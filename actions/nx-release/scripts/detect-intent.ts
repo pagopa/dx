@@ -15,7 +15,9 @@ function appendOutput(key: string, value: string): void {
   if (!outputPath) {
     return;
   }
-  execSync(`printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`);
+  execSync(
+    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
+  );
 }
 
 function shellEscape(value: string): string {
@@ -76,18 +78,25 @@ function run(): void {
   const { base, head } = computeRange();
   console.log(`::notice::Analyzing diff range ${base}..${head}`);
 
-  const diffStatus = execSync(`git diff --name-status ${shellEscape(base)} ${shellEscape(head)}`, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  });
+  const diffStatus = execSync(
+    `git diff --name-status ${shellEscape(base)} ${shellEscape(head)}`,
+    {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
 
   const mode = detectMode(diffStatus);
   appendOutput("mode", mode);
 
   if (mode === "create-pr") {
-    console.log("::notice::Detected new/modified Nx version plans on main. Mode: create-pr");
+    console.log(
+      "::notice::Detected new/modified Nx version plans on main. Mode: create-pr",
+    );
   } else if (mode === "publish") {
-    console.log("::notice::Detected consumed version plans and version bumps. Mode: publish");
+    console.log(
+      "::notice::Detected consumed version plans and version bumps. Mode: publish",
+    );
   } else {
     console.log("::notice::No Nx release action required. Mode: noop");
   }

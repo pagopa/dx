@@ -16,7 +16,9 @@ function getChangedFiles(): string[] {
     .filter(Boolean);
 }
 
-function parsePackageJson(path: string): { name: string; version: string } | null {
+function parsePackageJson(
+  path: string,
+): { name: string; version: string } | null {
   if (!existsSync(path)) {
     return null;
   }
@@ -131,7 +133,9 @@ function formatReleaseSection(entry: ReleaseEntry): string {
     return output.join("\n");
   }
 
-  const bodyLines = sectionLines.slice(1).filter((line) => line.trim().length > 0);
+  const bodyLines = sectionLines
+    .slice(1)
+    .filter((line) => line.trim().length > 0);
 
   if (bodyLines.length === 0) {
     output.push("- No changelog entry found.");

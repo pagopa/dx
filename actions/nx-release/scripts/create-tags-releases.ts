@@ -9,7 +9,10 @@ type ReleaseTarget = {
 };
 
 function runCommand(command: string): string {
-  return execSync(command, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  return execSync(command, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
 }
 
 function getChangedFiles(): string[] {
@@ -26,7 +29,10 @@ function parsePackageJson(path: string): ReleaseTarget | null {
   }
 
   try {
-    const pkg = JSON.parse(readFileSync(path, "utf8")) as { name?: string; version?: string };
+    const pkg = JSON.parse(readFileSync(path, "utf8")) as {
+      name?: string;
+      version?: string;
+    };
     if (!pkg.name || !pkg.version) {
       return null;
     }
@@ -64,7 +70,9 @@ function extractTargets(changedFiles: string[]): ReleaseTarget[] {
       continue;
     }
 
-    const target = file.endsWith("package.json") ? parsePackageJson(file) : parsePom(file);
+    const target = file.endsWith("package.json")
+      ? parsePackageJson(file)
+      : parsePom(file);
     if (!target) {
       continue;
     }
@@ -83,7 +91,9 @@ function extractTargets(changedFiles: string[]): ReleaseTarget[] {
 
 function tagExists(tagName: string): boolean {
   try {
-    execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, { stdio: "ignore" });
+    execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
+      stdio: "ignore",
+    });
     return true;
   } catch {
     return false;
@@ -101,7 +111,9 @@ function extractReleaseNotes(target: ReleaseTarget): string {
   }
 
   const lines = readFileSync(changelog, "utf8").split("\n");
-  const versionPattern = new RegExp(`^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`);
+  const versionPattern = new RegExp(
+    `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
+  );
 
   let start = -1;
   for (let index = 0; index < lines.length; index += 1) {
@@ -127,7 +139,11 @@ function extractReleaseNotes(target: ReleaseTarget): string {
   return section || `Release ${target.name}@${target.version}`;
 }
 
-function createGitHubRelease(tagName: string, notes: string, prerelease: boolean): void {
+function createGitHubRelease(
+  tagName: string,
+  notes: string,
+  prerelease: boolean,
+): void {
   try {
     execSync(`gh release view ${shellEscape(tagName)}`, { stdio: "ignore" });
     console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
@@ -137,7 +153,8 @@ function createGitHubRelease(tagName: string, notes: string, prerelease: boolean
   }
 
   const prereleaseFlag = prerelease ? "--prerelease" : "";
-  const command = `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
+  const command =
+    `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
   execSync(command, { stdio: "inherit" });
 }
 
@@ -147,7 +164,9 @@ function appendOutput(key: string, value: string): void {
     return;
   }
 
-  execSync(`printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`);
+  execSync(
+    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
+  );
 }
 
 function run(): void {
@@ -163,9 +182,12 @@ function run(): void {
     }
 
     console.log(`::notice::Creating tag ${tagName}`);
-    execSync(`git tag -a ${shellEscape(tagName)} -m ${shellEscape(`Release ${target.name} ${target.version}`)}`, {
-      stdio: "inherit",
-    });
+    execSync(
+      `git tag -a ${shellEscape(tagName)} -m ${shellEscape(`Release ${target.name} ${target.version}`)}`,
+      {
+        stdio: "inherit",
+      },
+    );
 
     createdTags.push(tagName);
   }

@@ -8,6 +8,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -18,5 +20,12 @@
     "pr",
     "release"
   ],
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@tsconfig/node22": "catalog:",
+    "@types/node": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
 }

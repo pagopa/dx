@@ -129,7 +129,23 @@ importers:
 
   actions/make-artifact: {}
 
-  actions/nx-release: {}
+  actions/nx-release:
+    devDependencies:
+      '@tsconfig/node22':
+        specifier: 'catalog:'
+        version: 22.0.2
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.1
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
+      tsup:
+        specifier: 'catalog:'
+        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.17))(jiti@2.6.0)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.8.3)(yaml@2.8.2)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
 
   actions/opex-dashboard-generate: {}
 
