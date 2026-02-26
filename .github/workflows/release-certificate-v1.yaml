@@ -38,11 +38,11 @@ jobs:
   renew-certificate:
     name: Create or Renew Certificate
     runs-on: ubuntu-latest
-    environment: infra-${{ inputs.environment }}-cd
+    environment: certificates-${{ inputs.environment }}-cd
 
     steps:
       - name: Renew TLS Certificate
-        uses: pagopa/dx/actions/renew-tls-certificate@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+        uses: pagopa/dx/actions/renew-tls-certificate@main
         with:
           force_renewal: ${{ inputs.force_renewal }}
           key_vault_name: ${{ inputs.key_vault_name }}
