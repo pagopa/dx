@@ -3,13 +3,10 @@ name: stategraph.dx.pagopa.it TLS Certificate
 on:
   schedule:
     - cron: "0 2 * * 1,3"
-  push:
-    branches:
-      - CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
   workflow_dispatch:
     inputs:
       force_renewal:
-        description: "Renew the certificate even if not close to expiration"
+        description: "Force the certificate renewal to use when cron-triggered execution fails"
         required: false
         default: false
         type: boolean
