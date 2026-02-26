@@ -4,12 +4,13 @@ resource "dx_available_subnet_cidr" "psql_subnet_cidr" {
 }
 
 ephemeral "random_password" "psql" {
-  length      = 15
-  special     = true
-  min_lower   = 1
-  min_upper   = 1
-  min_numeric = 1
-  min_special = 1
+  length           = 15
+  special          = true
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "azurerm_subnet" "stategraph_psql" {
@@ -73,7 +74,7 @@ resource "azurerm_postgresql_flexible_server" "stategraph" {
 
   administrator_login               = "stategraph"
   administrator_password_wo         = ephemeral.random_password.psql.result
-  administrator_password_wo_version = 2
+  administrator_password_wo_version = 3
 
   tags = var.tags
 }

@@ -46,8 +46,8 @@ resource "azurerm_container_app_environment" "stategraph" {
 
   lifecycle {
     ignore_changes = [
-      infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan
-      workload_profile,                   # Otherwise Terraform forces the recreation at every plan
+      infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan due to provider issue
+      workload_profile                    # Otherwise Terraform forces the recreation at every plan due to provider issue
     ]
   }
 
@@ -155,12 +155,6 @@ resource "azurerm_container_app" "stategraph" {
       key_vault_secret_id = "https://${var.key_vault.name}.vault.azure.net/secrets/${lower(replace(secret.value, "_", "-"))}"
       identity            = "System"
     }
-  }
-
-  lifecycle {
-    ignore_changes = [
-      workload_profile_name # Otherwise Terraform forces the recreation at every plan
-    ]
   }
 
   depends_on = [
