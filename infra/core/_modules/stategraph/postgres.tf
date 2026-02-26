@@ -4,12 +4,13 @@ resource "dx_available_subnet_cidr" "psql_subnet_cidr" {
 }
 
 ephemeral "random_password" "psql" {
-  length      = 16
-  special     = true
-  min_lower   = 1
-  min_upper   = 1
-  min_numeric = 1
-  min_special = 1
+  length           = 15
+  special          = true
+  min_lower        = 1
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
+  override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
 resource "azurerm_subnet" "stategraph_psql" {
@@ -54,7 +55,7 @@ resource "azurerm_postgresql_flexible_server" "stategraph" {
 
   auto_grow_enabled            = true
   backup_retention_days        = 7
-  geo_redundant_backup_enabled = true
+  geo_redundant_backup_enabled = false # not supported in Italy North region
 
   high_availability {
     mode                      = "ZoneRedundant"
@@ -73,9 +74,18 @@ resource "azurerm_postgresql_flexible_server" "stategraph" {
 
   administrator_login               = "stategraph"
   administrator_password_wo         = ephemeral.random_password.psql.result
-  administrator_password_wo_version = 1
+  administrator_password_wo_version = 3
 
   tags = var.tags
+}
+
+resource "azurerm_postgresql_flexible_server_database" "stategraph" {
+  name      = "stategraph"
+  server_id = azurerm_postgresql_flexible_server.stategraph.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_postgresql_flexible_server_active_directory_administrator" "admins" {

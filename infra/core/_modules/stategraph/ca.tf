@@ -44,6 +44,13 @@ resource "azurerm_container_app_environment" "stategraph" {
     workload_profile_type = "Consumption"
   }
 
+  lifecycle {
+    ignore_changes = [
+      infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan due to provider issue
+      workload_profile                    # Otherwise Terraform forces the recreation at every plan due to provider issue
+    ]
+  }
+
   tags = var.tags
 }
 
@@ -74,7 +81,8 @@ resource "azurerm_private_endpoint" "cae_stategraph" {
 
 resource "azurerm_container_app" "stategraph" {
   name = provider::dx::resource_name(merge(var.environment, {
-    resource_type = "container_app",
+    resource_type   = "container_app",
+    instance_number = "02"
   }))
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -122,18 +130,20 @@ resource "azurerm_container_app" "stategraph" {
       }
 
       liveness_probe {
-        initial_delay    = 10
-        interval_seconds = 10
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 5
+        interval_seconds        = 10
+        failure_count_threshold = 3
+        path                    = "/health/live"
+        port                    = 8080
+        transport               = "HTTP"
       }
       readiness_probe {
-        initial_delay    = 5
-        interval_seconds = 5
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 10
+        interval_seconds        = 10
+        failure_count_threshold = 10
+        path                    = "/health/ready"
+        port                    = 8080
+        transport               = "HTTP"
       }
     }
   }
