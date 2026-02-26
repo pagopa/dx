@@ -1,11 +1,13 @@
+/** Technology Radar homepage — filterable, URL-synced card grid. */
 import { usePluginData } from "@docusaurus/useGlobalData";
-import React, { useMemo, useState } from "react";
+import React from "react";
 
 import type { RadarEntry, Ring } from "./types";
 
 import RadarCard from "./RadarCard";
 import styles from "./TechRadar.module.css";
 import { RING_META, RING_ORDER } from "./types";
+import { useRadarFilters } from "./use-radar-filters";
 
 const RING_TOGGLE_ACTIVE_CLASS: Record<Ring, string> = {
   adopt: styles.ringAdopt,
@@ -19,82 +21,7 @@ export default function TechRadarPage(): React.JSX.Element {
     entries: readonly RadarEntry[];
   };
 
-  const [search, setSearch] = useState("");
-  const [activeRings, setActiveRings] = useState<ReadonlySet<Ring>>(
-    new Set(RING_ORDER),
-  );
-  const [activeTags, setActiveTags] = useState<ReadonlySet<string>>(new Set());
-
-  // Collect all unique tags sorted alphabetically
-  const allTags = useMemo(() => {
-    const tagSet = new Set<string>();
-    for (const entry of entries) {
-      for (const tag of entry.tags) {
-        tagSet.add(tag);
-      }
-    }
-    return [...tagSet].sort();
-  }, [entries]);
-
-  // Filter entries
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return entries.filter((entry) => {
-      // Ring filter
-      if (!activeRings.has(entry.ring as Ring)) {
-        return false;
-      }
-      // Tag filter (AND logic)
-      for (const tag of activeTags) {
-        if (!entry.tags.includes(tag)) {
-          return false;
-        }
-      }
-      // Text search
-      if (q && !entry.title.toLowerCase().includes(q)) {
-        return false;
-      }
-      return true;
-    });
-  }, [entries, activeRings, activeTags, search]);
-
-  const toggleRing = (ring: Ring) => {
-    setActiveRings((prev) => {
-      const next = new Set(prev);
-      if (next.has(ring)) {
-        // Don't allow deselecting all rings
-        if (next.size > 1) {
-          next.delete(ring);
-        }
-      } else {
-        next.add(ring);
-      }
-      return next;
-    });
-  };
-
-  const toggleTag = (tag: string) => {
-    setActiveTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(tag)) {
-        next.delete(tag);
-      } else {
-        next.add(tag);
-      }
-      return next;
-    });
-  };
-
-  const clearFilters = () => {
-    setSearch("");
-    setActiveRings(new Set(RING_ORDER));
-    setActiveTags(new Set());
-  };
-
-  const hasActiveFilters =
-    search.length > 0 ||
-    activeRings.size !== RING_ORDER.length ||
-    activeTags.size > 0;
+  const filters = useRadarFilters(entries);
 
   return (
     <div className={styles.radarPage}>
@@ -129,15 +56,15 @@ export default function TechRadarPage(): React.JSX.Element {
         <div className={styles.searchRow}>
           <input
             className={styles.searchInput}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => filters.handleSearchChange(e.target.value)}
             placeholder="Search technologies..."
             type="text"
-            value={search}
+            value={filters.search}
           />
-          {hasActiveFilters && (
+          {filters.hasActiveFilters && (
             <button
               className={styles.clearButton}
-              onClick={clearFilters}
+              onClick={filters.clearFilters}
               type="button"
             >
               Clear filters
@@ -150,7 +77,7 @@ export default function TechRadarPage(): React.JSX.Element {
           <div className={styles.ringFilters}>
             {RING_ORDER.map((ring) => {
               const meta = RING_META[ring];
-              const isActive = activeRings.has(ring);
+              const isActive = filters.activeRings.has(ring);
               return (
                 <button
                   className={`${styles.ringToggle} ${
@@ -159,7 +86,7 @@ export default function TechRadarPage(): React.JSX.Element {
                       : styles.ringToggleInactive
                   }`}
                   key={ring}
-                  onClick={() => toggleRing(ring)}
+                  onClick={() => filters.toggleRing(ring)}
                   type="button"
                 >
                   <span className={styles.ringIcon}>{meta.icon}</span>
@@ -173,31 +100,69 @@ export default function TechRadarPage(): React.JSX.Element {
         <div className={styles.filterGroup}>
           <span className={styles.filterLabel}>Tags</span>
           <div className={styles.tagFilters}>
-            {allTags.map((tag) => (
+            {filters.visibleTags.map((tag) => (
               <button
                 className={`${styles.tagChip} ${
-                  activeTags.has(tag) ? styles.tagChipActive : ""
+                  filters.activeTags.has(tag) ? styles.tagChipActive : ""
                 }`}
                 key={tag}
-                onClick={() => toggleTag(tag)}
+                onClick={() => filters.toggleTag(tag)}
                 type="button"
               >
                 {tag}
               </button>
             ))}
+            {filters.hiddenTagCount > 0 && (
+              <button
+                className={styles.showMoreButton}
+                onClick={() => filters.setShowAllTags((prev) => !prev)}
+                type="button"
+              >
+                {filters.showAllTags
+                  ? "Show less"
+                  : `+${filters.hiddenTagCount} more`}
+              </button>
+            )}
           </div>
         </div>
       </div>
 
       {/* Results count */}
       <div className={styles.resultsBar}>
-        Showing {filtered.length} of {entries.length} entries
+        <span>
+          Showing {filters.filtered.length} of {entries.length} entries
+        </span>
+        {(filters.hasRingFilter || filters.hasTagFilter) && (
+          <span className={styles.activeFilters}>
+            {filters.hasRingFilter &&
+              RING_ORDER.filter((r) => filters.activeRings.has(r)).map(
+                (ring) => {
+                  const meta = RING_META[ring];
+                  return (
+                    <span
+                      className={`${styles.activeFilterChip} ${styles[`badge${meta.label}`]}`}
+                      key={ring}
+                    >
+                      <span className={styles.ringIcon}>{meta.icon}</span>
+                      {meta.label}
+                    </span>
+                  );
+                },
+              )}
+            {filters.hasTagFilter &&
+              [...filters.activeTags].map((tag) => (
+                <span className={styles.activeFilterChip} key={tag}>
+                  {tag}
+                </span>
+              ))}
+          </span>
+        )}
       </div>
 
       {/* Card grid */}
-      {filtered.length > 0 ? (
+      {filters.filtered.length > 0 ? (
         <div className={styles.grid}>
-          {filtered.map((entry) => (
+          {filters.filtered.map((entry) => (
             <RadarCard entry={entry} key={entry.slug} />
           ))}
         </div>
