@@ -128,18 +128,21 @@ runs:
     - name: Setup Python requirements
       if: steps.should_renew.outputs.renew_certificate == 'true'
       shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         pip3 install \
           --require-hashes \
-          --requirement "${{ github.action_path }}/le_renew_ssl_certificate_python_requirements.txt"
+          --requirement "$ACTION_PATH/le_renew_ssl_certificate_python_requirements.txt"
 
     - name: Generate the CSR
       if: steps.should_renew.outputs.renew_certificate == 'true'
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         CSR_COMMON_NAME: ${{ inputs.csr_common_name }}
       run: |
-        python3 "${{ github.action_path }}/le_renew_ssl_certificate_generate_csr.py" \
+        python3 "$ACTION_PATH/le_renew_ssl_certificate_generate_csr.py" \
           --common-name "$CSR_COMMON_NAME" \
           --out csr.der \
           --rsa-key-size 2048
@@ -152,8 +155,9 @@ runs:
         AZURE_SUBSCRIPTION_ID: ${{ inputs.arm_subscription_id }}
         AZURE_DNS_ZONE: ${{ inputs.dns_zone }}
         AZURE_IDENTITY_TYPE: "MANAGED_IDENTITY"
+        ACTION_PATH: ${{ github.action_path }}
       run: |
-        python3 "${{ github.action_path }}/le_renew_ssl_certificate_acme_tiny.py" \
+        python3 "$ACTION_PATH/le_renew_ssl_certificate_acme_tiny.py" \
           --private-key private_key.json \
           --regr regr.json \
           --csr csr.der \
