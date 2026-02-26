@@ -1,9 +1,8 @@
 ---
 title: "Flipper"
 ring: adopt
-tags: [mobile, react-native, debug, tool]
+tags: [mobile, debug, tool]
 ---
-
 
 [Flipper](https://fbflipper.com/) is a debugging tool for mobile apps that
 provides a GUI to inspect the app's state. It supports React Native, native iOS,

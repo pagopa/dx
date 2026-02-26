@@ -1,9 +1,8 @@
 ---
 title: "Azure Function App"
 ring: adopt
-tags: [cloud, azure, compute, dx, platform]
+tags: [cloud, azure, compute, dx]
 ---
-
 
 [Azure Function App](https://azure.microsoft.com/en-us/products/functions) is a
 serverless computing service on Microsoft Azure that allows developers to build

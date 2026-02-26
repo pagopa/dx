@@ -1,9 +1,8 @@
 ---
 title: "Rancher Desktop"
 ring: adopt
-tags: [containerization, kubernetes, tool]
+tags: [containerization, tool]
 ---
-
 
 [Rancher Desktop](https://rancherdesktop.io/) is an open-source desktop
 application that provides Kubernetes and container management on your local

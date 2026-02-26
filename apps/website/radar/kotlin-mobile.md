@@ -4,7 +4,6 @@ ring: adopt
 tags: [kotlin, mobile, language]
 ---
 
-
 [Kotlin](https://kotlinlang.org/docs/home.html) is an open-source,
 statically-typed programming language that supports both object-oriented and
 functional programming. It is interoperable with the Java virtual machine (JVM),

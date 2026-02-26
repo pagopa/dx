@@ -1,9 +1,8 @@
 ---
 title: "Microsoft Azure"
 ring: adopt
-tags: [cloud, platform, azure, dx]
+tags: [cloud, azure, dx]
 ---
-
 
 Azure is Microsoft's public cloud computing platform. It provides a range of
 cloud services, including those for computing, analytics, storage, and

@@ -1,9 +1,8 @@
 ---
 title: "SmallRye Mutiny"
 ring: trial
-tags: [java, backend, language]
+tags: [java, backend, framework]
 ---
-
 
 ["SmallRye Mutiny"](https://smallrye.io/smallrye-mutiny/latest/) is a reactive
 Java library designed to handle asynchronous communications and reactive

@@ -1,9 +1,8 @@
 ---
 title: "AWS Lambda"
 ring: adopt
-tags: [cloud, aws, serverless, compute, platform]
+tags: [cloud, aws, serverless, compute]
 ---
-
 
 [AWS Lambda](https://aws.amazon.com/lambda/) is a serverless computing service
 that allows you to run code without provisioning or managing servers. It

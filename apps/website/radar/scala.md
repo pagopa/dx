@@ -4,7 +4,6 @@ ring: hold
 tags: [backend, language]
 ---
 
-
 [Scala](https://www.scala-lang.org/) is a versatile programming language that
 emphasizes functional programming and a robust static type system. Notable for
 its succinctness, Scala was developed with the intention of addressing various

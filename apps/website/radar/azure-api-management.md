@@ -1,9 +1,8 @@
 ---
 title: "Azure API Management Service"
 ring: adopt
-tags: [cloud, azure, compute, platform]
+tags: [cloud, azure, compute]
 ---
-
 
 [Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts)
 (APIM) is a versatile cloud service designed to simplify the creation,

@@ -4,10 +4,10 @@ ring: adopt
 tags: [java, tool]
 ---
 
-
-[Maven](https://maven.apache.org/) is a powerful project management tool that is based on POM (project object
-model). It is used for projects build, dependency and documentation. It
-simplifies the build process like ANT. But it is too much advanced than ANT.
+[Maven](https://maven.apache.org/) is a powerful project management tool that is
+based on POM (project object model). It is used for projects build, dependency
+and documentation. It simplifies the build process like ANT. But it is too much
+advanced than ANT.
 
 ## Use cases
 

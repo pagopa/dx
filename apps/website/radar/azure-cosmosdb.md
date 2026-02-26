@@ -1,9 +1,8 @@
 ---
 title: "Azure Cosmos DB"
 ring: adopt
-tags: [cloud, azure, storage, dx, platform]
+tags: [cloud, azure, storage, dx]
 ---
-
 
 [Azure Cosmos DB](https://azure.microsoft.com/en-us/products/cosmos-db) is a
 globally distributed, multi-model database service offered by Microsoft Azure.

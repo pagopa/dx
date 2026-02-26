@@ -1,9 +1,8 @@
 ---
 title: "Azure Logic Apps"
 ring: adopt
-tags: [cloud, azure, automation, integration, platform]
+tags: [cloud, azure, integration]
 ---
-
 
 [Azure Logic Apps](https://azure.microsoft.com/en-us/products/logic-apps/) is a
 cloud-based integration and automation service that enables building scalable
@@ -34,11 +33,11 @@ workflows and facilitate integration between internal systems and cloud
 services. Most configurations for Logic Apps have historically been managed
 directly through the Azure portal.
 
-However, creating resources directly in the Azure portal **should be avoided**, all
-Logic Apps should be provisioned and managed through code-based configuration in
-Terraform to ensure consistency and maintainability. If a Logic App is created
-in the portal or already exists, a backup of the configuration must be added to
-the codebase to maintain a complete infrastructure record.
+However, creating resources directly in the Azure portal **should be avoided**,
+all Logic Apps should be provisioned and managed through code-based
+configuration in Terraform to ensure consistency and maintainability. If a Logic
+App is created in the portal or already exists, a backup of the configuration
+must be added to the codebase to maintain a complete infrastructure record.
 
 Code-based configuration, however, has only been implemented in this example:
 

@@ -1,9 +1,8 @@
 ---
 title: "Azure Storage Account"
 ring: adopt
-tags: [cloud, azure, storage, dx, platform]
+tags: [cloud, azure, storage, persistence, dx]
 ---
-
 
 [Azure Storage Account](https://azure.microsoft.com/en-us/products/category/storage)
 provides highly available, secure, and massively scalable cloud storage for

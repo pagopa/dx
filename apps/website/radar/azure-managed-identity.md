@@ -1,9 +1,8 @@
 ---
 title: "Azure Managed Identity"
 ring: adopt
-tags: [cloud, azure, security, dx, platform]
+tags: [cloud, azure, security, dx]
 ---
-
 
 [Azure Managed Identities](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
 simplify identity management for applications and services running in the cloud.

@@ -1,11 +1,12 @@
 ---
 title: "PM2"
 ring: adopt
-tags: [nodejs, compute, tool]
+tags: [nodejs, performance, tool]
 ---
 
-
-[PM2](https://pm2.keymetrics.io/) is a production process manager for Node.js applications with a built-in load balancer. It helps keep applications alive forever, reload them without downtime, and facilitate common system admin tasks.
+[PM2](https://pm2.keymetrics.io/) is a production process manager for Node.js
+applications with a built-in load balancer. It helps keep applications alive
+forever, reload them without downtime, and facilitate common system admin tasks.
 
 ## Use cases
 

@@ -1,9 +1,8 @@
 ---
 title: "React Native"
 ring: adopt
-tags: [mobile, typescript, language]
+tags: [mobile, typescript, framework]
 ---
-
 
 [React Native](https://reactnative.dev/) is a widely-used open-source mobile
 application framework developed by Facebook. It's recognized for its utility in

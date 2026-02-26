@@ -1,9 +1,8 @@
 ---
 title: "Azure Container Apps"
 ring: trial
-tags: [cloud, azure, compute, platform]
+tags: [cloud, azure, compute, dx]
 ---
-
 
 [Azure Container Apps](https://azure.microsoft.com/en-us/products/container-apps/)
 is a serverless container orchestration and management service provided by

@@ -1,9 +1,8 @@
 ---
 title: "Terraform"
 ring: adopt
-tags: [cloud, iac, dx, tool]
+tags: [cloud, dx, tool]
 ---
-
 
 [Terraform](https://www.terraform.io/) is an infrastructure as code tool that
 enables you to safely and predictably provision and manage infrastructure in any
@@ -23,7 +22,7 @@ Cloud Service Providers, with a current focus on Azure and AWS.
 - Integrate with CI/CD pipelines for continuous delivery
 - Manage infrastructure across multiple cloud platforms
 - Implement infrastructure as code best practices
-  
+
 ## Reference of usage in our organization
 
 [Our repositories](https://github.com/orgs/pagopa/repositories?q=infra), located

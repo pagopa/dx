@@ -4,7 +4,6 @@ ring: adopt
 tags: [typescript, dx, language]
 ---
 
-
 [TypeScript](https://www.typescriptlang.org/) is a superset of JavaScript that
 adds static typing to the language. It transpiles to JavaScript, meaning that an
 application written in TypeScript will be executed in the JavaScript runtime.

@@ -1,12 +1,11 @@
 ---
 title: "OpenAPI v3"
 ring: adopt
-tags: [all, api, integration, method]
+tags: [api, integration, pattern]
 ---
 
-
-The [OpenAPI Specification (OAS) v3](https://spec.openapis.org/) is a
-widely accepted standard for describing RESTful APIs.
+The [OpenAPI Specification (OAS) v3](https://spec.openapis.org/) is a widely
+accepted standard for describing RESTful APIs.
 
 It offers a rich and expressive format that enables developers to design,
 document, and consume APIs in a more efficient and standardized way. Adopting

@@ -1,9 +1,8 @@
 ---
 title: "Azure Key Vault"
 ring: adopt
-tags: [cloud, azure, security, dx, platform]
+tags: [cloud, azure, security, dx]
 ---
-
 
 [Azure Key Vault](https://azure.microsoft.com/en-us/products/key-vault) is a
 cloud service offered by Microsoft that allows users to securely store and

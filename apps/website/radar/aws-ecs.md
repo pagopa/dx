@@ -1,9 +1,8 @@
 ---
 title: "AWS ECS Fargate"
 ring: adopt
-tags: [cloud, aws, serverless, compute, platform]
+tags: [cloud, aws, serverless, compute]
 ---
-
 
 [AWS ECS Fargate](https://docs.aws.amazon.com/AmazonECS/latest/userguide/what-is-fargate.html)
 is a serverless container orchestration service that simplifies the deployment

@@ -1,9 +1,8 @@
 ---
 title: "Redux"
 ring: adopt
-tags: [web, mobile, react, react-native, language]
+tags: [web, mobile, react, react-native, library]
 ---
-
 
 [Redux](https://redux.js.org/)
 

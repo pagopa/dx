@@ -1,9 +1,8 @@
 ---
 title: "AWS SES"
 ring: adopt
-tags: [cloud, aws, email, platform]
+tags: [cloud, aws]
 ---
-
 
 [AWS SES](https://aws.amazon.com/ses/) Amazon SES is a cloud-based email service
 provider that can integrate into any application for high volume email

@@ -1,9 +1,8 @@
 ---
 title: "Detox"
 ring: trial
-tags: [react-native, mobile, testing, tool]
+tags: [mobile, testing, tool]
 ---
-
 
 [Detox](https://wix.github.io/Detox/) is a gray box end-to-end testing and
 automation library designed specifically for mobile apps. Unlike traditional

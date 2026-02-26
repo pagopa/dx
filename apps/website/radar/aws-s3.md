@@ -1,9 +1,8 @@
 ---
 title: "AWS S3"
 ring: adopt
-tags: [cloud, aws, storage, platform]
+tags: [cloud, aws, storage, persistence]
 ---
-
 
 [Amazon S3](https://aws.amazon.com/s3/), or Simple Storage Service, is a
 scalable and secure object storage service offered by AWS. It provides a simple

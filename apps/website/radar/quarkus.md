@@ -1,9 +1,8 @@
 ---
 title: "Quarkus"
 ring: trial
-tags: [java, backend, language]
+tags: [java, backend, framework]
 ---
-
 
 [Quarkus](https://quarkus.io/) is a framework for writing Java applications,
 optimized for use in containers and cloud-native environments like Kubernetes.

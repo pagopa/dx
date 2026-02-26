@@ -1,9 +1,8 @@
 ---
 title: "Jest"
 ring: hold
-tags: [typescript, frontend, web, backend, testing, tool]
+tags: [typescript, testing, tool]
 ---
-
 
 [Jest](https://jestjs.io/) is a JavaScript Testing Framework with a focus on
 simplicity.

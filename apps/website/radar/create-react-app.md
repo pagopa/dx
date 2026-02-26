@@ -1,9 +1,8 @@
 ---
 title: "Create React App"
 ring: hold
-tags: [web, typescript, react, tool]
+tags: [frontend, tool]
 ---
-
 
 While [Create React App](https://create-react-app.dev/) has been a popular
 choice for bootstrapping React applications due to its simplicity and ease of

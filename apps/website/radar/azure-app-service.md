@@ -1,9 +1,8 @@
 ---
 title: "Azure App Service"
 ring: adopt
-tags: [cloud, azure, compute, dx, platform]
+tags: [cloud, azure, compute, dx]
 ---
-
 
 [Azure App Service](https://azure.microsoft.com/en-us/products/app-service) is a
 fully managed platform offered by Microsoft Azure that enables developers to

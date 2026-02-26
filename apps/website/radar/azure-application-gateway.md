@@ -1,9 +1,8 @@
 ---
 title: "Azure Application Gateway"
 ring: adopt
-tags: [cloud, azure, networking, platform]
+tags: [cloud, azure, networking]
 ---
-
 
 [Azure Application Gateway](https://learn.microsoft.com/en-us/azure/application-gateway/overview)
 is a regional web traffic load balancer (OSI layer 7) service. It facilitates

@@ -1,9 +1,8 @@
 ---
 title: "Turborepo"
 ring: adopt
-tags: [typescript, monorepo, frontend, backend, dx, tool]
+tags: [typescript, monorepo, dx, tool]
 ---
-
 
 [Turborepo](https://turbo.build/) is a tool that allows you to manage multiple
 packages in a single repository. It provides a monorepo-like experience without

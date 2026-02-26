@@ -4,7 +4,6 @@ ring: adopt
 tags: [typescript, dx, tool]
 ---
 
-
 [Prettier](https://prettier.io/) is an opinionated code formatter. It removes
 all original styling and ensures that all outputted code conforms to a
 consistent style.

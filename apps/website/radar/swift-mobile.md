@@ -4,7 +4,6 @@ ring: adopt
 tags: [swift, mobile, language]
 ---
 
-
 [Swift](https://www.swift.org/) is an open-source, statically-typed programming
 language that supports both object-oriented and functional programming. It's the
 preferred language to build apps for Apple Mac, Pad and Phone devices.

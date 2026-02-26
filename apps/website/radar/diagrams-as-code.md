@@ -1,9 +1,8 @@
 ---
 title: "Diagrams as Code"
 ring: trial
-tags: [all, method]
+tags: [pattern]
 ---
-
 
 Diagram as code is an approach to creating diagrams using code instead of a
 graphical interface. This allows you to define diagrams in a text-based format

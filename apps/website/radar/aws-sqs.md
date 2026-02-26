@@ -1,9 +1,8 @@
 ---
 title: "AWS SQS"
 ring: adopt
-tags: [cloud, aws, queue, platform]
+tags: [cloud, aws, integration]
 ---
-
 
 [AWS SQS](https://aws.amazon.com/sqs/) is a fully managed message queuing
 service that enables decoupling and scaling of distributed systems components.

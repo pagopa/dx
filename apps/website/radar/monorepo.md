@@ -1,9 +1,8 @@
 ---
 title: "Monorepo"
 ring: adopt
-tags: [all, dx, method]
+tags: [dx, pattern]
 ---
-
 
 In our continuous effort to optimize our software development processes, we
 suggest to evaluate the transition from a poly-repo (multiple repositories)

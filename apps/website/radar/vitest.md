@@ -1,9 +1,8 @@
 ---
 title: "Vitest"
 ring: adopt
-tags: [typescript, frontend, web, backend, testing, dx, tool]
+tags: [typescript, testing, dx, tool]
 ---
-
 
 [Vitest](https://vitest.dev/) is a testing framework powered by Vite.
 

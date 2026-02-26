@@ -1,9 +1,8 @@
 ---
 title: "GraalVM"
 ring: adopt
-tags: [java, backend, tool]
+tags: [java, backend, performance]
 ---
-
 
 The General Recursive Applicative and Algorithmic Language Virtual Machine
 (Graal VM) is a high-performance JDK distribution written for Java and other JVM

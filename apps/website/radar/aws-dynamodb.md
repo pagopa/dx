@@ -1,9 +1,8 @@
 ---
 title: "AWS DynamoDB"
 ring: adopt
-tags: [cloud, aws, nosql, platform]
+tags: [cloud, aws, persistence, database]
 ---
-
 
 [Amazon DynamoDB](https://docs.aws.amazon.com/dynamodb/) is a fully managed
 NoSQL database service by AWS. It provides seamless and low-latency access to

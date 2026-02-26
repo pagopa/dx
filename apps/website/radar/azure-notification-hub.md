@@ -1,9 +1,8 @@
 ---
 title: "Azure Notification Hub"
 ring: adopt
-tags: [cloud, azure, notification, platform]
+tags: [cloud, azure, messaging]
 ---
-
 
 [Azure Notification Hub](https://azure.microsoft.com/en-us/products/notification-hubs)
 provide an easy-to-use and scaled-out push engine that enables you to send

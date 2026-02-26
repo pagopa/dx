@@ -1,9 +1,8 @@
 ---
 title: "nvm"
 ring: hold
-tags: [typescript, nodejs, tool]
+tags: [typescript, javascript, nodejs, tool]
 ---
-
 
 [nvm](https://github.com/nvm-sh/nvm) is a version manager for node.js, designed
 to be installed per-user, and invoked per-shell. It is a common tool for

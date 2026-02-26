@@ -1,9 +1,8 @@
 ---
 title: "AWS EventBridge"
 ring: adopt
-tags: [cloud, aws, platform]
+tags: [cloud, aws, integration]
 ---
-
 
 [AWS EventBridge](https://docs.aws.amazon.com/eventbridge/) is a fully managed
 event bus service that makes it easy to connect different applications using

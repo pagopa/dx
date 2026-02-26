@@ -1,9 +1,8 @@
 ---
 title: "fp-ts"
 ring: trial
-tags: [typescript, frontend, web, backend, language]
+tags: [typescript, library]
 ---
-
 
 The [fp-ts](https://gcanti.github.io/fp-ts/) is a powerful library that brings
 functional programming concepts to TypeScript development. It provides a set of

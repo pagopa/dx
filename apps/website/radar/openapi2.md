@@ -1,7 +1,7 @@
 ---
 title: "OpenAPI v2"
 ring: hold
-tags: [all, api, integration, method]
+tags: [api, integration, pattern]
 ---
 
 The [OpenAPI Specification (OAS) v2](https://swagger.io/specification/v2), also

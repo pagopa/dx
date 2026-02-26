@@ -1,9 +1,8 @@
 ---
 title: "Gherkin"
 ring: trial
-tags: [testing, language]
+tags: [testing, language, pattern]
 ---
-
 
 [Gherkin](https://cucumber.io/docs/gherkin/reference/) is a domain-specific
 language designed for describing software behavior without detailing how that

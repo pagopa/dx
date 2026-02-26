@@ -1,9 +1,8 @@
 ---
 title: "Azure Application Insights"
 ring: adopt
-tags: [cloud, azure, monitoring, observability, dx, platform]
+tags: [cloud, azure, monitoring, dx]
 ---
-
 
 [Azure Application Insights](https://azure.microsoft.com/en-us/products/monitor)
 is a powerful application performance management (APM) service that enables

@@ -1,9 +1,8 @@
 ---
 title: "create-react-native-library"
 ring: adopt
-tags: [mobile, react-native, swift, kotlin, java, tool]
+tags: [mobile, tool]
 ---
-
 
 [create-react-native-library](https://callstack.github.io/react-native-builder-bob/)
 is a CLI for scaffolding React Native libraries for iOS and Android. It

@@ -1,9 +1,8 @@
 ---
 title: "Spring Boot"
 ring: adopt
-tags: [java, backend, language]
+tags: [java, backend, framework]
 ---
-
 
 Spring Boot is an open source Java-based framework used to create a
 microservices. It is developed by Pivotal Team and is used to build stand-alone

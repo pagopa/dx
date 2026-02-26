@@ -1,9 +1,8 @@
 ---
 title: "Docker Desktop"
 ring: hold
-tags: [virtualization, containerization, docker, kubernetes, tool]
+tags: [containerization, tool]
 ---
-
 
 [Docker Desktop](https://www.docker.com/products/docker-desktop) is a tool for
 MacOS and Windows that allows to run Docker containers locally.

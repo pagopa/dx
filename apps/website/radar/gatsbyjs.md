@@ -1,9 +1,8 @@
 ---
 title: "GatsbyJS"
 ring: hold
-tags: [frontend, web, language]
+tags: [frontend, framework]
 ---
-
 
 [GatsbyJS](https://www.gatsbyjs.org/)is a static site generator based on React.
 It is used to build static websites that are progressive web apps, follow the

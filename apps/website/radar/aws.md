@@ -1,9 +1,8 @@
 ---
 title: "Amazon Web Services"
 ring: adopt
-tags: [cloud, platform, aws]
+tags: [cloud, aws, compute]
 ---
-
 
 Amazon Web Services (AWS) is a comprehensive, evolving cloud computing platform
 provided by Amazon. It provides a mix of infrastructure as a service (IaaS),

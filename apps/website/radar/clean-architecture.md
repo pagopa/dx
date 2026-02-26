@@ -1,9 +1,8 @@
 ---
 title: "Clean Architecture"
 ring: trial
-tags: [all, method]
+tags: [pattern]
 ---
-
 
 # [Clean architecture](https://betterprogramming.pub/the-clean-architecture-beginners-guide-e4b7058c1165)
 
@@ -14,11 +13,12 @@ edges. The architecture is divided into four concentric layers.
 
 From the center to the edges, the layers are:
 
-1. Entities, which contain **domain models** with their own methods:
-   methods belonging to the entities must not depend on any external library or
+1. Entities, which contain **domain models** with their own methods: methods
+   belonging to the entities must not depend on any external library or
    framework;
-2. Use Cases, which contain the **application-specific business rules**:
-   methods belonging to the use cases uses the entities and must not depend on any external library or framework;
+2. Use Cases, which contain the **application-specific business rules**: methods
+   belonging to the use cases uses the entities and must not depend on any
+   external library or framework;
 3. Interface Adapters, which **implement the interfaces** defined in the use
    cases and interact with external dependencies;
 4. Frameworks & Drivers, which contain the **external dependencies** (e.g.,
@@ -37,23 +37,23 @@ Here are some advantages of using the Clean Architecture approach:
 ## Comparison with Hexagonal Architecture
 
 As Clean architecture, Heaxagonal architecture is a software design philosophy
-that separates the concerns of the application into distinct layers. 
+that separates the concerns of the application into distinct layers.
 
 It is based on the idea of a "hexagon" with the core business logic at the
 center and the external dependencies at the edges. The architecture is divided
 into three layers:
 
-1. Core, which contains the **business logic** (*use cases*) and domain model
-  (*entities*): methods belonging to the core layer must not depend on any
-  external library or framework;
+1. Core, which contains the **business logic** (_use cases_) and domain model
+   (_entities_): methods belonging to the core layer must not depend on any
+   external library or framework;
 1. Ports, which **define the interfaces** that the core layer can use to
-  interact with the external world;
+   interact with the external world;
 1. Adapters, which **implement the interfaces** and interact with external
-  dependencies.
+   dependencies.
 
 While **Clean Architecture** uses concentric circles with dependencies pointing
-inward, emphasizing a *hierarchy* between layers, **Hexagonal Architecture**
-employs a *symmetrical* model with ports and adapters to handle input/output
+inward, emphasizing a _hierarchy_ between layers, **Hexagonal Architecture**
+employs a _symmetrical_ model with ports and adapters to handle input/output
 uniformly, without strict hierarchies.
 
 In both architectures, the core business logic is isolated from the external
@@ -62,9 +62,8 @@ other layers through well-defined interfaces.
 
 ## Use cases
 
-Clean Architecture is well-suited for **microservices** because it allows
-you to isolate the business logic of each service from the external
-dependencies.
+Clean Architecture is well-suited for **microservices** because it allows you to
+isolate the business logic of each service from the external dependencies.
 
 ## Example of application in a Typescript monorepo
 
@@ -95,7 +94,7 @@ separation of concerns:
   (e.g., repositories, services, etc.) which are agnostic with respect to
   frameworks and external services.
 - **Use-cases** utilize entities and ports (e.g., repositories, services, etc.),
-  but *never* import adapters.
+  but _never_ import adapters.
 - **Adapters** implement the interfaces defined in the domain and are only
   imported in the entry point modules and in config.
 - **Entry points** act as the "Composition Root" and connect adapters to
