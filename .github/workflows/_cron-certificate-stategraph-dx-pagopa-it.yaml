@@ -28,7 +28,7 @@ jobs:
       environment: "dev"
 
   uat:
-    name: stategraph.uat.dx.pagopa.it"
+    name: "stategraph.uat.dx.pagopa.it"
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
