@@ -46,8 +46,8 @@ resource "azurerm_container_app_environment" "stategraph" {
 
   lifecycle {
     ignore_changes = [
-      infrastructure_resource_group_name,
-      workload_profile,
+      infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan
+      workload_profile,                   # Otherwise Terraform forces the recreation at every plan
     ]
   }
 
@@ -158,7 +158,9 @@ resource "azurerm_container_app" "stategraph" {
   }
 
   lifecycle {
-    ignore_changes = [workload_profile_name]
+    ignore_changes = [
+      workload_profile_name # Otherwise Terraform forces the recreation at every plan
+    ]
   }
 
   depends_on = [
