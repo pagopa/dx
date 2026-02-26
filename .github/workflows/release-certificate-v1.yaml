@@ -37,7 +37,7 @@ concurrency:
 jobs:
   renew-certificate:
     name: Create or Renew Certificate
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: infra-${{ inputs.environment }}-cd
 
     steps:
