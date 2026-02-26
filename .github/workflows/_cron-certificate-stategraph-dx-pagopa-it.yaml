@@ -20,7 +20,7 @@ permissions:
 jobs:
   dev:
     name: "stategraph.dev.dx.pagopa.it"
-    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal || false }}
@@ -32,7 +32,7 @@ jobs:
 
   uat:
     name: stategraph.uat.dx.pagopa.it"
-    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     if: false
     with:
@@ -45,7 +45,7 @@ jobs:
 
   prod:
     name: stategraph.dx.pagopa.it
-    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     if: false
     with:
