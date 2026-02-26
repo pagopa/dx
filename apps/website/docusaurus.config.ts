@@ -29,6 +29,17 @@ const config: Config = {
   organizationName: "pagopa", // Usually your GitHub org/user name.
   plugins: [
     [
+      "@docusaurus/plugin-content-docs",
+      {
+        breadcrumbs: true,
+        id: "radar",
+        path: "radar",
+        routeBasePath: "radar",
+        sidebarPath: false,
+      },
+    ],
+    require.resolve("./src/plugins/radar-data-loader.ts"),
+    [
       "@docusaurus/plugin-client-redirects",
       {
         redirects: [
@@ -126,6 +137,10 @@ const config: Config = {
               label: "Start here",
               to: "/docs/",
             },
+            {
+              label: "Technology Radar",
+              to: "/radar",
+            },
           ],
           title: "Docs",
         },
@@ -163,6 +178,7 @@ const config: Config = {
     navbar: {
       items: [
         { label: "Docs", position: "left", to: "/docs" },
+        { label: "Radar", position: "left", to: "/radar" },
         { label: "Blog", position: "left", to: "/blog" },
         {
           className: "navbar-support-link",
