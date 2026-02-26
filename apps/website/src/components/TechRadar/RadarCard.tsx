@@ -40,6 +40,9 @@ export default function RadarCard({
           {meta?.label ?? ring}
         </span>
       </div>
+      {entry.description && (
+        <p className={styles.cardDescription}>{entry.description}</p>
+      )}
       <div className={styles.cardTags}>
         {entry.tags.map((tag) => (
           <span className={styles.cardTag} key={tag}>

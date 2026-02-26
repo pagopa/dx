@@ -5,6 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 
 interface RadarEntry {
+  readonly description: string;
   readonly ring: string;
   readonly slug: string;
   readonly tags: readonly string[];
@@ -42,9 +43,10 @@ export default function radarDataLoaderPlugin(
 
       const entries: RadarEntry[] = files.map((file) => {
         const raw = fs.readFileSync(path.join(radarDir, file), "utf-8");
-        const { data } = matter(raw);
+        const { content: body, data } = matter(raw);
         const slug = file.replace(/\.md$/, "");
         return {
+          description: extractDescription(body),
           ring: (data.ring as string) ?? "assess",
           slug,
           tags: (data.tags as string[]) ?? [],
@@ -62,18 +64,10 @@ export default function radarDataLoaderPlugin(
       const baseUrl = siteConfig.url.replace(/\/$/, "");
       const jsonEntries: RadarJsonEntry[] = (
         content as readonly RadarEntry[]
-      ).map((entry) => {
-        const raw = fs.readFileSync(
-          path.join(radarDir, `${entry.slug}.md`),
-          "utf-8",
-        );
-        const { content: body } = matter(raw);
-        return {
-          ...entry,
-          description: extractDescription(body),
-          ref: `${baseUrl}/radar/${entry.slug}`,
-        };
-      });
+      ).map((entry) => ({
+        ...entry,
+        ref: `${baseUrl}/radar/${entry.slug}`,
+      }));
       fs.writeFileSync(
         path.join(outDir, "radar.json"),
         JSON.stringify(jsonEntries, null, 2),

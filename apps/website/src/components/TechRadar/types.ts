@@ -1,4 +1,5 @@
 export interface RadarEntry {
+  readonly description: string;
   readonly ring: string;
   readonly slug: string;
   readonly tags: readonly string[];

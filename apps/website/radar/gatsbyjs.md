@@ -4,7 +4,7 @@ ring: hold
 tags: [frontend, framework]
 ---
 
-[GatsbyJS](https://www.gatsbyjs.org/)is a static site generator based on React.
+[GatsbyJS](https://www.gatsbyjs.org/) is a static site generator based on React.
 It is used to build static websites that are progressive web apps, follow the
 latest web standards, and are optimized to be highly performant.
 
