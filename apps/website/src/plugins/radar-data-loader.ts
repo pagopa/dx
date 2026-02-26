@@ -11,6 +11,10 @@ interface RadarEntry {
   readonly title: string;
 }
 
+interface RadarJsonEntry extends RadarEntry {
+  readonly ref: string;
+}
+
 /**
  * Docusaurus plugin that loads radar markdown frontmatter at build time
  * and makes metadata available to client components via global data.
@@ -50,5 +54,19 @@ export default function radarDataLoaderPlugin(
     },
 
     name: "radar-data-loader",
+
+    async postBuild({ content, outDir, siteConfig }) {
+      const baseUrl = siteConfig.url.replace(/\/$/, "");
+      const jsonEntries: RadarJsonEntry[] = (
+        content as readonly RadarEntry[]
+      ).map((entry) => ({
+        ...entry,
+        ref: `${baseUrl}/radar/${entry.slug}`,
+      }));
+      fs.writeFileSync(
+        path.join(outDir, "radar.json"),
+        JSON.stringify(jsonEntries, null, 2),
+      );
+    },
   };
 }
