@@ -20,7 +20,7 @@ jobs:
     uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     with:
-      force_renewal: ${{ inputs.force_renewal }}
+      force_renewal: ${{ inputs.force_renewal || false }}
       key_vault_name: "dx-d-itn-common-kv-01"
       csr_common_name: "stategraph.dev.dx.pagopa.it"
       dns_zone: "dev.dx.pagopa.it"
@@ -33,7 +33,7 @@ jobs:
     secrets: inherit
     if: false
     with:
-      force_renewal: ${{ inputs.force_renewal }}
+      force_renewal: ${{ inputs.force_renewal || false }}
       key_vault_name: "dx-u-itn-common-kv-01"
       csr_common_name: "stategraph.uat.dx.pagopa.it"
       dns_zone: "uat.dx.pagopa.it"
@@ -46,7 +46,7 @@ jobs:
     secrets: inherit
     if: false
     with:
-      force_renewal: ${{ inputs.force_renewal }}
+      force_renewal: ${{ inputs.force_renewal || false }}
       key_vault_name: "dx-u-itn-common-kv-01"
       csr_common_name: "stategraph.dx.pagopa.it"
       dns_zone: "dx.pagopa.it"
