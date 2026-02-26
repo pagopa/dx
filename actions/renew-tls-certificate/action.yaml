@@ -102,7 +102,7 @@ runs:
         elif [[ "$REQUIRE_NEW_CERT" == "true" ]]; then
           echo "renew_certificate=true" >> $GITHUB_OUTPUT
           echo "## 🔑 Renewal Status: REQUIRED" >> $GITHUB_STEP_SUMMARY
-          echo "**Verification successful.** The certificate will be renewed in the next step. ✅" >> $GITHUB_STEP_SUMMARY
+          echo "**Verification successful.** The certificate will be renewed in the next steps. ✅" >> $GITHUB_STEP_SUMMARY
         else
           echo "renew_certificate=false" >> $GITHUB_OUTPUT
           echo "## ✅ Renewal Status: NOT NEEDED" >> $GITHUB_STEP_SUMMARY
