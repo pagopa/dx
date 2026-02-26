@@ -1,7 +1,7 @@
 ---
 title: "AWS ECS Fargate"
 ring: adopt
-tags: [cloud, aws, serverless, compute]
+tags: [cloud, aws, serverless, computing]
 ---
 
 [AWS ECS Fargate](https://docs.aws.amazon.com/AmazonECS/latest/userguide/what-is-fargate.html)

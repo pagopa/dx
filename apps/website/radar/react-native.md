@@ -1,7 +1,7 @@
 ---
 title: "React Native"
 ring: adopt
-tags: [mobile, typescript, framework]
+tags: [mobile, typescript, react-native, framework]
 ---
 
 [React Native](https://reactnative.dev/) is a widely-used open-source mobile

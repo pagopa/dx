@@ -1,7 +1,7 @@
 ---
 title: "Azure API Management Service"
 ring: adopt
-tags: [cloud, azure, compute]
+tags: [cloud, azure, computing]
 ---
 
 [Azure API Management](https://learn.microsoft.com/en-us/azure/api-management/api-management-key-concepts)

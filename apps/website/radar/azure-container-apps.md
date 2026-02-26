@@ -1,7 +1,7 @@
 ---
 title: "Azure Container Apps"
 ring: trial
-tags: [cloud, azure, compute, dx]
+tags: [cloud, azure, computing, dx]
 ---
 
 [Azure Container Apps](https://azure.microsoft.com/en-us/products/container-apps/)

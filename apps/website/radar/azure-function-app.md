@@ -1,7 +1,7 @@
 ---
 title: "Azure Function App"
 ring: adopt
-tags: [cloud, azure, compute, dx]
+tags: [cloud, azure, computing, dx, serverless]
 ---
 
 [Azure Function App](https://azure.microsoft.com/en-us/products/functions) is a

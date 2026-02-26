@@ -1,7 +1,7 @@
 ---
 title: "Azure App Service"
 ring: adopt
-tags: [cloud, azure, compute, dx]
+tags: [cloud, azure, computing, dx]
 ---
 
 [Azure App Service](https://azure.microsoft.com/en-us/products/app-service) is a

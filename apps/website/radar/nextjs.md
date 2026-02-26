@@ -1,7 +1,7 @@
 ---
 title: "Next.js"
 ring: adopt
-tags: [frontend, web, typescript, framework]
+tags: [frontend, web, typescript, framework, react]
 ---
 
 [Next.js](https://nextjs.org/) is an open-source React front-end development web
