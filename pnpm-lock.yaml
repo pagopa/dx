@@ -129,6 +129,8 @@ importers:
 
   actions/make-artifact: {}
 
+  actions/opex-dashboard-generate: {}
+
   actions/pr-comment:
     dependencies:
       '@actions/core':
@@ -168,6 +170,8 @@ importers:
       vitest-mock-extended:
         specifier: 'catalog:'
         version: 3.1.0(typescript@5.8.3)(vitest@3.2.4)
+
+  actions/renew-tls-certificate: {}
 
   actions/setup-telemetry:
     dependencies:

@@ -17,35 +17,38 @@ permissions:
 jobs:
   dev:
     name: "stategraph.dev.dx.pagopa.it"
-    uses: ./.github/workflows/tls_certificate.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal }}
-      KEY_VAULT_NAME: "dx-d-itn-common-kv-01"
-      CSR_COMMON_NAME: "stategraph.dev.dx.pagopa.it"
-      DNS_ZONE: "dev.dx.pagopa.it"
-      DNS_ZONE_RESOURCE_GROUP: "dx-d-itn-network-rg-01"
+      key_vault_name: "dx-d-itn-common-kv-01"
+      csr_common_name: "stategraph.dev.dx.pagopa.it"
+      dns_zone: "dev.dx.pagopa.it"
+      dns_zone_resource_group: "dx-d-itn-network-rg-01"
+      environment: "dev"
 
   uat:
     name: stategraph.uat.dx.pagopa.it"
-    uses: ./.github/workflows/tls_certificate.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     if: false
     with:
       force_renewal: ${{ inputs.force_renewal }}
-      KEY_VAULT_NAME: "dx-u-itn-common-kv-01"
-      CSR_COMMON_NAME: "stategraph.uat.dx.pagopa.it"
-      DNS_ZONE: "uat.dx.pagopa.it"
-      DNS_ZONE_RESOURCE_GROUP: "dx-u-itn-network-rg-01"
+      key_vault_name: "dx-u-itn-common-kv-01"
+      csr_common_name: "stategraph.uat.dx.pagopa.it"
+      dns_zone: "uat.dx.pagopa.it"
+      dns_zone_resource_group: "dx-u-itn-network-rg-01"
+      environment: "uat"
 
   prod:
     name: stategraph.dx.pagopa.it
-    uses: ./.github/workflows/tls_certificate.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
+    uses: ./.github/workflows/release-tls-certificate-v1.yaml@CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
     secrets: inherit
     if: false
     with:
       force_renewal: ${{ inputs.force_renewal }}
-      KEY_VAULT_NAME: "dx-u-itn-common-kv-01"
-      CSR_COMMON_NAME: "stategraph.dx.pagopa.it"
-      DNS_ZONE: "dx.pagopa.it"
-      DNS_ZONE_RESOURCE_GROUP: "dx-u-itn-network-rg-01"
+      key_vault_name: "dx-u-itn-common-kv-01"
+      csr_common_name: "stategraph.dx.pagopa.it"
+      dns_zone: "dx.pagopa.it"
+      dns_zone_resource_group: "dx-u-itn-network-rg-01"
+      environment: "prod"
