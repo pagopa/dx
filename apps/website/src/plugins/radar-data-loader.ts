@@ -19,6 +19,7 @@ interface RadarJsonEntry extends RadarEntry {
 }
 
 const DESCRIPTION_MAX_LENGTH = 140;
+const DESCRIPTION_MIN_LENGTH = 12;
 
 /**
  * Docusaurus plugin that loads radar markdown frontmatter at build time
@@ -95,8 +96,10 @@ function extractDescription(markdown: string): string {
     .replace(/[*_`#>]/g, "")
     .replace(/\s+/g, " ")
     .trim();
-  // Take first sentence
-  const firstSentence = plain.match(/^[^.!?]+[.!?]/);
+  // Take first sentence, but ensure minimum length to avoid short snippets like "Next."
+  const firstSentence = plain.match(
+    new RegExp(`^.{${DESCRIPTION_MIN_LENGTH},}?[.!?]`),
+  );
   const snippet = firstSentence ? firstSentence[0].trim() : plain;
   if (snippet.length <= DESCRIPTION_MAX_LENGTH) {
     return snippet;
