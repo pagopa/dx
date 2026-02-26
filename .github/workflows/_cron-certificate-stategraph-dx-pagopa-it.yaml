@@ -3,6 +3,9 @@ name: stategraph.dx.pagopa.it TLS Certificate
 on:
   schedule:
     - cron: "0 2 * * 1,3"
+  push:
+    branches:
+      - CES-1726-assegnare-dns-alla-ca-che-hosta-stategraph
   workflow_dispatch:
     inputs:
       force_renewal:
