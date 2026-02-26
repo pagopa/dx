@@ -37,4 +37,4 @@ documentation.
 
 Many
 [microservices](https://github.com/search?q=org%3Apagopa+path%3A**%2Fpom.xml+spring-boot+&type=code)
-are written using Spring Boot in our Github organization
+are written using Spring Boot in our GitHub organization

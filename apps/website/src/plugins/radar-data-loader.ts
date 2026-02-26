@@ -3,17 +3,18 @@ import type { Plugin } from "@docusaurus/types";
 import matter from "gray-matter";
 import fs from "node:fs";
 import path from "node:path";
+import { z } from "zod";
 
-interface RadarEntry {
-  readonly description: string;
-  readonly ring: string;
-  readonly slug: string;
-  readonly tags: readonly string[];
-  readonly title: string;
-}
+import type { RadarEntry } from "../components/TechRadar/types";
+
+/** Zod schema to validate and coerce radar markdown frontmatter. */
+const FrontmatterSchema = z.object({
+  ring: z.enum(["adopt", "trial", "assess", "hold"]).default("assess"),
+  tags: z.array(z.string()).default([]),
+  title: z.string().optional(),
+});
 
 interface RadarJsonEntry extends RadarEntry {
-  readonly description: string;
   readonly ref: string;
 }
 
@@ -28,7 +29,7 @@ export default function radarDataLoaderPlugin(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _options: unknown,
 ): Plugin<readonly RadarEntry[]> {
-  const radarDir = path.join(context.siteDir, "radar");
+  const radarDir = path.join(context.siteDir, "radar-docs");
 
   return {
     async contentLoaded({ actions, content }) {
@@ -41,17 +42,27 @@ export default function radarDataLoaderPlugin(
         .readdirSync(radarDir)
         .filter((f) => f.endsWith(".md") && f !== "index.md");
 
-      const entries: RadarEntry[] = files.map((file) => {
+      const entries: RadarEntry[] = files.flatMap((file) => {
         const raw = fs.readFileSync(path.join(radarDir, file), "utf-8");
         const { content: body, data } = matter(raw);
         const slug = file.replace(/\.md$/, "");
-        return {
-          description: extractDescription(body),
-          ring: (data.ring as string) ?? "assess",
-          slug,
-          tags: (data.tags as string[]) ?? [],
-          title: (data.title as string) ?? slug,
-        };
+        const result = FrontmatterSchema.safeParse(data);
+        if (!result.success) {
+          console.warn(
+            `[radar-data-loader] Invalid frontmatter in ${file}: ${result.error.message}`,
+          );
+          return [];
+        }
+        const { ring, tags, title } = result.data;
+        return [
+          {
+            description: extractDescription(body),
+            ring,
+            slug,
+            tags,
+            title: title ?? slug,
+          },
+        ];
       });
 
       // Sort alphabetically by title
@@ -61,12 +72,12 @@ export default function radarDataLoaderPlugin(
     name: "radar-data-loader",
 
     async postBuild({ content, outDir, siteConfig }) {
-      const baseUrl = siteConfig.url.replace(/\/$/, "");
+      const siteBase = `${siteConfig.url.replace(/\/$/, "")}${siteConfig.baseUrl.replace(/\/$/, "")}`;
       const jsonEntries: RadarJsonEntry[] = (
         content as readonly RadarEntry[]
       ).map((entry) => ({
         ...entry,
-        ref: `${baseUrl}/radar/${entry.slug}`,
+        ref: `${siteBase}/radar/${entry.slug}`,
       }));
       fs.writeFileSync(
         path.join(outDir, "radar.json"),

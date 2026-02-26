@@ -33,7 +33,7 @@ const config: Config = {
       {
         breadcrumbs: true,
         id: "radar",
-        path: "radar",
+        path: "radar-docs",
         routeBasePath: "radar",
         sidebarPath: false,
       },

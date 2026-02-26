@@ -9,7 +9,7 @@ It is used to build static websites that are progressive web apps, follow the
 latest web standards, and are optimized to be highly performant.
 
 GatsbyJs was a good alternative to NextJS, but we prefer NextJS as it's easier
-to integrate with our existing ReactJS applications: GatsbyJs phylosophy of
+to integrate with our existing ReactJS applications: GatsbyJs philosophy of
 throwing GraphQL everywhere in the mix, makes things more complex than they
 could be.
 

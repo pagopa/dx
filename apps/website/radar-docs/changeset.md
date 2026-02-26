@@ -6,7 +6,7 @@ tags: [typescript, monorepo, frontend, backend, dx, tool]
 
 [Changeset](https://github.com/changesets/changesets)
 
-Changset is a tool to manage your versioning and changelogs with a focus on
+Changeset is a tool to manage your versioning and changelogs with a focus on
 monorepos. It is designed to work with any language, any package manager, and
 any codebase.
 

@@ -19,7 +19,7 @@ experience with several factors:
    code, providing explicit information about the expected data structures and
    formats. Developers can quickly understand the purpose and usage of functions
    and variables just by looking at their type annotations. This does not imply
-   comments become obsolete; on the opposite, they can focus on explaing the
+   comments become obsolete; on the opposite, they can focus on explaining the
    design choices.
 1. **Types require developers to reason about function inputs**: By specifying
    types for function parameters, TypeScript encourages developers to think

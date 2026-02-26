@@ -1,3 +1,4 @@
+import Link from "@docusaurus/Link";
 import React from "react";
 
 import type { RadarEntry, Ring } from "./types";
@@ -32,7 +33,7 @@ export default function RadarCard({
   const badgeClass = RING_BADGE_CLASS[ring] ?? "";
 
   return (
-    <a className={`${styles.card} ${cardClass}`} href={`/radar/${entry.slug}`}>
+    <Link className={`${styles.card} ${cardClass}`} to={`/radar/${entry.slug}`}>
       <div className={styles.cardHeader}>
         <span className={styles.cardTitle}>{entry.title}</span>
         <span className={`${styles.ringBadge} ${badgeClass}`}>
@@ -50,6 +51,6 @@ export default function RadarCard({
           </span>
         ))}
       </div>
-    </a>
+    </Link>
   );
 }

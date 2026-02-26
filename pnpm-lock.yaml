@@ -501,6 +501,9 @@ importers:
       react-dom:
         specifier: ^18.3.1
         version: 18.3.1(react@18.3.1)
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.5
     devDependencies:
       '@docusaurus/module-type-aliases':
         specifier: ^3.9.2

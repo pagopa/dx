@@ -63,14 +63,15 @@ based on Java.
 
 ### Reflection
 
-Native image compilation as some limitations regarding the usage of refelections
+Native image compilation as some limitations regarding the usage of reflections
 cause it need all class information at build time. To solve this issue the
-GraalVM community offers the "reachibility metadata" for the most common
+GraalVM community offers the "reachability metadata" for the most common
 libraries. Frameworks like SpringBoot and Quarkus also allows to generate
 metadata for reflections by using dedicated API, for example in Spring you can
 use
 [RuntimeHintsRegistrar](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.advanced.custom-hints).
-When there isn't reachibility metada for a particular library, GraalVM offers an
+When there isn't reachability metadata for a particular library, GraalVM offers
+an
 [agent](https://docs.spring.io/spring-boot/docs/current/reference/html/native-image.html#native-image.advanced.using-the-tracing-agent)
 to capture metadata.
 

@@ -16,13 +16,18 @@ export function useRadarFilters(entries: readonly RadarEntry[]) {
     [location.search],
   );
 
-  const [search, setSearch] = useState(params.get("q") ?? "");
-  const [activeRings, setActiveRings] = useState<ReadonlySet<Ring>>(() =>
-    parseRingsParam(params.get("rings")),
+  // Derive filter state directly from URL params so back/forward navigation
+  // automatically re-syncs the UI without additional effects.
+  const search = params.get("q") ?? "";
+  const activeRings = useMemo(
+    () => parseRingsParam(params.get("rings")),
+    [params],
   );
-  const [activeTags, setActiveTags] = useState<ReadonlySet<string>>(() =>
-    parseTagsParam(params.get("tags")),
+  const activeTags = useMemo(
+    () => parseTagsParam(params.get("tags")),
+    [params],
   );
+
   const [showAllTags, setShowAllTags] = useState(false);
 
   /** Push current filter state into the URL query string. */
@@ -87,40 +92,30 @@ export function useRadarFilters(entries: readonly RadarEntry[]) {
   }, [entries, activeRings, activeTags, search]);
 
   const toggleRing = (ring: Ring) => {
-    setActiveRings((prev) => {
-      const next = new Set(prev);
-      if (next.has(ring)) {
-        if (next.size > 1) next.delete(ring);
-      } else {
-        next.add(ring);
-      }
-      syncUrl(next, activeTags, search);
-      return next;
-    });
+    const next = new Set(activeRings);
+    if (next.has(ring)) {
+      if (next.size > 1) next.delete(ring);
+    } else {
+      next.add(ring);
+    }
+    syncUrl(next, activeTags, search);
   };
 
   const toggleTag = (tag: string) => {
-    setActiveTags((prev) => {
-      const next = new Set(prev);
-      if (next.has(tag)) {
-        next.delete(tag);
-      } else {
-        next.add(tag);
-      }
-      syncUrl(activeRings, next, search);
-      return next;
-    });
+    const next = new Set(activeTags);
+    if (next.has(tag)) {
+      next.delete(tag);
+    } else {
+      next.add(tag);
+    }
+    syncUrl(activeRings, next, search);
   };
 
   const handleSearchChange = (value: string) => {
-    setSearch(value);
     syncUrl(activeRings, activeTags, value);
   };
 
   const clearFilters = () => {
-    setSearch("");
-    setActiveRings(new Set(RING_ORDER));
-    setActiveTags(new Set());
     syncUrl(new Set(RING_ORDER), new Set(), "");
   };
 

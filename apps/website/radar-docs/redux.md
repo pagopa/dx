@@ -18,7 +18,7 @@ dispatching actions. Immutability guarantees predictability and facilitates
 debugging and testing. It's easy to trace back which action caused a change in
 the state, which reducer processed it and which result was yielded.
 
-An ecosystem of extentions is available to add additional functionalities such
+An ecosystem of extensions is available to add additional functionalities such
 as handling asynchronous operations, logging actions, persisting the store etc.
 Middlewares in particular can be used to extend Redux functionality by adding
 custom logic between dispatching an action and the moment it reaches the
@@ -32,7 +32,7 @@ reducer. Thus, allowing side effects like asynchronous API calls.
 - Manage the state of a single component or a group of components in a screen
   based on asynchronous operations such as API calls via middlewares like
   [redux-saga](https://redux-saga.js.org/).
-- Persist the state of the application between sessions via extentions like
+- Persist the state of the application between sessions via extensions like
   [redux-persist](https://github.com/rt2zz/redux-persist).
 
 ## Reference of usage in our organization

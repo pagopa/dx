@@ -55,7 +55,7 @@ From [Apple website](https://developer.apple.com/swift/):
 - Swift is currently the preferred language for
   [iOS development](https://developer.apple.com/tutorials/app-dev-training).
 - Swift is also used for [server-side development](https://swift.org/server/).
-  Se also [Vapor framework](https://vapor.codes/).
+  See also [Vapor framework](https://vapor.codes/).
 
 ## Reference of usage in our organization
 

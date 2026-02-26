@@ -6,7 +6,7 @@ tags: [typescript, tool]
 
 [Yarn](https://classic.yarnpkg.com/lang/en/) is an open-source package manager
 used to manage dependencies in JavaScript projects alternative to npm. We use
-it, intead of npm, in our Node, Next and React projects. The classic version is
+it, instead of npm, in our Node, Next and React projects. The classic version is
 on hold in favor of newer alternatives like [pnpm](./pnpm.md) that offer better
 performance and disk efficiency, and enforce strict dependency boundaries to
 avoid "ghost dependencies" issues.

@@ -36,7 +36,7 @@ Here are some advantages of using the Clean Architecture approach:
 
 ## Comparison with Hexagonal Architecture
 
-As Clean architecture, Heaxagonal architecture is a software design philosophy
+As Clean architecture, Hexagonal architecture is a software design philosophy
 that separates the concerns of the application into distinct layers.
 
 It is based on the idea of a "hexagon" with the core business logic at the
