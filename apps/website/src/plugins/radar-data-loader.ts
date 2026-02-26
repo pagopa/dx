@@ -12,8 +12,11 @@ interface RadarEntry {
 }
 
 interface RadarJsonEntry extends RadarEntry {
+  readonly description: string;
   readonly ref: string;
 }
+
+const DESCRIPTION_MAX_LENGTH = 140;
 
 /**
  * Docusaurus plugin that loads radar markdown frontmatter at build time
@@ -59,14 +62,39 @@ export default function radarDataLoaderPlugin(
       const baseUrl = siteConfig.url.replace(/\/$/, "");
       const jsonEntries: RadarJsonEntry[] = (
         content as readonly RadarEntry[]
-      ).map((entry) => ({
-        ...entry,
-        ref: `${baseUrl}/radar/${entry.slug}`,
-      }));
+      ).map((entry) => {
+        const raw = fs.readFileSync(
+          path.join(radarDir, `${entry.slug}.md`),
+          "utf-8",
+        );
+        const { content: body } = matter(raw);
+        return {
+          ...entry,
+          description: extractDescription(body),
+          ref: `${baseUrl}/radar/${entry.slug}`,
+        };
+      });
       fs.writeFileSync(
         path.join(outDir, "radar.json"),
         JSON.stringify(jsonEntries, null, 2),
       );
     },
   };
+}
+
+/** Extract a short plain-text snippet from markdown content. */
+function extractDescription(markdown: string): string {
+  // Strip markdown links, keeping link text
+  const plain = markdown
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[*_`#>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  // Take first sentence
+  const firstSentence = plain.match(/^[^.!?]+[.!?]/);
+  const snippet = firstSentence ? firstSentence[0].trim() : plain;
+  if (snippet.length <= DESCRIPTION_MAX_LENGTH) {
+    return snippet;
+  }
+  return `${snippet.slice(0, DESCRIPTION_MAX_LENGTH - 1)}…`;
 }
