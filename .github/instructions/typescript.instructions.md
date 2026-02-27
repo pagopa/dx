@@ -13,13 +13,15 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Do not access `process.env` outside an entrypoint; pass configuration through parameters.
 - Use `@pagopa/eslint-config` for consistent linting rules.
 - Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
+- Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
 - Add a short file header that states the module purpose.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
+- Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
 - Use `async/await` for asynchronous code for clarity.
 - Document non-obvious decisions and the rationale (the "why") in comments.
-- Follow existing naming and style conventions used in similar files.
+- Use clear and descriptive names for all identifiers, avoiding abbreviations that obscure intent.
 - Always validate external inputs and external data with zod schemas.
 - For new code, use zod v4; when editing existing code, keep that package's current zod major version until explicitly migrated.
 - Prefer `.safeParse()` for synchronous zod validation and handle both success and failure paths.

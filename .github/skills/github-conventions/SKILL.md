@@ -1,11 +1,17 @@
 ---
-description: This file describes general instructions for the project that apply to all file types.
-applyTo: "**"
+name: github-conventions
+description: Guidelines for pull request titles/descriptions, commit messages, and branch naming conventions. Use when preparing a pull request, committing changes, or creating a new branch to ensure consistency and readability in the repository history.
 ---
 
-# General Instructions for Code Generation
+# GitHub Conventions Skill
 
-Never commit code or open pull requests without being asked to do so.
+This skill provides comprehensive guidelines for maintainable and readable repository operations, including commit messages, pull requests, and branching strategies.
+
+## When to Use This Skill
+
+- When requested to **commit changes** or provide a **commit message**
+- When requested to **create a pull request** or write a **PR description**
+- When asked to **create or name a new branch**
 
 ## Pull Request Title and Description
 
