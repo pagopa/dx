@@ -6,7 +6,14 @@ type ReleaseTarget = {
   name: string;
   version: string;
   sourceFile: string;
+  type: "npm" | "maven";
+  isPrivate: boolean;
+  registry?: string;
 };
+
+function shellEscape(value: string): string {
+  return `'${value.replace(/'/g, `"'"'`)}'`;
+}
 
 function runCommand(command: string): string {
   return execSync(command, {
@@ -15,12 +22,24 @@ function runCommand(command: string): string {
   }).trim();
 }
 
-function getChangedFiles(): string[] {
-  const output = runCommand("git diff HEAD~1 --name-only");
+function listManifestFiles(): string[] {
+  const output = runCommand("git ls-files -- '**/package.json' '**/pom.xml'");
   return output
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
+}
+
+function isNpmRegistry(registry: string | undefined): boolean {
+  if (!registry) {
+    return true;
+  }
+
+  const normalized = registry.replace(/\/+$/, "").toLowerCase();
+  return (
+    normalized === "https://registry.npmjs.org" ||
+    normalized === "https://registry.yarnpkg.com"
+  );
 }
 
 function parsePackageJson(path: string): ReleaseTarget | null {
@@ -32,11 +51,24 @@ function parsePackageJson(path: string): ReleaseTarget | null {
     const pkg = JSON.parse(readFileSync(path, "utf8")) as {
       name?: string;
       version?: string;
+      private?: boolean;
+      publishConfig?: {
+        registry?: string;
+      };
     };
+
     if (!pkg.name || !pkg.version) {
       return null;
     }
-    return { name: pkg.name, version: pkg.version, sourceFile: path };
+
+    return {
+      name: pkg.name,
+      version: pkg.version,
+      sourceFile: path,
+      type: "npm",
+      isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
+      registry: pkg.publishConfig?.registry,
+    };
   } catch {
     return null;
   }
@@ -58,26 +90,35 @@ function parsePom(path: string): ReleaseTarget | null {
     return null;
   }
 
-  return { name, version, sourceFile: path };
+  return {
+    name,
+    version,
+    sourceFile: path,
+    type: "maven",
+    isPrivate: true,
+  };
 }
 
-function extractTargets(changedFiles: string[]): ReleaseTarget[] {
+function extractTargets(manifestFiles: string[]): ReleaseTarget[] {
   const seen = new Set<string>();
   const targets: ReleaseTarget[] = [];
 
-  for (const file of changedFiles) {
-    if (!file.endsWith("package.json") && !file.endsWith("pom.xml")) {
+  for (const file of manifestFiles) {
+    if (file === "actions/nx-release/package.json") {
       continue;
     }
 
     const target = file.endsWith("package.json")
       ? parsePackageJson(file)
-      : parsePom(file);
+      : file.endsWith("pom.xml")
+        ? parsePom(file)
+        : null;
+
     if (!target) {
       continue;
     }
 
-    const key = `${target.name}@${target.version}`;
+    const key = `${target.name}@${target.version}@${target.sourceFile}`;
     if (seen.has(key)) {
       continue;
     }
@@ -89,7 +130,7 @@ function extractTargets(changedFiles: string[]): ReleaseTarget[] {
   return targets;
 }
 
-function tagExists(tagName: string): boolean {
+function tagExistsLocally(tagName: string): boolean {
   try {
     execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
       stdio: "ignore",
@@ -100,8 +141,60 @@ function tagExists(tagName: string): boolean {
   }
 }
 
-function shellEscape(value: string): string {
-  return `'${value.replace(/'/g, `'"'"'`)}'`;
+function tagExistsOnRemote(tagName: string): boolean {
+  try {
+    const output = runCommand(
+      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`,
+    );
+    return output.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+function tagExists(tagName: string): boolean {
+  return tagExistsLocally(tagName) || tagExistsOnRemote(tagName);
+}
+
+function readNpmPublishedVersions(
+  packageName: string,
+  registry?: string,
+): string[] {
+  try {
+    const registryArg = registry ? ` --registry ${shellEscape(registry)}` : "";
+    const raw = runCommand(
+      `npm view ${shellEscape(packageName)} versions --json${registryArg}`,
+    );
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw) as string | string[];
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    if (typeof parsed === "string") {
+      return [parsed];
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
+}
+
+function shouldCreateTag(target: ReleaseTarget): boolean {
+  if (target.type === "maven" || target.isPrivate) {
+    return true;
+  }
+
+  const publishedVersions = readNpmPublishedVersions(
+    target.name,
+    target.registry,
+  );
+  return publishedVersions.includes(target.version);
 }
 
 function extractReleaseNotes(target: ReleaseTarget): string {
@@ -170,7 +263,7 @@ function appendOutput(key: string, value: string): void {
 }
 
 function run(): void {
-  const targets = extractTargets(getChangedFiles());
+  const targets = extractTargets(listManifestFiles());
   const createdTags: string[] = [];
 
   for (const target of targets) {
@@ -178,6 +271,14 @@ function run(): void {
 
     if (tagExists(tagName)) {
       console.log(`::notice::Tag ${tagName} already exists, skipping`);
+      continue;
+    }
+
+    const shouldTag = shouldCreateTag(target);
+    if (!shouldTag) {
+      console.log(
+        `::notice::Skipping ${tagName}: version not confirmed on npm registry yet`,
+      );
       continue;
     }
 

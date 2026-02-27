@@ -108,16 +108,6 @@ runs:
         echo "pull-request-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
-    - name: Create Git Tags and GitHub Releases
-      if: steps.intent.outputs.mode == 'publish'
-      id: tags
-      env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      shell: bash
-      run: |
-        set -euo pipefail
-        node "${{ github.action_path }}/scripts/dist/create-tags-releases.js"
-
     - name: Publish with Nx release
       if: steps.intent.outputs.mode == 'publish'
       id: publish
@@ -135,3 +125,13 @@ runs:
         npx nx release publish
 
         echo "published=true" >> "$GITHUB_OUTPUT"
+
+    - name: Sync Git Tags and GitHub Releases
+      if: steps.intent.outputs.mode == 'publish' && steps.publish.outputs.published == 'true'
+      id: tags
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        node "${{ github.action_path }}/scripts/dist/create-tags-releases.js"

@@ -8,8 +8,8 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
+    "lint": "eslint --fix scripts",
+    "lint:check": "eslint scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
