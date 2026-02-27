@@ -22,7 +22,7 @@ Always prefer explicit inputs over implicit environment variables for workflow a
 Maintain a clear distinction between internal and external dependencies.
 
 - **Internal DX Actions**: It is acceptable to use branch names like `main` or semantic tags for internal PagoPA DX actions during development or when they are part of the same lifecycle as the caller.
-- **External Actions**: **MUST** always be pinned to a specific version, ideally a full commit SHA. This protects the pipeline from supply chain attacks and prevents unexpected failures caused by upstream breaking changes.
+- **External Actions**: **MUST** always be pinned to a specific version using a full commit SHA. This protects the pipeline from supply chain attacks and prevents unexpected failures caused by upstream breaking changes.
 
 ### 3. Parameter Management
 
