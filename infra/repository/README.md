@@ -27,9 +27,9 @@
 | [github_actions_secret.le_regr_json](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
 | [github_actions_secret.slack_webhook_url](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
 | [github_repository_environment.automated_tests](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
-| [github_repository_environment.certificates_dev_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
-| [github_repository_environment.certificates_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
-| [github_repository_environment.certificates_uat_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.automation_dev_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.automation_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.automation_uat_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.npm_prod_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 
 ## Inputs
