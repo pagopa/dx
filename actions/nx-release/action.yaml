@@ -22,22 +22,6 @@ inputs:
     description: "Commit message for generated version bumps"
     required: false
     default: "chore: version packages"
-  version-command:
-    description: "Command used to consume version plans and generate version bumps/changelogs"
-    required: false
-    default: "npx nx release --preid rc --skip-publish"
-  lockfile-command:
-    description: "Command used to refresh lockfile after versioning"
-    required: false
-    default: "pnpm install --lockfile-only"
-  build-command:
-    description: "Build command executed before publish"
-    required: false
-    default: "npx nx run-many --target=build --projects=tag:npm:public"
-  publish-command:
-    description: "Publish command executed in publish mode"
-    required: false
-    default: "npx nx release publish"
 
 outputs:
   mode:
@@ -79,8 +63,6 @@ runs:
         RELEASE_BRANCH: ${{ inputs.release-branch }}
         PR_TITLE: ${{ inputs.pr-title }}
         COMMIT_MESSAGE: ${{ inputs.commit-message }}
-        VERSION_COMMAND: ${{ inputs.version-command }}
-        LOCKFILE_COMMAND: ${{ inputs.lockfile-command }}
         GH_TOKEN: ${{ inputs.github-token }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
@@ -90,10 +72,10 @@ runs:
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
 
         echo "::notice::Executing version command"
-        eval "$VERSION_COMMAND"
+        npx nx release --preid rc --skip-publish
 
         echo "::notice::Refreshing lockfile"
-        eval "$LOCKFILE_COMMAND"
+        pnpm install --lockfile-only
 
         # Check if any files changed
         if git diff HEAD --quiet; then
@@ -144,13 +126,12 @@ runs:
         NPM_CONFIG_PROVENANCE: true
         GITHUB_TOKEN: ${{ inputs.github-token }}
         BUILD_COMMAND: ${{ inputs.build-command }}
-        PUBLISH_COMMAND: ${{ inputs.publish-command }}
       run: |
         set -euo pipefail
         echo "::notice::Executing build command before publish"
-        eval "$BUILD_COMMAND"
+        npx nx run-many --target=build --projects=tag:npm:public
 
         echo "::notice::Executing publish command"
-        eval "$PUBLISH_COMMAND"
+        npx nx release publish
 
         echo "published=true" >> "$GITHUB_OUTPUT"
