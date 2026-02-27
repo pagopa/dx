@@ -154,6 +154,12 @@ resource "azurerm_container_app" "stategraph" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      workload_profile_name # Otherwise Terraform forces the recreation at every plan due to provider issue
+    ]
+  }
+
   depends_on = [
     azurerm_key_vault_secret.stategraph_postgres_password
   ]
@@ -165,5 +171,38 @@ resource "azurerm_role_assignment" "keyvault_ca" {
   scope                = var.key_vault.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_container_app.stategraph.identity[0].principal_id
-  description          = "Allow the Container App to read to secrets"
+  description          = "Allow the Container App to read to secrets and certificates"
+}
+
+resource "azurerm_role_assignment" "keyvault_cae" {
+  scope                = var.key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_container_app_environment.stategraph.identity[0].principal_id
+  description          = "Allow the Container App Environment to read to certificates"
+}
+
+locals {
+  stategraph_domain_name      = trim(azurerm_dns_cname_record.stategraph.fqdn, ".")
+  stategraph_certificate_name = replace(local.stategraph_domain_name, ".", "-")
+}
+
+resource "azurerm_container_app_environment_certificate" "stategraph" {
+  name                         = local.stategraph_certificate_name
+  container_app_environment_id = azurerm_container_app_environment.stategraph.id
+
+  certificate_key_vault {
+    identity            = "System"
+    key_vault_secret_id = "https://${var.key_vault.name}.vault.azure.net/secrets/${local.stategraph_certificate_name}"
+  }
+
+  depends_on = [azurerm_role_assignment.keyvault_cae]
+
+  tags = var.tags
+}
+
+resource "azurerm_container_app_custom_domain" "stategraph" {
+  name                                     = local.stategraph_domain_name
+  container_app_id                         = azurerm_container_app.stategraph.id
+  container_app_environment_certificate_id = azurerm_container_app_environment_certificate.stategraph.id
+  certificate_binding_type                 = "SniEnabled"
 }
