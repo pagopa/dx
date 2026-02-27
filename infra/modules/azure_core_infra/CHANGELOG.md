@@ -1,5 +1,11 @@
 # azure_core_infra
 
+## 2.3.2
+
+### Patch Changes
+
+- ada5499: Add delegation to GitHub runner subnet as required by Container App Environment with Workload Profiles
+
 ## 2.3.1
 
 ### Patch Changes

@@ -21,7 +21,10 @@ type InquirerChoice<T> = inquirer.Separator | { name: string; value: T };
 import { getLogger } from "@logtape/logtape";
 import { z } from "zod/v4";
 
-import { githubRepoSchema } from "../../../../domain/github-repo.js";
+import {
+  GitHubRepo,
+  githubRepoSchema,
+} from "../../../../domain/github-repo.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 
 const initSchema = z.object({
@@ -52,13 +55,14 @@ export type Payload = z.infer<typeof payloadSchema>;
 export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
+  github?: GitHubRepo;
 };
 
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (inquirer) => {
     const logger = getLogger(["gen", "env"]);
 
-    const github = await getGithubRepo();
+    const github = deps.github ?? (await getGithubRepo());
 
     assert.ok(github, "This generator only works inside a GitHub repository.");
 

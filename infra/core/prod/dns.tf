@@ -87,3 +87,36 @@ resource "azurerm_dns_ns_record" "uat_dx_pagopa_it" {
   ttl  = 300
   tags = local.tags
 }
+
+
+### Delegation from dx.pagopa.it to integration.dx.pagopa.it
+
+resource "azurerm_dns_ns_record" "integration_dx_pagopa_it" {
+  name                = "integration"
+  zone_name           = azurerm_dns_zone.dx_pagopa_it.name
+  resource_group_name = module.azure.network_resource_group_name
+  records = [
+    "ns1-01.azure-dns.com.",
+    "ns2-01.azure-dns.net.",
+    "ns3-01.azure-dns.org.",
+    "ns4-01.azure-dns.info."
+  ]
+  ttl  = 300
+  tags = local.tags
+}
+
+### Delegation from dx.pagopa.it to e2e.dx.pagopa.it
+
+resource "azurerm_dns_ns_record" "e2e_dx_pagopa_it" {
+  name                = "e2e"
+  zone_name           = azurerm_dns_zone.dx_pagopa_it.name
+  resource_group_name = module.azure.network_resource_group_name
+  records = [
+    "ns1-01.azure-dns.com.",
+    "ns2-01.azure-dns.net.",
+    "ns3-01.azure-dns.org.",
+    "ns4-01.azure-dns.info."
+  ]
+  ttl  = 300
+  tags = local.tags
+}

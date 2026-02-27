@@ -241,7 +241,10 @@ export const makeInitCommand = ({
             })
             .andThen((payload) =>
               ResultAsync.fromPromise(
-                runDeploymentEnvironmentGenerator(plop),
+                runDeploymentEnvironmentGenerator(plop, {
+                  owner: payload.repoOwner,
+                  repo: payload.repoName,
+                }),
                 handleGeneratorError,
               ).map(() => payload),
             ),

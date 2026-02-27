@@ -4,6 +4,8 @@ import {
   RetrievalResultLocation,
   RetrieveCommand,
 } from "@aws-sdk/client-bedrock-agent-runtime";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getLogger } from "@logtape/logtape";
 
 import { rerankingSupportedRegions } from "../config/aws.js";
@@ -12,6 +14,7 @@ export type QueryKnowledgeBasesOutput = {
   content: string;
   location?: RetrievalResultLocation;
   score: number;
+  sourceFileUrl?: string;
 };
 
 type RerankingModelName = "AMAZON" | "COHERE";
@@ -77,15 +80,29 @@ export async function queryKnowledgeBase(
   const results = response.retrievalResults || [];
   const documents: QueryKnowledgeBasesOutput[] = [];
 
+  // Create S3 client for pre-signed URLs (reuse region from Bedrock client)
+  const s3Client = new S3Client({ region: clientRegion });
+
   for (const result of results) {
     if (result.content?.type === "IMAGE") {
       logger.warn("Images are not supported at this time. Skipping...");
       continue;
     } else if (result.content?.text) {
+      // Generate pre-signed URL if S3 location is available
+      const preSignedUrl =
+        result.location?.type === "S3" && result.location.s3Location?.uri
+          ? await generatePreSignedUrl(
+              result.location.s3Location.uri,
+              s3Client,
+              logger,
+            )
+          : undefined;
+
       documents.push({
         content: result.content.text,
         location: resolveToWebsiteUrl(result.location),
         score: result.score || -1.0,
+        sourceFileUrl: preSignedUrl,
       });
     }
   }
@@ -145,15 +162,29 @@ export async function queryKnowledgeBaseStructured(
   const results = response.retrievalResults || [];
   const documents: QueryKnowledgeBasesOutput[] = [];
 
+  // Create S3 client for pre-signed URLs (reuse region from Bedrock client)
+  const s3Client = new S3Client({ region: clientRegion });
+
   for (const result of results) {
     if (result.content?.type === "IMAGE") {
       logger.warn("Images are not supported at this time. Skipping...");
       continue;
     } else if (result.content?.text) {
+      // Generate pre-signed URL if S3 location is available
+      const preSignedUrl =
+        result.location?.type === "S3" && result.location.s3Location?.uri
+          ? await generatePreSignedUrl(
+              result.location.s3Location.uri,
+              s3Client,
+              logger,
+            )
+          : undefined;
+
       documents.push({
         content: result.content.text,
         location: resolveToWebsiteUrl(result.location),
         score: result.score || -1.0,
+        sourceFileUrl: preSignedUrl,
       });
     }
   }
@@ -225,6 +256,33 @@ export function resolveToWebsiteUrl(
 }
 
 /**
+ * Generates a pre-signed URL for an S3 object.
+ * @param s3Uri The S3 URI in format s3://bucket/key
+ * @param s3Client The S3 client to use
+ * @param logger Logger instance
+ * @returns Pre-signed URL or undefined if generation fails
+ */
+async function generatePreSignedUrl(
+  s3Uri: string,
+  s3Client: S3Client,
+  logger: ReturnType<typeof getLogger>,
+): Promise<string | undefined> {
+  const match = s3Uri.match(/^s3:\/\/([^/]+)\/(.+)$/);
+  if (!match) {
+    return undefined;
+  }
+
+  const [, bucket, key] = match;
+  try {
+    const command = new GetObjectCommand({ Bucket: bucket, Key: key });
+    return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+  } catch (error) {
+    logger.warn(`Failed to generate pre-signed URL for ${s3Uri}: ${error}`);
+    return undefined;
+  }
+}
+
+/**
  * Serializes an array of knowledge base query results into a formatted string.
  * This method formats the results for better readability, including content, location, and score.
  *
@@ -262,9 +320,14 @@ function serializeResults(results: QueryKnowledgeBasesOutput[]): string {
       } else if (result.location) {
         locationStr = JSON.stringify(result.location);
       }
+
+      const sourceFileStr = result.sourceFileUrl
+        ? `\nSource File: ${result.sourceFileUrl}`
+        : "";
+
       return `Result ${index + 1} (Score: ${result.score.toFixed(4)}):\n${
         result.content
-      }\nLocation: ${locationStr}\n`;
+      }\nLocation: ${locationStr}${sourceFileStr}\n`;
     })
     .join("\n\n");
 }

@@ -8,6 +8,7 @@ import path from "node:path";
 import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
+import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
@@ -46,21 +47,21 @@ const validatePayload = async (
   }
 };
 
-export const getPlopInstance = async (): Promise<NodePlopAPI> => {
-  const plop = await nodePlop();
-  setMonorepoGenerator(plop);
-  setDeploymentEnvironmentGenerator(plop);
-  return plop;
-};
+export const getPlopInstance = async (): Promise<NodePlopAPI> => nodePlop();
 
 const runActions = async (generator: PlopGenerator, payload: Answers) => {
   const logger = getLogger(["dx-cli", "init"]);
   const result = await generator.runActions(payload);
   if (result.failures.length > 0) {
     for (const failure of result.failures) {
-      logger.error(failure.message);
+      if (failure.error === "Aborted due to previous action failure") {
+        continue;
+      }
+      logger.error(`Error on {type} step. ${failure.message}`, {
+        type: failure.type,
+      });
+      throw new Error("One or more actions failed during generation.");
     }
-    throw new Error("One or more actions failed during generation.");
   }
 };
 
@@ -68,6 +69,7 @@ export const runMonorepoGenerator = async (
   plop: NodePlopAPI,
   githubService: GitHubService,
 ): Promise<MonorepoPayload> => {
+  setMonorepoGenerator(plop);
   const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = monorepoPayloadSchema.parse(answers);
@@ -82,7 +84,9 @@ export const runMonorepoGenerator = async (
 
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
+  github: GitHubRepo,
 ): Promise<void> => {
+  setDeploymentEnvironmentGenerator(plop, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const payload = await generator.runPrompts();
   await oraPromise(runActions(generator, payload), {
@@ -92,7 +96,10 @@ export const runDeploymentEnvironmentGenerator = async (
   });
 };
 
-export const setDeploymentEnvironmentGenerator = (plop: NodePlopAPI) => {
+export const setDeploymentEnvironmentGenerator = (
+  plop: NodePlopAPI,
+  github: GitHubRepo,
+) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
@@ -107,5 +114,6 @@ export const setDeploymentEnvironmentGenerator = (plop: NodePlopAPI) => {
     templatesPath,
     cloudAccountRepository,
     cloudAccountService,
+    github,
   );
 };

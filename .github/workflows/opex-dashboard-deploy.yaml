@@ -1,0 +1,239 @@
+name: OpEx Dashboard Deploy
+
+on:
+  workflow_call:
+
+env:
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  OPEX_DASHBOARD_VERSION: "0.2.0"
+
+concurrency:
+  group: ${{ github.workflow }}-opex-dashboards
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate Dashboard Terraform
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      has_changes: ${{ steps.generate-action.outputs.has_changes }}
+      changed_directories: ${{ steps.generate-action.outputs.changed_directories }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Check if running from fork
+        env:
+          IS_FORK: ${{ github.event.repository.fork }}
+        run: |
+          if [ "$IS_FORK" = "true" ]; then
+            echo "::error::This workflow cannot be run from a forked repository"
+            exit 1
+          fi
+
+      # The standard DX Node.js setup action cannot be used here
+      # because it only runs on JavaScript projects with a configured package manager
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: 22
+
+      - name: Cache npm packages
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-npm-opex-${{ env.OPEX_DASHBOARD_VERSION }}
+          restore-keys: |
+            ${{ runner.os }}-npm-opex-
+            ${{ runner.os }}-npm-
+
+      - name: Generate dashboards
+        id: generate-action
+        uses: pagopa/dx/actions/opex-dashboard-generate@main
+        with:
+          config_pattern: ".opex/**/config.yaml"
+          opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
+          package_manager: "npm"
+
+      - name: Upload generated Terraform files
+        if: steps.generate-action.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: generated-terraform
+          path: ${{ steps.generate-action.outputs.artifacts_path }}
+          include-hidden-files: true
+          retention-days: 7
+
+  tf_plan:
+    name: Plan - ${{ matrix.dashboard.full_path }}
+    needs: generate
+    if: needs.generate.outputs.has_changes == 'true'
+    runs-on: "ubuntu-latest"
+    environment: opex-${{ matrix.dashboard.environment }}-ci
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+          path: .
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+      - name: Terraform Setup
+        id: set-terraform-version
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false -backend-config=backend.tfvars
+
+      - name: Generate artifact name
+        id: artifact-name
+        env:
+          DASHBOARD_PATH: ${{ matrix.dashboard.full_path }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          # Create a safe artifact name from the dashboard path
+          # Replace / and . with - to make it a valid artifact name
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.]/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Generated artifact name: ${ARTIFACT_NAME}"
+
+      - name: Terraform Plan
+        id: plan
+        working-directory: ${{ matrix.dashboard.full_path }}
+        # We use lock=false since the -ci environment cannot write to the state backend
+        run: |
+          set -o pipefail
+          terraform plan \
+            -lock=false \
+            -out="$TFPLAN_FILE" \
+            -input=false \
+            | tee plan_output.txt
+
+          # Extract summary line
+          SUMMARY=$(grep -E "Plan:|No changes" plan_output.txt | tail -1 || echo "Plan completed")
+          echo "summary_line=$SUMMARY" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-upload@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ matrix.dashboard.full_path }}
+          artifact-name: ${{ steps.artifact-name.outputs.name }}
+          retention-days: 1
+
+      - name: Check Terraform Plan Result
+        if: always() && steps.plan.outcome != 'success'
+        run: exit 1
+
+  tf_apply:
+    name: Apply - ${{ matrix.dashboard.full_path }}
+    needs: [generate, tf_plan]
+    # Only apply on pushes to the default branch (i.e., merged PRs); skip for PRs, forks, or any other branch
+    if: needs.generate.outputs.has_changes == 'true' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: "ubuntu-latest"
+    environment: opex-${{ matrix.dashboard.environment }}-cd
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        dashboard: ${{ fromJson(needs.generate.outputs.changed_directories) }}
+      fail-fast: false
+      max-parallel: 5
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TFPLAN_FILE: tfplan-${{ github.sha }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Generate artifact name
+        id: artifact-name
+        env:
+          DASHBOARD_PATH: ${{ matrix.dashboard.full_path }}
+          GIT_SHA: ${{ github.sha }}
+        run: |
+          # Create a safe artifact name from the dashboard path (same logic as in plan job)
+          # Replace / and . with - to make it a valid artifact name
+          SAFE_NAME=$(echo "${DASHBOARD_PATH}" | sed 's/[\/.]/-/g')
+          ARTIFACT_NAME="tfplan-${SAFE_NAME}-${GIT_SHA}"
+          echo "name=${ARTIFACT_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Generated artifact name: ${ARTIFACT_NAME}"
+
+      - name: Download generated Terraform files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: generated-terraform
+          path: .
+
+      - name: Download Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-download@main
+        env:
+          ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
+        with:
+          plan-file: tfplan-${{ github.sha }}
+          working-directory: ${{ matrix.dashboard.full_path }}
+          artifact-name: ${{ steps.artifact-name.outputs.name }}
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+      - name: Terraform Setup
+        id: set-terraform-version
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: terraform init -input=false -backend-config=backend.tfvars
+
+      - name: Terraform Apply
+        working-directory: ${{ matrix.dashboard.full_path }}
+        run: |
+          set -o pipefail
+          terraform apply \
+            -lock-timeout=120s \
+            -auto-approve \
+            -input=false \
+            "$TFPLAN_FILE"

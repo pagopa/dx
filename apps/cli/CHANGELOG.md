@@ -1,5 +1,17 @@
 # @pagopa/dx-cli
 
+## 0.16.3
+
+### Patch Changes
+
+- e63fe56: Add github provider to bootstrapper template
+
+## 0.16.2
+
+### Patch Changes
+
+- c442a4d: Fix issues on published package
+
 ## 0.16.1
 
 ### Patch Changes
