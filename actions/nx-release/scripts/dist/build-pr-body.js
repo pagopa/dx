@@ -1,11 +1,14 @@
-import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
-import { dirname, join } from 'path';
+import { execSync } from "child_process";
+import { existsSync, readFileSync } from "fs";
+import { dirname, join } from "path";
 
 // scripts/build-pr-body.ts
 function getChangedFiles() {
   const output = execSync("git diff --name-only", { encoding: "utf8" });
-  return output.split("\n").map((line) => line.trim()).filter(Boolean);
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 }
 function parsePackageJson(path) {
   if (!existsSync(path)) {
@@ -57,7 +60,9 @@ function resolveReleaseEntries(changedFiles) {
   }
   const entries = [];
   for (const manifestPath of manifestCandidates) {
-    const parsed = manifestPath.endsWith("package.json") ? parsePackageJson(manifestPath) : parsePom(manifestPath);
+    const parsed = manifestPath.endsWith("package.json")
+      ? parsePackageJson(manifestPath)
+      : parsePom(manifestPath);
     if (!parsed) {
       continue;
     }
@@ -65,7 +70,7 @@ function resolveReleaseEntries(changedFiles) {
     entries.push({
       name: parsed.name,
       version: parsed.version,
-      changelogPath
+      changelogPath,
     });
   }
   return entries.sort((a, b) => a.name.localeCompare(b.name));
@@ -98,7 +103,9 @@ function formatReleaseSection(entry) {
     output.push("");
     return output.join("\n");
   }
-  const bodyLines = sectionLines.slice(1).filter((line) => line.trim().length > 0);
+  const bodyLines = sectionLines
+    .slice(1)
+    .filter((line) => line.trim().length > 0);
   if (bodyLines.length === 0) {
     output.push("- No changelog entry found.");
     output.push("");
@@ -113,7 +120,7 @@ function buildBody(entries) {
     "This PR was opened by the [Changesets release](https://github.com/changesets/action) GitHub action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more changesets to main, this PR will be updated.",
     "",
     "# Releases",
-    ""
+    "",
   ];
   if (entries.length === 0) {
     return `${intro.join("\n")}See individual packages CHANGELOGs for details.`;

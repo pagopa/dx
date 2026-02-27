@@ -109,7 +109,6 @@ runs:
       env:
         NPM_CONFIG_PROVENANCE: true
         GITHUB_TOKEN: ${{ inputs.github-token }}
-        BUILD_COMMAND: ${{ inputs.build-command }}
       run: |
         set -euo pipefail
         echo "::notice::Executing build command before publish"
