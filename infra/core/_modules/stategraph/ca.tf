@@ -38,8 +38,6 @@ resource "azurerm_container_app_environment" "stategraph" {
   zone_redundancy_enabled    = true
 
   workload_profile {
-    maximum_count         = 1
-    minimum_count         = 1
     name                  = "Consumption"
     workload_profile_type = "Consumption"
   }
@@ -47,7 +45,6 @@ resource "azurerm_container_app_environment" "stategraph" {
   lifecycle {
     ignore_changes = [
       infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan due to provider issue
-      workload_profile                    # Otherwise Terraform forces the recreation at every plan due to provider issue
     ]
   }
 
