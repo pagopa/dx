@@ -8,6 +8,7 @@ type ReleaseEntry = {
   changelogPath: string;
 };
 
+/** Returns changed files in the current git working tree. */
 function getChangedFiles(): string[] {
   const output = execSync("git diff --name-only", { encoding: "utf8" });
   return output
@@ -16,6 +17,7 @@ function getChangedFiles(): string[] {
     .filter(Boolean);
 }
 
+/** Reads package name/version from a package.json file. */
 function parsePackageJson(
   path: string,
 ): { name: string; version: string } | null {
@@ -35,11 +37,13 @@ function parsePackageJson(
   }
 }
 
+/** Extracts the first regex capture group from text, if present. */
 function firstMatch(content: string, regex: RegExp): string {
   const match = content.match(regex);
   return match?.[1]?.trim() ?? "";
 }
 
+/** Reads artifact name/version from a Maven pom.xml file. */
 function parsePom(path: string): { name: string; version: string } | null {
   if (!existsSync(path)) {
     return null;
@@ -56,6 +60,7 @@ function parsePom(path: string): { name: string; version: string } | null {
   return { name, version };
 }
 
+/** Resolves release entries from changed manifests and changelog files. */
 function resolveReleaseEntries(changedFiles: string[]): ReleaseEntry[] {
   const manifestCandidates = new Set<string>();
 
@@ -98,6 +103,7 @@ function resolveReleaseEntries(changedFiles: string[]): ReleaseEntry[] {
   return entries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+/** Extracts the latest release section from a changelog file. */
 function extractLatestSection(changelogPath: string): string[] {
   if (!existsSync(changelogPath)) {
     return [];
@@ -120,6 +126,7 @@ function extractLatestSection(changelogPath: string): string[] {
   return lines.slice(firstHeading, end).map((line) => line.trimEnd());
 }
 
+/** Formats one package section for the release PR body. */
 function formatReleaseSection(entry: ReleaseEntry): string {
   const sectionLines = extractLatestSection(entry.changelogPath);
   const output: string[] = [];
@@ -148,6 +155,7 @@ function formatReleaseSection(entry: ReleaseEntry): string {
   return output.join("\n");
 }
 
+/** Builds the full release PR body with Changesets-like structure. */
 function buildBody(entries: ReleaseEntry[]): string {
   const intro = [
     "This PR was opened by the [Changesets release](https://github.com/changesets/action) GitHub action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more changesets to main, this PR will be updated.",
@@ -164,6 +172,7 @@ function buildBody(entries: ReleaseEntry[]): string {
   return `${intro.join("\n")}${sections.join("\n")}`.trim();
 }
 
+/** Main entrypoint: resolves entries, builds body, prints to stdout. */
 function run(): void {
   const changedFiles = getChangedFiles();
   const entries = resolveReleaseEntries(changedFiles);

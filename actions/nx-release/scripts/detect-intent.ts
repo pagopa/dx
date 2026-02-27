@@ -10,6 +10,7 @@ type GithubPushEvent = {
 
 const ZERO_SHA = "0000000000000000000000000000000000000000";
 
+/** Writes an output key/value for downstream GitHub Action steps. */
 function appendOutput(key: string, value: string): void {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (!outputPath) {
@@ -20,10 +21,12 @@ function appendOutput(key: string, value: string): void {
   );
 }
 
+/** Escapes shell arguments to avoid command injection and quoting issues. */
 function shellEscape(value: string): string {
   return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
+/** Reads the GitHub push event payload from GITHUB_EVENT_PATH. */
 function getEvent(): GithubPushEvent {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   if (!eventPath) {
@@ -38,6 +41,7 @@ function getEvent(): GithubPushEvent {
   }
 }
 
+/** Computes the git range to inspect for this workflow execution. */
 function computeRange(): { base: string; head: string } {
   const event = getEvent();
   const before = event.before ?? "";
@@ -50,6 +54,7 @@ function computeRange(): { base: string; head: string } {
   return { base: before, head: after || "HEAD" };
 }
 
+/** Detects which release mode should run based on changed files. */
 function detectMode(diffStatus: string): ReleaseMode {
   const hasPlanAddOrModify = diffStatus
     .split("\n")
@@ -74,6 +79,7 @@ function detectMode(diffStatus: string): ReleaseMode {
   return "noop";
 }
 
+/** Main entrypoint: inspects diff, detects mode, and exposes action output. */
 function run(): void {
   const { base, head } = computeRange();
   console.log(`::notice::Analyzing diff range ${base}..${head}`);

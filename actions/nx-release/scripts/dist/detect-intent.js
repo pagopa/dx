@@ -1,5 +1,5 @@
-import { execSync } from "child_process";
-import { readFileSync } from "fs";
+import { execSync } from 'child_process';
+import { readFileSync } from 'fs';
 
 // scripts/detect-intent.ts
 var ZERO_SHA = "0000000000000000000000000000000000000000";
@@ -10,7 +10,7 @@ function appendOutput(key, value) {
   }
   execSync(
     `printf '%s=%s
-' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
+' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`
   );
 }
 function shellEscape(value) {
@@ -38,15 +38,9 @@ function computeRange() {
   return { base: before, head: after || "HEAD" };
 }
 function detectMode(diffStatus) {
-  const hasPlanAddOrModify = diffStatus
-    .split("\n")
-    .some((line) => /^[AMR].*\.nx\/version-plans?\//.test(line));
-  const hasPlanDelete = diffStatus
-    .split("\n")
-    .some((line) => /^[DR].*\.nx\/version-plans?\//.test(line));
-  const hasVersionBump = diffStatus
-    .split("\n")
-    .some((line) => /^[AMR].*(package\.json|pom\.xml)$/.test(line));
+  const hasPlanAddOrModify = diffStatus.split("\n").some((line) => /^[AMR].*\.nx\/version-plans?\//.test(line));
+  const hasPlanDelete = diffStatus.split("\n").some((line) => /^[DR].*\.nx\/version-plans?\//.test(line));
+  const hasVersionBump = diffStatus.split("\n").some((line) => /^[AMR].*(package\.json|pom\.xml)$/.test(line));
   if (hasPlanAddOrModify) {
     return "create-pr";
   }
@@ -62,18 +56,18 @@ function run() {
     `git diff --name-status ${shellEscape(base)} ${shellEscape(head)}`,
     {
       encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    },
+      stdio: ["ignore", "pipe", "pipe"]
+    }
   );
   const mode = detectMode(diffStatus);
   appendOutput("mode", mode);
   if (mode === "create-pr") {
     console.log(
-      "::notice::Detected new/modified Nx version plans on main. Mode: create-pr",
+      "::notice::Detected new/modified Nx version plans on main. Mode: create-pr"
     );
   } else if (mode === "publish") {
     console.log(
-      "::notice::Detected consumed version plans and version bumps. Mode: publish",
+      "::notice::Detected consumed version plans and version bumps. Mode: publish"
     );
   } else {
     console.log("::notice::No Nx release action required. Mode: noop");

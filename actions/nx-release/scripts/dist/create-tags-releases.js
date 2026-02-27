@@ -1,6 +1,6 @@
-import { execSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
-import { join, dirname } from "path";
+import { execSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
+import { join, dirname } from 'path';
 
 // scripts/create-tags-releases.ts
 function shellEscape(value) {
@@ -9,25 +9,19 @@ function shellEscape(value) {
 function runCommand(command) {
   return execSync(command, {
     encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
+    stdio: ["ignore", "pipe", "pipe"]
   }).trim();
 }
 function listManifestFiles() {
   const output = runCommand("git ls-files -- '**/package.json' '**/pom.xml'");
-  return output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  return output.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 function isNpmRegistry(registry) {
   if (!registry) {
     return true;
   }
   const normalized = registry.replace(/\/+$/, "").toLowerCase();
-  return (
-    normalized === "https://registry.npmjs.org" ||
-    normalized === "https://registry.yarnpkg.com"
-  );
+  return normalized === "https://registry.npmjs.org" || normalized === "https://registry.yarnpkg.com";
 }
 function parsePackageJson(path) {
   if (!existsSync(path)) {
@@ -44,7 +38,7 @@ function parsePackageJson(path) {
       sourceFile: path,
       type: "npm",
       isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
-      registry: pkg.publishConfig?.registry,
+      registry: pkg.publishConfig?.registry
     };
   } catch {
     return null;
@@ -68,7 +62,7 @@ function parsePom(path) {
     version,
     sourceFile: path,
     type: "maven",
-    isPrivate: true,
+    isPrivate: true
   };
 }
 function extractTargets(manifestFiles) {
@@ -78,11 +72,7 @@ function extractTargets(manifestFiles) {
     if (file === "actions/nx-release/package.json") {
       continue;
     }
-    const target = file.endsWith("package.json")
-      ? parsePackageJson(file)
-      : file.endsWith("pom.xml")
-        ? parsePom(file)
-        : null;
+    const target = file.endsWith("package.json") ? parsePackageJson(file) : file.endsWith("pom.xml") ? parsePom(file) : null;
     if (!target) {
       continue;
     }
@@ -98,7 +88,7 @@ function extractTargets(manifestFiles) {
 function tagExistsLocally(tagName) {
   try {
     execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
-      stdio: "ignore",
+      stdio: "ignore"
     });
     return true;
   } catch {
@@ -108,7 +98,7 @@ function tagExistsLocally(tagName) {
 function tagExistsOnRemote(tagName) {
   try {
     const output = runCommand(
-      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`,
+      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`
     );
     return output.length > 0;
   } catch {
@@ -122,7 +112,7 @@ function readNpmPublishedVersions(packageName, registry) {
   try {
     const registryArg = registry ? ` --registry ${shellEscape(registry)}` : "";
     const raw = runCommand(
-      `npm view ${shellEscape(packageName)} versions --json${registryArg}`,
+      `npm view ${shellEscape(packageName)} versions --json${registryArg}`
     );
     if (!raw) {
       return [];
@@ -145,7 +135,7 @@ function shouldCreateTag(target) {
   }
   const publishedVersions = readNpmPublishedVersions(
     target.name,
-    target.registry,
+    target.registry
   );
   return publishedVersions.includes(target.version);
 }
@@ -156,7 +146,7 @@ function extractReleaseNotes(target) {
   }
   const lines = readFileSync(changelog, "utf8").split("\n");
   const versionPattern = new RegExp(
-    `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
+    `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`
   );
   let start = -1;
   for (let index = 0; index < lines.length; index += 1) {
@@ -183,10 +173,10 @@ function createGitHubRelease(tagName, notes, prerelease) {
     execSync(`gh release view ${shellEscape(tagName)}`, { stdio: "ignore" });
     console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
     return;
-  } catch {}
+  } catch {
+  }
   const prereleaseFlag = prerelease ? "--prerelease" : "";
-  const command =
-    `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
+  const command = `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
   execSync(command, { stdio: "inherit" });
 }
 function appendOutput(key, value) {
@@ -196,7 +186,7 @@ function appendOutput(key, value) {
   }
   execSync(
     `printf '%s=%s
-' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
+' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`
   );
 }
 function run() {
@@ -211,7 +201,7 @@ function run() {
     const shouldTag = shouldCreateTag(target);
     if (!shouldTag) {
       console.log(
-        `::notice::Skipping ${tagName}: version not confirmed on npm registry yet`,
+        `::notice::Skipping ${tagName}: version not confirmed on npm registry yet`
       );
       continue;
     }
@@ -219,8 +209,8 @@ function run() {
     execSync(
       `git tag -a ${shellEscape(tagName)} -m ${shellEscape(`Release ${target.name} ${target.version}`)}`,
       {
-        stdio: "inherit",
-      },
+        stdio: "inherit"
+      }
     );
     createdTags.push(tagName);
   }
