@@ -50,12 +50,10 @@ This action automates the Nx release flow in two phases:
 
 ## Outputs
 
-| Output                | Description                                                  |
-| --------------------- | ------------------------------------------------------------ |
-| `mode`                | Detected mode: `create-pr`, `publish`, or `noop`             |
-| `pull-request-number` | PR number created/updated for Version Packages               |
-| `pull-request-url`    | PR URL created/updated for Version Packages                  |
-| `published`           | Whether publish command ran successfully (`true` or `false`) |
+| Output                | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| `pull-request-number` | PR number created/updated for Version Packages |
+| `pull-request-url`    | PR URL created/updated for Version Packages    |
 
 ## Prerequisites
 

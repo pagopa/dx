@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch: # Remove after testing
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 

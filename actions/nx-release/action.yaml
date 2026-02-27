@@ -24,18 +24,12 @@ inputs:
     default: "chore: version packages"
 
 outputs:
-  mode:
-    description: "Detected mode for this run: create-pr | publish | noop"
-    value: ${{ steps.intent.outputs.mode }}
   pull-request-number:
     description: "PR number created/updated for Version Packages"
     value: ${{ steps.create-pr.outputs.pull-request-number }}
   pull-request-url:
     description: "PR URL created/updated for Version Packages"
     value: ${{ steps.create-pr.outputs.pull-request-url }}
-  published:
-    description: "Whether publish command ran successfully"
-    value: ${{ steps.publish.outputs.published || 'false' }}
 
 runs:
   using: "composite"
