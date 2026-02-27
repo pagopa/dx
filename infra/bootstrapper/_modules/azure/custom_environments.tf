@@ -15,3 +15,17 @@ resource "github_actions_environment_secret" "integration_tests_subscription_id"
   secret_name     = "ARM_SUBSCRIPTION_ID"
   plaintext_value = module.bootstrap.subscription_id
 }
+
+resource "github_actions_environment_secret" "certificates_cd_client_id" {
+  repository      = var.repository.name
+  environment     = "certificates-${local.env_long}-cd"
+  secret_name     = "ARM_CLIENT_ID"
+  plaintext_value = module.bootstrap.identities.infra.cd.client_id
+}
+
+resource "github_actions_environment_secret" "certificates_cd_subscription_id" {
+  repository      = var.repository.name
+  environment     = "certificates-${local.env_long}-cd"
+  secret_name     = "ARM_SUBSCRIPTION_ID"
+  plaintext_value = module.bootstrap.subscription_id
+}
