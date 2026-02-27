@@ -1,0 +1,180 @@
+Here’s a compact, copy-pasteable Terraform root module (provider, variables, resources, outputs), a suggested folder layout, and version hints. Short and friendly — happy to expand this into reusable modules if you want.
+
+File: main.tf
+```hcl
+terraform {
+  required_version = ">= 1.3.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 3.0"   # pin to latest 3.x (or bump to a specific 4.x if desired)
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+}
+
+resource "azurerm_resource_group" "rg" {
+  name     = "${var.prefix}-rg"
+  location = var.location
+}
+
+resource "azurerm_storage_account" "sa" {
+  name                     = lower(substr("${var.prefix}sa", 0, 24))
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = azurerm_resource_group.rg.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_app_service_plan" "plan" {
+  name                = "${var.prefix}-plan"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  kind                = "FunctionApp"
+  reserved            = true
+
+  sku {
+    tier = "Dynamic"
+    size = "Y1"   # consumption
+  }
+}
+
+resource "azurerm_linux_function_app" "func" {
+  name                = "${var.prefix}-func"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  service_plan_id     = azurerm_app_service_plan.plan.id
+
+  storage_account_name       = azurerm_storage_account.sa.name
+  storage_account_access_key = azurerm_storage_account.sa.primary_access_key
+
+  site_config {
+    linux_fx_version = "NODE|18"   # change node version as needed
+  }
+
+  app_settings = {
+    FUNCTIONS_EXTENSION_VERSION = "~4"
+    WEBSITE_RUN_FROM_PACKAGE    = var.function_package_url
+    APPINSIGHTS_INSTRUMENTATIONKEY = var.app_insights_key
+  }
+}
+
+resource "random_password" "pg_password" {
+  length  = 16
+  special = true
+  override_characters = "!@#"
+}
+
+resource "azurerm_postgresql_flexible_server" "pg" {
+  name                = "${var.prefix}-pg"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+
+  administrator_login          = var.postgres_admin
+  administrator_password       = coalesce(var.postgres_password, random_password.pg_password.result)
+  version                      = var.postgres_version
+  delegated_subnet_id          = null
+
+  storage {
+    storage_size_gb = 32
+  }
+
+  sku_name = "GP_Gen5_2"  # example; pick size appropriate for your needs
+
+  network {
+    public_network_access_enabled = true
+  }
+}
+```
+
+File: variables.tf
+```hcl
+variable "prefix" {
+  type    = string
+  default = "demo"
+  description = "Short prefix used for naming resources (lowercase, alphanumeric)."
+}
+
+variable "location" {
+  type    = string
+  default = "westeurope"
+}
+
+variable "function_package_url" {
+  type    = string
+  default = ""
+  description = "Optional URL to a zipped Function package (WEBSITE_RUN_FROM_PACKAGE)."
+}
+
+variable "app_insights_key" {
+  type    = string
+  default = ""
+  description = "Optional AppInsights instrumentation key."
+}
+
+variable "postgres_admin" {
+  type    = string
+  default = "pgadmin"
+}
+
+variable "postgres_password" {
+  type    = string
+  default = ""
+  description = "Optional: provide to avoid auto-generated password (sensitive)."
+  sensitive = true
+}
+
+variable "postgres_version" {
+  type    = string
+  default = "13"
+}
+```
+
+File: outputs.tf
+```hcl
+output "resource_group" {
+  value = azurerm_resource_group.rg.name
+}
+
+output "storage_account_name" {
+  value = azurerm_storage_account.sa.name
+}
+
+output "function_default_hostname" {
+  value = azurerm_linux_function_app.func.default_hostname
+}
+
+output "postgres_fqdn" {
+  value = azurerm_postgresql_flexible_server.pg.fqdn
+}
+
+output "postgres_connection_string" {
+  value     = format("postgresql://%s:%s@%s:5432/postgres?sslmode=require",
+                     azurerm_postgresql_flexible_server.pg.administrator_login,
+                     coalesce(var.postgres_password, random_password.pg_password.result),
+                     azurerm_postgresql_flexible_server.pg.fqdn)
+  sensitive = true
+}
+```
+
+Suggested folder layout
+- infra/
+  - terraform/
+    - main.tf
+    - variables.tf
+    - outputs.tf
+    - modules/
+      - function_app/   (optional for splitting Function + infra)
+      - postgres/       (optional)
+      - storage/
+
+Recommended versions (short)
+- Terraform CLI: >= 1.3.0 (use latest 1.x)
+- Provider: azurerm "~> 3.0" (or pin to a tested specific 3.x/4.x you use in prod)
+- Use azurerm_linux_function_app resource (provider 3.x+); prefer PostgreSQL Flexible Server for managed deployments
+
+If you want, convert Function/Postgres/Storage into reusable modules and I’ll scaffold them.
+

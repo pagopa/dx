@@ -1,0 +1,13 @@
+Canonical prompt (use for all experiments):
+
+Create from scratch a PagoPA DX-compliant infrastructure for an application
+that requires:
+
+- A Function App (Linux) that reads/writes to an Azure Storage Account
+- Resources named using `provider::dx::resource_name()` conventions
+- Required tags: `CostCenter`, `CreatedBy`, `Environment`, `BusinessUnit`, `ManagementTeam`
+- Secrets stored in Key Vault (use Key Vault references for AppSettings)
+- Networking: Virtual Network and subnets; prefer `dx_available_subnet_cidr` for subnet allocation
+- Use DX Registry modules (`pagopa-dx/*`) when available; pin versions using `~> major.minor`
+
+Provide Terraform code organized in `infra/resources/prod/` style, with a short explanation of choices and references to DX docs used.

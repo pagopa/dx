@@ -1,0 +1,13 @@
+checks:
+  - id: terraform_validate
+    description: "terraform init -backend=false && terraform validate"
+  - id: naming
+    description: "provider::dx::resource_name() usage"
+  - id: tags
+    description: "Required tags present"
+  - id: keyvault
+    description: "Key Vault references used for secrets"
+  - id: subnet
+    description: "dx_available_subnet_cidr used where applicable"
+  - id: modules
+    description: "pagopa-dx modules used and pinned with ~> major.minor"

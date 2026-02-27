@@ -1,0 +1,9 @@
+Devi risolvere il seguente task Terraform usando esclusivamente la skill "terraform-dx-best-practices-mcp".
+
+Task:
+Sto iniziando un nuovo progetto. Mi serve un esempio di root module Terraform per:
+- una Function App Node.js
+- uno Storage Account
+- un Database PostgreSQL
+
+Spiega brevemente come la skill "terraform-dx-best-practices-mcp" accede alla documentazione e poi genera il risultato.

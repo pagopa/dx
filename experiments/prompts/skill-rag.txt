@@ -1,0 +1,5 @@
+Sto iniziando un nuovo progetto. Usa la DX Search API per trovare le best practice Terraform più aggiornate e generami un root module per:
+- Function App Node.js
+- Storage Account
+- Database PostgreSQL
+Cita le fonti usate.

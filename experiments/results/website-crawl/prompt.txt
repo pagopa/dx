@@ -1,0 +1,13 @@
+Devi risolvere il seguente task Terraform usando esclusivamente la skill "terraform-dx-best-practices-website-crawl".
+È OBBLIGATORIO usare lo strumento fetch_webpage per recuperare ogni informazione: NON puoi usare conoscenza interna, memoria, o altre skill. Ogni dettaglio, esempio o best practice deve essere ottenuto tramite fetch_webpage sulle pagine del sito https://dx.pagopa.it/docs/terraform/ e link interni. Se fetch_webpage non è disponibile, rispondi che non puoi completare il task.
+
+Task:
+Sto iniziando un nuovo progetto. Mi serve un esempio di root module Terraform per:
+- una Function App Node.js
+- uno Storage Account
+- un Database Cosmos DB
+
+Scrivi direttamente i file Terraform generati nella cartella output di questo esperimento (
+/Users/christian.calabrese/Desktop/repository/dx/experiments/results/website-crawl/output). Se necessario, crea la struttura di file e sottocartelle. Includi README.md e ogni file utile. Non scrivere il risultato in output.txt, ma solo nei file nella cartella output.
+
+Spiega brevemente come la skill "terraform-dx-best-practices-website-crawl" accede alla documentazione e poi genera il risultato.
