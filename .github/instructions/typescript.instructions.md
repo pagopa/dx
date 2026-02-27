@@ -13,7 +13,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Do not access `process.env` outside an entrypoint; pass configuration through parameters.
 - Use `@pagopa/eslint-config` for consistent linting rules.
 - Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
-- Adhere to Clean Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
+- Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
 - Add a short file header that states the module purpose.
