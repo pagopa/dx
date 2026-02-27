@@ -64,6 +64,15 @@ variable "admins" {
   description = "List of admin object IDs for PostgreSQL flexible server."
 }
 
+variable "dns" {
+  type = object({
+    zone_name           = string
+    resource_group_name = string
+  })
+
+  description = "DNS configuration for the Stategraph environment."
+}
+
 variable "tags" {
   type        = map(any)
   description = "Map of tags to apply to all created resources."
