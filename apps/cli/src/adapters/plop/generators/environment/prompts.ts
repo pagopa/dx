@@ -223,15 +223,6 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       }
     }
 
-    if (missingRemoteBackend && payload.env.cloudAccounts.length > 1) {
-      questions.push({
-        choices: getCloudAccountChoices(payload.env.cloudAccounts),
-        message: "Cloud Account to use for the remote Terraform backend",
-        name: "terraformBackend.cloudAccount",
-        type: "list",
-      });
-    }
-
     const cloudAccountsNotInitialized = initStatus.issues.some(
       (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
     );
