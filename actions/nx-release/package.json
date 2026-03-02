@@ -22,8 +22,10 @@
   ],
   "license": "UNLICENSED",
   "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node22": "catalog:",
     "@types/node": "catalog:",
+    "eslint": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"

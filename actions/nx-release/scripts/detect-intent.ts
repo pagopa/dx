@@ -1,12 +1,12 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 
-type ReleaseMode = "create-pr" | "publish" | "noop";
-
-type GithubPushEvent = {
-  before?: string;
+interface GithubPushEvent {
   after?: string;
-};
+  before?: string;
+}
+
+type ReleaseMode = "create-pr" | "noop" | "publish";
 
 const ZERO_SHA = "0000000000000000000000000000000000000000";
 
@@ -19,26 +19,6 @@ function appendOutput(key: string, value: string): void {
   execSync(
     `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
   );
-}
-
-/** Escapes shell arguments to avoid command injection and quoting issues. */
-function shellEscape(value: string): string {
-  return `'${value.replace(/'/g, `'"'"'`)}'`;
-}
-
-/** Reads the GitHub push event payload from GITHUB_EVENT_PATH. */
-function getEvent(): GithubPushEvent {
-  const eventPath = process.env.GITHUB_EVENT_PATH;
-  if (!eventPath) {
-    return {};
-  }
-
-  try {
-    const raw = readFileSync(eventPath, "utf8");
-    return JSON.parse(raw) as GithubPushEvent;
-  } catch {
-    return {};
-  }
 }
 
 /** Computes the git range to inspect for this workflow execution. */
@@ -79,6 +59,21 @@ function detectMode(diffStatus: string): ReleaseMode {
   return "noop";
 }
 
+/** Reads the GitHub push event payload from GITHUB_EVENT_PATH. */
+function getEvent(): GithubPushEvent {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath) {
+    return {};
+  }
+
+  try {
+    const raw = readFileSync(eventPath, "utf8");
+    return JSON.parse(raw) as GithubPushEvent;
+  } catch {
+    return {};
+  }
+}
+
 /** Main entrypoint: inspects diff, detects mode, and exposes action output. */
 function run(): void {
   const { base, head } = computeRange();
@@ -106,6 +101,11 @@ function run(): void {
   } else {
     console.log("::notice::No Nx release action required. Mode: noop");
   }
+}
+
+/** Escapes shell arguments to avoid command injection and quoting issues. */
+function shellEscape(value: string): string {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
 run();

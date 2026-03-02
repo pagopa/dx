@@ -52,7 +52,6 @@ runs:
       id: create-pr
       shell: bash
       env:
-        NPM_CONFIG_PROVENANCE: true
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_BRANCH: ${{ inputs.release-branch }}
         PR_TITLE: ${{ inputs.pr-title }}

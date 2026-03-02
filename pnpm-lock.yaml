@@ -131,12 +131,18 @@ importers:
 
   actions/nx-release:
     devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
       '@tsconfig/node22':
         specifier: 'catalog:'
         version: 22.0.2
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.1
+      eslint:
+        specifier: 'catalog:'
+        version: 9.39.2(jiti@2.6.0)
       prettier:
         specifier: 'catalog:'
         version: 3.6.2

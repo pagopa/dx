@@ -2,212 +2,45 @@ import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
-type ReleaseTarget = {
-  name: string;
-  version: string;
-  sourceFile: string;
-  type: "npm" | "maven";
+interface ReleaseTarget {
   isPrivate: boolean;
+  name: string;
   registry?: string;
-};
-
-/** Escapes shell arguments to keep subprocess invocations safe. */
-function shellEscape(value: string): string {
-  return `'${value.replace(/'/g, `"'"'`)}'`;
+  sourceFile: string;
+  type: "maven" | "npm";
+  version: string;
 }
 
-/** Executes a command and returns trimmed stdout. */
-function runCommand(command: string): string {
-  return execSync(command, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"],
-  }).trim();
-}
-
-/** Lists tracked manifest files (package.json and pom.xml) in the repo. */
-function listManifestFiles(): string[] {
-  const output = runCommand("git ls-files -- '**/package.json' '**/pom.xml'");
-  return output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-/** Checks whether a registry URL is npm-compatible (public npm/yarn mirrors). */
-function isNpmRegistry(registry: string | undefined): boolean {
-  if (!registry) {
-    return true;
+/** Writes an output key/value for downstream GitHub Action steps. */
+function appendOutput(key: string, value: string): void {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (!outputPath) {
+    return;
   }
 
-  const normalized = registry.replace(/\/+$/, "").toLowerCase();
-  return (
-    normalized === "https://registry.npmjs.org" ||
-    normalized === "https://registry.yarnpkg.com"
+  execSync(
+    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
   );
 }
 
-/** Parses an npm package manifest into an internal release target model. */
-function parsePackageJson(path: string): ReleaseTarget | null {
-  if (!existsSync(path)) {
-    return null;
-  }
-
+/** Creates a GitHub release for a tag if it does not already exist. */
+function createGitHubRelease(
+  tagName: string,
+  notes: string,
+  prerelease: boolean,
+): void {
   try {
-    const pkg = JSON.parse(readFileSync(path, "utf8")) as {
-      name?: string;
-      version?: string;
-      private?: boolean;
-      publishConfig?: {
-        registry?: string;
-      };
-    };
-
-    if (!pkg.name || !pkg.version) {
-      return null;
-    }
-
-    return {
-      name: pkg.name,
-      version: pkg.version,
-      sourceFile: path,
-      type: "npm",
-      isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
-      registry: pkg.publishConfig?.registry,
-    };
+    execSync(`gh release view ${shellEscape(tagName)}`, { stdio: "ignore" });
+    console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
+    return;
   } catch {
-    return null;
-  }
-}
-
-/** Returns the first captured value for a regex match. */
-function matchValue(content: string, regex: RegExp): string {
-  return content.match(regex)?.[1]?.trim() ?? "";
-}
-
-/** Parses a Maven pom.xml into an internal release target model. */
-function parsePom(path: string): ReleaseTarget | null {
-  if (!existsSync(path)) {
-    return null;
+    // continue
   }
 
-  const raw = readFileSync(path, "utf8");
-  const name = matchValue(raw, /<artifactId>([^<]+)<\/artifactId>/);
-  const version = matchValue(raw, /<version>([^<]+)<\/version>/);
-  if (!name || !version) {
-    return null;
-  }
-
-  return {
-    name,
-    version,
-    sourceFile: path,
-    type: "maven",
-    isPrivate: true,
-  };
-}
-
-/** Builds the full list of release targets from repository manifests. */
-function extractTargets(manifestFiles: string[]): ReleaseTarget[] {
-  const seen = new Set<string>();
-  const targets: ReleaseTarget[] = [];
-
-  for (const file of manifestFiles) {
-    if (file === "actions/nx-release/package.json") {
-      continue;
-    }
-
-    const target = file.endsWith("package.json")
-      ? parsePackageJson(file)
-      : file.endsWith("pom.xml")
-        ? parsePom(file)
-        : null;
-
-    if (!target) {
-      continue;
-    }
-
-    const key = `${target.name}@${target.version}@${target.sourceFile}`;
-    if (seen.has(key)) {
-      continue;
-    }
-
-    seen.add(key);
-    targets.push(target);
-  }
-
-  return targets;
-}
-
-/** Checks whether a tag exists in local git refs. */
-function tagExistsLocally(tagName: string): boolean {
-  try {
-    execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
-      stdio: "ignore",
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/** Checks whether a tag already exists on origin remote. */
-function tagExistsOnRemote(tagName: string): boolean {
-  try {
-    const output = runCommand(
-      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`,
-    );
-    return output.length > 0;
-  } catch {
-    return false;
-  }
-}
-
-/** Checks whether a tag exists either locally or remotely. */
-function tagExists(tagName: string): boolean {
-  return tagExistsLocally(tagName) || tagExistsOnRemote(tagName);
-}
-
-/** Reads all published versions for an npm package from the target registry. */
-function readNpmPublishedVersions(
-  packageName: string,
-  registry?: string,
-): string[] {
-  try {
-    const registryArg = registry ? ` --registry ${shellEscape(registry)}` : "";
-    const raw = runCommand(
-      `npm view ${shellEscape(packageName)} versions --json${registryArg}`,
-    );
-
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw) as string | string[];
-    if (Array.isArray(parsed)) {
-      return parsed;
-    }
-
-    if (typeof parsed === "string") {
-      return [parsed];
-    }
-
-    return [];
-  } catch {
-    return [];
-  }
-}
-
-/** Decides if a tag should be created for a target using registry-aware rules. */
-function shouldCreateTag(target: ReleaseTarget): boolean {
-  if (target.type === "maven" || target.isPrivate) {
-    return true;
-  }
-
-  const publishedVersions = readNpmPublishedVersions(
-    target.name,
-    target.registry,
-  );
-  return publishedVersions.includes(target.version);
+  const prereleaseFlag = prerelease ? "--prerelease" : "";
+  const command =
+    `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
+  execSync(command, { stdio: "inherit" });
 }
 
 /** Extracts release notes for a specific version from package changelog. */
@@ -246,36 +79,148 @@ function extractReleaseNotes(target: ReleaseTarget): string {
   return section || `Release ${target.name}@${target.version}`;
 }
 
-/** Creates a GitHub release for a tag if it does not already exist. */
-function createGitHubRelease(
-  tagName: string,
-  notes: string,
-  prerelease: boolean,
-): void {
-  try {
-    execSync(`gh release view ${shellEscape(tagName)}`, { stdio: "ignore" });
-    console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
-    return;
-  } catch {
-    // continue
+/** Builds the full list of release targets from repository manifests. */
+function extractTargets(manifestFiles: string[]): ReleaseTarget[] {
+  const seen = new Set<string>();
+  const targets: ReleaseTarget[] = [];
+
+  for (const file of manifestFiles) {
+    if (file === "actions/nx-release/package.json") {
+      continue;
+    }
+
+    const target = file.endsWith("package.json")
+      ? parsePackageJson(file)
+      : file.endsWith("pom.xml")
+        ? parsePom(file)
+        : null;
+
+    if (!target) {
+      continue;
+    }
+
+    const key = `${target.name}@${target.version}@${target.sourceFile}`;
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    targets.push(target);
   }
 
-  const prereleaseFlag = prerelease ? "--prerelease" : "";
-  const command =
-    `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
-  execSync(command, { stdio: "inherit" });
+  return targets;
 }
 
-/** Writes an output key/value for downstream GitHub Action steps. */
-function appendOutput(key: string, value: string): void {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (!outputPath) {
-    return;
+/** Checks whether a registry URL is npm-compatible (public npm/yarn mirrors). */
+function isNpmRegistry(registry: string | undefined): boolean {
+  if (!registry) {
+    return true;
   }
 
-  execSync(
-    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
+  const normalized = registry.replace(/\/+$/, "").toLowerCase();
+  return (
+    normalized === "https://registry.npmjs.org" ||
+    normalized === "https://registry.yarnpkg.com"
   );
+}
+
+/** Lists tracked manifest files (package.json and pom.xml) in the repo. */
+function listManifestFiles(): string[] {
+  const output = runCommand("git ls-files -- '**/package.json' '**/pom.xml'");
+  return output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+}
+
+/** Returns the first captured value for a regex match. */
+function matchValue(content: string, regex: RegExp): string {
+  return content.match(regex)?.[1]?.trim() ?? "";
+}
+
+/** Parses an npm package manifest into an internal release target model. */
+function parsePackageJson(path: string): null | ReleaseTarget {
+  if (!existsSync(path)) {
+    return null;
+  }
+
+  try {
+    const pkg = JSON.parse(readFileSync(path, "utf8")) as {
+      name?: string;
+      private?: boolean;
+      publishConfig?: {
+        registry?: string;
+      };
+      version?: string;
+    };
+
+    if (!pkg.name || !pkg.version) {
+      return null;
+    }
+
+    return {
+      isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
+      name: pkg.name,
+      registry: pkg.publishConfig?.registry,
+      sourceFile: path,
+      type: "npm",
+      version: pkg.version,
+    };
+  } catch {
+    return null;
+  }
+}
+
+/** Parses a Maven pom.xml into an internal release target model. */
+function parsePom(path: string): null | ReleaseTarget {
+  if (!existsSync(path)) {
+    return null;
+  }
+
+  const raw = readFileSync(path, "utf8");
+  const name = matchValue(raw, /<artifactId>([^<]+)<\/artifactId>/);
+  const version = matchValue(raw, /<version>([^<]+)<\/version>/);
+  if (!name || !version) {
+    return null;
+  }
+
+  return {
+    isPrivate: true,
+    name,
+    sourceFile: path,
+    type: "maven",
+    version,
+  };
+}
+
+/** Reads all published versions for an npm package from the target registry. */
+function readNpmPublishedVersions(
+  packageName: string,
+  registry?: string,
+): string[] {
+  try {
+    const registryArg = registry ? ` --registry ${shellEscape(registry)}` : "";
+    const raw = runCommand(
+      `npm view ${shellEscape(packageName)} versions --json${registryArg}`,
+    );
+
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw) as string | string[];
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+
+    if (typeof parsed === "string") {
+      return [parsed];
+    }
+
+    return [];
+  } catch {
+    return [];
+  }
 }
 
 /** Main entrypoint: resolves targets, creates missing tags, and syncs releases. */
@@ -326,6 +271,61 @@ function run(): void {
   }
 
   appendOutput("tags", createdTags.join(" "));
+}
+
+/** Executes a command and returns trimmed stdout. */
+function runCommand(command: string): string {
+  return execSync(command, {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
+}
+
+/** Escapes shell arguments to keep subprocess invocations safe. */
+function shellEscape(value: string): string {
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
+}
+
+/** Decides if a tag should be created for a target using registry-aware rules. */
+function shouldCreateTag(target: ReleaseTarget): boolean {
+  if (target.type === "maven" || target.isPrivate) {
+    return true;
+  }
+
+  const publishedVersions = readNpmPublishedVersions(
+    target.name,
+    target.registry,
+  );
+  return publishedVersions.includes(target.version);
+}
+
+/** Checks whether a tag exists either locally or remotely. */
+function tagExists(tagName: string): boolean {
+  return tagExistsLocally(tagName) || tagExistsOnRemote(tagName);
+}
+
+/** Checks whether a tag exists in local git refs. */
+function tagExistsLocally(tagName: string): boolean {
+  try {
+    execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
+      stdio: "ignore",
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** Checks whether a tag already exists on origin remote. */
+function tagExistsOnRemote(tagName: string): boolean {
+  try {
+    const output = runCommand(
+      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`,
+    );
+    return output.length > 0;
+  } catch {
+    return false;
+  }
 }
 
 run();
