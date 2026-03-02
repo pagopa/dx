@@ -36,3 +36,4 @@ onlyBuiltDependencies:
 linkWorkspacePackages: true
 packageImportMethod: "clone-or-copy"
 cleanupUnusedCatalogs: true
+minimumReleaseAge: 1440
