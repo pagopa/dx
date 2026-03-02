@@ -2,6 +2,7 @@ import { Octokit } from "octokit";
 import { DeepMockProxy, mock, mockDeep, MockProxy } from "vitest-mock-extended";
 
 import { Config } from "../../config.js";
+import { AuthorizationService } from "../authorization.js";
 import { GitHubService } from "../github.js";
 import {
   Dependency,
@@ -29,12 +30,14 @@ export const makeMockPackageJson = (
 };
 
 export const makeMockDependencies = (): {
+  authorizationService: MockProxy<AuthorizationService>;
   gitHubService: MockProxy<GitHubService>;
   octokit: DeepMockProxy<Octokit>;
   packageJsonReader: MockProxy<PackageJsonReader>;
   repositoryReader: MockProxy<RepositoryReader>;
   validationReporter: MockProxy<ValidationReporter>;
 } => ({
+  authorizationService: mock<AuthorizationService>(),
   gitHubService: mock<GitHubService>(),
   octokit: mockDeep<Octokit>(),
   packageJsonReader: mock<PackageJsonReader>(),
