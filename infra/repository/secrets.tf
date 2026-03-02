@@ -8,9 +8,9 @@ resource "github_actions_secret" "slack_webhook_url" {
   }
 }
 
-resource "github_actions_secret" "le_private_key_json" {
+resource "github_actions_secret" "lets_encrypt_private_key" {
   repository      = module.github_repository.name
-  secret_name     = "LE_PRIVATE_KEY_JSON"
+  secret_name     = "LETS_ENCRYPT_PRIVATE_KEY_JSON"
   plaintext_value = "placeholder"
 
   lifecycle {
@@ -18,9 +18,9 @@ resource "github_actions_secret" "le_private_key_json" {
   }
 }
 
-resource "github_actions_secret" "le_regr_json" {
+resource "github_actions_secret" "lets_encrypt_registration" {
   repository      = module.github_repository.name
-  secret_name     = "LE_REGR_JSON"
+  secret_name     = "LETS_ENCRYPT_REGISTRATION_JSON"
   plaintext_value = "placeholder"
 
   lifecycle {

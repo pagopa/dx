@@ -30,10 +30,10 @@ inputs:
   arm_tenant_id:
     description: "Azure Tenant ID"
     required: true
-  le_private_key_json:
+  lets_encrypt_private_key_json:
     description: "Let's Encrypt account private key in JWK JSON format"
     required: true
-  le_regr_json:
+  lets_encrypt_registration_json:
     description: "Let's Encrypt account registration info in JSON format"
     required: true
 
@@ -109,15 +109,15 @@ runs:
           echo "No certificate renewal is required at this time. 🟢" >> $GITHUB_STEP_SUMMARY
         fi
 
-    - name: Set LE account files
+    - name: Set Let's Encrypt account files
       if: steps.should_renew.outputs.renew_certificate == 'true'
       shell: bash
       env:
-        LE_PRIVATE_KEY_JSON: ${{ inputs.le_private_key_json }}
-        LE_REGR_JSON: ${{ inputs.le_regr_json }}
+        PRIVATE_KEY_JSON: ${{ inputs.lets_encrypt_private_key_json }}
+        REGISTRATION_JSON: ${{ inputs.lets_encrypt_registration_json }}
       run: |
-        echo "$LE_PRIVATE_KEY_JSON" > private_key.json
-        echo "$LE_REGR_JSON" > regr.json
+        echo "$PRIVATE_KEY_JSON" > private_key.json
+        echo "$REGISTRATION_JSON" > registration.json
 
     - name: Setup Python
       if: steps.should_renew.outputs.renew_certificate == 'true'
@@ -159,7 +159,7 @@ runs:
       run: |
         python3 "$ACTION_PATH/le_renew_ssl_certificate_acme_tiny.py" \
           --private-key private_key.json \
-          --regr regr.json \
+          --regr registration.json \
           --csr csr.der \
           --out certificate_chain.pem
 

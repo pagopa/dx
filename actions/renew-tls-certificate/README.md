@@ -6,18 +6,18 @@ Both the check and the renewal are executed in a **single job**, keeping the cal
 
 ## Inputs
 
-| Name                      | Required | Default   | Description                                                                                 |
-| ------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------- |
-| `force_renewal`           | No       | `"false"` | Force the certificate renewal to use when cron-triggered execution fails or troubleshooting |
-| `key_vault_name`          | Yes      | —         | Name of the Azure Key Vault that stores the certificate                                     |
-| `csr_common_name`         | Yes      | —         | Common Name (CN) for the Certificate Signing Request                                        |
-| `dns_zone`                | Yes      | —         | Azure DNS Zone used for the ACME DNS-01 challenge                                           |
-| `dns_zone_resource_group` | Yes      | —         | Resource Group that contains the DNS Zone                                                   |
-| `arm_client_id`           | Yes      | —         | Azure Client ID (Workload Identity / Service Principal)                                     |
-| `arm_subscription_id`     | Yes      | —         | Azure Subscription ID                                                                       |
-| `arm_tenant_id`           | Yes      | —         | Azure Tenant ID                                                                             |
-| `le_private_key_json`     | Yes      | —         | Let's Encrypt account private key in JWK JSON format                                        |
-| `le_regr_json`            | Yes      | —         | Let's Encrypt account registration info in JSON format                                      |
+| Name                             | Required | Default   | Description                                                                                 |
+| -------------------------------- | -------- | --------- | ------------------------------------------------------------------------------------------- |
+| `force_renewal`                  | No       | `"false"` | Force the certificate renewal to use when cron-triggered execution fails or troubleshooting |
+| `key_vault_name`                 | Yes      | —         | Name of the Azure Key Vault that stores the certificate                                     |
+| `csr_common_name`                | Yes      | —         | Common Name (CN) for the Certificate Signing Request                                        |
+| `dns_zone`                       | Yes      | —         | Azure DNS Zone used for the ACME DNS-01 challenge                                           |
+| `dns_zone_resource_group`        | Yes      | —         | Resource Group that contains the DNS Zone                                                   |
+| `arm_client_id`                  | Yes      | —         | Azure Client ID (Workload Identity / Service Principal)                                     |
+| `arm_subscription_id`            | Yes      | —         | Azure Subscription ID                                                                       |
+| `arm_tenant_id`                  | Yes      | —         | Azure Tenant ID                                                                             |
+| `lets_encrypt_private_key_json`  | Yes      | —         | Let's Encrypt account private key in JWK JSON format                                        |
+| `lets_encrypt_registration_json` | Yes      | —         | Let's Encrypt account registration info in JSON format                                      |
 
 ## Outputs
 
@@ -44,8 +44,8 @@ jobs:
           arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
           arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           arm_tenant_id: ${{ secrets.ARM_TENANT_ID }}
-          le_private_key_json: ${{ secrets.LE_PRIVATE_KEY_JSON }}
-          le_regr_json: ${{ secrets.LE_REGR_JSON }}
+          lets_encrypt_private_key_json: ${{ secrets.LETS_ENCRYPT_PRIVATE_KEY_JSON }}
+          lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}
 ```
 
 ## How it works
