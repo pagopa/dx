@@ -37,5 +37,7 @@ module "github_runner" {
     use_rbac            = var.github_private_runner.key_vault.use_rbac
   }
 
+  use_github_app = var.github_private_runner.use_github_app
+
   tags = local.tags
 }
