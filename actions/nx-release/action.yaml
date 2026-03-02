@@ -37,9 +37,11 @@ runs:
     - name: Detect Nx release intent
       id: intent
       shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
-        node "${{ github.action_path }}/scripts/dist/detect-intent.js"
+        node "$ACTION_PATH/scripts/dist/detect-intent.js"
 
     - name: Configure Git user
       shell: bash
@@ -52,6 +54,7 @@ runs:
       id: create-pr
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_BRANCH: ${{ inputs.release-branch }}
         PR_TITLE: ${{ inputs.pr-title }}
@@ -78,7 +81,7 @@ runs:
           exit 0
         fi
 
-        PR_BODY=$(node "${{ github.action_path }}/scripts/dist/build-pr-body.js")
+        PR_BODY=$(node "$ACTION_PATH/scripts/dist/build-pr-body.js")
 
         # Commit and push the version changes (bump + changelog)
         git add -A
@@ -122,8 +125,9 @@ runs:
       if: steps.intent.outputs.mode == 'publish' && steps.publish.outputs.published == 'true'
       id: tags
       env:
+        ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       shell: bash
       run: |
         set -euo pipefail
-        node "${{ github.action_path }}/scripts/dist/create-tags-releases.js"
+        node "$ACTION_PATH/scripts/dist/create-tags-releases.js"

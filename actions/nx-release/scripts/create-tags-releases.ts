@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 interface ReleaseTarget {
@@ -18,9 +18,7 @@ function appendOutput(key: string, value: string): void {
     return;
   }
 
-  execSync(
-    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
-  );
+  appendFileSync(outputPath, `${key}=${value}\n`);
 }
 
 /** Creates a GitHub release for a tag if it does not already exist. */

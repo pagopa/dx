@@ -1,5 +1,5 @@
 import { execSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 
 interface GithubPushEvent {
   after?: string;
@@ -16,9 +16,7 @@ function appendOutput(key: string, value: string): void {
   if (!outputPath) {
     return;
   }
-  execSync(
-    `printf '%s=%s\n' ${shellEscape(key)} ${shellEscape(value)} >> ${shellEscape(outputPath)}`,
-  );
+  appendFileSync(outputPath, `${key}=${value}\n`);
 }
 
 /** Computes the git range to inspect for this workflow execution. */

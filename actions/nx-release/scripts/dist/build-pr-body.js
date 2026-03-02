@@ -1,14 +1,66 @@
-import { execSync } from "child_process";
-import { existsSync, readFileSync } from "fs";
-import { dirname, join } from "path";
+import { execSync } from 'child_process';
+import { existsSync, readFileSync } from 'fs';
+import { dirname, join } from 'path';
 
 // scripts/build-pr-body.ts
+function buildBody(entries) {
+  const intro = [
+    "This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to main, this PR will be updated.",
+    "",
+    "# Releases",
+    ""
+  ];
+  if (entries.length === 0) {
+    return `${intro.join("\n")}See individual packages CHANGELOGs for details.`;
+  }
+  const sections = entries.map((entry) => formatReleaseSection(entry));
+  return `${intro.join("\n")}${sections.join("\n")}`.trim();
+}
+function extractLatestSection(changelogPath) {
+  if (!existsSync(changelogPath)) {
+    return [];
+  }
+  const lines = readFileSync(changelogPath, "utf8").split("\n");
+  const firstHeading = lines.findIndex((line) => /^##\s+/.test(line));
+  if (firstHeading === -1) {
+    return [];
+  }
+  let end = lines.length;
+  for (let index = firstHeading + 1; index < lines.length; index += 1) {
+    if (/^##\s+/.test(lines[index])) {
+      end = index;
+      break;
+    }
+  }
+  return lines.slice(firstHeading, end).map((line) => line.trimEnd());
+}
+function firstMatch(content, regex) {
+  const match = content.match(regex);
+  return match?.[1]?.trim() ?? "";
+}
+function formatReleaseSection(entry) {
+  const sectionLines = extractLatestSection(entry.changelogPath);
+  const output = [];
+  output.push(`## ${entry.name}@${entry.version}`);
+  output.push("");
+  if (sectionLines.length === 0) {
+    output.push("- No changelog entry found.");
+    output.push("");
+    return output.join("\n");
+  }
+  const bodyLines = sectionLines.slice(1).filter((line) => line.trim().length > 0);
+  if (bodyLines.length === 0) {
+    output.push("- No changelog entry found.");
+    output.push("");
+    return output.join("\n");
+  }
+  output.push(...bodyLines);
+  output.push("");
+  return output.join("\n");
+}
 function getChangedFiles() {
-  const output = execSync("git diff --name-only", { encoding: "utf8" });
-  return output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
+  const output = execSync("git diff HEAD --name-only", { encoding: "utf8" });
+  return output.split("\n").map((line) => line.trim()).filter(Boolean);
 }
 function parsePackageJson(path) {
   if (!existsSync(path)) {
@@ -24,10 +76,6 @@ function parsePackageJson(path) {
   } catch {
     return null;
   }
-}
-function firstMatch(content, regex) {
-  const match = content.match(regex);
-  return match?.[1]?.trim() ?? "";
 }
 function parsePom(path) {
   if (!existsSync(path)) {
@@ -60,73 +108,18 @@ function resolveReleaseEntries(changedFiles) {
   }
   const entries = [];
   for (const manifestPath of manifestCandidates) {
-    const parsed = manifestPath.endsWith("package.json")
-      ? parsePackageJson(manifestPath)
-      : parsePom(manifestPath);
+    const parsed = manifestPath.endsWith("package.json") ? parsePackageJson(manifestPath) : parsePom(manifestPath);
     if (!parsed) {
       continue;
     }
     const changelogPath = join(dirname(manifestPath), "CHANGELOG.md");
     entries.push({
-      name: parsed.name,
-      version: parsed.version,
       changelogPath,
+      name: parsed.name,
+      version: parsed.version
     });
   }
   return entries.sort((a, b) => a.name.localeCompare(b.name));
-}
-function extractLatestSection(changelogPath) {
-  if (!existsSync(changelogPath)) {
-    return [];
-  }
-  const lines = readFileSync(changelogPath, "utf8").split("\n");
-  const firstHeading = lines.findIndex((line) => /^##\s+/.test(line));
-  if (firstHeading === -1) {
-    return [];
-  }
-  let end = lines.length;
-  for (let index = firstHeading + 1; index < lines.length; index += 1) {
-    if (/^##\s+/.test(lines[index])) {
-      end = index;
-      break;
-    }
-  }
-  return lines.slice(firstHeading, end).map((line) => line.trimEnd());
-}
-function formatReleaseSection(entry) {
-  const sectionLines = extractLatestSection(entry.changelogPath);
-  const output = [];
-  output.push(`## ${entry.name}@${entry.version}`);
-  output.push("");
-  if (sectionLines.length === 0) {
-    output.push("- No changelog entry found.");
-    output.push("");
-    return output.join("\n");
-  }
-  const bodyLines = sectionLines
-    .slice(1)
-    .filter((line) => line.trim().length > 0);
-  if (bodyLines.length === 0) {
-    output.push("- No changelog entry found.");
-    output.push("");
-    return output.join("\n");
-  }
-  output.push(...bodyLines);
-  output.push("");
-  return output.join("\n");
-}
-function buildBody(entries) {
-  const intro = [
-    "This PR was opened by the [Changesets release](https://github.com/changesets/action) GitHub action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more changesets to main, this PR will be updated.",
-    "",
-    "# Releases",
-    "",
-  ];
-  if (entries.length === 0) {
-    return `${intro.join("\n")}See individual packages CHANGELOGs for details.`;
-  }
-  const sections = entries.map((entry) => formatReleaseSection(entry));
-  return `${intro.join("\n")}${sections.join("\n")}`.trim();
 }
 function run() {
   const changedFiles = getChangedFiles();
