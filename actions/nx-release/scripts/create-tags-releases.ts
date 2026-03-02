@@ -1,3 +1,8 @@
+/**
+ * Scans all tracked package manifests in the repo, creates annotated git tags
+ * for newly published versions, pushes them to origin, and creates the
+ * corresponding GitHub releases with changelog notes.
+ */
 import { execSync } from "node:child_process";
 import { appendFileSync, existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -12,12 +17,7 @@ interface ReleaseTarget {
 }
 
 /** Writes an output key/value for downstream GitHub Action steps. */
-function appendOutput(key: string, value: string): void {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (!outputPath) {
-    return;
-  }
-
+function appendOutput(outputPath: string, key: string, value: string): void {
   appendFileSync(outputPath, `${key}=${value}\n`);
 }
 
@@ -53,25 +53,15 @@ function extractReleaseNotes(target: ReleaseTarget): string {
     `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
   );
 
-  let start = -1;
-  for (let index = 0; index < lines.length; index += 1) {
-    if (versionPattern.test(lines[index])) {
-      start = index;
-      break;
-    }
-  }
-
+  const start = lines.findIndex((line) => versionPattern.test(line));
   if (start === -1) {
     return `Release ${target.name}@${target.version}`;
   }
 
-  let end = lines.length;
-  for (let index = start + 1; index < lines.length; index += 1) {
-    if (/^##\s+/.test(lines[index])) {
-      end = index;
-      break;
-    }
-  }
+  const nextHeading = lines.findIndex(
+    (line, i) => i > start && /^##\s+/.test(line),
+  );
+  const end = nextHeading === -1 ? lines.length : nextHeading;
 
   const section = lines.slice(start, end).join("\n").trim();
   return section || `Release ${target.name}@${target.version}`;
@@ -143,26 +133,30 @@ function parsePackageJson(path: string): null | ReleaseTarget {
   }
 
   try {
-    const pkg = JSON.parse(readFileSync(path, "utf8")) as {
-      name?: string;
-      private?: boolean;
-      publishConfig?: {
-        registry?: string;
-      };
-      version?: string;
-    };
-
-    if (!pkg.name || !pkg.version) {
+    const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
+    const pkg = parsed as Record<string, unknown>;
+    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
+      return null;
+    }
+    const publishConfig =
+      typeof pkg["publishConfig"] === "object" && pkg["publishConfig"] !== null
+        ? (pkg["publishConfig"] as Record<string, unknown>)
+        : undefined;
+    const registry =
+      typeof publishConfig?.["registry"] === "string"
+        ? publishConfig["registry"]
+        : undefined;
 
     return {
-      isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
-      name: pkg.name,
-      registry: pkg.publishConfig?.registry,
+      isPrivate: !!pkg["private"] || !isNpmRegistry(registry),
+      name: pkg["name"],
+      registry,
       sourceFile: path,
       type: "npm",
-      version: pkg.version,
+      version: pkg["version"],
     };
   } catch {
     return null;
@@ -206,16 +200,11 @@ function readNpmPublishedVersions(
       return [];
     }
 
-    const parsed = JSON.parse(raw) as string | string[];
+    const parsed: unknown = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      return parsed.filter((v): v is string => typeof v === "string");
     }
-
-    if (typeof parsed === "string") {
-      return [parsed];
-    }
-
-    return [];
+    return typeof parsed === "string" ? [parsed] : [];
   } catch {
     return [];
   }
@@ -223,6 +212,8 @@ function readNpmPublishedVersions(
 
 /** Main entrypoint: resolves targets, creates missing tags, and syncs releases. */
 function run(): void {
+  const outputPath = process.env.GITHUB_OUTPUT;
+
   const targets = extractTargets(listManifestFiles());
   const createdTags: string[] = [];
 
@@ -268,7 +259,9 @@ function run(): void {
     }
   }
 
-  appendOutput("tags", createdTags.join(" "));
+  if (outputPath) {
+    appendOutput(outputPath, "tags", createdTags.join(" "));
+  }
 }
 
 /** Executes a command and returns trimmed stdout. */

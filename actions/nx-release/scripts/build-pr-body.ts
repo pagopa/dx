@@ -1,3 +1,7 @@
+/**
+ * Builds the release PR body by extracting the latest changelog section
+ * from each package bumped in the current commit.
+ */
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -37,13 +41,10 @@ function extractLatestSection(changelogPath: string): string[] {
     return [];
   }
 
-  let end = lines.length;
-  for (let index = firstHeading + 1; index < lines.length; index += 1) {
-    if (/^##\s+/.test(lines[index])) {
-      end = index;
-      break;
-    }
-  }
+  const nextHeading = lines.findIndex(
+    (line, i) => i > firstHeading && /^##\s+/.test(line),
+  );
+  const end = nextHeading === -1 ? lines.length : nextHeading;
 
   return lines.slice(firstHeading, end).map((line) => line.trimEnd());
 }
@@ -101,18 +102,21 @@ function parsePackageJson(
   }
 
   try {
-    const raw = readFileSync(path, "utf8");
-    const pkg = JSON.parse(raw) as { name?: string; version?: string };
-    if (!pkg.name || !pkg.version) {
+    const parsed: unknown = JSON.parse(readFileSync(path, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
-    return { name: pkg.name, version: pkg.version };
+    const pkg = parsed as Record<string, unknown>;
+    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
+      return null;
+    }
+    return { name: pkg["name"], version: pkg["version"] };
   } catch {
     return null;
   }
 }
 
-/** Reads artifact name/version from a Maven pom.xml file. */
+/** Reads and validates artifact name/version from a Maven pom.xml file. */
 function parsePom(path: string): null | { name: string; version: string } {
   if (!existsSync(path)) {
     return null;
@@ -122,6 +126,7 @@ function parsePom(path: string): null | { name: string; version: string } {
   const name = firstMatch(raw, /<artifactId>([^<]+)<\/artifactId>/);
   const version = firstMatch(raw, /<version>([^<]+)<\/version>/);
 
+  // firstMatch returns an empty string when no match is found
   if (!name || !version) {
     return null;
   }

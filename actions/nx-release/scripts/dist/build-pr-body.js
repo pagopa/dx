@@ -25,13 +25,10 @@ function extractLatestSection(changelogPath) {
   if (firstHeading === -1) {
     return [];
   }
-  let end = lines.length;
-  for (let index = firstHeading + 1; index < lines.length; index += 1) {
-    if (/^##\s+/.test(lines[index])) {
-      end = index;
-      break;
-    }
-  }
+  const nextHeading = lines.findIndex(
+    (line, i) => i > firstHeading && /^##\s+/.test(line)
+  );
+  const end = nextHeading === -1 ? lines.length : nextHeading;
   return lines.slice(firstHeading, end).map((line) => line.trimEnd());
 }
 function firstMatch(content, regex) {
@@ -67,12 +64,15 @@ function parsePackageJson(path) {
     return null;
   }
   try {
-    const raw = readFileSync(path, "utf8");
-    const pkg = JSON.parse(raw);
-    if (!pkg.name || !pkg.version) {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
-    return { name: pkg.name, version: pkg.version };
+    const pkg = parsed;
+    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
+      return null;
+    }
+    return { name: pkg["name"], version: pkg["version"] };
   } catch {
     return null;
   }

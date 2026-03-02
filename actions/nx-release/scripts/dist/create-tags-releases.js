@@ -3,11 +3,7 @@ import { existsSync, readFileSync, appendFileSync } from 'fs';
 import { join, dirname } from 'path';
 
 // scripts/create-tags-releases.ts
-function appendOutput(key, value) {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (!outputPath) {
-    return;
-  }
+function appendOutput(outputPath, key, value) {
   appendFileSync(outputPath, `${key}=${value}
 `);
 }
@@ -31,23 +27,14 @@ function extractReleaseNotes(target) {
   const versionPattern = new RegExp(
     `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`
   );
-  let start = -1;
-  for (let index = 0; index < lines.length; index += 1) {
-    if (versionPattern.test(lines[index])) {
-      start = index;
-      break;
-    }
-  }
+  const start = lines.findIndex((line) => versionPattern.test(line));
   if (start === -1) {
     return `Release ${target.name}@${target.version}`;
   }
-  let end = lines.length;
-  for (let index = start + 1; index < lines.length; index += 1) {
-    if (/^##\s+/.test(lines[index])) {
-      end = index;
-      break;
-    }
-  }
+  const nextHeading = lines.findIndex(
+    (line, i) => i > start && /^##\s+/.test(line)
+  );
+  const end = nextHeading === -1 ? lines.length : nextHeading;
   const section = lines.slice(start, end).join("\n").trim();
   return section || `Release ${target.name}@${target.version}`;
 }
@@ -90,17 +77,23 @@ function parsePackageJson(path) {
     return null;
   }
   try {
-    const pkg = JSON.parse(readFileSync(path, "utf8"));
-    if (!pkg.name || !pkg.version) {
+    const parsed = JSON.parse(readFileSync(path, "utf8"));
+    if (typeof parsed !== "object" || parsed === null) {
       return null;
     }
+    const pkg = parsed;
+    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
+      return null;
+    }
+    const publishConfig = typeof pkg["publishConfig"] === "object" && pkg["publishConfig"] !== null ? pkg["publishConfig"] : void 0;
+    const registry = typeof publishConfig?.["registry"] === "string" ? publishConfig["registry"] : void 0;
     return {
-      isPrivate: !!pkg.private || !isNpmRegistry(pkg.publishConfig?.registry),
-      name: pkg.name,
-      registry: pkg.publishConfig?.registry,
+      isPrivate: !!pkg["private"] || !isNpmRegistry(registry),
+      name: pkg["name"],
+      registry,
       sourceFile: path,
       type: "npm",
-      version: pkg.version
+      version: pkg["version"]
     };
   } catch {
     return null;
@@ -135,17 +128,15 @@ function readNpmPublishedVersions(packageName, registry) {
     }
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed;
+      return parsed.filter((v) => typeof v === "string");
     }
-    if (typeof parsed === "string") {
-      return [parsed];
-    }
-    return [];
+    return typeof parsed === "string" ? [parsed] : [];
   } catch {
     return [];
   }
 }
 function run() {
+  const outputPath = process.env.GITHUB_OUTPUT;
   const targets = extractTargets(listManifestFiles());
   const createdTags = [];
   for (const target of targets) {
@@ -183,7 +174,9 @@ function run() {
       createGitHubRelease(tagName, notes, prerelease);
     }
   }
-  appendOutput("tags", createdTags.join(" "));
+  if (outputPath) {
+    appendOutput(outputPath, "tags", createdTags.join(" "));
+  }
 }
 function runCommand(command) {
   return execSync(command, {

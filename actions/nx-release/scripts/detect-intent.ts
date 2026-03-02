@@ -1,3 +1,8 @@
+/**
+ * Inspects the current git push event to determine which Nx release mode
+ * ("create-pr", "publish", or "noop") should run, then writes it to
+ * GITHUB_OUTPUT for downstream steps.
+ */
 import { execSync } from "node:child_process";
 import { appendFileSync, readFileSync } from "node:fs";
 
@@ -11,19 +16,17 @@ type ReleaseMode = "create-pr" | "noop" | "publish";
 const ZERO_SHA = "0000000000000000000000000000000000000000";
 
 /** Writes an output key/value for downstream GitHub Action steps. */
-function appendOutput(key: string, value: string): void {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (!outputPath) {
-    return;
-  }
+function appendOutput(outputPath: string, key: string, value: string): void {
   appendFileSync(outputPath, `${key}=${value}\n`);
 }
 
 /** Computes the git range to inspect for this workflow execution. */
-function computeRange(): { base: string; head: string } {
-  const event = getEvent();
+function computeRange(
+  event: GithubPushEvent,
+  githubSha: string | undefined,
+): { base: string; head: string } {
   const before = event.before ?? "";
-  const after = event.after ?? process.env.GITHUB_SHA ?? "HEAD";
+  const after = event.after ?? githubSha ?? "HEAD";
 
   if (!before || before === ZERO_SHA) {
     return { base: "HEAD~1", head: "HEAD" };
@@ -34,17 +37,17 @@ function computeRange(): { base: string; head: string } {
 
 /** Detects which release mode should run based on changed files. */
 function detectMode(diffStatus: string): ReleaseMode {
-  const hasPlanAddOrModify = diffStatus
-    .split("\n")
-    .some((line) => /^[AMR].*\.nx\/version-plans?\//.test(line));
+  const lines = diffStatus.split("\n");
 
-  const hasPlanDelete = diffStatus
-    .split("\n")
-    .some((line) => /^[DR].*\.nx\/version-plans?\//.test(line));
-
-  const hasVersionBump = diffStatus
-    .split("\n")
-    .some((line) => /^[AMR].*(package\.json|pom\.xml)$/.test(line));
+  const hasPlanAddOrModify = lines.some((line) =>
+    /^[AMR].*\.nx\/version-plans?\//.test(line),
+  );
+  const hasPlanDelete = lines.some((line) =>
+    /^[DR].*\.nx\/version-plans?\//.test(line),
+  );
+  const hasVersionBump = lines.some((line) =>
+    /^[AMR].*(package\.json|pom\.xml)$/.test(line),
+  );
 
   if (hasPlanAddOrModify) {
     return "create-pr";
@@ -57,16 +60,19 @@ function detectMode(diffStatus: string): ReleaseMode {
   return "noop";
 }
 
-/** Reads the GitHub push event payload from GITHUB_EVENT_PATH. */
-function getEvent(): GithubPushEvent {
-  const eventPath = process.env.GITHUB_EVENT_PATH;
-  if (!eventPath) {
-    return {};
-  }
-
+/** Reads the GitHub push event payload from a file path. */
+function getEvent(eventPath: string): GithubPushEvent {
   try {
     const raw = readFileSync(eventPath, "utf8");
-    return JSON.parse(raw) as GithubPushEvent;
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) {
+      return {};
+    }
+    const event = parsed as Record<string, unknown>;
+    return {
+      after: typeof event["after"] === "string" ? event["after"] : undefined,
+      before: typeof event["before"] === "string" ? event["before"] : undefined,
+    };
   } catch {
     return {};
   }
@@ -74,7 +80,12 @@ function getEvent(): GithubPushEvent {
 
 /** Main entrypoint: inspects diff, detects mode, and exposes action output. */
 function run(): void {
-  const { base, head } = computeRange();
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  const githubSha = process.env.GITHUB_SHA;
+  const outputPath = process.env.GITHUB_OUTPUT;
+
+  const event = eventPath ? getEvent(eventPath) : {};
+  const { base, head } = computeRange(event, githubSha);
   console.log(`::notice::Analyzing diff range ${base}..${head}`);
 
   const diffStatus = execSync(
@@ -86,7 +97,10 @@ function run(): void {
   );
 
   const mode = detectMode(diffStatus);
-  appendOutput("mode", mode);
+
+  if (outputPath) {
+    appendOutput(outputPath, "mode", mode);
+  }
 
   if (mode === "create-pr") {
     console.log(
