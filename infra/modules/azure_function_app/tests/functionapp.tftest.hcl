@@ -86,8 +86,8 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "20"
-    error_message = "The Function App must use Node version 20"
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "22"
+    error_message = "The Function App must use Node version 22"
   }
 
   assert {
@@ -96,8 +96,8 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].node_version == "20"
-    error_message = "The Function App staging slot must use Node version 20"
+    condition     = azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].node_version == "22"
+    error_message = "The Function App staging slot must use Node version 22"
   }
 
   assert {

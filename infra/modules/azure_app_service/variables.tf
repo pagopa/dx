@@ -88,12 +88,12 @@ variable "stack" {
 
 variable "node_version" {
   type        = number
-  default     = 20
-  description = "Node.js version to use. Supported versions: 18, 20, 22, 24."
+  default     = 22
+  description = "Node.js version to use. Supported versions: 22, 24."
 
   validation {
-    condition     = contains([18, 20, 22, 24], var.node_version)
-    error_message = "Allowed values for node_version are 18, 20, 22, 24."
+    condition     = contains([22, 24], var.node_version)
+    error_message = "Allowed values for node_version are 22, 24."
   }
 }
 
