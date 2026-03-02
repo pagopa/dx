@@ -51,6 +51,11 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
   },
   init: {
     cloudAccountsToInitialize: [],
+    runnerAppCredentials: {
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
     terraformBackend: {
       cloudAccount: createMockCloudAccount(),
     },
@@ -92,6 +97,11 @@ describe("provisionTerraformBackend", () => {
       },
       init: {
         cloudAccountsToInitialize: [],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
         terraformBackend: {
           cloudAccount,
         },
@@ -139,6 +149,11 @@ describe("provisionTerraformBackend", () => {
       },
       init: {
         cloudAccountsToInitialize: [],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
         terraformBackend: {
           cloudAccount: backendCloudAccount,
         },

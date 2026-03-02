@@ -1,3 +1,5 @@
+import { z } from "zod/v4";
+
 export type CreateBranchParams = {
   branchName: string;
   fromRef: string; // source branch (e.g., "main")
@@ -111,3 +113,11 @@ export class RepositoryNotFoundError extends Error {
     this.name = "RepositoryNotFoundError";
   }
 }
+
+export const githubAppCredentialsSchema = z.object({
+  id: z.string().nonempty(),
+  installationId: z.string().nonempty(),
+  key: z.string().nonempty(),
+});
+
+export type GitHubAppCredentials = z.infer<typeof githubAppCredentialsSchema>;
