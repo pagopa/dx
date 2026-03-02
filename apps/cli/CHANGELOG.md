@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.17.0
+
+### Minor Changes
+
+- 907253d: Create a function useful to add a Bootstrap Identity to an Azure subscription. This function creates a Pull Request on eng-azure-authorization repository to add the identity.
+
 ## 0.16.3
 
 ### Patch Changes
