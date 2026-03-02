@@ -13,6 +13,8 @@ import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
 import createDeploymentEnvironmentGenerator, {
+  Payload as EnvironmentPayload,
+  payloadSchema as environmentPayloadSchema,
   PLOP_ENVIRONMENT_GENERATOR_NAME,
 } from "../plop/generators/environment/index.js";
 import createMonorepoGenerator, {
@@ -85,15 +87,17 @@ export const runMonorepoGenerator = async (
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
   github: GitHubRepo,
-): Promise<void> => {
+): Promise<EnvironmentPayload> => {
   setDeploymentEnvironmentGenerator(plop, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-  const payload = await generator.runPrompts();
+  const answers = await generator.runPrompts();
+  const payload = environmentPayloadSchema.parse(answers);
   await oraPromise(runActions(generator, payload), {
     failText: "Failed to create deployment environment",
     successText: "Environment created successfully!",
     text: "Creating environment...",
   });
+  return payload;
 };
 
 export const setDeploymentEnvironmentGenerator = (
