@@ -36,7 +36,7 @@ For a complete example of how to use this module, refer to the [examples/complet
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.8.0, < 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.58.0, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 
 ## Modules
@@ -62,7 +62,7 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | Path of the endpoint where health probe is exposed. | `string` | n/a | yes |
 | <a name="input_java_version"></a> [java\_version](#input\_java\_version) | Java version to use. | `string` | `17` | no |
-| <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Node.js version to use. | `number` | `20` | no |
+| <a name="input_node_version"></a> [node\_version](#input\_node\_version) | Node.js version to use. Supported versions: 22, 24. | `number` | `22` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_size"></a> [size](#input\_size) | App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2v3'. If not set, it will be determined by the use\_case. | `string` | `null` | no |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | Application settings for the staging slot. | `map(string)` | `{}` | no |
