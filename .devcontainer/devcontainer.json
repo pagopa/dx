@@ -40,7 +40,7 @@
   "containerEnv": {
     "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
     "NX_DAEMON": "true",
-    "EDITOR": "code --wait"
+    "EDITOR": "code --reuse-window --wait"
   },
   "customizations": {
     "vscode": {
