@@ -1,5 +1,14 @@
 # docs
 
+## 0.12.4
+
+### Patch Changes
+
+- 7fb5e8b: Fix broken links and adding missing information to drift detection
+  workflow
+- 907253d: Update the page related to the permissions of the GitHub token used
+  by the DX CLI
+
 ## 0.12.3
 
 ### Patch Changes

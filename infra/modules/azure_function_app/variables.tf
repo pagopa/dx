@@ -100,8 +100,13 @@ variable "stack" {
 
 variable "node_version" {
   type        = number
-  default     = 20
-  description = "The version of Node.js to use for the Function App runtime."
+  default     = 22
+  description = "The version of Node.js to use for the Function App runtime. Supported versions: 22, 24 (Preview)."
+
+  validation {
+    condition     = contains([22, 24], var.node_version)
+    error_message = "Allowed values for node_version are 22, 24. Note: Node.js 24 is in Preview for Azure Functions."
+  }
 }
 
 variable "java_version" {

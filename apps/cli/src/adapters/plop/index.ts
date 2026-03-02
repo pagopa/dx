@@ -84,9 +84,17 @@ export const runMonorepoGenerator = async (
   return payload;
 };
 
+/**
+ * Run the deployment environment generator
+ *
+ * @param plop - The plop instance
+ * @param github - Optional GitHub repository info. When provided (by init command),
+ *                 uses the explicitly passed repository. When omitted (by add command),
+ *                 the generator infers it from the local git context.
+ */
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
-  github: GitHubRepo,
+  github?: GitHubRepo,
 ): Promise<EnvironmentPayload> => {
   setDeploymentEnvironmentGenerator(plop, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
@@ -100,9 +108,17 @@ export const runDeploymentEnvironmentGenerator = async (
   return payload;
 };
 
+/**
+ * Configure the deployment environment generator
+ *
+ * @param plop - The plop instance
+ * @param github - Optional GitHub repository info. When provided (by init command),
+ *                 uses the explicitly passed repository. When omitted (by add command),
+ *                 the generator infers it from the local git context.
+ */
 export const setDeploymentEnvironmentGenerator = (
   plop: NodePlopAPI,
-  github: GitHubRepo,
+  github?: GitHubRepo,
 ) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
