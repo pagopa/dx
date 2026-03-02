@@ -1,5 +1,5 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:da67c59f82e057e0ccb81ec7d13fb50464c26f477638018e6de1b2623a008a3a",
+  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:a30da48cdf5f9144ff7f2156622e701e752fc258d77ca7bb00120624f1a95938",
   "features": {
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
     "ghcr.io/devcontainers/features/azure-cli:1": {},
@@ -25,7 +25,9 @@
       "nvmInstallPath": "/opt/nvm"
     },
     "ghcr.io/devcontainers/features/go:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false
+    },
     "ghcr.io/devcontainers-extra/features/act:1": {},
     "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
@@ -37,7 +39,8 @@
   },
   "containerEnv": {
     "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
-    "NX_DAEMON": "true"
+    "NX_DAEMON": "true",
+    "EDITOR": "code --wait"
   },
   "customizations": {
     "vscode": {

@@ -66,8 +66,8 @@ importers:
         specifier: ^2.29.8
         version: 2.29.8(@types/node@22.19.1)
       '@devcontainers/cli':
-        specifier: ^0.80.3
-        version: 0.80.3
+        specifier: ^0.83.3
+        version: 0.83.3
       '@nx/docker':
         specifier: 22.3.3
         version: 22.3.3(nx@22.3.3(@swc-node/register@1.9.2(@swc/core@1.5.29(@swc/helpers@0.5.17))(@swc/types@0.1.25)(typescript@5.8.3))(@swc/core@1.5.29(@swc/helpers@0.5.17)))
@@ -2317,8 +2317,8 @@ packages:
     peerDependencies:
       postcss: ^8.4
 
-  '@devcontainers/cli@0.80.3':
-    resolution: {integrity: sha512-PaN2NxSdVdrY77C4aiqXjFyrg8Bj86hMSdRsHnLCwsocPcMUNxOjLz6G7jKUy6K7FIHY38613LNwfBVi1ePpdA==}
+  '@devcontainers/cli@0.83.3':
+    resolution: {integrity: sha512-QiuI8mrJC6kLXxoGe7jt+yCEKGNn3MS+ZHOYW3zZDki+nsp7lIqOxHvXurvKNv/JFfB9JdoiX8yHgo6yOfXO5w==}
     engines: {node: ^16.13.0 || >=18.0.0}
     hasBin: true
 
@@ -13451,7 +13451,7 @@ snapshots:
     dependencies:
       postcss: 8.5.6
 
-  '@devcontainers/cli@0.80.3': {}
+  '@devcontainers/cli@0.83.3': {}
 
   '@discoveryjs/json-ext@0.5.7': {}
 
