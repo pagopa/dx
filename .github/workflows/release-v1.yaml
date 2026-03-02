@@ -80,6 +80,6 @@ jobs:
 
       - name: Nx Publish
         if: steps.detect-release-tool.outputs.tool == 'nx'
-        uses: pagopa/dx/actions/nx-release@feat-add-nx-release-support # main
+        uses: pagopa/dx/actions/nx-release@main
         with:
           github-token: ${{ secrets.github-token }}
