@@ -33,14 +33,15 @@ organization** and include the following permissions.
 
 ### Repository Permissions
 
-| Permission         | Access Level   | Reason                                                              |
-| ------------------ | -------------- | ------------------------------------------------------------------- |
-| **Administration** | Read and write | Required for repository settings and management tasks.              |
-| **Environments**   | Read and write | Needed to manage repository environments for CI/CD workflows.       |
-| **Metadata**       | Read-only      | Automatically included; allows access to repository metadata.       |
-| **Pull requests**  | Read and write | Required to create and manage pull requests.                        |
-| **Secrets**        | Read and write | Needed to manage repository secrets for automation and CI/CD.       |
-| **Variables**      | Read and write | Needed to manage repository variables for workflows and automation. |
+| Permission         | Access Level   | Reason                                                                       |
+| ------------------ | -------------- | ---------------------------------------------------------------------------- |
+| **Administration** | Read and write | Required for repository settings and management tasks.                       |
+| **Contents**       | Read and write | Required to read and update files in repositories (e.g., for automated PRs). |
+| **Environments**   | Read and write | Needed to manage repository environments for CI/CD workflows.                |
+| **Metadata**       | Read-only      | Automatically included; allows access to repository metadata.                |
+| **Pull requests**  | Read and write | Required to create and manage pull requests.                                 |
+| **Secrets**        | Read and write | Needed to manage repository secrets for automation and CI/CD.                |
+| **Variables**      | Read and write | Needed to manage repository variables for workflows and automation.          |
 
 :::note
 
