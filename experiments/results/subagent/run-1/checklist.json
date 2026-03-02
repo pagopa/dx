@@ -1,0 +1,25 @@
+{
+  "checks": [
+    { "id": "validate", "desc": "terraform validate passes" },
+    {
+      "id": "naming",
+      "desc": "uses provider::dx::resource_name() or naming provider"
+    },
+    {
+      "id": "tags",
+      "desc": "contains required tags: CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam"
+    },
+    {
+      "id": "secrets",
+      "desc": "no secrets hardcoded; Key Vault references used"
+    },
+    {
+      "id": "networking",
+      "desc": "uses dx_available_subnet_cidr or documents subnet allocation"
+    },
+    {
+      "id": "modules",
+      "desc": "uses pagopa-dx modules and pins with ~> major.minor"
+    }
+  ]
+}

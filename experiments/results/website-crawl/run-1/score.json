@@ -1,0 +1,12 @@
+{
+  "score": 5,
+  "max": 6,
+  "checks": {
+    "validate":   { "pass": false,   "detail": "failed" },
+    "naming":     { "pass": true,     "detail": "found provider::dx::resource_name() or DX provider" },
+    "tags":       { "pass": true,       "detail": "all required tags present" },
+    "secrets":    { "pass": true,    "detail": "Key Vault references used, no hardcoded secrets" },
+    "networking": { "pass": true, "detail": "dx_available_subnet_cidr found" },
+    "modules":    { "pass": true,    "detail": "pagopa-dx modules found with ~> version pin" }
+  }
+}
