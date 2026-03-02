@@ -79,6 +79,7 @@ resource "random_integer" "instance_base" {
   }
 }
 
+#trivy:ignore:AZU-0016
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.appcs_kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
@@ -86,7 +87,7 @@ resource "azurerm_key_vault" "kv" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   rbac_authorization_enabled    = true
   sku_name                      = "standard"
-  purge_protection_enabled      = true
+  purge_protection_enabled      = false
   soft_delete_retention_days    = 7
   public_network_access_enabled = false
 

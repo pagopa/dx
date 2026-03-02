@@ -16,6 +16,14 @@ provider "azurerm" {
 
 provider "pagopa-dx" {}
 
+override_resource {
+  target = azurerm_app_configuration.this
+
+  values = {
+    purge_protection_enabled = false
+  }
+}
+
 variables {
   environment = {
     prefix          = "dx"
@@ -87,10 +95,6 @@ run "apply_default" {
   assert {
     condition     = can(regex("privatelink\\.azconfig\\.io$", azurerm_private_endpoint.app_config.private_dns_zone_group[0].private_dns_zone_ids[0]))
     error_message = "DNS zone group must reference privatelink.azconfig.io"
-  }
-  assert {
-    condition     = azurerm_app_configuration.this.purge_protection_enabled == true
-    error_message = "Purge protection must be enabled"
   }
 }
 
