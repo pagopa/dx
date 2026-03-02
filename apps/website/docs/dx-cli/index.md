@@ -109,6 +109,16 @@ Next Steps:
 After the command completes, you will have a new GitHub repository with an open
 Pull Request to merge the initial project structure.
 
+### `add` - Scaffold New Components
+
+Scaffold new components in your project following DevEx guidelines.
+
+#### Currently Supported Components
+
+| Component Type | Description                                |
+| -------------- | ------------------------------------------ |
+| `environment`  | Add a new cloud environment to the project |
+
 ### `doctor` – Repository Validation
 
 Validate your repository against DevEx guidelines. Typical checks include:

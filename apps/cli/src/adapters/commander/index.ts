@@ -2,6 +2,7 @@ import { Command } from "commander";
 
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
+import { makeAddCommand } from "./commands/add.js";
 import {
   CodemodCommandDependencies,
   makeCodemodCommand,
@@ -28,6 +29,7 @@ export const makeCli = (
   program.addCommand(makeInitCommand(deps));
   program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps));
+  program.addCommand(makeAddCommand());
 
   return program;
 };

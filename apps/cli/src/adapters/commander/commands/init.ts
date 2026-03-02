@@ -114,7 +114,7 @@ const checkAzLogin = () =>
     ensureAzLogin(),
   );
 
-const checkPreconditions = () =>
+export const checkPreconditions = () =>
   checkTerraformCliIsInstalled().andThen(() => checkAzLogin());
 
 const createRemoteRepository = ({
