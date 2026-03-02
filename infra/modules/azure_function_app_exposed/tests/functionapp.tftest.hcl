@@ -234,3 +234,30 @@ run "function_app_override_size_fail" {
     var.size,
   ]
 }
+
+run "function_app_with_node_24" {
+  command = plan
+
+  variables {
+    use_case     = "default"
+    node_version = 24
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == "24"
+    error_message = "The Function App must use Node version 24"
+  }
+}
+
+run "function_app_invalid_node_version" {
+  command = plan
+
+  variables {
+    use_case     = "default"
+    node_version = 99
+  }
+
+  expect_failures = [
+    var.node_version,
+  ]
+}
