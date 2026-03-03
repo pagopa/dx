@@ -45,6 +45,8 @@ env:
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
   TF_IN_AUTOMATION: true
+  TF_HTTP_USERNAME: ${{ secrets.TF_HTTP_USERNAME }}
+  TF_HTTP_PASSWORD: ${{ secrets.TF_HTTP_PASSWORD }}
 
 jobs:
   terraform_driftdetection_job:
