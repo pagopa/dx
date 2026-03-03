@@ -204,5 +204,5 @@ resource "azurerm_container_app_custom_domain" "stategraph" {
   name                                     = local.stategraph_domain_name
   container_app_id                         = azurerm_container_app.stategraph.id
   container_app_environment_certificate_id = azurerm_container_app_environment_certificate.stategraph.id
-  certificate_binding_type                 = "SniEnabled"
+  certificate_binding_type                 = "SniEnabled" # enable https only
 }
