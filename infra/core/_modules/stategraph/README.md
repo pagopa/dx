@@ -14,7 +14,11 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_container_app.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
+| [azurerm_container_app_custom_domain.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_custom_domain) | resource |
 | [azurerm_container_app_environment.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
+| [azurerm_container_app_environment_certificate.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment_certificate) | resource |
+| [azurerm_dns_cname_record.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record) | resource |
+| [azurerm_dns_txt_record.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_txt_record) | resource |
 | [azurerm_key_vault_secret.stategraph_postgres_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_network_security_group.psql](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_network_security_rule.allow_inbound_ca_to_psql](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
@@ -22,8 +26,10 @@ No modules.
 | [azurerm_postgresql_flexible_server.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server) | resource |
 | [azurerm_postgresql_flexible_server_active_directory_administrator.admins](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server_active_directory_administrator) | resource |
 | [azurerm_postgresql_flexible_server_configuration.azure_extensions](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server_configuration) | resource |
+| [azurerm_postgresql_flexible_server_database.stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server_database) | resource |
 | [azurerm_private_endpoint.cae_stategraph](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
 | [azurerm_role_assignment.keyvault_ca](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.keyvault_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_subnet.stategraph_cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_subnet.stategraph_psql](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [dx_available_subnet_cidr.cae_subnet_cidr](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/available_subnet_cidr) | resource |
@@ -35,6 +41,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_admins"></a> [admins](#input\_admins) | List of admin object IDs for PostgreSQL flexible server. | `map(string)` | n/a | yes |
 | <a name="input_cae_dns_zone_id"></a> [cae\_dns\_zone\_id](#input\_cae\_dns\_zone\_id) | The ID of the private DNS zone for Container App Environment. | `string` | n/a | yes |
+| <a name="input_dns"></a> [dns](#input\_dns) | DNS configuration for the Stategraph environment. | <pre>object({<br/>    zone_name           = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Key Vault with secrets | <pre>object({<br/>    id   = string<br/>    name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to which the Stategraph environment will be linked for logging and monitoring. | `string` | n/a | yes |

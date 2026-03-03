@@ -38,10 +38,14 @@ resource "azurerm_container_app_environment" "stategraph" {
   zone_redundancy_enabled    = true
 
   workload_profile {
-    maximum_count         = 1
-    minimum_count         = 1
     name                  = "Consumption"
     workload_profile_type = "Consumption"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      infrastructure_resource_group_name, # Otherwise Terraform forces the recreation at every plan due to provider issue
+    ]
   }
 
   tags = var.tags
@@ -74,7 +78,8 @@ resource "azurerm_private_endpoint" "cae_stategraph" {
 
 resource "azurerm_container_app" "stategraph" {
   name = provider::dx::resource_name(merge(var.environment, {
-    resource_type = "container_app",
+    resource_type   = "container_app",
+    instance_number = "02"
   }))
   resource_group_name          = var.resource_group_name
   revision_mode                = "Single"
@@ -100,7 +105,7 @@ resource "azurerm_container_app" "stategraph" {
     }
 
     container {
-      image  = "ghcr.io/stategraph/stategraph-server:0.1.25"
+      image  = "ghcr.io/stategraph/stategraph-server:0.1.26"
       cpu    = 1
       memory = "2Gi"
       name   = "stategraph"
@@ -122,18 +127,20 @@ resource "azurerm_container_app" "stategraph" {
       }
 
       liveness_probe {
-        initial_delay    = 10
-        interval_seconds = 10
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 5
+        interval_seconds        = 10
+        failure_count_threshold = 3
+        path                    = "/health/live"
+        port                    = 8080
+        transport               = "HTTP"
       }
       readiness_probe {
-        initial_delay    = 5
-        interval_seconds = 5
-        path             = "/api/v1/health"
-        port             = 8080
-        transport        = "HTTP"
+        initial_delay           = 10
+        interval_seconds        = 10
+        failure_count_threshold = 10
+        path                    = "/health/ready"
+        port                    = 8080
+        transport               = "HTTP"
       }
     }
   }
@@ -147,6 +154,12 @@ resource "azurerm_container_app" "stategraph" {
     }
   }
 
+  lifecycle {
+    ignore_changes = [
+      workload_profile_name # Otherwise Terraform forces the recreation at every plan due to provider issue
+    ]
+  }
+
   depends_on = [
     azurerm_key_vault_secret.stategraph_postgres_password
   ]
@@ -158,5 +171,38 @@ resource "azurerm_role_assignment" "keyvault_ca" {
   scope                = var.key_vault.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_container_app.stategraph.identity[0].principal_id
-  description          = "Allow the Container App to read to secrets"
+  description          = "Allow the Container App to read to secrets and certificates"
+}
+
+resource "azurerm_role_assignment" "keyvault_cae" {
+  scope                = var.key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_container_app_environment.stategraph.identity[0].principal_id
+  description          = "Allow the Container App Environment to read to certificates"
+}
+
+locals {
+  stategraph_domain_name      = trim(azurerm_dns_cname_record.stategraph.fqdn, ".")
+  stategraph_certificate_name = replace(local.stategraph_domain_name, ".", "-")
+}
+
+resource "azurerm_container_app_environment_certificate" "stategraph" {
+  name                         = local.stategraph_certificate_name
+  container_app_environment_id = azurerm_container_app_environment.stategraph.id
+
+  certificate_key_vault {
+    identity            = "System"
+    key_vault_secret_id = "https://${var.key_vault.name}.vault.azure.net/secrets/${local.stategraph_certificate_name}"
+  }
+
+  depends_on = [azurerm_role_assignment.keyvault_cae]
+
+  tags = var.tags
+}
+
+resource "azurerm_container_app_custom_domain" "stategraph" {
+  name                                     = local.stategraph_domain_name
+  container_app_id                         = azurerm_container_app.stategraph.id
+  container_app_environment_certificate_id = azurerm_container_app_environment_certificate.stategraph.id
+  certificate_binding_type                 = "SniEnabled" # enable https only
 }

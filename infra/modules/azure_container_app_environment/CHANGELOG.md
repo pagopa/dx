@@ -1,5 +1,11 @@
 # azure_container_app_environment
 
+## 1.1.1
+
+### Patch Changes
+
+- b06eece: Remove minimum/maximum count for Consumption workload profile and related ignore_changes block
+
 ## 1.1.0
 
 ### Minor Changes

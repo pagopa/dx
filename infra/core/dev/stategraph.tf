@@ -4,6 +4,8 @@ resource "azurerm_resource_group" "stategraph" {
     app_name      = "stategraph"
   }))
   location = local.azure_environment.location
+
+  tags = local.tags
 }
 
 module "stategraph" {
@@ -30,6 +32,10 @@ module "stategraph" {
   pep_subnet_id        = module.azure.common_pep_snet.id
   postgres_dns_zone_id = data.azurerm_private_dns_zone.postgres.id
   cae_dns_zone_id      = data.azurerm_private_dns_zone.cae.id
+  dns = {
+    zone_name           = azurerm_dns_zone.dev_dx_pagopa_it.name
+    resource_group_name = module.azure.network_resource_group_name
+  }
   key_vault = {
     id   = module.azure.common_key_vault.id
     name = module.azure.common_key_vault.name

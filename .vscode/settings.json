@@ -9,5 +9,17 @@
   },
   "[go]": {
     "editor.defaultFormatter": "golang.go"
+  },
+  "files.watcherExclude": {
+    "**/build/**": true,
+    "**/dist/**": true,
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/**": true,
+    ".pnpm-store/**": true,
+    ".turbo/**": true,
+    ".nx/**": true,
+    "coverage/**": true,
+    ".terraform/**": true
   }
 }

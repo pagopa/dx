@@ -1,10 +1,13 @@
 import type { TokenCredential } from "@azure/identity";
 
 import { AuthorizationManagementClient } from "@azure/arm-authorization";
+import { KeyVaultManagementClient } from "@azure/arm-keyvault";
 import { ManagedServiceIdentityClient } from "@azure/arm-msi";
 import { ResourceGraphClient } from "@azure/arm-resourcegraph";
 import { ResourceManagementClient } from "@azure/arm-resources";
+import { SubscriptionClient } from "@azure/arm-resources-subscriptions";
 import { StorageManagementClient } from "@azure/arm-storage";
+import { SecretClient } from "@azure/keyvault-secrets";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
 import { Client } from "@microsoft/microsoft-graph-client";
@@ -19,6 +22,7 @@ import {
   type EnvironmentId,
   environmentShort,
 } from "../../domain/environment.js";
+import { GitHubAppCredentials } from "../../domain/github.js";
 import {
   type TerraformBackend,
   terraformBackendSchema,
@@ -171,6 +175,7 @@ export class AzureCloudAccountService implements CloudAccountService {
   async initialize(
     cloudAccount: CloudAccount,
     { name, prefix }: EnvironmentId,
+    runnerAppCredentials: GitHubAppCredentials,
     tags: Record<string, string> = {},
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
@@ -191,7 +196,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       location: locationShort[cloudAccount.defaultLocation],
     };
 
-    const resourceGroupName = `${prefix}-${short.env}-${short.location}-bootstrap-rg-01`;
+    const resourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
 
     const parameters = {
       location: cloudAccount.defaultLocation,
@@ -211,23 +216,106 @@ export class AzureCloudAccountService implements CloudAccountService {
       { resourceGroupName, subscriptionId: cloudAccount.id },
     );
 
-    const msiClient = new ManagedServiceIdentityClient(
-      this.#credential,
-      cloudAccount.id,
-    );
+    try {
+      const identityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
 
-    const identityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
+      const msiClient = new ManagedServiceIdentityClient(
+        this.#credential,
+        cloudAccount.id,
+      );
 
-    await msiClient.userAssignedIdentities.createOrUpdate(
-      resourceGroupName,
-      identityName,
-      parameters,
-    );
+      await msiClient.userAssignedIdentities.createOrUpdate(
+        resourceGroupName,
+        identityName,
+        parameters,
+      );
 
-    logger.debug(
-      "Created identity {identityName} in subscription {subscriptionId}",
-      { identityName, subscriptionId: cloudAccount.id },
-    );
+      logger.debug(
+        "Created identity {identityName} in subscription {subscriptionId}",
+        { identityName, subscriptionId: cloudAccount.id },
+      );
+
+      // Retrieve tenant ID from the subscription
+      const subscriptionClient = new SubscriptionClient(this.#credential);
+      const subscription = await subscriptionClient.subscriptions.get(
+        cloudAccount.id,
+      );
+      assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+
+      const kvClient = new KeyVaultManagementClient(
+        this.#credential,
+        cloudAccount.id,
+      );
+
+      const keyVaultName = `${prefix}-${short.env}-${short.location}-common-kv-01`;
+
+      const secretsProtectionEnabled = short.env === "p";
+
+      await kvClient.vaults.beginCreateOrUpdateAndWait(
+        resourceGroupName,
+        keyVaultName,
+        {
+          location: cloudAccount.defaultLocation,
+          properties: {
+            enabledForDiskEncryption: true,
+            enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
+            enableRbacAuthorization: true,
+            sku: {
+              family: "A",
+              name: "standard",
+            },
+            softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
+            tenantId: subscription.tenantId,
+          },
+          tags: {
+            Environment: name,
+            ...tags,
+          },
+        },
+      );
+
+      logger.debug(
+        "Created key vault {keyVaultName} in subscription {subscriptionId}",
+        { keyVaultName, subscriptionId: cloudAccount.id },
+      );
+
+      const secretClient = new SecretClient(
+        `https://${keyVaultName}.vault.azure.net/`,
+        this.#credential,
+      );
+
+      await Promise.all([
+        secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
+        secretClient.setSecret(
+          "github-runner-app-installation-id",
+          runnerAppCredentials.installationId,
+        ),
+        secretClient.setSecret(
+          "github-runner-app-key",
+          runnerAppCredentials.key,
+        ),
+      ]);
+
+      logger.debug(
+        "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
+        { keyVaultName, subscriptionId: cloudAccount.id },
+      );
+    } catch (cause) {
+      // Cleanup resource group if initialization fails
+      await resourceManagementClient.resourceGroups.beginDeleteAndWait(
+        resourceGroupName,
+      );
+      logger.debug(
+        "Deleted resource group {resourceGroupName} in subscription {subscriptionId} due to initialization failure",
+        { resourceGroupName, subscriptionId: cloudAccount.id },
+      );
+      if (cause instanceof Error) {
+        logger.error(cause.message);
+      }
+      throw new Error(`Error during the initialization of the cloud account`, {
+        cause,
+      });
+    }
   }
 
   async isInitialized(
@@ -236,17 +324,32 @@ export class AzureCloudAccountService implements CloudAccountService {
   ): Promise<boolean> {
     const allLocations = Object.values(locationShort).join("|");
     const shortEnv = environmentShort[name];
-    const resourceName = `${prefix}-${shortEnv}-(${allLocations})-bootstrap-id-(0[1-9]|[1-9]\\d)`;
-    const query = `resources
-             | where type == 'microsoft.managedidentity/userassignedidentities'
-             | where name matches regex @'${resourceName}'
-            `;
-    const result = await this.#resourceGraphClient.resources({
-      query,
-      subscriptions: [cloudAccountId],
-    });
 
-    const initialized = result.totalRecords > 0;
+    const identityResourceName = `${prefix}-${shortEnv}-(${allLocations})-bootstrap-id-(0[1-9]|[1-9]\\d)`;
+    const identityQuery = `resources
+             | where type == 'microsoft.managedidentity/userassignedidentities'
+             | where name matches regex @'${identityResourceName}'
+            `;
+
+    const keyVaultResourceName = `${prefix}-${shortEnv}-(${allLocations})-common-kv-(0[1-9]|[1-9]\\d)`;
+    const keyVaultQuery = `resources
+             | where type == 'microsoft.keyvault/vaults'
+             | where name matches regex @'${keyVaultResourceName}'
+            `;
+
+    const [identityResult, keyVaultResult] = await Promise.all([
+      this.#resourceGraphClient.resources({
+        query: identityQuery,
+        subscriptions: [cloudAccountId],
+      }),
+      this.#resourceGraphClient.resources({
+        query: keyVaultQuery,
+        subscriptions: [cloudAccountId],
+      }),
+    ]);
+
+    const initialized =
+      identityResult.totalRecords > 0 && keyVaultResult.totalRecords > 0;
 
     const logger = getLogger(["gen", "env"]);
 

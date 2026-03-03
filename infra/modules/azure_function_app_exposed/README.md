@@ -39,7 +39,7 @@ For a complete example, see the [examples/complete](https://github.com/pagopa-dx
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.8.0, < 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.58.0, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 
 ## Modules
@@ -80,7 +80,7 @@ No modules.
 | <a name="input_has_durable_functions"></a> [has\_durable\_functions](#input\_has\_durable\_functions) | Set to true if the Function App hosts Durable Functions. | `bool` | `false` | no |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | The endpoint path where the health probe is exposed for the Function App. | `string` | n/a | yes |
 | <a name="input_java_version"></a> [java\_version](#input\_java\_version) | The version of Java to use for the Function App runtime. | `string` | `17` | no |
-| <a name="input_node_version"></a> [node\_version](#input\_node\_version) | The version of Node.js to use for the Function App runtime. | `number` | `20` | no |
+| <a name="input_node_version"></a> [node\_version](#input\_node\_version) | The version of Node.js to use for the Function App runtime. Supported versions: 22, 24 (Preview). | `number` | `22` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_size"></a> [size](#input\_size) | App Service Plan size. Allowed values: 'P0v3', 'P1v3', 'P2mv3', 'P3mv3'. If not set, it will be determined by the use\_case. | `string` | `null` | no |
 | <a name="input_slot_app_settings"></a> [slot\_app\_settings](#input\_slot\_app\_settings) | A map of application settings specific to the staging slot of the Function App. | `map(string)` | `{}` | no |

@@ -77,8 +77,8 @@ run "app_service_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "20-lts"
-    error_message = "The App Service must use Node version 20 LTS"
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "22-lts"
+    error_message = "The App Service must use Node version 22"
   }
 
   assert {
@@ -195,4 +195,31 @@ run "app_service_with_diagnostic_settings_only_log_analytics" {
     condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
     error_message = "Diagnostic settings should be created with only Log Analytics workspace"
   }
+}
+
+run "app_service_with_node_24" {
+  command = plan
+
+  variables {
+    use_case     = "default"
+    node_version = 24
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "24-lts"
+    error_message = "The App Service must use Node version 24 LTS"
+  }
+}
+
+run "app_service_invalid_node_version" {
+  command = plan
+
+  variables {
+    use_case     = "default"
+    node_version = 99
+  }
+
+  expect_failures = [
+    var.node_version,
+  ]
 }

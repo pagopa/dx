@@ -10,8 +10,6 @@ resource "azurerm_container_app_environment" "this" {
   workload_profile {
     name                  = "Consumption"
     workload_profile_type = "Consumption"
-    minimum_count         = 1
-    maximum_count         = 1
   }
 
   zone_redundancy_enabled = var.environment.env_short != "d" ? true : false
@@ -19,7 +17,6 @@ resource "azurerm_container_app_environment" "this" {
   lifecycle {
     ignore_changes = [
       infrastructure_resource_group_name,
-      workload_profile,
     ]
   }
 

@@ -113,8 +113,9 @@ variable "github_private_runner" {
       secret_name         = optional(string, "github-runner-pat")
       use_rbac            = optional(bool, false)
     })
-    cpu    = optional(number, 1.5)
-    memory = optional(string, "3Gi")
+    use_github_app = optional(bool, false)
+    cpu            = optional(number, 1.5)
+    memory         = optional(string, "3Gi")
   })
 
   description = "Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration."

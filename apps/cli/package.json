@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.16.3",
+  "version": "0.17.0",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {
@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-keyvault": "^4.0.0",
     "@azure/arm-msi": "^2.2.0",
+    "@azure/keyvault-secrets": "^4.9.0",
     "@azure/arm-resourcegraph": "^4.2.1",
     "@azure/arm-resources": "^7.0.0",
     "@azure/arm-resources-subscriptions": "^2.1.0",
