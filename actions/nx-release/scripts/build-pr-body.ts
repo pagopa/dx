@@ -9,7 +9,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
-import { readPackageJson, readPomXml } from "./shared.js";
+import { readPackageJson, readPomXml } from "./parse-manifests.js";
 
 interface ReleaseEntry {
   changelogPath: string;
@@ -32,7 +32,8 @@ async function extractLatestSection(changelogPath: string): Promise<string[]> {
     const end = nextHeading === -1 ? lines.length : nextHeading;
 
     return lines.slice(firstHeading, end).map((line) => line.trimEnd());
-  } catch {
+  } catch (err) {
+    console.warn(`Could not read changelog at ${changelogPath}:`, err);
     return [];
   }
 }

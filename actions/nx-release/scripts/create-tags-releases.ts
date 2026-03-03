@@ -8,7 +8,7 @@ import { appendFile, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
 
-import { readPackageJson, readPomXml } from "./shared.js";
+import { readPackageJson, readPomXml } from "./parse-manifests.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -84,7 +84,8 @@ async function extractReleaseNotes(target: ReleaseTarget): Promise<string> {
 
     const section = lines.slice(start, end).join("\n").trim();
     return section || `Release ${target.name}@${target.version}`;
-  } catch {
+  } catch (err) {
+    console.warn(`Could not read changelog for ${target.name}:`, err);
     return `Release ${target.name}@${target.version}`;
   }
 }
@@ -318,6 +319,7 @@ async function tagExistsLocally(tagName: string): Promise<boolean> {
     ]);
     return true;
   } catch {
+    // Non-zero exit means the tag does not exist locally
     return false;
   }
 }
@@ -332,7 +334,8 @@ async function tagExistsOnRemote(tagName: string): Promise<boolean> {
       `refs/tags/${tagName}`,
     ]);
     return stdout.length > 0;
-  } catch {
+  } catch (err) {
+    console.warn(`Failed to check remote tag ${tagName}:`, err);
     return false;
   }
 }

@@ -78,7 +78,8 @@ async function extractReleaseNotes(target) {
     const end = nextHeading === -1 ? lines.length : nextHeading;
     const section = lines.slice(start, end).join("\n").trim();
     return section || `Release ${target.name}@${target.version}`;
-  } catch {
+  } catch (err) {
+    console.warn(`Could not read changelog for ${target.name}:`, err);
     return `Release ${target.name}@${target.version}`;
   }
 }
@@ -258,7 +259,8 @@ async function tagExistsOnRemote(tagName) {
       `refs/tags/${tagName}`
     ]);
     return stdout.length > 0;
-  } catch {
+  } catch (err) {
+    console.warn(`Failed to check remote tag ${tagName}:`, err);
     return false;
   }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { readPackageJson, readPomXml } from "../shared.js";
+import { readPackageJson, readPomXml } from "../parse-manifests.js";
 
 vi.mock("node:fs/promises", () => ({
   readFile: vi.fn(),

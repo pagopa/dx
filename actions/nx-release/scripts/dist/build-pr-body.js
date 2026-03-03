@@ -47,7 +47,8 @@ async function extractLatestSection(changelogPath) {
     );
     const end = nextHeading === -1 ? lines.length : nextHeading;
     return lines.slice(firstHeading, end).map((line) => line.trimEnd());
-  } catch {
+  } catch (err) {
+    console.warn(`Could not read changelog at ${changelogPath}:`, err);
     return [];
   }
 }
