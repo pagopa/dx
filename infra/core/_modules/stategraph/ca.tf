@@ -105,7 +105,7 @@ resource "azurerm_container_app" "stategraph" {
     }
 
     container {
-      image  = "ghcr.io/stategraph/stategraph-server:0.1.25"
+      image  = "ghcr.io/stategraph/stategraph-server:0.1.26"
       cpu    = 1
       memory = "2Gi"
       name   = "stategraph"
