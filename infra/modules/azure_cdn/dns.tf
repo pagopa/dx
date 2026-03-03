@@ -23,15 +23,20 @@ resource "azurerm_dns_a_record" "this" {
 
 # Create a DNS TXT record for each custom domain publicly exposed via DNS.
 # This record is used to validate the custom domain and allow the CDN to serve content for it.
+# If custom domain is already validated and there is empty validation token the resource will not be created (Note: the CDN service will remove the TXT record once the domain is validated)
 resource "azurerm_dns_txt_record" "validation" {
-  for_each            = { for custom_domain in var.custom_domains : custom_domain.host_name => custom_domain if custom_domain.dns.zone_name != null && custom_domain.dns.zone_resource_group_name != null }
+  for_each = { for custom_domain in var.custom_domains :
+    custom_domain.host_name => custom_domain
+    if custom_domain.dns.zone_name != null &&
+    custom_domain.dns.zone_resource_group_name != null &&
+    azurerm_cdn_frontdoor_custom_domain.this[custom_domain.host_name].validation_token != ""
+  }
   name                = each.value.host_name == each.value.dns.zone_name ? "_dnsauth" : format("_dnsauth.%s", trimsuffix(each.value.host_name, ".${each.value.dns.zone_name}"))
   zone_name           = each.value.dns.zone_name
   resource_group_name = each.value.dns.zone_resource_group_name
   ttl                 = "3600"
   record {
-    # To avoid empty token when already validated, set a dummy value (the CDN service will remove the TXT record once the domain is validated)
-    value = length(try(azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token, "")) > 0 ? azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token : "AlreadyValidated"
+    value = azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token
   }
   tags = merge(local.tags, {
     Origin = each.value.host_name
