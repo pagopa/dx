@@ -27,3 +27,37 @@ resource "github_actions_secret" "lets_encrypt_registration" {
     ignore_changes = [remote_updated_at]
   }
 }
+
+locals {
+  stategraph_environments = toset([
+    for pair in setproduct(["dev", "uat", "prod"], ["ci", "cd"]) :
+    "infra-${pair[0]}-${pair[1]}"
+  ])
+}
+
+resource "github_actions_environment_secret" "stategraph_username" {
+  for_each = local.stategraph_environments
+
+  repository      = module.github_repository.name
+  environment     = each.value
+  secret_name     = "STATEGRAPH_USERNAME"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
+resource "github_actions_environment_secret" "stategraph_token" {
+  for_each = local.stategraph_environments
+
+  repository      = module.github_repository.name
+  environment     = each.value
+  secret_name     = "STATEGRAPH_TOKEN"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
