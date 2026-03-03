@@ -45,8 +45,6 @@ env:
   BASE_DIR: ${{ inputs.base_path }}
   AZURE_ENVIRONMENT: ${{ inputs.environment }}
   TF_IN_AUTOMATION: true
-  TF_HTTP_USERNAME: ${{ secrets.TF_HTTP_USERNAME }}
-  TF_HTTP_PASSWORD: ${{ secrets.TF_HTTP_PASSWORD }}
 
 jobs:
   terraform_driftdetection_job:
@@ -64,6 +62,8 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+      TF_HTTP_USERNAME: ${{ secrets.TF_HTTP_USERNAME }}
+      TF_HTTP_PASSWORD: ${{ secrets.TF_HTTP_PASSWORD }}
     steps:
       # Exit with error if SLACK_WEBHOOK_URL is not set
       - name: Check Slack Webhook

@@ -90,6 +90,8 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       TFPLAN_FILE: tf-outcome-${{ github.sha }}
+      TF_HTTP_USERNAME: ${{ secrets.TF_HTTP_USERNAME }}
+      TF_HTTP_PASSWORD: ${{ secrets.TF_HTTP_PASSWORD }}
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -183,6 +185,8 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tf-outcome-${{ github.sha }}
+      TF_HTTP_USERNAME: ${{ secrets.TF_HTTP_USERNAME }}
+      TF_HTTP_PASSWORD: ${{ secrets.TF_HTTP_PASSWORD }}
 
     steps:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
