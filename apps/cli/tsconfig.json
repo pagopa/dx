@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
@@ -8,5 +8,7 @@
     "declaration": true,
     "target": "ES2022"
   },
-  "include": ["src"]
+  "include": [
+    "src"
+  ]
 }

@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
@@ -8,5 +8,7 @@
     "moduleResolution": "bundler",
     "module": "ESNext"
   },
-  "exclude": ["tsup.config.ts"]
+  "exclude": [
+    "tsup.config.ts"
+  ]
 }
