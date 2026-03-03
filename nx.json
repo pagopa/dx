@@ -65,9 +65,34 @@
     },
     "version": {}
   },
+  "release": {
+    "versionPlans": true,
+    "projectsRelationship": "independent",
+    "version": {
+      "updateDependents": "never"
+    },
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": true,
+          "applyUsernameToAuthors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    },
+    "git": {
+      "commit": false,
+      "tag": false,
+      "stageChanges": false
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/docker",
+      "exclude": ["apps/mcpserver/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
