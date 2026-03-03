@@ -34,6 +34,8 @@ outputs:
 runs:
   using: "composite"
   steps:
+    # Step to detect if the release intent is to create/update a PR or to publish
+    # will set output 'mode' to either 'create-pr', 'publish', or 'noop'
     - name: Detect Nx release intent
       id: intent
       shell: bash
