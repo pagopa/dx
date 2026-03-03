@@ -4,7 +4,7 @@ locals {
     "DB_PORT"            = "5432"
     "DB_USER"            = "stategraph",
     "DB_NAME"            = "stategraph",
-    "STATEGRAPH_UI_BASE" = "stategraph.${var.dns.zone_name}",
+    "STATEGRAPH_UI_BASE" = "https://stategraph.${var.dns.zone_name}",
     "POSTGRES_DB"        = "stategraph",
   }
 
