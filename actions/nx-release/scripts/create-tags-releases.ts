@@ -1,13 +1,16 @@
-import { execa } from "execa";
 /**
  * Scans all tracked package manifests in the repo, creates annotated git tags
  * for newly published versions, pushes them to origin, and creates the
  * corresponding GitHub releases with changelog notes.
  */
+import { execFile, spawn } from "node:child_process";
 import { appendFile, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { promisify } from "node:util";
 
 import { readPackageJson, readPomXml } from "./shared.js";
+
+const execFileAsync = promisify(execFile);
 
 interface ReleaseTarget {
   isPrivate: boolean;
@@ -34,7 +37,7 @@ async function createGitHubRelease(
   prerelease: boolean,
 ): Promise<void> {
   try {
-    await execa("gh", ["release", "view", tagName], { stdio: "ignore" });
+    await execFileAsync("gh", ["release", "view", tagName]);
     console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
     return;
   } catch {
@@ -55,7 +58,7 @@ async function createGitHubRelease(
     args.push("--prerelease");
   }
 
-  await execa("gh", args, { stdio: "inherit" });
+  await spawnInherit("gh", args);
   console.log(`::notice::Created GitHub release ${tagName}`);
 }
 
@@ -135,7 +138,7 @@ function isNpmRegistry(registry: string | undefined): boolean {
 
 /** Lists tracked manifest files (package.json and pom.xml) in the repo. */
 async function listManifestFiles(): Promise<string[]> {
-  const { stdout } = await execa("git", [
+  const { stdout } = await execFileAsync("git", [
     "ls-files",
     "--",
     "**/package.json",
@@ -143,7 +146,7 @@ async function listManifestFiles(): Promise<string[]> {
   ]);
   return stdout
     .split("\n")
-    .map((line) => line.trim())
+    .map((line: string) => line.trim())
     .filter(Boolean);
 }
 
@@ -200,7 +203,7 @@ async function readNpmPublishedVersions(
     if (registry) {
       args.push("--registry", registry);
     }
-    const { stdout } = await execa("npm", args);
+    const { stdout } = await execFileAsync("npm", args);
     if (!stdout) {
       return [];
     }
@@ -238,18 +241,20 @@ async function run(): Promise<void> {
     }
 
     console.log(`::notice::Creating tag ${tagName}`);
-    await execa(
-      "git",
-      ["tag", "-a", tagName, "-m", `Release ${target.name} ${target.version}`],
-      { stdio: "inherit" },
-    );
+    await spawnInherit("git", [
+      "tag",
+      "-a",
+      tagName,
+      "-m",
+      `Release ${target.name} ${target.version}`,
+    ]);
 
     createdTags.push(tagName);
   }
 
   if (createdTags.length > 0) {
     console.log(`::notice::Pushing ${createdTags.length} tags to origin`);
-    await execa("git", ["push", "origin", "--tags"], { stdio: "inherit" });
+    await spawnInherit("git", ["push", "origin", "--tags"]);
 
     for (const target of targets) {
       const tagName = `${target.name}@${target.version}`;
@@ -280,6 +285,21 @@ async function shouldCreateTag(target: ReleaseTarget): Promise<boolean> {
   return publishedVersions.includes(target.version);
 }
 
+/** Runs a command and streams its output to the current terminal. */
+function spawnInherit(cmd: string, args: string[]): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, { stdio: "inherit" });
+    child.on("close", (code) =>
+      code === 0
+        ? resolve()
+        : reject(
+            new Error(`${cmd} ${args.join(" ")} exited with code ${code}`),
+          ),
+    );
+    child.on("error", reject);
+  });
+}
+
 /** Checks whether a tag exists either locally or remotely. */
 async function tagExists(tagName: string): Promise<boolean> {
   return (
@@ -290,13 +310,12 @@ async function tagExists(tagName: string): Promise<boolean> {
 /** Checks whether a tag exists in local git refs. */
 async function tagExistsLocally(tagName: string): Promise<boolean> {
   try {
-    await execa(
-      "git",
-      ["rev-parse", "-q", "--verify", `refs/tags/${tagName}`],
-      {
-        stdio: "ignore",
-      },
-    );
+    await execFileAsync("git", [
+      "rev-parse",
+      "-q",
+      "--verify",
+      `refs/tags/${tagName}`,
+    ]);
     return true;
   } catch {
     return false;
@@ -306,7 +325,7 @@ async function tagExistsLocally(tagName: string): Promise<boolean> {
 /** Checks whether a tag already exists on origin remote. */
 async function tagExistsOnRemote(tagName: string): Promise<boolean> {
   try {
-    const { stdout } = await execa("git", [
+    const { stdout } = await execFileAsync("git", [
       "ls-remote",
       "--tags",
       "origin",

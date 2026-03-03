@@ -1,10 +1,13 @@
-import { execa } from "execa";
 /**
  * Inspects the current git push event to determine which Nx release mode
  * ("create-pr", "publish", or "noop") should run, then writes it to
  * GITHUB_OUTPUT for downstream steps.
  */
+import { execFile } from "node:child_process";
 import { appendFile, readFile } from "node:fs/promises";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 export type ReleaseMode = "create-pr" | "noop" | "publish";
 
@@ -93,7 +96,12 @@ async function run(): Promise<void> {
   const { base, head } = computeRange(event, githubSha);
   console.log(`::notice::Analyzing diff range ${base}..${head}`);
 
-  const { stdout } = await execa("git", ["diff", "--name-status", base, head]);
+  const { stdout } = await execFileAsync("git", [
+    "diff",
+    "--name-status",
+    base,
+    head,
+  ]);
   const mode = detectMode(stdout);
 
   if (outputPath) {

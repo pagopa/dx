@@ -1,10 +1,13 @@
-import { execa } from "execa";
 /**
  * Builds the release PR body by extracting the latest changelog section
  * from each package bumped in the current commit.
  */
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 import { readPackageJson, readPomXml } from "./shared.js";
 
@@ -65,7 +68,11 @@ async function formatReleaseSection(entry: ReleaseEntry): Promise<string> {
 
 /** Returns changed files relative to HEAD (staged and unstaged). */
 async function getChangedFiles(): Promise<string[]> {
-  const { stdout } = await execa("git", ["diff", "HEAD", "--name-only"]);
+  const { stdout } = await execFileAsync("git", [
+    "diff",
+    "HEAD",
+    "--name-only",
+  ]);
   return stdout
     .split("\n")
     .map((line) => line.trim())
