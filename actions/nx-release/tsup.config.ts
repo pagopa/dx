@@ -14,6 +14,7 @@ export default defineConfig({
   outDir: "scripts/dist",
   platform: "node",
   sourcemap: false,
+  splitting: false,
   target: "node20",
   treeshake: true,
 });
