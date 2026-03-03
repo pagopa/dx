@@ -1,4 +1,5 @@
 import { type NodePlopAPI } from "node-plop";
+import assert from "node:assert/strict";
 
 import { CloudAccountService } from "../../../domain/cloud-account.js";
 import {
@@ -10,10 +11,17 @@ export const initCloudAccounts = async (
   payload: Payload,
   cloudAccountService: CloudAccountService,
 ) => {
-  if (payload.init) {
+  if (payload.init && payload.init.cloudAccountsToInitialize.length > 0) {
+    const { runnerAppCredentials } = payload.init;
+    assert.ok(runnerAppCredentials, "Runner app credentials are required");
     await Promise.all(
       payload.init.cloudAccountsToInitialize.map((cloudAccount) =>
-        cloudAccountService.initialize(cloudAccount, payload.env, payload.tags),
+        cloudAccountService.initialize(
+          cloudAccount,
+          payload.env,
+          runnerAppCredentials,
+          payload.tags,
+        ),
       ),
     );
   }

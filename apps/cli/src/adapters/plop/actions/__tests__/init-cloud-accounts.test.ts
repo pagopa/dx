@@ -40,6 +40,11 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
   },
   init: {
     cloudAccountsToInitialize: [],
+    runnerAppCredentials: {
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
     terraformBackend: {
       cloudAccount: createMockCloudAccount(),
     },
@@ -67,6 +72,11 @@ describe("initCloudAccounts", () => {
       },
       init: {
         cloudAccountsToInitialize: [cloudAccount1, cloudAccount2],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
         terraformBackend: {
           cloudAccount: createMockCloudAccount(),
         },
@@ -79,11 +89,21 @@ describe("initCloudAccounts", () => {
     expect(initializeMock).toHaveBeenCalledWith(
       cloudAccount1,
       expect.objectContaining({ name: "prod", prefix: "io" }),
+      {
+        id: "test-app-id",
+        installationId: "test-installation-id",
+        key: "test-private-key",
+      },
       {},
     );
     expect(initializeMock).toHaveBeenCalledWith(
       cloudAccount2,
       expect.objectContaining({ name: "prod", prefix: "io" }),
+      {
+        id: "test-app-id",
+        installationId: "test-installation-id",
+        key: "test-private-key",
+      },
       {},
     );
   });
@@ -96,6 +116,11 @@ describe("initCloudAccounts", () => {
     const payload = createMockPayload({
       init: {
         cloudAccountsToInitialize: [],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
         terraformBackend: {
           cloudAccount: createMockCloudAccount(),
         },
@@ -135,6 +160,11 @@ describe("initCloudAccounts", () => {
       },
       init: {
         cloudAccountsToInitialize: [cloudAccount],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
         terraformBackend: {
           cloudAccount: createMockCloudAccount(),
         },
@@ -146,6 +176,11 @@ describe("initCloudAccounts", () => {
     expect(initializeMock).toHaveBeenCalledWith(
       cloudAccount,
       expect.objectContaining({ name: "uat", prefix: "pagopa" }),
+      {
+        id: "test-app-id",
+        installationId: "test-installation-id",
+        key: "test-private-key",
+      },
       {},
     );
   });
