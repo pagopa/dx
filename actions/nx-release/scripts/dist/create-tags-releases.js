@@ -1,51 +1,63 @@
-import { execSync } from 'child_process';
-import { existsSync, readFileSync, appendFileSync } from 'fs';
+import { readPackageJson, readPomXml } from './chunk-A3PKVJUP.js';
+import { execa } from './chunk-N4R2TMCK.js';
+import { readFile, appendFile } from 'fs/promises';
 import { join, dirname } from 'path';
 
-// scripts/create-tags-releases.ts
-function appendOutput(outputPath, key, value) {
-  appendFileSync(outputPath, `${key}=${value}
+async function appendOutput(outputPath, key, value) {
+  await appendFile(outputPath, `${key}=${value}
 `);
 }
-function createGitHubRelease(tagName, notes, prerelease) {
+async function createGitHubRelease(tagName, notes, prerelease) {
   try {
-    execSync(`gh release view ${shellEscape(tagName)}`, { stdio: "ignore" });
+    await execa("gh", ["release", "view", tagName], { stdio: "ignore" });
     console.log(`::notice::GitHub release ${tagName} already exists, skipping`);
     return;
   } catch {
   }
-  const prereleaseFlag = prerelease ? "--prerelease" : "";
-  const command = `gh release create ${shellEscape(tagName)} --title ${shellEscape(tagName)} --notes ${shellEscape(notes)} ${prereleaseFlag}`.trim();
-  execSync(command, { stdio: "inherit" });
+  const args = [
+    "release",
+    "create",
+    tagName,
+    "--title",
+    tagName,
+    "--notes",
+    notes
+  ];
+  if (prerelease) {
+    args.push("--prerelease");
+  }
+  await execa("gh", args, { stdio: "inherit" });
+  console.log(`::notice::Created GitHub release ${tagName}`);
 }
-function extractReleaseNotes(target) {
+async function extractReleaseNotes(target) {
   const changelog = join(dirname(target.sourceFile), "CHANGELOG.md");
-  if (!existsSync(changelog)) {
+  try {
+    const lines = (await readFile(changelog, "utf8")).split("\n");
+    const versionPattern = new RegExp(
+      `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`
+    );
+    const start = lines.findIndex((line) => versionPattern.test(line));
+    if (start === -1) {
+      return `Release ${target.name}@${target.version}`;
+    }
+    const nextHeading = lines.findIndex(
+      (line, i) => i > start && /^##\s+/.test(line)
+    );
+    const end = nextHeading === -1 ? lines.length : nextHeading;
+    const section = lines.slice(start, end).join("\n").trim();
+    return section || `Release ${target.name}@${target.version}`;
+  } catch {
     return `Release ${target.name}@${target.version}`;
   }
-  const lines = readFileSync(changelog, "utf8").split("\n");
-  const versionPattern = new RegExp(
-    `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`
-  );
-  const start = lines.findIndex((line) => versionPattern.test(line));
-  if (start === -1) {
-    return `Release ${target.name}@${target.version}`;
-  }
-  const nextHeading = lines.findIndex(
-    (line, i) => i > start && /^##\s+/.test(line)
-  );
-  const end = nextHeading === -1 ? lines.length : nextHeading;
-  const section = lines.slice(start, end).join("\n").trim();
-  return section || `Release ${target.name}@${target.version}`;
 }
-function extractTargets(manifestFiles) {
+async function extractTargets(manifestFiles) {
   const seen = /* @__PURE__ */ new Set();
   const targets = [];
   for (const file of manifestFiles) {
     if (file === "actions/nx-release/package.json") {
       continue;
     }
-    const target = file.endsWith("package.json") ? parsePackageJson(file) : file.endsWith("pom.xml") ? parsePom(file) : null;
+    const target = file.endsWith("package.json") ? await parsePackageJson(file) : file.endsWith("pom.xml") ? await parsePom(file) : null;
     if (!target) {
       continue;
     }
@@ -65,159 +77,149 @@ function isNpmRegistry(registry) {
   const normalized = registry.replace(/\/+$/, "").toLowerCase();
   return normalized === "https://registry.npmjs.org" || normalized === "https://registry.yarnpkg.com";
 }
-function listManifestFiles() {
-  const output = runCommand("git ls-files -- '**/package.json' '**/pom.xml'");
-  return output.split("\n").map((line) => line.trim()).filter(Boolean);
+async function listManifestFiles() {
+  const { stdout } = await execa("git", [
+    "ls-files",
+    "--",
+    "**/package.json",
+    "**/pom.xml"
+  ]);
+  return stdout.split("\n").map((line) => line.trim()).filter(Boolean);
 }
-function matchValue(content, regex) {
-  return content.match(regex)?.[1]?.trim() ?? "";
-}
-function parsePackageJson(path) {
-  if (!existsSync(path)) {
+async function parsePackageJson(path) {
+  const result = await readPackageJson(path);
+  if (!result) {
     return null;
   }
-  try {
-    const parsed = JSON.parse(readFileSync(path, "utf8"));
-    if (typeof parsed !== "object" || parsed === null) {
-      return null;
-    }
-    const pkg = parsed;
-    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
-      return null;
-    }
-    const publishConfig = typeof pkg["publishConfig"] === "object" && pkg["publishConfig"] !== null ? pkg["publishConfig"] : void 0;
-    const registry = typeof publishConfig?.["registry"] === "string" ? publishConfig["registry"] : void 0;
-    return {
-      isPrivate: !!pkg["private"] || !isNpmRegistry(registry),
-      name: pkg["name"],
-      registry,
-      sourceFile: path,
-      type: "npm",
-      version: pkg["version"]
-    };
-  } catch {
-    return null;
-  }
+  const { name, raw, version } = result;
+  const publishConfig = typeof raw["publishConfig"] === "object" && raw["publishConfig"] !== null ? raw["publishConfig"] : void 0;
+  const registry = typeof publishConfig?.["registry"] === "string" ? publishConfig["registry"] : void 0;
+  return {
+    isPrivate: !!raw["private"] || !isNpmRegistry(registry),
+    name,
+    registry,
+    sourceFile: path,
+    type: "npm",
+    version
+  };
 }
-function parsePom(path) {
-  if (!existsSync(path)) {
-    return null;
-  }
-  const raw = readFileSync(path, "utf8");
-  const name = matchValue(raw, /<artifactId>([^<]+)<\/artifactId>/);
-  const version = matchValue(raw, /<version>([^<]+)<\/version>/);
-  if (!name || !version) {
+async function parsePom(path) {
+  const result = await readPomXml(path);
+  if (!result) {
     return null;
   }
   return {
     isPrivate: true,
-    name,
+    name: result.name,
     sourceFile: path,
     type: "maven",
-    version
+    version: result.version
   };
 }
-function readNpmPublishedVersions(packageName, registry) {
+async function readNpmPublishedVersions(packageName, registry) {
   try {
-    const registryArg = registry ? ` --registry ${shellEscape(registry)}` : "";
-    const raw = runCommand(
-      `npm view ${shellEscape(packageName)} versions --json${registryArg}`
-    );
-    if (!raw) {
+    const args = ["view", packageName, "versions", "--json"];
+    if (registry) {
+      args.push("--registry", registry);
+    }
+    const { stdout } = await execa("npm", args);
+    if (!stdout) {
       return [];
     }
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(stdout);
     if (Array.isArray(parsed)) {
       return parsed.filter((v) => typeof v === "string");
     }
     return typeof parsed === "string" ? [parsed] : [];
-  } catch {
+  } catch (err) {
+    console.warn(`Failed to read npm versions for ${packageName}:`, err);
     return [];
   }
 }
-function run() {
+async function run() {
   const outputPath = process.env.GITHUB_OUTPUT;
-  const targets = extractTargets(listManifestFiles());
+  const targets = await extractTargets(await listManifestFiles());
   const createdTags = [];
   for (const target of targets) {
     const tagName = `${target.name}@${target.version}`;
-    if (tagExists(tagName)) {
+    if (await tagExists(tagName)) {
       console.log(`::notice::Tag ${tagName} already exists, skipping`);
       continue;
     }
-    const shouldTag = shouldCreateTag(target);
-    if (!shouldTag) {
+    if (!await shouldCreateTag(target)) {
       console.log(
         `::notice::Skipping ${tagName}: version not confirmed on npm registry yet`
       );
       continue;
     }
     console.log(`::notice::Creating tag ${tagName}`);
-    execSync(
-      `git tag -a ${shellEscape(tagName)} -m ${shellEscape(`Release ${target.name} ${target.version}`)}`,
-      {
-        stdio: "inherit"
-      }
+    await execa(
+      "git",
+      ["tag", "-a", tagName, "-m", `Release ${target.name} ${target.version}`],
+      { stdio: "inherit" }
     );
     createdTags.push(tagName);
   }
   if (createdTags.length > 0) {
-    console.log(`::notice::Pushing ${createdTags.length} tags`);
-    execSync("git push origin --tags", { stdio: "inherit" });
+    console.log(`::notice::Pushing ${createdTags.length} tags to origin`);
+    await execa("git", ["push", "origin", "--tags"], { stdio: "inherit" });
     for (const target of targets) {
       const tagName = `${target.name}@${target.version}`;
       if (!createdTags.includes(tagName)) {
         continue;
       }
-      const notes = extractReleaseNotes(target);
+      const notes = await extractReleaseNotes(target);
       const prerelease = target.version.includes("-");
-      createGitHubRelease(tagName, notes, prerelease);
+      await createGitHubRelease(tagName, notes, prerelease);
     }
   }
   if (outputPath) {
-    appendOutput(outputPath, "tags", createdTags.join(" "));
+    await appendOutput(outputPath, "tags", createdTags.join(" "));
   }
 }
-function runCommand(command) {
-  return execSync(command, {
-    encoding: "utf8",
-    stdio: ["ignore", "pipe", "pipe"]
-  }).trim();
-}
-function shellEscape(value) {
-  return `'${value.replace(/'/g, `'"'"'`)}'`;
-}
-function shouldCreateTag(target) {
+async function shouldCreateTag(target) {
   if (target.type === "maven" || target.isPrivate) {
     return true;
   }
-  const publishedVersions = readNpmPublishedVersions(
+  const publishedVersions = await readNpmPublishedVersions(
     target.name,
     target.registry
   );
   return publishedVersions.includes(target.version);
 }
-function tagExists(tagName) {
-  return tagExistsLocally(tagName) || tagExistsOnRemote(tagName);
+async function tagExists(tagName) {
+  return await tagExistsLocally(tagName) || await tagExistsOnRemote(tagName);
 }
-function tagExistsLocally(tagName) {
+async function tagExistsLocally(tagName) {
   try {
-    execSync(`git rev-parse -q --verify refs/tags/${shellEscape(tagName)}`, {
-      stdio: "ignore"
-    });
+    await execa(
+      "git",
+      ["rev-parse", "-q", "--verify", `refs/tags/${tagName}`],
+      {
+        stdio: "ignore"
+      }
+    );
     return true;
   } catch {
     return false;
   }
 }
-function tagExistsOnRemote(tagName) {
+async function tagExistsOnRemote(tagName) {
   try {
-    const output = runCommand(
-      `git ls-remote --tags origin refs/tags/${shellEscape(tagName)}`
-    );
-    return output.length > 0;
+    const { stdout } = await execa("git", [
+      "ls-remote",
+      "--tags",
+      "origin",
+      `refs/tags/${tagName}`
+    ]);
+    return stdout.length > 0;
   } catch {
     return false;
   }
 }
-run();
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err) => {
+    console.error("Unexpected error in create-tags-releases:", err);
+    process.exit(1);
+  });
+}

@@ -1,12 +1,7 @@
-import { execSync } from 'child_process';
-import { readFileSync, appendFileSync } from 'fs';
+import { execa } from './chunk-N4R2TMCK.js';
+import { readFile, appendFile } from 'fs/promises';
 
-// scripts/detect-intent.ts
 var ZERO_SHA = "0000000000000000000000000000000000000000";
-function appendOutput(outputPath, key, value) {
-  appendFileSync(outputPath, `${key}=${value}
-`);
-}
 function computeRange(event, githubSha) {
   const before = event.before ?? "";
   const after = event.after ?? githubSha ?? "HEAD";
@@ -34,9 +29,13 @@ function detectMode(diffStatus) {
   }
   return "noop";
 }
-function getEvent(eventPath) {
+async function appendOutput(outputPath, key, value) {
+  await appendFile(outputPath, `${key}=${value}
+`);
+}
+async function getEvent(eventPath) {
   try {
-    const raw = readFileSync(eventPath, "utf8");
+    const raw = await readFile(eventPath, "utf8");
     const parsed = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) {
       return {};
@@ -46,27 +45,22 @@ function getEvent(eventPath) {
       after: typeof event["after"] === "string" ? event["after"] : void 0,
       before: typeof event["before"] === "string" ? event["before"] : void 0
     };
-  } catch {
+  } catch (err) {
+    console.error("Failed to read event payload:", err);
     return {};
   }
 }
-function run() {
+async function run() {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   const githubSha = process.env.GITHUB_SHA;
   const outputPath = process.env.GITHUB_OUTPUT;
-  const event = eventPath ? getEvent(eventPath) : {};
+  const event = eventPath ? await getEvent(eventPath) : {};
   const { base, head } = computeRange(event, githubSha);
   console.log(`::notice::Analyzing diff range ${base}..${head}`);
-  const diffStatus = execSync(
-    `git diff --name-status ${shellEscape(base)} ${shellEscape(head)}`,
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"]
-    }
-  );
-  const mode = detectMode(diffStatus);
+  const { stdout } = await execa("git", ["diff", "--name-status", base, head]);
+  const mode = detectMode(stdout);
   if (outputPath) {
-    appendOutput(outputPath, "mode", mode);
+    await appendOutput(outputPath, "mode", mode);
   }
   if (mode === "create-pr") {
     console.log(
@@ -80,7 +74,11 @@ function run() {
     console.log("::notice::No Nx release action required. Mode: noop");
   }
 }
-function shellEscape(value) {
-  return `'${value.replace(/'/g, `'"'"'`)}'`;
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err) => {
+    console.error("Unexpected error in detect-intent:", err);
+    process.exit(1);
+  });
 }
-run();
+
+export { ZERO_SHA, computeRange, detectMode };

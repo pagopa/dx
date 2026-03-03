@@ -21,7 +21,7 @@ inputs:
   commit-message:
     description: "Commit message for generated version bumps"
     required: false
-    default: "chore: version packages"
+    default: "Version Packages"
 
 outputs:
   pull-request-number:

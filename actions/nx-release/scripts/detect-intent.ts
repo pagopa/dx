@@ -1,27 +1,22 @@
+import { execa } from "execa";
 /**
  * Inspects the current git push event to determine which Nx release mode
  * ("create-pr", "publish", or "noop") should run, then writes it to
  * GITHUB_OUTPUT for downstream steps.
  */
-import { execSync } from "node:child_process";
-import { appendFileSync, readFileSync } from "node:fs";
+import { appendFile, readFile } from "node:fs/promises";
+
+export type ReleaseMode = "create-pr" | "noop" | "publish";
 
 interface GithubPushEvent {
   after?: string;
   before?: string;
 }
 
-type ReleaseMode = "create-pr" | "noop" | "publish";
-
-const ZERO_SHA = "0000000000000000000000000000000000000000";
-
-/** Writes an output key/value for downstream GitHub Action steps. */
-function appendOutput(outputPath: string, key: string, value: string): void {
-  appendFileSync(outputPath, `${key}=${value}\n`);
-}
+export const ZERO_SHA = "0000000000000000000000000000000000000000";
 
 /** Computes the git range to inspect for this workflow execution. */
-function computeRange(
+export function computeRange(
   event: GithubPushEvent,
   githubSha: string | undefined,
 ): { base: string; head: string } {
@@ -36,7 +31,7 @@ function computeRange(
 }
 
 /** Detects which release mode should run based on changed files. */
-function detectMode(diffStatus: string): ReleaseMode {
+export function detectMode(diffStatus: string): ReleaseMode {
   const lines = diffStatus.split("\n");
 
   const hasPlanAddOrModify = lines.some((line) =>
@@ -60,10 +55,19 @@ function detectMode(diffStatus: string): ReleaseMode {
   return "noop";
 }
 
+/** Writes an output key/value for downstream GitHub Action steps. */
+async function appendOutput(
+  outputPath: string,
+  key: string,
+  value: string,
+): Promise<void> {
+  await appendFile(outputPath, `${key}=${value}\n`);
+}
+
 /** Reads the GitHub push event payload from a file path. */
-function getEvent(eventPath: string): GithubPushEvent {
+async function getEvent(eventPath: string): Promise<GithubPushEvent> {
   try {
-    const raw = readFileSync(eventPath, "utf8");
+    const raw = await readFile(eventPath, "utf8");
     const parsed: unknown = JSON.parse(raw);
     if (typeof parsed !== "object" || parsed === null) {
       return {};
@@ -73,33 +77,27 @@ function getEvent(eventPath: string): GithubPushEvent {
       after: typeof event["after"] === "string" ? event["after"] : undefined,
       before: typeof event["before"] === "string" ? event["before"] : undefined,
     };
-  } catch {
+  } catch (err) {
+    console.error("Failed to read event payload:", err);
     return {};
   }
 }
 
 /** Main entrypoint: inspects diff, detects mode, and exposes action output. */
-function run(): void {
+async function run(): Promise<void> {
   const eventPath = process.env.GITHUB_EVENT_PATH;
   const githubSha = process.env.GITHUB_SHA;
   const outputPath = process.env.GITHUB_OUTPUT;
 
-  const event = eventPath ? getEvent(eventPath) : {};
+  const event = eventPath ? await getEvent(eventPath) : {};
   const { base, head } = computeRange(event, githubSha);
   console.log(`::notice::Analyzing diff range ${base}..${head}`);
 
-  const diffStatus = execSync(
-    `git diff --name-status ${shellEscape(base)} ${shellEscape(head)}`,
-    {
-      encoding: "utf8",
-      stdio: ["ignore", "pipe", "pipe"],
-    },
-  );
-
-  const mode = detectMode(diffStatus);
+  const { stdout } = await execa("git", ["diff", "--name-status", base, head]);
+  const mode = detectMode(stdout);
 
   if (outputPath) {
-    appendOutput(outputPath, "mode", mode);
+    await appendOutput(outputPath, "mode", mode);
   }
 
   if (mode === "create-pr") {
@@ -115,9 +113,10 @@ function run(): void {
   }
 }
 
-/** Escapes shell arguments to avoid command injection and quoting issues. */
-function shellEscape(value: string): string {
-  return `'${value.replace(/'/g, `'"'"'`)}'`;
+// Only execute when run directly as a script, not when imported in tests
+if (import.meta.url === `file://${process.argv[1]}`) {
+  run().catch((err: unknown) => {
+    console.error("Unexpected error in detect-intent:", err);
+    process.exit(1);
+  });
 }
-
-run();

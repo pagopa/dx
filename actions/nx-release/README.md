@@ -40,13 +40,13 @@ This action automates the Nx release flow in two phases:
 
 ## Inputs
 
-| Input            | Description                                                              | Default                   | Required |
-| ---------------- | ------------------------------------------------------------------------ | ------------------------- | -------- |
-| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}`     | false    |
-| `base-branch`    | Base branch where release flow runs                                      | `main`                    | false    |
-| `release-branch` | Branch used for Version Packages PR                                      | `nx-release/main`         | false    |
-| `pr-title`       | Title for the release pull request                                       | `Version Packages`        | false    |
-| `commit-message` | Commit message for generated version bumps                               | `chore: version packages` | false    |
+| Input            | Description                                                              | Default               | Required |
+| ---------------- | ------------------------------------------------------------------------ | --------------------- | -------- |
+| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}` | false    |
+| `base-branch`    | Base branch where release flow runs                                      | `main`                | false    |
+| `release-branch` | Branch used for Version Packages PR                                      | `nx-release/main`     | false    |
+| `pr-title`       | Title for the release pull request                                       | `Version Packages`    | false    |
+| `commit-message` | Commit message for generated version bumps                               | `Version Packages`    | false    |
 
 ## Outputs
 
@@ -61,6 +61,7 @@ This action automates the Nx release flow in two phases:
 - Node.js and pnpm/npm installed
 - `gh` CLI available in the runner
 - GitHub token with appropriate permissions
+- npm packages require [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) configured to enable provenance signing (`id-token: write` permission must be granted)
 
 ## Usage in Workflow
 
@@ -83,28 +84,56 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
           fetch-tags: "true"
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
           node-version: "20"
 
       - run: corepack enable && corepack prepare pnpm@10.30.0 --activate
       - run: pnpm install --frozen-lockfile
 
-      - uses: pagopa/dx/.github/actions/nx-release@main
+      - uses: pagopa/dx/actions/nx-release@<COMMIT_SHA> # replace with the latest SHA
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Behavior
 
-### No action needed
+The action runs in one of three modes, determined automatically by inspecting
+the git diff of the current push event.
 
-If no version plans or no version changes are detected, action exits cleanly with mode `noop`.
+### Mode: `noop`
+
+No version plan files were added, modified, or deleted. The action exits
+cleanly without creating branches, commits, or releases.
+
+### Mode: `create-pr`
+
+One or more `.nx/version-plans/**` files were **added or modified** on the base
+branch. The action:
+
+1. Checks out a `nx-release/main` branch
+2. Runs `npx nx release --skip-publish` to consume version plans and update
+   `package.json`/`pom.xml` and `CHANGELOG.md` files
+3. Commits all changes and force-pushes the branch
+4. Creates or updates a pull request titled `Version Packages`
+5. Outputs `pull-request-number` and `pull-request-url`
+
+### Mode: `publish`
+
+Version plan files were **deleted** and version bumps were detected (i.e. the
+`Version Packages` PR was merged). The action:
+
+1. Builds all public npm packages (`tag:npm:public`)
+2. Runs `npx nx release publish` with npm provenance enabled
+3. Creates annotated git tags for each newly published version
+4. Pushes all tags to origin
+5. Creates a GitHub release per tag with extracted changelog notes
+6. Outputs the list of created tags via `tags`
 
 ## Compatibility
 
