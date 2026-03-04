@@ -6,7 +6,7 @@ data "azurerm_log_analytics_workspace" "e2e" {
 }
 
 data "azurerm_user_assigned_identity" "infra_github" {
-  name                = "dx-d-itn-devex-infra-github-cd-id-01"
+  name                = "dx-d-itn-devex-integration-id-01"
   resource_group_name = "dx-d-itn-devex-rg-01"
 }
 
