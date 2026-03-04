@@ -27,7 +27,7 @@ Organize Terraform code into dedicated files based on their purpose:
 | `outputs.tf`                 | Output values with descriptions                                |
 | `main.tf` or `<resource>.tf` | Resources and modules (e.g., `azure.tf`, `function.tf`)        |
 | `data.tf`                    | Data sources                                                   |
-| `_modules/`                  | Local modules directory for functional component separation    |
+| `_modules/`                  | Local modules directory                                        |
 
 :::info About project structure
 
@@ -39,26 +39,15 @@ configurations. For the overall infrastructure project structure, see
 
 ## Local Modules
 
-:::tip Prefer local modules for functional separation
+Use one local module per service or capability. Each module should:
 
-Use local modules to organize infrastructure by functional component. Each
-module groups the resources that belong to a single, well-defined service or
-capability, improving maintainability, reusability, and independent reasoning.
-
-:::
-
-### What is a Functional Component?
-
-A **functional component** is a service or capability with a clear, single
-responsibility. Each local module should:
-
-- Represent one service or capability (e.g., API gateway, data processor,
+- Have a single, well-defined responsibility (e.g., API gateway, data processor,
   message notifier)
 - Own all the infrastructure resources that service needs (compute, storage, IAM
   permissions)
 - Be deployable and testable in isolation
 
-**Examples of functional components and their resources:**
+**Examples:**
 
 - **API Management (APIM)**: APIM instance, policies, API definitions, private
   endpoint
@@ -105,8 +94,7 @@ This still causes the same problems, just at a smaller scale.
 
 ### What TO DO (Best Practice)
 
-✅ **One module per functional component** - Each module owns the resources for
-one service:
+✅ **One module per service** - Each module owns the resources for one service:
 
 ```
 infra/resources/prod/_modules/
@@ -147,9 +135,8 @@ Benefits:
 
 Local modules provide several benefits:
 
-- **Separation of concerns**: Each functional component (e.g., API Management,
-  data processor, message notifier) lives in its own module with clear
-  boundaries
+- **Separation of concerns**: Each service (e.g., API Management, data
+  processor, message notifier) lives in its own module with clear boundaries
 - **Encapsulation**: Related resources and their IAM permissions stay together
 - **Reusability**: Modules can be reused across environments with different
   configurations
@@ -159,8 +146,6 @@ Local modules provide several benefits:
 
 ### Module Organization Example
 
-Organize your infrastructure into one module per functional component:
-
 ```
 infra/resources/prod/
 ├── locals.tf              # Environment configuration (no variables!)
@@ -169,16 +154,16 @@ infra/resources/prod/
 ├── main.tf                # Module instantiations
 ├── outputs.tf             # Root module outputs
 └── _modules/
-    ├── apim/              # API Management component
+    ├── apim/              # API Management service
     │   ├── main.tf
     │   ├── variables.tf   # Module inputs
     │   └── outputs.tf
-    ├── func_processor/    # Data Processor component (Function App + Storage)
+    ├── func_processor/    # Data Processor service (Function App + Storage)
     │   ├── main.tf
     │   ├── variables.tf
-    │   ├── iam.tf         # IAM permissions for this component
+    │   ├── iam.tf         # IAM permissions for this module
     │   └── outputs.tf
-    └── func_notifier/     # Message Notifier component (Function App + IAM)
+    └── func_notifier/     # Message Notifier service (Function App + IAM)
         ├── main.tf
         ├── variables.tf
         ├── iam.tf
