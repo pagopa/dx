@@ -30,6 +30,8 @@ jobs:
 
     steps:
       - name: Ensure Slack Webhook is Set
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: |
           if [ -z "$SLACK_WEBHOOK_URL" ]; then
             echo "SLACK_WEBHOOK_URL is not set. Please set the secret."
@@ -78,4 +80,4 @@ jobs:
           id: "Terraform Integration Tests"
           title: "*Terraform Integration Tests failed*"
           text: "One or more integration tests failed in the weekly run. Please check the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details."
-          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_FAILED_TESTS }}
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
