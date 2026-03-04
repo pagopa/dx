@@ -27,7 +27,7 @@ Organize Terraform code into dedicated files based on their purpose:
 | `outputs.tf`                 | Output values with descriptions                                |
 | `main.tf` or `<resource>.tf` | Resources and modules (e.g., `azure.tf`, `function.tf`)        |
 | `data.tf`                    | Data sources                                                   |
-| `_modules/`                  | Local modules directory for workload separation                |
+| `_modules/`                  | Local modules directory for functional component separation    |
 
 :::info About project structure
 
