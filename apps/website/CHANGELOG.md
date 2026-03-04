@@ -1,5 +1,12 @@
 # docs
 
+## 0.12.5
+
+### Patch Changes
+
+- 96ea1c0: Document preference about creation of local modules and variables
+  usage
+
 ## 0.12.4
 
 ### Patch Changes
