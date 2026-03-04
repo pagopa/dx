@@ -24,6 +24,7 @@ resource "random_password" "password" {
   special = true
 }
 
+#trivy:ignore:AZU-0016
 resource "azurerm_key_vault" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = null,
@@ -35,7 +36,7 @@ resource "azurerm_key_vault" "example" {
   sku_name            = "standard"
 
   tenant_id                  = data.azurerm_client_config.current.tenant_id
-  purge_protection_enabled   = true
+  purge_protection_enabled   = false
   soft_delete_retention_days = 7
 
   network_acls {
