@@ -24,7 +24,7 @@ resource "random_password" "password" {
   special = true
 }
 
-#trivy:ignore:AZU-0016
+#trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = null,

@@ -79,7 +79,7 @@ resource "random_integer" "instance_base" {
   }
 }
 
-#trivy:ignore:AZU-0016
+#trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.appcs_kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
