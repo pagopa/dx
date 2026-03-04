@@ -5,8 +5,8 @@ data "azurerm_log_analytics_workspace" "e2e" {
   resource_group_name = local.e2e_virtual_network.resource_group_name
 }
 
-data "azurerm_user_assigned_identity" "integration_github" {
-  name                = "dx-d-itn-devex-integration-id-01"
+data "azurerm_user_assigned_identity" "infra_github" {
+  name                = "dx-d-itn-devex-infra-github-cd-id-01"
   resource_group_name = "dx-d-itn-devex-rg-01"
 }
 

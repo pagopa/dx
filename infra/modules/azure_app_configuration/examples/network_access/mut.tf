@@ -29,6 +29,6 @@ resource "azurerm_app_configuration_key" "test_setting" {
   content_type           = "application/json"
 
   depends_on = [
-    module.integration_github_roles
+    module.infra_github_roles
   ]
 }
