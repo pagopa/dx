@@ -44,8 +44,12 @@ curl -s -X POST https://api.dx.pagopa.it/search \
 ```
 
 La risposta JSON ha struttura:
+
 ```json
-{ "query": "...", "results": [{"content": "...", "score": 0.9, "source": "https://..."}] }
+{
+  "query": "...",
+  "results": [{ "content": "...", "score": 0.9, "source": "https://..." }]
+}
 ```
 
 **Integra i risultati nella generazione**: cita le fonti nel README finale.

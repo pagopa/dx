@@ -33,18 +33,23 @@ Se un file non esiste, documenta il fatto nel README con `<!-- local-missing: <n
 Seguire le istruzioni nella skill base `terraform-dx-best-practices`. In particolare:
 
 ### Naming
+
 - Leggi `provider-dx.md` o `naming-convention.md` per la sintassi di `provider::dx::resource_name()`.
 
 ### Tag
+
 - Leggi `required-tags.md` per l'elenco completo dei tag obbligatori.
 
 ### Moduli
+
 - Leggi `modules.md` per i moduli `pagopa-dx/*` disponibili e le versioni.
 
 ### Segreti
+
 - Leggi `secrets.md` per i pattern Key Vault.
 
 ### File di output
+
 - Leggi `code-style.md` e `folder-structure.md` per la struttura cartelle.
 
 ## Checklist di autovalutazione (6 check)

@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# run_experiment.sh --approach <name> [--run N] [--model <model>]
+# run_experiment.sh --approach <name> [--run N] [--model <model>] [--judge-model <model>]
 # Results go to experiments/results/<approach>/run-<N>/
 set -euo pipefail
 
 APPROACH=""
 RUN_N=1
-MODEL="claude-sonnet-4.5"
+MODEL="claude-haiku-4.5"
+JUDGE_MODEL="gpt-5.1-codex-mini"
 
 usage() {
-  echo "Usage: $0 --approach <mcp|skill-inline|skill-rag|local|subagent|website-crawl> [--run N] [--model <model>]"
+  echo "Usage: $0 --approach <mcp|skill-inline|skill-rag|local|subagent|website-crawl> [--run N] [--model <model>] [--judge-model <model>]"
   exit 1
 }
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --approach) APPROACH="$2"; shift 2;;
-    --run)      RUN_N="$2";    shift 2;;
-    --model)    MODEL="$2";    shift 2;;
+    --approach)     APPROACH="$2";     shift 2;;
+    --run)          RUN_N="$2";        shift 2;;
+    --model)        MODEL="$2";        shift 2;;
+    --judge-model)  JUDGE_MODEL="$2";  shift 2;;
     *) usage;;
   esac
 done
@@ -68,7 +70,9 @@ cp "${ROOTDIR}/experiments/checklist.json" "$RESULTS/checklist.json"
 
 
 # ── Copilot CLI args ──────────────────────────────────────────────────────────
-BASE_ARGS="--model $MODEL --allow-all --silent --add-github-mcp-toolset all \
+# All approaches use terraform and azure MCP tools; only mcp enables dx server
+BASE_ARGS="--model $MODEL --allow-all --silent \
+  --add-github-mcp-tool terraform --add-github-mcp-tool azure \
   --log-dir $RESULTS/copilot-logs --log-level debug \
   --share $RESULTS/copilot-session.md \
   --disable-mcp-server dx"
@@ -78,8 +82,9 @@ case "$APPROACH" in
     COPILOT_ARGS="$BASE_ARGS --add-dir ${ROOTDIR}/apps/website/docs/terraform"
     ;;
   mcp)
-    # Enable DX MCP server for mcp approach
-    COPILOT_ARGS="--model $MODEL --allow-all --silent --add-github-mcp-toolset all \
+    # Enable DX MCP server for mcp approach (keep terraform + azure)
+    COPILOT_ARGS="--model $MODEL --allow-all --silent \
+      --add-github-mcp-tool terraform --add-github-mcp-tool azure \
       --log-dir $RESULTS/copilot-logs --log-level debug \
       --share $RESULTS/copilot-session.md"
     ;;
@@ -91,6 +96,11 @@ esac
 # ── Run Copilot ───────────────────────────────────────────────────────────────
 echo "[INFO] approach=$APPROACH run=$RUN_N model=$MODEL" | tee "$RESULTS/run.log"
 echo "[INFO] output_dir=$OUTPUT_DIR" >> "$RESULTS/run.log"
+
+# Clean output directory to avoid Copilot using previous run artifacts
+rm -rf "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+echo "[INFO] Cleaned output directory before run" >> "$RESULTS/run.log"
 
 if copilot -p "$(cat "$RESULTS/prompt.txt")" $COPILOT_ARGS 2>> "$RESULTS/run.log"; then
   echo "[INFO] Copilot CLI completed successfully." >> "$RESULTS/run.log"
@@ -105,27 +115,59 @@ DURATION=$((END_S - START_S))
 LATEST_LOG=$(ls -1t "$RESULTS/copilot-logs"/process-*.log 2>/dev/null | head -n1 || true)
 TOOL_CALLS=0
 if [[ -f "$LATEST_LOG" ]]; then
-  TOOL_CALLS=$(grep -c '"type":"tool_use"' "$LATEST_LOG" 2>/dev/null || echo 0)
+  # Use head -1 to take only first line, handle grep errors safely
+  TOOL_CALLS=$(grep -c '"type":"tool_use"' "$LATEST_LOG" 2>/dev/null | head -1 || echo "0")
+fi
+# Validate it's a number, default to 0 if not
+if ! [[ "$TOOL_CALLS" =~ ^[0-9]+$ ]]; then
+  TOOL_CALLS=0
 fi
 
-# ── Evaluate output ───────────────────────────────────────────────────────────
+# ── Evaluate output (deterministic) ──────────────────────────────────────────
 bash "${ROOTDIR}/experiments/scripts/evaluate.sh" "$OUTPUT_DIR" "$RESULTS/score.json" \
   >> "$RESULTS/run.log" 2>&1 || true
 
-SCORE=$(python3 -c "import json; d=json.load(open('$RESULTS/score.json')); print(d['score'])" 2>/dev/null || echo "0")
+SCORE=0
+if [[ -f "$RESULTS/score.json" ]]; then
+  SCORE=$(python3 -c "import json; d=json.load(open('$RESULTS/score.json')); print(d['score'])" 2>/dev/null || echo "0")
+fi
+if ! [[ "$SCORE" =~ ^[0-9]+$ ]]; then
+  SCORE=0
+fi
+
+# ── LLM Judge (qualitative) ───────────────────────────────────────────────────
+bash "${ROOTDIR}/experiments/scripts/llm_judge.sh" "$OUTPUT_DIR" "$RESULTS/llm_score.json" "$JUDGE_MODEL" \
+  >> "$RESULTS/run.log" 2>&1 || true
+
+LLM_SCORE=0
+if [[ -f "$RESULTS/llm_score.json" ]]; then
+  LLM_SCORE=$(python3 -c "import json; d=json.load(open('$RESULTS/llm_score.json')); print(d['llm_score'])" 2>/dev/null || echo "0")
+fi
+if ! [[ "$LLM_SCORE" =~ ^[0-9]+$ ]]; then
+  LLM_SCORE=0
+fi
 
 # ── Metrics ───────────────────────────────────────────────────────────────────
-cat > "$RESULTS/metrics.json" << METRICS_EOF
-{
-  "approach": "$APPROACH",
-  "run": $RUN_N,
-  "model": "$MODEL",
-  "timestamp": "$START_TS",
-  "duration_s": $DURATION,
-  "tool_calls": $TOOL_CALLS,
-  "score": $SCORE
+python3 << PYTHON_EOF
+import json
+
+metrics = {
+    "approach": "$APPROACH",
+    "run": $RUN_N,
+    "model": "$MODEL",
+    "judge_model": "$JUDGE_MODEL",
+    "timestamp": "$START_TS",
+    "duration_s": $DURATION,
+    "tool_calls": $TOOL_CALLS,
+    "score": $SCORE,
+    "score_max": 16,
+    "llm_score": $LLM_SCORE,
+    "llm_score_max": 40,
 }
-METRICS_EOF
+
+with open("$RESULTS/metrics.json", "w") as f:
+    json.dump(metrics, f, indent=2)
+PYTHON_EOF
 
 # ── Summary via Copilot (stdin) ───────────────────────────────────────────────
 if [[ -f "$LATEST_LOG" ]]; then
@@ -147,6 +189,6 @@ fi
 echo "──────────────────────────────────────────────"
 echo " Experiment complete"
 echo " Approach : $APPROACH  Run : $RUN_N"
-echo " Score    : $SCORE/6   Duration: ${DURATION}s"
+echo " Score    : $SCORE/16  LLM: ${LLM_SCORE}/40  Duration: ${DURATION}s"
 echo " Results  : $RESULTS"
 echo "──────────────────────────────────────────────"

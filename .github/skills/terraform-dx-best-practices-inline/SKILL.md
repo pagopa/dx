@@ -18,12 +18,15 @@ Questa skill genera codice Terraform DX-compliant usando **esclusivamente la con
 Seguire la skill base `terraform-dx-best-practices`. In aggiunta:
 
 ### Naming
+
 - Configura il provider `pagopa-dx/azure` con alias `dx` nel blocco `required_providers`.
 - Usa SEMPRE `provider::dx::resource_name()` per tutti i nomi delle risorse Azure.
 - Sintassi: `provider::dx::resource_name(environment, "tipo-risorsa")` dove `tipo-risorsa` è il suffisso usato internamente (es. `"fn"` per Function App, `"st"` per Storage Account).
 
 ### Tag obbligatori
+
 Ogni risorsa DEVE includere questi tag:
+
 ```hcl
 tags = merge(var.tags, {
   CostCenter     = var.tags.CostCenter
@@ -35,20 +38,24 @@ tags = merge(var.tags, {
 ```
 
 ### Moduli DX Registry
+
 - Usa moduli `pagopa-dx/*` dal Terraform Registry per Function App, Storage Account, Cosmos DB ecc.
 - Specifica la versione con `~> major.minor` (es. `~> 1.0`).
 - Usa risorse azurerm raw solo se non esiste un modulo DX.
 
 ### Segreti
+
 - NESSUN valore hardcoded per password, connection string, chiavi.
 - Usa `azurerm_key_vault_secret` o riferimenti `@Microsoft.KeyVault(...)` nelle app settings.
 
 ### Struttura file
+
 Genera sempre file separati: `main.tf`, `variables.tf`, `outputs.tf`, `locals.tf`, `providers.tf`, `versions.tf`.
 
 ## Checklist di autovalutazione (6 check)
 
 Prima di restituire il codice, verifica:
+
 - [ ] `validate`: il codice è sintatticamente valido (nessun errore `terraform validate`)
 - [ ] `naming`: `provider::dx::resource_name()` usato su TUTTI i nomi risorse
 - [ ] `tags`: tutti e 5 i tag obbligatori presenti (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
@@ -59,6 +66,7 @@ Prima di restituire il codice, verifica:
 ## Output atteso
 
 File da produrre nella cartella di output:
+
 ```
 main.tf        # risorse principali
 variables.tf   # variabili di input

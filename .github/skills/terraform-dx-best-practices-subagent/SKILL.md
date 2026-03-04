@@ -12,6 +12,7 @@ Questa skill genera codice Terraform DX-compliant delegando la **ricerca documen
 **Step 1 — Avvia subagent di ricerca**
 
 Delega al subagent il compito di raccogliere:
+
 1. Code style e struttura cartelle DX (da `https://api.dx.pagopa.it/search` o `fetch_webpage`)
 2. Naming convention (`provider::dx::resource_name`) e provider `pagopa-dx/azure`
 3. Elenco tag obbligatori (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)

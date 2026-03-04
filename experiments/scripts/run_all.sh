@@ -15,21 +15,23 @@ SCRIPTS="$ROOTDIR/experiments/scripts"
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
 N_RUNS=3
-MODEL="claude-sonnet-4.5"
+MODEL="claude-haiku-4.5"
+JUDGE_MODEL="gpt-5.1-codex-mini"
 APPROACHES=(inline rag local mcp subagent website-crawl)
 
 # ── Arg parsing ───────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --runs)       N_RUNS="$2"; shift 2;;
-    --model)      MODEL="$2";  shift 2;;
+    --runs)         N_RUNS="$2";      shift 2;;
+    --model)        MODEL="$2";       shift 2;;
+    --judge-model)  JUDGE_MODEL="$2"; shift 2;;
     --approaches)
       IFS=',' read -ra APPROACHES <<< "$2"
       shift 2
       ;;
     *)
       echo "Unknown option: $1"
-      echo "Usage: $0 [--runs N] [--model <model>] [--approaches a,b,c]"
+      echo "Usage: $0 [--runs N] [--model <model>] [--judge-model <model>] [--approaches a,b,c]"
       exit 1
       ;;
   esac
@@ -40,6 +42,7 @@ echo " DX Terraform Skill — Experiment Suite"
 echo " Approaches : ${APPROACHES[*]}"
 echo " Runs       : $N_RUNS per approach"
 echo " Model      : $MODEL"
+echo " Judge      : $JUDGE_MODEL"
 echo "════════════════════════════════════════════════════"
 
 FAILED=()
@@ -51,7 +54,8 @@ for approach in "${APPROACHES[@]}"; do
     if bash "$SCRIPTS/run_experiment.sh" \
         --approach "$approach" \
         --run "$run" \
-        --model "$MODEL"; then
+        --model "$MODEL" \
+        --judge-model "$JUDGE_MODEL"; then
       echo "  ✓ done"
     else
       echo "  ✗ FAILED (approach=$approach run=$run)"

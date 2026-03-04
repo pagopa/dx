@@ -34,6 +34,7 @@ get_latest_module_version(namespace="pagopa-dx", module="azure-function-app", pr
 ```
 
 Per ogni modulo trovato, recupera inputs, outputs e usage examples:
+
 ```
 get_module_details(moduleID="pagopa-dx/azure-function-app/azurerm/<versione>")
 ```
