@@ -82,10 +82,24 @@ async function getPackageInfo(projectName) {
     if (!name || !version) {
       return null;
     }
-    return { name, root, version };
+    const isPrivate = pkgJson["private"] === true;
+    return { name, private: isPrivate, root, version };
   } catch (err) {
     console.warn(`Failed to get package info for project ${projectName}:`, err);
     return null;
+  }
+}
+async function isPublishedOnNpm(name, version) {
+  try {
+    const { stdout } = await execFileAsync("npm", [
+      "view",
+      `${name}@${version}`,
+      "version",
+      "--json"
+    ]);
+    return stdout.trim().replace(/^"|"$/g, "") === version;
+  } catch {
+    return false;
   }
 }
 async function run() {
@@ -93,14 +107,47 @@ async function run() {
   const { releasePublish } = await loadNxRelease();
   console.log("::notice::Running Nx Release publish phase");
   const publishResults = await releasePublish({});
-  const successfulProjects = Object.entries(publishResults).filter(([, result]) => result.code === 0).map(([name]) => name);
   const failedProjects = Object.entries(publishResults).filter(([, result]) => result.code !== 0).map(([name]) => name);
   if (failedProjects.length > 0) {
     console.error(`::error::Failed to publish: ${failedProjects.join(", ")}`);
   }
-  const packages = (await Promise.all(successfulProjects.map(getPackageInfo))).filter((p) => p !== null);
+  const allAttemptedProjects = Object.keys(publishResults);
+  const packagesByProject = new Map(
+    (await Promise.all(
+      allAttemptedProjects.map(async (project) => ({
+        info: await getPackageInfo(project),
+        project
+      }))
+    )).filter(
+      (entry) => entry.info !== null
+    ).map(({ info, project }) => [project, info])
+  );
+  const packages = [...packagesByProject.values()];
+  const publishedPackages = (await Promise.all(
+    packages.map(async (pkg) => {
+      if (pkg.private) {
+        const project = [...packagesByProject.entries()].find(
+          ([, info]) => info.name === pkg.name
+        )?.[0];
+        const succeeded = project !== void 0 && publishResults[project]?.code === 0;
+        if (!succeeded) {
+          console.log(
+            `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`
+          );
+        }
+        return succeeded ? pkg : null;
+      }
+      const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
+      if (!onNpm) {
+        console.log(
+          `::warning::${pkg.name}@${pkg.version} not found on npm, skipping tag.`
+        );
+      }
+      return onNpm ? pkg : null;
+    })
+  )).filter((p) => p !== null);
   const createdTags = [];
-  for (const pkg of packages) {
+  for (const pkg of publishedPackages) {
     const tagName = `${pkg.name}@${pkg.version}`;
     if (await tagExists(tagName)) {
       console.log(`::notice::Tag ${tagName} already exists, skipping`);
@@ -119,7 +166,7 @@ async function run() {
   if (createdTags.length > 0) {
     console.log(`::notice::Pushing ${createdTags.length} tags to origin`);
     await spawnInherit("git", ["push", "origin", "--tags"]);
-    for (const pkg of packages) {
+    for (const pkg of publishedPackages) {
       const tagName = `${pkg.name}@${pkg.version}`;
       if (!createdTags.includes(tagName)) {
         continue;
@@ -133,11 +180,20 @@ async function run() {
     await appendOutput(
       outputPath,
       "published",
-      successfulProjects.length > 0 ? "true" : "false"
+      publishedPackages.length > 0 ? "true" : "false"
     );
     await appendOutput(outputPath, "tags", createdTags.join(" "));
   }
-  if (failedProjects.length > 0) {
+  const trulyFailed = await Promise.all(
+    failedProjects.map(async (project) => {
+      const pkg = packagesByProject.get(project);
+      if (!pkg) return true;
+      if (pkg.private) return true;
+      const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
+      return !onNpm;
+    })
+  );
+  if (trulyFailed.some(Boolean)) {
     process.exit(1);
   }
 }

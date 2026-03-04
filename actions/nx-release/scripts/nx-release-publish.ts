@@ -1,8 +1,13 @@
 /**
  * Runs the Nx Release publish phase via the programmatic API, then creates
  * annotated git tags and GitHub releases for every successfully published
- * package. Combines two separate steps (publish + tag sync)
- * into one, using structured publish results instead of scanning manifests.
+ * package.
+ *
+ * After publish, the npm registry — not `publishResults` — is the source of
+ * truth for determining which packages need a git tag and GitHub release.
+ * This makes the entire flow idempotent: if the action is re-run after a
+ * partial failure, packages already on npm get their missing tags/releases
+ * created without attempting to re-publish them.
  *
  * Expected environment variables:
  *   GITHUB_TOKEN   — token used by the gh CLI to create releases
@@ -36,6 +41,8 @@ const execFileAsync = promisify(execFile);
 
 interface PackageInfo {
   name: string;
+  /** Whether the package has `"private": true` in package.json (not published to npm). */
+  private: boolean;
   root: string;
   version: string;
 }
@@ -145,10 +152,34 @@ async function getPackageInfo(
       return null;
     }
 
-    return { name, root, version };
+    const isPrivate = pkgJson["private"] === true;
+    return { name, private: isPrivate, root, version };
   } catch (err) {
     console.warn(`Failed to get package info for project ${projectName}:`, err);
     return null;
+  }
+}
+
+/**
+ * Checks whether a specific version of an npm package is published on the
+ * registry.  Returns true even when the package was published in a previous
+ * action run that failed before creating the git tag — this is what makes the
+ * publish phase idempotent.
+ */
+async function isPublishedOnNpm(
+  name: string,
+  version: string,
+): Promise<boolean> {
+  try {
+    const { stdout } = await execFileAsync("npm", [
+      "view",
+      `${name}@${version}`,
+      "version",
+      "--json",
+    ]);
+    return stdout.trim().replace(/^"|"$/g, "") === version;
+  } catch {
+    return false;
   }
 }
 
@@ -162,10 +193,6 @@ async function run(): Promise<void> {
   console.log("::notice::Running Nx Release publish phase");
   const publishResults = await releasePublish({});
 
-  const successfulProjects = Object.entries(publishResults)
-    .filter(([, result]) => result.code === 0)
-    .map(([name]) => name);
-
   const failedProjects = Object.entries(publishResults)
     .filter(([, result]) => result.code !== 0)
     .map(([name]) => name);
@@ -174,15 +201,71 @@ async function run(): Promise<void> {
     console.error(`::error::Failed to publish: ${failedProjects.join(", ")}`);
   }
 
-  // ── Phase 2: resolve package metadata ─────────────────────────────────────
-  const packages = (
-    await Promise.all(successfulProjects.map(getPackageInfo))
+  // ── Phase 2: resolve package metadata for all attempted projects ───────────
+  // Use all projects from publishResults, not just the successful ones.
+  // A non-zero exit code from npm publish can mean "already published" — the
+  // npm registry is the authoritative source, checked below.
+  const allAttemptedProjects = Object.keys(publishResults);
+  const packagesByProject = new Map(
+    (
+      await Promise.all(
+        allAttemptedProjects.map(async (project) => ({
+          info: await getPackageInfo(project),
+          project,
+        })),
+      )
+    )
+      .filter(
+        (entry): entry is { info: PackageInfo; project: string } =>
+          entry.info !== null,
+      )
+      .map(({ info, project }) => [project, info] as const),
+  );
+  const packages = [...packagesByProject.values()];
+
+  // ── Phase 3: determine which packages should receive a tag ──────────────────
+  //
+  // Public packages:  npm registry is the source of truth — the package must
+  //                   be present on npm before we create a tag.  This makes the
+  //                   step idempotent across retries.
+  // Private packages: they are never published to npm, so we rely on
+  //                   `releasePublish` returning code 0 (Nx marks them as
+  //                   successfully "processed" even though no upload happens).
+  const publishedPackages = (
+    await Promise.all(
+      packages.map(async (pkg) => {
+        if (pkg.private) {
+          // For private packages Nx still calls the publish target (e.g. a
+          // local build step) and returns code 0 on success.
+          const project = [...packagesByProject.entries()].find(
+            ([, info]) => info.name === pkg.name,
+          )?.[0];
+          const succeeded =
+            project !== undefined && publishResults[project]?.code === 0;
+          if (!succeeded) {
+            console.log(
+              `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`,
+            );
+          }
+          return succeeded ? pkg : null;
+        }
+
+        // Public package — check the registry.
+        const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
+        if (!onNpm) {
+          console.log(
+            `::warning::${pkg.name}@${pkg.version} not found on npm, skipping tag.`,
+          );
+        }
+        return onNpm ? pkg : null;
+      }),
+    )
   ).filter((p): p is PackageInfo => p !== null);
 
-  // ── Phase 3: create git tags ───────────────────────────────────────────────
+  // ── Phase 4: create git tags for published-but-untagged packages ───────────
   const createdTags: string[] = [];
 
-  for (const pkg of packages) {
+  for (const pkg of publishedPackages) {
     const tagName = `${pkg.name}@${pkg.version}`;
 
     if (await tagExists(tagName)) {
@@ -201,12 +284,12 @@ async function run(): Promise<void> {
     createdTags.push(tagName);
   }
 
-  // ── Phase 4: push tags + create GitHub releases ────────────────────────────
+  // ── Phase 5: push tags + create GitHub releases ────────────────────────────
   if (createdTags.length > 0) {
     console.log(`::notice::Pushing ${createdTags.length} tags to origin`);
     await spawnInherit("git", ["push", "origin", "--tags"]);
 
-    for (const pkg of packages) {
+    for (const pkg of publishedPackages) {
       const tagName = `${pkg.name}@${pkg.version}`;
       if (!createdTags.includes(tagName)) {
         continue;
@@ -217,17 +300,30 @@ async function run(): Promise<void> {
     }
   }
 
-  // ── Phase 5: write outputs ─────────────────────────────────────────────────
+  // ── Phase 6: write outputs ─────────────────────────────────────────────────
   if (outputPath) {
     await appendOutput(
       outputPath,
       "published",
-      successfulProjects.length > 0 ? "true" : "false",
+      publishedPackages.length > 0 ? "true" : "false",
     );
     await appendOutput(outputPath, "tags", createdTags.join(" "));
   }
 
-  if (failedProjects.length > 0) {
+  // Fail the action only when a package truly could not be published:
+  //   - Public package:  failed AND still absent from npm registry
+  //   - Private package: failed (no npm fallback check possible)
+  const trulyFailed = await Promise.all(
+    failedProjects.map(async (project) => {
+      const pkg = packagesByProject.get(project);
+      if (!pkg) return true;
+      if (pkg.private) return true; // private publish failure is always real
+      const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
+      return !onNpm;
+    }),
+  );
+
+  if (trulyFailed.some(Boolean)) {
     process.exit(1);
   }
 }
@@ -249,7 +345,6 @@ function spawnInherit(cmd: string, args: string[]): Promise<void> {
 
 /** Checks whether a tag exists locally or on origin. */
 async function tagExists(tagName: string): Promise<boolean> {
-  // Check local refs first (fast)
   try {
     await execFileAsync("git", [
       "rev-parse",
@@ -262,7 +357,6 @@ async function tagExists(tagName: string): Promise<boolean> {
     // Non-zero exit means the tag does not exist locally
   }
 
-  // Fall back to remote check
   try {
     const { stdout } = await execFileAsync("git", [
       "ls-remote",
