@@ -97,7 +97,7 @@ output "resource_name" {
 
 **Output**: `dx-d-itn-app-apim-pep-01`
 
-:::warning Resource abbreviation cannot start with the name
+:::warning The `name` value cannot be part of the resource abbreviation
 
 The `name` parameter must **not** be a prefix of the resource abbreviation. If
 it is, you will get an error like:
