@@ -12,11 +12,14 @@ on:
     branches:
       - main
 
-concurrency: ${{ github.workflow }}-${{ github.ref }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  release:
-    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
+  version-packages-pr:
+    if: github.event_name == 'push'
+    name: Create/Update Version Packages PR
     permissions:
       contents: write
       id-token: write
@@ -24,12 +27,13 @@ jobs:
     uses: ./.github/workflows/release-v1.yaml
     with:
       environment: npm-prod-cd
-      mode: 'publish'
+      mode: "create-pr"
     secrets:
       github-token: ${{ secrets.BOT_GH_TOKEN }}
 
-  pr:
-    if: github.event.pull_request.merged != true && github.event_name == 'push'
+  release:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
+    name: Publish Release
     permissions:
       contents: write
       id-token: write
@@ -37,6 +41,6 @@ jobs:
     uses: ./.github/workflows/release-v1.yaml
     with:
       environment: npm-prod-cd
-      mode: 'create-pr'
+      mode: "publish"
     secrets:
       github-token: ${{ secrets.BOT_GH_TOKEN }}

@@ -40,14 +40,11 @@ dedicated workflow using the `mode` input.
 
 ## Inputs
 
-| Input            | Description                                                                                               | Default               | Required |
-| ---------------- | --------------------------------------------------------------------------------------------------------- | --------------------- | -------- |
-| `mode`           | Release mode: `create-pr` to create/update the Version Packages PR, `publish` to publish and create tags | —                     | **true** |
-| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions                                  | `${{ github.token }}` | false    |
-| `base-branch`    | Base branch where release flow runs                                                                        | `main`                | false    |
-| `release-branch` | Branch used for Version Packages PR                                                                        | `nx-release/main`     | false    |
-| `pr-title`       | Title for the release pull request                                                                         | `Version Packages`    | false    |
-| `commit-message` | Commit message for generated version bumps                                                                 | `Version Packages`    | false    |
+| Input          | Description                                                                                              | Default               | Required |
+| -------------- | -------------------------------------------------------------------------------------------------------- | --------------------- | -------- |
+| `mode`         | Release mode: `create-pr` to create/update the Version Packages PR, `publish` to publish and create tags | —                     | **true** |
+| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions                                 | `${{ github.token }}` | false    |
+| `base-branch`  | Base branch where release flow runs                                                                      | `main`                | false    |
 
 ## Outputs
 

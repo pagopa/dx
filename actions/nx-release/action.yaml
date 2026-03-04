@@ -10,18 +10,6 @@ inputs:
     description: "Base branch where release flow runs"
     required: false
     default: "main"
-  release-branch:
-    description: "Branch used for Version Packages PR"
-    required: false
-    default: "nx-release/main"
-  pr-title:
-    description: "Title for the release pull request"
-    required: false
-    default: "Version Packages"
-  commit-message:
-    description: "Commit message for generated version bumps"
-    required: false
-    default: "Version Packages"
   mode:
     description: "Release mode: 'create-pr' to create/update the Version Packages PR, 'publish' to publish packages and create tags"
     required: true
@@ -50,9 +38,9 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        RELEASE_BRANCH: ${{ inputs.release-branch }}
-        PR_TITLE: ${{ inputs.pr-title }}
-        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        RELEASE_BRANCH: "nx-release/main"
+        PR_TITLE: "Version Packages"
+        COMMIT_MESSAGE: "Version Packages"
         # nx-release-version.js writes the PR body here
         PR_BODY_PATH: ${{ runner.temp }}/nx-release-pr-body.md
         GH_TOKEN: ${{ inputs.github-token }}

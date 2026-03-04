@@ -125,22 +125,23 @@ async function run() {
   const packages = [...packagesByProject.values()];
   const publishedPackages = (await Promise.all(
     packages.map(async (pkg) => {
+      const project = [...packagesByProject.entries()].find(
+        ([, info]) => info.name === pkg.name
+      )?.[0];
+      const code = project !== void 0 ? publishResults[project]?.code ?? -1 : -1;
+      if (code === 0) {
+        return pkg;
+      }
       if (pkg.private) {
-        const project = [...packagesByProject.entries()].find(
-          ([, info]) => info.name === pkg.name
-        )?.[0];
-        const succeeded = project !== void 0 && publishResults[project]?.code === 0;
-        if (!succeeded) {
-          console.log(
-            `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`
-          );
-        }
-        return succeeded ? pkg : null;
+        console.log(
+          `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`
+        );
+        return null;
       }
       const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
       if (!onNpm) {
         console.log(
-          `::warning::${pkg.name}@${pkg.version} not found on npm, skipping tag.`
+          `::warning::${pkg.name}@${pkg.version} not found on npm registry, skipping tag.`
         );
       }
       return onNpm ? pkg : null;

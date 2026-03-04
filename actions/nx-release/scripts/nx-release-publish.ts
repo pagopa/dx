@@ -225,36 +225,40 @@ async function run(): Promise<void> {
 
   // ── Phase 3: determine which packages should receive a tag ──────────────────
   //
-  // Public packages:  npm registry is the source of truth — the package must
-  //                   be present on npm before we create a tag.  This makes the
-  //                   step idempotent across retries.
-  // Private packages: they are never published to npm, so we rely on
-  //                   `releasePublish` returning code 0 (Nx marks them as
-  //                   successfully "processed" even though no upload happens).
+  // Primary signal: `code === 0` from releasePublish — the package was just
+  // published in this run.
+  //
+  // Retry/idempotency fallback: if code !== 0 (npm said "already exists" on a
+  // previous failed run), check the registry directly to confirm the version
+  // is there before creating the tag.
+  //
+  // Private packages never go to npm, so we only use the publish exit code.
   const publishedPackages = (
     await Promise.all(
       packages.map(async (pkg) => {
-        if (pkg.private) {
-          // For private packages Nx still calls the publish target (e.g. a
-          // local build step) and returns code 0 on success.
-          const project = [...packagesByProject.entries()].find(
-            ([, info]) => info.name === pkg.name,
-          )?.[0];
-          const succeeded =
-            project !== undefined && publishResults[project]?.code === 0;
-          if (!succeeded) {
-            console.log(
-              `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`,
-            );
-          }
-          return succeeded ? pkg : null;
+        const project = [...packagesByProject.entries()].find(
+          ([, info]) => info.name === pkg.name,
+        )?.[0];
+        const code =
+          project !== undefined ? (publishResults[project]?.code ?? -1) : -1;
+
+        if (code === 0) {
+          return pkg;
         }
 
-        // Public package — check the registry.
+        if (pkg.private) {
+          console.log(
+            `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`,
+          );
+          return null;
+        }
+
+        // Public package with non-zero exit: could be a benign "already
+        // published" error from a previous partial run. Check the registry.
         const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
         if (!onNpm) {
           console.log(
-            `::warning::${pkg.name}@${pkg.version} not found on npm, skipping tag.`,
+            `::warning::${pkg.name}@${pkg.version} not found on npm registry, skipping tag.`,
           );
         }
         return onNpm ? pkg : null;
