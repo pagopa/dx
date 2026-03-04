@@ -1,49 +1,34 @@
 /**
- * Runs the Nx Release publish phase via the programmatic API, then creates
- * annotated git tags and GitHub releases for every successfully published
- * package.
+ * Scans all tracked package manifests in the repo, creates annotated git tags
+ * for newly published versions, pushes them to origin, and creates the
+ * corresponding GitHub releases with changelog notes.
  *
- * After publish, the npm registry — not `publishResults` — is the source of
- * truth for determining which packages need a git tag and GitHub release.
- * This makes the entire flow idempotent: if the action is re-run after a
- * partial failure, packages already on npm get their missing tags/releases
- * created without attempting to re-publish them.
+ * Source of truth for public npm packages: the npm registry.
+ * A tag is created only when the version is confirmed to be present on the
+ * registry — this makes the entire flow idempotent across retries.
+ *
+ * Private packages (private:true or non-npm registry) receive a tag
+ * unconditionally because they are never published to the public registry.
+ *
+ * The `npm publish` step is run separately by action.yaml before this script
+ * is invoked. This script only handles git tagging and GitHub releases.
  *
  * Expected environment variables:
  *   GITHUB_TOKEN   — token used by the gh CLI to create releases
  *   GITHUB_OUTPUT  — path to GitHub Actions output file
  */
-import type { releasePublish } from "nx/release";
-
 import { execFile, spawn } from "node:child_process";
 import { appendFile, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
 import { promisify } from "node:util";
-
-/**
- * Loads nx/release from the consumer workspace's node_modules.
- * See nx-release-version.ts for the rationale behind dynamic import.
- */
-async function loadNxRelease(): Promise<{
-  releasePublish: typeof releasePublish;
-}> {
-  const workspaceRoot = process.env.GITHUB_WORKSPACE ?? process.cwd();
-  const nxReleasePath = pathToFileURL(
-    join(workspaceRoot, "node_modules/nx/release/index.js"),
-  ).href;
-  return import(nxReleasePath) as Promise<{
-    releasePublish: typeof releasePublish;
-  }>;
-}
 
 const execFileAsync = promisify(execFile);
 
-interface PackageInfo {
+interface ReleaseTarget {
+  isPrivate: boolean;
   name: string;
-  /** Whether the package has `"private": true` in package.json (not published to npm). */
-  private: boolean;
-  root: string;
+  registry?: string;
+  sourceFile: string;
   version: string;
 }
 
@@ -88,19 +73,19 @@ async function createGitHubRelease(
   console.log(`::notice::Created GitHub release ${tagName}`);
 }
 
-/** Extracts the changelog section for a specific version from CHANGELOG.md. */
-async function extractReleaseNotes(pkg: PackageInfo): Promise<string> {
-  const changelogPath = join(pkg.root, "CHANGELOG.md");
+/** Extracts release notes for a specific version from package changelog. */
+async function extractReleaseNotes(target: ReleaseTarget): Promise<string> {
+  const changelog = join(dirname(target.sourceFile), "CHANGELOG.md");
 
   try {
-    const lines = (await readFile(changelogPath, "utf8")).split("\n");
+    const lines = (await readFile(changelog, "utf8")).split("\n");
     const versionPattern = new RegExp(
-      `^##\\s+\\[?${pkg.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
+      `^##\\s+\\[?${target.version.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&")}`,
     );
 
     const start = lines.findIndex((line) => versionPattern.test(line));
     if (start === -1) {
-      return `Release ${pkg.name}@${pkg.version}`;
+      return `Release ${target.name}@${target.version}`;
     }
 
     const nextHeading = lines.findIndex(
@@ -108,172 +93,155 @@ async function extractReleaseNotes(pkg: PackageInfo): Promise<string> {
     );
     const end = nextHeading === -1 ? lines.length : nextHeading;
 
-    return (
-      lines.slice(start, end).join("\n").trim() ||
-      `Release ${pkg.name}@${pkg.version}`
-    );
+    const section = lines.slice(start, end).join("\n").trim();
+    return section || `Release ${target.name}@${target.version}`;
   } catch (err) {
-    console.warn(`Could not read changelog for ${pkg.name}:`, err);
-    return `Release ${pkg.name}@${pkg.version}`;
+    console.warn(`Could not read changelog for ${target.name}:`, err);
+    return `Release ${target.name}@${target.version}`;
   }
 }
 
-/**
- * Resolves the npm package name, version, and root directory for an Nx project
- * by querying `nx show project` and reading its package.json.
- */
-async function getPackageInfo(
-  projectName: string,
-): Promise<null | PackageInfo> {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "project",
-      projectName,
-      "--json",
-    ]);
+/** Builds the full list of release targets from repository manifests. */
+async function extractTargets(
+  manifestFiles: string[],
+): Promise<ReleaseTarget[]> {
+  const seen = new Set<string>();
+  const targets: ReleaseTarget[] = [];
 
-    const project = JSON.parse(stdout) as Record<string, unknown>;
-    const root = typeof project["root"] === "string" ? project["root"] : null;
-    if (!root) {
-      return null;
+  for (const file of manifestFiles) {
+    // Skip the action's own package.json
+    if (file === "actions/nx-release/package.json") {
+      continue;
     }
 
-    const pkgJson = JSON.parse(
-      await readFile(join(root, "package.json"), "utf8"),
-    ) as Record<string, unknown>;
+    const target = file.endsWith("package.json")
+      ? await parsePackageJson(file)
+      : null;
 
-    const name = typeof pkgJson["name"] === "string" ? pkgJson["name"] : null;
-    const version =
-      typeof pkgJson["version"] === "string" ? pkgJson["version"] : null;
+    if (!target) {
+      continue;
+    }
+
+    const key = `${target.name}@${target.version}@${target.sourceFile}`;
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    targets.push(target);
+  }
+
+  return targets;
+}
+
+/** Checks whether a registry URL is npm-compatible (public npm/yarn mirrors). */
+function isNpmRegistry(registry: string | undefined): boolean {
+  if (!registry) {
+    return true;
+  }
+
+  const normalized = registry.replace(/\/+$/, "").toLowerCase();
+  return (
+    normalized === "https://registry.npmjs.org" ||
+    normalized === "https://registry.yarnpkg.com"
+  );
+}
+
+/** Lists tracked package.json files in the repo via `git ls-files`. */
+async function listManifestFiles(): Promise<string[]> {
+  const { stdout } = await execFileAsync("git", [
+    "ls-files",
+    "--",
+    "**/package.json",
+  ]);
+  return stdout
+    .split("\n")
+    .map((line: string) => line.trim())
+    .filter(Boolean);
+}
+
+/** Parses an npm package manifest into an internal release target model. */
+async function parsePackageJson(path: string): Promise<null | ReleaseTarget> {
+  try {
+    const raw = JSON.parse(await readFile(path, "utf8")) as Record<
+      string,
+      unknown
+    >;
+
+    const name = typeof raw["name"] === "string" ? raw["name"] : null;
+    const version = typeof raw["version"] === "string" ? raw["version"] : null;
 
     if (!name || !version) {
       return null;
     }
 
-    const isPrivate = pkgJson["private"] === true;
-    return { name, private: isPrivate, root, version };
+    const publishConfig =
+      typeof raw["publishConfig"] === "object" && raw["publishConfig"] !== null
+        ? (raw["publishConfig"] as Record<string, unknown>)
+        : undefined;
+
+    const registry =
+      typeof publishConfig?.["registry"] === "string"
+        ? publishConfig["registry"]
+        : undefined;
+
+    return {
+      isPrivate: !!raw["private"] || !isNpmRegistry(registry),
+      name,
+      registry,
+      sourceFile: path,
+      version,
+    };
   } catch (err) {
-    console.warn(`Failed to get package info for project ${projectName}:`, err);
+    console.warn(`Failed to parse ${path}:`, err);
     return null;
   }
 }
 
-/**
- * Checks whether a specific version of an npm package is published on the
- * registry.  Returns true even when the package was published in a previous
- * action run that failed before creating the git tag — this is what makes the
- * publish phase idempotent.
- */
-async function isPublishedOnNpm(
-  name: string,
-  version: string,
-): Promise<boolean> {
+/** Reads all published versions for an npm package from the target registry. */
+async function readNpmPublishedVersions(
+  packageName: string,
+  registry?: string,
+): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("npm", [
-      "view",
-      `${name}@${version}`,
-      "version",
-      "--json",
-    ]);
-    return stdout.trim().replace(/^"|"$/g, "") === version;
-  } catch {
-    return false;
+    const args = ["view", packageName, "versions", "--json"];
+    if (registry) {
+      args.push("--registry", registry);
+    }
+    const { stdout } = await execFileAsync("npm", args);
+    if (!stdout) {
+      return [];
+    }
+    const parsed: unknown = JSON.parse(stdout);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((v): v is string => typeof v === "string");
+    }
+    return typeof parsed === "string" ? [parsed] : [];
+  } catch (err) {
+    console.warn(`Failed to read npm versions for ${packageName}:`, err);
+    return [];
   }
 }
 
-/** Main entrypoint: publishes packages, creates git tags, and GitHub releases. */
+/** Main entrypoint: resolves targets, creates missing tags, and syncs releases. */
 async function run(): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
 
-  // ── Phase 1: publish ───────────────────────────────────────────────────────
-  const { releasePublish } = await loadNxRelease();
-
-  console.log("::notice::Running Nx Release publish phase");
-  const publishResults = await releasePublish({});
-
-  const failedProjects = Object.entries(publishResults)
-    .filter(([, result]) => result.code !== 0)
-    .map(([name]) => name);
-
-  if (failedProjects.length > 0) {
-    console.error(`::error::Failed to publish: ${failedProjects.join(", ")}`);
-  }
-
-  // ── Phase 2: resolve package metadata for all attempted projects ───────────
-  // Use all projects from publishResults, not just the successful ones.
-  // A non-zero exit code from npm publish can mean "already published" — the
-  // npm registry is the authoritative source, checked below.
-  const allAttemptedProjects = Object.keys(publishResults);
-  const packagesByProject = new Map(
-    (
-      await Promise.all(
-        allAttemptedProjects.map(async (project) => ({
-          info: await getPackageInfo(project),
-          project,
-        })),
-      )
-    )
-      .filter(
-        (entry): entry is { info: PackageInfo; project: string } =>
-          entry.info !== null,
-      )
-      .map(({ info, project }) => [project, info] as const),
-  );
-  const packages = [...packagesByProject.values()];
-
-  // ── Phase 3: determine which packages should receive a tag ──────────────────
-  //
-  // Primary signal: `code === 0` from releasePublish — the package was just
-  // published in this run.
-  //
-  // Retry/idempotency fallback: if code !== 0 (npm said "already exists" on a
-  // previous failed run), check the registry directly to confirm the version
-  // is there before creating the tag.
-  //
-  // Private packages never go to npm, so we only use the publish exit code.
-  const publishedPackages = (
-    await Promise.all(
-      packages.map(async (pkg) => {
-        const project = [...packagesByProject.entries()].find(
-          ([, info]) => info.name === pkg.name,
-        )?.[0];
-        const code =
-          project !== undefined ? (publishResults[project]?.code ?? -1) : -1;
-
-        if (code === 0) {
-          return pkg;
-        }
-
-        if (pkg.private) {
-          console.log(
-            `::notice::Private package ${pkg.name}@${pkg.version} was not successfully processed, skipping tag.`,
-          );
-          return null;
-        }
-
-        // Public package with non-zero exit: could be a benign "already
-        // published" error from a previous partial run. Check the registry.
-        const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
-        if (!onNpm) {
-          console.log(
-            `::warning::${pkg.name}@${pkg.version} not found on npm registry, skipping tag.`,
-          );
-        }
-        return onNpm ? pkg : null;
-      }),
-    )
-  ).filter((p): p is PackageInfo => p !== null);
-
-  // ── Phase 4: create git tags for published-but-untagged packages ───────────
+  const targets = await extractTargets(await listManifestFiles());
   const createdTags: string[] = [];
 
-  for (const pkg of publishedPackages) {
-    const tagName = `${pkg.name}@${pkg.version}`;
+  for (const target of targets) {
+    const tagName = `${target.name}@${target.version}`;
 
     if (await tagExists(tagName)) {
       console.log(`::notice::Tag ${tagName} already exists, skipping`);
+      continue;
+    }
+
+    if (!(await shouldCreateTag(target))) {
+      console.log(
+        `::notice::Skipping ${tagName}: version not confirmed on npm registry yet`,
+      );
       continue;
     }
 
@@ -283,53 +251,44 @@ async function run(): Promise<void> {
       "-a",
       tagName,
       "-m",
-      `Release ${pkg.name} ${pkg.version}`,
+      `Release ${target.name} ${target.version}`,
     ]);
+
     createdTags.push(tagName);
   }
 
-  // ── Phase 5: push tags + create GitHub releases ────────────────────────────
   if (createdTags.length > 0) {
     console.log(`::notice::Pushing ${createdTags.length} tags to origin`);
     await spawnInherit("git", ["push", "origin", "--tags"]);
 
-    for (const pkg of publishedPackages) {
-      const tagName = `${pkg.name}@${pkg.version}`;
+    for (const target of targets) {
+      const tagName = `${target.name}@${target.version}`;
       if (!createdTags.includes(tagName)) {
         continue;
       }
-      const notes = await extractReleaseNotes(pkg);
-      const prerelease = pkg.version.includes("-");
+
+      const notes = await extractReleaseNotes(target);
+      const prerelease = target.version.includes("-");
       await createGitHubRelease(tagName, notes, prerelease);
     }
   }
 
-  // ── Phase 6: write outputs ─────────────────────────────────────────────────
   if (outputPath) {
-    await appendOutput(
-      outputPath,
-      "published",
-      publishedPackages.length > 0 ? "true" : "false",
-    );
     await appendOutput(outputPath, "tags", createdTags.join(" "));
   }
+}
 
-  // Fail the action only when a package truly could not be published:
-  //   - Public package:  failed AND still absent from npm registry
-  //   - Private package: failed (no npm fallback check possible)
-  const trulyFailed = await Promise.all(
-    failedProjects.map(async (project) => {
-      const pkg = packagesByProject.get(project);
-      if (!pkg) return true;
-      if (pkg.private) return true; // private publish failure is always real
-      const onNpm = await isPublishedOnNpm(pkg.name, pkg.version);
-      return !onNpm;
-    }),
-  );
-
-  if (trulyFailed.some(Boolean)) {
-    process.exit(1);
+/** Decides if a tag should be created for a target using registry-aware rules. */
+async function shouldCreateTag(target: ReleaseTarget): Promise<boolean> {
+  if (target.isPrivate) {
+    return true;
   }
+
+  const publishedVersions = await readNpmPublishedVersions(
+    target.name,
+    target.registry,
+  );
+  return publishedVersions.includes(target.version);
 }
 
 /** Runs a command and streams its output to the current terminal. */
@@ -347,8 +306,15 @@ function spawnInherit(cmd: string, args: string[]): Promise<void> {
   });
 }
 
-/** Checks whether a tag exists locally or on origin. */
+/** Checks whether a tag exists either locally or remotely. */
 async function tagExists(tagName: string): Promise<boolean> {
+  return (
+    (await tagExistsLocally(tagName)) || (await tagExistsOnRemote(tagName))
+  );
+}
+
+/** Checks whether a tag exists in local git refs. */
+async function tagExistsLocally(tagName: string): Promise<boolean> {
   try {
     await execFileAsync("git", [
       "rev-parse",
@@ -359,8 +325,12 @@ async function tagExists(tagName: string): Promise<boolean> {
     return true;
   } catch {
     // Non-zero exit means the tag does not exist locally
+    return false;
   }
+}
 
+/** Checks whether a tag already exists on origin remote. */
+async function tagExistsOnRemote(tagName: string): Promise<boolean> {
   try {
     const { stdout } = await execFileAsync("git", [
       "ls-remote",

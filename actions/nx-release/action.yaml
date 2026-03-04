@@ -100,6 +100,9 @@ runs:
         echo "::notice::Executing build command before publish"
         npx nx run-many --target=build --projects=tag:npm:public
 
-        # Runs releasePublish via Nx programmatic API then creates git tags
-        # and GitHub releases for every successfully published package.
+        echo "::notice::Publishing packages to npm"
+        npx nx release publish
+
+        # Scans all tracked package.json files, checks the npm registry, and
+        # creates annotated git tags + GitHub releases for every published version.
         node "$ACTION_PATH/scripts/dist/nx-release-publish.js"

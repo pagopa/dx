@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   version-packages-pr:
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' && github.event.pull_request == null
     name: Create/Update Version Packages PR
     permissions:
       contents: write
@@ -32,7 +32,7 @@ jobs:
       github-token: ${{ secrets.BOT_GH_TOKEN }}
 
   release:
-    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
     name: Publish Release
     permissions:
       contents: write
