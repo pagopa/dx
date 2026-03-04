@@ -30,12 +30,14 @@ module "bootstrap" {
   github_private_runner = {
     container_app_environment_id       = module.core_values.github_runner.environment_id
     container_app_environment_location = var.environment.location
+    use_github_app                     = true
     labels = [
       local.env_long
     ]
     key_vault = {
       name                = module.core_values.common_key_vault.name
       resource_group_name = module.core_values.common_key_vault.resource_group_name
+      use_rbac            = true
     }
   }
 
