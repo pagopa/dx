@@ -16,14 +16,6 @@ provider "azurerm" {
 
 provider "pagopa-dx" {}
 
-override_resource {
-  target = azurerm_app_configuration.this
-
-  values = {
-    purge_protection_enabled = false
-  }
-}
-
 variables {
   environment = {
     prefix          = "dx"
