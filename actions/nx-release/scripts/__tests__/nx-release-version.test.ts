@@ -21,7 +21,7 @@ describe("buildPrBody", () => {
     const body = buildPrBody({
       "@pagopa/foo": { contents: "## 1.1.0\n\n- feat: something" },
     });
-    expect(body).toContain("## 1.1.0");
+    expect(body).toContain("## @pagopa/foo@1.1.0");
     expect(body).toContain("feat: something");
   });
 
@@ -39,6 +39,7 @@ describe("buildPrBody", () => {
     const body = buildPrBody({
       "@pagopa/foo": { contents: "  ## 1.0.0  \n\n" },
     });
+    expect(body).toContain("## @pagopa/foo@1.0.0");
     expect(body).not.toMatch(/^\s+/);
     expect(body).not.toMatch(/\s+$/);
   });
@@ -48,7 +49,7 @@ describe("buildPrBody", () => {
       "@pagopa/empty": { contents: "   " },
       "@pagopa/real": { contents: "## 2.0.0\n\n- fix: bug" },
     });
-    expect(body).toContain("## 2.0.0");
+    expect(body).toContain("## @pagopa/real@2.0.0");
     expect(body).not.toContain(
       "See individual packages CHANGELOGs for details.",
     );

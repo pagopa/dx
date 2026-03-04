@@ -10,7 +10,13 @@ function buildPrBody(projectChangelogs) {
     "# Releases",
     ""
   ].join("\n");
-  const entries = Object.entries(projectChangelogs ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([, data]) => data.contents.trim()).filter(Boolean);
+  const entries = Object.entries(projectChangelogs ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(
+    ([projectName, data]) => (
+      // Nx generates headings like "## 1.1.0-rc.4" — prefix with project name
+      // so each section reads "## my-package@1.1.0-rc.4" in the PR body.
+      data.contents.trim().replace(/^(## )(\S+)/m, `$1${projectName}@$2`)
+    )
+  ).filter(Boolean);
   return entries.length > 0 ? `${intro}${entries.join("\n\n")}`.trim() : `${intro}See individual packages CHANGELOGs for details.`;
 }
 async function appendOutput(outputPath, key, value) {
@@ -29,7 +35,16 @@ async function run() {
   const prBodyPath = process.env.PR_BODY_PATH;
   const { releaseChangelog, releaseVersion } = await loadNxRelease();
   console.log("::notice::Running Nx Release versioning phase");
-  const { projectsVersionData, releaseGraph, workspaceVersion } = await releaseVersion({ preid: "rc" });
+  const { projectsVersionData, releaseGraph, workspaceVersion } = await releaseVersion({
+    // Disable all git operations — version changes will be committed by
+    // action.yaml after the lockfile is refreshed, not by Nx itself.
+    // These must be explicit so the action works regardless of how the
+    // consumer's nx.json is configured.
+    gitCommit: false,
+    gitTag: false,
+    preid: "rc",
+    stageChanges: false
+  });
   const hasChanges = Object.values(projectsVersionData).some(
     (v) => v.newVersion !== null && v.newVersion !== v.currentVersion
   );

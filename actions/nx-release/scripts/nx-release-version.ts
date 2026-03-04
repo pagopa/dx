@@ -27,7 +27,11 @@ export function buildPrBody(
 
   const entries = Object.entries(projectChangelogs ?? {})
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([, data]) => data.contents.trim())
+    .map(([projectName, data]) =>
+      // Nx generates headings like "## 1.1.0-rc.4" — prefix with project name
+      // so each section reads "## my-package@1.1.0-rc.4" in the PR body.
+      data.contents.trim().replace(/^(## )(\S+)/m, `$1${projectName}@$2`),
+    )
     .filter(Boolean);
 
   return entries.length > 0
@@ -74,7 +78,16 @@ async function run(): Promise<void> {
 
   console.log("::notice::Running Nx Release versioning phase");
   const { projectsVersionData, releaseGraph, workspaceVersion } =
-    await releaseVersion({ preid: "rc" });
+    await releaseVersion({
+      // Disable all git operations — version changes will be committed by
+      // action.yaml after the lockfile is refreshed, not by Nx itself.
+      // These must be explicit so the action works regardless of how the
+      // consumer's nx.json is configured.
+      gitCommit: false,
+      gitTag: false,
+      preid: "rc",
+      stageChanges: false,
+    });
 
   const hasChanges = Object.values(projectsVersionData).some(
     (v) => v.newVersion !== null && v.newVersion !== v.currentVersion,
