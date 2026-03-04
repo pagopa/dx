@@ -1,5 +1,3 @@
-# Diagnostic Settings for App Configuration
-# Logs configuration operations and metrics
 resource "azurerm_monitor_diagnostic_setting" "app_configuration" {
   count = var.diagnostic_settings.enabled ? 1 : 0
 
@@ -13,7 +11,7 @@ resource "azurerm_monitor_diagnostic_setting" "app_configuration" {
     category_group = "allLogs"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
   }
 }

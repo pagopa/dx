@@ -24,29 +24,37 @@ resource "azurerm_container_app_job" "github_runner" {
         name             = "github-runner-rule"
         custom_rule_type = "github-runner"
 
-        # https://keda.sh/docs/2.17/scalers/github-runner/
+        # https://keda.sh/docs/2.19/scalers/github-runner/
         metadata = merge({
+          githubApiURL              = "https://api.github.com"
           owner                     = var.repository.owner
           runnerScope               = "repo"
           repos                     = var.repository.name
-          targetWorkflowQueueLength = "1"
-          github-runner             = "https://api.github.com"
           enableEtags               = "true"
-        }, var.container_app_environment.use_labels ? { labels = local.labels } : {})
+          targetWorkflowQueueLength = "1"
+          },
+          var.use_github_app ? {
+            applicationIDFromEnv  = "GITHUB_APP_ID"
+            installationIDFromEnv = "GITHUB_APP_INSTALLATION_ID"
+          } : {},
+          var.container_app_environment.use_labels ? { labels = local.labels } : {}
+        )
 
         authentication {
-          secret_name       = var.key_vault.secret_name
-          trigger_parameter = "personalAccessToken"
+          secret_name       = var.use_github_app ? "github-runner-app-key" : var.key_vault.secret_name
+          trigger_parameter = var.use_github_app ? "appKey" : "personalAccessToken"
         }
       }
     }
   }
 
-  secret {
-    key_vault_secret_id = "${local.key_vault_uri}secrets/${var.key_vault.secret_name}" # no versioning
-
-    identity = "System"
-    name     = var.key_vault.secret_name
+  dynamic "secret" {
+    for_each = local.secrets
+    content {
+      key_vault_secret_id = "${local.key_vault_uri}secrets/${secret.value}"
+      identity            = "System"
+      name                = secret.value
+    }
   }
 
   template {
@@ -73,7 +81,7 @@ resource "azurerm_container_app_job" "github_runner" {
       }
 
       dynamic "env" {
-        for_each = local.runner_secrets
+        for_each = local.runner_env_vars_sensitive
         content {
           name        = env.key
           secret_name = env.value

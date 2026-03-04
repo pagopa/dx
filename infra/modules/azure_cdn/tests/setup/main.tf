@@ -1,16 +1,3 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 3.110, < 5.0"
-    }
-    dx = {
-      source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
-    }
-  }
-}
-
 locals {
   naming_config = {
     prefix          = var.environment.prefix,
@@ -110,4 +97,8 @@ output "storage_account_host_name" {
 
 output "devex_pagopa_it_zone_name" {
   value = azurerm_dns_zone.devex_pagopa_it.name
+}
+
+output "storage_account_id" {
+  value = module.storage_account.id
 }

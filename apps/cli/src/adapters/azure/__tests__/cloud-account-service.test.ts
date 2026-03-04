@@ -117,3 +117,53 @@ describe("getTerraformBackend", () => {
     );
   });
 });
+
+describe("isInitialized", () => {
+  test("returns true when both bootstrap identity and common Key Vault exist", async ({
+    cloudAccountService,
+  }) => {
+    // First call: identity query → found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    // Second call: key vault query → found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+
+    const result = await cloudAccountService.isInitialized("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toBe(true);
+  });
+
+  test("returns false when bootstrap identity exists but common Key Vault does not", async ({
+    cloudAccountService,
+  }) => {
+    // First call: identity query → found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    // Second call: key vault query → not found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 0 });
+
+    const result = await cloudAccountService.isInitialized("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toBe(false);
+  });
+
+  test("returns false when common Key Vault exists but bootstrap identity does not", async ({
+    cloudAccountService,
+  }) => {
+    // First call: identity query → not found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 0 });
+    // Second call: key vault query → found
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+
+    const result = await cloudAccountService.isInitialized("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toBe(false);
+  });
+});

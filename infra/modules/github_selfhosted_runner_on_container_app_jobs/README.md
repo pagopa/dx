@@ -8,12 +8,20 @@ This module creates a Container App Job to be used as a GitHub self-hosted runne
 
 - **Container App Job**: Deploys a Container App Job in the specified Azure Container App Environment.
 - **Managed Identity**: Provides System Assigned Managed Identity for secure authentication with Azure resources.
-- **Key Vault Access**: Grant access to the KeyVault instance with GitHub credentials (PAT token)
+- **Key Vault Access**: Grant access to the KeyVault instance with GitHub credentials.
 - **Auto GitHub Registration**: Automatically scale and register as self-hosted runner in the target repository.
+
+## Authentication Methods
+
+This module supports two authentication methods:
+
+1. **GitHub App Authentication (Recommended)**: Use `app_key_secret_name`, `app_id_secret_name`, and `installation_id_secret_name` in the `key_vault` variable.
+2. **PAT-based Authentication (Legacy)**: Use `secret_name` in the `key_vault` variable for backward compatibility.
 
 ## Usage Example
 
 A usage example can be found in the [examples](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app/tree/main/examples/basic) directory.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -42,10 +50,11 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_container_app_environment"></a> [container\_app\_environment](#input\_container\_app\_environment) | Configuration for the Container App Environment. | <pre>object({<br/>    id                          = string<br/>    location                    = string<br/>    replica_timeout_in_seconds  = optional(number, 1800)<br/>    polling_interval_in_seconds = optional(number, 30)<br/>    min_instances               = optional(number, 0)<br/>    max_instances               = optional(number, 30)<br/>    use_labels                  = optional(bool, false)<br/>    override_labels             = optional(list(string), [])<br/>    cpu                         = optional(number, 1.5)<br/>    memory                      = optional(string, "3Gi")<br/>    image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")<br/>    env_vars                    = optional(map(string), {})<br/>    secrets                     = optional(map(string), {})<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Details of the Key Vault used to store secrets for the Container App Job. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>    use_rbac            = optional(bool, false)<br/>    secret_name         = optional(string, "github-runner-pat")<br/>  })</pre> | n/a | yes |
+| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Details of the Key Vault used to store GitHub credentials.<br/>The field 'secret\_name' is used only when 'use\_github\_app' is set to false. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>    use_rbac            = optional(bool, false)<br/>    secret_name         = optional(string, "github-runner-pat")<br/>  })</pre> | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details of the GitHub repository, including the owner and repository name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the Container App Job will be deployed. Defaults to null. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
+| <a name="input_use_github_app"></a> [use\_github\_app](#input\_use\_github\_app) | Set true to use GitHub App authentication instead of a Personal Access Token.<br/>If true, the module expects the Key Vault to contain the following secrets:<br/>  - github-runner-app-installation-id: GitHub App Installation ID<br/>  - github-runner-app-id: GitHub App ID<br/>  - github-runner-app-key: GitHub App private key in PEM format | `bool` | `false` | no |
 
 ## Outputs
 

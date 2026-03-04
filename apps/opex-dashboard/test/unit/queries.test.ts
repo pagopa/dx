@@ -28,6 +28,7 @@ describe("API Management Queries", () => {
       response_time_percentile: 95,
       status_code_categories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
     },
+    resource_group: "dashboards",
     resource_type: "api-management",
     timespan: "5m",
   };
@@ -97,6 +98,7 @@ describe("App Gateway Queries", () => {
       response_time_percentile: 95,
       status_code_categories: ["1XX", "2XX", "3XX", "4XX", "5XX"],
     },
+    resource_group: "dashboards",
     resource_type: "app-gateway",
     timespan: "5m",
   };

@@ -88,6 +88,7 @@ async function generateHandler(options: {
       name: config.name,
       queries: config.queries || config.overrides?.queries,
       resolver,
+      resource_group: config.resource_group,
       resource_type: config.resource_type,
       resources: [config.data_source],
       response_time_threshold: config.response_time_threshold,

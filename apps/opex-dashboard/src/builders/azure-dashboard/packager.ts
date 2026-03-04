@@ -36,8 +36,32 @@ export async function generateTerraformAssets(
       ),
     ]);
 
-    // Generate env/ directories for dev, uat, prod
-    if (terraformConfig?.environments) {
+    // Check if using flat configuration (schema guarantees prefix and env_short are both defined)
+    if (terraformConfig && "prefix" in terraformConfig) {
+      // Flat mode: generate tfvars directly in the output directory
+      const backendTfvarsContent = generateBackendTfvars(
+        terraformConfig.backend,
+      );
+      const terraformTfvarsContent = generateTerraformTfvars({
+        backend: terraformConfig.backend,
+        env_short: terraformConfig.env_short,
+        prefix: terraformConfig.prefix,
+      });
+
+      await Promise.all([
+        writeFile(
+          path.join(outputPath, "backend.tfvars"),
+          backendTfvarsContent,
+          "utf-8",
+        ),
+        writeFile(
+          path.join(outputPath, "terraform.tfvars"),
+          terraformTfvarsContent,
+          "utf-8",
+        ),
+      ]);
+    } else if (terraformConfig && "environments" in terraformConfig) {
+      // Environment mode: generate env/ directories for dev, uat, prod
       const envPromises = [];
 
       for (const [env, envConfig] of Object.entries(

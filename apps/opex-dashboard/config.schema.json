@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Configuration schema for generating operational dashboards from OpenAPI specifications",
   "title": "OpEx Dashboard Configuration",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "object",
   "properties": {
     "action_groups": {
@@ -168,6 +168,11 @@
       ],
       "additionalProperties": false
     },
+    "resource_group": {
+      "description": "Azure resource group name where dashboard and alerts will be created. Default: dashboards",
+      "default": "dashboards",
+      "type": "string"
+    },
     "resource_type": {
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
       "default": "app-gateway",
@@ -184,164 +189,220 @@
     },
     "terraform": {
       "description": "Optional Terraform and environment-specific configuration",
-      "type": "object",
-      "properties": {
-        "environments": {
-          "description": "Environment-specific configurations for dev/uat/prod",
+      "anyOf": [
+        {
           "type": "object",
           "properties": {
-            "dev": {
+            "backend": {
+              "description": "Azure backend configuration for Terraform state",
               "type": "object",
               "properties": {
-                "backend": {
-                  "description": "Azure backend configuration for Terraform state",
-                  "type": "object",
-                  "properties": {
-                    "container_name": {
-                      "description": "Blob container name for Terraform state",
-                      "type": "string"
-                    },
-                    "key": {
-                      "description": "State file key/path",
-                      "type": "string"
-                    },
-                    "resource_group_name": {
-                      "description": "Azure resource group for backend state",
-                      "type": "string"
-                    },
-                    "storage_account_name": {
-                      "description": "Storage account for Terraform state",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "container_name",
-                    "key",
-                    "resource_group_name",
-                    "storage_account_name"
-                  ],
-                  "additionalProperties": false
+                "container_name": {
+                  "description": "Blob container name for Terraform state",
+                  "type": "string"
                 },
-                "env_short": {
-                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
-                  "type": "string",
-                  "maxLength": 1
+                "key": {
+                  "description": "State file key/path",
+                  "type": "string"
                 },
-                "prefix": {
-                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
-                  "type": "string",
-                  "maxLength": 6
+                "resource_group_name": {
+                  "description": "Azure resource group for backend state",
+                  "type": "string"
+                },
+                "storage_account_name": {
+                  "description": "Storage account for Terraform state",
+                  "type": "string"
                 }
               },
               "required": [
-                "env_short",
-                "prefix"
+                "container_name",
+                "key",
+                "resource_group_name",
+                "storage_account_name"
               ],
               "additionalProperties": false
             },
-            "prod": {
-              "type": "object",
-              "properties": {
-                "backend": {
-                  "description": "Azure backend configuration for Terraform state",
-                  "type": "object",
-                  "properties": {
-                    "container_name": {
-                      "description": "Blob container name for Terraform state",
-                      "type": "string"
-                    },
-                    "key": {
-                      "description": "State file key/path",
-                      "type": "string"
-                    },
-                    "resource_group_name": {
-                      "description": "Azure resource group for backend state",
-                      "type": "string"
-                    },
-                    "storage_account_name": {
-                      "description": "Storage account for Terraform state",
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "container_name",
-                    "key",
-                    "resource_group_name",
-                    "storage_account_name"
-                  ],
-                  "additionalProperties": false
-                },
-                "env_short": {
-                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
-                  "type": "string",
-                  "maxLength": 1
-                },
-                "prefix": {
-                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
-                  "type": "string",
-                  "maxLength": 6
-                }
-              },
-              "required": [
-                "env_short",
-                "prefix"
-              ],
-              "additionalProperties": false
+            "env_short": {
+              "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+              "type": "string",
+              "maxLength": 1
             },
-            "uat": {
+            "prefix": {
+              "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+              "type": "string",
+              "maxLength": 6
+            }
+          },
+          "required": [
+            "env_short",
+            "prefix"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "environments": {
+              "description": "Environment-specific configurations for dev/uat/prod",
               "type": "object",
               "properties": {
-                "backend": {
-                  "description": "Azure backend configuration for Terraform state",
+                "dev": {
                   "type": "object",
                   "properties": {
-                    "container_name": {
-                      "description": "Blob container name for Terraform state",
-                      "type": "string"
+                    "backend": {
+                      "description": "Azure backend configuration for Terraform state",
+                      "type": "object",
+                      "properties": {
+                        "container_name": {
+                          "description": "Blob container name for Terraform state",
+                          "type": "string"
+                        },
+                        "key": {
+                          "description": "State file key/path",
+                          "type": "string"
+                        },
+                        "resource_group_name": {
+                          "description": "Azure resource group for backend state",
+                          "type": "string"
+                        },
+                        "storage_account_name": {
+                          "description": "Storage account for Terraform state",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "container_name",
+                        "key",
+                        "resource_group_name",
+                        "storage_account_name"
+                      ],
+                      "additionalProperties": false
                     },
-                    "key": {
-                      "description": "State file key/path",
-                      "type": "string"
+                    "env_short": {
+                      "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                      "type": "string",
+                      "maxLength": 1
                     },
-                    "resource_group_name": {
-                      "description": "Azure resource group for backend state",
-                      "type": "string"
-                    },
-                    "storage_account_name": {
-                      "description": "Storage account for Terraform state",
-                      "type": "string"
+                    "prefix": {
+                      "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                      "type": "string",
+                      "maxLength": 6
                     }
                   },
                   "required": [
-                    "container_name",
-                    "key",
-                    "resource_group_name",
-                    "storage_account_name"
+                    "env_short",
+                    "prefix"
                   ],
                   "additionalProperties": false
                 },
-                "env_short": {
-                  "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
-                  "type": "string",
-                  "maxLength": 1
+                "prod": {
+                  "type": "object",
+                  "properties": {
+                    "backend": {
+                      "description": "Azure backend configuration for Terraform state",
+                      "type": "object",
+                      "properties": {
+                        "container_name": {
+                          "description": "Blob container name for Terraform state",
+                          "type": "string"
+                        },
+                        "key": {
+                          "description": "State file key/path",
+                          "type": "string"
+                        },
+                        "resource_group_name": {
+                          "description": "Azure resource group for backend state",
+                          "type": "string"
+                        },
+                        "storage_account_name": {
+                          "description": "Storage account for Terraform state",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "container_name",
+                        "key",
+                        "resource_group_name",
+                        "storage_account_name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "env_short": {
+                      "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                      "type": "string",
+                      "maxLength": 1
+                    },
+                    "prefix": {
+                      "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                      "type": "string",
+                      "maxLength": 6
+                    }
+                  },
+                  "required": [
+                    "env_short",
+                    "prefix"
+                  ],
+                  "additionalProperties": false
                 },
-                "prefix": {
-                  "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
-                  "type": "string",
-                  "maxLength": 6
+                "uat": {
+                  "type": "object",
+                  "properties": {
+                    "backend": {
+                      "description": "Azure backend configuration for Terraform state",
+                      "type": "object",
+                      "properties": {
+                        "container_name": {
+                          "description": "Blob container name for Terraform state",
+                          "type": "string"
+                        },
+                        "key": {
+                          "description": "State file key/path",
+                          "type": "string"
+                        },
+                        "resource_group_name": {
+                          "description": "Azure resource group for backend state",
+                          "type": "string"
+                        },
+                        "storage_account_name": {
+                          "description": "Storage account for Terraform state",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "container_name",
+                        "key",
+                        "resource_group_name",
+                        "storage_account_name"
+                      ],
+                      "additionalProperties": false
+                    },
+                    "env_short": {
+                      "description": "Environment short name (1 char: 'd'=dev, 'u'=uat, 'p'=prod)",
+                      "type": "string",
+                      "maxLength": 1
+                    },
+                    "prefix": {
+                      "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')",
+                      "type": "string",
+                      "maxLength": 6
+                    }
+                  },
+                  "required": [
+                    "env_short",
+                    "prefix"
+                  ],
+                  "additionalProperties": false
                 }
               },
-              "required": [
-                "env_short",
-                "prefix"
-              ],
               "additionalProperties": false
             }
           },
+          "required": [
+            "environments"
+          ],
           "additionalProperties": false
         }
-      },
-      "additionalProperties": false
+      ]
     },
     "timespan": {
       "description": "Time range for dashboard queries (e.g., 5m, 1h, 24h). Default: 5m",
@@ -354,7 +415,8 @@
     "data_source",
     "location",
     "name",
-    "oa3_spec"
+    "oa3_spec",
+    "resource_group"
   ],
   "additionalProperties": false
 }

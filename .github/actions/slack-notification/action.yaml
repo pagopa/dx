@@ -37,8 +37,10 @@ runs:
 
     # Reference: https://github.com/slackapi/slack-github-action
     - name: Slack Notification
-      uses: slackapi/slack-github-action@70cd7be8e40a46e8b0eced40b0de447bdb42f68e # v1.26.0
+      uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a # v2.1.1
       with:
+        webhook: ${{ inputs.slack_webhook_url }}
+        webhook-type: incoming-webhook
         payload: |
           {
             "text": "${{ inputs.id }}",
@@ -59,6 +61,3 @@ runs:
               }
             ]
           }
-      env:
-        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
-        SLACK_WEBHOOK_URL: ${{ inputs.slack_webhook_url }}

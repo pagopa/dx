@@ -9,8 +9,8 @@ variables {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    domain          = "integration"
-    app_name        = "appcstest"
+    domain          = "int"
+    app_name        = "appcs"
     instance_number = "01"
   }
 
@@ -173,11 +173,15 @@ run "apply_key_vault_integration" {
     error_message = "Managed identity principal id must be present for KV integration"
   }
   assert {
-    condition     = length(module.app_roles) == 1
-    error_message = "One app_roles module must be created for the App Configuration identity"
+    condition     = length(azurerm_role_assignment.app_kv_secrets_user) == 1
+    error_message = "One Key Vault role assignment must be created for the managed identity"
   }
   assert {
-    condition     = length(local.app_assignments) == 1
+    condition     = length(azurerm_role_assignment.app_appconfig_reader) == 1
+    error_message = "One App Configuration role assignment must be created for the managed identity"
+  }
+  assert {
+    condition     = length(local.app_principal_assignments) == 1
     error_message = "App Configuration identity must be assigned to Key Vault"
   }
 }

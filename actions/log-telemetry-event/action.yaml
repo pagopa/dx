@@ -1,0 +1,67 @@
+name: "Log Telemetry Event"
+description: "Append a telemetry event to the session file"
+
+inputs:
+  name:
+    description: "Event name"
+    required: true
+
+  body:
+    description: "(Optional) Event body/message plain text"
+    required: false
+    default: ""
+
+  is_exception:
+    description: "If 'true', logs this event as an exception instead of a custom event"
+    required: false
+    default: "false"
+
+  span_phase:
+    description: "(Optional) 'start' to mark span start, 'end' to mark span end"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Append event / span marker
+      shell: bash
+      env:
+        INPUT_NAME: ${{inputs.name}}
+        INPUT_BODY: ${{inputs.body}}
+        INPUT_IS_EXCEPTION: ${{inputs.is_exception}}
+        INPUT_SPAN_PHASE: ${{inputs.span_phase}}
+      run: |
+        if [ -z "$OTEL_EVENT_FILE" ]; then
+          echo "OTEL_EVENT_FILE not set" >&2; exit 1;
+        fi
+
+        echo "is exception: $INPUT_IS_EXCEPTION"
+
+        if [ "$INPUT_IS_EXCEPTION" = "true" ]; then
+          EXC=true
+        else
+          EXC=false
+        fi
+
+        NOW_ISO=$(date -u '+%Y-%m-%dT%H:%M:%S.%3NZ')
+
+        if [ -n "$INPUT_NAME" ] && [ -n "$INPUT_SPAN_PHASE" ]; then
+          # Validate phase
+          if [ "$INPUT_SPAN_PHASE" = "start" ]; then
+            jq -cn --arg span "$INPUT_NAME" --arg startSpan "$NOW_ISO" \
+              '{span: $span, startSpan: $startSpan}' >> "$OTEL_EVENT_FILE"
+          elif [ "$INPUT_SPAN_PHASE" = "end" ]; then
+            jq -cn --arg span "$INPUT_NAME" --arg endSpan "$NOW_ISO" \
+              '{span: $span, endSpan: $endSpan}' >> "$OTEL_EVENT_FILE"
+          else
+            echo "Unknown span_phase value '$INPUT_SPAN_PHASE' (expected 'start' or 'end'), writing as normal event" >&2
+            jq -cn --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exc "$EXC" \
+              '{name: $name, body: $body, exception: $exc}' >> "$OTEL_EVENT_FILE"
+          fi
+        else
+          jq -cn --arg name "$INPUT_NAME" --arg body "$INPUT_BODY" --argjson exc "$EXC" \
+            '{name: $name, body: $body, exception: $exc}' >> "$OTEL_EVENT_FILE"
+        fi
+
+        cat "$OTEL_EVENT_FILE"

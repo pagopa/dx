@@ -1,5 +1,36 @@
 # @pagopa/dx-cli
 
+## 0.17.0
+
+### Minor Changes
+
+- 907253d: Create a function useful to add a Bootstrap Identity to an Azure subscription. This function creates a Pull Request on eng-azure-authorization repository to add the identity.
+
+## 0.16.3
+
+### Patch Changes
+
+- e63fe56: Add github provider to bootstrapper template
+
+## 0.16.2
+
+### Patch Changes
+
+- c442a4d: Fix issues on published package
+
+## 0.16.1
+
+### Patch Changes
+
+- daa0c37: - Update error message to include tfenv setup instructions when Terraform is not found
+  - Display Azure account name in login success message
+
+## 0.16.0
+
+### Minor Changes
+
+- 20c2a64: Include environment generator in init command
+
 ## 0.15.5
 
 ### Patch Changes

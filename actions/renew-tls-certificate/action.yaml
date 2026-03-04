@@ -1,0 +1,191 @@
+name: Renew TLS Certificate
+description: >
+  Checks whether a TLS certificate stored in Azure Key Vault is about to expire
+  and, if needed, requests a new one from Let's Encrypt via the ACME protocol.
+  Both the check and the renewal are performed in a single composite action.
+
+inputs:
+  force_renewal:
+    description: "Force certificate renewal even if it is not close to expiration"
+    required: false
+    default: "false"
+  key_vault_name:
+    description: "Name of the Azure Key Vault that stores the certificate"
+    required: true
+  csr_common_name:
+    description: "Common Name (CN) for the Certificate Signing Request"
+    required: true
+  dns_zone:
+    description: "Azure DNS Zone used for the ACME DNS-01 challenge"
+    required: true
+  dns_zone_resource_group:
+    description: "Resource Group that contains the DNS Zone"
+    required: true
+  arm_client_id:
+    description: "Azure Client ID (Workload Identity / Service Principal)"
+    required: true
+  arm_subscription_id:
+    description: "Azure Subscription ID"
+    required: true
+  arm_tenant_id:
+    description: "Azure Tenant ID"
+    required: true
+  lets_encrypt_private_key_json:
+    description: "Let's Encrypt account private key in JWK JSON format"
+    required: true
+  lets_encrypt_registration_json:
+    description: "Let's Encrypt account registration info in JSON format"
+    required: true
+
+outputs:
+  renew_certificate:
+    description: "'true' if the certificate was (or had to be) renewed, 'false' otherwise"
+    value: ${{ steps.should_renew.outputs.renew_certificate }}
+
+runs:
+  using: composite
+  steps:
+    - name: Calculate Key Vault certificate name
+      id: calc_cert_name
+      shell: bash
+      env:
+        CERT_NAME: ${{ inputs.csr_common_name }}
+      run: |
+        key_vault_cert_name=$(echo "${CERT_NAME//./-}")
+        echo "kv_cert_name=$key_vault_cert_name" >> $GITHUB_OUTPUT
+
+    - name: Azure Login
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+      with:
+        client-id: ${{ inputs.arm_client_id }}
+        tenant-id: ${{ inputs.arm_tenant_id }}
+        subscription-id: ${{ inputs.arm_subscription_id }}
+
+    - name: Fetch and check certificate
+      if: inputs.force_renewal != 'true'
+      id: fetch_and_check
+      shell: bash
+      env:
+        KEY_VAULT_NAME: ${{ inputs.key_vault_name }}
+        KV_CERT_NAME: ${{ steps.calc_cert_name.outputs.kv_cert_name }}
+        CERTIFICATE_EXPIRATION: "2592000"
+      run: |
+        if ! az keyvault certificate download --vault-name "$KEY_VAULT_NAME" -n "$KV_CERT_NAME" -f certificate.pem >/dev/null
+          then
+            echo "❌ The certificate was not found in the selected Key Vault, proceeding to request it from LE"
+            echo "require_new_certificate=true" >> $GITHUB_OUTPUT
+        else
+          if ! openssl x509 -inform pem -checkend "$CERTIFICATE_EXPIRATION" -noout -in certificate.pem
+            then
+              # certificate is expiring or is already expired
+              echo "require_new_certificate=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ The certificate is not expiring, cleaning up and exiting"
+          fi
+          rm -f certificate.pem
+        fi
+
+    - name: Set renew_certificate
+      id: should_renew
+      shell: bash
+      env:
+        REQUIRE_NEW_CERT: ${{ steps.fetch_and_check.outputs.require_new_certificate }}
+        FORCE_RENEWAL: ${{ inputs.force_renewal }}
+        KV_CERT_NAME: ${{ steps.calc_cert_name.outputs.kv_cert_name }}
+      run: |
+        echo "KV_CERT_NAME=$KV_CERT_NAME" >> $GITHUB_OUTPUT
+
+        if [[ "$FORCE_RENEWAL" == "true" ]]; then
+          echo "renew_certificate=true" >> $GITHUB_OUTPUT
+          echo "## ⚠️ Renewal Status: FORCED" >> $GITHUB_STEP_SUMMARY
+          echo "**Renewal explicitly requested.** The renewal action will proceed. 🛠️" >> $GITHUB_STEP_SUMMARY
+        elif [[ "$REQUIRE_NEW_CERT" == "true" ]]; then
+          echo "renew_certificate=true" >> $GITHUB_OUTPUT
+          echo "## 🔑 Renewal Status: REQUIRED" >> $GITHUB_STEP_SUMMARY
+          echo "**Verification successful.** The certificate will be renewed in the next steps. ✅" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "renew_certificate=false" >> $GITHUB_OUTPUT
+          echo "## ✅ Renewal Status: NOT NEEDED" >> $GITHUB_STEP_SUMMARY
+          echo "No certificate renewal is required at this time. 🟢" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Set Let's Encrypt account files
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      env:
+        PRIVATE_KEY_JSON: ${{ inputs.lets_encrypt_private_key_json }}
+        REGISTRATION_JSON: ${{ inputs.lets_encrypt_registration_json }}
+      run: |
+        echo "$PRIVATE_KEY_JSON" > private_key.json
+        echo "$REGISTRATION_JSON" > registration.json
+
+    - name: Setup Python
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6
+      with:
+        python-version: "3.12.8"
+
+    - name: Setup Python requirements
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        pip3 install \
+          --require-hashes \
+          --requirement "$ACTION_PATH/le_renew_ssl_certificate_python_requirements.txt"
+
+    - name: Generate the CSR
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        CSR_COMMON_NAME: ${{ inputs.csr_common_name }}
+      run: |
+        python3 "$ACTION_PATH/le_renew_ssl_certificate_generate_csr.py" \
+          --common-name "$CSR_COMMON_NAME" \
+          --out csr.der \
+          --rsa-key-size 2048
+
+    - name: Request a new certificate from Let's Encrypt
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      env:
+        AZURE_DNS_ZONE_RESOURCE_GROUP: ${{ inputs.dns_zone_resource_group }}
+        AZURE_SUBSCRIPTION_ID: ${{ inputs.arm_subscription_id }}
+        AZURE_DNS_ZONE: ${{ inputs.dns_zone }}
+        AZURE_IDENTITY_TYPE: "MANAGED_IDENTITY"
+        ACTION_PATH: ${{ github.action_path }}
+      run: |
+        python3 "$ACTION_PATH/le_renew_ssl_certificate_acme_tiny.py" \
+          --private-key private_key.json \
+          --regr registration.json \
+          --csr csr.der \
+          --out certificate_chain.pem
+
+    - name: Convert certificate to PFX
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      run: |
+        mv certificate_chain.pem.0 certificate_chain.pem
+        openssl pkcs12 -inkey csr.key -in certificate_chain.pem -export -passout pass: -nodes -out certificate_chain.pfx
+
+    - name: Upload the certificate to Key Vault
+      if: steps.should_renew.outputs.renew_certificate == 'true'
+      shell: bash
+      env:
+        KEY_VAULT_NAME: ${{ inputs.key_vault_name }}
+        KV_CERT_NAME: ${{ steps.should_renew.outputs.KV_CERT_NAME }}
+      run: |
+        az keyvault certificate import \
+          --vault-name "$KEY_VAULT_NAME" \
+          --name "$KV_CERT_NAME" \
+          --disabled false \
+          -f certificate_chain.pfx \
+          --password "" >/dev/null
+
+    - name: Cleanup workspace
+      if: always()
+      shell: bash
+      run: |
+        rm -f ./*.pem* ./*.json ./*.der ./*.key ./*.pfx

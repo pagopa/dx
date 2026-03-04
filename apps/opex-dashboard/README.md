@@ -60,11 +60,75 @@ npx @pagopa/opex-dashboard generate -t azure-dashboard -c config.yaml --package 
 
 ### 3. Deploy with Terraform
 
+The deployment process depends on the configuration mode you chose:
+
+#### Multi-Environment Mode
+
+When using the multi-environment configuration (with `environments` section),
+the generated package includes separate subdirectories for each environment:
+
 ```bash
 cd output/azure-dashboard
+# Deploy to dev
 terraform init -backend-config=env/dev/backend.tfvars
 terraform apply -var-file=env/dev/terraform.tfvars
+
+# Deploy to prod
+terraform init -backend-config=env/prod/backend.tfvars
+terraform apply -var-file=env/prod/terraform.tfvars
 ```
+
+**Generated structure:**
+
+```
+output/azure-dashboard/
+├── main.tf
+├── variables.tf
+├── dashboard.tf
+└── env/
+    ├── dev/
+    │   ├── backend.tfvars
+    │   └── terraform.tfvars
+    ├── uat/
+    │   ├── backend.tfvars
+    │   └── terraform.tfvars
+    └── prod/
+        ├── backend.tfvars
+        └── terraform.tfvars
+```
+
+#### Flat Mode
+
+When using flat configuration (with `prefix` and `env_short` directly under
+`terraform`), all files are generated in the root directory:
+
+```bash
+cd output/azure-dashboard
+terraform init -backend-config=backend.tfvars
+terraform apply -var-file=terraform.tfvars
+```
+
+**Generated structure:**
+
+```
+output/azure-dashboard/
+├── main.tf
+├── variables.tf
+├── dashboard.tf
+├── backend.tfvars
+└── terraform.tfvars
+```
+
+**Use flat mode when:**
+
+- Deploying to a single environment
+- Managing infrastructure for a specific environment in a separate repository
+- You don't need environment-specific subdirectories
+
+**Use multi-environment mode when:**
+
+- Managing multiple environments (dev/uat/prod) in the same repository
+- You want organized environment-specific configurations in subdirectories
 
 ## Dashboard Components
 
@@ -129,6 +193,7 @@ action_groups: string[] # Array of Azure Action Group IDs
 
 # Optional fields (with defaults)
 resource_type: app-gateway | api-management # Default: app-gateway
+resource_group: string # Default: dashboards (Azure resource group for dashboard and alerts)
 timespan: string # Default: 5m
 evaluation_frequency: integer # Default: 10 (minutes)
 evaluation_time_window: integer # Default: 20 (minutes)
@@ -137,7 +202,10 @@ availability_threshold`: float # Default: 0.99 (99%)
 response_time_threshold: float # Default: 1.0 second
 
 # When generating Terraform packages (using `--package` option),
-# you can optionally configure environment-specific settings
+# you can optionally configure environment-specific settings.
+# Two configuration modes are supported:
+
+# 1. Multi-environment mode (with subdirectories):
 terraform:
   environments:
     dev:
@@ -150,6 +218,16 @@ terraform:
         key: string
     uat: # Similar to dev
     prod: # Similar to dev
+
+# 2. Flat mode (single environment, no subdirectories):
+terraform:
+  prefix: string # Max 6 chars (required)
+  env_short: string # Max 1 char: 'd', 'u', 'p' (required)
+  backend: # Optional backend state configuration
+    resource_group_name: string
+    storage_account_name: string
+    container_name: string
+    key: string
 ```
 
 See [`examples/`](./examples) directory for complete configuration samples.

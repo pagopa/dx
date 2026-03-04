@@ -1,27 +1,18 @@
 locals {
-  # Distinct principal IDs from all Key Vaults
-  distinct_app_principals = var.key_vaults != null ? toset(flatten([
-    for kv in var.key_vaults : kv.app_principal_ids
-  ])) : toset([])
+  # Flatten application principal assignments using static index-based keys
+  # while values (principal_id, scope) can be unknown at plan time.
+  # Knowing keys at plan time is required to avoid Terraform errors
+  app_principal_assignments = flatten([
+    for kv_idx, kv in var.key_vaults != null ? var.key_vaults : [] : [
+      for principal_idx, principal_id in kv.app_principal_ids : {
+        key          = "${kv_idx}-${principal_idx}"
+        principal_id = principal_id
+        kv_name      = kv.name
+        kv_rg        = kv.resource_group_name
+      }
+    ]
+  ])
 
-  # For each distinct principal, collect all Key Vaults where they're listed
-  app_assignments = {
-    for principal_id in local.distinct_app_principals :
-    principal_id => {
-      principal_id = principal_id
-      key_vaults = [
-        for kv in var.key_vaults :
-        {
-          name                = kv.name
-          resource_group_name = kv.resource_group_name
-          has_rbac_support    = kv.has_rbac_support
-        }
-        if contains(kv.app_principal_ids, principal_id)
-      ]
-    }
-  }
-
-  # App Configuration role assignments for authorized teams
   appconfig_role_assignments = merge(
     {
       for idx, principal_id in var.authorized_teams.writers : "${principal_id}|writer" => {
@@ -38,37 +29,20 @@ locals {
   )
 }
 
-# Assign both Key Vault and App Configuration roles to application principals
-# Each principal gets:
-# - Roles for all Key Vaults where they are listed
-# - A single reader role for the App Configuration
-module "app_roles" {
-  for_each = local.app_assignments
+resource "azurerm_role_assignment" "app_kv_secrets_user" {
+  for_each = { for item in local.app_principal_assignments : item.key => item }
 
-  source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.3"
+  principal_id         = each.value.principal_id
+  role_definition_name = "Key Vault Secrets User"
+  scope                = "/subscriptions/${var.subscription_id}/resourceGroups/${each.value.kv_rg}/providers/Microsoft.KeyVault/vaults/${each.value.kv_name}"
+}
 
-  subscription_id = var.subscription_id
-  principal_id    = each.value.principal_id
+resource "azurerm_role_assignment" "app_appconfig_reader" {
+  for_each = { for item in local.app_principal_assignments : item.key => item }
 
-  key_vault = [
-    for kv in each.value.key_vaults : {
-      name                = kv.name
-      resource_group_name = kv.resource_group_name
-      has_rbac_support    = kv.has_rbac_support
-      description         = "Allow application to read Key Vault secrets"
-      roles = {
-        secrets = "reader"
-      }
-    }
-  ]
-
-  app_config = [{
-    name                = azurerm_app_configuration.this.name
-    resource_group_name = azurerm_app_configuration.this.resource_group_name
-    description         = "Allow application to read App Configuration settings"
-    role                = "reader"
-  }]
+  principal_id         = each.value.principal_id
+  role_definition_name = "App Configuration Data Reader"
+  scope                = azurerm_app_configuration.this.id
 }
 
 module "appconfig_team_roles" {

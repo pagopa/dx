@@ -7,6 +7,7 @@ location: West Europe
 timespan: 5m
 data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
 resource_type: app-gateway
+# resource_group: dashboards # Optional: Azure resource group name for dashboard and alerts (default: dashboards)
 action_groups:
   - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
 # Global threshold defaults

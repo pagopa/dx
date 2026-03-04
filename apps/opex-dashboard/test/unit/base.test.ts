@@ -19,6 +19,7 @@ describe("Builder", () => {
     hosts: ["host1"],
     location: "eastus",
     name: "test",
+    resource_group: "dashboards",
     resource_type: "app-gateway",
   };
 

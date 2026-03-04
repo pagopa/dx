@@ -1,0 +1,56 @@
+name: Generate TLS Certificate
+
+on:
+  workflow_call:
+    inputs:
+      force_renewal:
+        description: "Force certificate renewal"
+        required: false
+        default: false
+        type: boolean
+      key_vault_name:
+        description: "Azure Key Vault name"
+        required: true
+        type: string
+      csr_common_name:
+        description: "Common Name for the CSR"
+        required: true
+        type: string
+      dns_zone:
+        description: "DNS Zone for the domain"
+        required: true
+        type: string
+      dns_zone_resource_group:
+        description: "Resource Group of the DNS Zone"
+        required: true
+        type: string
+      environment:
+        description: "Deployment environment"
+        required: false
+        default: "prod"
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-cd
+  cancel-in-progress: true
+
+jobs:
+  renew-certificate:
+    name: Create or Renew Certificate
+    runs-on: ubuntu-latest
+    environment: automation-${{ inputs.environment }}-cd
+
+    steps:
+      - name: Renew TLS Certificate
+        uses: pagopa/dx/actions/renew-tls-certificate@main
+        with:
+          force_renewal: ${{ inputs.force_renewal }}
+          key_vault_name: ${{ inputs.key_vault_name }}
+          csr_common_name: ${{ inputs.csr_common_name }}
+          dns_zone: ${{ inputs.dns_zone }}
+          dns_zone_resource_group: ${{ inputs.dns_zone_resource_group }}
+          arm_client_id: ${{ secrets.ARM_CLIENT_ID }}
+          arm_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          arm_tenant_id: ${{ secrets.ARM_TENANT_ID }}
+          lets_encrypt_private_key_json: ${{ secrets.LETS_ENCRYPT_PRIVATE_KEY_JSON }}
+          lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}

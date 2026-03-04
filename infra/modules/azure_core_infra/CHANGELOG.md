@@ -1,5 +1,22 @@
 # azure_core_infra
 
+## 3.0.0
+
+### Major Changes
+
+- 6cd97ee: Migrate GitHub runner Container App Environment (CAE) to Workload Profiles. It will be asked for CAE replacement.
+
+  ## Migration Guide
+  - Delete all the jobs hosted on the CAE
+  - Apply this new version to replace the Consumption CAE with the new Workload Profile CAE.
+  - Re-apply bootstrapper modules in repositories that had the self-hosted runner in the old CAE
+
+## 2.3.2
+
+### Patch Changes
+
+- ada5499: Add delegation to GitHub runner subnet as required by Container App Environment with Workload Profiles
+
 ## 2.3.1
 
 ### Patch Changes

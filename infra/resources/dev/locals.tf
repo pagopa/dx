@@ -37,6 +37,7 @@ locals {
     "privatelink.servicebus.windows.net",
     "privatelink.table.core.windows.net",
     "privatelink.azconfig.io",
+    "privatelink.vaultcore.azure.net",
   ]
 
   tags = {

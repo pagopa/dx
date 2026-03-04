@@ -103,26 +103,19 @@ run "key_vault_roles_contract" {
     ]
   }
 
-  override_data {
-    target = module.app_roles["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
+  assert {
+    condition     = length(azurerm_role_assignment.app_kv_secrets_user) == 1
+    error_message = "One Key Vault role assignment must exist for single principal"
   }
 
   assert {
-    condition     = length(module.app_roles) == 1
-    error_message = "One module instance must exist for single principal"
+    condition     = length(azurerm_role_assignment.app_appconfig_reader) == 1
+    error_message = "One App Configuration role assignment must exist for single principal"
   }
 
   assert {
-    condition     = length(local.app_assignments["aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"].key_vaults) == 1
-    error_message = "Principal must be assigned to one Key Vault"
-  }
-
-  assert {
-    condition     = length(local.distinct_app_principals) == 1
-    error_message = "One distinct principal must be identified"
+    condition     = length(local.app_principal_assignments) == 1
+    error_message = "One principal assignment must be identified"
   }
 }
 
@@ -160,37 +153,18 @@ run "deduplication_across_key_vaults" {
     ]
   }
 
-  override_data {
-    target = module.app_roles["dddddddd-dddd-dddd-dddd-dddddddddddd"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
-  }
-
-  override_data {
-    target = module.app_roles["eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"].module.key_vault.data.azurerm_client_config.current
-    values = {
-      tenant_id = "00000000-0000-0000-0000-000000000000"
-    }
+  assert {
+    condition     = length(azurerm_role_assignment.app_kv_secrets_user) == 3
+    error_message = "Three Key Vault role assignments must be created (2 from KV1 + 1 from KV2)"
   }
 
   assert {
-    condition     = length(module.app_roles) == 2
-    error_message = "Only 2 distinct principals should create module instances"
+    condition     = length(azurerm_role_assignment.app_appconfig_reader) == 3
+    error_message = "Three App Configuration role assignments must be created (2 from KV1 + 1 from KV2)"
   }
 
   assert {
-    condition     = length(local.distinct_app_principals) == 2
-    error_message = "Two distinct principals must be identified"
-  }
-
-  assert {
-    condition     = length(local.app_assignments["dddddddd-dddd-dddd-dddd-dddddddddddd"].key_vaults) == 2
-    error_message = "Principal dddd... must have access to 2 Key Vaults"
-  }
-
-  assert {
-    condition     = length(local.app_assignments["eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"].key_vaults) == 1
-    error_message = "Principal eeee... must have access to 1 Key Vault"
+    condition     = length(local.app_principal_assignments) == 3
+    error_message = "Three principal assignments must be created (2 from KV1 + 1 from KV2)"
   }
 }

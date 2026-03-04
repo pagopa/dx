@@ -34,7 +34,7 @@ locals {
 }
 
 data "azurerm_resource_group" "this" {
-  name     = "dashboards"
+  name     = "${context.resource_group}"
 }
 
 resource "azurerm_portal_dashboard" "this" {

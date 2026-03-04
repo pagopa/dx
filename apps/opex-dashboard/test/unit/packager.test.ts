@@ -114,4 +114,84 @@ describe("generateTerraformAssets", () => {
     // prod should be created
     expect(statSync(join(tempDir, "env", "prod")).isDirectory()).toBe(true);
   });
+
+  it("should generate tfvars files in root directory when using flat config without backend", async () => {
+    const terraformConfig: TerraformConfig = {
+      env_short: "d",
+      prefix: "test",
+    };
+
+    await generateTerraformAssets(tempDir, terraformConfig);
+
+    // Check main files
+    expect(statSync(join(tempDir, "main.tf")).isFile()).toBe(true);
+    expect(statSync(join(tempDir, "variables.tf")).isFile()).toBe(true);
+
+    // Check tfvars files are in root, not in env/ subdirectory
+    expect(statSync(join(tempDir, "backend.tfvars")).isFile()).toBe(true);
+    expect(statSync(join(tempDir, "terraform.tfvars")).isFile()).toBe(true);
+
+    // Ensure env/ directory is not created
+    expect(() => statSync(join(tempDir, "env"))).toThrow();
+
+    // Check content
+    const terraformTfvars = readFileSync(
+      join(tempDir, "terraform.tfvars"),
+      "utf-8",
+    );
+    expect(terraformTfvars).toContain('prefix    = "test"');
+    expect(terraformTfvars).toContain('env_short = "d"');
+
+    // backend.tfvars should have empty values
+    const backendTfvars = readFileSync(
+      join(tempDir, "backend.tfvars"),
+      "utf-8",
+    );
+    expect(backendTfvars).toContain("resource_group_name  =");
+    expect(backendTfvars).toContain("storage_account_name =");
+  });
+
+  it("should generate tfvars files in root directory when using flat config with backend", async () => {
+    const terraformConfig: TerraformConfig = {
+      backend: {
+        container_name: "tfstate-flat",
+        key: "flat.tfstate",
+        resource_group_name: "flat-rg",
+        storage_account_name: "flatstorage",
+      },
+      env_short: "p",
+      prefix: "myapp",
+    };
+
+    await generateTerraformAssets(tempDir, terraformConfig);
+
+    // Check main files
+    expect(statSync(join(tempDir, "main.tf")).isFile()).toBe(true);
+    expect(statSync(join(tempDir, "variables.tf")).isFile()).toBe(true);
+
+    // Check tfvars files are in root
+    expect(statSync(join(tempDir, "backend.tfvars")).isFile()).toBe(true);
+    expect(statSync(join(tempDir, "terraform.tfvars")).isFile()).toBe(true);
+
+    // Ensure env/ directory is not created
+    expect(() => statSync(join(tempDir, "env"))).toThrow();
+
+    // Check backend content
+    const backendTfvars = readFileSync(
+      join(tempDir, "backend.tfvars"),
+      "utf-8",
+    );
+    expect(backendTfvars).toContain('resource_group_name  = "flat-rg"');
+    expect(backendTfvars).toContain('storage_account_name = "flatstorage"');
+    expect(backendTfvars).toContain('container_name       = "tfstate-flat"');
+    expect(backendTfvars).toContain('key                  = "flat.tfstate"');
+
+    // Check terraform.tfvars content
+    const terraformTfvars = readFileSync(
+      join(tempDir, "terraform.tfvars"),
+      "utf-8",
+    );
+    expect(terraformTfvars).toContain('prefix    = "myapp"');
+    expect(terraformTfvars).toContain('env_short = "p"');
+  });
 });

@@ -1,5 +1,17 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.2.0
+
+### Minor Changes
+
+- 24116f4: Add support for Github Runner App
+
+## 3.1.3
+
+### Patch Changes
+
+- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
+
 ## 3.1.2
 
 ### Patch Changes

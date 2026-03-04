@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { ConfigSchema } from "@/core/config/config.schema.js";
 import { DEFAULTS } from "@/core/config/defaults.js";
 
+// eslint-disable-next-line max-lines-per-function
 describe("Config Schema", () => {
   it("should validate minimal valid config", () => {
     const config = {
@@ -157,6 +158,121 @@ describe("Config Schema", () => {
           },
         },
       },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(false);
+  });
+
+  it("should validate flat terraform configuration", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {
+        env_short: "d",
+        prefix: "io",
+      },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(true);
+  });
+
+  it("should validate flat terraform configuration with backend", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {
+        backend: {
+          container_name: "tfstate",
+          key: "dashboard.tfstate",
+          resource_group_name: "rg-terraform",
+          storage_account_name: "sttfstate",
+        },
+        env_short: "p",
+        prefix: "myapp",
+      },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(true);
+  });
+
+  it("should reject flat configuration without env_short", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {
+        prefix: "io",
+      },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject flat configuration without prefix", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {
+        env_short: "d",
+      },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject configuration with both environments and flat config", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {
+        env_short: "d",
+        environments: {
+          dev: {
+            env_short: "d",
+            prefix: "io",
+          },
+        },
+        prefix: "io",
+      },
+    };
+
+    const result = ConfigSchema.safeParse(config);
+    expect(result.success).toBe(false);
+  });
+
+  it("should reject empty terraform configuration", () => {
+    const config = {
+      action_groups: ["/subscriptions/test/actionGroups/test"],
+      data_source: "/subscriptions/test/dataSource",
+      location: "West Europe",
+      name: "Test Dashboard",
+      oa3_spec: "test/data/io_backend_light.yaml",
+      resource_type: "app-gateway",
+      terraform: {},
     };
 
     const result = ConfigSchema.safeParse(config);

@@ -17,3 +17,17 @@ module "testing" {
 
   tags = local.tags
 }
+
+resource "azurerm_dns_zone" "integration_dx_pagopa_it" {
+  name                = "integration.dx.pagopa.it"
+  resource_group_name = module.azure_core_values.network_resource_group_name
+
+  tags = local.tags
+}
+
+resource "azurerm_dns_zone" "e2e_dx_pagopa_it" {
+  name                = "e2e.dx.pagopa.it"
+  resource_group_name = module.azure_core_values.network_resource_group_name
+
+  tags = local.tags
+}

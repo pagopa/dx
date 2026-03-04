@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../config.schema.json
+#
+# Example configuration using flat Terraform mode (single environment).
+# This mode generates tfvars files directly in the root directory without
+# creating environment subdirectories.
+#
+# Use this mode when:
+# - Deploying to a single environment
+# - Managing infrastructure for a specific environment in a separate repository
+# - You don't need environment-specific subdirectories
+#
+oa3_spec: test/data/io_backend.yaml # If starts with http, the file will be downloaded from the internet
+name: My spec
+location: West Europe
+timespan: 5m # Default, a number or a timespan https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan
+data_source: /subscriptions/uuid/resourceGroups/my-rg/providers/Microsoft.Network/applicationGateways/my-gtw
+resource_type: app-gateway
+# resource_group: dashboards # Optional: Azure resource group name for dashboard and alerts (default: dashboards)
+action_groups:
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-email
+  - /subscriptions/uuid/resourceGroups/my-rg/providers/microsoft.insights/actionGroups/my-action-group-slack
+
+# Terraform flat configuration (single environment mode)
+# Files will be generated directly in the root directory:
+# - main.tf, variables.tf, dashboard.tf (Terraform modules)
+# - backend.tfvars, terraform.tfvars (configuration files)
+terraform:
+  prefix: "io" # Max 6 chars (required)
+  env_short: "p" # Max 1 char: 'd'=dev, 'u'=uat, 'p'=prod (required)
+  backend: # Backend state configuration (optional)
+    resource_group_name: "terraform-state-rg"
+    storage_account_name: "tfstate"
+    container_name: "terraform-state"
+    key: "opex-dashboards.tfstate"

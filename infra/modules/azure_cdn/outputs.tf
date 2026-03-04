@@ -1,16 +1,16 @@
 output "id" {
   description = "The ID of the CDN FrontDoor Profile"
-  value       = azurerm_cdn_frontdoor_profile.this.id
+  value       = local.profile_id
 }
 
 output "name" {
   description = "The name of the CDN FrontDoor Profile"
-  value       = azurerm_cdn_frontdoor_profile.this.name
+  value       = local.profile_name
 }
 
 output "resource_group_name" {
   description = "The name of the resource group the CDN FrontDoor Profile was created in"
-  value       = azurerm_cdn_frontdoor_profile.this.resource_group_name
+  value       = local.create_profile ? azurerm_cdn_frontdoor_profile.this[0].resource_group_name : data.azurerm_cdn_frontdoor_profile.existing[0].resource_group_name
 }
 
 output "endpoint_hostname" {
@@ -25,7 +25,7 @@ output "origin_group_id" {
 
 output "principal_id" {
   description = "The principal ID of the Front Door Profile's system-assigned managed identity."
-  value       = azurerm_cdn_frontdoor_profile.this.identity[0].principal_id
+  value       = local.profile_identity_id
 }
 
 output "rule_set_id" {

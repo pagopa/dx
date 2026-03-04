@@ -67,7 +67,7 @@ resource "random_integer" "appcs_kv_instance" {
 }
 
 resource "azurerm_key_vault" "kv" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", domain = "int", instance_number = random_integer.appcs_kv_instance.result }))
+  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.appcs_kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
   resource_group_name           = azurerm_resource_group.sut.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id

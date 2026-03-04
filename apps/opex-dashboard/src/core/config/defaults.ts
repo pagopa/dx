@@ -12,12 +12,14 @@ import {
 } from "../../constants/index.js";
 
 export const DEFAULT_TIMESPAN = "5m";
+export const DEFAULT_RESOURCE_GROUP = "dashboards";
 
 export const DEFAULTS = {
   availability_threshold: DEFAULT_AVAILABILITY_THRESHOLD,
   evaluation_frequency: EVALUATION_FREQUENCY_MINUTES,
   evaluation_time_window: TIME_WINDOW_MINUTES,
   event_occurrences: EVENT_OCCURRENCES,
+  resource_group: DEFAULT_RESOURCE_GROUP,
   response_time_threshold: DEFAULT_RESPONSE_TIME_THRESHOLD,
   timespan: DEFAULT_TIMESPAN,
 } as const;

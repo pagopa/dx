@@ -30,6 +30,13 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
+      - name: Ensure Slack Webhook is Set
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is not set. Please set the secret."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
@@ -56,3 +63,12 @@ jobs:
         timeout-minutes: 70
         run: |
           npx nx run-many --target test:e2e
+
+      - name: Notify Slack on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: pagopa/dx/.github/actions/slack-notification@main
+        with:
+          id: "Terraform E2E Tests"
+          title: "*Terraform E2E Tests failed*"
+          text: "One or more end-to-end tests failed in the weekly run. Please check the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details."
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL_FAILED_TESTS }}

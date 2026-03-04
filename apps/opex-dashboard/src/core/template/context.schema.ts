@@ -28,6 +28,7 @@ export const TemplateContextSchema = z.object({
   location: z.string(),
   name: z.string(),
   queries: QueryConfigSchema.optional(),
+  resource_group: z.string(),
   resource_type: z.string(),
   response_time_threshold: z.number().optional(),
   time_window: z.number().optional(),
