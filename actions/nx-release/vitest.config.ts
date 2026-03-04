@@ -16,6 +16,7 @@ export default defineConfig({
     exclude: ["node_modules/", "scripts/dist/"],
     globals: true,
     include: ["scripts/**/*.test.ts"],
+    passWithNoTests: true,
     watch: false,
   },
 });

@@ -14,17 +14,8 @@ import { appendFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-/** Writes an output key/value for downstream GitHub Action steps. */
-async function appendOutput(
-  outputPath: string,
-  key: string,
-  value: string,
-): Promise<void> {
-  await appendFile(outputPath, `${key}=${value}\n`);
-}
-
 /** Builds the PR body using changelog entry contents returned by Nx Release. */
-function buildPrBody(
+export function buildPrBody(
   projectChangelogs: Record<string, { contents: string }> | undefined,
 ): string {
   const intro = [
@@ -42,6 +33,15 @@ function buildPrBody(
   return entries.length > 0
     ? `${intro}${entries.join("\n\n")}`.trim()
     : `${intro}See individual packages CHANGELOGs for details.`;
+}
+
+/** Writes an output key/value for downstream GitHub Action steps. */
+async function appendOutput(
+  outputPath: string,
+  key: string,
+  value: string,
+): Promise<void> {
+  await appendFile(outputPath, `${key}=${value}\n`);
 }
 
 /**
@@ -96,6 +96,12 @@ async function run(): Promise<void> {
 
   console.log("::notice::Running Nx Release changelog phase");
   const { projectChangelogs } = await releaseChangelog({
+    // Disable all git operations — action.yaml handles the commit/push
+    // so that lockfile refresh can happen between changelog and commit.
+    // Tags and GitHub releases are created after publish, not here.
+    createRelease: false,
+    gitCommit: false,
+    gitTag: false,
     releaseGraph,
     version: workspaceVersion,
     versionData: projectsVersionData,

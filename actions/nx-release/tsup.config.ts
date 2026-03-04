@@ -4,11 +4,7 @@ export default defineConfig({
   bundle: true,
   clean: true,
   dts: false,
-  entry: [
-    "scripts/detect-intent.ts",
-    "scripts/nx-release-version.ts",
-    "scripts/nx-release-publish.ts",
-  ],
+  entry: ["scripts/nx-release-version.ts", "scripts/nx-release-publish.ts"],
   format: ["esm"],
   minify: false,
   outDir: "scripts/dist",

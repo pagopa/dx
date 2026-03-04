@@ -1,7 +1,7 @@
 /**
  * Runs the Nx Release publish phase via the programmatic API, then creates
  * annotated git tags and GitHub releases for every successfully published
- * package. Combines what was previously two separate steps (publish + tag sync)
+ * package. Combines two separate steps (publish + tag sync)
  * into one, using structured publish results instead of scanning manifests.
  *
  * Expected environment variables:

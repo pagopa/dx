@@ -22,6 +22,9 @@ inputs:
     description: "Commit message for generated version bumps"
     required: false
     default: "Version Packages"
+  mode:
+    description: "Release mode: 'create-pr' to create/update the Version Packages PR, 'publish' to publish packages and create tags"
+    required: true
 
 outputs:
   pull-request-number:
@@ -34,17 +37,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Step to detect if the release intent is to create/update a PR or to publish
-    # will set output 'mode' to either 'create-pr', 'publish', or 'noop'
-    - name: Detect Nx release intent
-      id: intent
-      shell: bash
-      env:
-        ACTION_PATH: ${{ github.action_path }}
-      run: |
-        set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/detect-intent.js"
-
     - name: Configure Git user
       shell: bash
       run: |
@@ -52,7 +44,7 @@ runs:
         git config user.email "dx-pagopa-bot@pagopa.it"
 
     - name: Create or update Version Packages PR
-      if: steps.intent.outputs.mode == 'create-pr'
+      if: inputs.mode == 'create-pr'
       id: create-pr
       shell: bash
       env:
@@ -108,7 +100,7 @@ runs:
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
     - name: Publish packages, create git tags and GitHub releases
-      if: steps.intent.outputs.mode == 'publish'
+      if: inputs.mode == 'publish'
       id: publish
       shell: bash
       env:
