@@ -1,8 +1,0 @@
-Short, developer-style prompt:
-
-I'm starting a new project and need Terraform to deploy:
-- a Node.js Azure Function App
-- an Azure Storage Account
-- an Azure Database for PostgreSQL
-
-Please give me a short, copyable Terraform root module example (provider, variables, resources, outputs), a suggested folder layout, and recommended module versions. Keep it brief and friendly.
