@@ -61,6 +61,8 @@ runs:
         RELEASE_BRANCH: ${{ inputs.release-branch }}
         PR_TITLE: ${{ inputs.pr-title }}
         COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        # nx-release-version.js writes the PR body here
+        PR_BODY_PATH: ${{ runner.temp }}/nx-release-pr-body.md
         GH_TOKEN: ${{ inputs.github-token }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
@@ -69,21 +71,19 @@ runs:
         git fetch origin "$BASE_BRANCH" "$RELEASE_BRANCH" 2>/dev/null || true
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
 
-        echo "::notice::Executing version command"
-        npx nx release --preid rc --skip-publish
+        # Runs releaseVersion + releaseChangelog via Nx programmatic API.
+        # Writes PR body to $PR_BODY_PATH only when version changes are detected.
+        node "$ACTION_PATH/scripts/dist/nx-release-version.js"
 
-        echo "::notice::Refreshing lockfile"
-        pnpm install --lockfile-only
-
-        # Check if any files changed
-        if git diff HEAD --quiet; then
-          echo "::notice::No version changes produced by Nx release. Skipping PR update."
+        # PR_BODY_PATH is non-empty only when there are actual version changes
+        if [[ ! -s "$PR_BODY_PATH" ]]; then
           echo "pull-request-number=" >> "$GITHUB_OUTPUT"
           echo "pull-request-url=" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
-        PR_BODY=$(node "$ACTION_PATH/scripts/dist/build-pr-body.js")
+        echo "::notice::Refreshing lockfile"
+        pnpm install --lockfile-only
 
         # Commit and push the version changes (bump + changelog)
         git add -A
@@ -92,6 +92,7 @@ runs:
 
         # Create or update PR
         PR_NUMBER=$(gh pr list --base "$BASE_BRANCH" --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty' || true)
+        PR_BODY=$(cat "$PR_BODY_PATH")
 
         if [[ -n "$PR_NUMBER" ]]; then
           gh pr edit "$PR_NUMBER" --title "$PR_TITLE" --body "$PR_BODY"
@@ -106,11 +107,12 @@ runs:
         echo "pull-request-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
-    - name: Publish with Nx release
+    - name: Publish packages, create git tags and GitHub releases
       if: steps.intent.outputs.mode == 'publish'
       id: publish
       shell: bash
       env:
+        ACTION_PATH: ${{ github.action_path }}
         NPM_CONFIG_PROVENANCE: true
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
@@ -118,18 +120,6 @@ runs:
         echo "::notice::Executing build command before publish"
         npx nx run-many --target=build --projects=tag:npm:public
 
-        echo "::notice::Executing publish command"
-        npx nx release publish
-
-        echo "published=true" >> "$GITHUB_OUTPUT"
-
-    - name: Sync Git Tags and GitHub Releases
-      if: steps.intent.outputs.mode == 'publish' && steps.publish.outputs.published == 'true'
-      id: tags
-      env:
-        ACTION_PATH: ${{ github.action_path }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
-      shell: bash
-      run: |
-        set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/create-tags-releases.js"
+        # Runs releasePublish via Nx programmatic API then creates git tags
+        # and GitHub releases for every successfully published package.
+        node "$ACTION_PATH/scripts/dist/nx-release-publish.js"

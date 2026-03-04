@@ -6,9 +6,11 @@ export default defineConfig({
   dts: false,
   entry: [
     "scripts/detect-intent.ts",
-    "scripts/build-pr-body.ts",
-    "scripts/create-tags-releases.ts",
+    "scripts/nx-release-version.ts",
+    "scripts/nx-release-publish.ts",
   ],
+  // nx and @nx/devkit are resolved at runtime in the consumer's workspace
+  external: ["nx", "@nx/devkit"],
   format: ["esm"],
   minify: false,
   outDir: "scripts/dist",
