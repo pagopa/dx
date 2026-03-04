@@ -1,7 +1,3 @@
-import { execFile, spawn } from "node:child_process";
-import { appendFile, readFile } from "node:fs/promises";
-import { join } from "node:path";
-import { promisify } from "node:util";
 /**
  * Runs the Nx Release publish phase via the programmatic API, then creates
  * annotated git tags and GitHub releases for every successfully published
@@ -12,7 +8,29 @@ import { promisify } from "node:util";
  *   GITHUB_TOKEN   — token used by the gh CLI to create releases
  *   GITHUB_OUTPUT  — path to GitHub Actions output file
  */
-import { releasePublish } from "nx/release";
+import type { releasePublish } from "nx/release";
+
+import { execFile, spawn } from "node:child_process";
+import { appendFile, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
+import { promisify } from "node:util";
+
+/**
+ * Loads nx/release from the consumer workspace's node_modules.
+ * See nx-release-version.ts for the rationale behind dynamic import.
+ */
+async function loadNxRelease(): Promise<{
+  releasePublish: typeof releasePublish;
+}> {
+  const workspaceRoot = process.env.GITHUB_WORKSPACE ?? process.cwd();
+  const nxReleasePath = pathToFileURL(
+    join(workspaceRoot, "node_modules/nx/release/index.js"),
+  ).href;
+  return import(nxReleasePath) as Promise<{
+    releasePublish: typeof releasePublish;
+  }>;
+}
 
 const execFileAsync = promisify(execFile);
 
@@ -139,6 +157,8 @@ async function run(): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
 
   // ── Phase 1: publish ───────────────────────────────────────────────────────
+  const { releasePublish } = await loadNxRelease();
+
   console.log("::notice::Running Nx Release publish phase");
   const publishResults = await releasePublish({});
 

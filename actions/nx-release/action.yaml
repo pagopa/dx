@@ -51,14 +51,6 @@ runs:
         git config user.name "dx-pagopa-bot"
         git config user.email "dx-pagopa-bot@pagopa.it"
 
-    # Expose the consumer workspace's node_modules so that action scripts can
-    # import 'nx/release' at runtime without bundling the entire nx package.
-    # GITHUB_WORKSPACE always points to the consumer repo root, which has nx
-    # installed as part of the Nx monorepo setup.
-    - name: Expose workspace node_modules to action scripts
-      shell: bash
-      run: echo "NODE_PATH=$GITHUB_WORKSPACE/node_modules" >> "$GITHUB_ENV"
-
     - name: Create or update Version Packages PR
       if: steps.intent.outputs.mode == 'create-pr'
       id: create-pr

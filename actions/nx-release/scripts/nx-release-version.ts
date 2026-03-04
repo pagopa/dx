@@ -1,4 +1,3 @@
-import { appendFile, writeFile } from "node:fs/promises";
 /**
  * Runs the Nx Release versioning and changelog generation phases via the
  * programmatic API, then writes the formatted PR body to the path specified
@@ -9,7 +8,11 @@ import { appendFile, writeFile } from "node:fs/promises";
  *   PR_BODY_PATH   — file path where the generated PR body should be written
  *                    (written only when version changes are detected)
  */
-import { releaseChangelog, releaseVersion } from "nx/release";
+import type { releaseChangelog, releaseVersion } from "nx/release";
+
+import { appendFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 /** Writes an output key/value for downstream GitHub Action steps. */
 async function appendOutput(
@@ -41,10 +44,33 @@ function buildPrBody(
     : `${intro}See individual packages CHANGELOGs for details.`;
 }
 
+/**
+ * Loads nx/release from the consumer workspace's node_modules.
+ * A dynamic import with an explicit file:// URL is required because Node.js
+ * ESM resolves static imports relative to the *source file* location, which
+ * on GitHub Actions runners is inside the isolated _actions/ directory —
+ * not the consumer workspace that has nx installed.
+ */
+async function loadNxRelease(): Promise<{
+  releaseChangelog: typeof releaseChangelog;
+  releaseVersion: typeof releaseVersion;
+}> {
+  const workspaceRoot = process.env.GITHUB_WORKSPACE ?? process.cwd();
+  const nxReleasePath = pathToFileURL(
+    join(workspaceRoot, "node_modules/nx/release/index.js"),
+  ).href;
+  return import(nxReleasePath) as Promise<{
+    releaseChangelog: typeof releaseChangelog;
+    releaseVersion: typeof releaseVersion;
+  }>;
+}
+
 /** Main entrypoint: runs versioning + changelog via Nx Release programmatic API. */
 async function run(): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
   const prBodyPath = process.env.PR_BODY_PATH;
+
+  const { releaseChangelog, releaseVersion } = await loadNxRelease();
 
   console.log("::notice::Running Nx Release versioning phase");
   const { projectsVersionData, releaseGraph, workspaceVersion } =

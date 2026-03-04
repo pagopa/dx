@@ -1,5 +1,6 @@
 import { writeFile, appendFile } from 'fs/promises';
-import { releaseVersion, releaseChangelog } from 'nx/release';
+import { join } from 'path';
+import { pathToFileURL } from 'url';
 
 // scripts/nx-release-version.ts
 async function appendOutput(outputPath, key, value) {
@@ -16,9 +17,17 @@ function buildPrBody(projectChangelogs) {
   const entries = Object.entries(projectChangelogs ?? {}).sort(([a], [b]) => a.localeCompare(b)).map(([, data]) => data.contents.trim()).filter(Boolean);
   return entries.length > 0 ? `${intro}${entries.join("\n\n")}`.trim() : `${intro}See individual packages CHANGELOGs for details.`;
 }
+async function loadNxRelease() {
+  const workspaceRoot = process.env.GITHUB_WORKSPACE ?? process.cwd();
+  const nxReleasePath = pathToFileURL(
+    join(workspaceRoot, "node_modules/nx/release/index.js")
+  ).href;
+  return import(nxReleasePath);
+}
 async function run() {
   const outputPath = process.env.GITHUB_OUTPUT;
   const prBodyPath = process.env.PR_BODY_PATH;
+  const { releaseChangelog, releaseVersion } = await loadNxRelease();
   console.log("::notice::Running Nx Release versioning phase");
   const { projectsVersionData, releaseGraph, workspaceVersion } = await releaseVersion({ preid: "rc" });
   const hasChanges = Object.values(projectsVersionData).some(

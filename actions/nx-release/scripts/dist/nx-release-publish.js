@@ -1,10 +1,17 @@
 import { execFile, spawn } from 'child_process';
 import { readFile, appendFile } from 'fs/promises';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import { promisify } from 'util';
-import { releasePublish } from 'nx/release';
 
 // scripts/nx-release-publish.ts
+async function loadNxRelease() {
+  const workspaceRoot = process.env.GITHUB_WORKSPACE ?? process.cwd();
+  const nxReleasePath = pathToFileURL(
+    join(workspaceRoot, "node_modules/nx/release/index.js")
+  ).href;
+  return import(nxReleasePath);
+}
 var execFileAsync = promisify(execFile);
 async function appendOutput(outputPath, key, value) {
   await appendFile(outputPath, `${key}=${value}
@@ -83,6 +90,7 @@ async function getPackageInfo(projectName) {
 }
 async function run() {
   const outputPath = process.env.GITHUB_OUTPUT;
+  const { releasePublish } = await loadNxRelease();
   console.log("::notice::Running Nx Release publish phase");
   const publishResults = await releasePublish({});
   const successfulProjects = Object.entries(publishResults).filter(([, result]) => result.code === 0).map(([name]) => name);
