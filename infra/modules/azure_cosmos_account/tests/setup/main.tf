@@ -105,6 +105,16 @@ resource "azurerm_role_assignment" "integration_keyvault_data_access_admin" {
   description          = "Allow GitHub workflow to manage roles"
 }
 
+resource "time_sleep" "wait_for_kv_rbac_propagation" {
+  create_duration = "300s"
+
+  depends_on = [
+    azurerm_role_assignment.kv_cosmos_uai,
+    azurerm_role_assignment.integration_keyvault_key_officer,
+    azurerm_role_assignment.integration_keyvault_data_access_admin,
+  ]
+}
+
 resource "azurerm_key_vault_key" "cmk" {
   name            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "customer_key_cosmos_db_nosql" }))
   key_vault_id    = azurerm_key_vault.kv.id
@@ -113,10 +123,7 @@ resource "azurerm_key_vault_key" "cmk" {
   key_opts        = ["wrapKey", "unwrapKey"]
   expiration_date = timeadd(timestamp(), "2h")
 
-  depends_on = [
-    azurerm_role_assignment.kv_cosmos_uai,
-    azurerm_role_assignment.integration_keyvault_data_access_admin,
-  ]
+  depends_on = [time_sleep.wait_for_kv_rbac_propagation]
 }
 
 output "pep_id" {
