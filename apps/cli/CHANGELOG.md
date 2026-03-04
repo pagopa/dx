@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.18.0
+
+### Minor Changes
+
+- f0ce0c9: Init now requires a GitHub App for self-hosted runners
+- 6074052: Add add command to scaffold new components
+
 ## 0.17.0
 
 ### Minor Changes
