@@ -39,30 +39,31 @@ configurations. For the overall infrastructure project structure, see
 
 ## Local Modules
 
-:::tip Prefer local modules for workload separation
+:::tip Prefer local modules for functional separation
 
-Use local modules to separate distinct workloads within your infrastructure.
-This improves maintainability, reusability, and makes it easier to reason about
-each component independently.
+Use local modules to organize infrastructure by functional component. Each
+module groups the resources that belong to a single, well-defined service or
+capability, improving maintainability, reusability, and independent reasoning.
 
 :::
 
-### What is a Workload?
+### What is a Functional Component?
 
-A **workload** is a logical unit of infrastructure that serves a specific
-purpose and operates independently from other components. Each workload should:
+A **functional component** is a service or capability with a clear, single
+responsibility. Each local module should:
 
-- Have a clear, single responsibility
-- Manage its own resources and dependencies
-- Include related infrastructure components (compute, storage, IAM permissions)
+- Represent one service or capability (e.g., API gateway, data processor,
+  message notifier)
+- Own all the infrastructure resources that service needs (compute, storage, IAM
+  permissions)
 - Be deployable and testable in isolation
 
-**Examples of workloads:**
+**Examples of functional components and their resources:**
 
 - **API Management (APIM)**: APIM instance, policies, API definitions, private
   endpoint
-- **Data Processor Function**: Function App + Storage Account + Blob Storage +
-  IAM permissions
+- **Data Processor**: Function App + Storage Account + Blob Storage + IAM
+  permissions
 - **Message Notifier**: Function App + Service Bus connection + IAM for Service
   Bus
 - **Reporting Service**: App Service + Application Insights + Database
@@ -85,7 +86,7 @@ infra/resources/prod/
 This causes:
 
 - Hard to understand what resources belong together
-- Difficult to modify one workload without affecting others
+- Difficult to modify one component without affecting others
 - Challenging to test or reuse configurations
 - Risk of IAM permission management becoming chaotic
 - Team members must coordinate on the entire main.tf
@@ -104,26 +105,27 @@ This still causes the same problems, just at a smaller scale.
 
 ### What TO DO (Best Practice)
 
-✅ **Module per workload** - Each module owns its workload:
+✅ **One module per functional component** - Each module owns the resources for
+one service:
 
 ```
 infra/resources/prod/_modules/
-├── apim/               # APIM workload: instance + policies + private endpoint
+├── apim/               # API Management: instance + policies + private endpoint
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── iam.tf
 │   └── outputs.tf
-├── func_processor/     # Processor Function: function + storage + blob container + IAM
+├── func_processor/     # Data Processor: function + storage + blob container + IAM
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── iam.tf
 │   └── outputs.tf
-├── func_notifier/      # Notifier Function: function + Service Bus connection + IAM
+├── func_notifier/      # Message Notifier: function + Service Bus connection + IAM
 │   ├── main.tf
 │   ├── variables.tf
 │   ├── iam.tf
 │   └── outputs.tf
-└── reporting/          # Reporting workload: App Service + App Insights + DB connection + IAM
+└── reporting/          # Reporting Service: App Service + App Insights + DB connection + IAM
     ├── main.tf
     ├── variables.tf
     ├── iam.tf
@@ -145,8 +147,9 @@ Benefits:
 
 Local modules provide several benefits:
 
-- **Separation of concerns**: Each workload (e.g., API Management, Function App,
-  Storage) lives in its own module with clear boundaries
+- **Separation of concerns**: Each functional component (e.g., API Management,
+  data processor, message notifier) lives in its own module with clear
+  boundaries
 - **Encapsulation**: Related resources and their IAM permissions stay together
 - **Reusability**: Modules can be reused across environments with different
   configurations
@@ -156,7 +159,7 @@ Local modules provide several benefits:
 
 ### Module Organization Example
 
-Organize your infrastructure into logical modules based on workloads:
+Organize your infrastructure into one module per functional component:
 
 ```
 infra/resources/prod/
@@ -166,16 +169,16 @@ infra/resources/prod/
 ├── main.tf                # Module instantiations
 ├── outputs.tf             # Root module outputs
 └── _modules/
-    ├── apim/              # API Management workload
+    ├── apim/              # API Management component
     │   ├── main.tf
     │   ├── variables.tf   # Module inputs
     │   └── outputs.tf
-    ├── func_processor/    # Processor Function App + related Storage
+    ├── func_processor/    # Data Processor component (Function App + Storage)
     │   ├── main.tf
     │   ├── variables.tf
-    │   ├── iam.tf         # IAM permissions for this function
+    │   ├── iam.tf         # IAM permissions for this component
     │   └── outputs.tf
-    └── func_notifier/     # Notifier Function App + IAM
+    └── func_notifier/     # Message Notifier component (Function App + IAM)
         ├── main.tf
         ├── variables.tf
         ├── iam.tf
