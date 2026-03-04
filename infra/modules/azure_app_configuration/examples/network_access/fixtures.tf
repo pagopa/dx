@@ -137,11 +137,11 @@ module "role_appcs_public" {
   ]
 }
 
-module "infra_github_roles" {
+module "integration_github_roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 1.0"
 
-  principal_id    = data.azurerm_user_assigned_identity.infra_github.principal_id
+  principal_id    = data.azurerm_user_assigned_identity.integration_github.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
 
   app_config = [

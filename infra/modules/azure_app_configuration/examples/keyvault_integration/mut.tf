@@ -20,7 +20,7 @@ module "appcs_with_kv" {
     name                = azurerm_key_vault.kv.name
     resource_group_name = azurerm_key_vault.kv.resource_group_name
     app_principal_ids = [
-      data.azurerm_user_assigned_identity.infra_github.principal_id,
+      data.azurerm_user_assigned_identity.integration_github.principal_id,
       azurerm_container_group.private_app.identity[0].principal_id
     ]
   }]

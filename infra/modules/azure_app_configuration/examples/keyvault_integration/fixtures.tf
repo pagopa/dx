@@ -132,7 +132,7 @@ resource "azurerm_container_group" "private_app" {
 resource "azurerm_role_assignment" "github_kv_secrets_writer" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Secrets Officer"
-  principal_id         = data.azurerm_user_assigned_identity.infra_github.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
 
   depends_on = [azurerm_key_vault.kv]
 }
@@ -140,7 +140,7 @@ resource "azurerm_role_assignment" "github_kv_secrets_writer" {
 resource "azurerm_role_assignment" "github_appconfig_writer" {
   scope                = module.appcs_with_kv.id
   role_definition_name = "App Configuration Data Owner"
-  principal_id         = data.azurerm_user_assigned_identity.infra_github.principal_id
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
 
   depends_on = [module.appcs_with_kv]
 }

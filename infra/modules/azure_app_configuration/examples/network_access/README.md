@@ -14,7 +14,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_infra_github_roles"></a> [infra\_github\_roles](#module\_infra\_github\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
+| <a name="module_integration_github_roles"></a> [integration\_github\_roles](#module\_integration\_github\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_private_appcs"></a> [private\_appcs](#module\_private\_appcs) | pagopa-dx/azure-app-configuration/azurerm | ~> 0.0 |
 | <a name="module_role_appcs_private"></a> [role\_appcs\_private](#module\_role\_appcs\_private) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_role_appcs_public"></a> [role\_appcs\_public](#module\_role\_appcs\_public) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
@@ -34,7 +34,7 @@
 | [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
-| [azurerm_user_assigned_identity.infra_github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
+| [azurerm_user_assigned_identity.integration_github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 | [azurerm_virtual_network.e2e](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
