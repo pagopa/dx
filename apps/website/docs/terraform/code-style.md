@@ -171,25 +171,6 @@ infra/resources/
     └── outputs.tf             # Root module outputs
 ```
 
-### IAM and Role Assignments
-
-Each local module is responsible for the IAM permissions of the resources it
-owns. Define role assignments in a dedicated `iam.tf` file inside the module,
-keeping permissions co-located with the resources they protect. This avoids
-scattered `azurerm_role_assignment` resources spread across the root module and
-makes it easy to reason about the security boundary of each service.
-
-For supported resource types (Storage Account, Cosmos DB, Key Vault, Event Hub,
-and more), use the
-[`azure-role-assignments`](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest)
-DX module instead of raw `azurerm_role_assignment` resources. The module
-encapsulates the correct role definitions, reduces boilerplate, and enforces
-consistent patterns across all teams. Use bare `azurerm_role_assignment` only
-for resource types not yet covered by the module.
-
-For naming conventions, policies, and best practices around identity and access
-management on Azure, see the [IAM documentation](../azure/iam/index.md).
-
 ### Root Module: Use Locals and Data Sources Only
 
 :::warning No variables in root modules
@@ -596,9 +577,34 @@ resource "azurerm_subnet" "bad" {
 
 ---
 
-## Standard File Templates
+## Azure
 
-### Standard locals.tf
+The following conventions apply specifically to Azure infrastructure using the
+[DX Azure provider](../azure/using-azure-registry-provider.md) and the PagoPA DX
+Terraform module registry.
+
+### IAM and Role Assignments
+
+Each local module is responsible for the IAM permissions of the resources it
+owns. Define role assignments in a dedicated `iam.tf` file inside the module,
+keeping permissions co-located with the resources they protect. This avoids
+scattered role assignment resources spread across the root module and makes it
+easy to reason about the security boundary of each service.
+
+For supported resource types (Storage Account, Cosmos DB, Key Vault, Event Hub,
+and more), use the
+[`azure-role-assignments`](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest)
+DX module instead of raw `azurerm_role_assignment` resources. The module
+encapsulates the correct role definitions, reduces boilerplate, and enforces
+consistent patterns across all teams. Use bare `azurerm_role_assignment` only
+for resource types not yet covered by the module.
+
+For naming conventions, policies, and best practices around identity and access
+management on Azure, see the [IAM documentation](../azure/iam/index.md).
+
+### Standard File Templates
+
+#### Standard locals.tf
 
 ```hcl title="infra/resources/prod/locals.tf"
 locals {
@@ -628,7 +634,7 @@ See [Required Tags](./required-tags.md) for details on mandatory tag values.
 
 :::
 
-### Standard providers.tf
+#### Standard providers.tf
 
 ```hcl title="infra/resources/prod/providers.tf"
 terraform {
