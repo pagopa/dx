@@ -38,7 +38,7 @@ To ensure proper access control, follow these steps:
 Define a `CODEOWNERS` file to manage repository ownership.
 
 See
-https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file
+[GitHub documentation](https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file)
 
 ### Create Dot Files
 
@@ -130,23 +130,22 @@ PATs have an expiration date.
 
 :::
 
-### Link GitHub to AWS, Azure or both
+### Link GitHub to AWS, Azure or both {#link-github-to-csp}
 
 :::info[Requirements]
 
-Before starting, ensure you have a stored secret in the target CSP containing a
-PAT token that will be used by the Bootstrap module to configure the GitHub
-self-hosted runner. The PAT must have the following permissions:
+Before starting, ensure the Key Vault referenced in
+`github_private_runner.key_vault` contains the following secrets for GitHub App
+authentication:
 
-- Repository permissions:
-  - Actions: read only
-  - Administration: read and write
-  - Metadata: read only
-- List of repositories:
-  - The target repository
+- `github-runner-app-id`: the numeric GitHub App ID
+- `github-runner-app-installation-id`: the installation ID of the GitHub App on
+  the target organization
+- `github-runner-app-key`: the private key of the GitHub App in PEM format
 
-The PAT's user owner must also have the `Admin` role on the target GitHub
-repository.
+See [Obtaining GitHub App credentials](#obtaining-github-app-credentials) for
+step-by-step instructions on how to create a GitHub App and retrieve these
+values.
 
 :::
 
@@ -158,6 +157,26 @@ the proper Terraform module:
    [aws-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/aws/latest)
 3. For Azure, use
    [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
+   and set `use_github_app = true` inside `github_private_runner`:
+
+   ```hcl
+   module "bootstrap" {
+     source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+     version = "~> 3.0"
+
+     # ... other required variables ...
+
+     github_private_runner = {
+       container_app_environment_id       = data.azurerm_container_app_environment.runner.id
+       container_app_environment_location = "italynorth"
+       key_vault = {
+         name                = "my-keyvault"
+         resource_group_name = "my-rg"
+       }
+       use_github_app = true
+     }
+   }
+   ```
 
 Note, you can use both modules in the same repository if needed.
 
@@ -186,3 +205,56 @@ administrative roles to the product Engineering Leader. For example in Azure:
   },
   ...
 ```
+
+:::
+
+### Obtaining GitHub App credentials {#obtaining-github-app-credentials}
+
+The self-hosted runner modules authenticate with GitHub using a **GitHub App**.
+A GitHub App provides fine-grained permissions, does not expire, and is not tied
+to any individual user account.
+
+You need to create a GitHub App and store three secrets in the Key Vault
+referenced by the runner module:
+
+| Key Vault secret name               | Description                                               |
+| ----------------------------------- | --------------------------------------------------------- |
+| `github-runner-app-id`              | The numeric ID of the GitHub App                          |
+| `github-runner-app-installation-id` | The installation ID of the App on the target organization |
+| `github-runner-app-key`             | The App private key in PEM format                         |
+
+#### 1. Create a GitHub App
+
+1. In PagoPA context, see
+   [the documentation](https://pagopa.atlassian.net/wiki/search?text=Creazione%20GithubApp%20configurazione%20repo)
+2. Generate and wonload a private key as exposed in the above link and keep it
+   safe, you will need its contents shortly.
+
+#### 2. Retrieve the App ID
+
+The **App ID** is shown on the App settings page under **About** → **App ID**.
+
+#### 3. Store the secrets in Key Vault
+
+Store the three values as Key Vault secrets using the Azure CLI as break lines
+are important:
+
+```bash
+az keyvault secret set \
+  --vault-name "<your-keyvault-name>" \
+  --name "github-runner-app-id" \
+  --value "<app-id>"
+
+az keyvault secret set \
+  --vault-name "<your-keyvault-name>" \
+  --name "github-runner-app-installation-id" \
+  --value "<installation-id>"
+
+az keyvault secret set \
+  --vault-name "<your-keyvault-name>" \
+  --name "github-runner-app-key" \
+  --file "<path-to-private-key.pem>"
+```
+
+Once the secrets are in place, the runner module can be configured with
+`use_github_app = true` and it will automatically read these values at runtime.
