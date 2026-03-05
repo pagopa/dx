@@ -19,6 +19,11 @@ terraform {
       source  = "pagopa-dx/aws"
       version = "~> 0.0"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.8"
+    }
   }
 
   backend "azurerm" {
@@ -26,12 +31,14 @@ terraform {
     storage_account_name = "dxpitntfstatest01"
     container_name       = "terraform-state"
     key                  = "dx.core.prod.tfstate"
+    use_azuread_auth     = true
   }
 }
 
 # Default provider configuration
 provider "azurerm" {
   features {}
+  storage_use_azuread = true
 }
 
 provider "aws" {

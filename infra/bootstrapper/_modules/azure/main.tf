@@ -36,6 +36,7 @@ module "bootstrap" {
     key_vault = {
       name                = module.core_values.common_key_vault.name
       resource_group_name = module.core_values.common_key_vault.resource_group_name
+      use_rbac            = true
     }
   }
 
