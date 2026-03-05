@@ -37,7 +37,7 @@ terraform {
   }
 
   backend "http" {
-    address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/d21769c8-a0cb-46c4-95c7-7c493bf621a8"
+    address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/0ff8566f-2e6a-4b2f-883d-873f4a4f3dcb"
   }
 }
 
