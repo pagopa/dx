@@ -49,3 +49,4 @@ jobs:
       csr_common_name: "stategraph.dx.pagopa.it"
       dns_zone: "dx.pagopa.it"
       dns_zone_resource_group: "dx-p-itn-network-rg-01"
+      environment: "automation-prod"
