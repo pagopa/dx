@@ -31,7 +31,7 @@ on:
         type: string
 
 concurrency:
-  group: ${{ github.workflow }}-cd
+  group: ${{ github.workflow }}-${{ inputs.environment }}-cd
   cancel-in-progress: false
 
 jobs:
