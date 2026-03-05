@@ -32,13 +32,15 @@ const makeEnv = () => {
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
+    envShort: "d",
+    prefix: "test",
     subscriptionName: "test-subscription",
   });
 
 // eslint-disable-next-line max-lines-per-function
 describe("PagoPA AuthorizationService", () => {
   describe("happy path", () => {
-    it("should create a pull request when all steps succeed", async () => {
+    it("should create a pull request with identity and AD groups", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = `
@@ -82,10 +84,25 @@ directory_readers = {
         repo: "eng-azure-authorization",
       });
 
+      // Verify the updated content includes both the identity and AD groups
+      const updateCall = gitHubService.updateFile.mock.calls[0]?.[0];
+      expect(updateCall).toBeDefined();
+      expect(updateCall?.content).toContain('"test-bootstrap-identity-id"');
+      expect(updateCall?.content).toContain("test-d-adgroup-admin");
+      expect(updateCall?.content).toContain("test-d-adgroup-developers");
+      expect(updateCall?.content).toContain("test-d-adgroup-operations");
+      expect(updateCall?.content).toContain("test-d-adgroup-security");
+      expect(updateCall?.content).toContain(
+        "test-d-adgroup-technical-project-managers",
+      );
+      expect(updateCall?.content).toContain("test-d-adgroup-product-owners");
+      expect(updateCall?.content).toContain("test-d-adgroup-externals");
+      expect(updateCall?.content).toContain("test-d-adgroup-oncall");
+
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
           branch: "feats/add-test-subscription-bootstrap-identity",
-          message: "Add directory reader for test-subscription",
+          message: "Add bootstrap identity and AD groups for test-subscription",
           owner: "pagopa",
           path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
           repo: "eng-azure-authorization",
@@ -95,12 +112,65 @@ directory_readers = {
 
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
+        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-subscription-bootstrap-identity",
         owner: "pagopa",
         repo: "eng-azure-authorization",
-        title: "Add directory reader for test-subscription",
+        title: "Add bootstrap identity and AD groups for test-subscription",
       });
+    });
+
+    it("should preserve existing groups and update roles when needed", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const contentWithExistingGroups = `
+directory_readers = {
+  service_principals_name = []
+}
+
+groups = [
+  {
+    name = "test-d-adgroup-admin"
+    members = ["existing-member"],
+    roles = [
+      "Reader"
+    ]
+  },
+  {
+    name = "test-d-adgroup-custom"
+    members = [],
+    roles = [
+      "Contributor"
+    ]
+  }
+]
+`.trim();
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: contentWithExistingGroups,
+        sha: "sha-456",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/43",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      const updateCall = gitHubService.updateFile.mock.calls[0]?.[0];
+      expect(updateCall).toBeDefined();
+      // Admin group should have roles updated to "Owner" but preserve existing member
+      expect(updateCall?.content).toContain('"existing-member"');
+      expect(updateCall?.content).toContain("test-d-adgroup-admin");
+      // Custom group should be preserved
+      expect(updateCall?.content).toContain("test-d-adgroup-custom");
+      // All default groups should be present
+      expect(updateCall?.content).toContain("test-d-adgroup-developers");
     });
   });
 
