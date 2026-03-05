@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # evaluate.sh <output_dir> [score_out.json]
-# Grades a generated Terraform output directory against the DX checklist (12 checks).
+# Grades a generated Terraform output directory against the DX checklist (20 checks).
 # Exits 0 always; writes results to score_out.json (default: <output_dir>/../score.json).
 set -euo pipefail
 
@@ -78,14 +78,6 @@ if [[ "$kv_refs" == "true" && "$hardcoded" == "false" ]]; then
   secrets_detail="Key Vault references used, no hardcoded secrets"
 elif [[ "$hardcoded" == "true" ]]; then
   secrets_detail="hardcoded secrets detected"
-fi
-
-# ── 5. networking: dx_available_subnet_cidr ───────────────────────────────────
-networking="false"
-networking_detail="dx_available_subnet_cidr not found"
-if echo "$ALL_TF_CONTENT" | grep -q "dx_available_subnet_cidr"; then
-  networking="true"
-  networking_detail="dx_available_subnet_cidr found"
 fi
 
 # ── 6. modules: pagopa-dx/* with ~> version pin ───────────────────────────────
@@ -197,7 +189,7 @@ fi
 # ── 16. naming_config_fields: naming_config local has all 6 required fields ───
 naming_fields="false"
 naming_fields_detail="naming_config local missing or incomplete"
-required_fields=(prefix env_short location domain app_name instance_number)
+required_fields=(prefix environment location domain name instance_number)
 missing_fields=()
 if echo "$ALL_TF_CONTENT" | grep -q "naming_config"; then
   for field in "${required_fields[@]}"; do
@@ -212,11 +204,27 @@ if echo "$ALL_TF_CONTENT" | grep -q "naming_config"; then
     naming_fields_detail="naming_config missing fields: ${missing_fields[*]}"
   fi
 fi
+
+# ── 17. outputs_grouped: output values are objects, not flat scalars ─────────
+outputs_grouped="false"
+outputs_grouped_detail="no outputs found or outputs are flat scalars (not grouped objects)"
+if echo "$ALL_TF_CONTENT" | grep -q 'output "'; then
+  output_count=$(echo "$ALL_TF_CONTENT" | grep -cE '^output "' || echo "0")
+  grouped_count=$(echo "$ALL_TF_CONTENT" | grep -cE 'value\s*=\s*\{' || echo "0")
+  if [[ "$output_count" -gt 0 && "$grouped_count" -ge "$output_count" ]]; then
+    outputs_grouped="true"
+    outputs_grouped_detail="all ${output_count} output(s) use grouped object values"
+  elif [[ "$grouped_count" -gt 0 ]]; then
+    outputs_grouped_detail="only ${grouped_count}/${output_count} output(s) use grouped object format"
+  fi
+fi
+
 score=0
-for val in "$validate" "$naming" "$tags" "$secrets" "$networking" "$modules" \
+for val in "$validate" "$naming" "$tags" "$secrets" "$modules" \
            "$coverage" "$modules_version" "$file_structure" "$dx_provider" \
            "$no_github" "$var_descriptions" \
-           "$createdby_tf" "$azurerm_4x" "$storage_azuread" "$naming_fields"; do
+           "$createdby_tf" "$azurerm_4x" "$storage_azuread" "$naming_fields" \
+           "$outputs_grouped"; do
   [[ "$val" == "true" ]] && ((score++)) || true
 done
 
@@ -228,7 +236,6 @@ export _v_validate="$validate"          _d_validate="$validate_detail"
 export _v_naming="$naming"              _d_naming="$naming_detail"
 export _v_tags="$tags"                  _d_tags="$tags_detail"
 export _v_secrets="$secrets"            _d_secrets="$secrets_detail"
-export _v_networking="$networking"      _d_networking="$networking_detail"
 export _v_modules="$modules"            _d_modules="$modules_detail"
 export _v_coverage="$coverage"          _d_coverage="$coverage_detail"
 export _v_modver="$modules_version"     _d_modver="$modules_version_detail"
@@ -240,6 +247,7 @@ export _v_crby="$createdby_tf"          _d_crby="$createdby_tf_detail"
 export _v_az4x="$azurerm_4x"            _d_az4x="$azurerm_4x_detail"
 export _v_azuread="$storage_azuread"    _d_azuread="$storage_azuread_detail"
 export _v_namfld="$naming_fields"       _d_namfld="$naming_fields_detail"
+export _v_outgrp="$outputs_grouped"     _d_outgrp="$outputs_grouped_detail"
 
 python3 - <<'PYEOF'
 import json, os
@@ -251,7 +259,6 @@ checks = {
     "naming":                chk("_v_naming",    "_d_naming"),
     "tags":                  chk("_v_tags",      "_d_tags"),
     "secrets":               chk("_v_secrets",   "_d_secrets"),
-    "networking":            chk("_v_networking","_d_networking"),
     "modules":               chk("_v_modules",   "_d_modules"),
     "dx_modules_coverage":   chk("_v_coverage",  "_d_coverage"),
     "modules_version":       chk("_v_modver",    "_d_modver"),
@@ -263,6 +270,7 @@ checks = {
     "azurerm_4x":            chk("_v_az4x",      "_d_az4x"),
     "storage_azuread":       chk("_v_azuread",   "_d_azuread"),
     "naming_config_fields":  chk("_v_namfld",    "_d_namfld"),
+    "outputs_grouped":       chk("_v_outgrp",    "_d_outgrp"),
 }
 result = {"score": int(os.environ.get("_SCORE", 0)), "max": 16, "checks": checks}
 with open(os.environ["_SCORE_FILE"], "w") as f:

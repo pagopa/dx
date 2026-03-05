@@ -45,19 +45,29 @@ The API returns a JSON object with:
 - `query`: The search query
 - `results`: Array of result objects containing `content`, `score`, and `source` URL
 
-### 2. Check Terraform Registry for Module Versions
+### 2. Search DX Modules Before Writing Any Resource
 
-**Always use Terraform HashiCorp MCP tools**, if present, to retrieve module information from the Terraform Registry:
+**CRITICAL — Module-first rule**: before writing **any** `resource` block, you MUST check whether a `pagopa-dx/*` module already wraps that resource type. This applies to every resource: compute, storage, networking, IAM/RBAC role assignments, monitoring, and more.
 
-- Call `search_modules` to find DX modules in the `pagopa-dx` namespace
-- Call `get_module_details` to retrieve module inputs, outputs, required providers, and usage examples
-- Call `get_latest_module_version` to get the most recent version
-- Always use the latest available version in your code
+#### Procedure
 
-Otherwise consider to query Terraform registry using its API as described here: https://developer.hashicorp.com/terraform/registry/api-docs
+1. **List all available DX modules** — do this once at the start:
+   - **If Terraform MCP tools are available** (preferred): call `search_modules` with query `pagopa-dx` to get the full catalogue.
+   - **Otherwise**, query the Terraform Registry API:
+     ```
+     GET https://registry.terraform.io/v1/modules?namespace=pagopa-dx&limit=100
+     ```
+     The response has an array `modules[]` with fields `name`, `provider`, `version`. Use `version` as the latest available.
+2. **For each resource you plan to create**, scan the module list for a match (e.g., if you need `azurerm_role_assignment` → look for a module named `azure-role-assignments`; if you need `azurerm_cosmosdb_account` → look for `azure-cosmos-account`).
+3. **If a matching module exists**:
+   - Call `get_module_details` (MCP) or fetch `https://registry.terraform.io/modules/pagopa-dx/<module>/azurerm/latest` to read its inputs, outputs, and usage examples.
+   - Call `get_latest_module_version` to pin the version with `~> major.minor`.
+   - **Use the module instead of raw resources.**
+4. **Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
 
-Example: For the `azure-function-app` module, retrieve details from:
-`https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest`
+#### Common modules you may overlook
+
+The `pagopa-dx` namespace contains modules for many resource types beyond compute and storage. Examples of frequently missed modules include role assignments, service bus, event hub, CDN, API management, and container apps. **Always search — do not assume a module doesn't exist.**
 
 ### 3. Ask User for Required Values
 

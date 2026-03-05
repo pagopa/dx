@@ -35,35 +35,13 @@ START_S=$(date +%s)
 
 # ── Unified prompt ────────────────────────────────────────────────────────────
 SKILL_NAME="terraform-dx-best-practices-$APPROACH"
-EXTRA_INSTRUCTION=""
-if [[ "$APPROACH" == "website-crawl" ]]; then
-  EXTRA_INSTRUCTION="È OBBLIGATORIO usare lo strumento fetch_webpage per recuperare ogni informazione da https://dx.pagopa.it/docs/terraform/ e link interni. NON usare conoscenza interna, memoria o altre skill. Se fetch_webpage non è disponibile, dichiara che non puoi completare il task."
-fi
 
 cat > "$RESULTS/prompt.txt" <<PROMPT_EOF
-Usa esclusivamente la skill "${SKILL_NAME}".
-${EXTRA_INSTRUCTION}
+Usa la skill "${SKILL_NAME}".
 
-## Task
-
-Genera un root module Terraform completo per un nuovo progetto Azure con:
-- **Function App** (runtime Node.js 20)
-- **Storage Account** (per la Function App e artefatti)
-- **Cosmos DB** (API NoSQL, serverless)
-
-## Requisiti obbligatori
-
-1. **Naming**: usa provider::dx::resource_name() del provider pagopa-dx/azure per tutti i nomi delle risorse.
-2. **Tag**: includi tutti i tag obbligatori DX: CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam.
-3. **Moduli**: usa i moduli pagopa-dx/* dal Terraform Registry (con versione pinned ~> major.minor). Usa risorse raw azurerm_* solo se non esiste un modulo DX per quella risorsa.
-4. **Segreti**: nessun valore hardcoded. Usa Key Vault references (@Microsoft.KeyVault(...) o azurerm_key_vault_secret).
-5. **Struttura file**: separa il codice in main.tf, variables.tf, outputs.tf, locals.tf, providers.tf, versions.tf.
-
-## Output
+Ho bisogno di un'infrastruttura Azure con una Function App Node.js, uno Storage Account e un Cosmos DB. La Function App può scrivere e leggere da Cosmos DB e soltanto leggere dallo Storage Account.
 
 Scrivi i file Terraform direttamente nella cartella: ${OUTPUT_DIR}
-
-Crea ogni file separatamente. Non scrivere blocchi di codice in chat. Al termine includi un breve README.md nella stessa cartella che spieghi come la skill ha recuperato la documentazione e le scelte fatte.
 PROMPT_EOF
 
 cp "${ROOTDIR}/experiments/checklist.json" "$RESULTS/checklist.json"
@@ -160,7 +138,7 @@ metrics = {
     "duration_s": $DURATION,
     "tool_calls": $TOOL_CALLS,
     "score": $SCORE,
-    "score_max": 16,
+    "score_max": 20,
     "llm_score": $LLM_SCORE,
     "llm_score_max": 40,
 }
@@ -189,6 +167,6 @@ fi
 echo "──────────────────────────────────────────────"
 echo " Experiment complete"
 echo " Approach : $APPROACH  Run : $RUN_N"
-echo " Score    : $SCORE/16  LLM: ${LLM_SCORE}/40  Duration: ${DURATION}s"
+echo " Score    : $SCORE/20  LLM: ${LLM_SCORE}/40  Duration: ${DURATION}s"
 echo " Results  : $RESULTS"
 echo "──────────────────────────────────────────────"

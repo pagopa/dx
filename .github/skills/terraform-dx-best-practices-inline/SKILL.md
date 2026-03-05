@@ -39,9 +39,12 @@ tags = merge(var.tags, {
 
 ### Moduli DX Registry
 
-- Usa moduli `pagopa-dx/*` dal Terraform Registry per Function App, Storage Account, Cosmos DB ecc.
+- Prima di scrivere qualsiasi blocco `resource`, chiediti se esiste un modulo `pagopa-dx/*` nel Terraform Registry che wrappa quella risorsa.
+- Il namespace `pagopa-dx` contiene moduli per molti tipi di risorse oltre a compute e storage: role assignments, service bus, event hub, CDN, API management, container apps, ecc.
+- Se dalla tua conoscenza interna sai che esiste un modulo per la risorsa in questione, usalo.
+- Se non sei sicuro che un modulo esista, segnalalo nel README con `<!-- inline-assumption: no DX module found for <risorsa> -->`.
 - Specifica la versione con `~> major.minor` (es. `~> 1.0`).
-- Usa risorse azurerm raw solo se non esiste un modulo DX.
+- Usa risorse `azurerm_*` / `aws_*` raw **solo se sei ragionevolmente sicuro** che non esiste un modulo DX per quella risorsa.
 
 ### Segreti
 

@@ -49,24 +49,26 @@ You are a senior Terraform engineer at PagoPA DX, reviewing automatically genera
 
 The task that was given to the model was:
 Generate a root Terraform module for an Azure project with:
-- Function App (Node.js 20 runtime)
-- Storage Account (for Function App and artifacts)
-- Cosmos DB (NoSQL API, serverless)
+- Function App (Node.js runtime)
+- Storage Account
+- Cosmos DB
+
+The Function App must be able to write and read from Cosmos DB, and only read from the Storage Account.
+IAM/RBAC role assignments must reflect these permissions.
 
 DX mandatory requirements (from https://dx.pagopa.it/docs/terraform/):
 - Naming: use provider::dx::resource_name() from pagopa-dx/azure provider for ALL resource names;
   define a naming_config local with exactly 6 fields: prefix, env_short, location, domain, app_name, instance_number
-- Tags (all 6 required in locals.tf): CostCenter, CreatedBy="Terraform", Environment, BusinessUnit, Source (github URL), ManagementTeam;
+- Tags (required in locals.tf): CostCenter, CreatedBy=\"Terraform\", Environment, BusinessUnit, ManagementTeam;
   always pass local.tags to every resource and module — never hardcode tags inline
 - Modules: use pagopa-dx/* modules from Terraform Registry (format: pagopa-dx/<name>/azurerm) with ~> version pin;
   NEVER use github.com/pagopa as module source; prefer DX modules over raw azurerm_* resources when available
 - Providers: declare hashicorp/azurerm ~> 4.0 AND pagopa-dx/azure ~> 0.0 in required_providers;
   set storage_use_azuread = true in the azurerm provider block for AAD-only storage auth
 - Secrets: zero hardcoded values; reference secrets via azurerm_key_vault_secret data source or @Microsoft.KeyVault() app setting references
-- Networking: use dx_available_subnet_cidr resource for every new subnet to auto-allocate non-overlapping CIDRs
 - File structure: exactly main.tf, variables.tf, outputs.tf, locals.tf, providers.tf, versions.tf;
-  group outputs in objects (not flat, not nested resource name); every variable must have description + validation
-- Code style: prefer for_each over count with lists; use try() for optional attrs; define use_cases map in locals.tf
+  group outputs in objects (not flat); every variable must have description
+- Code style: prefer for_each over count with lists; group outputs in objects
 
 Here is the generated code to evaluate:
 
@@ -83,10 +85,10 @@ COMBINED_PROMPT="${CONTEXT_BLOCK}
 Evaluate the code above across ALL 4 dimensions simultaneously.
 
 For each dimension, assign an integer score 0-10 and a one-sentence reasoning:
-- completeness: All 3 required services fully implemented: Function App (Node.js 20, linux runtime), Storage Account, Cosmos DB (serverless, NoSQL API). No stubs, no placeholders, all wired together.
-- security: Private endpoints for Storage and Cosmos, managed identity (not service principal passwords), storage_use_azuread=true declared, no public_network_access_enabled=true, RBAC role assignments, Key Vault for all secret values.
-- code_quality: for_each preferred over count-with-lists, try() used for optional attrs, locals.tf has naming_config with all 6 fields + use_cases map, outputs grouped in objects (not flat keys), all variables have description and validation, versions.tf present and separate from providers.tf.
-- dx_adherence: provider::dx::resource_name() used for EVERY resource name (not just some), naming_config passed to all resource_name() calls, all 6 required tags present with CreatedBy="Terraform" and Source pointing to github.com/pagopa, DX Registry modules used (pagopa-dx/* format) for all supported services instead of raw azurerm_*, no github.com module sources, pagopa-dx/azure provider declared with ~> 0.0.
+- completeness: All 3 required services fully implemented (Function App, Storage Account, Cosmos DB), wired with correct permissions (Function App can read+write Cosmos, read-only Storage). RBAC role assignments are coherent with these permissions. No stubs or placeholders.
+- security: Managed identity used (not service principal passwords), no hardcoded secrets, Key Vault referenced for sensitive values, storage_use_azuread=true declared. Private endpoints are a bonus, not required.
+- code_quality: Files separated (main, variables, outputs, locals, providers, versions), variables have description, outputs grouped in objects (not flat keys), naming_config local defined with all 6 fields, clean and readable code structure.
+- dx_adherence: provider::dx::resource_name() used for EVERY resource name (not just some), naming_config passed to all resource_name() calls, required DX tags present with CreatedBy=\"Terraform\", DX Registry modules used (pagopa-dx/* format with ~> pin) for supported services, pagopa-dx/azure provider declared, no github.com module sources.
 
 Return ONLY a single valid JSON object — no markdown, no text outside the JSON:
 {\"completeness\": {\"score\": <int>, \"reasoning\": \"<sentence>\"},
@@ -95,11 +97,42 @@ Return ONLY a single valid JSON object — no markdown, no text outside the JSON
  \"dx_adherence\": {\"score\": <int>, \"reasoning\": \"<sentence>\"}}"
 
 _RAW_TMP=$(mktemp)
-echo "$COMBINED_PROMPT" | copilot \
+_PROMPT_TMP=$(mktemp)
+_ERR_TMP=$(mktemp)
+echo "$COMBINED_PROMPT" > "$_PROMPT_TMP"
+
+PROMPT_TEXT="$(cat "$_PROMPT_TMP")"
+PROMPT_LEN=${#PROMPT_TEXT}
+echo "[LLM Judge] Prompt length: ${PROMPT_LEN} chars"
+
+# Use -p flag for non-interactive mode (copilot CLI ignores stdin).
+# Timeout after 120s to avoid hanging.
+if command -v gtimeout &>/dev/null; then
+  TIMEOUT_CMD="gtimeout 120"
+elif command -v timeout &>/dev/null; then
+  TIMEOUT_CMD="timeout 120"
+else
+  TIMEOUT_CMD=""
+fi
+
+$TIMEOUT_CMD copilot \
+  -p "$PROMPT_TEXT" \
   --model "$MODEL" \
   --allow-all \
   --silent \
-  > "$_RAW_TMP" 2>/dev/null || true
+  > "$_RAW_TMP" 2>"$_ERR_TMP" || true
+
+rm -f "$_PROMPT_TMP"
+
+# Log errors if any
+if [[ -s "$_ERR_TMP" ]]; then
+  echo "[LLM Judge] stderr from copilot:" >&2
+  head -5 "$_ERR_TMP" >&2
+fi
+rm -f "$_ERR_TMP"
+
+RAW_SIZE=$(wc -c < "$_RAW_TMP" | tr -d ' ')
+echo "[LLM Judge] Raw response size: ${RAW_SIZE} bytes"
 
 # Parse combined JSON and write llm_score.json
 export _LLM_RAW_FILE="$_RAW_TMP"

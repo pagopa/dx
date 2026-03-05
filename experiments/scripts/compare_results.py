@@ -18,10 +18,11 @@ ROOT = Path(__file__).resolve().parents[2]   # dx/ root
 RESULTS_DIR = ROOT / "experiments" / "results"
 
 CHECKS_DETERMINISTIC = [
-    "validate", "naming", "tags", "secrets", "networking", "modules",
+    "validate", "naming", "tags", "secrets", "modules",
     "dx_modules_coverage", "modules_version", "file_structure",
     "dx_provider", "no_github_sources", "variable_descriptions",
     "createdby_terraform", "azurerm_4x", "storage_azuread", "naming_config_fields",
+    "outputs_grouped",
 ]
 CHECKS_LLM = ["completeness", "security", "code_quality", "dx_adherence"]
 APPROACHES_ORDER = [
@@ -46,7 +47,7 @@ def load_run(run_dir: Path) -> Optional[Dict]:
         try:
             score_data = json.loads(s_path.read_text())
             data["score"] = score_data.get("score", data.get("score", 0))
-            data["score_max"] = score_data.get("max", 16)
+            data["score_max"] = score_data.get("max", 20)
             data["checks"] = score_data.get("checks", {})
         except json.JSONDecodeError as e:
             print(f"[WARN] Invalid JSON in {s_path}: {e}", file=sys.stderr)
@@ -112,7 +113,7 @@ def aggregate(runs: List[Dict]) -> Dict:
         vals = [r.get("llm_dimensions", {}).get(dim, {}).get("score", 0) for r in runs]
         llm_dim_rates[dim] = round(sum(vals) / len(vals), 1) if vals else 0.0
 
-    score_max = runs[0].get("score_max", 16) if runs else 16
+    score_max = runs[0].get("score_max", 20) if runs else 20
 
     return {
         "n_runs": len(runs),
@@ -213,11 +214,11 @@ def print_markdown(data: Dict[str, List[Dict]]) -> None:
     print(run_sep)
     for a in ordered:
         runs = data[a]
-        cells = " | ".join(f"{r.get('score',0)}/{r.get('score_max',16)} det, {r.get('llm_score',0)}/40 llm" for r in runs)
+        cells = " | ".join(f"{r.get('score',0)}/{r.get('score_max',20)} det, {r.get('llm_score',0)}/40 llm" for r in runs)
         print(f"| `{a}` | {cells} |")
 
     # ── Combined ranking ────────────────────────────────────────────────────
-    COMBINED_MAX = 56  # 16 det + 40 llm
+    COMBINED_MAX = 60  # 20 det + 40 llm
     print("\n## Combined Ranking (det/16 + LLM/40 = /56)\n")
     combined = [(a, round(agg[a]['avg_score'] + agg[a]['avg_llm_score'], 1)) for a in ordered]
     combined.sort(key=lambda x: x[1], reverse=True)

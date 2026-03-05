@@ -16,8 +16,11 @@ Delega al subagent il compito di raccogliere:
 1. Code style e struttura cartelle DX (da `https://api.dx.pagopa.it/search` o `fetch_webpage`)
 2. Naming convention (`provider::dx::resource_name`) e provider `pagopa-dx/azure`
 3. Elenco tag obbligatori (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
-4. Moduli disponibili in `pagopa-dx/*` nel Terraform Registry per: Function App, Storage Account, Cosmos DB
-5. Versioni più recenti dei moduli (usa `get_latest_module_version` o the Registry API)
+4. **Lista completa di TUTTI i moduli disponibili** nel namespace `pagopa-dx` del Terraform Registry. Il subagent deve:
+   - Chiamare `search_modules(moduleQuery="pagopa-dx")` (se MCP disponibile) oppure `GET https://registry.terraform.io/v1/modules/search?namespace=pagopa-dx&limit=50`
+   - Restituire la lista completa con nome modulo e descrizione
+   - Per ogni modulo rilevante al task dell'utente, recuperare inputs e versione con `get_module_details` / `get_latest_module_version`
+5. Versioni più recenti dei moduli trovati al punto 4
 6. Gestione segreti con Key Vault references
 7. Pattern di networking (`dx_available_subnet_cidr`)
 
@@ -27,6 +30,8 @@ Istruisci il subagent a restituire un report strutturato con le informazioni rac
 **Step 2 — Integra i risultati**
 
 Usa le informazioni restituite dal subagent per generare il codice Terraform. NON inventare dettagli non trovati dal subagent; se mancano, documentalo nel README con `<!-- subagent-gap: ... -->`.
+
+**Module-first rule**: prima di scrivere qualsiasi blocco `resource`, verifica nella lista moduli restituita dal subagent se esiste un modulo `pagopa-dx/*` per quella risorsa. Il namespace copre molti tipi di risorse: role assignments, service bus, event hub, CDN, API management, container apps, ecc. **Usa il modulo se esiste.** Usa risorse raw solo come fallback.
 
 **Step 3 — Genera il codice**
 

@@ -3,6 +3,13 @@
 registry_check.py <tf_file>
 Checks DX module coverage and version pins against the Terraform Registry.
 Outputs a single tab-separated line: coverage module_version coverage_detail version_detail
+
+Coverage logic:
+  1. Fetches all pagopa-dx modules from the Terraform Registry.
+  2. Maps each module to the raw azurerm resource(s) it replaces.
+  3. Scans the generated code for raw resources that could be replaced by a DX module.
+  4. Fails if ANY raw resource is used where a DX module exists, or if a required
+     service (Function App, Storage, Cosmos) is missing entirely.
 """
 import sys, re, json, urllib.request
 
@@ -24,23 +31,41 @@ except Exception:
         "azure-postgres-server": "2.0.0",
         "azure-container-app":   "1.0.0",
         "azure-role-assignments": "1.0.0",
+        "azure-event-hub":       "1.0.0",
+        "azure-service-bus-namespace": "1.0.0",
+        "azure-api-management":  "1.0.0",
+        "azure-cdn":             "1.0.0",
+        "azure-app-configuration": "1.0.0",
     }
 
-# ── Map DX module slug → raw azurerm resource pattern ─────────────────────
+# ── Map DX module slug → raw azurerm resource pattern(s) ──────────────────
+# Each entry maps a DX module name to a regex matching the raw azurerm
+# resource(s) it replaces. If a raw resource matches AND the corresponding
+# DX module is available in the registry, it's a coverage miss.
 DX_TO_RAW = {
-    "azure-function-app":    r'resource\s+"azurerm_(linux|windows)_?function_app"',
-    "azure-storage-account": r'resource\s+"azurerm_storage_account"',
-    "azure-cosmos-account":  r'resource\s+"azurerm_cosmosdb_account"',
-    "azure-app-service":     r'resource\s+"azurerm_(linux|windows)_web_app"',
-    "azure-postgres-server": r'resource\s+"azurerm_postgresql_flexible_server"',
-    "azure-container-app":   r'resource\s+"azurerm_container_app"',
+    "azure-function-app":          r'resource\s+"azurerm_linux_function_app"',
+    "azure-function-app-exposed":  r'resource\s+"azurerm_linux_function_app"',
+    "azure-storage-account":       r'resource\s+"azurerm_storage_account"',
+    "azure-cosmos-account":        r'resource\s+"azurerm_cosmosdb_account"',
+    "azure-app-service":           r'resource\s+"azurerm_linux_web_app"',
+    "azure-app-service-exposed":   r'resource\s+"azurerm_linux_web_app"',
+    "azure-postgres-server":       r'resource\s+"azurerm_postgresql_flexible_server"',
+    "azure-container-app":         r'resource\s+"azurerm_container_app"',
+    "azure-role-assignments":      r'resource\s+"azurerm_role_assignment"',
+    "azure-event-hub":             r'resource\s+"azurerm_eventhub(_namespace)?"',
+    "azure-service-bus-namespace": r'resource\s+"azurerm_servicebus_namespace"',
+    "azure-api-management":        r'resource\s+"azurerm_api_management"',
+    "azure-cdn":                   r'resource\s+"azurerm_(cdn_frontdoor_profile|cdn_endpoint)"',
+    "azure-app-configuration":     r'resource\s+"azurerm_app_configuration"',
 }
 
-# ── Task-required services ─────────────────────────────────────────────────
+# ── Task-required services (must be present in generated code) ─────────────
 REQUIRED = ["azure-function-app", "azure-storage-account", "azure-cosmos-account"]
 
 # ── Coverage check ─────────────────────────────────────────────────────────
 missing_coverage = []
+
+# 1. Check required services are present (via DX module, not raw)
 for mod in REQUIRED:
     has_dx  = bool(re.search(rf'source\s*=\s*"pagopa-dx/{mod}', tf))
     raw_pat = DX_TO_RAW.get(mod)
@@ -51,6 +76,17 @@ for mod in REQUIRED:
         missing_coverage.append(f"{mod} (raw azurerm instead of DX module)")
     else:
         missing_coverage.append(f"{mod} (not implemented)")
+
+# 2. Check ALL raw resources: flag any that have a DX module available
+for mod_name, raw_pattern in DX_TO_RAW.items():
+    if mod_name in REQUIRED:
+        continue  # already checked above
+    if mod_name not in registry_modules:
+        continue  # module not in registry, skip
+    has_dx  = bool(re.search(rf'source\s*=\s*"pagopa-dx/{mod_name}', tf))
+    has_raw = bool(re.search(raw_pattern, tf))
+    if has_raw and not has_dx:
+        missing_coverage.append(f"{mod_name} (raw azurerm used, DX module available)")
 
 coverage = "true" if not missing_coverage else "false"
 coverage_detail = "all required services use DX modules" if not missing_coverage \

@@ -22,22 +22,36 @@ pagopa_query_documentation(query="Key Vault references AppSettings secrets")
 pagopa_query_documentation(query="dx_available_subnet_cidr networking subnet")
 ```
 
-### 2. Terraform Registry (server `terraform-mcp-server`)
+### 2. Terraform Registry — Module-first search (server `terraform-mcp-server`)
 
-Usa gli strumenti del server `terraform-mcp-server` per i moduli DX:
+**CRITICAL — Before writing ANY `resource` block**, search whether a `pagopa-dx/*` module wraps that resource type.
 
-```
-search_modules(moduleQuery="pagopa-dx azure-function-app")
-search_modules(moduleQuery="pagopa-dx azure-storage-account")
-search_modules(moduleQuery="pagopa-dx azure-cosmos-account")
-get_latest_module_version(namespace="pagopa-dx", module="azure-function-app", provider="azurerm")
-```
-
-Per ogni modulo trovato, recupera inputs, outputs e usage examples:
+**Step 1 — List all available modules** (do this once at the start):
 
 ```
-get_module_details(moduleID="pagopa-dx/azure-function-app/azurerm/<versione>")
+search_modules(moduleQuery="pagopa-dx")
 ```
+
+This returns the full catalogue of DX modules. Scan the results to build a mental map of which resource types are covered.
+
+**Step 2 — For each resource you plan to create**, check if the catalogue contains a matching module. Examples:
+
+- `azurerm_role_assignment` → look for `azure-role-assignments`
+- `azurerm_cosmosdb_account` → look for `azure-cosmos-account`
+- `azurerm_storage_account` → look for `azure-storage-account`
+- `azurerm_eventhub_namespace` → look for `azure-event-hub`
+- `azurerm_servicebus_namespace` → look for `azure-service-bus-namespace`
+
+**Step 3 — If a matching module exists**, retrieve its details and latest version:
+
+```
+get_module_details(moduleID="pagopa-dx/<module>/azurerm/<version>")
+get_latest_module_version(namespace="pagopa-dx", module="<module>", provider="azurerm")
+```
+
+Use the module instead of raw resources. Pin the version with `~> major.minor`.
+
+**Step 4 — Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
 
 ### 3. Provider DX
 

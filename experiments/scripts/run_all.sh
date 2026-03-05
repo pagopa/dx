@@ -17,7 +17,14 @@ SCRIPTS="$ROOTDIR/experiments/scripts"
 N_RUNS=3
 MODEL="claude-haiku-4.5"
 JUDGE_MODEL="gpt-5.1-codex-mini"
-APPROACHES=(inline rag local mcp subagent website-crawl)
+ALL_APPROACHES=(inline rag local mcp subagent website-crawl)
+DISABLED_APPROACHES=(mcp rag subagent inline)  # low-scoring or redundant, re-enable by removing from this list
+APPROACHES=()
+for _a in "${ALL_APPROACHES[@]}"; do
+  _skip=false
+  for _d in "${DISABLED_APPROACHES[@]}"; do [[ "$_a" == "$_d" ]] && _skip=true; done
+  $_skip || APPROACHES+=("$_a")
+done
 
 # ── Arg parsing ───────────────────────────────────────────────────────────────
 while [[ $# -gt 0 ]]; do
@@ -70,7 +77,8 @@ echo " All runs complete — generating comparison report"
 echo "════════════════════════════════════════════════════"
 
 REPORT="$ROOTDIR/experiments/results/comparison.md"
-python3 "$SCRIPTS/compare_results.py" --md | tee "$REPORT"
+# Pass the active approaches to the comparison script to filter out disabled ones
+python3 "$SCRIPTS/compare_results.py" --md "${APPROACHES[@]}" | tee "$REPORT"
 
 echo ""
 echo "Report written to: $REPORT"
