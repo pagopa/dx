@@ -83,7 +83,7 @@ This causes:
 ❌ **Over-nesting resources** - Multiple resources stuffed in one module:
 
 ```
-infra/resources/prod/_modules/
+infra/resources/_modules/
 └── backend/
     ├── main.tf         # Has: Function 1, Function 2, Function 3, Storage 1, Storage 2, + all IAM
     ├── variables.tf
@@ -97,7 +97,7 @@ This still causes the same problems, just at a smaller scale.
 ✅ **One module per service** - Each module owns the resources for one service:
 
 ```
-infra/resources/prod/_modules/
+infra/resources/_modules/
 ├── apim/               # API Management: instance + policies + private endpoint
 │   ├── main.tf
 │   ├── variables.tf
@@ -147,27 +147,28 @@ Local modules provide several benefits:
 ### Module Organization Example
 
 ```
-infra/resources/prod/
-├── locals.tf              # Environment configuration (no variables!)
-├── providers.tf           # Provider and backend configuration
-├── data.tf                # Shared data sources
-├── main.tf                # Module instantiations
-├── outputs.tf             # Root module outputs
-└── _modules/
-    ├── apim/              # API Management service
-    │   ├── main.tf
-    │   ├── variables.tf   # Module inputs
-    │   └── outputs.tf
-    ├── func_processor/    # Data Processor service (Function App + Storage)
-    │   ├── main.tf
-    │   ├── variables.tf
-    │   ├── iam.tf         # IAM permissions for this module
-    │   └── outputs.tf
-    └── func_notifier/     # Message Notifier service (Function App + IAM)
-        ├── main.tf
-        ├── variables.tf
-        ├── iam.tf
-        └── outputs.tf
+infra/resources/
+├── _modules/
+│   ├── apim/              # API Management service
+│   │   ├── main.tf
+│   │   ├── variables.tf   # Module inputs
+│   │   └── outputs.tf
+│   ├── func_processor/    # Data Processor service (Function App + Storage)
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── iam.tf         # IAM permissions for this module
+│   │   └── outputs.tf
+│   └── func_notifier/     # Message Notifier service (Function App + IAM)
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── iam.tf
+│       └── outputs.tf
+└── prod/
+    ├── locals.tf              # Environment configuration (no variables!)
+    ├── providers.tf           # Provider and backend configuration
+    ├── data.tf                # Shared data sources
+    ├── main.tf                # Module instantiations
+    └── outputs.tf             # Root module outputs
 ```
 
 ### Root Module: Use Locals and Data Sources Only
@@ -240,7 +241,7 @@ data "azurerm_key_vault" "main" {
 ```hcl title="infra/resources/prod/main.tf"
 # Compose modules using locals and data sources
 module "apim" {
-  source = "./_modules/apim"
+  source = "../_modules/apim"
 
   environment         = local.environment
   tags                = local.tags
@@ -249,7 +250,7 @@ module "apim" {
 }
 
 module "func_processor" {
-  source = "./_modules/func_processor"
+  source = "../_modules/func_processor"
 
   environment         = local.environment
   tags                = local.tags
@@ -261,7 +262,7 @@ module "func_processor" {
 }
 
 module "func_notifier" {
-  source = "./_modules/func_notifier"
+  source = "../_modules/func_notifier"
 
   environment         = local.environment
   tags                = local.tags
@@ -276,7 +277,7 @@ module "func_notifier" {
 Local modules receive their configuration through variables, making them
 reusable and testable:
 
-```hcl title="infra/resources/prod/_modules/func_processor/variables.tf"
+```hcl title="infra/resources/_modules/func_processor/variables.tf"
 variable "environment" {
   type = object({
     prefix          = string
@@ -323,7 +324,7 @@ variable "apim_id" {
 }
 ```
 
-```hcl title="infra/resources/prod/_modules/func_processor/main.tf"
+```hcl title="infra/resources/_modules/func_processor/main.tf"
 locals {
   naming_config = {
     prefix          = var.environment.prefix
@@ -337,7 +338,8 @@ locals {
 
 # Function App with its dedicated Storage Account
 module "function_app" {
-  source = "github.com/pagopa/dx//infra/modules/azure_function_app?ref=main"
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 5.0"
 
   environment         = var.environment
   tags                = var.tags
@@ -347,7 +349,8 @@ module "function_app" {
 
 # Storage Account directly related to this function
 module "storage" {
-  source = "github.com/pagopa/dx//infra/modules/azure_storage_account?ref=main"
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.0"
 
   environment         = var.environment
   tags                = var.tags
@@ -356,18 +359,42 @@ module "storage" {
 }
 ```
 
-```hcl title="infra/resources/prod/_modules/func_processor/iam.tf"
-# IAM permissions specific to this function
-resource "azurerm_role_assignment" "function_to_storage" {
-  scope                = module.storage.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = module.function_app.principal_id
+```hcl title="infra/resources/_modules/func_processor/iam.tf"
+# Use the DX module for supported resource types
+module "function_to_storage" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 0.0"
+
+  principal_id    = module.function_app.principal_id
+  subscription_id = var.subscription_id
+
+  storage_blob = [
+    {
+      storage_account_name = module.storage.name
+      resource_group_name  = var.resource_group_name
+      role                 = "writer"
+      description          = "Allow function app to write blobs"
+    }
+  ]
 }
 
-resource "azurerm_role_assignment" "function_to_keyvault" {
-  scope                = var.key_vault_id
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = module.function_app.principal_id
+module "function_to_keyvault" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 0.0"
+
+  principal_id    = module.function_app.principal_id
+  subscription_id = var.subscription_id
+
+  key_vault = [
+    {
+      name                = var.key_vault_name
+      resource_group_name = var.resource_group_name
+      description         = "Allow function app to read secrets"
+      roles = {
+        secrets = "reader"
+      }
+    }
+  ]
 }
 ```
 
@@ -550,9 +577,34 @@ resource "azurerm_subnet" "bad" {
 
 ---
 
-## Standard File Templates
+## Azure
 
-### Standard locals.tf
+The following conventions apply specifically to Azure infrastructure using the
+[DX Azure provider](../azure/using-azure-registry-provider.md) and the PagoPA DX
+Terraform module registry.
+
+### IAM and Role Assignments
+
+Each local module is responsible for the IAM permissions of the resources it
+owns. Define role assignments in a dedicated `iam.tf` file inside the module,
+keeping permissions co-located with the resources they protect. This avoids
+scattered role assignment resources spread across the root module and makes it
+easy to reason about the security boundary of each service.
+
+For supported resource types (Storage Account, Cosmos DB, Key Vault, Event Hub,
+and more), use the
+[`azure-role-assignments`](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest)
+DX module instead of raw `azurerm_role_assignment` resources. The module
+encapsulates the correct role definitions, reduces boilerplate, and enforces
+consistent patterns across all teams. Use bare `azurerm_role_assignment` only
+for resource types not yet covered by the module.
+
+For naming conventions, policies, and best practices around identity and access
+management on Azure, see the [IAM documentation](../azure/iam/index.md).
+
+### Standard File Templates
+
+#### Standard locals.tf
 
 ```hcl title="infra/resources/prod/locals.tf"
 locals {
@@ -582,7 +634,7 @@ See [Required Tags](./required-tags.md) for details on mandatory tag values.
 
 :::
 
-### Standard providers.tf
+#### Standard providers.tf
 
 ```hcl title="infra/resources/prod/providers.tf"
 terraform {
