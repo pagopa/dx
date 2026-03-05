@@ -22,6 +22,24 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Find intent
+      id: find-intent
+      shell: bash
+      env:
+        IS_PUSH: ${{ github.event_name == 'push' }}
+        IS_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/') }}
+      run: |
+        if [[ "$IS_PR" == "true" ]]; then
+          echo "Intent: publish packages and create tags/releases if PR is merged"
+          echo "mode=publish" >> $GITHUB_OUTPUT
+        elif [[ "$IS_PUSH" == "true" ]]; then
+          echo "Intent: create/update PR for version packages"
+          echo "mode=create-pr" >> $GITHUB_OUTPUT
+        else
+          echo "::error:: Unsupported event type: $GITHUB_EVENT_NAME. This action only supports push and pull_request events."
+          exit 1
+        fi
+
     - name: Configure Git user
       shell: bash
       run: |
@@ -29,7 +47,7 @@ runs:
         git config user.email "dx-pagopa-bot@pagopa.it"
 
     - name: Create or update Version Packages PR
-      if: github.event_name == 'push'
+      if: steps.find-intent.outputs.mode == 'create-pr'
       id: create-pr
       shell: bash
       env:
@@ -85,7 +103,7 @@ runs:
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
     - name: Publish packages, create git tags and GitHub releases
-      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
+      if: steps.find-intent.outputs.mode == 'publish'
       id: publish
       shell: bash
       env:
