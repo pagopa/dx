@@ -27,8 +27,13 @@ on:
       environment:
         description: "Deployment environment"
         required: false
-        default: "prod"
+        default: "automation-prod"
         type: string
+      override_github_environment:
+        description: Set a value if GitHub Environment name is different than the TF environment folder
+        type: string
+        required: false
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -38,7 +43,7 @@ jobs:
   renew-certificate:
     name: Create or Renew Certificate
     runs-on: ubuntu-latest
-    environment: automation-${{ inputs.environment }}-cd
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
 
     steps:
       - name: Renew TLS Certificate
