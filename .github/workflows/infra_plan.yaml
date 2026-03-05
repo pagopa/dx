@@ -33,6 +33,11 @@ on:
         type: string
         required: false
         default: ""
+      override_env_dir:
+        description: Override the environment subdirectory appended to base_path. When set, replaces the environment value in the path (e.g. base_path/prod/project instead of base_path/prod).
+        type: string
+        required: false
+        default: ""
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -95,7 +100,7 @@ jobs:
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
       check_to_run: lock_modules
-      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      folder: ${{ inputs.base_path }}/${{ inputs.override_env_dir != '' && inputs.override_env_dir || inputs.environment }}/
       verbose: true
 
   tf_plan:
@@ -128,18 +133,22 @@ jobs:
         env:
           ENVIRONMENT: ${{ inputs.environment }}
           BASE_PATH: ${{ inputs.base_path }}
+          OVERRIDE_ENVIRONMENT_DIR: ${{ inputs.override_env_dir }}
         run: |
           set -euo pipefail
 
           if [ -z "$ENVIRONMENT" ]; then
             echo "Environment must be provided."
             exit 1
-          else
-            # The directory is expected to be in the format
-            #  infra/resources/$ENVIRONMENT
-            # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
           fi
+
+          # Use override_environment_dir if set, otherwise fall back to environment
+          ENV_DIR=${OVERRIDE_ENVIRONMENT_DIR:-$ENVIRONMENT}
+
+          # The directory is expected to be in the format
+          #  infra/resources/$ENVIRONMENT (or infra/resources/$OVERRIDE_ENVIRONMENT_DIR)
+          # Example: infra/resources/prod or infra/resources/prod/project
+          printf "dir=%q/%q" "$BASE_PATH" "$ENV_DIR" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
