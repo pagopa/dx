@@ -25,7 +25,7 @@ jobs:
       csr_common_name: "stategraph.dev.dx.pagopa.it"
       dns_zone: "dev.dx.pagopa.it"
       dns_zone_resource_group: "dx-d-itn-network-rg-01"
-      environment: "dev"
+      environment: "automation-dev"
 
   uat:
     name: "stategraph.uat.dx.pagopa.it"
@@ -37,7 +37,7 @@ jobs:
       csr_common_name: "stategraph.uat.dx.pagopa.it"
       dns_zone: "uat.dx.pagopa.it"
       dns_zone_resource_group: "dx-u-itn-network-rg-01"
-      environment: "uat"
+      environment: "automation-uat"
 
   prod:
     name: stategraph.dx.pagopa.it
@@ -49,4 +49,4 @@ jobs:
       csr_common_name: "stategraph.dx.pagopa.it"
       dns_zone: "dx.pagopa.it"
       dns_zone_resource_group: "dx-p-itn-network-rg-01"
-      environment: "prod"
+      environment: "automation-prod"
