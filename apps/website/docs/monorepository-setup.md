@@ -227,7 +227,7 @@ referenced by the runner module:
 
 1. In PagoPA context, see
    [the documentation](https://pagopa.atlassian.net/wiki/search?text=Creazione%20GithubApp%20configurazione%20repo)
-2. Generate and wonload a private key as exposed in the above link and keep it
+2. Generate and download a private key as exposed in the above link and keep it
    safe, you will need its contents shortly.
 
 #### 2. Retrieve the App ID
