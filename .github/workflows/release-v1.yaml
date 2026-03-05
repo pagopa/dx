@@ -8,11 +8,6 @@ on:
         required: true
         type: string
         default: "app-prod-cd"
-      mode:
-        description: "Release mode for Nx: 'create-pr' to open/update the Version Packages PR, 'publish' to publish packages and create tags. Not used for Changesets."
-        required: false
-        type: string
-        default: ""
     secrets:
       github-token:
         description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
@@ -88,4 +83,3 @@ jobs:
         uses: pagopa/dx/actions/nx-release@feat-add-nx-release-support-test # main
         with:
           github-token: ${{ secrets.github-token }}
-          mode: ${{ inputs.mode }}

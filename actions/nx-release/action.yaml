@@ -10,9 +10,6 @@ inputs:
     description: "Base branch where release flow runs"
     required: false
     default: "main"
-  mode:
-    description: "Release mode: 'create-pr' to create/update the Version Packages PR, 'publish' to publish packages and create tags"
-    required: true
 
 outputs:
   pull-request-number:
@@ -32,7 +29,7 @@ runs:
         git config user.email "dx-pagopa-bot@pagopa.it"
 
     - name: Create or update Version Packages PR
-      if: inputs.mode == 'create-pr'
+      if: github.event_name == 'push'
       id: create-pr
       shell: bash
       env:
@@ -88,7 +85,7 @@ runs:
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
     - name: Publish packages, create git tags and GitHub releases
-      if: inputs.mode == 'publish'
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
       id: publish
       shell: bash
       env:
