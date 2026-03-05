@@ -32,6 +32,11 @@ export const getPayload = (includeInit = false): Payload => {
   if (includeInit) {
     payload.init = {
       cloudAccountsToInitialize: [cloudAccount],
+      runnerAppCredentials: {
+        id: "test-app-id",
+        installationId: "test-installation-id",
+        key: "test-private-key",
+      },
       terraformBackend: {
         cloudAccount,
       },

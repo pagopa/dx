@@ -1,5 +1,18 @@
 # @pagopa/dx-cli
 
+## 0.18.0
+
+### Minor Changes
+
+- f0ce0c9: Init now requires a GitHub App for self-hosted runners
+- 6074052: Add add command to scaffold new components
+
+## 0.17.0
+
+### Minor Changes
+
+- 907253d: Create a function useful to add a Bootstrap Identity to an Azure subscription. This function creates a Pull Request on eng-azure-authorization repository to add the identity.
+
 ## 0.16.3
 
 ### Patch Changes

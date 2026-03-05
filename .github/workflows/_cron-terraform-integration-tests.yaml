@@ -2,7 +2,7 @@ name: Terraform modules integration tests (weekly)
 
 on:
   schedule:
-    - cron: "0 3 * * 1" # Every Monday at 03:00 UTC
+    - cron: "0 3 * * 6" # Every Saturday at 03:00 UTC
   workflow_dispatch:
 
 concurrency:
@@ -20,15 +20,24 @@ jobs:
   terraform-integration-test:
     name: Run Terraform Integration Tests
     runs-on: ubuntu-latest
-    environment: integration-tests
+    environment: automation-dev-cd
     permissions:
       id-token: write
       contents: read
     env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.INTEGRATION_ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
 
     steps:
+      - name: Ensure Slack Webhook is Set
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is not set. Please set the secret."
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0
 
@@ -51,7 +60,24 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Cache Nx
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: .nx
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-cache-
+
       - name: Run Terraform Integration Tests
         timeout-minutes: 120
         run: |
           npx nx run-many --target test:integration
+
+      - name: Notify Slack on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: pagopa/dx/.github/actions/slack-notification@main
+        with:
+          id: "Terraform Integration Tests"
+          title: "*Terraform Integration Tests failed*"
+          text: "One or more integration tests failed in the weekly run. Please check the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details."
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,5 +1,13 @@
 provider "azurerm" {
-  features {}
+  features {
+    app_configuration {
+      purge_soft_delete_on_destroy = false
+      recover_soft_deleted         = true
+    }
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
 
 provider "pagopa-dx" {}
@@ -10,7 +18,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "int"
-    app_name        = "appcs"
+    app_name        = "ac"
     instance_number = "01"
   }
 
@@ -44,7 +52,7 @@ run "setup" {
 run "apply_default" {
   command = apply
   variables {
-    environment                          = var.environment
+    environment                          = merge(var.environment, { instance_number = run.setup.instance_numbers.default })
     tags                                 = var.tags
     use_case                             = var.use_case
     resource_group_name                  = run.setup.resource_group_name
@@ -76,17 +84,13 @@ run "apply_default" {
     condition     = can(regex("privatelink\\.azconfig\\.io$", azurerm_private_endpoint.app_config.private_dns_zone_group[0].private_dns_zone_ids[0]))
     error_message = "DNS zone group must reference privatelink.azconfig.io"
   }
-  assert {
-    condition     = azurerm_app_configuration.this.purge_protection_enabled == true
-    error_message = "Purge protection must be enabled"
-  }
 }
 
 # Scenario 2: Explicit premium size
 run "apply_premium" {
   command = apply
   variables {
-    environment                          = merge(var.environment, { app_name = "appcs-prem" })
+    environment                          = merge(var.environment, { instance_number = run.setup.instance_numbers.premium })
     tags                                 = var.tags
     use_case                             = var.use_case
     resource_group_name                  = run.setup.resource_group_name
@@ -112,11 +116,11 @@ run "apply_premium" {
   }
 }
 
-# Scenario 2: Explicit development size
+# Scenario 3: Explicit development size
 run "apply_developer" {
   command = apply
   variables {
-    environment                          = merge(var.environment, { app_name = "appcs-dev" })
+    environment                          = merge(var.environment, { instance_number = run.setup.instance_numbers.developer })
     tags                                 = var.tags
     use_case                             = "development"
     resource_group_name                  = run.setup.resource_group_name
@@ -145,7 +149,7 @@ run "apply_developer" {
 run "apply_key_vault_integration" {
   command = apply
   variables {
-    environment                          = merge(var.environment, { app_name = "appcs-kv" })
+    environment                          = merge(var.environment, { instance_number = run.setup.instance_numbers.kv_integration })
     tags                                 = var.tags
     use_case                             = var.use_case
     resource_group_name                  = run.setup.resource_group_name

@@ -117,6 +117,8 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TF_HTTP_USERNAME: ${{ secrets.STATEGRAPH_USERNAME }}
+      TF_HTTP_PASSWORD: ${{ secrets.STATEGRAPH_TOKEN }}
 
     steps:
       # Set the directory where the Terraform files are located

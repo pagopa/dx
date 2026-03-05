@@ -19,13 +19,15 @@ terraform {
       source  = "pagopa-dx/aws"
       version = "~> 0.0"
     }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.8"
+    }
   }
 
-  backend "azurerm" {
-    resource_group_name  = "dx-d-itn-tfstate-rg-01"
-    storage_account_name = "dxditntfstatest01"
-    container_name       = "terraform-state"
-    key                  = "dx.core.dev.tfstate"
+  backend "http" {
+    address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/3464191c-439c-4520-8c90-9f49ccfc8944"
   }
 }
 
