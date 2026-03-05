@@ -35,7 +35,8 @@ data "aws_iam_policy_document" "rw_docs_knowledge_base_policy" {
       "bedrock:GetKnowledgeBaseDocuments",
       "bedrock:IngestKnowledgeBaseDocuments",
       "bedrock:DeleteKnowledgeBaseDocuments",
-      "bedrock:ListKnowledgeBases"
+      "bedrock:ListKnowledgeBases",
+      "bedrock:StartIngestionJob"
     ]
     resources = [
       "*",
