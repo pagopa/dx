@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -198,20 +197,6 @@ func extractConfigurationValues(configuration map[string]types.String) configura
 	return config
 }
 
-// validNameOrDomainPattern matches only lowercase alphanumeric characters (no hyphens or special chars)
-var validNameOrDomainPattern = regexp.MustCompile(`^[a-z0-9]+$`)
-
-// validateNameOrDomain checks that a name or domain value contains only alphanumeric characters
-func validateNameOrDomain(field, value string) *function.FuncError {
-	if value == "" {
-		return nil
-	}
-	if !validNameOrDomainPattern.MatchString(value) {
-		return function.NewFuncError(fmt.Sprintf("Invalid %s '%s': must contain only lowercase alphanumeric characters (no hyphens or special characters)", field, value))
-	}
-	return nil
-}
-
 // validatePrefix checks if the prefix length is valid
 func validatePrefix(prefix string) *function.FuncError {
 	if len(prefix) < 2 || len(prefix) > 4 {
@@ -372,16 +357,6 @@ func (f *resourceNameFunction) Run(ctx context.Context, req function.RunRequest,
 	config := extractConfigurationValues(configuration)
 
 	// Validate all inputs
-	if err := validateNameOrDomain("domain", config.domain); err != nil {
-		resp.Error = err
-		return
-	}
-
-	if err := validateNameOrDomain("name", config.name); err != nil {
-		resp.Error = err
-		return
-	}
-
 	if err := validatePrefix(config.prefix); err != nil {
 		resp.Error = err
 		return
