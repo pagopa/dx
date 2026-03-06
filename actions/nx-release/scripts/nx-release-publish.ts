@@ -1,16 +1,19 @@
 /**
- * Scans all tracked package manifests in the repo, creates annotated git tags
- * for newly published versions, pushes them to origin, and creates the
- * corresponding GitHub releases with changelog notes.
+ * Scans all tracked package manifests (package.json and pom.xml) in the repo,
+ * creates annotated git tags for newly published versions, pushes them to origin,
+ * and creates the corresponding GitHub releases with changelog notes.
  *
- * Source of truth for public npm packages: the npm registry.
+ * Source of truth for public packages:
+ *   - npm packages: npm registry
+ *   - Maven packages: Maven Central (or configured repository)
  * A tag is created only when the version is confirmed to be present on the
  * registry — this makes the entire flow idempotent across retries.
  *
- * Private packages (private:true or non-npm registry) receive a tag
- * unconditionally because they are never published to the public registry.
+ * Private packages (npm: private:true or non-npm registry; Maven: custom
+ * distributionManagement) receive a tag unconditionally because they are never
+ * published to the public registry.
  *
- * The `npm publish` step is run separately by action.yaml before this script
+ * The publish step is run separately by action.yaml before this script
  * is invoked. This script only handles git tagging and GitHub releases.
  *
  * Expected environment variables:
@@ -29,6 +32,7 @@ interface ReleaseTarget {
   name: string;
   registry?: string;
   sourceFile: string;
+  type: "maven" | "npm";
   version: string;
 }
 
@@ -116,7 +120,9 @@ async function extractTargets(
 
     const target = file.endsWith("package.json")
       ? await parsePackageJson(file)
-      : null;
+      : file.endsWith("pom.xml")
+        ? await parsePomXml(file)
+        : null;
 
     if (!target) {
       continue;
@@ -134,6 +140,32 @@ async function extractTargets(
   return targets;
 }
 
+/**
+ * Checks if a specific Maven version is published by attempting to resolve it.
+ */
+async function isMavenVersionPublished(
+  artifactId: string,
+  version: string,
+  registry?: string,
+): Promise<boolean> {
+  try {
+    const args = [
+      "dependency:get",
+      `-Dartifact=${artifactId}:${version}:pom`,
+      "-q",
+    ];
+
+    if (registry) {
+      args.push(`-DremoteRepositories=${registry}`);
+    }
+
+    await execFileAsync("mvn", args, { timeout: 10000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /** Checks whether a registry URL is npm-compatible (public npm/yarn mirrors). */
 function isNpmRegistry(registry: string | undefined): boolean {
   if (!registry) {
@@ -147,12 +179,13 @@ function isNpmRegistry(registry: string | undefined): boolean {
   );
 }
 
-/** Lists tracked package.json files in the repo via `git ls-files`. */
+/** Lists tracked package.json and pom.xml files in the repo via `git ls-files`. */
 async function listManifestFiles(): Promise<string[]> {
   const { stdout } = await execFileAsync("git", [
     "ls-files",
     "--",
     "**/package.json",
+    "**/pom.xml",
   ]);
   return stdout
     .split("\n")
@@ -190,6 +223,57 @@ async function parsePackageJson(path: string): Promise<null | ReleaseTarget> {
       name,
       registry,
       sourceFile: path,
+      type: "npm",
+      version,
+    };
+  } catch (err) {
+    console.warn(`Failed to parse ${path}:`, err);
+    return null;
+  }
+}
+
+/** Parses a Maven pom.xml into an internal release target model. */
+async function parsePomXml(path: string): Promise<null | ReleaseTarget> {
+  try {
+    const xml = await readFile(path, "utf8");
+
+    // Extract artifactId (required)
+    const artifactIdMatch = xml.match(/<artifactId>([^<]+)<\/artifactId>/);
+    const artifactId = artifactIdMatch?.[1]?.trim();
+
+    // Extract version (required)
+    const versionMatch = xml.match(/<version>([^<]+)<\/version>/);
+    const version = versionMatch?.[1]?.trim();
+
+    if (!artifactId || !version) {
+      return null;
+    }
+
+    // Check for distributionManagement to determine if private
+    // If no distributionManagement or points to Maven Central, consider public
+    const hasDistributionManagement = /<distributionManagement>/.test(xml);
+    const pointsToMavenCentral =
+      /repository>.*https?:\/\/(oss\.sonatype\.org|repo1?\.maven\.org|central\.sonatype\.com)/i.test(
+        xml,
+      );
+
+    // Extract repository URL from distributionManagement if present
+    let registry: string | undefined;
+    if (hasDistributionManagement) {
+      const repoUrlMatch = xml.match(
+        /<distributionManagement>[\s\S]*?<repository>[\s\S]*?<url>([^<]+)<\/url>/,
+      );
+      registry = repoUrlMatch?.[1]?.trim();
+    }
+
+    const isPrivate = hasDistributionManagement && !pointsToMavenCentral;
+
+    return {
+      isPrivate,
+      name: artifactId,
+      registry,
+      sourceFile: path,
+      type: "maven",
       version,
     };
   } catch (err) {
@@ -229,16 +313,29 @@ async function readNpmPublishedVersions(
 async function run(): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
 
-  console.log("::notice::Scanning repository for package manifests...");
+  console.log("::group::Scanning repository for package manifests");
   const manifestFiles = await listManifestFiles();
+  const packageJsonCount = manifestFiles.filter((f) =>
+    f.endsWith("package.json"),
+  ).length;
+  const pomXmlCount = manifestFiles.filter((f) => f.endsWith("pom.xml")).length;
   console.log(
-    `::notice::Found ${manifestFiles.length} package.json files in repository`,
+    `Found ${manifestFiles.length} manifest files in repository (${packageJsonCount} package.json, ${pomXmlCount} pom.xml)`,
   );
+  if (manifestFiles.length > 0 && manifestFiles.length <= 10) {
+    console.log(`Files: ${manifestFiles.join(", ")}`);
+  }
+  console.log("::endgroup::");
 
+  console.log("::group::Extracting release targets");
   const targets = await extractTargets(manifestFiles);
-  console.log(
-    `::notice::Extracted ${targets.length} release targets: ${targets.map((t) => `${t.name}@${t.version}`).join(", ")}`,
-  );
+  console.log(`Extracted ${targets.length} release targets`);
+  for (const target of targets) {
+    console.log(
+      `  - ${target.name}@${target.version} (type: ${target.type}, private: ${target.isPrivate}, registry: ${target.registry || "default"})`,
+    );
+  }
+  console.log("::endgroup::");
 
   const createdTags: string[] = [];
 
@@ -294,31 +391,56 @@ async function run(): Promise<void> {
 async function shouldCreateTag(target: ReleaseTarget): Promise<boolean> {
   if (target.isPrivate) {
     console.log(
-      `::notice::${target.name}@${target.version} is private, will create tag`,
+      `::notice::${target.name}@${target.version} (${target.type}) is private, will create tag`,
     );
     return true;
   }
 
-  console.log(
-    `::notice::Checking npm registry for ${target.name}@${target.version}...`,
-  );
-  const publishedVersions = await readNpmPublishedVersions(
-    target.name,
-    target.registry,
-  );
+  if (target.type === "npm") {
+    console.log(
+      `::notice::Checking npm registry for ${target.name}@${target.version}...`,
+    );
+    const publishedVersions = await readNpmPublishedVersions(
+      target.name,
+      target.registry,
+    );
 
-  const isPublished = publishedVersions.includes(target.version);
-  if (isPublished) {
+    const isPublished = publishedVersions.includes(target.version);
+    if (isPublished) {
+      console.log(
+        `::notice::${target.name}@${target.version} confirmed on npm registry, will create tag`,
+      );
+    } else {
+      console.log(
+        `::warning::${target.name}@${target.version} not found on npm registry (found versions: ${publishedVersions.slice(-3).join(", ")}), skipping tag`,
+      );
+    }
+
+    return isPublished;
+  } else if (target.type === "maven") {
     console.log(
-      `::notice::${target.name}@${target.version} confirmed on npm registry, will create tag`,
+      `::notice::Checking Maven repository for ${target.name}@${target.version}...`,
     );
-  } else {
-    console.log(
-      `::warning::${target.name}@${target.version} not found on npm registry (found versions: ${publishedVersions.slice(-3).join(", ")}), skipping tag`,
+    const isPublished = await isMavenVersionPublished(
+      target.name,
+      target.version,
+      target.registry,
     );
+
+    if (isPublished) {
+      console.log(
+        `::notice::${target.name}@${target.version} confirmed on Maven repository, will create tag`,
+      );
+    } else {
+      console.log(
+        `::warning::${target.name}@${target.version} not found on Maven repository, skipping tag`,
+      );
+    }
+
+    return isPublished;
   }
 
-  return isPublished;
+  return false;
 }
 
 /** Runs a command and streams its output to the current terminal. */
