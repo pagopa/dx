@@ -1,5 +1,12 @@
 # docs
 
+## 0.12.6
+
+### Patch Changes
+
+- 107a7ef: Fix documentation about terraform local modules location in the
+  filesystem
+
 ## 0.12.5
 
 ### Patch Changes
