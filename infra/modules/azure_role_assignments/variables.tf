@@ -1,5 +1,5 @@
 variable "principal_id" {
-  description = "The ID of the principal to which assign roles. It can be a managed identity."
+  description = "The ID of the principal (user, group, service principal, or managed identity) to which roles will be assigned. For managed identities, use the principal_id output from the identity resource."
   type        = string
 }
 
@@ -9,7 +9,31 @@ variable "subscription_id" {
 }
 
 variable "cosmos" {
-  description = "A list of role assignments for Azure Cosmos DB accounts, specifying the account name, resource group, role, and optional database and collections. Defaults to all databases and collections if not specified."
+  description = <<EOT
+List of role assignments for Azure Cosmos DB accounts.
+
+REQUIRED FIELDS:
+- account_name: Name of the Cosmos DB account
+- resource_group_name: Resource group containing the account
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- database: Database name (default: "*" for all databases)
+- collections: List of collection names (default: ["*"] for all collections)
+
+EXAMPLE:
+cosmos = [
+  {
+    account_name        = "my-cosmos-account"
+    resource_group_name = "my-rg"
+    role                = "reader"
+    description         = "Read access to orders database"
+    database            = "orders"
+    collections         = ["orders-collection"]
+  }
+]
+EOT
   type = list(object({
     account_name        = string
     resource_group_name = string
@@ -23,7 +47,27 @@ variable "cosmos" {
 }
 
 variable "redis" {
-  description = "A list of role assignments for Azure Redis Cache instances, specifying the cache name, resource group, role, username, and description."
+  description = <<EOT
+List of role assignments for Azure Cache for Redis instances.
+
+REQUIRED FIELDS:
+- cache_name: Name of the Redis cache instance
+- resource_group_name: Resource group containing the cache
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- username: Redis username for the access policy (used in Redis ACLs)
+- description: Human-readable description of the role assignment purpose
+
+EXAMPLE:
+redis = [
+  {
+    cache_name          = "my-redis-cache"
+    resource_group_name = "my-rg"
+    role                = "writer"
+    username            = "app-user"
+    description         = "Write access for application cache operations"
+  }
+]
+EOT
   type = list(object({
     cache_name          = string
     resource_group_name = string
@@ -36,7 +80,39 @@ variable "redis" {
 }
 
 variable "key_vault" {
-  description = "A list of role assignments for Azure Key Vaults, including optional RBAC support and role overrides for secrets, certificates, and keys. Indicates if the Key Vault has RBAC enabled and allows overriding roles for specific functionalities."
+  description = <<EOT
+List of role assignments for Azure Key Vault instances.
+
+REQUIRED FIELDS:
+- name: Name of the Key Vault
+- resource_group_name: Resource group containing the Key Vault
+- description: Human-readable description of the role assignment purpose
+- roles: Object specifying base permissions for each Key Vault functionality:
+  - secrets: Role for secrets - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
+  - certificates: Role for certificates - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
+  - keys: Role for keys - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
+
+OPTIONAL FIELDS:
+- has_rbac_support: Set to true if Key Vault uses Azure RBAC for authorization (default: null, auto-detected)
+- override_roles: Advanced - list of Azure built-in role definition names to assign directly, bypassing the abstracted "reader"/"writer"/"owner" mapping. Use only when specific Azure roles are needed.
+  - secrets: List of role definition names for secrets (e.g., ["Key Vault Secrets Officer"])
+  - certificates: List of role definition names for certificates
+  - keys: List of role definition names for keys
+
+EXAMPLE:
+key_vault = [
+  {
+    name                = "my-key-vault"
+    resource_group_name = "my-rg"
+    description         = "Application access to secrets and certificates"
+    roles = {
+      secrets      = "reader"
+      certificates = "reader"
+      keys         = ""
+    }
+  }
+]
+EOT
   type = list(object({
     name                = string
     resource_group_name = string
@@ -63,7 +139,30 @@ variable "key_vault" {
 }
 
 variable "storage_table" {
-  description = "A list of role assignments for Azure Storage Tables, specifying the storage account, resource group, table name, and role. Defaults to all tables if the table name is not specified."
+  description = <<EOT
+List of role assignments for Azure Storage Tables.
+
+REQUIRED FIELDS:
+- storage_account_name: Name of the Storage Account
+- resource_group_name: Resource group containing the Storage Account
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- table_name: Specific table name (default: "*" for all tables)
+- table_resource_manager_id: Azure Resource Manager ID of a specific table (alternative to table_name for granular scope)
+
+EXAMPLE:
+storage_table = [
+  {
+    storage_account_name = "mystorageaccount"
+    resource_group_name  = "my-rg"
+    table_name           = "orders"
+    role                 = "reader"
+    description          = "Read access to orders table"
+  }
+]
+EOT
   type = list(object({
     storage_account_name      = string
     resource_group_name       = string
@@ -77,7 +176,30 @@ variable "storage_table" {
 }
 
 variable "storage_blob" {
-  description = "A list of role assignments for Azure Storage Blobs, specifying the storage account, resource group, container name, and role. Defaults to all containers if the container name is not specified."
+  description = <<EOT
+List of role assignments for Azure Storage Blob containers.
+
+REQUIRED FIELDS:
+- storage_account_name: Name of the Storage Account
+- resource_group_name: Resource group containing the Storage Account
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- container_name: Specific container name (default: "*" for all containers)
+- container_resource_manager_id: Azure Resource Manager ID of a specific container (alternative to container_name for granular scope)
+
+EXAMPLE:
+storage_blob = [
+  {
+    storage_account_name = "mystorageaccount"
+    resource_group_name  = "my-rg"
+    container_name       = "documents"
+    role                 = "writer"
+    description          = "Write access to documents container"
+  }
+]
+EOT
   type = list(object({
     storage_account_name          = string
     resource_group_name           = string
@@ -91,7 +213,30 @@ variable "storage_blob" {
 }
 
 variable "storage_queue" {
-  description = "A list of role assignments for Azure Storage Queues, specifying the storage account, resource group, queue name, and role. Defaults to all queues if the queue name is not specified."
+  description = <<EOT
+List of role assignments for Azure Storage Queues.
+
+REQUIRED FIELDS:
+- storage_account_name: Name of the Storage Account
+- resource_group_name: Resource group containing the Storage Account
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- queue_name: Specific queue name (default: "*" for all queues)
+- queue_resource_manager_id: Azure Resource Manager ID of a specific queue (alternative to queue_name for granular scope)
+
+EXAMPLE:
+storage_queue = [
+  {
+    storage_account_name = "mystorageaccount"
+    resource_group_name  = "my-rg"
+    queue_name           = "orders-queue"
+    role                 = "writer"
+    description          = "Write access to orders queue"
+  }
+]
+EOT
   type = list(object({
     storage_account_name      = string
     resource_group_name       = string
@@ -105,7 +250,29 @@ variable "storage_queue" {
 }
 
 variable "event_hub" {
-  description = "A list of role assignments for Azure Event Hubs, specifying the namespace, resource group, event hub names, and role. Defaults to all event hubs if the event hub names are not specified."
+  description = <<EOT
+List of role assignments for Azure Event Hubs.
+
+REQUIRED FIELDS:
+- namespace_name: Name of the Event Hubs namespace
+- resource_group_name: Resource group containing the namespace
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- event_hub_names: List of specific Event Hub names within the namespace (default: ["*"] for all Event Hubs)
+
+EXAMPLE:
+event_hub = [
+  {
+    namespace_name      = "my-eventhub-ns"
+    resource_group_name = "my-rg"
+    event_hub_names     = ["orders-events", "user-events"]
+    role                = "writer"
+    description         = "Send events to orders and user hubs"
+  }
+]
+EOT
   type = list(object({
     namespace_name      = string
     resource_group_name = string
@@ -118,7 +285,25 @@ variable "event_hub" {
 }
 
 variable "apim" {
-  description = "A list of role assignments for Azure API Management (APIM) instances, specifying the APIM name, resource group, and role."
+  description = <<EOT
+List of role assignments for Azure API Management (APIM) instances.
+
+REQUIRED FIELDS:
+- name: Name of the API Management instance
+- resource_group_name: Resource group containing the APIM instance
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+EXAMPLE:
+apim = [
+  {
+    name                = "my-apim-instance"
+    resource_group_name = "my-rg"
+    role                = "reader"
+    description         = "Read access for monitoring and diagnostics"
+  }
+]
+EOT
   type = list(object({
     name                = string
     resource_group_name = string
@@ -131,21 +316,40 @@ variable "apim" {
 
 variable "service_bus" {
   description = <<EOT
-  A list of role assignments for Azure Service Bus, specifying the namespace, resource group, and role.
-  For queues and topics, list the names. For subscriptions, pair the related topic and the subscription in a map object.
+List of role assignments for Azure Service Bus.
 
-  Example for `subscriptions` map object:
+REQUIRED FIELDS:
+- namespace_name: Name of the Service Bus namespace
+- resource_group_name: Resource group containing the namespace
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+OPTIONAL FIELDS:
+- queue_names: List of specific queue names (default: [] for namespace-level access only)
+- topic_names: List of specific topic names (default: [] for namespace-level access only)
+- subscriptions: Map of topic names to lists of subscription names. Each key is a topic name, each value is a list of subscription names under that topic.
+
+EXAMPLE:
+service_bus = [
   {
-    topic1 = "subscription1",
-    topic2 = "subscription2"
+    namespace_name      = "my-servicebus-ns"
+    resource_group_name = "my-rg"
+    queue_names         = ["orders-queue"]
+    topic_names         = ["events-topic"]
+    subscriptions = {
+      "events-topic" = ["processor-subscription", "logger-subscription"]
+    }
+    role                = "writer"
+    description         = "Send messages to queues and topics"
   }
-  EOT
+]
+EOT
   type = list(object({
     namespace_name      = string
     resource_group_name = string
     queue_names         = optional(list(string), [])
     topic_names         = optional(list(string), [])
-    subscriptions       = optional(map(list(string)), {})
+    subscription_names  = optional(map(list(string)), {})
     role                = string
     description         = string
   }))
@@ -154,7 +358,25 @@ variable "service_bus" {
 }
 
 variable "app_config" {
-  description = "A list of role assignments for Azure App Configuration stores, specifying the configuration store name, resource group, and role."
+  description = <<EOT
+List of role assignments for Azure App Configuration stores.
+
+REQUIRED FIELDS:
+- name: Name of the App Configuration store
+- resource_group_name: Resource group containing the App Configuration store
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+EXAMPLE:
+app_config = [
+  {
+    name                = "my-app-config"
+    resource_group_name = "my-rg"
+    role                = "reader"
+    description         = "Read configuration values for application"
+  }
+]
+EOT
   type = list(object({
     name                = string
     resource_group_name = string
