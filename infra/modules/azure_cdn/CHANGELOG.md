@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.5.2
+
+### Patch Changes
+
+- d134fb1: This fix avoids cases where a pre-validated custom domain results in an empty `validation_token`, which would cause the plan or apply to fail, by adding a check that inserts a dummy value instead.
+
 ## 0.5.1
 
 ### Patch Changes
