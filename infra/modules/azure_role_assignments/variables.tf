@@ -21,18 +21,6 @@ REQUIRED FIELDS:
 OPTIONAL FIELDS:
 - database: Database name (default: "*" for all databases)
 - collections: List of collection names (default: ["*"] for all collections)
-
-EXAMPLE:
-cosmos = [
-  {
-    account_name        = "my-cosmos-account"
-    resource_group_name = "my-rg"
-    role                = "reader"
-    description         = "Read access to orders database"
-    database            = "orders"
-    collections         = ["orders-collection"]
-  }
-]
 EOT
   type = list(object({
     account_name        = string
@@ -56,17 +44,6 @@ REQUIRED FIELDS:
 - role: Permission level - MUST be one of: "reader", "writer", "owner"
 - username: Redis username for the access policy (used in Redis ACLs)
 - description: Human-readable description of the role assignment purpose
-
-EXAMPLE:
-redis = [
-  {
-    cache_name          = "my-redis-cache"
-    resource_group_name = "my-rg"
-    role                = "writer"
-    username            = "app-user"
-    description         = "Write access for application cache operations"
-  }
-]
 EOT
   type = list(object({
     cache_name          = string
@@ -95,21 +72,6 @@ REQUIRED FIELDS:
 OPTIONAL FIELDS:
 - has_rbac_support: Set to true if Key Vault uses Azure RBAC for authorization (default: true, access policies will be created for vaults without RBAC support otherwise, role assignments for vaults with RBAC support)
 - override_roles: Advanced - list of Access Policies permissions to override module-defined ones. Has no effect when has_rbac_support is true.
-
-EXAMPLE:
-key_vault = [
-  {
-    name                = "my-key-vault"
-    resource_group_name = "my-rg"
-    description         = "Application access to secrets and certificates"
-
-    # This assignment will grant "reader" access to secrets and certificates, no access to keys, using RBAC role assignments or access policies (if not).
-    roles = {
-      secrets      = "reader"
-      certificates = "reader"
-    }
-  }
-]
 EOT
   type = list(object({
     name                = string
@@ -149,17 +111,6 @@ REQUIRED FIELDS:
 OPTIONAL FIELDS:
 - table_name: Specific table name (default: "*" for all tables)
 - table_resource_manager_id: Azure Resource Manager ID of a specific table (alternative to table_name for granular scope)
-
-EXAMPLE:
-storage_table = [
-  {
-    storage_account_name = "mystorageaccount"
-    resource_group_name  = "my-rg"
-    table_name           = "orders"
-    role                 = "reader"
-    description          = "Read access to orders table"
-  }
-]
 EOT
   type = list(object({
     storage_account_name      = string
@@ -186,17 +137,6 @@ REQUIRED FIELDS:
 OPTIONAL FIELDS:
 - container_name: Specific container name (default: "*" for all containers)
 - container_resource_manager_id: Azure Resource Manager ID of a specific container (alternative to container_name for granular scope)
-
-EXAMPLE:
-storage_blob = [
-  {
-    storage_account_name = "mystorageaccount"
-    resource_group_name  = "my-rg"
-    container_name       = "documents"
-    role                 = "writer"
-    description          = "Write access to documents container"
-  }
-]
 EOT
   type = list(object({
     storage_account_name          = string
@@ -223,17 +163,6 @@ REQUIRED FIELDS:
 OPTIONAL FIELDS:
 - queue_name: Specific queue name (default: "*" for all queues)
 - queue_resource_manager_id: Azure Resource Manager ID of a specific queue (alternative to queue_name for granular scope)
-
-EXAMPLE:
-storage_queue = [
-  {
-    storage_account_name = "mystorageaccount"
-    resource_group_name  = "my-rg"
-    queue_name           = "orders-queue"
-    role                 = "writer"
-    description          = "Write access to orders queue"
-  }
-]
 EOT
   type = list(object({
     storage_account_name      = string
@@ -259,17 +188,6 @@ REQUIRED FIELDS:
 
 OPTIONAL FIELDS:
 - event_hub_names: List of specific Event Hub names within the namespace (default: ["*"] for all Event Hubs)
-
-EXAMPLE:
-event_hub = [
-  {
-    namespace_name      = "my-eventhub-ns"
-    resource_group_name = "my-rg"
-    event_hub_names     = ["orders-events", "user-events"]
-    role                = "writer"
-    description         = "Send events to orders and user hubs"
-  }
-]
 EOT
   type = list(object({
     namespace_name      = string
@@ -291,16 +209,6 @@ REQUIRED FIELDS:
 - resource_group_name: Resource group containing the APIM instance
 - role: Permission level - MUST be one of: "reader", "writer", "owner"
 - description: Human-readable description of the role assignment purpose
-
-EXAMPLE:
-apim = [
-  {
-    name                = "my-apim-instance"
-    resource_group_name = "my-rg"
-    role                = "reader"
-    description         = "Read access for monitoring and diagnostics"
-  }
-]
 EOT
   type = list(object({
     name                = string
@@ -326,21 +234,6 @@ OPTIONAL FIELDS:
 - queue_names: List of specific queue names (default: [] for namespace-level access only)
 - topic_names: List of specific topic names (default: [] for namespace-level access only)
 - subscriptions: Map of topic names to lists of subscription names. Each key is a topic name, each value is a list of subscription names under that topic.
-
-EXAMPLE:
-service_bus = [
-  {
-    namespace_name      = "my-servicebus-ns"
-    resource_group_name = "my-rg"
-    queue_names         = ["orders-queue"]
-    topic_names         = ["events-topic"]
-    subscriptions = {
-      "events-topic" = ["processor-subscription", "logger-subscription"]
-    }
-    role                = "writer"
-    description         = "Send messages to queues and topics"
-  }
-]
 EOT
   type = list(object({
     namespace_name      = string
@@ -364,16 +257,6 @@ REQUIRED FIELDS:
 - resource_group_name: Resource group containing the App Configuration store
 - role: Permission level - MUST be one of: "reader", "writer", "owner"
 - description: Human-readable description of the role assignment purpose
-
-EXAMPLE:
-app_config = [
-  {
-    name                = "my-app-config"
-    resource_group_name = "my-rg"
-    role                = "reader"
-    description         = "Read configuration values for application"
-  }
-]
 EOT
   type = list(object({
     name                = string
