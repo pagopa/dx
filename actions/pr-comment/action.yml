@@ -24,8 +24,8 @@ outputs:
     description: "The URL of the created comment"
 
 runs:
-  using: "node20"
-  main: "dist/index.cjs"
+  using: "node24"
+  main: "dist/index.js"
 
 branding:
   icon: "message-circle"
