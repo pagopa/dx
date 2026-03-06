@@ -1,0 +1,14 @@
+{
+  "extends": "@tsconfig/node22/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./scripts/dist",
+    "rootDir": "./scripts",
+    "sourceMap": false,
+    "declaration": false,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "types": ["node"]
+  },
+  "include": ["scripts/**/*.ts"],
+  "exclude": ["tsup.config.ts"]
+}

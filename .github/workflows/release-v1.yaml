@@ -29,6 +29,21 @@ jobs:
           fetch-tags: "true"
           fetch-depth: 0
 
+      - name: Detect Release tool
+        id: detect-release-tool
+        shell: bash
+        run: |
+          if [ -f ".changeset/config.json" ]; then
+            echo "::notice:: Detected Changesets for managing releases."
+            echo "tool=changeset" >> $GITHUB_OUTPUT
+          elif [ -f "nx.json" ]; then
+            echo "::notice:: Detected Nx for managing releases."
+            echo "tool=nx" >> $GITHUB_OUTPUT
+          else
+            echo "::error:: No supported release tool detected. Please ensure either Changesets or Nx is configured."
+            exit 1
+          fi
+
       - name: Setup Node.js
         id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -53,6 +68,7 @@ jobs:
         run: npm ci
 
       - name: Create Release Pull Request or Publish to npm
+        if: steps.detect-release-tool.outputs.tool == 'changeset'
         id: release
         uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
         with:
@@ -61,3 +77,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.github-token }}
           NPM_CONFIG_PROVENANCE: true
+
+      - name: Nx Publish
+        if: steps.detect-release-tool.outputs.tool == 'nx'
+        uses: pagopa/dx/actions/nx-release@main
+        with:
+          github-token: ${{ secrets.github-token }}
