@@ -68,9 +68,7 @@
   "release": {
     "versionPlans": true,
     "projectsRelationship": "independent",
-    "version": {
-      "updateDependents": "never"
-    },
+    "version": {},
     "changelog": {
       "projectChangelogs": {
         "createRelease": false,
