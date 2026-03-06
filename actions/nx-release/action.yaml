@@ -10,18 +10,6 @@ inputs:
     description: "Base branch where release flow runs"
     required: false
     default: "main"
-  release-branch:
-    description: "Branch used for Version Packages PR"
-    required: false
-    default: "nx-release/main"
-  pr-title:
-    description: "Title for the release pull request"
-    required: false
-    default: "Version Packages"
-  commit-message:
-    description: "Commit message for generated version bumps"
-    required: false
-    default: "Version Packages"
 
 outputs:
   pull-request-number:
@@ -34,17 +22,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    # Step to detect if the release intent is to create/update a PR or to publish
-    # will set output 'mode' to either 'create-pr', 'publish', or 'noop'
-    - name: Detect Nx release intent
-      id: intent
-      shell: bash
-      env:
-        ACTION_PATH: ${{ github.action_path }}
-      run: |
-        set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/detect-intent.js"
-
     - name: Configure Git user
       shell: bash
       run: |
@@ -52,15 +29,15 @@ runs:
         git config user.email "dx-pagopa-bot@pagopa.it"
 
     - name: Create or update Version Packages PR
-      if: steps.intent.outputs.mode == 'create-pr'
+      if: github.event_name == 'push'
       id: create-pr
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_BRANCH: ${{ inputs.release-branch }}
-        PR_TITLE: ${{ inputs.pr-title }}
-        COMMIT_MESSAGE: ${{ inputs.commit-message }}
+        PR_TITLE: "Version Packages"
+        COMMIT_MESSAGE: "Version Packages"
         GH_TOKEN: ${{ inputs.github-token }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
@@ -107,7 +84,7 @@ runs:
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
     - name: Publish with Nx release
-      if: steps.intent.outputs.mode == 'publish'
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
       id: publish
       shell: bash
       env:
@@ -124,7 +101,7 @@ runs:
         echo "published=true" >> "$GITHUB_OUTPUT"
 
     - name: Sync Git Tags and GitHub Releases
-      if: steps.intent.outputs.mode == 'publish' && steps.publish.outputs.published == 'true'
+      if: steps.publish.outputs.published == 'true'
       id: tags
       env:
         ACTION_PATH: ${{ github.action_path }}

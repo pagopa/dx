@@ -16,7 +16,7 @@ This action automates the Nx release flow in two phases:
 
 **Actions**:
 
-1. Detects new or modified version plan files
+1. Detects new or modified version plan files by github events
 2. Checks out to `nx-release/main` branch
 3. Runs `npx nx release --skip-publish` to:
    - Consume version plans
@@ -40,13 +40,10 @@ This action automates the Nx release flow in two phases:
 
 ## Inputs
 
-| Input            | Description                                                              | Default               | Required |
-| ---------------- | ------------------------------------------------------------------------ | --------------------- | -------- |
-| `github-token`   | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}` | false    |
-| `base-branch`    | Base branch where release flow runs                                      | `main`                | false    |
-| `release-branch` | Branch used for Version Packages PR                                      | `nx-release/main`     | false    |
-| `pr-title`       | Title for the release pull request                                       | `Version Packages`    | false    |
-| `commit-message` | Commit message for generated version bumps                               | `Version Packages`    | false    |
+| Input          | Description                                                              | Default               | Required |
+| -------------- | ------------------------------------------------------------------------ | --------------------- | -------- |
+| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}` | false    |
+| `base-branch`  | Base branch where release flow runs                                      | `main`                | false    |
 
 ## Outputs
 
@@ -69,7 +66,16 @@ This action automates the Nx release flow in two phases:
 name: Release
 
 on:
+  # Needed for the push github event to trigger the action when version plans are added/modified
   push:
+    branches:
+      - main
+    paths:
+      - ".nx/version-plans/**"
+  # Needed for the pull_request github event to trigger the action when Version Packages PR is merged
+  pull_request:
+    types:
+      - closed
     branches:
       - main
 
@@ -96,22 +102,16 @@ jobs:
       - run: corepack enable && corepack prepare pnpm@10.30.0 --activate
       - run: pnpm install --frozen-lockfile
 
-      - uses: pagopa/dx/actions/nx-release@<COMMIT_SHA> # replace with the latest SHA
+      - uses: pagopa/dx/actions/nx-release@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## Behavior
 
-The action runs in one of three modes, determined automatically by inspecting
-the git diff of the current push event.
+The action runs in one of two modes, determined automatically by github event type.
 
-### Mode: `noop`
-
-No version plan files were added, modified, or deleted. The action exits
-cleanly without creating branches, commits, or releases.
-
-### Mode: `create-pr`
+### Mode: `Create PR`
 
 One or more `.nx/version-plans/**` files were **added or modified** on the base
 branch. The action:
@@ -123,7 +123,7 @@ branch. The action:
 4. Creates or updates a pull request titled `Version Packages`
 5. Outputs `pull-request-number` and `pull-request-url`
 
-### Mode: `publish`
+### Mode: `Publish`
 
 Version plan files were **deleted** and version bumps were detected (i.e. the
 `Version Packages` PR was merged). The action:
