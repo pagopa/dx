@@ -15,6 +15,11 @@ import (
 func TestCosmosDBNetworkAccess(t *testing.T) {
 	fixtureFolder := "../examples/network_access"
 
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+		terraform.Destroy(t, terraformOptions)
+	})
+
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{
 			TerraformDir: fixtureFolder,
@@ -47,10 +52,6 @@ func TestCosmosDBNetworkAccess(t *testing.T) {
 		probeCosmosEndpoint(t, privateApp, privateAccountName, 200)
 	})
 
-	test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-		terraform.Destroy(t, terraformOptions)
-	})
 }
 
 func probeCosmosEndpoint(t *testing.T, appIPAddress string, cosmosName string, expectedStatus int) {

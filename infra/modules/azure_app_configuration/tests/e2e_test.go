@@ -15,6 +15,11 @@ import (
 func TestAppConfigurationNetworkSettings(t *testing.T) {
 	fixtureFolder := "../examples/network_access/"
 
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+		terraform.Destroy(t, terraformOptions)
+	})
+
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{
 			TerraformDir: fixtureFolder,
@@ -36,14 +41,15 @@ func TestAppConfigurationNetworkSettings(t *testing.T) {
 		probeSetting(t, publicApp, appConfigName, 502)
 	})
 
-	test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-		terraform.Destroy(t, terraformOptions)
-	})
 }
 
 func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
 	fixtureFolder := "../examples/keyvault_integration/"
+
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+		terraform.Destroy(t, terraformOptions)
+	})
 
 	test_structure.RunTestStage(t, "setup", func() {
 		terraformOptions := &terraform.Options{
@@ -65,10 +71,6 @@ func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
 		probeSecret(t, privateApp, appConfigName, 200)
 	})
 
-	test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-		terraform.Destroy(t, terraformOptions)
-	})
 }
 
 func probeSetting(t *testing.T, appIPAddress string, appConfigName string, expectedStatus int) {
