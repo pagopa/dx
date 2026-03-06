@@ -78,7 +78,35 @@ After generating all files, **always run validation** in the target directory be
 
 Never present code to the user if `terraform validate` fails.
 
-## Self-assessment Checklist (7 checks)
+## Align with the Technology Radar
+
+Before choosing any Azure/AWS service or technology, check the [PagoPA DX Technology Radar](https://dx.pagopa.it/radar.json).
+
+| Ring     | Action                                                            |
+| -------- | ----------------------------------------------------------------- |
+| `adopt`  | **Prefer these** — standard choice                                |
+| `trial`  | Use with awareness — add a README note                            |
+| `assess` | Avoid unless explicitly requested by the user                     |
+| `hold`   | **Do not use** — warn the user and suggest an `adopt` alternative |
+
+Key services (always check the live radar for updates):
+
+- ✅ `adopt`: Azure App Service, Azure Function App, Azure Cosmos DB, Azure Storage Account, Azure Key Vault, Azure API Management, Azure Application Insights, Azure Managed Identity, Azure Cache for Redis, Azure Database for PostgreSQL Flexible, AWS Lambda, AWS S3, AWS DynamoDB, AWS SQS, AWS ECS Fargate
+- 🔬 `trial`: Azure Container Apps
+- 👀 `assess`: Azure Service Bus
+- 🚫 `hold`: Azure Database for MySQL Flexible Server
+
+If the user requests a `hold` service, warn them:
+
+> ⚠️ **[Service name]** is marked as **hold** in the PagoPA DX Technology Radar. Consider **[adopt alternative]** instead.
+
+If the user explicitly confirms they want to proceed, add a comment on the resource block:
+
+```hcl
+# radar: hold — consider migrating to <alternative>
+```
+
+## Self-assessment Checklist (8 checks)
 
 Before returning the code, verify:
 
@@ -89,6 +117,7 @@ Before returning the code, verify:
 - [ ] `networking`: subnets use `dx_available_subnet_cidr` if dedicated subnets are required
 - [ ] `modules`: at least one `pagopa-dx/*` module with `version` pinned `~>`
 - [ ] `no_placeholders`: no placeholder comments — all code is fully implemented, no `# TODO`, `# add here`, or inline stubs
+- [ ] `radar`: all services are `adopt` or `trial` in the [Technology Radar](https://dx.pagopa.it/radar.json); `hold` services have user acknowledgement and a `# radar: hold` comment
 
 ## Expected Output
 

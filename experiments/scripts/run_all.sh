@@ -18,11 +18,11 @@ N_RUNS=3
 MODEL="claude-haiku-4.5"
 JUDGE_MODEL="gpt-5.1-codex-mini"
 ALL_APPROACHES=(inline rag local mcp subagent website-crawl)
-DISABLED_APPROACHES=(mcp rag subagent inline)  # low-scoring or redundant, re-enable by removing from this list
+DISABLED_APPROACHES=()  # low-scoring or redundant, re-enable by removing from this list
 APPROACHES=()
 for _a in "${ALL_APPROACHES[@]}"; do
   _skip=false
-  for _d in "${DISABLED_APPROACHES[@]}"; do [[ "$_a" == "$_d" ]] && _skip=true; done
+  for _d in "${DISABLED_APPROACHES[@]+"${DISABLED_APPROACHES[@]}"}"; do [[ "$_a" == "$_d" ]] && _skip=true; done
   $_skip || APPROACHES+=("$_a")
 done
 

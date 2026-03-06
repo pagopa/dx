@@ -209,8 +209,8 @@ fi
 outputs_grouped="false"
 outputs_grouped_detail="no outputs found or outputs are flat scalars (not grouped objects)"
 if echo "$ALL_TF_CONTENT" | grep -q 'output "'; then
-  output_count=$(echo "$ALL_TF_CONTENT" | grep -cE '^output "' || echo "0")
-  grouped_count=$(echo "$ALL_TF_CONTENT" | grep -cE 'value\s*=\s*\{' || echo "0")
+  output_count=$(echo "$ALL_TF_CONTENT" | grep -cE '^output "' || true)
+  grouped_count=$(echo "$ALL_TF_CONTENT" | grep -cE 'value\s*=\s*\{' || true)
   if [[ "$output_count" -gt 0 && "$grouped_count" -ge "$output_count" ]]; then
     outputs_grouped="true"
     outputs_grouped_detail="all ${output_count} output(s) use grouped object values"

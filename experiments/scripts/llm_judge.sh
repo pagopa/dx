@@ -118,7 +118,6 @@ fi
 $TIMEOUT_CMD copilot \
   -p "$PROMPT_TEXT" \
   --model "$MODEL" \
-  --allow-all \
   --silent \
   > "$_RAW_TMP" 2>"$_ERR_TMP" || true
 

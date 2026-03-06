@@ -13,18 +13,15 @@ When generating Terraform code, follow these instructions:
 
 **Always read the DX documentation files** before generating code. These files are the authoritative source for DX best practices.
 
-**If the DX repository is available locally** (the workspace contains `apps/website/docs/terraform/`), read the files below via `read_file` before generating any code:
+**If the DX repository is available locally** (the workspace contains `apps/website/docs/`), read the files below via `read_file` before generating any code:
 
 ```
+apps/website/docs/terraform/index.md
 apps/website/docs/terraform/code-style.md
-apps/website/docs/terraform/required-tags.md
-apps/website/docs/terraform/naming-convention.md
-apps/website/docs/terraform/folder-structure.md
-apps/website/docs/terraform/secrets.md
-apps/website/docs/terraform/networking.md
-apps/website/docs/terraform/provider-dx.md
-apps/website/docs/terraform/pre-commit.md
-apps/website/docs/terraform/versioning.md
+apps/website/docs/terraform/infra-folder-structure.md
+apps/website/docs/terraform/pre-commit-terraform.md
+apps/website/docs/terraform/using-terraform-registry-modules.md
+apps/website/docs/azure/using-azure-registry-provider.md
 ```
 
 **If the DX repository is NOT present locally**, use one of the following fallbacks (in order of preference):
@@ -87,9 +84,11 @@ The `pagopa-dx` namespace contains modules for many resource types beyond comput
 **Never bundle multiple values into a single question.** Ask each unknown value in a separate, focused question. This reduces errors and makes it easier for the user to answer accurately.
 
 **Wrong ❌**
+
 > Please provide prefix, domain, app_name, and instance_number separated by commas.
 
 **Right ✅**
+
 > What is the `prefix` for this project? (e.g., `io`, `pagopa`, `dx`)
 
 > What is the `domain`? (e.g., `wallet`, `payments`, `skl`)
@@ -109,12 +108,12 @@ Use free-form only for values with no fixed set (`prefix`, `domain`, `app_name`)
 
 **For technical options such as module `use_case`**, always present a descriptive table so the user can make an informed choice. Fetch the available options from the module's documentation and format them like this example (Cosmos DB module):
 
-| use_case | Description | Zone Redundancy |
-|---|---|---|
-| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. Do not use in production. | Enabled |
-| `default` | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled |
+| use_case      | Description                                                                                                                  | Zone Redundancy |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. Do not use in production. | Enabled         |
+| `default`     | Suitable for production environments requiring predictable performance and provisioned throughput.                           | Disabled        |
 
-Then ask: *"Which `use_case` best fits your needs?"*
+Then ask: _"Which `use_case` best fits your needs?"_
 
 ### 5. Never Assume Default Values
 
@@ -142,6 +141,40 @@ After generating all files, **always run validation** in the target directory be
 4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
 
 Never present code to the user if `terraform validate` fails.
+
+### 8. Align with the Technology Radar
+
+Before choosing any Azure/AWS service or technology, verify its **adoption status** in the PagoPA DX Technology Radar:
+
+```
+GET https://dx.pagopa.it/radar.json
+```
+
+Each entry has a `ring` field:
+
+| Ring     | Meaning                           | Action                                                            |
+| -------- | --------------------------------- | ----------------------------------------------------------------- |
+| `adopt`  | Stable, widely used in production | **Prefer these** — use as default choice                          |
+| `trial`  | Validated in limited scenarios    | Use with awareness — note it in a README comment                  |
+| `assess` | Promising but not yet validated   | Avoid unless explicitly requested by the user                     |
+| `hold`   | Deprecated or discouraged         | **Do not use** — warn the user and suggest an `adopt` alternative |
+
+**Relevant services for Terraform code** (non-exhaustive — always check the live radar):
+
+- ✅ `adopt`: Azure App Service, Azure Function App, Azure Cosmos DB, Azure Storage Account, Azure Key Vault, Azure API Management, Azure Application Insights, Azure Managed Identity, Azure Cache for Redis, Azure Database for PostgreSQL Flexible, AWS Lambda, AWS S3, AWS DynamoDB, AWS SQS, AWS ECS Fargate
+- 🔬 `trial`: Azure Container Apps
+- 👀 `assess`: Azure Service Bus
+- 🚫 `hold`: Azure Database for MySQL Flexible Server
+
+If the user requests a service flagged as `hold`, issue an explicit warning:
+
+> ⚠️ **[Service name]** is marked as **hold** in the PagoPA DX Technology Radar. It is discouraged for new projects. Consider using **[adopt alternative]** instead.
+
+If the user explicitly confirms they want to proceed, generate the code but add a comment on the resource block:
+
+```hcl
+# radar: hold — consider migrating to <alternative>
+```
 
 ---
 
@@ -171,11 +204,15 @@ Never present code to the user if `terraform validate` fails.
 - [ ] Secrets use Key Vault references (`@Microsoft.KeyVault(...)`)
 - [ ] No sensitive values hardcoded in Terraform code
 
+### Technology Radar
+
+- [ ] All services and technologies used are `adopt` or `trial` in the [PagoPA DX Technology Radar](https://dx.pagopa.it/radar.json) — `hold` items have a `# radar: hold` comment and user acknowledgement
+
 ### Code Quality
 
 - [ ] No placeholder comments — all configuration is fully implemented, no `# TODO`, `# add here`, or `# configure below` stubs
 
-### Before Committing
+### Before finishing
 
 - [ ] `terraform init` (or `terraform init -backend=false`) completed successfully
 - [ ] `terraform validate` passes with no errors
