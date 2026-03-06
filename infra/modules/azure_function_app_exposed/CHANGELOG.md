@@ -1,5 +1,20 @@
 # azure_function_app_exposed
 
+## 3.0.1
+
+### Patch Changes
+
+- a7fe4ac: fix: correct `ignore_changes` syntax for nested `site_config` block
+
+  Changed `site_config["health_check_eviction_time_in_min"]` to `site_config[0].health_check_eviction_time_in_min` to properly reference the specific attribute within the nested block. The previous syntax caused Terraform to ignore the entire `site_config` block, preventing changes to `node_version` and other attributes from being applied to the production slot. With the corrected syntax, only the `health_check_eviction_time_in_min` attribute is ignored, while `node_version` and other configuration changes are now properly detected and applied.
+
+## 3.0.0
+
+### Major Changes
+
+- 4802442: Drop Node.js 18 and 20 support and add Node.js 24 (Preview). The `node_version` variable now accepts 22 and 24 only, with a new default of 22. Note: Node.js 24 is in Preview for Azure Functions and not recommended for production use.
+  The azurerm minimum provider version is updated to 4.58.0.
+
 ## 2.0.1
 
 ### Patch Changes

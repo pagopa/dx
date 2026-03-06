@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.3
+
+### Patch Changes
+
+- 9ba9415: Make RAG queries return the full source files URL.
+
 ## 0.1.2
 
 ### Patch Changes
