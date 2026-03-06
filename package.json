@@ -8,7 +8,7 @@
     "@nx/eslint": "22.5.3",
     "@nx/js": "22.5.3",
     "@nx/vitest": "22.5.3",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "eslint": "catalog:",
     "nx": "22.5.3",
     "prettier": "catalog:",
