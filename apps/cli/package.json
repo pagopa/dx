@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/inquirer": "^9.0.9",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
