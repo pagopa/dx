@@ -1,17 +1,17 @@
 ---
 name: terraform-dx-best-practices-mcp
-description: Usa solo strumenti MCP/registry per trovare moduli Terraform DX e generare output.
+description: Uses only MCP/registry tools to find DX Terraform modules and generate output.
 ---
 
 # Terraform DX Best Practices (MCP)
 
-Questa skill genera codice Terraform DX-compliant usando **esclusivamente tool MCP** per la documentazione DX e i moduli del Terraform Registry.
+This skill generates DX-compliant Terraform code using **exclusively MCP tools** for DX documentation and Terraform Registry modules.
 
-## Tool MCP da usare (procedura obbligatoria)
+## MCP Tools to Use (mandatory procedure)
 
 ### 1. DX Documentation (server `dx`)
 
-Usa lo strumento `pagopa_query_documentation` (server MCP `dx`, URL: `https://api.dx.pagopa.it/mcp`) per queste query:
+Use the `pagopa_query_documentation` tool (MCP server `dx`, URL: `https://api.dx.pagopa.it/mcp`) for these queries:
 
 ```
 pagopa_query_documentation(query="Terraform folder structure code style")
@@ -60,20 +60,44 @@ get_latest_provider_version(namespace="pagopa-dx", provider="azure")
 get_provider_capabilities(namespace="pagopa-dx", name="azure")
 ```
 
-**NON usare**: DX Search API HTTP, documentazione locale allegata, `fetch_webpage`, conoscenza interna non supportata da un tool MCP.
+**Do NOT use**: HTTP DX Search API, attached local documentation, `fetch_webpage`, or internal knowledge not backed by an MCP tool.
 
-## Regole di generazione obbligatorie
+## Mandatory Generation Rules
 
-Seguire la skill base `terraform-dx-best-practices` per tutti i dettagli.
+Follow the base skill `terraform-dx-best-practices` for all details.
 
-## Checklist di autovalutazione (6 check)
+### No Placeholder Comments
 
-- [ ] `validate`: codice sintatticamente valido
-- [ ] `naming`: `provider::dx::resource_name()` su tutti i nomi risorse
+**Always write complete, working code.** Never leave comments that instruct where to add something the agent could implement directly. Examples of what to avoid:
+
+```hcl
+# Add your app settings here
+# TODO: configure Cosmos DB endpoint
+# Add Key Vault reference for secrets
+```
+
+If information needed to generate the code is missing, ask the user before writing anything — do not emit skeleton code with inline instructions as a substitute.
+
+## Validate Generated Code
+
+After generating all files, **always run validation** in the target directory before presenting the code to the user:
+
+1. Run `terraform init` to initialize providers and modules. If backend configuration is unavailable, run `terraform init -backend=false`.
+2. Run `terraform validate` — fix **all** errors before proceeding.
+3. Run `terraform plan` if a backend and credentials are available; investigate and fix any errors reported.
+4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
+
+Never present code to the user if `terraform validate` fails.
+
+## Self-assessment Checklist (7 checks)
+
+- [ ] `validate`: `terraform init` and `terraform validate` completed without errors; `terraform plan` verified if backend is available
+- [ ] `naming`: `provider::dx::resource_name()` used on ALL resource names
 - [ ] `tags`: CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam
-- [ ] `secrets`: nessun valore hardcoded, KV references
-- [ ] `networking`: `dx_available_subnet_cidr` per subnet dedicate
-- [ ] `modules`: moduli `pagopa-dx/*` con `version` pinned `~>`
+- [ ] `secrets`: no hardcoded values, KV references used
+- [ ] `networking`: `dx_available_subnet_cidr` for dedicated subnets
+- [ ] `modules`: `pagopa-dx/*` modules with `version` pinned `~>`
+- [ ] `no_placeholders`: no placeholder comments — all code is fully implemented, no `# TODO`, `# add here`, or inline stubs
 
 ## Output atteso
 

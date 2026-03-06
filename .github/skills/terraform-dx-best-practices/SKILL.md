@@ -71,27 +71,82 @@ The `pagopa-dx` namespace contains modules for many resource types beyond comput
 
 ### 3. Ask User for Required Values
 
-**Ask the user for project-specific values** when not found in the existing codebase:
+**Before asking the user, check for values in the existing infrastructure:**
 
-- **Module use_case**: Present all available `use_case` options from the chosen modules' documentation and **always ask the user to select the appropriate one** (e.g., "default", "high_load", "spot")
-- `environment` values: prefix, env_short, location, domain, app_name, instance_number
-- `tags` values: BusinessUnit, ManagementTeam
+1. **Look for existing `.tf` files** in `infra/resources/<env>/` matching the target environment (`dev`, `prod`, `uat`). Read `locals.tf` or similar files to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter).
+
+2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/azurerm` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources. Invite the user to review the full output list on the Terraform Registry:
+   ```
+   https://registry.terraform.io/modules/pagopa-dx/<csp>-core-values-exporter/azurerm/latest
+   ```
+
+**Only ask the user for values that could not be inferred from the steps above:**
+
+- **Module use_case**: present all available `use_case` options with their descriptions (see section 4 below)
+- `environment` values not already found: prefix, env_short, location, domain, app_name, instance_number
+- `tags` values not already found: BusinessUnit, ManagementTeam
 - Backend state configuration
 
-### 4. Prefer Multiple-Choice Questions
+### 4. Ask One Question at a Time
 
-When asking the user, offer choices when possible:
+**Never bundle multiple values into a single question.** Ask each unknown value in a separate, focused question. This reduces errors and makes it easier for the user to answer accurately.
 
-- `env_short`: "p (prod)", "d (dev)", "u (uat)"
-- `location`: "italynorth", "westeurope", "spaincentral"
-- `BusinessUnit`: "App IO", "CGN", "Carta della Cultura", "IT Wallet", "DevEx", or "Other (specify)"
-- `ManagementTeam`: "IO Platform", "IO Wallet", "IO Comunicazione", "IO Enti & Servizi", "IO Autenticazione", "IO Bonus & Pagamenti", "IO Firma", "Developer Experience", or "Other (specify)"
+**Wrong ❌**
+> Please provide prefix, domain, app_name, and instance_number separated by commas.
 
-Use free-form only for truly unknown values like `prefix`, `domain`, `app_name`. Prefix and domain may be inferred from existing code if available.
+**Right ✅**
+> What is the `prefix` for this project? (e.g., `io`, `pagopa`, `dx`)
+
+> What is the `domain`? (e.g., `wallet`, `payments`, `skl`)
+
+> What is the `app_name`? (e.g., `storager`, `processor`)
+
+> What `instance_number` should be used? (e.g., `01`, `02`)
+
+**Offer choices whenever the set of valid values is known:**
+
+- `env_short`: `p` (prod) / `d` (dev) / `u` (uat)
+- `location`: `italynorth` / `westeurope` / `spaincentral`
+- `BusinessUnit`: App IO / CGN / Carta della Cultura / IT Wallet / DevEx / Other (specify)
+- `ManagementTeam`: IO Platform / IO Wallet / IO Comunicazione / IO Enti & Servizi / IO Autenticazione / IO Bonus & Pagamenti / IO Firma / Developer Experience / Other (specify)
+
+Use free-form only for values with no fixed set (`prefix`, `domain`, `app_name`). Infer them from existing code if available before asking.
+
+**For technical options such as module `use_case`**, always present a descriptive table so the user can make an informed choice. Fetch the available options from the module's documentation and format them like this example (Cosmos DB module):
+
+| use_case | Description | Zone Redundancy |
+|---|---|---|
+| `development` | Recommended for development or testing environments where cost efficiency and flexibility are key. Do not use in production. | Enabled |
+| `default` | Suitable for production environments requiring predictable performance and provisioned throughput. | Disabled |
+
+Then ask: *"Which `use_case` best fits your needs?"*
 
 ### 5. Never Assume Default Values
 
 If project-specific configuration is not found in the workspace, ask the user.
+
+### 6. Never Leave Placeholder Comments
+
+**Always write complete, working code.** Never leave comments that instruct where to add something the agent could implement directly. Examples of what to avoid:
+
+```hcl
+# Add your app settings here
+# TODO: configure Cosmos DB endpoint
+# Add Key Vault reference for secrets
+```
+
+If information needed to generate the code is missing, ask the user before writing anything — do not emit skeleton code with inline instructions as a substitute.
+
+### 7. Validate and Fix Generated Code
+
+After generating all files, **always run validation** in the target directory before presenting the code to the user:
+
+1. Run `terraform init` to initialize providers and modules. If backend configuration is unavailable, run `terraform init -backend=false`.
+2. Run `terraform validate` — fix **all** errors before proceeding.
+3. Run `terraform plan` if a backend and credentials are available; investigate and fix any errors reported.
+4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
+
+Never present code to the user if `terraform validate` fails.
 
 ---
 
@@ -121,8 +176,15 @@ If project-specific configuration is not found in the workspace, ask the user.
 - [ ] Secrets use Key Vault references (`@Microsoft.KeyVault(...)`)
 - [ ] No sensitive values hardcoded in Terraform code
 
+### Code Quality
+
+- [ ] No placeholder comments — all configuration is fully implemented, no `# TODO`, `# add here`, or `# configure below` stubs
+
 ### Before Committing
 
+- [ ] `terraform init` (or `terraform init -backend=false`) completed successfully
+- [ ] `terraform validate` passes with no errors
+- [ ] `terraform plan` reviewed (if backend and credentials are available)
 - [ ] Run `pre-commit run -a` on staged files
 
 ---

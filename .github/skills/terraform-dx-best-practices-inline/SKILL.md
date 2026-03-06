@@ -1,31 +1,31 @@
 ---
 name: terraform-dx-best-practices-inline
-description: Applica le best practice DX solo tramite conoscenza interna, senza consultare API, documentazione esterna o strumenti MCP.
+description: Applies DX best practices using only internal knowledge, without consulting external APIs, documentation, or MCP tools.
 ---
 
 # Terraform DX Best Practices (Inline)
 
-Questa skill genera codice Terraform DX-compliant usando **esclusivamente la conoscenza interna** dell'agente, senza consultare API, documentazione esterna, strumenti MCP o subagent.
+This skill generates DX-compliant Terraform code using **exclusively the agent's internal knowledge**, without consulting external APIs, documentation, MCP tools, or subagents.
 
-## Fonte di conoscenza
+## Knowledge Source
 
-- Usa la conoscenza interna già nota su PagoPA DX e le sue convenzioni Terraform.
-- NON fare richieste HTTP, NON usare tool MCP, NON delegare a subagent.
-- Se non ricordi con certezza un dettaglio (es. versione modulo), indicalo esplicitamente nel README con una nota `<!-- inline-assumption: ... -->`.
+- Use internal knowledge of PagoPA DX and its Terraform conventions.
+- Do NOT make HTTP requests, do NOT use MCP tools, do NOT delegate to subagents.
+- If a detail is uncertain (e.g., module version), state it explicitly in the README with `<!-- inline-assumption: ... -->`.
 
-## Regole di generazione obbligatorie
+## Mandatory Generation Rules
 
-Seguire la skill base `terraform-dx-best-practices`. In aggiunta:
+Follow the base skill `terraform-dx-best-practices`. Additionally:
 
 ### Naming
 
-- Configura il provider `pagopa-dx/azure` con alias `dx` nel blocco `required_providers`.
-- Usa SEMPRE `provider::dx::resource_name()` per tutti i nomi delle risorse Azure.
-- Sintassi: `provider::dx::resource_name(environment, "tipo-risorsa")` dove `tipo-risorsa` è il suffisso usato internamente (es. `"fn"` per Function App, `"st"` per Storage Account).
+- Configure the `pagopa-dx/azure` provider with alias `dx` in the `required_providers` block.
+- ALWAYS use `provider::dx::resource_name()` for all Azure resource names.
+- Syntax: `provider::dx::resource_name(environment, "resource-type")` where `resource-type` is the internal suffix (e.g., `"fn"` for Function App, `"st"` for Storage Account).
 
-### Tag obbligatori
+### Required Tags
 
-Ogni risorsa DEVE includere questi tag:
+Every resource MUST include these tags:
 
 ```hcl
 tags = merge(var.tags, {
@@ -37,45 +37,69 @@ tags = merge(var.tags, {
 })
 ```
 
-### Moduli DX Registry
+### DX Registry Modules
 
-- Prima di scrivere qualsiasi blocco `resource`, chiediti se esiste un modulo `pagopa-dx/*` nel Terraform Registry che wrappa quella risorsa.
-- Il namespace `pagopa-dx` contiene moduli per molti tipi di risorse oltre a compute e storage: role assignments, service bus, event hub, CDN, API management, container apps, ecc.
-- Se dalla tua conoscenza interna sai che esiste un modulo per la risorsa in questione, usalo.
-- Se non sei sicuro che un modulo esista, segnalalo nel README con `<!-- inline-assumption: no DX module found for <risorsa> -->`.
-- Specifica la versione con `~> major.minor` (es. `~> 1.0`).
-- Usa risorse `azurerm_*` / `aws_*` raw **solo se sei ragionevolmente sicuro** che non esiste un modulo DX per quella risorsa.
+- Before writing any `resource` block, ask yourself whether a `pagopa-dx/*` module exists in the Terraform Registry that wraps that resource.
+- The `pagopa-dx` namespace contains modules for many resource types beyond compute and storage: role assignments, service bus, event hub, CDN, API management, container apps, etc.
+- If your internal knowledge confirms a module exists for the resource, use it.
+- If unsure whether a module exists, note it in the README with `<!-- inline-assumption: no DX module found for <resource> -->`.
+- Pin the version with `~> major.minor` (e.g., `~> 1.0`).
+- Use raw `azurerm_*` / `aws_*` resources **only if reasonably certain** no DX module covers that resource.
 
-### Segreti
+### Secrets
 
-- NESSUN valore hardcoded per password, connection string, chiavi.
-- Usa `azurerm_key_vault_secret` o riferimenti `@Microsoft.KeyVault(...)` nelle app settings.
+- NO hardcoded values for passwords, connection strings, or keys.
+- Use `azurerm_key_vault_secret` or `@Microsoft.KeyVault(...)` references in app settings.
 
-### Struttura file
+### No Placeholder Comments
 
-Genera sempre file separati: `main.tf`, `variables.tf`, `outputs.tf`, `locals.tf`, `providers.tf`, `versions.tf`.
+**Always write complete, working code.** Never leave comments that instruct where to add something the agent could implement directly. Examples of what to avoid:
 
-## Checklist di autovalutazione (6 check)
+```hcl
+# Add your app settings here
+# TODO: configure Cosmos DB endpoint
+# Add Key Vault reference for secrets
+```
 
-Prima di restituire il codice, verifica:
+If information needed to generate the code is missing, ask the user before writing anything — do not emit skeleton code with inline instructions as a substitute.
 
-- [ ] `validate`: il codice è sintatticamente valido (nessun errore `terraform validate`)
-- [ ] `naming`: `provider::dx::resource_name()` usato su TUTTI i nomi risorse
-- [ ] `tags`: tutti e 5 i tag obbligatori presenti (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
-- [ ] `secrets`: nessun valore hardcoded, usa KV references
-- [ ] `networking`: sottoreti usano `dx_available_subnet_cidr` se sono richieste subnet dedicate
-- [ ] `modules`: almeno un modulo `pagopa-dx/*` con `version` pinned `~>`
+### File Structure
 
-## Output atteso
+Always generate separate files: `main.tf`, `variables.tf`, `outputs.tf`, `locals.tf`, `providers.tf`, `versions.tf`.
 
-File da produrre nella cartella di output:
+### Validate Generated Code
+
+After generating all files, **always run validation** in the target directory before presenting the code to the user:
+
+1. Run `terraform init` to initialize providers and modules. If backend configuration is unavailable, run `terraform init -backend=false`.
+2. Run `terraform validate` — fix **all** errors before proceeding.
+3. Run `terraform plan` if a backend and credentials are available; investigate and fix any errors reported.
+4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
+
+Never present code to the user if `terraform validate` fails.
+
+## Self-assessment Checklist (7 checks)
+
+Before returning the code, verify:
+
+- [ ] `validate`: `terraform init` and `terraform validate` completed without errors; `terraform plan` verified if backend is available
+- [ ] `naming`: `provider::dx::resource_name()` used on ALL resource names
+- [ ] `tags`: all 5 required tags present (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
+- [ ] `secrets`: no hardcoded values, use KV references
+- [ ] `networking`: subnets use `dx_available_subnet_cidr` if dedicated subnets are required
+- [ ] `modules`: at least one `pagopa-dx/*` module with `version` pinned `~>`
+- [ ] `no_placeholders`: no placeholder comments — all code is fully implemented, no `# TODO`, `# add here`, or inline stubs
+
+## Expected Output
+
+Files to produce in the output folder:
 
 ```
-main.tf        # risorse principali
-variables.tf   # variabili di input
-outputs.tf     # output del modulo
-locals.tf      # valori computati localmente
-providers.tf   # configurazione provider (pagopa-dx/azure, azurerm)
-versions.tf    # required_providers e versioni
-README.md      # note sulla skill e sulle assunzioni fatte
+main.tf        # main resources
+variables.tf   # input variables
+outputs.tf     # module outputs
+locals.tf      # locally computed values
+providers.tf   # provider configuration (pagopa-dx/azure, azurerm)
+versions.tf    # required_providers and versions
+README.md      # skill notes and assumptions made
 ```

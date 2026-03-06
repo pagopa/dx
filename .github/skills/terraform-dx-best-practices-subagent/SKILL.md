@@ -1,55 +1,67 @@
 ---
 name: terraform-dx-best-practices-subagent
-description: Delega la ricerca delle best practice Terraform a un subagent DX, poi integra il risultato.
+description: Delegates Terraform best practice research to a DX subagent, then integrates the result.
 ---
 
 # Terraform DX Best Practices (Subagent)
 
-Questa skill genera codice Terraform DX-compliant delegando la **ricerca documentazione** a un subagent specializzato, poi integra i risultati nella generazione.
+This skill generates DX-compliant Terraform code by delegating **documentation research** to a specialised subagent, then integrating the findings into the generation.
 
-## Procedura di delega (obbligatoria)
+## Delegation Procedure (mandatory)
 
-**Step 1 — Avvia subagent di ricerca**
+**Step 1 — Launch research subagent**
 
-Delega al subagent il compito di raccogliere:
+Delegate to the subagent the task of collecting:
 
-1. Code style e struttura cartelle DX (da `https://api.dx.pagopa.it/search` o `fetch_webpage`)
-2. Naming convention (`provider::dx::resource_name`) e provider `pagopa-dx/azure`
-3. Elenco tag obbligatori (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
-4. **Lista completa di TUTTI i moduli disponibili** nel namespace `pagopa-dx` del Terraform Registry. Il subagent deve:
-   - Chiamare `search_modules(moduleQuery="pagopa-dx")` (se MCP disponibile) oppure `GET https://registry.terraform.io/v1/modules/search?namespace=pagopa-dx&limit=50`
-   - Restituire la lista completa con nome modulo e descrizione
-   - Per ogni modulo rilevante al task dell'utente, recuperare inputs e versione con `get_module_details` / `get_latest_module_version`
-5. Versioni più recenti dei moduli trovati al punto 4
-6. Gestione segreti con Key Vault references
-7. Pattern di networking (`dx_available_subnet_cidr`)
+1. DX code style and folder structure (from `https://api.dx.pagopa.it/search` or `fetch_webpage`)
+2. Naming convention (`provider::dx::resource_name`) and provider `pagopa-dx/azure`
+3. List of required tags (CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam)
+4. **Full list of ALL available modules** in the `pagopa-dx` namespace on the Terraform Registry. The subagent must:
+   - Call `search_modules(moduleQuery="pagopa-dx")` (if MCP available) or `GET https://registry.terraform.io/v1/modules/search?namespace=pagopa-dx&limit=50`
+   - Return the full list with module name and description
+   - For each module relevant to the user's task, retrieve inputs and version with `get_module_details` / `get_latest_module_version`
+5. Latest versions of the modules found in step 4
+6. Secrets management with Key Vault references
+7. Networking patterns (`dx_available_subnet_cidr`)
 
-Il subagent può usare qualsiasi strumento disponibile (HTTP curl, MCP tools, `fetch_webpage`).
-Istruisci il subagent a restituire un report strutturato con le informazioni raccolte.
+The subagent may use any available tool (HTTP curl, MCP tools, `fetch_webpage`).
+Instruct the subagent to return a structured report with the collected information.
 
-**Step 2 — Integra i risultati**
+**Step 2 — Integrate the results**
 
-Usa le informazioni restituite dal subagent per generare il codice Terraform. NON inventare dettagli non trovati dal subagent; se mancano, documentalo nel README con `<!-- subagent-gap: ... -->`.
+Use the information returned by the subagent to generate the Terraform code. Do NOT invent details not found by the subagent; if any are missing, document them in the README with `<!-- subagent-gap: ... -->`.
 
-**Module-first rule**: prima di scrivere qualsiasi blocco `resource`, verifica nella lista moduli restituita dal subagent se esiste un modulo `pagopa-dx/*` per quella risorsa. Il namespace copre molti tipi di risorse: role assignments, service bus, event hub, CDN, API management, container apps, ecc. **Usa il modulo se esiste.** Usa risorse raw solo come fallback.
+**Module-first rule**: before writing any `resource` block, check the module list returned by the subagent for a `pagopa-dx/*` module covering that resource type. The namespace covers many resource types: role assignments, service bus, event hub, CDN, API management, container apps, etc. **Use the module if it exists.** Use raw resources only as a fallback.
 
-**Step 3 — Genera il codice**
+**Step 3 — Generate the code**
 
-Seguire la skill base `terraform-dx-best-practices` per naming, tag, moduli, segreti e struttura file.
+Follow the base skill `terraform-dx-best-practices` for naming, tags, modules, secrets, and file structure.
 
-## Checklist di autovalutazione (6 check)
+## Validate Generated Code
 
-- [ ] `validate`: codice sintatticamente valido
-- [ ] `naming`: `provider::dx::resource_name()` su tutti i nomi risorse
+After generating all files, **always run validation** in the target directory before presenting the code to the user:
+
+1. Run `terraform init` to initialize providers and modules. If backend configuration is unavailable, run `terraform init -backend=false`.
+2. Run `terraform validate` — fix **all** errors before proceeding.
+3. Run `terraform plan` if a backend and credentials are available; investigate and fix any errors reported.
+4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
+
+Never present code to the user if `terraform validate` fails.
+
+## Self-assessment Checklist (7 checks)
+
+- [ ] `validate`: `terraform init` and `terraform validate` completed without errors; `terraform plan` verified if backend is available
+- [ ] `naming`: `provider::dx::resource_name()` used on ALL resource names
 - [ ] `tags`: CostCenter, CreatedBy, Environment, BusinessUnit, ManagementTeam
-- [ ] `secrets`: nessun valore hardcoded, KV references
-- [ ] `networking`: `dx_available_subnet_cidr` per subnet dedicate
-- [ ] `modules`: moduli `pagopa-dx/*` con `version` pinned `~>`
+- [ ] `secrets`: no hardcoded values, KV references used
+- [ ] `networking`: `dx_available_subnet_cidr` for dedicated subnets
+- [ ] `modules`: `pagopa-dx/*` modules with `version` pinned `~>`
+- [ ] `no_placeholders`: no placeholder comments — all code is fully implemented, no `# TODO`, `# add here`, or inline stubs
 
-## Output atteso
+## Expected Output
 
 ```
 main.tf, variables.tf, outputs.tf, locals.tf, providers.tf, versions.tf, README.md
 ```
 
-Il README deve includere un paragrafo "Processo di delega" che spiega cosa ha cercato il subagent e cosa ha trovato.
+The README must include a "Delegation Process" paragraph explaining what the subagent searched for and what it found.
