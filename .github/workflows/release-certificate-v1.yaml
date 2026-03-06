@@ -30,10 +30,6 @@ on:
         default: "infra-prod"
         type: string
 
-concurrency:
-  group: ${{ github.workflow }}-cd
-  cancel-in-progress: false
-
 jobs:
   renew-certificate:
     name: Create or Renew Certificate
