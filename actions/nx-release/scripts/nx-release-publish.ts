@@ -249,29 +249,11 @@ async function parsePomXml(path: string): Promise<null | ReleaseTarget> {
       return null;
     }
 
-    // Check for distributionManagement to determine if private
-    // If no distributionManagement or points to Maven Central, consider public
-    const hasDistributionManagement = /<distributionManagement>/.test(xml);
-    const pointsToMavenCentral =
-      /repository>.*https?:\/\/(oss\.sonatype\.org|repo1?\.maven\.org|central\.sonatype\.com)/i.test(
-        xml,
-      );
-
-    // Extract repository URL from distributionManagement if present
-    let registry: string | undefined;
-    if (hasDistributionManagement) {
-      const repoUrlMatch = xml.match(
-        /<distributionManagement>[\s\S]*?<repository>[\s\S]*?<url>([^<]+)<\/url>/,
-      );
-      registry = repoUrlMatch?.[1]?.trim();
-    }
-
-    const isPrivate = hasDistributionManagement && !pointsToMavenCentral;
-
+    // Maven artifacts are always treated as private (no registry check needed)
     return {
-      isPrivate,
+      isPrivate: true,
       name: artifactId,
-      registry,
+      registry: undefined,
       sourceFile: path,
       type: "maven",
       version,

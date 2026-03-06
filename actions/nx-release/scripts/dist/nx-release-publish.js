@@ -138,22 +138,10 @@ async function parsePomXml(path) {
     if (!artifactId || !version) {
       return null;
     }
-    const hasDistributionManagement = /<distributionManagement>/.test(xml);
-    const pointsToMavenCentral = /repository>.*https?:\/\/(oss\.sonatype\.org|repo1?\.maven\.org|central\.sonatype\.com)/i.test(
-      xml
-    );
-    let registry;
-    if (hasDistributionManagement) {
-      const repoUrlMatch = xml.match(
-        /<distributionManagement>[\s\S]*?<repository>[\s\S]*?<url>([^<]+)<\/url>/
-      );
-      registry = repoUrlMatch?.[1]?.trim();
-    }
-    const isPrivate = hasDistributionManagement && !pointsToMavenCentral;
     return {
-      isPrivate,
+      isPrivate: true,
       name: artifactId,
-      registry,
+      registry: void 0,
       sourceFile: path,
       type: "maven",
       version
