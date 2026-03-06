@@ -1,5 +1,8 @@
 variable "principal_id" {
-  description = "The ID of the principal (user, group, service principal, or managed identity) to which roles will be assigned. For managed identities, use the principal_id output from the identity resource."
+  description = <<EOT
+  The ID of the principal (user, group, service principal, or managed identity) to which roles will be assigned.
+  For managed identities, use the principal_id output from the identity resource.
+  EOT
   type        = string
 }
 
