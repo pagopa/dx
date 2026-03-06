@@ -17,7 +17,7 @@ permissions:
 jobs:
   dev:
     name: "stategraph.dev.dx.pagopa.it"
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@fix-tls-identities
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal || false }}
@@ -29,7 +29,7 @@ jobs:
 
   uat:
     name: "stategraph.uat.dx.pagopa.it"
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@fix-tls-identities
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal || false }}
@@ -41,7 +41,7 @@ jobs:
 
   prod:
     name: stategraph.dx.pagopa.it
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@fix-tls-identities
+    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
       force_renewal: ${{ inputs.force_renewal || false }}
