@@ -88,16 +88,13 @@ REQUIRED FIELDS:
 - resource_group_name: Resource group containing the Key Vault
 - description: Human-readable description of the role assignment purpose
 - roles: Object specifying base permissions for each Key Vault functionality:
-  - secrets: Role for secrets - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
-  - certificates: Role for certificates - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
-  - keys: Role for keys - MUST be one of: "reader", "writer", "owner", or "" (empty string for no access)
+  - secrets: Role for secrets - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)
+  - certificates: Role for certificates - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)
+  - keys: Role for keys - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)
 
 OPTIONAL FIELDS:
-- has_rbac_support: Set to true if Key Vault uses Azure RBAC for authorization (default: null, auto-detected)
-- override_roles: Advanced - list of Azure built-in role definition names to assign directly, bypassing the abstracted "reader"/"writer"/"owner" mapping. Use only when specific Azure roles are needed.
-  - secrets: List of role definition names for secrets (e.g., ["Key Vault Secrets Officer"])
-  - certificates: List of role definition names for certificates
-  - keys: List of role definition names for keys
+- has_rbac_support: Set to true if Key Vault uses Azure RBAC for authorization (default: true, access policies will be created for vaults without RBAC support otherwise, role assignments for vaults with RBAC support)
+- override_roles: Advanced - list of Access Policies permissions to override module-defined ones. Has no effect when has_rbac_support is true.
 
 EXAMPLE:
 key_vault = [
@@ -105,10 +102,11 @@ key_vault = [
     name                = "my-key-vault"
     resource_group_name = "my-rg"
     description         = "Application access to secrets and certificates"
+
+    # This assignment will grant "reader" access to secrets and certificates, no access to keys, using RBAC role assignments or access policies (if not).
     roles = {
       secrets      = "reader"
       certificates = "reader"
-      keys         = ""
     }
   }
 ]
@@ -349,7 +347,7 @@ EOT
     resource_group_name = string
     queue_names         = optional(list(string), [])
     topic_names         = optional(list(string), [])
-    subscription_names  = optional(map(list(string)), {})
+    subscriptions       = optional(map(list(string)), {})
     role                = string
     description         = string
   }))
