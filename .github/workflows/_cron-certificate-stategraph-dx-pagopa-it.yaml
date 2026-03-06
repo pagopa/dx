@@ -17,6 +17,9 @@ permissions:
 jobs:
   dev:
     name: "stategraph.dev.dx.pagopa.it"
+    concurrency:
+      group: stategraph-dev-dx-pagopa-it
+      cancel-in-progress: true
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
@@ -29,6 +32,9 @@ jobs:
 
   uat:
     name: "stategraph.uat.dx.pagopa.it"
+    concurrency:
+      group: stategraph-uat-dx-pagopa-it
+      cancel-in-progress: true
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
@@ -41,6 +47,9 @@ jobs:
 
   prod:
     name: stategraph.dx.pagopa.it
+    concurrency:
+      group: stategraph-dx-pagopa-it
+      cancel-in-progress: true
     uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
     secrets: inherit
     with:
