@@ -18,6 +18,9 @@ outputs:
   pull-request-url:
     description: "PR URL created/updated for Version Packages"
     value: ${{ steps.create-pr.outputs.pull-request-url }}
+  tags:
+    description: "Space-separated list of created tags"
+    value: ${{ steps.tags.outputs.tags }}
 
 runs:
   using: "composite"
@@ -100,6 +103,6 @@ runs:
         echo "::notice::Publishing packages to npm"
         npx nx release publish
 
-        # Scans all tracked package.json files, checks the npm registry, and
-        # creates annotated git tags + GitHub releases for every published version.
+        echo "::notice::Creating git tags and GitHub releases"
         node "$ACTION_PATH/scripts/dist/nx-release-publish.js"
+

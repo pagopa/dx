@@ -132,7 +132,15 @@ async function readNpmPublishedVersions(packageName, registry) {
 }
 async function run() {
   const outputPath = process.env.GITHUB_OUTPUT;
-  const targets = await extractTargets(await listManifestFiles());
+  console.log("::notice::Scanning repository for package manifests...");
+  const manifestFiles = await listManifestFiles();
+  console.log(
+    `::notice::Found ${manifestFiles.length} package.json files in repository`
+  );
+  const targets = await extractTargets(manifestFiles);
+  console.log(
+    `::notice::Extracted ${targets.length} release targets: ${targets.map((t) => `${t.name}@${t.version}`).join(", ")}`
+  );
   const createdTags = [];
   for (const target of targets) {
     const tagName = `${target.name}@${target.version}`;
@@ -175,13 +183,29 @@ async function run() {
 }
 async function shouldCreateTag(target) {
   if (target.isPrivate) {
+    console.log(
+      `::notice::${target.name}@${target.version} is private, will create tag`
+    );
     return true;
   }
+  console.log(
+    `::notice::Checking npm registry for ${target.name}@${target.version}...`
+  );
   const publishedVersions = await readNpmPublishedVersions(
     target.name,
     target.registry
   );
-  return publishedVersions.includes(target.version);
+  const isPublished = publishedVersions.includes(target.version);
+  if (isPublished) {
+    console.log(
+      `::notice::${target.name}@${target.version} confirmed on npm registry, will create tag`
+    );
+  } else {
+    console.log(
+      `::warning::${target.name}@${target.version} not found on npm registry (found versions: ${publishedVersions.slice(-3).join(", ")}), skipping tag`
+    );
+  }
+  return isPublished;
 }
 function spawnInherit(cmd, args) {
   return new Promise((resolve, reject) => {

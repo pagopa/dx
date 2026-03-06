@@ -198,7 +198,9 @@ async function parsePackageJson(path: string): Promise<null | ReleaseTarget> {
   }
 }
 
-/** Reads all published versions for an npm package from the target registry. */
+/**
+ * Reads all published versions for an npm package from the target registry.
+ */
 async function readNpmPublishedVersions(
   packageName: string,
   registry?: string,
@@ -227,7 +229,17 @@ async function readNpmPublishedVersions(
 async function run(): Promise<void> {
   const outputPath = process.env.GITHUB_OUTPUT;
 
-  const targets = await extractTargets(await listManifestFiles());
+  console.log("::notice::Scanning repository for package manifests...");
+  const manifestFiles = await listManifestFiles();
+  console.log(
+    `::notice::Found ${manifestFiles.length} package.json files in repository`,
+  );
+
+  const targets = await extractTargets(manifestFiles);
+  console.log(
+    `::notice::Extracted ${targets.length} release targets: ${targets.map((t) => `${t.name}@${t.version}`).join(", ")}`,
+  );
+
   const createdTags: string[] = [];
 
   for (const target of targets) {
@@ -281,14 +293,32 @@ async function run(): Promise<void> {
 /** Decides if a tag should be created for a target using registry-aware rules. */
 async function shouldCreateTag(target: ReleaseTarget): Promise<boolean> {
   if (target.isPrivate) {
+    console.log(
+      `::notice::${target.name}@${target.version} is private, will create tag`,
+    );
     return true;
   }
 
+  console.log(
+    `::notice::Checking npm registry for ${target.name}@${target.version}...`,
+  );
   const publishedVersions = await readNpmPublishedVersions(
     target.name,
     target.registry,
   );
-  return publishedVersions.includes(target.version);
+
+  const isPublished = publishedVersions.includes(target.version);
+  if (isPublished) {
+    console.log(
+      `::notice::${target.name}@${target.version} confirmed on npm registry, will create tag`,
+    );
+  } else {
+    console.log(
+      `::warning::${target.name}@${target.version} not found on npm registry (found versions: ${publishedVersions.slice(-3).join(", ")}), skipping tag`,
+    );
+  }
+
+  return isPublished;
 }
 
 /** Runs a command and streams its output to the current terminal. */
