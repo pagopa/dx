@@ -30,10 +30,19 @@ resource "azurerm_dns_txt_record" "validation" {
   resource_group_name = each.value.dns.zone_resource_group_name
   ttl                 = "3600"
   record {
-    value = azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token
+    # To avoid empty token when already validated, set a dummy value (the CDN service will remove the TXT record once the domain is validated)
+    value = length(try(azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token, "")) > 0 ? azurerm_cdn_frontdoor_custom_domain.this[each.key].validation_token : "AlreadyValidated"
   }
   tags = merge(local.tags, {
     Origin = each.value.host_name
     Cdn    = local.profile_name
   })
+
+  # When the custom domain is validated, the CDN service will automatically remove the TXT record
+  # To prevent Terraform from trying to recreate it, we ignore changes to the record value.
+  lifecycle {
+    ignore_changes = [
+      record
+    ]
+  }
 }
