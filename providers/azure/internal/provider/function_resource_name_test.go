@@ -763,7 +763,8 @@ func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
 	})
 }
 
-func TestResourceNameFunction_NameIsBareAbbreviationPrefix_ShouldSucceed(t *testing.T) {
+
+func TestResourceNameFunction_NameIsBareAbbreviationPrefix(t *testing.T) {
 	t.Parallel()
 	// Regression test: name="cdn" with cdn_frontdoor_route (abbr="cdnr") must NOT be rejected.
 	// "cdn" is a bare string prefix of "cdnr" but they are not separated by "-", so there is
