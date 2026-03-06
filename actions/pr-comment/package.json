@@ -4,11 +4,8 @@
   "type": "module",
   "private": true,
   "description": "TypeScript action for creating and managing PR comments",
-  "main": "dist/index.cjs",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -30,7 +27,6 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "@vitest/coverage-v8": "catalog:",
