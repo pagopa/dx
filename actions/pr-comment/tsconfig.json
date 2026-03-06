@@ -3,10 +3,8 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "sourceMap": true,
-    "declaration": true,
-    "moduleResolution": "bundler",
-    "module": "ESNext"
+    "declaration": true
   },
-  "exclude": ["tsup.config.ts"]
+  "include": ["./src/**/*"],
+  "exclude": ["./src/**/*.test.ts"]
 }
