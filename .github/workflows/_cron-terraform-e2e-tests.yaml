@@ -75,10 +75,12 @@ jobs:
 
       - name: Run Terraform E2E Tests
         timeout-minutes: 120
+        # env:
+        #   GOFLAGS: "-p=1"
         run: |
           npx nx run-many \
             --target test:e2e \
-            --parallel=2
+            --parallel=1
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'
