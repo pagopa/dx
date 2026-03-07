@@ -35,12 +35,109 @@ const BootstrapIdentityId = z
   .brand<"BootstrapIdentityId">();
 
 /**
+ * Branded type for resource prefix (e.g., "dx", "io").
+ * Validates that the prefix contains only lowercase letters to prevent injection.
+ */
+const ResourcePrefix = z
+  .string()
+  .min(1)
+  .regex(/^[a-z]+$/, {
+    message: "Resource prefix may contain only lowercase letters",
+  })
+  .brand<"ResourcePrefix">();
+
+/**
+ * Branded type for environment short name (e.g., "d", "u", "p").
+ * Validates single lowercase letter for environment.
+ */
+const EnvShort = z
+  .string()
+  .min(1)
+  .max(1)
+  .regex(/^[a-z]$/, {
+    message: "Environment short name must be a single lowercase letter",
+  })
+  .brand<"EnvShort">();
+
+/**
  * Input validation schema for the request authorization use case.
  */
 export const requestAuthorizationInputSchema = z.object({
   bootstrapIdentityId: BootstrapIdentityId,
+  envShort: EnvShort,
+  prefix: ResourcePrefix,
   subscriptionName: SubscriptionName,
 });
+
+/**
+ * Configuration for an AD group with its roles.
+ */
+export type GroupConfig = {
+  readonly members: readonly string[];
+  readonly name: string;
+  readonly roles: readonly string[];
+};
+
+/**
+ * Group name and roles configuration for default AD groups.
+ */
+type DefaultGroupSpec = {
+  readonly groupName: string;
+  readonly roles: readonly string[];
+};
+
+/**
+ * Default AD groups that should be created for each subscription.
+ * These follow the PagoPA standard pattern: <prefix>-<envShort>-adgroup-<groupName>
+ */
+export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
+  { groupName: "admin", roles: ["Owner"] },
+  { groupName: "developers", roles: ["Owner"] },
+  {
+    groupName: "operations",
+    roles: [
+      "Reader",
+      "Monitoring Contributor",
+      "Support Request Contributor",
+      "Storage Blob Data Reader",
+      "Storage Queue Data Reader",
+      "Cosmos DB Account Reader Role",
+    ],
+  },
+  {
+    groupName: "security",
+    roles: ["Reader", "Support Request Contributor"],
+  },
+  {
+    groupName: "technical-project-managers",
+    roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
+  },
+  {
+    groupName: "product-owners",
+    roles: ["Reader", "Support Request Contributor"],
+  },
+  { groupName: "externals", roles: ["Owner"] },
+  {
+    groupName: "oncall",
+    roles: [
+      "Reader",
+      "Monitoring Contributor",
+      "Support Request Contributor",
+      "Storage Blob Data Reader",
+      "Storage Queue Data Reader",
+      "Cosmos DB Account Reader Role",
+    ],
+  },
+];
+
+/**
+ * Generates the full group name from prefix, envShort, and groupName.
+ */
+export const makeGroupName = (
+  prefix: string,
+  envShort: string,
+  groupName: string,
+): string => `${prefix}-${envShort}-adgroup-${groupName}`;
 
 /**
  * Service interface for requesting cloud authorization.
