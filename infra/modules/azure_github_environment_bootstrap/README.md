@@ -57,6 +57,7 @@ module "bootstrap" {
       name                = "my-keyvault"
       resource_group_name = "common-rg"
     }
+    use_github_app = true
   }
 
   pep_vnet_id                        = data.azurerm_virtual_network.common.id
@@ -105,6 +106,7 @@ module "bootstrap" {
       name                = module.core_values.common_key_vault.name
       resource_group_name = module.core_values.common_key_vault.resource_group_name
     }
+    use_github_app = true
   }
 
   pep_vnet_id                        = module.core_values.common_vnet.id
@@ -213,19 +215,27 @@ repository = {
 
 Configuration for the GitHub Actions self-hosted runner deployed on Azure Container Apps.
 
+Authentication is done via a **GitHub App**. The Key Vault must contain three secrets
+before applying this module. See
+[Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
+for step-by-step instructions.
+
 ```hcl
 github_private_runner = {
   # Required: Container App Environment where the runner will be deployed
   container_app_environment_id       = data.azurerm_container_app_environment.runner.id
   container_app_environment_location = "italynorth"
 
-  # Required: Key Vault containing the GitHub PAT for runner registration
+  # Required: Key Vault containing the GitHub App credentials
+  # Secrets expected: github-runner-app-id, github-runner-app-installation-id, github-runner-app-key
   key_vault = {
     name                = "my-keyvault"
     resource_group_name = "common-rg"
-    secret_name         = "github-runner-pat"  # Optional, defaults to "github-runner-pat"
-    use_rbac            = false                 # Optional, set true if KV uses RBAC
+    use_rbac            = false  # Optional, set true if KV uses RBAC
   }
+
+  # Use GitHub App authentication (required)
+  use_github_app = true
 
   # Optional: Scaling configuration
   min_instances                = 0       # Minimum runners (default: 0)
