@@ -256,21 +256,26 @@ func validateResourceType(resourceType string, abbreviations map[string]string) 
 
 // validateRedundancy checks for redundant values between domain, name, and abbreviation
 func validateRedundancy(domain, name, abbreviation string) *function.FuncError {
+	normalizedDomain := strings.ToLower(domain)
 	normalizedName := strings.ToLower(name)
 	normalizedAbbreviation := strings.ToLower(abbreviation)
 
 	// Domain and name cannot be the same
-	if domain != "" && normalizedName != "" && domain == normalizedName {
+	if domain != "" && normalizedName != "" && normalizedDomain == normalizedName {
 		return function.NewFuncError("Resource domain cannot be the same as the resource name")
 	}
 
-	// Check if abbreviation starts with domain (e.g., domain="psql", abbreviation="psql-pep")
-	if domain != "" && strings.HasPrefix(normalizedAbbreviation, domain) {
+	// Check if abbreviation starts with domain followed by a separator or equals domain exactly
+	// (e.g., domain="psql", abbreviation="psql-pep"). A bare prefix match like domain="fdo"
+	// against abbreviation="fdog" must not trigger this check.
+	if domain != "" && (strings.HasPrefix(normalizedAbbreviation, normalizedDomain+"-") || normalizedAbbreviation == normalizedDomain) {
 		return function.NewFuncError("Resource domain cannot be part of the resource abbreviation. The abbreviation already contains the domain prefix")
 	}
 
-	// Check if abbreviation starts with name (e.g., name="cosno", abbreviation="cosno-pep")
-	if normalizedName != "" && strings.HasPrefix(normalizedAbbreviation, normalizedName) {
+	// Check if abbreviation starts with name followed by a separator or equals name exactly
+	// (e.g., name="cosno", abbreviation="cosno-pep"). A bare prefix match like name="cdn"
+	// against abbreviation="cdnr" must not trigger this check.
+	if normalizedName != "" && (strings.HasPrefix(normalizedAbbreviation, normalizedName+"-") || normalizedAbbreviation == normalizedName) {
 		return function.NewFuncError("Resource name cannot be part of the resource abbreviation. The abbreviation already contains the name prefix")
 	}
 
