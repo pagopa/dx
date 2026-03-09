@@ -123,3 +123,40 @@ resource "azurerm_role_assignment" "integration_github_roles" {
   principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
   description          = "Allow GitHub to write settings on App Configuration"
 }
+
+# The private_app subnet is ephemeral (test-only) but the VNet peering between the
+# common VNet and the e2e VNet is permanent and filters by remote_subnet_names.
+# This resource temporarily adds private_app to the allowed remote subnets via CLI
+# so the self-hosted runner can reach the private container instance during tests,
+# then restores the original filter on destroy.
+resource "terraform_data" "peering_private_app_subnet" {
+  triggers_replace = {
+    peering_name            = "${data.azurerm_virtual_network.common.name}-to-${data.azurerm_virtual_network.e2e.name}"
+    peering_vnet_name       = data.azurerm_virtual_network.common.name
+    peering_rg              = data.azurerm_virtual_network.common.resource_group_name
+    private_app_subnet_name = azurerm_subnet.private_app.name
+    pep_subnet_name         = data.azurerm_subnet.pep.name
+  }
+
+  provisioner "local-exec" {
+    when    = create
+    command = <<-EOT
+      az network vnet peering update \
+        --name "${self.triggers_replace.peering_name}" \
+        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+        --resource-group "${self.triggers_replace.peering_rg}" \
+        --set "remoteSubnets=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"},{\"name\":\"${self.triggers_replace.private_app_subnet_name}\"}]"
+    EOT
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOT
+      az network vnet peering update \
+        --name "${self.triggers_replace.peering_name}" \
+        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+        --resource-group "${self.triggers_replace.peering_rg}" \
+        --set "remoteSubnets=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"}]"
+    EOT
+  }
+}
