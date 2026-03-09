@@ -45,6 +45,8 @@ variable "origin_group" {
   })
 
   description = "Origin group configuration"
+
+  default = {}
 }
 
 variable "existing_cdn_frontdoor_profile_id" {
