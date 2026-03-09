@@ -38,6 +38,15 @@ variable "origins" {
   }
 }
 
+variable "origin_group" {
+  type = object({
+    health_probe_path = optional(string, "/")
+    request_type      = optional(string, "HEAD")
+  })
+
+  description = "Origin group configuration"
+}
+
 variable "existing_cdn_frontdoor_profile_id" {
   type        = string
   description = "Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile."
