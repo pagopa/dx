@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.18.2
+
+### Patch Changes
+
+- 8f76777: Update key vault properties to enable recover
+
 ## 0.18.1
 
 ### Patch Changes
