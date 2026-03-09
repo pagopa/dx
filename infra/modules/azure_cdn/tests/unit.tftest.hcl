@@ -83,6 +83,37 @@ run "cdn_origin_group_health_probe" {
     condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].protocol == "Https"
     error_message = "Origin group health probe protocol must be HTTPS"
   }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].path == "/"
+    error_message = "Origin group health probe path must default to /"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].request_type == "HEAD"
+    error_message = "Origin group health probe request type must default to HEAD"
+  }
+}
+
+run "cdn_origin_group_custom_health_probe" {
+  command = plan
+
+  variables {
+    origin_group = {
+      health_probe_path         = "/health"
+      health_probe_request_type = "GET"
+    }
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].path == "/health"
+    error_message = "Origin group health probe path must match provided value"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].request_type == "GET"
+    error_message = "Origin group health probe request type must match provided value"
+  }
 }
 
 run "cdn_single_origin" {
