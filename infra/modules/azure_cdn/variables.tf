@@ -38,13 +38,13 @@ variable "origins" {
   }
 }
 
-variable "origin_group" {
+variable "origin_health_probe" {
   type = object({
-    health_probe_path         = optional(string, "/")
-    health_probe_request_type = optional(string, "HEAD")
+    path         = optional(string, "/")
+    request_type = optional(string, "HEAD")
   })
 
-  description = "Origin group configuration"
+  description = "Health probe configuration of the CDN origin group"
 
   default = {}
 }

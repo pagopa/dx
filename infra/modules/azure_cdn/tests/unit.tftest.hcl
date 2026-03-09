@@ -99,9 +99,9 @@ run "cdn_origin_group_custom_health_probe" {
   command = plan
 
   variables {
-    origin_group = {
-      health_probe_path         = "/health"
-      health_probe_request_type = "GET"
+    origin_health_probe = {
+      path         = "/health"
+      request_type = "GET"
     }
   }
 

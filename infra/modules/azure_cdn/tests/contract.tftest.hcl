@@ -227,12 +227,12 @@ run "origin_group_default_values" {
 
   assert {
     condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].path == "/"
-    error_message = "Origin group health probe path must default to / when origin_group is not provided"
+    error_message = "Origin group health probe path must default to / when origin_health_probe is not provided"
   }
 
   assert {
     condition     = azurerm_cdn_frontdoor_origin_group.this.health_probe[0].request_type == "HEAD"
-    error_message = "Origin group health probe request type must default to HEAD when origin_group is not provided"
+    error_message = "Origin group health probe request type must default to HEAD when origin_health_probe is not provided"
   }
 }
 
