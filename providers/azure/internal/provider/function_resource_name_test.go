@@ -763,6 +763,39 @@ func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
 	})
 }
 
+
+func TestResourceNameFunction_NameIsBareAbbreviationPrefix(t *testing.T) {
+	t.Parallel()
+	// Regression test: name="cdn" with cdn_frontdoor_route (abbr="cdnr") must NOT be rejected.
+	// "cdn" is a bare string prefix of "cdnr" but they are not separated by "-", so there is
+	// no redundancy and the name should be accepted.
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "iw",
+						environment = "p",
+						location = "itn",
+						name = "cdn",
+						resource_type = "cdn_frontdoor_route",
+						instance_number = "1"
+					})
+        }
+        `,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckOutput("test", "iw-p-itn-cdn-cdnr-01"),
+				),
+			},
+		},
+	})
+}
+
 func TestResourceNameFunction_DomainMatchesCompositeAbbreviation(t *testing.T) {
 	t.Parallel()
 	// Test that domain cannot match the prefix of a composite abbreviation
