@@ -27,7 +27,6 @@ resource "azurerm_cdn_frontdoor_endpoint" "this" {
 resource "azurerm_cdn_frontdoor_origin_group" "this" {
   name                     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cdn_frontdoor_origin_group" }))
   cdn_frontdoor_profile_id = local.profile_id
-  session_affinity_enabled = false
 
   health_probe {
     interval_in_seconds = 100
