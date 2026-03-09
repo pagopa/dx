@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.1.5
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.1.4
 
 ### Patch Changes

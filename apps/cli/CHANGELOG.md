@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.18.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+- Updated dependencies [2d3d8fb]
+  - @pagopa/dx-savemoney@0.1.5
+
 ## 0.18.0
 
 ### Minor Changes
