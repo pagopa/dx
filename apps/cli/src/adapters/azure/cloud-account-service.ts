@@ -118,6 +118,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       const requiredRoles = [
         "8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
         "ba92f5b4-2d11-453d-a403-e96b0029c9fe", // Storage Blob Data Contributor
+        "b86a8fe4-44ce-4948-aee5-eccb2c155cd7", // Key Vault Secrets Officer
       ];
 
       const scope = `/subscriptions/${cloudAccountId}`;
@@ -251,12 +252,18 @@ export class AzureCloudAccountService implements CloudAccountService {
 
       const secretsProtectionEnabled = short.env === "p";
 
+      const result = await kvClient.vaults.checkNameAvailability({
+        name: keyVaultName,
+        type: "Microsoft.KeyVault/vaults",
+      });
+
       await kvClient.vaults.beginCreateOrUpdateAndWait(
         resourceGroupName,
         keyVaultName,
         {
           location: cloudAccount.defaultLocation,
           properties: {
+            createMode: result.nameAvailable ? "default" : "recover",
             enabledForDiskEncryption: true,
             enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
             enableRbacAuthorization: true,
