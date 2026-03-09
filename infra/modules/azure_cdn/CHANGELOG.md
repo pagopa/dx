@@ -1,5 +1,11 @@
 # azure_cdn
 
+## 0.6.0
+
+### Minor Changes
+
+- ce19de2: Add variable to manage origin group health probe configuration
+
 ## 0.5.2
 
 ### Patch Changes
