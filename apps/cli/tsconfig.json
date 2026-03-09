@@ -1,12 +1,11 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "moduleResolution": "NodeNext",
-    "module": "NodeNext",
     "declaration": true,
-    "target": "ES2022"
+    "lib": ["ES2023", "ES2024.Object", "ESNext.Collection"],
+    "target": "ES2023"
   },
   "include": ["src"]
 }
