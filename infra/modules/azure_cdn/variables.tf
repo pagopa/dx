@@ -40,8 +40,8 @@ variable "origins" {
 
 variable "origin_group" {
   type = object({
-    health_probe_path = optional(string, "/")
-    request_type      = optional(string, "HEAD")
+    health_probe_path         = optional(string, "/")
+    health_probe_request_type = optional(string, "HEAD")
   })
 
   description = "Origin group configuration"
