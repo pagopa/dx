@@ -31,6 +31,8 @@ resource "azurerm_cdn_frontdoor_origin_group" "this" {
   health_probe {
     interval_in_seconds = 100
     protocol            = "Https"
+    path                = var.origin_health_probe.path
+    request_type        = var.origin_health_probe.request_type
   }
 
   load_balancing {}
