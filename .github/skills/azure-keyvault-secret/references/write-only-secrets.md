@@ -2,9 +2,10 @@
 
 ## Why Secrets Leak into State
 
-Classic `azurerm_key_vault_secret` uses the `value` attribute:
+Using the `value` attribute within an `azurerm_key_vault_secret` resource is considered a security anti-pattern:
 
 ```hcl
+# DON'T DO THIS!
 resource "azurerm_key_vault_secret" "example" {
   name         = "my-secret"
   value        = "super-secret-value"   # ⚠️ stored in terraform.tfstate in plaintext
@@ -22,6 +23,7 @@ is sent to the provider during `apply` but is never persisted in state. The azur
 provider added support via `value_wo` in **version 4.23**.
 
 ```hcl
+DO THIS INSTEAD
 resource "azurerm_key_vault_secret" "example" {
   name             = "my-secret"
   value_wo         = ""    # write-only: not stored in state

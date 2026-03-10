@@ -10,7 +10,7 @@ resource "azurerm_key_vault_secret" "<RESOURCE_LABEL>" {
   value_wo         = ""
   value_wo_version = 1
 
-  # Optional — remove if not needed
-  content_type = "<CONTENT_TYPE>" # e.g. "text/plain", "application/json"
+  # Optional - use only when needed
+  # content_type = "<CONTENT_TYPE>" # e.g. "text/plain", "application/json"
   tags         = <TAGS_REFERENCE> # e.g. var.tags
 }
