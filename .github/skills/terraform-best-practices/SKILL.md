@@ -1,5 +1,5 @@
 ---
-name: terraform-dx-best-practices
+name: terraform-best-practices
 description: Generate Terraform code following PagoPA DX best practices. Reads DX documentation, enforces module-first usage from the pagopa-dx Registry namespace, collects required values from the existing workspace, and validates all generated code before presenting it to the user.
 ---
 
