@@ -26,12 +26,18 @@ apps/website/docs/azure/using-azure-registry-provider.md
 
 **If the DX repository is NOT present locally**, use one of the following fallbacks (in order of preference):
 
-1. **GitHub file tools**: if GitHub file-reading tools are available, fetch each file from the `pagopa/dx` repository at path `apps/website/docs/terraform/<filename>`.
-2. **Raw GitHub URL**: use `fetch_webpage` on:
+1. **Clone to a persistent local directory**: clone the repo once into `~/.dx` so it can be reused across sessions without re-cloning. Run in a terminal:
+   ```bash
+   if [ ! -d "$HOME/.dx" ]; then
+     git clone --depth 1 https://github.com/pagopa/dx "$HOME/.dx"
+   fi
+   ```
+   Then read the files from `~/.dx/apps/website/docs/terraform/`. On subsequent runs the clone is already present — skip the `git clone` step and read directly from `~/.dx`.
+2. **GitHub file tools**: if GitHub file-reading tools are available, fetch each file from the `pagopa/dx` repository at path `apps/website/docs/terraform/<filename>`.
+3. **Raw GitHub URL**: use `fetch_webpage` on:
    ```
    https://raw.githubusercontent.com/pagopa/dx/main/apps/website/docs/terraform/<filename>
    ```
-3. **Clone to a temp directory**: run `git clone --depth 1 https://github.com/pagopa/dx /tmp/dx` in a terminal, then read the files from `/tmp/dx/apps/website/docs/terraform/`.
 
 If a file does not exist (locally or remotely), note it in the README with `<!-- local-missing: <filename> -->` and continue without it.
 
@@ -67,9 +73,9 @@ The `pagopa-dx` namespace contains modules for many resource types beyond comput
 
 1. **Look for existing `.tf` files** in `infra/resources/<env>/` matching the target environment (`dev`, `prod`, `uat`). Read `locals.tf` or similar files to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter).
 
-2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/azurerm` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources. Invite the user to review the full output list on the Terraform Registry:
+2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources. Invite the user to review the full output list on the Terraform Registry:
    ```
-   https://registry.terraform.io/modules/pagopa-dx/<csp>-core-values-exporter/azurerm/latest
+   https://registry.terraform.io/modules/pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>/latest
    ```
 
 **Only ask the user for values that could not be inferred from the steps above:**
