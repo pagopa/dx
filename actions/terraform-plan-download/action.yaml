@@ -1,5 +1,9 @@
 name: Download Terraform Plan
-description: Downloads and decrypts a Terraform plan artifact
+description: >
+  Downloads and decrypts a Terraform plan artifact.
+  When backend-source is set, the plain plan is fetched directly from the
+  Terraform remote state storage (Azure Blob Storage or S3) and the
+  GitHub Actions artifact + decryption step are skipped.
 
 inputs:
   plan-file:
@@ -11,17 +15,59 @@ inputs:
   artifact-name:
     description: Name of the artifact to download
     required: true
+  backend-source:
+    description: >
+      If set, download the plain plan from this remote path in the state storage
+      instead of fetching the GitHub Actions artifact. When empty the artifact flow is used.
+    required: false
+    default: ""
+  provider:
+    description: Cloud storage provider for the backend download. Accepted values are "azure" and "aws".
+    required: false
+    default: ""
+  azure-storage-account:
+    description: Azure Storage Account name. Required when provider is "azure".
+    required: false
+    default: ""
+  azure-container:
+    description: Azure Blob container name. Required when provider is "azure".
+    required: false
+    default: ""
+  aws-bucket:
+    description: S3 bucket name. Required when provider is "aws".
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region where the S3 bucket lives. Required when provider is "aws".
+    required: false
+    default: ""
 
 runs:
   using: composite
   steps:
+    # State storage flow: fetch plain plan directly from remote storage (no decrypt needed).
+    - name: Download Plan from State Storage
+      if: ${{ inputs.backend-source != '' }}
+      uses: pagopa/dx/actions/cloud-storage-download@main
+      with:
+        provider: ${{ inputs.provider }}
+        source: ${{ inputs.backend-source }}
+        file-path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}
+        azure-storage-account: ${{ inputs.azure-storage-account }}
+        azure-container: ${{ inputs.azure-container }}
+        aws-bucket: ${{ inputs.aws-bucket }}
+        aws-region: ${{ inputs.aws-region }}
+
+    # Standard flow: download the encrypted artifact and decrypt it.
     - name: Download Terraform Plan Artifact
+      if: ${{ inputs.backend-source == '' }}
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ inputs.artifact-name }}
         path: ${{ inputs.working-directory }}
 
     - name: Decrypt Terraform Plan
+      if: ${{ inputs.backend-source == '' }}
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:

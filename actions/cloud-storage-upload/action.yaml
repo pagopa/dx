@@ -1,0 +1,51 @@
+name: Cloud Storage Upload
+description: >
+  Uploads a local file to Azure Blob Storage or Amazon S3.
+  Authentication is delegated to the calling workflow (azure/login or
+  aws-actions/configure-aws-credentials must have already run).
+
+inputs:
+  provider:
+    description: Cloud storage provider. Accepted values are "azure" and "aws".
+    required: true
+  file-path:
+    description: Absolute or relative path of the local file to upload.
+    required: true
+  destination:
+    description: Remote object path (blob name or S3 object key).
+    required: true
+  azure-storage-account:
+    description: Azure Storage Account name. Required when provider is "azure".
+    required: false
+    default: ""
+  azure-container:
+    description: Azure Blob container name. Required when provider is "azure".
+    required: false
+    default: ""
+  aws-bucket:
+    description: S3 bucket name. Required when provider is "aws".
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region where the S3 bucket lives. Required when provider is "aws".
+    required: false
+    default: ""
+  overwrite:
+    description: Overwrite the remote object if it already exists.
+    required: false
+    default: "true"
+  workflow-run-url:
+    description: >
+      If provided, attached to the uploaded object as a tag (key: workflow-run-url).
+      Useful for tracing an artifact back to the GitHub Actions run that created it.
+      Example: https://github.com/org/repo/actions/runs/12345678
+    required: false
+    default: ""
+
+outputs:
+  remote-url:
+    description: Full URL of the uploaded object.
+
+runs:
+  using: node20
+  main: dist/main.cjs

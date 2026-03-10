@@ -1,0 +1,51 @@
+name: Cloud Storage Download
+description: >
+  Downloads a file from Azure Blob Storage or Amazon S3 to a local path.
+  When delete-on-completion is true, the remote object and the local file are
+  deleted in a post step after the job completes.
+  Authentication is delegated to the calling workflow (azure/login or
+  aws-actions/configure-aws-credentials must have already run).
+
+inputs:
+  provider:
+    description: Cloud storage provider. Accepted values are "azure" and "aws".
+    required: true
+  source:
+    description: Remote object path (blob name or S3 object key) to download.
+    required: true
+  file-path:
+    description: Local destination path where the file will be saved.
+    required: true
+  azure-storage-account:
+    description: Azure Storage Account name. Required when provider is "azure".
+    required: false
+    default: ""
+  azure-container:
+    description: Azure Blob container name. Required when provider is "azure".
+    required: false
+    default: ""
+  aws-bucket:
+    description: S3 bucket name. Required when provider is "aws".
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region where the S3 bucket lives. Required when provider is "aws".
+    required: false
+    default: ""
+  delete-on-completion:
+    description: >
+      When true, deletes the remote object and the local file in a post step
+      that runs after the job completes (regardless of success or failure).
+      Useful for ephemeral artifacts such as Terraform plans.
+    required: false
+    default: "false"
+
+outputs:
+  file-path:
+    description: Absolute path of the downloaded file.
+
+runs:
+  using: node20
+  main: dist/main.cjs
+  post: dist/post.cjs
+  post-if: success()
