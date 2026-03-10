@@ -56,8 +56,12 @@ export async function importPullRequests(
         author: pullRequest.user?.login || null,
         reviewDecision: null,
         createdAt: new Date(pullRequest.created_at),
-        closedAt: pullRequest.closed_at ? new Date(pullRequest.closed_at) : null,
-        mergedAt: pullRequest.merged_at ? new Date(pullRequest.merged_at) : null,
+        closedAt: pullRequest.closed_at
+          ? new Date(pullRequest.closed_at)
+          : null,
+        mergedAt: pullRequest.merged_at
+          ? new Date(pullRequest.merged_at)
+          : null,
         mergedBy: null,
         additions: null,
         totalCommentsCount: null,

@@ -58,7 +58,10 @@ const parseTerrawizOutput = (value: unknown): TerrawizOutput => {
 
 const parseRegistryModulesPage = (value: unknown) => {
   if (!isRecord(value)) {
-    return { modules: [] as TerraformRegistryModule[], nextUrl: null as string | null };
+    return {
+      modules: [] as TerraformRegistryModule[],
+      nextUrl: null as string | null,
+    };
   }
 
   const modules = Array.isArray(value.modules)
@@ -130,9 +133,7 @@ const sortVersions = (versions: string[]): string[] =>
     const [rightMajor, rightMinor = 0, rightPatch = 0] = parseVersion(right);
 
     return (
-      leftMajor - rightMajor ||
-      leftMinor - rightMinor ||
-      leftPatch - rightPatch
+      leftMajor - rightMajor || leftMinor - rightMinor || leftPatch - rightPatch
     );
   });
 

@@ -357,8 +357,10 @@ export function DataTable<TData extends object>({
   className = "",
   tooltip,
 }: DataTableProps<TData>) {
-  const [sortKey, setSortKey] =
-    React.useState<Extract<keyof TData, string> | null>(null);
+  const [sortKey, setSortKey] = React.useState<Extract<
+    keyof TData,
+    string
+  > | null>(null);
   const [sortDir, setSortDir] = React.useState<"asc" | "desc">("asc");
 
   const handleSort = (key: Extract<keyof TData, string>) => {

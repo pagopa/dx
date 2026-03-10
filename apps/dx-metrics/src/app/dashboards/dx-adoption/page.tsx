@@ -38,10 +38,12 @@ export default function DxAdoptionDashboard() {
     mode: "repository-only",
   });
 
-  const { data, loading, error, refetch } =
-    useDashboardData<DxAdoptionData>("dx-adoption", {
+  const { data, loading, error, refetch } = useDashboardData<DxAdoptionData>(
+    "dx-adoption",
+    {
       repository,
-    });
+    },
+  );
 
   const pipelinePie =
     data?.pipelineAdoption.map((r) => ({

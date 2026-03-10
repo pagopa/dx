@@ -14,10 +14,7 @@ import {
   HelpRequestedError,
   parseArgs,
 } from "./lib/cli";
-import {
-  loadImportConfig,
-  resolveImportSettings,
-} from "./lib/config";
+import { loadImportConfig, resolveImportSettings } from "./lib/config";
 import {
   closeImportContext,
   createImportContext,
@@ -40,10 +37,7 @@ import {
   importTerraformRegistryReleases,
 } from "./lib/importers/terraform";
 import { importTrackerCsv } from "./lib/importers/tracker";
-import {
-  importWorkflows,
-  importWorkflowRuns,
-} from "./lib/importers/workflows";
+import { importWorkflows, importWorkflowRuns } from "./lib/importers/workflows";
 
 const readEnvironmentOverrides = () => ({
   ORGANIZATION: process.env.ORGANIZATION,
@@ -73,7 +67,10 @@ async function main(): Promise<void> {
   const overallStartTime = Date.now();
   const args = parseArgs(process.argv.slice(2), process.cwd());
   const fileConfig = loadImportConfig(args.configPath);
-  const settings = resolveImportSettings(fileConfig, readEnvironmentOverrides());
+  const settings = resolveImportSettings(
+    fileConfig,
+    readEnvironmentOverrides(),
+  );
   const context = await createImportContext(settings);
   const stats = { skipped: 0 };
 
@@ -111,7 +108,9 @@ async function main(): Promise<void> {
       const isRepositoryEntity =
         repoName !== null && context.repositories.includes(repoName);
       const repoId =
-        repoName && isRepositoryEntity ? await context.ensureRepo(repoName) : null;
+        repoName && isRepositoryEntity
+          ? await context.ensureRepo(repoName)
+          : null;
       const syncRunId = await startCheckpoint(
         context,
         entityType,

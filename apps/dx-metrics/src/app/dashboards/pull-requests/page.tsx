@@ -45,11 +45,13 @@ interface PrDashboardData {
 export default function PullRequestsDashboard() {
   const { repository, days, setRepository, setDays } = useDashboardFilters();
 
-  const { data, loading, error, refetch } =
-    useDashboardData<PrDashboardData>("pull-requests", {
+  const { data, loading, error, refetch } = useDashboardData<PrDashboardData>(
+    "pull-requests",
+    {
       repository,
       days,
-    });
+    },
+  );
 
   return (
     <div className="space-y-8">

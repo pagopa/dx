@@ -26,7 +26,10 @@ const DEFAULT_MODE: DashboardFilterMode = "repository-and-time";
 const isPositiveInteger = (value: number) =>
   Number.isInteger(value) && value > 0;
 
-const getValidRepository = (repository: string | null, fallbackRepository: string) =>
+const getValidRepository = (
+  repository: string | null,
+  fallbackRepository: string,
+) =>
   repository && REPOSITORIES.includes(repository)
     ? repository
     : fallbackRepository;
@@ -81,7 +84,14 @@ export function useDashboardFilters({
 
       router.push(queryString ? `${pathname}?${queryString}` : pathname);
     },
-    [mode, pathname, repository, resolvedDefaultRepository, router, searchParams],
+    [
+      mode,
+      pathname,
+      repository,
+      resolvedDefaultRepository,
+      router,
+      searchParams,
+    ],
   );
 
   const setRepository = useCallback(

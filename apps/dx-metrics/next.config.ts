@@ -27,7 +27,9 @@ const readConfiguredRepositories = () => {
 
   const repositories = parsedConfig.repositories.map((repository) => {
     if (typeof repository !== "string" || repository.trim().length === 0) {
-      throw new Error("config.yaml repositories entries must be non-empty strings");
+      throw new Error(
+        "config.yaml repositories entries must be non-empty strings",
+      );
     }
 
     return repository.trim();

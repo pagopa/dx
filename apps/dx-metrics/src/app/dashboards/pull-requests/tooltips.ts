@@ -16,10 +16,12 @@ export const pullRequestsTooltips = {
     "Weekly average lead time trend. Shows velocity patterns and helps identify process improvements.",
   leadTimeTrend:
     "Lead time trend line over time. Visualizes long-term velocity improvements or regressions.",
-  mergedPrs: "Number of successfully merged PRs per day. Tracks deployment throughput.",
+  mergedPrs:
+    "Number of successfully merged PRs per day. Tracks deployment throughput.",
   unmergedPrs:
     "Open pull requests not yet merged. Higher numbers may indicate review bottlenecks.",
-  newPrs: "New pull requests created per day. Measures development activity level.",
+  newPrs:
+    "New pull requests created per day. Measures development activity level.",
   cumulatedNewPrs:
     "Cumulative count of PRs over time. Shows total throughput and long-term trends.",
   prSize:

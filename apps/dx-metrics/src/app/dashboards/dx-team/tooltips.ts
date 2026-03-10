@@ -13,6 +13,8 @@ export const dxTeamTooltips = {
     "List of infrastructure PRs authored by team. Tracks infrastructure enhancement efforts.",
   commitsByRepo:
     "DX member contributions across repositories. Reveals team expertise areas.",
-  adoptingProjects: "Projects using DX tools and standards. Shows successful adoption patterns.",
-  pipelinesUsage: "Which DX pipelines are used across projects. Measures tool adoption and utility.",
+  adoptingProjects:
+    "Projects using DX tools and standards. Shows successful adoption patterns.",
+  pipelinesUsage:
+    "Which DX pipelines are used across projects. Measures tool adoption and utility.",
 } as const;

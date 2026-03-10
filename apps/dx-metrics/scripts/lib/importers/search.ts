@@ -3,10 +3,7 @@
 import { sql } from "drizzle-orm";
 import * as schema from "../../../src/db/schema";
 import type { ImportContext } from "../import-context";
-import {
-  escapeForRegularExpression,
-  sleep,
-} from "../importer-helpers";
+import { escapeForRegularExpression, sleep } from "../importer-helpers";
 
 const buildDxUsesPattern = (context: ImportContext): RegExp => {
   const workflowPrefix = `${context.organization}/${context.dxRepo}/.github/workflows/`;
@@ -45,7 +42,12 @@ export async function importDxPipelineUsages(
       const callerFile = result.path;
       const ownerLogin = result.repository?.owner?.login;
       const repositoryName = result.repository?.name;
-      if (!repositoryFullName || !callerFile || !ownerLogin || !repositoryName) {
+      if (
+        !repositoryFullName ||
+        !callerFile ||
+        !ownerLogin ||
+        !repositoryName
+      ) {
         continue;
       }
 

@@ -9,11 +9,14 @@ export const dxAdoptionTooltips = {
     "Percentage of DX vs standard pipelines. Indicates team adoption of standardized CI/CD.",
   moduleAdoption:
     "Percentage of DX vs standard Terraform modules. Shows infrastructure standardization.",
-  workflowsList: "All available pipelines and their categorization. Helps teams discover DX tools.",
-  modulesList: "Terraform modules available. Enables self-service infrastructure automation.",
+  workflowsList:
+    "All available pipelines and their categorization. Helps teams discover DX tools.",
+  modulesList:
+    "Terraform modules available. Enables self-service infrastructure automation.",
   upToDatePercentage:
     "Percentage of modules using latest version. Measures dependency freshness.",
-  outdatedModules: "Count of modules with available updates. Indicates technical debt.",
+  outdatedModules:
+    "Count of modules with available updates. Indicates technical debt.",
   unknownVersions:
     "Modules with untracked version status. Reveals visibility gaps in infrastructure.",
   versionDrift:

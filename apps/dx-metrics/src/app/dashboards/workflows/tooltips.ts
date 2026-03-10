@@ -5,7 +5,8 @@
 export const workflowsTooltips = {
   title:
     "Monitors CI/CD pipeline metrics including build success rates, execution times, and failure patterns.",
-  firstRun: "Date of first pipeline execution in this period. Indicates when pipeline was enabled.",
+  firstRun:
+    "Date of first pipeline execution in this period. Indicates when pipeline was enabled.",
   runsCount:
     "Total number of pipeline executions. Measures CI/CD activity and testing frequency.",
   avgDuration:
@@ -20,7 +21,8 @@ export const workflowsTooltips = {
     "Count of failed runs by pipeline. Identifies which pipelines need reliability improvements.",
   avgPipelineDuration:
     "Average execution time per pipeline. Shows which pipelines are performance bottlenecks.",
-  pipelineRunCount: "Total runs per pipeline. Indicates pipeline usage and importance.",
+  pipelineRunCount:
+    "Total runs per pipeline. Indicates pipeline usage and importance.",
   cumulativeDuration:
     "Total time spent per pipeline. Helps prioritize optimization efforts.",
   infraPlanDuration:

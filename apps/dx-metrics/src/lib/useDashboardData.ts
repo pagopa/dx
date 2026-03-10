@@ -44,42 +44,50 @@ export function useDashboardData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const queryString = useMemo(() => buildDashboardQueryString(params), [params]);
+  const queryString = useMemo(
+    () => buildDashboardQueryString(params),
+    [params],
+  );
 
-  const fetchData = useCallback(async (signal?: AbortSignal) => {
-    setLoading(true);
-    setError(null);
+  const fetchData = useCallback(
+    async (signal?: AbortSignal) => {
+      setLoading(true);
+      setError(null);
 
-    try {
-      const route = queryString
-        ? `/api/dashboards/${endpoint}?${queryString}`
-        : `/api/dashboards/${endpoint}`;
-      const response = await fetch(route, {
-        cache: "no-store",
-        signal,
-      });
+      try {
+        const route = queryString
+          ? `/api/dashboards/${endpoint}?${queryString}`
+          : `/api/dashboards/${endpoint}`;
+        const response = await fetch(route, {
+          cache: "no-store",
+          signal,
+        });
 
-      if (!response.ok) {
-        throw new Error(await extractDashboardErrorMessage(response));
+        if (!response.ok) {
+          throw new Error(await extractDashboardErrorMessage(response));
+        }
+
+        const payload: T = await response.json();
+
+        if (!signal?.aborted) {
+          setData(payload);
+        }
+      } catch (caughtError) {
+        if (!signal?.aborted) {
+          setError(
+            caughtError instanceof Error
+              ? caughtError.message
+              : "Unknown error",
+          );
+        }
+      } finally {
+        if (!signal?.aborted) {
+          setLoading(false);
+        }
       }
-
-      const payload: T = await response.json();
-
-      if (!signal?.aborted) {
-        setData(payload);
-      }
-    } catch (caughtError) {
-      if (!signal?.aborted) {
-        setError(
-          caughtError instanceof Error ? caughtError.message : "Unknown error",
-        );
-      }
-    } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
-    }
-  }, [endpoint, queryString]);
+    },
+    [endpoint, queryString],
+  );
 
   useEffect(() => {
     const controller = new AbortController();

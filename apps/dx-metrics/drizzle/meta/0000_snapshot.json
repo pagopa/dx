@@ -186,12 +186,8 @@
           "name": "commits_repository_id_repositories_id_fk",
           "tableFrom": "commits",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -344,9 +340,7 @@
         "dx_team_members_username_unique": {
           "name": "dx_team_members_username_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "username"
-          ]
+          "columns": ["username"]
         }
       },
       "policies": {},
@@ -472,12 +466,8 @@
           "name": "iac_pr_lead_times_repository_id_repositories_id_fk",
           "tableFrom": "iac_pr_lead_times",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -581,12 +571,8 @@
           "name": "pull_request_reviews_pull_request_id_pull_requests_id_fk",
           "tableFrom": "pull_request_reviews",
           "tableTo": "pull_requests",
-          "columnsFrom": [
-            "pull_request_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pull_request_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -594,12 +580,8 @@
           "name": "pull_request_reviews_repository_id_repositories_id_fk",
           "tableFrom": "pull_request_reviews",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -751,12 +733,8 @@
           "name": "pull_requests_repository_id_repositories_id_fk",
           "tableFrom": "pull_requests",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -803,9 +781,7 @@
         "repositories_full_name_unique": {
           "name": "repositories_full_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "full_name"
-          ]
+          "columns": ["full_name"]
         }
       },
       "policies": {},
@@ -878,12 +854,8 @@
           "name": "sync_runs_repository_id_repositories_id_fk",
           "tableFrom": "sync_runs",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1253,12 +1225,8 @@
           "name": "workflow_runs_repository_id_repositories_id_fk",
           "tableFrom": "workflow_runs",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1266,12 +1234,8 @@
           "name": "workflow_runs_workflow_id_workflows_id_fk",
           "tableFrom": "workflow_runs",
           "tableTo": "workflows",
-          "columnsFrom": [
-            "workflow_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workflow_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1333,12 +1297,8 @@
           "name": "workflows_repository_id_repositories_id_fk",
           "tableFrom": "workflows",
           "tableTo": "repositories",
-          "columnsFrom": [
-            "repository_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }

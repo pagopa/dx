@@ -11,10 +11,12 @@ export const iacTooltips = {
     "Lead time trend for IaC PRs. Indicates if infrastructure reviews are getting faster.",
   supervisedVsUnsupervised:
     "Cumulative count of supervised vs unsupervised IaC PRs. Tracks governance compliance.",
-  prsOverTime: "Count of IaC PRs by week. Measures infrastructure change frequency and update velocity.",
+  prsOverTime:
+    "Count of IaC PRs by week. Measures infrastructure change frequency and update velocity.",
   prsByReviewer:
     "Infrastructure PRs handled by each reviewer. Shows expertise distribution and workload.",
-  mergedPrs: "Approved and merged IaC PRs. Measures completed infrastructure changes.",
+  mergedPrs:
+    "Approved and merged IaC PRs. Measures completed infrastructure changes.",
   avgLeadTimeDays:
     "Average time to merge infrastructure changes. Critical for infrastructure update speed.",
 } as const;

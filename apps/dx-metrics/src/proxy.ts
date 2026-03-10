@@ -6,7 +6,11 @@ export default auth((req) => {
   if (process.env.SKIP_AUTH === "true") {
     return NextResponse.next();
   }
-  if (!req.auth && !req.nextUrl.pathname.startsWith("/sign-in") && !req.nextUrl.pathname.startsWith("/api/auth")) {
+  if (
+    !req.auth &&
+    !req.nextUrl.pathname.startsWith("/sign-in") &&
+    !req.nextUrl.pathname.startsWith("/api/auth")
+  ) {
     const newUrl = new URL("/sign-in", req.nextUrl.origin);
     return NextResponse.redirect(newUrl);
   }

@@ -49,9 +49,7 @@ export default function PullRequestsReviewDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
-          Pull Requests Review
-        </h2>
+        <h2 className="text-xl font-bold text-white">Pull Requests Review</h2>
         <TooltipIcon content={tooltipContent.title} />
       </div>
       <DashboardFilters

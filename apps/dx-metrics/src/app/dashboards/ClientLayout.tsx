@@ -30,7 +30,8 @@ export function ClientLayout({
     };
 
     window.addEventListener(sidebarToggleEventName, handleToggle);
-    return () => window.removeEventListener(sidebarToggleEventName, handleToggle);
+    return () =>
+      window.removeEventListener(sidebarToggleEventName, handleToggle);
   }, []);
 
   return (
