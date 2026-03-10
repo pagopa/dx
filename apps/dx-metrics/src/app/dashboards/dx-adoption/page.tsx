@@ -1,36 +1,37 @@
 "use client";
 
-import { DashboardFilters } from "@/components/DashboardFilters";
+import { DataTable, SimplePieChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/dashboard-request-state";
-import { SimplePieChart, DataTable } from "@/components/Charts";
+import { DashboardFilters } from "@/components/DashboardFilters";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
+
 import { dxAdoptionTooltips as tooltipContent } from "./tooltips";
 
 interface DxAdoptionData {
-  pipelineAdoption: { pipeline_type: string; pipeline_count: number }[];
-  moduleAdoption: { module_type: string; module_count: number }[];
-  workflowsList: { workflow_name: string; pipeline_type: string }[];
+  moduleAdoption: { module_count: number; module_type: string }[];
   modulesList: {
+    file_path: string;
     module_name: string;
     module_type: string;
-    file_path: string;
   }[];
+  pipelineAdoption: { pipeline_count: number; pipeline_type: string }[];
   versionDriftList: {
-    module_name: string;
-    used_version: string | null;
-    latest_version: string | null;
-    file_path: string | null;
     drift_status: string;
+    file_path: null | string;
+    latest_version: null | string;
+    module_name: string;
+    used_version: null | string;
   }[];
   versionDriftSummary: {
-    upToDate: number;
     outdated: number;
-    unknown: number;
     total: number;
+    unknown: number;
+    upToDate: number;
   };
+  workflowsList: { pipeline_type: string; workflow_name: string }[];
 }
 
 export default function DxAdoptionDashboard() {
@@ -38,7 +39,7 @@ export default function DxAdoptionDashboard() {
     mode: "repository-only",
   });
 
-  const { data, loading, error, refetch } = useDashboardData<DxAdoptionData>(
+  const { data, error, loading, refetch } = useDashboardData<DxAdoptionData>(
     "dx-adoption",
     {
       repository,
@@ -93,12 +94,12 @@ export default function DxAdoptionDashboard() {
       </div>
       <DashboardFilters
         mode="repository-only"
-        repository={repository}
         onRepositoryChange={setRepository}
+        repository={repository}
       />
       <DashboardRequestState
-        loading={loading}
         error={error}
+        loading={loading}
         onRetry={refetch}
       />
 
@@ -106,35 +107,35 @@ export default function DxAdoptionDashboard() {
         <>
           <div className="grid grid-cols-2 gap-4">
             <SimplePieChart
-              title="DX Pipeline Adoption"
               data={pipelinePie}
+              title="DX Pipeline Adoption"
               tooltip={tooltipContent.pipelineAdoption}
             />
             <SimplePieChart
-              title="DX Terraform Modules Adoption"
               data={modulePie}
+              title="DX Terraform Modules Adoption"
               tooltip={tooltipContent.moduleAdoption}
             />
           </div>
 
           <div className="mt-4 grid grid-cols-2 gap-4">
             <DataTable
-              title="Workflows List"
               columns={[
                 { key: "workflow_name", label: "Workflow" },
                 { key: "pipeline_type", label: "Type" },
               ]}
               data={data.workflowsList}
+              title="Workflows List"
               tooltip={tooltipContent.workflowsList}
             />
             <DataTable
-              title="Terraform Modules List"
               columns={[
                 { key: "module_name", label: "Module" },
                 { key: "module_type", label: "Type" },
                 { key: "file_path", label: "File Path" },
               ]}
               data={data.modulesList}
+              title="Terraform Modules List"
               tooltip={tooltipContent.modulesList}
             />
           </div>
@@ -148,32 +149,31 @@ export default function DxAdoptionDashboard() {
               <div className="mb-4 grid grid-cols-4 gap-4">
                 <MetricCard
                   label="DX Modules Up-to-Date"
+                  tooltip={tooltipContent.upToDatePercentage}
                   value={
                     driftSummary
                       ? `${driftSummary.upToDate}/${driftSummary.total}`
                       : null
                   }
-                  tooltip={tooltipContent.upToDatePercentage}
                 />
                 <MetricCard
                   label="Up-to-Date %"
-                  value={driftUpToDatePct}
                   suffix="%"
                   tooltip={tooltipContent.upToDatePercentage}
+                  value={driftUpToDatePct}
                 />
                 <MetricCard
                   label="Outdated Modules"
-                  value={driftSummary?.outdated ?? null}
                   tooltip={tooltipContent.outdatedModules}
+                  value={driftSummary?.outdated ?? null}
                 />
                 <MetricCard
                   label="Unknown Version"
-                  value={driftSummary?.unknown ?? null}
                   tooltip={tooltipContent.unknownVersions}
+                  value={driftSummary?.unknown ?? null}
                 />
               </div>
               <DataTable
-                title="DX Module Version Drift"
                 columns={[
                   { key: "module_name", label: "Module" },
                   { key: "used_version", label: "Used Version" },
@@ -187,6 +187,7 @@ export default function DxAdoptionDashboard() {
                   },
                 ]}
                 data={data.versionDriftList}
+                title="DX Module Version Drift"
                 tooltip={tooltipContent.versionDrift}
               />
             </>

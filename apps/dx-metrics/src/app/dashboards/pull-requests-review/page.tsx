@@ -1,45 +1,46 @@
 "use client";
 
-import { DashboardFilters } from "@/components/DashboardFilters";
-import { DashboardRequestState } from "@/components/dashboard-request-state";
-import { MetricCard } from "@/components/MetricCard";
 import {
-  SimpleLineChart,
-  SimpleBarChart,
   DataTable,
+  SimpleBarChart,
+  SimpleLineChart,
 } from "@/components/Charts";
+import { DashboardRequestState } from "@/components/dashboard-request-state";
+import { DashboardFilters } from "@/components/DashboardFilters";
+import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
+
 import { pullRequestsReviewTooltips as tooltipContent } from "./tooltips";
 
 interface PrReviewDashboardData {
   cards: {
-    avgTimeToFirstReview: number | null;
-    avgTimeToMerge: number | null;
+    avgTimeToFirstReview: null | number;
+    avgTimeToMerge: null | number;
   };
-  timeToFirstReviewTrend: { week: string; avg_hours_to_first_review: number }[];
-  timeToMergeTrend: { week: string; avg_hours_to_merge: number }[];
   reviewDistribution: {
-    reviewer: string;
-    total_reviews: number;
     approvals: number;
     change_requests: number;
+    reviewer: string;
+    total_reviews: number;
   }[];
   reviewMatrix: {
     author: string;
-    reviewer: string;
     review_count: number;
+    reviewer: string;
   }[];
+  timeToFirstReviewTrend: { avg_hours_to_first_review: number; week: string }[];
+  timeToMergeTrend: { avg_hours_to_merge: number; week: string }[];
 }
 
 export default function PullRequestsReviewDashboard() {
-  const { repository, days, setRepository, setDays } = useDashboardFilters();
+  const { days, repository, setDays, setRepository } = useDashboardFilters();
 
-  const { data, loading, error, refetch } =
+  const { data, error, loading, refetch } =
     useDashboardData<PrReviewDashboardData>("pull-requests-review", {
-      repository,
       days,
+      repository,
     });
 
   const reviewMatrixWithoutSelfReviews =
@@ -53,14 +54,14 @@ export default function PullRequestsReviewDashboard() {
         <TooltipIcon content={tooltipContent.title} />
       </div>
       <DashboardFilters
-        repository={repository}
-        timeInterval={days}
         onRepositoryChange={setRepository}
         onTimeIntervalChange={setDays}
+        repository={repository}
+        timeInterval={days}
       />
       <DashboardRequestState
-        loading={loading}
         error={error}
+        loading={loading}
         onRetry={refetch}
       />
 
@@ -69,15 +70,15 @@ export default function PullRequestsReviewDashboard() {
           <div className="mb-6 grid grid-cols-2 gap-4">
             <MetricCard
               label="Avg Time to First Review"
-              value={data.cards.avgTimeToFirstReview}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToFirstReview}
+              value={data.cards.avgTimeToFirstReview}
             />
             <MetricCard
               label="Avg Time to Merge"
-              value={data.cards.avgTimeToMerge}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToMerge}
+              value={data.cards.avgTimeToMerge}
             />
           </div>
 
@@ -90,30 +91,30 @@ export default function PullRequestsReviewDashboard() {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <SimpleLineChart
-                  title="Avg Time to First Review (weekly, hours)"
                   data={data.timeToFirstReviewTrend}
-                  xKey="week"
                   lines={[
                     {
+                      color: "#2563eb",
                       key: "avg_hours_to_first_review",
                       name: "Hours to First Review",
-                      color: "#2563eb",
                     },
                   ]}
+                  title="Avg Time to First Review (weekly, hours)"
                   tooltip={tooltipContent.timeToFirstReviewTrend}
+                  xKey="week"
                 />
                 <SimpleLineChart
-                  title="Avg Time to Merge after Approval (weekly, hours)"
                   data={data.timeToMergeTrend}
-                  xKey="week"
                   lines={[
                     {
+                      color: "#dc2626",
                       key: "avg_hours_to_merge",
                       name: "Hours to Merge",
-                      color: "#dc2626",
                     },
                   ]}
+                  title="Avg Time to Merge after Approval (weekly, hours)"
                   tooltip={tooltipContent.timeToMergeTrend}
+                  xKey="week"
                 />
               </div>
             </>
@@ -127,28 +128,27 @@ export default function PullRequestsReviewDashboard() {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <SimpleBarChart
-                  title="Reviews per Reviewer"
-                  data={data.reviewDistribution}
-                  xKey="reviewer"
-                  layout="vertical"
                   bars={[
                     {
+                      color: "#16a34a",
                       key: "approvals",
                       name: "Approvals",
-                      color: "#16a34a",
                       stackId: "reviews",
                     },
                     {
+                      color: "#dc2626",
                       key: "change_requests",
                       name: "Change Requests",
-                      color: "#dc2626",
                       stackId: "reviews",
                     },
                   ]}
+                  data={data.reviewDistribution}
+                  layout="vertical"
+                  title="Reviews per Reviewer"
                   tooltip={tooltipContent.reviewsPerReviewer}
+                  xKey="reviewer"
                 />
                 <DataTable
-                  title="Reviewer Stats"
                   columns={[
                     { key: "reviewer", label: "Reviewer" },
                     { key: "total_reviews", label: "Total" },
@@ -156,18 +156,19 @@ export default function PullRequestsReviewDashboard() {
                     { key: "change_requests", label: "Changes Requested" },
                   ]}
                   data={data.reviewDistribution}
+                  title="Reviewer Stats"
                   tooltip={tooltipContent.reviewerStats}
                 />
               </div>
               <div className="mt-4">
                 <DataTable
-                  title="Author → Reviewer Matrix"
                   columns={[
                     { key: "author", label: "Author" },
                     { key: "reviewer", label: "Reviewer" },
                     { key: "review_count", label: "Reviews" },
                   ]}
                   data={reviewMatrixWithoutSelfReviews}
+                  title="Author → Reviewer Matrix"
                   tooltip={tooltipContent.authorReviewerMatrix}
                 />
               </div>

@@ -1,14 +1,15 @@
 "use client";
 
-import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
+import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
+
 interface DashboardFiltersProps {
-  repository?: string;
-  timeInterval?: number;
+  mode?: DashboardFilterMode;
   onRepositoryChange?: (repo: string) => void;
   onTimeIntervalChange?: (days: number) => void;
-  mode?: DashboardFilterMode;
+  repository?: string;
+  timeInterval?: number;
 }
 
 const showsRepositoryFilter = (mode: DashboardFilterMode) =>
@@ -18,11 +19,11 @@ const showsTimeIntervalFilter = (mode: DashboardFilterMode) =>
   mode === "repository-and-time" || mode === "time-only";
 
 export function DashboardFilters({
-  repository,
-  timeInterval,
+  mode = "repository-and-time",
   onRepositoryChange,
   onTimeIntervalChange,
-  mode = "repository-and-time",
+  repository,
+  timeInterval,
 }: DashboardFiltersProps) {
   const showRepository = showsRepositoryFilter(mode);
   const showTimeInterval = showsTimeIntervalFilter(mode);
@@ -35,9 +36,9 @@ export function DashboardFilters({
             Repository
           </label>
           <select
-            value={repository}
-            onChange={(e) => onRepositoryChange?.(e.target.value)}
             className="block w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all cursor-pointer"
+            onChange={(e) => onRepositoryChange?.(e.target.value)}
+            value={repository}
           >
             {REPOSITORIES.map((repo) => (
               <option key={repo} value={repo}>
@@ -53,9 +54,9 @@ export function DashboardFilters({
             Time Interval
           </label>
           <select
-            value={timeInterval}
-            onChange={(e) => onTimeIntervalChange?.(Number(e.target.value))}
             className="block w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all cursor-pointer"
+            onChange={(e) => onTimeIntervalChange?.(Number(e.target.value))}
+            value={timeInterval}
           >
             {TIME_INTERVALS.map((ti) => (
               <option key={ti.value} value={ti.value}>

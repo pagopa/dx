@@ -1,16 +1,17 @@
 /** This module imports tracker CSV snapshots into PostgreSQL. */
 
 import fs from "fs";
-import * as schema from "../../../src/db/schema";
+
 import type { ImportContext } from "../import-context";
+
+import * as schema from "../../../src/db/schema";
 
 const splitCsvLine = (line: string): string[] => {
   const result: string[] = [];
   let currentValue = "";
   let inQuotes = false;
 
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
+  for (const character of line) {
     if (character === '"') {
       inQuotes = !inQuotes;
       continue;
@@ -111,14 +112,14 @@ export async function importTrackerCsv(
     const rawClosedAt = getColumnValue(columns, closedIndex);
 
     await context.db.insert(schema.trackerRequests).values({
-      submittedAt: parseTrackerDate(rawSubmittedAt),
-      closedAt: parseTrackerDate(rawClosedAt),
       category: getColumnValue(columns, categoryIndex),
-      priority: getColumnValue(columns, priorityIndex),
+      closedAt: parseTrackerDate(rawClosedAt),
       isClosed: getColumnValue(columns, isClosedIndex),
-      status: getColumnValue(columns, statusIndex),
-      rawSubmittedAt,
+      priority: getColumnValue(columns, priorityIndex),
       rawClosedAt,
+      rawSubmittedAt,
+      status: getColumnValue(columns, statusIndex),
+      submittedAt: parseTrackerDate(rawSubmittedAt),
     });
 
     importedCount += 1;

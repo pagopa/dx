@@ -1,11 +1,13 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
+
+import { db } from "@/db";
+import { ORGANIZATION } from "@/lib/config";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const repository = searchParams.get("repository") || "dx";
-  const org = process.env.ORGANIZATION || "pagopa";
+  const org = ORGANIZATION;
   const fullName = `${org}/${repository}`;
 
   try {
@@ -123,17 +125,17 @@ export async function GET(req: NextRequest) {
     `);
 
     return NextResponse.json({
-      pipelineAdoption: pipelineAdoption.rows,
       moduleAdoption: moduleAdoption.rows,
-      workflowsList: workflowsList.rows,
       modulesList: modulesList.rows,
+      pipelineAdoption: pipelineAdoption.rows,
       versionDriftList: versionDriftList.rows,
       versionDriftSummary: {
-        upToDate: Number(versionDriftSummary.rows[0]?.up_to_date) || 0,
         outdated: Number(versionDriftSummary.rows[0]?.outdated) || 0,
-        unknown: Number(versionDriftSummary.rows[0]?.unknown) || 0,
         total: Number(versionDriftSummary.rows[0]?.total) || 0,
+        unknown: Number(versionDriftSummary.rows[0]?.unknown) || 0,
+        upToDate: Number(versionDriftSummary.rows[0]?.up_to_date) || 0,
       },
+      workflowsList: workflowsList.rows,
     });
   } catch (error) {
     console.error("DX Adoption dashboard error:", error);

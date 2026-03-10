@@ -2,17 +2,17 @@
 
 /** Renders consistent loading and error feedback for dashboard requests. */
 interface DashboardRequestStateProps {
+  error: null | string;
   loading: boolean;
-  error: string | null;
-  onRetry: () => Promise<void>;
   loadingMessage?: string;
+  onRetry: () => Promise<void>;
 }
 
 export function DashboardRequestState({
-  loading,
   error,
-  onRetry,
+  loading,
   loadingMessage = "Loading dashboard data...",
+  onRetry,
 }: DashboardRequestStateProps) {
   if (!loading && !error) {
     return null;
@@ -35,11 +35,11 @@ export function DashboardRequestState({
               <p className="mt-1 text-red-200/90">{error}</p>
             </div>
             <button
-              type="button"
+              className="inline-flex items-center justify-center rounded-md border border-red-300/30 px-3 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-500/10"
               onClick={() => {
                 void onRetry();
               }}
-              className="inline-flex items-center justify-center rounded-md border border-red-300/30 px-3 py-2 text-sm font-medium text-red-100 transition-colors hover:bg-red-500/10"
+              type="button"
             >
               Retry
             </button>

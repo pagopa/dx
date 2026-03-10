@@ -1,6 +1,7 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+
+import { db } from "@/db";
 
 export async function GET() {
   try {
@@ -15,11 +16,11 @@ export async function GET() {
       FROM terraform_registry_releases
     `);
     const stats = statsResult.rows[0] as {
-      total_modules: string;
+      newest_release: null | string;
+      oldest_release: null | string;
       total_major_versions: string;
+      total_modules: string;
       total_releases: string;
-      oldest_release: string | null;
-      newest_release: string | null;
     };
 
     // Per-module summary: major versions count, total releases, first release date, latest major
@@ -54,19 +55,19 @@ export async function GET() {
     `);
 
     return NextResponse.json({
+      modulesSummary: modulesSummary.rows,
+      releasesTimeline: releasesTimeline.rows,
       stats: {
-        totalModules: Number(stats.total_modules),
-        totalMajorVersions: Number(stats.total_major_versions),
-        totalReleases: Number(stats.total_releases),
-        oldestRelease: stats.oldest_release
-          ? String(stats.oldest_release).slice(0, 10)
-          : null,
         newestRelease: stats.newest_release
           ? String(stats.newest_release).slice(0, 10)
           : null,
+        oldestRelease: stats.oldest_release
+          ? String(stats.oldest_release).slice(0, 10)
+          : null,
+        totalMajorVersions: Number(stats.total_major_versions),
+        totalModules: Number(stats.total_modules),
+        totalReleases: Number(stats.total_releases),
       },
-      modulesSummary: modulesSummary.rows,
-      releasesTimeline: releasesTimeline.rows,
     });
   } catch (e) {
     console.error(e);

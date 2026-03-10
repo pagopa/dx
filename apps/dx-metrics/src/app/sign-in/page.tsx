@@ -1,5 +1,6 @@
-import { auth, signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
+import { auth, signIn } from "@/lib/auth";
 
 export default async function SignInPage() {
   const session = await auth();
@@ -20,8 +21,8 @@ export default async function SignInPage() {
           }}
         >
           <button
-            type="submit"
             className="rounded-lg bg-gray-900 px-6 py-3 text-white hover:bg-gray-700"
+            type="submit"
           >
             Sign in with GitHub
           </button>

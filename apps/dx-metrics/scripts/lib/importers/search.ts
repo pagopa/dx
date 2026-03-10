@@ -1,8 +1,10 @@
 /** This module imports DX adoption data using GitHub code search. */
 
 import { sql } from "drizzle-orm";
-import * as schema from "../../../src/db/schema";
+
 import type { ImportContext } from "../import-context";
+
+import * as schema from "../../../src/db/schema";
 import { escapeForRegularExpression, sleep } from "../importer-helpers";
 
 const buildDxUsesPattern = (context: ImportContext): RegExp => {
@@ -13,6 +15,49 @@ const buildDxUsesPattern = (context: ImportContext): RegExp => {
     "g",
   );
 };
+
+export async function importCodeSearch(context: ImportContext): Promise<void> {
+  console.log("  Importing code search results (DX adoption)...");
+
+  const query = `${context.organization}/${context.dxRepo} org:${context.organization}`;
+
+  try {
+    const results = await context.octokit.paginate(
+      context.octokit.rest.search.code,
+      {
+        per_page: 100,
+        q: query,
+      },
+    );
+
+    await context.db
+      .delete(schema.codeSearchResults)
+      .where(sql`${schema.codeSearchResults.query} = ${query}`);
+
+    let importedCount = 0;
+    for (const result of results) {
+      const repositoryFullName = result.repository?.full_name;
+      if (!repositoryFullName) {
+        continue;
+      }
+
+      await context.db
+        .insert(schema.codeSearchResults)
+        .values({
+          path: result.path || null,
+          query,
+          repositoryFullName,
+        })
+        .onConflictDoNothing();
+
+      importedCount += 1;
+    }
+
+    console.log(`    ✓ ${importedCount} code search results`);
+  } catch (error) {
+    console.log(`    ⚠ Code search failed: ${error}`);
+  }
+}
 
 export async function importDxPipelineUsages(
   context: ImportContext,
@@ -27,8 +72,8 @@ export async function importDxPipelineUsages(
     const results = await context.octokit.paginate(
       context.octokit.rest.search.code,
       {
-        q: query,
         per_page: 100,
+        q: query,
       },
     );
     console.log(`    Found ${results.length} workflow files referencing DX`);
@@ -55,8 +100,8 @@ export async function importDxPipelineUsages(
       try {
         const { data: fileData } = await context.octokit.rest.repos.getContent({
           owner: ownerLogin,
-          repo: repositoryName,
           path: callerFile,
+          repo: repositoryName,
         });
         if ("content" in fileData && fileData.content) {
           content = Buffer.from(fileData.content, "base64").toString("utf-8");
@@ -72,10 +117,10 @@ export async function importDxPipelineUsages(
         await context.db
           .insert(schema.dxPipelineUsages)
           .values({
-            repository: repositoryFullName,
             callerFile,
             dxWorkflow,
             ref,
+            repository: repositoryFullName,
           })
           .onConflictDoNothing();
         importedCount += 1;
@@ -88,48 +133,5 @@ export async function importDxPipelineUsages(
   } catch (error) {
     console.log(`    ⚠ DX pipeline usages import failed: ${error}`);
     throw error;
-  }
-}
-
-export async function importCodeSearch(context: ImportContext): Promise<void> {
-  console.log("  Importing code search results (DX adoption)...");
-
-  const query = `${context.organization}/${context.dxRepo} org:${context.organization}`;
-
-  try {
-    const results = await context.octokit.paginate(
-      context.octokit.rest.search.code,
-      {
-        q: query,
-        per_page: 100,
-      },
-    );
-
-    await context.db
-      .delete(schema.codeSearchResults)
-      .where(sql`${schema.codeSearchResults.query} = ${query}`);
-
-    let importedCount = 0;
-    for (const result of results) {
-      const repositoryFullName = result.repository?.full_name;
-      if (!repositoryFullName) {
-        continue;
-      }
-
-      await context.db
-        .insert(schema.codeSearchResults)
-        .values({
-          query,
-          repositoryFullName,
-          path: result.path || null,
-        })
-        .onConflictDoNothing();
-
-      importedCount += 1;
-    }
-
-    console.log(`    ✓ ${importedCount} code search results`);
-  } catch (error) {
-    console.log(`    ⚠ Code search failed: ${error}`);
   }
 }

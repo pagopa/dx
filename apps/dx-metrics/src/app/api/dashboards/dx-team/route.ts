@@ -1,11 +1,13 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
+import { db } from "@/db";
+import { ORGANIZATION } from "@/lib/config";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const days = parseInt(searchParams.get("days") || "120");
-  const org = process.env.ORGANIZATION || "pagopa";
+  const days = parseInt(searchParams.get("days") || "120", 10);
+  const org = ORGANIZATION;
 
   try {
     // PRs on IO-Infra: DX vs non-DX
@@ -88,12 +90,12 @@ export async function GET(req: NextRequest) {
     `);
 
     return NextResponse.json({
-      ioInfraPrs: ioInfraPrs.rows,
-      dxCommits: dxCommits.rows,
-      ioInfraPrTable: ioInfraPrTable.rows,
       commitsByRepo: commitsByRepo.rows,
       dxAdoptingProjects: dxAdoptingProjects.rows,
+      dxCommits: dxCommits.rows,
       dxPipelinesUsage: dxPipelinesUsage.rows,
+      ioInfraPrs: ioInfraPrs.rows,
+      ioInfraPrTable: ioInfraPrTable.rows,
     });
   } catch (error) {
     console.error("DX Team dashboard error:", error);

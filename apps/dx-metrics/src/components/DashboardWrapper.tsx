@@ -1,4 +1,4 @@
-import { Suspense, ReactNode } from "react";
+import { ReactNode, Suspense } from "react";
 
 interface DashboardWrapperProps {
   children: ReactNode;

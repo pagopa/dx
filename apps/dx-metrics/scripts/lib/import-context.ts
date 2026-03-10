@@ -1,11 +1,14 @@
 /** This module creates and manages the shared runtime context for importers. */
 
-import pg from "pg";
+import type { Octokit } from "octokit";
+
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
-import * as schema from "../../src/db/schema";
+import pg from "pg";
+
 import type { ImportSettings } from "./config";
-import type { Octokit } from "octokit";
+
+import * as schema from "../../src/db/schema";
 
 const createDatabaseConnection = (connectionString?: string) => {
   const pool = connectionString
@@ -13,24 +16,24 @@ const createDatabaseConnection = (connectionString?: string) => {
     : new pg.Pool();
   const db = drizzle(pool, { schema });
 
-  return { pool, db };
+  return { db, pool };
 };
 
-type DatabaseConnection = ReturnType<typeof createDatabaseConnection>;
+export interface ImportContext {
+  db: ImportDatabase;
+  dxRepo: string;
+  dxTeamMembers: string[];
+  ensureRepo: (name: string) => Promise<number>;
+  octokit: Octokit;
+  organization: string;
+  pool: ImportPool;
+  repositories: string[];
+}
 
 export type ImportDatabase = DatabaseConnection["db"];
 export type ImportPool = DatabaseConnection["pool"];
 
-export interface ImportContext {
-  organization: string;
-  repositories: string[];
-  dxTeamMembers: string[];
-  dxRepo: string;
-  pool: ImportPool;
-  db: ImportDatabase;
-  octokit: Octokit;
-  ensureRepo: (name: string) => Promise<number>;
-}
+type DatabaseConnection = ReturnType<typeof createDatabaseConnection>;
 
 // We use a dynamic import as module resolution is set to bundler
 // which doesn't support conditional exports.
@@ -40,11 +43,17 @@ const createOctokitClient = async (githubToken?: string): Promise<Octokit> => {
   return githubToken ? new Octokit({ auth: githubToken }) : new Octokit();
 };
 
+export async function closeImportContext(
+  context: ImportContext,
+): Promise<void> {
+  await context.pool.end();
+}
+
 export async function createImportContext(
   settings: ImportSettings,
 ): Promise<ImportContext> {
   const { databaseUrl, githubToken, ...config } = settings;
-  const { pool, db } = createDatabaseConnection(databaseUrl);
+  const { db, pool } = createDatabaseConnection(databaseUrl);
   const octokit = await createOctokitClient(githubToken);
 
   const ensureRepo = async (name: string): Promise<number> => {
@@ -68,9 +77,9 @@ export async function createImportContext(
     await db
       .insert(schema.repositories)
       .values({
+        fullName: data.full_name,
         id: data.id,
         name: data.name,
-        fullName: data.full_name,
         organization: config.organization,
       })
       .onConflictDoNothing();
@@ -80,10 +89,10 @@ export async function createImportContext(
 
   return {
     ...config,
-    pool,
     db,
-    octokit,
     ensureRepo,
+    octokit,
+    pool,
   };
 }
 
@@ -94,16 +103,16 @@ export async function seedConfig(context: ImportContext): Promise<void> {
     .insert(schema.config)
     .values({ key: "organization", value: context.organization })
     .onConflictDoUpdate({
-      target: schema.config.key,
       set: { value: context.organization },
+      target: schema.config.key,
     });
 
   await context.db
     .insert(schema.config)
     .values({ key: "dx_repo", value: context.dxRepo })
     .onConflictDoUpdate({
-      target: schema.config.key,
       set: { value: context.dxRepo },
+      target: schema.config.key,
     });
 
   for (const member of context.dxTeamMembers) {
@@ -114,10 +123,4 @@ export async function seedConfig(context: ImportContext): Promise<void> {
   }
 
   console.log("    ✓ Config seeded");
-}
-
-export async function closeImportContext(
-  context: ImportContext,
-): Promise<void> {
-  await context.pool.end();
 }

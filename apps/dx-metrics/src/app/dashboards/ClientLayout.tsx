@@ -1,25 +1,30 @@
 "use client";
 
+import { TooltipProvider } from "@radix-ui/react-tooltip";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+
 import { Sidebar } from "@/components/Sidebar";
-import { useState, useEffect } from "react";
 import {
   readSidebarCollapsedState,
   sidebarToggleEventName,
 } from "@/lib/sidebar-state";
 import { cn } from "@/lib/utils";
-import { TooltipProvider } from "@radix-ui/react-tooltip";
+
+type ClientSession = null | {
+  user?: null | { image?: null | string; name?: null | string };
+};
 
 export function ClientLayout({
   children,
   session,
-  skipAuth,
   signOutAction,
+  skipAuth,
 }: {
   children: React.ReactNode;
-  session: any;
-  skipAuth: boolean;
+  session: ClientSession;
   signOutAction: () => Promise<void>;
+  skipAuth: boolean;
 }) {
   const [isCollapsed, setIsCollapsed] = useState(readSidebarCollapsedState);
 
@@ -50,11 +55,11 @@ export function ClientLayout({
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#21262d] border border-[#30363d]">
                 {session?.user?.image && (
                   <Image
-                    src={session.user.image}
                     alt=""
-                    width={24}
-                    height={24}
                     className="h-6 w-6 rounded-full ring-1 ring-[#8b949e]/20"
+                    height={24}
+                    src={session.user.image}
+                    width={24}
                   />
                 )}
                 <span className="text-xs font-medium text-[#e6edf3]">
@@ -64,8 +69,8 @@ export function ClientLayout({
               {!skipAuth && (
                 <form action={signOutAction}>
                   <button
-                    type="submit"
                     className="text-xs font-semibold text-gray-500 hover:text-white transition-colors"
+                    type="submit"
                   >
                     Sign out
                   </button>

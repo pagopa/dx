@@ -3,24 +3,24 @@
 import path from "path";
 
 export interface ImportCliOptions {
-  since: string;
-  entity: string;
-  trackerCsv: string;
-  force: boolean;
   configPath: string;
-}
-
-export class HelpRequestedError extends Error {
-  constructor() {
-    super("Help requested");
-    this.name = "HelpRequestedError";
-  }
+  entity: string;
+  force: boolean;
+  since: string;
+  trackerCsv: string;
 }
 
 export class CliUsageError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "CliUsageError";
+  }
+}
+
+export class HelpRequestedError extends Error {
+  constructor() {
+    super("Help requested");
+    this.name = "HelpRequestedError";
   }
 }
 
@@ -105,5 +105,5 @@ export function parseArgs(
     throw new CliUsageError("--since YYYY-MM-DD is required.");
   }
 
-  return { since, entity, trackerCsv, force, configPath };
+  return { configPath, entity, force, since, trackerCsv };
 }

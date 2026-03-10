@@ -1,74 +1,11 @@
 /** This module imports GitHub workflow definitions and workflow runs. */
 
 import yaml from "js-yaml";
-import * as schema from "../../../src/db/schema";
+
 import type { ImportContext } from "../import-context";
+
+import * as schema from "../../../src/db/schema";
 import { formatSecondsElapsed } from "../importer-helpers";
-
-export async function importWorkflows(
-  context: ImportContext,
-  repoName: string,
-): Promise<void> {
-  const startTime = Date.now();
-  const repoId = await context.ensureRepo(repoName);
-  const fullName = `${context.organization}/${repoName}`;
-  console.log(`  Importing workflows for ${fullName}...`);
-
-  const workflows = await context.octokit.paginate(
-    context.octokit.rest.actions.listRepoWorkflows,
-    {
-      owner: context.organization,
-      repo: repoName,
-      per_page: 100,
-    },
-  );
-  console.log(`    Found ${workflows.length} workflows`);
-
-  let importedCount = 0;
-  for (const workflow of workflows) {
-    let pipelineContent: string | null = workflow.path || null;
-
-    try {
-      const { data: fileData } = await context.octokit.rest.repos.getContent({
-        owner: context.organization,
-        repo: repoName,
-        path: workflow.path,
-      });
-
-      if ("content" in fileData && fileData.content) {
-        const decoded = Buffer.from(fileData.content, "base64").toString(
-          "utf-8",
-        );
-        const parsed = yaml.load(decoded);
-        pipelineContent = JSON.stringify(parsed);
-      }
-    } catch {
-      pipelineContent = workflow.path || null;
-    }
-
-    await context.db
-      .insert(schema.workflows)
-      .values({
-        id: workflow.id,
-        repositoryId: repoId,
-        name: workflow.name,
-        pipeline: pipelineContent,
-      })
-      .onConflictDoUpdate({
-        target: schema.workflows.id,
-        set: {
-          name: workflow.name,
-          pipeline: pipelineContent,
-        },
-      });
-
-    importedCount += 1;
-  }
-
-  console.log(
-    `    ✓ ${importedCount} workflows imported in ${formatSecondsElapsed(startTime)}s`,
-  );
-}
 
 export async function importWorkflowRuns(
   context: ImportContext,
@@ -84,10 +21,10 @@ export async function importWorkflowRuns(
   const workflowRuns = await context.octokit.paginate(
     context.octokit.rest.actions.listWorkflowRunsForRepo,
     {
-      owner: context.organization,
-      repo: repoName,
       created: `>=${since}`,
+      owner: context.organization,
       per_page: 100,
+      repo: repoName,
     },
     (response) => {
       fetchedCount += response.data.length;
@@ -103,30 +40,30 @@ export async function importWorkflowRuns(
       .insert(schema.workflows)
       .values({
         id: workflowRun.workflow_id,
-        repositoryId: repoId,
         name: workflowRun.name || "unknown",
         pipeline: null,
+        repositoryId: repoId,
       })
       .onConflictDoNothing();
 
     await context.db
       .insert(schema.workflowRuns)
       .values({
+        conclusion: workflowRun.conclusion || null,
+        createdAt: new Date(workflowRun.created_at),
         id: workflowRun.id,
         repositoryId: repoId,
-        workflowId: workflowRun.workflow_id,
-        conclusion: workflowRun.conclusion || null,
         status: workflowRun.status || null,
-        createdAt: new Date(workflowRun.created_at),
         updatedAt: new Date(workflowRun.updated_at),
+        workflowId: workflowRun.workflow_id,
       })
       .onConflictDoUpdate({
-        target: schema.workflowRuns.id,
         set: {
           conclusion: workflowRun.conclusion || null,
           status: workflowRun.status || null,
           updatedAt: new Date(workflowRun.updated_at),
         },
+        target: schema.workflowRuns.id,
       });
 
     importedCount += 1;
@@ -145,5 +82,70 @@ export async function importWorkflowRuns(
 
   console.log(
     `    ✓ ${importedCount} workflow runs imported in ${formatSecondsElapsed(startTime)}s`,
+  );
+}
+
+export async function importWorkflows(
+  context: ImportContext,
+  repoName: string,
+): Promise<void> {
+  const startTime = Date.now();
+  const repoId = await context.ensureRepo(repoName);
+  const fullName = `${context.organization}/${repoName}`;
+  console.log(`  Importing workflows for ${fullName}...`);
+
+  const workflows = await context.octokit.paginate(
+    context.octokit.rest.actions.listRepoWorkflows,
+    {
+      owner: context.organization,
+      per_page: 100,
+      repo: repoName,
+    },
+  );
+  console.log(`    Found ${workflows.length} workflows`);
+
+  let importedCount = 0;
+  for (const workflow of workflows) {
+    let pipelineContent: null | string = workflow.path || null;
+
+    try {
+      const { data: fileData } = await context.octokit.rest.repos.getContent({
+        owner: context.organization,
+        path: workflow.path,
+        repo: repoName,
+      });
+
+      if ("content" in fileData && fileData.content) {
+        const decoded = Buffer.from(fileData.content, "base64").toString(
+          "utf-8",
+        );
+        const parsed = yaml.load(decoded);
+        pipelineContent = JSON.stringify(parsed);
+      }
+    } catch {
+      pipelineContent = workflow.path || null;
+    }
+
+    await context.db
+      .insert(schema.workflows)
+      .values({
+        id: workflow.id,
+        name: workflow.name,
+        pipeline: pipelineContent,
+        repositoryId: repoId,
+      })
+      .onConflictDoUpdate({
+        set: {
+          name: workflow.name,
+          pipeline: pipelineContent,
+        },
+        target: schema.workflows.id,
+      });
+
+    importedCount += 1;
+  }
+
+  console.log(
+    `    ✓ ${importedCount} workflows imported in ${formatSecondsElapsed(startTime)}s`,
   );
 }

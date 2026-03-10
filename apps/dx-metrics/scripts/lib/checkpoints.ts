@@ -1,17 +1,47 @@
 /** This module manages checkpoint tracking for incremental imports. */
 
 import { sql } from "drizzle-orm";
+
 import type { ImportContext } from "./import-context";
 
 const getCheckpointKey = (
   entityType: string,
-  repoName: string | null,
+  repoName: null | string,
 ): string => (repoName ? `${entityType}:${repoName}` : entityType);
+
+export async function cleanStaleCheckpoints(
+  context: ImportContext,
+): Promise<void> {
+  await context.db.execute(
+    sql`UPDATE sync_runs SET status = 'interrupted', completed_at = NOW()
+        WHERE status = 'running'`,
+  );
+}
+
+export async function completeCheckpoint(
+  context: ImportContext,
+  syncRunId: number,
+): Promise<void> {
+  await context.db.execute(
+    sql`UPDATE sync_runs SET status = 'done', completed_at = NOW()
+        WHERE id = ${syncRunId}`,
+  );
+}
+
+export async function failCheckpoint(
+  context: ImportContext,
+  syncRunId: number,
+): Promise<void> {
+  await context.db.execute(
+    sql`UPDATE sync_runs SET status = 'failed', completed_at = NOW()
+        WHERE id = ${syncRunId}`,
+  );
+}
 
 export async function hasCheckpoint(
   context: ImportContext,
   entityType: string,
-  repoName: string | null,
+  repoName: null | string,
   since: string,
 ): Promise<boolean> {
   const requestedSinceDate = new Date(since);
@@ -39,9 +69,9 @@ export async function hasCheckpoint(
 export async function startCheckpoint(
   context: ImportContext,
   entityType: string,
-  repoName: string | null,
+  repoName: null | string,
   since: string,
-  repoId: number | null,
+  repoId: null | number,
 ): Promise<number> {
   const checkpointKey = getCheckpointKey(entityType, repoName);
   const rows = await context.db.execute<{ id: number }>(
@@ -51,33 +81,4 @@ export async function startCheckpoint(
   );
 
   return rows.rows[0].id;
-}
-
-export async function completeCheckpoint(
-  context: ImportContext,
-  syncRunId: number,
-): Promise<void> {
-  await context.db.execute(
-    sql`UPDATE sync_runs SET status = 'done', completed_at = NOW()
-        WHERE id = ${syncRunId}`,
-  );
-}
-
-export async function failCheckpoint(
-  context: ImportContext,
-  syncRunId: number,
-): Promise<void> {
-  await context.db.execute(
-    sql`UPDATE sync_runs SET status = 'failed', completed_at = NOW()
-        WHERE id = ${syncRunId}`,
-  );
-}
-
-export async function cleanStaleCheckpoints(
-  context: ImportContext,
-): Promise<void> {
-  await context.db.execute(
-    sql`UPDATE sync_runs SET status = 'interrupted', completed_at = NOW()
-        WHERE status = 'running'`,
-  );
 }

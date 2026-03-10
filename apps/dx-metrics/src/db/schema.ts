@@ -1,20 +1,19 @@
 import {
+  bigint,
+  index,
+  integer,
+  numeric,
   pgTable,
   text,
-  integer,
   timestamp,
-  bigint,
-  numeric,
-  primaryKey,
   uniqueIndex,
-  index,
 } from "drizzle-orm/pg-core";
 
 // --- Repositories ---
 export const repositories = pgTable("repositories", {
+  fullName: text("full_name").notNull().unique(),
   id: integer("id").primaryKey(),
   name: text("name").notNull(),
-  fullName: text("full_name").notNull().unique(),
   organization: text("organization").notNull(),
 });
 
@@ -22,21 +21,21 @@ export const repositories = pgTable("repositories", {
 export const pullRequests = pgTable(
   "pull_requests",
   {
+    additions: integer("additions"),
+    author: text("author"),
+    closedAt: timestamp("closed_at"),
+    createdAt: timestamp("created_at"),
+    draft: integer("draft"), // 0: false, 1: true
     id: bigint("id", { mode: "number" }).primaryKey(),
+    mergedAt: timestamp("merged_at"),
+    mergedBy: text("merged_by"),
+    number: integer("number").notNull(),
     repositoryId: integer("repository_id")
       .notNull()
       .references(() => repositories.id),
-    number: integer("number").notNull(),
-    title: text("title").notNull(),
-    author: text("author"),
     reviewDecision: text("review_decision"),
-    createdAt: timestamp("created_at"),
-    closedAt: timestamp("closed_at"),
-    mergedAt: timestamp("merged_at"),
-    mergedBy: text("merged_by"),
-    additions: integer("additions"),
+    title: text("title").notNull(),
     totalCommentsCount: integer("total_comments_count"),
-    draft: integer("draft"), // 0: false, 1: true
   },
   (t) => [
     uniqueIndex("pr_repo_number_idx").on(t.repositoryId, t.number),
@@ -50,11 +49,11 @@ export const workflows = pgTable(
   "workflows",
   {
     id: bigint("id", { mode: "number" }).primaryKey(),
+    name: text("name").notNull(),
+    pipeline: text("pipeline"),
     repositoryId: integer("repository_id")
       .notNull()
       .references(() => repositories.id),
-    name: text("name").notNull(),
-    pipeline: text("pipeline"),
   },
   (t) => [index("wf_repo_idx").on(t.repositoryId)],
 );
@@ -63,17 +62,17 @@ export const workflows = pgTable(
 export const workflowRuns = pgTable(
   "workflow_runs",
   {
+    conclusion: text("conclusion"),
+    createdAt: timestamp("created_at"),
     id: bigint("id", { mode: "number" }).primaryKey(),
     repositoryId: integer("repository_id")
       .notNull()
       .references(() => repositories.id),
+    status: text("status"),
+    updatedAt: timestamp("updated_at"),
     workflowId: bigint("workflow_id", { mode: "number" })
       .notNull()
       .references(() => workflows.id),
-    conclusion: text("conclusion"),
-    status: text("status"),
-    createdAt: timestamp("created_at"),
-    updatedAt: timestamp("updated_at"),
   },
   (t) => [
     index("wr_repo_idx").on(t.repositoryId),
@@ -86,18 +85,18 @@ export const workflowRuns = pgTable(
 export const iacPrLeadTimes = pgTable(
   "iac_pr_lead_times",
   {
+    author: text("author"),
+    createdAt: timestamp("created_at"),
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    leadTimeDays: numeric("lead_time_days"),
+    mergedAt: timestamp("merged_at"),
+    prNumber: integer("pr_number").notNull(),
+    repositoryFullName: text("repository_full_name").notNull(),
     repositoryId: integer("repository_id")
       .notNull()
       .references(() => repositories.id),
-    repositoryFullName: text("repository_full_name").notNull(),
-    prNumber: integer("pr_number").notNull(),
-    title: text("title").notNull(),
-    author: text("author"),
-    createdAt: timestamp("created_at"),
-    mergedAt: timestamp("merged_at"),
-    leadTimeDays: numeric("lead_time_days"),
     targetAuthors: text("target_authors").array(),
+    title: text("title").notNull(),
   },
   (t) => [
     uniqueIndex("iac_pr_repo_number_idx").on(t.repositoryId, t.prNumber),
@@ -109,15 +108,15 @@ export const iacPrLeadTimes = pgTable(
 export const commits = pgTable(
   "commits",
   {
-    sha: text("sha").primaryKey(),
-    repositoryId: integer("repository_id")
-      .notNull()
-      .references(() => repositories.id),
-    repositoryFullName: text("repository_full_name").notNull(),
     author: text("author"),
     committer: text("committer"),
     committerDate: timestamp("committer_date"),
     message: text("message"),
+    repositoryFullName: text("repository_full_name").notNull(),
+    repositoryId: integer("repository_id")
+      .notNull()
+      .references(() => repositories.id),
+    sha: text("sha").primaryKey(),
   },
   (t) => [
     index("commit_repo_idx").on(t.repositoryId),
@@ -130,11 +129,11 @@ export const commits = pgTable(
 export const codeSearchResults = pgTable(
   "code_search_results",
   {
+    fetchedAt: timestamp("fetched_at").defaultNow(),
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    path: text("path"),
     query: text("query").notNull(),
     repositoryFullName: text("repository_full_name").notNull(),
-    path: text("path"),
-    fetchedAt: timestamp("fetched_at").defaultNow(),
   },
   (t) => [
     uniqueIndex("code_search_query_repo_path_idx").on(
@@ -171,11 +170,11 @@ export const pullRequestReviews = pgTable(
 export const dxPipelineUsages = pgTable(
   "dx_pipeline_usages",
   {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    repository: text("repository").notNull(),
     callerFile: text("caller_file").notNull(),
     dxWorkflow: text("dx_workflow").notNull(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     ref: text("ref"),
+    repository: text("repository").notNull(),
   },
   (t) => [
     uniqueIndex("dx_pipeline_repo_file_wf_idx").on(
@@ -190,10 +189,10 @@ export const dxPipelineUsages = pgTable(
 export const terraformModules = pgTable(
   "terraform_modules",
   {
-    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-    repository: text("repository").notNull(),
-    module: text("module").notNull(),
     filePath: text("file_path"),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    module: text("module").notNull(),
+    repository: text("repository").notNull(),
     version: text("version"),
   },
   (t) => [
@@ -209,14 +208,14 @@ export const terraformModules = pgTable(
 export const terraformRegistryReleases = pgTable(
   "terraform_registry_releases",
   {
+    firstReleaseVersion: text("first_release_version").notNull(),
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    latestVersion: text("latest_version"),
+    majorVersion: integer("major_version").notNull(),
     moduleName: text("module_name").notNull(),
     provider: text("provider").notNull(),
-    majorVersion: integer("major_version").notNull(),
-    firstReleaseVersion: text("first_release_version").notNull(),
     releaseDate: timestamp("release_date"),
     releasesCount: integer("releases_count"),
-    latestVersion: text("latest_version"),
   },
   (t) => [
     uniqueIndex("tf_reg_mod_version_idx").on(
@@ -229,15 +228,15 @@ export const terraformRegistryReleases = pgTable(
 
 // --- Tracker Requests ---
 export const trackerRequests = pgTable("tracker_requests", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  submittedAt: timestamp("submitted_at"),
-  closedAt: timestamp("closed_at"),
   category: text("category"),
-  priority: text("priority"),
+  closedAt: timestamp("closed_at"),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   isClosed: text("is_closed"),
-  status: text("status"),
-  rawSubmittedAt: text("raw_submitted_at"),
+  priority: text("priority"),
   rawClosedAt: text("raw_closed_at"),
+  rawSubmittedAt: text("raw_submitted_at"),
+  status: text("status"),
+  submittedAt: timestamp("submitted_at"),
 });
 
 // --- DX Team Members ---
@@ -254,11 +253,11 @@ export const config = pgTable("config", {
 
 // --- Sync Runs ---
 export const syncRuns = pgTable("sync_runs", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  entityType: text("entity_type").notNull(),
-  repositoryId: integer("repository_id").references(() => repositories.id),
-  startedAt: timestamp("started_at").defaultNow(),
   completedAt: timestamp("completed_at"),
+  entityType: text("entity_type").notNull(),
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  repositoryId: integer("repository_id").references(() => repositories.id),
   sinceDate: timestamp("since_date"),
+  startedAt: timestamp("started_at").defaultNow(),
   status: text("status").notNull().default("running"),
 });

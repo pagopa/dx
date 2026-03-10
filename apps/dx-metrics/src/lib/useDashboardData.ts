@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const buildDashboardQueryString = (params: Record<string, string | number>) => {
+const buildDashboardQueryString = (params: Record<string, number | string>) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params)
@@ -38,11 +38,11 @@ const extractDashboardErrorMessage = async (response: Response) => {
 
 export function useDashboardData<T>(
   endpoint: string,
-  params: Record<string, string | number>,
+  params: Record<string, number | string>,
 ) {
-  const [data, setData] = useState<T | null>(null);
+  const [data, setData] = useState<null | T>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<null | string>(null);
 
   const queryString = useMemo(
     () => buildDashboardQueryString(params),
@@ -103,5 +103,5 @@ export function useDashboardData<T>(
     await fetchData();
   }, [fetchData]);
 
-  return { data, loading, error, refetch };
+  return { data, error, loading, refetch };
 }

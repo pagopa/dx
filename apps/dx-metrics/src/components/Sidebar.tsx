@@ -1,20 +1,21 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
 import {
+  Activity,
   ChevronLeft,
   ChevronRight,
+  Cloud,
   GitPullRequest,
   MessageSquare,
   PlayCircle,
-  Cloud,
+  Ship,
   TrendingUp,
   Users,
-  Activity,
-  Ship,
 } from "lucide-react";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useState } from "react";
+
 import {
   readSidebarCollapsedState,
   sidebarCollapsedStorageKey,
@@ -25,20 +26,20 @@ import { cn } from "@/lib/utils";
 const navItems = [
   {
     href: "/dashboards/pull-requests",
-    label: "Pull Requests",
     icon: GitPullRequest,
+    label: "Pull Requests",
   },
   {
     href: "/dashboards/pull-requests-review",
-    label: "PR Reviews",
     icon: MessageSquare,
+    label: "PR Reviews",
   },
-  { href: "/dashboards/workflows", label: "Workflows", icon: PlayCircle },
-  { href: "/dashboards/iac", label: "IaC PRs", icon: Cloud },
-  { href: "/dashboards/dx-adoption", label: "DX Adoption", icon: TrendingUp },
-  { href: "/dashboards/dx-team", label: "DX Team", icon: Users },
-  { href: "/dashboards/dx-tracker", label: "DX Tracker", icon: Activity },
-  { href: "/dashboards/dx-releases", label: "DX Releases", icon: Ship },
+  { href: "/dashboards/workflows", icon: PlayCircle, label: "Workflows" },
+  { href: "/dashboards/iac", icon: Cloud, label: "IaC PRs" },
+  { href: "/dashboards/dx-adoption", icon: TrendingUp, label: "DX Adoption" },
+  { href: "/dashboards/dx-team", icon: Users, label: "DX Team" },
+  { href: "/dashboards/dx-tracker", icon: Activity, label: "DX Tracker" },
+  { href: "/dashboards/dx-releases", icon: Ship, label: "DX Releases" },
 ];
 
 export function Sidebar() {
@@ -75,11 +76,11 @@ export function Sidebar() {
         )}
 
         <button
-          onClick={toggleSidebar}
           className={cn(
             "p-1.5 rounded-md hover:bg-[#21262d] text-gray-400 hover:text-white border border-[#30363d] transition-colors",
             isCollapsed ? "" : "",
           )}
+          onClick={toggleSidebar}
           title={isCollapsed ? "Expand" : "Collapse"}
         >
           {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
@@ -97,8 +98,6 @@ export function Sidebar() {
 
           return (
             <Link
-              key={item.href}
-              href={href}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all group relative",
                 isActive
@@ -106,12 +105,14 @@ export function Sidebar() {
                   : "text-gray-400 hover:text-white hover:bg-[#161b22]",
                 isCollapsed && "justify-center px-0",
               )}
+              href={href}
+              key={item.href}
             >
               <Icon
-                size={18}
                 className={cn(
                   isActive ? "text-green-500" : "group-hover:text-white",
                 )}
+                size={18}
               />
               {!isCollapsed && <span className="truncate">{item.label}</span>}
 

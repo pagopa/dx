@@ -1,12 +1,15 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
+import { db } from "@/db";
+import { ORGANIZATION } from "@/lib/config";
+import { parseDashboardQuery } from "@/lib/query-params";
+
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-  const repository = searchParams.get("repository") || "dx";
-  const days = parseInt(searchParams.get("days") || "120");
-  const org = process.env.ORGANIZATION || "pagopa";
+  const parsed = parseDashboardQuery(req);
+  if ("error" in parsed) return parsed.error;
+  const { days, repository = "dx" } = parsed.query;
+  const org = ORGANIZATION;
   const fullName = `${org}/${repository}`;
 
   try {
@@ -135,18 +138,18 @@ export async function GET(req: NextRequest) {
           Number(avgTimeToFirstReview.rows[0]?.value) || null,
         avgTimeToMerge: Number(avgTimeToMerge.rows[0]?.value) || null,
       },
-      timeToFirstReviewTrend: numericRows(timeToFirstReviewTrend.rows, [
-        "avg_hours_to_first_review",
-      ]),
-      timeToMergeTrend: numericRows(timeToMergeTrend.rows, [
-        "avg_hours_to_merge",
-      ]),
       reviewDistribution: numericRows(reviewDistribution.rows, [
         "total_reviews",
         "approvals",
         "change_requests",
       ]),
       reviewMatrix: numericRows(reviewMatrix.rows, ["review_count"]),
+      timeToFirstReviewTrend: numericRows(timeToFirstReviewTrend.rows, [
+        "avg_hours_to_first_review",
+      ]),
+      timeToMergeTrend: numericRows(timeToMergeTrend.rows, [
+        "avg_hours_to_merge",
+      ]),
     });
   } catch (error) {
     console.error("PR review dashboard error:", error);

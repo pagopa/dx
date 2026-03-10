@@ -1,14 +1,17 @@
 /** Builds chart-ready cumulative series data with forward-filled gaps. */
-type CumulativeSeriesRow<TLabelKey extends string> = {
-  run_date: string;
+type CumulativeSeriesRow<TLabelKey extends string> = Record<
+  TLabelKey,
+  string
+> & {
   cumulative_count: number;
-} & Record<TLabelKey, string>;
+  run_date: string;
+};
 
 const buildEmptyPoint = (
   date: string,
   seriesKeys: readonly string[],
-): Record<string, string | number> => {
-  const point: Record<string, string | number> = { run_date: date };
+): Record<string, number | string> => {
+  const point: Record<string, number | string> = { run_date: date };
 
   for (const seriesKey of seriesKeys) {
     point[seriesKey] = 0;
@@ -24,12 +27,12 @@ export function pivotCumulativeSeries<
   TLabelKey extends string,
   TSeriesKey extends string,
 >(
-  rows: ReadonlyArray<CumulativeSeriesRow<TLabelKey>>,
+  rows: readonly CumulativeSeriesRow<TLabelKey>[],
   labelKey: TLabelKey,
   labelToSeries: Readonly<Record<string, TSeriesKey>>,
 ) {
   const seriesKeys = Array.from(new Set(Object.values(labelToSeries)));
-  const pointsByDate = new Map<string, Record<string, string | number>>();
+  const pointsByDate = new Map<string, Record<string, number | string>>();
 
   for (const row of rows) {
     const seriesKey = labelToSeries[row[labelKey]];

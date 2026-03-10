@@ -4,12 +4,12 @@ import TooltipIcon from "@/components/TooltipIcon";
 
 interface MetricCardProps {
   label: string;
-  value: string | number | null;
   suffix?: string;
   tooltip?: string;
+  value: null | number | string;
 }
 
-export function MetricCard({ label, value, suffix, tooltip }: MetricCardProps) {
+export function MetricCard({ label, suffix, tooltip, value }: MetricCardProps) {
   return (
     <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-all hover:border-[#8b949e]">
       <p className="text-xs font-medium uppercase tracking-wider text-gray-500 flex items-center gap-1">

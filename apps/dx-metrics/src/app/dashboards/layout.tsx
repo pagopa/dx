@@ -1,5 +1,7 @@
-import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
+
+import { auth, signOut } from "@/lib/auth";
+
 import { ClientLayout } from "./ClientLayout";
 
 export const dynamic = "force-dynamic";
@@ -24,8 +26,8 @@ export default async function DashboardLayout({
   return (
     <ClientLayout
       session={session}
-      skipAuth={skipAuth}
       signOutAction={signOutAction}
+      skipAuth={skipAuth}
     >
       {children}
     </ClientLayout>

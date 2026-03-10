@@ -1,23 +1,24 @@
 "use client";
 
-import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
+
+import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
 
 export type DashboardFilterMode =
   | "repository-and-time"
   | "repository-only"
   | "time-only";
 
-interface UseDashboardFiltersOptions {
-  defaultRepository?: string;
-  defaultDays?: number;
-  mode?: DashboardFilterMode;
+interface DashboardFilterUpdates {
+  days?: number;
+  repository?: string;
 }
 
-interface DashboardFilterUpdates {
-  repository?: string;
-  days?: number;
+interface UseDashboardFiltersOptions {
+  defaultDays?: number;
+  defaultRepository?: string;
+  mode?: DashboardFilterMode;
 }
 
 const DEFAULT_DAYS = 120;
@@ -27,7 +28,7 @@ const isPositiveInteger = (value: number) =>
   Number.isInteger(value) && value > 0;
 
 const getValidRepository = (
-  repository: string | null,
+  repository: null | string,
   fallbackRepository: string,
 ) =>
   repository && REPOSITORIES.includes(repository)
@@ -35,8 +36,8 @@ const getValidRepository = (
     : fallbackRepository;
 
 export function useDashboardFilters({
-  defaultRepository = DEFAULT_REPOSITORY,
   defaultDays = DEFAULT_DAYS,
+  defaultRepository = DEFAULT_REPOSITORY,
   mode = DEFAULT_MODE,
 }: UseDashboardFiltersOptions = {}) {
   const router = useRouter();
@@ -111,9 +112,9 @@ export function useDashboardFilters({
   );
 
   return {
-    repository,
     days,
-    setRepository,
+    repository,
     setDays,
+    setRepository,
   };
 }

@@ -1,31 +1,33 @@
 /** This module imports Terraform module usage and registry release metrics. */
 
 import { execSync } from "child_process";
+import { sql } from "drizzle-orm";
 import fs from "fs";
 import os from "os";
 import path from "path";
-import { sql } from "drizzle-orm";
-import * as schema from "../../../src/db/schema";
+
 import type { ImportContext } from "../import-context";
+
+import * as schema from "../../../src/db/schema";
 import { sleep } from "../importer-helpers";
 
+interface TerraformRegistryModule {
+  name: string;
+  namespace: string;
+  provider: string;
+}
+
 interface TerrawizModule {
+  filePath: string;
+  lineNumber: number;
+  repository: string;
   source: string;
   sourceType: string;
   version: string;
-  repository: string;
-  filePath: string;
-  lineNumber: number;
 }
 
 interface TerrawizOutput {
   modules: TerrawizModule[];
-}
-
-interface TerraformRegistryModule {
-  name: string;
-  provider: string;
-  namespace: string;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -43,12 +45,12 @@ const parseTerrawizOutput = (value: unknown): TerrawizOutput => {
 
     return [
       {
+        filePath: typeof item.filePath === "string" ? item.filePath : "",
+        lineNumber: typeof item.lineNumber === "number" ? item.lineNumber : 0,
+        repository: typeof item.repository === "string" ? item.repository : "",
         source: typeof item.source === "string" ? item.source : "",
         sourceType: typeof item.sourceType === "string" ? item.sourceType : "",
         version: typeof item.version === "string" ? item.version : "",
-        repository: typeof item.repository === "string" ? item.repository : "",
-        filePath: typeof item.filePath === "string" ? item.filePath : "",
-        lineNumber: typeof item.lineNumber === "number" ? item.lineNumber : 0,
       },
     ];
   });
@@ -60,7 +62,7 @@ const parseRegistryModulesPage = (value: unknown) => {
   if (!isRecord(value)) {
     return {
       modules: [] as TerraformRegistryModule[],
-      nextUrl: null as string | null,
+      nextUrl: null as null | string,
     };
   }
 
@@ -78,8 +80,8 @@ const parseRegistryModulesPage = (value: unknown) => {
         return [
           {
             name: item.name,
-            provider: item.provider,
             namespace: item.namespace,
+            provider: item.provider,
           },
         ];
       })
@@ -155,9 +157,9 @@ export async function importTerraformModules(
       `npx --yes terrawiz scan github:${fullName} -f json -e ${temporaryFilePath}`,
       {
         env: { ...process.env },
-        timeout: 5 * 60 * 1000,
         maxBuffer: 50 * 1024 * 1024,
         stdio: "pipe",
+        timeout: 5 * 60 * 1000,
       },
     );
 
@@ -190,9 +192,9 @@ export async function importTerraformModules(
     await context.db
       .insert(schema.terraformModules)
       .values({
-        repository: fullName,
-        module: moduleUsage.source,
         filePath: moduleUsage.filePath || null,
+        module: moduleUsage.source,
+        repository: fullName,
         version: moduleUsage.version || null,
       })
       .onConflictDoNothing();
@@ -215,7 +217,7 @@ export async function importTerraformRegistryReleases(
 
   try {
     const allModules: TerraformRegistryModule[] = [];
-    let nextUrl: string | null = `${apiBaseUrl}/modules/${namespace}`;
+    let nextUrl: null | string = `${apiBaseUrl}/modules/${namespace}`;
     while (nextUrl) {
       const response = await fetch(nextUrl);
       if (!response.ok) {
@@ -281,24 +283,24 @@ export async function importTerraformRegistryReleases(
         await context.db
           .insert(schema.terraformRegistryReleases)
           .values({
+            firstReleaseVersion,
+            latestVersion,
+            majorVersion,
             moduleName: moduleDefinition.name,
             provider: moduleDefinition.provider,
-            majorVersion,
-            firstReleaseVersion,
             releaseDate: publishedAt,
             releasesCount,
-            latestVersion,
           })
           .onConflictDoUpdate({
+            set: {
+              latestVersion,
+              releasesCount,
+            },
             target: [
               schema.terraformRegistryReleases.moduleName,
               schema.terraformRegistryReleases.provider,
               schema.terraformRegistryReleases.majorVersion,
             ],
-            set: {
-              releasesCount,
-              latestVersion,
-            },
           });
 
         totalImportedCount += 1;

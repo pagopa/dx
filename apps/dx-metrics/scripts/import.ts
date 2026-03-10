@@ -25,8 +25,8 @@ import {
   importIacPrLeadTime,
 } from "./lib/importers/commits";
 import {
-  importPullRequests,
   importPullRequestReviews,
+  importPullRequests,
 } from "./lib/importers/pull-requests";
 import {
   importCodeSearch,
@@ -37,15 +37,15 @@ import {
   importTerraformRegistryReleases,
 } from "./lib/importers/terraform";
 import { importTrackerCsv } from "./lib/importers/tracker";
-import { importWorkflows, importWorkflowRuns } from "./lib/importers/workflows";
+import { importWorkflowRuns, importWorkflows } from "./lib/importers/workflows";
 
 const readEnvironmentOverrides = () => ({
+  DATABASE_URL: process.env.DATABASE_URL,
+  DX_REPO: process.env.DX_REPO,
+  DX_TEAM_MEMBERS: process.env.DX_TEAM_MEMBERS,
+  GITHUB_TOKEN: process.env.GITHUB_TOKEN,
   ORGANIZATION: process.env.ORGANIZATION,
   REPOSITORIES: process.env.REPOSITORIES,
-  DX_TEAM_MEMBERS: process.env.DX_TEAM_MEMBERS,
-  DX_REPO: process.env.DX_REPO,
-  DATABASE_URL: process.env.DATABASE_URL,
-  GITHUB_TOKEN: process.env.GITHUB_TOKEN,
 });
 
 const handleCliError = (error: unknown): never => {
@@ -90,7 +90,7 @@ async function main(): Promise<void> {
 
     const runWithCheckpoint = async (
       entityType: string,
-      repoName: string | null,
+      repoName: null | string,
       task: () => Promise<void>,
     ): Promise<void> => {
       if (

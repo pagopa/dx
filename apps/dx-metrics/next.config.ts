@@ -13,18 +13,18 @@ const appConfig = AppConfigSchema.parse(rawConfig);
 const configuredRepositories = appConfig.repositories;
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   env: {
     NEXT_PUBLIC_REPOSITORIES: configuredRepositories.join(","),
   },
   images: {
     remotePatterns: [
       {
-        protocol: "https",
         hostname: "avatars.githubusercontent.com",
+        protocol: "https",
       },
     ],
   },
+  output: "standalone",
 };
 
 export default nextConfig;

@@ -1,6 +1,7 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
+
+import { db } from "@/db";
 
 export async function GET() {
   try {
@@ -95,15 +96,15 @@ export async function GET() {
     `);
 
     return NextResponse.json({
+      byCategory: byCategory.rows,
+      byPriority: byPriority.rows,
       cards: {
-        openedTotal: openedTotal.rows[0]?.value,
-        closedTotal: closedTotal.rows[0]?.value,
         avgClose: avgClose.rows[0]?.value,
+        closedTotal: closedTotal.rows[0]?.value,
+        openedTotal: openedTotal.rows[0]?.value,
         requestsTrend: requestsTrend.rows[0]?.value,
       },
       frequencyTrend: frequencyTrend.rows,
-      byCategory: byCategory.rows,
-      byPriority: byPriority.rows,
     });
   } catch (error) {
     console.error("Tracker dashboard error:", error);

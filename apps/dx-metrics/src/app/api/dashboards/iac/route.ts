@@ -1,13 +1,15 @@
-import { db } from "@/db";
 import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
-import { DX_TEAM_MEMBERS } from "@/lib/config";
+
+import { db } from "@/db";
+import { DX_TEAM_MEMBERS, ORGANIZATION } from "@/lib/config";
+import { parseDashboardQuery } from "@/lib/query-params";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-  const repository = searchParams.get("repository") || "io-infra";
-  const days = parseInt(searchParams.get("days") || "120");
-  const org = process.env.ORGANIZATION || "pagopa";
+  const parsed = parseDashboardQuery(req);
+  if ("error" in parsed) return parsed.error;
+  const { days, repository = "io-infra" } = parsed.query;
+  const org = ORGANIZATION;
   const fullName = `${org}/${repository}`;
 
   try {
@@ -128,9 +130,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       leadTimeMovingAvg: leadTimeMovingAvg.rows,
       leadTimeTrend: leadTimeTrend.rows,
-      supervisedVsUnsupervised: supervisedVsUnsupervised.rows,
-      prsOverTime: prsOverTime.rows,
       prsByReviewer: prsByReviewer.rows,
+      prsOverTime: prsOverTime.rows,
+      supervisedVsUnsupervised: supervisedVsUnsupervised.rows,
     });
   } catch (error) {
     console.error("IaC dashboard error:", error);
