@@ -35,23 +35,14 @@ on:
         default: ""
       save_plan_to_backend:
         description: |
-          Upload the plan artifact to the Terraform remote state storage
+          Upload the Terraform plan to the remote state storage
           (same storage account / S3 bucket used for the state file) for audit and traceability.
           Requires the CI identity to have write access to the state storage.
-          The plan is stored under the key prefix "tfplans/<run_id>/" and removed after a
-          successful apply.
+          The plan is stored under the key prefix "<state_key_prefix>.tfplan.<run_id>" and removed
+          after a successful apply via the cloud-storage-download post step.
         type: boolean
         required: false
         default: false
-      retention_days:
-        description: |
-          Number of days to retain the plan artifact.
-          Applies to both the GitHub Actions artifact and the state storage object.
-          For Azure state storage, sets a native blob expiry.
-          For AWS state storage, adds a delete-after tag (requires a matching bucket lifecycle rule).
-        type: number
-        required: false
-        default: 7
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -120,6 +111,10 @@ jobs:
       azure_container: ${{ steps.backend-plan.outputs.azure-container }}
       aws_bucket: ${{ steps.backend-plan.outputs.aws-bucket }}
       aws_region: ${{ steps.backend-plan.outputs.aws-region }}
+
+    # save_plan_to_backend is required when using this workflow.
+    # The Read Terraform Backend Config and Upload steps will fail fast if the
+    # backend is not one of the supported types (azurerm, s3).
 
     steps:
       # Set the directory where the Terraform files are located
@@ -218,30 +213,6 @@ jobs:
           aws-region: ${{ steps.backend-plan.outputs.aws-region }}
           workflow-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
-      - name: Encrypt Terraform Plan
-        working-directory: ${{ steps.directory.outputs.dir }}
-        env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          openssl enc -aes-256-cbc -salt -pbkdf2 \
-            -in "$TFPLAN_FILE" \
-            -out "${TFPLAN_FILE}.enc" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "$TFPLAN_FILE"
-
-      - name: Upload Terraform Bundle as Artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
-        env:
-          TERRAFORM_DIR: ${{ steps.directory.outputs.dir }}
-        with:
-          name: terraform-bundle
-          path: |
-            ${{ env.TERRAFORM_DIR }}/${{ env.TFPLAN_FILE }}.enc
-            ${{ env.TERRAFORM_DIR }}/.terraform.lock.hcl
-            ${{ env.TERRAFORM_DIR }}/.terraform/modules/
-          retention-days: ${{ inputs.retention_days }}
-
   tf_apply:
     name: "Terraform Apply"
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
@@ -264,15 +235,6 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      # Standard flow: download the artifact bundle early so that the module cache
-      # (.terraform/modules/) is available before terraform init runs.
-      - name: Download Terraform Bundle as Artifact
-        if: ${{ !inputs.save_plan_to_backend }}
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
-        with:
-          name: terraform-bundle
-          path: ${{ needs.tf_plan.outputs.working_dir }}
-
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
@@ -283,22 +245,9 @@ jobs:
         run: |
           terraform init -input=false
 
-      - name: Decrypt Terraform Plan
-        if: ${{ !inputs.save_plan_to_backend }}
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        env:
-          ENCRYPTION_PASSPHRASE: ${{ secrets.ARTIFACT_ENC_KEY }}
-        run: |
-          set -euo pipefail
-          openssl enc -aes-256-cbc -d -pbkdf2 \
-            -in "${TFPLAN_FILE}.enc" \
-            -out "$TFPLAN_FILE" \
-            -pass env:ENCRYPTION_PASSPHRASE
-          rm -f "${TFPLAN_FILE}.enc"
-
-      # State storage flow: download the plain plan directly (no decrypt needed).
+      # Download the plan directly from cloud state storage (no decrypt needed).
       # The post step of the action will delete both the remote object and the local file
-      # after the job completes, regardless of success or failure.
+      # after a successful apply.
       - name: Download Plan from State Storage
         if: ${{ inputs.save_plan_to_backend }}
         uses: pagopa/dx/actions/cloud-storage-download@main
