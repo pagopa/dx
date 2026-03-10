@@ -1,0 +1,28 @@
+{
+  "name": "@pagopa-dx/cloud-storage-upload",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "GitHub Action to upload a file to Azure Blob Storage or Amazon S3",
+  "main": "dist/main.cjs",
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@actions/core": "^1.11.1",
+    "@azure/identity": "^4.10.0",
+    "@azure/storage-blob": "^12.27.0",
+    "@aws-sdk/client-s3": "^3.808.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:"
+  }
+}
+

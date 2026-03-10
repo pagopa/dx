@@ -1,5 +1,8 @@
 name: Upload Terraform Plan
-description: Encrypts a Terraform plan file and uploads it as a GitHub Actions artifact
+description: >
+  Encrypts a Terraform plan file and uploads it as a GitHub Actions artifact.
+  Optionally also uploads the plain plan to the Terraform remote state storage
+  (Azure Blob Storage or S3) before encrypting.
 
 inputs:
   plan-file:
@@ -15,10 +18,56 @@ inputs:
     description: Number of days to retain the artifact
     required: false
     default: "1"
+  backend-destination:
+    description: >
+      If set, the plain plan is also uploaded to this remote path in the state storage
+      (same container / bucket used for the Terraform state file) before encrypting.
+      When empty the backend upload is skipped.
+    required: false
+    default: ""
+  provider:
+    description: Cloud storage provider for the backend upload. Accepted values are "azure" and "aws".
+    required: false
+    default: ""
+  azure-storage-account:
+    description: Azure Storage Account name. Required when provider is "azure".
+    required: false
+    default: ""
+  azure-container:
+    description: Azure Blob container name. Required when provider is "azure".
+    required: false
+    default: ""
+  aws-bucket:
+    description: S3 bucket name. Required when provider is "aws".
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region where the S3 bucket lives. Required when provider is "aws".
+    required: false
+    default: ""
+  workflow-run-url:
+    description: >
+      If provided, attached to the backend object as a tag (key: workflow-run-url)
+      for traceability. Has no effect when backend-destination is empty.
+    required: false
+    default: ""
 
 runs:
   using: composite
   steps:
+    - name: Upload Plan to State Storage
+      if: ${{ inputs.backend-destination != '' }}
+      uses: pagopa/dx/actions/cloud-storage-upload@main
+      with:
+        provider: ${{ inputs.provider }}
+        file-path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}
+        destination: ${{ inputs.backend-destination }}
+        azure-storage-account: ${{ inputs.azure-storage-account }}
+        azure-container: ${{ inputs.azure-container }}
+        aws-bucket: ${{ inputs.aws-bucket }}
+        aws-region: ${{ inputs.aws-region }}
+        workflow-run-url: ${{ inputs.workflow-run-url }}
+
     - name: Encrypt Terraform Plan
       shell: bash
       working-directory: ${{ inputs.working-directory }}
