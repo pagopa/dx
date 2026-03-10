@@ -23,7 +23,13 @@ catalog:
   typescript: ~5.8.3
   vitest: ^3.2.4
   vitest-mock-extended: ^3.1.0
-  zod: ^4.2.1
+  zod: ^4.3.5
+
+cleanupUnusedCatalogs: true
+
+linkWorkspacePackages: true
+
+minimumReleaseAge: 1440
 
 onlyBuiltDependencies:
   - '@swc/core'
@@ -33,7 +39,4 @@ onlyBuiltDependencies:
   - nx
   - protobufjs
 
-linkWorkspacePackages: true
-packageImportMethod: "clone-or-copy"
-cleanupUnusedCatalogs: true
-minimumReleaseAge: 1440
+packageImportMethod: clone-or-copy

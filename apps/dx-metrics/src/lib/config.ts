@@ -1,4 +1,4 @@
-// Configuration constants - repositories are sourced from config.yaml via next.config.ts.
+// Configuration constants - repositories are sourced from config.ts via next.config.ts.
 export const ORGANIZATION = process.env.ORGANIZATION || "pagopa";
 
 const configuredRepositories = (process.env.NEXT_PUBLIC_REPOSITORIES || "dx")

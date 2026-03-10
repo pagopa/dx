@@ -26,7 +26,8 @@
     "react-dom": "^19.2.4",
     "recharts": "^3.7.0",
     "tailwind-merge": "^3.5.0",
-    "terrawiz": "^1.0.0"
+    "terrawiz": "^1.0.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -36,6 +37,7 @@
     "@types/pg": "^8.11.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "baseline-browser-mapping": "^2.10.0",
     "drizzle-kit": "^0.30.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.1.6",

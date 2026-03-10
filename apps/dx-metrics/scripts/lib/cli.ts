@@ -48,7 +48,7 @@ Options:
                               tracker           Tracker CSV data (requires --tracker-csv)
 
   --tracker-csv <path>      Path to the tracker CSV file (used with --entity tracker)
-  --config <path>           Path to config YAML file (default: config.yaml)
+  --config <path>           Path to config JSON file (default: config.json)
   --force                   Re-import even if a checkpoint already exists
   --help                    Show this help message
 `;
@@ -62,7 +62,7 @@ export function parseArgs(
   let entity = "all";
   let trackerCsv = "";
   let force = false;
-  let configPath = path.resolve(workingDirectory, "config.yaml");
+  let configPath = path.resolve(workingDirectory, "config.json");
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];

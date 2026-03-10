@@ -1,0 +1,30 @@
+{
+  "organization": "pagopa",
+  "repositories": [
+    "dx",
+    "io-infra",
+    "io-wallet",
+    "io-messages",
+    "io-services-cms",
+    "io-auth-n-identity-domain",
+    "io-ipatente",
+    "io-cgn",
+    "io-cdc",
+    "io-sign",
+    "developer-portal",
+    "interop-be-monorepo",
+    "selfcare",
+    "plsm-service-management",
+    "selfcare-infra",
+    "b2b-portals"
+  ],
+  "dxTeamMembers": [
+    "gunzip",
+    "lucacavallaro",
+    "Krusty93",
+    "kin0992",
+    "christian-calabrese",
+    "mamu0"
+  ],
+  "dxRepo": "dx"
+}
