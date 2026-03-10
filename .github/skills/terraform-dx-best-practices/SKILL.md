@@ -71,6 +71,10 @@ Other retrieval methods (DX Search API, MCP documentation tools, internal knowle
 
 The `pagopa-dx` namespace contains modules for many resource types beyond compute and storage. Examples of frequently missed modules include role assignments, service bus, event hub, CDN, API management, and container apps. **Always search — do not assume a module doesn't exist.**
 
+#### Special case: sensitive values and secrets
+
+Whenever the implementation involves managing sensitive values, secrets, or anything stored in Azure Key Vault, **stop and invoke the `azure-keyvault-secret` skill** before writing any code. It covers the correct and secure patterns for handling secrets in Terraform, including how to avoid storing sensitive data in state.
+
 ### 3. Ask User for Required Values
 
 **Before asking the user, check for values in the existing infrastructure:**
@@ -215,6 +219,7 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 
 - [ ] Secrets use Key Vault references (`@Microsoft.KeyVault(...)`)
 - [ ] No sensitive values hardcoded in Terraform code
+- [ ] For any sensitive value or secret managed through Azure Key Vault, the **`azure-keyvault-secret` skill** has been followed
 
 ### Technology Radar
 
