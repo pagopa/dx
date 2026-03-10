@@ -41,9 +41,7 @@ async function uploadToAzure(
   ).getContainerClient(container);
   const blockBlobClient = containerClient.getBlockBlobClient(destination);
 
-  const uploadOptions = overwrite
-    ? {}
-    : { conditions: { ifNoneMatch: "*" } };
+  const uploadOptions = overwrite ? {} : { conditions: { ifNoneMatch: "*" } };
 
   await blockBlobClient.uploadFile(filePath, uploadOptions);
   core.info(
@@ -79,7 +77,9 @@ async function uploadToS3(
 
   // Always include gh-action-ephemeral so that a bucket lifecycle rule can reclaim
   // objects that were never explicitly deleted.
-  const tagSet: Tag[] = [{ Key: DX_EPHEMERAL_TAG.key, Value: DX_EPHEMERAL_TAG.value }];
+  const tagSet: Tag[] = [
+    { Key: DX_EPHEMERAL_TAG.key, Value: DX_EPHEMERAL_TAG.value },
+  ];
   if (workflowRunUrl) {
     tagSet.push({ Key: "workflow-run-url", Value: workflowRunUrl });
   }

@@ -69,7 +69,10 @@ async function run(): Promise<void> {
   core.saveState("provider", provider);
   core.saveState("source", source);
   core.saveState("file-path", filePath);
-  core.saveState("azure-storage-account", core.getInput("azure-storage-account"));
+  core.saveState(
+    "azure-storage-account",
+    core.getInput("azure-storage-account"),
+  );
   core.saveState("azure-container", core.getInput("azure-container"));
   core.saveState("aws-bucket", core.getInput("aws-bucket"));
   core.saveState("aws-region", core.getInput("aws-region"));

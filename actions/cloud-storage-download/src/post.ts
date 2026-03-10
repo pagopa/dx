@@ -12,7 +12,11 @@
 import * as core from "@actions/core";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { DeleteObjectCommand, GetObjectTaggingCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectTaggingCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { unlink } from "fs/promises";
 
 // Must match the tag key set by cloud-storage-upload.
