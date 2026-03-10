@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.18.3
+
+### Patch Changes
+
+- 0f96dab: Add `corepack` as required tool for `init` command
+- 24e7b3b: Encode `github-runner-app-key` in `base64` when stored in the common kv
+
 ## 0.18.2
 
 ### Patch Changes
