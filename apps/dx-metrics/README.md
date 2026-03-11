@@ -70,6 +70,7 @@ npx tsx scripts/import.ts --since YYYY-MM-DD [--entity <type>] [--tracker-csv <p
 - `iac-pr` — IaC pull request lead times
 - `commits` — DX team member commits
 - `code-search` — code search results for DX adoption
+- `tech-radar` — discoverable tool usage mapped to DX Techradar
 - `terraform-registry` — Terraform registry releases
 - `tracker` — DX request tracker (from Slack CSV)
 
@@ -87,6 +88,7 @@ npx tsx scripts/import.ts --since 2024-01-01 --entity tracker --tracker-csv /pat
 | **Workflows**     | Deployment frequency, pipeline failures, duration        |
 | **IaC PRs**       | Infrastructure PR lead times, supervised vs unsupervised |
 | **DX Adoption**   | DX pipeline and Terraform module adoption                |
+| **Techradar**     | Discoverable tool adoption mapped to DX Techradar        |
 | **DX Team**       | Team commits across repositories                         |
 | **Tracker**       | DX request tracking and trends                           |
 

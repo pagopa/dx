@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "better-auth/cookies";
+import { type NextRequest, NextResponse } from "next/server";
 
 /** Protects app routes with Better Auth before route handling. */
 export function proxy(req: NextRequest) {

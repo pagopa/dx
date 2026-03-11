@@ -1,6 +1,6 @@
 {
-  "id": "879f6efb-9707-4959-a857-511392d72510",
-  "prevId": "e8b22bfb-2940-4627-9839-e9cca2d07f91",
+  "id": "55d7393b-4d4c-46da-ac5e-252c6c647917",
+  "prevId": "879f6efb-9707-4959-a857-511392d72510",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1065,6 +1065,171 @@
         "sync_runs_repository_id_repositories_id_fk": {
           "name": "sync_runs_repository_id_repositories_id_fk",
           "tableFrom": "sync_runs",
+          "tableTo": "repositories",
+          "columnsFrom": ["repository_id"],
+          "columnsTo": ["id"],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.tech_radar_usages": {
+      "name": "tech_radar_usages",
+      "schema": "",
+      "columns": {
+        "detected_at": {
+          "name": "detected_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "evidence_path": {
+          "name": "evidence_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "tech_radar_usages_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "radar_ref": {
+          "name": "radar_ref",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "radar_ring": {
+          "name": "radar_ring",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "radar_slug": {
+          "name": "radar_slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "radar_status": {
+          "name": "radar_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "radar_title": {
+          "name": "radar_title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "repository_full_name": {
+          "name": "repository_full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "repository_id": {
+          "name": "repository_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "search_query": {
+          "name": "search_query",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tool_key": {
+          "name": "tool_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tool_name": {
+          "name": "tool_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "tech_radar_repository_idx": {
+          "name": "tech_radar_repository_idx",
+          "columns": [
+            {
+              "expression": "repository_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tech_radar_status_idx": {
+          "name": "tech_radar_status_idx",
+          "columns": [
+            {
+              "expression": "radar_status",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "tech_radar_repo_tool_idx": {
+          "name": "tech_radar_repo_tool_idx",
+          "columns": [
+            {
+              "expression": "repository_full_name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tool_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "tech_radar_usages_repository_id_repositories_id_fk": {
+          "name": "tech_radar_usages_repository_id_repositories_id_fk",
+          "tableFrom": "tech_radar_usages",
           "tableTo": "repositories",
           "columnsFrom": ["repository_id"],
           "columnsTo": ["id"],

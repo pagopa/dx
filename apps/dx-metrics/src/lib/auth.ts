@@ -18,12 +18,12 @@ const env = AuthEnvSchema.parse({
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, { provider: "pg" }),
+  // nextCookies must be the last plugin to auto-set cookies in server actions
+  plugins: [nextCookies()],
   socialProviders: {
     github: {
       clientId: env.AUTH_GITHUB_ID,
       clientSecret: env.AUTH_GITHUB_SECRET,
     },
   },
-  // nextCookies must be the last plugin to auto-set cookies in server actions
-  plugins: [nextCookies()],
 });

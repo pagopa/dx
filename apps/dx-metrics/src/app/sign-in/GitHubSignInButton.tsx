@@ -9,8 +9,8 @@ export function GitHubSignInButton() {
       className="rounded-lg bg-gray-900 px-6 py-3 text-white hover:bg-gray-700"
       onClick={() =>
         authClient.signIn.social({
-          provider: "github",
           callbackURL: "/dashboards/pull-requests",
+          provider: "github",
         })
       }
       type="button"

@@ -1,10 +1,7 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 
-import {
-  DashboardQuerySchema,
-  parseDashboardQuery,
-} from "../query-params.js";
+import { DashboardQuerySchema, parseDashboardQuery } from "../query-params.js";
 
 const makeRequest = (params: Record<string, string> = {}) => {
   const url = new URL("http://localhost/api/dashboard");

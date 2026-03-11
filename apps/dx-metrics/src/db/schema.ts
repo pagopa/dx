@@ -228,6 +228,33 @@ export const terraformRegistryReleases = pgTable(
   ],
 );
 
+// --- Techradar Tool Usages ---
+export const techRadarUsages = pgTable(
+  "tech_radar_usages",
+  {
+    detectedAt: timestamp("detected_at").defaultNow().notNull(),
+    evidencePath: text("evidence_path"),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    radarRef: text("radar_ref"),
+    radarRing: text("radar_ring"),
+    radarSlug: text("radar_slug"),
+    radarStatus: text("radar_status").notNull(),
+    radarTitle: text("radar_title"),
+    repositoryFullName: text("repository_full_name").notNull(),
+    repositoryId: integer("repository_id")
+      .notNull()
+      .references(() => repositories.id),
+    searchQuery: text("search_query").notNull(),
+    toolKey: text("tool_key").notNull(),
+    toolName: text("tool_name").notNull(),
+  },
+  (t) => [
+    index("tech_radar_repository_idx").on(t.repositoryId),
+    index("tech_radar_status_idx").on(t.radarStatus),
+    uniqueIndex("tech_radar_repo_tool_idx").on(t.repositoryFullName, t.toolKey),
+  ],
+);
+
 // --- Tracker Requests ---
 export const trackerRequests = pgTable("tracker_requests", {
   category: text("category"),
@@ -267,12 +294,12 @@ export const syncRuns = pgTable("sync_runs", {
 // --- Better Auth Tables ---
 
 export const user = pgTable("user", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
   email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").default(false).notNull(),
+  id: text("id").primaryKey(),
   image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  name: text("name").notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
     .$onUpdate(() => new Date())
@@ -282,14 +309,14 @@ export const user = pgTable("user", {
 export const session = pgTable(
   "session",
   {
-    id: text("id").primaryKey(),
-    expiresAt: timestamp("expires_at").notNull(),
-    token: text("token").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    id: text("id").primaryKey(),
+    ipAddress: text("ip_address"),
+    token: text("token").notNull().unique(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
-    ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
     userId: text("user_id")
       .notNull()
@@ -301,23 +328,23 @@ export const session = pgTable(
 export const account = pgTable(
   "account",
   {
-    id: text("id").primaryKey(),
-    accountId: text("account_id").notNull(),
-    providerId: text("provider_id").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
-    refreshToken: text("refresh_token"),
-    idToken: text("id_token"),
     accessTokenExpiresAt: timestamp("access_token_expires_at"),
+    accountId: text("account_id").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    id: text("id").primaryKey(),
+    idToken: text("id_token"),
+    password: text("password"),
+    providerId: text("provider_id").notNull(),
+    refreshToken: text("refresh_token"),
     refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
     scope: text("scope"),
-    password: text("password"),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .$onUpdate(() => new Date())
       .notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
   },
   (table) => [index("account_userId_idx").on(table.userId)],
 );
@@ -325,22 +352,22 @@ export const account = pgTable(
 export const verification = pgTable(
   "verification",
   {
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
     id: text("id").primaryKey(),
     identifier: text("identifier").notNull(),
-    value: text("value").notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
       .$onUpdate(() => new Date())
       .notNull(),
+    value: text("value").notNull(),
   },
   (table) => [index("verification_identifier_idx").on(table.identifier)],
 );
 
 export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
   accounts: many(account),
+  sessions: many(session),
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({

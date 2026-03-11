@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
       WHERE r.full_name = ${fullName}
     `);
     const maxDate =
-      (maxDateResult.rows[0] as { max_date: string } | undefined)?.max_date ??
+      (maxDateResult.rows[0] as undefined | { max_date: string })?.max_date ??
       new Date().toISOString();
 
     // Deployments to Production (weekly average)

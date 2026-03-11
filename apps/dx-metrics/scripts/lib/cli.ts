@@ -41,10 +41,11 @@ Options:
                               workflow-runs     GitHub Actions workflow run history
                               iac-pr            IaC pull request lead time
                               commits           Repository commits
-                              code-search       Code search results (DX repo)
-                              terraform-registry Terraform registry module releases
-                              terraform-modules Terraform module usage (via terrawiz)
-                              dx-pipelines      DX pipeline usages (via GitHub code search)
+                               code-search       Code search results (DX repo)
+                               tech-radar        Discoverable tool usage aligned to DX Techradar
+                               terraform-registry Terraform registry module releases
+                               terraform-modules Terraform module usage (via terrawiz)
+                               dx-pipelines      DX pipeline usages (via GitHub code search)
                               tracker           Tracker CSV data (requires --tracker-csv)
 
   --tracker-csv <path>      Path to the tracker CSV file (used with --entity tracker)
