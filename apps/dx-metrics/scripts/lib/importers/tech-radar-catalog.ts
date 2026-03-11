@@ -49,7 +49,7 @@ const techRadarToolCatalog = [
   {
     key: "yarn",
     path: "yarn.lock",
-    radarSlug: "yarn",
+    radarSlug: "yarn-classic",
     toolName: "Yarn",
   },
 ] as const;
