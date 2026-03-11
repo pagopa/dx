@@ -8,14 +8,14 @@
  */
 
 import * as core from "@actions/core";
-import { DefaultAzureCredential } from "@azure/identity";
-import { BlobServiceClient } from "@azure/storage-blob";
 import {
   PutObjectCommand,
   PutObjectTaggingCommand,
   S3Client,
   Tag,
 } from "@aws-sdk/client-s3";
+import { DefaultAzureCredential } from "@azure/identity";
+import { BlobServiceClient } from "@azure/storage-blob";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 
@@ -24,6 +24,52 @@ import { resolve } from "path";
 // workflow run). Pair with an Azure Management Policy or an S3 Lifecycle Rule
 // that filters on this tag.
 const DX_EPHEMERAL_TAG = { key: "gh-action-ephemeral", value: "true" };
+
+async function run(): Promise<void> {
+  const provider = core.getInput("provider", { required: true });
+  const filePath = resolve(core.getInput("file-path", { required: true }));
+  const destination = core.getInput("destination", { required: true });
+  const overwrite = core.getInput("overwrite") !== "false";
+  const workflowRunUrl = core.getInput("workflow-run-url");
+
+  let remoteUrl: string;
+
+  switch (provider) {
+    case "aws": {
+      const bucket = core.getInput("aws-bucket", { required: true });
+      const region = core.getInput("aws-region", { required: true });
+      remoteUrl = await uploadToS3(
+        bucket,
+        region,
+        destination,
+        filePath,
+        workflowRunUrl,
+      );
+      break;
+    }
+    case "azure": {
+      const storageAccount = core.getInput("azure-storage-account", {
+        required: true,
+      });
+      const container = core.getInput("azure-container", { required: true });
+      remoteUrl = await uploadToAzure(
+        storageAccount,
+        container,
+        destination,
+        filePath,
+        overwrite,
+        workflowRunUrl,
+      );
+      break;
+    }
+    default:
+      throw new Error(
+        `Unsupported provider '${provider}'. Accepted values are 'azure' and 'aws'.`,
+      );
+  }
+
+  core.setOutput("remote-url", remoteUrl);
+}
 
 async function uploadToAzure(
   storageAccount: string,
@@ -71,7 +117,7 @@ async function uploadToS3(
   const body = await readFile(filePath);
 
   await client.send(
-    new PutObjectCommand({ Bucket: bucket, Key: destination, Body: body }),
+    new PutObjectCommand({ Body: body, Bucket: bucket, Key: destination }),
   );
   core.info(`Uploaded → s3://${bucket}/${destination}`);
 
@@ -92,52 +138,6 @@ async function uploadToS3(
   );
 
   return `s3://${bucket}/${destination}`;
-}
-
-async function run(): Promise<void> {
-  const provider = core.getInput("provider", { required: true });
-  const filePath = resolve(core.getInput("file-path", { required: true }));
-  const destination = core.getInput("destination", { required: true });
-  const overwrite = core.getInput("overwrite") !== "false";
-  const workflowRunUrl = core.getInput("workflow-run-url");
-
-  let remoteUrl: string;
-
-  switch (provider) {
-    case "azure": {
-      const storageAccount = core.getInput("azure-storage-account", {
-        required: true,
-      });
-      const container = core.getInput("azure-container", { required: true });
-      remoteUrl = await uploadToAzure(
-        storageAccount,
-        container,
-        destination,
-        filePath,
-        overwrite,
-        workflowRunUrl,
-      );
-      break;
-    }
-    case "aws": {
-      const bucket = core.getInput("aws-bucket", { required: true });
-      const region = core.getInput("aws-region", { required: true });
-      remoteUrl = await uploadToS3(
-        bucket,
-        region,
-        destination,
-        filePath,
-        workflowRunUrl,
-      );
-      break;
-    }
-    default:
-      throw new Error(
-        `Unsupported provider '${provider}'. Accepted values are 'azure' and 'aws'.`,
-      );
-  }
-
-  core.setOutput("remote-url", remoteUrl);
 }
 
 run().catch(core.setFailed);

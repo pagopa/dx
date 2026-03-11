@@ -10,13 +10,13 @@
  */
 
 import * as core from "@actions/core";
-import { DefaultAzureCredential } from "@azure/identity";
-import { BlobServiceClient } from "@azure/storage-blob";
 import {
   DeleteObjectCommand,
   GetObjectTaggingCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
+import { DefaultAzureCredential } from "@azure/identity";
+import { BlobServiceClient } from "@azure/storage-blob";
 import { unlink } from "fs/promises";
 
 // Must match the tag key set by cloud-storage-upload.
@@ -86,16 +86,16 @@ async function run(): Promise<void> {
 
   // Delete remote object
   switch (provider) {
-    case "azure": {
-      const storageAccount = core.getState("azure-storage-account");
-      const container = core.getState("azure-container");
-      await deleteFromAzure(storageAccount, container, source);
-      break;
-    }
     case "aws": {
       const bucket = core.getState("aws-bucket");
       const region = core.getState("aws-region");
       await deleteFromS3(bucket, region, source);
+      break;
+    }
+    case "azure": {
+      const storageAccount = core.getState("azure-storage-account");
+      const container = core.getState("azure-container");
+      await deleteFromAzure(storageAccount, container, source);
       break;
     }
     default:

@@ -33,16 +33,6 @@ on:
         type: string
         required: false
         default: ""
-      save_plan_to_backend:
-        description: |
-          Upload the Terraform plan to the remote state storage
-          (same storage account / S3 bucket used for the state file) for audit and traceability.
-          Requires the CI identity to have write access to the state storage.
-          The plan is stored under the key prefix "<state_key_prefix>.tfplan.<run_id>" and removed
-          after a successful apply via the cloud-storage-download post step.
-        type: boolean
-        required: false
-        default: false
 
 env:
   ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -112,10 +102,6 @@ jobs:
       aws_bucket: ${{ steps.backend-plan.outputs.aws-bucket }}
       aws_region: ${{ steps.backend-plan.outputs.aws-region }}
 
-    # save_plan_to_backend is required when using this workflow.
-    # The Read Terraform Backend Config and Upload steps will fail fast if the
-    # backend is not one of the supported types (azurerm, s3).
-
     steps:
       # Set the directory where the Terraform files are located
       # The directory the value is then available in ${{ steps.directory.outputs.dir }}
@@ -174,7 +160,6 @@ jobs:
       # The storage backend (Azure Blob / S3) provides its own access-control
       # and server-side encryption, so no additional client-side encryption is applied here.
       - name: Read Terraform Backend Config
-        if: ${{ inputs.save_plan_to_backend }}
         id: backend-plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
@@ -201,7 +186,6 @@ jobs:
           esac
 
       - name: Upload Plan to State Storage
-        if: ${{ inputs.save_plan_to_backend }}
         uses: pagopa/dx/actions/cloud-storage-upload@poc-store-plan-artifact-in-csp
         with:
           provider: ${{ steps.backend-plan.outputs.provider }}
@@ -244,7 +228,6 @@ jobs:
       # The post step of the action will delete both the remote object and the local file
       # after a successful apply.
       - name: Download Plan from State Storage
-        if: ${{ inputs.save_plan_to_backend }}
         uses: pagopa/dx/actions/cloud-storage-download@poc-store-plan-artifact-in-csp
         with:
           provider: ${{ needs.tf_plan.outputs.storage_provider }}

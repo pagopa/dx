@@ -13,11 +13,12 @@
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
+    "@aws-sdk/client-s3": "^3.808.0",
     "@azure/identity": "^4.10.0",
-    "@azure/storage-blob": "^12.27.0",
-    "@aws-sdk/client-s3": "^3.808.0"
+    "@azure/storage-blob": "^12.27.0"
   },
   "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "prettier": "catalog:",

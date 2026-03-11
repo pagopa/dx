@@ -7,9 +7,9 @@
  */
 
 import * as core from "@actions/core";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
 
@@ -78,18 +78,18 @@ async function run(): Promise<void> {
   core.saveState("aws-region", core.getInput("aws-region"));
 
   switch (provider) {
+    case "aws": {
+      const bucket = core.getInput("aws-bucket", { required: true });
+      const region = core.getInput("aws-region", { required: true });
+      await downloadFromS3(bucket, region, source, filePath);
+      break;
+    }
     case "azure": {
       const storageAccount = core.getInput("azure-storage-account", {
         required: true,
       });
       const container = core.getInput("azure-container", { required: true });
       await downloadFromAzure(storageAccount, container, source, filePath);
-      break;
-    }
-    case "aws": {
-      const bucket = core.getInput("aws-bucket", { required: true });
-      const region = core.getInput("aws-region", { required: true });
-      await downloadFromS3(bucket, region, source, filePath);
       break;
     }
     default:
