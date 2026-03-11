@@ -18,7 +18,7 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "{{env.name}}"
+    Environment = "{{titleCase env.name}}"
     {{#each tags}}
     {{@key}}    = "{{this}}"
     {{/each}}
