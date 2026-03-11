@@ -2,6 +2,7 @@
   "name": "dx-metrics",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "./start-nextapp.sh",
     "build": "next build",
