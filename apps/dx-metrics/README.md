@@ -29,8 +29,8 @@ cp .env.example .env
 2. **Edit `.env`** with your values:
    - `GITHUB_TOKEN` — GitHub personal access token
    - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` — GitHub OAuth App credentials
-   - `AUTH_SECRET` — random secret for session encryption
-
+   - `BETTER_AUTH_SECRET` — random secret used by Better Auth for session/token encryption
+   - `BETTER_AUTH_URL` — application URL used by Better Auth (e.g. `http://localhost:3000`)
 3. **Start services:**
 
 ```bash
@@ -94,14 +94,21 @@ npx tsx scripts/import.ts --since 2024-01-01 --entity tracker --tracker-csv /pat
 
 ## Configuration
 
-Configuration is set via environment variables:
+Application configuration is loaded at runtime from the configuration file
+(for example via `src/lib/config.ts` reading `config.json`), **not** from
+these environment variables.
 
-| Variable          | Default      | Description                           |
-| ----------------- | ------------ | ------------------------------------- |
-| `ORGANIZATION`    | `pagopa`     | GitHub organization                   |
-| `REPOSITORIES`    | (see config) | Comma-separated repository list       |
-| `DX_TEAM_MEMBERS` | (see config) | Comma-separated team member usernames |
-| `DX_REPO`         | `dx`         | The DX repository name                |
+Typical configuration fields include:
+
+| Field           | Default      | Description                      |
+| --------------- | ------------ | -------------------------------- |
+| `organization`  | `pagopa`     | GitHub organization              |
+| `repositories`  | (see config) | List of repositories to analyze  |
+| `dxTeamMembers` | (see config) | List of DX team member usernames |
+| `dxRepo`        | `dx`         | The DX repository name           |
+
+Refer to the `config.json` used by `src/lib/config.ts` for the exact
+structure and values.
 
 ## Development
 

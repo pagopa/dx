@@ -2,7 +2,7 @@
  * Tooltip content for Releases dashboard
  */
 
-export const releasestooltips = {
+export const releasesTooltips = {
   firstReleaseDate:
     "When module was first published. Indicates module maturity.",
   lastReleaseDate:

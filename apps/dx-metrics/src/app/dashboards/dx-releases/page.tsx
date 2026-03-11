@@ -5,7 +5,7 @@ import { DashboardRequestState } from "@/components/DashboardRequestState";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useDashboardData } from "@/lib/useDashboardData";
 
-import { releasestooltips as tooltipContent } from "./tooltips";
+import { releasesTooltips as tooltipContent } from "./tooltips";
 
 interface ModuleSummary {
   first_release_date: string;
