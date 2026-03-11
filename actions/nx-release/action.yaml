@@ -73,7 +73,8 @@ runs:
         # CHANGELOG extraction). Manifests are already updated (unstaged) at this point.
         RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node - << 'JSEOF'
         'use strict';
-        const { execFileSync, readFileSync } = require('child_process');
+        const { execFileSync } = require('child_process');
+        const { readFileSync } = require('fs');
         const newTags = (process.env.NEW_TAGS || '').split('\n').filter(Boolean);
         if (newTags.length === 0) { console.log('[]'); process.exit(0); }
         const manifests = execFileSync('git', ['ls-files', '--', '**/package.json', '**/pom.xml'], { encoding: 'utf8' })
