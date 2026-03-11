@@ -44,9 +44,21 @@ export function useDashboardData<T>(
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
 
+  // Serialize params to a stable string key to avoid unnecessary re-renders when
+  // callers pass inline objects. This ensures the effect only refetches when the
+  // actual param values change, not when the object identity changes.
+  const paramsSerialized = useMemo(
+    () =>
+      JSON.stringify(
+        Object.entries(params).sort(([a], [b]) => a.localeCompare(b)),
+      ),
+    [params],
+  );
+
   const queryString = useMemo(
     () => buildDashboardQueryString(params),
-    [params],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [paramsSerialized],
   );
 
   const fetchData = useCallback(

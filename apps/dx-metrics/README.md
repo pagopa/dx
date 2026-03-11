@@ -20,30 +20,19 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 
 ## Quick Start
 
-1. **Copy environment file:**
-
-```bash
-cp .env.example .env
-```
-
-2. **Edit `.env`** with your values:
-   - `GITHUB_TOKEN` — GitHub personal access token
-   - `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` — GitHub OAuth App credentials
-   - `BETTER_AUTH_SECRET` — random secret used by Better Auth for session/token encryption
-   - `BETTER_AUTH_URL` — application URL used by Better Auth (e.g. `http://localhost:3000`)
-3. **Start services:**
+1. **Start services:**
 
 ```bash
 docker compose up -d
 ```
 
-4. **Run database migrations:**
+2. **Run database migrations:**
 
 ```bash
 DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit migrate
 ```
 
-5. **Import data (incremental):**
+3. **Import data (incremental):**
 
 ```bash
 export GITHUB_TOKEN=ghp_XXX
@@ -51,7 +40,7 @@ export DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics
 npx tsx scripts/import.ts --since 2026-01-01
 ```
 
-6. **Access dashboards** at http://localhost:3000
+4. **Access dashboards** at http://localhost:3000
 
 ## Import Script
 

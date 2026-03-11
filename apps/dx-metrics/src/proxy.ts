@@ -15,6 +15,9 @@ export function proxy(req: NextRequest) {
     const newUrl = new URL("/sign-in", req.nextUrl.origin);
     return NextResponse.redirect(newUrl);
   }
+  // We have a session cookie or we're on an auth route,
+  // so we can proceed to the requested route
+  return NextResponse.next();
 }
 
 export const config = {
