@@ -10,25 +10,20 @@ import { execFile, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
-import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
-const TagEntrySchema = z.object({
-  path: z.string().nullable(),
-  tag: z.string(),
-  // version was added later; default to "" for PR bodies written before this field.
-  version: z.string().default(""),
-});
+export interface TagEntry {
+  path: null | string;
+  tag: string;
+  // version was added later; may be absent in PR bodies written before this field.
+  version: string;
+}
 
-const PrDataSchema = z.object({
-  body: z.string(),
-  number: z.number(),
-});
-
-const PrListSchema = z.array(PrDataSchema);
-
-export type TagEntry = z.infer<typeof TagEntrySchema>;
+interface PrData {
+  body: string;
+  number: number;
+}
 
 /**
  * Extracts the changelog section matching `version` from a CHANGELOG.md file.
@@ -74,28 +69,27 @@ export async function run(base: string): Promise<void> {
     "--base",
     base,
     "--limit",
-    "100",
+    // Scanning the last 20 merged PRs is enough to recover from any realistic
+    // sequence of failed publish runs without making the step noticeably slow.
+    "20",
     "--json",
     "number,body",
   ]);
 
-  const parseResult = PrListSchema.safeParse(JSON.parse(stdout));
-  if (!parseResult.success) {
-    throw new Error(
-      `Unexpected gh pr list response: ${parseResult.error.message}`,
-    );
+  const parsed: unknown = JSON.parse(stdout);
+  if (!isPrDataArray(parsed)) {
+    throw new Error("Unexpected gh pr list response: not an array of PR data");
   }
 
   // Collect all tag entries from every merged Version Packages PR.
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
   const allEntries = new Map<string, TagEntry>();
-  for (const pr of parseResult.data) {
+  for (const pr of parsed) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
-    const entriesResult = z.array(TagEntrySchema).safeParse(JSON.parse(m[1]));
-    if (entriesResult.success) {
-      for (const e of entriesResult.data) allEntries.set(e.tag, e);
+    for (const e of parseTagEntries(JSON.parse(m[1]))) {
+      allEntries.set(e.tag, e);
     }
   }
 
@@ -173,6 +167,35 @@ export async function tagExistsOnRemote(tag: string): Promise<boolean> {
     `refs/tags/${tag}`,
   ]);
   return stdout.trim().length > 0;
+}
+
+function isPrDataArray(value: unknown): value is PrData[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as Record<string, unknown>)["body"] === "string" &&
+        typeof (item as Record<string, unknown>)["number"] === "number",
+    )
+  );
+}
+
+function parseTagEntries(raw: unknown): TagEntry[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const r = item as Record<string, unknown>;
+    if (typeof r["tag"] !== "string") return [];
+    return [
+      {
+        path: typeof r["path"] === "string" ? r["path"] : null,
+        tag: r["tag"],
+        version: typeof r["version"] === "string" ? r["version"] : "",
+      },
+    ];
+  });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -2,21 +2,9 @@ import { execFile, spawn } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { promisify } from 'util';
-import { z } from 'zod';
 
 // scripts/sync-tags-releases.ts
 var execFileAsync = promisify(execFile);
-var TagEntrySchema = z.object({
-  path: z.string().nullable(),
-  tag: z.string(),
-  // version was added later; default to "" for PR bodies written before this field.
-  version: z.string().default("")
-});
-var PrDataSchema = z.object({
-  body: z.string(),
-  number: z.number()
-});
-var PrListSchema = z.array(PrDataSchema);
 async function extractChangelogSection(clPath, version) {
   try {
     const lines = (await readFile(clPath, "utf8")).split("\n");
@@ -53,20 +41,17 @@ async function run(base) {
     "--json",
     "number,body"
   ]);
-  const parseResult = PrListSchema.safeParse(JSON.parse(stdout));
-  if (!parseResult.success) {
-    throw new Error(
-      `Unexpected gh pr list response: ${parseResult.error.message}`
-    );
+  const parsed = JSON.parse(stdout);
+  if (!isPrDataArray(parsed)) {
+    throw new Error("Unexpected gh pr list response: not an array of PR data");
   }
   const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of parseResult.data) {
+  for (const pr of parsed) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
-    const entriesResult = z.array(TagEntrySchema).safeParse(JSON.parse(m[1]));
-    if (entriesResult.success) {
-      for (const e of entriesResult.data) allEntries.set(e.tag, e);
+    for (const e of parseTagEntries(JSON.parse(m[1]))) {
+      allEntries.set(e.tag, e);
     }
   }
   if (allEntries.size === 0) {
@@ -133,6 +118,26 @@ async function tagExistsOnRemote(tag) {
     `refs/tags/${tag}`
   ]);
   return stdout.trim().length > 0;
+}
+function isPrDataArray(value) {
+  return Array.isArray(value) && value.every(
+    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number"
+  );
+}
+function parseTagEntries(raw) {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((item) => {
+    if (typeof item !== "object" || item === null) return [];
+    const r = item;
+    if (typeof r["tag"] !== "string") return [];
+    return [
+      {
+        path: typeof r["path"] === "string" ? r["path"] : null,
+        tag: r["tag"],
+        version: typeof r["version"] === "string" ? r["version"] : ""
+      }
+    ];
+  });
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   run(process.env.BASE_BRANCH ?? "main").catch((err) => {

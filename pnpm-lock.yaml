@@ -6,42 +6,21 @@ settings:
 
 catalogs:
   default:
-    '@logtape/logtape':
-      specifier: ^1.3.4
-      version: 1.3.4
-    '@modelcontextprotocol/sdk':
-      specifier: ^1.26.0
-      version: 1.26.0
     '@tsconfig/node22':
       specifier: 22.0.2
       version: 22.0.2
     '@types/node':
       specifier: ^22.19.1
       version: 22.19.1
-    '@types/semver':
-      specifier: ^7.7.1
-      version: 7.7.1
     '@vitest/coverage-v8':
       specifier: ^3.2.4
       version: 3.2.4
     eslint:
       specifier: ^9.39.2
       version: 9.39.2
-    execa:
-      specifier: ^9.6.1
-      version: 9.6.1
-    neverthrow:
-      specifier: ^8.2.0
-      version: 8.2.0
-    plop:
-      specifier: ^4.0.4
-      version: 4.0.4
     prettier:
       specifier: 3.6.2
       version: 3.6.2
-    semver:
-      specifier: ^7.7.2
-      version: 7.7.3
     tsup:
       specifier: ^8.5.1
       version: 8.5.1
@@ -51,12 +30,6 @@ catalogs:
     vitest:
       specifier: ^3.2.4
       version: 3.2.4
-    vitest-mock-extended:
-      specifier: ^3.1.0
-      version: 3.1.0
-    zod:
-      specifier: ^4.3.5
-      version: 4.3.5
 
 importers:
 
@@ -130,10 +103,6 @@ importers:
   actions/make-artifact: {}
 
   actions/nx-release:
-    dependencies:
-      zod:
-        specifier: 'catalog:'
-        version: 4.3.5
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
