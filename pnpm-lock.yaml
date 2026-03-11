@@ -126,6 +126,9 @@ importers:
         specifier: ^12.27.0
         version: 12.29.1
     devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
       '@tsconfig/node24':
         specifier: 'catalog:'
         version: 24.0.0
@@ -157,6 +160,9 @@ importers:
         specifier: ^12.27.0
         version: 12.29.1
     devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
       '@tsconfig/node24':
         specifier: 'catalog:'
         version: 24.0.0
