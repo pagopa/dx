@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "./start-nextapp.sh",
-    "build": "next build'",
+    "build": "next build",
     "start": "next start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
