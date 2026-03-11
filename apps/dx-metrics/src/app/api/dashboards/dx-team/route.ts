@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { db } from "@/db";
 import { ORGANIZATION } from "@/lib/config";
+import { parseDashboardQuery } from "@/lib/query-params";
 
 export async function GET(req: NextRequest) {
-  const { searchParams } = req.nextUrl;
-  const days = parseInt(searchParams.get("days") || "120", 10);
+  const parsed = parseDashboardQuery(req);
+  if ("error" in parsed) return parsed.error;
+  const { days } = parsed.query;
   const org = ORGANIZATION;
 
   try {

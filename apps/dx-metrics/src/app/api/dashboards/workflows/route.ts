@@ -20,7 +20,9 @@ export async function GET(req: NextRequest) {
       JOIN repositories r ON wr.repository_id = r.id
       WHERE r.full_name = ${fullName}
     `);
-    const maxDate = (maxDateResult.rows[0] as { max_date: string }).max_date;
+    const maxDate =
+      (maxDateResult.rows[0] as { max_date: string } | undefined)?.max_date ??
+      new Date().toISOString();
 
     // Deployments to Production (weekly average)
     const deployments = await db.execute(sql`
