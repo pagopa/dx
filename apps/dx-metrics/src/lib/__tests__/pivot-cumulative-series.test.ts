@@ -9,6 +9,12 @@ const LABEL_TO_SERIES = {
   "Non-DX Pipelines": "nonDx",
 } as const;
 
+interface PivotCumulativeSeriesTestRow {
+  cumulative_count: number;
+  pipeline_type: keyof typeof LABEL_TO_SERIES;
+  run_date: string;
+}
+
 describe("pivotCumulativeSeries", () => {
   it("returns empty array for empty input", () => {
     expect(pivotCumulativeSeries([], LABEL_KEY, LABEL_TO_SERIES)).toEqual([]);
@@ -16,20 +22,36 @@ describe("pivotCumulativeSeries", () => {
 
   it("pivots rows into one object per date with series as keys", () => {
     const rows = [
-      { pipeline_type: "DX Pipelines", cumulative_count: 5, run_date: "2024-01-01" },
-      { pipeline_type: "Non-DX Pipelines", cumulative_count: 3, run_date: "2024-01-01" },
+      {
+        cumulative_count: 5,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-01",
+      },
+      {
+        cumulative_count: 3,
+        pipeline_type: "Non-DX Pipelines",
+        run_date: "2024-01-01",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({ run_date: "2024-01-01", dx: 5, nonDx: 3 });
+    expect(result[0]).toEqual({ dx: 5, nonDx: 3, run_date: "2024-01-01" });
   });
 
   it("sorts output by run_date ascending", () => {
     const rows = [
-      { pipeline_type: "DX Pipelines", cumulative_count: 10, run_date: "2024-01-03" },
-      { pipeline_type: "DX Pipelines", cumulative_count: 2, run_date: "2024-01-01" },
+      {
+        cumulative_count: 10,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-03",
+      },
+      {
+        cumulative_count: 2,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-01",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
@@ -40,10 +62,22 @@ describe("pivotCumulativeSeries", () => {
 
   it("forward-fills zeros with the previous non-zero value", () => {
     const rows = [
-      { pipeline_type: "DX Pipelines", cumulative_count: 5, run_date: "2024-01-01" },
-      { pipeline_type: "DX Pipelines", cumulative_count: 7, run_date: "2024-01-02" },
+      {
+        cumulative_count: 5,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-01",
+      },
+      {
+        cumulative_count: 7,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-02",
+      },
       // Non-DX is missing on 2024-01-02 — should forward-fill from 2024-01-01
-      { pipeline_type: "Non-DX Pipelines", cumulative_count: 3, run_date: "2024-01-01" },
+      {
+        cumulative_count: 3,
+        pipeline_type: "Non-DX Pipelines",
+        run_date: "2024-01-01",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
@@ -57,8 +91,16 @@ describe("pivotCumulativeSeries", () => {
 
   it("does not forward-fill when previous value is also zero", () => {
     const rows = [
-      { pipeline_type: "DX Pipelines", cumulative_count: 0, run_date: "2024-01-01" },
-      { pipeline_type: "DX Pipelines", cumulative_count: 0, run_date: "2024-01-02" },
+      {
+        cumulative_count: 0,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-01",
+      },
+      {
+        cumulative_count: 0,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-02",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
@@ -67,9 +109,13 @@ describe("pivotCumulativeSeries", () => {
   });
 
   it("skips rows with unknown label values", () => {
-    const rows = [
-      // @ts-expect-error — intentionally invalid label to test runtime filtering
-      { pipeline_type: "Unknown", cumulative_count: 10, run_date: "2024-01-01" },
+    const rows: PivotCumulativeSeriesTestRow[] = [
+      {
+        cumulative_count: 10,
+        // @ts-expect-error — intentionally invalid label to test runtime filtering
+        pipeline_type: "Unknown",
+        run_date: "2024-01-01",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
@@ -79,7 +125,11 @@ describe("pivotCumulativeSeries", () => {
 
   it("initialises missing series keys to 0 for a given date", () => {
     const rows = [
-      { pipeline_type: "DX Pipelines", cumulative_count: 4, run_date: "2024-01-01" },
+      {
+        cumulative_count: 4,
+        pipeline_type: "DX Pipelines",
+        run_date: "2024-01-01",
+      },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
