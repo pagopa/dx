@@ -38,11 +38,13 @@ export const pullRequests = pgTable(
     reviewDecision: text("review_decision"),
     title: text("title").notNull(),
     totalCommentsCount: integer("total_comments_count"),
+    updatedAt: timestamp("updated_at"),
   },
   (t) => [
     uniqueIndex("pr_repo_number_idx").on(t.repositoryId, t.number),
     index("pr_created_at_idx").on(t.createdAt),
     index("pr_merged_at_idx").on(t.mergedAt),
+    index("pr_updated_at_idx").on(t.updatedAt),
   ],
 );
 

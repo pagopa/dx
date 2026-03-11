@@ -9,7 +9,7 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 - **PostgreSQL 16** — persistent data storage
 - **Drizzle ORM** — type-safe database access
 - **Recharts** — chart rendering
-- **NextAuth.js** — GitHub OAuth authentication
+- **Better Auth** — GitHub OAuth authentication
 - **Import script** — incremental data sync from GitHub API via Octokit
 
 ## Prerequisites

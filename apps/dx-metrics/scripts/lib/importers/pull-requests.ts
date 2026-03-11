@@ -9,7 +9,55 @@ import { formatSecondsElapsed, sleep } from "../importer-helpers";
 
 const BOT_LOGINS = new Set(["dependabot", "dx-pagopa-bot", "renovate-pagopa"]);
 
+interface PullRequestListItem {
+  closed_at: null | string;
+  created_at: string;
+  draft?: boolean | null;
+  id: number;
+  merged_at: null | string;
+  number: number;
+  title: string;
+  updated_at: string;
+  user?: null | {
+    login?: string;
+  };
+}
+
 type PullRequestRow = typeof schema.pullRequests.$inferSelect;
+type PullRequestWithUpdatedAt = Pick<PullRequestListItem, "updated_at">;
+
+export const isPullRequestUpdatedSince = <T extends PullRequestWithUpdatedAt>(
+  pullRequest: T,
+  sinceDate: Date,
+): boolean => new Date(pullRequest.updated_at) >= sinceDate;
+
+export const selectPullRequestsUpdatedSince = <
+  T extends PullRequestWithUpdatedAt,
+>(
+  pullRequests: readonly T[],
+  sinceDate: Date,
+): T[] =>
+  pullRequests.filter((pullRequest) =>
+    isPullRequestUpdatedSince(pullRequest, sinceDate),
+  );
+
+export const shouldStopPullRequestPagination = <
+  T extends PullRequestWithUpdatedAt,
+>(
+  pullRequests: readonly T[],
+  sinceDate: Date,
+): boolean => {
+  const oldestPullRequest = pullRequests.at(-1);
+
+  return oldestPullRequest
+    ? !isPullRequestUpdatedSince(oldestPullRequest, sinceDate)
+    : false;
+};
+
+const getPullRequestSinceFilter = (sinceDate: Date) =>
+  sql`(${schema.pullRequests.updatedAt} >= ${sinceDate}
+       OR (${schema.pullRequests.updatedAt} IS NULL
+           AND ${schema.pullRequests.createdAt} >= ${sinceDate}))`;
 
 export async function importPullRequestReviews(
   context: ImportContext,
@@ -17,6 +65,7 @@ export async function importPullRequestReviews(
   since: string,
 ): Promise<void> {
   const startTime = Date.now();
+  const sinceDate = new Date(since);
   const repoId = await context.ensureRepo(repoName);
   const fullName = `${context.organization}/${repoName}`;
   console.log(`  Importing PR reviews for ${fullName}...`);
@@ -26,7 +75,7 @@ export async function importPullRequestReviews(
     .from(schema.pullRequests)
     .where(
       sql`repository_id = ${repoId}
-          AND created_at >= ${new Date(since)}
+          AND ${getPullRequestSinceFilter(sinceDate)}
           AND merged_at IS NOT NULL`,
     );
 
@@ -106,8 +155,10 @@ export async function importPullRequests(
   const fullName = `${context.organization}/${repoName}`;
   console.log(`  Importing pull requests for ${fullName}...`);
 
+  const sinceDate = new Date(since);
   let fetchedCount = 0;
-  const pullRequests = await context.octokit.paginate(
+  const filteredPullRequests: PullRequestListItem[] = [];
+  for await (const response of context.octokit.paginate.iterator(
     context.octokit.rest.pulls.list,
     {
       direction: "desc",
@@ -117,18 +168,18 @@ export async function importPullRequests(
       sort: "updated",
       state: "all",
     },
-    (response) => {
-      fetchedCount += response.data.length;
-      process.stdout.write(`\r    Fetching PRs: ${fetchedCount}...`);
-      return response.data;
-    },
-  );
-  process.stdout.write(`\r    Fetched ${fetchedCount} PRs total\n`);
+  )) {
+    fetchedCount += response.data.length;
+    process.stdout.write(`\r    Fetching PRs: ${fetchedCount}...`);
+    filteredPullRequests.push(
+      ...selectPullRequestsUpdatedSince(response.data, sinceDate),
+    );
 
-  const sinceDate = new Date(since);
-  const filteredPullRequests = pullRequests.filter(
-    (pullRequest) => new Date(pullRequest.updated_at) >= sinceDate,
-  );
+    if (shouldStopPullRequestPagination(response.data, sinceDate)) {
+      break;
+    }
+  }
+  process.stdout.write(`\r    Fetched ${fetchedCount} PRs before cutoff\n`);
 
   console.log(
     `    Processing ${filteredPullRequests.length} PRs since ${since}...`,
@@ -155,6 +206,7 @@ export async function importPullRequests(
         reviewDecision: null,
         title: pullRequest.title,
         totalCommentsCount: null,
+        updatedAt: new Date(pullRequest.updated_at),
       })
       .onConflictDoUpdate({
         set: {
@@ -166,6 +218,7 @@ export async function importPullRequests(
             ? new Date(pullRequest.merged_at)
             : null,
           title: pullRequest.title,
+          updatedAt: new Date(pullRequest.updated_at),
         },
         target: schema.pullRequests.id,
       });
@@ -191,7 +244,7 @@ export async function importPullRequests(
       sql`${schema.pullRequests.repositoryId} = ${repoId}
           AND (${schema.pullRequests.additions} IS NULL
                OR ${schema.pullRequests.totalCommentsCount} IS NULL)
-          AND ${schema.pullRequests.createdAt} >= ${since}`,
+          AND ${getPullRequestSinceFilter(sinceDate)}`,
     );
 
   await backfillPullRequestDetails(
