@@ -1,19 +1,11 @@
-// Configuration constants - repositories are sourced from config.ts via next.config.ts.
-export const ORGANIZATION = process.env.ORGANIZATION || "pagopa";
+// Configuration constants - all values are sourced from config.json and cannot be overridden via environment.
+import rawConfig from "../../config.json";
 
-const configuredRepositories = (process.env.NEXT_PUBLIC_REPOSITORIES || "dx")
-  .split(",")
-  .map((repository) => repository.trim())
-  .filter(Boolean);
-
-export const REPOSITORIES = configuredRepositories;
-export const DEFAULT_REPOSITORY = REPOSITORIES[0] || "dx";
-
-export const DX_TEAM_MEMBERS = (process.env.DX_TEAM_MEMBERS || "gunzip").split(
-  ",",
-);
-
-export const DX_REPO = process.env.DX_REPO || "dx";
+export const ORGANIZATION: string = rawConfig.organization;
+export const REPOSITORIES: string[] = rawConfig.repositories;
+export const DEFAULT_REPOSITORY = REPOSITORIES[0] ?? "dx";
+export const DX_TEAM_MEMBERS: string[] = rawConfig.dxTeamMembers;
+export const DX_REPO: string = rawConfig.dxRepo;
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 

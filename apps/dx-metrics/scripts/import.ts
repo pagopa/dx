@@ -41,11 +41,7 @@ import { importWorkflowRuns, importWorkflows } from "./lib/importers/workflows";
 
 const readEnvironmentOverrides = () => ({
   DATABASE_URL: process.env.DATABASE_URL,
-  DX_REPO: process.env.DX_REPO,
-  DX_TEAM_MEMBERS: process.env.DX_TEAM_MEMBERS,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
-  ORGANIZATION: process.env.ORGANIZATION,
-  REPOSITORIES: process.env.REPOSITORIES,
 });
 
 const handleCliError = (error: unknown): never => {
