@@ -4,7 +4,6 @@
  * Uploads a local file to Azure Blob Storage or Amazon S3.
 // Always attaches an ephemeral tag so that storage lifecycle rules can
  * reclaim objects that were never explicitly deleted (e.g. after a failed apply).
- * Optionally attaches a workflow-run-url tag for traceability.
  */
 
 import * as core from "@actions/core";
@@ -23,7 +22,6 @@ async function run(): Promise<void> {
   const filePath = resolve(core.getInput("file-path", { required: true }));
   const destination = core.getInput("destination", { required: true });
   const overwrite = core.getInput("overwrite") !== "false";
-  // Intentionally not reading `workflow-run-url` to keep permissions minimal.
 
   let remoteUrl: string;
 
@@ -78,9 +76,6 @@ async function uploadToAzure(
   core.info(
     `Uploaded → https://${storageAccount}.blob.core.windows.net/${container}/${destination}`,
   );
-
-  // No tagging: caller controls destination layout. Optionally keep workflow-run-url
-  // in blob metadata if needed in the future (not set here to preserve minimal perms).
 
   return `https://${storageAccount}.blob.core.windows.net/${container}/${destination}`;
 }

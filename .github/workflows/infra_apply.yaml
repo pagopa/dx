@@ -171,7 +171,11 @@ jobs:
           # 'dx/resources/dev/plan-artifacts/dev.tfstate.${GITHUB_RUN_ID}'
           STATE_DIR=$(dirname "$STATE_KEY")
           STATE_BASENAME=$(basename "$STATE_KEY")
-          PLAN_DESTINATION="${STATE_DIR}/plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
+          if [ "$STATE_DIR" = "." ]; then
+            PLAN_DESTINATION="plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
+          else
+            PLAN_DESTINATION="${STATE_DIR}/plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
+          fi
           echo "plan-destination=${PLAN_DESTINATION}" >> "$GITHUB_OUTPUT"
           case "$TYPE" in
             azurerm)
@@ -200,7 +204,6 @@ jobs:
           azure-container: ${{ steps.backend-plan.outputs.azure-container }}
           aws-bucket: ${{ steps.backend-plan.outputs.aws-bucket }}
           aws-region: ${{ steps.backend-plan.outputs.aws-region }}
-          workflow-run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
   tf_apply:
     name: "Terraform Apply"
