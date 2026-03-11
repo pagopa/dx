@@ -34,13 +34,6 @@ inputs:
     description: Overwrite the remote object if it already exists.
     required: false
     default: "true"
-  workflow-run-url:
-    description: >
-      If provided, attached to the uploaded object as a tag (key: workflow-run-url).
-      Useful for tracing an artifact back to the GitHub Actions run that created it.
-      Example: https://github.com/org/repo/actions/runs/12345678
-    required: false
-    default: ""
 
 outputs:
   remote-url:

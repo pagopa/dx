@@ -8,29 +8,22 @@
  */
 
 import * as core from "@actions/core";
-import {
-  PutObjectCommand,
-  PutObjectTaggingCommand,
-  S3Client,
-  Tag,
-} from "@aws-sdk/client-s3";
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { readFile } from "fs/promises";
 import { resolve } from "path";
 
-// Fixed tag applied to every uploaded object so that storage lifecycle rules
-// can reclaim objects that were never explicitly deleted (e.g. after a failed
-// workflow run). Pair with an Azure Management Policy or an S3 Lifecycle Rule
-// that filters on this tag.
-const DX_EPHEMERAL_TAG = { key: "gh-action-ephemeral", value: "true" };
+// Upload action: does not rely on object tagging (some CI identities cannot set tags).
+// The upload destination is provided by the caller; the workflow places plans
+// under a `plan-artifacts/` folder next to the state file.
 
 async function run(): Promise<void> {
   const provider = core.getInput("provider", { required: true });
   const filePath = resolve(core.getInput("file-path", { required: true }));
   const destination = core.getInput("destination", { required: true });
   const overwrite = core.getInput("overwrite") !== "false";
-  const workflowRunUrl = core.getInput("workflow-run-url");
+  // Intentionally not reading `workflow-run-url` to keep permissions minimal.
 
   let remoteUrl: string;
 
@@ -38,13 +31,7 @@ async function run(): Promise<void> {
     case "aws": {
       const bucket = core.getInput("aws-bucket", { required: true });
       const region = core.getInput("aws-region", { required: true });
-      remoteUrl = await uploadToS3(
-        bucket,
-        region,
-        destination,
-        filePath,
-        workflowRunUrl,
-      );
+      remoteUrl = await uploadToS3(bucket, region, destination, filePath);
       break;
     }
     case "azure": {
@@ -58,7 +45,6 @@ async function run(): Promise<void> {
         destination,
         filePath,
         overwrite,
-        workflowRunUrl,
       );
       break;
     }
@@ -77,7 +63,6 @@ async function uploadToAzure(
   destination: string,
   filePath: string,
   overwrite: boolean,
-  workflowRunUrl: string,
 ): Promise<string> {
   const credential = new DefaultAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
@@ -94,14 +79,8 @@ async function uploadToAzure(
     `Uploaded → https://${storageAccount}.blob.core.windows.net/${container}/${destination}`,
   );
 
-  // Tags are set separately: uploadFile does not support tags directly.
-  const tags: Record<string, string> = {
-    [DX_EPHEMERAL_TAG.key]: DX_EPHEMERAL_TAG.value,
-  };
-  if (workflowRunUrl) {
-    tags["workflow-run-url"] = workflowRunUrl;
-  }
-  await blockBlobClient.setTags(tags);
+  // No tagging: caller controls destination layout. Optionally keep workflow-run-url
+  // in blob metadata if needed in the future (not set here to preserve minimal perms).
 
   return `https://${storageAccount}.blob.core.windows.net/${container}/${destination}`;
 }
@@ -111,7 +90,6 @@ async function uploadToS3(
   region: string,
   destination: string,
   filePath: string,
-  workflowRunUrl: string,
 ): Promise<string> {
   const client = new S3Client({ region });
   const body = await readFile(filePath);
@@ -121,21 +99,7 @@ async function uploadToS3(
   );
   core.info(`Uploaded → s3://${bucket}/${destination}`);
 
-  // Always include gh-action-ephemeral so that a bucket lifecycle rule can reclaim
-  // objects that were never explicitly deleted.
-  const tagSet: Tag[] = [
-    { Key: DX_EPHEMERAL_TAG.key, Value: DX_EPHEMERAL_TAG.value },
-  ];
-  if (workflowRunUrl) {
-    tagSet.push({ Key: "workflow-run-url", Value: workflowRunUrl });
-  }
-  await client.send(
-    new PutObjectTaggingCommand({
-      Bucket: bucket,
-      Key: destination,
-      Tagging: { TagSet: tagSet },
-    }),
-  );
+  // No tagging performed here. Keep upload minimal to respect least-privilege roles.
 
   return `s3://${bucket}/${destination}`;
 }
