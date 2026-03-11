@@ -10,6 +10,14 @@ inputs:
     description: "Base branch where release flow runs"
     required: false
     default: "main"
+  from-ref:
+    description: "Git ref to use as 'from' when syncing tags and releases (useful for workflow_dispatch fallback). Defaults to HEAD~1."
+    required: false
+    default: "HEAD~1"
+  to-ref:
+    description: "Git ref to use as 'to' when syncing tags and releases (useful for workflow_dispatch fallback). Defaults to HEAD."
+    required: false
+    default: "HEAD"
 
 outputs:
   pull-request-number:
@@ -35,7 +43,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        RELEASE_BRANCH: ${{ inputs.release-branch }}
+        RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
         GH_TOKEN: ${{ inputs.github-token }}
@@ -47,7 +55,10 @@ runs:
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
 
         echo "::notice::Executing version command"
-        npx nx release --preid rc --skip-publish
+        npx nx release version --preid rc
+
+        echo "::notice::Executing changelog command"
+        npx nx release changelog
 
         echo "::notice::Refreshing lockfile"
         pnpm install --lockfile-only
@@ -101,12 +112,34 @@ runs:
         echo "published=true" >> "$GITHUB_OUTPUT"
 
     - name: Sync Git Tags and GitHub Releases
-      if: steps.publish.outputs.published == 'true'
+      if: steps.publish.outputs.published == 'true' || github.event_name == 'workflow_dispatch'
       id: tags
-      env:
-        ACTION_PATH: ${{ github.action_path }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
       shell: bash
+      env:
+        FROM_REF: ${{ inputs.from-ref }}
+        TO_REF: ${{ inputs.to-ref }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/create-tags-releases.js"
+        # Use the workspace's nx/release programmatic API to create git tags and GitHub Releases.
+        # NODE_PATH lets Node.js resolve 'nx/release' from the target repo's node_modules.
+        # resolveVersionPlans: 'using-from-and-to' reconstructs release info from the git diff
+        # (deleted version plan files between FROM_REF and TO_REF) without needing them on disk.
+        NODE_PATH="$GITHUB_WORKSPACE/node_modules" node -e "
+          const { releaseChangelog } = require('nx/release');
+          (async () => {
+            const { projectsVersionData } = await releaseChangelog({
+              from: process.env.FROM_REF || 'HEAD~1',
+              to: process.env.TO_REF || 'HEAD',
+              stageChanges: false,
+              gitTag: true,
+              gitCommit: false,
+              gitPush: true,
+              createRelease: 'github',
+              resolveVersionPlans: 'using-from-and-to',
+              verbose: true,
+            });
+            const count = projectsVersionData ? Object.keys(projectsVersionData).length : 0;
+            console.log('::notice::Synced tags and releases for', count, 'project(s)');
+          })().catch(err => { console.error(err); process.exit(1); });
+        "

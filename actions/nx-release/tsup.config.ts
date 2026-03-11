@@ -5,9 +5,7 @@ export default defineConfig({
   clean: true,
   dts: false,
   entry: [
-    "scripts/detect-intent.ts",
     "scripts/build-pr-body.ts",
-    "scripts/create-tags-releases.ts",
   ],
   format: ["esm"],
   minify: false,
