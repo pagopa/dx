@@ -418,6 +418,9 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.14)
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 3.2.4(vitest@3.2.4)
       baseline-browser-mapping:
         specifier: ^2.10.0
         version: 2.10.0
@@ -445,6 +448,9 @@ importers:
       typescript-eslint:
         specifier: ^8.46.4
         version: 8.46.4(eslint@9.39.2(jiti@2.6.1))(typescript@5.8.3)
+      vitest:
+        specifier: 'catalog:'
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.1)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   apps/mcpserver:
     dependencies:
@@ -21530,7 +21536,7 @@ snapshots:
 
   effect@3.18.4:
     dependencies:
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
   ejs@3.1.10:

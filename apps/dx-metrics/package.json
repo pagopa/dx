@@ -6,6 +6,7 @@
     "dev": "./start-nextapp.sh",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -36,6 +37,7 @@
     "@types/pg": "^8.11.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@vitest/coverage-v8": "catalog:",
     "baseline-browser-mapping": "^2.10.0",
     "drizzle-kit": "^0.30.0",
     "eslint": "catalog:",
@@ -44,6 +46,7 @@
     "tailwindcss": "^4.0.0",
     "tsx": "^4.20.0",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.46.4"
+    "typescript-eslint": "^8.46.4",
+    "vitest": "catalog:"
   }
 }
