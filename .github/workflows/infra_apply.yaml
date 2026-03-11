@@ -195,7 +195,7 @@ jobs:
           esac
 
       - name: Upload Plan to State Storage
-        uses: pagopa/dx/actions/cloud-storage-upload@poc-store-plan-artifact-in-csp
+        uses: pagopa/dx/actions/cloud-storage-upload@main
         with:
           provider: ${{ steps.backend-plan.outputs.provider }}
           file-path: ${{ steps.directory.outputs.dir }}/${{ env.TFPLAN_FILE }}
@@ -236,7 +236,7 @@ jobs:
       # The post step of the action will delete both the remote object and the local file
       # after a successful apply.
       - name: Download Plan from State Storage
-        uses: pagopa/dx/actions/cloud-storage-download@poc-store-plan-artifact-in-csp
+        uses: pagopa/dx/actions/cloud-storage-download@main
         with:
           provider: ${{ needs.tf_plan.outputs.storage_provider }}
           source: ${{ needs.tf_plan.outputs.plan_destination }}
