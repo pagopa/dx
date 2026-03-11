@@ -10,17 +10,10 @@
  */
 
 import * as core from "@actions/core";
-import {
-  DeleteObjectCommand,
-  GetObjectTaggingCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { unlink } from "fs/promises";
-
-// Must match the tag key set by cloud-storage-upload.
-const EPHEMERAL_TAG = { key: "gh-action-ephemeral", value: "true" };
 
 async function deleteFromAzure(
   storageAccount: string,
@@ -32,14 +25,6 @@ async function deleteFromAzure(
   const blobClient = new BlobServiceClient(url, credential)
     .getContainerClient(container)
     .getBlobClient(blobName);
-
-  const { tags } = await blobClient.getTags();
-  if (tags[EPHEMERAL_TAG.key] !== EPHEMERAL_TAG.value) {
-    core.warning(
-      `Skipping deletion: blob does not have tag '${EPHEMERAL_TAG.key}=${EPHEMERAL_TAG.value}'.`,
-    );
-    return;
-  }
 
   await blobClient.deleteIfExists();
   core.info(
@@ -53,19 +38,6 @@ async function deleteFromS3(
   key: string,
 ): Promise<void> {
   const client = new S3Client({ region });
-
-  const { TagSet = [] } = await client.send(
-    new GetObjectTaggingCommand({ Bucket: bucket, Key: key }),
-  );
-  const isEphemeral = TagSet.some(
-    (t) => t.Key === EPHEMERAL_TAG.key && t.Value === EPHEMERAL_TAG.value,
-  );
-  if (!isEphemeral) {
-    core.warning(
-      `Skipping deletion: object does not have tag '${EPHEMERAL_TAG.key}=${EPHEMERAL_TAG.value}'.`,
-    );
-    return;
-  }
 
   await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
   core.info(`Deleted remote object: s3://${bucket}/${key}`);
