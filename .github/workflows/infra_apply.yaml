@@ -202,7 +202,7 @@ jobs:
 
       - name: Upload Plan to State Storage
         if: ${{ inputs.save_plan_to_backend }}
-        uses: pagopa/dx/actions/cloud-storage-upload@main
+        uses: pagopa/dx/actions/cloud-storage-upload@poc-store-plan-artifact-in-csp
         with:
           provider: ${{ steps.backend-plan.outputs.provider }}
           file-path: ${{ steps.directory.outputs.dir }}/${{ env.TFPLAN_FILE }}
@@ -240,17 +240,12 @@ jobs:
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 
-      - name: Terraform Init
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        run: |
-          terraform init -input=false
-
-      # Download the plan directly from cloud state storage (no decrypt needed).
+      # Download the plan directly from cloud state storage
       # The post step of the action will delete both the remote object and the local file
       # after a successful apply.
       - name: Download Plan from State Storage
         if: ${{ inputs.save_plan_to_backend }}
-        uses: pagopa/dx/actions/cloud-storage-download@main
+        uses: pagopa/dx/actions/cloud-storage-download@poc-store-plan-artifact-in-csp
         with:
           provider: ${{ needs.tf_plan.outputs.storage_provider }}
           source: ${{ needs.tf_plan.outputs.plan_destination }}
@@ -260,6 +255,11 @@ jobs:
           aws-bucket: ${{ needs.tf_plan.outputs.aws_bucket }}
           aws-region: ${{ needs.tf_plan.outputs.aws_region }}
           delete-on-completion: "true"
+
+      - name: Terraform Init
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        run: |
+          terraform init -input=false
 
       - name: Terraform Apply
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}
