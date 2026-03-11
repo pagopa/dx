@@ -166,7 +166,12 @@ jobs:
           set -euo pipefail
           TYPE=$(jq -r '.backend.type' .terraform/terraform.tfstate)
           STATE_KEY=$(jq -r '.backend.config.key' .terraform/terraform.tfstate)
-          PLAN_DESTINATION="${STATE_KEY%.tfstate}.tfplan.${GITHUB_RUN_ID}"
+          # Place plan artifacts in a sibling directory named plan-artifacts.
+          # Example: state key 'dx/resources/dev.tfstate' ->
+          # 'dx/resources/dev/plan-artifacts/dev.tfstate.${GITHUB_RUN_ID}'
+          STATE_DIR=$(dirname "$STATE_KEY")
+          STATE_BASENAME=$(basename "$STATE_KEY")
+          PLAN_DESTINATION="${STATE_DIR}/plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
           echo "plan-destination=${PLAN_DESTINATION}" >> "$GITHUB_OUTPUT"
           case "$TYPE" in
             azurerm)
