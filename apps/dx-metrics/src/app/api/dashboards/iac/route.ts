@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { db } from "@/db";
-import { DX_TEAM_MEMBERS, ORGANIZATION } from "@/lib/config";
+import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 
 export async function GET(req: NextRequest) {
@@ -60,7 +60,13 @@ export async function GET(req: NextRequest) {
 
     // Supervised vs Unsupervised IaC PRs (cumulative)
     // A PR is "supervised" when authored by a DX team member OR merged/reviewed by one.
-    const dxMembers = DX_TEAM_MEMBERS;
+    // Team members are resolved from the GitHub API during import and stored in the database.
+    const dxMembersResult = await db.execute(sql`
+      SELECT username FROM dx_team_members
+    `);
+    const dxMembers = dxMembersResult.rows.map(
+      (row) => (row as { username: string }).username,
+    );
     const dxMembersSql = sql.join(
       dxMembers.map((m) => sql`${m}`),
       sql`, `,

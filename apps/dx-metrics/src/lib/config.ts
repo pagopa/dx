@@ -4,7 +4,7 @@ import rawConfig from "../../config.json";
 export const ORGANIZATION: string = rawConfig.organization;
 export const REPOSITORIES: string[] = rawConfig.repositories;
 export const DEFAULT_REPOSITORY = REPOSITORIES[0] ?? "dx";
-export const DX_TEAM_MEMBERS: string[] = rawConfig.dxTeamMembers;
+export const DX_TEAM_SLUG: string = rawConfig.dxTeamSlug;
 export const DX_REPO: string = rawConfig.dxRepo;
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];

@@ -4,6 +4,7 @@ import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import TooltipIcon from "@/components/TooltipIcon";
+import { ORGANIZATION } from "@/lib/config";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -142,7 +143,7 @@ export default function DxTeamDashboard() {
                     return (
                       <a
                         className="text-blue-600 hover:underline"
-                        href={`https://github.com/search?q=org%3Apagopa+${encodedPath}&type=code`}
+                        href={`https://github.com/search?q=org%3A${encodeURIComponent(ORGANIZATION)}+${encodedPath}&type=code`}
                         rel="noopener noreferrer"
                         target="_blank"
                       >

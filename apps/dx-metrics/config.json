@@ -18,13 +18,6 @@
     "selfcare-infra",
     "b2b-portals"
   ],
-  "dxTeamMembers": [
-    "gunzip",
-    "lucacavallaro",
-    "Krusty93",
-    "kin0992",
-    "christian-calabrese",
-    "mamu0"
-  ],
+  "dxTeamSlug": "engineering-team-devex",
   "dxRepo": "dx"
 }
