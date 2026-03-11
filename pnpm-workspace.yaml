@@ -25,11 +25,6 @@ catalog:
   vitest-mock-extended: ^3.1.0
   zod: ^4.3.5
 
-cleanupUnusedCatalogs: true
-
-linkWorkspacePackages: true
-
-minimumReleaseAge: 1440
 
 onlyBuiltDependencies:
   - '@swc/core'
@@ -39,4 +34,7 @@ onlyBuiltDependencies:
   - nx
   - protobufjs
 
-packageImportMethod: clone-or-copy
+linkWorkspacePackages: true
+packageImportMethod: "clone-or-copy"
+cleanupUnusedCatalogs: true
+minimumReleaseAge: 1440

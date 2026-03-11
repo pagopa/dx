@@ -106,7 +106,6 @@ Configuration is set via environment variables:
 ## Development
 
 ```bash
-cd nextapp
 pnpm install
 pnpm dev
 ```
