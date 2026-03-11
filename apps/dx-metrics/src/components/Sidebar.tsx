@@ -37,11 +37,11 @@ const navItems = [
   },
   { href: "/dashboards/workflows", icon: PlayCircle, label: "Workflows" },
   { href: "/dashboards/iac", icon: Cloud, label: "IaC PRs" },
+  { href: "/dashboards/techradar", icon: Target, label: "Techradar" },
   { href: "/dashboards/dx-adoption", icon: TrendingUp, label: "DX Adoption" },
   { href: "/dashboards/dx-team", icon: Users, label: "DX Team" },
   { href: "/dashboards/dx-tracker", icon: Activity, label: "DX Tracker" },
   { href: "/dashboards/dx-releases", icon: Ship, label: "DX Releases" },
-  { href: "/dashboards/techradar", icon: Target, label: "Techradar" },
 ];
 
 export function Sidebar() {

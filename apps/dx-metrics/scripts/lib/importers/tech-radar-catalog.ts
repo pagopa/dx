@@ -17,45 +17,46 @@ const RadarEntriesSchema = z.array(RadarEntrySchema);
 
 const techRadarToolCatalog = [
   {
-    buildSearchQuery: (repositoryFullName: string) =>
-      `repo:${repositoryFullName} filename:pnpm-lock.yaml`,
     key: "pnpm",
+    path: "pnpm-lock.yaml",
     radarSlug: "pnpm",
     toolName: "pnpm",
   },
   {
-    buildSearchQuery: (repositoryFullName: string) =>
-      `repo:${repositoryFullName} filename:package-lock.json`,
     key: "npm",
+    path: "package-lock.json",
     radarSlug: "npm",
     toolName: "npm",
   },
   {
-    buildSearchQuery: (repositoryFullName: string) =>
-      `repo:${repositoryFullName} filename:turbo.json`,
     key: "turborepo",
+    path: "turbo.json",
     radarSlug: "turborepo",
     toolName: "Turborepo",
   },
   {
-    buildSearchQuery: (repositoryFullName: string) =>
-      `repo:${repositoryFullName} filename:config.json path:.changeset`,
     key: "changeset",
+    path: ".changeset/config.json",
     radarSlug: "changeset",
     toolName: "Changeset",
   },
   {
-    buildSearchQuery: (repositoryFullName: string) =>
-      `repo:${repositoryFullName} filename:nx.json`,
     key: "nx",
+    path: "nx.json",
     radarSlug: null,
     toolName: "Nx",
+  },
+  {
+    key: "yarn",
+    path: "yarn.lock",
+    radarSlug: "yarn",
+    toolName: "Yarn",
   },
 ] as const;
 
 export interface LoadedTechRadarTool {
-  buildSearchQuery: (repositoryFullName: string) => string;
   key: TechRadarToolKey;
+  path: string;
   radarRef: null | string;
   radarRing: "adopt" | "assess" | "hold" | "trial" | null;
   radarSlug: null | string;

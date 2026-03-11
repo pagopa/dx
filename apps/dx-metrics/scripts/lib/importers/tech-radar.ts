@@ -1,4 +1,4 @@
-/** This module imports Techradar tool usage data with GitHub code search. */
+/** This module imports Techradar tool usage data via direct file existence checks. */
 
 import { sql } from "drizzle-orm";
 
@@ -8,10 +8,16 @@ import * as schema from "../../../src/db/schema";
 import { sleep } from "../importer-helpers";
 import { loadTechRadarTools } from "./tech-radar-catalog";
 
-const SEARCH_THROTTLE_MS = 150;
+const CONTENT_THROTTLE_MS = 150;
 
 const getErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
+
+const isNotFoundError = (error: unknown): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "status" in error &&
+  error.status === 404;
 
 export async function importTechRadarRepositoryUsages(
   context: ImportContext,
@@ -32,24 +38,24 @@ export async function importTechRadarRepositoryUsages(
   let detectedTools = 0;
 
   for (const tool of tools) {
-    const searchQuery = tool.buildSearchQuery(repositoryFullName);
+    const storedCheckPath = `path:${tool.path}`;
 
     try {
-      const response = await context.octokit.rest.search.code({
-        per_page: 1,
-        q: searchQuery,
+      const response = await context.octokit.rest.repos.getContent({
+        owner: context.organization,
+        path: tool.path,
+        repo: repositoryName,
       });
-      const match = response.data.items[0];
 
-      if (!match?.path) {
-        await sleep(SEARCH_THROTTLE_MS);
+      if (!("path" in response.data)) {
+        await sleep(CONTENT_THROTTLE_MS);
         continue;
       }
 
       await context.db
         .insert(schema.techRadarUsages)
         .values({
-          evidencePath: match.path,
+          evidencePath: response.data.path,
           radarRef: tool.radarRef,
           radarRing: tool.radarRing,
           radarSlug: tool.radarSlug,
@@ -57,20 +63,22 @@ export async function importTechRadarRepositoryUsages(
           radarTitle: tool.radarTitle,
           repositoryFullName,
           repositoryId,
-          searchQuery,
+          // We keep the existing column for auditability while switching away
+          // from GitHub Search API to direct content existence checks.
+          searchQuery: storedCheckPath,
           toolKey: tool.key,
           toolName: tool.toolName,
         })
         .onConflictDoUpdate({
           set: {
             detectedAt: new Date(),
-            evidencePath: match.path,
+            evidencePath: response.data.path,
             radarRef: tool.radarRef,
             radarRing: tool.radarRing,
             radarSlug: tool.radarSlug,
             radarStatus: tool.radarStatus,
             radarTitle: tool.radarTitle,
-            searchQuery,
+            searchQuery: storedCheckPath,
             toolName: tool.toolName,
           },
           target: [
@@ -80,9 +88,14 @@ export async function importTechRadarRepositoryUsages(
         });
 
       detectedTools += 1;
-      console.log(`    ✓ ${tool.toolName}: ${match.path}`);
-      await sleep(SEARCH_THROTTLE_MS);
+      console.log(`    ✓ ${tool.toolName}: ${response.data.path}`);
+      await sleep(CONTENT_THROTTLE_MS);
     } catch (error) {
+      if (isNotFoundError(error)) {
+        await sleep(CONTENT_THROTTLE_MS);
+        continue;
+      }
+
       throw new Error(
         `Techradar detection failed for ${repositoryFullName} / ${tool.toolName}: ${getErrorMessage(error)}`,
       );
