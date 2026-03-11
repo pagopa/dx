@@ -12,6 +12,6 @@ export default defineConfig({
   noExternal: [/.*/],
   platform: "node",
   sourcemap: false,
-  target: "node20",
+  target: "node22",
   treeshake: true,
 });

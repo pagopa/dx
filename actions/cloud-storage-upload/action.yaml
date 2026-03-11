@@ -47,5 +47,5 @@ outputs:
     description: Full URL of the uploaded object.
 
 runs:
-  using: node20
+  using: node22
   main: dist/main.cjs
