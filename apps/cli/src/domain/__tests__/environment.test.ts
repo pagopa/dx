@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { CloudAccount, CloudAccountService } from "../cloud-account.js";
 import {
   Environment,
+  environmentSchema,
   getInitializationStatus,
   getTerraformBackend,
   hasUserPermissionToInitialize,
@@ -361,5 +362,70 @@ describe("hasUserPermissionToInitialize", () => {
     expect(hasUserPermissionMock).toHaveBeenCalledTimes(2);
     expect(hasUserPermissionMock).toHaveBeenNthCalledWith(1, "account-a");
     expect(hasUserPermissionMock).toHaveBeenNthCalledWith(2, "account-b");
+  });
+});
+
+describe("environmentSchema — prefix transforms", () => {
+  const baseEnv = {
+    cloudAccounts: [
+      {
+        csp: "azure" as const,
+        defaultLocation: "westeurope",
+        displayName: "Test Account",
+        id: "test-account-id",
+      },
+    ],
+    name: "dev" as const,
+    prefix: "dx",
+  };
+
+  it("lowercases an uppercase prefix", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: "ABC" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.prefix).toBe("abc");
+  });
+
+  it("lowercases a mixed-case prefix", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: "AbCd" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.prefix).toBe("abcd");
+  });
+
+  it("trims leading and trailing whitespace from prefix", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: " dx " });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.prefix).toBe("dx");
+  });
+
+  it("trims and lowercases prefix together", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: " DX " });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.prefix).toBe("dx");
+  });
+
+  it("still rejects a prefix shorter than 2 characters after trim", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: " a " });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("still rejects a prefix longer than 4 characters after trim", () => {
+    const result = environmentSchema.safeParse({
+      ...baseEnv,
+      prefix: "abcde",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts a valid lowercase prefix unchanged", () => {
+    const result = environmentSchema.safeParse({ ...baseEnv, prefix: "dx" });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.prefix).toBe("dx");
   });
 });
