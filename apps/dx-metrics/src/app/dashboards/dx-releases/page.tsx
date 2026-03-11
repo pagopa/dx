@@ -1,7 +1,7 @@
 "use client";
 
 import { DataTable, SimpleLineChart } from "@/components/Charts";
-import { DashboardRequestState } from "@/components/dashboard-request-state";
+import { DashboardRequestState } from "@/components/DashboardRequestState";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useDashboardData } from "@/lib/useDashboardData";
 

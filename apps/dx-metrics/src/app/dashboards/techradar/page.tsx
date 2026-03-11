@@ -5,7 +5,7 @@
 import Link from "next/link";
 
 import { DataTable, SimpleBarChart, SimplePieChart } from "@/components/Charts";
-import { DashboardRequestState } from "@/components/dashboard-request-state";
+import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useDashboardData } from "@/lib/useDashboardData";
