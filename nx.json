@@ -83,8 +83,11 @@
     },
     "git": {
       "commit": false,
-      "tag": false,
+      "tag": true,
       "stageChanges": false
+    },
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
     }
   },
   "plugins": [
