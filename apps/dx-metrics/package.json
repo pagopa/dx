@@ -16,6 +16,7 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.0",
+    "js-yaml": "^4.1.1",
     "lucide-react": "^0.577.0",
     "next": "^16.1.6",
     "next-auth": "^5.0.0-beta.25",
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "catalog:",
     "@types/pg": "^8.11.0",
     "@types/react": "^19.2.14",
