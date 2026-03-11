@@ -23,10 +23,11 @@ Organize Terraform code into dedicated files based on their purpose:
 | ---------------------------- | -------------------------------------------------------------- |
 | `locals.tf`                  | Local values, naming configs, computed values                  |
 | `providers.tf`               | Terraform block, required providers, backend, provider configs |
-| `variables.tf`               | Input variables with descriptions and validations              |
+| `variables.tf`               | Input variables (**local modules only**, not in root modules)  |
 | `outputs.tf`                 | Output values with descriptions                                |
 | `main.tf` or `<resource>.tf` | Resources and modules (e.g., `azure.tf`, `function.tf`)        |
 | `data.tf`                    | Data sources                                                   |
+| `_modules/`                  | Local modules directory                                        |
 
 :::info About project structure
 
@@ -36,7 +37,377 @@ configurations. For the overall infrastructure project structure, see
 
 :::
 
+## Local Modules
+
+Use one local module per service or capability. Each module should:
+
+- Have a single, well-defined responsibility (e.g., API gateway, data processor,
+  message notifier)
+- Own all the infrastructure resources that service needs (compute, storage, IAM
+  permissions)
+- Be deployable and testable in isolation
+
+**Examples:**
+
+- **API Management (APIM)**: APIM instance, policies, API definitions, private
+  endpoint
+- **Data Processor**: Function App + Storage Account + Blob Storage + IAM
+  permissions
+- **Message Notifier**: Function App + Service Bus connection + IAM for Service
+  Bus
+- **Reporting Service**: App Service + Application Insights + Database
+  connection + IAM
+- **Cache Layer**: Redis instance + private endpoint + firewall rules + IAM
+
+### What NOT to Do (Anti-pattern)
+
+❌ **Flat structure** - All resources in `main.tf` of root module:
+
+```
+infra/resources/prod/
+├── locals.tf
+├── main.tf              # Contains EVERYTHING (APIM, 5 functions, storage, etc.)
+├── variables.tf         # Should not exist here!
+├── outputs.tf
+└── iam.tf               # Mixed permissions from all resources
+```
+
+This causes:
+
+- Hard to understand what resources belong together
+- Difficult to modify one component without affecting others
+- Challenging to test or reuse configurations
+- Risk of IAM permission management becoming chaotic
+- Team members must coordinate on the entire main.tf
+
+❌ **Over-nesting resources** - Multiple resources stuffed in one module:
+
+```
+infra/resources/_modules/
+└── backend/
+    ├── main.tf         # Has: Function 1, Function 2, Function 3, Storage 1, Storage 2, + all IAM
+    ├── variables.tf
+    └── iam.tf
+```
+
+This still causes the same problems, just at a smaller scale.
+
+### What TO DO (Best Practice)
+
+✅ **One module per service** - Each module owns the resources for one service:
+
+```
+infra/resources/_modules/
+├── apim/               # API Management: instance + policies + private endpoint
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+├── func_processor/     # Data Processor: function + storage + blob container + IAM
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+├── func_notifier/      # Message Notifier: function + Service Bus connection + IAM
+│   ├── main.tf
+│   ├── variables.tf
+│   ├── iam.tf
+│   └── outputs.tf
+└── reporting/          # Reporting Service: App Service + App Insights + DB connection + IAM
+    ├── main.tf
+    ├── variables.tf
+    ├── iam.tf
+    └── outputs.tf
+```
+
+Benefits:
+
+- ✅ Clear ownership: "func_processor module manages everything about data
+  processing"
+- ✅ Easy to modify: "Change notifier Function? Edit only func_notifier module"
+- ✅ Team can work in parallel: Different teams manage different modules
+- ✅ IAM is localized: "func_processor/iam.tf has only permissions for processor
+  function"
+- ✅ Reusable: Can deploy the same function in another environment just by
+  calling the module
+
+### Why Use Local Modules?
+
+Local modules provide several benefits:
+
+- **Separation of concerns**: Each service (e.g., API Management, data
+  processor, message notifier) lives in its own module with clear boundaries
+- **Encapsulation**: Related resources and their IAM permissions stay together
+- **Reusability**: Modules can be reused across environments with different
+  configurations
+- **Testability**: Smaller modules are easier to test and validate
+- **Team collaboration**: Different team members can work on different modules
+  without conflicts
+
+### Module Organization Example
+
+```
+infra/resources/
+├── _modules/
+│   ├── apim/              # API Management service
+│   │   ├── main.tf
+│   │   ├── variables.tf   # Module inputs
+│   │   └── outputs.tf
+│   ├── func_processor/    # Data Processor service (Function App + Storage)
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── iam.tf         # IAM permissions for this module
+│   │   └── outputs.tf
+│   └── func_notifier/     # Message Notifier service (Function App + IAM)
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── iam.tf
+│       └── outputs.tf
+└── prod/
+    ├── locals.tf              # Environment configuration (no variables!)
+    ├── providers.tf           # Provider and backend configuration
+    ├── data.tf                # Shared data sources
+    ├── main.tf                # Module instantiations
+    └── outputs.tf             # Root module outputs
+```
+
+### Root Module: Use Locals and Data Sources Only
+
+:::warning No variables in root modules
+
+Root modules (e.g., `infra/resources/prod/`) should **not** use `variables.tf`.
+Instead, define all configuration in `locals.tf` and fetch existing resources
+using data sources. Variables are reserved for local modules only.
+
+:::
+
+This approach ensures that:
+
+- Environment-specific values are explicitly defined, not passed externally
+- Configuration is self-contained and auditable
+- There's no risk of accidental variable overrides
+- The root module serves as the "composition layer" that wires modules together
+
+```hcl title="infra/resources/prod/locals.tf"
+locals {
+  environment = {
+    prefix          = "io"
+    env_short       = "p"
+    location        = "italynorth"
+    domain          = "messages"
+    app_name        = "processor"
+    instance_number = "01"
+  }
+
+  tags = {
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Prod"
+    BusinessUnit   = "App IO"
+    Source         = "https://github.com/pagopa/io-infra"
+    ManagementTeam = "IO Platform"
+  }
+
+  # Module-specific configuration
+  processor_config = {
+    use_case = "high_load"
+    tier     = "premium"
+  }
+
+  notifier_config = {
+    use_case = "default"
+    tier     = "standard"
+  }
+}
+```
+
+```hcl title="infra/resources/prod/data.tf"
+# Fetch existing shared resources
+data "azurerm_resource_group" "main" {
+  name = "io-p-rg-common"
+}
+
+data "azurerm_virtual_network" "main" {
+  name                = "io-p-vnet-common"
+  resource_group_name = data.azurerm_resource_group.main.name
+}
+
+data "azurerm_key_vault" "main" {
+  name                = "io-p-kv-common"
+  resource_group_name = data.azurerm_resource_group.main.name
+}
+```
+
+```hcl title="infra/resources/prod/main.tf"
+# Compose modules using locals and data sources
+module "apim" {
+  source = "../_modules/apim"
+
+  environment         = local.environment
+  tags                = local.tags
+  resource_group_name = data.azurerm_resource_group.main.name
+  virtual_network_id  = data.azurerm_virtual_network.main.id
+}
+
+module "func_processor" {
+  source = "../_modules/func_processor"
+
+  environment         = local.environment
+  tags                = local.tags
+  config              = local.processor_config
+  resource_group_name = data.azurerm_resource_group.main.name
+  virtual_network_id  = data.azurerm_virtual_network.main.id
+  key_vault_id        = data.azurerm_key_vault.main.id
+  apim_id             = module.apim.id
+}
+
+module "func_notifier" {
+  source = "../_modules/func_notifier"
+
+  environment         = local.environment
+  tags                = local.tags
+  config              = local.notifier_config
+  resource_group_name = data.azurerm_resource_group.main.name
+  key_vault_id        = data.azurerm_key_vault.main.id
+}
+```
+
+### Local Module: Use Variables for Inputs
+
+Local modules receive their configuration through variables, making them
+reusable and testable:
+
+```hcl title="infra/resources/_modules/func_processor/variables.tf"
+variable "environment" {
+  type = object({
+    prefix          = string
+    env_short       = string
+    location        = string
+    domain          = optional(string)
+    app_name        = string
+    instance_number = string
+  })
+  description = "Environment configuration for resource naming."
+}
+
+variable "tags" {
+  type        = map(string)
+  description = "Tags to apply to all resources."
+}
+
+variable "config" {
+  type = object({
+    use_case = string
+    tier     = string
+  })
+  description = "Function App configuration."
+}
+
+variable "resource_group_name" {
+  type        = string
+  description = "Name of the resource group where resources will be created."
+}
+
+variable "virtual_network_id" {
+  type        = string
+  description = "ID of the virtual network for private endpoints."
+}
+
+variable "key_vault_id" {
+  type        = string
+  description = "ID of the Key Vault for secrets."
+}
+
+variable "apim_id" {
+  type        = string
+  description = "ID of the API Management instance."
+}
+```
+
+```hcl title="infra/resources/_modules/func_processor/main.tf"
+locals {
+  naming_config = {
+    prefix          = var.environment.prefix
+    environment     = var.environment.env_short
+    location        = var.environment.location
+    domain          = var.environment.domain
+    name            = var.environment.app_name
+    instance_number = tonumber(var.environment.instance_number)
+  }
+}
+
+# Function App with its dedicated Storage Account
+module "function_app" {
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 5.0"
+
+  environment         = var.environment
+  tags                = var.tags
+  resource_group_name = var.resource_group_name
+  # ... other configuration
+}
+
+# Storage Account directly related to this function
+module "storage" {
+  source  = "pagopa-dx/azure-storage-account/azurerm"
+  version = "~> 2.0"
+
+  environment         = var.environment
+  tags                = var.tags
+  resource_group_name = var.resource_group_name
+  # ... other configuration
+}
+```
+
+```hcl title="infra/resources/_modules/func_processor/iam.tf"
+# Use the DX module for supported resource types
+module "function_to_storage" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 0.0"
+
+  principal_id    = module.function_app.principal_id
+  subscription_id = var.subscription_id
+
+  storage_blob = [
+    {
+      storage_account_name = module.storage.name
+      resource_group_name  = var.resource_group_name
+      role                 = "writer"
+      description          = "Allow function app to write blobs"
+    }
+  ]
+}
+
+module "function_to_keyvault" {
+  source  = "pagopa-dx/azure-role-assignments/azurerm"
+  version = "~> 0.0"
+
+  principal_id    = module.function_app.principal_id
+  subscription_id = var.subscription_id
+
+  key_vault = [
+    {
+      name                = var.key_vault_name
+      resource_group_name = var.resource_group_name
+      description         = "Allow function app to read secrets"
+      roles = {
+        secrets = "reader"
+      }
+    }
+  ]
+}
+```
+
 ## Variable Definitions
+
+:::warning Variables are for local modules only
+
+As described in the [Local Modules](#local-modules) section, **do not use
+variables in root modules**. Use `locals.tf` and data sources instead. Variables
+should only be defined in local modules to receive configuration from the root
+module.
+
+:::
 
 :::info Always include descriptions and validations
 
@@ -206,9 +577,34 @@ resource "azurerm_subnet" "bad" {
 
 ---
 
-## Standard File Templates
+## Azure
 
-### Standard locals.tf
+The following conventions apply specifically to Azure infrastructure using the
+[DX Azure provider](../azure/using-azure-registry-provider.md) and the PagoPA DX
+Terraform module registry.
+
+### IAM and Role Assignments
+
+Each local module is responsible for the IAM permissions of the resources it
+owns. Define role assignments in a dedicated `iam.tf` file inside the module,
+keeping permissions co-located with the resources they protect. This avoids
+scattered role assignment resources spread across the root module and makes it
+easy to reason about the security boundary of each service.
+
+For supported resource types (Storage Account, Cosmos DB, Key Vault, Event Hub,
+and more), use the
+[`azure-role-assignments`](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest)
+DX module instead of raw `azurerm_role_assignment` resources. The module
+encapsulates the correct role definitions, reduces boilerplate, and enforces
+consistent patterns across all teams. Use bare `azurerm_role_assignment` only
+for resource types not yet covered by the module.
+
+For naming conventions, policies, and best practices around identity and access
+management on Azure, see the [IAM documentation](../azure/iam/index.md).
+
+### Standard File Templates
+
+#### Standard locals.tf
 
 ```hcl title="infra/resources/prod/locals.tf"
 locals {
@@ -238,7 +634,7 @@ See [Required Tags](./required-tags.md) for details on mandatory tag values.
 
 :::
 
-### Standard providers.tf
+#### Standard providers.tf
 
 ```hcl title="infra/resources/prod/providers.tf"
 terraform {

@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/opex-dashboard-generate-action",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "GitHub Action to automatically generate Azure Dashboard Terraform from OpenAPI specifications",
   "repository": {
     "type": "git",

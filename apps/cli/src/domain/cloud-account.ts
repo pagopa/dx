@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { type EnvironmentId } from "./environment.js";
+import { type GitHubAppCredentials } from "./github.js";
 import { TerraformBackend } from "./remote-backend.js";
 
 export const cloudAccountSchema = z.object({
@@ -29,6 +30,7 @@ export type CloudAccountService = {
   initialize(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
+    runnerAppCredentials: GitHubAppCredentials,
     tags?: Record<string, string>,
   ): Promise<void>;
 

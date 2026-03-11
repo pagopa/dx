@@ -1,7 +1,7 @@
 {
   "name": "renew-tls-certificate",
   "description": "Checks whether a certificate stored in Azure Key Vault is expiring and renews it via Let's Encrypt if needed.",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
   "private": true,
   "keywords": [

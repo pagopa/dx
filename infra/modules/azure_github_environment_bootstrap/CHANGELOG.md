@@ -1,5 +1,17 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.2.1
+
+### Patch Changes
+
+- c2e4a35: Update documentation to reflect recent changes to replace GitHub PATs with Apps
+
+## 3.2.0
+
+### Minor Changes
+
+- 24116f4: Add support for Github Runner App
+
 ## 3.1.3
 
 ### Patch Changes

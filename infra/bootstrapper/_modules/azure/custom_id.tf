@@ -20,3 +20,12 @@ resource "azurerm_federated_identity_credential" "infra_cd_integration_tests" {
   parent_id = azurerm_user_assigned_identity.integration_tests[0].id
   subject   = "repo:pagopa/${var.repository.name}:environment:${github_actions_environment_secret.integration_tests_client_id[0].environment}"
 }
+
+resource "azurerm_federated_identity_credential" "automation_cd" {
+  name      = "dx-environment-infra-${local.env_long}-automation-${local.env_long}-cd"
+  audience  = ["api://AzureADTokenExchange"]
+  issuer    = "https://token.actions.githubusercontent.com"
+  parent_id = module.bootstrap.identities.infra.cd.id
+  subject   = "repo:pagopa/${var.repository.name}:environment:automation-${local.env_long}-cd"
+}
+

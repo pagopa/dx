@@ -16,7 +16,14 @@ export const environmentShort: Record<Environment["name"], string> = {
 export const environmentSchema = z.object({
   cloudAccounts: z.array(cloudAccountSchema).min(1),
   name: z.enum(["dev", "prod", "uat"]),
-  prefix: z.string().min(2).max(4),
+  // Trim and lowercase at the schema level so the constraint is enforced
+  // regardless of how the data enters the system (prompt, test, or API).
+  prefix: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .min(2, "Prefix must have at least 2 chars")
+    .max(4, "Prefix must have at most 4 chars"),
 });
 
 export type Environment = z.infer<typeof environmentSchema>;
