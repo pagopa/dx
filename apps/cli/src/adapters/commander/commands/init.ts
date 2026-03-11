@@ -92,6 +92,14 @@ const checkTerraformCliIsInstalled = () =>
     tf$`terraform -version`,
   );
 
+const checkCorepackIsInstalled = () =>
+  withSpinner(
+    "Checking Corepack installation...",
+    "Corepack is installed!",
+    "Please install Corepack before running this command.",
+    tf$`corepack -v`,
+  );
+
 const azureAccountSchema = z.object({
   user: z.object({
     name: z.string().min(1),
@@ -114,8 +122,11 @@ const checkAzLogin = () =>
     ensureAzLogin(),
   );
 
+// TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const checkPreconditions = () =>
-  checkTerraformCliIsInstalled().andThen(() => checkAzLogin());
+  checkTerraformCliIsInstalled()
+    .andThen(() => checkAzLogin())
+    .andThen(() => checkCorepackIsInstalled());
 
 const createRemoteRepository = ({
   repoName,

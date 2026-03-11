@@ -1,5 +1,26 @@
 # @pagopa/dx-cli
 
+## 0.18.3
+
+### Patch Changes
+
+- 0f96dab: Add `corepack` as required tool for `init` command
+- 24e7b3b: Encode `github-runner-app-key` in `base64` when stored in the common kv
+
+## 0.18.2
+
+### Patch Changes
+
+- 8f76777: Update key vault properties to enable recover
+
+## 0.18.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+- Updated dependencies [2d3d8fb]
+  - @pagopa/dx-savemoney@0.1.5
+
 ## 0.18.0
 
 ### Minor Changes

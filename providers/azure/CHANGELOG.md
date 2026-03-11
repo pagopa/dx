@@ -1,5 +1,11 @@
 # provider-azure
 
+## 0.8.4
+
+### Patch Changes
+
+- b108e3e: Enhance redundancy validation for resource names and abbreviations: a bare prefix match, such as domain="fdo" against abbreviation="fdog", must not trigger this check.
+
 ## 0.8.3
 
 ### Patch Changes

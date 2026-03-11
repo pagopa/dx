@@ -22,6 +22,7 @@ export default function (plop: NodePlopAPI) {
       env,
       extendEnv: false, // Don't include process.env variables
     });
+    await pnpm$`corepack enable`;
     await pnpm$`corepack use pnpm@latest`;
     await pnpm$`pnpm -w add -D turbo @changesets/cli @devcontainers/cli`;
     await pnpm$`pnpm changeset init`;
