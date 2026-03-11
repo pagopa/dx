@@ -45,12 +45,6 @@ inputs:
     description: AWS region where the S3 bucket lives. Required when provider is "aws".
     required: false
     default: ""
-  workflow-run-url:
-    description: >
-      If provided, attached to the backend object as a tag (key: workflow-run-url)
-      for traceability. Has no effect when backend-destination is empty.
-    required: false
-    default: ""
 
 runs:
   using: composite
@@ -66,7 +60,6 @@ runs:
         azure-container: ${{ inputs.azure-container }}
         aws-bucket: ${{ inputs.aws-bucket }}
         aws-region: ${{ inputs.aws-region }}
-        workflow-run-url: ${{ inputs.workflow-run-url }}
 
     - name: Encrypt Terraform Plan
       shell: bash
