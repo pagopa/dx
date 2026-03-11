@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "./start-nextapp.sh",
-    "build": "sh -c 'if [ -f .env ]; then set -a; . .env; set +a; elif [ -f .env.example ]; then set -a; . .env.example; set +a; fi; next build'",
+    "build": "next build'",
     "start": "next start",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
