@@ -45,7 +45,7 @@ outputs:
     description: Absolute path of the downloaded file.
 
 runs:
-  using: node20
+  using: node22
   main: dist/main.cjs
   post: dist/post.cjs
   post-if: success()
