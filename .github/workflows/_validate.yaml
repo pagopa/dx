@@ -50,3 +50,7 @@ jobs:
 
       - name: Run code quality checks on affected projects
         run: pnpm validate
+
+      - uses: pagopa/dx/actions/pr-comment@update-pr-comment-action
+        with:
+          comment-body: "Hello!"
