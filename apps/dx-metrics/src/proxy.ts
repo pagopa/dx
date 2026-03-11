@@ -1,21 +1,21 @@
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
+import { getSessionCookie } from "better-auth/cookies";
 
-/** Protects app routes with Auth.js before route handling. */
-import { auth } from "@/lib/auth";
-
-export default auth((req) => {
+/** Protects app routes with Better Auth before route handling. */
+export function proxy(req: NextRequest) {
   if (process.env.SKIP_AUTH === "true") {
     return NextResponse.next();
   }
+  const sessionCookie = getSessionCookie(req);
   if (
-    !req.auth &&
+    !sessionCookie &&
     !req.nextUrl.pathname.startsWith("/sign-in") &&
     !req.nextUrl.pathname.startsWith("/api/auth")
   ) {
     const newUrl = new URL("/sign-in", req.nextUrl.origin);
     return NextResponse.redirect(newUrl);
   }
-});
+}
 
 export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],

@@ -1,6 +1,7 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { auth, signOut } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 
 import { ClientLayout } from "./ClientLayout";
 
@@ -12,7 +13,9 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const skipAuth = process.env.SKIP_AUTH === "true";
-  const session = skipAuth ? null : await auth();
+  const session = skipAuth
+    ? null
+    : await auth.api.getSession({ headers: await headers() });
 
   if (!skipAuth && !session?.user) {
     redirect("/sign-in");
@@ -20,7 +23,8 @@ export default async function DashboardLayout({
 
   async function signOutAction() {
     "use server";
-    await signOut({ redirectTo: "/sign-in" });
+    await auth.api.signOut({ headers: await headers() });
+    redirect("/sign-in");
   }
 
   return (

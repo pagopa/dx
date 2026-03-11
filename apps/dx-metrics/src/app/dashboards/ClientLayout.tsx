@@ -11,6 +11,7 @@ import {
 } from "@/lib/sidebar-state";
 import { cn } from "@/lib/utils";
 
+// Better Auth session shape: { user: { image, name, ... }, session: { ... } } | null
 type ClientSession = null | {
   user?: null | { image?: null | string; name?: null | string };
 };
