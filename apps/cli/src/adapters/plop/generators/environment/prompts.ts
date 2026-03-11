@@ -28,6 +28,7 @@ import {
 } from "../../../../domain/github-repo.js";
 import { githubAppCredentialsSchema } from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
+import { validatePrompt } from "../../helpers/validate-prompt.js";
 
 const initSchema = z.object({
   cloudAccountsToInitialize: z.array(cloudAccountSchema),
@@ -44,7 +45,7 @@ type InitPayload = z.infer<typeof initSchema>;
 const tagsSchema = z.record(z.string(), z.string().min(1));
 
 export const workspaceSchema = z.object({
-  domain: z.string().default(""),
+  domain: z.string().trim().toLowerCase().default(""),
 });
 
 export const payloadSchema = z.object({
@@ -106,19 +107,16 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
             : "Please select a cloud account.",
       },
       {
+        filter: (value: string) => value.trim().toLowerCase(),
         message: "Prefix (2-4 characters)",
         name: "env.prefix",
-        transformer: (value) => value.trim().toLowerCase(),
         type: "input",
-        validate: (value) =>
-          value.length >= 2 && value.length <= 4
-            ? true
-            : "Please enter a valid prefix.",
+        validate: validatePrompt(environmentSchema.shape.prefix),
       },
       {
+        filter: (value: string) => value.trim().toLowerCase(),
         message: "Domain (optional)",
         name: "workspace.domain",
-        transformer: (value) => value.trim().toLowerCase(),
         type: "input",
       },
       {
