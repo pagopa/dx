@@ -75,7 +75,7 @@ resource "azurerm_key_vault" "kv" {
   tenant_id                     = data.azurerm_client_config.current.tenant_id
   sku_name                      = "standard"
   soft_delete_retention_days    = 7
-  purge_protection_enabled      = true
+  purge_protection_enabled      = true # mandatory when used for CMK in Cosmos DB
   public_network_access_enabled = true
   rbac_authorization_enabled    = true
   tags                          = var.tags
@@ -93,6 +93,25 @@ resource "azurerm_role_assignment" "integration_keyvault_key_officer" {
   scope                = azurerm_key_vault.kv.id
   role_definition_name = "Key Vault Crypto Officer"
   description          = "Allow GitHub workflow to access the key"
+
+  depends_on = [azurerm_role_assignment.integration_keyvault_data_access_admin]
+}
+
+resource "azurerm_role_assignment" "integration_keyvault_data_access_admin" {
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+  scope                = azurerm_key_vault.kv.id
+  role_definition_name = "Key Vault Data Access Administrator"
+  description          = "Allow GitHub workflow to manage roles"
+}
+
+resource "time_sleep" "wait_for_kv_rbac_propagation" {
+  create_duration = "300s"
+
+  depends_on = [
+    azurerm_role_assignment.kv_cosmos_uai,
+    azurerm_role_assignment.integration_keyvault_key_officer,
+    azurerm_role_assignment.integration_keyvault_data_access_admin,
+  ]
 }
 
 resource "azurerm_key_vault_key" "cmk" {
@@ -103,7 +122,7 @@ resource "azurerm_key_vault_key" "cmk" {
   key_opts        = ["wrapKey", "unwrapKey"]
   expiration_date = timeadd(timestamp(), "2h")
 
-  depends_on = [azurerm_role_assignment.kv_cosmos_uai]
+  depends_on = [time_sleep.wait_for_kv_rbac_propagation]
 }
 
 output "pep_id" {

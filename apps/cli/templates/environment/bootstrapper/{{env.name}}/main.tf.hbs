@@ -36,6 +36,7 @@ module "azure-{{displayName}}_bootstrap" {
       name                = data.azurerm_key_vault.common.name
       resource_group_name = data.azurerm_key_vault.common.resource_group_name
     }
+    use_github_app = true
   }
 
   apim_id                            = data.azurerm_api_management.apim.id
@@ -103,6 +104,7 @@ module "azure-{{displayName}}_bootstrap" {
       name                = module.azure-{{displayName}}_core_values.common_key_vault.name
       resource_group_name = module.azure-{{displayName}}_core_values.common_key_vault.resource_group_name
     }
+    use_github_app = true
   }
 
   pep_vnet_id                        = module.azure-{{displayName}}_core_values.common_vnet.id

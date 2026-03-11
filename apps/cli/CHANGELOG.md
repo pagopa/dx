@@ -1,5 +1,39 @@
 # @pagopa/dx-cli
 
+## 0.18.3
+
+### Patch Changes
+
+- 0f96dab: Add `corepack` as required tool for `init` command
+- 24e7b3b: Encode `github-runner-app-key` in `base64` when stored in the common kv
+
+## 0.18.2
+
+### Patch Changes
+
+- 8f76777: Update key vault properties to enable recover
+
+## 0.18.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+- Updated dependencies [2d3d8fb]
+  - @pagopa/dx-savemoney@0.1.5
+
+## 0.18.0
+
+### Minor Changes
+
+- f0ce0c9: Init now requires a GitHub App for self-hosted runners
+- 6074052: Add add command to scaffold new components
+
+## 0.17.0
+
+### Minor Changes
+
+- 907253d: Create a function useful to add a Bootstrap Identity to an Azure subscription. This function creates a Pull Request on eng-azure-authorization repository to add the identity.
+
 ## 0.16.3
 
 ### Patch Changes

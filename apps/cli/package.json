@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.16.3",
+  "version": "0.18.3",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {
@@ -22,7 +22,9 @@
   },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-keyvault": "^4.0.0",
     "@azure/arm-msi": "^2.2.0",
+    "@azure/keyvault-secrets": "^4.9.0",
     "@azure/arm-resourcegraph": "^4.2.1",
     "@azure/arm-resources": "^7.0.0",
     "@azure/arm-resources-subscriptions": "^2.1.0",
@@ -31,7 +33,7 @@
     "@azure/storage-blob": "^12.29.1",
     "@logtape/logtape": "catalog:",
     "@microsoft/microsoft-graph-client": "^3.0.7",
-    "@pagopa/dx-savemoney": "workspace:^",
+    "@pagopa/dx-savemoney": "0.1.4",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "core-js": "^3.47.0",
@@ -49,7 +51,7 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/inquirer": "^9.0.9",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",

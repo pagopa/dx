@@ -1,4 +1,4 @@
-import inquirer from "inquirer";
+import inquirer, { DistinctQuestion } from "inquirer";
 import { type DynamicPromptsFunction } from "node-plop";
 import * as assert from "node:assert/strict";
 
@@ -10,6 +10,7 @@ import {
   CloudRegion,
 } from "../../../../domain/cloud-account.js";
 import {
+  EnvironmentInitStatus,
   environmentSchema,
   getInitializationStatus,
   hasUserPermissionToInitialize,
@@ -25,10 +26,13 @@ import {
   GitHubRepo,
   githubRepoSchema,
 } from "../../../../domain/github-repo.js";
+import { githubAppCredentialsSchema } from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
+import { validatePrompt } from "../../helpers/validate-prompt.js";
 
 const initSchema = z.object({
   cloudAccountsToInitialize: z.array(cloudAccountSchema),
+  runnerAppCredentials: githubAppCredentialsSchema.optional(),
   terraformBackend: z
     .object({
       cloudAccount: cloudAccountSchema,
@@ -36,10 +40,12 @@ const initSchema = z.object({
     .optional(),
 });
 
+type InitPayload = z.infer<typeof initSchema>;
+
 const tagsSchema = z.record(z.string(), z.string().min(1));
 
 export const workspaceSchema = z.object({
-  domain: z.string().default(""),
+  domain: z.string().trim().toLowerCase().default(""),
 });
 
 export const payloadSchema = z.object({
@@ -58,16 +64,13 @@ export type PromptsDependencies = {
   github?: GitHubRepo;
 };
 
+/* eslint-disable max-lines-per-function */
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (inquirer) => {
     const logger = getLogger(["gen", "env"]);
-
     const github = deps.github ?? (await getGithubRepo());
-
     assert.ok(github, "This generator only works inside a GitHub repository.");
-
     logger.debug("github repo {github}", { github });
-
     const answers = await inquirer.prompt([
       {
         choices: [
@@ -104,19 +107,16 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
             : "Please select a cloud account.",
       },
       {
+        filter: (value: string) => value.trim().toLowerCase(),
         message: "Prefix (2-4 characters)",
         name: "env.prefix",
-        transformer: (value) => value.trim().toLowerCase(),
         type: "input",
-        validate: (value) =>
-          value.length >= 2 && value.length <= 4
-            ? true
-            : "Please enter a valid prefix.",
+        validate: validatePrompt(environmentSchema.shape.prefix),
       },
       {
+        filter: (value: string) => value.trim().toLowerCase(),
         message: "Domain (optional)",
         name: "workspace.domain",
-        transformer: (value) => value.trim().toLowerCase(),
         type: "input",
       },
       {
@@ -136,18 +136,18 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
             : "Please select a Cost Center.",
       },
       {
+        filter: (value) => value.trim(),
         message: "Business unit",
         name: "tags.BusinessUnit",
-        transformer: (value) => value.trim(),
         validate: (value) =>
-          value.trim().length > 0 ? true : "Business Unit cannot be empty.",
+          value.length > 0 ? true : "Business Unit cannot be empty.",
       },
       {
+        filter: (value) => value.trim(),
         message: "Management team",
         name: "tags.ManagementTeam",
-        transformer: (value) => value.trim(),
         validate: (value) =>
-          value.trim().length > 0 ? true : "Management Team cannot be empty.",
+          value.length > 0 ? true : "Management Team cannot be empty.",
       },
     ]);
 
@@ -162,7 +162,6 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
         type: "list",
       })),
     );
-
     payload.env.cloudAccounts.forEach((account) => {
       const location = locations[account.id];
       if (location) {
@@ -181,6 +180,16 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       return payload;
     }
 
+    const initConfirm = await inquirer.prompt({
+      default: true,
+      message:
+        "The environment is not initialized. Do you want to initialize it now?",
+      name: "init",
+      type: "confirm",
+    });
+
+    assert.ok(initConfirm.init, "Can't proceed without initialization");
+
     assert.ok(
       await hasUserPermissionToInitialize(
         deps.cloudAccountService,
@@ -193,39 +202,71 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       (issue) => issue.type === "MISSING_REMOTE_BACKEND",
     );
 
-    const initInput = await inquirer.prompt([
-      {
-        default: true,
-        message:
-          "The environment is not initialized. Do you want to initialize it now?",
-        name: "init",
-        type: "confirm",
-      },
-      {
-        choices: getCloudAccountChoices(payload.env.cloudAccounts),
-        message: "Cloud Account to use for the remote Terraform backend",
-        name: "terraformBackend.cloudAccount",
-        type: "list",
-        when: (answers) =>
-          answers.init &&
-          missingRemoteBackend &&
-          payload.env.cloudAccounts.length > 1,
-      },
-    ]);
+    const questions: DistinctQuestion[] = [];
 
-    assert.ok(initInput.init, "Can't proceed without initialization");
+    let terraformBackend: InitPayload["terraformBackend"];
+
+    if (missingRemoteBackend) {
+      if (payload.env.cloudAccounts.length === 1) {
+        terraformBackend = {
+          cloudAccount: payload.env.cloudAccounts[0],
+        };
+      } else {
+        questions.push({
+          choices: getCloudAccountChoices(payload.env.cloudAccounts),
+          message: "Cloud Account to use for the remote Terraform backend",
+          name: "terraformBackend.cloudAccount",
+          type: "list",
+        });
+      }
+    }
+
+    const cloudAccountsNotInitialized = initStatus.issues.some(
+      (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
+    );
+
+    let runnerAppCredentials: InitPayload["runnerAppCredentials"];
+
+    if (cloudAccountsNotInitialized) {
+      questions.push(
+        {
+          filter: (value) => value.trim(),
+          message: "GitHub Runner App ID",
+          name: "runnerAppCredentials.id",
+          type: "input",
+          validate: (value) => value.length > 0,
+        },
+        {
+          filter: (value) => value.trim(),
+          message: "GitHub Runner App Installation ID",
+          name: "runnerAppCredentials.installationId",
+          type: "input",
+          validate: (value) => value.length > 0,
+        },
+        {
+          filter: (value) => value.trim(),
+          message: "GitHub Runner App Private Key",
+          name: "runnerAppCredentials.key",
+          type: "editor",
+          validate: (value) => value.length > 0,
+        },
+      );
+    }
+
+    const initInput = await inquirer.prompt(questions);
+
+    if (initInput.runnerAppCredentials) {
+      runnerAppCredentials = initInput.runnerAppCredentials;
+    }
+
+    if (initInput.terraformBackend) {
+      terraformBackend = initInput.terraformBackend;
+    }
 
     payload.init = payloadSchema.shape.init.parse({
-      cloudAccountsToInitialize: initStatus.issues
-        .filter((issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED")
-        .map((issue) => issue.cloudAccount),
-      terraformBackend: missingRemoteBackend
-        ? {
-            cloudAccount:
-              initInput.terraformBackend?.cloudAccount ||
-              payload.env.cloudAccounts[0],
-          }
-        : undefined,
+      cloudAccountsToInitialize: getCloudAccountToInitialize(initStatus),
+      runnerAppCredentials,
+      terraformBackend,
     });
 
     return payload;
@@ -244,5 +285,12 @@ export const getCloudLocationChoices = (
   regions: CloudRegion[],
 ): InquirerChoice<CloudRegion["name"]>[] =>
   regions.map((r) => ({ name: r.displayName, value: r.name }));
+
+export const getCloudAccountToInitialize = (
+  initStatus: EnvironmentInitStatus & { initialized: false },
+) =>
+  initStatus.issues
+    .filter((issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED")
+    .map((issue) => issue.cloudAccount);
 
 export default prompts;

@@ -1,5 +1,11 @@
 # github_selfhosted_runner_on_container_app_jobs
 
+## 1.3.1
+
+### Patch Changes
+
+- c2e4a35: Update documentation to reflect recent changes to replace GitHub PATs with Apps
+
 ## 1.3.0
 
 ### Minor Changes

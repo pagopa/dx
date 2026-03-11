@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.12
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.4.11
 
 ### Patch Changes

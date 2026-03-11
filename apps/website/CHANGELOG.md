@@ -1,5 +1,28 @@
 # docs
 
+## 0.12.6
+
+### Patch Changes
+
+- 107a7ef: Fix documentation about terraform local modules location in the
+  filesystem
+
+## 0.12.5
+
+### Patch Changes
+
+- 96ea1c0: Document preference about creation of local modules and variables
+  usage
+
+## 0.12.4
+
+### Patch Changes
+
+- 7fb5e8b: Fix broken links and adding missing information to drift detection
+  workflow
+- 907253d: Update the page related to the permissions of the GitHub token used
+  by the DX CLI
+
 ## 0.12.3
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @pagopa/opex-dashboard
 
+## 0.2.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.2.0
 
 ### Minor Changes
