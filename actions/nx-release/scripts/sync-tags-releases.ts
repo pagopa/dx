@@ -7,28 +7,39 @@
  * catches up on every tag missed across multiple failed publish runs.
  */
 import { execFile, spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
-interface PrData {
-  body: string;
-  number: number;
-}
+const TagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  // version was added later; default to "" for PR bodies written before this field.
+  version: z.string().default(""),
+});
 
-interface TagEntry {
-  path: null | string;
-  tag: string;
-}
+const PrDataSchema = z.object({
+  body: z.string(),
+  number: z.number(),
+});
 
-function extractChangelogSection(
+const PrListSchema = z.array(PrDataSchema);
+
+export type TagEntry = z.infer<typeof TagEntrySchema>;
+
+/**
+ * Extracts the changelog section matching `version` from a CHANGELOG.md file.
+ * Returns null when the file cannot be read or the version heading is not found.
+ */
+export async function extractChangelogSection(
   clPath: string,
   version: string,
-): null | string {
+): Promise<null | string> {
   try {
-    const lines = readFileSync(clPath, "utf8").split("\n");
+    const lines = (await readFile(clPath, "utf8")).split("\n");
     const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pat = new RegExp(`^##\\s+.*${escapedVersion}`);
     const s = lines.findIndex((l) => pat.test(l));
@@ -43,7 +54,7 @@ function extractChangelogSection(
   }
 }
 
-async function releaseExists(tag: string): Promise<boolean> {
+export async function releaseExists(tag: string): Promise<boolean> {
   try {
     await execFileAsync("gh", ["release", "view", tag]);
     return true;
@@ -52,9 +63,7 @@ async function releaseExists(tag: string): Promise<boolean> {
   }
 }
 
-async function run(): Promise<void> {
-  const base = process.env.BASE_BRANCH ?? "main";
-
+export async function run(base: string): Promise<void> {
   const { stdout } = await execFileAsync("gh", [
     "pr",
     "list",
@@ -70,21 +79,23 @@ async function run(): Promise<void> {
     "number,body",
   ]);
 
-  const prs = JSON.parse(stdout) as PrData[];
+  const parseResult = PrListSchema.safeParse(JSON.parse(stdout));
+  if (!parseResult.success) {
+    throw new Error(
+      `Unexpected gh pr list response: ${parseResult.error.message}`,
+    );
+  }
 
   // Collect all tag entries from every merged Version Packages PR.
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
   const allEntries = new Map<string, TagEntry>();
-  for (const pr of prs) {
+  for (const pr of parseResult.data) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
-    try {
-      for (const e of JSON.parse(m[1]) as TagEntry[]) {
-        allEntries.set(e.tag, e);
-      }
-    } catch {
-      // Ignore malformed tags
+    const entriesResult = z.array(TagEntrySchema).safeParse(JSON.parse(m[1]));
+    if (entriesResult.success) {
+      for (const e of entriesResult.data) allEntries.set(e.tag, e);
     }
   }
 
@@ -119,16 +130,13 @@ async function run(): Promise<void> {
 
   await spawnInherit("git", ["push", "origin", "--tags"]);
 
-  for (const { path, tag } of newTags) {
-    const version = tag.slice(tag.lastIndexOf("@") + 1);
+  for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
 
     if (path) {
       const clPath = join(dirname(path), "CHANGELOG.md");
-      if (existsSync(clPath)) {
-        const section = extractChangelogSection(clPath, version);
-        if (section) notes = section;
-      }
+      const section = await extractChangelogSection(clPath, version);
+      if (section) notes = section;
     }
 
     if (await releaseExists(tag)) {
@@ -143,7 +151,7 @@ async function run(): Promise<void> {
   }
 }
 
-function spawnInherit(cmd: string, args: string[]): Promise<void> {
+export function spawnInherit(cmd: string, args: string[]): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: "inherit" });
     child.on("close", (code) =>
@@ -157,7 +165,7 @@ function spawnInherit(cmd: string, args: string[]): Promise<void> {
   });
 }
 
-async function tagExistsOnRemote(tag: string): Promise<boolean> {
+export async function tagExistsOnRemote(tag: string): Promise<boolean> {
   const { stdout } = await execFileAsync("git", [
     "ls-remote",
     "--tags",
@@ -168,7 +176,7 @@ async function tagExistsOnRemote(tag: string): Promise<boolean> {
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run().catch((err: unknown) => {
+  run(process.env.BASE_BRANCH ?? "main").catch((err: unknown) => {
     console.error("Unexpected error in sync-tags-releases:", err);
     process.exit(1);
   });

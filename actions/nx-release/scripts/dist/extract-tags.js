@@ -34,12 +34,21 @@ async function readPomXml(filePath) {
 
 // scripts/extract-tags.ts
 var execFileAsync = promisify(execFile);
-async function run() {
-  const newTags = (process.env.NEW_TAGS ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
-  if (newTags.length === 0) {
-    console.log("[]");
-    return;
-  }
+async function buildTagEntries(newTags) {
+  const manifestInfos = await getModifiedManifestInfos();
+  return newTags.map((tag) => {
+    const match = manifestInfos.find(({ name, version: version2 }) => {
+      if (!tag.endsWith(version2)) return false;
+      const nameIdx = tag.indexOf(name);
+      if (nameIdx === -1) return false;
+      const charAfterName = tag[nameIdx + name.length];
+      return charAfterName !== void 0 && !/\w/.test(charAfterName);
+    });
+    const version = match?.version ?? tag.slice(tag.lastIndexOf("@") + 1);
+    return { path: match?.path ?? null, tag, version };
+  });
+}
+async function getModifiedManifestInfos() {
   const { stdout } = await execFileAsync("git", [
     "diff",
     "--name-only",
@@ -47,30 +56,25 @@ async function run() {
     "**/package.json",
     "**/pom.xml"
   ]);
-  const modifiedManifests = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
-  const manifestInfos = [];
-  for (const f of modifiedManifests) {
+  const infos = [];
+  for (const f of stdout.split("\n").map((l) => l.trim()).filter(Boolean)) {
     const result = f.endsWith("package.json") ? await readPackageJson(f) : await readPomXml(f);
     if (result?.name && result?.version) {
-      manifestInfos.push({
-        name: result.name,
-        path: f,
-        version: result.version
-      });
+      infos.push({ name: result.name, path: f, version: result.version });
     }
   }
-  const entries = [];
-  for (const tag of newTags) {
-    const match = manifestInfos.find(
-      ({ name, version }) => tag.includes(name) && tag.includes(version)
-    );
-    entries.push({ path: match?.path ?? null, tag });
-  }
-  console.log(JSON.stringify(entries));
+  return infos;
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run().catch((err) => {
-    console.error("Unexpected error in extract-tags:", err);
-    process.exit(1);
-  });
+  const newTags = (process.env.NEW_TAGS ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
+  if (newTags.length === 0) {
+    console.log("[]");
+  } else {
+    buildTagEntries(newTags).then((entries) => console.log(JSON.stringify(entries))).catch((err) => {
+      console.error("Unexpected error in extract-tags:", err);
+      process.exit(1);
+    });
+  }
 }
+
+export { buildTagEntries, getModifiedManifestInfos };

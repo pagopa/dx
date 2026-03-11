@@ -1,13 +1,10 @@
 /**
- * Reads the NEW_TAGS environment variable (newline-separated list of tags created
- * by `nx release --skip-publish`), locates the corresponding manifest file for each
- * tag by looking at files modified in the working tree (which are guaranteed to be
- * the manifests just bumped by nx release), and writes a JSON array of { path, tag }
- * entries to stdout.
+ * Reads a list of tags created by `nx release --skip-publish`, locates the
+ * corresponding manifest file for each by inspecting working-tree changes, and
+ * writes a JSON array of { path, tag, version } entries to stdout.
  *
- * Matching is based on both the package name and bumped version appearing in the tag
- * string, without assuming any specific separator (the default "@" is configurable
- * in nx.json via `releaseTagPattern`).
+ * Matching uses the bumped files from `git diff --name-only`, which is reliable
+ * and independent of the releaseTagPattern separator configured in nx.json.
  *
  * Used to populate the nx-release-tags metadata comment in the Version Packages PR body.
  */
@@ -18,65 +15,30 @@ import { readPackageJson, readPomXml } from "./parse-manifests.js";
 
 const execFileAsync = promisify(execFile);
 
-interface ManifestInfo {
+export interface ManifestInfo {
   name: string;
   path: string;
   version: string;
 }
 
-interface TagEntry {
+export interface TagEntry {
   path: null | string;
   tag: string;
+  version: string;
 }
 
-async function run(): Promise<void> {
-  const newTags = (process.env.NEW_TAGS ?? "")
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
+/**
+ * Maps each Nx-generated tag to its manifest info.
+ *
+ * Matching rules (robust to any releaseTagPattern separator):
+ * 1. The tag must end exactly with the bumped version string.
+ * 2. The package name must appear in the tag followed by a non-word character
+ *    (the separator), preventing partial matches like "foo" matching "foobar".
+ */
+export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
+  const manifestInfos = await getModifiedManifestInfos();
 
-  if (newTags.length === 0) {
-    console.log("[]");
-    return;
-  }
-
-  // Use files modified in the working tree by `nx release --skip-publish`.
-  // These are guaranteed to be only the bumped manifests, making matching reliable
-  // and independent of the tag format configured in nx.json.
-  const { stdout } = await execFileAsync("git", [
-    "diff",
-    "--name-only",
-    "--",
-    "**/package.json",
-    "**/pom.xml",
-  ]);
-  const modifiedManifests = stdout
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean);
-
-  const manifestInfos: ManifestInfo[] = [];
-  for (const f of modifiedManifests) {
-    const result = f.endsWith("package.json")
-      ? await readPackageJson(f)
-      : await readPomXml(f);
-    if (result?.name && result?.version) {
-      manifestInfos.push({
-        name: result.name,
-        path: f,
-        version: result.version,
-      });
-    }
-  }
-
-  const entries: TagEntry[] = [];
-  for (const tag of newTags) {
-    // Match by checking that:
-    // 1. The tag ends exactly with the bumped version (prevents partial version matches).
-    // 2. The package name appears in the tag followed immediately by a non-word
-    //    character (the separator), so that "foo" doesn't accidentally match "foobar".
-    // Both rules together are robust to any releaseTagPattern and to multiple packages
-    // being bumped to the same version in the same PR.
+  return newTags.map((tag) => {
     const match = manifestInfos.find(({ name, version }) => {
       if (!tag.endsWith(version)) return false;
       const nameIdx = tag.indexOf(name);
@@ -84,15 +46,51 @@ async function run(): Promise<void> {
       const charAfterName = tag[nameIdx + name.length];
       return charAfterName !== undefined && !/\w/.test(charAfterName);
     });
-    entries.push({ path: match?.path ?? null, tag });
-  }
+    // Fall back to @-based extraction when manifest was not found (rare edge case).
+    const version = match?.version ?? tag.slice(tag.lastIndexOf("@") + 1);
+    return { path: match?.path ?? null, tag, version };
+  });
+}
 
-  console.log(JSON.stringify(entries));
+/** Returns manifest metadata for all files modified by nx release in the working tree. */
+export async function getModifiedManifestInfos(): Promise<ManifestInfo[]> {
+  const { stdout } = await execFileAsync("git", [
+    "diff",
+    "--name-only",
+    "--",
+    "**/package.json",
+    "**/pom.xml",
+  ]);
+
+  const infos: ManifestInfo[] = [];
+  for (const f of stdout
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)) {
+    const result = f.endsWith("package.json")
+      ? await readPackageJson(f)
+      : await readPomXml(f);
+    if (result?.name && result?.version) {
+      infos.push({ name: result.name, path: f, version: result.version });
+    }
+  }
+  return infos;
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run().catch((err: unknown) => {
-    console.error("Unexpected error in extract-tags:", err);
-    process.exit(1);
-  });
+  const newTags = (process.env.NEW_TAGS ?? "")
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (newTags.length === 0) {
+    console.log("[]");
+  } else {
+    buildTagEntries(newTags)
+      .then((entries) => console.log(JSON.stringify(entries)))
+      .catch((err: unknown) => {
+        console.error("Unexpected error in extract-tags:", err);
+        process.exit(1);
+      });
+  }
 }

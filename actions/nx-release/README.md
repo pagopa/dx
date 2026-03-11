@@ -23,20 +23,27 @@ This action automates the Nx release flow in two phases:
    - Generate or update version bumps in `package.json`/`pom.xml`
    - Generate or update `CHANGELOG.md` files
    - Remove `.nx/version-plans/**` files
-4. Commits all changes
-5. Creates or updates PR with title `Version Packages`
-6. PR body includes extracted release notes from changelogs
+   - Create git tags **locally** (not pushed yet)
+4. Captures the exact tags Nx created (via snapshot diff before/after) and embeds them
+   as a hidden `<!-- nx-release-tags: [...] -->` comment in the PR body
+5. Commits all changes
+6. Creates or updates PR with title `Version Packages`
+7. PR body includes extracted release notes from changelogs
 
-### Phase 2: Publish Release
+### Phase 2: Publish and Sync
 
-**Trigger**: When version plan files are deleted and version bumps are detected on main (PR merge).
+**Trigger**: When the `Version Packages` PR is merged (or manually via `workflow_dispatch`).
 
 **Actions**:
 
-1. Runs `npx nx release publish` to:
-   - Create git tags and github release for each package
-   - Build and publish packages to npm
-   - Ensure npm provenance is enabled
+1. Runs `npx nx release publish` to build and publish packages to npm with provenance
+2. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
+3. Creates any missing annotated git tags and pushes them
+4. Creates any missing GitHub Releases with extracted changelog notes
+
+> [!TIP]
+> `workflow_dispatch` can be used to recover from failed runs: the sync step scans all
+> past merged PRs and creates only the tags and releases that are still missing.
 
 ## Inputs
 
@@ -78,6 +85,8 @@ on:
       - closed
     branches:
       - main
+  # Can be triggered manually to recover any git tags/GitHub Releases missed by a failed publish
+  workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
@@ -119,27 +128,30 @@ branch. The action:
 1. Checks out a `nx-release/main` branch
 2. Runs `npx nx release --skip-publish` to consume version plans and update
    `package.json`/`pom.xml` and `CHANGELOG.md` files
-3. Commits all changes and force-pushes the branch
-4. Creates or updates a pull request titled `Version Packages`
-5. Outputs `pull-request-number` and `pull-request-url`
+3. Captures the git tags created locally by Nx (snapshot diff before/after)
+4. Commits all changes and force-pushes the branch
+5. Creates or updates a pull request titled `Version Packages` with a
+   hidden `<!-- nx-release-tags: [...] -->` metadata comment in the body
+6. Outputs `pull-request-number` and `pull-request-url`
 
 ### Mode: `Publish`
 
-Version plan files were **deleted** and version bumps were detected (i.e. the
-`Version Packages` PR was merged). The action:
+The `Version Packages` PR was **merged** (or `workflow_dispatch` was triggered). The action:
 
 1. Builds all public npm packages (`tag:npm:public`)
 2. Runs `npx nx release publish` with npm provenance enabled
-3. Creates annotated git tags for each newly published version
-4. Pushes all tags to origin
-5. Creates a GitHub release per tag with extracted changelog notes
-6. Outputs the list of created tags via `tags`
+3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
+   creates any missing annotated git tags, and pushes them
+4. Creates a GitHub Release per new tag with extracted changelog notes;
+   pre-release builds (versions containing `-`) are marked as pre-releases
 
 ## Compatibility
 
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
 - ✅ npm provenance enabled by default
+- ✅ Compatible with custom `releaseTagPattern` in `nx.json` (tag matching does not
+  assume a specific separator between package name and version)
 
 ## Troubleshooting
 
@@ -155,10 +167,12 @@ Version plan files were **deleted** and version bumps were detected (i.e. the
 - Check that packages are public on npm registry
 - Ensure `NPM_CONFIG_PROVENANCE=true` is set in workflow
 
-### Duplicate PRs or releases
+### Git tags or GitHub Releases missing after publish
 
-- Re-run workflow on the same commit should detect and skip
-- If issues persist, manually review branch `nx-release/main` and tags
+- Trigger `workflow_dispatch` on the release workflow; the Sync step will scan all
+  past merged `Version Packages` PRs and create any tags and releases still missing.
+- If a PR body lacks the `<!-- nx-release-tags -->` comment, re-run the Create PR
+  step on the `nx-release/main` branch to regenerate it.
 
 ---
 

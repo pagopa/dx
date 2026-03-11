@@ -1,13 +1,25 @@
 import { execFile, spawn } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import { join, dirname } from 'path';
 import { promisify } from 'util';
+import { z } from 'zod';
 
 // scripts/sync-tags-releases.ts
 var execFileAsync = promisify(execFile);
-function extractChangelogSection(clPath, version) {
+var TagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  // version was added later; default to "" for PR bodies written before this field.
+  version: z.string().default("")
+});
+var PrDataSchema = z.object({
+  body: z.string(),
+  number: z.number()
+});
+var PrListSchema = z.array(PrDataSchema);
+async function extractChangelogSection(clPath, version) {
   try {
-    const lines = readFileSync(clPath, "utf8").split("\n");
+    const lines = (await readFile(clPath, "utf8")).split("\n");
     const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const pat = new RegExp(`^##\\s+.*${escapedVersion}`);
     const s = lines.findIndex((l) => pat.test(l));
@@ -26,8 +38,7 @@ async function releaseExists(tag) {
     return false;
   }
 }
-async function run() {
-  const base = process.env.BASE_BRANCH ?? "main";
+async function run(base) {
   const { stdout } = await execFileAsync("gh", [
     "pr",
     "list",
@@ -42,17 +53,20 @@ async function run() {
     "--json",
     "number,body"
   ]);
-  const prs = JSON.parse(stdout);
+  const parseResult = PrListSchema.safeParse(JSON.parse(stdout));
+  if (!parseResult.success) {
+    throw new Error(
+      `Unexpected gh pr list response: ${parseResult.error.message}`
+    );
+  }
   const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of prs) {
+  for (const pr of parseResult.data) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
-    try {
-      for (const e of JSON.parse(m[1])) {
-        allEntries.set(e.tag, e);
-      }
-    } catch {
+    const entriesResult = z.array(TagEntrySchema).safeParse(JSON.parse(m[1]));
+    if (entriesResult.success) {
+      for (const e of entriesResult.data) allEntries.set(e.tag, e);
     }
   }
   if (allEntries.size === 0) {
@@ -82,15 +96,12 @@ async function run() {
     return;
   }
   await spawnInherit("git", ["push", "origin", "--tags"]);
-  for (const { path, tag } of newTags) {
-    const version = tag.slice(tag.lastIndexOf("@") + 1);
+  for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
     if (path) {
       const clPath = join(dirname(path), "CHANGELOG.md");
-      if (existsSync(clPath)) {
-        const section = extractChangelogSection(clPath, version);
-        if (section) notes = section;
-      }
+      const section = await extractChangelogSection(clPath, version);
+      if (section) notes = section;
     }
     if (await releaseExists(tag)) {
       console.log(`::notice::GitHub release ${tag} already exists, skipping`);
@@ -124,8 +135,10 @@ async function tagExistsOnRemote(tag) {
   return stdout.trim().length > 0;
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run().catch((err) => {
+  run(process.env.BASE_BRANCH ?? "main").catch((err) => {
     console.error("Unexpected error in sync-tags-releases:", err);
     process.exit(1);
   });
 }
+
+export { extractChangelogSection, releaseExists, run, spawnInherit, tagExistsOnRemote };
