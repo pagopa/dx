@@ -1,6 +1,5 @@
 /**
- * Shared manifest parsing helpers used by build-pr-body and
- * create-tags-releases to avoid code duplication.
+ * Shared manifest parsing helpers used by build-pr-body.
  */
 import { readFile } from "node:fs/promises";
 

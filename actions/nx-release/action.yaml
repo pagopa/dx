@@ -10,7 +10,6 @@ inputs:
     description: "Base branch where release flow runs"
     required: false
     default: "main"
-
 outputs:
   pull-request-number:
     description: "PR number created/updated for Version Packages"
@@ -35,7 +34,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        RELEASE_BRANCH: ${{ inputs.release-branch }}
+        RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
         GH_TOKEN: ${{ inputs.github-token }}
@@ -46,8 +45,16 @@ runs:
         git fetch origin "$BASE_BRANCH" "$RELEASE_BRANCH" 2>/dev/null || true
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
 
+        echo "::notice::Recording existing tags before version bump"
+        git tag -l | sort > /tmp/nx-tags-before.txt
+
         echo "::notice::Executing version command"
         npx nx release --preid rc --skip-publish
+
+        # Capture the exact tags Nx just created locally (not pushed yet).
+        # comm -13 outputs lines in the second file only = new tags.
+        NEW_TAGS=$(comm -13 /tmp/nx-tags-before.txt <(git tag -l | sort) | grep -v '^$' || true)
+        rm -f /tmp/nx-tags-before.txt
 
         echo "::notice::Refreshing lockfile"
         pnpm install --lockfile-only
@@ -61,6 +68,12 @@ runs:
         fi
 
         PR_BODY=$(node "$ACTION_PATH/scripts/dist/build-pr-body.js")
+
+        # For each tag Nx created, find the corresponding manifest path (used later for
+        # CHANGELOG extraction). Manifests are already updated (unstaged) at this point.
+        RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
+        PR_BODY="${PR_BODY}
+        <!-- nx-release-tags: ${RELEASE_TAGS} -->"
 
         # Commit and push the version changes (bump + changelog)
         git add -A
@@ -84,7 +97,7 @@ runs:
         echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
 
     - name: Publish with Nx release
-      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/')
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/') || github.event_name == 'workflow_dispatch'
       id: publish
       shell: bash
       env:
@@ -103,10 +116,11 @@ runs:
     - name: Sync Git Tags and GitHub Releases
       if: steps.publish.outputs.published == 'true'
       id: tags
+      shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
+        BASE_BRANCH: ${{ inputs.base-branch }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
-      shell: bash
       run: |
         set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/create-tags-releases.js"
+        node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

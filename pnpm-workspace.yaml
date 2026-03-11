@@ -25,6 +25,10 @@ catalog:
   vitest-mock-extended: ^3.1.0
   zod: ^4.2.1
 
+cleanupUnusedCatalogs: true
+
+linkWorkspacePackages: true
+
 onlyBuiltDependencies:
   - '@swc/core'
   - core-js
@@ -33,6 +37,4 @@ onlyBuiltDependencies:
   - nx
   - protobufjs
 
-linkWorkspacePackages: true
-packageImportMethod: "clone-or-copy"
-cleanupUnusedCatalogs: true
+packageImportMethod: clone-or-copy
