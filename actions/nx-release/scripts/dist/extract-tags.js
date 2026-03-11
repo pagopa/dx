@@ -41,34 +41,30 @@ async function run() {
     return;
   }
   const { stdout } = await execFileAsync("git", [
-    "ls-files",
+    "diff",
+    "--name-only",
     "--",
     "**/package.json",
     "**/pom.xml"
   ]);
-  const manifests = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const modifiedManifests = stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  const manifestInfos = [];
+  for (const f of modifiedManifests) {
+    const result = f.endsWith("package.json") ? await readPackageJson(f) : await readPomXml(f);
+    if (result?.name && result?.version) {
+      manifestInfos.push({
+        name: result.name,
+        path: f,
+        version: result.version
+      });
+    }
+  }
   const entries = [];
   for (const tag of newTags) {
-    const atIdx = tag.lastIndexOf("@");
-    const name = tag.slice(0, atIdx);
-    const version = tag.slice(atIdx + 1);
-    let found = null;
-    for (const f of manifests) {
-      if (f.endsWith("package.json")) {
-        const result = await readPackageJson(f);
-        if (result?.name === name && result?.version === version) {
-          found = f;
-          break;
-        }
-      } else if (f.endsWith("pom.xml")) {
-        const result = await readPomXml(f);
-        if (result?.name === name && result?.version === version) {
-          found = f;
-          break;
-        }
-      }
-    }
-    entries.push({ path: found, tag });
+    const match = manifestInfos.find(
+      ({ name, version }) => tag.includes(name) && tag.includes(version)
+    );
+    entries.push({ path: match?.path ?? null, tag });
   }
   console.log(JSON.stringify(entries));
 }
