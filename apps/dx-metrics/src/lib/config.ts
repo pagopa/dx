@@ -17,6 +17,4 @@ export const TIME_INTERVALS = [
   { label: "300 days", value: 300 },
   { label: "360 days", value: 360 },
   { label: "720 days", value: 720 },
-  { label: "1080 days", value: 1080 },
-  { label: "1440 days", value: 1440 },
 ];
