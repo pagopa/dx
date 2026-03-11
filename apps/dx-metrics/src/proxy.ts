@@ -3,7 +3,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 /** Protects app routes with Better Auth before route handling. */
 export function proxy(req: NextRequest) {
-  if (process.env.SKIP_AUTH === "true") {
+  if (process.env.NODE_ENV === "development") {
     return NextResponse.next();
   }
   const sessionCookie = getSessionCookie(req);

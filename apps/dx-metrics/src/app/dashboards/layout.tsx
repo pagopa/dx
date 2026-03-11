@@ -12,7 +12,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const skipAuth = process.env.SKIP_AUTH === "true";
+  const skipAuth = process.env.NODE_ENV === "development";
   const session = skipAuth
     ? null
     : await auth.api.getSession({ headers: await headers() });
