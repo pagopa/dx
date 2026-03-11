@@ -71,38 +71,7 @@ runs:
 
         # For each tag Nx created, find the corresponding manifest path (used later for
         # CHANGELOG extraction). Manifests are already updated (unstaged) at this point.
-        RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node - << 'JSEOF'
-        'use strict';
-        const { execFileSync } = require('child_process');
-        const { readFileSync } = require('fs');
-        const newTags = (process.env.NEW_TAGS || '').split('\n').filter(Boolean);
-        if (newTags.length === 0) { console.log('[]'); process.exit(0); }
-        const manifests = execFileSync('git', ['ls-files', '--', '**/package.json', '**/pom.xml'], { encoding: 'utf8' })
-          .split('\n').map(function(l) { return l.trim(); }).filter(Boolean);
-        const entries = [];
-        for (const tag of newTags) {
-          const atIdx = tag.lastIndexOf('@');
-          const name = tag.slice(0, atIdx);
-          const version = tag.slice(atIdx + 1);
-          let found = null;
-          for (const f of manifests) {
-            try {
-              if (f.endsWith('package.json')) {
-                const p = JSON.parse(readFileSync(f, 'utf8'));
-                if (p.name === name && p.version === version) { found = f; break; }
-              } else {
-                const c = readFileSync(f, 'utf8');
-                const id = (c.match(/<artifactId>([^<]+)<\/artifactId>/) || [])[1];
-                const v  = (c.match(/<version>([^<]+)<\/version>/) || [])[1];
-                if (id === name && v === version) { found = f; break; }
-              }
-            } catch {}
-          }
-          entries.push({ tag: tag, path: found });
-        }
-        console.log(JSON.stringify(entries));
-        JSEOF
-        )
+        RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
         PR_BODY="${PR_BODY}
         <!-- nx-release-tags: ${RELEASE_TAGS} -->"
 
@@ -153,81 +122,4 @@ runs:
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-        # Reads the nx-release-tags metadata saved in the body of every merged
-        # "Version Packages" PR. Idempotent: skips tags/releases that already exist.
-        # Recovery-capable: scans ALL past merged PRs, so a single workflow_dispatch
-        # catches up on every tag missed across multiple failed publish runs.
-        node - << 'JSEOF'
-        'use strict';
-        const { execFileSync, spawnSync } = require('child_process');
-        const { readFileSync, existsSync } = require('fs');
-        const { dirname, join } = require('path');
-
-        function exec(cmd, args) {
-          return execFileSync(cmd, args, { encoding: 'utf8' });
-        }
-        function run(cmd, args) {
-          const r = spawnSync(cmd, args, { stdio: 'inherit' });
-          if (r.status !== 0) throw new Error(cmd + ' ' + args.join(' ') + ' exited with code ' + r.status);
-        }
-
-        const base = process.env.BASE_BRANCH || 'main';
-
-        // Query all merged Version Packages PRs and collect their tag metadata.
-        // Use a Map keyed by tag to deduplicate across PRs (handles multiple bumps of same package).
-        const prs = JSON.parse(exec('gh', [
-          'pr', 'list', '--state', 'merged', '--head', 'nx-release/main', '--base', base,
-          '--limit', '100', '--json', 'number,body',
-        ]));
-        const allEntries = new Map();
-        for (const pr of prs) {
-          if (!pr.body) continue;
-          const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
-          if (!m) continue;
-          try {
-            for (const e of JSON.parse(m[1])) allEntries.set(e.tag, e);
-          } catch {}
-        }
-
-        if (allEntries.size === 0) {
-          console.log('::notice::No release tags found in merged Version Packages PRs');
-          process.exit(0);
-        }
-
-        const newTags = [];
-        for (const entry of allEntries.values()) {
-          const { tag, path } = entry;
-          const remote = exec('git', ['ls-remote', '--tags', 'origin', 'refs/tags/' + tag]);
-          if (remote.trim()) { console.log('::notice::Tag ' + tag + ' already exists, skipping'); continue; }
-          run('git', ['tag', '-a', tag, '-m', 'Release ' + tag]);
-          newTags.push(entry);
-          console.log('::notice::Created tag: ' + tag);
-        }
-
-        if (newTags.length === 0) { console.log('::notice::No new tags to push'); process.exit(0); }
-
-        run('git', ['push', 'origin', '--tags']);
-
-        for (const { tag, path } of newTags) {
-          let notes = 'Release ' + tag;
-          const clPath = join(dirname(path), 'CHANGELOG.md');
-          if (existsSync(clPath)) {
-            try {
-              const version = tag.slice(tag.lastIndexOf('@') + 1);
-              const lines = readFileSync(clPath, 'utf8').split('\n');
-              const pat = new RegExp('^##\\s+.*' + version.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-              const s = lines.findIndex(function(l) { return pat.test(l); });
-              if (s >= 0) {
-                const e = lines.findIndex(function(l, i) { return i > s && /^##\s/.test(l); });
-                const sec = lines.slice(s, e < 0 ? undefined : e).join('\n').trim();
-                if (sec) notes = sec;
-              }
-            } catch {}
-          }
-          try { exec('gh', ['release', 'view', tag]); console.log('::notice::GitHub release ' + tag + ' already exists, skipping'); continue; } catch {}
-          const args = ['release', 'create', tag, '--title', tag, '--notes', notes];
-          if (tag.includes('-')) args.push('--prerelease');
-          run('gh', args);
-          console.log('::notice::Created GitHub release: ' + tag);
-        }
-        JSEOF
+        node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

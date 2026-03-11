@@ -6,6 +6,8 @@ export default defineConfig({
   dts: false,
   entry: [
     "scripts/build-pr-body.ts",
+    "scripts/extract-tags.ts",
+    "scripts/sync-tags-releases.ts",
   ],
   format: ["esm"],
   minify: false,
