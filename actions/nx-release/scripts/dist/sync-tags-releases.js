@@ -37,7 +37,9 @@ async function run(base) {
     "--base",
     base,
     "--limit",
-    "100",
+    // Scanning the last 20 merged PRs is enough to recover from any realistic
+    // sequence of failed publish runs without making the step noticeably slow.
+    "20",
     "--json",
     "number,body"
   ]);
