@@ -13,13 +13,16 @@
  * This tool does NOT modify, tag, or delete any resources.
  */
 
+// Re-export config helpers for consumers (e.g. CLI)
+export { loadThresholds } from "./azure/config.js";
 // Export common types
 export type { AzureConfig } from "./azure/types.js";
-export * from "./types.js";
 
 // Export Azure module
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
+
+export * from "./types.js";
 
 import { getLogger } from "@logtape/logtape";
 // Utility imports for loadConfig and prompt functions

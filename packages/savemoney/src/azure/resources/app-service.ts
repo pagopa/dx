@@ -8,8 +8,9 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -31,6 +32,7 @@ export async function analyzeAppServicePlan(
   webSiteClient: WebSiteManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -87,11 +89,17 @@ export async function analyzeAppServicePlan(
       timespanDays,
     );
 
-    if (cpuPercentage !== null && cpuPercentage < 5) {
+    if (
+      cpuPercentage !== null &&
+      cpuPercentage < thresholds.appService.cpuPercent
+    ) {
       reason += `Very low CPU usage (${cpuPercentage.toFixed(2)}%). `;
     }
 
-    if (memoryPercentage !== null && memoryPercentage < 10) {
+    if (
+      memoryPercentage !== null &&
+      memoryPercentage < thresholds.appService.memoryPercent
+    ) {
       reason += `Very low memory usage (${memoryPercentage.toFixed(2)}%). `;
     }
 
@@ -99,7 +107,7 @@ export async function analyzeAppServicePlan(
     if (
       planDetails.sku?.tier?.includes("Premium") &&
       cpuPercentage &&
-      cpuPercentage < 10
+      cpuPercentage < thresholds.appService.premiumCpuPercent
     ) {
       reason += "Premium tier with low resource utilization. ";
     }

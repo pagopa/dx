@@ -41,7 +41,8 @@
     "@azure/arm-network": "^34.1.0",
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "^4.13.0",
-    "@logtape/logtape": "catalog:"
+    "@logtape/logtape": "catalog:",
+    "cosmiconfig": "^9.0.0"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

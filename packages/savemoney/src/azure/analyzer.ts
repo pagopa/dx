@@ -13,7 +13,12 @@ import { getLogger } from "@logtape/logtape";
 
 import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 
-import { type AnalysisResult, mergeResults } from "../types.js";
+import {
+  type AnalysisResult,
+  DEFAULT_THRESHOLDS,
+  mergeResults,
+  type Thresholds,
+} from "../types.js";
 import { generateReport } from "./report.js";
 import {
   analyzeAppServicePlan,
@@ -26,6 +31,7 @@ import {
   analyzeStorageAccount,
   analyzeVM,
 } from "./resources/index.js";
+import { matchesTags } from "./utils.js";
 
 /**
  * Analyzes resources in multiple Azure subscriptions and generates a report.
@@ -35,7 +41,7 @@ import {
  */
 export async function analyzeAzureResources(
   config: AzureConfig,
-  format: "detailed-json" | "json" | "table",
+  format: "detailed-json" | "json" | "lint" | "table",
 ) {
   const logger = getLogger(["savemoney", "azure"]);
   const credential = new DefaultAzureCredential();
@@ -66,8 +72,15 @@ export async function analyzeAzureResources(
       subscriptionId.trim(),
     );
 
+    const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
+
     // Use the async iterator to avoid memory explosion for large environments
     for await (const resource of resourceClient.resources.list()) {
+      // Skip resources that don't match the requested tag filter
+      if (!matchesTags(resource, config.filterTags)) {
+        continue;
+      }
+
       const { costRisk, reason, suspectedUnused } = await analyzeResource(
         resource,
         monitorClient,
@@ -77,6 +90,7 @@ export async function analyzeAzureResources(
         containerAppsClient,
         config.preferredLocation,
         config.timespanDays,
+        thresholds,
         config.verbose || false,
       );
 
@@ -127,6 +141,7 @@ export async function analyzeResource(
   containerAppsClient: ContainerAppsAPIClient,
   preferredLocation: string,
   timespanDays: number,
+  thresholds: Thresholds,
   verbose = false,
 ): Promise<AnalysisResult> {
   const type = resource.type?.toLowerCase() || "";
@@ -150,6 +165,7 @@ export async function analyzeResource(
         containerAppsClient,
         monitorClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, containerAppResult);
@@ -166,6 +182,7 @@ export async function analyzeResource(
         monitorClient,
         computeClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, vmResult);
@@ -191,6 +208,7 @@ export async function analyzeResource(
         networkClient,
         monitorClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, pipResult);
@@ -201,6 +219,7 @@ export async function analyzeResource(
         resource,
         monitorClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, storageResult);
@@ -212,6 +231,7 @@ export async function analyzeResource(
         webSiteClient,
         monitorClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, aspResult);
@@ -222,6 +242,7 @@ export async function analyzeResource(
         resource,
         monitorClient,
         timespanDays,
+        thresholds,
         verbose,
       );
       result = mergeResults(result, staticSiteResult);

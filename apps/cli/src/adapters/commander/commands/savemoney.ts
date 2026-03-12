@@ -1,6 +1,6 @@
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-import { azure, loadConfig } from "@pagopa/dx-savemoney";
+import { azure, loadConfig, loadThresholds } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
 export const makeSavemoneyCommand = () =>
@@ -11,7 +11,7 @@ export const makeSavemoneyCommand = () =>
     .option("-c, --config <path>", "Path to configuration file (JSON)")
     .option(
       "-f, --format <format>",
-      "Report format: json, table, or detailed-json (default: table)",
+      "Report format: json, table, detailed-json, or lint (default: table)",
       "table",
     )
     .option(
@@ -21,13 +21,30 @@ export const makeSavemoneyCommand = () =>
     )
     .option("-d, --days <number>", "Number of days for metrics analysis", "30")
     .option("-v, --verbose", "Enable verbose logging")
+    .option(
+      "-t, --tags <tags>",
+      "Filter resources by tags (key=value,key2=value2). Only resources matching ALL specified tags are analyzed.",
+    )
+    .option(
+      "--thresholds <path>",
+      'Explicit path to a thresholds config file. When omitted, cosmiconfig searches the current directory upward for: .savemoneyrc, .savemoneyrc.json, .savemoneyrc.yaml, savemoney.config.js, or the "savemoney" key in package.json',
+    )
     .action(async function (options) {
       try {
         // Load configuration
         const config: AzureConfig = await loadConfig(options.config);
+
+        // Parse tag filter
+        const filterTags = parseTagsOption(options.tags);
+
+        // Load analysis thresholds (via cosmiconfig or explicit path)
+        const thresholds = await loadThresholds(options.thresholds);
+
         const finalConfig: AzureConfig = {
           ...config,
+          filterTags,
           preferredLocation: options.location || config.preferredLocation,
+          thresholds,
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
           verbose: options.verbose || false,
@@ -40,3 +57,24 @@ export const makeSavemoneyCommand = () =>
         );
       }
     });
+
+/**
+ * Parses a "key=value,key2=value2" string into a Record<string, string>.
+ * Returns undefined when the option is not provided or empty.
+ */
+function parseTagsOption(
+  tagsOption: string | undefined,
+): Record<string, string> | undefined {
+  if (!tagsOption || tagsOption.trim().length === 0) {
+    return undefined;
+  }
+  const result: Record<string, string> = {};
+  for (const pair of tagsOption.split(",")) {
+    const eqIndex = pair.indexOf("=");
+    if (eqIndex === -1) continue; // skip malformed pairs silently
+    const key = pair.slice(0, eqIndex).trim();
+    const value = pair.slice(eqIndex + 1).trim();
+    if (key) result[key] = value;
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}

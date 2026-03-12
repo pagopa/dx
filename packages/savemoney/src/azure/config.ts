@@ -3,10 +3,14 @@
  */
 
 import { getLogger } from "@logtape/logtape";
+import { cosmiconfig } from "cosmiconfig";
 import * as fs from "fs";
 import * as readline from "readline";
 
+import type { Thresholds } from "../types.js";
 import type { AzureConfig } from "./types.js";
+
+import { DEFAULT_THRESHOLDS } from "../types.js";
 
 /**
  * Loads Azure configuration from file, environment variables, or interactive prompts.
@@ -59,6 +63,59 @@ export async function loadAzureConfig(
     tenantId,
     timespanDays: 30,
   };
+}
+
+/**
+ * Loads analysis thresholds by merging any user-defined overrides (discovered via cosmiconfig
+ * under the module name "savemoney") on top of DEFAULT_THRESHOLDS.
+ *
+ * Supported config files (searched from CWD upward):
+ *   .savemoneyrc, .savemoneyrc.json, .savemoneyrc.yaml,
+ *   savemoney.config.js, savemoney.config.cjs, or "savemoney" key in package.json
+ *
+ * @param explicitPath - Optional explicit path to a thresholds config file
+ * @returns Merged thresholds
+ */
+export async function loadThresholds(
+  explicitPath?: string,
+): Promise<Thresholds> {
+  const explorer = cosmiconfig("savemoney");
+
+  try {
+    const result = explicitPath
+      ? await explorer.load(explicitPath)
+      : await explorer.search();
+
+    if (!result || result.isEmpty) {
+      return DEFAULT_THRESHOLDS;
+    }
+
+    const userConfig = result.config as Partial<Thresholds>;
+
+    // Deep-merge user overrides onto defaults
+    return {
+      appService: {
+        ...DEFAULT_THRESHOLDS.appService,
+        ...userConfig.appService,
+      },
+      containerApp: {
+        ...DEFAULT_THRESHOLDS.containerApp,
+        ...userConfig.containerApp,
+      },
+      publicIp: { ...DEFAULT_THRESHOLDS.publicIp, ...userConfig.publicIp },
+      staticSite: {
+        ...DEFAULT_THRESHOLDS.staticSite,
+        ...userConfig.staticSite,
+      },
+      storage: { ...DEFAULT_THRESHOLDS.storage, ...userConfig.storage },
+      vm: { ...DEFAULT_THRESHOLDS.vm, ...userConfig.vm },
+    };
+  } catch {
+    // If config loading fails, fall back to defaults
+    const logger = getLogger(["savemoney", "config"]);
+    logger.warn("Failed to load threshold config, using defaults.");
+    return DEFAULT_THRESHOLDS;
+  }
 }
 
 /**

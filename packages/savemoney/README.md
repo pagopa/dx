@@ -80,7 +80,10 @@ yarn add @pagopa/dx-savemoney
   - `table`: A human-readable summary for the terminal.
   - `json`: Standard format for integration with other tools.
   - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
+  - `lint`: A linter-style output grouped by resource, with risk icons and a summary — ideal for CI pipelines and quick triage.
 - **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
+- **Configurable Thresholds**: All analysis thresholds (CPU%, memory, transaction counts, etc.) can be overridden via a configuration file discovered automatically by [cosmiconfig](https://www.npmjs.com/package/cosmiconfig).
+- **Tag Filtering**: Restrict the analysis to resources that match specific tag key-value pairs.
 
 ### Analyzed Resources
 
@@ -133,23 +136,26 @@ await azure.analyzeAzureResources(config, "table");
 
 The tool requires the following configuration:
 
-| Input               | Type       | Required | Default      | Description                                                  |
-| :------------------ | :--------- | :------: | :----------- | :----------------------------------------------------------- |
-| `tenantId`          | `string`   |    ✅    | -            | Azure Active Directory Tenant ID                             |
-| `subscriptionIds`   | `string[]` |    ✅    | -            | Array of Azure subscription IDs to analyze                   |
-| `preferredLocation` | `string`   |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged) |
-| `timespanDays`      | `number`   |    ❌    | `30`         | Number of days to look back for metrics analysis             |
-| `verbose`           | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
+| Input               | Type                     | Required | Default      | Description                                                               |
+| :------------------ | :----------------------- | :------: | :----------- | :------------------------------------------------------------------------ |
+| `tenantId`          | `string`                 |    ✅    | -            | Azure Active Directory Tenant ID                                          |
+| `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
+| `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
+| `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
+| `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
+| `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
+| `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
 
 #### Output Formats
 
 The tool supports multiple output formats for different use cases:
 
-| Format          | Description                                     | Use Case                       |
-| :-------------- | :---------------------------------------------- | :----------------------------- |
-| `table`         | Human-readable table in terminal                | Quick visual inspection        |
-| `json`          | Structured JSON with resource summaries         | Integration with other tools   |
-| `detailed-json` | Complete JSON with full Azure resource metadata | AI analysis or deep inspection |
+| Format          | Description                                         | Use Case                       |
+| :-------------- | :-------------------------------------------------- | :----------------------------- |
+| `table`         | Human-readable table in terminal                    | Quick visual inspection        |
+| `json`          | Structured JSON with resource summaries             | Integration with other tools   |
+| `detailed-json` | Complete JSON with full Azure resource metadata     | AI analysis or deep inspection |
+| `lint`          | Linter-style output grouped by resource, with icons | CI pipelines and quick triage  |
 
 #### How to Load Configuration
 
@@ -181,7 +187,92 @@ const config2 = await loadConfig();
 }
 ```
 
+#### Thresholds Configuration
+
+All numeric thresholds used during analysis can be overridden to match your environment. The tool uses [cosmiconfig](https://www.npmjs.com/package/cosmiconfig) to auto-discover the configuration from the current directory upward. Supported file names:
+
+- `.savemoneyrc`
+- `.savemoneyrc.json`
+- `.savemoneyrc.yaml`
+- `savemoney.config.js`
+- `savemoney.config.cjs`
+- `"savemoney"` key in `package.json`
+
+You can also load a thresholds file explicitly via `loadThresholds(path)`.
+
+**Example `.savemoneyrc.json`** (only override what you need — all other values keep their defaults):
+
+```json
+{
+  "vm": {
+    "cpuPercent": 5,
+    "networkInBytesPerDay": 10485760
+  },
+  "appService": {
+    "cpuPercent": 10,
+    "memoryPercent": 20,
+    "premiumCpuPercent": 15
+  },
+  "containerApp": {
+    "cpuNanoCores": 5000000,
+    "memoryBytes": 52428800,
+    "networkBytes": 100000
+  },
+  "storage": {
+    "transactionsPerDay": 50
+  },
+  "publicIp": {
+    "bytesInDDoS": 1048576
+  },
+  "staticSite": {
+    "siteHits": 500,
+    "bytesSent": 5242880
+  }
+}
+```
+
+**Default threshold values:**
+
+| Resource       | Field                  | Default Value           | Description                                   |
+| :------------- | :--------------------- | :---------------------- | :-------------------------------------------- |
+| `vm`           | `cpuPercent`           | `1` (%)                 | Average CPU below which VM is flagged         |
+| `vm`           | `networkInBytesPerDay` | `3145728` (3 MB)        | Average inbound traffic below which flagged   |
+| `appService`   | `cpuPercent`           | `5` (%)                 | Average CPU below which plan is flagged       |
+| `appService`   | `memoryPercent`        | `10` (%)                | Average memory below which plan is flagged    |
+| `appService`   | `premiumCpuPercent`    | `10` (%)                | CPU threshold for Premium-tier over-provision |
+| `containerApp` | `cpuNanoCores`         | `1000000` (0.001 cores) | Average CPU below which app is flagged        |
+| `containerApp` | `memoryBytes`          | `10485760` (10 MB)      | Average memory below which app is flagged     |
+| `containerApp` | `networkBytes`         | `34000` (~33 KB)        | Combined Rx+Tx below which app is flagged     |
+| `storage`      | `transactionsPerDay`   | `10`                    | Avg daily transactions below which flagged    |
+| `publicIp`     | `bytesInDDoS`          | `340000` (~332 KB)      | Avg inbound bytes/day below which flagged     |
+| `staticSite`   | `siteHits`             | `100`                   | Total requests below which site is flagged    |
+| `staticSite`   | `bytesSent`            | `1048576` (1 MB)        | Total bytes sent below which site is flagged  |
+
 #### Usage Examples
+
+##### Tag Filtering
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+const config = await loadConfig("./config.json");
+// Analyze only resources tagged with environment=prod AND team=platform
+await azure.analyzeAzureResources(
+  { ...config, filterTags: { environment: "prod", team: "platform" } },
+  "lint",
+);
+```
+
+##### Custom Thresholds
+
+```typescript
+import { azure, loadConfig, loadThresholds } from "@pagopa/dx-savemoney";
+
+const config = await loadConfig("./config.json");
+// loadThresholds() auto-discovers .savemoneyrc.json (or similar) in the CWD
+const thresholds = await loadThresholds();
+await azure.analyzeAzureResources({ ...config, thresholds }, "lint");
+```
 
 ##### Basic Usage
 
