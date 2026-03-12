@@ -44,9 +44,8 @@ export async function generateReport(
         "Resource Group": r.resourceGroup || "N/A",
         Risk: r.costRisk,
         Type: r.type,
-        Unused: r.suspectedUnused ? "Yes" : "No",
       })),
-      ["Name", "Type", "Resource Group", "Risk", "Unused", "Reason"],
+      ["Name", "Type", "Resource Group", "Risk", "Reason"],
     );
   }
 }
