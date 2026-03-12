@@ -1,8 +1,8 @@
 /**
- * @fileoverview Cloud Storage Download - main entry point
+ * @fileoverview Ephemeral Cloud Download - main entry point
  *
  * Downloads a file from Azure Blob Storage or Amazon S3.
- * Saves connection state for the post step so it can delete
+ * Saves connection context to GITHUB_STATE for the post step, which deletes
  * the remote object and the local file after the job completes.
  */
 
@@ -12,6 +12,27 @@ import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import fs from "node:fs/promises";
 import path from "node:path";
+
+import { type Context, ContextSchema } from "./schema.js";
+
+async function download(ctx: Context): Promise<void> {
+  switch (ctx.provider) {
+    case "aws":
+      return downloadFromS3(
+        ctx["aws-bucket"],
+        ctx["aws-region"],
+        ctx.source,
+        ctx["file-path"],
+      );
+    case "azure":
+      return downloadFromAzure(
+        ctx["azure-storage-account"],
+        ctx["azure-container"],
+        ctx.source,
+        ctx["file-path"],
+      );
+  }
+}
 
 async function downloadFromAzure(
   storageAccount: string,
@@ -27,7 +48,7 @@ async function downloadFromAzure(
 
   await fs.mkdir(path.dirname(filePath), { recursive: true });
 
-  // downloadToBuffer is simpler than streaming for the small files (Terraform plans)
+  // downloadToBuffer is simpler than streaming for small files (Terraform plans)
   const buffer = await blobClient.downloadToBuffer();
   await fs.writeFile(filePath, buffer);
 
@@ -59,42 +80,38 @@ async function downloadFromS3(
 }
 
 async function run(): Promise<void> {
-  const provider = core.getInput("provider", { required: true });
-  const source = core.getInput("source", { required: true });
-  const filePath = core.getInput("file-path", { required: true });
-  core.saveState("provider", provider);
-  core.saveState("source", source);
-  core.saveState("file-path", filePath);
-  core.saveState(
-    "azure-storage-account",
-    core.getInput("azure-storage-account"),
-  );
-  core.saveState("azure-container", core.getInput("azure-container"));
-  core.saveState("aws-bucket", core.getInput("aws-bucket"));
-  core.saveState("aws-region", core.getInput("aws-region"));
+  const result = ContextSchema.safeParse({
+    "aws-bucket": core.getInput("aws-bucket"),
+    "aws-region": core.getInput("aws-region"),
+    "azure-container": core.getInput("azure-container"),
+    "azure-storage-account": core.getInput("azure-storage-account"),
+    "file-path": core.getInput("file-path"),
+    provider: core.getInput("provider"),
+    source: core.getInput("source"),
+  });
 
-  switch (provider) {
-    case "aws": {
-      const bucket = core.getInput("aws-bucket", { required: true });
-      const region = core.getInput("aws-region", { required: true });
-      await downloadFromS3(bucket, region, source, filePath);
-      break;
-    }
-    case "azure": {
-      const storageAccount = core.getInput("azure-storage-account", {
-        required: true,
-      });
-      const container = core.getInput("azure-container", { required: true });
-      await downloadFromAzure(storageAccount, container, source, filePath);
-      break;
-    }
-    default:
-      throw new Error(
-        `Unsupported provider '${provider}'. Accepted values are 'azure' and 'aws'.`,
-      );
+  if (!result.success) {
+    throw new Error(result.error.issues.map((i) => i.message).join("; "));
   }
 
-  const resolvedPath = path.resolve(filePath);
+  const ctx = result.data;
+
+  // Persist context for the post step via GITHUB_STATE.
+  // Inputs are not available in post steps, only state is.
+  core.saveState("provider", ctx.provider);
+  core.saveState("source", ctx.source);
+  core.saveState("file-path", ctx["file-path"]);
+  if (ctx.provider === "azure") {
+    core.saveState("azure-storage-account", ctx["azure-storage-account"]);
+    core.saveState("azure-container", ctx["azure-container"]);
+  } else {
+    core.saveState("aws-bucket", ctx["aws-bucket"]);
+    core.saveState("aws-region", ctx["aws-region"]);
+  }
+
+  await download(ctx);
+
+  const resolvedPath = path.resolve(ctx["file-path"]);
   core.setOutput("file-path", resolvedPath);
   core.info(`File saved to: ${resolvedPath}`);
 }

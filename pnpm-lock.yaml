@@ -125,6 +125,9 @@ importers:
       '@azure/storage-blob':
         specifier: ^12.27.0
         version: 12.29.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.5
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^
@@ -159,6 +162,9 @@ importers:
       '@azure/storage-blob':
         specifier: ^12.27.0
         version: 12.29.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.3.5
     devDependencies:
       '@pagopa/eslint-config':
         specifier: workspace:^

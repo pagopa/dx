@@ -1,11 +1,11 @@
 /**
- * @fileoverview Cloud Storage Download - post entry point
+ * @fileoverview Ephemeral Cloud Download - post entry point
  *
  * Runs after the job completes successfully. Deletes:
  *   1. The remote object on Azure Blob Storage or S3
  *   2. The local downloaded file
  *
- * Connection details are read from GITHUB_STATE, written by the main step.
+ * Connection context is read from GITHUB_STATE, written by the main step.
  */
 
 import * as core from "@actions/core";
@@ -13,7 +13,8 @@ import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import fs from "node:fs/promises";
-import path from "node:path";
+
+import { type Context, ContextSchema } from "./schema.js";
 
 async function deleteFromAzure(
   storageAccount: string,
@@ -43,73 +44,44 @@ async function deleteFromS3(
   core.info(`Deleted remote object: s3://${bucket}/${key}`);
 }
 
-async function run(): Promise<void> {
-  // Read state written by the main step — inputs are not available in post.
-  const provider = core.getState("provider");
-  const source = core.getState("source");
-  const filePath = core.getState("file-path");
-
-  // Validate the file path to prevent path-traversal attacks.
-  validateFilePath(filePath);
-
-  // Delete remote object
-  switch (provider) {
-    case "aws": {
-      const bucket = core.getState("aws-bucket");
-      const region = core.getState("aws-region");
-      await deleteFromS3(bucket, region, source);
-      break;
-    }
-    case "azure": {
-      const storageAccount = core.getState("azure-storage-account");
-      const container = core.getState("azure-container");
-      await deleteFromAzure(storageAccount, container, source);
-      break;
-    }
-    default:
-      core.warning(
-        `Unexpected provider '${provider}'. Skipping remote deletion.`,
+async function deleteRemote(ctx: Context): Promise<void> {
+  switch (ctx.provider) {
+    case "aws":
+      return deleteFromS3(ctx["aws-bucket"], ctx["aws-region"], ctx.source);
+    case "azure":
+      return deleteFromAzure(
+        ctx["azure-storage-account"],
+        ctx["azure-container"],
+        ctx.source,
       );
-  }
-
-  // Delete local file (runner is ephemeral but clean up anyway)
-  try {
-    await fs.unlink(filePath);
-    core.info(`Deleted local file: ${filePath}`);
-  } catch {
-    core.info(`Local file already gone or never written: ${filePath}`);
   }
 }
 
-/**
- * Validates that a local file path is safe, preventing path-traversal attacks.
- * @param filePath - The file path to validate
- * @throws Error if the path is unsafe
- */
-function validateFilePath(filePath: string): void {
-  if (!filePath) {
-    throw new Error("file-path state is empty — cannot clean up.");
+async function run(): Promise<void> {
+  const result = ContextSchema.safeParse({
+    "aws-bucket": core.getState("aws-bucket"),
+    "aws-region": core.getState("aws-region"),
+    "azure-container": core.getState("azure-container"),
+    "azure-storage-account": core.getState("azure-storage-account"),
+    "file-path": core.getState("file-path"),
+    provider: core.getState("provider"),
+    source: core.getState("source"),
+  });
+
+  if (!result.success) {
+    throw new Error(result.error.issues.map((i) => i.message).join("; "));
   }
 
-  const absolutePath = path.resolve(filePath);
-  const sensitivePatterns = [
-    "/etc/",
-    "/proc/",
-    "/sys/",
-    "/.ssh/",
-    "/.env",
-    "id_rsa",
-    "id_dsa",
-    "authorized_keys",
-  ];
+  const ctx = result.data;
 
-  const normalizedPath = absolutePath.toLowerCase();
-  for (const pattern of sensitivePatterns) {
-    if (normalizedPath.includes(pattern)) {
-      throw new Error(
-        `file-path "${filePath}" contains potentially sensitive pattern "${pattern}" — aborting cleanup.`,
-      );
-    }
+  await deleteRemote(ctx);
+
+  // Delete local file (runner is ephemeral but clean up anyway)
+  try {
+    await fs.unlink(ctx["file-path"]);
+    core.info(`Deleted local file: ${ctx["file-path"]}`);
+  } catch {
+    core.info(`Local file already gone or never written: ${ctx["file-path"]}`);
   }
 }
 
