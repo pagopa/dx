@@ -2,8 +2,8 @@
  * @fileoverview Cloud Storage Upload - main entry point
  *
  * Uploads a local file to Azure Blob Storage or Amazon S3.
-// Always attaches an ephemeral tag so that storage lifecycle rules can
- * reclaim objects that were never explicitly deleted (e.g. after a failed apply).
+ * The upload destination is provided by the caller; the workflow places plans
+ * under a `plan-artifacts/` folder next to the state file.
  */
 
 import * as core from "@actions/core";
@@ -13,44 +13,46 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-// Upload action: does not rely on object tagging (some CI identities cannot set tags).
-// The upload destination is provided by the caller; the workflow places plans
-// under a `plan-artifacts/` folder next to the state file.
+import { type Inputs, InputsSchema } from "./schema.js";
 
 async function run(): Promise<void> {
-  const provider = core.getInput("provider", { required: true });
-  const filePath = path.resolve(core.getInput("file-path", { required: true }));
-  const destination = core.getInput("destination", { required: true });
+  const result = InputsSchema.safeParse({
+    "aws-bucket": core.getInput("aws-bucket"),
+    "aws-region": core.getInput("aws-region"),
+    "azure-container": core.getInput("azure-container"),
+    "azure-storage-account": core.getInput("azure-storage-account"),
+    destination: core.getInput("destination"),
+    "file-path": core.getInput("file-path"),
+    provider: core.getInput("provider"),
+  });
 
-  let remoteUrl: string;
-
-  switch (provider) {
-    case "aws": {
-      const bucket = core.getInput("aws-bucket", { required: true });
-      const region = core.getInput("aws-region", { required: true });
-      remoteUrl = await uploadToS3(bucket, region, destination, filePath);
-      break;
-    }
-    case "azure": {
-      const storageAccount = core.getInput("azure-storage-account", {
-        required: true,
-      });
-      const container = core.getInput("azure-container", { required: true });
-      remoteUrl = await uploadToAzure(
-        storageAccount,
-        container,
-        destination,
-        filePath,
-      );
-      break;
-    }
-    default:
-      throw new Error(
-        `Unsupported provider '${provider}'. Accepted values are 'azure' and 'aws'.`,
-      );
+  if (!result.success) {
+    throw new Error(result.error.issues.map((i) => i.message).join("; "));
   }
 
+  const remoteUrl = await upload(result.data);
   core.setOutput("remote-url", remoteUrl);
+}
+
+async function upload(inputs: Inputs): Promise<string> {
+  const filePath = path.resolve(inputs["file-path"]);
+
+  switch (inputs.provider) {
+    case "aws":
+      return uploadToS3(
+        inputs["aws-bucket"],
+        inputs["aws-region"],
+        inputs.destination,
+        filePath,
+      );
+    case "azure":
+      return uploadToAzure(
+        inputs["azure-storage-account"],
+        inputs["azure-container"],
+        inputs.destination,
+        filePath,
+      );
+  }
 }
 
 async function uploadToAzure(
@@ -61,11 +63,9 @@ async function uploadToAzure(
 ): Promise<string> {
   const credential = new DefaultAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
-  const containerClient = new BlobServiceClient(
-    url,
-    credential,
-  ).getContainerClient(container);
-  const blockBlobClient = containerClient.getBlockBlobClient(destination);
+  const blockBlobClient = new BlobServiceClient(url, credential)
+    .getContainerClient(container)
+    .getBlockBlobClient(destination);
 
   await blockBlobClient.uploadFile(filePath);
   core.info(
@@ -88,8 +88,6 @@ async function uploadToS3(
     new PutObjectCommand({ Body: body, Bucket: bucket, Key: destination }),
   );
   core.info(`Uploaded → s3://${bucket}/${destination}`);
-
-  // No tagging performed here. Keep upload minimal to respect least-privilege roles.
 
   return `s3://${bucket}/${destination}`;
 }
