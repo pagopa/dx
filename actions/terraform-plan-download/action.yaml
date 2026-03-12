@@ -48,7 +48,7 @@ runs:
     # State storage flow: fetch plain plan directly from remote storage (no decrypt needed).
     - name: Download Plan from State Storage
       if: ${{ inputs.backend-source != '' }}
-      uses: pagopa/dx/actions/cloud-storage-download@main
+      uses: pagopa/dx/actions/cloud-ephemeral-download@main
       with:
         provider: ${{ inputs.provider }}
         source: ${{ inputs.backend-source }}

@@ -10,8 +10,8 @@ import * as core from "@actions/core";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { mkdir, writeFile } from "fs/promises";
-import { dirname, resolve } from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 async function downloadFromAzure(
   storageAccount: string,
@@ -25,11 +25,11 @@ async function downloadFromAzure(
     .getContainerClient(container)
     .getBlobClient(blobName);
 
-  await mkdir(dirname(filePath), { recursive: true });
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
 
   // downloadToBuffer is simpler than streaming for the small files (Terraform plans)
   const buffer = await blobClient.downloadToBuffer();
-  await writeFile(filePath, buffer);
+  await fs.writeFile(filePath, buffer);
 
   core.info(
     `Downloaded ← https://${storageAccount}.blob.core.windows.net/${container}/${blobName}`,
@@ -51,9 +51,9 @@ async function downloadFromS3(
     throw new Error("Empty response body from S3");
   }
 
-  await mkdir(dirname(filePath), { recursive: true });
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
   const bytes = await response.Body.transformToByteArray();
-  await writeFile(filePath, bytes);
+  await fs.writeFile(filePath, bytes);
 
   core.info(`Downloaded ← s3://${bucket}/${key}`);
 }
@@ -62,10 +62,6 @@ async function run(): Promise<void> {
   const provider = core.getInput("provider", { required: true });
   const source = core.getInput("source", { required: true });
   const filePath = core.getInput("file-path", { required: true });
-  const deleteOnCompletion = core.getInput("delete-on-completion");
-
-  // Persist all context needed by the post step via GITHUB_STATE.
-  core.saveState("delete-on-completion", deleteOnCompletion);
   core.saveState("provider", provider);
   core.saveState("source", source);
   core.saveState("file-path", filePath);
@@ -98,7 +94,7 @@ async function run(): Promise<void> {
       );
   }
 
-  const resolvedPath = resolve(filePath);
+  const resolvedPath = path.resolve(filePath);
   core.setOutput("file-path", resolvedPath);
   core.info(`File saved to: ${resolvedPath}`);
 }

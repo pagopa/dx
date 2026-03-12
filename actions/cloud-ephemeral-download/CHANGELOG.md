@@ -1,4 +1,4 @@
-# @pagopa-dx/cloud-storage-download
+# @pagopa-dx/cloud-ephemeral-download
 
 ## 0.0.1
 

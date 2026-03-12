@@ -30,11 +30,6 @@ inputs:
     description: AWS region where the S3 bucket lives. Required when provider is "aws".
     required: false
     default: ""
-  overwrite:
-    description: Overwrite the remote object if it already exists.
-    required: false
-    default: "true"
-
 outputs:
   remote-url:
     description: Full URL of the uploaded object.

@@ -10,8 +10,8 @@ import * as core from "@actions/core";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { readFile } from "fs/promises";
-import { resolve } from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 
 // Upload action: does not rely on object tagging (some CI identities cannot set tags).
 // The upload destination is provided by the caller; the workflow places plans
@@ -19,9 +19,8 @@ import { resolve } from "path";
 
 async function run(): Promise<void> {
   const provider = core.getInput("provider", { required: true });
-  const filePath = resolve(core.getInput("file-path", { required: true }));
+  const filePath = path.resolve(core.getInput("file-path", { required: true }));
   const destination = core.getInput("destination", { required: true });
-  const overwrite = core.getInput("overwrite") !== "false";
 
   let remoteUrl: string;
 
@@ -42,7 +41,6 @@ async function run(): Promise<void> {
         container,
         destination,
         filePath,
-        overwrite,
       );
       break;
     }
@@ -60,7 +58,6 @@ async function uploadToAzure(
   container: string,
   destination: string,
   filePath: string,
-  overwrite: boolean,
 ): Promise<string> {
   const credential = new DefaultAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
@@ -70,9 +67,7 @@ async function uploadToAzure(
   ).getContainerClient(container);
   const blockBlobClient = containerClient.getBlockBlobClient(destination);
 
-  const uploadOptions = overwrite ? {} : { conditions: { ifNoneMatch: "*" } };
-
-  await blockBlobClient.uploadFile(filePath, uploadOptions);
+  await blockBlobClient.uploadFile(filePath);
   core.info(
     `Uploaded → https://${storageAccount}.blob.core.windows.net/${container}/${destination}`,
   );
@@ -87,7 +82,7 @@ async function uploadToS3(
   filePath: string,
 ): Promise<string> {
   const client = new S3Client({ region });
-  const body = await readFile(filePath);
+  const body = await fs.readFile(filePath);
 
   await client.send(
     new PutObjectCommand({ Body: body, Bucket: bucket, Key: destination }),
