@@ -1,0 +1,8 @@
+{
+  "vm": {
+    "cpuPercent": 5
+  },
+  "storage": {
+    "transactionsPerDay": 50
+  }
+}
