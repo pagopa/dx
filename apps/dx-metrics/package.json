@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "./start-nextapp.sh",
+    "dev": "next dev -H 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "test": "vitest run",

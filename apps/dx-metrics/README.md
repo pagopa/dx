@@ -18,7 +18,7 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 - A GitHub personal access token with `repo` scope
 - A GitHub OAuth App (for dashboard authentication)
 
-## Quick Start
+## Setup
 
 1. **Start services:**
 
@@ -67,6 +67,13 @@ npx tsx scripts/import.ts --since YYYY-MM-DD [--entity <type>] [--tracker-csv <p
 
 ```bash
 npx tsx scripts/import.ts --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
+```
+
+## Starting the Application
+
+```bash
+chmod +x start.sh
+./start.sh
 ```
 
 ## Dashboards
