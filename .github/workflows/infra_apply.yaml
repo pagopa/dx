@@ -187,14 +187,6 @@ jobs:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 
       # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
-      # Backend init is needed to populate .terraform/terraform.tfstate with the storage
-      # coordinates so the download action can reconstruct the remote path.
-      # The remote bundle is automatically deleted after a successful apply.
-      - name: Terraform Backend Init
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        run: |
-          terraform init -backend-only -input=false
-
       - name: Download Terraform Plan
         uses: pagopa/dx/actions/terraform-plan-download@poc-store-plan-artifact-in-csp
         with:
