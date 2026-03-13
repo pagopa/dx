@@ -1,5 +1,14 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.4
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+- Updated dependencies [e0a3767]
+  - @pagopa/azure-tracing@0.4.13
+  - @pagopa/dx-mcpprompts@0.2.4
+
 ## 0.1.3
 
 ### Patch Changes
