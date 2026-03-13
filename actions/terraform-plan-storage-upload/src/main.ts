@@ -171,7 +171,10 @@ async function run(): Promise<void> {
   const tfState = await readBackendConfig(absoluteWorkingDir);
   const planPath = computePlanPath(tfState.backend.config.key, runId);
 
-  const { archivePath, tmpDir } = await createBundle(inputs, absoluteWorkingDir);
+  const { archivePath, tmpDir } = await createBundle(
+    inputs,
+    absoluteWorkingDir,
+  );
   try {
     switch (tfState.backend.type) {
       case "azurerm": {
