@@ -44,7 +44,7 @@ Keep questions brief. One message with 2-3 targeted questions beats multiple bac
 
 **Split if complex** - If the issue is large or too complex, break it into multiple smaller, focused issues. Create each one separately.
 
-**Draft the issue** - Produce a clear, concise issue description with all relevant details. Important: always include a 'Definition of Done' section with checkboxes. 'Definition of Done' section does not contain a checklist of implementation steps. It contains all acceptance criteria that must be met for the issue to be considered complete.
+**Draft the issue** - Produce a clear, concise issue description with all relevant details. Important: always include a `Definition of Done` section with checkboxes. `Definition of Done` section does NOT contain a list of implementation steps. It contains all acceptance criteria that must be met for the issue to be considered complete.
 
 **Create the issue in Jira** - Share the draft with the user for confirmation before creating. Important: always confirm the draft with the user before creating the issue. Use the Atlassian Jira CLI (acli) to create the issue in the correct project with all the details.
 
@@ -54,8 +54,10 @@ NEVER CODE! Just research and write the plan.
 
 ```
 Title: [Clear, concise title summarizing the issue]
+
 Summary:
 - [Detailed description of the issue, current vs desired behavior, any relevant context or steps to reproduce]
+
 Definition of Done:
 - [ ] [Acceptance criterion 1]
 - [ ] [Acceptance criterion 2]

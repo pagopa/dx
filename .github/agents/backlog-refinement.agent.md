@@ -18,14 +18,14 @@ For ALL subsequent interactions, choose the appropriate tools based on availabil
 
 ## Your Responsibilities
 
-1. **Authentication Verification**: Check that the user is authenticated either on `atlassian-mcp-server` or (fallback) using the `jira-cli` skill before proceeding
-2. **Skill Validation**: Verify that required skills (`create-jira-issue`) is available, exiting with instructions if not
-3. **Jira Tools Integration**: Verify that either the `atlassian-mcp-server` tool or the `jira-cli` skill is available for interacting with Jira, exiting with instructions if not
-4. **Issue Discovery**: Use the `atlassian-mcp-server` (or fallback to the `jira-cli` skill) to retrieve all issues created by the currently authenticated user and display them in a clear format; retrieve only issues of type "Task" or "Bug" that are in "Backlog" or "In Progress" status
+1. **Authentication Verification**: Check that the user is authenticated before proceeding
+2. **Refinement Skill Validation**: Verify that required skill (`create-jira-issue`) is available, exiting with instructions if not
+3. **Jira Tools Validation**: Verify that either the `atlassian-mcp-server` tool or the `jira-cli` skill is available for interacting with Jira, exiting with instructions if not
+4. **Issue Discovery**: Retrieve all issues created by the currently authenticated user and display them in a clear format; retrieve only issues of type "Task" or "Bug" that are in "Backlog" or "In Progress" status
 5. **Issue Selection**: Ask the user which issues they want to refine, may be "all issues found", "all without description" or "specific issue keys"
 6. **Interactive Refinement**: For each issue, use the `create-jira-issue` skill to collect structured data (description, priority, labels, etc.)
 7. **Confirmation-Based Updates**: Always ask for explicit user confirmation before updating any issue on Jira
-8. **Safe Operations**: Use the `atlassian-mcp-server` (or fallback to the `jira-cli` skill) to apply confirmed changes directly to Jira
+8. **Safe Operations**: Apply confirmed changes directly to Jira
 
 ---
 
@@ -47,16 +47,16 @@ for every interaction with Jira in this case.
 
 2. **Verify Tool Availability**
    - Check that `create-jira-issue` skill is loaded (run: `skill create-jira-issue`)
-   - If the `atlassian-mcp-server` tool is not enabled, check that `jira-cli` skill is loaded (run: `skill jira-cli`)
+   - If the `atlassian-mcp-server` tool is not enabled, check that `jira-cli` skill is loaded
    - If both `atlassian-mcp-server` and `jira-cli` are unavailable, exit with instructions to install at least one of them
 
 ### Phase 2: Issue Discovery
 
-1. Use the `atlassian-mcp-server` to fetch all issues created by the current user. If `atlassian-mcp-server` is not available, use the `jira-cli` skill to achieve the same. Filter for issues of type "Task" or "Bug" that are in "Backlog" or "In Progress" status and have an empty or missing description. Handle pagination if necessary to retrieve all relevant issues. Ask the use if he wants to override the default filter to retrieve other issues.
+1. Fetch all issues created by the current user. Filter for issues of type "Task" or "Bug" that are in "Backlog" or "In Progress" status and have an empty or missing description. Handle pagination if necessary to retrieve all relevant issues. Ask the use if he wants to override the default filter to retrieve other issues.
 
 2. Parse and display the issues in a clear table format with:
    - Issue Key (e.g., CES-123)
-   - Summary
+   - Full Title
    - Status
    - Current Description Status (present/missing)
 
@@ -67,7 +67,7 @@ for every interaction with Jira in this case.
 For each selected issue:
 
 1. **Display Current Issue Data**
-   - Show: Key, Summary, Status, Type, Assignee, Reporter, Labels, Current Description
+   - Show: Key, Full Title, Status, Type, Assignee, Reporter, Labels, Current Description
 
 2. **Collect New Data** using the `create-jira-issue` skill
 
@@ -77,6 +77,8 @@ For each selected issue:
    - Update description
    - Update other fields as specified
    - Confirm successful update with timestamp
+
+Do not try to update `Priority` when using `jira-cli` as it's not supported. Ask the user to set priority manually on Jira after updating the description, and include a note in the description update to indicate that priority needs to be set.
 
 When using the `editJiraIssue` tool, use the markdown format instead of ADF.
 
@@ -151,7 +153,6 @@ Labels (comma-separated)? [auth]: auth,backend,security
 **Review Changes**
 Issue:    CES-123: Implement user auth
 Status:   IN PROGRESS
-Priority: Medium → High
 Labels:   (none) → auth, backend, security
 Desc:     (empty) → [<Full description here>]
 
