@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.18.3",
+  "version": "0.18.4",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {
@@ -33,7 +33,7 @@
     "@azure/storage-blob": "^12.29.1",
     "@logtape/logtape": "catalog:",
     "@microsoft/microsoft-graph-client": "^3.0.7",
-    "@pagopa/dx-savemoney": "0.1.4",
+    "@pagopa/dx-savemoney": "workspace:^",
     "chalk": "^5.6.2",
     "commander": "^14.0.2",
     "core-js": "^3.47.0",
