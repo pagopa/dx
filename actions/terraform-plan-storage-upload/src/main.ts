@@ -78,7 +78,7 @@ function computePlanPath(stateKey: string, runId: string): string {
 async function createBundle(
   inputs: Inputs,
   workingDirectory: string,
-): Promise<string> {
+): Promise<{ archivePath: string; tmpDir: string }> {
   const BUNDLE_ENTRIES = [
     inputs["plan-file"],
     ".terraform.lock.hcl",
@@ -109,7 +109,10 @@ async function createBundle(
     );
   }
 
-  const archivePath = path.join(os.tmpdir(), `tf-bundle-${Date.now()}.tar.gz`);
+  // Use mkdtemp for a cryptographically random temp directory to avoid
+  // insecure predictable temp file names (CWE-377).
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "tf-bundle-"));
+  const archivePath = path.join(tmpDir, "bundle.tar.gz");
   execFileSync("tar", [
     "czf",
     archivePath,
@@ -118,7 +121,7 @@ async function createBundle(
     ...existingPaths,
   ]);
   core.info(`Bundled ${existingPaths.join(", ")} into ${archivePath}`);
-  return archivePath;
+  return { archivePath, tmpDir };
 }
 
 /**
@@ -168,7 +171,7 @@ async function run(): Promise<void> {
   const tfState = await readBackendConfig(absoluteWorkingDir);
   const planPath = computePlanPath(tfState.backend.config.key, runId);
 
-  const archivePath = await createBundle(inputs, absoluteWorkingDir);
+  const { archivePath, tmpDir } = await createBundle(inputs, absoluteWorkingDir);
   try {
     switch (tfState.backend.type) {
       case "azurerm": {
@@ -200,7 +203,7 @@ async function run(): Promise<void> {
       }
     }
   } finally {
-    await fs.rm(archivePath, { force: true });
+    await fs.rm(tmpDir, { force: true, recursive: true });
   }
 }
 
@@ -222,10 +225,6 @@ async function uploadToAzure(
   );
 }
 
-// --------------------------------------------------------------------------
-// Entry point
-// --------------------------------------------------------------------------
-
 async function uploadToS3(
   bucket: string,
   region: string,
@@ -239,5 +238,9 @@ async function uploadToS3(
   );
   core.info(`Uploaded → s3://${bucket}/${destination}`);
 }
+
+// --------------------------------------------------------------------------
+// Entry point
+// --------------------------------------------------------------------------
 
 run().catch(core.setFailed);
