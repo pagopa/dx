@@ -1,44 +1,29 @@
 /**
  * @fileoverview Ephemeral Cloud Download - main entry point
  *
- * Downloads a file from Azure Blob Storage or Amazon S3.
- * Saves connection context to GITHUB_STATE for the post step, which deletes
- * the remote object and the local file after the job completes.
+ * Downloads a `.tar.gz` bundle from Azure Blob Storage or Amazon S3 into a
+ * temporary file, extracts it into `extract-to`, then removes the temp archive.
+ *
+ * Saves only the connection context (provider + credentials + source) to
+ * GITHUB_STATE so the post step can delete the remote object after the job.
  */
 
 import * as core from "@actions/core";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
+import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 
 import { type Context, ContextSchema } from "./schema.js";
-
-async function download(ctx: Context): Promise<void> {
-  switch (ctx.provider) {
-    case "aws":
-      return downloadFromS3(
-        ctx["aws-bucket"],
-        ctx["aws-region"],
-        ctx.source,
-        ctx["file-path"],
-      );
-    case "azure":
-      return downloadFromAzure(
-        ctx["azure-storage-account"],
-        ctx["azure-container"],
-        ctx.source,
-        ctx["file-path"],
-      );
-  }
-}
 
 async function downloadFromAzure(
   storageAccount: string,
   container: string,
   blobName: string,
-  filePath: string,
+  destFile: string,
 ): Promise<void> {
   const credential = new DefaultAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
@@ -46,11 +31,9 @@ async function downloadFromAzure(
     .getContainerClient(container)
     .getBlobClient(blobName);
 
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
-
-  // downloadToBuffer is simpler than streaming for small files (Terraform plans)
+  await fs.mkdir(path.dirname(destFile), { recursive: true });
   const buffer = await blobClient.downloadToBuffer();
-  await fs.writeFile(filePath, buffer);
+  await fs.writeFile(destFile, buffer);
 
   core.info(
     `Downloaded ← https://${storageAccount}.blob.core.windows.net/${container}/${blobName}`,
@@ -61,7 +44,7 @@ async function downloadFromS3(
   bucket: string,
   region: string,
   key: string,
-  filePath: string,
+  destFile: string,
 ): Promise<void> {
   const client = new S3Client({ region });
   const response = await client.send(
@@ -72,11 +55,30 @@ async function downloadFromS3(
     throw new Error("Empty response body from S3");
   }
 
-  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.mkdir(path.dirname(destFile), { recursive: true });
   const bytes = await response.Body.transformToByteArray();
-  await fs.writeFile(filePath, bytes);
+  await fs.writeFile(destFile, bytes);
 
   core.info(`Downloaded ← s3://${bucket}/${key}`);
+}
+
+async function downloadToFile(ctx: Context, destFile: string): Promise<void> {
+  switch (ctx.provider) {
+    case "aws":
+      return downloadFromS3(
+        ctx["aws-bucket"],
+        ctx["aws-region"],
+        ctx.source,
+        destFile,
+      );
+    case "azure":
+      return downloadFromAzure(
+        ctx["azure-storage-account"],
+        ctx["azure-container"],
+        ctx.source,
+        destFile,
+      );
+  }
 }
 
 async function run(): Promise<void> {
@@ -85,7 +87,7 @@ async function run(): Promise<void> {
     "aws-region": core.getInput("aws-region"),
     "azure-container": core.getInput("azure-container"),
     "azure-storage-account": core.getInput("azure-storage-account"),
-    "file-path": core.getInput("file-path"),
+    "extract-to": core.getInput("extract-to"),
     provider: core.getInput("provider"),
     source: core.getInput("source"),
   });
@@ -96,11 +98,10 @@ async function run(): Promise<void> {
 
   const ctx = result.data;
 
-  // Persist context for the post step via GITHUB_STATE.
-  // Inputs are not available in post steps, only state is.
+  // Persist connection context for the post step via GITHUB_STATE.
+  // `extract-to` is not saved: the post step only needs to delete the remote object.
   core.saveState("provider", ctx.provider);
   core.saveState("source", ctx.source);
-  core.saveState("file-path", ctx["file-path"]);
   if (ctx.provider === "azure") {
     core.saveState("azure-storage-account", ctx["azure-storage-account"]);
     core.saveState("azure-container", ctx["azure-container"]);
@@ -109,11 +110,18 @@ async function run(): Promise<void> {
     core.saveState("aws-region", ctx["aws-region"]);
   }
 
-  await download(ctx);
+  const archivePath = path.join(os.tmpdir(), `tf-bundle-${Date.now()}.tar.gz`);
+  try {
+    await downloadToFile(ctx, archivePath);
 
-  const resolvedPath = path.resolve(ctx["file-path"]);
-  core.setOutput("file-path", resolvedPath);
-  core.info(`File saved to: ${resolvedPath}`);
+    const extractTo = path.resolve(ctx["extract-to"]);
+    await fs.mkdir(extractTo, { recursive: true });
+    execFileSync("tar", ["xzf", archivePath, "-C", extractTo]);
+    core.info(`Extracted bundle to: ${extractTo}`);
+    core.setOutput("extract-to", extractTo);
+  } finally {
+    await fs.rm(archivePath, { force: true });
+  }
 }
 
 run().catch(core.setFailed);

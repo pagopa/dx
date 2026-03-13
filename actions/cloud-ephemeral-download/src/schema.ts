@@ -1,7 +1,9 @@
 /**
  * @fileoverview Input/state validation schema for the Ephemeral Cloud Download action.
  *
- * Shared between main.ts (action inputs) and post.ts (saved GITHUB_STATE).
+ * - `ContextSchema`   — used by main.ts to validate action inputs.
+ * - `PostStateSchema` — used by post.ts to validate values read from GITHUB_STATE.
+ *
  * Uses a discriminated union on `provider` so that required cloud-specific
  * fields are enforced by the schema itself, avoiding runtime surprises.
  */
@@ -20,17 +22,21 @@ const SENSITIVE_PATH_PATTERNS = [
   "authorized_keys",
 ];
 
-const safeFilePath = z
-  .string()
-  .min(1, "file-path must not be empty")
-  .refine(
-    (filePath) => {
-      const normalized = path.resolve(filePath).toLowerCase();
-      return !SENSITIVE_PATH_PATTERNS.some((p) => normalized.includes(p));
-    },
-    { message: "file-path points to a potentially sensitive location" },
-  );
+const safePath = (fieldName: string) =>
+  z
+    .string()
+    .min(1, `${fieldName} must not be empty`)
+    .refine(
+      (p) => {
+        const normalized = path.resolve(p).toLowerCase();
+        return !SENSITIVE_PATH_PATTERNS.some((pattern) =>
+          normalized.includes(pattern),
+        );
+      },
+      { message: `${fieldName} points to a potentially sensitive location` },
+    );
 
+/** Schema for main.ts — full action inputs including extraction target. */
 export const ContextSchema = z.discriminatedUnion("provider", [
   z.object({
     "azure-container": z
@@ -39,7 +45,7 @@ export const ContextSchema = z.discriminatedUnion("provider", [
     "azure-storage-account": z
       .string()
       .min(1, "azure-storage-account is required when provider is 'azure'"),
-    "file-path": safeFilePath,
+    "extract-to": safePath("extract-to"),
     provider: z.literal("azure"),
     source: z.string().min(1, "source must not be empty"),
   }),
@@ -50,10 +56,39 @@ export const ContextSchema = z.discriminatedUnion("provider", [
     "aws-region": z
       .string()
       .min(1, "aws-region is required when provider is 'aws'"),
-    "file-path": safeFilePath,
+    "extract-to": safePath("extract-to"),
+    provider: z.literal("aws"),
+    source: z.string().min(1, "source must not be empty"),
+  }),
+]);
+
+/**
+ * Schema for post.ts — only the fields saved to GITHUB_STATE by main.ts.
+ * `extract-to` is intentionally omitted: the post step only needs to delete
+ * the remote object; local cleanup is handled by main.ts after extraction.
+ */
+export const PostStateSchema = z.discriminatedUnion("provider", [
+  z.object({
+    "azure-container": z
+      .string()
+      .min(1, "azure-container is required when provider is 'azure'"),
+    "azure-storage-account": z
+      .string()
+      .min(1, "azure-storage-account is required when provider is 'azure'"),
+    provider: z.literal("azure"),
+    source: z.string().min(1, "source must not be empty"),
+  }),
+  z.object({
+    "aws-bucket": z
+      .string()
+      .min(1, "aws-bucket is required when provider is 'aws'"),
+    "aws-region": z
+      .string()
+      .min(1, "aws-region is required when provider is 'aws'"),
     provider: z.literal("aws"),
     source: z.string().min(1, "source must not be empty"),
   }),
 ]);
 
 export type Context = z.infer<typeof ContextSchema>;
+export type PostState = z.infer<typeof PostStateSchema>;
