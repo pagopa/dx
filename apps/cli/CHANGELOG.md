@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.18.5
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+- Updated dependencies [e0a3767]
+  - @pagopa/dx-savemoney@0.1.6
+
 ## 0.18.4
 
 ### Patch Changes
