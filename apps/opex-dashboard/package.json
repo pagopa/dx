@@ -38,10 +38,10 @@
   ],
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
-    "commander": "^14.0.2",
+    "commander": "catalog:",
     "js-yaml": "^4.1.1",
     "tmp": "^0.2.5",
-    "zod": "^4.1.13"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -53,7 +53,7 @@
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
-    "tsx": "^4.21.0",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
