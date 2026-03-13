@@ -122,7 +122,10 @@ async function run(): Promise<void> {
     core.saveState("aws-region", ctx["aws-region"]);
   }
 
-  const archivePath = path.join(os.tmpdir(), `tf-bundle-${Date.now()}.tar.gz`);
+  // Use mkdtemp for a cryptographically random temp directory to avoid
+  // insecure predictable temp file names (CWE-377).
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "tf-bundle-"));
+  const archivePath = path.join(tmpDir, "bundle.tar.gz");
   try {
     await downloadToFile(ctx, archivePath);
 
@@ -130,7 +133,7 @@ async function run(): Promise<void> {
     execFileSync("tar", ["xzf", archivePath, "-C", extractTo]);
     core.info(`Extracted bundle to: ${extractTo}`);
   } finally {
-    await fs.rm(archivePath, { force: true });
+    await fs.rm(tmpDir, { force: true, recursive: true });
   }
 }
 
