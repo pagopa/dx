@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 
 import { matchProjectName } from "../extract-tags.js";
 
-// Realistic project names as returned by `nx show projects --json` in selfcare-monorepo-poc
 const NX_NAMES = ["@dx/app-x", "@dx/app-y", "@dx/app-zs", "it.pagopa.dx:app-x"];
 
 describe("matchProjectName", () => {
