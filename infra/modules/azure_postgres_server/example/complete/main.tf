@@ -82,10 +82,8 @@ module "azure_postgres" {
 
   use_case = "default"
 
-  administrator_credentials = {
-    name     = azurerm_key_vault_secret.postgres_username.value
-    password = azurerm_key_vault_secret.postgres_password.value
-  }
+  admin_username = azurerm_key_vault_secret.postgres_username.value
+  admin_password = azurerm_key_vault_secret.postgres_password.value
 
   subnet_pep_id = data.azurerm_subnet.pep.id
 

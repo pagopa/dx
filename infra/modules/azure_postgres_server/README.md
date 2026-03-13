@@ -31,7 +31,8 @@ A complete example of how to use this module can be found in the [example/comple
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.116, < 5.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.21, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 
 ## Modules
@@ -61,6 +62,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. | `string` | n/a | yes |
+| <a name="input_admin_password_version"></a> [admin\_password\_version](#input\_admin\_password\_version) | Version number for the administrator password. Increment this value when rotating the password to trigger an update, since Terraform cannot detect changes to write-only values. | `number` | `1` | no |
 | <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. | `string` | n/a | yes |
 | <a name="input_alert_action"></a> [alert\_action](#input\_alert\_action) | The ID of the Action Group and optional map of custom string properties to include with the post webhook operation. | <pre>list(object(<br/>    {<br/>      action_group_id = string<br/>    }<br/>  ))</pre> | `[]` | no |
 | <a name="input_alerts_enabled"></a> [alerts\_enabled](#input\_alerts\_enabled) | Define if alerts should be enabled. | `bool` | `false` | no |
