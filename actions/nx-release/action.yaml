@@ -67,11 +67,13 @@ runs:
           exit 0
         fi
 
-        PR_BODY=$(node "$ACTION_PATH/scripts/dist/build-pr-body.js")
-
-        # For each tag Nx created, find the corresponding manifest path (used later for
-        # CHANGELOG extraction). Manifests are already updated (unstaged) at this point.
+        # Resolve tag → project root path via nx (used for changelog extraction and
+        # GitHub Release notes). Must run before build-pr-body so paths are available.
+        echo "::notice::NEW_TAGS=${NEW_TAGS}"
         RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
+        echo "::notice::RELEASE_TAGS=${RELEASE_TAGS}"
+
+        PR_BODY=$(RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/build-pr-body.js")
         PR_BODY="${PR_BODY}
         <!-- nx-release-tags: ${RELEASE_TAGS} -->"
 
