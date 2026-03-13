@@ -86,29 +86,83 @@ jobs:
         with:
           default_version: "1.10.4"
 
+  detect-projects:
+    name: Detect Terraform Projects
+    runs-on: ubuntu-latest
+    needs: [gate, get-terraform-version]
+    if: ${{ needs.gate.outputs.run == 'true' }}
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+        with:
+          fetch-depth: 0
+
+      - name: Detect Terraform projects
+        id: detect
+        env:
+          BASE_PATH: ${{ inputs.base_path }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          DIR="$BASE_PATH/$ENVIRONMENT"
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$DIR")
+          else
+            if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+              CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR")
+            else
+              CHANGED=$(git diff --name-only HEAD~1 -- "$DIR")
+            fi
+          fi
+
+          # dirname on each changed file gives base_path/env (single project)
+          # or base_path/env/dir (sub-project) — always the right Terraform root
+          MATRIX=$(echo "$CHANGED" \
+            | xargs -r dirname \
+            | sort -u \
+            | jq -R . | jq -sc .)
+
+          MATRIX=${MATRIX:-[]}
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "Detected matrix: $MATRIX"
+
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
-    needs: [gate, get-terraform-version]
-    if: ${{ needs.gate.outputs.run == 'true' }}
+    needs: [gate, get-terraform-version, detect-projects]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect-projects.outputs.matrix) }}
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
       check_to_run: lock_modules
-      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      folder: ${{ matrix.dir }}/
       verbose: true
 
   tf_plan:
     name: "Terraform Plan"
-    needs: [gate, get-terraform-version, tf-modules-check]
-    if: ${{ needs.gate.outputs.run == 'true' }}
+    needs: [gate, get-terraform-version, tf-modules-check, detect-projects]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect-projects.outputs.matrix) }}
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
-      group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.base_path }}-ci
+      group: ${{ github.workflow }}-${{ inputs.environment }}-${{ matrix.dir }}-ci
       cancel-in-progress: false
     permissions:
       id-token: write
@@ -121,25 +175,14 @@ jobs:
       TF_HTTP_PASSWORD: ${{ secrets.STATEGRAPH_TOKEN }}
 
     steps:
-      # Set the directory where the Terraform files are located
-      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
+      # The working directory comes from the matrix; available in ${{ steps.directory.outputs.dir }}
       - name: Set directory
         id: directory
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          BASE_PATH: ${{ inputs.base_path }}
+          WORKING_DIR: ${{ matrix.dir }}
         run: |
           set -euo pipefail
-
-          if [ -z "$ENVIRONMENT" ]; then
-            echo "Environment must be provided."
-            exit 1
-          else
-            # The directory is expected to be in the format
-            #  infra/resources/$ENVIRONMENT
-            # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
-          fi
+          printf "dir=%q" "$WORKING_DIR" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
         name: Checkout
@@ -175,10 +218,12 @@ jobs:
         id: cache-key
         env:
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          WORKING_DIR: ${{ matrix.dir }}
         run: |
           # Get current epoch time rounded to chosen window
+          DIR_SLUG=$(echo "$WORKING_DIR" | tr '/' '-')
           TIME_WINDOW=$(( $(date +%s) / $REFRESH_STATE_EVERY_SECONDS ))
-          echo "cache-key=tfplan-pr${PR_NUMBER}-${TIME_WINDOW}s" >> $GITHUB_OUTPUT
+          echo "cache-key=tfplan-pr${PR_NUMBER}-${DIR_SLUG}-${TIME_WINDOW}s" >> $GITHUB_OUTPUT
 
       # Restore PR TFPlan Cache (miss = first run or >10 minutes, hit = within 10 minutes)
       - name: Check for Cache
