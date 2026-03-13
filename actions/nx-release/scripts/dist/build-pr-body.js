@@ -45,7 +45,10 @@ function resolveReleaseEntries() {
   try {
     entries = JSON.parse(raw);
   } catch {
-    console.error("[build-pr-body] Failed to parse RELEASE_TAGS:", raw.slice(0, 200));
+    console.error(
+      "[build-pr-body] Failed to parse RELEASE_TAGS:",
+      raw.slice(0, 200)
+    );
     return [];
   }
   return entries.filter((e) => e.path !== null).map((e) => ({

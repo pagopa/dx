@@ -53,12 +53,14 @@ export async function getNxProjectNames(): Promise<string[]> {
       "projects",
       "--json",
     ]);
-    // nx may print banner/daemon text before the JSON array — find the first '['
-    const jsonStart = stdout.indexOf("[");
+    // nx may print non-JSON text before the array (e.g. "[Maven Analyzer] ...").
+    // Look for '["' (array of strings) or '[]' (empty array) to skip any prefix.
+    let jsonStart = stdout.indexOf('["');
+    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
     if (jsonStart === -1) {
       console.error(
         "[extract-tags] nx show projects: no JSON array found in stdout:",
-        stdout.slice(0, 200),
+        stdout.slice(0, 300),
       );
       return [];
     }

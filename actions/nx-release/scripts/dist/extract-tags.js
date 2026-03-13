@@ -27,11 +27,12 @@ async function getNxProjectNames() {
       "projects",
       "--json"
     ]);
-    const jsonStart = stdout.indexOf("[");
+    let jsonStart = stdout.indexOf('["');
+    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
     if (jsonStart === -1) {
       console.error(
         "[extract-tags] nx show projects: no JSON array found in stdout:",
-        stdout.slice(0, 200)
+        stdout.slice(0, 300)
       );
       return [];
     }
