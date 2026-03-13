@@ -89,18 +89,6 @@ function computePlanPath(stateKey: string, runId: string): string {
 }
 
 /**
- * Resolves a path relative to working-directory, using GITHUB_WORKSPACE as
- * the base for relative working directories so the node action CWD does not
- * affect resolution.
- */
-function resolvePath(workingDirectory: string, entry: string): string {
-  const base = path.isAbsolute(workingDirectory)
-    ? workingDirectory
-    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
-  return path.join(base, entry);
-}
-
-/**
  * Creates a `.tar.gz` archive of the plan file plus optional Terraform artefacts.
  * Entries that do not exist under `workingDirectory` are skipped with a warning.
  */
@@ -118,16 +106,20 @@ async function createBundle(
     ? workingDirectory
     : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
 
+  core.info(`[bundle] GITHUB_WORKSPACE=${process.env["GITHUB_WORKSPACE"] ?? "(unset)"}`);
+  core.info(`[bundle] process.cwd()=${process.cwd()}`);
+  core.info(`[bundle] workingDirectory input=${workingDirectory}`);
+  core.info(`[bundle] absoluteWorkingDir=${absoluteWorkingDir}`);
+
   const existingPaths: string[] = [];
   for (const entry of BUNDLE_ENTRIES) {
-    const absolute = resolvePath(workingDirectory, entry);
+    const absolute = path.join(absoluteWorkingDir, entry);
     try {
       await fs.access(absolute);
+      core.info(`[bundle] ✓ found: ${absolute}`);
       existingPaths.push(entry);
     } catch {
-      core.warning(
-        `Skipping "${entry}": not found at ${absolute}`,
-      );
+      core.warning(`[bundle] ✗ not found: ${absolute}`);
     }
   }
 
