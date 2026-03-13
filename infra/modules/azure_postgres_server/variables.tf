@@ -82,13 +82,23 @@ variable "storage_mb" {
   default     = 32768
 }
 
-variable "administrator_credentials" {
-  type = object({
-    name     = string
-    password = string
-  })
+variable "admin_username" {
+  type        = string
   sensitive   = true
-  description = "Administrator credentials for the PostgreSQL Flexible Server, including username and password."
+  description = "The administrator username for the PostgreSQL Flexible Server."
+}
+
+variable "admin_password" {
+  type        = string
+  sensitive   = true
+  description = "The administrator password for the PostgreSQL Flexible Server."
+  ephemeral   = true
+}
+
+variable "admin_password_version" {
+  type        = number
+  default     = 1
+  description = "Version number for the administrator password. Increment this value when rotating the password to trigger an update, since Terraform cannot detect changes to write-only values."
 }
 
 #--------#

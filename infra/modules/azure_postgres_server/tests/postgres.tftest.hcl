@@ -43,10 +43,8 @@ run "postgres_is_correct_plan" {
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
-    administrator_credentials = {
-      name     = "psql_admin"
-      password = "password"
-    }
+    admin_username = "psql_admin"
+    admin_password = "password"
 
   }
 
@@ -89,10 +87,8 @@ run "postgres_delegated_snet_is_correct_plan" {
     delegated_subnet_id                  = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
-    administrator_credentials = {
-      name     = "psql_admin"
-      password = "password"
-    }
+    admin_username = "psql_admin"
+    admin_password = "password"
 
   }
 
@@ -130,10 +126,8 @@ run "postgres_no_replica_is_correct_plan" {
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
-    administrator_credentials = {
-      name     = "psql_admin"
-      password = "password"
-    }
+    admin_username = "psql_admin"
+    admin_password = "password"
   }
 
   # Checks some assertions
@@ -165,10 +159,8 @@ run "postgres_replica_location_correct_plan" {
     subnet_pep_id                        = run.setup_tests.pep_id
     private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
 
-    administrator_credentials = {
-      name     = "psql_admin"
-      password = "password"
-    }
+    admin_username = "psql_admin"
+    admin_password = "password"
   }
 
   # Checks some assertions

@@ -1,8 +1,9 @@
 terraform {
+  required_version = ">= 1.11.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.116, < 5.0"
+      version = ">= 4.21, < 5.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
@@ -27,8 +28,9 @@ resource "azurerm_postgresql_flexible_server" "this" {
   private_dns_zone_id           = var.delegated_subnet_id != null ? data.azurerm_private_dns_zone.postgre_dns_zone.id : null
 
   # Credentials
-  administrator_login    = var.administrator_credentials.name
-  administrator_password = var.administrator_credentials.password
+  administrator_login               = var.admin_username
+  administrator_password_wo         = var.admin_password
+  administrator_password_wo_version = var.admin_password_version
 
   # Backup
   backup_retention_days        = var.backup_retention_days
