@@ -60,7 +60,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_administrator_credentials"></a> [administrator\_credentials](#input\_administrator\_credentials) | Administrator credentials for the PostgreSQL Flexible Server, including username and password. | <pre>object({<br/>    name     = string<br/>    password = string<br/>  })</pre> | n/a | yes |
+| <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. | `string` | n/a | yes |
+| <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. | `string` | n/a | yes |
 | <a name="input_alert_action"></a> [alert\_action](#input\_alert\_action) | The ID of the Action Group and optional map of custom string properties to include with the post webhook operation. | <pre>list(object(<br/>    {<br/>      action_group_id = string<br/>    }<br/>  ))</pre> | `[]` | no |
 | <a name="input_alerts_enabled"></a> [alerts\_enabled](#input\_alerts\_enabled) | Define if alerts should be enabled. | `bool` | `false` | no |
 | <a name="input_backup_retention_days"></a> [backup\_retention\_days](#input\_backup\_retention\_days) | Number of days to retain backups. Valid values range from 7 to 35. Defaults to 7. | `number` | `7` | no |
@@ -88,6 +89,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_admin_password"></a> [admin\_password](#output\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care. It is marked as ephemeral, meaning it will not be stored in the state file after the initial creation of the resource. |
+| <a name="output_admin_username"></a> [admin\_username](#output\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name. |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'. |
 | <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server. |
