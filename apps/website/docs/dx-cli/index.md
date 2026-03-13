@@ -279,7 +279,10 @@ The tool supports multiple authentication methods:
 
 - `--config`, `-c` - Path to config file
 - `--format`, `-f` - Output format, possible values: `table` (_default_),
-  `json`, `detailed-json`
+  `json`, `detailed-json`, `lint`
+- `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod,team=dx`)
+- `--thresholds` - Path to a threshold override file (see
+  [Custom Thresholds](#custom-thresholds))
 - `--verbose`, `-v` - Enable detailed logging
 
 ##### Configuration Example
@@ -337,6 +340,44 @@ All resources are additionally evaluated for:
 - **Location Mismatch** - Resources outside preferred region may have compliance
   or cost implications
 
+#### Tag Filtering
+
+Use `--tags` to restrict the analysis to resources that match **all** specified
+Azure tags (AND logic):
+
+```bash
+npx @pagopa/dx-cli savemoney --config config.json --tags env=prod,team=dx
+```
+
+Only resources that have every listed tag with the exact expected value will be
+analyzed. This is useful to scope a scan to a specific environment or team
+without editing the config file.
+
+#### Custom Thresholds
+
+Analysis thresholds (e.g. minimum CPU%, minimum transactions/day) can be
+overridden via a configuration file. The tool auto-discovers the following file
+names from the working directory upward:
+
+`.savemoneyrc`, `.savemoneyrc.json`, `.savemoneyrc.yaml`, `savemoney.config.js`
+
+Or point to an explicit file with `--thresholds`:
+
+```bash
+npx @pagopa/dx-cli savemoney --config config.json --thresholds ./thresholds.json
+```
+
+Example `.savemoneyrc.json` (only the fields you want to change are required):
+
+```json
+{
+  "vm": { "cpuPercent": 5 },
+  "storage": { "transactionsPerDay": 50 }
+}
+```
+
+All omitted fields keep their built-in defaults.
+
 #### Output Formats
 
 Available formats:
@@ -345,6 +386,8 @@ Available formats:
 - **`json`** - Structured JSON array for integration with other tools
 - **`detailed-json`** - Complete output with full Azure resource metadata for AI
   analysis
+- **`lint`** - Linter-style output grouped by resource ID, with risk icons and a
+  summary line
 
 <details>
 <summary>Example JSON Output</summary>
@@ -377,6 +420,15 @@ npx @pagopa/dx-cli savemoney --config config.json
 
 # Custom timespan and format
 npx @pagopa/dx-cli savemoney --config config.json --days 60 --format json
+
+# Linter-style output
+npx @pagopa/dx-cli savemoney --config config.json --format lint
+
+# Filter to a specific environment
+npx @pagopa/dx-cli savemoney --config config.json --tags env=prod
+
+# Use custom thresholds file
+npx @pagopa/dx-cli savemoney --config config.json --thresholds ./.savemoneyrc.json
 
 # Verbose output for debugging
 npx @pagopa/dx-cli savemoney --config config.json --verbose
