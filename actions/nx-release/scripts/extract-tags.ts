@@ -52,7 +52,11 @@ export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
 /** Returns all files modified by nx release in the working tree. */
 export async function getModifiedFiles(): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("git", ["diff", "--name-only"]);
+    const { stdout } = await execFileAsync("git", [
+      "diff",
+      "HEAD",
+      "--name-only",
+    ]);
     return stdout
       .split("\n")
       .map((l) => l.trim())

@@ -21,6 +21,18 @@ async function buildTagEntries(newTags) {
     })
   );
 }
+async function getModifiedFiles() {
+  try {
+    const { stdout } = await execFileAsync("git", [
+      "diff",
+      "HEAD",
+      "--name-only"
+    ]);
+    return stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 async function getNxProjectNames() {
   try {
     const { stdout } = await execFileAsync("npx", [
@@ -50,14 +62,6 @@ async function getNxProjectRoot(name) {
     return typeof root === "string" && root ? root : null;
   } catch {
     return null;
-  }
-}
-async function getModifiedFiles() {
-  try {
-    const { stdout } = await execFileAsync("git", ["diff", "--name-only"]);
-    return stdout.split("\n").map((l) => l.trim()).filter(Boolean);
-  } catch {
-    return [];
   }
 }
 function matchProjectName(tag, projectNames) {
