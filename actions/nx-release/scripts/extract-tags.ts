@@ -21,11 +21,10 @@ export interface TagEntry {
 }
 
 /**
- * Maps each Nx-generated tag to its manifest path and version.
+ * Maps each Nx-generated tag to its project root path and version.
  */
 export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
   const projectNames = await getNxProjectNames();
-  const modifiedFiles = await getModifiedFiles();
 
   return Promise.all(
     newTags.map(async (tag) => {
@@ -38,32 +37,11 @@ export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
       }
       // Version is everything after the project name and its separator character
       const version = tag.slice(name.length + 1);
-      const root = await getNxProjectRoot(name);
-      // Find any modified file inside the project root — dirname(path) will
-      // give the root directory, which is what sync-tags-releases needs.
-      const path = root
-        ? (modifiedFiles.find((f) => f.startsWith(root + "/")) ?? null)
-        : null;
+      // path = the project root directory from `nx show project <name> --json`
+      const path = await getNxProjectRoot(name);
       return { path, tag, version };
     }),
   );
-}
-
-/** Returns all files modified by nx release in the working tree. */
-export async function getModifiedFiles(): Promise<string[]> {
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "diff",
-      "HEAD",
-      "--name-only",
-    ]);
-    return stdout
-      .split("\n")
-      .map((l) => l.trim())
-      .filter(Boolean);
-  } catch {
-    return [];
-  }
 }
 
 /** Returns all Nx project names in the workspace. */

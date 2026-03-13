@@ -5,7 +5,6 @@ import { promisify } from 'util';
 var execFileAsync = promisify(execFile);
 async function buildTagEntries(newTags) {
   const projectNames = await getNxProjectNames();
-  const modifiedFiles = await getModifiedFiles();
   return Promise.all(
     newTags.map(async (tag) => {
       const name = matchProjectName(tag, projectNames);
@@ -15,23 +14,10 @@ async function buildTagEntries(newTags) {
         return { path: null, tag, version: version2 };
       }
       const version = tag.slice(name.length + 1);
-      const root = await getNxProjectRoot(name);
-      const path = root ? modifiedFiles.find((f) => f.startsWith(root + "/")) ?? null : null;
+      const path = await getNxProjectRoot(name);
       return { path, tag, version };
     })
   );
-}
-async function getModifiedFiles() {
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "diff",
-      "HEAD",
-      "--name-only"
-    ]);
-    return stdout.split("\n").map((l) => l.trim()).filter(Boolean);
-  } catch {
-    return [];
-  }
 }
 async function getNxProjectNames() {
   try {
@@ -85,4 +71,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }
 
-export { buildTagEntries, getModifiedFiles, getNxProjectNames, getNxProjectRoot, matchProjectName };
+export { buildTagEntries, getNxProjectNames, getNxProjectRoot, matchProjectName };

@@ -1,6 +1,6 @@
 import { execFile, spawn } from 'child_process';
 import { readFile } from 'fs/promises';
-import { join, dirname } from 'path';
+import { join } from 'path';
 import { promisify } from 'util';
 
 // scripts/sync-tags-releases.ts
@@ -86,7 +86,7 @@ async function run(base) {
   for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
     if (path) {
-      const clPath = join(dirname(path), "CHANGELOG.md");
+      const clPath = join(path, "CHANGELOG.md");
       const section = await extractChangelogSection(clPath, version);
       if (section) notes = section;
     }

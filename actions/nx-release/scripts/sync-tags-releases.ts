@@ -8,7 +8,7 @@
  */
 import { execFile, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
@@ -128,7 +128,7 @@ export async function run(base: string): Promise<void> {
     let notes = `Release ${tag}`;
 
     if (path) {
-      const clPath = join(dirname(path), "CHANGELOG.md");
+      const clPath = join(path, "CHANGELOG.md");
       const section = await extractChangelogSection(clPath, version);
       if (section) notes = section;
     }
