@@ -1,69 +1,73 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
-import { readFile } from 'fs/promises';
-
-// scripts/extract-tags.ts
-async function readPackageJson(filePath) {
-  try {
-    const parsed = JSON.parse(await readFile(filePath, "utf8"));
-    if (typeof parsed !== "object" || parsed === null) {
-      return null;
-    }
-    const pkg = parsed;
-    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
-      return null;
-    }
-    return { name: pkg["name"], raw: pkg, version: pkg["version"] };
-  } catch {
-    return null;
-  }
-}
-async function readPomXml(filePath) {
-  try {
-    const raw = await readFile(filePath, "utf8");
-    const name = raw.match(/<artifactId>([^<]+)<\/artifactId>/)?.[1]?.trim() ?? "";
-    const version = raw.match(/<version>([^<]+)<\/version>/)?.[1]?.trim() ?? "";
-    if (!name || !version) {
-      return null;
-    }
-    return { name, version };
-  } catch {
-    return null;
-  }
-}
 
 // scripts/extract-tags.ts
 var execFileAsync = promisify(execFile);
 async function buildTagEntries(newTags) {
-  const manifestInfos = await getModifiedManifestInfos();
-  return newTags.map((tag) => {
-    const match = manifestInfos.find(({ name, version: version2 }) => {
-      if (!tag.endsWith(version2)) return false;
-      const nameIdx = tag.indexOf(name);
-      if (nameIdx === -1) return false;
-      const charAfterName = tag[nameIdx + name.length];
-      return charAfterName !== void 0 && !/\w/.test(charAfterName);
-    });
-    const version = match?.version ?? tag.slice(tag.lastIndexOf("@") + 1);
-    return { path: match?.path ?? null, tag, version };
-  });
+  const projectNames = await getNxProjectNames();
+  const modifiedFiles = await getModifiedFiles();
+  return Promise.all(
+    newTags.map(async (tag) => {
+      const name = matchProjectName(tag, projectNames);
+      if (!name) {
+        const m = tag.match(/[^\w](\d[\w.-]*)$/);
+        const version2 = m ? m[1] : tag;
+        return { path: null, tag, version: version2 };
+      }
+      const version = tag.slice(name.length + 1);
+      const root = await getNxProjectRoot(name);
+      const path = root ? modifiedFiles.find((f) => f.startsWith(root + "/")) ?? null : null;
+      return { path, tag, version };
+    })
+  );
 }
-async function getModifiedManifestInfos() {
-  const { stdout } = await execFileAsync("git", [
-    "diff",
-    "--name-only",
-    "--",
-    "**/package.json",
-    "**/pom.xml"
-  ]);
-  const infos = [];
-  for (const f of stdout.split("\n").map((l) => l.trim()).filter(Boolean)) {
-    const result = f.endsWith("package.json") ? await readPackageJson(f) : await readPomXml(f);
-    if (result?.name && result?.version) {
-      infos.push({ name: result.name, path: f, version: result.version });
-    }
+async function getNxProjectNames() {
+  try {
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
+      "show",
+      "projects",
+      "--json"
+    ]);
+    const parsed = JSON.parse(stdout);
+    return Array.isArray(parsed) && parsed.every((s) => typeof s === "string") ? parsed : [];
+  } catch {
+    return [];
   }
-  return infos;
+}
+async function getNxProjectRoot(name) {
+  try {
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
+      "show",
+      "project",
+      name,
+      "--json"
+    ]);
+    const parsed = JSON.parse(stdout);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const root = parsed["root"];
+    return typeof root === "string" && root ? root : null;
+  } catch {
+    return null;
+  }
+}
+async function getModifiedFiles() {
+  try {
+    const { stdout } = await execFileAsync("git", ["diff", "--name-only"]);
+    return stdout.split("\n").map((l) => l.trim()).filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+function matchProjectName(tag, projectNames) {
+  const candidates = projectNames.filter((name) => {
+    if (!tag.startsWith(name)) return false;
+    const charAfter = tag[name.length];
+    return charAfter !== void 0 && !/\w/.test(charAfter);
+  });
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => a.length >= b.length ? a : b);
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   const newTags = (process.env.NEW_TAGS ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
@@ -77,4 +81,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }
 
-export { buildTagEntries, getModifiedManifestInfos };
+export { buildTagEntries, getModifiedFiles, getNxProjectNames, getNxProjectRoot, matchProjectName };
