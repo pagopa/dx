@@ -106,20 +106,14 @@ async function createBundle(
     ? workingDirectory
     : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
 
-  core.info(`[bundle] GITHUB_WORKSPACE=${process.env["GITHUB_WORKSPACE"] ?? "(unset)"}`);
-  core.info(`[bundle] process.cwd()=${process.cwd()}`);
-  core.info(`[bundle] workingDirectory input=${workingDirectory}`);
-  core.info(`[bundle] absoluteWorkingDir=${absoluteWorkingDir}`);
-
   const existingPaths: string[] = [];
   for (const entry of BUNDLE_ENTRIES) {
     const absolute = path.join(absoluteWorkingDir, entry);
     try {
       await fs.access(absolute);
-      core.info(`[bundle] ✓ found: ${absolute}`);
       existingPaths.push(entry);
     } catch {
-      core.warning(`[bundle] ✗ not found: ${absolute}`);
+      core.warning(`Skipping "${entry}": not found at ${absolute}`);
     }
   }
 
