@@ -101,6 +101,15 @@ async function run(): Promise<void> {
 
   const ctx = result.data;
 
+  // Resolve working-directory against GITHUB_WORKSPACE so the node action CWD
+  // does not affect path resolution (GHA runs JS actions from the action directory).
+  const extractTo = path.isAbsolute(ctx["working-directory"])
+    ? ctx["working-directory"]
+    : path.resolve(
+        process.env["GITHUB_WORKSPACE"] ?? process.cwd(),
+        ctx["working-directory"],
+      );
+
   // Persist connection context for the post step via GITHUB_STATE.
   // `working-directory` is not saved: the post step only needs to delete the remote object.
   core.saveState("provider", ctx.provider);
@@ -117,7 +126,6 @@ async function run(): Promise<void> {
   try {
     await downloadToFile(ctx, archivePath);
 
-    const extractTo = path.resolve(ctx["working-directory"]);
     await fs.mkdir(extractTo, { recursive: true });
     execFileSync("tar", ["xzf", archivePath, "-C", extractTo]);
     core.info(`Extracted bundle to: ${extractTo}`);
