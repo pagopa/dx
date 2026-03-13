@@ -1,24 +1,23 @@
-name: Cloud Storage Upload
+name: Download Terraform Plan from Storage
 description: >
-  Uploads a local file to Azure Blob Storage or Amazon S3.
-  Authentication is delegated to the calling workflow (azure/login or
-  aws-actions/configure-aws-credentials must have already run).
+  Downloads a Terraform plan bundle from Azure Blob Storage or Amazon S3 and
+  extracts it into the specified working directory.
+
+  Accepts the storage coordinates (provider, plan-path, credentials) directly
+  as inputs — no terraform init required in the calling job.
+
+  The remote bundle is automatically deleted after the job completes
+  (via the post step).
 
 inputs:
   provider:
     description: Cloud storage provider. Accepted values are "azure" and "aws".
     required: true
-  file-paths:
-    description: >
-      Newline-separated list of files and/or directories to include in the bundle
-      (relative to `working-directory`). Mirrors the `path` input of
-      `actions/upload-artifact`.
+  plan-path:
+    description: Remote object path of the plan bundle (as output by terraform-plan-storage-upload).
     required: true
   working-directory:
-    description: Base directory used to resolve the entries in `file-paths`.
-    required: true
-  destination:
-    description: Remote object path (blob name or S3 object key) for the uploaded bundle.
+    description: Local directory where the bundle will be extracted.
     required: true
   azure-storage-account:
     description: Azure Storage Account name. Required when provider is "azure".
@@ -36,10 +35,8 @@ inputs:
     description: AWS region where the S3 bucket lives. Required when provider is "aws".
     required: false
     default: ""
-outputs:
-  remote-url:
-    description: Full URL of the uploaded object.
 
 runs:
   using: node24
   main: dist/main.cjs
+  post: dist/post.cjs

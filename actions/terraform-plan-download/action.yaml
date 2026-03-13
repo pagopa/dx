@@ -1,45 +1,36 @@
 name: Download Terraform Plan
-description: >
-  Reads the Terraform backend configuration from the initialised .terraform/
-  directory, downloads the plan bundle, and extracts it into working-directory.
-  Uses the same GITHUB_RUN_ID as the upload action to reconstruct the remote
-  path — no extra inputs required.
-  The remote bundle is automatically deleted after a successful apply.
-  Requires terraform init (or terraform init -backend-only) to have already
-  run in working-directory before this action is called.
+description: Downloads and decrypts a Terraform plan artifact
 
 inputs:
   plan-file:
-    description: Unused. Kept for backward compatibility.
-    required: false
-    default: ""
+    description: Name of the Terraform plan file to decrypt
+    required: true
   working-directory:
-    description: >
-      Directory containing the Terraform configuration.
-      The plan bundle (plan file, .terraform.lock.hcl, .terraform/modules/) is
-      extracted here.
+    description: Working directory where the plan will be decrypted
     required: true
   artifact-name:
-    description: Unused. Kept for backward compatibility.
-    required: false
-    default: ""
+    description: Name of the artifact to download
+    required: true
 
 runs:
   using: composite
   steps:
-    - name: Read Terraform Backend Config
-      id: backend
-      uses: pagopa/dx/actions/get-terraform-backend-config@poc-store-plan-artifact-in-csp
+    - name: Download Terraform Plan Artifact
+      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
-        working-directory: ${{ inputs.working-directory }}
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.working-directory }}
 
-    - name: Download Plan Bundle from State Storage
-      uses: pagopa/dx/actions/cloud-ephemeral-download@poc-store-plan-artifact-in-csp
-      with:
-        provider: ${{ steps.backend.outputs.provider }}
-        source: ${{ steps.backend.outputs.plan-path }}
-        extract-to: ${{ inputs.working-directory }}
-        azure-storage-account: ${{ steps.backend.outputs.azure-storage-account }}
-        azure-container: ${{ steps.backend.outputs.azure-container }}
-        aws-bucket: ${{ steps.backend.outputs.aws-bucket }}
-        aws-region: ${{ steps.backend.outputs.aws-region }}
+    - name: Decrypt Terraform Plan
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PLAN_FILE: ${{ inputs.plan-file }}
+        ENCRYPTION_PASSPHRASE: ${{ env.ARTIFACT_ENC_KEY }}
+      run: |
+        set -euo pipefail
+        openssl enc -aes-256-cbc -d -pbkdf2 \
+          -in "${PLAN_FILE}.enc" \
+          -out "$PLAN_FILE" \
+          -pass env:ENCRYPTION_PASSPHRASE
+        rm -f "${PLAN_FILE}.enc"

@@ -1,51 +1,42 @@
 name: Upload Terraform Plan
-description: >
-  Reads the Terraform backend configuration from the initialised .terraform/
-  directory, bundles the plan file together with .terraform.lock.hcl and
-  .terraform/modules/, and uploads the archive to the same storage backend
-  used for the Terraform state.
-  The bundle is stored under a plan-artifacts/ sibling path next to the state
-  file and is automatically deleted by the companion download action after a
-  successful apply.
+description: Encrypts a Terraform plan file and uploads it as a GitHub Actions artifact
 
 inputs:
   plan-file:
-    description: Name of the Terraform plan file to upload
+    description: Name of the Terraform plan file to encrypt and upload
     required: true
   working-directory:
-    description: >
-      Working directory containing the plan file and the initialised .terraform/
-      directory (produced by running terraform init before this action).
+    description: Working directory containing the plan file
     required: true
   artifact-name:
-    description: Unused. Kept for backward compatibility.
-    required: false
-    default: ""
+    description: Name for the uploaded artifact
+    required: true
   retention-days:
-    description: Unused. Kept for backward compatibility.
+    description: Number of days to retain the artifact
     required: false
     default: "1"
 
 runs:
   using: composite
   steps:
-    - name: Read Terraform Backend Config
-      id: backend
-      uses: pagopa/dx/actions/get-terraform-backend-config@poc-store-plan-artifact-in-csp
-      with:
-        working-directory: ${{ inputs.working-directory }}
+    - name: Encrypt Terraform Plan
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        PLAN_FILE: ${{ inputs.plan-file }}
+        ENCRYPTION_PASSPHRASE: ${{ env.ARTIFACT_ENC_KEY }}
+      run: |
+        set -euo pipefail
+        openssl enc -aes-256-cbc -salt -pbkdf2 \
+          -in "$PLAN_FILE" \
+          -out "${PLAN_FILE}.enc" \
+          -pass env:ENCRYPTION_PASSPHRASE
+        rm -f "$PLAN_FILE"
 
-    - name: Upload Plan Bundle to State Storage
-      uses: pagopa/dx/actions/cloud-storage-upload@poc-store-plan-artifact-in-csp
+    - name: Upload Terraform Plan as Artifact
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
-        provider: ${{ steps.backend.outputs.provider }}
-        file-paths: |
-          ${{ inputs.plan-file }}
-          .terraform.lock.hcl
-          .terraform/modules/
-        working-directory: ${{ inputs.working-directory }}
-        destination: ${{ steps.backend.outputs.plan-path }}
-        azure-storage-account: ${{ steps.backend.outputs.azure-storage-account }}
-        azure-container: ${{ steps.backend.outputs.azure-container }}
-        aws-bucket: ${{ steps.backend.outputs.aws-bucket }}
-        aws-region: ${{ steps.backend.outputs.aws-region }}
+        name: ${{ inputs.artifact-name }}
+        path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}.enc
+        if-no-files-found: error
+        retention-days: ${{ inputs.retention-days }}

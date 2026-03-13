@@ -1,5 +1,5 @@
 /**
- * @fileoverview Input/state validation schema for the Ephemeral Cloud Download action.
+ * @fileoverview Input/state validation schema for the Terraform Plan Storage Download action.
  *
  * - `ContextSchema`   — used by main.ts to validate action inputs.
  * - `PostStateSchema` — used by post.ts to validate values read from GITHUB_STATE.
@@ -45,9 +45,9 @@ export const ContextSchema = z.discriminatedUnion("provider", [
     "azure-storage-account": z
       .string()
       .min(1, "azure-storage-account is required when provider is 'azure'"),
-    "extract-to": safePath("extract-to"),
+    "plan-path": z.string().min(1, "plan-path must not be empty"),
     provider: z.literal("azure"),
-    source: z.string().min(1, "source must not be empty"),
+    "working-directory": safePath("working-directory"),
   }),
   z.object({
     "aws-bucket": z
@@ -56,16 +56,16 @@ export const ContextSchema = z.discriminatedUnion("provider", [
     "aws-region": z
       .string()
       .min(1, "aws-region is required when provider is 'aws'"),
-    "extract-to": safePath("extract-to"),
+    "plan-path": z.string().min(1, "plan-path must not be empty"),
     provider: z.literal("aws"),
-    source: z.string().min(1, "source must not be empty"),
+    "working-directory": safePath("working-directory"),
   }),
 ]);
 
 /**
  * Schema for post.ts — only the fields saved to GITHUB_STATE by main.ts.
- * `extract-to` is intentionally omitted: the post step only needs to delete
- * the remote object; local cleanup is handled by main.ts after extraction.
+ * `working-directory` is intentionally omitted: the post step only needs to
+ * delete the remote object; local cleanup is handled by main.ts after extraction.
  */
 export const PostStateSchema = z.discriminatedUnion("provider", [
   z.object({
@@ -75,8 +75,8 @@ export const PostStateSchema = z.discriminatedUnion("provider", [
     "azure-storage-account": z
       .string()
       .min(1, "azure-storage-account is required when provider is 'azure'"),
+    "plan-path": z.string().min(1, "plan-path must not be empty"),
     provider: z.literal("azure"),
-    source: z.string().min(1, "source must not be empty"),
   }),
   z.object({
     "aws-bucket": z
@@ -85,8 +85,8 @@ export const PostStateSchema = z.discriminatedUnion("provider", [
     "aws-region": z
       .string()
       .min(1, "aws-region is required when provider is 'aws'"),
+    "plan-path": z.string().min(1, "plan-path must not be empty"),
     provider: z.literal("aws"),
-    source: z.string().min(1, "source must not be empty"),
   }),
 ]);
 

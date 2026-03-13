@@ -1,3 +1,0 @@
-node_modules/
-# Commit dist/ so GitHub Actions can run the built JS without a build step
-!dist/

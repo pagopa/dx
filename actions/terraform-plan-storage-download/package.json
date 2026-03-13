@@ -1,9 +1,9 @@
 {
-  "name": "@pagopa-dx/cloud-storage-upload",
+  "name": "@pagopa-dx/terraform-plan-storage-download",
   "version": "0.0.1",
   "type": "module",
   "private": true,
-  "description": "GitHub Action to upload a file to Azure Blob Storage or Amazon S3",
+  "description": "GitHub Action to download and extract a Terraform plan bundle from the state backend storage",
   "main": "dist/main.cjs",
   "scripts": {
     "build": "tsup",
