@@ -91,8 +91,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_admin_password"></a> [admin\_password](#output\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care. It is marked as ephemeral, meaning it will not be stored in the state file after the initial creation of the resource. |
-| <a name="output_admin_username"></a> [admin\_username](#output\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name. |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'. |
 | <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server. |
