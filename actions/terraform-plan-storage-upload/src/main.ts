@@ -89,6 +89,18 @@ function computePlanPath(stateKey: string, runId: string): string {
 }
 
 /**
+ * Resolves a path relative to working-directory, using GITHUB_WORKSPACE as
+ * the base for relative working directories so the node action CWD does not
+ * affect resolution.
+ */
+function resolvePath(workingDirectory: string, entry: string): string {
+  const base = path.isAbsolute(workingDirectory)
+    ? workingDirectory
+    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
+  return path.join(base, entry);
+}
+
+/**
  * Creates a `.tar.gz` archive of the plan file plus optional Terraform artefacts.
  * Entries that do not exist under `workingDirectory` are skipped with a warning.
  */
@@ -102,15 +114,19 @@ async function createBundle(
     ".terraform/modules/",
   ];
 
+  const absoluteWorkingDir = path.isAbsolute(workingDirectory)
+    ? workingDirectory
+    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
+
   const existingPaths: string[] = [];
   for (const entry of BUNDLE_ENTRIES) {
-    const absolute = path.resolve(workingDirectory, entry);
+    const absolute = resolvePath(workingDirectory, entry);
     try {
       await fs.access(absolute);
       existingPaths.push(entry);
     } catch {
       core.warning(
-        `Skipping "${entry}": path does not exist under working-directory`,
+        `Skipping "${entry}": not found at ${absolute}`,
       );
     }
   }
@@ -126,7 +142,7 @@ async function createBundle(
     "czf",
     archivePath,
     "-C",
-    workingDirectory,
+    absoluteWorkingDir,
     ...existingPaths,
   ]);
   core.info(`Bundled ${existingPaths.join(", ")} into ${archivePath}`);
@@ -186,10 +202,14 @@ async function run(): Promise<void> {
     throw new Error("GITHUB_RUN_ID environment variable is not set");
   }
 
-  const tfState = await readBackendConfig(inputs["working-directory"]);
+  const absoluteWorkingDir = path.isAbsolute(inputs["working-directory"])
+    ? inputs["working-directory"]
+    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), inputs["working-directory"]);
+
+  const tfState = await readBackendConfig(absoluteWorkingDir);
   const planPath = computePlanPath(tfState.backend.config.key, runId);
 
-  const archivePath = await createBundle(inputs, inputs["working-directory"]);
+  const archivePath = await createBundle(inputs, absoluteWorkingDir);
   try {
     switch (tfState.backend.type) {
       case "azurerm": {
