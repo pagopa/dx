@@ -8,7 +8,7 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
 
-[!diagram](./diagram.svg)
+![diagram](diagram.svg)
 
 ## Features
 
@@ -201,68 +201,13 @@ az storage account immutability-policy update \
 
 ## Usage Example
 
-A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory.
+A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/complete) directory, and an audit specific example can be found in the [example/audit-compliance](https://github.com/pagopa-dx/terraform-azurerm-azure-storage-account/tree/main/examples/audit-compliance) directory.
 
-## Diagram
+## Deprecation Notice
 
-The following diagram illustrates the architecture and relationships between the main components of this module:
+⚠️ **`override_infrastructure_encryption` variable is deprecated and will be removed in v3.0.0.**
 
-```mermaid
-flowchart LR
-    subgraph Security["Security Layer"]
-        kv["Key Vault"]
-        kv@{ icon: "azure:key-vaults"}
-
-        cmk["Customer Managed Key"]
-        cmk@{ icon: "azure:keys"}
-    end
-
-    subgraph Storage["Primary Storage"]
-        sa["Storage Account"]
-        sa@{ icon: "azure:storage-accounts"}
-
-        containers["Containers"]
-        tables["Tables"]
-        queues["Queues"]
-
-        containers@{ icon: "azure:storage-container" }
-        queues@{ icon: "azure:storage-queue" }
-        tables@{ icon: "azure:table" }
-
-    end
-
-    subgraph Network["Network Layer"]
-        netrules["Network Rules"]
-
-        pep["Private Endpoints"]
-        pep@{ icon: "azure:private-endpoints"}
-    end
-
-    subgraph Monitoring["Monitoring"]
-        alert["Metric Alerts"]
-        alert@{ icon: "azure:monitor"}
-
-        defender["Storage Defender"]
-        defender@{ icon: "azure:microsoft-defender-for-cloud" }
-    end
-
-    subgraph Replication["Geo-Replication (Optional)"]
-        secondary["Secondary Storage Account"]
-        secondary@{ icon: "azure:storage-accounts"}
-    end
-
-    %% Dependencies
-    kv -.-> cmk
-    cmk -.-> sa
-    netrules --> sa
-    pep --> sa
-    sa --> containers
-    sa --> tables
-    sa --> queues
-    sa -.-> secondary
-    alert -.-> sa
-    defender -.-> sa
-```
+This variable was introduced as a temporary workaround to prevent storage account recreation when upgrading from versions before 2.1.0, where infrastructure encryption was not enabled by default for the `audit` use case. New deployments should not use this variable.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
