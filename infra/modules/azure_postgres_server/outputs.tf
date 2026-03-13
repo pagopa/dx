@@ -24,16 +24,3 @@ output "postgres_replica" {
     id   = azurerm_postgresql_flexible_server.replica[0].id
   } : {}
 }
-
-output "admin_username" {
-  description = "The administrator username for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care."
-  sensitive   = true
-  value       = var.admin_username
-}
-
-output "admin_password" {
-  description = "The administrator password for the PostgreSQL Flexible Server. This output is sensitive and should be handled with care. It is marked as ephemeral, meaning it will not be stored in the state file after the initial creation of the resource."
-  sensitive   = true
-  ephemeral   = true
-  value       = var.admin_password
-}
