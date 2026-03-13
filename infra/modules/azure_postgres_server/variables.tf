@@ -95,6 +95,12 @@ variable "admin_password" {
   ephemeral   = true
 }
 
+variable "admin_password_version" {
+  type        = number
+  default     = 1
+  description = "Version number for the administrator password. Increment this value when rotating the password to trigger an update, since Terraform cannot detect changes to write-only values."
+}
+
 #--------#
 # Backup #
 #--------#
