@@ -1,0 +1,45 @@
+name: Upload Terraform Plan to Storage
+description: >
+  Reads the Terraform backend configuration from the initialised .terraform/
+  directory, bundles the plan file together with .terraform.lock.hcl and
+  .terraform/modules/, and uploads the archive to the same storage backend
+  used for the Terraform state.
+
+  Outputs the storage coordinates so the companion download action can
+  retrieve the bundle without needing to run terraform init again.
+
+  Requires terraform init to have already run in working-directory.
+
+inputs:
+  plan-file:
+    description: Name of the Terraform plan file to upload (relative to working-directory).
+    required: true
+  working-directory:
+    description: >
+      Directory containing the plan file and the initialised .terraform/
+      directory (produced by running terraform init before this action).
+    required: true
+
+outputs:
+  provider:
+    description: Detected cloud provider. Either "azure" or "aws".
+    value: ${{ steps.upload.outputs.provider }}
+  plan-path:
+    description: Remote path of the uploaded plan bundle in the state storage.
+    value: ${{ steps.upload.outputs.plan-path }}
+  azure-storage-account:
+    description: Azure Storage Account name. Set when provider is "azure".
+    value: ${{ steps.upload.outputs.azure-storage-account }}
+  azure-container:
+    description: Azure Blob container name. Set when provider is "azure".
+    value: ${{ steps.upload.outputs.azure-container }}
+  aws-bucket:
+    description: S3 bucket name. Set when provider is "aws".
+    value: ${{ steps.upload.outputs.aws-bucket }}
+  aws-region:
+    description: AWS region. Set when provider is "aws".
+    value: ${{ steps.upload.outputs.aws-region }}
+
+runs:
+  using: node24
+  main: dist/main.cjs

@@ -1,7 +1,7 @@
 /**
- * @fileoverview Ephemeral Cloud Download - post entry point
+ * @fileoverview Terraform Plan Storage Download - post entry point
  *
- * Runs after the job completes successfully. Deletes the remote object
+ * Runs after the job completes successfully. Deletes the remote plan bundle
  * (blob or S3 object) that was downloaded by the main step.
  *
  * Local cleanup is not required: the temp archive was already removed by
@@ -51,13 +51,13 @@ async function deleteRemote(state: PostState): Promise<void> {
       return deleteFromS3(
         state["aws-bucket"],
         state["aws-region"],
-        state.source,
+        state["plan-path"],
       );
     case "azure":
       return deleteFromAzure(
         state["azure-storage-account"],
         state["azure-container"],
-        state.source,
+        state["plan-path"],
       );
   }
 }
@@ -68,8 +68,8 @@ async function run(): Promise<void> {
     "aws-region": core.getState("aws-region"),
     "azure-container": core.getState("azure-container"),
     "azure-storage-account": core.getState("azure-storage-account"),
+    "plan-path": core.getState("plan-path"),
     provider: core.getState("provider"),
-    source: core.getState("source"),
   });
 
   if (!result.success) {

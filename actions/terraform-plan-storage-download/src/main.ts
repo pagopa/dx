@@ -1,11 +1,14 @@
 /**
- * @fileoverview Ephemeral Cloud Download - main entry point
+ * @fileoverview Terraform Plan Storage Download - main entry point
  *
- * Downloads a `.tar.gz` bundle from Azure Blob Storage or Amazon S3 into a
- * temporary file, extracts it into `extract-to`, then removes the temp archive.
+ * Downloads a `.tar.gz` plan bundle from Azure Blob Storage or Amazon S3 into
+ * a temporary file, extracts it into `working-directory`, then removes the
+ * temp archive.
  *
- * Saves only the connection context (provider + credentials + source) to
- * GITHUB_STATE so the post step can delete the remote object after the job.
+ * Accepts storage coordinates directly as inputs — no terraform init required.
+ *
+ * Saves the connection context (provider + credentials + plan-path) to
+ * GITHUB_STATE so the post step can delete the remote bundle after the job.
  */
 
 import * as core from "@actions/core";
@@ -68,14 +71,14 @@ async function downloadToFile(ctx: Context, destFile: string): Promise<void> {
       return downloadFromS3(
         ctx["aws-bucket"],
         ctx["aws-region"],
-        ctx.source,
+        ctx["plan-path"],
         destFile,
       );
     case "azure":
       return downloadFromAzure(
         ctx["azure-storage-account"],
         ctx["azure-container"],
-        ctx.source,
+        ctx["plan-path"],
         destFile,
       );
   }
@@ -87,9 +90,9 @@ async function run(): Promise<void> {
     "aws-region": core.getInput("aws-region"),
     "azure-container": core.getInput("azure-container"),
     "azure-storage-account": core.getInput("azure-storage-account"),
-    "extract-to": core.getInput("extract-to"),
+    "plan-path": core.getInput("plan-path"),
     provider: core.getInput("provider"),
-    source: core.getInput("source"),
+    "working-directory": core.getInput("working-directory"),
   });
 
   if (!result.success) {
@@ -99,9 +102,9 @@ async function run(): Promise<void> {
   const ctx = result.data;
 
   // Persist connection context for the post step via GITHUB_STATE.
-  // `extract-to` is not saved: the post step only needs to delete the remote object.
+  // `working-directory` is not saved: the post step only needs to delete the remote object.
   core.saveState("provider", ctx.provider);
-  core.saveState("source", ctx.source);
+  core.saveState("plan-path", ctx["plan-path"]);
   if (ctx.provider === "azure") {
     core.saveState("azure-storage-account", ctx["azure-storage-account"]);
     core.saveState("azure-container", ctx["azure-container"]);
@@ -114,11 +117,10 @@ async function run(): Promise<void> {
   try {
     await downloadToFile(ctx, archivePath);
 
-    const extractTo = path.resolve(ctx["extract-to"]);
+    const extractTo = path.resolve(ctx["working-directory"]);
     await fs.mkdir(extractTo, { recursive: true });
     execFileSync("tar", ["xzf", archivePath, "-C", extractTo]);
     core.info(`Extracted bundle to: ${extractTo}`);
-    core.setOutput("extract-to", extractTo);
   } finally {
     await fs.rm(archivePath, { force: true });
   }
