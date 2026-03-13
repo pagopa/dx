@@ -29,12 +29,12 @@ runs:
   steps:
     - name: Read Terraform Backend Config
       id: backend
-      uses: pagopa/dx/actions/get-terraform-backend-config@main
+      uses: pagopa/dx/actions/get-terraform-backend-config@poc-store-plan-artifact-in-csp
       with:
         working-directory: ${{ inputs.working-directory }}
 
     - name: Download Plan Bundle from State Storage
-      uses: pagopa/dx/actions/cloud-ephemeral-download@main
+      uses: pagopa/dx/actions/cloud-ephemeral-download@poc-store-plan-artifact-in-csp
       with:
         provider: ${{ steps.backend.outputs.provider }}
         source: ${{ steps.backend.outputs.plan-path }}

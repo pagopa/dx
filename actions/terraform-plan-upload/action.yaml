@@ -31,12 +31,12 @@ runs:
   steps:
     - name: Read Terraform Backend Config
       id: backend
-      uses: pagopa/dx/actions/get-terraform-backend-config@main
+      uses: pagopa/dx/actions/get-terraform-backend-config@poc-store-plan-artifact-in-csp
       with:
         working-directory: ${{ inputs.working-directory }}
 
     - name: Upload Plan Bundle to State Storage
-      uses: pagopa/dx/actions/cloud-storage-upload@main
+      uses: pagopa/dx/actions/cloud-storage-upload@poc-store-plan-artifact-in-csp
       with:
         provider: ${{ steps.backend.outputs.provider }}
         file-paths: |
