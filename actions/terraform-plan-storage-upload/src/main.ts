@@ -28,25 +28,28 @@ import { type Inputs, InputsSchema } from "./schema.js";
 // --------------------------------------------------------------------------
 
 const AzurermBackendSchema = z.object({
-  type: z.literal("azurerm"),
   config: z.object({
     container_name: z.string().min(1),
     key: z.string().min(1),
     storage_account_name: z.string().min(1),
   }),
+  type: z.literal("azurerm"),
 });
 
 const S3BackendSchema = z.object({
-  type: z.literal("s3"),
   config: z.object({
     bucket: z.string().min(1),
     key: z.string().min(1),
     region: z.string().min(1),
   }),
+  type: z.literal("s3"),
 });
 
 const TfStateSchema = z.object({
-  backend: z.discriminatedUnion("type", [AzurermBackendSchema, S3BackendSchema]),
+  backend: z.discriminatedUnion("type", [
+    AzurermBackendSchema,
+    S3BackendSchema,
+  ]),
 });
 
 type TfState = z.infer<typeof TfStateSchema>;
@@ -54,26 +57,6 @@ type TfState = z.infer<typeof TfStateSchema>;
 // --------------------------------------------------------------------------
 // Helpers
 // --------------------------------------------------------------------------
-
-/**
- * Parses `.terraform/terraform.tfstate` from the given working directory.
- */
-async function readBackendConfig(workingDirectory: string): Promise<TfState> {
-  const tfstatePath = path.join(
-    workingDirectory,
-    ".terraform",
-    "terraform.tfstate",
-  );
-  const raw = await fs.readFile(tfstatePath, "utf8");
-  const json: unknown = JSON.parse(raw);
-  const result = TfStateSchema.safeParse(json);
-  if (!result.success) {
-    throw new Error(
-      `Failed to parse .terraform/terraform.tfstate: ${result.error.issues.map((i) => i.message).join("; ")}`,
-    );
-  }
-  return result.data;
-}
 
 /**
  * Computes the remote plan bundle path relative to the state key.
@@ -104,7 +87,10 @@ async function createBundle(
 
   const absoluteWorkingDir = path.isAbsolute(workingDirectory)
     ? workingDirectory
-    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), workingDirectory);
+    : path.resolve(
+        process.env["GITHUB_WORKSPACE"] ?? process.cwd(),
+        workingDirectory,
+      );
 
   const existingPaths: string[] = [];
   for (const entry of BUNDLE_ENTRIES) {
@@ -135,41 +121,25 @@ async function createBundle(
   return archivePath;
 }
 
-async function uploadToAzure(
-  storageAccount: string,
-  container: string,
-  destination: string,
-  archivePath: string,
-): Promise<void> {
-  const credential = new DefaultAzureCredential();
-  const url = `https://${storageAccount}.blob.core.windows.net`;
-  const blockBlobClient = new BlobServiceClient(url, credential)
-    .getContainerClient(container)
-    .getBlockBlobClient(destination);
-
-  await blockBlobClient.uploadFile(archivePath);
-  core.info(
-    `Uploaded → https://${storageAccount}.blob.core.windows.net/${container}/${destination}`,
+/**
+ * Parses `.terraform/terraform.tfstate` from the given working directory.
+ */
+async function readBackendConfig(workingDirectory: string): Promise<TfState> {
+  const tfstatePath = path.join(
+    workingDirectory,
+    ".terraform",
+    "terraform.tfstate",
   );
+  const raw = await fs.readFile(tfstatePath, "utf8");
+  const json: unknown = JSON.parse(raw);
+  const result = TfStateSchema.safeParse(json);
+  if (!result.success) {
+    throw new Error(
+      `Failed to parse .terraform/terraform.tfstate: ${result.error.issues.map((i) => i.message).join("; ")}`,
+    );
+  }
+  return result.data;
 }
-
-async function uploadToS3(
-  bucket: string,
-  region: string,
-  destination: string,
-  archivePath: string,
-): Promise<void> {
-  const client = new S3Client({ region });
-  const body = await fs.readFile(archivePath);
-  await client.send(
-    new PutObjectCommand({ Body: body, Bucket: bucket, Key: destination }),
-  );
-  core.info(`Uploaded → s3://${bucket}/${destination}`);
-}
-
-// --------------------------------------------------------------------------
-// Entry point
-// --------------------------------------------------------------------------
 
 async function run(): Promise<void> {
   const result = InputsSchema.safeParse({
@@ -190,7 +160,10 @@ async function run(): Promise<void> {
 
   const absoluteWorkingDir = path.isAbsolute(inputs["working-directory"])
     ? inputs["working-directory"]
-    : path.resolve(process.env["GITHUB_WORKSPACE"] ?? process.cwd(), inputs["working-directory"]);
+    : path.resolve(
+        process.env["GITHUB_WORKSPACE"] ?? process.cwd(),
+        inputs["working-directory"],
+      );
 
   const tfState = await readBackendConfig(absoluteWorkingDir);
   const planPath = computePlanPath(tfState.backend.config.key, runId);
@@ -229,6 +202,42 @@ async function run(): Promise<void> {
   } finally {
     await fs.rm(archivePath, { force: true });
   }
+}
+
+async function uploadToAzure(
+  storageAccount: string,
+  container: string,
+  destination: string,
+  archivePath: string,
+): Promise<void> {
+  const credential = new DefaultAzureCredential();
+  const url = `https://${storageAccount}.blob.core.windows.net`;
+  const blockBlobClient = new BlobServiceClient(url, credential)
+    .getContainerClient(container)
+    .getBlockBlobClient(destination);
+
+  await blockBlobClient.uploadFile(archivePath);
+  core.info(
+    `Uploaded → https://${storageAccount}.blob.core.windows.net/${container}/${destination}`,
+  );
+}
+
+// --------------------------------------------------------------------------
+// Entry point
+// --------------------------------------------------------------------------
+
+async function uploadToS3(
+  bucket: string,
+  region: string,
+  destination: string,
+  archivePath: string,
+): Promise<void> {
+  const client = new S3Client({ region });
+  const body = await fs.readFile(archivePath);
+  await client.send(
+    new PutObjectCommand({ Body: body, Bucket: bucket, Key: destination }),
+  );
+  core.info(`Uploaded → s3://${bucket}/${destination}`);
 }
 
 run().catch(core.setFailed);
