@@ -95,12 +95,6 @@ jobs:
     outputs:
       working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      plan_destination: ${{ steps.backend-plan.outputs.plan-destination }}
-      storage_provider: ${{ steps.backend-plan.outputs.provider }}
-      azure_storage_account: ${{ steps.backend-plan.outputs.azure-storage-account }}
-      azure_container: ${{ steps.backend-plan.outputs.azure-container }}
-      aws_bucket: ${{ steps.backend-plan.outputs.aws-bucket }}
-      aws_region: ${{ steps.backend-plan.outputs.aws-region }}
 
     steps:
       # Set the directory where the Terraform files are located
@@ -156,54 +150,14 @@ jobs:
             -out="$TFPLAN_FILE" \
             -input=false \
             | grep -v "hidden-link:"
-      # Read backend coordinates (populated by terraform init) to derive the plan storage path.
-      # The storage backend (Azure Blob / S3) provides its own access-control
-      # and server-side encryption, so no additional client-side encryption is applied here.
-      - name: Read Terraform Backend Config
-        id: backend-plan
-        working-directory: ${{ steps.directory.outputs.dir }}
-        run: |
-          set -euo pipefail
-          TYPE=$(jq -r '.backend.type' .terraform/terraform.tfstate)
-          STATE_KEY=$(jq -r '.backend.config.key' .terraform/terraform.tfstate)
-          # Place plan artifacts in a sibling directory named plan-artifacts.
-          # Example: state key 'dx/resources/dev.tfstate' ->
-          # 'dx/resources/dev/plan-artifacts/dev.tfstate.${GITHUB_RUN_ID}'
-          STATE_DIR=$(dirname "$STATE_KEY")
-          STATE_BASENAME=$(basename "$STATE_KEY")
-          if [ "$STATE_DIR" = "." ]; then
-            PLAN_DESTINATION="plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
-          else
-            PLAN_DESTINATION="${STATE_DIR}/plan-artifacts/${STATE_BASENAME}.${GITHUB_RUN_ID}"
-          fi
-          echo "plan-destination=${PLAN_DESTINATION}" >> "$GITHUB_OUTPUT"
-          case "$TYPE" in
-            azurerm)
-              echo "provider=azure" >> "$GITHUB_OUTPUT"
-              echo "azure-storage-account=$(jq -r '.backend.config.storage_account_name' .terraform/terraform.tfstate)" >> "$GITHUB_OUTPUT"
-              echo "azure-container=$(jq -r '.backend.config.container_name' .terraform/terraform.tfstate)" >> "$GITHUB_OUTPUT"
-              ;;
-            s3)
-              echo "provider=aws" >> "$GITHUB_OUTPUT"
-              echo "aws-bucket=$(jq -r '.backend.config.bucket' .terraform/terraform.tfstate)" >> "$GITHUB_OUTPUT"
-              echo "aws-region=$(jq -r '.backend.config.region' .terraform/terraform.tfstate)" >> "$GITHUB_OUTPUT"
-              ;;
-            *)
-              echo "::error::Unsupported backend type '${TYPE}'."
-              exit 1
-              ;;
-          esac
-
-      - name: Upload Plan to State Storage
-        uses: pagopa/dx/actions/cloud-storage-upload@main
+      # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
+      # and upload it to the same storage backend used for the Terraform state.
+      # The bundle path is derived automatically from the backend config.
+      - name: Upload Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-upload@poc-store-plan-artifact-in-csp
         with:
-          provider: ${{ steps.backend-plan.outputs.provider }}
-          file-path: ${{ steps.directory.outputs.dir }}/${{ env.TFPLAN_FILE }}
-          destination: ${{ steps.backend-plan.outputs.plan-destination }}
-          azure-storage-account: ${{ steps.backend-plan.outputs.azure-storage-account }}
-          azure-container: ${{ steps.backend-plan.outputs.azure-container }}
-          aws-bucket: ${{ steps.backend-plan.outputs.aws-bucket }}
-          aws-region: ${{ steps.backend-plan.outputs.aws-region }}
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ steps.directory.outputs.dir }}
 
   tf_apply:
     name: "Terraform Apply"
@@ -232,19 +186,19 @@ jobs:
         with:
           terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
 
-      # Download the plan directly from cloud state storage
-      # The post step of the action will delete both the remote object and the local file
-      # after a successful apply.
-      - name: Download Plan from State Storage
-        uses: pagopa/dx/actions/cloud-ephemeral-download@main
+      # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
+      # Backend init is needed to populate .terraform/terraform.tfstate with the storage
+      # coordinates so the download action can reconstruct the remote path.
+      # The remote bundle is automatically deleted after a successful apply.
+      - name: Terraform Backend Init
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        run: |
+          terraform init -backend-only -input=false
+
+      - name: Download Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-download@poc-store-plan-artifact-in-csp
         with:
-          provider: ${{ needs.tf_plan.outputs.storage_provider }}
-          source: ${{ needs.tf_plan.outputs.plan_destination }}
-          file-path: ${{ needs.tf_plan.outputs.working_dir }}/${{ env.TFPLAN_FILE }}
-          azure-storage-account: ${{ needs.tf_plan.outputs.azure_storage_account }}
-          azure-container: ${{ needs.tf_plan.outputs.azure_container }}
-          aws-bucket: ${{ needs.tf_plan.outputs.aws_bucket }}
-          aws-region: ${{ needs.tf_plan.outputs.aws_region }}
+          working-directory: ${{ needs.tf_plan.outputs.working_dir }}
 
       - name: Terraform Init
         working-directory: ${{ needs.tf_plan.outputs.working_dir }}

@@ -1,0 +1,20 @@
+{
+  "name": "@pagopa-dx/get-terraform-backend-config",
+  "description": "A GitHub Action that reads the Terraform backend configuration and derives the plan bundle path.",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "github",
+    "action",
+    "terraform",
+    "backend"
+  ],
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "catalog:"
+  }
+}
