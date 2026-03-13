@@ -4,7 +4,7 @@
  * { path, tag, version } entries to stdout.
  *
  * Matching: `nx show projects --json` returns full project names (e.g.
- * `@selfcare/infra-dev-iam-ms`) which are the exact prefix of each tag.
+ * `@dx/app-x`) which are the exact prefix of each tag.
  * The longest prefix match wins.
  *
  * Used to populate the nx-release-tags metadata comment in the Version Packages PR body.
@@ -53,11 +53,21 @@ export async function getNxProjectNames(): Promise<string[]> {
       "projects",
       "--json",
     ]);
-    const parsed: unknown = JSON.parse(stdout);
+    // nx may print banner/daemon text before the JSON array — find the first '['
+    const jsonStart = stdout.indexOf("[");
+    if (jsonStart === -1) {
+      console.error(
+        "[extract-tags] nx show projects: no JSON array found in stdout:",
+        stdout.slice(0, 200),
+      );
+      return [];
+    }
+    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
     return Array.isArray(parsed) && parsed.every((s) => typeof s === "string")
       ? (parsed as string[])
       : [];
-  } catch {
+  } catch (err) {
+    console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];
   }
 }
@@ -74,11 +84,21 @@ export async function getNxProjectRoot(name: string): Promise<null | string> {
       name,
       "--json",
     ]);
-    const parsed: unknown = JSON.parse(stdout);
+    // nx may print banner/daemon text before the JSON object — find the first '{'
+    const jsonStart = stdout.indexOf("{");
+    if (jsonStart === -1) {
+      console.error(
+        `[extract-tags] nx show project ${name}: no JSON object found in stdout:`,
+        stdout.slice(0, 200),
+      );
+      return null;
+    }
+    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
     if (typeof parsed !== "object" || parsed === null) return null;
     const root = (parsed as Record<string, unknown>)["root"];
     return typeof root === "string" && root ? root : null;
-  } catch {
+  } catch (err) {
+    console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
     return null;
   }
 }

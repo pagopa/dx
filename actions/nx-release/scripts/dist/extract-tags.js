@@ -27,9 +27,18 @@ async function getNxProjectNames() {
       "projects",
       "--json"
     ]);
-    const parsed = JSON.parse(stdout);
+    const jsonStart = stdout.indexOf("[");
+    if (jsonStart === -1) {
+      console.error(
+        "[extract-tags] nx show projects: no JSON array found in stdout:",
+        stdout.slice(0, 200)
+      );
+      return [];
+    }
+    const parsed = JSON.parse(stdout.slice(jsonStart));
     return Array.isArray(parsed) && parsed.every((s) => typeof s === "string") ? parsed : [];
-  } catch {
+  } catch (err) {
+    console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];
   }
 }
@@ -42,11 +51,20 @@ async function getNxProjectRoot(name) {
       name,
       "--json"
     ]);
-    const parsed = JSON.parse(stdout);
+    const jsonStart = stdout.indexOf("{");
+    if (jsonStart === -1) {
+      console.error(
+        `[extract-tags] nx show project ${name}: no JSON object found in stdout:`,
+        stdout.slice(0, 200)
+      );
+      return null;
+    }
+    const parsed = JSON.parse(stdout.slice(jsonStart));
     if (typeof parsed !== "object" || parsed === null) return null;
     const root = parsed["root"];
     return typeof root === "string" && root ? root : null;
-  } catch {
+  } catch (err) {
+    console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
     return null;
   }
 }
