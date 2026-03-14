@@ -6,6 +6,8 @@ import type { DashboardParams, Database } from "@/domain/shared/types";
 
 import type { IacDashboardResult } from "./types";
 
+import { buildMemberMatchSql } from "./member-match-sql";
+
 /**
  * Resolves the latest data point date for the given repository.
  * All time-window filters are relative to this reference date.
@@ -26,13 +28,6 @@ const getDxMembers = async (db: Database): Promise<readonly string[]> => {
   `);
   return result.rows.map((row) => (row as { username: string }).username);
 };
-
-/** Builds a SQL list expression from an array of member usernames. */
-const membersSqlList = (members: readonly string[]) =>
-  sql.join(
-    members.map((m) => sql`${m}`),
-    sql`, `,
-  );
 
 /** IaC PR Lead Time — weekly average. */
 const queryLeadTimeMovingAvg = (
@@ -92,13 +87,13 @@ const querySupervisedVsUnsupervised = (
   fullName: string,
   maxDate: string,
   days: number,
-  dxMembersSql: ReturnType<typeof membersSqlList>,
+  dxMembers: readonly string[],
 ) =>
   db.execute(sql`
     WITH classified AS (
       SELECT ipr.created_at::date AS run_date,
-        CASE WHEN ipr.author IN (${dxMembersSql})
-                  OR pr.merged_by IN (${dxMembersSql})
+        CASE WHEN ${buildMemberMatchSql("ipr.author", dxMembers)}
+                  OR ${buildMemberMatchSql("pr.merged_by", dxMembers)}
              THEN 'Supervised PRs'
              ELSE 'Unsupervised PRs' END AS pr_type
       FROM iac_pr_lead_times ipr
@@ -140,7 +135,7 @@ const queryPrsByReviewer = (
   fullName: string,
   maxDate: string,
   days: number,
-  dxMembersSql: ReturnType<typeof membersSqlList>,
+  dxMembers: readonly string[],
 ) =>
   db.execute(sql`
     WITH base AS (
@@ -154,8 +149,8 @@ const queryPrsByReviewer = (
     expanded AS (
       SELECT pr_number, created_at, merged_at,
         UNNEST(ARRAY[
-          CASE WHEN author IN (${dxMembersSql}) THEN author END,
-          CASE WHEN merged_by IN (${dxMembersSql}) AND merged_by != author THEN merged_by END
+          CASE WHEN ${buildMemberMatchSql("author", dxMembers)} THEN author END,
+          CASE WHEN ${buildMemberMatchSql("merged_by", dxMembers)} AND merged_by != author THEN merged_by END
         ]) AS member
       FROM base
     )
@@ -178,7 +173,6 @@ export const getIacDashboard = async (
 
   const maxDate = await getMaxDate(db, fullName);
   const dxMembers = await getDxMembers(db);
-  const dxMembersSql = membersSqlList(dxMembers);
 
   const [
     leadTimeMovingAvg,
@@ -189,9 +183,9 @@ export const getIacDashboard = async (
   ] = await Promise.all([
     queryLeadTimeMovingAvg(db, fullName, maxDate, days),
     queryLeadTimeTrend(db, fullName, maxDate, days),
-    querySupervisedVsUnsupervised(db, fullName, maxDate, days, dxMembersSql),
+    querySupervisedVsUnsupervised(db, fullName, maxDate, days, dxMembers),
     queryPrsOverTime(db, fullName, maxDate, days),
-    queryPrsByReviewer(db, fullName, maxDate, days, dxMembersSql),
+    queryPrsByReviewer(db, fullName, maxDate, days, dxMembers),
   ]);
 
   return {

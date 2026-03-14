@@ -33,7 +33,26 @@ export interface ImportContext {
 export type ImportDatabase = DatabaseConnection["db"];
 export type ImportPool = DatabaseConnection["pool"];
 
+export interface TeamMembersClient {
+  paginate: (
+    route: string,
+    parameters: {
+      readonly org: string;
+      readonly per_page: number;
+      readonly team_slug: string;
+    },
+    mapFn: (response: TeamMembersPage) => readonly string[],
+  ) => Promise<readonly string[]>;
+}
+
 type DatabaseConnection = ReturnType<typeof createDatabaseConnection>;
+
+interface TeamMembersPage {
+  readonly data: readonly { readonly login: string }[];
+}
+
+const toSortedUniqueMembers = (members: readonly string[]): string[] =>
+  [...new Set(members)].sort();
 
 // We use a dynamic import as module resolution is set to bundler
 // which doesn't support conditional exports.
@@ -41,6 +60,24 @@ const createOctokitClient = async (githubToken?: string): Promise<Octokit> => {
   const { Octokit } = await import("octokit");
 
   return githubToken ? new Octokit({ auth: githubToken }) : new Octokit();
+};
+
+/** Resolves DX team members from the configured GitHub team slug. */
+export const resolveDxTeamMembers = async (
+  teamMembersClient: TeamMembersClient,
+  settings: Pick<ImportSettings, "dxTeamSlug" | "organization">,
+): Promise<string[]> => {
+  const members = await teamMembersClient.paginate(
+    "GET /orgs/{org}/teams/{team_slug}/members",
+    {
+      org: settings.organization,
+      per_page: 100,
+      team_slug: settings.dxTeamSlug,
+    },
+    (response) => response.data.map((member) => member.login),
+  );
+
+  return toSortedUniqueMembers(members);
 };
 
 export async function closeImportContext(
@@ -55,6 +92,7 @@ export async function createImportContext(
   const { databaseUrl, githubToken, ...config } = settings;
   const { db, pool } = createDatabaseConnection(databaseUrl);
   const octokit = await createOctokitClient(githubToken);
+  const dxTeamMembers = await resolveDxTeamMembers(octokit, config);
 
   const ensureRepo = async (name: string): Promise<number> => {
     const fullName = `${config.organization}/${name}`;
@@ -88,11 +126,14 @@ export async function createImportContext(
   };
 
   return {
-    ...config,
     db,
+    dxRepo: config.dxRepo,
+    dxTeamMembers,
     ensureRepo,
     octokit,
+    organization: config.organization,
     pool,
+    repositories: config.repositories,
   };
 }
 

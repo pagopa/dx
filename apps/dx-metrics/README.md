@@ -27,10 +27,18 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 docker compose --profile dx-metrics up -d
 ```
 
-2. **Run database migrations:**
+2. **Setup database:**
+
+Only needed on first run or when applying new migrations:
 
 ```bash
 DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit push
+```
+
+if you need to apply migrations incrementally, you can use migrate instead of push:
+
+```bash
+DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit migrate
 ```
 
 3. **Import data (incremental):**
@@ -97,12 +105,12 @@ these environment variables.
 
 Typical configuration fields include:
 
-| Field          | Default          | Description                                               |
-| -------------- | ---------------- | --------------------------------------------------------- |
-| `organization` | `pagopa`         | GitHub organization                                       |
-| `repositories` | (see config)     | List of repositories to analyze                           |
-| `dxTeamSlug`   | `engineering-dx` | GitHub team slug — members are resolved via API at import |
-| `dxRepo`       | `dx`             | The DX repository name                                    |
+| Field           | Default          | Description                                               |
+| --------------- | ---------------- | --------------------------------------------------------- |
+| `organization`  | `pagopa`         | GitHub organization                                       |
+| `repositories`  | (see config)     | List of repositories to analyze                           |
+| `dxTeamSlug`    | `engineering-dx` | GitHub team slug — members are resolved via API at import |
+| `dxRepo`        | `dx`             | The DX repository name                                    |
 
 Refer to the `config.json` used by `src/lib/config.ts` for the exact
 structure and values.

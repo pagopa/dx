@@ -5,7 +5,7 @@ import { z } from "zod";
 
 const ImportFileConfigSchema = z.object({
   dxRepo: z.string().optional(),
-  dxTeamMembers: z.array(z.string()).optional(),
+  dxTeamSlug: z.string().min(1),
   organization: z.string().optional(),
   repositories: z.array(z.string()).optional(),
 });
@@ -20,7 +20,7 @@ export type ImportFileConfig = z.infer<typeof ImportFileConfigSchema>;
 export interface ImportSettings {
   databaseUrl?: string;
   dxRepo: string;
-  dxTeamMembers: string[];
+  dxTeamSlug: string;
   githubToken?: string;
   organization: string;
   repositories: string[];
@@ -50,7 +50,7 @@ export function resolveImportSettings(
   return {
     databaseUrl: readOptionalEnvironmentString(environment.DATABASE_URL),
     dxRepo: fileConfig.dxRepo ?? "dx",
-    dxTeamMembers: fileConfig.dxTeamMembers ?? [],
+    dxTeamSlug: fileConfig.dxTeamSlug,
     githubToken: readOptionalEnvironmentString(environment.GITHUB_TOKEN),
     organization: fileConfig.organization ?? "pagopa",
     repositories: fileConfig.repositories ?? [],
