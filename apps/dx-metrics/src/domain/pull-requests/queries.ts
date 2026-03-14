@@ -3,7 +3,7 @@ import { sql } from "drizzle-orm";
 
 import type { DashboardParams, Database } from "@/domain/shared/types";
 
-import { numericRows } from "@/domain/shared/numeric";
+import { parseSqlRow, parseSqlRows } from "@/domain/shared/sql-parsing";
 
 import type {
   PrCountData,
@@ -11,6 +11,20 @@ import type {
   PrLeadTimeData,
   PrQualityData,
   PrSummaryCards,
+} from "./types";
+
+import {
+  prCommentsBySizeRowSchema,
+  prCommentsRowSchema,
+  prCumulativeCountRowSchema,
+  prDateCountRowSchema,
+  prLeadTimeMovingAvgRowSchema,
+  prLeadTimeTrendRowSchema,
+  prMetricValueRowSchema,
+  prOpenCountRowSchema,
+  prSizeDistributionRowSchema,
+  prSizeRowSchema,
+  slowestPrRowSchema,
 } from "./types";
 
 /** Fetches the complete pull-request dashboard for a repository. */
@@ -71,10 +85,16 @@ async function fetchLeadTimeData(
     `),
   ]);
   return {
-    leadTimeMovingAvg: numericRows(leadTimeMovingAvg.rows, [
-      "avg_lead_time_days",
-    ]),
-    leadTimeTrend: numericRows(leadTimeTrend.rows, ["trend_line"]),
+    leadTimeMovingAvg: parseSqlRows(
+      prLeadTimeMovingAvgRowSchema,
+      leadTimeMovingAvg.rows,
+      "pull-requests leadTimeMovingAvg",
+    ),
+    leadTimeTrend: parseSqlRows(
+      prLeadTimeTrendRowSchema,
+      leadTimeTrend.rows,
+      "pull-requests leadTimeTrend",
+    ),
   };
 }
 
@@ -162,10 +182,26 @@ async function fetchPrCountData(
     `),
   ]);
   return {
-    cumulatedNewPrs: numericRows(cumulatedNewPrs.rows, ["cumulative_count"]),
-    mergedPrs: numericRows(mergedPrs.rows, ["pr_count"]),
-    newPrs: numericRows(newPrs.rows, ["pr_count"]),
-    unmergedPrs: numericRows(unmergedPrs.rows, ["open_prs"]),
+    cumulatedNewPrs: parseSqlRows(
+      prCumulativeCountRowSchema,
+      cumulatedNewPrs.rows,
+      "pull-requests cumulatedNewPrs",
+    ),
+    mergedPrs: parseSqlRows(
+      prDateCountRowSchema,
+      mergedPrs.rows,
+      "pull-requests mergedPrs",
+    ),
+    newPrs: parseSqlRows(
+      prDateCountRowSchema,
+      newPrs.rows,
+      "pull-requests newPrs",
+    ),
+    unmergedPrs: parseSqlRows(
+      prOpenCountRowSchema,
+      unmergedPrs.rows,
+      "pull-requests unmergedPrs",
+    ),
   };
 }
 
@@ -231,16 +267,27 @@ async function fetchPrQualityData(
       `),
     ]);
   return {
-    prComments: numericRows(prComments.rows, ["avg_comments"]),
-    prCommentsBySize: numericRows(prCommentsBySize.rows, [
-      "avg_comments_per_addition",
-    ]),
-    prSize: numericRows(prSize.rows, ["avg_additions"]),
-    prSizeDistribution: numericRows(prSizeDistribution.rows, [
-      "pr_count",
-      "avg_additions",
-    ]),
-    slowestPrs: numericRows(slowestPrs.rows, ["lead_time_days"]),
+    prComments: parseSqlRows(
+      prCommentsRowSchema,
+      prComments.rows,
+      "pull-requests prComments",
+    ),
+    prCommentsBySize: parseSqlRows(
+      prCommentsBySizeRowSchema,
+      prCommentsBySize.rows,
+      "pull-requests prCommentsBySize",
+    ),
+    prSize: parseSqlRows(prSizeRowSchema, prSize.rows, "pull-requests prSize"),
+    prSizeDistribution: parseSqlRows(
+      prSizeDistributionRowSchema,
+      prSizeDistribution.rows,
+      "pull-requests prSizeDistribution",
+    ),
+    slowestPrs: parseSqlRows(
+      slowestPrRowSchema,
+      slowestPrs.rows,
+      "pull-requests slowestPrs",
+    ),
   };
 }
 
@@ -284,10 +331,32 @@ async function fetchPrSummary(
           AND (pr.draft IS NULL OR pr.draft = 0)
       `),
     ]);
+
+  const avgLeadTimeValue = parseSqlRow(
+    prMetricValueRowSchema,
+    avgLeadTime.rows[0],
+    "pull-requests avgLeadTime",
+  ).value;
+  const commentsPerPrValue = parseSqlRow(
+    prMetricValueRowSchema,
+    commentsPerPr.rows[0],
+    "pull-requests commentsPerPr",
+  ).value;
+  const totalCommentsValue = parseSqlRow(
+    prMetricValueRowSchema,
+    totalComments.rows[0],
+    "pull-requests totalComments",
+  ).value;
+  const totalPrsValue = parseSqlRow(
+    prMetricValueRowSchema,
+    totalPrs.rows[0],
+    "pull-requests totalPrs",
+  ).value;
+
   return {
-    avgLeadTime: Number(avgLeadTime.rows[0]?.value) || null,
-    commentsPerPr: Number(commentsPerPr.rows[0]?.value) || null,
-    totalComments: Number(totalComments.rows[0]?.value) || null,
-    totalPrs: Number(totalPrs.rows[0]?.value) || null,
+    avgLeadTime: avgLeadTimeValue,
+    commentsPerPr: commentsPerPrValue,
+    totalComments: totalCommentsValue,
+    totalPrs: totalPrsValue,
   };
 }

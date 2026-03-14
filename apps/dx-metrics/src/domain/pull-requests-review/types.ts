@@ -1,35 +1,59 @@
-/** Types for the pull-requests-review dashboard result. */
+/** Zod schemas and inferred types for the pull-requests-review dashboard result. */
 
-export interface PullRequestsReviewDashboard {
-  readonly cards: {
-    readonly avgTimeToFirstReview: null | number;
-    readonly avgTimeToMerge: null | number;
-  };
-  readonly reviewDistribution: readonly ReviewDistributionRow[];
-  readonly reviewMatrix: readonly ReviewMatrixRow[];
-  readonly timeToFirstReviewTrend: readonly TimeToFirstReviewTrendRow[];
-  readonly timeToMergeTrend: readonly TimeToMergeTrendRow[];
-}
+import { z } from "zod";
 
-export interface ReviewDistributionRow {
-  readonly approvals: number;
-  readonly change_requests: number;
-  readonly reviewer: string;
-  readonly total_reviews: number;
-}
+import {
+  nullableSqlNumberSchema,
+  sqlDateSchema,
+  sqlNumberSchema,
+} from "../shared/sql-parsing";
 
-export interface ReviewMatrixRow {
-  readonly author: string;
-  readonly review_count: number;
-  readonly reviewer: string;
-}
+export const reviewMetricValueRowSchema = z.object({
+  value: nullableSqlNumberSchema,
+});
 
-export interface TimeToFirstReviewTrendRow {
-  readonly avg_hours_to_first_review: number;
-  readonly week: string;
-}
+export const reviewDistributionRowSchema = z.object({
+  approvals: sqlNumberSchema,
+  change_requests: sqlNumberSchema,
+  reviewer: z.string().min(1),
+  total_reviews: sqlNumberSchema,
+});
 
-export interface TimeToMergeTrendRow {
-  readonly avg_hours_to_merge: number;
-  readonly week: string;
-}
+export const reviewMatrixRowSchema = z.object({
+  author: z.string().min(1),
+  review_count: sqlNumberSchema,
+  reviewer: z.string().min(1),
+});
+
+export const timeToFirstReviewTrendRowSchema = z.object({
+  avg_hours_to_first_review: sqlNumberSchema,
+  week: sqlDateSchema,
+});
+
+export const timeToMergeTrendRowSchema = z.object({
+  avg_hours_to_merge: sqlNumberSchema,
+  week: sqlDateSchema,
+});
+
+export const pullRequestsReviewCardsSchema = z.object({
+  avgTimeToFirstReview: nullableSqlNumberSchema,
+  avgTimeToMerge: nullableSqlNumberSchema,
+});
+
+export const pullRequestsReviewDashboardSchema = z.object({
+  cards: pullRequestsReviewCardsSchema,
+  reviewDistribution: z.array(reviewDistributionRowSchema),
+  reviewMatrix: z.array(reviewMatrixRowSchema),
+  timeToFirstReviewTrend: z.array(timeToFirstReviewTrendRowSchema),
+  timeToMergeTrend: z.array(timeToMergeTrendRowSchema),
+});
+
+export type PullRequestsReviewDashboard = z.infer<
+  typeof pullRequestsReviewDashboardSchema
+>;
+export type ReviewDistributionRow = z.infer<typeof reviewDistributionRowSchema>;
+export type ReviewMatrixRow = z.infer<typeof reviewMatrixRowSchema>;
+export type TimeToFirstReviewTrendRow = z.infer<
+  typeof timeToFirstReviewTrendRowSchema
+>;
+export type TimeToMergeTrendRow = z.infer<typeof timeToMergeTrendRowSchema>;

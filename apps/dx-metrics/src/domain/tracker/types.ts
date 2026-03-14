@@ -1,31 +1,49 @@
-/** Type definitions for the Tracker dashboard domain. */
+/** Zod schemas and inferred types for the Tracker dashboard domain. */
 
-export interface CategoryRow {
-  readonly category: string;
-  readonly requests: number;
-}
+import { z } from "zod";
 
-export interface FrequencyTrendRow {
-  readonly actual_requests: number;
-  readonly request_date: string;
-  readonly trend: number;
-}
+import {
+  nullableSqlNumberSchema,
+  sqlDateSchema,
+  sqlNumberSchema,
+} from "../shared/sql-parsing";
 
-export interface PriorityRow {
-  readonly priority: string;
-  readonly requests: number;
-}
+export const trackerMetricValueRowSchema = z.object({
+  value: nullableSqlNumberSchema,
+});
 
-export interface TrackerCards {
-  readonly avgClose: null | number;
-  readonly closedTotal: null | number;
-  readonly openedTotal: null | number;
-  readonly requestsTrend: null | number;
-}
+export const categoryRowSchema = z.object({
+  category: z.string().min(1),
+  requests: sqlNumberSchema,
+});
 
-export interface TrackerDashboard {
-  readonly byCategory: readonly CategoryRow[];
-  readonly byPriority: readonly PriorityRow[];
-  readonly cards: TrackerCards;
-  readonly frequencyTrend: readonly FrequencyTrendRow[];
-}
+export const frequencyTrendRowSchema = z.object({
+  actual_requests: sqlNumberSchema,
+  request_date: sqlDateSchema,
+  trend: sqlNumberSchema,
+});
+
+export const priorityRowSchema = z.object({
+  priority: z.string().min(1),
+  requests: sqlNumberSchema,
+});
+
+export const trackerCardsSchema = z.object({
+  avgClose: nullableSqlNumberSchema,
+  closedTotal: nullableSqlNumberSchema,
+  openedTotal: nullableSqlNumberSchema,
+  requestsTrend: nullableSqlNumberSchema,
+});
+
+export const trackerDashboardSchema = z.object({
+  byCategory: z.array(categoryRowSchema),
+  byPriority: z.array(priorityRowSchema),
+  cards: trackerCardsSchema,
+  frequencyTrend: z.array(frequencyTrendRowSchema),
+});
+
+export type CategoryRow = z.infer<typeof categoryRowSchema>;
+export type FrequencyTrendRow = z.infer<typeof frequencyTrendRowSchema>;
+export type PriorityRow = z.infer<typeof priorityRowSchema>;
+export type TrackerCards = z.infer<typeof trackerCardsSchema>;
+export type TrackerDashboard = z.infer<typeof trackerDashboardSchema>;

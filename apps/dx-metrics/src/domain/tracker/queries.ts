@@ -3,7 +3,15 @@
 import { sql } from "drizzle-orm";
 
 import type { Database } from "../shared/types";
-import type { TrackerDashboard } from "./types";
+
+import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import {
+  categoryRowSchema,
+  frequencyTrendRowSchema,
+  priorityRowSchema,
+  type TrackerDashboard,
+  trackerMetricValueRowSchema,
+} from "./types";
 
 export const getTrackerDashboard = async (
   db: Database,
@@ -102,21 +110,48 @@ export const getTrackerDashboard = async (
     `),
   ]);
 
+  const avgCloseValue = parseSqlRow(
+    trackerMetricValueRowSchema,
+    avgClose.rows[0],
+    "tracker avgClose",
+  ).value;
+  const closedTotalValue = parseSqlRow(
+    trackerMetricValueRowSchema,
+    closedTotal.rows[0],
+    "tracker closedTotal",
+  ).value;
+  const openedTotalValue = parseSqlRow(
+    trackerMetricValueRowSchema,
+    openedTotal.rows[0],
+    "tracker openedTotal",
+  ).value;
+  const requestsTrendValue = parseSqlRow(
+    trackerMetricValueRowSchema,
+    requestsTrend.rows[0],
+    "tracker requestsTrend",
+  ).value;
+
   return {
-    byCategory: byCategory.rows as unknown as TrackerDashboard["byCategory"],
-    byPriority: byPriority.rows as unknown as TrackerDashboard["byPriority"],
+    byCategory: parseSqlRows(
+      categoryRowSchema,
+      byCategory.rows,
+      "tracker byCategory",
+    ),
+    byPriority: parseSqlRows(
+      priorityRowSchema,
+      byPriority.rows,
+      "tracker byPriority",
+    ),
     cards: {
-      avgClose: (avgClose.rows[0] as Record<string, unknown> | undefined)
-        ?.value as null | number,
-      closedTotal: (closedTotal.rows[0] as Record<string, unknown> | undefined)
-        ?.value as null | number,
-      openedTotal: (openedTotal.rows[0] as Record<string, unknown> | undefined)
-        ?.value as null | number,
-      requestsTrend: (
-        requestsTrend.rows[0] as Record<string, unknown> | undefined
-      )?.value as null | number,
+      avgClose: avgCloseValue,
+      closedTotal: closedTotalValue,
+      openedTotal: openedTotalValue,
+      requestsTrend: requestsTrendValue,
     },
-    frequencyTrend:
-      frequencyTrend.rows as unknown as TrackerDashboard["frequencyTrend"],
+    frequencyTrend: parseSqlRows(
+      frequencyTrendRowSchema,
+      frequencyTrend.rows,
+      "tracker frequencyTrend",
+    ),
   };
 };

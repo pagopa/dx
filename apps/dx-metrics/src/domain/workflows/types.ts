@@ -1,65 +1,92 @@
-/** Type definitions for the workflows dashboard. */
+/** Zod schemas and inferred types for the workflows dashboard. */
 
-export interface WorkflowAvgDuration {
-  readonly average_duration_minutes: number;
-  readonly workflow_name: string;
-}
+import { z } from "zod";
 
-export interface WorkflowCumulativeDuration {
-  readonly cumulative_duration_minutes: number;
-  readonly workflow_name: string;
-}
+import {
+  nullableSqlNumberSchema,
+  nullableSqlTimestampSchema,
+  sqlDateSchema,
+  sqlNumberSchema,
+  sqlTimestampSchema,
+} from "../shared/sql-parsing";
 
-export interface WorkflowDashboardResult {
-  readonly avgDuration: readonly Record<string, unknown>[];
-  readonly cumulativeDuration: readonly Record<string, unknown>[];
-  readonly deployments: readonly Record<string, unknown>[];
-  readonly dxVsNonDx: readonly Record<string, unknown>[];
-  readonly failures: readonly Record<string, unknown>[];
-  readonly infraApply: readonly Record<string, unknown>[];
-  readonly infraPlan: readonly Record<string, unknown>[];
-  readonly runCount: readonly Record<string, unknown>[];
-  readonly successRatio: readonly Record<string, unknown>[];
-  readonly summary: undefined | WorkflowSummary;
-}
+export const maxDateRowSchema = z.object({
+  max_date: sqlTimestampSchema,
+});
 
-export interface WorkflowDeployment {
-  readonly run_week: string;
-  readonly weekly_deployment_count: number;
-}
+export const workflowAvgDurationSchema = z.object({
+  average_duration_minutes: sqlNumberSchema,
+  workflow_name: z.string().min(1),
+});
 
-export interface WorkflowDxVsNonDx {
-  readonly cumulative_count: number;
-  readonly pipeline_type: string;
-  readonly run_date: string;
-}
+export const workflowCumulativeDurationSchema = z.object({
+  cumulative_duration_minutes: sqlNumberSchema,
+  workflow_name: z.string().min(1),
+});
 
-export interface WorkflowFailure {
-  readonly failed_runs: number;
-  readonly workflow_name: string;
-}
+export const workflowDeploymentSchema = z.object({
+  run_week: sqlTimestampSchema,
+  weekly_deployment_count: sqlNumberSchema,
+});
 
-export interface WorkflowInfraDuration {
-  readonly duration_minutes: number;
-  readonly run_timestamp: string;
-}
+export const workflowDxVsNonDxSchema = z.object({
+  cumulative_count: sqlNumberSchema,
+  pipeline_type: z.string().min(1),
+  run_date: sqlDateSchema,
+});
 
-export interface WorkflowRunCount {
-  readonly run_count: number;
-  readonly workflow_name: string;
-}
+export const workflowFailureSchema = z.object({
+  failed_runs: sqlNumberSchema,
+  workflow_name: z.string().min(1),
+});
 
-export interface WorkflowSuccessRatio {
-  readonly failed_runs: number;
-  readonly success_rate_percentage: number;
-  readonly successful_runs: number;
-  readonly total_runs: number;
-  readonly workflow_name: string;
-}
+export const workflowInfraDurationSchema = z.object({
+  duration_minutes: sqlNumberSchema,
+  run_timestamp: sqlTimestampSchema,
+});
 
-export interface WorkflowSummary {
-  readonly avg_duration_minutes: number;
-  readonly first_pipeline_date: string;
-  readonly total_duration_minutes: number;
-  readonly total_pipelines: number;
-}
+export const workflowRunCountSchema = z.object({
+  run_count: sqlNumberSchema,
+  workflow_name: z.string().min(1),
+});
+
+export const workflowSuccessRatioSchema = z.object({
+  failed_runs: sqlNumberSchema,
+  success_rate_percentage: sqlNumberSchema,
+  successful_runs: sqlNumberSchema,
+  total_runs: sqlNumberSchema,
+  workflow_name: z.string().min(1),
+});
+
+export const workflowSummarySchema = z.object({
+  avg_duration_minutes: nullableSqlNumberSchema,
+  first_pipeline_date: nullableSqlTimestampSchema,
+  total_duration_minutes: nullableSqlNumberSchema,
+  total_pipelines: sqlNumberSchema,
+});
+
+export const workflowDashboardSchema = z.object({
+  avgDuration: z.array(workflowAvgDurationSchema),
+  cumulativeDuration: z.array(workflowCumulativeDurationSchema),
+  deployments: z.array(workflowDeploymentSchema),
+  dxVsNonDx: z.array(workflowDxVsNonDxSchema),
+  failures: z.array(workflowFailureSchema),
+  infraApply: z.array(workflowInfraDurationSchema),
+  infraPlan: z.array(workflowInfraDurationSchema),
+  runCount: z.array(workflowRunCountSchema),
+  successRatio: z.array(workflowSuccessRatioSchema),
+  summary: workflowSummarySchema.optional(),
+});
+
+export type WorkflowAvgDuration = z.infer<typeof workflowAvgDurationSchema>;
+export type WorkflowCumulativeDuration = z.infer<
+  typeof workflowCumulativeDurationSchema
+>;
+export type WorkflowDashboardResult = z.infer<typeof workflowDashboardSchema>;
+export type WorkflowDeployment = z.infer<typeof workflowDeploymentSchema>;
+export type WorkflowDxVsNonDx = z.infer<typeof workflowDxVsNonDxSchema>;
+export type WorkflowFailure = z.infer<typeof workflowFailureSchema>;
+export type WorkflowInfraDuration = z.infer<typeof workflowInfraDurationSchema>;
+export type WorkflowRunCount = z.infer<typeof workflowRunCountSchema>;
+export type WorkflowSuccessRatio = z.infer<typeof workflowSuccessRatioSchema>;
+export type WorkflowSummary = z.infer<typeof workflowSummarySchema>;

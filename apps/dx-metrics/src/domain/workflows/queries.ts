@@ -4,9 +4,26 @@ import { sql } from "drizzle-orm";
 
 import type { DashboardParams, Database } from "@/domain/shared/types";
 
-import { coerceNumbers } from "@/domain/shared/numeric";
+import {
+  parseOptionalSqlRow,
+  parseSqlRow,
+  parseSqlRows,
+} from "@/domain/shared/sql-parsing";
 
-import type { WorkflowDashboardResult, WorkflowSummary } from "./types";
+import type { WorkflowDashboardResult } from "./types";
+
+import {
+  maxDateRowSchema,
+  workflowAvgDurationSchema,
+  workflowCumulativeDurationSchema,
+  workflowDeploymentSchema,
+  workflowDxVsNonDxSchema,
+  workflowFailureSchema,
+  workflowInfraDurationSchema,
+  workflowRunCountSchema,
+  workflowSuccessRatioSchema,
+  workflowSummarySchema,
+} from "./types";
 
 /** Fetch all workflow dashboard data for the given repository and time window. */
 export const getWorkflowDashboard = async (
@@ -42,16 +59,16 @@ export const getWorkflowDashboard = async (
   ]);
 
   return {
-    avgDuration: coerceNumbers(avgDuration),
-    cumulativeDuration: coerceNumbers(cumulativeDuration),
-    deployments: coerceNumbers(deployments),
-    dxVsNonDx: coerceNumbers(dxVsNonDx),
-    failures: coerceNumbers(failures),
-    infraApply: coerceNumbers(infraApply),
-    infraPlan: coerceNumbers(infraPlan),
-    runCount: coerceNumbers(runCount),
-    successRatio: coerceNumbers(successRatio),
-    summary: summaryResult as unknown as undefined | WorkflowSummary,
+    avgDuration,
+    cumulativeDuration,
+    deployments,
+    dxVsNonDx,
+    failures,
+    infraApply,
+    infraPlan,
+    runCount,
+    successRatio,
+    summary: summaryResult,
   };
 };
 
@@ -63,8 +80,8 @@ const fetchMaxDate = async (db: Database, fullName: string) => {
     WHERE r.full_name = ${fullName}
   `);
   return (
-    (result.rows[0] as undefined | { max_date: string })?.max_date ??
-    new Date().toISOString()
+    parseSqlRow(maxDateRowSchema, result.rows[0], "workflows maxDate")
+      .max_date ?? new Date().toISOString()
   );
 };
 
@@ -88,7 +105,11 @@ const fetchDeployments = async (
       AND w.name != 'Labeler'
     GROUP BY DATE_TRUNC('week', wr.created_at) ORDER BY run_week
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowDeploymentSchema,
+    r.rows,
+    "workflows deployments",
+  );
 };
 
 const fetchDxVsNonDx = async (
@@ -114,7 +135,7 @@ const fetchDxVsNonDx = async (
         CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END
     ) daily_counts ORDER BY run_date, pipeline_type
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(workflowDxVsNonDxSchema, r.rows, "workflows dxVsNonDx");
 };
 
 const fetchFailures = async (
@@ -135,7 +156,7 @@ const fetchFailures = async (
       AND w.name NOT IN ('CodeQL', 'Labeler')
     GROUP BY workflow_name ORDER BY workflow_name
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(workflowFailureSchema, r.rows, "workflows failures");
 };
 
 const fetchAvgDuration = async (
@@ -157,7 +178,11 @@ const fetchAvgDuration = async (
       AND w.name NOT IN ('CodeQL', 'Labeler')
     GROUP BY workflow_name ORDER BY workflow_name
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowAvgDurationSchema,
+    r.rows,
+    "workflows avgDuration",
+  );
 };
 
 const fetchRunCount = async (
@@ -179,7 +204,7 @@ const fetchRunCount = async (
       AND w.name NOT IN ('CodeQL', 'Labeler')
     GROUP BY workflow_name ORDER BY workflow_name
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(workflowRunCountSchema, r.rows, "workflows runCount");
 };
 
 const fetchCumulativeDuration = async (
@@ -201,7 +226,11 @@ const fetchCumulativeDuration = async (
       AND w.name NOT IN ('CodeQL', 'Labeler')
     GROUP BY workflow_name ORDER BY workflow_name
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowCumulativeDurationSchema,
+    r.rows,
+    "workflows cumulativeDuration",
+  );
 };
 
 const fetchInfraPlan = async (
@@ -223,7 +252,11 @@ const fetchInfraPlan = async (
       AND w.pipeline LIKE '%infra_plan.yaml%' AND w.name != 'Labeler'
     ORDER BY run_timestamp
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowInfraDurationSchema,
+    r.rows,
+    "workflows infraPlan",
+  );
 };
 
 const fetchInfraApply = async (
@@ -245,7 +278,11 @@ const fetchInfraApply = async (
       AND w.pipeline LIKE '%infra_apply.yaml%' AND w.name != 'Labeler'
     ORDER BY run_timestamp
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowInfraDurationSchema,
+    r.rows,
+    "workflows infraApply",
+  );
 };
 
 const fetchSuccessRatio = async (
@@ -268,7 +305,11 @@ const fetchSuccessRatio = async (
       AND w.name NOT IN ('CodeQL', 'Labeler')
     GROUP BY w.name ORDER BY total_runs DESC
   `);
-  return r.rows as Record<string, unknown>[];
+  return parseSqlRows(
+    workflowSuccessRatioSchema,
+    r.rows,
+    "workflows successRatio",
+  );
 };
 
 const fetchSummary = async (
@@ -292,5 +333,9 @@ const fetchSummary = async (
       AND wr.updated_at <= ${maxDate}::timestamptz
       AND w.name NOT IN ('CodeQL', 'Labeler')
   `);
-  return r.rows[0];
+  return parseOptionalSqlRow(
+    workflowSummarySchema,
+    r.rows[0],
+    "workflows summary",
+  );
 };

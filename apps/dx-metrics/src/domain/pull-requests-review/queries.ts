@@ -4,14 +4,16 @@ import { sql } from "drizzle-orm";
 
 import type { DashboardParams, Database } from "@/domain/shared/types";
 
-import { numericRows } from "@/domain/shared/numeric";
+import { parseSqlRow, parseSqlRows } from "@/domain/shared/sql-parsing";
 
-import type {
-  PullRequestsReviewDashboard,
-  ReviewDistributionRow,
-  ReviewMatrixRow,
-  TimeToFirstReviewTrendRow,
-  TimeToMergeTrendRow,
+import type { PullRequestsReviewDashboard } from "./types";
+
+import {
+  reviewDistributionRowSchema,
+  reviewMatrixRowSchema,
+  reviewMetricValueRowSchema,
+  timeToFirstReviewTrendRowSchema,
+  timeToMergeTrendRowSchema,
 } from "./types";
 
 export const getPullRequestsReviewDashboard = async (
@@ -123,24 +125,41 @@ export const getPullRequestsReviewDashboard = async (
     ORDER BY review_count DESC
   `);
 
+  const avgTimeToFirstReviewValue = parseSqlRow(
+    reviewMetricValueRowSchema,
+    avgTimeToFirstReview.rows[0],
+    "pull-requests-review avgTimeToFirstReview",
+  ).value;
+  const avgTimeToMergeValue = parseSqlRow(
+    reviewMetricValueRowSchema,
+    avgTimeToMerge.rows[0],
+    "pull-requests-review avgTimeToMerge",
+  ).value;
+
   return {
     cards: {
-      avgTimeToFirstReview: Number(avgTimeToFirstReview.rows[0]?.value) || null,
-      avgTimeToMerge: Number(avgTimeToMerge.rows[0]?.value) || null,
+      avgTimeToFirstReview: avgTimeToFirstReviewValue,
+      avgTimeToMerge: avgTimeToMergeValue,
     },
-    reviewDistribution: numericRows(reviewDistribution.rows, [
-      "total_reviews",
-      "approvals",
-      "change_requests",
-    ]) as unknown as ReviewDistributionRow[],
-    reviewMatrix: numericRows(reviewMatrix.rows, [
-      "review_count",
-    ]) as unknown as ReviewMatrixRow[],
-    timeToFirstReviewTrend: numericRows(timeToFirstReviewTrend.rows, [
-      "avg_hours_to_first_review",
-    ]) as unknown as TimeToFirstReviewTrendRow[],
-    timeToMergeTrend: numericRows(timeToMergeTrend.rows, [
-      "avg_hours_to_merge",
-    ]) as unknown as TimeToMergeTrendRow[],
+    reviewDistribution: parseSqlRows(
+      reviewDistributionRowSchema,
+      reviewDistribution.rows,
+      "pull-requests-review reviewDistribution",
+    ),
+    reviewMatrix: parseSqlRows(
+      reviewMatrixRowSchema,
+      reviewMatrix.rows,
+      "pull-requests-review reviewMatrix",
+    ),
+    timeToFirstReviewTrend: parseSqlRows(
+      timeToFirstReviewTrendRowSchema,
+      timeToFirstReviewTrend.rows,
+      "pull-requests-review timeToFirstReviewTrend",
+    ),
+    timeToMergeTrend: parseSqlRows(
+      timeToMergeTrendRowSchema,
+      timeToMergeTrend.rows,
+      "pull-requests-review timeToMergeTrend",
+    ),
   };
 };

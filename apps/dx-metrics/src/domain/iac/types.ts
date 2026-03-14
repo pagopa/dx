@@ -1,37 +1,62 @@
-/** TypeScript types for the IaC dashboard result shapes. */
+/** Zod schemas and inferred types for the IaC dashboard result shapes. */
 
-export interface IacDashboardResult {
-  readonly leadTimeMovingAvg: readonly LeadTimeMovingAvgRow[];
-  readonly leadTimeTrend: readonly LeadTimeTrendRow[];
-  readonly prsByReviewer: readonly PrsByReviewerRow[];
-  readonly prsOverTime: readonly PrsOverTimeRow[];
-  readonly supervisedVsUnsupervised: readonly SupervisedVsUnsupervisedRow[];
-}
+import { z } from "zod";
 
-export interface LeadTimeMovingAvgRow {
-  readonly avg_lead_time_days: number;
-  readonly week: string;
-}
+import {
+  sqlDateSchema,
+  sqlNumberSchema,
+  sqlTimestampSchema,
+} from "../shared/sql-parsing";
 
-export interface LeadTimeTrendRow {
-  readonly date: string;
-  readonly trend_line: number;
-}
+export const maxDateRowSchema = z.object({
+  max_date: sqlTimestampSchema,
+});
 
-export interface PrsByReviewerRow {
-  readonly avg_lead_time_days: number;
-  readonly merged_prs: number;
-  readonly reviewer: string;
-  readonly total_prs: number;
-}
+export const dxMemberRowSchema = z.object({
+  username: z.string().min(1),
+});
 
-export interface PrsOverTimeRow {
-  readonly pr_count: number;
-  readonly week: string;
-}
+export const leadTimeMovingAvgRowSchema = z.object({
+  avg_lead_time_days: sqlNumberSchema,
+  week: sqlDateSchema,
+});
 
-export interface SupervisedVsUnsupervisedRow {
-  readonly cumulative_count: number;
-  readonly pr_type: string;
-  readonly run_date: string;
-}
+export const leadTimeTrendRowSchema = z.object({
+  date: sqlDateSchema,
+  trend_line: sqlNumberSchema,
+});
+
+export const prsByReviewerRowSchema = z.object({
+  avg_lead_time_days: sqlNumberSchema,
+  merged_prs: sqlNumberSchema,
+  reviewer: z.string().min(1),
+  total_prs: sqlNumberSchema,
+});
+
+export const prsOverTimeRowSchema = z.object({
+  pr_count: sqlNumberSchema,
+  week: sqlDateSchema,
+});
+
+export const supervisedVsUnsupervisedRowSchema = z.object({
+  cumulative_count: sqlNumberSchema,
+  pr_type: z.string().min(1),
+  run_date: sqlDateSchema,
+});
+
+export const iacDashboardResultSchema = z.object({
+  leadTimeMovingAvg: z.array(leadTimeMovingAvgRowSchema),
+  leadTimeTrend: z.array(leadTimeTrendRowSchema),
+  prsByReviewer: z.array(prsByReviewerRowSchema),
+  prsOverTime: z.array(prsOverTimeRowSchema),
+  supervisedVsUnsupervised: z.array(supervisedVsUnsupervisedRowSchema),
+});
+
+export type IacDashboardResult = z.infer<typeof iacDashboardResultSchema>;
+export type LeadTimeMovingAvgRow = z.infer<typeof leadTimeMovingAvgRowSchema>;
+export type LeadTimeTrendRow = z.infer<typeof leadTimeTrendRowSchema>;
+export type PrsByReviewerRow = z.infer<typeof prsByReviewerRowSchema>;
+export type PrsOverTimeRow = z.infer<typeof prsOverTimeRowSchema>;
+export type SupervisedVsUnsupervisedRow = z.infer<
+  typeof supervisedVsUnsupervisedRowSchema
+>;

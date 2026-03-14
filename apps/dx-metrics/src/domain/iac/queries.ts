@@ -4,9 +4,19 @@ import { sql } from "drizzle-orm";
 
 import type { DashboardParams, Database } from "@/domain/shared/types";
 
-import type { IacDashboardResult } from "./types";
+import { parseSqlRow, parseSqlRows } from "@/domain/shared/sql-parsing";
 
 import { buildMemberMatchSql } from "./member-match-sql";
+import {
+  dxMemberRowSchema,
+  type IacDashboardResult,
+  leadTimeMovingAvgRowSchema,
+  leadTimeTrendRowSchema,
+  maxDateRowSchema,
+  prsByReviewerRowSchema,
+  prsOverTimeRowSchema,
+  supervisedVsUnsupervisedRowSchema,
+} from "./types";
 
 /**
  * Resolves the latest data point date for the given repository.
@@ -18,7 +28,7 @@ const getMaxDate = async (db: Database, fullName: string): Promise<string> => {
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
   `);
-  return (result.rows[0] as { max_date: string }).max_date;
+  return parseSqlRow(maxDateRowSchema, result.rows[0], "iac maxDate").max_date;
 };
 
 /** Fetches the list of DX team member usernames. */
@@ -26,7 +36,9 @@ const getDxMembers = async (db: Database): Promise<readonly string[]> => {
   const result = await db.execute(sql`
     SELECT username FROM dx_team_members
   `);
-  return result.rows.map((row) => (row as { username: string }).username);
+  return parseSqlRows(dxMemberRowSchema, result.rows, "iac dxMembers").map(
+    (row) => row.username,
+  );
 };
 
 /** IaC PR Lead Time — weekly average. */
@@ -189,15 +201,30 @@ export const getIacDashboard = async (
   ]);
 
   return {
-    leadTimeMovingAvg:
-      leadTimeMovingAvg.rows as unknown as IacDashboardResult["leadTimeMovingAvg"],
-    leadTimeTrend:
-      leadTimeTrend.rows as unknown as IacDashboardResult["leadTimeTrend"],
-    prsByReviewer:
-      prsByReviewer.rows as unknown as IacDashboardResult["prsByReviewer"],
-    prsOverTime:
-      prsOverTime.rows as unknown as IacDashboardResult["prsOverTime"],
-    supervisedVsUnsupervised:
-      supervisedVsUnsupervised.rows as unknown as IacDashboardResult["supervisedVsUnsupervised"],
+    leadTimeMovingAvg: parseSqlRows(
+      leadTimeMovingAvgRowSchema,
+      leadTimeMovingAvg.rows,
+      "iac leadTimeMovingAvg",
+    ),
+    leadTimeTrend: parseSqlRows(
+      leadTimeTrendRowSchema,
+      leadTimeTrend.rows,
+      "iac leadTimeTrend",
+    ),
+    prsByReviewer: parseSqlRows(
+      prsByReviewerRowSchema,
+      prsByReviewer.rows,
+      "iac prsByReviewer",
+    ),
+    prsOverTime: parseSqlRows(
+      prsOverTimeRowSchema,
+      prsOverTime.rows,
+      "iac prsOverTime",
+    ),
+    supervisedVsUnsupervised: parseSqlRows(
+      supervisedVsUnsupervisedRowSchema,
+      supervisedVsUnsupervised.rows,
+      "iac supervisedVsUnsupervised",
+    ),
   };
 };

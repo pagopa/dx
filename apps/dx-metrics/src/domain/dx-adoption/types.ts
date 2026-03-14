@@ -1,46 +1,68 @@
-/** Types for the DX Adoption dashboard result. */
+/** Zod schemas and inferred types for the DX Adoption dashboard result. */
 
-export interface DxAdoptionResult {
-  readonly moduleAdoption: readonly ModuleAdoptionRow[];
-  readonly modulesList: readonly ModuleRow[];
-  readonly pipelineAdoption: readonly PipelineAdoptionRow[];
-  readonly versionDriftList: readonly VersionDriftRow[];
-  readonly versionDriftSummary: VersionDriftSummary;
-  readonly workflowsList: readonly WorkflowRow[];
-}
+import { z } from "zod";
 
-export interface ModuleAdoptionRow {
-  readonly module_count: number;
-  readonly module_type: string;
-}
+import {
+  nullableSqlNumberSchema,
+  sqlNumberSchema,
+} from "../shared/sql-parsing";
 
-export interface ModuleRow {
-  readonly file_path: string;
-  readonly module_name: string;
-  readonly module_type: string;
-}
+export const moduleAdoptionRowSchema = z.object({
+  module_count: sqlNumberSchema,
+  module_type: z.string().min(1),
+});
 
-export interface PipelineAdoptionRow {
-  readonly pipeline_count: number;
-  readonly pipeline_type: string;
-}
+export const moduleRowSchema = z.object({
+  file_path: z.string().min(1),
+  module_name: z.string().min(1),
+  module_type: z.string().min(1),
+});
 
-export interface VersionDriftRow {
-  readonly drift_status: string;
-  readonly file_path: string;
-  readonly latest_version: null | string;
-  readonly module_name: string;
-  readonly used_version: null | string;
-}
+export const pipelineAdoptionRowSchema = z.object({
+  pipeline_count: sqlNumberSchema,
+  pipeline_type: z.string().min(1),
+});
 
-export interface VersionDriftSummary {
-  readonly outdated: number;
-  readonly total: number;
-  readonly unknown: number;
-  readonly upToDate: number;
-}
+export const versionDriftRowSchema = z.object({
+  drift_status: z.string().min(1),
+  file_path: z.string().min(1),
+  latest_version: z.string().min(1).nullable(),
+  module_name: z.string().min(1),
+  used_version: z.string().min(1).nullable(),
+});
 
-export interface WorkflowRow {
-  readonly pipeline_type: string;
-  readonly workflow_name: string;
-}
+export const versionDriftSummaryRowSchema = z.object({
+  outdated: nullableSqlNumberSchema,
+  total: nullableSqlNumberSchema,
+  unknown: nullableSqlNumberSchema,
+  up_to_date: nullableSqlNumberSchema,
+});
+
+export const versionDriftSummarySchema = z.object({
+  outdated: sqlNumberSchema,
+  total: sqlNumberSchema,
+  unknown: sqlNumberSchema,
+  upToDate: sqlNumberSchema,
+});
+
+export const workflowRowSchema = z.object({
+  pipeline_type: z.string().min(1),
+  workflow_name: z.string().min(1),
+});
+
+export const dxAdoptionResultSchema = z.object({
+  moduleAdoption: z.array(moduleAdoptionRowSchema),
+  modulesList: z.array(moduleRowSchema),
+  pipelineAdoption: z.array(pipelineAdoptionRowSchema),
+  versionDriftList: z.array(versionDriftRowSchema),
+  versionDriftSummary: versionDriftSummarySchema,
+  workflowsList: z.array(workflowRowSchema),
+});
+
+export type DxAdoptionResult = z.infer<typeof dxAdoptionResultSchema>;
+export type ModuleAdoptionRow = z.infer<typeof moduleAdoptionRowSchema>;
+export type ModuleRow = z.infer<typeof moduleRowSchema>;
+export type PipelineAdoptionRow = z.infer<typeof pipelineAdoptionRowSchema>;
+export type VersionDriftRow = z.infer<typeof versionDriftRowSchema>;
+export type VersionDriftSummary = z.infer<typeof versionDriftSummarySchema>;
+export type WorkflowRow = z.infer<typeof workflowRowSchema>;

@@ -3,13 +3,16 @@
 import { sql } from "drizzle-orm";
 
 import type { Database } from "../shared/types";
-import type {
-  DxAdoptionResult,
-  ModuleAdoptionRow,
-  ModuleRow,
-  PipelineAdoptionRow,
-  VersionDriftRow,
-  WorkflowRow,
+
+import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import {
+  type DxAdoptionResult,
+  moduleAdoptionRowSchema,
+  moduleRowSchema,
+  pipelineAdoptionRowSchema,
+  versionDriftRowSchema,
+  versionDriftSummaryRowSchema,
+  workflowRowSchema,
 } from "./types";
 
 /**
@@ -131,17 +134,43 @@ export const fetchDxAdoption = async (
     FROM drift
   `);
 
+  const versionDriftSummaryRow = parseSqlRow(
+    versionDriftSummaryRowSchema,
+    versionDriftSummary.rows[0],
+    "dx-adoption versionDriftSummary",
+  );
+
   return {
-    moduleAdoption: moduleAdoption.rows as unknown as ModuleAdoptionRow[],
-    modulesList: modulesList.rows as unknown as ModuleRow[],
-    pipelineAdoption: pipelineAdoption.rows as unknown as PipelineAdoptionRow[],
-    versionDriftList: versionDriftList.rows as unknown as VersionDriftRow[],
+    moduleAdoption: parseSqlRows(
+      moduleAdoptionRowSchema,
+      moduleAdoption.rows,
+      "dx-adoption moduleAdoption",
+    ),
+    modulesList: parseSqlRows(
+      moduleRowSchema,
+      modulesList.rows,
+      "dx-adoption modulesList",
+    ),
+    pipelineAdoption: parseSqlRows(
+      pipelineAdoptionRowSchema,
+      pipelineAdoption.rows,
+      "dx-adoption pipelineAdoption",
+    ),
+    versionDriftList: parseSqlRows(
+      versionDriftRowSchema,
+      versionDriftList.rows,
+      "dx-adoption versionDriftList",
+    ),
     versionDriftSummary: {
-      outdated: Number(versionDriftSummary.rows[0]?.outdated) || 0,
-      total: Number(versionDriftSummary.rows[0]?.total) || 0,
-      unknown: Number(versionDriftSummary.rows[0]?.unknown) || 0,
-      upToDate: Number(versionDriftSummary.rows[0]?.up_to_date) || 0,
+      outdated: versionDriftSummaryRow.outdated ?? 0,
+      total: versionDriftSummaryRow.total ?? 0,
+      unknown: versionDriftSummaryRow.unknown ?? 0,
+      upToDate: versionDriftSummaryRow.up_to_date ?? 0,
     },
-    workflowsList: workflowsList.rows as unknown as WorkflowRow[],
+    workflowsList: parseSqlRows(
+      workflowRowSchema,
+      workflowsList.rows,
+      "dx-adoption workflowsList",
+    ),
   };
 };

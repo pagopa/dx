@@ -3,15 +3,14 @@
 import { sql } from "drizzle-orm";
 
 import type { Database } from "../shared/types";
-import type { ReleasesDashboard } from "./types";
 
-interface StatsRow {
-  newest_release: null | string;
-  oldest_release: null | string;
-  total_major_versions: string;
-  total_modules: string;
-  total_releases: string;
-}
+import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import {
+  moduleSummaryRowSchema,
+  type ReleasesDashboard,
+  releaseStatsRowSchema,
+  releasesTimelineRowSchema,
+} from "./types";
 
 /** Fetches the full releases dashboard payload. */
 export const getReleasesDashboard = async (
@@ -27,7 +26,11 @@ export const getReleasesDashboard = async (
       MAX(release_date)                                    AS newest_release
     FROM terraform_registry_releases
   `);
-  const stats = statsResult.rows[0] as unknown as StatsRow;
+  const stats = parseSqlRow(
+    releaseStatsRowSchema,
+    statsResult.rows[0],
+    "releases stats",
+  );
 
   // Per-module summary
   const modulesSummary = await db.execute(sql`
@@ -61,20 +64,22 @@ export const getReleasesDashboard = async (
   `);
 
   return {
-    modulesSummary:
-      modulesSummary.rows as unknown as ReleasesDashboard["modulesSummary"],
-    releasesTimeline:
-      releasesTimeline.rows as unknown as ReleasesDashboard["releasesTimeline"],
+    modulesSummary: parseSqlRows(
+      moduleSummaryRowSchema,
+      modulesSummary.rows,
+      "releases modulesSummary",
+    ),
+    releasesTimeline: parseSqlRows(
+      releasesTimelineRowSchema,
+      releasesTimeline.rows,
+      "releases releasesTimeline",
+    ),
     stats: {
-      newestRelease: stats.newest_release
-        ? String(stats.newest_release).slice(0, 10)
-        : null,
-      oldestRelease: stats.oldest_release
-        ? String(stats.oldest_release).slice(0, 10)
-        : null,
-      totalMajorVersions: Number(stats.total_major_versions),
-      totalModules: Number(stats.total_modules),
-      totalReleases: Number(stats.total_releases),
+      newestRelease: stats.newest_release,
+      oldestRelease: stats.oldest_release,
+      totalMajorVersions: stats.total_major_versions,
+      totalModules: stats.total_modules,
+      totalReleases: stats.total_releases,
     },
   };
 };
