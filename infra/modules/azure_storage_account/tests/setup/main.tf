@@ -1,118 +1,87 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 3.110, < 5.0"
-    }
-    dx = {
-      source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
-    }
-  }
-}
-
 locals {
   naming_config = {
-    prefix          = var.environment.prefix
-    environment     = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    name            = var.environment.app_name
-    instance_number = tonumber(var.environment.instance_number)
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location,
+    domain          = var.environment.domain,
+    name            = var.environment.app_name,
+    instance_number = tonumber(var.environment.instance_number),
   }
 
-  virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
-      domain        = null,
-      name          = "common",
-      resource_type = "virtual_network"
-    }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      domain        = null,
-      name          = "network",
-      resource_type = "resource_group"
-    }))
+  # Resolves names of shared pre-provisioned test infrastructure.
+  # The test infra is named using test_kind ("integration") as the app name
+  # and an empty domain, following the pagopa-dx naming convention.
+  existing_resources = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location,
+    domain          = "",
+    name            = var.test_kind,
+    instance_number = tonumber(var.environment.instance_number),
   }
 }
 
-data "azurerm_subnet" "snet" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "test",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
+data "azurerm_client_config" "current" {}
+
+data "azurerm_user_assigned_identity" "test" {
+  name                = provider::dx::resource_name(merge(local.existing_resources, { domain = "devex", resource_type = "managed_identity" }))
+  resource_group_name = provider::dx::resource_name(merge(local.existing_resources, { name = "devex", resource_type = "resource_group" }))
+}
+
+data "azurerm_resource_group" "test" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
+}
+
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group", name = "network" }))
+}
+
+data "azurerm_virtual_network" "vnet" {
+  name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "virtual_network" }))
+  resource_group_name = data.azurerm_resource_group.test.name
 }
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "pep",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
+  name                 = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "subnet", name = "pep" }))
+  resource_group_name  = data.azurerm_resource_group.test.name
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
 }
 
-data "azurerm_resource_group" "rg" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "test",
-    resource_type = "resource_group"
-  }))
+data "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = data.azurerm_resource_group.network.name
 }
 
-data "azurerm_key_vault" "kv" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "common",
-    resource_type = "key_vault"
-  }))
-  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "common",
-    resource_type = "resource_group"
-  }))
-}
-
-data "azurerm_log_analytics_workspace" "law" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "common",
-    resource_type = "log_analytics"
-  }))
-  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = null,
-    name          = "common",
-    resource_type = "resource_group"
-  }))
-}
-
-output "pep_id" {
-  value = data.azurerm_subnet.pep.id
-}
-
-output "subnet_id" {
-  value = data.azurerm_subnet.snet.id
+# Resource group created for the System Under Test (SUT).
+resource "azurerm_resource_group" "sut" {
+  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  location = var.environment.location
+  tags     = var.tags
 }
 
 output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
+  value = azurerm_resource_group.sut.name
 }
 
-output "kv_id" {
-  value = data.azurerm_key_vault.kv.id
+output "subscription_id" {
+  value = data.azurerm_client_config.current.subscription_id
 }
 
-output "log_analytics_workspace_id" {
-  value = data.azurerm_log_analytics_workspace.law.id
+output "subnet_pep_id" {
+  value = data.azurerm_subnet.pep.id
+}
+
+output "private_dns_zone_resource_group_name" {
+  value = data.azurerm_resource_group.network.name
+}
+
+output "virtual_network" {
+  value = {
+    name                = data.azurerm_virtual_network.vnet.name
+    resource_group_name = data.azurerm_resource_group.network.name
+  }
 }
 
 output "tags" {
   value = var.tags
-}
-
-output "environment" {
-  value = var.environment
 }
