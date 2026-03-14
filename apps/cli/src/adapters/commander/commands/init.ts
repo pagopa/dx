@@ -7,11 +7,20 @@ import * as path from "node:path";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
+import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
+
+import {
+  AuthorizationResult,
+  AuthorizationService,
+  requestAuthorizationInputSchema,
+} from "../../../domain/authorization.js";
+import { environmentShort } from "../../../domain/environment.js";
 import {
   GitHubService,
   PullRequest,
   Repository,
 } from "../../../domain/github.js";
+import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import { tf$ } from "../../execa/terraform.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import {
@@ -22,6 +31,7 @@ import {
 import { exitWithError } from "../index.js";
 
 type InitResult = {
+  authorizationPrs: AuthorizationResult[];
   pr?: PullRequest;
   repository?: Repository;
 };
@@ -52,7 +62,7 @@ const withSpinner = <T>(
   );
 
 const displaySummary = (initResult: InitResult) => {
-  const { pr, repository } = initResult;
+  const { authorizationPrs, pr, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
 
   if (repository) {
@@ -67,12 +77,21 @@ const displaySummary = (initResult: InitResult) => {
   }
 
   if (pr) {
+    let step = 1;
     console.log(chalk.green.bold("\nNext Steps:"));
     console.log(
-      `1. Review the Pull Request in the GitHub repository: ${chalk.underline(pr.url)}`,
+      `${step++}. Review the Pull Request in the GitHub repository: ${chalk.underline(pr.url)}`,
     );
+
+    if (authorizationPrs.length > 0) {
+      console.log(`${step++}. Review the Azure authorization Pull Request(s):`);
+      for (const authPr of authorizationPrs) {
+        console.log(`   - ${chalk.underline(authPr.url)}`);
+      }
+    }
+
     console.log(
-      `2. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+      `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
     );
   } else {
     console.log(
@@ -220,11 +239,81 @@ const handleGeneratorError = (err: unknown) => {
   return new Error("Failed to run the generator");
 };
 
+/**
+ * Requests Azure authorization for each newly initialized cloud account.
+ * Creates a PR on eng-azure-authorization to add the bootstrap identity
+ * to the directory readers. Failures are logged but do not block the flow.
+ */
+export const requestAzureAuthorizations =
+  (authorizationService: AuthorizationService) =>
+  (
+    envPayload: EnvironmentPayload,
+  ): ResultAsync<AuthorizationResult[], never> => {
+    const accountsToInitialize =
+      envPayload.init?.cloudAccountsToInitialize ?? [];
+
+    if (accountsToInitialize.length === 0) {
+      return okAsync([]);
+    }
+
+    const logger = getLogger(["dx-cli", "init"]);
+    const { name, prefix } = envPayload.env;
+    const envShort = environmentShort[name];
+
+    const requestAll = async (): Promise<AuthorizationResult[]> => {
+      const results: AuthorizationResult[] = [];
+
+      for (const account of accountsToInitialize) {
+        if (!isAzureLocation(account.defaultLocation)) {
+          logger.warn(
+            "Skipping authorization for {account}: unsupported location",
+            { account: account.displayName },
+          );
+          continue;
+        }
+
+        const locShort = locationShort[account.defaultLocation];
+        const input = requestAuthorizationInputSchema.safeParse({
+          bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+          subscriptionName: account.displayName,
+        });
+
+        if (!input.success) {
+          logger.warn("Skipping authorization for {account}: invalid input", {
+            account: account.displayName,
+          });
+          continue;
+        }
+
+        const result = await authorizationService.requestAuthorization(
+          input.data,
+        );
+
+        result.match(
+          (authResult) => results.push(authResult),
+          (error) =>
+            logger.warn("Authorization request failed for {account}: {error}", {
+              account: account.displayName,
+              error: error.message,
+            }),
+        );
+      }
+
+      return results;
+    };
+
+    return ResultAsync.fromPromise(requestAll(), () => []).orElse(() =>
+      okAsync([]),
+    );
+  };
+
 type InitCommandDependencies = {
+  authorizationService: AuthorizationService;
   gitHubService: GitHubService;
 };
 
 export const makeInitCommand = ({
+  authorizationService,
   gitHubService,
 }: InitCommandDependencies): Command =>
   new Command()
@@ -250,17 +339,24 @@ export const makeInitCommand = ({
               process.chdir(payload.repoName);
               console.log(chalk.blue.bold("\nCloud Environment"));
             })
-            .andThen((payload) =>
+            .andThen((monorepoPayload) =>
               ResultAsync.fromPromise(
                 runDeploymentEnvironmentGenerator(plop, {
-                  owner: payload.repoOwner,
-                  repo: payload.repoName,
+                  owner: monorepoPayload.repoOwner,
+                  repo: monorepoPayload.repoName,
                 }),
                 handleGeneratorError,
-              ).map(() => payload),
+              ).map((envPayload) => ({ envPayload, monorepoPayload })),
             ),
         )
         .andTee(() => console.log()) // Print a new line before the gh repo creation logs
-        .andThen((payload) => handleNewGitHubRepository(gitHubService)(payload))
+        .andThen(({ envPayload, monorepoPayload }) =>
+          handleNewGitHubRepository(gitHubService)(monorepoPayload).andThen(
+            (repoPr) =>
+              requestAzureAuthorizations(authorizationService)(envPayload).map(
+                (authorizationPrs) => ({ ...repoPr, authorizationPrs }),
+              ),
+          ),
+        )
         .match(displaySummary, exitWithError(this));
     });
