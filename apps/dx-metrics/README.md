@@ -23,7 +23,8 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 1. **Start services:**
 
 ```bash
-docker compose up -d
+# From the monorepo root
+docker compose --profile dx-metrics up -d
 ```
 
 2. **Run database migrations:**

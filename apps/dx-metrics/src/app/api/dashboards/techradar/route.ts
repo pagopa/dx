@@ -1,12 +1,10 @@
-/** This module serves the aggregated Techradar dashboard payload. */
+/** Route adapter — serves the aggregated Techradar dashboard payload. */
 
-import { asc, inArray } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-import { db } from "@/db";
-import { techRadarUsages } from "@/db/schema";
+import { db } from "@/db/instance";
+import { getTechRadarDashboard } from "@/domain/techradar/queries";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
-import { buildTechRadarDashboardData } from "@/lib/tech-radar-dashboard";
 
 export async function GET() {
   const configuredRepositories = REPOSITORIES.map(
@@ -14,30 +12,8 @@ export async function GET() {
   );
 
   try {
-    const rows = await db
-      .select({
-        evidencePath: techRadarUsages.evidencePath,
-        radarRef: techRadarUsages.radarRef,
-        radarRing: techRadarUsages.radarRing,
-        radarSlug: techRadarUsages.radarSlug,
-        radarStatus: techRadarUsages.radarStatus,
-        radarTitle: techRadarUsages.radarTitle,
-        repositoryFullName: techRadarUsages.repositoryFullName,
-        toolKey: techRadarUsages.toolKey,
-        toolName: techRadarUsages.toolName,
-      })
-      .from(techRadarUsages)
-      .where(
-        inArray(techRadarUsages.repositoryFullName, configuredRepositories),
-      )
-      .orderBy(
-        asc(techRadarUsages.repositoryFullName),
-        asc(techRadarUsages.toolName),
-      );
-
-    return NextResponse.json(
-      buildTechRadarDashboardData(rows, configuredRepositories),
-    );
+    const data = await getTechRadarDashboard(db, { configuredRepositories });
+    return NextResponse.json(data);
   } catch (error) {
     console.error("Techradar dashboard error:", error);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });

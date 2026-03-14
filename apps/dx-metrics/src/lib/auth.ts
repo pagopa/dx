@@ -4,7 +4,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { z } from "zod";
 
-import { db } from "@/db";
+import { db } from "@/db/instance";
 
 const AuthEnvSchema = z.object({
   AUTH_GITHUB_ID: z.string().min(1),
