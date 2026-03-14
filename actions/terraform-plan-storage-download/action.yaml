@@ -1,0 +1,42 @@
+name: Download Terraform Plan from Storage
+description: >
+  Downloads a Terraform plan bundle from Azure Blob Storage or Amazon S3 and
+  extracts it into the specified working directory.
+
+  Accepts the storage coordinates (provider, plan-path, credentials) directly
+  as inputs — no terraform init required in the calling job.
+
+  The remote bundle is automatically deleted after the job completes
+  (via the post step).
+
+inputs:
+  provider:
+    description: Cloud storage provider. Accepted values are "azure" and "aws".
+    required: true
+  plan-path:
+    description: Remote object path of the plan bundle (as output by terraform-plan-storage-upload).
+    required: true
+  working-directory:
+    description: Local directory where the bundle will be extracted.
+    required: true
+  azure-storage-account:
+    description: Azure Storage Account name. Required when provider is "azure".
+    required: false
+    default: ""
+  azure-container:
+    description: Azure Blob container name. Required when provider is "azure".
+    required: false
+    default: ""
+  aws-bucket:
+    description: S3 bucket name. Required when provider is "aws".
+    required: false
+    default: ""
+  aws-region:
+    description: AWS region where the S3 bucket lives. Required when provider is "aws".
+    required: false
+    default: ""
+
+runs:
+  using: node24
+  main: dist/main.cjs
+  post: dist/post.cjs
