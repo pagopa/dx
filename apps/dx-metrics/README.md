@@ -30,7 +30,7 @@ docker compose --profile dx-metrics up -d
 2. **Run database migrations:**
 
 ```bash
-DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit migrate
+DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit push
 ```
 
 3. **Import data (incremental):**
