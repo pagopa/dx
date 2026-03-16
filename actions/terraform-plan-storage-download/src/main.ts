@@ -36,7 +36,7 @@ async function downloadFromAzure(
 
   await fs.mkdir(path.dirname(destFile), { recursive: true });
   const buffer = await blobClient.downloadToBuffer();
-  await fs.writeFile(destFile, buffer);
+  await fs.writeFile(destFile, buffer, { mode: 0o600 });
 
   core.info(
     `Downloaded ← https://${storageAccount}.blob.core.windows.net/${container}/${blobName}`,
@@ -60,7 +60,7 @@ async function downloadFromS3(
 
   await fs.mkdir(path.dirname(destFile), { recursive: true });
   const bytes = await response.Body.transformToByteArray();
-  await fs.writeFile(destFile, bytes);
+  await fs.writeFile(destFile, bytes, { mode: 0o600 });
 
   core.info(`Downloaded ← s3://${bucket}/${key}`);
 }
