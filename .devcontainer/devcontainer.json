@@ -2,11 +2,10 @@
   "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:a30da48cdf5f9144ff7f2156622e701e752fc258d77ca7bb00120624f1a95938",
   "features": {
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
+    "ghcr.io/pagopa/devcontainer-features/acli:1": {},
     "ghcr.io/devcontainers/features/azure-cli:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {
-      "extensions": [
-        "seachicken/gh-poi"
-      ]
+      "extensions": ["seachicken/gh-poi"]
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "latest",
