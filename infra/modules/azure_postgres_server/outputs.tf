@@ -1,3 +1,13 @@
+output "admin_password_secret" {
+  description = "Details of the Key Vault secret storing the admin password. Null when key_vault is not provided. Never exposes the password value."
+  value = var.key_vault != null ? {
+    id             = azurerm_key_vault_secret.admin_password[0].id
+    name           = azurerm_key_vault_secret.admin_password[0].name
+    version        = azurerm_key_vault_secret.admin_password[0].version
+    versionless_id = azurerm_key_vault_secret.admin_password[0].versionless_id
+  } : null
+}
+
 output "private_endpoint" {
   description = "The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server."
   value       = var.delegated_subnet_id == null ? azurerm_private_endpoint.postgre_pep[0].id : null

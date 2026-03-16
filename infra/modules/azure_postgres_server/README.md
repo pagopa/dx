@@ -32,7 +32,7 @@ A complete example of how to use this module can be found in the [example/comple
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.21, < 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.23, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 
 ## Modules
@@ -43,6 +43,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [azurerm_key_vault_secret.admin_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_diagnostic_setting.replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -62,7 +63,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. | `string` | n/a | yes |
-| <a name="input_admin_password_version"></a> [admin\_password\_version](#input\_admin\_password\_version) | Version number for the administrator password. Increment this value when rotating the password to trigger an update, since Terraform cannot detect changes to write-only values. | `number` | `1` | no |
+| <a name="input_admin_password_version"></a> [admin\_password\_version](#input\_admin\_password\_version) | Version counter for the administrator password. Start at 1 and increment on every rotation — this is the only signal Terraform has to re-apply a write-only value, since it cannot diff ephemeral inputs. | `number` | n/a | yes |
 | <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. | `string` | n/a | yes |
 | <a name="input_alert_action"></a> [alert\_action](#input\_alert\_action) | The ID of the Action Group and optional map of custom string properties to include with the post webhook operation. | <pre>list(object(<br/>    {<br/>      action_group_id = string<br/>    }<br/>  ))</pre> | `[]` | no |
 | <a name="input_alerts_enabled"></a> [alerts\_enabled](#input\_alerts\_enabled) | Define if alerts should be enabled. | `bool` | `false` | no |
@@ -76,6 +77,7 @@ No modules.
 | <a name="input_enable_lock"></a> [enable\_lock](#input\_enable\_lock) | Define if lock should be enabled. | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_high_availability_override"></a> [high\_availability\_override](#input\_high\_availability\_override) | Override if high availability should be enabled. | `bool` | `false` | no |
+| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Optional. When provided, the module creates an azurerm\_key\_vault\_secret for the admin password using write-only attributes (value\_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault. secret\_name defaults to '<db-name>-admin-password'. | <pre>object({<br/>    id          = string<br/>    secret_name = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_pgbouncer_enabled"></a> [pgbouncer\_enabled](#input\_pgbouncer\_enabled) | Indicates whether PgBouncer, a connection pooling tool, is enabled. Defaults to true. | `bool` | `true` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone. | `string` | n/a | yes |
 | <a name="input_replica_location"></a> [replica\_location](#input\_replica\_location) | The location where the replica PostgreSQL Flexible Server should be created. Defaults to another region to improve Disaster Recovery. | `string` | `null` | no |
@@ -91,6 +93,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_admin_password_secret"></a> [admin\_password\_secret](#output\_admin\_password\_secret) | Details of the Key Vault secret storing the admin password. Null when key\_vault is not provided. Never exposes the password value. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name. |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'. |
 | <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server. |
