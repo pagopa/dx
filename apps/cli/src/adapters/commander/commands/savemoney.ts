@@ -27,7 +27,7 @@ export const makeSavemoneyCommand = () =>
     )
     .option(
       "--thresholds <path>",
-      'Explicit path to a thresholds config file. When omitted, cosmiconfig searches the current directory upward for: .savemoneyrc, .savemoneyrc.json, .savemoneyrc.yaml, savemoney.config.js, or the "savemoney" key in package.json',
+      'Explicit path to a thresholds config file. When omitted, searches the current directory upward for: .savemoneyrc, .savemoneyrc.json, .savemoneyrc.yaml, savemoney.config.js, or the "savemoney" key in package.json',
     )
     .action(async function (options) {
       try {
@@ -61,20 +61,22 @@ export const makeSavemoneyCommand = () =>
 /**
  * Parses a "key=value,key2=value2" string into a Record<string, string>.
  * Returns undefined when the option is not provided or empty.
+ * Supports values that contain "=" (only the first "=" is treated as separator).
  */
 function parseTagsOption(
   tagsOption: string | undefined,
 ): Record<string, string> | undefined {
-  if (!tagsOption || tagsOption.trim().length === 0) {
+  if (!tagsOption?.trim()) {
     return undefined;
   }
   const result: Record<string, string> = {};
   for (const pair of tagsOption.split(",")) {
-    const eqIndex = pair.indexOf("=");
-    if (eqIndex === -1) continue; // skip malformed pairs silently
-    const key = pair.slice(0, eqIndex).trim();
-    const value = pair.slice(eqIndex + 1).trim();
-    if (key) result[key] = value;
+    const [rawKey, ...rest] = pair.split("=");
+    const key = rawKey?.trim();
+    const value = rest.join("=").trim();
+    if (key && rest.length > 0) {
+      result[key] = value;
+    }
   }
   return Object.keys(result).length > 0 ? result : undefined;
 }
