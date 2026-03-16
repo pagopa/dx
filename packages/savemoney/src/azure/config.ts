@@ -26,17 +26,14 @@ export async function loadAzureConfig(
       const configContent = fs.readFileSync(configPath, "utf-8");
       const config = JSON.parse(configContent) as Partial<AzureConfig>;
 
-      if (!config.tenantId || !config.subscriptionIds) {
-        throw new Error(
-          "Config file must contain 'tenantId' and 'subscriptionIds'",
-        );
+      if (!config.subscriptionIds) {
+        throw new Error("Config file must contain 'subscriptionIds'");
       }
 
       return {
         ...config,
         preferredLocation: config.preferredLocation || "italynorth",
         subscriptionIds: config.subscriptionIds,
-        tenantId: config.tenantId,
         timespanDays: config.timespanDays || 30,
       };
     } catch (error) {
@@ -51,8 +48,6 @@ export async function loadAzureConfig(
     "Configuration file not found. Checking environment variables...",
   );
 
-  const tenantId =
-    process.env.ARM_TENANT_ID || (await prompt("Enter Tenant ID: "));
   const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
     ? process.env.ARM_SUBSCRIPTION_ID.split(",")
     : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
@@ -60,7 +55,6 @@ export async function loadAzureConfig(
   return {
     preferredLocation: "italynorth",
     subscriptionIds,
-    tenantId,
     timespanDays: 30,
   };
 }

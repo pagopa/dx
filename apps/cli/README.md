@@ -217,7 +217,6 @@ dx savemoney --days 60 --location italynorth
 
 ```json
 {
-  "tenantId": "your-tenant-id",
   "subscriptionIds": ["subscription-1", "subscription-2"],
   "preferredLocation": "italynorth",
   "timespanDays": 30

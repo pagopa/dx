@@ -138,7 +138,6 @@ The tool requires the following configuration:
 
 | Input               | Type                     | Required | Default      | Description                                                               |
 | :------------------ | :----------------------- | :------: | :----------- | :------------------------------------------------------------------------ |
-| `tenantId`          | `string`                 |    ✅    | -            | Azure Active Directory Tenant ID                                          |
 | `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
 | `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
 | `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
@@ -162,7 +161,7 @@ The tool supports multiple output formats for different use cases:
 The `loadConfig()` function loads configuration in the following priority order:
 
 1. **Configuration file** (pass file path as parameter)
-2. **Environment variables** (`ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`)
+2. **Environment variable** (`ARM_SUBSCRIPTION_ID`)
 3. **Interactive prompt** (if no other configuration is found)
 
 **Example:**
@@ -179,7 +178,6 @@ const config2 = await loadConfig();
 
 ```json
 {
-  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "subscriptionIds": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
   "preferredLocation": "italynorth",
   "timespanDays": 30,
@@ -293,7 +291,6 @@ import { azure } from "@pagopa/dx-savemoney";
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
 const config: AzureConfig = {
-  tenantId: "your-tenant-id",
   subscriptionIds: ["sub-id-1", "sub-id-2"],
   preferredLocation: "italynorth",
   timespanDays: 30,
@@ -319,7 +316,6 @@ await azure.analyzeAzureResources(config, "detailed-json");
 import { loadConfig, azure } from "@pagopa/dx-savemoney";
 
 // Set environment variables
-// ARM_TENANT_ID=xxx
 // ARM_SUBSCRIPTION_ID=sub1,sub2
 
 const config = await loadConfig(); // Will read from env vars

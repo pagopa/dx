@@ -21,7 +21,8 @@ export type AzureConfig = BaseConfig & {
    */
   filterTags?: Map<string, string>;
   subscriptionIds: string[];
-  tenantId: string;
+  /** @deprecated Not used by the analyser — DefaultAzureCredential reads the tenant from `az login` */
+  tenantId?: string;
   /**
    * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
    */

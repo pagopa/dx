@@ -270,7 +270,6 @@ The tool supports multiple authentication methods:
 
 | Parameter           | Type       | Req. | CLI Flag               | Description                                                |
 | :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
-| `tenantId`          | `string`   | Yes  | -                      | Azure Tenant ID                                            |
 | `subscriptionIds`   | `string[]` | Yes  | -                      | Azure subscription IDs to scan                             |
 | `preferredLocation` | `string`   |  No  | `--location`,<br/>`-l` | Preferred Azure region<br/>(default: `italynorth`)         |
 | `timespanDays`      | `number`   |  No  | `--days`,<br/>`-d`     | Days to look back for metrics analysis<br/>(default: `30`) |
@@ -291,7 +290,6 @@ Create a `config.json` file:
 
 ```json
 {
-  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
   "subscriptionIds": [
     "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
@@ -304,14 +302,15 @@ Create a `config.json` file:
 Alternatively, use environment variables:
 
 ```bash
-export ARM_TENANT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 export ARM_SUBSCRIPTION_ID="sub-1,sub-2,sub-3"
 ```
 
 :::tip
 
-If required parameters are not provided via config file, environments or CLI,
-the tool will prompt for them interactively.
+If `subscriptionIds` is not provided via config file or environment variable,
+the tool will prompt for it interactively. Authentication is handled
+automatically by `DefaultAzureCredential` (e.g. via `az login` or managed
+identity).
 
 :::
 

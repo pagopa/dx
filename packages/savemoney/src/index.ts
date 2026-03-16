@@ -46,10 +46,8 @@ export async function loadConfig(configPath?: string): Promise<AzureConfig> {
       const config = JSON.parse(configContent);
 
       // Validate required fields
-      if (!config.tenantId || !config.subscriptionIds) {
-        throw new Error(
-          "Config file must contain 'tenantId' and 'subscriptionIds'",
-        );
+      if (!config.subscriptionIds) {
+        throw new Error("Config file must contain 'subscriptionIds'");
       }
 
       return {
@@ -68,8 +66,6 @@ export async function loadConfig(configPath?: string): Promise<AzureConfig> {
     "Configuration file not found. Checking environment variables...",
   );
 
-  const tenantId =
-    process.env.ARM_TENANT_ID || (await prompt("Enter Tenant ID: "));
   const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
     ? process.env.ARM_SUBSCRIPTION_ID.split(",")
     : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
@@ -77,7 +73,6 @@ export async function loadConfig(configPath?: string): Promise<AzureConfig> {
   return {
     preferredLocation: "italynorth",
     subscriptionIds,
-    tenantId,
     timespanDays: 30,
   };
 }
