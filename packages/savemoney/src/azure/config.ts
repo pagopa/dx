@@ -91,6 +91,12 @@ export async function loadThresholds(
     }
 
     const userConfig = result.config as Record<string, unknown>;
+    // Read thresholds from the "azure" namespace to allow future cloud-specific sections
+    const azureConfig = (
+      typeof userConfig.azure === "object" && userConfig.azure !== null
+        ? userConfig.azure
+        : {}
+    ) as Record<string, unknown>;
 
     // Strip any non-numeric values to prevent invalid config from propagating
     const sanitize = (
@@ -118,25 +124,25 @@ export async function loadThresholds(
     return {
       appService: sanitize(
         DEFAULT_THRESHOLDS.appService,
-        userConfig.appService,
+        azureConfig.appService,
       ) as Thresholds["appService"],
       containerApp: sanitize(
         DEFAULT_THRESHOLDS.containerApp,
-        userConfig.containerApp,
+        azureConfig.containerApp,
       ) as Thresholds["containerApp"],
       publicIp: sanitize(
         DEFAULT_THRESHOLDS.publicIp,
-        userConfig.publicIp,
+        azureConfig.publicIp,
       ) as Thresholds["publicIp"],
       staticSite: sanitize(
         DEFAULT_THRESHOLDS.staticSite,
-        userConfig.staticSite,
+        azureConfig.staticSite,
       ) as Thresholds["staticSite"],
       storage: sanitize(
         DEFAULT_THRESHOLDS.storage,
-        userConfig.storage,
+        azureConfig.storage,
       ) as Thresholds["storage"],
-      vm: sanitize(DEFAULT_THRESHOLDS.vm, userConfig.vm) as Thresholds["vm"],
+      vm: sanitize(DEFAULT_THRESHOLDS.vm, azureConfig.vm) as Thresholds["vm"],
     };
   } catch (error) {
     // Fall back to defaults and surface the error so misconfigured paths are diagnosable

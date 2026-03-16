@@ -1,8 +1,10 @@
 {
-  "vm": {
-    "cpuPercent": 5
-  },
-  "storage": {
-    "transactionsPerDay": 50
+  "azure": {
+    "vm": {
+      "cpuPercent": 5
+    },
+    "storage": {
+      "transactionsPerDay": 50
+    }
   }
 }

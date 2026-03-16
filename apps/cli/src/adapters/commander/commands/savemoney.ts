@@ -22,8 +22,8 @@ export const makeSavemoneyCommand = () =>
     .option("-d, --days <number>", "Number of days for metrics analysis", "30")
     .option("-v, --verbose", "Enable verbose logging")
     .option(
-      "-t, --tags <tags>",
-      "Filter resources by tags (key=value,key2=value2). Only resources matching ALL specified tags are analyzed.",
+      "-t, --tags <tags...>",
+      "Filter resources by tags (key=value key2=value2). Only resources matching ALL specified tags are analyzed.",
     )
     .option(
       "--thresholds <path>",
@@ -59,16 +59,18 @@ export const makeSavemoneyCommand = () =>
     });
 
 /**
- * Parses a "key=value,key2=value2" string into a Map<string, string>.
+ * Parses an array of "key=value" strings (from commander variadic option) into a Map<string, string>.
  * Returns an empty Map when the option is not provided or empty.
  * Supports values that contain "=" (only the first "=" is treated as separator).
  */
-function parseTagsOption(tagsOption: string | undefined): Map<string, string> {
+function parseTagsOption(
+  tagsOption: string[] | undefined,
+): Map<string, string> {
   const result = new Map<string, string>();
-  if (!tagsOption?.trim()) {
+  if (!tagsOption || tagsOption.length === 0) {
     return result;
   }
-  for (const pair of tagsOption.split(",")) {
+  for (const pair of tagsOption) {
     const [rawKey, ...rest] = pair.split("=");
     const key = rawKey?.trim();
     const value = rest.join("=").trim();

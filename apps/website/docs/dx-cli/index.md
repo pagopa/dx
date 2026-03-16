@@ -280,7 +280,7 @@ The tool supports multiple authentication methods:
 - `--config`, `-c` - Path to config file
 - `--format`, `-f` - Output format, possible values: `table` (_default_),
   `json`, `detailed-json`, `lint`
-- `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod,team=dx`)
+- `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
 - `--thresholds` - Path to a threshold override file (see
   [Custom Thresholds](#custom-thresholds))
 - `--verbose`, `-v` - Enable detailed logging
@@ -346,7 +346,7 @@ Use `--tags` to restrict the analysis to resources that match **all** specified
 Azure tags (AND logic):
 
 ```bash
-npx @pagopa/dx-cli savemoney --config config.json --tags env=prod,team=dx
+npx @pagopa/dx-cli savemoney --config config.json --tags env=prod team=dx
 ```
 
 Only resources that have every listed tag with the exact expected value will be
@@ -371,8 +371,10 @@ Example `.savemoneyrc.json` (only the fields you want to change are required):
 
 ```json
 {
-  "vm": { "cpuPercent": 5 },
-  "storage": { "transactionsPerDay": 50 }
+  "azure": {
+    "vm": { "cpuPercent": 5 },
+    "storage": { "transactionsPerDay": 50 }
+  }
 }
 ```
 

@@ -185,7 +185,7 @@ dx savemoney [options]
 | `--days`       | `-d`  | Metric analysis period in days.                                                                                                                                                                                               | `30`         |
 | `--location`   | `-l`  | Preferred Azure location for resources.                                                                                                                                                                                       | `italynorth` |
 | `--verbose`    | `-v`  | Enable verbose mode with detailed logging for each resource analyzed.                                                                                                                                                         | `false`      |
-| `--tags`       | `-t`  | Filter resources by tags (`key=value,key2=value2`). Only resources matching **all** specified tags are analyzed.                                                                                                              | N/A          |
+| `--tags`       | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated).                                                                                  | N/A          |
 | `--thresholds` |       | Explicit path to a thresholds config file. When omitted, cosmiconfig searches the CWD upward for `.savemoneyrc`, `.savemoneyrc.json`, `.savemoneyrc.yaml`, `savemoney.config.js`, or the `"savemoney"` key in `package.json`. | N/A          |
 
 **Example usage:**
@@ -230,15 +230,17 @@ Place this file in your project root (or any parent directory). Only the values 
 
 ```json
 {
-  "vm": {
-    "cpuPercent": 5
-  },
-  "appService": {
-    "cpuPercent": 10,
-    "memoryPercent": 20
-  },
-  "storage": {
-    "transactionsPerDay": 50
+  "azure": {
+    "vm": {
+      "cpuPercent": 5
+    },
+    "appService": {
+      "cpuPercent": 10,
+      "memoryPercent": 20
+    },
+    "storage": {
+      "transactionsPerDay": 50
+    }
   }
 }
 ```
