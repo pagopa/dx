@@ -28,7 +28,10 @@ import {
   terraformBackendSchema,
 } from "../../domain/remote-backend.js";
 import { isAzureLocation, locations, locationShort } from "./locations.js";
-import { registerResourceProviders } from "./register-resource-providers.js";
+import {
+  areResourceProvidersRegistered,
+  registerResourceProviders,
+} from "./register-resource-providers.js";
 
 // We are only interested in these properties for now;
 // the actual result structure contains the full cloud resource object
@@ -188,6 +191,9 @@ export class AzureCloudAccountService implements CloudAccountService {
 
     const logger = getLogger(["gen", "env"]);
 
+    // Register required resource providers before creating any resources
+    await registerResourceProviders(this.#credential, cloudAccount.id);
+
     const resourceManagementClient = new ResourceManagementClient(
       this.#credential,
       cloudAccount.id,
@@ -345,19 +351,23 @@ export class AzureCloudAccountService implements CloudAccountService {
              | where name matches regex @'${keyVaultResourceName}'
             `;
 
-    const [identityResult, keyVaultResult] = await Promise.all([
-      this.#resourceGraphClient.resources({
-        query: identityQuery,
-        subscriptions: [cloudAccountId],
-      }),
-      this.#resourceGraphClient.resources({
-        query: keyVaultQuery,
-        subscriptions: [cloudAccountId],
-      }),
-    ]);
+    const [identityResult, keyVaultResult, areProvidersRegistered] =
+      await Promise.all([
+        this.#resourceGraphClient.resources({
+          query: identityQuery,
+          subscriptions: [cloudAccountId],
+        }),
+        this.#resourceGraphClient.resources({
+          query: keyVaultQuery,
+          subscriptions: [cloudAccountId],
+        }),
+        areResourceProvidersRegistered(this.#credential, cloudAccountId),
+      ]);
 
     const initialized =
-      identityResult.totalRecords > 0 && keyVaultResult.totalRecords > 0;
+      identityResult.totalRecords > 0 &&
+      keyVaultResult.totalRecords > 0 &&
+      areProvidersRegistered;
 
     const logger = getLogger(["gen", "env"]);
 
@@ -473,10 +483,6 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
-  }
-
-  async registerProviders(cloudAccountId: CloudAccount["id"]): Promise<void> {
-    await registerResourceProviders(this.#credential, cloudAccountId);
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {

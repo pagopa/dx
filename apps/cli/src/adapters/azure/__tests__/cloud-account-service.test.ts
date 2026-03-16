@@ -2,9 +2,17 @@ import { DefaultAzureCredential } from "@azure/identity";
 import { test as baseTest, describe, expect, vi } from "vitest";
 
 import { AzureCloudAccountService } from "../cloud-account-service.js";
+import { REQUIRED_RESOURCE_PROVIDERS } from "../register-resource-providers.js";
 
 const { queryResources } = vi.hoisted(() => ({
   queryResources: vi.fn().mockRejectedValue(new Error("Not implemented")),
+}));
+
+const { mockProviderGet, mockProviderRegister } = vi.hoisted(() => ({
+  mockProviderGet: vi
+    .fn()
+    .mockResolvedValue({ registrationState: "Registered" }),
+  mockProviderRegister: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("@azure/identity", () => ({
@@ -14,6 +22,15 @@ vi.mock("@azure/identity", () => ({
 vi.mock("@azure/arm-resourcegraph", () => ({
   ResourceGraphClient: class {
     resources = queryResources;
+  },
+}));
+
+vi.mock("@azure/arm-resources", () => ({
+  ResourceManagementClient: class {
+    providers = {
+      get: mockProviderGet,
+      register: mockProviderRegister,
+    };
   },
 }));
 
@@ -119,13 +136,14 @@ describe("getTerraformBackend", () => {
 });
 
 describe("isInitialized", () => {
-  test("returns true when both bootstrap identity and common Key Vault exist", async ({
+  test("returns true when both bootstrap identity and common Key Vault exist and all providers are registered", async ({
     cloudAccountService,
   }) => {
     // First call: identity query → found
     queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
     // Second call: key vault query → found
     queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    // Provider checks → all registered (default mock)
 
     const result = await cloudAccountService.isInitialized("sub-1", {
       name: "dev",
@@ -165,5 +183,41 @@ describe("isInitialized", () => {
     });
 
     expect(result).toBe(false);
+  });
+
+  test("returns false when resources exist but a required provider is not registered", async ({
+    cloudAccountService,
+  }) => {
+    // Both resources exist
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    // One provider is not registered
+    mockProviderGet.mockResolvedValueOnce({
+      registrationState: "NotRegistered",
+    });
+
+    const result = await cloudAccountService.isInitialized("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(result).toBe(false);
+  });
+
+  test("checks all required providers during isInitialized", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
+    mockProviderGet.mockClear();
+
+    await cloudAccountService.isInitialized("sub-1", {
+      name: "dev",
+      prefix: "dx",
+    });
+
+    expect(mockProviderGet).toHaveBeenCalledTimes(
+      REQUIRED_RESOURCE_PROVIDERS.length,
+    );
   });
 });

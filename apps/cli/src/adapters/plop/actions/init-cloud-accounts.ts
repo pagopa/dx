@@ -14,14 +14,6 @@ export const initCloudAccounts = async (
   if (payload.init && payload.init.cloudAccountsToInitialize.length > 0) {
     const { runnerAppCredentials } = payload.init;
     assert.ok(runnerAppCredentials, "Runner app credentials are required");
-
-    // Register required Azure resource providers on all subscriptions first
-    await Promise.all(
-      payload.init.cloudAccountsToInitialize.map((cloudAccount) =>
-        cloudAccountService.registerProviders(cloudAccount.id),
-      ),
-    );
-
     await Promise.all(
       payload.init.cloudAccountsToInitialize.map((cloudAccount) =>
         cloudAccountService.initialize(

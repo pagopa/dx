@@ -1,15 +1,17 @@
 import { describe, expect, it, vi } from "vitest";
 
 import {
+  areResourceProvidersRegistered,
   registerResourceProviders,
   REQUIRED_RESOURCE_PROVIDERS,
 } from "../register-resource-providers.js";
 
 const mockRegister = vi.fn().mockResolvedValue({});
+const mockGet = vi.fn().mockResolvedValue({ registrationState: "Registered" });
 
 vi.mock("@azure/arm-resources", () => ({
   ResourceManagementClient: vi.fn().mockImplementation(() => ({
-    providers: { register: mockRegister },
+    providers: { get: mockGet, register: mockRegister },
   })),
 }));
 
@@ -77,5 +79,42 @@ describe("registerResourceProviders", () => {
     await expect(
       registerResourceProviders(stubCredential, "sub-789"),
     ).resolves.toBeUndefined();
+  });
+});
+
+describe("areResourceProvidersRegistered", () => {
+  it("should return true when all providers are registered", async () => {
+    mockGet.mockResolvedValue({ registrationState: "Registered" });
+
+    const result = await areResourceProvidersRegistered(
+      stubCredential,
+      "sub-123",
+    );
+
+    expect(result).toBe(true);
+    expect(mockGet).toHaveBeenCalledTimes(REQUIRED_RESOURCE_PROVIDERS.length);
+  });
+
+  it("should return false when any provider is not registered", async () => {
+    mockGet
+      .mockResolvedValue({ registrationState: "Registered" })
+      .mockResolvedValueOnce({ registrationState: "NotRegistered" });
+
+    const result = await areResourceProvidersRegistered(
+      stubCredential,
+      "sub-456",
+    );
+
+    expect(result).toBe(false);
+  });
+
+  it("should check all required providers", async () => {
+    mockGet.mockResolvedValue({ registrationState: "Registered" });
+
+    await areResourceProvidersRegistered(stubCredential, "sub-789");
+
+    for (const namespace of REQUIRED_RESOURCE_PROVIDERS) {
+      expect(mockGet).toHaveBeenCalledWith(namespace);
+    }
   });
 });
