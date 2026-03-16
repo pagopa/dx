@@ -16,7 +16,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
-- Add a short file header that states the module purpose.
+- Add a short file header that states the module purpose and how it fits into the overall architecture.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
 - Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
 - Use `async/await` for asynchronous code for clarity.
@@ -42,7 +42,9 @@ const user = JSON.parse(data) as User;
 // ✅ Good
 const userSchema = z.object({ name: z.string(), email: z.string().email() });
 const result = userSchema.safeParse(JSON.parse(data));
-if (!result.success) throw new Error(result.error.message);
+if (!result.success) {
+  /* handle validation error */
+}
 ```
 
 ### Error Handling
@@ -62,23 +64,23 @@ try {
   throw new Error("Failed");
 }
 
-// ✅ Good: Preserve original error
-try {
-  await fetchUser(id);
-} catch (err) {
-  throw new Error(`Failed to fetch user ${id}`, { cause: err });
-}
-
 // ✅ Good: Only catch when you handle it
 try {
   await cache.delete(key);
 } catch (e) {
   console.warn("Cache cleanup failed", e);
 }
+
+// ✅ Good: Preserve original error
+try {
+  await fetchUser(id);
+} catch (err) {
+  throw new Error(`Failed to fetch user ${id}`, { cause: err });
+}
 ```
 
 - Avoid deeply nested control flow; prefer early returns or small helper functions.
-- Use asynchronous functions for I/O-bound operations.
+- Use asynchronous functions for I/O-bound operations. Never use `writeFileSync` or similar blocking calls in production code.
 - Favor dependency injection over instantiating collaborators with `new` inside methods.
 - Use ES Modules (`import`/`export`) and include `.js`/`.ts` extensions in new code.
 
