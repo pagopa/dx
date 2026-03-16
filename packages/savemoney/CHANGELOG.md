@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.1.6
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
 ## 0.1.5
 
 ### Patch Changes
