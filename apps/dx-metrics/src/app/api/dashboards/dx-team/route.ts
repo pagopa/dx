@@ -1,8 +1,8 @@
 /** Route handler adapter for the DX Team dashboard. */
 import { NextRequest, NextResponse } from "next/server";
 
+import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
 import { db } from "@/db/instance";
-import { fetchDxTeamDashboard } from "@/domain/dx-team/queries";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 

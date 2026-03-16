@@ -1,57 +1,11 @@
 /** This module aggregates Techradar usage rows into dashboard-ready shapes. */
 
+import type {
+  TechRadarDashboardResult,
+  TechRadarUsageRow,
+} from "@/adapters/db/techradar/schemas";
+
 const NOT_IN_RADAR_LABEL = "Not in radar";
-
-export interface TechRadarDashboardData {
-  adoptionByTool: {
-    adoption_percentage: number;
-    radar_ref: null | string;
-    radar_ring: null | string;
-    radar_slug: null | string;
-    radar_status: string;
-    radar_title: null | string;
-    repository_count: number;
-    tool_key: string;
-    tool_name: string;
-  }[];
-  repositoriesWithoutDetectedTools: string[];
-  repositoryCoverage: {
-    aligned_tools: number;
-    detected_tools: number;
-    repository: string;
-  }[];
-  repositoryMatrix: {
-    evidence_path: null | string;
-    radar_ref: null | string;
-    radar_ring: null | string;
-    radar_status: string;
-    radar_status_label: string;
-    radar_title: null | string;
-    repository: string;
-    tool_name: string;
-  }[];
-  statusDistribution: { name: string; value: number }[];
-  summary: {
-    aligned_usages: number;
-    detected_usages: number;
-    repositories_total: number;
-    repositories_with_detected_tools: number;
-    tools_detected: number;
-    usages_not_in_radar: number;
-  };
-}
-
-export interface TechRadarUsageRow {
-  evidencePath: null | string;
-  radarRef: null | string;
-  radarRing: null | string;
-  radarSlug: null | string;
-  radarStatus: string;
-  radarTitle: null | string;
-  repositoryFullName: string;
-  toolKey: string;
-  toolName: string;
-}
 
 const formatRadarStatusLabel = (
   radarRing: null | string,
@@ -69,7 +23,7 @@ const roundPercentage = (value: number): number => Math.round(value * 10) / 10;
 export function buildTechRadarDashboardData(
   rows: readonly TechRadarUsageRow[],
   configuredRepositories: readonly string[],
-): TechRadarDashboardData {
+): TechRadarDashboardResult {
   const toolUsageIndex = new Map<
     string,
     {

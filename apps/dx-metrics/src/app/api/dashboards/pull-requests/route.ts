@@ -1,8 +1,8 @@
 // Pull request dashboard API route — thin adapter delegating to the domain layer.
 import { NextRequest, NextResponse } from "next/server";
 
+import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
 import { db } from "@/db/instance";
-import { fetchPrDashboard } from "@/domain/pull-requests/queries";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 

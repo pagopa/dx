@@ -2,8 +2,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 
+import { getWorkflowDashboard } from "@/adapters/db/workflows/queries";
 import { db } from "@/db/instance";
-import { getWorkflowDashboard } from "@/domain/workflows/queries";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 

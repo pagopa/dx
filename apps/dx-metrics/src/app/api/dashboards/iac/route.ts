@@ -1,8 +1,8 @@
 /** Next.js route handler for the IaC dashboard — thin adapter over domain logic. */
 import { NextRequest, NextResponse } from "next/server";
 
+import { getIacDashboard } from "@/adapters/db/iac/queries";
 import { db } from "@/db/instance";
-import { getIacDashboard } from "@/domain/iac/queries";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 

@@ -2,8 +2,8 @@
 
 import { NextResponse } from "next/server";
 
+import { getTechRadarDashboard } from "@/adapters/db/techradar/queries";
 import { db } from "@/db/instance";
-import { getTechRadarDashboard } from "@/domain/techradar/queries";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
 
 export async function GET() {

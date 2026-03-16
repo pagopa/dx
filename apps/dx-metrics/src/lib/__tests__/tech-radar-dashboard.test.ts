@@ -2,10 +2,9 @@
 
 import { describe, expect, it } from "vitest";
 
-import {
-  buildTechRadarDashboardData,
-  type TechRadarUsageRow,
-} from "../tech-radar-dashboard.js";
+import type { TechRadarUsageRow } from "@/adapters/db/techradar/schemas";
+
+import { buildTechRadarDashboardData } from "../tech-radar-dashboard.js";
 
 describe("buildTechRadarDashboardData", () => {
   it("computes adoption percentages and radar grouping", () => {

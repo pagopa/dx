@@ -2,8 +2,8 @@
 
 import { NextResponse } from "next/server";
 
+import { getTrackerDashboard } from "@/adapters/db/tracker/queries";
 import { db } from "@/db/instance";
-import { getTrackerDashboard } from "@/domain/tracker/queries";
 
 export async function GET() {
   try {

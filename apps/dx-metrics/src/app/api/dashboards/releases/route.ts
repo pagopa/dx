@@ -1,8 +1,8 @@
 /** Route handler adapter for the releases dashboard. */
 import { NextResponse } from "next/server";
 
+import { getReleasesDashboard } from "@/adapters/db/releases/queries";
 import { db } from "@/db/instance";
-import { getReleasesDashboard } from "@/domain/releases/queries";
 
 export async function GET() {
   try {
