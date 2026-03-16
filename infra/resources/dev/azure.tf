@@ -19,8 +19,7 @@ module "metrics_portal" {
   subnet_pep_id                        = module.azure_core_values.common_pep_snet.id
   private_dns_zone_resource_group_name = module.azure_core_values.network_resource_group_name
 
-  key_vault_id   = module.azure_core_values.common_key_vault.id
-  key_vault_name = module.azure_core_values.common_key_vault.name
+  key_vault_id = module.azure_core_values.common_key_vault.id
 
   application_insights_connection_string = try(module.azure_core_values.application_insights.connection_string, null)
 }

@@ -51,7 +51,7 @@ module "app_service" {
   application_insights_connection_string = var.application_insights_connection_string
 
   app_settings = {
-    DATABASE_URL = "@Microsoft.KeyVault(SecretUri=https://${var.key_vault_name}.vault.azure.net/secrets/postgres-connection-string/)"
+    DATABASE_URL = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.db_connection_string.versionless_id})"
     NODE_ENV     = "production"
     PORT         = "3000"
   }

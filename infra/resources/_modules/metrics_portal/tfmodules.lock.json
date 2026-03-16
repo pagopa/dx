@@ -1,29 +1,17 @@
 {
-  "azure_core_values": {
-    "hash": "8b9a3151a0e9ec1015b23f137107cd966629384e0cd954c69be07891ff198b1b",
-    "version": "0.4.0",
-    "name": "azure_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.4.0"
-  },
-  "aws_core_values": {
-    "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
-    "version": "0.1.2",
-    "name": "aws_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
-  },
-  "metrics_portal.app_service": {
+  "app_service": {
     "hash": "1646a2321f56dbf705f884498b1e86c165c2cac7ef33e1bbe33c8bcfc1909e80",
     "version": "3.0.0",
     "name": "azure_app_service_exposed",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-app-service-exposed/azurerm/3.0.0"
   },
-  "metrics_portal.app_service_key_vault_roles": {
+  "app_service_key_vault_roles": {
     "hash": "a8c1a6fa085349f937017deb20236170f0bb9dd78b5ded85ec75d7caeba7a872",
     "version": "1.3.3",
     "name": "azure_role_assignments",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/1.3.3"
   },
-  "metrics_portal.postgres": {
+  "postgres": {
     "hash": "c2ff43e75d0a13516fdd04df62f640cb0cd8938a0e3a0d109515167e5b2a2b78",
     "version": "2.0.1",
     "name": "azure_postgres_server",

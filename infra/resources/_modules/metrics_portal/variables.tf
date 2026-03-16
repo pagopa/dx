@@ -35,11 +35,6 @@ variable "key_vault_id" {
   description = "ID of the Key Vault where secrets (DB credentials, connection string) will be stored."
 }
 
-variable "key_vault_name" {
-  type        = string
-  description = "Name of the Key Vault, used to construct Key Vault reference URLs for app settings."
-}
-
 variable "application_insights_connection_string" {
   type        = string
   default     = null
