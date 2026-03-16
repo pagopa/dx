@@ -25,7 +25,7 @@ Requires azurerm provider `>= 4.23` (previously `>= 3.116`) and Terraform `>= 1.
 
 ## New feature: optional Key Vault secret management
 
-A new optional `key_vault` variable allows the module to create and manage an `azurerm_key_vault_secret` for the admin password automatically, using `value_wo` so the password is never stored in Terraform state.
+A new optional `key_vault_id` variable allows the module to create and manage an `azurerm_key_vault_secret` for the admin password automatically, using `value_wo` so the password is never stored in Terraform state.
 
 ```hcl
 module "postgres" {
@@ -36,14 +36,11 @@ module "postgres" {
 
   # Optional: the module creates the KV secret and outputs its details.
   # Requires Key Vault Secrets Officer role on the vault for the Terraform identity.
-  key_vault = {
-    id = azurerm_key_vault.this.id
-    # secret_name = "custom-name"  # optional; defaults to "<db-name>-admin-password"
-  }
+  key_vault_id = azurerm_key_vault.this.id
 }
 ```
 
-When `key_vault` is provided, the `admin_password_secret` output exposes `id`, `name`, `version`, and `versionless_id` of the secret. The password value is never exposed in outputs or state.
+When `key_vault_id` is provided, the module creates a secret named `<db-name>-admin-password` and the `admin_password_secret` output exposes `id`, `name`, `version`, and `versionless_id` of the secret. The password value is never exposed in outputs or state.
 
 The `admin_password_version` counter drives both the PostgreSQL server write-only attribute and the Key Vault secret write-only attribute, so a single increment rotates both resources atomically.
 

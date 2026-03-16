@@ -1,6 +1,6 @@
 output "admin_password_secret" {
-  description = "Details of the Key Vault secret storing the admin password. Null when key_vault is not provided. Never exposes the password value."
-  value = var.key_vault != null ? {
+  description = "Details of the Key Vault secret storing the admin password. Null when key_vault_id is not provided. Never exposes the password value."
+  value = var.key_vault_id != null ? {
     id             = azurerm_key_vault_secret.admin_password[0].id
     name           = azurerm_key_vault_secret.admin_password[0].name
     version        = azurerm_key_vault_secret.admin_password[0].version

@@ -80,9 +80,7 @@ module "azure_postgres" {
 
   # The module creates a Key Vault secret for the admin password automatically.
   # Requires Key Vault Secrets Officer role on the vault for the Terraform identity.
-  key_vault = {
-    id = azurerm_key_vault.example.id
-  }
+  key_vault_id = azurerm_key_vault.example.id
 
   subnet_pep_id = data.azurerm_subnet.pep.id
 

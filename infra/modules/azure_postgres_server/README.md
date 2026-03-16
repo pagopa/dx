@@ -31,7 +31,7 @@ The module uses Terraform 1.11 write-only attributes to handle the admin passwor
 
 ### Recommended: delegate secret management to the module
 
-Pass a `key_vault` block and the module creates and manages the `azurerm_key_vault_secret` automatically. The password flows from an ephemeral source directly into both the PostgreSQL server and the Key Vault secret via write-only attributes — it never touches state at any point.
+Pass `key_vault_id` and the module creates and manages the `azurerm_key_vault_secret` automatically. The password flows from an ephemeral source directly into both the PostgreSQL server and the Key Vault secret via write-only attributes — it never touches state at any point.
 
 The Terraform identity must hold the **Key Vault Secrets Officer** role on the vault.
 
@@ -49,10 +49,7 @@ module "postgres" {
   admin_password         = ephemeral.random_password.db.result
   admin_password_version = 1  # increment on every rotation
 
-  key_vault = {
-    id = azurerm_key_vault.this.id
-    # secret_name = "custom-name"  # optional; defaults to "<db-name>-admin-password"
-  }
+  key_vault_id = azurerm_key_vault.this.id
 }
 
 # The module outputs the secret details (never the value itself)
@@ -65,7 +62,7 @@ Incrementing `admin_password_version` rotates **both** the PostgreSQL server pas
 
 ### Manual: manage the Key Vault secret yourself
 
-If you need full control over the secret resource, omit `key_vault` and create the `azurerm_key_vault_secret` outside the module. You are then responsible for keeping the two version counters in sync — if you forget to increment one of them, Terraform will silently skip the write for that resource.
+If you need full control over the secret resource, omit `key_vault_id` and create the `azurerm_key_vault_secret` outside the module. You are then responsible for keeping the two version counters in sync — if you forget to increment one of them, Terraform will silently skip the write for that resource.
 
 ```hcl
 ephemeral "random_password" "db" {
@@ -144,7 +141,7 @@ No modules.
 | <a name="input_enable_lock"></a> [enable\_lock](#input\_enable\_lock) | Define if lock should be enabled. | `bool` | `true` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_high_availability_override"></a> [high\_availability\_override](#input\_high\_availability\_override) | Override if high availability should be enabled. | `bool` | `false` | no |
-| <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Optional. When provided, the module creates an azurerm\_key\_vault\_secret for the admin password using write-only attributes (value\_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault. secret\_name defaults to '<db-name>-admin-password'. | <pre>object({<br/>    id          = string<br/>    secret_name = optional(string)<br/>  })</pre> | `null` | no |
+| <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | Optional. When provided, the module creates an azurerm\_key\_vault\_secret named '<db-name>-admin-password' in this vault using write-only attributes (value\_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault. | `string` | `null` | no |
 | <a name="input_pgbouncer_enabled"></a> [pgbouncer\_enabled](#input\_pgbouncer\_enabled) | Indicates whether PgBouncer, a connection pooling tool, is enabled. Defaults to true. | `bool` | `true` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone. | `string` | n/a | yes |
 | <a name="input_replica_location"></a> [replica\_location](#input\_replica\_location) | The location where the replica PostgreSQL Flexible Server should be created. Defaults to another region to improve Disaster Recovery. | `string` | `null` | no |
@@ -160,7 +157,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_admin_password_secret"></a> [admin\_password\_secret](#output\_admin\_password\_secret) | Details of the Key Vault secret storing the admin password. Null when key\_vault is not provided. Never exposes the password value. |
+| <a name="output_admin_password_secret"></a> [admin\_password\_secret](#output\_admin\_password\_secret) | Details of the Key Vault secret storing the admin password. Null when key\_vault\_id is not provided. Never exposes the password value. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name. |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'. |
 | <a name="output_private_endpoint"></a> [private\_endpoint](#output\_private\_endpoint) | The resource ID of the Private Endpoint associated with the PostgreSQL Flexible Server. |

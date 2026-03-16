@@ -100,14 +100,10 @@ variable "admin_password_version" {
   description = "Version counter for the administrator password. Start at 1 and increment on every rotation — this is the only signal Terraform has to re-apply a write-only value, since it cannot diff ephemeral inputs."
 }
 
-variable "key_vault" {
-  type = object({
-    id          = string
-    secret_name = optional(string)
-  })
+variable "key_vault_id" {
+  type        = string
   default     = null
-  description = "Optional. When provided, the module creates an azurerm_key_vault_secret for the admin password using write-only attributes (value_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault. secret_name defaults to '<db-name>-admin-password'."
-
+  description = "Optional. When provided, the module creates an azurerm_key_vault_secret named '<db-name>-admin-password' in this vault using write-only attributes (value_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault."
 }
 
 #--------#

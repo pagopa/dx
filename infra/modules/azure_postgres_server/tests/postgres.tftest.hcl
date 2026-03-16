@@ -200,9 +200,7 @@ run "postgres_with_key_vault_is_correct_plan" {
     admin_password         = "password"
     admin_password_version = 1
 
-    key_vault = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-vault"
-    }
+    key_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-vault"
   }
 
   assert {
