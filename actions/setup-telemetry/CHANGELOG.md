@@ -1,5 +1,11 @@
 # Install Setup Telemetry
 
+## 0.1.2
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
 ## 0.1.1
 
 ### Patch Changes

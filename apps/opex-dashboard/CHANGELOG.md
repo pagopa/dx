@@ -1,5 +1,11 @@
 # @pagopa/opex-dashboard
 
+## 0.2.2
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
 ## 0.2.1
 
 ### Patch Changes

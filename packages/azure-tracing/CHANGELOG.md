@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.13
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
 ## 0.4.12
 
 ### Patch Changes
