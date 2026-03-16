@@ -59,24 +59,22 @@ export const makeSavemoneyCommand = () =>
     });
 
 /**
- * Parses a "key=value,key2=value2" string into a Record<string, string>.
- * Returns undefined when the option is not provided or empty.
+ * Parses a "key=value,key2=value2" string into a Map<string, string>.
+ * Returns an empty Map when the option is not provided or empty.
  * Supports values that contain "=" (only the first "=" is treated as separator).
  */
-function parseTagsOption(
-  tagsOption: string | undefined,
-): Record<string, string> | undefined {
+function parseTagsOption(tagsOption: string | undefined): Map<string, string> {
+  const result = new Map<string, string>();
   if (!tagsOption?.trim()) {
-    return undefined;
+    return result;
   }
-  const result: Record<string, string> = {};
   for (const pair of tagsOption.split(",")) {
     const [rawKey, ...rest] = pair.split("=");
     const key = rawKey?.trim();
     const value = rest.join("=").trim();
     if (key && rest.length > 0) {
-      result[key] = value;
+      result.set(key, value);
     }
   }
-  return Object.keys(result).length > 0 ? result : undefined;
+  return result;
 }

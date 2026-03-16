@@ -19,7 +19,7 @@ export type AzureConfig = BaseConfig & {
    * Only analyze resources that match ALL the given tag key-value pairs.
    * If omitted, all resources are analyzed.
    */
-  filterTags?: Record<string, string>;
+  filterTags?: Map<string, string>;
   subscriptionIds: string[];
   tenantId: string;
   /**

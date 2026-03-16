@@ -23,8 +23,8 @@ describe("matchesTags", () => {
       expect(matchesTags(makeResource({ env: "prod" }), undefined)).toBe(true);
     });
 
-    it("returns true for empty filterTags object", () => {
-      expect(matchesTags(makeResource({ env: "prod" }), {})).toBe(true);
+    it("returns true for empty Map", () => {
+      expect(matchesTags(makeResource({ env: "prod" }), new Map())).toBe(true);
     });
 
     it("returns true even when resource has no tags", () => {
@@ -34,31 +34,33 @@ describe("matchesTags", () => {
 
   describe("single tag filter", () => {
     it("returns true when tag key and value match exactly", () => {
-      expect(matchesTags(makeResource({ env: "prod" }), { env: "prod" })).toBe(
-        true,
-      );
+      expect(
+        matchesTags(makeResource({ env: "prod" }), new Map([["env", "prod"]])),
+      ).toBe(true);
     });
 
     it("returns false when tag key is missing from resource", () => {
-      expect(matchesTags(makeResource({ app: "myapp" }), { env: "prod" })).toBe(
-        false,
-      );
+      expect(
+        matchesTags(makeResource({ app: "myapp" }), new Map([["env", "prod"]])),
+      ).toBe(false);
     });
 
     it("returns false when tag key exists but value differs", () => {
-      expect(matchesTags(makeResource({ env: "dev" }), { env: "prod" })).toBe(
-        false,
-      );
+      expect(
+        matchesTags(makeResource({ env: "dev" }), new Map([["env", "prod"]])),
+      ).toBe(false);
     });
 
     it("returns false when resource has no tags at all", () => {
-      expect(matchesTags(makeResource(), { env: "prod" })).toBe(false);
+      expect(matchesTags(makeResource(), new Map([["env", "prod"]]))).toBe(
+        false,
+      );
     });
 
     it("is case-sensitive for tag values", () => {
-      expect(matchesTags(makeResource({ env: "Prod" }), { env: "prod" })).toBe(
-        false,
-      );
+      expect(
+        matchesTags(makeResource({ env: "Prod" }), new Map([["env", "prod"]])),
+      ).toBe(false);
     });
   });
 
@@ -69,22 +71,54 @@ describe("matchesTags", () => {
         region: "italy",
         team: "dx",
       });
-      expect(matchesTags(resource, { env: "prod", team: "dx" })).toBe(true);
+      expect(
+        matchesTags(
+          resource,
+          new Map([
+            ["env", "prod"],
+            ["team", "dx"],
+          ]),
+        ),
+      ).toBe(true);
     });
 
     it("returns false when one of the filter tags is missing", () => {
       const resource = makeResource({ env: "prod" });
-      expect(matchesTags(resource, { env: "prod", team: "dx" })).toBe(false);
+      expect(
+        matchesTags(
+          resource,
+          new Map([
+            ["env", "prod"],
+            ["team", "dx"],
+          ]),
+        ),
+      ).toBe(false);
     });
 
     it("returns false when one of the filter tags has the wrong value", () => {
       const resource = makeResource({ env: "prod", team: "backend" });
-      expect(matchesTags(resource, { env: "prod", team: "dx" })).toBe(false);
+      expect(
+        matchesTags(
+          resource,
+          new Map([
+            ["env", "prod"],
+            ["team", "dx"],
+          ]),
+        ),
+      ).toBe(false);
     });
 
     it("returns false when both filter tags have wrong values", () => {
       const resource = makeResource({ env: "dev", team: "backend" });
-      expect(matchesTags(resource, { env: "prod", team: "dx" })).toBe(false);
+      expect(
+        matchesTags(
+          resource,
+          new Map([
+            ["env", "prod"],
+            ["team", "dx"],
+          ]),
+        ),
+      ).toBe(false);
     });
   });
 });

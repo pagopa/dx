@@ -168,13 +168,13 @@ export async function getMetric(
  */
 export function matchesTags(
   resource: armResources.GenericResource,
-  filterTags: Record<string, string> | undefined,
+  filterTags: Map<string, string> | undefined,
 ): boolean {
-  if (!filterTags || Object.keys(filterTags).length === 0) {
+  if (!filterTags || filterTags.size === 0) {
     return true;
   }
   const resourceTags = resource.tags ?? {};
-  return Object.entries(filterTags).every(
+  return [...filterTags.entries()].every(
     ([key, value]) => resourceTags[key] === value,
   );
 }
