@@ -1,3 +1,4 @@
+# Used only for local development. Not intended for production use.
 services:
   postgresql:
     image: postgres:16-alpine
