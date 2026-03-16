@@ -178,14 +178,14 @@ dx savemoney [options]
 
 **Options:**
 
-| Option         | Alias | Description                                                                                                                                                                        | Default      |
-| :------------- | :---- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------- |
-| `--config`     | `-c`  | Path to a JSON configuration file.                                                                                                                                                 | N/A          |
-| `--format`     | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                                                        | `table`      |
-| `--days`       | `-d`  | Metric analysis period in days.                                                                                                                                                    | `30`         |
-| `--location`   | `-l`  | Preferred Azure location for resources.                                                                                                                                            | `italynorth` |
-| `--verbose`    | `-v`  | Enable verbose mode with detailed logging for each resource analyzed.                                                                                                              | `false`      |
-| `--tags`       | `-t`  | Filter resources by tags (`key=value,key2=value2`). Only resources matching **all** specified tags are analyzed.                                                                   | N/A          |
+| Option         | Alias | Description                                                                                                                                                                                                                   | Default      |
+| :------------- | :---- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------- |
+| `--config`     | `-c`  | Path to a JSON configuration file.                                                                                                                                                                                            | N/A          |
+| `--format`     | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                                                                                                   | `table`      |
+| `--days`       | `-d`  | Metric analysis period in days.                                                                                                                                                                                               | `30`         |
+| `--location`   | `-l`  | Preferred Azure location for resources.                                                                                                                                                                                       | `italynorth` |
+| `--verbose`    | `-v`  | Enable verbose mode with detailed logging for each resource analyzed.                                                                                                                                                         | `false`      |
+| `--tags`       | `-t`  | Filter resources by tags (`key=value,key2=value2`). Only resources matching **all** specified tags are analyzed.                                                                                                              | N/A          |
 | `--thresholds` |       | Explicit path to a thresholds config file. When omitted, cosmiconfig searches the CWD upward for `.savemoneyrc`, `.savemoneyrc.json`, `.savemoneyrc.yaml`, `savemoney.config.js`, or the `"savemoney"` key in `package.json`. | N/A          |
 
 **Example usage:**
