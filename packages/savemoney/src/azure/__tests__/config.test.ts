@@ -4,7 +4,6 @@
  * 2. Loads and deep-merges user overrides from an explicit file path.
  * 3. Partial overrides keep defaults for non-overridden fields.
  * 4. Falls back to defaults for a non-existent path (no throw).
- * 5. The actual .savemoneyrc.json at the dx root is correctly loaded.
  */
 
 import path from "path";
@@ -21,8 +20,7 @@ const FIXTURE_PARTIAL = path.resolve(
   __dirname,
   "fixtures/partial-override.json",
 );
-/** The .savemoneyrc.json at the dx workspace root (4 levels up from this file) */
-const DX_ROOT_RC = path.resolve(__dirname, "../../../../../.savemoneyrc.json");
+const FIXTURE_FULL = path.resolve(__dirname, "fixtures/full-override.json");
 
 describe("loadThresholds", () => {
   it("returns DEFAULT_THRESHOLDS when explicit path does not exist", async () => {
@@ -50,10 +48,9 @@ describe("loadThresholds", () => {
     expect(result.staticSite).toEqual(DEFAULT_THRESHOLDS.staticSite);
   });
 
-  it("loads the dx root .savemoneyrc.json and all values differ from defaults", async () => {
-    const result = await loadThresholds(DX_ROOT_RC);
+  it("loads a full override file and all values differ from defaults", async () => {
+    const result = await loadThresholds(FIXTURE_FULL);
 
-    // All values in .savemoneyrc.json are intentionally different from the defaults
     expect(result.vm.cpuPercent).toBe(5);
     expect(result.vm.networkInBytesPerDay).toBe(10485760);
     expect(result.appService.cpuPercent).toBe(10);
@@ -67,7 +64,6 @@ describe("loadThresholds", () => {
     expect(result.staticSite.siteHits).toBe(500);
     expect(result.staticSite.bytesSent).toBe(5242880);
 
-    // Sanity: the values are indeed different from the defaults
     expect(result.vm.cpuPercent).not.toBe(DEFAULT_THRESHOLDS.vm.cpuPercent);
     expect(result.storage.transactionsPerDay).not.toBe(
       DEFAULT_THRESHOLDS.storage.transactionsPerDay,
