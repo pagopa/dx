@@ -1,20 +1,20 @@
 services:
-  dx-metrics-db:
+  postgresql:
     image: postgres:16-alpine
     profiles: [dx-metrics]
     ports:
       - "5432:5432"
     environment:
-      POSTGRES_USER: dxmetrics
-      POSTGRES_PASSWORD: dxmetrics
-      POSTGRES_DB: dxmetrics
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgresql
+      POSTGRES_DB: postgresql
     volumes:
-      - dx-metrics-pgdata:/var/lib/postgresql/data
+      - postgresql-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U dxmetrics"]
+      test: ["CMD-SHELL", "pg_isready -U postgresql"]
       interval: 5s
       timeout: 5s
       retries: 5
 
 volumes:
-  dx-metrics-pgdata:
+  postgresql-data:

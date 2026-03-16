@@ -32,20 +32,20 @@ docker compose --profile dx-metrics up -d
 Only needed on first run or when applying new migrations:
 
 ```bash
-DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit push
+DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit push
 ```
 
 if you need to apply migrations incrementally, you can use migrate instead of push:
 
 ```bash
-DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics npx drizzle-kit migrate
+DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit migrate
 ```
 
 3. **Import data (incremental):**
 
 ```bash
 export GITHUB_TOKEN=ghp_XXX
-export DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics
+export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
 npx tsx scripts/import.ts --since 2026-01-01
 ```
 
@@ -127,7 +127,7 @@ pnpm dev
 When running outside Docker Compose (e.g., in development), the database URL needs to point to the Docker network gateway:
 
 ```bash
-DATABASE_URL=postgresql://dxmetrics:dxmetrics@172.18.0.1:5432/dxmetrics
+DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
 ```
 
 To find the correct IP, inspect the Docker network:
