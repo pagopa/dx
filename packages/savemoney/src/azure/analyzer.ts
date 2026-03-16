@@ -37,7 +37,7 @@ import { matchesTags } from "./utils.js";
  * Analyzes resources in multiple Azure subscriptions and generates a report.
  *
  * @param config - Azure configuration with subscription IDs and settings
- * @param format - Output format (table, json, or detailed-json)
+ * @param format - Output format (table, json, detailed-json, or lint)
  */
 export async function analyzeAzureResources(
   config: AzureConfig,

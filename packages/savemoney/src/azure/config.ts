@@ -90,30 +90,62 @@ export async function loadThresholds(
       return DEFAULT_THRESHOLDS;
     }
 
-    const userConfig = result.config as Partial<Thresholds>;
+    const userConfig = result.config as Record<string, unknown>;
+
+    // Strip any non-numeric values to prevent invalid config from propagating
+    const sanitize = (
+      defaults: Record<string, number>,
+      overrides: unknown,
+    ): Record<string, number> => {
+      if (!overrides || typeof overrides !== "object") return defaults;
+      const out: Record<string, number> = { ...defaults };
+      for (const [key, val] of Object.entries(
+        overrides as Record<string, unknown>,
+      )) {
+        if (typeof val === "number" && Number.isFinite(val)) {
+          out[key] = val;
+        } else if (val !== undefined) {
+          const logger = getLogger(["savemoney", "config"]);
+          logger.warn(
+            `Ignoring invalid threshold value for "${key}": expected a finite number, got ${JSON.stringify(val)}.`,
+          );
+        }
+      }
+      return out;
+    };
 
     // Deep-merge user overrides onto defaults
     return {
-      appService: {
-        ...DEFAULT_THRESHOLDS.appService,
-        ...userConfig.appService,
-      },
-      containerApp: {
-        ...DEFAULT_THRESHOLDS.containerApp,
-        ...userConfig.containerApp,
-      },
-      publicIp: { ...DEFAULT_THRESHOLDS.publicIp, ...userConfig.publicIp },
-      staticSite: {
-        ...DEFAULT_THRESHOLDS.staticSite,
-        ...userConfig.staticSite,
-      },
-      storage: { ...DEFAULT_THRESHOLDS.storage, ...userConfig.storage },
-      vm: { ...DEFAULT_THRESHOLDS.vm, ...userConfig.vm },
+      appService: sanitize(
+        DEFAULT_THRESHOLDS.appService,
+        userConfig.appService,
+      ) as Thresholds["appService"],
+      containerApp: sanitize(
+        DEFAULT_THRESHOLDS.containerApp,
+        userConfig.containerApp,
+      ) as Thresholds["containerApp"],
+      publicIp: sanitize(
+        DEFAULT_THRESHOLDS.publicIp,
+        userConfig.publicIp,
+      ) as Thresholds["publicIp"],
+      staticSite: sanitize(
+        DEFAULT_THRESHOLDS.staticSite,
+        userConfig.staticSite,
+      ) as Thresholds["staticSite"],
+      storage: sanitize(
+        DEFAULT_THRESHOLDS.storage,
+        userConfig.storage,
+      ) as Thresholds["storage"],
+      vm: sanitize(DEFAULT_THRESHOLDS.vm, userConfig.vm) as Thresholds["vm"],
     };
-  } catch {
-    // If config loading fails, fall back to defaults
+  } catch (error) {
+    // Fall back to defaults and surface the error so misconfigured paths are diagnosable
     const logger = getLogger(["savemoney", "config"]);
-    logger.warn("Failed to load threshold config, using defaults.");
+    const detail = error instanceof Error ? error.message : String(error);
+    const location = explicitPath ?? "(auto-discovered)";
+    logger.warn(
+      `Failed to load threshold config from ${location}: ${detail}. Using defaults.`,
+    );
     return DEFAULT_THRESHOLDS;
   }
 }

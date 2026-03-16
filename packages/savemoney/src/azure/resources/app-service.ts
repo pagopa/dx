@@ -106,7 +106,7 @@ export async function analyzeAppServicePlan(
     // Check if it's an oversized plan (Premium tier with low usage)
     if (
       planDetails.sku?.tier?.includes("Premium") &&
-      cpuPercentage &&
+      cpuPercentage !== null &&
       cpuPercentage < thresholds.appService.premiumCpuPercent
     ) {
       reason += "Premium tier with low resource utilization. ";

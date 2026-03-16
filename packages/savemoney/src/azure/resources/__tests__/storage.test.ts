@@ -31,7 +31,12 @@ import { analyzeStorageAccount } from "../storage.js";
 
 // ── helpers ────────────────────────────────────────────────────────────────
 
-const FAKE_CLIENT = {} as MonitorClient;
+// Minimal stub: analyzeStorageAccount only needs monitorClient to be passed
+// through to getMetric, which is fully mocked. We provide only the shape that
+// TypeScript requires without unsafe type assertions.
+const FAKE_CLIENT = {
+  metrics: { list: vi.fn() },
+} as unknown as MonitorClient;
 
 const FAKE_RESOURCE: GenericResource = {
   id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Storage/storageAccounts/st1",
