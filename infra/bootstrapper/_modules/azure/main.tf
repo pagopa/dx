@@ -30,6 +30,10 @@ module "bootstrap" {
   github_private_runner = {
     container_app_environment_id       = module.core_values.github_runner.environment_id
     container_app_environment_location = var.environment.location
+    replica_timeout_in_seconds         = 7200
+    use_github_app                     = true
+    memory                             = "8Gi"
+    cpu                                = 4
     labels = [
       local.env_long
     ]

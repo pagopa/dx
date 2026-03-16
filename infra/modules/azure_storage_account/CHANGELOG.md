@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 2.2.0
+
+### Minor Changes
+
+- fd857b0: Add `primary_blob_endpoint` and `primary_table_endpoint` outputs to the Azure Storage Account module.
+
 ## 2.1.4
 
 ### Patch Changes
