@@ -77,12 +77,6 @@ runs:
         PR_BODY="${PR_BODY}
         <!-- nx-release-tags: ${RELEASE_TAGS} -->"
 
-        # For each tag Nx created, find the corresponding manifest path (used later for
-        # CHANGELOG extraction). Manifests are already updated (unstaged) at this point.
-        RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
-        PR_BODY="${PR_BODY}
-        <!-- nx-release-tags: ${RELEASE_TAGS} -->"
-
         # Commit and push the version changes (bump + changelog)
         git add -A
         git commit -m "$COMMIT_MESSAGE"
