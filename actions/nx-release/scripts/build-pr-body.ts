@@ -1,19 +1,20 @@
 /**
- * Builds the release PR body by extracting the latest changelog section
- * from each package bumped in the current commit.
+ * Builds the release PR body by reading RELEASE_TAGS (JSON array of
+ * { tag, path, version } set by extract-tags.js) and extracting the
+ * latest changelog section from each project.
  */
-import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
-
-import { readPackageJson, readPomXml } from "./parse-manifests.js";
+import { join } from "node:path";
 
 interface ReleaseEntry {
   changelogPath: string;
   name: string;
+  version: string;
+}
+
+interface TagEntry {
+  path: null | string;
+  tag: string;
   version: string;
 }
 
@@ -67,58 +68,26 @@ async function formatReleaseSection(entry: ReleaseEntry): Promise<string> {
   return output.join("\n");
 }
 
-/** Returns changed files relative to HEAD (staged and unstaged). */
-async function getChangedFiles(): Promise<string[]> {
-  const { stdout } = await execFileAsync("git", [
-    "diff",
-    "HEAD",
-    "--name-only",
-  ]);
-  return stdout
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-/** Resolves release entries from changed manifests and changelog files. */
-async function resolveReleaseEntries(
-  changedFiles: string[],
-): Promise<ReleaseEntry[]> {
-  const manifestCandidates = new Set<string>();
-
-  for (const file of changedFiles) {
-    if (file.endsWith("/package.json") || file.endsWith("/pom.xml")) {
-      manifestCandidates.add(file);
-    }
-
-    if (file.endsWith("CHANGELOG.md")) {
-      const folder = dirname(file);
-      // Add both candidates — the parsing step filters out missing files
-      manifestCandidates.add(join(folder, "package.json"));
-      manifestCandidates.add(join(folder, "pom.xml"));
-    }
+/** Resolves release entries from RELEASE_TAGS env var. */
+function resolveReleaseEntries(): ReleaseEntry[] {
+  const raw = process.env.RELEASE_TAGS ?? "[]";
+  let entries: TagEntry[];
+  try {
+    entries = JSON.parse(raw) as TagEntry[];
+  } catch {
+    console.error(
+      "[build-pr-body] Failed to parse RELEASE_TAGS:",
+      raw.slice(0, 200),
+    );
+    return [];
   }
-
-  const entries = await Promise.all(
-    [...manifestCandidates].map(async (manifestPath) => {
-      const parsed = manifestPath.endsWith("package.json")
-        ? await readPackageJson(manifestPath)
-        : await readPomXml(manifestPath);
-
-      if (!parsed) {
-        return null;
-      }
-
-      return {
-        changelogPath: join(dirname(manifestPath), "CHANGELOG.md"),
-        name: parsed.name,
-        version: parsed.version,
-      };
-    }),
-  );
-
   return entries
-    .filter((e): e is ReleaseEntry => e !== null)
+    .filter((e): e is TagEntry & { path: string } => e.path !== null)
+    .map((e) => ({
+      changelogPath: join(e.path, "CHANGELOG.md"),
+      name: e.tag.slice(0, e.tag.length - e.version.length - 1),
+      version: e.version,
+    }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
@@ -131,8 +100,7 @@ async function run(): Promise<void> {
     "",
   ].join("\n");
 
-  const changedFiles = await getChangedFiles();
-  const entries = await resolveReleaseEntries(changedFiles);
+  const entries = resolveReleaseEntries();
 
   if (entries.length === 0) {
     process.stdout.write(

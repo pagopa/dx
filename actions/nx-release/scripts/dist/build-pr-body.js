@@ -1,40 +1,7 @@
-import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
-import { dirname, join } from 'path';
-import { promisify } from 'util';
+import { join } from 'path';
 
 // scripts/build-pr-body.ts
-async function readPackageJson(filePath) {
-  try {
-    const parsed = JSON.parse(await readFile(filePath, "utf8"));
-    if (typeof parsed !== "object" || parsed === null) {
-      return null;
-    }
-    const pkg = parsed;
-    if (typeof pkg["name"] !== "string" || typeof pkg["version"] !== "string") {
-      return null;
-    }
-    return { name: pkg["name"], raw: pkg, version: pkg["version"] };
-  } catch {
-    return null;
-  }
-}
-async function readPomXml(filePath) {
-  try {
-    const raw = await readFile(filePath, "utf8");
-    const name = raw.match(/<artifactId>([^<]+)<\/artifactId>/)?.[1]?.trim() ?? "";
-    const version = raw.match(/<version>([^<]+)<\/version>/)?.[1]?.trim() ?? "";
-    if (!name || !version) {
-      return null;
-    }
-    return { name, version };
-  } catch {
-    return null;
-  }
-}
-
-// scripts/build-pr-body.ts
-var execFileAsync = promisify(execFile);
 async function extractLatestSection(changelogPath) {
   try {
     const lines = (await readFile(changelogPath, "utf8")).split("\n");
@@ -72,40 +39,23 @@ async function formatReleaseSection(entry) {
   output.push("");
   return output.join("\n");
 }
-async function getChangedFiles() {
-  const { stdout } = await execFileAsync("git", [
-    "diff",
-    "HEAD",
-    "--name-only"
-  ]);
-  return stdout.split("\n").map((line) => line.trim()).filter(Boolean);
-}
-async function resolveReleaseEntries(changedFiles) {
-  const manifestCandidates = /* @__PURE__ */ new Set();
-  for (const file of changedFiles) {
-    if (file.endsWith("/package.json") || file.endsWith("/pom.xml")) {
-      manifestCandidates.add(file);
-    }
-    if (file.endsWith("CHANGELOG.md")) {
-      const folder = dirname(file);
-      manifestCandidates.add(join(folder, "package.json"));
-      manifestCandidates.add(join(folder, "pom.xml"));
-    }
+function resolveReleaseEntries() {
+  const raw = process.env.RELEASE_TAGS ?? "[]";
+  let entries;
+  try {
+    entries = JSON.parse(raw);
+  } catch {
+    console.error(
+      "[build-pr-body] Failed to parse RELEASE_TAGS:",
+      raw.slice(0, 200)
+    );
+    return [];
   }
-  const entries = await Promise.all(
-    [...manifestCandidates].map(async (manifestPath) => {
-      const parsed = manifestPath.endsWith("package.json") ? await readPackageJson(manifestPath) : await readPomXml(manifestPath);
-      if (!parsed) {
-        return null;
-      }
-      return {
-        changelogPath: join(dirname(manifestPath), "CHANGELOG.md"),
-        name: parsed.name,
-        version: parsed.version
-      };
-    })
-  );
-  return entries.filter((e) => e !== null).sort((a, b) => a.name.localeCompare(b.name));
+  return entries.filter((e) => e.path !== null).map((e) => ({
+    changelogPath: join(e.path, "CHANGELOG.md"),
+    name: e.tag.slice(0, e.tag.length - e.version.length - 1),
+    version: e.version
+  })).sort((a, b) => a.name.localeCompare(b.name));
 }
 async function run() {
   const intro = [
@@ -114,8 +64,7 @@ async function run() {
     "# Releases",
     ""
   ].join("\n");
-  const changedFiles = await getChangedFiles();
-  const entries = await resolveReleaseEntries(changedFiles);
+  const entries = resolveReleaseEntries();
   if (entries.length === 0) {
     process.stdout.write(
       `${intro}See individual packages CHANGELOGs for details.`

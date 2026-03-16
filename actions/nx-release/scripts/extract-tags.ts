@@ -1,25 +1,18 @@
 /**
- * Reads a list of tags created by `nx release --skip-publish`, locates the
- * corresponding manifest file for each by inspecting working-tree changes, and
- * writes a JSON array of { path, tag, version } entries to stdout.
+ * Reads a list of tags created by `nx release --skip-publish`, resolves the
+ * project root for each via `nx show project`, and writes a JSON array of
+ * { path, tag, version } entries to stdout.
  *
- * Matching uses the bumped files from `git diff --name-only`, which is reliable
- * and independent of the releaseTagPattern separator configured in nx.json.
+ * Matching: `nx show projects --json` returns full project names (e.g.
+ * `@dx/app-x`) which are the exact prefix of each tag.
+ * The longest prefix match wins.
  *
  * Used to populate the nx-release-tags metadata comment in the Version Packages PR body.
  */
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import { readPackageJson, readPomXml } from "./parse-manifests.js";
-
 const execFileAsync = promisify(execFile);
-
-export interface ManifestInfo {
-  name: string;
-  path: string;
-  version: string;
-}
 
 export interface TagEntry {
   path: null | string;
@@ -28,53 +21,105 @@ export interface TagEntry {
 }
 
 /**
- * Maps each Nx-generated tag to its manifest info.
- *
- * Matching rules (robust to any releaseTagPattern separator):
- * 1. The tag must end exactly with the bumped version string.
- * 2. The package name must appear in the tag followed by a non-word character
- *    (the separator), preventing partial matches like "foo" matching "foobar".
+ * Maps each Nx-generated tag to its project root path and version.
  */
 export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
-  const manifestInfos = await getModifiedManifestInfos();
+  const projectNames = await getNxProjectNames();
 
-  return newTags.map((tag) => {
-    const match = manifestInfos.find(({ name, version }) => {
-      if (!tag.endsWith(version)) return false;
-      const nameIdx = tag.indexOf(name);
-      if (nameIdx === -1) return false;
-      const charAfterName = tag[nameIdx + name.length];
-      return charAfterName !== undefined && !/\w/.test(charAfterName);
-    });
-    // Fall back to @-based extraction when manifest was not found (rare edge case).
-    const version = match?.version ?? tag.slice(tag.lastIndexOf("@") + 1);
-    return { path: match?.path ?? null, tag, version };
-  });
+  return Promise.all(
+    newTags.map(async (tag) => {
+      const name = matchProjectName(tag, projectNames);
+      if (!name) {
+        // Fallback: extract version as the trailing semver-like segment
+        const m = tag.match(/[^\w](\d[\w.-]*)$/);
+        const version = m ? m[1] : tag;
+        return { path: null, tag, version };
+      }
+      // Version is everything after the project name and its separator character
+      const version = tag.slice(name.length + 1);
+      // path = the project root directory from `nx show project <name> --json`
+      const path = await getNxProjectRoot(name);
+      return { path, tag, version };
+    }),
+  );
 }
 
-/** Returns manifest metadata for all files modified by nx release in the working tree. */
-export async function getModifiedManifestInfos(): Promise<ManifestInfo[]> {
-  const { stdout } = await execFileAsync("git", [
-    "diff",
-    "--name-only",
-    "--",
-    "**/package.json",
-    "**/pom.xml",
-  ]);
-
-  const infos: ManifestInfo[] = [];
-  for (const f of stdout
-    .split("\n")
-    .map((l) => l.trim())
-    .filter(Boolean)) {
-    const result = f.endsWith("package.json")
-      ? await readPackageJson(f)
-      : await readPomXml(f);
-    if (result?.name && result?.version) {
-      infos.push({ name: result.name, path: f, version: result.version });
+/** Returns all Nx project names in the workspace. */
+export async function getNxProjectNames(): Promise<string[]> {
+  try {
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
+      "show",
+      "projects",
+      "--json",
+    ]);
+    // nx may print non-JSON text before the array (e.g. "[Maven Analyzer] ...").
+    // Look for '["' (array of strings) or '[]' (empty array) to skip any prefix.
+    let jsonStart = stdout.indexOf('["');
+    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
+    if (jsonStart === -1) {
+      console.error(
+        "[extract-tags] nx show projects: no JSON array found in stdout:",
+        stdout.slice(0, 300),
+      );
+      return [];
     }
+    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
+    return Array.isArray(parsed) && parsed.every((s) => typeof s === "string")
+      ? (parsed as string[])
+      : [];
+  } catch (err) {
+    console.error("[extract-tags] getNxProjectNames failed:", err);
+    return [];
   }
-  return infos;
+}
+
+/**
+ * Returns the root directory for a given Nx project name, or null on failure.
+ */
+export async function getNxProjectRoot(name: string): Promise<null | string> {
+  try {
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
+      "show",
+      "project",
+      name,
+      "--json",
+    ]);
+    // nx may print banner/daemon text before the JSON object — find the first '{'
+    const jsonStart = stdout.indexOf("{");
+    if (jsonStart === -1) {
+      console.error(
+        `[extract-tags] nx show project ${name}: no JSON object found in stdout:`,
+        stdout.slice(0, 200),
+      );
+      return null;
+    }
+    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
+    if (typeof parsed !== "object" || parsed === null) return null;
+    const root = (parsed as Record<string, unknown>)["root"];
+    return typeof root === "string" && root ? root : null;
+  } catch (err) {
+    console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
+    return null;
+  }
+}
+
+/**
+ * Finds the longest project name that is a prefix of the tag, followed by a
+ * non-word separator character (e.g. `@`, `/`).
+ */
+export function matchProjectName(
+  tag: string,
+  projectNames: string[],
+): null | string {
+  const candidates = projectNames.filter((name) => {
+    if (!tag.startsWith(name)) return false;
+    const charAfter = tag[name.length];
+    return charAfter !== undefined && !/\w/.test(charAfter);
+  });
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => (a.length >= b.length ? a : b));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
