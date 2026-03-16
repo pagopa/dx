@@ -21,17 +21,17 @@ interface PrReviewDashboardData {
   };
   reviewDistribution: {
     approvals: number;
-    change_requests: number;
+    changeRequests: number;
     reviewer: string;
-    total_reviews: number;
+    totalReviews: number;
   }[];
   reviewMatrix: {
     author: string;
-    review_count: number;
+    reviewCount: number;
     reviewer: string;
   }[];
-  timeToFirstReviewTrend: { avg_hours_to_first_review: number; week: string }[];
-  timeToMergeTrend: { avg_hours_to_merge: number; week: string }[];
+  timeToFirstReviewTrend: { avgHoursToFirstReview: number; week: string }[];
+  timeToMergeTrend: { avgHoursToMerge: number; week: string }[];
 }
 
 export default function PullRequestsReviewDashboard() {
@@ -95,7 +95,7 @@ export default function PullRequestsReviewDashboard() {
                   lines={[
                     {
                       color: "#2563eb",
-                      key: "avg_hours_to_first_review",
+                      key: "avgHoursToFirstReview",
                       name: "Hours to First Review",
                     },
                   ]}
@@ -108,7 +108,7 @@ export default function PullRequestsReviewDashboard() {
                   lines={[
                     {
                       color: "#dc2626",
-                      key: "avg_hours_to_merge",
+                      key: "avgHoursToMerge",
                       name: "Hours to Merge",
                     },
                   ]}
@@ -137,7 +137,7 @@ export default function PullRequestsReviewDashboard() {
                     },
                     {
                       color: "#dc2626",
-                      key: "change_requests",
+                      key: "changeRequests",
                       name: "Change Requests",
                       stackId: "reviews",
                     },
@@ -151,9 +151,9 @@ export default function PullRequestsReviewDashboard() {
                 <DataTable
                   columns={[
                     { key: "reviewer", label: "Reviewer" },
-                    { key: "total_reviews", label: "Total" },
+                    { key: "totalReviews", label: "Total" },
                     { key: "approvals", label: "Approvals" },
-                    { key: "change_requests", label: "Changes Requested" },
+                    { key: "changeRequests", label: "Changes Requested" },
                   ]}
                   data={data.reviewDistribution}
                   title="Reviewer Stats"
@@ -165,7 +165,7 @@ export default function PullRequestsReviewDashboard() {
                   columns={[
                     { key: "author", label: "Author" },
                     { key: "reviewer", label: "Reviewer" },
-                    { key: "review_count", label: "Reviews" },
+                    { key: "reviewCount", label: "Reviews" },
                   ]}
                   data={reviewMatrixWithoutSelfReviews}
                   title="Author → Reviewer Matrix"

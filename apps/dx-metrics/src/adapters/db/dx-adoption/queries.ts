@@ -30,11 +30,11 @@ export const fetchDxAdoption = async (
       FROM workflows w JOIN repositories r ON w.repository_id = r.id
       WHERE r.full_name = ${fullName} AND w.name NOT IN ('CodeQL', 'Labeler')
     )
-    SELECT CASE WHEN pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS pipeline_type,
-      COUNT(*) AS pipeline_count
+    SELECT CASE WHEN pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS "pipelineType",
+      COUNT(*) AS "pipelineCount"
     FROM distinct_workflows
     GROUP BY CASE WHEN pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END
-    ORDER BY pipeline_type
+    ORDER BY "pipelineType"
   `);
 
   // DX Terraform Modules Adoption (pie)
@@ -46,18 +46,18 @@ export const fetchDxAdoption = async (
         AND module NOT LIKE './%' AND module NOT LIKE '../%'
     )
     SELECT CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%'
-      THEN 'DX Terraform Modules' ELSE 'Non-DX Terraform Modules' END AS module_type,
-      COUNT(*) AS module_count
+      THEN 'DX Terraform Modules' ELSE 'Non-DX Terraform Modules' END AS "moduleType",
+      COUNT(*) AS "moduleCount"
     FROM distinct_modules
     GROUP BY CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%'
       THEN 'DX Terraform Modules' ELSE 'Non-DX Terraform Modules' END
-    ORDER BY module_type
+    ORDER BY "moduleType"
   `);
 
   // Workflows List
   const workflowsList = await db.execute(sql`
-    SELECT DISTINCT ON (w.name) w.name AS workflow_name,
-      CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS pipeline_type
+    SELECT DISTINCT ON (w.name) w.name AS "workflowName",
+      CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS "pipelineType"
     FROM workflows w JOIN repositories r ON w.repository_id = r.id
     WHERE r.full_name = ${fullName} AND w.name NOT IN ('CodeQL', 'Labeler')
     ORDER BY w.name, CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
@@ -65,9 +65,9 @@ export const fetchDxAdoption = async (
 
   // Terraform Modules List
   const modulesList = await db.execute(sql`
-    SELECT DISTINCT ON (module) module AS module_name,
-      CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS module_type,
-      file_path
+    SELECT DISTINCT ON (module) module AS "moduleName",
+      CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS "moduleType",
+      file_path AS "filePath"
     FROM terraform_modules
     WHERE repository = ${fullName}
       AND module NOT LIKE './%' AND module NOT LIKE '../%'
@@ -77,10 +77,10 @@ export const fetchDxAdoption = async (
   // Version Drift: compare used version constraint vs latest available for DX modules
   const versionDriftList = await db.execute(sql`
     SELECT
-      tm.module AS module_name,
-      tm.version AS used_version,
-      trr.latest_version,
-      tm.file_path,
+      tm.module AS "moduleName",
+      tm.version AS "usedVersion",
+      trr.latest_version AS "latestVersion",
+      tm.file_path AS "filePath",
       CASE
         WHEN tm.version IS NULL OR trr.latest_version IS NULL THEN 'unknown'
         WHEN (regexp_match(tm.version, '([0-9]+)'))[1]::integer
@@ -88,7 +88,7 @@ export const fetchDxAdoption = async (
         WHEN (regexp_match(tm.version, '([0-9]+)'))[1]::integer
              < trr.major_version THEN 'outdated'
         ELSE 'unknown'
-      END AS drift_status
+      END AS "driftStatus"
     FROM terraform_modules tm
     LEFT JOIN LATERAL (
       SELECT latest_version, major_version FROM terraform_registry_releases trr
@@ -100,7 +100,7 @@ export const fetchDxAdoption = async (
       AND (tm.module LIKE '%pagopa-dx%' OR tm.module LIKE '%pagopa/dx%')
       AND tm.module NOT LIKE './%'
       AND tm.module NOT LIKE '../%'
-    ORDER BY drift_status DESC, tm.module
+    ORDER BY "driftStatus" DESC, tm.module
   `);
 
   const versionDriftSummary = await db.execute(sql`
@@ -113,7 +113,7 @@ export const fetchDxAdoption = async (
           WHEN (regexp_match(tm.version, '([0-9]+)'))[1]::integer
                < trr.major_version THEN 'outdated'
           ELSE 'unknown'
-        END AS drift_status
+        END AS "driftStatus"
       FROM terraform_modules tm
       LEFT JOIN LATERAL (
         SELECT major_version, latest_version FROM terraform_registry_releases trr
@@ -127,9 +127,9 @@ export const fetchDxAdoption = async (
         AND tm.module NOT LIKE '../%'
     )
     SELECT
-      COUNT(*) FILTER (WHERE drift_status = 'up-to-date') AS up_to_date,
-      COUNT(*) FILTER (WHERE drift_status = 'outdated') AS outdated,
-      COUNT(*) FILTER (WHERE drift_status = 'unknown') AS unknown,
+      COUNT(*) FILTER (WHERE "driftStatus" = 'up-to-date') AS "upToDate",
+      COUNT(*) FILTER (WHERE "driftStatus" = 'outdated') AS outdated,
+      COUNT(*) FILTER (WHERE "driftStatus" = 'unknown') AS unknown,
       COUNT(*) AS total
     FROM drift
   `);
@@ -165,7 +165,7 @@ export const fetchDxAdoption = async (
       outdated: versionDriftSummaryRow.outdated ?? 0,
       total: versionDriftSummaryRow.total ?? 0,
       unknown: versionDriftSummaryRow.unknown ?? 0,
-      upToDate: versionDriftSummaryRow.up_to_date ?? 0,
+      upToDate: versionDriftSummaryRow.upToDate ?? 0,
     },
     workflowsList: parseSqlRows(
       workflowRowSchema,

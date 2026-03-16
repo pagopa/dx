@@ -50,25 +50,25 @@ describe("buildTechRadarDashboardData", () => {
       "pagopa/io-wallet",
     ]);
 
-    expect(result.summary.repositories_total).toBe(3);
-    expect(result.summary.repositories_with_detected_tools).toBe(2);
-    expect(result.summary.detected_usages).toBe(3);
-    expect(result.summary.usages_not_in_radar).toBe(1);
+    expect(result.summary.repositoriesTotal).toBe(3);
+    expect(result.summary.repositoriesWithDetectedTools).toBe(2);
+    expect(result.summary.detectedUsages).toBe(3);
+    expect(result.summary.usagesNotInRadar).toBe(1);
     expect(result.adoptionByTool).toEqual([
       expect.objectContaining({
-        adoption_percentage: 33.3,
-        repository_count: 1,
-        tool_key: "nx",
+        adoptionPercentage: 33.3,
+        repositoryCount: 1,
+        toolKey: "nx",
       }),
       expect.objectContaining({
-        adoption_percentage: 33.3,
-        repository_count: 1,
-        tool_key: "pnpm",
+        adoptionPercentage: 33.3,
+        repositoryCount: 1,
+        toolKey: "pnpm",
       }),
       expect.objectContaining({
-        adoption_percentage: 33.3,
-        repository_count: 1,
-        tool_key: "turborepo",
+        adoptionPercentage: 33.3,
+        repositoryCount: 1,
+        toolKey: "turborepo",
       }),
     ]);
     expect(result.statusDistribution).toEqual([

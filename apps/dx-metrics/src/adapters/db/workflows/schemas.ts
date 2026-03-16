@@ -14,58 +14,58 @@ import {
 export const getWorkflowDashboardInputSchema = dashboardParamsSchema;
 
 export const maxDateRowSchema = z.object({
-  max_date: sqlTimestampSchema,
+  maxDate: sqlTimestampSchema,
 });
 
 export const workflowAvgDurationSchema = z.object({
-  average_duration_minutes: sqlNumberSchema,
-  workflow_name: z.string().min(1),
+  averageDurationMinutes: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowCumulativeDurationSchema = z.object({
-  cumulative_duration_minutes: sqlNumberSchema,
-  workflow_name: z.string().min(1),
+  cumulativeDurationMinutes: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowDeploymentSchema = z.object({
-  run_week: sqlTimestampSchema,
-  weekly_deployment_count: sqlNumberSchema,
+  runWeek: sqlTimestampSchema,
+  weeklyDeploymentCount: sqlNumberSchema,
 });
 
 export const workflowDxVsNonDxSchema = z.object({
-  cumulative_count: sqlNumberSchema,
-  pipeline_type: z.string().min(1),
-  run_date: sqlDateSchema,
+  cumulativeCount: sqlNumberSchema,
+  pipelineType: z.string().min(1),
+  runDate: sqlDateSchema,
 });
 
 export const workflowFailureSchema = z.object({
-  failed_runs: sqlNumberSchema,
-  workflow_name: z.string().min(1),
+  failedRuns: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowInfraDurationSchema = z.object({
-  duration_minutes: sqlNumberSchema,
-  run_timestamp: sqlTimestampSchema,
+  durationMinutes: sqlNumberSchema,
+  runTimestamp: sqlTimestampSchema,
 });
 
 export const workflowRunCountSchema = z.object({
-  run_count: sqlNumberSchema,
-  workflow_name: z.string().min(1),
+  runCount: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowSuccessRatioSchema = z.object({
-  failed_runs: sqlNumberSchema,
-  success_rate_percentage: sqlNumberSchema,
-  successful_runs: sqlNumberSchema,
-  total_runs: sqlNumberSchema,
-  workflow_name: z.string().min(1),
+  failedRuns: sqlNumberSchema,
+  successfulRuns: sqlNumberSchema,
+  successRatePercentage: sqlNumberSchema,
+  totalRuns: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowSummarySchema = z.object({
-  avg_duration_minutes: nullableSqlNumberSchema,
-  first_pipeline_date: nullableSqlTimestampSchema,
-  total_duration_minutes: nullableSqlNumberSchema,
-  total_pipelines: sqlNumberSchema,
+  avgDurationMinutes: nullableSqlNumberSchema,
+  firstPipelineDate: nullableSqlTimestampSchema,
+  totalDurationMinutes: nullableSqlNumberSchema,
+  totalPipelines: sqlNumberSchema,
 });
 
 export const workflowDashboardSchema = z.object({

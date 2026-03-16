@@ -66,8 +66,8 @@ it("parses tracker rows and nullable metric values", () => {
       frequencyTrendRowSchema,
       [
         {
-          actual_requests: "4",
-          request_date: new Date("2026-03-10"),
+          actualRequests: "4",
+          requestDate: new Date("2026-03-10"),
           trend: "3.25",
         },
       ],
@@ -75,8 +75,8 @@ it("parses tracker rows and nullable metric values", () => {
     ),
   ).toEqual([
     {
-      actual_requests: 4,
-      request_date: "2026-03-10",
+      actualRequests: 4,
+      requestDate: "2026-03-10",
       trend: 3.25,
     },
   ]);
@@ -91,20 +91,20 @@ it("parses releases rows and date aggregates", () => {
     parseSqlRow(
       releaseStatsRowSchema,
       {
-        newest_release: new Date("2026-03-01"),
-        oldest_release: "2024-01-15",
-        total_major_versions: "8",
-        total_modules: "3",
-        total_releases: "21",
+        newestRelease: new Date("2026-03-01"),
+        oldestRelease: "2024-01-15",
+        totalMajorVersions: "8",
+        totalModules: "3",
+        totalReleases: "21",
       },
       "releases stats",
     ),
   ).toEqual({
-    newest_release: "2026-03-01",
-    oldest_release: "2024-01-15",
-    total_major_versions: 8,
-    total_modules: 3,
-    total_releases: 21,
+    newestRelease: "2026-03-01",
+    oldestRelease: "2024-01-15",
+    totalMajorVersions: 8,
+    totalModules: 3,
+    totalReleases: 21,
   });
 
   expect(
@@ -112,28 +112,28 @@ it("parses releases rows and date aggregates", () => {
       moduleSummaryRowSchema,
       [
         {
-          first_release_date: "2024-01-15",
-          last_release_date: new Date("2026-03-01"),
-          latest_major: "4",
-          major_versions_count: "4",
-          module_name: "storage-account",
+          firstReleaseDate: "2024-01-15",
+          lastReleaseDate: new Date("2026-03-01"),
+          latestMajor: "4",
+          majorVersionsCount: "4",
+          moduleName: "storage-account",
           provider: "azure",
-          total_releases: "11",
-          versions_detail: "v1 (2), v2 (3), v3 (3), v4 (3)",
+          totalReleases: "11",
+          versionsDetail: "v1 (2), v2 (3), v3 (3), v4 (3)",
         },
       ],
       "releases modules",
     ),
   ).toEqual([
     {
-      first_release_date: "2024-01-15",
-      last_release_date: "2026-03-01",
-      latest_major: 4,
-      major_versions_count: 4,
-      module_name: "storage-account",
+      firstReleaseDate: "2024-01-15",
+      lastReleaseDate: "2026-03-01",
+      latestMajor: 4,
+      majorVersionsCount: 4,
+      moduleName: "storage-account",
       provider: "azure",
-      total_releases: 11,
-      versions_detail: "v1 (2), v2 (3), v3 (3), v4 (3)",
+      totalReleases: 11,
+      versionsDetail: "v1 (2), v2 (3), v3 (3), v4 (3)",
     },
   ]);
 });
@@ -146,7 +146,7 @@ it("parses dx-adoption and iac support rows", () => {
         outdated: "2",
         total: "5",
         unknown: null,
-        up_to_date: "3",
+        upToDate: "3",
       },
       "dx-adoption summary",
     ),
@@ -154,7 +154,7 @@ it("parses dx-adoption and iac support rows", () => {
     outdated: 2,
     total: 5,
     unknown: null,
-    up_to_date: 3,
+    upToDate: 3,
   });
 
   expect(
@@ -168,30 +168,30 @@ it("parses dx-adoption and iac support rows", () => {
   expect(
     parseSqlRow(
       maxDateRowSchema,
-      { max_date: new Date("2026-03-14T08:15:00.000Z") },
+      { maxDate: new Date("2026-03-14T08:15:00.000Z") },
       "iac maxDate",
     ),
-  ).toEqual({ max_date: "2026-03-14T08:15:00.000Z" });
+  ).toEqual({ maxDate: "2026-03-14T08:15:00.000Z" });
 
   expect(
     parseSqlRows(
       prsByReviewerRowSchema,
       [
         {
-          avg_lead_time_days: "2.5",
-          merged_prs: "4",
+          avgLeadTimeDays: "2.5",
+          mergedPrs: "4",
           reviewer: "alice",
-          total_prs: "6",
+          totalPrs: "6",
         },
       ],
       "iac prsByReviewer",
     ),
   ).toEqual([
     {
-      avg_lead_time_days: 2.5,
-      merged_prs: 4,
+      avgLeadTimeDays: 2.5,
+      mergedPrs: 4,
       reviewer: "alice",
-      total_prs: 6,
+      totalPrs: 6,
     },
   ]);
 });
@@ -207,9 +207,9 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       [
         {
           approvals: "5",
-          change_requests: "1",
+          changeRequests: "1",
           reviewer: "carol",
-          total_reviews: "6",
+          totalReviews: "6",
         },
       ],
       "review distribution",
@@ -217,9 +217,9 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
   ).toEqual([
     {
       approvals: 5,
-      change_requests: 1,
+      changeRequests: 1,
       reviewer: "carol",
-      total_reviews: 6,
+      totalReviews: 6,
     },
   ]);
 
@@ -228,16 +228,16 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       workflowDeploymentSchema,
       [
         {
-          run_week: new Date("2026-03-10T00:00:00.000Z"),
-          weekly_deployment_count: "7",
+          runWeek: new Date("2026-03-10T00:00:00.000Z"),
+          weeklyDeploymentCount: "7",
         },
       ],
       "workflow deployments",
     ),
   ).toEqual([
     {
-      run_week: "2026-03-10T00:00:00.000Z",
-      weekly_deployment_count: 7,
+      runWeek: "2026-03-10T00:00:00.000Z",
+      weeklyDeploymentCount: 7,
     },
   ]);
 
@@ -245,18 +245,18 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     parseSqlRow(
       workflowSummarySchema,
       {
-        avg_duration_minutes: null,
-        first_pipeline_date: null,
-        total_duration_minutes: "34.5",
-        total_pipelines: "9",
+        avgDurationMinutes: null,
+        firstPipelineDate: null,
+        totalDurationMinutes: "34.5",
+        totalPipelines: "9",
       },
       "workflow summary",
     ),
   ).toEqual({
-    avg_duration_minutes: null,
-    first_pipeline_date: null,
-    total_duration_minutes: 34.5,
-    total_pipelines: 9,
+    avgDurationMinutes: null,
+    firstPipelineDate: null,
+    totalDurationMinutes: 34.5,
+    totalPipelines: 9,
   });
 
   expect(
@@ -266,19 +266,19 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
   expect(
     parseSqlRows(
       prCommentsBySizeRowSchema,
-      [{ avg_comments_per_addition: null, week: "2026-03-10" }],
+      [{ avgCommentsPerAddition: null, week: "2026-03-10" }],
       "pr comments by size",
     ),
-  ).toEqual([{ avg_comments_per_addition: null, week: "2026-03-10" }]);
+  ).toEqual([{ avgCommentsPerAddition: null, week: "2026-03-10" }]);
 
   expect(
     parseSqlRows(
       slowestPrRowSchema,
       [
         {
-          created_at: new Date("2026-03-01T10:00:00.000Z"),
-          lead_time_days: "6.2",
-          merged_at: "2026-03-07T12:00:00.000Z",
+          createdAt: new Date("2026-03-01T10:00:00.000Z"),
+          leadTimeDays: "6.2",
+          mergedAt: "2026-03-07T12:00:00.000Z",
           number: "42",
           title: "Add rollout validation",
         },
@@ -287,9 +287,9 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     ),
   ).toEqual([
     {
-      created_at: "2026-03-01T10:00:00.000Z",
-      lead_time_days: 6.2,
-      merged_at: "2026-03-07T12:00:00.000Z",
+      createdAt: "2026-03-01T10:00:00.000Z",
+      leadTimeDays: 6.2,
+      mergedAt: "2026-03-07T12:00:00.000Z",
       number: 42,
       title: "Add rollout validation",
     },

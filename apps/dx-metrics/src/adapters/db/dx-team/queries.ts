@@ -65,17 +65,17 @@ const fetchIoInfraPrs = async (db: Database, days: number, org: string) => {
     pr_counts AS (
       SELECT
         CASE WHEN ${days} < 240 THEN pr.created_at::date
-          ELSE date_trunc('week', pr.created_at)::date END AS pr_date,
-        SUM(CASE WHEN pr.author IN (SELECT username FROM dx_members) THEN 1 ELSE 0 END) AS dx_pr,
-        SUM(CASE WHEN pr.author NOT IN (SELECT username FROM dx_members) THEN 1 ELSE 0 END) AS non_dx_pr
+          ELSE date_trunc('week', pr.created_at)::date END AS "prDate",
+        SUM(CASE WHEN pr.author IN (SELECT username FROM dx_members) THEN 1 ELSE 0 END) AS "dxPr",
+        SUM(CASE WHEN pr.author NOT IN (SELECT username FROM dx_members) THEN 1 ELSE 0 END) AS "nonDxPr"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${`${org}/io-infra`}
         AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
         AND (pr.draft IS NULL OR pr.draft = 0)
-      GROUP BY pr_date
+      GROUP BY "prDate"
     )
-    SELECT ds.date, SUM(COALESCE(pc.dx_pr, 0)) AS dx_pr, SUM(COALESCE(pc.non_dx_pr, 0)) AS non_dx_pr
-    FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc.pr_date
+    SELECT ds.date, SUM(COALESCE(pc."dxPr", 0)) AS "dxPr", SUM(COALESCE(pc."nonDxPr", 0)) AS "nonDxPr"
+    FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc."prDate"
     GROUP BY ds.date
     ORDER BY ds.date
   `);
@@ -85,13 +85,13 @@ const fetchIoInfraPrs = async (db: Database, days: number, org: string) => {
 /** DX Members Commits on Non-DX Repos. */
 const fetchDxCommits = async (db: Database, days: number) => {
   const result = await db.execute(sql`
-    SELECT committer_date::date AS committer_date, author AS member_name, COUNT(*) AS repository_commits
+    SELECT committer_date::date AS "committerDate", author AS "memberName", COUNT(*) AS "repositoryCommits"
     FROM commits
     WHERE author IN (SELECT username FROM dx_team_members)
       AND committer_date >= NOW() - MAKE_INTERVAL(days => ${days})
       AND repository_full_name !~ '(dx|eng)' AND repository_full_name ~ 'pagopa'
       AND repository_full_name NOT LIKE '%technology-radar%'
-    GROUP BY committer_date::date, author ORDER BY committer_date
+    GROUP BY committer_date::date, author ORDER BY "committerDate"
   `);
   return parseSqlRows(dxCommitRowSchema, result.rows, "dx-team dxCommits");
 };
@@ -99,12 +99,12 @@ const fetchDxCommits = async (db: Database, days: number) => {
 /** IO-Infra PR table (list of PRs with author and date). */
 const fetchIoInfraPrTable = async (db: Database, days: number, org: string) => {
   const result = await db.execute(sql`
-    SELECT pr.author, pr.created_at
+    SELECT pr.author, pr.created_at AS "createdAt"
     FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
     WHERE r.full_name = ${`${org}/io-infra`}
       AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
       AND (pr.draft IS NULL OR pr.draft = 0)
-    ORDER BY pr.created_at DESC
+    ORDER BY "createdAt" DESC
   `);
   return parseSqlRows(
     ioInfraPrTableRowSchema,
@@ -116,14 +116,14 @@ const fetchIoInfraPrTable = async (db: Database, days: number, org: string) => {
 /** DX Members Commits by Repository. */
 const fetchCommitsByRepo = async (db: Database, days: number, org: string) => {
   const result = await db.execute(sql`
-    SELECT author AS member_name, repository_full_name AS full_name, COUNT(*) AS repository_commits
+    SELECT author AS "memberName", repository_full_name AS "fullName", COUNT(*) AS "repositoryCommits"
     FROM commits
     WHERE author IN (SELECT username FROM dx_team_members)
       AND committer_date >= NOW() - MAKE_INTERVAL(days => ${days})
       AND repository_full_name LIKE ${`${org}/%`}
       AND repository_full_name NOT LIKE '%pagopa-dx%'
       AND repository_full_name NOT LIKE ${`${org}/terraform%`}
-    GROUP BY author, repository_full_name ORDER BY author, repository_commits DESC
+    GROUP BY author, repository_full_name ORDER BY author, "repositoryCommits" DESC
   `);
   return parseSqlRows(
     commitsByRepoRowSchema,
@@ -151,11 +151,11 @@ const fetchDxAdoptingProjects = async (db: Database) => {
 const fetchDxPipelinesUsage = async (db: Database) => {
   const result = await db.execute(sql`
     SELECT
-      dx_workflow AS dx_path,
-      COUNT(DISTINCT repository) AS repository_count
+      dx_workflow AS "dxPath",
+      COUNT(DISTINCT repository) AS "repositoryCount"
     FROM dx_pipeline_usages
     GROUP BY dx_workflow
-    ORDER BY repository_count DESC
+    ORDER BY "repositoryCount" DESC
   `);
   return parseSqlRows(
     dxPipelinesUsageRowSchema,

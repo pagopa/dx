@@ -43,7 +43,7 @@ export const getPullRequestsReviewDashboard = async (
     SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
       ROUND(AVG(
         EXTRACT(EPOCH FROM (first_review.submitted_at - pr.created_at)) / 3600
-      )::numeric, 2) AS avg_hours_to_first_review
+      )::numeric, 2) AS "avgHoursToFirstReview"
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     JOIN LATERAL (
@@ -81,7 +81,7 @@ export const getPullRequestsReviewDashboard = async (
     SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
       ROUND(AVG(
         EXTRACT(EPOCH FROM (pr.merged_at - last_approval.submitted_at)) / 3600
-      )::numeric, 2) AS avg_hours_to_merge
+      )::numeric, 2) AS "avgHoursToMerge"
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     JOIN LATERAL (
@@ -100,20 +100,20 @@ export const getPullRequestsReviewDashboard = async (
   // --- Code Review Distribution ---
   const reviewDistribution = await db.execute(sql`
     SELECT reviewer,
-      COUNT(*) AS total_reviews,
+      COUNT(*) AS "totalReviews",
       COUNT(*) FILTER (WHERE state = 'APPROVED') AS approvals,
-      COUNT(*) FILTER (WHERE state = 'CHANGES_REQUESTED') AS change_requests
+      COUNT(*) FILTER (WHERE state = 'CHANGES_REQUESTED') AS "changeRequests"
     FROM pull_request_reviews prr
     JOIN repositories r ON prr.repository_id = r.id
     WHERE r.full_name = ${fullName}
       AND prr.submitted_at >= NOW() - MAKE_INTERVAL(days => ${days})
       AND reviewer NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
     GROUP BY reviewer
-    ORDER BY total_reviews DESC
+    ORDER BY "totalReviews" DESC
   `);
 
   const reviewMatrix = await db.execute(sql`
-    SELECT pr.author, prr.reviewer, COUNT(*) AS review_count
+    SELECT pr.author, prr.reviewer, COUNT(*) AS "reviewCount"
     FROM pull_request_reviews prr
     JOIN pull_requests pr ON prr.pull_request_id = pr.id
     JOIN repositories r ON prr.repository_id = r.id
@@ -123,7 +123,7 @@ export const getPullRequestsReviewDashboard = async (
       AND prr.reviewer NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
       AND (pr.draft IS NULL OR pr.draft = 0)
     GROUP BY pr.author, prr.reviewer
-    ORDER BY review_count DESC
+    ORDER BY "reviewCount" DESC
   `);
 
   const avgTimeToFirstReviewValue = parseSqlRow(

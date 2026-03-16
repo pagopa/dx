@@ -87,57 +87,54 @@ export function buildTechRadarDashboardData(
 
   const adoptionByTool = [...toolUsageIndex.values()]
     .map((entry) => ({
-      adoption_percentage:
+      adoptionPercentage:
         configuredRepositories.length === 0
           ? 0
           : roundPercentage(
               (entry.repositories.size / configuredRepositories.length) * 100,
             ),
-      radar_ref: entry.radarRef,
-      radar_ring: entry.radarRing,
-      radar_slug: entry.radarSlug,
-      radar_status: entry.radarStatus,
-      radar_title: entry.radarTitle,
-      repository_count: entry.repositories.size,
-      tool_key: entry.toolKey,
-      tool_name: entry.toolName,
+      radarRef: entry.radarRef,
+      radarRing: entry.radarRing,
+      radarSlug: entry.radarSlug,
+      radarStatus: entry.radarStatus,
+      radarTitle: entry.radarTitle,
+      repositoryCount: entry.repositories.size,
+      toolKey: entry.toolKey,
+      toolName: entry.toolName,
     }))
     .sort(
       (left, right) =>
-        right.repository_count - left.repository_count ||
-        left.tool_name.localeCompare(right.tool_name),
+        right.repositoryCount - left.repositoryCount ||
+        left.toolName.localeCompare(right.toolName),
     );
 
   const repositoryCoverage = [...repositoryCoverageIndex.entries()]
     .map(([repository, coverage]) => ({
-      aligned_tools: coverage.alignedTools,
-      detected_tools: coverage.detectedTools,
+      alignedTools: coverage.alignedTools,
+      detectedTools: coverage.detectedTools,
       repository,
     }))
     .sort(
       (left, right) =>
-        right.detected_tools - left.detected_tools ||
+        right.detectedTools - left.detectedTools ||
         left.repository.localeCompare(right.repository),
     );
 
   const repositoryMatrix = [...rows]
     .map((row) => ({
-      evidence_path: row.evidencePath,
-      radar_ref: row.radarRef,
-      radar_ring: row.radarRing,
-      radar_status: row.radarStatus,
-      radar_status_label: formatRadarStatusLabel(
-        row.radarRing,
-        row.radarStatus,
-      ),
-      radar_title: row.radarTitle,
+      evidencePath: row.evidencePath,
+      radarRef: row.radarRef,
+      radarRing: row.radarRing,
+      radarStatus: row.radarStatus,
+      radarStatusLabel: formatRadarStatusLabel(row.radarRing, row.radarStatus),
+      radarTitle: row.radarTitle,
       repository: row.repositoryFullName,
-      tool_name: row.toolName,
+      toolName: row.toolName,
     }))
     .sort(
       (left, right) =>
         left.repository.localeCompare(right.repository) ||
-        left.tool_name.localeCompare(right.tool_name),
+        left.toolName.localeCompare(right.toolName),
     );
 
   const statusDistribution = [...statusDistributionIndex.entries()]
@@ -148,10 +145,10 @@ export function buildTechRadarDashboardData(
     );
 
   const repositoriesWithDetectedTools = repositoryCoverage.filter(
-    (repository) => repository.detected_tools > 0,
+    (repository) => repository.detectedTools > 0,
   ).length;
   const repositoriesWithoutDetectedTools = repositoryCoverage
-    .filter((repository) => repository.detected_tools === 0)
+    .filter((repository) => repository.detectedTools === 0)
     .map((repository) => repository.repository);
   const alignedUsages = rows.filter(
     (row) => row.radarStatus === "aligned",
@@ -164,12 +161,12 @@ export function buildTechRadarDashboardData(
     repositoryMatrix,
     statusDistribution,
     summary: {
-      aligned_usages: alignedUsages,
-      detected_usages: rows.length,
-      repositories_total: configuredRepositories.length,
-      repositories_with_detected_tools: repositoriesWithDetectedTools,
-      tools_detected: adoptionByTool.length,
-      usages_not_in_radar: rows.length - alignedUsages,
+      alignedUsages: alignedUsages,
+      detectedUsages: rows.length,
+      repositoriesTotal: configuredRepositories.length,
+      repositoriesWithDetectedTools: repositoriesWithDetectedTools,
+      toolsDetected: adoptionByTool.length,
+      usagesNotInRadar: rows.length - alignedUsages,
     },
   };
 }

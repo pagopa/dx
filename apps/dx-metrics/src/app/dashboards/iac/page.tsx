@@ -15,19 +15,19 @@ import { useDashboardFilters } from "@/lib/useDashboardFilters";
 import { iacTooltips as tooltipContent } from "./tooltips";
 
 interface IacDashboardData {
-  leadTimeMovingAvg: { avg_lead_time_days: number; week: string }[];
-  leadTimeTrend: { date: string; trend_line: number }[];
+  leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
+  leadTimeTrend: { date: string; trendLine: number }[];
   prsByReviewer: {
-    avg_lead_time_days: number;
-    merged_prs: number;
+    avgLeadTimeDays: number;
+    mergedPrs: number;
     reviewer: string;
-    total_prs: number;
+    totalPrs: number;
   }[];
-  prsOverTime: { pr_count: number; week: string }[];
+  prsOverTime: { prCount: number; week: string }[];
   supervisedVsUnsupervised: {
-    cumulative_count: number;
-    pr_type: string;
-    run_date: string;
+    cumulativeCount: number;
+    prType: string;
+    runDate: string;
   }[];
 }
 
@@ -43,7 +43,7 @@ export default function IacDashboard() {
   );
 
   const supervisedPivoted = data
-    ? pivotCumulativeSeries(data.supervisedVsUnsupervised, "pr_type", {
+    ? pivotCumulativeSeries(data.supervisedVsUnsupervised, "prType", {
         "Supervised PRs": "supervised",
         "Unsupervised PRs": "unsupervised",
       })
@@ -76,7 +76,7 @@ export default function IacDashboard() {
               bars={[
                 {
                   color: "#2563eb",
-                  key: "avg_lead_time_days",
+                  key: "avgLeadTimeDays",
                   name: "Lead Time",
                 },
               ]}
@@ -97,7 +97,7 @@ export default function IacDashboard() {
             />
             <SimpleLineChart
               data={data.leadTimeTrend}
-              lines={[{ color: "#dc2626", key: "trend_line", name: "Trend" }]}
+              lines={[{ color: "#dc2626", key: "trendLine", name: "Trend" }]}
               title="IaC PR Lead Time (trend)"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
@@ -118,11 +118,11 @@ export default function IacDashboard() {
               ]}
               title="Supervised vs Unsupervised IaC PRs (Cumulative)"
               tooltip={tooltipContent.supervisedVsUnsupervised}
-              xKey="run_date"
+              xKey="runDate"
             />
             <SimpleLineChart
               data={data.prsOverTime}
-              lines={[{ color: "#2563eb", key: "pr_count", name: "PR Count" }]}
+              lines={[{ color: "#2563eb", key: "prCount", name: "PR Count" }]}
               title="IaC PRs Count Over Time"
               tooltip={tooltipContent.prsOverTime}
               xKey="week"
@@ -133,9 +133,9 @@ export default function IacDashboard() {
             <DataTable
               columns={[
                 { key: "reviewer", label: "Reviewer" },
-                { key: "total_prs", label: "Total PRs" },
-                { key: "merged_prs", label: "Merged PRs" },
-                { key: "avg_lead_time_days", label: "Avg Lead Time (days)" },
+                { key: "totalPrs", label: "Total PRs" },
+                { key: "mergedPrs", label: "Merged PRs" },
+                { key: "avgLeadTimeDays", label: "Avg Lead Time (days)" },
               ]}
               data={data.prsByReviewer}
               title="IaC PRs by Reviewer"

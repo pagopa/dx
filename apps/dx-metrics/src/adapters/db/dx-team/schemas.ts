@@ -14,9 +14,9 @@ export const fetchDxTeamDashboardInputSchema = z.object({
 });
 
 export const commitsByRepoRowSchema = z.object({
-  full_name: z.string().min(1),
-  member_name: z.string().min(1),
-  repository_commits: sqlNumberSchema,
+  fullName: z.string().min(1),
+  memberName: z.string().min(1),
+  repositoryCommits: sqlNumberSchema,
 });
 
 export const dxAdoptingProjectRowSchema = z.object({
@@ -24,25 +24,25 @@ export const dxAdoptingProjectRowSchema = z.object({
 });
 
 export const dxCommitRowSchema = z.object({
-  committer_date: sqlDateSchema,
-  member_name: z.string().min(1),
-  repository_commits: sqlNumberSchema,
+  committerDate: sqlDateSchema,
+  memberName: z.string().min(1),
+  repositoryCommits: sqlNumberSchema,
 });
 
 export const dxPipelinesUsageRowSchema = z.object({
-  dx_path: z.string().min(1),
-  repository_count: sqlNumberSchema,
+  dxPath: z.string().min(1),
+  repositoryCount: sqlNumberSchema,
 });
 
 export const ioInfraPrRowSchema = z.object({
   date: sqlDateSchema,
-  dx_pr: sqlNumberSchema,
-  non_dx_pr: sqlNumberSchema,
+  dxPr: sqlNumberSchema,
+  nonDxPr: sqlNumberSchema,
 });
 
 export const ioInfraPrTableRowSchema = z.object({
   author: z.string().min(1),
-  created_at: sqlTimestampSchema,
+  createdAt: sqlTimestampSchema,
 });
 
 export const dxTeamDashboardResultSchema = z.object({

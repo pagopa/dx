@@ -47,54 +47,54 @@ export const getTrackerDashboard = async (
     // Requests Trend (percentage change from linear regression)
     db.execute(sql`
       WITH daily_requests AS (
-        SELECT submitted_at::date AS request_date, COUNT(*) AS requests
+        SELECT submitted_at::date AS "requestDate", COUNT(*) AS requests
         FROM tracker_requests WHERE submitted_at IS NOT NULL
         GROUP BY submitted_at::date
       ),
       numbered_days AS (
-        SELECT request_date, requests, ROW_NUMBER() OVER (ORDER BY request_date) AS day_number
+        SELECT "requestDate", requests, ROW_NUMBER() OVER (ORDER BY "requestDate") AS "dayNumber"
         FROM daily_requests
       ),
       regression AS (
-        SELECT COUNT(*) AS n, SUM(day_number) AS sum_x, SUM(requests) AS sum_y,
-          SUM(day_number * requests) AS sum_xy, SUM(day_number * day_number) AS sum_xx
+        SELECT COUNT(*) AS n, SUM("dayNumber") AS "sumX", SUM(requests) AS "sumY",
+          SUM("dayNumber" * requests) AS "sumXY", SUM("dayNumber" * "dayNumber") AS "sumXX"
         FROM numbered_days
       ),
       trend_values AS (
         SELECT
-          MIN(CASE WHEN nd.day_number = 1 THEN
-            (r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * nd.day_number +
-            (r.sum_y - (r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * r.sum_x) / r.n
-          END) AS first_value,
-          MAX(CASE WHEN nd.day_number = r.n THEN
-            (r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * nd.day_number +
-            (r.sum_y - (r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * r.sum_x) / r.n
-          END) AS last_value
+          MIN(CASE WHEN nd."dayNumber" = 1 THEN
+            (r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * nd."dayNumber" +
+            (r."sumY" - (r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * r."sumX") / r.n
+          END) AS "firstValue",
+          MAX(CASE WHEN nd."dayNumber" = r.n THEN
+            (r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * nd."dayNumber" +
+            (r."sumY" - (r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * r."sumX") / r.n
+          END) AS "lastValue"
         FROM numbered_days nd CROSS JOIN regression r
       )
-      SELECT ROUND(((last_value - first_value) / NULLIF(first_value, 0) * 100)::numeric, 2) AS value
+      SELECT ROUND((("lastValue" - "firstValue") / NULLIF("firstValue", 0) * 100)::numeric, 2) AS value
       FROM trend_values
     `),
     // Requests Frequency Trend chart
     db.execute(sql`
       WITH daily_requests AS (
-        SELECT submitted_at::date AS request_date, COUNT(*) AS requests
+        SELECT submitted_at::date AS "requestDate", COUNT(*) AS requests
         FROM tracker_requests WHERE submitted_at IS NOT NULL
         GROUP BY submitted_at::date
       ),
       numbered_days AS (
-        SELECT request_date, requests, ROW_NUMBER() OVER (ORDER BY request_date) AS day_number
+        SELECT "requestDate", requests, ROW_NUMBER() OVER (ORDER BY "requestDate") AS "dayNumber"
         FROM daily_requests
       ),
       regression AS (
-        SELECT COUNT(*) AS n, SUM(day_number) AS sum_x, SUM(requests) AS sum_y,
-          SUM(day_number * requests) AS sum_xy, SUM(day_number * day_number) AS sum_xx
+        SELECT COUNT(*) AS n, SUM("dayNumber") AS "sumX", SUM(requests) AS "sumY",
+          SUM("dayNumber" * requests) AS "sumXY", SUM("dayNumber" * "dayNumber") AS "sumXX"
         FROM numbered_days
       )
-      SELECT nd.request_date, nd.requests AS actual_requests,
-        ROUND(((r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * nd.day_number +
-          (r.sum_y - (r.sum_xy * r.n - r.sum_x * r.sum_y) / NULLIF(r.sum_xx * r.n - r.sum_x * r.sum_x, 0) * r.sum_x) / r.n)::numeric, 2) AS trend
-      FROM numbered_days nd CROSS JOIN regression r ORDER BY nd.request_date
+      SELECT nd."requestDate", nd.requests AS "actualRequests",
+        ROUND((((r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * nd."dayNumber" +
+          (r."sumY" - (r."sumXY" * r.n - r."sumX" * r."sumY") / NULLIF(r."sumXX" * r.n - r."sumX" * r."sumX", 0) * r."sumX") / r.n))::numeric, 2) AS trend
+      FROM numbered_days nd CROSS JOIN regression r ORDER BY nd."requestDate"
     `),
     // Requests per Category
     db.execute(sql`

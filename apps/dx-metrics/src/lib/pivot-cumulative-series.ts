@@ -3,15 +3,15 @@ type CumulativeSeriesRow<TLabelKey extends string> = Record<
   TLabelKey,
   string
 > & {
-  cumulative_count: number;
-  run_date: string;
+  cumulativeCount: number;
+  runDate: string;
 };
 
 const buildEmptyPoint = (
   date: string,
   seriesKeys: readonly string[],
 ): Record<string, number | string> => {
-  const point: Record<string, number | string> = { run_date: date };
+  const point: Record<string, number | string> = { runDate: date };
 
   for (const seriesKey of seriesKeys) {
     point[seriesKey] = 0;
@@ -42,15 +42,14 @@ export function pivotCumulativeSeries<
     }
 
     const point =
-      pointsByDate.get(row.run_date) ??
-      buildEmptyPoint(row.run_date, seriesKeys);
+      pointsByDate.get(row.runDate) ?? buildEmptyPoint(row.runDate, seriesKeys);
 
-    point[seriesKey] = Number(row.cumulative_count);
-    pointsByDate.set(row.run_date, point);
+    point[seriesKey] = Number(row.cumulativeCount);
+    pointsByDate.set(row.runDate, point);
   }
 
   const points = Array.from(pointsByDate.values()).toSorted((left, right) =>
-    String(left.run_date).localeCompare(String(right.run_date)),
+    String(left.runDate).localeCompare(String(right.runDate)),
   );
 
   for (let index = 1; index < points.length; index += 1) {

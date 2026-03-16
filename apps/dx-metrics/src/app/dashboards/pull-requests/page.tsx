@@ -21,26 +21,26 @@ interface PrDashboardData {
     totalComments: null | number;
     totalPrs: null | number;
   };
-  cumulatedNewPrs: { cumulative_count: number; date: string }[];
-  leadTimeMovingAvg: { avg_lead_time_days: number; week: string }[];
-  leadTimeTrend: { date: string; trend_line: number }[];
-  mergedPrs: { date: string; pr_count: number }[];
-  newPrs: { date: string; pr_count: number }[];
-  prComments: { avg_comments: number; week: string }[];
-  prSize: { avg_additions: number; week: string }[];
+  cumulatedNewPrs: { cumulativeCount: number; date: string }[];
+  leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
+  leadTimeTrend: { date: string; trendLine: number }[];
+  mergedPrs: { date: string; prCount: number }[];
+  newPrs: { date: string; prCount: number }[];
+  prComments: { avgComments: number; week: string }[];
+  prSize: { avgAdditions: number; week: string }[];
   prSizeDistribution: {
-    avg_additions: number;
-    pr_count: number;
-    size_range: string;
+    avgAdditions: number;
+    prCount: number;
+    sizeRange: string;
   }[];
   slowestPrs: {
-    created_at: string;
-    lead_time_days: number;
-    merged_at: string;
+    createdAt: string;
+    leadTimeDays: number;
+    mergedAt: string;
     number: number;
     title: string;
   }[];
-  unmergedPrs: { date: string; open_prs: number }[];
+  unmergedPrs: { date: string; openPrs: number }[];
 }
 
 export default function PullRequestsDashboard() {
@@ -114,7 +114,7 @@ export default function PullRequestsDashboard() {
               bars={[
                 {
                   color: "#238636",
-                  key: "avg_lead_time_days",
+                  key: "avgLeadTimeDays",
                   name: "Days",
                 },
               ]}
@@ -125,13 +125,13 @@ export default function PullRequestsDashboard() {
             />
             <SimpleLineChart
               data={data.leadTimeTrend}
-              lines={[{ color: "#dc2626", key: "trend_line", name: "Trend" }]}
+              lines={[{ color: "#dc2626", key: "trendLine", name: "Trend" }]}
               title="Lead Time Trend"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
             />
             <SimpleBarChart
-              bars={[{ color: "#2563eb", key: "pr_count", name: "Merged PRs" }]}
+              bars={[{ color: "#2563eb", key: "prCount", name: "Merged PRs" }]}
               data={data.mergedPrs}
               title="Merged Pull Requests"
               tooltip={tooltipContent.mergedPrs}
@@ -139,13 +139,13 @@ export default function PullRequestsDashboard() {
             />
             <SimpleLineChart
               data={data.unmergedPrs}
-              lines={[{ color: "#ea580c", key: "open_prs", name: "Open PRs" }]}
+              lines={[{ color: "#ea580c", key: "openPrs", name: "Open PRs" }]}
               title="Unmerged Pull Requests"
               tooltip={tooltipContent.unmergedPrs}
               xKey="date"
             />
             <SimpleBarChart
-              bars={[{ color: "#16a34a", key: "pr_count", name: "New PRs" }]}
+              bars={[{ color: "#16a34a", key: "prCount", name: "New PRs" }]}
               data={data.newPrs}
               title="New Pull Requests"
               tooltip={tooltipContent.newPrs}
@@ -156,7 +156,7 @@ export default function PullRequestsDashboard() {
               lines={[
                 {
                   color: "#7c3aed",
-                  key: "cumulative_count",
+                  key: "cumulativeCount",
                   name: "Cumulated New PRs",
                 },
               ]}
@@ -168,7 +168,7 @@ export default function PullRequestsDashboard() {
               bars={[
                 {
                   color: "#2196F3",
-                  key: "avg_additions",
+                  key: "avgAdditions",
                   name: "Avg Additions",
                 },
               ]}
@@ -181,7 +181,7 @@ export default function PullRequestsDashboard() {
               bars={[
                 {
                   color: "#0891b2",
-                  key: "avg_comments",
+                  key: "avgComments",
                   name: "Avg Comments",
                 },
               ]}
@@ -194,14 +194,14 @@ export default function PullRequestsDashboard() {
               bars={[
                 {
                   color: "#2196F3",
-                  key: "avg_additions",
+                  key: "avgAdditions",
                   name: "Avg Additions",
                 },
               ]}
               data={data.prSizeDistribution}
               title="Pull Requests Size (avg additions)"
               tooltip={tooltipContent.prSizeDistribution}
-              xKey="size_range"
+              xKey="sizeRange"
             />
           </div>
 
@@ -209,10 +209,10 @@ export default function PullRequestsDashboard() {
             <DataTable
               columns={[
                 { key: "title", label: "Title" },
-                { key: "lead_time_days", label: "Lead Time (days)" },
+                { key: "leadTimeDays", label: "Lead Time (days)" },
                 { key: "number", label: "#" },
-                { key: "created_at", label: "Created" },
-                { key: "merged_at", label: "Merged" },
+                { key: "createdAt", label: "Created" },
+                { key: "mergedAt", label: "Merged" },
               ]}
               data={data.slowestPrs}
               title="Slowest Pull Requests"

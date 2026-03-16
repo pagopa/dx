@@ -8,14 +8,14 @@ import { useDashboardData } from "@/lib/useDashboardData";
 import { releasesTooltips as tooltipContent } from "./tooltips";
 
 interface ModuleSummary {
-  first_release_date: string;
-  last_release_date: string;
-  latest_major: string;
-  major_versions_count: string;
-  module_name: string;
+  firstReleaseDate: string;
+  lastReleaseDate: string;
+  latestMajor: string;
+  majorVersionsCount: string;
+  moduleName: string;
   provider: string;
-  total_releases: string;
-  versions_detail: string;
+  totalReleases: string;
+  versionsDetail: string;
 }
 
 interface ReleasesDashboardData {
@@ -33,9 +33,9 @@ interface ReleaseStats {
 }
 
 interface ReleasesTimeline {
-  major_versions_introduced: string;
+  majorVersionsIntroduced: string;
   month: string;
-  total_releases: string;
+  totalReleases: string;
 }
 
 export default function ReleasesDashboard() {
@@ -43,9 +43,9 @@ export default function ReleasesDashboard() {
     useDashboardData<ReleasesDashboardData>("releases", {});
 
   const releasesTimelineChartData = (data?.releasesTimeline ?? []).map((r) => ({
-    major_versions: Number(r.major_versions_introduced),
+    major_versions: Number(r.majorVersionsIntroduced),
     month: r.month,
-    total_releases: Number(r.total_releases),
+    totalReleases: Number(r.totalReleases),
   }));
 
   return (
@@ -109,7 +109,7 @@ export default function ReleasesDashboard() {
           <DataTable
             columns={[
               {
-                key: "module_name",
+                key: "moduleName",
                 label: "Module",
                 renderCell: (value, row) => (
                   <a
@@ -123,13 +123,13 @@ export default function ReleasesDashboard() {
                 ),
               },
               { key: "provider", label: "Provider" },
-              { key: "major_versions_count", label: "Majors" },
-              { key: "latest_major", label: "Latest" },
-              { key: "total_releases", label: "Releases" },
-              { key: "first_release_date", label: "First Release" },
-              { key: "last_release_date", label: "Last Release" },
+              { key: "majorVersionsCount", label: "Majors" },
+              { key: "latestMajor", label: "Latest" },
+              { key: "totalReleases", label: "Releases" },
+              { key: "firstReleaseDate", label: "First Release" },
+              { key: "lastReleaseDate", label: "Last Release" },
               {
-                key: "versions_detail",
+                key: "versionsDetail",
                 label: "History",
                 renderCell: (v) => (
                   <span className="font-mono text-xs opacity-80">

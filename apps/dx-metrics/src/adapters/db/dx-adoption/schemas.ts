@@ -12,34 +12,34 @@ export const fetchDxAdoptionInputSchema = z.object({
 });
 
 export const moduleAdoptionRowSchema = z.object({
-  module_count: sqlNumberSchema,
-  module_type: z.string().min(1),
+  moduleCount: sqlNumberSchema,
+  moduleType: z.string().min(1),
 });
 
 export const moduleRowSchema = z.object({
-  file_path: z.string().min(1),
-  module_name: z.string().min(1),
-  module_type: z.string().min(1),
+  filePath: z.string().min(1),
+  moduleName: z.string().min(1),
+  moduleType: z.string().min(1),
 });
 
 export const pipelineAdoptionRowSchema = z.object({
-  pipeline_count: sqlNumberSchema,
-  pipeline_type: z.string().min(1),
+  pipelineCount: sqlNumberSchema,
+  pipelineType: z.string().min(1),
 });
 
 export const versionDriftRowSchema = z.object({
-  drift_status: z.string().min(1),
-  file_path: z.string().min(1),
-  latest_version: z.string().min(1).nullable(),
-  module_name: z.string().min(1),
-  used_version: z.string().min(1).nullable(),
+  driftStatus: z.string().min(1),
+  filePath: z.string().min(1),
+  latestVersion: z.string().min(1).nullable(),
+  moduleName: z.string().min(1),
+  usedVersion: z.string().min(1).nullable(),
 });
 
 export const versionDriftSummaryRowSchema = z.object({
   outdated: nullableSqlNumberSchema,
   total: nullableSqlNumberSchema,
   unknown: nullableSqlNumberSchema,
-  up_to_date: nullableSqlNumberSchema,
+  upToDate: nullableSqlNumberSchema,
 });
 
 export const versionDriftSummarySchema = z.object({
@@ -50,8 +50,8 @@ export const versionDriftSummarySchema = z.object({
 });
 
 export const workflowRowSchema = z.object({
-  pipeline_type: z.string().min(1),
-  workflow_name: z.string().min(1),
+  pipelineType: z.string().min(1),
+  workflowName: z.string().min(1),
 });
 
 export const dxAdoptionResultSchema = z.object({

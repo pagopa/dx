@@ -18,8 +18,8 @@ export const categoryRowSchema = z.object({
 });
 
 export const frequencyTrendRowSchema = z.object({
-  actual_requests: sqlNumberSchema,
-  request_date: sqlDateSchema,
+  actualRequests: sqlNumberSchema,
+  requestDate: sqlDateSchema,
   trend: sqlNumberSchema,
 });
 

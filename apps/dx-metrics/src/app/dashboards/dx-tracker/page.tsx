@@ -18,8 +18,8 @@ interface TrackerData {
     requestsTrend: null | number;
   };
   frequencyTrend: {
-    actual_requests: number;
-    request_date: string;
+    actualRequests: number;
+    requestDate: string;
     trend: number;
   }[];
 }
@@ -78,14 +78,14 @@ export default function TrackerDashboard() {
               lines={[
                 {
                   color: "#2563eb",
-                  key: "actual_requests",
+                  key: "actualRequests",
                   name: "Actual Requests",
                 },
                 { color: "#dc2626", key: "trend", name: "Trend" },
               ]}
               title="DX Requests Frequency Trend"
               tooltip={tooltipContent.frequencyTrend}
-              xKey="request_date"
+              xKey="requestDate"
             />
           </div>
         </>

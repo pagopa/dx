@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { pivotCumulativeSeries } from "../pivot-cumulative-series.js";
 
-const LABEL_KEY = "pipeline_type" as const;
+const LABEL_KEY = "pipelineType" as const;
 
 const LABEL_TO_SERIES = {
   "DX Pipelines": "dx",
@@ -10,9 +10,9 @@ const LABEL_TO_SERIES = {
 } as const;
 
 interface PivotCumulativeSeriesTestRow {
-  cumulative_count: number;
-  pipeline_type: keyof typeof LABEL_TO_SERIES;
-  run_date: string;
+  cumulativeCount: number;
+  pipelineType: keyof typeof LABEL_TO_SERIES;
+  runDate: string;
 }
 
 describe("pivotCumulativeSeries", () => {
@@ -23,60 +23,60 @@ describe("pivotCumulativeSeries", () => {
   it("pivots rows into one object per date with series as keys", () => {
     const rows = [
       {
-        cumulative_count: 5,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 5,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-01",
       },
       {
-        cumulative_count: 3,
-        pipeline_type: "Non-DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 3,
+        pipelineType: "Non-DX Pipelines",
+        runDate: "2024-01-01",
       },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
 
     expect(result).toHaveLength(1);
-    expect(result[0]).toEqual({ dx: 5, nonDx: 3, run_date: "2024-01-01" });
+    expect(result[0]).toEqual({ dx: 5, nonDx: 3, runDate: "2024-01-01" });
   });
 
-  it("sorts output by run_date ascending", () => {
+  it("sorts output by runDate ascending", () => {
     const rows = [
       {
-        cumulative_count: 10,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-03",
+        cumulativeCount: 10,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-03",
       },
       {
-        cumulative_count: 2,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 2,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-01",
       },
     ];
 
     const result = pivotCumulativeSeries(rows, LABEL_KEY, LABEL_TO_SERIES);
 
-    expect(result[0].run_date).toBe("2024-01-01");
-    expect(result[1].run_date).toBe("2024-01-03");
+    expect(result[0].runDate).toBe("2024-01-01");
+    expect(result[1].runDate).toBe("2024-01-03");
   });
 
   it("forward-fills zeros with the previous non-zero value", () => {
     const rows = [
       {
-        cumulative_count: 5,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 5,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-01",
       },
       {
-        cumulative_count: 7,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-02",
+        cumulativeCount: 7,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-02",
       },
       // Non-DX is missing on 2024-01-02 — should forward-fill from 2024-01-01
       {
-        cumulative_count: 3,
-        pipeline_type: "Non-DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 3,
+        pipelineType: "Non-DX Pipelines",
+        runDate: "2024-01-01",
       },
     ];
 
@@ -92,14 +92,14 @@ describe("pivotCumulativeSeries", () => {
   it("does not forward-fill when previous value is also zero", () => {
     const rows = [
       {
-        cumulative_count: 0,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 0,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-01",
       },
       {
-        cumulative_count: 0,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-02",
+        cumulativeCount: 0,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-02",
       },
     ];
 
@@ -111,10 +111,10 @@ describe("pivotCumulativeSeries", () => {
   it("skips rows with unknown label values", () => {
     const rows: PivotCumulativeSeriesTestRow[] = [
       {
-        cumulative_count: 10,
+        cumulativeCount: 10,
         // @ts-expect-error — intentionally invalid label to test runtime filtering
-        pipeline_type: "Unknown",
-        run_date: "2024-01-01",
+        pipelineType: "Unknown",
+        runDate: "2024-01-01",
       },
     ];
 
@@ -126,9 +126,9 @@ describe("pivotCumulativeSeries", () => {
   it("initialises missing series keys to 0 for a given date", () => {
     const rows = [
       {
-        cumulative_count: 4,
-        pipeline_type: "DX Pipelines",
-        run_date: "2024-01-01",
+        cumulativeCount: 4,
+        pipelineType: "DX Pipelines",
+        runDate: "2024-01-01",
       },
     ];
 

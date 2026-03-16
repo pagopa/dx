@@ -14,40 +14,40 @@ import { techradarTooltips as tooltipContent } from "./tooltips";
 
 interface TechradarDashboardData {
   adoptionByTool: {
-    adoption_percentage: number;
-    radar_ref: null | string;
-    radar_ring: null | string;
-    radar_slug: null | string;
-    radar_status: string;
-    radar_title: null | string;
-    repository_count: number;
-    tool_key: string;
-    tool_name: string;
+    adoptionPercentage: number;
+    radarRef: null | string;
+    radarRing: null | string;
+    radarSlug: null | string;
+    radarStatus: string;
+    radarTitle: null | string;
+    repositoryCount: number;
+    toolKey: string;
+    toolName: string;
   }[];
   repositoriesWithoutDetectedTools: string[];
   repositoryCoverage: {
-    aligned_tools: number;
-    detected_tools: number;
+    alignedTools: number;
+    detectedTools: number;
     repository: string;
   }[];
   repositoryMatrix: {
-    evidence_path: null | string;
-    radar_ref: null | string;
-    radar_ring: null | string;
-    radar_status: string;
-    radar_status_label: string;
-    radar_title: null | string;
+    evidencePath: null | string;
+    radarRef: null | string;
+    radarRing: null | string;
+    radarStatus: string;
+    radarStatusLabel: string;
+    radarTitle: null | string;
     repository: string;
-    tool_name: string;
+    toolName: string;
   }[];
   statusDistribution: { name: string; value: number }[];
   summary: {
-    aligned_usages: number;
-    detected_usages: number;
-    repositories_total: number;
-    repositories_with_detected_tools: number;
-    tools_detected: number;
-    usages_not_in_radar: number;
+    alignedUsages: number;
+    detectedUsages: number;
+    repositoriesTotal: number;
+    repositoriesWithDetectedTools: number;
+    toolsDetected: number;
+    usagesNotInRadar: number;
   };
 }
 
@@ -65,8 +65,8 @@ export default function TechradarDashboard() {
 
   const adoptionBarData =
     data?.adoptionByTool.map((tool) => ({
-      adoption_percentage: tool.adoption_percentage,
-      tool_name: tool.tool_name,
+      adoptionPercentage: tool.adoptionPercentage,
+      toolName: tool.toolName,
     })) ?? [];
   const statusPieData = data?.statusDistribution ?? [];
 
@@ -88,22 +88,22 @@ export default function TechradarDashboard() {
             <MetricCard
               label="Repositories Analyzed"
               tooltip={tooltipContent.repositoriesAnalysed}
-              value={data.summary.repositories_total}
+              value={data.summary.repositoriesTotal}
             />
             <MetricCard
               label="Repositories With Detections"
               tooltip={tooltipContent.repositoriesWithDetectedTools}
-              value={data.summary.repositories_with_detected_tools}
+              value={data.summary.repositoriesWithDetectedTools}
             />
             <MetricCard
               label="Unique Tools Detected"
               tooltip={tooltipContent.toolsDetected}
-              value={data.summary.tools_detected}
+              value={data.summary.toolsDetected}
             />
             <MetricCard
               label="Detections Not In Radar"
               tooltip={tooltipContent.usagesNotInRadar}
-              value={data.summary.usages_not_in_radar}
+              value={data.summary.usagesNotInRadar}
             />
           </div>
 
@@ -112,7 +112,7 @@ export default function TechradarDashboard() {
               bars={[
                 {
                   color: "#2563eb",
-                  key: "adoption_percentage",
+                  key: "adoptionPercentage",
                   name: "Adoption %",
                 },
               ]}
@@ -120,7 +120,7 @@ export default function TechradarDashboard() {
               layout="vertical"
               title="Tool Adoption by Repository Coverage"
               tooltip={tooltipContent.adoptionByTool}
-              xKey="tool_name"
+              xKey="toolName"
             />
             <SimplePieChart
               data={statusPieData}
@@ -132,22 +132,22 @@ export default function TechradarDashboard() {
           <div className="mt-4 grid grid-cols-2 gap-4">
             <DataTable
               columns={[
-                { key: "tool_name", label: "Tool" },
-                { key: "repository_count", label: "Repositories" },
-                { key: "adoption_percentage", label: "Adoption %" },
+                { key: "toolName", label: "Tool" },
+                { key: "repositoryCount", label: "Repositories" },
+                { key: "adoptionPercentage", label: "Adoption %" },
                 {
-                  key: "radar_status",
+                  key: "radarStatus",
                   label: "Radar Status",
                   renderCell: (value, row) => (
                     <span
                       className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${statusBadgeClassName(String(value ?? ""))}`}
                     >
-                      {row.radar_ring ?? "not in radar"}
+                      {row.radarRing ?? "not in radar"}
                     </span>
                   ),
                 },
                 {
-                  key: "radar_ref",
+                  key: "radarRef",
                   label: "Radar Entry",
                   renderCell: (value, row) =>
                     value ? (
@@ -157,7 +157,7 @@ export default function TechradarDashboard() {
                         rel="noreferrer"
                         target="_blank"
                       >
-                        {row.radar_title ?? row.radar_slug ?? "Open entry"}
+                        {row.radarTitle ?? row.radarSlug ?? "Open entry"}
                       </Link>
                     ) : (
                       "—"
@@ -171,8 +171,8 @@ export default function TechradarDashboard() {
             <DataTable
               columns={[
                 { key: "repository", label: "Repository" },
-                { key: "detected_tools", label: "Detected Tools" },
-                { key: "aligned_tools", label: "Aligned Tools" },
+                { key: "detectedTools", label: "Detected Tools" },
+                { key: "alignedTools", label: "Aligned Tools" },
               ]}
               data={data.repositoryCoverage}
               title="Repository Coverage"
@@ -184,20 +184,20 @@ export default function TechradarDashboard() {
             <DataTable
               columns={[
                 { key: "repository", label: "Repository" },
-                { key: "tool_name", label: "Tool" },
+                { key: "toolName", label: "Tool" },
                 {
-                  key: "radar_status_label",
+                  key: "radarStatusLabel",
                   label: "Radar Status",
                   renderCell: (value, row) => (
                     <span
-                      className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${statusBadgeClassName(row.radar_status)}`}
+                      className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${statusBadgeClassName(row.radarStatus)}`}
                     >
                       {String(value)}
                     </span>
                   ),
                 },
                 {
-                  key: "radar_ref",
+                  key: "radarRef",
                   label: "Radar Entry",
                   renderCell: (value, row) =>
                     value ? (
@@ -207,13 +207,13 @@ export default function TechradarDashboard() {
                         rel="noreferrer"
                         target="_blank"
                       >
-                        {row.radar_title ?? "Open entry"}
+                        {row.radarTitle ?? "Open entry"}
                       </Link>
                     ) : (
                       "—"
                     ),
                 },
-                { key: "evidence_path", label: "Evidence Path" },
+                { key: "evidencePath", label: "Evidence Path" },
               ]}
               data={data.repositoryMatrix}
               title="Repository / Tool Matrix"

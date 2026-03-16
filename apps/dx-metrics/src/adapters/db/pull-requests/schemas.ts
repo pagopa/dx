@@ -25,54 +25,54 @@ export const prSummaryCardsSchema = z.object({
 
 export const prDateCountRowSchema = z.object({
   date: sqlDateSchema,
-  pr_count: sqlNumberSchema,
+  prCount: sqlNumberSchema,
 });
 
 export const prOpenCountRowSchema = z.object({
   date: sqlDateSchema,
-  open_prs: sqlNumberSchema,
+  openPrs: sqlNumberSchema,
 });
 
 export const prCumulativeCountRowSchema = z.object({
-  cumulative_count: sqlNumberSchema,
+  cumulativeCount: sqlNumberSchema,
   date: sqlDateSchema,
 });
 
 export const prLeadTimeMovingAvgRowSchema = z.object({
-  avg_lead_time_days: sqlNumberSchema,
+  avgLeadTimeDays: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const prLeadTimeTrendRowSchema = z.object({
   date: sqlDateSchema,
-  trend_line: sqlNumberSchema,
+  trendLine: sqlNumberSchema,
 });
 
 export const prCommentsRowSchema = z.object({
-  avg_comments: sqlNumberSchema,
+  avgComments: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const prCommentsBySizeRowSchema = z.object({
-  avg_comments_per_addition: nullableSqlNumberSchema,
+  avgCommentsPerAddition: nullableSqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const prSizeRowSchema = z.object({
-  avg_additions: sqlNumberSchema,
+  avgAdditions: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const prSizeDistributionRowSchema = z.object({
-  avg_additions: sqlNumberSchema,
-  pr_count: sqlNumberSchema,
-  size_range: z.string().min(1),
+  avgAdditions: sqlNumberSchema,
+  prCount: sqlNumberSchema,
+  sizeRange: z.string().min(1),
 });
 
 export const slowestPrRowSchema = z.object({
-  created_at: sqlTimestampSchema,
-  lead_time_days: sqlNumberSchema,
-  merged_at: sqlTimestampSchema,
+  createdAt: sqlTimestampSchema,
+  leadTimeDays: sqlNumberSchema,
+  mergedAt: sqlTimestampSchema,
   number: sqlNumberSchema,
   title: z.string().min(1),
 });

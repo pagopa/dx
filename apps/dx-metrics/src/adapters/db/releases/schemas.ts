@@ -9,22 +9,22 @@ import {
 } from "../shared/sql-parsing";
 
 export const releaseStatsRowSchema = z.object({
-  newest_release: nullableSqlDateSchema,
-  oldest_release: nullableSqlDateSchema,
-  total_major_versions: sqlNumberSchema,
-  total_modules: sqlNumberSchema,
-  total_releases: sqlNumberSchema,
+  newestRelease: nullableSqlDateSchema,
+  oldestRelease: nullableSqlDateSchema,
+  totalMajorVersions: sqlNumberSchema,
+  totalModules: sqlNumberSchema,
+  totalReleases: sqlNumberSchema,
 });
 
 export const moduleSummaryRowSchema = z.object({
-  first_release_date: nullableSqlDateSchema,
-  last_release_date: nullableSqlDateSchema,
-  latest_major: sqlNumberSchema,
-  major_versions_count: sqlNumberSchema,
-  module_name: z.string().min(1),
+  firstReleaseDate: nullableSqlDateSchema,
+  lastReleaseDate: nullableSqlDateSchema,
+  latestMajor: sqlNumberSchema,
+  majorVersionsCount: sqlNumberSchema,
+  moduleName: z.string().min(1),
   provider: z.string().min(1),
-  total_releases: sqlNumberSchema,
-  versions_detail: z.string(),
+  totalReleases: sqlNumberSchema,
+  versionsDetail: z.string(),
 });
 
 export const releaseStatsSchema = z.object({
@@ -36,9 +36,9 @@ export const releaseStatsSchema = z.object({
 });
 
 export const releasesTimelineRowSchema = z.object({
-  major_versions_introduced: sqlNumberSchema,
+  majorVersionsIntroduced: sqlNumberSchema,
   month: sqlMonthSchema,
-  total_releases: sqlNumberSchema,
+  totalReleases: sqlNumberSchema,
 });
 
 export const releasesDashboardSchema = z.object({

@@ -75,14 +75,14 @@ export const getWorkflowDashboard = async (
 
 const fetchMaxDate = async (db: Database, fullName: string) => {
   const result = await db.execute(sql`
-    SELECT COALESCE(MAX(wr.created_at), NOW()) AS max_date
+    SELECT COALESCE(MAX(wr.created_at), NOW()) AS "maxDate"
     FROM workflow_runs wr
     JOIN repositories r ON wr.repository_id = r.id
     WHERE r.full_name = ${fullName}
   `);
   return (
     parseSqlRow(maxDateRowSchema, result.rows[0], "workflows maxDate")
-      .max_date ?? new Date().toISOString()
+      .maxDate ?? new Date().toISOString()
   );
 };
 
@@ -93,8 +93,8 @@ const fetchDeployments = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT DATE_TRUNC('week', wr.created_at) AS run_week,
-      COUNT(*) AS weekly_deployment_count
+    SELECT DATE_TRUNC('week', wr.created_at) AS "runWeek",
+      COUNT(*) AS "weeklyDeploymentCount"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -104,7 +104,7 @@ const fetchDeployments = async (
       AND TRIM(wr.conclusion) = 'success'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND w.name != 'Labeler'
-    GROUP BY DATE_TRUNC('week', wr.created_at) ORDER BY run_week
+    GROUP BY DATE_TRUNC('week', wr.created_at) ORDER BY "runWeek"
   `);
   return parseSqlRows(
     workflowDeploymentSchema,
@@ -120,12 +120,12 @@ const fetchDxVsNonDx = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT run_date, pipeline_type,
-      SUM(daily_count) OVER (PARTITION BY pipeline_type ORDER BY run_date) AS cumulative_count
+    SELECT "runDate", "pipelineType",
+      SUM("dailyCount") OVER (PARTITION BY "pipelineType" ORDER BY "runDate") AS "cumulativeCount"
     FROM (
-      SELECT wr.created_at::date AS run_date,
-        CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS pipeline_type,
-        COUNT(*) AS daily_count
+      SELECT wr.created_at::date AS "runDate",
+        CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS "pipelineType",
+        COUNT(*) AS "dailyCount"
       FROM workflow_runs wr
       JOIN workflows w ON wr.workflow_id = w.id
       JOIN repositories r ON wr.repository_id = r.id
@@ -134,7 +134,7 @@ const fetchDxVsNonDx = async (
         AND w.name NOT IN ('CodeQL', 'Labeler')
       GROUP BY wr.created_at::date,
         CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END
-    ) daily_counts ORDER BY run_date, pipeline_type
+    ) daily_counts ORDER BY "runDate", "pipelineType"
   `);
   return parseSqlRows(workflowDxVsNonDxSchema, r.rows, "workflows dxVsNonDx");
 };
@@ -146,8 +146,8 @@ const fetchFailures = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS workflow_name,
-      COUNT(*) AS failed_runs
+    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS "workflowName",
+      COUNT(*) AS "failedRuns"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -155,7 +155,7 @@ const fetchFailures = async (
       AND TRIM(wr.conclusion) = 'failure'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND w.name NOT IN ('CodeQL', 'Labeler')
-    GROUP BY workflow_name ORDER BY workflow_name
+    GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(workflowFailureSchema, r.rows, "workflows failures");
 };
@@ -167,8 +167,8 @@ const fetchAvgDuration = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS workflow_name,
-      AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS average_duration_minutes
+    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS "workflowName",
+      AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "averageDurationMinutes"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -177,7 +177,7 @@ const fetchAvgDuration = async (
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
       AND w.name NOT IN ('CodeQL', 'Labeler')
-    GROUP BY workflow_name ORDER BY workflow_name
+    GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(
     workflowAvgDurationSchema,
@@ -193,8 +193,8 @@ const fetchRunCount = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS workflow_name,
-      COUNT(*) AS run_count
+    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS "workflowName",
+      COUNT(*) AS "runCount"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -203,7 +203,7 @@ const fetchRunCount = async (
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
       AND w.name NOT IN ('CodeQL', 'Labeler')
-    GROUP BY workflow_name ORDER BY workflow_name
+    GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(workflowRunCountSchema, r.rows, "workflows runCount");
 };
@@ -215,8 +215,8 @@ const fetchCumulativeDuration = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS workflow_name,
-      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS cumulative_duration_minutes
+    SELECT CONCAT(CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX ' ELSE '' END, w.name) AS "workflowName",
+      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "cumulativeDurationMinutes"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -225,7 +225,7 @@ const fetchCumulativeDuration = async (
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
       AND w.name NOT IN ('CodeQL', 'Labeler')
-    GROUP BY workflow_name ORDER BY workflow_name
+    GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(
     workflowCumulativeDurationSchema,
@@ -241,8 +241,8 @@ const fetchInfraPlan = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT wr.created_at AS run_timestamp,
-      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS duration_minutes
+    SELECT wr.created_at AS "runTimestamp",
+      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -251,7 +251,7 @@ const fetchInfraPlan = async (
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
       AND w.pipeline LIKE '%infra_plan.yaml%' AND w.name != 'Labeler'
-    ORDER BY run_timestamp
+    ORDER BY "runTimestamp"
   `);
   return parseSqlRows(
     workflowInfraDurationSchema,
@@ -267,8 +267,8 @@ const fetchInfraApply = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT wr.created_at AS run_timestamp,
-      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS duration_minutes
+    SELECT wr.created_at AS "runTimestamp",
+      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -277,7 +277,7 @@ const fetchInfraApply = async (
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
       AND w.pipeline LIKE '%infra_apply.yaml%' AND w.name != 'Labeler'
-    ORDER BY run_timestamp
+    ORDER BY "runTimestamp"
   `);
   return parseSqlRows(
     workflowInfraDurationSchema,
@@ -293,10 +293,10 @@ const fetchSuccessRatio = async (
   maxDate: string,
 ) => {
   const r = await db.execute(sql`
-    SELECT w.name AS workflow_name, COUNT(*) AS total_runs,
-      SUM(CASE WHEN TRIM(wr.conclusion) = 'success' THEN 1 ELSE 0 END) AS successful_runs,
-      SUM(CASE WHEN TRIM(wr.conclusion) = 'failure' THEN 1 ELSE 0 END) AS failed_runs,
-      ROUND((SUM(CASE WHEN TRIM(wr.conclusion) = 'success' THEN 1 ELSE 0 END)::float / COUNT(*) * 100)::numeric, 2) AS success_rate_percentage
+    SELECT w.name AS "workflowName", COUNT(*) AS "totalRuns",
+      SUM(CASE WHEN TRIM(wr.conclusion) = 'success' THEN 1 ELSE 0 END) AS "successfulRuns",
+      SUM(CASE WHEN TRIM(wr.conclusion) = 'failure' THEN 1 ELSE 0 END) AS "failedRuns",
+      ROUND((SUM(CASE WHEN TRIM(wr.conclusion) = 'success' THEN 1 ELSE 0 END)::float / COUNT(*) * 100)::numeric, 2) AS "successRatePercentage"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -304,7 +304,7 @@ const fetchSuccessRatio = async (
       AND TRIM(wr.conclusion) IN ('success', 'failure')
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND w.name NOT IN ('CodeQL', 'Labeler')
-    GROUP BY w.name ORDER BY total_runs DESC
+    GROUP BY w.name ORDER BY "totalRuns" DESC
   `);
   return parseSqlRows(
     workflowSuccessRatioSchema,
@@ -321,10 +321,10 @@ const fetchSummary = async (
 ) => {
   const r = await db.execute(sql`
     SELECT
-      COUNT(*)::int AS total_pipelines,
-      AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS avg_duration_minutes,
-      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS total_duration_minutes,
-      MIN(wr.created_at) AS first_pipeline_date
+      COUNT(*)::int AS "totalPipelines",
+      AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "avgDurationMinutes",
+      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "totalDurationMinutes",
+      MIN(wr.created_at) AS "firstPipelineDate"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id

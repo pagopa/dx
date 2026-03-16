@@ -11,19 +11,19 @@ import { useDashboardFilters } from "@/lib/useDashboardFilters";
 import { dxAdoptionTooltips as tooltipContent } from "./tooltips";
 
 interface DxAdoptionData {
-  moduleAdoption: { module_count: number; module_type: string }[];
+  moduleAdoption: { moduleCount: number; moduleType: string }[];
   modulesList: {
-    file_path: string;
-    module_name: string;
-    module_type: string;
+    filePath: string;
+    moduleName: string;
+    moduleType: string;
   }[];
-  pipelineAdoption: { pipeline_count: number; pipeline_type: string }[];
+  pipelineAdoption: { pipelineCount: number; pipelineType: string }[];
   versionDriftList: {
-    drift_status: string;
-    file_path: null | string;
-    latest_version: null | string;
-    module_name: string;
-    used_version: null | string;
+    driftStatus: string;
+    filePath: null | string;
+    latestVersion: null | string;
+    moduleName: string;
+    usedVersion: null | string;
   }[];
   versionDriftSummary: {
     outdated: number;
@@ -31,7 +31,7 @@ interface DxAdoptionData {
     unknown: number;
     upToDate: number;
   };
-  workflowsList: { pipeline_type: string; workflow_name: string }[];
+  workflowsList: { pipelineType: string; workflowName: string }[];
 }
 
 export default function DxAdoptionDashboard() {
@@ -48,14 +48,14 @@ export default function DxAdoptionDashboard() {
 
   const pipelinePie =
     data?.pipelineAdoption.map((r) => ({
-      name: r.pipeline_type,
-      value: Number(r.pipeline_count),
+      name: r.pipelineType,
+      value: Number(r.pipelineCount),
     })) || [];
 
   const modulePie =
     data?.moduleAdoption.map((r) => ({
-      name: r.module_type,
-      value: Number(r.module_count),
+      name: r.moduleType,
+      value: Number(r.moduleCount),
     })) || [];
 
   const driftSummary = data?.versionDriftSummary;
@@ -121,8 +121,8 @@ export default function DxAdoptionDashboard() {
           <div className="mt-4 grid grid-cols-2 gap-4">
             <DataTable
               columns={[
-                { key: "workflow_name", label: "Workflow" },
-                { key: "pipeline_type", label: "Type" },
+                { key: "workflowName", label: "Workflow" },
+                { key: "pipelineType", label: "Type" },
               ]}
               data={data.workflowsList}
               title="Workflows List"
@@ -130,9 +130,9 @@ export default function DxAdoptionDashboard() {
             />
             <DataTable
               columns={[
-                { key: "module_name", label: "Module" },
-                { key: "module_type", label: "Type" },
-                { key: "file_path", label: "File Path" },
+                { key: "moduleName", label: "Module" },
+                { key: "moduleType", label: "Type" },
+                { key: "filePath", label: "File Path" },
               ]}
               data={data.modulesList}
               title="Terraform Modules List"
@@ -175,12 +175,12 @@ export default function DxAdoptionDashboard() {
               </div>
               <DataTable
                 columns={[
-                  { key: "module_name", label: "Module" },
-                  { key: "used_version", label: "Used Version" },
-                  { key: "latest_version", label: "Latest Version" },
-                  { key: "file_path", label: "File" },
+                  { key: "moduleName", label: "Module" },
+                  { key: "usedVersion", label: "Used Version" },
+                  { key: "latestVersion", label: "Latest Version" },
+                  { key: "filePath", label: "File" },
                   {
-                    key: "drift_status",
+                    key: "driftStatus",
                     label: "Status",
                     renderCell: (value) =>
                       driftStatusBadge(String(value ?? "unknown")),

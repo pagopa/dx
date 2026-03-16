@@ -49,7 +49,7 @@ async function fetchLeadTimeData(
   const [leadTimeMovingAvg, leadTimeTrend] = await Promise.all([
     db.execute(sql`
       SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
-        ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS avg_lead_time_days
+        ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${fullName}
         AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
@@ -61,7 +61,7 @@ async function fetchLeadTimeData(
     db.execute(sql`
       WITH weekly_avg AS (
         SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
-          ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS avg_lead_time_days,
+          ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays",
           ROW_NUMBER() OVER (ORDER BY DATE_TRUNC('week', pr.merged_at)::date) AS x
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
@@ -71,15 +71,15 @@ async function fetchLeadTimeData(
           AND (pr.draft IS NULL OR pr.draft = 0)
         GROUP BY DATE_TRUNC('week', pr.merged_at)::date
       ),
-      stats AS (SELECT COUNT(*) AS n, AVG(x) AS x_avg, AVG(avg_lead_time_days) AS y_avg FROM weekly_avg),
+      stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("avgLeadTimeDays") AS "yAvg" FROM weekly_avg),
       regression AS (
-        SELECT CASE WHEN SUM(POWER(w.x - s.x_avg, 2)) != 0
-          THEN SUM((w.x - s.x_avg) * (w.avg_lead_time_days - s.y_avg)) / SUM(POWER(w.x - s.x_avg, 2))
-          ELSE 0 END AS slope, s.y_avg, s.x_avg
-        FROM weekly_avg w CROSS JOIN stats s GROUP BY s.x_avg, s.y_avg
+        SELECT CASE WHEN SUM(POWER(w.x - s."xAvg", 2)) != 0
+          THEN SUM((w.x - s."xAvg") * (w."avgLeadTimeDays" - s."yAvg")) / SUM(POWER(w.x - s."xAvg", 2))
+          ELSE 0 END AS slope, s."yAvg", s."xAvg"
+        FROM weekly_avg w CROSS JOIN stats s GROUP BY s."xAvg", s."yAvg"
       )
       SELECT w.week AS date,
-        ROUND((r.slope * w.x + (r.y_avg - r.slope * r.x_avg))::numeric, 2) AS trend_line
+        ROUND((r.slope * w.x + (r."yAvg" - r.slope * r."xAvg"))::numeric, 2) AS "trendLine"
       FROM weekly_avg w CROSS JOIN regression r ORDER BY w.week
     `),
   ]);
@@ -115,15 +115,15 @@ async function fetchPrCountData(
       ),
       pr_counts AS (
         SELECT CASE WHEN ${days} < 240 THEN pr.merged_at::date
-          ELSE date_trunc('week', pr.merged_at)::date END AS pr_date, COUNT(*) AS pr_count
+          ELSE date_trunc('week', pr.merged_at)::date END AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.merged_at <= NOW()
           AND pr.merged_at IS NOT NULL AND (pr.draft IS NULL OR pr.draft = 0)
-        GROUP BY pr_date
+        GROUP BY "prDate"
       )
-      SELECT ds.date, COALESCE(pc.pr_count, 0) AS pr_count
-      FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc.pr_date ORDER BY ds.date
+      SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
+      FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc."prDate" ORDER BY ds.date
     `),
     db.execute(sql`
       WITH daily_counts AS (
@@ -136,14 +136,14 @@ async function fetchPrCountData(
         )::date AS date
       ),
       pr_status AS (
-        SELECT pr.created_at::date AS created_date,
-          COALESCE(pr.closed_at::date, CURRENT_DATE + 1) AS closed_date
+        SELECT pr.created_at::date AS "createdDate",
+          COALESCE(pr.closed_at::date, CURRENT_DATE + 1) AS "closedDate"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
         AND (pr.draft IS NULL OR pr.draft = 0)
       )
-      SELECT d.date, COUNT(*) FILTER (WHERE d.date >= p.created_date AND d.date < p.closed_date) AS open_prs
-      FROM daily_counts d LEFT JOIN pr_status p ON d.date >= p.created_date AND d.date < p.closed_date
+      SELECT d.date, COUNT(*) FILTER (WHERE d.date >= p."createdDate" AND d.date < p."closedDate") AS "openPrs"
+      FROM daily_counts d LEFT JOIN pr_status p ON d.date >= p."createdDate" AND d.date < p."closedDate"
       GROUP BY d.date ORDER BY d.date
     `),
     db.execute(sql`
@@ -158,25 +158,25 @@ async function fetchPrCountData(
       ),
       pr_counts AS (
         SELECT CASE WHEN ${days} < 240 THEN pr.created_at::date
-          ELSE date_trunc('week', pr.created_at)::date END AS pr_date, COUNT(*) AS pr_count
+          ELSE date_trunc('week', pr.created_at)::date END AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.created_at <= NOW()
           AND (pr.draft IS NULL OR pr.draft = 0)
-        GROUP BY pr_date
+        GROUP BY "prDate"
       )
-      SELECT ds.date, COALESCE(pc.pr_count, 0) AS pr_count
-      FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc.pr_date ORDER BY ds.date
+      SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
+      FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc."prDate" ORDER BY ds.date
     `),
     db.execute(sql`
       WITH daily_pr AS (
-        SELECT pr.created_at::date AS date, COUNT(*) AS daily_count
+        SELECT pr.created_at::date AS date, COUNT(*) AS "dailyCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
         GROUP BY pr.created_at::date
       ),
       ts AS (SELECT generate_series((SELECT MIN(date) FROM daily_pr), CURRENT_DATE, '1 day'::interval)::date AS date)
-      SELECT t.date, SUM(COALESCE(d.daily_count, 0)) OVER (ORDER BY t.date) AS cumulative_count
+      SELECT t.date, SUM(COALESCE(d."dailyCount", 0)) OVER (ORDER BY t.date) AS "cumulativeCount"
       FROM ts t LEFT JOIN daily_pr d ON t.date = d.date ORDER BY t.date
     `),
   ]);
@@ -213,7 +213,7 @@ async function fetchPrQualityData(
     await Promise.all([
       db.execute(sql`
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
-          ROUND(AVG(pr.additions)::numeric, 2) AS avg_additions
+          ROUND(AVG(pr.additions)::numeric, 2) AS "avgAdditions"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.additions IS NOT NULL
@@ -221,7 +221,7 @@ async function fetchPrQualityData(
       `),
       db.execute(sql`
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
-          ROUND(AVG(pr.total_comments_count)::numeric, 2) AS avg_comments
+          ROUND(AVG(pr.total_comments_count)::numeric, 2) AS "avgComments"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
@@ -230,7 +230,7 @@ async function fetchPrQualityData(
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
           ROUND(
             AVG(pr.total_comments_count)::numeric / NULLIF(AVG(pr.additions)::numeric, 0)
-          , 2) AS avg_comments_per_addition
+          , 2) AS "avgCommentsPerAddition"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
@@ -241,28 +241,28 @@ async function fetchPrQualityData(
           SELECT pr.additions,
             CASE WHEN additions <= 50 THEN '0-50' WHEN additions <= 200 THEN '51-200'
             WHEN additions <= 500 THEN '201-500' WHEN additions <= 1000 THEN '501-1000'
-            ELSE '1000+' END AS size_range,
+            ELSE '1000+' END AS "sizeRange",
             CASE WHEN additions <= 50 THEN 1 WHEN additions <= 200 THEN 2
             WHEN additions <= 500 THEN 3 WHEN additions <= 1000 THEN 4
-            ELSE 5 END AS sort_order
+            ELSE 5 END AS "sortOrder"
           FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
           WHERE r.full_name = ${fullName}
             AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.additions IS NOT NULL
             AND (pr.draft IS NULL OR pr.draft = 0)
         )
-        SELECT size_range, COUNT(*) AS pr_count, ROUND(AVG(additions)::numeric, 0) AS avg_additions
-        FROM bucketed GROUP BY size_range, sort_order ORDER BY sort_order
+        SELECT "sizeRange", COUNT(*) AS "prCount", ROUND(AVG(additions)::numeric, 0) AS "avgAdditions"
+        FROM bucketed GROUP BY "sizeRange", "sortOrder" ORDER BY "sortOrder"
       `),
       db.execute(sql`
-        SELECT pr.title, ROUND(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400, 2) AS lead_time_days,
-          pr.number, pr.created_at, pr.merged_at
+        SELECT pr.title, ROUND(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400, 2) AS "leadTimeDays",
+          pr.number, pr.created_at AS "createdAt", pr.merged_at AS "mergedAt"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
           AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
           AND (pr.draft IS NULL OR pr.draft = 0)
-        ORDER BY lead_time_days DESC LIMIT 50
+        ORDER BY "leadTimeDays" DESC LIMIT 50
       `),
     ]);
   return {

@@ -16,33 +16,33 @@ import { useDashboardFilters } from "@/lib/useDashboardFilters";
 import { workflowsTooltips as tooltipContent } from "./tooltips";
 
 interface WorkflowDashboardData {
-  avgDuration: { average_duration_minutes: number; workflow_name: string }[];
+  avgDuration: { averageDurationMinutes: number; workflowName: string }[];
   cumulativeDuration: {
-    cumulative_duration_minutes: number;
-    workflow_name: string;
+    cumulativeDurationMinutes: number;
+    workflowName: string;
   }[];
-  deployments: { run_week: string; weekly_deployment_count: number }[];
+  deployments: { runWeek: string; weeklyDeploymentCount: number }[];
   dxVsNonDx: {
-    cumulative_count: number;
-    pipeline_type: string;
-    run_date: string;
+    cumulativeCount: number;
+    pipelineType: string;
+    runDate: string;
   }[];
-  failures: { failed_runs: number; workflow_name: string }[];
-  infraApply: { duration_minutes: number; run_timestamp: string }[];
-  infraPlan: { duration_minutes: number; run_timestamp: string }[];
-  runCount: { run_count: number; workflow_name: string }[];
+  failures: { failedRuns: number; workflowName: string }[];
+  infraApply: { durationMinutes: number; runTimestamp: string }[];
+  infraPlan: { durationMinutes: number; runTimestamp: string }[];
+  runCount: { runCount: number; workflowName: string }[];
   successRatio: {
-    failed_runs: number;
-    success_rate_percentage: number;
-    successful_runs: number;
-    total_runs: number;
-    workflow_name: string;
+    failedRuns: number;
+    successfulRuns: number;
+    successRatePercentage: number;
+    totalRuns: number;
+    workflowName: string;
   }[];
   summary: {
-    avg_duration_minutes: number;
-    first_pipeline_date: string;
-    total_duration_minutes: number;
-    total_pipelines: number;
+    avgDurationMinutes: number;
+    firstPipelineDate: string;
+    totalDurationMinutes: number;
+    totalPipelines: number;
   };
 }
 
@@ -93,7 +93,7 @@ function formatDate(value: unknown): string {
 function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
   const dxVsNonDxPivoted = pivotCumulativeSeries(
     data.dxVsNonDx,
-    "pipeline_type",
+    "pipelineType",
     {
       "DX Pipelines": "dx",
       "Non-DX Pipelines": "non_dx",
@@ -106,20 +106,20 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <MetricCard
           label="First Run"
           tooltip={tooltipContent.firstRun}
-          value={formatDate(data.summary.first_pipeline_date)}
+          value={formatDate(data.summary.firstPipelineDate)}
         />
         <MetricCard
           label="Runs Count"
           tooltip={tooltipContent.runsCount}
-          value={data.summary.total_pipelines}
+          value={data.summary.totalPipelines}
         />
         <MetricCard
           label="Average Duration"
           suffix="min"
           tooltip={tooltipContent.avgDuration}
           value={
-            data.summary.avg_duration_minutes !== null
-              ? Number(data.summary.avg_duration_minutes).toFixed(1)
+            data.summary.avgDurationMinutes !== null
+              ? Number(data.summary.avgDurationMinutes).toFixed(1)
               : "—"
           }
         />
@@ -128,8 +128,8 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           suffix="min"
           tooltip={tooltipContent.totalDuration}
           value={
-            data.summary.total_duration_minutes !== null
-              ? Number(data.summary.total_duration_minutes).toFixed(0)
+            data.summary.totalDurationMinutes !== null
+              ? Number(data.summary.totalDurationMinutes).toFixed(0)
               : "—"
           }
         />
@@ -140,14 +140,14 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           bars={[
             {
               color: "#2563eb",
-              key: "weekly_deployment_count",
+              key: "weeklyDeploymentCount",
               name: "Deployments",
             },
           ]}
           data={data.deployments}
           title="Deployments to Production (weekly)"
           tooltip={tooltipContent.deploymentsToProduction}
-          xKey="run_week"
+          xKey="runWeek"
           xValueFormatter={formatDate}
         />
         <SimpleLineChart
@@ -158,22 +158,22 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           ]}
           title="DX VS Non-DX Pipeline Runs (Cumulative)"
           tooltip={tooltipContent.dxVsNonDx}
-          xKey="run_date"
+          xKey="runDate"
           xValueFormatter={formatDate}
         />
         <SimpleBarChart
-          bars={[{ color: "#c97d9b", key: "failed_runs", name: "Failed Runs" }]}
+          bars={[{ color: "#c97d9b", key: "failedRuns", name: "Failed Runs" }]}
           data={data.failures}
           layout="vertical"
           title="Pipeline Failures"
           tooltip={tooltipContent.pipelineFailures}
-          xKey="workflow_name"
+          xKey="workflowName"
         />
         <SimpleBarChart
           bars={[
             {
               color: "#2563eb",
-              key: "average_duration_minutes",
+              key: "averageDurationMinutes",
               name: "Avg Duration",
             },
           ]}
@@ -181,21 +181,21 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           layout="vertical"
           title="Pipeline Average Duration (minutes)"
           tooltip={tooltipContent.avgPipelineDuration}
-          xKey="workflow_name"
+          xKey="workflowName"
         />
         <SimpleBarChart
-          bars={[{ color: "#16a34a", key: "run_count", name: "Run Count" }]}
+          bars={[{ color: "#16a34a", key: "runCount", name: "Run Count" }]}
           data={data.runCount}
           layout="vertical"
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
-          xKey="workflow_name"
+          xKey="workflowName"
         />
         <SimpleBarChart
           bars={[
             {
               color: "#7c3aed",
-              key: "cumulative_duration_minutes",
+              key: "cumulativeDurationMinutes",
               name: "Cumulative Duration",
             },
           ]}
@@ -203,26 +203,26 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           layout="vertical"
           title="Pipeline Cumulative Duration (minutes)"
           tooltip={tooltipContent.cumulativeDuration}
-          xKey="workflow_name"
+          xKey="workflowName"
         />
         <SimpleLineChart
           data={data.infraPlan}
           lines={[
-            { color: "#2563eb", key: "duration_minutes", name: "Duration" },
+            { color: "#2563eb", key: "durationMinutes", name: "Duration" },
           ]}
           title="Infra Plan Duration (minutes)"
           tooltip={tooltipContent.infraPlanDuration}
-          xKey="run_timestamp"
+          xKey="runTimestamp"
           xValueFormatter={formatDate}
         />
         <SimpleLineChart
           data={data.infraApply}
           lines={[
-            { color: "#16a34a", key: "duration_minutes", name: "Duration" },
+            { color: "#16a34a", key: "durationMinutes", name: "Duration" },
           ]}
           title="Infra Apply Duration (minutes)"
           tooltip={tooltipContent.infraApplyDuration}
-          xKey="run_timestamp"
+          xKey="runTimestamp"
           xValueFormatter={formatDate}
         />
       </div>
@@ -230,11 +230,11 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
       <div className="mt-4">
         <DataTable
           columns={[
-            { key: "workflow_name", label: "Workflow" },
-            { key: "total_runs", label: "Total Runs" },
-            { key: "successful_runs", label: "Successful" },
-            { key: "failed_runs", label: "Failed" },
-            { key: "success_rate_percentage", label: "Success Rate (%)" },
+            { key: "workflowName", label: "Workflow" },
+            { key: "totalRuns", label: "Total Runs" },
+            { key: "successfulRuns", label: "Successful" },
+            { key: "failedRuns", label: "Failed" },
+            { key: "successRatePercentage", label: "Success Rate (%)" },
           ]}
           data={data.successRatio}
           title="Workflow Success/Failure Ratio"

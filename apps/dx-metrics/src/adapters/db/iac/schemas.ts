@@ -12,7 +12,7 @@ import {
 export const getIacDashboardInputSchema = dashboardParamsSchema;
 
 export const maxDateRowSchema = z.object({
-  max_date: sqlTimestampSchema,
+  maxDate: sqlTimestampSchema,
 });
 
 export const dxMemberRowSchema = z.object({
@@ -20,31 +20,31 @@ export const dxMemberRowSchema = z.object({
 });
 
 export const leadTimeMovingAvgRowSchema = z.object({
-  avg_lead_time_days: sqlNumberSchema,
+  avgLeadTimeDays: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const leadTimeTrendRowSchema = z.object({
   date: sqlDateSchema,
-  trend_line: sqlNumberSchema,
+  trendLine: sqlNumberSchema,
 });
 
 export const prsByReviewerRowSchema = z.object({
-  avg_lead_time_days: sqlNumberSchema,
-  merged_prs: sqlNumberSchema,
+  avgLeadTimeDays: sqlNumberSchema,
+  mergedPrs: sqlNumberSchema,
   reviewer: z.string().min(1),
-  total_prs: sqlNumberSchema,
+  totalPrs: sqlNumberSchema,
 });
 
 export const prsOverTimeRowSchema = z.object({
-  pr_count: sqlNumberSchema,
+  prCount: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const supervisedVsUnsupervisedRowSchema = z.object({
-  cumulative_count: sqlNumberSchema,
-  pr_type: z.string().min(1),
-  run_date: sqlDateSchema,
+  cumulativeCount: sqlNumberSchema,
+  prType: z.string().min(1),
+  runDate: sqlDateSchema,
 });
 
 export const iacDashboardResultSchema = z.object({

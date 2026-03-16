@@ -17,24 +17,24 @@ export const reviewMetricValueRowSchema = z.object({
 
 export const reviewDistributionRowSchema = z.object({
   approvals: sqlNumberSchema,
-  change_requests: sqlNumberSchema,
+  changeRequests: sqlNumberSchema,
   reviewer: z.string().min(1),
-  total_reviews: sqlNumberSchema,
+  totalReviews: sqlNumberSchema,
 });
 
 export const reviewMatrixRowSchema = z.object({
   author: z.string().min(1),
-  review_count: sqlNumberSchema,
+  reviewCount: sqlNumberSchema,
   reviewer: z.string().min(1),
 });
 
 export const timeToFirstReviewTrendRowSchema = z.object({
-  avg_hours_to_first_review: sqlNumberSchema,
+  avgHoursToFirstReview: sqlNumberSchema,
   week: sqlDateSchema,
 });
 
 export const timeToMergeTrendRowSchema = z.object({
-  avg_hours_to_merge: sqlNumberSchema,
+  avgHoursToMerge: sqlNumberSchema,
   week: sqlDateSchema,
 });
 

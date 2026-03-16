@@ -23,11 +23,11 @@ import {
  */
 const getMaxDate = async (db: Database, fullName: string): Promise<string> => {
   const result = await db.execute(sql`
-    SELECT COALESCE(MAX(GREATEST(created_at, merged_at)), NOW()) AS max_date
+    SELECT COALESCE(MAX(GREATEST(created_at, merged_at)), NOW()) AS "maxDate"
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
   `);
-  return parseSqlRow(maxDateRowSchema, result.rows[0], "iac maxDate").max_date;
+  return parseSqlRow(maxDateRowSchema, result.rows[0], "iac maxDate").maxDate;
 };
 
 /** Fetches the list of DX team member usernames. */
@@ -49,7 +49,7 @@ const queryLeadTimeMovingAvg = (
 ) =>
   db.execute(sql`
     SELECT DATE_TRUNC('week', merged_at)::date AS week,
-      ROUND(AVG(EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400)::numeric, 2) AS avg_lead_time_days
+      ROUND(AVG(EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays"
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
       AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
@@ -68,25 +68,25 @@ const queryLeadTimeTrend = (
 ) =>
   db.execute(sql`
     WITH pr_lead_times AS (
-      SELECT created_at::date AS created_date,
-        EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400 AS lead_time_days,
-        ROW_NUMBER() OVER (ORDER BY created_at::date) AS x
+        SELECT created_at::date AS "createdDate",
+          EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400 AS "leadTimeDays",
+          ROW_NUMBER() OVER (ORDER BY created_at::date) AS x
       FROM iac_pr_lead_times
       WHERE repository_full_name = ${fullName}
         AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND created_at IS NOT NULL AND merged_at IS NOT NULL
         AND title != 'Version Packages'
     ),
-    stats AS (SELECT COUNT(*) AS n, AVG(x) AS x_avg, AVG(lead_time_days) AS y_avg FROM pr_lead_times),
+    stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("leadTimeDays") AS "yAvg" FROM pr_lead_times),
     regression AS (
-      SELECT CASE WHEN SUM(POWER(p.x - s.x_avg, 2)) != 0
-        THEN SUM((p.x - s.x_avg) * (p.lead_time_days - s.y_avg)) / SUM(POWER(p.x - s.x_avg, 2))
-        ELSE 0 END AS slope, s.y_avg, s.x_avg
-      FROM pr_lead_times p CROSS JOIN stats s GROUP BY s.x_avg, s.y_avg
+      SELECT CASE WHEN SUM(POWER(p.x - s."xAvg", 2)) != 0
+        THEN SUM((p.x - s."xAvg") * (p."leadTimeDays" - s."yAvg")) / SUM(POWER(p.x - s."xAvg", 2))
+        ELSE 0 END AS slope, s."yAvg", s."xAvg"
+      FROM pr_lead_times p CROSS JOIN stats s GROUP BY s."xAvg", s."yAvg"
     )
-    SELECT p.created_date AS date,
-      GREATEST(ROUND((r.slope * p.x + (r.y_avg - r.slope * r.x_avg))::numeric, 2), 0) AS trend_line
-    FROM pr_lead_times p CROSS JOIN regression r ORDER BY p.created_date
+    SELECT p."createdDate" AS date,
+      GREATEST(ROUND((r.slope * p.x + (r."yAvg" - r.slope * r."xAvg"))::numeric, 2), 0) AS "trendLine"
+    FROM pr_lead_times p CROSS JOIN regression r ORDER BY p."createdDate"
   `);
 
 /**
@@ -102,11 +102,11 @@ const querySupervisedVsUnsupervised = (
 ) =>
   db.execute(sql`
     WITH classified AS (
-      SELECT ipr.created_at::date AS run_date,
+      SELECT ipr.created_at::date AS "runDate",
         CASE WHEN ${buildMemberMatchSql("ipr.author", dxMembers)}
                   OR ${buildMemberMatchSql("pr.merged_by", dxMembers)}
              THEN 'Supervised PRs'
-             ELSE 'Unsupervised PRs' END AS pr_type
+             ELSE 'Unsupervised PRs' END AS "prType"
       FROM iac_pr_lead_times ipr
       LEFT JOIN pull_requests pr ON pr.repository_id = ipr.repository_id AND pr.number = ipr.pr_number
       WHERE ipr.repository_full_name = ${fullName}
@@ -114,13 +114,13 @@ const querySupervisedVsUnsupervised = (
         AND ipr.created_at IS NOT NULL AND ipr.title != 'Version Packages'
         AND (pr.draft IS NULL OR pr.draft = 0)
     )
-    SELECT run_date, pr_type,
-      SUM(daily_count) OVER (PARTITION BY pr_type ORDER BY run_date) AS cumulative_count
+    SELECT "runDate", "prType",
+      SUM("dailyCount") OVER (PARTITION BY "prType" ORDER BY "runDate") AS "cumulativeCount"
     FROM (
-      SELECT run_date, pr_type, COUNT(*) AS daily_count
+      SELECT "runDate", "prType", COUNT(*) AS "dailyCount"
       FROM classified
-      GROUP BY run_date, pr_type
-    ) daily_counts ORDER BY run_date, pr_type
+      GROUP BY "runDate", "prType"
+    ) daily_counts ORDER BY "runDate", "prType"
   `);
 
 /** IaC PRs Count Over Time — weekly buckets. */
@@ -132,7 +132,7 @@ const queryPrsOverTime = (
 ) =>
   db.execute(sql`
     SELECT DATE_TRUNC('week', created_at)::date AS week,
-      COUNT(*) AS pr_count
+      COUNT(*) AS "prCount"
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
       AND created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
@@ -165,14 +165,14 @@ const queryPrsByReviewer = (
         ]) AS member
       FROM base
     )
-    SELECT member AS reviewer,
-      COUNT(*) AS total_prs,
-      COUNT(*) FILTER (WHERE merged_at IS NOT NULL) AS merged_prs,
+      SELECT member AS reviewer,
+      COUNT(*) AS "totalPrs",
+      COUNT(*) FILTER (WHERE merged_at IS NOT NULL) AS "mergedPrs",
       ROUND(AVG(CASE WHEN merged_at IS NOT NULL
-        THEN EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400 END)::numeric, 2) AS avg_lead_time_days
+        THEN EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400 END)::numeric, 2) AS "avgLeadTimeDays"
     FROM expanded
     WHERE member IS NOT NULL
-    GROUP BY member ORDER BY total_prs DESC
+    GROUP BY member ORDER BY "totalPrs" DESC
   `);
 
 /** Fetches all IaC dashboard data for the given repository and time window. */
