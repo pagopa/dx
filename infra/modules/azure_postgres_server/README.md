@@ -25,6 +25,73 @@ This Terraform module provisions an Azure PostgreSQL Flexible Server along with 
 
 A complete example of how to use this module can be found in the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-postgres-server/tree/main/example/complete) directory.
 
+## Admin password management
+
+The module uses Terraform 1.11 write-only attributes to handle the admin password, ensuring it is never persisted in Terraform state or plan output. There are two supported patterns.
+
+### Recommended: delegate secret management to the module
+
+Pass a `key_vault` block and the module creates and manages the `azurerm_key_vault_secret` automatically. The password flows from an ephemeral source directly into both the PostgreSQL server and the Key Vault secret via write-only attributes — it never touches state at any point.
+
+The Terraform identity must hold the **Key Vault Secrets Officer** role on the vault.
+
+```hcl
+ephemeral "random_password" "db" {
+  length  = 32
+  special = true
+}
+
+module "postgres" {
+  source = "pagopa-dx/azure-postgres-server/azurerm"
+  # ...
+
+  admin_username         = "pgadmin"
+  admin_password         = ephemeral.random_password.db.result
+  admin_password_version = 1  # increment on every rotation
+
+  key_vault = {
+    id = azurerm_key_vault.this.id
+    # secret_name = "custom-name"  # optional; defaults to "<db-name>-admin-password"
+  }
+}
+
+# The module outputs the secret details (never the value itself)
+output "db_password_secret_id" {
+  value = module.postgres.admin_password_secret.versionless_id
+}
+```
+
+Incrementing `admin_password_version` rotates **both** the PostgreSQL server password and the Key Vault secret in a single `terraform apply`.
+
+### Manual: manage the Key Vault secret yourself
+
+If you need full control over the secret resource, omit `key_vault` and create the `azurerm_key_vault_secret` outside the module. You are then responsible for keeping the two version counters in sync — if you forget to increment one of them, Terraform will silently skip the write for that resource.
+
+```hcl
+ephemeral "random_password" "db" {
+  length  = 32
+  special = true
+}
+
+# You manage this resource directly
+resource "azurerm_key_vault_secret" "db_password" {
+  name             = "postgres-admin-password"
+  key_vault_id     = azurerm_key_vault.this.id
+  content_type     = "text/plain"
+  value_wo         = ephemeral.random_password.db.result
+  value_wo_version = 2  # ⚠️ must be incremented in sync with admin_password_version below
+}
+
+module "postgres" {
+  source = "pagopa-dx/azure-postgres-server/azurerm"
+  # ...
+
+  admin_username         = "pgadmin"
+  admin_password         = ephemeral.random_password.db.result
+  admin_password_version = 2  # ⚠️ must be incremented in sync with value_wo_version above
+}
+```
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
