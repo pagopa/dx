@@ -44,6 +44,8 @@ export type CloudAccountService = {
     environment: EnvironmentId,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
+
+  registerProviders(cloudAccountId: CloudAccount["id"]): Promise<void>;
 };
 
 export const cloudRegionSchema = z.object({

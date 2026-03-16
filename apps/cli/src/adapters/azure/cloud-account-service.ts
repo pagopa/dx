@@ -28,6 +28,7 @@ import {
   terraformBackendSchema,
 } from "../../domain/remote-backend.js";
 import { isAzureLocation, locations, locationShort } from "./locations.js";
+import { registerResourceProviders } from "./register-resource-providers.js";
 
 // We are only interested in these properties for now;
 // the actual result structure contains the full cloud resource object
@@ -472,6 +473,10 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
+  }
+
+  async registerProviders(cloudAccountId: CloudAccount["id"]): Promise<void> {
+    await registerResourceProviders(this.#credential, cloudAccountId);
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {

@@ -15,6 +15,7 @@ const createMockCloudAccountService = (
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
   provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+  registerProviders: vi.fn().mockResolvedValue(undefined),
   ...overrides,
 });
 
@@ -56,6 +57,7 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
   ...overrides,
 });
 
+// eslint-disable-next-line max-lines-per-function
 describe("initCloudAccounts", () => {
   it("should initialize all cloud accounts in cloudAccountsToInitialize", async () => {
     const cloudAccount1 = createMockCloudAccount({ id: "account-1" });
@@ -183,5 +185,89 @@ describe("initCloudAccounts", () => {
       },
       {},
     );
+  });
+
+  it("should call registerProviders for each cloud account being initialized", async () => {
+    const cloudAccount1 = createMockCloudAccount({ id: "account-1" });
+    const cloudAccount2 = createMockCloudAccount({ id: "account-2" });
+    const registerProvidersMock = vi.fn().mockResolvedValue(undefined);
+    const mockService = createMockCloudAccountService({
+      registerProviders: registerProvidersMock,
+    });
+    const payload = createMockPayload({
+      init: {
+        cloudAccountsToInitialize: [cloudAccount1, cloudAccount2],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
+        terraformBackend: {
+          cloudAccount: createMockCloudAccount(),
+        },
+      },
+    });
+
+    await initCloudAccounts(payload, mockService);
+
+    expect(registerProvidersMock).toHaveBeenCalledTimes(2);
+    expect(registerProvidersMock).toHaveBeenCalledWith("account-1");
+    expect(registerProvidersMock).toHaveBeenCalledWith("account-2");
+  });
+
+  it("should call registerProviders before initialize", async () => {
+    const callOrder: string[] = [];
+    const registerProvidersMock = vi.fn().mockImplementation(async () => {
+      callOrder.push("registerProviders");
+    });
+    const initializeMock = vi.fn().mockImplementation(async () => {
+      callOrder.push("initialize");
+    });
+    const mockService = createMockCloudAccountService({
+      initialize: initializeMock,
+      registerProviders: registerProvidersMock,
+    });
+    const payload = createMockPayload({
+      init: {
+        cloudAccountsToInitialize: [createMockCloudAccount()],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
+        terraformBackend: {
+          cloudAccount: createMockCloudAccount(),
+        },
+      },
+    });
+
+    await initCloudAccounts(payload, mockService);
+
+    expect(callOrder[0]).toBe("registerProviders");
+    expect(callOrder[1]).toBe("initialize");
+  });
+
+  it("should not call registerProviders when no cloud accounts to initialize", async () => {
+    const registerProvidersMock = vi.fn().mockResolvedValue(undefined);
+    const mockService = createMockCloudAccountService({
+      registerProviders: registerProvidersMock,
+    });
+    const payload = createMockPayload({
+      init: {
+        cloudAccountsToInitialize: [],
+        runnerAppCredentials: {
+          id: "test-app-id",
+          installationId: "test-installation-id",
+          key: "test-private-key",
+        },
+        terraformBackend: {
+          cloudAccount: createMockCloudAccount(),
+        },
+      },
+    });
+
+    await initCloudAccounts(payload, mockService);
+
+    expect(registerProvidersMock).not.toHaveBeenCalled();
   });
 });
