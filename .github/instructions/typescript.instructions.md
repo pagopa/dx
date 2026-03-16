@@ -16,19 +16,72 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
-- Add a short file header that states the module purpose.
+- Add a short file header that states the module purpose and how it fits into the overall architecture.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
 - Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
 - Use `async/await` for asynchronous code for clarity.
 - Document non-obvious decisions and the rationale (the "why") in comments.
 - Use clear and descriptive names for all identifiers, avoiding abbreviations that obscure intent.
-- Always validate external inputs and external data with zod schemas.
-- For new code, use zod v4; when editing existing code, keep that package's current zod major version until explicitly migrated.
-- Prefer `.safeParse()` for synchronous zod validation and handle both success and failure paths.
+
+### Data Validation and Type Safety
+
+**Always validate external inputs with zod:** API responses, environment variables, user input, database results, file contents.
+
+**Zod rules:**
+
+- New code: zod v4; existing code: keep current version until migrated
+- Use `.safeParse()` and handle both success/failure paths
+- Export schemas alongside inferred types
+
+**Avoid casts for:** JSON parsing → zod, enum conversion → zod refinements, bypassing type errors → fix root cause
+
+```ts
+// ❌ Bad
+const user = JSON.parse(data) as User;
+
+// ✅ Good
+const userSchema = z.object({ name: z.string(), email: z.string().email() });
+const result = userSchema.safeParse(JSON.parse(data));
+if (!result.success) {
+  /* handle validation error */
+}
+```
+
+### Error Handling
+
+**Never silently ignore errors.** Only catch exceptions you can meaningfully handle. Propagate others and preserve the original error with `cause`.
+
+```ts
+// ❌ Bad: Silent failure
+try {
+  await fetchUser(id);
+} catch {}
+
+// ❌ Bad: Lost information
+try {
+  await fetchUser(id);
+} catch (err) {
+  throw new Error("Failed");
+}
+
+// ✅ Good: Only catch when you handle it
+try {
+  await cache.delete(key);
+} catch (e) {
+  console.warn("Cache cleanup failed", e);
+}
+
+// ✅ Good: Preserve original error
+try {
+  await fetchUser(id);
+} catch (err) {
+  throw new Error(`Failed to fetch user ${id}`, { cause: err });
+}
+```
+
 - Avoid deeply nested control flow; prefer early returns or small helper functions.
-- Use asynchronous functions for I/O-bound operations.
+- Use asynchronous functions for I/O-bound operations. Never use `writeFileSync` or similar blocking calls in production code.
 - Favor dependency injection over instantiating collaborators with `new` inside methods.
-- Avoid `as` casts, especially to `any`; prefer zod validation or explicit type guards instead.
 - Use ES Modules (`import`/`export`) and include `.js`/`.ts` extensions in new code.
 
 ## NodeJS
