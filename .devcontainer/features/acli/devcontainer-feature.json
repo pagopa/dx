@@ -1,0 +1,8 @@
+{
+  "id": "acli",
+  "version": "1.0.0",
+  "name": "Atlassian CLI (acli)",
+  "description": "Installs the Atlassian CLI (acli)",
+  "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/acli",
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
+}

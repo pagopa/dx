@@ -1,5 +1,12 @@
 # @pagopa/dx-cli
 
+## 0.18.4
+
+### Patch Changes
+
+- 4a5813b: Use workspace protocol for @pagopa/dx-savemoney
+- 1834d54: Improve user input validation and make sure to follow proper formatting of some parameters
+
 ## 0.18.3
 
 ### Patch Changes

@@ -38,7 +38,17 @@ output "secondary_replica" {
   }
 }
 
+output "primary_blob_endpoint" {
+  value       = azurerm_storage_account.this.primary_blob_endpoint
+  description = "The primary blob endpoint of the Azure Storage Account."
+}
+
 output "primary_queue_endpoint" {
   value       = azurerm_storage_account.this.primary_queue_endpoint
   description = "The primary queue endpoint of the Azure Storage Account."
+}
+
+output "primary_table_endpoint" {
+  value       = azurerm_storage_account.this.primary_table_endpoint
+  description = "The primary table endpoint of the Azure Storage Account."
 }
