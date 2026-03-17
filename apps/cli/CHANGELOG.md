@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.18.6
+
+### Patch Changes
+
+- 01f9318: The encode of the `github-runner-app-key` in `base64` when stored in the common kv has been reverted. The secret is now stored as plain value and stripped for trailing newlines.
+
 ## 0.18.5
 
 ### Patch Changes
