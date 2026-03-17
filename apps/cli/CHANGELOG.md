@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.18.7
+
+### Patch Changes
+
+- d547c62: Update CLI commands for SaveMoney new features
+- Updated dependencies [d547c62]
+  - @pagopa/dx-savemoney@0.2.0
+
 ## 0.18.6
 
 ### Patch Changes
