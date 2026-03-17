@@ -1,6 +1,6 @@
-output "app_service" {
-  value       = module.app_service.app_service
-  description = "Details of the App Service hosting the Next.js application."
+output "container_app" {
+  value       = module.container_app
+  description = "Details of the Container App hosting the Next.js application."
 }
 
 output "postgres" {

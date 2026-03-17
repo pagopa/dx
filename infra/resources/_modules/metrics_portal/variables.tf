@@ -1,11 +1,12 @@
 variable "environment" {
   type = object({
     prefix          = string
-    environment     = string
+    environment     = optional(string)
+    env_short       = optional(string)
     location        = string
     instance_number = string
     domain          = optional(string)
-    app_name        = string
+    app_name        = optional(string)
   })
   description = "Values used to generate resource names and location short names."
 }
@@ -35,9 +36,17 @@ variable "key_vault_id" {
   description = "ID of the Key Vault where secrets (DB credentials, connection string) will be stored."
 }
 
-variable "application_insights_connection_string" {
+variable "container_app_env_id" {
   type        = string
-  default     = null
-  sensitive   = true
-  description = "Application Insights connection string for telemetry of the App Service."
+  description = "ID of the Container App Environment."
+}
+
+variable "container_app_user_assigned_identity_id" {
+  type        = string
+  description = "ID of the user-assigned managed identity for the Container App to access Key Vault."
+}
+
+variable "container_app_image" {
+  type        = string
+  description = "OCI image URI for the Container App. Should reference the dx-metrics image from GitHub Container Registry (e.g., 'ghcr.io/pagopa/dx/dx-metrics:latest'). Built and deployed via GitHub Actions."
 }

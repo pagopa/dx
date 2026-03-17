@@ -1,4 +1,11 @@
 locals {
+  environment = {
+    prefix          = "dx"
+    env_short       = "p"
+    location        = "italynorth"
+    instance_number = "01"
+  }
+
   core_state = {
     resource_group_name  = "dx-p-itn-tfstate-rg-01"
     storage_account_name = "dxpitntfstatest01"

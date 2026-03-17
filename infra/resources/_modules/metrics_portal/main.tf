@@ -1,68 +1,17 @@
-locals {
-  # Map from local naming convention ("environment") to DX registry module convention ("env_short")
-  dx_environment = {
-    prefix          = var.environment.prefix
-    env_short       = var.environment.environment
-    location        = var.environment.location
-    domain          = var.environment.domain
-    app_name        = var.environment.app_name
-    instance_number = var.environment.instance_number
-  }
-}
-
 # Generate a strong, random password for the PostgreSQL administrator account.
-resource "random_password" "db_admin" {
+# Using ephemeral so the password is never persisted to Terraform state.
+ephemeral "random_password" "db_admin" {
   length           = 32
   special          = true
   override_special = "!*?"
 }
 
-# Store the raw admin password in Key Vault so it can be retrieved if needed.
-resource "azurerm_key_vault_secret" "db_admin_password" {
-  name         = "postgres-admin-password"
-  value        = random_password.db_admin.result
-  key_vault_id = var.key_vault_id
-}
-
-# Store the full connection string in Key Vault.
-# The App Service reads it via a Key Vault reference in app_settings.
-resource "azurerm_key_vault_secret" "db_connection_string" {
-  name         = "postgres-connection-string"
-  value        = "postgresql://dbadmin:${random_password.db_admin.result}@${module.postgres.postgres.name}.postgres.database.azure.com:5432/postgres?sslmode=require"
-  key_vault_id = var.key_vault_id
-
-  depends_on = [module.postgres]
-}
-
-# Publicly accessible App Service hosting the Next.js application.
-module "app_service" {
-  source  = "pagopa-dx/azure-app-service-exposed/azurerm"
-  version = "~> 3.0"
-
-  environment         = local.dx_environment
-  resource_group_name = var.resource_group_name
-  tags                = var.tags
-
-  stack             = "node"
-  node_version      = 22
-  health_check_path = "/api/health"
-  use_case          = "default"
-
-  application_insights_connection_string = var.application_insights_connection_string
-
-  app_settings = {
-    DATABASE_URL = "@Microsoft.KeyVault(SecretUri=${azurerm_key_vault_secret.db_connection_string.versionless_id})"
-    NODE_ENV     = "production"
-    PORT         = "3000"
-  }
-
-  sticky_app_setting_names = ["NODE_ENV"]
-}
-
 # PostgreSQL Flexible Server accessed via private endpoint.
+# Uses write-only password attributes to keep credentials out of Terraform state.
+# The module automatically creates the admin password secret in Key Vault.
 module "postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.dx_environment
   resource_group_name = var.resource_group_name
@@ -71,11 +20,57 @@ module "postgres" {
   subnet_pep_id                        = var.subnet_pep_id
   private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name
 
-  administrator_credentials = {
-    name     = "dbadmin"
-    password = random_password.db_admin.result
-  }
+  admin_username         = "dbadmin"
+  admin_password         = ephemeral.random_password.db_admin.result
+  admin_password_version = 1 # Increment this value when rotating the password
+
+  # Let the module manage the Key Vault secret for the admin password.
+  # Requires Key Vault Secrets Officer role on the vault for the Terraform identity.
+  key_vault_id = var.key_vault_id
 
   # Disable replica in non-production environments to reduce cost.
   create_replica = false
+}
+
+# Publicly accessible Container App hosting the Next.js application.
+module "container_app" {
+  source  = "pagopa-dx/azure-container-app/azurerm"
+  version = "~> 1.0"
+
+  environment         = merge(local.dx_environment, { env_short = local.dx_environment.env_short })
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
+
+  container_app_environment_id = var.container_app_env_id
+  user_assigned_identity_id    = var.container_app_user_assigned_identity_id
+
+  revision_mode = "Single"
+  tier          = "s" # 0.5 CPU, 1Gi memory, 1-1 replicas
+  target_port   = 3000
+
+  container_app_templates = [
+    {
+      image = var.container_app_image
+      name  = "metrics-portal"
+
+      app_settings = {
+        NODE_ENV                = "production"
+        PORT                    = "3000"
+        DATABASE_HOST           = module.postgres.postgres.fqdn
+        DATABASE_PORT           = "5432"
+        DATABASE_NAME           = "postgres"
+        DATABASE_USER           = "dbadmin"
+        DATABASE_PASSWORD_VAULT = module.postgres.admin_password_secret.versionless_id
+      }
+
+      liveness_probe = {
+        path          = "/health"
+        initial_delay = 30
+        timeout       = 5
+        transport     = "HTTP"
+      }
+    }
+  ]
+
+  depends_on = [module.postgres]
 }
