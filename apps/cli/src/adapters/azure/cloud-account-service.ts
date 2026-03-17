@@ -28,10 +28,6 @@ import {
   terraformBackendSchema,
 } from "../../domain/remote-backend.js";
 import { isAzureLocation, locations, locationShort } from "./locations.js";
-import {
-  areResourceProvidersRegistered,
-  registerResourceProviders,
-} from "./register-resource-providers.js";
 
 // We are only interested in these properties for now;
 // the actual result structure contains the full cloud resource object
@@ -56,6 +52,24 @@ const graphGroupMembershipResponseSchema = z.object({
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
+  #requiredResourceProviders = [
+    "Microsoft.Advisor",
+    "Microsoft.AlertsManagement",
+    "Microsoft.ApiManagement",
+    "Microsoft.App",
+    "Microsoft.Authorization",
+    "Microsoft.AzureTerraform",
+    "Microsoft.Cache",
+    "Microsoft.Cdn",
+    "Microsoft.ContainerInstance",
+    "Microsoft.CostManagement",
+    "Microsoft.DBforPostgreSQL",
+    "Microsoft.KeyVault",
+    "Microsoft.ServiceBus",
+    "Microsoft.Sql",
+    "Microsoft.Storage",
+    "Microsoft.Web",
+  ] as const;
   #resourceGraphClient: ResourceGraphClient;
 
   constructor(credential: TokenCredential) {
@@ -192,7 +206,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     const logger = getLogger(["gen", "env"]);
 
     // Register required resource providers before creating any resources
-    await registerResourceProviders(this.#credential, cloudAccount.id);
+    await this.#registerProviders(cloudAccount.id);
 
     const resourceManagementClient = new ResourceManagementClient(
       this.#credential,
@@ -361,7 +375,7 @@ export class AzureCloudAccountService implements CloudAccountService {
           query: keyVaultQuery,
           subscriptions: [cloudAccountId],
         }),
-        areResourceProvidersRegistered(this.#credential, cloudAccountId),
+        this.#areProvidersRegistered(cloudAccountId),
       ]);
 
     const initialized =
@@ -485,6 +499,20 @@ export class AzureCloudAccountService implements CloudAccountService {
     });
   }
 
+  async #areProvidersRegistered(subscriptionId: string): Promise<boolean> {
+    const client = new ResourceManagementClient(
+      this.#credential,
+      subscriptionId,
+    );
+    const results = await Promise.all(
+      this.#requiredResourceProviders.map(async (namespace) => {
+        const provider = await client.providers.get(namespace);
+        return provider.registrationState === "Registered";
+      }),
+    );
+    return results.every(Boolean);
+  }
+
   async #getCurrentPrincipalIds(): Promise<Set<string>> {
     // Create Graph client with custom auth provider that fetches fresh tokens
     const graphClient = Client.init({
@@ -528,5 +556,30 @@ export class AzureCloudAccountService implements CloudAccountService {
     // All principal IDs to check (user + all groups)
     const allPrincipalIds = new Set([userObjectId, ...groupIds]);
     return allPrincipalIds;
+  }
+
+  async #registerProviders(subscriptionId: string): Promise<void> {
+    const logger = getLogger(["dx-cli", "register-providers"]);
+    const client = new ResourceManagementClient(
+      this.#credential,
+      subscriptionId,
+    );
+
+    logger.info(
+      "Registering {count} resource providers on subscription {subscriptionId}",
+      { count: this.#requiredResourceProviders.length, subscriptionId },
+    );
+
+    await Promise.all(
+      this.#requiredResourceProviders.map(async (namespace) => {
+        await client.providers.register(namespace);
+        logger.debug("Registered provider {namespace}", { namespace });
+      }),
+    );
+
+    logger.info(
+      "All resource providers registered on subscription {subscriptionId}",
+      { subscriptionId },
+    );
   }
 }

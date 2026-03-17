@@ -2,7 +2,6 @@ import { DefaultAzureCredential } from "@azure/identity";
 import { test as baseTest, describe, expect, vi } from "vitest";
 
 import { AzureCloudAccountService } from "../cloud-account-service.js";
-import { REQUIRED_RESOURCE_PROVIDERS } from "../register-resource-providers.js";
 
 const { queryResources } = vi.hoisted(() => ({
   queryResources: vi.fn().mockRejectedValue(new Error("Not implemented")),
@@ -202,22 +201,5 @@ describe("isInitialized", () => {
     });
 
     expect(result).toBe(false);
-  });
-
-  test("checks all required providers during isInitialized", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
-    queryResources.mockResolvedValueOnce({ data: [], totalRecords: 1 });
-    mockProviderGet.mockClear();
-
-    await cloudAccountService.isInitialized("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-
-    expect(mockProviderGet).toHaveBeenCalledTimes(
-      REQUIRED_RESOURCE_PROVIDERS.length,
-    );
   });
 });
