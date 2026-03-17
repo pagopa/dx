@@ -1,6 +1,12 @@
 name: Deploy DX Metrics Container App
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/dx-metrics/package.json"
 
 permissions:
   contents: read
