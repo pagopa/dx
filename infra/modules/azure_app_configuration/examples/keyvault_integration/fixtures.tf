@@ -41,7 +41,8 @@ resource "azurerm_key_vault_secret" "test_secret" {
   value        = "secret value"
 
   depends_on = [
-    azurerm_role_assignment.github_kv_secrets_writer
+    azurerm_role_assignment.github_kv_secrets_writer,
+    azurerm_private_endpoint.kv
   ]
 }
 
