@@ -6,6 +6,7 @@ import { getLogger } from "@logtape/logtape";
 import * as fs from "fs";
 import * as yaml from "js-yaml";
 import * as readline from "readline";
+import { z } from "zod";
 
 import type { AzureConfig } from "./types.js";
 
@@ -47,6 +48,9 @@ export async function loadAzureConfig(
         timespanDays: parsed.azure.timespanDays,
       };
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new Error(`Invalid config file:\n${z.prettifyError(error)}`);
+      }
       throw new Error(
         `Failed to load config file: ${error instanceof Error ? error.message : error}`,
       );
