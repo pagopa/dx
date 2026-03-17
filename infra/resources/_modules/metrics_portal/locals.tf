@@ -1,6 +1,6 @@
 locals {
   dx_environment = merge(var.environment, {
-    env_short = var.environment.environment
+    env_short = coalesce(var.environment.env_short, var.environment.environment)
   })
 
   # Parse Key Vault resource ID using azurerm provider function

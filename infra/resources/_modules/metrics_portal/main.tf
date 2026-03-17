@@ -56,7 +56,7 @@ module "container_app" {
       app_settings = {
         NODE_ENV                = "production"
         PORT                    = "3000"
-        DATABASE_HOST           = module.postgres.postgres.fqdn
+        DATABASE_HOST           = "${module.postgres.postgres.name}.postgres.database.azure.com"
         DATABASE_PORT           = "5432"
         DATABASE_NAME           = "postgres"
         DATABASE_USER           = "dbadmin"

@@ -9,7 +9,7 @@ module "azure_core_values" {
 module "container_app_infra" {
   source = "../_modules/container_app_environment"
 
-  environment         = merge(local.environment, { app_name = "container-app" })
+  environment         = merge(local.environment, { app_name = "common" })
   resource_group_name = data.azurerm_resource_group.dx.name
   tags                = local.tags
 

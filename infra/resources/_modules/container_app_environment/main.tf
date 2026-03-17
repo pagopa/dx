@@ -6,7 +6,7 @@ resource "dx_available_subnet_cidr" "container_app" {
 
 # Dedicated subnet for Container App Environment and deployed Container Apps
 resource "azurerm_subnet" "container_app" {
-  name                 = provider::dx::resource_name(merge(local.environment_short, { resource_type = "subnet" }))
+  name                 = provider::dx::resource_name(merge(local.naming_config, { resource_type = "subnet" }))
   resource_group_name  = var.virtual_network_resource_group_name
   virtual_network_name = var.virtual_network_name
   address_prefixes     = [dx_available_subnet_cidr.container_app.cidr_block]
@@ -18,7 +18,7 @@ resource "azurerm_subnet" "container_app" {
 # ⚠️ Azure Container Apps is in trial status in the PagoPA DX Technology Radar
 # Consider the operational and cost implications before using in production
 resource "azurerm_container_app_environment" "this" {
-  name                = provider::dx::resource_name(merge(local.environment_short, { resource_type = "container-app-environment" }))
+  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app_environment" }))
   resource_group_name = var.resource_group_name
   location            = var.environment.location
 
@@ -32,7 +32,7 @@ resource "azurerm_container_app_environment" "this" {
 
 # User-assigned managed identity for Container Apps to access Azure resources (e.g., Key Vault)
 resource "azurerm_user_assigned_identity" "container_app" {
-  name                = provider::dx::resource_name(merge(local.environment_short, { resource_type = "managed_identity", name = "container-app" }))
+  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_identity", name = "container_app" }))
   resource_group_name = var.resource_group_name
   location            = var.environment.location
 

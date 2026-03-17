@@ -1,6 +1,10 @@
 # Environment configuration for resource naming
 locals {
-  environment_short = merge(var.environment, {
-    app_name = "container-app"
-  })
+  naming_config = {
+    prefix          = var.environment.prefix
+    environment     = var.environment.env_short
+    location        = var.environment.location
+    name            = "common"
+    instance_number = var.environment.instance_number
+  }
 }
