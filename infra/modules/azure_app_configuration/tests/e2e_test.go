@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -12,8 +13,16 @@ import (
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
+var suiteSetupFailed atomic.Bool
+
 func TestAppConfigurationNetworkSettings(t *testing.T) {
 	fixtureFolder := "../examples/network_access/"
+
+	defer func() {
+		if t.Failed() {
+			suiteSetupFailed.Store(true)
+		}
+	}()
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
@@ -48,6 +57,10 @@ func TestAppConfigurationNetworkSettings(t *testing.T) {
 }
 
 func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
+	if suiteSetupFailed.Load() {
+		t.Skip("skipping: previous test setup failed")
+	}
+
 	fixtureFolder := "../examples/keyvault_integration/"
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
