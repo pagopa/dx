@@ -6,8 +6,9 @@ import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -27,6 +28,7 @@ export async function analyzeStorageAccount(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -51,8 +53,10 @@ export async function analyzeStorageAccount(
     "Average",
     timespanDays,
   );
-  if (transactions !== null && transactions < 10) {
-    // Less than 10 transactions per day on average
+  if (
+    transactions !== null &&
+    transactions < thresholds.storage.transactionsPerDay
+  ) {
     const result = {
       costRisk,
       reason: `Very low transaction count (${transactions.toFixed(2)} avg/day). `,

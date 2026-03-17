@@ -8,8 +8,9 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -32,6 +33,7 @@ export async function analyzeContainerApp(
   containerAppsClient: ContainerAppsAPIClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -79,6 +81,7 @@ export async function analyzeContainerApp(
       resource,
       monitorClient,
       timespanDays,
+      thresholds,
       reason,
       verbose,
     );
@@ -86,6 +89,7 @@ export async function analyzeContainerApp(
       resource,
       monitorClient,
       timespanDays,
+      thresholds,
       reason,
       verbose,
     );
@@ -110,6 +114,7 @@ async function checkNetworkMetrics(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds,
   reason: string,
   verbose: boolean,
 ): Promise<string> {
@@ -149,7 +154,7 @@ async function checkNetworkMetrics(
   if (
     networkIn !== null &&
     networkOut !== null &&
-    networkIn + networkOut < 34000
+    networkIn + networkOut < thresholds.containerApp.networkBytes
   ) {
     newReason += `Very low network traffic (${((networkIn + networkOut) / 1048576).toFixed(2)} MB/day avg). `;
   }
@@ -164,6 +169,7 @@ async function checkResourceMetrics(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds,
   reason: string,
   verbose: boolean,
 ): Promise<string> {
@@ -200,11 +206,14 @@ async function checkResourceMetrics(
     `Memory Usage: ${memoryUsage !== null ? `${(memoryUsage / 1048576).toFixed(2)} MB` : "N/A"}`,
   );
 
-  if (cpuUsage !== null && cpuUsage < 1000000) {
+  if (cpuUsage !== null && cpuUsage < thresholds.containerApp.cpuNanoCores) {
     newReason += `Very low CPU usage (${(cpuUsage / 1000000000).toFixed(4)} cores). `;
   }
 
-  if (memoryUsage !== null && memoryUsage < 10485760) {
+  if (
+    memoryUsage !== null &&
+    memoryUsage < thresholds.containerApp.memoryBytes
+  ) {
     newReason += `Very low memory usage (${(memoryUsage / 1048576).toFixed(2)} MB). `;
   }
 

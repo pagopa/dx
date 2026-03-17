@@ -1,0 +1,10 @@
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  preferredLocation: italynorth
+  timespanDays: 30
+  thresholds:
+    vm:
+      cpuPercent: 5
+    storage:
+      transactionsPerDay: 50

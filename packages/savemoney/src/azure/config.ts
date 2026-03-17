@@ -4,38 +4,53 @@
 
 import { getLogger } from "@logtape/logtape";
 import * as fs from "fs";
+import * as yaml from "js-yaml";
 import * as readline from "readline";
+import { z } from "zod";
 
 import type { AzureConfig } from "./types.js";
 
+import { ConfigSchema } from "../schema.js";
+
 /**
- * Loads Azure configuration from file, environment variables, or interactive prompts.
+ * Loads Azure configuration from a YAML file, environment variables, or interactive prompts.
  *
- * @param configPath - Optional path to JSON configuration file
- * @returns Azure configuration object with subscription IDs and settings
+ * The YAML file must have an `azure` top-level key:
+ * ```yaml
+ * azure:
+ *   subscriptionIds:
+ *     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ *   preferredLocation: italynorth
+ *   timespanDays: 30
+ *   thresholds:
+ *     vm:
+ *       cpuPercent: 5
+ * ```
+ *
+ * @param configPath - Optional path to a YAML configuration file
+ * @returns Azure configuration object with subscription IDs, settings and thresholds
  */
 export async function loadAzureConfig(
   configPath?: string,
 ): Promise<AzureConfig> {
-  if (configPath && fs.existsSync(configPath)) {
+  if (configPath) {
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`Config file not found: ${configPath}`);
+    }
     try {
-      const configContent = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(configContent) as Partial<AzureConfig>;
-
-      if (!config.tenantId || !config.subscriptionIds) {
-        throw new Error(
-          "Config file must contain 'tenantId' and 'subscriptionIds'",
-        );
-      }
-
+      const raw = fs.readFileSync(configPath, "utf-8");
+      const rawYaml = yaml.load(raw);
+      const parsed = ConfigSchema.parse(rawYaml);
       return {
-        ...config,
-        preferredLocation: config.preferredLocation || "italynorth",
-        subscriptionIds: config.subscriptionIds,
-        tenantId: config.tenantId,
-        timespanDays: config.timespanDays || 30,
+        preferredLocation: parsed.azure.preferredLocation,
+        subscriptionIds: parsed.azure.subscriptionIds,
+        thresholds: parsed.azure.thresholds,
+        timespanDays: parsed.azure.timespanDays,
       };
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        throw new Error(`Invalid config file:\n${z.prettifyError(error)}`);
+      }
       throw new Error(
         `Failed to load config file: ${error instanceof Error ? error.message : error}`,
       );
@@ -47,8 +62,6 @@ export async function loadAzureConfig(
     "Configuration file not found. Checking environment variables...",
   );
 
-  const tenantId =
-    process.env.ARM_TENANT_ID || (await prompt("Enter Tenant ID: "));
   const subscriptionIds = process.env.ARM_SUBSCRIPTION_ID
     ? process.env.ARM_SUBSCRIPTION_ID.split(",")
     : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
@@ -56,7 +69,6 @@ export async function loadAzureConfig(
   return {
     preferredLocation: "italynorth",
     subscriptionIds,
-    tenantId,
     timespanDays: 30,
   };
 }

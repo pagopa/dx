@@ -3,6 +3,7 @@
  */
 
 import type { MonitorClient } from "@azure/arm-monitor";
+import type * as armResources from "@azure/arm-resources";
 
 import { getLogger } from "@logtape/logtape";
 
@@ -156,6 +157,26 @@ export async function getMetric(
     );
     return null;
   }
+}
+
+/**
+ * Returns true if the resource matches ALL specified tag key-value pairs.
+ * If filterTags is empty or undefined, always returns true (no filtering).
+ *
+ * @param resource - The Azure resource to check
+ * @param filterTags - Map of required tag key→value pairs
+ */
+export function matchesTags(
+  resource: armResources.GenericResource,
+  filterTags: Map<string, string> | undefined,
+): boolean {
+  if (!filterTags || filterTags.size === 0) {
+    return true;
+  }
+  const resourceTags = resource.tags ?? {};
+  return [...filterTags.entries()].every(
+    ([key, value]) => resourceTags[key] === value,
+  );
 }
 
 /**
