@@ -96,7 +96,7 @@ module "azure_cdn" {
         key_vault_certificate_versionless_id = data.azurerm_key_vault_certificate.cert.versionless_id
         key_vault_name                       = data.azurerm_key_vault.kv.name
         key_vault_resource_group_name        = data.azurerm_key_vault.kv.resource_group_name
-        key_vault_has_rbac_support           = data.azurerm_key_vault.kv.enable_rbac_authorization
+        key_vault_has_rbac_support           = data.azurerm_key_vault.kv.rbac_authorization_enabled
       }
     }
   ]

@@ -4,14 +4,27 @@
 
 import type * as armResources from "@azure/arm-resources";
 
-import type { AnalysisResult, BaseConfig, CostRisk } from "../types.js";
+import type {
+  AnalysisResult,
+  BaseConfig,
+  CostRisk,
+  Thresholds,
+} from "../types.js";
 
 /**
  * Azure configuration extending base config
  */
 export type AzureConfig = BaseConfig & {
+  /**
+   * Only analyze resources that match ALL the given tag key-value pairs.
+   * If omitted, all resources are analyzed.
+   */
+  filterTags?: Map<string, string>;
   subscriptionIds: string[];
-  tenantId: string;
+  /**
+   * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
+   */
+  thresholds?: Thresholds;
   verbose?: boolean;
 };
 

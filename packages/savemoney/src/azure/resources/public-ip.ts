@@ -8,8 +8,9 @@ import type { NetworkManagementClient } from "@azure/arm-network";
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -31,6 +32,7 @@ export async function analyzePublicIp(
   networkClient: NetworkManagementClient,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -87,8 +89,7 @@ export async function analyzePublicIp(
       timespanDays,
     );
 
-    if (bytesInDDoS !== null && bytesInDDoS < 340000) {
-      // Less than ~340KB average per day
+    if (bytesInDDoS !== null && bytesInDDoS < thresholds.publicIp.bytesInDDoS) {
       reason += `Very low network traffic (${(bytesInDDoS / 1024 / 1024).toFixed(2)} MB/day avg). `;
     }
   } catch (error) {
