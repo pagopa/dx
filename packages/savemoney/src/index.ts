@@ -13,8 +13,6 @@
  * This tool does NOT modify, tag, or delete any resources.
  */
 
-// Re-export config helpers for consumers (e.g. CLI)
-export { loadThresholds } from "./azure/config.js";
 // Export common types
 export type { AzureConfig } from "./azure/types.js";
 
@@ -25,35 +23,69 @@ export const azure = azureModule;
 export * from "./types.js";
 
 import { getLogger } from "@logtape/logtape";
-// Utility imports for loadConfig and prompt functions
 import * as fs from "fs";
+import * as yaml from "js-yaml";
 import * as readline from "readline";
 
 import type { AzureConfig } from "./azure/types.js";
 
+import { sanitizeThresholds } from "./azure/config.js";
+
+type YamlAzureSection = {
+  preferredLocation?: string;
+  subscriptionIds?: string[];
+  thresholds?: Record<string, unknown>;
+  timespanDays?: number;
+};
+
 /**
- * Loads configuration from file, environment variables, or interactive prompts.
+ * Loads configuration from a YAML file, environment variables, or interactive prompts.
  *
- * @param configPath - Optional path to JSON configuration file
- * @returns Configuration object with subscription IDs and settings
+ * The YAML file should have an `azure` top-level key:
+ * ```yaml
+ * azure:
+ *   subscriptionIds:
+ *     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+ *   preferredLocation: italynorth
+ *   timespanDays: 30
+ *   thresholds:
+ *     vm:
+ *       cpuPercent: 5
+ * ```
+ *
+ * @param configPath - Optional path to a YAML configuration file
+ * @returns Configuration object with subscription IDs, settings and thresholds
  */
 export async function loadConfig(configPath?: string): Promise<AzureConfig> {
   const logger = getLogger(["savemoney", "config"]);
 
-  if (configPath && fs.existsSync(configPath)) {
+  if (configPath) {
+    if (!fs.existsSync(configPath)) {
+      throw new Error(`Config file not found: ${configPath}`);
+    }
     try {
-      const configContent = fs.readFileSync(configPath, "utf-8");
-      const config = JSON.parse(configContent);
+      const raw = fs.readFileSync(configPath, "utf-8");
+      const parsed = yaml.load(raw) as Record<string, unknown>;
+      const azureSection = (
+        typeof parsed?.azure === "object" && parsed.azure !== null
+          ? parsed.azure
+          : {}
+      ) as YamlAzureSection;
 
-      // Validate required fields
-      if (!config.subscriptionIds) {
-        throw new Error("Config file must contain 'subscriptionIds'");
+      if (
+        !azureSection.subscriptionIds ||
+        azureSection.subscriptionIds.length === 0
+      ) {
+        throw new Error(
+          "Config file must contain at least one entry in 'azure.subscriptionIds'",
+        );
       }
 
       return {
-        ...config,
-        preferredLocation: config.preferredLocation || "italynorth",
-        timespanDays: config.timespanDays || 30,
+        preferredLocation: azureSection.preferredLocation ?? "italynorth",
+        subscriptionIds: azureSection.subscriptionIds,
+        thresholds: sanitizeThresholds(azureSection.thresholds),
+        timespanDays: azureSection.timespanDays ?? 30,
       };
     } catch (error) {
       throw new Error(

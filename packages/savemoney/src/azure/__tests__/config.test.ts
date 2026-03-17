@@ -1,91 +1,97 @@
 /**
- * Tests for loadThresholds() — verifies that:
- * 1. Returns DEFAULT_THRESHOLDS when no file is found.
- * 2. Loads and deep-merges user overrides from an explicit file path.
- * 3. Partial overrides keep defaults for non-overridden fields.
- * 4. Falls back to defaults for a non-existent path (no throw).
+ * Tests for loadConfig() — verifies that:
+ * 1. Returns default thresholds and prompts for subscriptionIds when no file is given.
+ * 2. Loads subscriptionIds, location, timespanDays and thresholds from a YAML file.
+ * 3. Partial threshold overrides keep defaults for non-overridden fields.
+ * 4. Throws a clear error for a non-existent explicit path.
  */
 
 import path from "path";
 import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
 
+import { loadConfig } from "../../index.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
-import { loadThresholds } from "../config.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 /** Absolute paths used in tests */
 const FIXTURE_PARTIAL = path.resolve(
   __dirname,
-  "fixtures/partial-override.json",
+  "fixtures/partial-override.yaml",
 );
-const FIXTURE_FULL = path.resolve(__dirname, "fixtures/full-override.json");
+const FIXTURE_FULL = path.resolve(__dirname, "fixtures/full-override.yaml");
 
-describe("loadThresholds", () => {
-  it("returns DEFAULT_THRESHOLDS when explicit path does not exist", async () => {
-    const result = await loadThresholds("/nonexistent/.savemoneyrc.json");
-    expect(result).toEqual(DEFAULT_THRESHOLDS);
+describe("loadConfig", () => {
+  it("throws when explicit path does not exist", async () => {
+    await expect(loadConfig("/nonexistent/config.yaml")).rejects.toThrow(
+      "Config file not found",
+    );
   });
 
-  it("loads partial overrides from an explicit file and keeps defaults for missing fields", async () => {
-    // partial-override.json overrides vm.cpuPercent (5) and storage.transactionsPerDay (50)
-    const result = await loadThresholds(FIXTURE_PARTIAL);
+  it("loads subscriptionIds and defaults from a partial YAML file", async () => {
+    const result = await loadConfig(FIXTURE_PARTIAL);
+
+    expect(result.subscriptionIds).toEqual([
+      "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    ]);
+    expect(result.preferredLocation).toBe("italynorth");
+    expect(result.timespanDays).toBe(30);
+  });
+
+  it("loads partial threshold overrides and keeps defaults for missing fields", async () => {
+    const result = await loadConfig(FIXTURE_PARTIAL);
 
     // Overridden values
-    expect(result.vm.cpuPercent).toBe(5);
-    expect(result.storage.transactionsPerDay).toBe(50);
+    expect(result.thresholds?.vm.cpuPercent).toBe(5);
+    expect(result.thresholds?.storage.transactionsPerDay).toBe(50);
 
     // Non-overridden vm field keeps default
-    expect(result.vm.networkInBytesPerDay).toBe(
+    expect(result.thresholds?.vm.networkInBytesPerDay).toBe(
       DEFAULT_THRESHOLDS.vm.networkInBytesPerDay,
     );
 
     // Entire non-overridden sections keep defaults
-    expect(result.appService).toEqual(DEFAULT_THRESHOLDS.appService);
-    expect(result.containerApp).toEqual(DEFAULT_THRESHOLDS.containerApp);
-    expect(result.publicIp).toEqual(DEFAULT_THRESHOLDS.publicIp);
-    expect(result.staticSite).toEqual(DEFAULT_THRESHOLDS.staticSite);
-  });
-
-  it("loads a full override file and all values differ from defaults", async () => {
-    const result = await loadThresholds(FIXTURE_FULL);
-
-    expect(result.vm.cpuPercent).toBe(5);
-    expect(result.vm.networkInBytesPerDay).toBe(10485760);
-    expect(result.appService.cpuPercent).toBe(10);
-    expect(result.appService.memoryPercent).toBe(20);
-    expect(result.appService.premiumCpuPercent).toBe(15);
-    expect(result.containerApp.cpuNanoCores).toBe(5000000);
-    expect(result.containerApp.memoryBytes).toBe(52428800);
-    expect(result.containerApp.networkBytes).toBe(100000);
-    expect(result.storage.transactionsPerDay).toBe(50);
-    expect(result.publicIp.bytesInDDoS).toBe(1048576);
-    expect(result.staticSite.siteHits).toBe(500);
-    expect(result.staticSite.bytesSent).toBe(5242880);
-
-    expect(result.vm.cpuPercent).not.toBe(DEFAULT_THRESHOLDS.vm.cpuPercent);
-    expect(result.storage.transactionsPerDay).not.toBe(
-      DEFAULT_THRESHOLDS.storage.transactionsPerDay,
+    expect(result.thresholds?.appService).toEqual(
+      DEFAULT_THRESHOLDS.appService,
+    );
+    expect(result.thresholds?.containerApp).toEqual(
+      DEFAULT_THRESHOLDS.containerApp,
+    );
+    expect(result.thresholds?.publicIp).toEqual(DEFAULT_THRESHOLDS.publicIp);
+    expect(result.thresholds?.staticSite).toEqual(
+      DEFAULT_THRESHOLDS.staticSite,
     );
   });
 
-  it("overrides only the specified nested fields, leaving others at default", async () => {
-    // partial-override.json only sets vm.cpuPercent — vm.networkInBytesPerDay stays default
-    const result = await loadThresholds(FIXTURE_PARTIAL);
-    expect(result.vm.cpuPercent).toBe(5);
-    expect(result.vm.networkInBytesPerDay).toBe(
-      DEFAULT_THRESHOLDS.vm.networkInBytesPerDay,
-    );
+  it("loads all values from a full YAML file", async () => {
+    const result = await loadConfig(FIXTURE_FULL);
+
+    expect(result.subscriptionIds).toHaveLength(2);
+    expect(result.preferredLocation).toBe("westeurope");
+    expect(result.timespanDays).toBe(60);
+
+    expect(result.thresholds?.vm.cpuPercent).toBe(5);
+    expect(result.thresholds?.vm.networkInBytesPerDay).toBe(10485760);
+    expect(result.thresholds?.appService.cpuPercent).toBe(10);
+    expect(result.thresholds?.appService.memoryPercent).toBe(20);
+    expect(result.thresholds?.appService.premiumCpuPercent).toBe(15);
+    expect(result.thresholds?.containerApp.cpuNanoCores).toBe(5000000);
+    expect(result.thresholds?.containerApp.memoryBytes).toBe(52428800);
+    expect(result.thresholds?.containerApp.networkBytes).toBe(100000);
+    expect(result.thresholds?.storage.transactionsPerDay).toBe(50);
+    expect(result.thresholds?.publicIp.bytesInDDoS).toBe(1048576);
+    expect(result.thresholds?.staticSite.siteHits).toBe(500);
+    expect(result.thresholds?.staticSite.bytesSent).toBe(5242880);
   });
 
   it("returns a complete Thresholds object (all required keys present)", async () => {
-    const result = await loadThresholds(FIXTURE_PARTIAL);
-    expect(result).toHaveProperty("vm");
-    expect(result).toHaveProperty("appService");
-    expect(result).toHaveProperty("containerApp");
-    expect(result).toHaveProperty("storage");
-    expect(result).toHaveProperty("publicIp");
-    expect(result).toHaveProperty("staticSite");
+    const result = await loadConfig(FIXTURE_PARTIAL);
+    expect(result.thresholds).toHaveProperty("vm");
+    expect(result.thresholds).toHaveProperty("appService");
+    expect(result.thresholds).toHaveProperty("containerApp");
+    expect(result.thresholds).toHaveProperty("storage");
+    expect(result.thresholds).toHaveProperty("publicIp");
+    expect(result.thresholds).toHaveProperty("staticSite");
   });
 });

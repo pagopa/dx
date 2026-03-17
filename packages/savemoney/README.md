@@ -82,7 +82,7 @@ yarn add @pagopa/dx-savemoney
   - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
   - `lint`: A linter-style output grouped by resource, with risk icons and a summary — ideal for CI pipelines and quick triage.
 - **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
-- **Configurable Thresholds**: All analysis thresholds (CPU%, memory, transaction counts, etc.) can be overridden via a configuration file discovered automatically by [cosmiconfig](https://www.npmjs.com/package/cosmiconfig).
+- **Configurable Thresholds**: All analysis thresholds (CPU%, memory, transaction counts, etc.) can be overridden via the `thresholds` section of the YAML config file.
 - **Tag Filtering**: Restrict the analysis to resources that match specific tag key-value pairs.
 
 ### Analyzed Resources
@@ -126,7 +126,7 @@ All resources are also checked for:
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 // Load configuration (from file, env vars, or interactive prompt)
-const config = await loadConfig("./config.json");
+const config = await loadConfig("./config.yaml");
 
 // Run analysis and generate report
 await azure.analyzeAzureResources(config, "table");
@@ -168,67 +168,60 @@ The `loadConfig()` function loads configuration in the following priority order:
 
 ```typescript
 // From file
-const config1 = await loadConfig("./config.json");
+const config1 = await loadConfig("./config.yaml");
 
-// From environment variables or prompt
+// From environment variable or prompt
 const config2 = await loadConfig();
 ```
 
 #### Configuration File Example
 
-```json
-{
-  "subscriptionIds": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
-  "preferredLocation": "italynorth",
-  "timespanDays": 30,
-  "verbose": false
-}
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  preferredLocation: italynorth
+  timespanDays: 30
+  verbose: false
+  thresholds: # optional — omit to use built-in defaults
+    vm:
+      cpuPercent: 5
+    storage:
+      transactionsPerDay: 50
 ```
 
 #### Thresholds Configuration
 
-All numeric thresholds used during analysis can be overridden to match your environment. The tool uses [cosmiconfig](https://www.npmjs.com/package/cosmiconfig) to auto-discover the configuration from the current directory upward. Supported file names:
+All numeric thresholds used during analysis can be overridden by adding a
+`thresholds` section inside the `azure` block of your config YAML.
+Only the fields you want to change are required — all others keep their
+built-in defaults.
 
-- `.savemoneyrc`
-- `.savemoneyrc.json`
-- `.savemoneyrc.yaml`
-- `savemoney.config.js`
-- `savemoney.config.cjs`
-- `"savemoney"` key in `package.json`
+**Example (full override, `config.yaml`):**
 
-You can also load a thresholds file explicitly via `loadThresholds(path)`.
-
-**Example `.savemoneyrc.json`** (only override what you need — all other values keep their defaults):
-
-```json
-{
-  "azure": {
-    "vm": {
-      "cpuPercent": 5,
-      "networkInBytesPerDay": 10485760
-    },
-    "appService": {
-      "cpuPercent": 10,
-      "memoryPercent": 20,
-      "premiumCpuPercent": 15
-    },
-    "containerApp": {
-      "cpuNanoCores": 5000000,
-      "memoryBytes": 52428800,
-      "networkBytes": 100000
-    },
-    "storage": {
-      "transactionsPerDay": 50
-    },
-    "publicIp": {
-      "bytesInDDoS": 1048576
-    },
-    "staticSite": {
-      "siteHits": 500,
-      "bytesSent": 5242880
-    }
-  }
-}
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  thresholds:
+    vm:
+      cpuPercent: 5
+      networkInBytesPerDay: 10485760
+    appService:
+      cpuPercent: 10
+      memoryPercent: 20
+      premiumCpuPercent: 15
+    containerApp:
+      cpuNanoCores: 5000000
+      memoryBytes: 52428800
+      networkBytes: 100000
+    storage:
+      transactionsPerDay: 50
+    publicIp:
+      bytesInDDoS: 1048576
+    staticSite:
+      siteHits: 500
+      bytesSent: 5242880
 ```
 
 **Default threshold values:**
@@ -255,23 +248,18 @@ You can also load a thresholds file explicitly via `loadThresholds(path)`.
 ```typescript
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
-const config = await loadConfig("./config.json");
+const config = await loadConfig("./config.yaml");
 // Analyze only resources tagged with environment=prod AND team=platform
 await azure.analyzeAzureResources(
-  { ...config, filterTags: { environment: "prod", team: "platform" } },
+  {
+    ...config,
+    filterTags: new Map([
+      ["environment", "prod"],
+      ["team", "platform"],
+    ]),
+  },
   "lint",
 );
-```
-
-##### Custom Thresholds
-
-```typescript
-import { azure, loadConfig, loadThresholds } from "@pagopa/dx-savemoney";
-
-const config = await loadConfig("./config.json");
-// loadThresholds() auto-discovers .savemoneyrc.json (or similar) in the CWD
-const thresholds = await loadThresholds();
-await azure.analyzeAzureResources({ ...config, thresholds }, "lint");
 ```
 
 ##### Basic Usage
@@ -280,7 +268,7 @@ await azure.analyzeAzureResources({ ...config, thresholds }, "lint");
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 // Load from config file
-const config = await loadConfig("./config.json");
+const config = await loadConfig("./config.yaml");
 await azure.analyzeAzureResources(config, "table");
 ```
 

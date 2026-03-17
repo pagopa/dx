@@ -1,6 +1,6 @@
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-import { azure, loadConfig, loadThresholds } from "@pagopa/dx-savemoney";
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
 export const makeSavemoneyCommand = () =>
@@ -8,7 +8,7 @@ export const makeSavemoneyCommand = () =>
     .description(
       "Analyze Azure subscriptions and report unused or inefficient resources",
     )
-    .option("-c, --config <path>", "Path to configuration file (JSON)")
+    .option("-c, --config <path>", "Path to YAML configuration file")
     .option(
       "-f, --format <format>",
       "Report format: json, table, detailed-json, or lint (default: table)",
@@ -16,35 +16,31 @@ export const makeSavemoneyCommand = () =>
     )
     .option(
       "-l, --location <string>",
-      "Preferred Azure location for resources",
+      "Preferred Azure location for resources (overrides config file)",
       "italynorth",
     )
-    .option("-d, --days <number>", "Number of days for metrics analysis", "30")
+    .option(
+      "-d, --days <number>",
+      "Number of days for metrics analysis (overrides config file)",
+      "30",
+    )
     .option("-v, --verbose", "Enable verbose logging")
     .option(
       "-t, --tags <tags...>",
       "Filter resources by tags (key=value key2=value2). Only resources matching ALL specified tags are analyzed.",
     )
-    .option(
-      "--thresholds <path>",
-      'Explicit path to a thresholds config file. When omitted, searches the current directory upward for: .savemoneyrc, .savemoneyrc.json, .savemoneyrc.yaml, savemoney.config.js, or the "savemoney" key in package.json',
-    )
     .action(async function (options) {
       try {
-        // Load configuration
+        // Load configuration from YAML (includes subscriptionIds, location, timespanDays, thresholds)
         const config: AzureConfig = await loadConfig(options.config);
 
         // Parse tag filter
         const filterTags = parseTagsOption(options.tags);
 
-        // Load analysis thresholds (via cosmiconfig or explicit path)
-        const thresholds = await loadThresholds(options.thresholds);
-
         const finalConfig: AzureConfig = {
           ...config,
           filterTags,
           preferredLocation: options.location || config.preferredLocation,
-          thresholds,
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
           verbose: options.verbose || false,
