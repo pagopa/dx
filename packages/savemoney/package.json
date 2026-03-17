@@ -45,7 +45,8 @@
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "catalog:",
     "@logtape/logtape": "catalog:",
-    "js-yaml": "^4.1.1"
+    "js-yaml": "^4.1.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
