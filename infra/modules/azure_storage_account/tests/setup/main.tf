@@ -8,9 +8,7 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  # Resolves names of shared pre-provisioned test infrastructure.
-  # The test infra is named using test_kind ("integration") as the app name
-  # and an empty domain, following the pagopa-dx naming convention.
+  # Resolves names of shared pre-provisioned test infrastructure
   existing_resources = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
