@@ -146,6 +146,10 @@ resource "terraform_data" "peering_private_app_subnet" {
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
         --set "remote_subnet_names=[\"${self.triggers_replace.pep_subnet_name}\",\"${self.triggers_replace.private_app_subnet_name}\"]"
+      az network vnet peering sync \
+        --name "${self.triggers_replace.peering_name}" \
+        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+        --resource-group "${self.triggers_replace.peering_rg}"
     EOT
   }
 
@@ -157,6 +161,10 @@ resource "terraform_data" "peering_private_app_subnet" {
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
         --set "remote_subnet_names=[\"${self.triggers_replace.pep_subnet_name}\"]"
+      az network vnet peering sync \
+        --name "${self.triggers_replace.peering_name}" \
+        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+        --resource-group "${self.triggers_replace.peering_rg}"
     EOT
   }
 }
