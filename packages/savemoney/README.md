@@ -80,7 +80,10 @@ yarn add @pagopa/dx-savemoney
   - `table`: A human-readable summary for the terminal.
   - `json`: Standard format for integration with other tools.
   - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
+  - `lint`: A linter-style output grouped by resource, with risk icons and a summary — ideal for CI pipelines and quick triage.
 - **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
+- **Configurable Thresholds**: All analysis thresholds (CPU%, memory, transaction counts, etc.) can be overridden via the `thresholds` section of the YAML config file.
+- **Tag Filtering**: Restrict the analysis to resources that match specific tag key-value pairs.
 
 ### Analyzed Resources
 
@@ -123,7 +126,7 @@ All resources are also checked for:
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 // Load configuration (from file, env vars, or interactive prompt)
-const config = await loadConfig("./config.json");
+const config = await loadConfig("./config.yaml");
 
 // Run analysis and generate report
 await azure.analyzeAzureResources(config, "table");
@@ -133,55 +136,131 @@ await azure.analyzeAzureResources(config, "table");
 
 The tool requires the following configuration:
 
-| Input               | Type       | Required | Default      | Description                                                  |
-| :------------------ | :--------- | :------: | :----------- | :----------------------------------------------------------- |
-| `tenantId`          | `string`   |    ✅    | -            | Azure Active Directory Tenant ID                             |
-| `subscriptionIds`   | `string[]` |    ✅    | -            | Array of Azure subscription IDs to analyze                   |
-| `preferredLocation` | `string`   |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged) |
-| `timespanDays`      | `number`   |    ❌    | `30`         | Number of days to look back for metrics analysis             |
-| `verbose`           | `boolean`  |    ❌    | `false`      | Enable detailed logging for each resource analyzed           |
+| Input               | Type                     | Required | Default      | Description                                                               |
+| :------------------ | :----------------------- | :------: | :----------- | :------------------------------------------------------------------------ |
+| `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
+| `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
+| `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
+| `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
+| `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
+| `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
 
 #### Output Formats
 
 The tool supports multiple output formats for different use cases:
 
-| Format          | Description                                     | Use Case                       |
-| :-------------- | :---------------------------------------------- | :----------------------------- |
-| `table`         | Human-readable table in terminal                | Quick visual inspection        |
-| `json`          | Structured JSON with resource summaries         | Integration with other tools   |
-| `detailed-json` | Complete JSON with full Azure resource metadata | AI analysis or deep inspection |
+| Format          | Description                                         | Use Case                       |
+| :-------------- | :-------------------------------------------------- | :----------------------------- |
+| `table`         | Human-readable table in terminal                    | Quick visual inspection        |
+| `json`          | Structured JSON with resource summaries             | Integration with other tools   |
+| `detailed-json` | Complete JSON with full Azure resource metadata     | AI analysis or deep inspection |
+| `lint`          | Linter-style output grouped by resource, with icons | CI pipelines and quick triage  |
 
 #### How to Load Configuration
 
 The `loadConfig()` function loads configuration in the following priority order:
 
 1. **Configuration file** (pass file path as parameter)
-2. **Environment variables** (`ARM_TENANT_ID`, `ARM_SUBSCRIPTION_ID`)
+2. **Environment variable** (`ARM_SUBSCRIPTION_ID`)
 3. **Interactive prompt** (if no other configuration is found)
 
 **Example:**
 
 ```typescript
 // From file
-const config1 = await loadConfig("./config.json");
+const config1 = await loadConfig("./config.yaml");
 
-// From environment variables or prompt
+// From environment variable or prompt
 const config2 = await loadConfig();
 ```
 
 #### Configuration File Example
 
-```json
-{
-  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "subscriptionIds": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
-  "preferredLocation": "italynorth",
-  "timespanDays": 30,
-  "verbose": false
-}
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  preferredLocation: italynorth
+  timespanDays: 30
+  verbose: false
+  thresholds: # optional — omit to use built-in defaults
+    vm:
+      cpuPercent: 5
+    storage:
+      transactionsPerDay: 50
 ```
 
+#### Thresholds Configuration
+
+All numeric thresholds used during analysis can be overridden by adding a
+`thresholds` section inside the `azure` block of your config YAML.
+Only the fields you want to change are required — all others keep their
+built-in defaults.
+
+**Example (full override, `config.yaml`):**
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  thresholds:
+    vm:
+      cpuPercent: 5
+      networkInBytesPerDay: 10485760
+    appService:
+      cpuPercent: 10
+      memoryPercent: 20
+      premiumCpuPercent: 15
+    containerApp:
+      cpuNanoCores: 5000000
+      memoryBytes: 52428800
+      networkBytes: 100000
+    storage:
+      transactionsPerDay: 50
+    publicIp:
+      bytesInDDoS: 1048576
+    staticSite:
+      siteHits: 500
+      bytesSent: 5242880
+```
+
+**Default threshold values:**
+
+| Resource       | Field                  | Default Value           | Description                                   |
+| :------------- | :--------------------- | :---------------------- | :-------------------------------------------- |
+| `vm`           | `cpuPercent`           | `1` (%)                 | Average CPU below which VM is flagged         |
+| `vm`           | `networkInBytesPerDay` | `3145728` (3 MB)        | Average inbound traffic below which flagged   |
+| `appService`   | `cpuPercent`           | `5` (%)                 | Average CPU below which plan is flagged       |
+| `appService`   | `memoryPercent`        | `10` (%)                | Average memory below which plan is flagged    |
+| `appService`   | `premiumCpuPercent`    | `10` (%)                | CPU threshold for Premium-tier over-provision |
+| `containerApp` | `cpuNanoCores`         | `1000000` (0.001 cores) | Average CPU below which app is flagged        |
+| `containerApp` | `memoryBytes`          | `10485760` (10 MB)      | Average memory below which app is flagged     |
+| `containerApp` | `networkBytes`         | `34000` (~33 KB)        | Combined Rx+Tx below which app is flagged     |
+| `storage`      | `transactionsPerDay`   | `10`                    | Avg daily transactions below which flagged    |
+| `publicIp`     | `bytesInDDoS`          | `340000` (~332 KB)      | Avg inbound bytes/day below which flagged     |
+| `staticSite`   | `siteHits`             | `100`                   | Total requests below which site is flagged    |
+| `staticSite`   | `bytesSent`            | `1048576` (1 MB)        | Total bytes sent below which site is flagged  |
+
 #### Usage Examples
+
+##### Tag Filtering
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+const config = await loadConfig("./config.yaml");
+// Analyze only resources tagged with environment=prod AND team=platform
+await azure.analyzeAzureResources(
+  {
+    ...config,
+    filterTags: new Map([
+      ["environment", "prod"],
+      ["team", "platform"],
+    ]),
+  },
+  "lint",
+);
+```
 
 ##### Basic Usage
 
@@ -189,7 +268,7 @@ const config2 = await loadConfig();
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 // Load from config file
-const config = await loadConfig("./config.json");
+const config = await loadConfig("./config.yaml");
 await azure.analyzeAzureResources(config, "table");
 ```
 
@@ -200,7 +279,6 @@ import { azure } from "@pagopa/dx-savemoney";
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
 const config: AzureConfig = {
-  tenantId: "your-tenant-id",
   subscriptionIds: ["sub-id-1", "sub-id-2"],
   preferredLocation: "italynorth",
   timespanDays: 30,
@@ -226,7 +304,6 @@ await azure.analyzeAzureResources(config, "detailed-json");
 import { loadConfig, azure } from "@pagopa/dx-savemoney";
 
 // Set environment variables
-// ARM_TENANT_ID=xxx
 // ARM_SUBSCRIPTION_ID=sub1,sub2
 
 const config = await loadConfig(); // Will read from env vars

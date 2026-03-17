@@ -7,8 +7,9 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -29,6 +30,7 @@ export async function analyzeStaticSite(
   resource: armResources.GenericResource,
   monitorClient: MonitorClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -84,13 +86,11 @@ export async function analyzeStaticSite(
     if (siteHits === null && bytesSent === null) {
       reason += `No traffic data available in ${timespanDays} days. `;
     } else {
-      if (siteHits !== null && siteHits < 100) {
-        // Less than 100 requests total in the timespan (< ~3.3 requests/day)
+      if (siteHits !== null && siteHits < thresholds.staticSite.siteHits) {
         reason += `Very low site traffic (${siteHits.toFixed(0)} requests in ${timespanDays} days). `;
       }
 
-      if (bytesSent !== null && bytesSent < 1048576) {
-        // Less than 1MB total in the timespan (< ~34KB/day)
+      if (bytesSent !== null && bytesSent < thresholds.staticSite.bytesSent) {
         reason += `Very low data transfer (${(bytesSent / 1024 / 1024).toFixed(2)} MB in ${timespanDays} days). `;
       }
     }
