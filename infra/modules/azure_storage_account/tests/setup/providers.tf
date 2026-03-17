@@ -6,11 +6,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = "~> 3.7"
+      version = "~> 0.8"
     }
   }
 }
@@ -22,5 +18,3 @@ provider "azurerm" {
     }
   }
 }
-
-provider "random" {}

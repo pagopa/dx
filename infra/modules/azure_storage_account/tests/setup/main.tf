@@ -23,11 +23,6 @@ locals {
 
 data "azurerm_client_config" "current" {}
 
-data "azurerm_user_assigned_identity" "test" {
-  name                = provider::dx::resource_name(merge(local.existing_resources, { domain = "devex", resource_type = "managed_identity" }))
-  resource_group_name = provider::dx::resource_name(merge(local.existing_resources, { name = "devex", resource_type = "resource_group" }))
-}
-
 data "azurerm_resource_group" "test" {
   name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
 }
@@ -45,11 +40,6 @@ data "azurerm_subnet" "pep" {
   name                 = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "subnet", name = "pep" }))
   resource_group_name  = data.azurerm_resource_group.test.name
   virtual_network_name = data.azurerm_virtual_network.vnet.name
-}
-
-data "azurerm_private_dns_zone" "blob" {
-  name                = "privatelink.blob.core.windows.net"
-  resource_group_name = data.azurerm_resource_group.network.name
 }
 
 # Resource group created for the System Under Test (SUT).
