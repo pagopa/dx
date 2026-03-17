@@ -17,10 +17,10 @@ variable "tags" {
 
 variable "test_kind" {
   type        = string
-  description = "Test type: must be 'integration' (setup module is not used by e2e tests)."
+  description = "A value between integration and e2e"
 
   validation {
-    condition     = var.test_kind == "integration"
-    error_message = "test_kind must be 'integration' (setup is not used by e2e tests)."
+    condition     = contains(["integration", "e2e"], var.test_kind)
+    error_message = "The test_kind variable must be either 'integration' or 'e2e'."
   }
 }

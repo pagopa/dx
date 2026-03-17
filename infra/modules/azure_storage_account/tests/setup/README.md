@@ -31,7 +31,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | `{}` | no |
-| <a name="input_test_kind"></a> [test\_kind](#input\_test\_kind) | Test type: must be 'integration' (setup module is not used by e2e tests). | `string` | n/a | yes |
+| <a name="input_test_kind"></a> [test\_kind](#input\_test\_kind) | A value between integration and e2e | `string` | n/a | yes |
 
 ## Outputs
 
