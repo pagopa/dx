@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 2.2.1
+
+### Patch Changes
+
+- 13b39a8: Replace deprecated property `enable_rbac_authorization` with `rbac_authorization_enabled`
+
 ## 2.2.0
 
 ### Minor Changes
