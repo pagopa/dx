@@ -98,6 +98,10 @@ variable "admin_password" {
 variable "admin_password_version" {
   type        = number
   description = "Version counter for the administrator password. Start at 1 and increment on every rotation — this is the only signal Terraform has to re-apply a write-only value, since it cannot diff ephemeral inputs."
+  validation {
+    condition     = var.admin_password_version > 0 && floor(var.admin_password_version) == var.admin_password_version
+    error_message = "admin_password_version must be an integer greater than 0."
+  }
 }
 
 variable "key_vault_id" {

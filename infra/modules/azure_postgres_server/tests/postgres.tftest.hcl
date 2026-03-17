@@ -213,3 +213,90 @@ run "postgres_with_key_vault_is_correct_plan" {
     error_message = "The Key Vault secret must reference the specified vault"
   }
 }
+
+run "admin_password_version_zero_is_rejected" {
+  command = plan
+
+  expect_failures = [var.admin_password_version]
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "default"
+    replica_location    = "spaincentral"
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    admin_username         = "psql_admin"
+    admin_password         = "password"
+    admin_password_version = 0
+  }
+}
+
+run "admin_password_version_negative_is_rejected" {
+  command = plan
+
+  expect_failures = [var.admin_password_version]
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "default"
+    replica_location    = "spaincentral"
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    admin_username         = "psql_admin"
+    admin_password         = "password"
+    admin_password_version = -1
+  }
+}
+
+run "admin_password_version_float_is_rejected" {
+  command = plan
+
+  expect_failures = [var.admin_password_version]
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "default"
+    replica_location    = "spaincentral"
+
+    subnet_pep_id                        = run.setup_tests.pep_id
+    private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+
+    admin_username         = "psql_admin"
+    admin_password         = "password"
+    admin_password_version = 1.5
+  }
+}
