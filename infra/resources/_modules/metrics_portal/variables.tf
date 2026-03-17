@@ -46,6 +46,11 @@ variable "container_app_user_assigned_identity_id" {
   description = "ID of the user-assigned managed identity for the Container App to access Key Vault."
 }
 
+variable "container_app_user_assigned_identity_principal_id" {
+  type        = string
+  description = "Principal ID of the user-assigned managed identity for the Container App to access Key Vault."
+}
+
 variable "container_app_image" {
   type        = string
   description = "OCI image URI for the Container App. Should reference the dx-metrics image from GitHub Container Registry (e.g., 'ghcr.io/pagopa/dx/dx-metrics:latest'). Built and deployed via GitHub Actions."

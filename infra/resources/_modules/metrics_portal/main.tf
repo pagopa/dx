@@ -1,3 +1,9 @@
+# Retrieve existing GitHub runner PAT from Key Vault
+data "azurerm_key_vault_secret" "github_runner_pat" {
+  name         = "github-runner-pat"
+  key_vault_id = var.key_vault_id
+}
+
 # Generate a strong, random password for the PostgreSQL administrator account.
 # Using ephemeral so the password is never persisted to Terraform state.
 ephemeral "random_password" "db_admin" {
@@ -106,7 +112,7 @@ module "container_app" {
     },
     {
       name                = "GITHUB_TOKEN"
-      key_vault_secret_id = "${var.key_vault_id}/secrets/github-runner-pat"
+      key_vault_secret_id = data.azurerm_key_vault_secret.github_runner_pat.versionless_id
     },
     {
       name                = "AUTH_GITHUB_ID"
@@ -138,5 +144,5 @@ module "container_app" {
     }
   ]
 
-  depends_on = [module.postgres]
+  depends_on = [module.postgres, module.container_app_key_vault_roles]
 }

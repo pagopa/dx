@@ -18,6 +18,7 @@
 | Name | Version |
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.4 |
+| <a name="provider_azuredx"></a> [azuredx](#provider\_azuredx) | ~> 0.0 |
 | <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.56.0 |
 
 ## Modules
@@ -26,7 +27,7 @@
 |------|--------|---------|
 | <a name="module_aws_core_values"></a> [aws\_core\_values](#module\_aws\_core\_values) | pagopa-dx/aws-core-values-exporter/aws | ~> 0.0 |
 | <a name="module_azure_core_values"></a> [azure\_core\_values](#module\_azure\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
-| <a name="module_container_app_infra"></a> [container\_app\_infra](#module\_container\_app\_infra) | ../_modules/container_app_environment | n/a |
+| <a name="module_container_app_infra"></a> [container\_app\_infra](#module\_container\_app\_infra) | pagopa-dx/azure-container-app-environment/azurerm | ~> 1.1 |
 | <a name="module_dx_website"></a> [dx\_website](#module\_dx\_website) | ../_modules/dx_website | n/a |
 | <a name="module_mcp_server"></a> [mcp\_server](#module\_mcp\_server) | ../_modules/mcp_server | n/a |
 | <a name="module_metrics_portal"></a> [metrics\_portal](#module\_metrics\_portal) | ../_modules/metrics_portal | n/a |
@@ -35,6 +36,7 @@
 
 | Name | Type |
 |------|------|
+| [azuredx_dx_available_subnet_cidr.container_app](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/dx_available_subnet_cidr) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
 | [azurerm_resource_group.dx](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |

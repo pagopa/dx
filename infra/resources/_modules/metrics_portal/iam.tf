@@ -4,7 +4,7 @@ module "container_app_key_vault_roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 1.0"
 
-  principal_id    = module.container_app.principal_id
+  principal_id    = var.container_app_user_assigned_identity_principal_id
   subscription_id = local.key_vault_subscription_id
 
   key_vault = [
