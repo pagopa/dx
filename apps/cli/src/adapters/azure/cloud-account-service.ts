@@ -299,7 +299,7 @@ export class AzureCloudAccountService implements CloudAccountService {
         ),
         secretClient.setSecret(
           "github-runner-app-key",
-          Buffer.from(runnerAppCredentials.key, "utf-8").toString("base64"),
+          runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
         ),
       ]);
 

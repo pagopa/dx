@@ -1,5 +1,11 @@
 # azure_api_management
 
+## 2.2.3
+
+### Patch Changes
+
+- e5570ef: Add diagram to readme.md representing the module architecture
+
 ## 2.2.2
 
 ### Patch Changes
