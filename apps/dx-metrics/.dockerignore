@@ -2,3 +2,6 @@ node_modules
 .next
 .env
 .env.local
+start.sh
+README.md
+CHANGELOG.md
