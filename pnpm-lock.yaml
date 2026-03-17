@@ -16214,7 +16214,7 @@ snapshots:
 
   '@docusaurus/react-loadable@6.0.0(react@18.3.1)':
     dependencies:
-      '@types/react': 18.3.28
+      '@types/react': 19.2.14
       react: 18.3.1
 
   '@docusaurus/theme-classic@3.9.2(@types/react@18.3.28)(lightningcss@1.31.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@5.9.3)':
@@ -25750,7 +25750,7 @@ snapshots:
   read-yaml-file@1.1.0:
     dependencies:
       graceful-fs: 4.2.11
-      js-yaml: 3.14.2
+      js-yaml: 3.14.1
       pify: 4.0.1
       strip-bom: 3.0.0
 
