@@ -30,6 +30,10 @@ func TestAppConfigurationNetworkSettings(t *testing.T) {
 		terraform.InitAndApply(t, terraformOptions)
 	})
 
+	if t.Failed() {
+		return
+	}
+
 	test_structure.RunTestStage(t, "validate_private_connectivity", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
 
@@ -60,6 +64,10 @@ func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
 
 		terraform.InitAndApply(t, terraformOptions)
 	})
+
+	if t.Failed() {
+		return
+	}
 
 	test_structure.RunTestStage(t, "validate_keyvault_integration", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
