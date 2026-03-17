@@ -66,7 +66,7 @@ output "private_dns_zone_resource_group_name" {
 output "virtual_network" {
   value = {
     name                = data.azurerm_virtual_network.vnet.name
-    resource_group_name = data.azurerm_resource_group.network.name
+    resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
 }
 
