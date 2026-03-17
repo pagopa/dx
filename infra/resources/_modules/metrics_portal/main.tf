@@ -6,6 +6,12 @@ ephemeral "random_password" "db_admin" {
   override_special = "!*?"
 }
 
+# Generate application auth secret without persisting it in Terraform state.
+ephemeral "random_password" "better_auth" {
+  length  = 48
+  special = false
+}
+
 # PostgreSQL Flexible Server accessed via private endpoint.
 # Uses write-only password attributes to keep credentials out of Terraform state.
 # The module automatically creates the admin password secret in Key Vault.
@@ -32,6 +38,47 @@ module "postgres" {
   create_replica = false
 }
 
+# Store app secrets in Key Vault using write-only attributes.
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "database_url" {
+  name         = "dx-metrics-database-url"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = "postgresql://dbadmin:${ephemeral.random_password.db_admin.result}@${module.postgres.postgres.name}.postgres.database.azure.com:5432/postgres"
+  value_wo_version = 1
+}
+
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "better_auth_secret" {
+  name         = "dx-metrics-better-auth-secret"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = ephemeral.random_password.better_auth.result
+  value_wo_version = 1
+}
+
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "auth_github_id" {
+  name         = "dx-metrics-auth-github-id"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = "placeholder"
+  value_wo_version = 1
+}
+
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "auth_github_secret" {
+  name         = "dx-metrics-auth-github-secret"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = "placeholder"
+  value_wo_version = 1
+}
+
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
@@ -48,19 +95,38 @@ module "container_app" {
   tier          = "s" # 0.5 CPU, 1Gi memory, 1-1 replicas
   target_port   = 3000
 
+  secrets = [
+    {
+      name                = "DATABASE_URL"
+      key_vault_secret_id = azurerm_key_vault_secret.database_url.versionless_id
+    },
+    {
+      name                = "BETTER_AUTH_SECRET"
+      key_vault_secret_id = azurerm_key_vault_secret.better_auth_secret.versionless_id
+    },
+    {
+      name                = "GITHUB_TOKEN"
+      key_vault_secret_id = "${var.key_vault_id}/secrets/github-runner-pat"
+    },
+    {
+      name                = "AUTH_GITHUB_ID"
+      key_vault_secret_id = azurerm_key_vault_secret.auth_github_id.versionless_id
+    },
+    {
+      name                = "AUTH_GITHUB_SECRET"
+      key_vault_secret_id = azurerm_key_vault_secret.auth_github_secret.versionless_id
+    }
+  ]
+
   container_app_templates = [
     {
       image = var.container_app_image
       name  = "metrics-portal"
 
       app_settings = {
-        NODE_ENV                = "production"
-        PORT                    = "3000"
-        DATABASE_HOST           = "${module.postgres.postgres.name}.postgres.database.azure.com"
-        DATABASE_PORT           = "5432"
-        DATABASE_NAME           = "postgres"
-        DATABASE_USER           = "dbadmin"
-        DATABASE_PASSWORD_VAULT = module.postgres.admin_password_secret.versionless_id
+        NODE_ENV        = "production"
+        PORT            = "3000"
+        BETTER_AUTH_URL = "http://localhost:3000"
       }
 
       liveness_probe = {
