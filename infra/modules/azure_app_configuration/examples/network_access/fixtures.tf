@@ -145,7 +145,7 @@ resource "terraform_data" "peering_private_app_subnet" {
         --name "${self.triggers_replace.peering_name}" \
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
-        --set "remoteSubnets=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"},{\"name\":\"${self.triggers_replace.private_app_subnet_name}\"}]"
+        --set "remote_subnet_names=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"},{\"name\":\"${self.triggers_replace.private_app_subnet_name}\"}]"
     EOT
   }
 
@@ -156,7 +156,7 @@ resource "terraform_data" "peering_private_app_subnet" {
         --name "${self.triggers_replace.peering_name}" \
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
-        --set "remoteSubnets=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"}]"
+        --set "remote_subnet_names=[{\"name\":\"${self.triggers_replace.pep_subnet_name}\"}]"
     EOT
   }
 }
