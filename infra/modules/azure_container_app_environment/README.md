@@ -7,8 +7,10 @@ This Terraform module deploys an Azure Container App Environment along with nece
 ## Features
 
 - **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
+- **Flexible Ingress**: Choose between private (internal VNet only) or public ingress via the `internal_load_balancer_enabled` variable. Private mode is the default for backward compatibility.
+- **VNet Integration**: Container apps can always reach internal resources (databases, services) via the infrastructure subnet, regardless of ingress mode.
 - **Subnet Creation**: Creates a subnet for the container app environment if not provided.
-- **Private Endpoint**: Enables secure connectivity by creating a private endpoint.
+- **Private Endpoint**: Enables secure management connectivity by creating a private endpoint, available in both public and private ingress modes.
 - **Zone Redundancy**: Supports zone redundancy for high availability, enabled by default unless the environment is set to development.
 
 ## Usage Example
@@ -61,6 +63,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for Container App Environment logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_internal_load_balancer_enabled"></a> [internal\_load\_balancer\_enabled](#input\_internal\_load\_balancer\_enabled) | If false, the Container App Environment exposes a public endpoint for ingress. If true (default), ingress is restricted to the internal virtual network only. Note: outbound access to internal resources (databases, etc.) is available in both cases via the infrastructure\_subnet\_id. | `bool` | `true` | no |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to use for the container app environment. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The name of the resource group containing the private DNS zone for private endpoints. Defaults to the resource group of the Virtual Network if not specified. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the Azure Resource Group where the resources will be deployed. | `string` | n/a | yes |
@@ -74,8 +77,10 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_default_domain"></a> [default\_domain](#output\_default\_domain) | The default domain of the Container App Environment. Used for public ingress when internal\_load\_balancer\_enabled is false. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Container App Environment resource. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Container App Environment resource. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the Azure Resource Group where the Container App Environment is deployed. |
+| <a name="output_static_ip_address"></a> [static\_ip\_address](#output\_static\_ip\_address) | The static public IP address of the Container App Environment. Available when internal\_load\_balancer\_enabled is false. |
 | <a name="output_user_assigned_identity"></a> [user\_assigned\_identity](#output\_user\_assigned\_identity) | Details about the user-assigned managed identity created to manage roles of the Container Apps of this Environment |
 <!-- END_TF_DOCS -->

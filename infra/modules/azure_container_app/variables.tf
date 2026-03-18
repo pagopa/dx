@@ -77,6 +77,24 @@ variable "target_port" {
   default     = 8080
 }
 
+variable "external_enabled" {
+  type        = bool
+  default     = true
+  description = "If true (default), the container app is accessible via a public FQDN. If false, the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has internal_load_balancer_enabled set to false."
+}
+
+variable "custom_domain" {
+  type = object({
+    host_name = string
+    dns = optional(object({
+      zone_name                = string
+      zone_resource_group_name = string
+    }))
+  })
+  default     = null
+  description = "Custom domain configuration for the container app. If 'dns' is provided, CNAME and TXT validation records are created automatically in the specified Azure DNS zone. Otherwise, DNS records must be created manually."
+}
+
 variable "secrets" {
   type = list(object({
     name                = string

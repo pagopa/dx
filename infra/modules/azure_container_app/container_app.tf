@@ -14,7 +14,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = true
+    external_enabled           = var.external_enabled
     target_port                = var.target_port
     traffic_weight {
       percentage      = 100
@@ -192,4 +192,19 @@ resource "azurerm_container_app" "this" {
   }
 
   tags = local.tags
+}
+
+resource "azurerm_container_app_custom_domain" "this" {
+  count = var.custom_domain != null ? 1 : 0
+
+  container_app_id = azurerm_container_app.this.id
+  name             = var.custom_domain.host_name
+
+  # Use SNI_ENABLED for managed certificate (Azure-managed SSL)
+  certificate_binding_type = "SniEnabled"
+
+  depends_on = [
+    azurerm_dns_cname_record.this,
+    azurerm_dns_txt_record.validation,
+  ]
 }

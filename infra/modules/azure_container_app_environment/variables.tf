@@ -28,6 +28,12 @@ variable "log_analytics_workspace_id" {
   description = "The ID of the Log Analytics workspace to use for the container app environment."
 }
 
+variable "internal_load_balancer_enabled" {
+  type        = bool
+  default     = true
+  description = "If false, the Container App Environment exposes a public endpoint for ingress. If true (default), ingress is restricted to the internal virtual network only. Note: outbound access to internal resources (databases, etc.) is available in both cases via the infrastructure_subnet_id."
+}
+
 # ------------ NETWORKING ------------ #
 
 variable "subnet_id" {
