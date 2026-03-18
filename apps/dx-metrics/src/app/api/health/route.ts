@@ -8,14 +8,14 @@ import { db } from "@/db/instance";
 export async function GET() {
   try {
     await db.execute(sql`SELECT 1`);
-    return NextResponse.json({ status: "ok", db: "ok" });
+    return NextResponse.json({ db: "ok", status: "ok" });
   } catch (error) {
     console.error("Health check failed:", error);
     return NextResponse.json(
       {
-        status: "error",
         db: "unreachable",
         error: error instanceof Error ? error.message : "unknown error",
+        status: "error",
       },
       { status: 503 },
     );
