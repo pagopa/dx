@@ -7,10 +7,10 @@ This Terraform module deploys an Azure Container App Environment along with nece
 ## Features
 
 - **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
-- **Flexible Ingress**: Choose between private (internal VNet only) or public ingress via the `internal_load_balancer_enabled` variable. Private mode is the default for backward compatibility.
+- **Flexible Ingress**: Choose between private (internal VNet only) or public ingress via the `public_network_access_enabled` variable (default: `false` — private mode).
 - **VNet Integration**: Container apps can always reach internal resources (databases, services) via the infrastructure subnet, regardless of ingress mode.
 - **Subnet Creation**: Creates a subnet for the container app environment if not provided.
-- **Private Endpoint**: Enables secure management connectivity by creating a private endpoint, available in both public and private ingress modes.
+- **Private Endpoint**: Creates a private endpoint for secure management connectivity. Created only when `public_network_access_enabled` is `false` (private mode).
 - **Zone Redundancy**: Supports zone redundancy for high availability, enabled by default unless the environment is set to development.
 
 ## Usage Example

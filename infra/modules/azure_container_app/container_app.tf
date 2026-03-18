@@ -212,11 +212,12 @@ resource "azurerm_container_app_custom_domain" "this" {
   # the expected format per the provider documentation ("The hostname of the Custom Domain").
   name = var.custom_domain.host_name
 
-  # Start unbound: Azure validates DNS, then azapi creates the managed cert and binds it.
-  # ignore_changes is required to prevent Terraform from reverting the certificate_binding_type
-  # back to "Disabled" after azapi_update_resource.bind_certificate changes it to "SniEnabled".
-  # Without this, every plan/apply would attempt to reset the binding, breaking the custom domain.
-  certificate_binding_type = "Disabled"
+  # When a pre-uploaded certificate is provided via certificate_id, bind with SniEnabled directly.
+  # When using an auto-provisioned managed certificate (managed_certificate azapi resource),
+  # start Disabled; azapi_update_resource.bind_certificate later changes it to SniEnabled.
+  # ignore_changes prevents Terraform from reverting the binding on subsequent applies.
+  certificate_binding_type                 = var.custom_domain.certificate_id != null ? "SniEnabled" : "Disabled"
+  container_app_environment_certificate_id = var.custom_domain.certificate_id
 
   lifecycle {
     ignore_changes = [

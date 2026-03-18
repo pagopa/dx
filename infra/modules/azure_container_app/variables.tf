@@ -84,24 +84,30 @@ variable "target_port" {
 
 variable "public_access_enabled" {
   type        = bool
-  default     = false
-  description = "If true, the container app is accessible via a public FQDN. If false (default), the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
+  default     = true
+  description = "If true (default), the container app is accessible via a public FQDN. If false, the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
 }
 
 variable "custom_domain" {
   type = object({
-    host_name = string
+    host_name      = string
+    certificate_id = optional(string)
     dns = optional(object({
       zone_name                = string
       zone_resource_group_name = string
     }))
   })
   default     = null
-  description = "Custom domain configuration for the container app. If 'dns' is provided, CNAME and TXT validation records are created automatically in the specified Azure DNS zone. Otherwise, DNS records must be created manually."
+  description = "Custom domain configuration for the container app. Provide 'certificate_id' to use a pre-uploaded azurerm_container_app_environment_certificate, or 'dns' to auto-provision an Azure-managed certificate (CNAME and TXT records are created automatically). At least one of 'certificate_id' or 'dns' must be specified."
 
   validation {
     condition     = var.custom_domain == null || var.public_access_enabled == true
     error_message = "public_access_enabled must be true when custom_domain is configured."
+  }
+
+  validation {
+    condition     = var.custom_domain == null || var.custom_domain.certificate_id != null || var.custom_domain.dns != null
+    error_message = "Either 'certificate_id' or 'dns' must be provided in custom_domain to activate the certificate binding."
   }
 
   validation {
@@ -125,6 +131,11 @@ variable "authentication" {
   })
   default     = null
   description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be the versionless_id of the KV secret; the module automatically adds it to the Container App secrets."
+
+  validation {
+    condition     = var.authentication == null || startswith(var.authentication.azure_active_directory.client_secret_key_vault_id, "https://")
+    error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI (must start with 'https://')."
+  }
 }
 
 variable "secrets" {

@@ -7,7 +7,7 @@ resource "azurerm_dns_cname_record" "this" {
   zone_name           = var.custom_domain.dns.zone_name
   resource_group_name = var.custom_domain.dns.zone_resource_group_name
   ttl                 = 300
-  record              = azurerm_container_app.this.ingress[0].fqdn
+  record              = trimsuffix(azurerm_container_app.this.ingress[0].fqdn, ".")
 
   tags = local.tags
 }
@@ -47,7 +47,7 @@ resource "time_sleep" "dns_propagation" {
 # Uses the managedCertificates API since azurerm_container_app_environment_certificate only
 # supports manually uploaded certificates.
 resource "azapi_resource" "managed_certificate" {
-  count     = var.custom_domain != null ? 1 : 0
+  count     = var.custom_domain != null && var.custom_domain.certificate_id == null ? 1 : 0
   type      = "Microsoft.App/managedEnvironments/managedCertificates@2024-03-01"
   name      = "cert-${replace(var.custom_domain.host_name, ".", "-")}"
   parent_id = var.container_app_environment_id
@@ -70,7 +70,7 @@ resource "azapi_resource" "managed_certificate" {
 # azurerm_container_app_custom_domain is kept in Disabled state with ignore_changes to avoid
 # Terraform reverting this binding on subsequent applies.
 resource "azapi_update_resource" "bind_certificate" {
-  count       = var.custom_domain != null ? 1 : 0
+  count       = var.custom_domain != null && var.custom_domain.certificate_id == null ? 1 : 0
   type        = "Microsoft.App/containerApps@2024-03-01"
   resource_id = azurerm_container_app.this.id
 

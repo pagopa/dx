@@ -583,3 +583,48 @@ run "container_app_diagnostics_enabled_plan" {
     error_message = "Log Analytics workspace ID should be set correctly"
   }
 }
+
+run "container_app_public_access_enabled_plan" {
+  command = plan
+
+  variables {
+    public_access_enabled = true
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.ingress[0].external_enabled == true
+    error_message = "Container app should have external ingress enabled when public_access_enabled is true"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.ingress[0].external_enabled == !false
+    error_message = "Container app should not have internal-only ingress when public_access_enabled is true"
+  }
+}
+
+run "container_app_authentication_plan" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = run.setup_tests.key_vault_secret1.secret_id
+      }
+    }
+  }
+
+  assert {
+    condition     = length([for s in azurerm_container_app.this.secret : s if s.name == "entra-id-client-secret"]) == 1
+    error_message = "The entra-id-client-secret should be injected into Container App secrets when authentication is configured"
+  }
+
+  assert {
+    condition = (
+      [for s in azurerm_container_app.this.secret : s if s.name == "entra-id-client-secret"][0].key_vault_secret_id
+      == run.setup_tests.key_vault_secret1.secret_id
+    )
+    error_message = "The entra-id-client-secret should reference the correct Key Vault secret"
+  }
+}
