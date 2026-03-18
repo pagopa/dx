@@ -64,3 +64,9 @@ variable "custom_domain_host_name" {
   type        = string
   description = "Host name for the custom domain to be used by the Container App (e.g., 'metrics.dx.pagopa.it'). The domain must be configured in the specified DNS zone."
 }
+
+variable "auth_entra_id_client_id" {
+  type        = string
+  description = "Azure Entra ID application (client) ID for authentication. When set, enables managed authentication on the Container App. Not sensitive — it is a public application identifier."
+  default     = "90565e12-fde8-4a60-95ee-a282409d3b86"
+}

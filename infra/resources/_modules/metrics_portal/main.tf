@@ -4,18 +4,14 @@ data "azurerm_key_vault_secret" "github_runner_pat" {
   key_vault_id = var.key_vault_id
 }
 
+data "azurerm_client_config" "current" {}
+
 # Generate a strong, random password for the PostgreSQL administrator account.
 # Using ephemeral so the password is never persisted to Terraform state.
 ephemeral "random_password" "db_admin" {
   length           = 32
   special          = true
   override_special = "!*?"
-}
-
-# Generate application auth secret without persisting it in Terraform state.
-ephemeral "random_password" "better_auth" {
-  length  = 48
-  special = false
 }
 
 # PostgreSQL Flexible Server accessed via private endpoint.
@@ -57,16 +53,6 @@ resource "azurerm_key_vault_secret" "database_url" {
 
 # trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
 # trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
-resource "azurerm_key_vault_secret" "better_auth_secret" {
-  name         = "dx-metrics-better-auth-secret"
-  key_vault_id = var.key_vault_id
-
-  value_wo         = ephemeral.random_password.better_auth.result
-  value_wo_version = 1
-}
-
-# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
-# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
 resource "azurerm_key_vault_secret" "auth_github_id" {
   name         = "dx-metrics-auth-github-id"
   key_vault_id = var.key_vault_id
@@ -82,6 +68,26 @@ resource "azurerm_key_vault_secret" "auth_github_secret" {
   key_vault_id = var.key_vault_id
 
   value_wo         = "placeholder"
+  value_wo_version = 1
+}
+
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "auth_entra_id_client_id" {
+  name         = "dx-metrics-auth-entra-id-client-id"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = var.auth_entra_id_client_id != null ? var.auth_entra_id_client_id : "placeholder"
+  value_wo_version = 1
+}
+
+# trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
+# trivy:ignore:AVD-AZU-0017 Expiration date is optional for long-lived secrets
+resource "azurerm_key_vault_secret" "auth_entra_id_tenant_id" {
+  name         = "dx-metrics-auth-entra-id-tenant-id"
+  key_vault_id = var.key_vault_id
+
+  value_wo         = data.azurerm_client_config.current.tenant_id
   value_wo_version = 1
 }
 
@@ -117,6 +123,14 @@ module "container_app" {
     }
   }
 
+  auth = var.auth_entra_id_client_id != null ? {
+    azure_active_directory = {
+      client_id                  = var.auth_entra_id_client_id
+      client_secret_setting_name = replace(lower(azurerm_key_vault_secret.better_auth_secret.name), "_", "-")
+      tenant_id                  = data.azurerm_client_config.current.tenant_id
+    }
+  } : null
+
   secrets = [
     {
       name                = "DATABASE_URL"
@@ -129,14 +143,6 @@ module "container_app" {
     {
       name                = "GITHUB_TOKEN"
       key_vault_secret_id = data.azurerm_key_vault_secret.github_runner_pat.versionless_id
-    },
-    {
-      name                = "AUTH_GITHUB_ID"
-      key_vault_secret_id = azurerm_key_vault_secret.auth_github_id.versionless_id
-    },
-    {
-      name                = "AUTH_GITHUB_SECRET"
-      key_vault_secret_id = azurerm_key_vault_secret.auth_github_secret.versionless_id
     }
   ]
 
@@ -146,9 +152,8 @@ module "container_app" {
       name  = "metrics-portal"
 
       app_settings = {
-        NODE_ENV        = "production"
-        PORT            = "3000"
-        BETTER_AUTH_URL = "https://${var.custom_domain_host_name}"
+        NODE_ENV = "production"
+        PORT     = "3000"
       }
 
       liveness_probe = {

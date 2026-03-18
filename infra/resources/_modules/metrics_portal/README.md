@@ -21,16 +21,19 @@
 
 | Name | Type |
 |------|------|
+| [azurerm_key_vault_secret.auth_entra_id_client_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
+| [azurerm_key_vault_secret.auth_entra_id_tenant_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.auth_github_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.auth_github_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [azurerm_key_vault_secret.better_auth_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.database_url](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_key_vault_secret.github_runner_pat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_auth_entra_id_client_id"></a> [auth\_entra\_id\_client\_id](#input\_auth\_entra\_id\_client\_id) | Azure Entra ID application (client) ID for authentication. When set, enables managed authentication on the Container App. Not sensitive — it is a public application identifier. | `string` | `"90565e12-fde8-4a60-95ee-a282409d3b86"` | no |
 | <a name="input_container_app_env_id"></a> [container\_app\_env\_id](#input\_container\_app\_env\_id) | ID of the Container App Environment. | `string` | n/a | yes |
 | <a name="input_container_app_image"></a> [container\_app\_image](#input\_container\_app\_image) | OCI image URI for the Container App. Should reference the dx-metrics image from GitHub Container Registry (e.g., 'ghcr.io/pagopa/dx/dx-metrics:latest'). Built and deployed via GitHub Actions. | `string` | n/a | yes |
 | <a name="input_container_app_user_assigned_identity_id"></a> [container\_app\_user\_assigned\_identity\_id](#input\_container\_app\_user\_assigned\_identity\_id) | ID of the user-assigned managed identity for the Container App to access Key Vault. | `string` | n/a | yes |
