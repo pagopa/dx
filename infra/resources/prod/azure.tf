@@ -40,6 +40,8 @@ module "metrics_portal" {
     app_name = "portal"
   })
 
+  tenant_id = data.azurerm_client_config.current.tenant_id
+
   custom_domain_host_name = "metrics.dx.pagopa.it"
 
   resource_group_name = module.azure_core_values.common_resource_group_name

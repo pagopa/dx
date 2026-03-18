@@ -10,6 +10,11 @@ variable "environment" {
   description = "Values used to generate resource names and location short names."
 }
 
+variable "tenant_id" {
+  type        = string
+  description = "Azure tenant ID for authentication."
+}
+
 variable "resource_group_name" {
   type        = string
   description = "Name of the resource group where resources will be deployed."

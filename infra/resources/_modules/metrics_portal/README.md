@@ -21,12 +21,8 @@
 
 | Name | Type |
 |------|------|
-| [azurerm_key_vault_secret.auth_entra_id_client_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [azurerm_key_vault_secret.auth_entra_id_tenant_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [azurerm_key_vault_secret.auth_github_id](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [azurerm_key_vault_secret.auth_github_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
+| [azurerm_key_vault_secret.azuread_client_secret](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_key_vault_secret.database_url](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_key_vault_secret.github_runner_pat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
 
 ## Inputs
@@ -46,6 +42,7 @@
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | ID of the subnet used for private endpoints. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to assign to all resources. | `map(any)` | n/a | yes |
+| <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | Azure tenant ID for authentication. | `string` | n/a | yes |
 
 ## Outputs
 

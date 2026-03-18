@@ -39,6 +39,7 @@
 | [azuredx_dx_available_subnet_cidr.container_app](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/dx_available_subnet_cidr) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 
 ## Inputs
 
