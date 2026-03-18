@@ -115,6 +115,18 @@ variable "custom_domain" {
   }
 }
 
+variable "auth" {
+  type = object({
+    azure_active_directory = object({
+      client_id                  = string
+      client_secret_setting_name = string
+      tenant_id                  = string
+    })
+  })
+  default     = null
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests receive a 401 response. 'client_secret_setting_name' must match the normalized secret name (lowercase, underscores replaced with dashes) of a secret defined in the 'secrets' variable."
+}
+
 variable "secrets" {
   type = list(object({
     name                = string
