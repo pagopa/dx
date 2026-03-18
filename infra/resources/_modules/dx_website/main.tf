@@ -1,8 +1,8 @@
 resource "azurerm_static_web_app" "this" {
   name = provider::azuredx::resource_name(merge(
-    var.naming_config,
+    var.environment,
     {
-      name          = "website",
+      app_name      = "website",
       resource_type = "static_web_app",
     })
   )

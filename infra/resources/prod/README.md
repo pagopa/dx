@@ -19,7 +19,7 @@
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.4 |
 | <a name="provider_azuredx"></a> [azuredx](#provider\_azuredx) | ~> 0.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.56.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.64.0 |
 
 ## Modules
 
@@ -39,8 +39,6 @@
 | [azuredx_dx_available_subnet_cidr.container_app](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/dx_available_subnet_cidr) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [azurerm_application_insights.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/application_insights) | data source |
-| [azurerm_resource_group.dx](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
-| [azurerm_virtual_network.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 

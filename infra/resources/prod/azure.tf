@@ -8,7 +8,7 @@ module "azure_core_values" {
 # Generate available CIDR block for Container App subnet (/24 provides 256 addresses for multiple container apps)
 resource "dx_available_subnet_cidr" "container_app" {
   provider           = azuredx
-  virtual_network_id = data.azurerm_virtual_network.common.id
+  virtual_network_id = module.azure_core_values.common_vnet.id
   prefix_length      = 24
 }
 
@@ -17,13 +17,13 @@ module "container_app_infra" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
   version = "~> 1.1"
 
-  environment         = merge(local.environment, { app_name = "common" })
-  resource_group_name = data.azurerm_resource_group.dx.name
+  environment         = merge(local.azure_naming_config, { env_short = local.azure_naming_config.environment, app_name = "common" })
+  resource_group_name = module.azure_core_values.common_resource_group_name
   tags                = local.tags
 
   virtual_network = {
-    name                = data.azurerm_virtual_network.common.name
-    resource_group_name = data.azurerm_virtual_network.common.resource_group_name
+    name                = module.azure_core_values.common_vnet.name
+    resource_group_name = module.azure_core_values.network_resource_group_name
   }
 
   subnet_cidr                          = dx_available_subnet_cidr.container_app.cidr_block
@@ -35,12 +35,12 @@ module "container_app_infra" {
 module "metrics_portal" {
   source = "../_modules/metrics_portal"
 
-  environment = merge(local.environment, {
+  environment = merge(local.azure_naming_config, {
     domain   = "metrics"
     app_name = "portal"
   })
 
-  resource_group_name = data.azurerm_resource_group.dx.name
+  resource_group_name = module.azure_core_values.common_resource_group_name
   tags                = local.tags
 
   subnet_pep_id                        = module.azure_core_values.common_pep_snet.id
@@ -60,6 +60,6 @@ module "dx_website" {
 
   resource_group_name         = module.azure_core_values.common_resource_group_name
   network_resource_group_name = module.azure_core_values.network_resource_group_name
-  naming_config               = local.azure_naming_config
+  environment                 = local.azure_naming_config
   tags                        = local.tags
 }

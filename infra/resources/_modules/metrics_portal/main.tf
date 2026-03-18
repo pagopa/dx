@@ -25,7 +25,7 @@ module "postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
   version = "~> 3.0"
 
-  environment         = local.dx_environment
+  environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
   tags                = var.tags
 
@@ -51,8 +51,8 @@ resource "azurerm_key_vault_secret" "database_url" {
   name         = "dx-metrics-database-url"
   key_vault_id = var.key_vault_id
 
-  value_wo         = "postgresql://dbadmin:${ephemeral.random_password.db_admin.result}@${module.postgres.postgres.name}.postgres.database.azure.com:5432/postgres"
-  value_wo_version = 1
+  value_wo         = "postgresql://dbadmin:${ephemeral.random_password.db_admin.result}@${module.postgres.postgres.name}.postgres.database.azure.com:5432/postgres?sslmode=verify-full"
+  value_wo_version = 2
 }
 
 # trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
@@ -90,7 +90,7 @@ module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
   version = "~> 1.0"
 
-  environment         = merge(local.dx_environment, { env_short = local.dx_environment.env_short })
+  environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
   tags                = var.tags
 

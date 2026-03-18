@@ -1,8 +1,7 @@
 variable "environment" {
   type = object({
     prefix          = string
-    environment     = optional(string)
-    env_short       = optional(string)
+    environment     = string
     location        = string
     instance_number = string
     domain          = optional(string)
