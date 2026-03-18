@@ -206,5 +206,6 @@ resource "azurerm_container_app_custom_domain" "this" {
   depends_on = [
     azurerm_dns_cname_record.this,
     azurerm_dns_txt_record.validation,
+    time_sleep.dns_propagation,
   ]
 }

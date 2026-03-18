@@ -26,10 +26,10 @@ output "user_assigned_identity" {
 
 output "default_domain" {
   value       = azurerm_container_app_environment.this.default_domain
-  description = "The default domain of the Container App Environment. Used for public ingress when internal_load_balancer_enabled is false."
+  description = "The default domain of the Container App Environment. Used for public ingress when public_network_access_enabled is true."
 }
 
 output "static_ip_address" {
   value       = azurerm_container_app_environment.this.static_ip_address
-  description = "The static public IP address of the Container App Environment. Available when internal_load_balancer_enabled is false."
+  description = "The static public IP address of the Container App Environment. Available when public_network_access_enabled is true."
 }

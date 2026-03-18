@@ -28,10 +28,10 @@ variable "log_analytics_workspace_id" {
   description = "The ID of the Log Analytics workspace to use for the container app environment."
 }
 
-variable "internal_load_balancer_enabled" {
+variable "public_network_access_enabled" {
   type        = bool
-  default     = true
-  description = "If false, the Container App Environment exposes a public endpoint for ingress. If true (default), ingress is restricted to the internal virtual network only. Note: outbound access to internal resources (databases, etc.) is available in both cases via the infrastructure_subnet_id."
+  default     = false
+  description = "If true, the Container App Environment exposes a public endpoint and allows internet ingress. If false (default), ingress is restricted to the internal virtual network only. Note: outbound access to internal resources (databases, etc.) is available in both cases via the infrastructure_subnet_id. When public_network_access_enabled is true, private endpoints cannot be used."
 }
 
 # ------------ NETWORKING ------------ #
@@ -55,7 +55,13 @@ variable "subnet_cidr" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet designated for hosting private endpoints."
+  default     = null
+  description = "The ID of the subnet designated for hosting private endpoints. Required when public_network_access_enabled is false (default)."
+
+  validation {
+    condition     = var.public_network_access_enabled || var.subnet_pep_id != null
+    error_message = "subnet_pep_id is required when public_network_access_enabled is false."
+  }
 }
 
 variable "virtual_network" {

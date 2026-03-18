@@ -16,6 +16,8 @@ resource "azurerm_subnet" "this" {
 }
 
 resource "azurerm_private_endpoint" "this" {
+  count = var.public_network_access_enabled ? 0 : 1
+
   name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app_private_endpoint" }))
   location            = var.environment.location
   resource_group_name = var.resource_group_name
@@ -30,8 +32,15 @@ resource "azurerm_private_endpoint" "this" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.this.id]
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.this[0].id]
   }
 
   tags = local.tags
+
+  lifecycle {
+    precondition {
+      condition     = var.subnet_pep_id != null
+      error_message = "subnet_pep_id is required when public_network_access_enabled is false."
+    }
+  }
 }

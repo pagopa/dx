@@ -75,12 +75,17 @@ variable "target_port" {
   type        = number
   description = "The port on which the container app will listen for incoming traffic."
   default     = 8080
+
+  validation {
+    condition     = var.target_port >= 1 && var.target_port <= 65535
+    error_message = "target_port must be between 1 and 65535."
+  }
 }
 
 variable "external_enabled" {
   type        = bool
-  default     = true
-  description = "If true (default), the container app is accessible via a public FQDN. If false, the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has internal_load_balancer_enabled set to false."
+  default     = false
+  description = "If true, the container app is accessible via a public FQDN. If false (default), the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
 }
 
 variable "custom_domain" {
@@ -93,6 +98,21 @@ variable "custom_domain" {
   })
   default     = null
   description = "Custom domain configuration for the container app. If 'dns' is provided, CNAME and TXT validation records are created automatically in the specified Azure DNS zone. Otherwise, DNS records must be created manually."
+
+  validation {
+    condition     = var.custom_domain == null || var.external_enabled == true
+    error_message = "external_enabled must be true when custom_domain is configured."
+  }
+
+  validation {
+    condition     = var.custom_domain == null || var.custom_domain.dns == null || endswith(var.custom_domain.host_name, ".${var.custom_domain.dns.zone_name}")
+    error_message = "custom_domain.host_name must be a subdomain of custom_domain.dns.zone_name (e.g., api.example.com within zone example.com)."
+  }
+
+  validation {
+    condition     = var.custom_domain == null || var.custom_domain.dns == null || var.custom_domain.host_name != var.custom_domain.dns.zone_name
+    error_message = "Apex domains (where host_name equals zone_name) are not supported. Managed certificates require a subdomain (e.g., api.example.com)."
+  }
 }
 
 variable "secrets" {

@@ -28,3 +28,16 @@ resource "azurerm_dns_txt_record" "validation" {
 
   tags = local.tags
 }
+
+# Wait for DNS propagation before Azure attempts to validate the custom domain.
+# Without this delay, Azure may fail to find the TXT record immediately after creation.
+resource "time_sleep" "dns_propagation" {
+  count = var.custom_domain != null && try(var.custom_domain.dns, null) != null ? 1 : 0
+
+  depends_on = [
+    azurerm_dns_cname_record.this,
+    azurerm_dns_txt_record.validation,
+  ]
+
+  create_duration = "60s"
+}
