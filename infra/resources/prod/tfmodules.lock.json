@@ -11,12 +11,6 @@
     "name": "azure_core_values_exporter",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.4.0"
   },
-  "metrics_portal.container_app": {
-    "hash": "fe43248dd23002563d235d734432e2d2a8fb80dad45a840e503f6d6fc4f40b42",
-    "version": "1.0.2",
-    "name": "azure_container_app",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/1.0.2"
-  },
   "metrics_portal.container_app_key_vault_roles": {
     "hash": "a8c1a6fa085349f937017deb20236170f0bb9dd78b5ded85ec75d7caeba7a872",
     "version": "1.3.3",
@@ -28,11 +22,5 @@
     "version": "3.0.0",
     "name": "azure_postgres_server",
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/3.0.0"
-  },
-  "container_app_infra": {
-    "hash": "bb4129102be875e2e51b3e54c63cbd9f4aff9a2e2a2a8866291a4af1de747a44",
-    "version": "1.1.1",
-    "name": "azure_container_app_environment",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app-environment/azurerm/1.1.1"
   }
 }

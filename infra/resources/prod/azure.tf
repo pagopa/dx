@@ -14,8 +14,9 @@ resource "dx_available_subnet_cidr" "container_app" {
 
 # Container App Environment with dedicated subnet using pagopa-dx module
 module "container_app_infra" {
-  source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 1.1"
+  # source  = "pagopa-dx/azure-container-app-environment/azurerm"
+  # version = "~> 1.1"
+  source = "github.com/pagopa/dx//infra/modules/azure_container_app_environment?ref=allow-container-app-environment-to-have-public-connectivity"
 
   environment         = merge(local.azure_naming_config, { env_short = local.azure_naming_config.environment, app_name = "common" })
   resource_group_name = module.azure_core_values.common_resource_group_name
@@ -26,6 +27,7 @@ module "container_app_infra" {
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
 
+  internal_load_balancer_enabled       = false
   subnet_cidr                          = dx_available_subnet_cidr.container_app.cidr_block
   subnet_pep_id                        = module.azure_core_values.common_pep_snet.id
   private_dns_zone_resource_group_name = module.azure_core_values.network_resource_group_name
@@ -40,6 +42,8 @@ module "metrics_portal" {
     app_name = "portal"
   })
 
+  custom_domain_host_name = "metrics.dx.pagopa.it"
+
   resource_group_name = module.azure_core_values.common_resource_group_name
   tags                = local.tags
 
@@ -53,6 +57,8 @@ module "metrics_portal" {
   container_app_user_assigned_identity_id           = module.container_app_infra.user_assigned_identity.id
   container_app_user_assigned_identity_principal_id = module.container_app_infra.user_assigned_identity.principal_id
   container_app_image                               = "ghcr.io/pagopa/dx-metrics:latest"
+
+  network_resource_group_name = module.azure_core_values.network_resource_group_name
 }
 
 module "dx_website" {

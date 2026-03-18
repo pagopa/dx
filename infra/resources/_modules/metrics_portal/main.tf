@@ -87,8 +87,9 @@ resource "azurerm_key_vault_secret" "auth_github_secret" {
 
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
-  source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 1.0"
+  # source  = "pagopa-dx/azure-container-app/azurerm"
+  # version = "~> 1.0"
+  source = "github.com/pagopa/dx//infra/modules/azure_container_app?ref=allow-container-app-environment-to-have-public-connectivity"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
@@ -98,8 +99,23 @@ module "container_app" {
   user_assigned_identity_id    = var.container_app_user_assigned_identity_id
 
   revision_mode = "Single"
-  tier          = "s" # 0.5 CPU, 1Gi memory, 1-1 replicas
+  use_case      = "default"
+
+  size = {
+    cpu = 0.5
+    memory = "1Gi"
+  }
+
   target_port   = 3000
+
+  external_enabled = true
+  custom_domain = {
+    host_name = var.custom_domain_host_name
+    dns_zone = {
+      name                = "dx.pagopa.it"
+      resource_group_name = var.network_resource_group_name
+    }
+  }
 
   secrets = [
     {
@@ -132,7 +148,7 @@ module "container_app" {
       app_settings = {
         NODE_ENV        = "production"
         PORT            = "3000"
-        BETTER_AUTH_URL = "http://localhost:3000"
+        BETTER_AUTH_URL = "https://${var.custom_domain_host_name}"
       }
 
       liveness_probe = {

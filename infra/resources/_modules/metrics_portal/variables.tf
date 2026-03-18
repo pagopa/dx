@@ -54,3 +54,13 @@ variable "container_app_image" {
   type        = string
   description = "OCI image URI for the Container App. Should reference the dx-metrics image from GitHub Container Registry (e.g., 'ghcr.io/pagopa/dx/dx-metrics:latest'). Built and deployed via GitHub Actions."
 }
+
+variable "network_resource_group_name" {
+  type        = string
+  description = "Name of the resource group containing network resources, used for DNS zone reference."
+}
+
+variable "custom_domain_host_name" {
+  type        = string
+  description = "Host name for the custom domain to be used by the Container App (e.g., 'metrics.dx.pagopa.it'). The domain must be configured in the specified DNS zone."
+}

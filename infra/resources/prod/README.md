@@ -27,7 +27,7 @@
 |------|--------|---------|
 | <a name="module_aws_core_values"></a> [aws\_core\_values](#module\_aws\_core\_values) | pagopa-dx/aws-core-values-exporter/aws | ~> 0.0 |
 | <a name="module_azure_core_values"></a> [azure\_core\_values](#module\_azure\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
-| <a name="module_container_app_infra"></a> [container\_app\_infra](#module\_container\_app\_infra) | pagopa-dx/azure-container-app-environment/azurerm | ~> 1.1 |
+| <a name="module_container_app_infra"></a> [container\_app\_infra](#module\_container\_app\_infra) | github.com/pagopa/dx//infra/modules/azure_container_app_environment | allow-container-app-environment-to-have-public-connectivity |
 | <a name="module_dx_website"></a> [dx\_website](#module\_dx\_website) | ../_modules/dx_website | n/a |
 | <a name="module_mcp_server"></a> [mcp\_server](#module\_mcp\_server) | ../_modules/mcp_server | n/a |
 | <a name="module_metrics_portal"></a> [metrics\_portal](#module\_metrics\_portal) | ../_modules/metrics_portal | n/a |
