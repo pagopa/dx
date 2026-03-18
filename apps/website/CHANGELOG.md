@@ -1,5 +1,11 @@
 # docs
 
+## 0.12.8
+
+### Patch Changes
+
+- d547c62: Update CLI docs with new SaveMoney features
+
 ## 0.12.7
 
 ### Patch Changes
