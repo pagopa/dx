@@ -71,7 +71,7 @@ module "container_app" {
       }
 
       liveness_probe = {
-        path          = "/health"
+        path          = "/api/health"
         initial_delay = 30
         timeout       = 5
         transport     = "HTTP"
