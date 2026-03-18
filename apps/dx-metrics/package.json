@@ -14,7 +14,6 @@
     "import": "tsx scripts/import.ts"
   },
   "dependencies": {
-    "better-auth": "^1.2.7",
     "@radix-ui/react-tooltip": "^1.2.8",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.0",
