@@ -39,6 +39,16 @@ resource "azurerm_container_app" "this" {
     }
   }
 
+  # Add Entra ID client secret if authentication is configured
+  dynamic "secret" {
+    for_each = var.auth != null && var.auth.azure_active_directory.client_secret_key_vault_id != null ? [1] : []
+    content {
+      name                = "entra-id-client-secret"
+      key_vault_secret_id = var.auth.azure_active_directory.client_secret_key_vault_id
+      identity            = var.user_assigned_identity_id
+    }
+  }
+
   template {
     termination_grace_period_seconds = 30
 

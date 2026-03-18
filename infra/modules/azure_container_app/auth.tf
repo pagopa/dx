@@ -5,7 +5,7 @@ resource "azapi_resource" "auth" {
   name      = "current"
   parent_id = azurerm_container_app.this.id
 
-  body = jsonencode({
+  body = {
     properties = {
       platform = {
         enabled = true
@@ -18,11 +18,11 @@ resource "azapi_resource" "auth" {
           enabled = true
           registration = {
             clientId                = var.auth.azure_active_directory.client_id
-            clientSecretSettingName = var.auth.azure_active_directory.client_secret_setting_name
+            clientSecretSettingName = "entra-id-client-secret"
             openIdIssuer            = "https://login.microsoftonline.com/${var.auth.azure_active_directory.tenant_id}/v2.0"
           }
         }
       }
     }
-  })
+  }
 }
