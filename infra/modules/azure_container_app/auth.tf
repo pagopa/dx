@@ -12,6 +12,7 @@ resource "azapi_resource" "auth" {
       }
       globalValidation = {
         unauthenticatedClientAction = "RedirectToLoginPage"
+        redirectToProvider          = "azureactivedirectory"
       }
       identityProviders = {
         azureActiveDirectory = {
