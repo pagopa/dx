@@ -31,20 +31,8 @@ Only needed on first run, when applying new migrations, or when upgrading an
 existing database:
 
 ```bash
+# From apps/dx-metrics/
 DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit push
-```
-
-If you're upgrading from a version that used GitHub authentication, drop the
-legacy auth tables before applying the anonymous schema:
-
-```bash
-psql "$DATABASE_URL" -c 'DROP TABLE IF EXISTS verification, session, account, "user" CASCADE;'
-```
-
-If you need to apply migrations incrementally, you can use migrate instead of push:
-
-```bash
-DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit migrate
 ```
 
 3. **Import data (incremental):**

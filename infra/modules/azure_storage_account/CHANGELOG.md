@@ -1,5 +1,11 @@
 # azure_storage_account
 
+## 2.2.2
+
+### Patch Changes
+
+- 9294e5e: Add diagram to README.md representing the module architecture.
+
 ## 2.2.1
 
 ### Patch Changes

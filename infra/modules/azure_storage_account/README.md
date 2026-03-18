@@ -4,6 +4,12 @@
 
 This Terraform module provisions an Azure Storage Account with optional configurations for advanced features, networking, and monitoring.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](diagram.svg)
+
 ## Features
 
 - **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
