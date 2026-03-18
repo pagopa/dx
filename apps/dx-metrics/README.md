@@ -32,13 +32,8 @@ docker compose --profile dx-metrics up -d
 Only needed on first run or when applying new migrations:
 
 ```bash
+# From apps/dx-metrics/
 DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit push
-```
-
-if you need to apply migrations incrementally, you can use migrate instead of push:
-
-```bash
-DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit migrate
 ```
 
 3. **Import data (incremental):**
