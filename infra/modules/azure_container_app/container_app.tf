@@ -14,7 +14,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = var.external_enabled
+    external_enabled           = var.public_access_enabled
     target_port                = var.target_port
     traffic_weight {
       percentage      = 100
@@ -41,10 +41,10 @@ resource "azurerm_container_app" "this" {
 
   # Add Entra ID client secret if authentication is configured
   dynamic "secret" {
-    for_each = var.auth != null && var.auth.azure_active_directory.client_secret_key_vault_id != null ? [1] : []
+    for_each = var.authentication != null ? [1] : []
     content {
       name                = "entra-id-client-secret"
-      key_vault_secret_id = var.auth.azure_active_directory.client_secret_key_vault_id
+      key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
       identity            = var.user_assigned_identity_id
     }
   }
@@ -208,10 +208,14 @@ resource "azurerm_container_app_custom_domain" "this" {
   count = var.custom_domain != null ? 1 : 0
 
   container_app_id = azurerm_container_app.this.id
-  name             = var.custom_domain.host_name
+  # azurerm_container_app_custom_domain uses the full FQDN (with dots) as its name, which is
+  # the expected format per the provider documentation ("The hostname of the Custom Domain").
+  name = var.custom_domain.host_name
 
   # Start unbound: Azure validates DNS, then azapi creates the managed cert and binds it.
-  # ignore_changes prevents Terraform from reverting the binding after azapi sets SniEnabled.
+  # ignore_changes is required to prevent Terraform from reverting the certificate_binding_type
+  # back to "Disabled" after azapi_update_resource.bind_certificate changes it to "SniEnabled".
+  # Without this, every plan/apply would attempt to reset the binding, breaking the custom domain.
   certificate_binding_type = "Disabled"
 
   lifecycle {

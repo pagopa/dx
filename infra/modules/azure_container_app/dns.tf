@@ -6,7 +6,7 @@ resource "azurerm_dns_cname_record" "this" {
   name                = trimsuffix(var.custom_domain.host_name, ".${var.custom_domain.dns.zone_name}")
   zone_name           = var.custom_domain.dns.zone_name
   resource_group_name = var.custom_domain.dns.zone_resource_group_name
-  ttl                 = 3600
+  ttl                 = 300
   record              = azurerm_container_app.this.ingress[0].fqdn
 
   tags = local.tags
@@ -20,7 +20,7 @@ resource "azurerm_dns_txt_record" "validation" {
   name                = "asuid.${trimsuffix(var.custom_domain.host_name, ".${var.custom_domain.dns.zone_name}")}"
   zone_name           = var.custom_domain.dns.zone_name
   resource_group_name = var.custom_domain.dns.zone_resource_group_name
-  ttl                 = 3600
+  ttl                 = 300
 
   record {
     value = azurerm_container_app.this.custom_domain_verification_id
@@ -59,6 +59,8 @@ resource "azapi_resource" "managed_certificate" {
       domainControlValidation = "CNAME"
     }
   }
+
+  tags = local.tags
 
   # The domain must be added to the container app before Azure can issue the managed cert.
   depends_on = [azurerm_container_app_custom_domain.this]

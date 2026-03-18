@@ -82,7 +82,7 @@ variable "target_port" {
   }
 }
 
-variable "external_enabled" {
+variable "public_access_enabled" {
   type        = bool
   default     = false
   description = "If true, the container app is accessible via a public FQDN. If false (default), the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
@@ -100,8 +100,8 @@ variable "custom_domain" {
   description = "Custom domain configuration for the container app. If 'dns' is provided, CNAME and TXT validation records are created automatically in the specified Azure DNS zone. Otherwise, DNS records must be created manually."
 
   validation {
-    condition     = var.custom_domain == null || var.external_enabled == true
-    error_message = "external_enabled must be true when custom_domain is configured."
+    condition     = var.custom_domain == null || var.public_access_enabled == true
+    error_message = "public_access_enabled must be true when custom_domain is configured."
   }
 
   validation {
@@ -115,12 +115,12 @@ variable "custom_domain" {
   }
 }
 
-variable "auth" {
+variable "authentication" {
   type = object({
     azure_active_directory = object({
       client_id                  = string
       tenant_id                  = string
-      client_secret_key_vault_id = optional(string)
+      client_secret_key_vault_id = string
     })
   })
   default     = null
