@@ -52,7 +52,7 @@ module "metrics_portal" {
   container_app_env_id                              = module.container_app_infra.id
   container_app_user_assigned_identity_id           = module.container_app_infra.user_assigned_identity.id
   container_app_user_assigned_identity_principal_id = module.container_app_infra.user_assigned_identity.principal_id
-  container_app_image                               = "ghcr.io/pagopa/dx/dx-metrics:latest"
+  container_app_image                               = "ghcr.io/pagopa/dx-metrics:latest"
 }
 
 module "dx_website" {
