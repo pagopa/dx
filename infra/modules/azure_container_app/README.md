@@ -123,6 +123,7 @@ A complete usage example can be found in the [example/complete](https://github.c
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | >= 2.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.16.0, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9 |
@@ -135,6 +136,8 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [azapi_resource.managed_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
+| [azapi_update_resource.bind_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) | resource |
 | [azurerm_container_app.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app) | resource |
 | [azurerm_container_app_custom_domain.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_custom_domain) | resource |
 | [azurerm_dns_cname_record.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/dns_cname_record) | resource |

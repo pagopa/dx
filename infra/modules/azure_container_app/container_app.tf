@@ -200,8 +200,16 @@ resource "azurerm_container_app_custom_domain" "this" {
   container_app_id = azurerm_container_app.this.id
   name             = var.custom_domain.host_name
 
-  # Use SNI_ENABLED for managed certificate (Azure-managed SSL)
-  certificate_binding_type = "SniEnabled"
+  # Start unbound: Azure validates DNS, then azapi creates the managed cert and binds it.
+  # ignore_changes prevents Terraform from reverting the binding after azapi sets SniEnabled.
+  certificate_binding_type = "Disabled"
+
+  lifecycle {
+    ignore_changes = [
+      certificate_binding_type,
+      container_app_environment_certificate_id,
+    ]
+  }
 
   depends_on = [
     azurerm_dns_cname_record.this,

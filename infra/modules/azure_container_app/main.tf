@@ -4,6 +4,10 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 4.16.0, < 5.0"
     }
+    azapi = {
+      source  = "azure/azapi"
+      version = ">= 2.0"
+    }
     dx = {
       source  = "pagopa-dx/azure"
       version = ">= 0.0.6, < 1.0.0"
