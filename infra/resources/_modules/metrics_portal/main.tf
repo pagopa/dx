@@ -32,7 +32,7 @@ module "container_app" {
 
   target_port = 3000
 
-  external_enabled = true
+  public_access_enabled = true
   custom_domain = {
     host_name = var.custom_domain_host_name
     dns = {
@@ -41,7 +41,7 @@ module "container_app" {
     }
   }
 
-  auth = var.auth_entra_id_client_id != null ? {
+  authentication = var.auth_entra_id_client_id != null ? {
     azure_active_directory = {
       client_id                  = var.auth_entra_id_client_id
       tenant_id                  = var.tenant_id
