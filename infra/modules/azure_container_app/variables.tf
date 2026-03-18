@@ -124,7 +124,7 @@ variable "auth" {
     })
   })
   default     = null
-  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests receive a 401 response. client_secret_key_vault_id deve essere il versionless_id del segreto KV; il modulo automaticamente lo aggiunge ai secrets del Container App."
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be the versionless_id of the KV secret; the module automatically adds it to the Container App secrets."
 }
 
 variable "secrets" {

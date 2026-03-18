@@ -11,7 +11,7 @@ resource "azapi_resource" "auth" {
         enabled = true
       }
       globalValidation = {
-        unauthenticatedClientAction = "Return401"
+        unauthenticatedClientAction = "RedirectToLoginPage"
       }
       identityProviders = {
         azureActiveDirectory = {
