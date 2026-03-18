@@ -27,11 +27,9 @@ module "container_app_infra" {
     resource_group_name = module.azure_core_values.network_resource_group_name
   }
 
-  internal_load_balancer_enabled       = false
-  subnet_cidr                          = dx_available_subnet_cidr.container_app.cidr_block
-  subnet_pep_id                        = module.azure_core_values.common_pep_snet.id
-  private_dns_zone_resource_group_name = module.azure_core_values.network_resource_group_name
-  log_analytics_workspace_id           = module.azure_core_values.common_log_analytics_workspace.id
+  public_network_access_enabled = true
+  subnet_cidr                   = dx_available_subnet_cidr.container_app.cidr_block
+  log_analytics_workspace_id    = module.azure_core_values.common_log_analytics_workspace.id
 }
 
 module "metrics_portal" {

@@ -102,18 +102,18 @@ module "container_app" {
   use_case      = "default"
 
   size = {
-    cpu = 0.5
+    cpu    = 0.5
     memory = "1Gi"
   }
 
-  target_port   = 3000
+  target_port = 3000
 
   external_enabled = true
   custom_domain = {
     host_name = var.custom_domain_host_name
-    dns_zone = {
-      name                = "dx.pagopa.it"
-      resource_group_name = var.network_resource_group_name
+    dns = {
+      zone_name                = "dx.pagopa.it"
+      zone_resource_group_name = var.network_resource_group_name
     }
   }
 
