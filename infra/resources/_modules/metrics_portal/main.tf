@@ -41,13 +41,13 @@ module "container_app" {
     }
   }
 
-  authentication = var.auth_entra_id_client_id != null ? {
+  authentication = {
     azure_active_directory = {
       client_id                  = var.auth_entra_id_client_id
       tenant_id                  = var.tenant_id
       client_secret_key_vault_id = azurerm_key_vault_secret.azuread_client_secret.versionless_id
     }
-  } : null
+  }
 
   secrets = [
     {
