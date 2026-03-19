@@ -74,7 +74,7 @@ module "roles" {
       resource_group_name  = "storage-account-resource-group-name"
       container_name       = "container-name"
       role                 = "reader"
-      description         = "Add a meaningful description"
+      description          = "Add a meaningful description"
     }
   ]
 }
