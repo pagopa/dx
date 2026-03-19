@@ -1,5 +1,11 @@
 # dx-metrics
 
+## 0.3.0
+
+### Minor Changes
+
+- 94d5d8c: The /api/health route has been added to check for app's liveness and db connectivity
+
 ## 0.2.0
 
 ### Minor Changes
