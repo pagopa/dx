@@ -66,9 +66,9 @@ jobs:
       - name: Install Nx CLI
         shell: bash
         run: |
-          add-apt-repository ppa:nrwl/nx
-          apt update
-          apt install nx
+          sudo add-apt-repository ppa:nrwl/nx
+          sudo apt update
+          sudo apt install nx
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
