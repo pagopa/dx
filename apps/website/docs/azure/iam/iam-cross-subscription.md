@@ -106,7 +106,7 @@ the `Reader` role on the target resource (subscription A).
 
 - Documentation: Document all cross-subscription relationships in a central
   location
-- Comments: Use the `description` property in the Terraform code explaining:
+- Comments: Use the `description` property in the Terraform code to document:
   - The purpose of the access
   - The source resource details
   - The date when access was granted
