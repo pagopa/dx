@@ -9,6 +9,7 @@
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.12 |
 
 ## Modules
 
@@ -31,6 +32,7 @@
 | [dx_available_subnet_cidr.private_app](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/available_subnet_cidr) | resource |
 | [random_integer.appcs_instance](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
 | [terraform_data.peering_private_app_subnet](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [time_sleep.wait_for_peering_propagation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [azurerm_log_analytics_workspace.e2e](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 | [azurerm_resource_group.network](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
