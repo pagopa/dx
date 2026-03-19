@@ -42,7 +42,7 @@ resource "azurerm_key_vault_secret" "test_secret" {
 
   depends_on = [
     azurerm_role_assignment.github_kv_secrets_writer,
-    azurerm_private_endpoint.kv
+    time_sleep.wait_for_kv_private_endpoint,
   ]
 }
 
@@ -144,4 +144,13 @@ resource "azurerm_role_assignment" "github_appconfig_writer" {
   principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
 
   depends_on = [module.appcs_with_kv]
+}
+
+# Azure private endpoints can take up to a minute to be fully reachable after
+# Terraform marks them as created. Without this delay, azurerm_key_vault_secret
+# may hit the public IP (403) before the private endpoint is actually active.
+resource "time_sleep" "wait_for_kv_private_endpoint" {
+  create_duration = "60s"
+
+  depends_on = [azurerm_private_endpoint.kv]
 }
