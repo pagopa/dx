@@ -105,8 +105,8 @@ func probeSecret(t *testing.T, appIPAddress string, appConfigName string, expect
 }
 
 func probe(t *testing.T, url string, expectedStatus int) {
-	maxRetries := 3
-	delay := 5 * time.Second
+	maxRetries := 20
+	delay := 15 * time.Second
 
 	options := httpHelper.HttpGetOptions{
 		Url:       url,

@@ -168,3 +168,11 @@ resource "terraform_data" "peering_private_app_subnet" {
     EOT
   }
 }
+
+# Allow time for the VNet peering route change to propagate before the test
+# validation stage attempts to reach the private container instance.
+resource "time_sleep" "wait_for_peering_propagation" {
+  create_duration = "60s"
+
+  depends_on = [terraform_data.peering_private_app_subnet]
+}
