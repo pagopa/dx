@@ -157,19 +157,19 @@ importers:
         version: 3.2.4(vitest@3.2.4)
       eslint:
         specifier: 'catalog:'
-        version: 9.39.2(jiti@2.6.0)
+        version: 9.39.2(jiti@2.6.1)
       prettier:
         specifier: 'catalog:'
         version: 3.8.1
       tsup:
         specifier: 'catalog:'
-        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.17))(jiti@2.6.0)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+        version: 8.5.1(@swc/core@1.5.29(@swc/helpers@0.5.17))(jiti@2.6.1)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
       vitest:
         specifier: 'catalog:'
-        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.0)(lightningcss@1.30.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   actions/opex-dashboard-generate: {}
 

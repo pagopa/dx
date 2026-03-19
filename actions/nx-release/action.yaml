@@ -49,15 +49,12 @@ runs:
         git tag -l | sort > /tmp/nx-tags-before.txt
 
         echo "::notice::Executing version command"
-        npx nx release --preid rc --skip-publish
+        nx release --preid rc --skip-publish
 
         # Capture the exact tags Nx just created locally (not pushed yet).
         # comm -13 outputs lines in the second file only = new tags.
         NEW_TAGS=$(comm -13 /tmp/nx-tags-before.txt <(git tag -l | sort) | grep -v '^$' || true)
         rm -f /tmp/nx-tags-before.txt
-
-        echo "::notice::Refreshing lockfile"
-        pnpm install --lockfile-only
 
         # Check if any files changed
         if git diff HEAD --quiet; then
@@ -108,10 +105,10 @@ runs:
       run: |
         set -euo pipefail
         echo "::notice::Executing build command before publish"
-        npx nx run-many --target=build --projects=tag:npm:public
+        nx run-many --target=build --projects="tag:*:public"
 
         echo "::notice::Executing publish command"
-        npx nx release publish
+        nx release publish
 
         echo "published=true" >> "$GITHUB_OUTPUT"
 

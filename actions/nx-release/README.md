@@ -11,14 +11,14 @@ This action automates the Nx release flow in two phases:
 **Trigger**: When `.nx/version-plans/**` files are added or modified on the main branch.
 
 > [!TIP]
-> To generate version plan files, you can use `npx nx release plan` command in your local environment.
-> E.g. `npx nx release plan --projects="@pagopa/package-name" --only-touched=false`
+> To generate version plan files, you can use `nx release plan` command in your local environment.
+> E.g. `nx release plan --projects="@pagopa/package-name" --only-touched=false`
 
 **Actions**:
 
 1. Detects new or modified version plan files by github events
 2. Checks out to `nx-release/main` branch
-3. Runs `npx nx release --skip-publish` to:
+3. Runs `nx release --skip-publish` to:
    - Consume version plans
    - Generate or update version bumps in `package.json`/`pom.xml`
    - Generate or update `CHANGELOG.md` files
@@ -36,7 +36,7 @@ This action automates the Nx release flow in two phases:
 
 **Actions**:
 
-1. Runs `npx nx release publish` to build and publish packages to npm with provenance
+1. Runs `nx release publish` to build and publish packages to npm with provenance
 2. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 3. Creates any missing annotated git tags and pushes them
 4. Creates any missing GitHub Releases with extracted changelog notes
@@ -62,7 +62,6 @@ This action automates the Nx release flow in two phases:
 ## Prerequisites
 
 - Repository configured with `nx.json` (Nx monorepo)
-- Node.js and pnpm/npm installed
 - `gh` CLI available in the runner
 - GitHub token with appropriate permissions
 - npm packages require [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) configured to enable provenance signing (`id-token: write` permission must be granted)
@@ -126,7 +125,7 @@ One or more `.nx/version-plans/**` files were **added or modified** on the base
 branch. The action:
 
 1. Checks out a `nx-release/main` branch
-2. Runs `npx nx release --skip-publish` to consume version plans and update
+2. Runs `nx release --skip-publish` to consume version plans and update
    `package.json`/`pom.xml` and `CHANGELOG.md` files
 3. Captures the git tags created locally by Nx (snapshot diff before/after)
 4. Commits all changes and force-pushes the branch
@@ -139,7 +138,7 @@ branch. The action:
 The `Version Packages` PR was **merged** (or `workflow_dispatch` was triggered). The action:
 
 1. Builds all public npm packages (`tag:npm:public`)
-2. Runs `npx nx release publish` with npm provenance enabled
+2. Runs `nx release publish` with npm provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 4. Creates a GitHub Release per new tag with extracted changelog notes;
