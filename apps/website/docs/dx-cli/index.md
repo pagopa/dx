@@ -216,10 +216,10 @@ or deletes resources.
 npx @pagopa/dx-cli savemoney
 
 # Using configuration file
-npx @pagopa/dx-cli savemoney --config config.json
+npx @pagopa/dx-cli savemoney --config config.yaml
 
 # With verbose output and JSON format
-npx @pagopa/dx-cli savemoney --config config.json --format json --verbose
+npx @pagopa/dx-cli savemoney --config config.yaml --format json --verbose
 ```
 
 #### Analysis Flow
@@ -270,45 +270,48 @@ The tool supports multiple authentication methods:
 
 | Parameter           | Type       | Req. | CLI Flag               | Description                                                |
 | :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
-| `tenantId`          | `string`   | Yes  | -                      | Azure Tenant ID                                            |
 | `subscriptionIds`   | `string[]` | Yes  | -                      | Azure subscription IDs to scan                             |
 | `preferredLocation` | `string`   |  No  | `--location`,<br/>`-l` | Preferred Azure region<br/>(default: `italynorth`)         |
 | `timespanDays`      | `number`   |  No  | `--days`,<br/>`-d`     | Days to look back for metrics analysis<br/>(default: `30`) |
 
 **CLI-only options:**
 
-- `--config`, `-c` - Path to config file
+- `--config`, `-c` - Path to YAML config file
 - `--format`, `-f` - Output format, possible values: `table` (_default_),
-  `json`, `detailed-json`
+  `json`, `detailed-json`, `lint`
+- `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
 - `--verbose`, `-v` - Enable detailed logging
 
 ##### Configuration Example
 
-Create a `config.json` file:
+Create a `config.yaml` file:
 
-```json
-{
-  "tenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-  "subscriptionIds": [
-    "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
-  ],
-  "preferredLocation": "italynorth",
-  "timespanDays": 30
-}
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    - yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+  preferredLocation: italynorth
+  timespanDays: 30
+  thresholds: # optional — omit to use built-in defaults
+    vm:
+      cpuPercent: 5
+    storage:
+      transactionsPerDay: 50
 ```
 
-Alternatively, use environment variables:
+Alternatively, use the environment variable:
 
 ```bash
-export ARM_TENANT_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 export ARM_SUBSCRIPTION_ID="sub-1,sub-2,sub-3"
 ```
 
 :::tip
 
-If required parameters are not provided via config file, environments or CLI,
-the tool will prompt for them interactively.
+If `subscriptionIds` is not provided via config file or environment variable,
+the tool will prompt for it interactively. Authentication is handled
+automatically by `DefaultAzureCredential` (e.g. via `az login` or managed
+identity).
 
 :::
 
@@ -337,6 +340,40 @@ All resources are additionally evaluated for:
 - **Location Mismatch** - Resources outside preferred region may have compliance
   or cost implications
 
+#### Tag Filtering
+
+Use `--tags` to restrict the analysis to resources that match **all** specified
+Azure tags (AND logic):
+
+```bash
+npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod team=dx
+```
+
+Only resources that have every listed tag with the exact expected value will be
+analyzed. This is useful to scope a scan to a specific environment or team
+without editing the config file.
+
+#### Custom Thresholds
+
+Analysis thresholds (e.g. minimum CPU%, minimum transactions/day) can be
+overridden by adding a `thresholds` section inside the `azure` block of your
+config YAML. Only the fields you want to change are required — all others keep
+their built-in defaults.
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  thresholds:
+    vm:
+      cpuPercent: 5
+    appService:
+      cpuPercent: 10
+      memoryPercent: 20
+    storage:
+      transactionsPerDay: 50
+```
+
 #### Output Formats
 
 Available formats:
@@ -345,6 +382,8 @@ Available formats:
 - **`json`** - Structured JSON array for integration with other tools
 - **`detailed-json`** - Complete output with full Azure resource metadata for AI
   analysis
+- **`lint`** - Linter-style output grouped by resource ID, with risk icons and a
+  summary line
 
 <details>
 <summary>Example JSON Output</summary>
@@ -373,13 +412,19 @@ Available formats:
 npx @pagopa/dx-cli savemoney
 
 # With config file
-npx @pagopa/dx-cli savemoney --config config.json
+npx @pagopa/dx-cli savemoney --config config.yaml
 
 # Custom timespan and format
-npx @pagopa/dx-cli savemoney --config config.json --days 60 --format json
+npx @pagopa/dx-cli savemoney --config config.yaml --days 60 --format json
+
+# Linter-style output
+npx @pagopa/dx-cli savemoney --config config.yaml --format lint
+
+# Filter to a specific environment
+npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod
 
 # Verbose output for debugging
-npx @pagopa/dx-cli savemoney --config config.json --verbose
+npx @pagopa/dx-cli savemoney --config config.yaml --verbose
 ```
 
 #### ✅ Best Practices

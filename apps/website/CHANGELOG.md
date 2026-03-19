@@ -1,5 +1,19 @@
 # docs
 
+## 0.12.8
+
+### Patch Changes
+
+- d547c62: Update CLI docs with new SaveMoney features
+
+## 0.12.7
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+- Updated dependencies [e0a3767]
+  - @pagopa/dx-mcpprompts@0.2.4
+
 ## 0.12.6
 
 ### Patch Changes

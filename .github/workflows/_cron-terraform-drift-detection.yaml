@@ -3,7 +3,7 @@ name: Drift Detection
 on:
   workflow_dispatch:
   schedule:
-      - cron: '00 08 * * *' # Run at 08:00 every day
+    - cron: "00 08 * * *" # Run at 08:00 every day
 
 jobs:
   drift_detection_dev:
@@ -15,9 +15,12 @@ jobs:
       id-token: write
     secrets: inherit
     with:
-      environment: 'dev'
-      override_github_environment: 'infra-dev'
-      base_path: 'infra/resources'
+      environment: "dev"
+      override_github_environment: "infra-dev"
+      base_path: "infra/resources"
+      use_private_agent: true
+      use_labels: true
+      override_labels: "dev"
 
   drift_detection_prod:
     uses: ./.github/workflows/infra_drift_detection.yml
@@ -28,6 +31,6 @@ jobs:
       id-token: write
     secrets: inherit
     with:
-      environment: 'prod'
-      override_github_environment: 'infra-prod'
-      base_path: 'infra/resources'
+      environment: "prod"
+      override_github_environment: "infra-prod"
+      base_path: "infra/resources"

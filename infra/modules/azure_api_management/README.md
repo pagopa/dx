@@ -4,6 +4,8 @@
 
 This module deploys an Azure API Management instance with optional configurations for networking, monitoring, autoscaling, and custom domains.
 
+![diagram](diagram.svg)
+
 ## Features
 
 - **Azure API Management Instance**: Manage APIs, policies, and configurations.
@@ -17,11 +19,11 @@ This module deploys an Azure API Management instance with optional configuration
 
 ## Use Cases and Configurations
 
-| Use case          | Description                                                                                               | SLA  | Scalability      | Autoscaling | Zones Configured  | Metric Alerts |
-| ----------------- | --------------------------------------------------------------------------------------------------------- | ---- | ---------------- | ----------- | ----------------- | ------------- |
-| `development`     | For development and testing purposes.                                                                     | None | Limited          | No          | No                | Disabled      |
-| `cost_optimized`  | The default use case, for production workloads.                                                           | Yes  | Moderate         | No          | No                | Enabled       |
-| `high_load`       | Designed for large-scale production workloads.                                                            | Yes  | High (Autoscale) | Yes         | `["1", "2"]`      | Enabled       |
+| Use case         | Description                                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts |
+| ---------------- | ----------------------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------- |
+| `development`    | For development and testing purposes.           | None | Limited          | No          | No               | Disabled      |
+| `cost_optimized` | The default use case, for production workloads. | Yes  | Moderate         | No          | No               | Enabled       |
+| `high_load`      | Designed for large-scale production workloads.  | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Enabled       |
 
 ## Monitoring
 
