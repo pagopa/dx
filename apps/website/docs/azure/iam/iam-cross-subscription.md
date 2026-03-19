@@ -37,14 +37,14 @@ To implement a cross-subscription role assignment, you will need:
 ### Defining the Terraform Code
 
 To create a `Role Assignment`, you can use the DX Terraform module
-[dx-azure-role-assignments](https://registry.terraform.io/modules/pagopa/dx-azure-role-assignments/azurerm/latest)
+[dx-azure-role-assignments](https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/latest)
 which allows you to give more roles at a time to the same principal and
 abstracts away the complexity of the role choice.
 
 ```hcl
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 0.0"
+  version = "~> 1.0"
 
   principal_id = "caller-resource-id"
 
@@ -53,6 +53,7 @@ module "roles" {
       account_name        = "cosmosdb-account-name"
       resource_group_name = "cosmosdb-account-resource-group-name"
       role                = "writer"
+      description         = "Add a meaningful description"
     }
   ]
 
@@ -60,6 +61,7 @@ module "roles" {
     {
       name                = "keyvault-name"
       resource_group_name = "keyvault-resource-group-name"
+      description         = "Add a meaningful description"
       roles = {
         secrets = "reader"
       }
@@ -72,6 +74,7 @@ module "roles" {
       resource_group_name  = "storage-account-resource-group-name"
       container_name       = "container-name"
       role                 = "reader"
+      description         = "Add a meaningful description"
     }
   ]
 }
@@ -103,7 +106,7 @@ the `Reader` role on the target resource (subscription A).
 
 - Documentation: Document all cross-subscription relationships in a central
   location
-- Comments: Add comments in the Terraform code explaining:
+- Comments: Use the `description` property in the Terraform code explaining:
   - The purpose of the access
   - The source resource details
   - The date when access was granted
