@@ -43,7 +43,7 @@ resource "azurerm_key_vault_secret" "test_secret" {
   depends_on = [
     azurerm_role_assignment.github_kv_secrets_writer,
     time_sleep.wait_for_kv_private_endpoint,
-    terraform_data.peering_private_app_subnet,
+    time_sleep.wait_for_peering_propagation,
   ]
 }
 
