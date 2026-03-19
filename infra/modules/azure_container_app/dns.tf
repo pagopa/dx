@@ -14,8 +14,9 @@ resource "azurerm_dns_cname_record" "this" {
 
 # Create a DNS TXT record used by Azure to verify ownership of the custom domain.
 # The record name follows the asuid.<subdomain> convention required by Azure Container Apps.
+# Only needed for Azure-managed certificate provisioning (not when a certificate_id is provided).
 resource "azurerm_dns_txt_record" "validation" {
-  count = var.custom_domain != null && try(var.custom_domain.dns, null) != null ? 1 : 0
+  count = var.custom_domain != null && try(var.custom_domain.dns, null) != null && var.custom_domain.certificate_id == null ? 1 : 0
 
   name                = "asuid.${trimsuffix(var.custom_domain.host_name, ".${var.custom_domain.dns.zone_name}")}"
   zone_name           = var.custom_domain.dns.zone_name
@@ -31,8 +32,9 @@ resource "azurerm_dns_txt_record" "validation" {
 
 # Wait for DNS propagation before Azure attempts to validate the custom domain.
 # Without this delay, Azure may fail to find the TXT record immediately after creation.
+# Only needed for Azure-managed certificate provisioning.
 resource "time_sleep" "dns_propagation" {
-  count = var.custom_domain != null && try(var.custom_domain.dns, null) != null ? 1 : 0
+  count = var.custom_domain != null && try(var.custom_domain.dns, null) != null && var.custom_domain.certificate_id == null ? 1 : 0
 
   depends_on = [
     azurerm_dns_cname_record.this,

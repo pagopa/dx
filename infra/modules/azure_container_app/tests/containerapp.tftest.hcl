@@ -664,7 +664,7 @@ run "container_app_custom_domain_requires_cert_or_dns" {
   ]
 }
 
-run "container_app_custom_domain_cert_and_dns_are_mutually_exclusive" {
+run "container_app_custom_domain_cert_and_dns_are_compatible" {
   command = plan
 
   variables {
@@ -678,9 +678,22 @@ run "container_app_custom_domain_cert_and_dns_are_mutually_exclusive" {
     }
   }
 
-  expect_failures = [
-    var.custom_domain,
-  ]
+  # Both fields together is valid: pre-uploaded cert + automatic CNAME routing.
+  # Only the CNAME is created; TXT and managed cert resources are skipped.
+  assert {
+    condition     = length(azurerm_dns_cname_record.this) == 1
+    error_message = "CNAME record should be created when dns is provided alongside certificate_id"
+  }
+
+  assert {
+    condition     = length(azurerm_dns_txt_record.validation) == 0
+    error_message = "TXT validation record should NOT be created when certificate_id is provided"
+  }
+
+  assert {
+    condition     = length(azapi_resource.managed_certificate) == 0
+    error_message = "Managed certificate should NOT be provisioned when certificate_id is provided"
+  }
 }
 
 run "container_app_custom_domain_hostname_must_be_subdomain" {
