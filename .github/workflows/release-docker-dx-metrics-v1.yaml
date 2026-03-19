@@ -29,5 +29,5 @@ jobs:
       docker_image_name: pagopa/dx-metrics
       docker_image_description: "DX Metrics is a monitoring and analytics service for the PagoPA Developer Experience (DX) team, providing insights into development experience."
       container_app: dx-p-itn-metrics-portal-ca-01
-      resource_group_name: dx-p-itn-devex-rg-01
+      resource_group_name: dx-p-itn-common-rg-01
       environment: app-prod
