@@ -106,8 +106,8 @@ variable "custom_domain" {
   }
 
   validation {
-    condition     = var.custom_domain == null || var.custom_domain.certificate_id != null || var.custom_domain.dns != null
-    error_message = "Either 'certificate_id' or 'dns' must be provided in custom_domain to activate the certificate binding."
+    condition     = var.custom_domain == null || (var.custom_domain.certificate_id != null) != (var.custom_domain.dns != null)
+    error_message = "Exactly one of 'certificate_id' or 'dns' must be provided in custom_domain — not both, not neither."
   }
 
   validation {

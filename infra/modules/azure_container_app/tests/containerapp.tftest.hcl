@@ -628,3 +628,111 @@ run "container_app_authentication_plan" {
     error_message = "The entra-id-client-secret should reference the correct Key Vault secret"
   }
 }
+
+# ---- Validation failure tests ----
+
+run "container_app_custom_domain_requires_public_access" {
+  command = plan
+
+  variables {
+    public_access_enabled = false
+    custom_domain = {
+      host_name = "api.example.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_requires_cert_or_dns" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "api.example.com"
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_cert_and_dns_are_mutually_exclusive" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name      = "api.example.com"
+      certificate_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.App/managedEnvironments/env/certificates/cert"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_hostname_must_be_subdomain" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "other.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_apex_not_supported" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "example.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_authentication_invalid_kv_uri" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = "not-a-valid-kv-uri"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.authentication,
+  ]
+}
