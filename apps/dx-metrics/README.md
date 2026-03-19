@@ -9,14 +9,12 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 - **PostgreSQL 16** — persistent data storage
 - **Drizzle ORM** — type-safe database access
 - **Recharts** — chart rendering
-- **Better Auth** — GitHub OAuth authentication
 - **Import script** — incremental data sync from GitHub API via Octokit
 
 ## Prerequisites
 
 - Docker and Docker Compose
 - A GitHub personal access token with `repo` scope
-- A GitHub OAuth App (for dashboard authentication)
 
 ## Setup
 
@@ -29,7 +27,8 @@ docker compose --profile dx-metrics up -d
 
 2. **Setup database:**
 
-Only needed on first run or when applying new migrations:
+Only needed on first run, when applying new migrations, or when upgrading an
+existing database:
 
 ```bash
 # From apps/dx-metrics/
@@ -44,7 +43,7 @@ export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresq
 npx tsx scripts/import.ts --since 2026-01-01
 ```
 
-4. **Access dashboards** at http://localhost:3000
+4. **Access dashboards** at http://localhost:3000 (anonymous access; no GitHub login required)
 
 ## Import Script
 
