@@ -1,5 +1,12 @@
 # docs
 
+## 0.12.9
+
+### Patch Changes
+
+- 442a508: Fix link and update module usage examples in iam-cross-subscription
+  page
+
 ## 0.12.8
 
 ### Patch Changes
