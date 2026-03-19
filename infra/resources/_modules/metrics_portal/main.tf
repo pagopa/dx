@@ -53,10 +53,6 @@ module "container_app" {
     {
       name                = "DATABASE_URL"
       key_vault_secret_id = azurerm_key_vault_secret.database_url.versionless_id
-    },
-    {
-      name                = "GITHUB_TOKEN"
-      key_vault_secret_id = data.azurerm_key_vault_secret.github_runner_pat.versionless_id
     }
   ]
 
