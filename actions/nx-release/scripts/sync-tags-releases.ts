@@ -6,6 +6,7 @@
  * Recovery-capable: scans up to 20 recent merged PRs to catch up on tags
  * missed across failed publish runs.
  */
+import { Octokit } from "@octokit/rest";
 import { execFile, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -54,43 +55,71 @@ export async function extractChangelogSection(
   }
 }
 
-export async function releaseExists(tag: string): Promise<boolean> {
+export async function releaseExists(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  tag: string,
+): Promise<boolean> {
   try {
-    await execFileAsync("gh", ["release", "view", tag]);
+    await octokit.repos.getReleaseByTag({
+      owner,
+      repo,
+      tag,
+    });
     return true;
-  } catch {
+  } catch (err: unknown) {
+    // 404 means release doesn't exist
+    if (
+      typeof err === "object" &&
+      err !== null &&
+      "status" in err &&
+      err.status === 404
+    ) {
+      return false;
+    }
+    // Other errors should be logged but treated as "doesn't exist"
+    console.warn(`Error checking release ${tag}:`, err);
     return false;
   }
 }
 
 export async function run(base: string): Promise<void> {
-  const { stdout } = await execFileAsync("gh", [
-    "pr",
-    "list",
-    "--state",
-    "merged",
-    "--head",
-    "nx-release/main",
-    "--base",
-    base,
-    "--limit",
-    // Scanning the last 20 merged PRs is enough to recover from any realistic
-    // sequence of failed publish runs without making the step noticeably slow.
-    "20",
-    "--json",
-    "number,body,mergeCommit",
-  ]);
+  const octokit = createOctokit();
+  const { owner, repo } = await getRepoInfo();
 
-  const parsed: unknown = JSON.parse(stdout);
-  if (!isPrDataArray(parsed)) {
-    throw new Error("Unexpected gh pr list response: not an array of PR data");
+  // List merged PRs from nx-release/main branch
+  const { data: pulls } = await octokit.pulls.list({
+    base,
+    direction: "desc",
+    head: `${owner}:nx-release/main`,
+    owner,
+    per_page: 20,
+    repo,
+    sort: "updated",
+    state: "closed",
+  });
+
+  // Filter only merged PRs and extract body + merge commit
+  const mergedPrs = pulls
+    .filter((pr) => pr.merged_at !== null)
+    .map((pr) => ({
+      body: pr.body ?? "",
+      mergeCommit: pr.merge_commit_sha
+        ? { oid: pr.merge_commit_sha }
+        : undefined,
+      number: pr.number,
+    }));
+
+  if (!isPrDataArray(mergedPrs)) {
+    throw new Error("Unexpected PR list response: not an array of PR data");
   }
 
   // Collect all tag entries from every merged Version Packages PR.
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
   // Store merge commit SHA for each tag to ensure tags point to the correct commit.
   const allEntries = new Map<string, TagEntry & { mergeCommitSha?: string }>();
-  for (const pr of parsed) {
+  for (const pr of mergedPrs) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
@@ -146,14 +175,19 @@ export async function run(base: string): Promise<void> {
       if (section) notes = section;
     }
 
-    if (await releaseExists(tag)) {
+    if (await releaseExists(octokit, owner, repo, tag)) {
       console.log(`::notice::GitHub release ${tag} already exists, skipping`);
       continue;
     }
 
-    const args = ["release", "create", tag, "--title", tag, "--notes", notes];
-    if (version.includes("-")) args.push("--prerelease");
-    await spawnInherit("gh", args);
+    await octokit.repos.createRelease({
+      body: notes,
+      name: tag,
+      owner,
+      prerelease: version.includes("-"),
+      repo,
+      tag_name: tag,
+    });
     console.log(`::notice::Created GitHub release: ${tag}`);
   }
 }
@@ -180,6 +214,45 @@ export async function tagExistsOnRemote(tag: string): Promise<boolean> {
     `refs/tags/${tag}`,
   ]);
   return stdout.trim().length > 0;
+}
+
+/** Creates an authenticated Octokit instance. */
+function createOctokit(): Octokit {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    throw new Error(
+      "GITHUB_TOKEN environment variable is required but not set",
+    );
+  }
+  return new Octokit({ auth: token });
+}
+
+/** Parses owner and repo from GITHUB_REPOSITORY env var or git remote. */
+async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
+  const ghRepo = process.env.GITHUB_REPOSITORY;
+  if (ghRepo) {
+    const [owner, repo] = ghRepo.split("/");
+    if (owner && repo) return { owner, repo };
+  }
+
+  // Fallback: parse from git remote
+  try {
+    const { stdout } = await execFileAsync("git", [
+      "remote",
+      "get-url",
+      "origin",
+    ]);
+    const match = stdout.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
+    if (match) {
+      return { owner: match[1], repo: match[2] };
+    }
+  } catch (err) {
+    console.error("Failed to get repo info from git remote:", err);
+  }
+
+  throw new Error(
+    "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote",
+  );
 }
 
 function isPrDataArray(value: unknown): value is PrData[] {

@@ -37,7 +37,6 @@ runs:
         RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
-        GH_TOKEN: ${{ inputs.github-token }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
@@ -65,35 +64,18 @@ runs:
         fi
 
         # Resolve tag → project root path via nx (used for changelog extraction and
-        # GitHub Release notes). Must run before build-pr-body so paths are available.
+        # GitHub Release notes). Must run before manage-version-pr so paths are available.
         echo "::notice::NEW_TAGS=${NEW_TAGS}"
         RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
         echo "::notice::RELEASE_TAGS=${RELEASE_TAGS}"
-
-        PR_BODY=$(RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/build-pr-body.js")
-        PR_BODY="${PR_BODY}
-        <!-- nx-release-tags: ${RELEASE_TAGS} -->"
 
         # Commit and push the version changes (bump + changelog)
         git add -A
         git commit -m "$COMMIT_MESSAGE"
         git push --force-with-lease origin "$RELEASE_BRANCH"
 
-        # Create or update PR
-        PR_NUMBER=$(gh pr list --base "$BASE_BRANCH" --head "$RELEASE_BRANCH" --state open --json number --jq '.[0].number // empty' || true)
-
-        if [[ -n "$PR_NUMBER" ]]; then
-          gh pr edit "$PR_NUMBER" --title "$PR_TITLE" --body "$PR_BODY"
-          PR_URL=$(gh pr view "$PR_NUMBER" --json url --jq '.url')
-          echo "::notice::Updated existing release PR #$PR_NUMBER"
-        else
-          PR_URL=$(gh pr create --base "$BASE_BRANCH" --head "$RELEASE_BRANCH" --title "$PR_TITLE" --body "$PR_BODY")
-          PR_NUMBER=$(echo "$PR_URL" | sed -E 's|.*/pull/([0-9]+).*|\1|')
-          echo "::notice::Created new release PR #$PR_NUMBER"
-        fi
-
-        echo "pull-request-number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
-        echo "pull-request-url=$PR_URL" >> "$GITHUB_OUTPUT"
+        # Create or update PR (script writes to GITHUB_OUTPUT)
+        RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/manage-version-pr.js"
 
     - name: Publish with Nx release
       if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/') || github.event_name == 'workflow_dispatch'

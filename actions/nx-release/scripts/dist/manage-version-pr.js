@@ -1,5 +1,5 @@
-import { execFile, spawn } from 'child_process';
-import { readFile } from 'fs/promises';
+import { execFile } from 'child_process';
+import { appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
 
@@ -3633,143 +3633,12 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
   }
 );
 var execFileAsync = promisify(execFile);
-async function extractChangelogSection(clPath, version) {
-  if (!version || version.trim() === "") {
-    return null;
+async function appendOutput(key, value) {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) {
+    await appendFile(outputPath, `${key}=${value}
+`);
   }
-  try {
-    const lines = (await readFile(clPath, "utf8")).split("\n");
-    const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pat = new RegExp(`^##\\s+.*${escapedVersion}`);
-    const s = lines.findIndex((l) => pat.test(l));
-    if (s < 0) return null;
-    const e = lines.findIndex((l, i) => i > s && /^##\s/.test(l));
-    return lines.slice(s, e < 0 ? void 0 : e).join("\n").trim();
-  } catch {
-    return null;
-  }
-}
-async function releaseExists(octokit, owner, repo, tag) {
-  try {
-    await octokit.repos.getReleaseByTag({
-      owner,
-      repo,
-      tag
-    });
-    return true;
-  } catch (err) {
-    if (typeof err === "object" && err !== null && "status" in err && err.status === 404) {
-      return false;
-    }
-    console.warn(`Error checking release ${tag}:`, err);
-    return false;
-  }
-}
-async function run(base) {
-  const octokit = createOctokit();
-  const { owner, repo } = await getRepoInfo();
-  const { data: pulls } = await octokit.pulls.list({
-    base,
-    direction: "desc",
-    head: `${owner}:nx-release/main`,
-    owner,
-    per_page: 20,
-    repo,
-    sort: "updated",
-    state: "closed"
-  });
-  const mergedPrs = pulls.filter((pr) => pr.merged_at !== null).map((pr) => ({
-    body: pr.body ?? "",
-    mergeCommit: pr.merge_commit_sha ? { oid: pr.merge_commit_sha } : void 0,
-    number: pr.number
-  }));
-  if (!isPrDataArray(mergedPrs)) {
-    throw new Error("Unexpected PR list response: not an array of PR data");
-  }
-  const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of mergedPrs) {
-    if (!pr.body) continue;
-    const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
-    if (!m) continue;
-    const mergeCommitSha = pr.mergeCommit?.oid;
-    for (const e of parseTagEntries(JSON.parse(m[1]))) {
-      allEntries.set(e.tag, { ...e, mergeCommitSha });
-    }
-  }
-  if (allEntries.size === 0) {
-    console.log(
-      "::notice::No release tags found in merged Version Packages PRs"
-    );
-    return;
-  }
-  const newTags = [];
-  for (const entry of allEntries.values()) {
-    if (await tagExistsOnRemote(entry.tag)) {
-      console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
-      continue;
-    }
-    const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
-    if (entry.mergeCommitSha) {
-      tagArgs.push(entry.mergeCommitSha);
-      console.log(
-        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
-      );
-    } else {
-      console.log(
-        `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
-      );
-    }
-    await spawnInherit("git", tagArgs);
-    newTags.push(entry);
-    console.log(`::notice::Created tag: ${entry.tag}`);
-  }
-  if (newTags.length === 0) {
-    console.log("::notice::No new tags to push");
-    return;
-  }
-  await spawnInherit("git", ["push", "origin", "--tags"]);
-  for (const { path, tag, version } of newTags) {
-    let notes = `Release ${tag}`;
-    if (path) {
-      const clPath = join(path, "CHANGELOG.md");
-      const section = await extractChangelogSection(clPath, version);
-      if (section) notes = section;
-    }
-    if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`::notice::GitHub release ${tag} already exists, skipping`);
-      continue;
-    }
-    await octokit.repos.createRelease({
-      body: notes,
-      name: tag,
-      owner,
-      prerelease: version.includes("-"),
-      repo,
-      tag_name: tag
-    });
-    console.log(`::notice::Created GitHub release: ${tag}`);
-  }
-}
-function spawnInherit(cmd, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on(
-      "close",
-      (code) => code === 0 ? resolve() : reject(
-        new Error(`${cmd} ${args.join(" ")} exited with code ${code}`)
-      )
-    );
-    child.on("error", reject);
-  });
-}
-async function tagExistsOnRemote(tag) {
-  const { stdout } = await execFileAsync("git", [
-    "ls-remote",
-    "--tags",
-    "origin",
-    `refs/tags/${tag}`
-  ]);
-  return stdout.trim().length > 0;
 }
 function createOctokit() {
   const token = process.env.GITHUB_TOKEN;
@@ -3779,6 +3648,43 @@ function createOctokit() {
     );
   }
   return new Octokit2({ auth: token });
+}
+async function extractLatestSection(changelogPath) {
+  try {
+    const lines = (await readFile(changelogPath, "utf8")).split("\n");
+    const firstHeading = lines.findIndex((line) => /^##\s+/.test(line));
+    if (firstHeading === -1) {
+      return [];
+    }
+    const nextHeading = lines.findIndex(
+      (line, i) => i > firstHeading && /^##\s+/.test(line)
+    );
+    const end = nextHeading === -1 ? lines.length : nextHeading;
+    return lines.slice(firstHeading, end).map((line) => line.trimEnd());
+  } catch (err) {
+    console.warn(`Could not read changelog at ${changelogPath}:`, err);
+    return [];
+  }
+}
+async function formatReleaseSection(entry) {
+  const sectionLines = await extractLatestSection(entry.changelogPath);
+  const output = [];
+  output.push(`## ${entry.name}@${entry.version}`);
+  output.push("");
+  if (sectionLines.length === 0) {
+    output.push("- No changelog entry found.");
+    output.push("");
+    return output.join("\n");
+  }
+  const bodyLines = sectionLines.slice(1).filter((line) => line.trim().length > 0);
+  if (bodyLines.length === 0) {
+    output.push("- No changelog entry found.");
+    output.push("");
+    return output.join("\n");
+  }
+  output.push(...bodyLines);
+  output.push("");
+  return output.join("\n");
 }
 async function getRepoInfo() {
   const ghRepo = process.env.GITHUB_REPOSITORY;
@@ -3803,29 +3709,100 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-function isPrDataArray(value) {
+function isTagEntryArray(value) {
   return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
+    (item) => typeof item === "object" && item !== null && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
   );
 }
-function parseTagEntries(raw) {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
-    if (typeof item !== "object" || item === null) return [];
-    const r = item;
-    if (typeof r["tag"] !== "string") return [];
-    return [
-      {
-        path: typeof r["path"] === "string" ? r["path"] : null,
-        tag: r["tag"],
-        version: typeof r["version"] === "string" ? r["version"] : ""
-      }
-    ];
+function resolveReleaseEntries() {
+  const raw = process.env.RELEASE_TAGS ?? "[]";
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    console.error(
+      "[manage-version-pr] Failed to parse RELEASE_TAGS:",
+      raw.slice(0, 200)
+    );
+    return [];
+  }
+  if (!isTagEntryArray(parsed)) {
+    console.error(
+      "[manage-version-pr] RELEASE_TAGS is not a valid TagEntry array"
+    );
+    return [];
+  }
+  const entries = parsed;
+  return entries.filter((e) => e.path !== null).map((e) => ({
+    changelogPath: join(e.path, "CHANGELOG.md"),
+    name: e.tag.slice(0, e.tag.length - e.version.length - 1),
+    version: e.version
+  })).sort((a, b) => a.name.localeCompare(b.name));
+}
+async function run() {
+  const baseBranch = process.env.BASE_BRANCH ?? "main";
+  const releaseBranch = process.env.RELEASE_BRANCH ?? "nx-release/main";
+  const prTitle = process.env.PR_TITLE ?? "Version Packages";
+  const releaseTags = process.env.RELEASE_TAGS ?? "[]";
+  const intro = [
+    "This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to main, this PR will be updated.",
+    "",
+    "# Releases",
+    ""
+  ].join("\n");
+  const entries = resolveReleaseEntries();
+  let prBody;
+  if (entries.length === 0) {
+    prBody = `${intro}See individual packages CHANGELOGs for details.`;
+  } else {
+    const sections = await Promise.all(entries.map(formatReleaseSection));
+    prBody = `${intro}${sections.join("\n")}`.trim();
+  }
+  prBody += `
+
+<!-- nx-release-tags: ${releaseTags} -->`;
+  console.log("::notice::Building PR with Octokit API");
+  const octokit = createOctokit();
+  const { owner, repo } = await getRepoInfo();
+  const { data: existingPrs } = await octokit.pulls.list({
+    base: baseBranch,
+    head: `${owner}:${releaseBranch}`,
+    owner,
+    repo,
+    state: "open"
   });
+  if (existingPrs.length > 0) {
+    const prNumber = existingPrs[0].number;
+    await octokit.pulls.update({
+      body: prBody,
+      owner,
+      pull_number: prNumber,
+      repo,
+      title: prTitle
+    });
+    const prUrl = existingPrs[0].html_url;
+    console.log(`::notice::Updated existing release PR #${prNumber}`);
+    console.log(`::notice::PR URL: ${prUrl}`);
+    await appendOutput("pull-request-number", prNumber.toString());
+    await appendOutput("pull-request-url", prUrl);
+  } else {
+    const { data: newPr } = await octokit.pulls.create({
+      base: baseBranch,
+      body: prBody,
+      head: releaseBranch,
+      owner,
+      repo,
+      title: prTitle
+    });
+    console.log(`::notice::Created new release PR #${newPr.number}`);
+    console.log(`::notice::PR URL: ${newPr.html_url}`);
+    await appendOutput("pull-request-number", newPr.number.toString());
+    await appendOutput("pull-request-url", newPr.html_url);
+  }
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run(process.env.BASE_BRANCH ?? "main").catch((err) => {
-    console.error("Unexpected error in sync-tags-releases:", err);
+  run().catch((err) => {
+    console.error("Unexpected error in manage-version-pr:", err);
     process.exit(1);
   });
 }
@@ -3838,5 +3815,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   (* v8 ignore next -- @preserve *)
   (* v8 ignore else -- @preserve *)
 */
-
-export { extractChangelogSection, releaseExists, run, spawnInherit, tagExistsOnRemote };
