@@ -77,9 +77,9 @@ jobs:
             exit 0
           fi
 
-          # Skip validation if the workflow is named _release-vN.yaml
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/_release-v[0-9]\+\.yaml$'; then
-            echo "Skipping validation for _release-vN.yaml"
+          # Skip validation if the workflow is named release-vN.yaml
+          if echo "$NEW_FILES" | grep -q '^.github/workflows/release-v[0-9]\+\.yaml$'; then
+            echo "Skipping validation for release-vN.yaml"
             exit 0
           fi
 
