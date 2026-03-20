@@ -65,9 +65,12 @@ export async function getNxProjectNames(): Promise<string[]> {
       return [];
     }
     const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    return Array.isArray(parsed) && parsed.every((s) => typeof s === "string")
-      ? (parsed as string[])
-      : [];
+    if (!Array.isArray(parsed)) return [];
+    // Type predicate ensures safe return without assertion
+    if (parsed.every((s): s is string => typeof s === "string")) {
+      return parsed;
+    }
+    return [];
   } catch (err) {
     console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];

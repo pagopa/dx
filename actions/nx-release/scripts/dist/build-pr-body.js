@@ -39,11 +39,16 @@ async function formatReleaseSection(entry) {
   output.push("");
   return output.join("\n");
 }
+function isTagEntryArray(value) {
+  return Array.isArray(value) && value.every(
+    (item) => typeof item === "object" && item !== null && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
+  );
+}
 function resolveReleaseEntries() {
   const raw = process.env.RELEASE_TAGS ?? "[]";
-  let entries;
+  let parsed;
   try {
-    entries = JSON.parse(raw);
+    parsed = JSON.parse(raw);
   } catch {
     console.error(
       "[build-pr-body] Failed to parse RELEASE_TAGS:",
@@ -51,6 +56,11 @@ function resolveReleaseEntries() {
     );
     return [];
   }
+  if (!isTagEntryArray(parsed)) {
+    console.error("[build-pr-body] RELEASE_TAGS is not a valid TagEntry array");
+    return [];
+  }
+  const entries = parsed;
   return entries.filter((e) => e.path !== null).map((e) => ({
     changelogPath: join(e.path, "CHANGELOG.md"),
     name: e.tag.slice(0, e.tag.length - e.version.length - 1),

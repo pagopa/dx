@@ -6,6 +6,9 @@ import { promisify } from 'util';
 // scripts/sync-tags-releases.ts
 var execFileAsync = promisify(execFile);
 async function extractChangelogSection(clPath, version) {
+  if (!version || version.trim() === "") {
+    return null;
+  }
   try {
     const lines = (await readFile(clPath, "utf8")).split("\n");
     const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -41,7 +44,7 @@ async function run(base) {
     // sequence of failed publish runs without making the step noticeably slow.
     "20",
     "--json",
-    "number,body"
+    "number,body,mergeCommit"
   ]);
   const parsed = JSON.parse(stdout);
   if (!isPrDataArray(parsed)) {
@@ -52,8 +55,9 @@ async function run(base) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
+    const mergeCommitSha = pr.mergeCommit?.oid;
     for (const e of parseTagEntries(JSON.parse(m[1]))) {
-      allEntries.set(e.tag, e);
+      allEntries.set(e.tag, { ...e, mergeCommitSha });
     }
   }
   if (allEntries.size === 0) {
@@ -68,13 +72,18 @@ async function run(base) {
       console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
       continue;
     }
-    await spawnInherit("git", [
-      "tag",
-      "-a",
-      entry.tag,
-      "-m",
-      `Release ${entry.tag}`
-    ]);
+    const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
+    if (entry.mergeCommitSha) {
+      tagArgs.push(entry.mergeCommitSha);
+      console.log(
+        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
+      );
+    } else {
+      console.log(
+        `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
+      );
+    }
+    await spawnInherit("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -123,7 +132,7 @@ async function tagExistsOnRemote(tag) {
 }
 function isPrDataArray(value) {
   return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number"
+    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
   );
 }
 function parseTagEntries(raw) {

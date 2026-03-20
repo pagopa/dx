@@ -1,10 +1,10 @@
 /**
- * Queries all merged "Version Packages" PRs, collects the nx-release-tags metadata
+ * Queries merged "Version Packages" PRs, collects the nx-release-tags metadata
  * embedded in each PR body, and creates any missing git tags and GitHub Releases.
  *
  * Fully idempotent: skips tags and releases that already exist.
- * Recovery-capable: scanning ALL past merged PRs ensures a single workflow_dispatch
- * catches up on every tag missed across multiple failed publish runs.
+ * Recovery-capable: scans up to 20 recent merged PRs to catch up on tags
+ * missed across failed publish runs.
  */
 import { execFile, spawn } from "node:child_process";
 import { readFile } from "node:fs/promises";
@@ -22,6 +22,7 @@ export interface TagEntry {
 
 interface PrData {
   body: string;
+  mergeCommit?: { oid: string };
   number: number;
 }
 
@@ -33,6 +34,10 @@ export async function extractChangelogSection(
   clPath: string,
   version: string,
 ): Promise<null | string> {
+  // Treat missing/empty version as "no extraction"
+  if (!version || version.trim() === "") {
+    return null;
+  }
   try {
     const lines = (await readFile(clPath, "utf8")).split("\n");
     const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -73,7 +78,7 @@ export async function run(base: string): Promise<void> {
     // sequence of failed publish runs without making the step noticeably slow.
     "20",
     "--json",
-    "number,body",
+    "number,body,mergeCommit",
   ]);
 
   const parsed: unknown = JSON.parse(stdout);
@@ -83,13 +88,15 @@ export async function run(base: string): Promise<void> {
 
   // Collect all tag entries from every merged Version Packages PR.
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
-  const allEntries = new Map<string, TagEntry>();
+  // Store merge commit SHA for each tag to ensure tags point to the correct commit.
+  const allEntries = new Map<string, TagEntry & { mergeCommitSha?: string }>();
   for (const pr of parsed) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
+    const mergeCommitSha = pr.mergeCommit?.oid;
     for (const e of parseTagEntries(JSON.parse(m[1]))) {
-      allEntries.set(e.tag, e);
+      allEntries.set(e.tag, { ...e, mergeCommitSha });
     }
   }
 
@@ -100,19 +107,25 @@ export async function run(base: string): Promise<void> {
     return;
   }
 
-  const newTags: TagEntry[] = [];
+  const newTags: (TagEntry & { mergeCommitSha?: string })[] = [];
   for (const entry of allEntries.values()) {
     if (await tagExistsOnRemote(entry.tag)) {
       console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
       continue;
     }
-    await spawnInherit("git", [
-      "tag",
-      "-a",
-      entry.tag,
-      "-m",
-      `Release ${entry.tag}`,
-    ]);
+    // Create tag on the merge commit SHA if available, otherwise on current HEAD
+    const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
+    if (entry.mergeCommitSha) {
+      tagArgs.push(entry.mergeCommitSha);
+      console.log(
+        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`,
+      );
+    } else {
+      console.log(
+        `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`,
+      );
+    }
+    await spawnInherit("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -177,7 +190,11 @@ function isPrDataArray(value: unknown): value is PrData[] {
         typeof item === "object" &&
         item !== null &&
         typeof (item as Record<string, unknown>)["body"] === "string" &&
-        typeof (item as Record<string, unknown>)["number"] === "number",
+        typeof (item as Record<string, unknown>)["number"] === "number" &&
+        ((item as Record<string, unknown>)["mergeCommit"] === undefined ||
+          (typeof (item as Record<string, unknown>)["mergeCommit"] ===
+            "object" &&
+            (item as Record<string, unknown>)["mergeCommit"] !== null)),
     )
   );
 }

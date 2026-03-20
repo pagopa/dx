@@ -37,7 +37,11 @@ async function getNxProjectNames() {
       return [];
     }
     const parsed = JSON.parse(stdout.slice(jsonStart));
-    return Array.isArray(parsed) && parsed.every((s) => typeof s === "string") ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    if (parsed.every((s) => typeof s === "string")) {
+      return parsed;
+    }
+    return [];
   } catch (err) {
     console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];

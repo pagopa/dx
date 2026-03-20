@@ -68,12 +68,28 @@ async function formatReleaseSection(entry: ReleaseEntry): Promise<string> {
   return output.join("\n");
 }
 
+/** Validates that a value is a TagEntry array. */
+function isTagEntryArray(value: unknown): value is TagEntry[] {
+  return (
+    Array.isArray(value) &&
+    value.every(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        typeof (item as Record<string, unknown>)["tag"] === "string" &&
+        typeof (item as Record<string, unknown>)["version"] === "string" &&
+        ((item as Record<string, unknown>)["path"] === null ||
+          typeof (item as Record<string, unknown>)["path"] === "string"),
+    )
+  );
+}
+
 /** Resolves release entries from RELEASE_TAGS env var. */
 function resolveReleaseEntries(): ReleaseEntry[] {
   const raw = process.env.RELEASE_TAGS ?? "[]";
-  let entries: TagEntry[];
+  let parsed: unknown;
   try {
-    entries = JSON.parse(raw) as TagEntry[];
+    parsed = JSON.parse(raw);
   } catch {
     console.error(
       "[build-pr-body] Failed to parse RELEASE_TAGS:",
@@ -81,6 +97,11 @@ function resolveReleaseEntries(): ReleaseEntry[] {
     );
     return [];
   }
+  if (!isTagEntryArray(parsed)) {
+    console.error("[build-pr-body] RELEASE_TAGS is not a valid TagEntry array");
+    return [];
+  }
+  const entries = parsed;
   return entries
     .filter((e): e is TagEntry & { path: string } => e.path !== null)
     .map((e) => ({
