@@ -156,16 +156,15 @@ resource "time_sleep" "wait_for_kv_private_endpoint" {
   depends_on = [azurerm_private_endpoint.kv]
 }
 
-# The private_app subnet is ephemeral (test-only) but the VNet peering between the
-# common VNet and the e2e VNet is permanent and filters by remote_subnet_names.
-# This resource temporarily adds private_app to the allowed remote subnets via CLI
-# so the self-hosted runner can reach the private container instance during tests,
-# then restores the original filter on destroy.
+# The private_app subnet is ephemeral (test-only). During test runs we temporarily
+# switch the peering to whole-VNet mode to simplify routing consistency from runner
+# to private endpoints and container instances, then restore subnet filtering on destroy.
 resource "terraform_data" "peering_private_app_subnet" {
   triggers_replace = {
     peering_name            = "${data.azurerm_virtual_network.common.name}-to-${data.azurerm_virtual_network.e2e.name}"
     peering_vnet_name       = data.azurerm_virtual_network.common.name
     peering_rg              = data.azurerm_virtual_network.common.resource_group_name
+    peering_remote_vnet_id  = data.azurerm_virtual_network.e2e.id
     private_app_subnet_name = azurerm_subnet.private_app.name
     pep_subnet_name         = data.azurerm_subnet.pep.name
   }
@@ -173,11 +172,26 @@ resource "terraform_data" "peering_private_app_subnet" {
   provisioner "local-exec" {
     when    = create
     command = <<-EOT
+      set -euo pipefail
+
+      if ! az network vnet peering show \
+        --name "${self.triggers_replace.peering_name}" \
+        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+        --resource-group "${self.triggers_replace.peering_rg}" \
+        >/dev/null 2>&1; then
+        az network vnet peering create \
+          --name "${self.triggers_replace.peering_name}" \
+          --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+          --resource-group "${self.triggers_replace.peering_rg}" \
+          --remote-vnet "${self.triggers_replace.peering_remote_vnet_id}" \
+          --allow-vnet-access true
+      fi
+
       az network vnet peering update \
         --name "${self.triggers_replace.peering_name}" \
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
-        --set "remote_subnet_names=[\"${self.triggers_replace.pep_subnet_name}\",\"${self.triggers_replace.private_app_subnet_name}\"]"
+        --set "peer_complete_vnets=true" "remote_subnet_names=[]"
       az network vnet peering sync \
         --name "${self.triggers_replace.peering_name}" \
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
@@ -188,15 +202,25 @@ resource "terraform_data" "peering_private_app_subnet" {
   provisioner "local-exec" {
     when    = destroy
     command = <<-EOT
-      az network vnet peering update \
+      set -euo pipefail
+
+      if az network vnet peering show \
         --name "${self.triggers_replace.peering_name}" \
         --vnet-name "${self.triggers_replace.peering_vnet_name}" \
         --resource-group "${self.triggers_replace.peering_rg}" \
-        --set "remote_subnet_names=[\"${self.triggers_replace.pep_subnet_name}\"]"
-      az network vnet peering sync \
-        --name "${self.triggers_replace.peering_name}" \
-        --vnet-name "${self.triggers_replace.peering_vnet_name}" \
-        --resource-group "${self.triggers_replace.peering_rg}"
+        >/dev/null 2>&1; then
+        az network vnet peering update \
+          --name "${self.triggers_replace.peering_name}" \
+          --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+          --resource-group "${self.triggers_replace.peering_rg}" \
+          --set "peer_complete_vnets=false" "remote_subnet_names=[\"${self.triggers_replace.pep_subnet_name}\"]"
+        az network vnet peering sync \
+          --name "${self.triggers_replace.peering_name}" \
+          --vnet-name "${self.triggers_replace.peering_vnet_name}" \
+          --resource-group "${self.triggers_replace.peering_rg}"
+      else
+        echo "Peering ${self.triggers_replace.peering_name} not found, skipping rollback"
+      fi
     EOT
   }
 }
