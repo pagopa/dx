@@ -137,7 +137,7 @@ branch. The action:
 
 The `Version Packages` PR was **merged** (or `workflow_dispatch` was triggered). The action:
 
-1. Builds all public npm packages (`tag:npm:public`)
+1. Builds all public npm packages (`tag:*:public`)
 2. Runs `nx release publish` with npm provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them

@@ -1,4 +1,4 @@
-import { execFile, spawn } from 'child_process';
+import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
@@ -3635,6 +3635,9 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
 var execFileAsync = promisify(execFile);
 async function extractChangelogSection(clPath, version) {
   if (!version || version.trim() === "") {
+    console.warn(
+      `Version is empty or missing for changelog at ${clPath}, skipping section extraction`
+    );
     return null;
   }
   try {
@@ -3645,7 +3648,11 @@ async function extractChangelogSection(clPath, version) {
     if (s < 0) return null;
     const e = lines.findIndex((l, i) => i > s && /^##\s/.test(l));
     return lines.slice(s, e < 0 ? void 0 : e).join("\n").trim();
-  } catch {
+  } catch (err) {
+    console.warn(
+      `Could not read changelog at ${clPath} to extract section for version ${version}:`,
+      err
+    );
     return null;
   }
 }
@@ -3719,7 +3726,7 @@ async function run(base) {
         `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
       );
     }
-    await spawnInherit("git", tagArgs);
+    await execFileAsync("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -3727,7 +3734,7 @@ async function run(base) {
     console.log("::notice::No new tags to push");
     return;
   }
-  await spawnInherit("git", ["push", "origin", "--tags"]);
+  await execFileAsync("git", ["push", "origin", "--tags"]);
   for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
     if (path) {
@@ -3749,18 +3756,6 @@ async function run(base) {
     });
     console.log(`::notice::Created GitHub release: ${tag}`);
   }
-}
-function spawnInherit(cmd, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on(
-      "close",
-      (code) => code === 0 ? resolve() : reject(
-        new Error(`${cmd} ${args.join(" ")} exited with code ${code}`)
-      )
-    );
-    child.on("error", reject);
-  });
 }
 async function tagExistsOnRemote(tag) {
   const { stdout } = await execFileAsync("git", [
@@ -3804,21 +3799,22 @@ async function getRepoInfo() {
   );
 }
 function isPrDataArray(value) {
-  return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
+  return Array.isArray(value) && // We cast to unknown[] first since Array.isArray() returns any[]
+  // which is not strict enough for our type guard
+  value.every(
+    (item) => typeof item === "object" && item !== null && "body" in item && "number" in item && "mergeCommit" in item && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
   );
 }
 function parseTagEntries(raw) {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) => {
     if (typeof item !== "object" || item === null) return [];
-    const r = item;
-    if (typeof r["tag"] !== "string") return [];
+    if ("tag" in item && typeof item["tag"] !== "string") return [];
     return [
       {
-        path: typeof r["path"] === "string" ? r["path"] : null,
-        tag: r["tag"],
-        version: typeof r["version"] === "string" ? r["version"] : ""
+        path: "path" in item && typeof item["path"] === "string" ? item["path"] : null,
+        tag: "tag" in item && typeof item["tag"] === "string" ? item["tag"] : "",
+        version: "version" in item && typeof item["version"] === "string" ? item["version"] : ""
       }
     ];
   });
@@ -3839,4 +3835,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   (* v8 ignore else -- @preserve *)
 */
 
-export { extractChangelogSection, releaseExists, run, spawnInherit, tagExistsOnRemote };
+export { extractChangelogSection, releaseExists, run, tagExistsOnRemote };

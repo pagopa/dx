@@ -47,8 +47,7 @@ export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
 /** Returns all Nx project names in the workspace. */
 export async function getNxProjectNames(): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
+    const { stdout } = await execFileAsync("nx", [
       "show",
       "projects",
       "--json",
@@ -111,6 +110,9 @@ export async function getNxProjectRoot(name: string): Promise<null | string> {
 /**
  * Finds the longest project name that is a prefix of the tag, followed by a
  * non-word separator character (e.g. `@`, `/`).
+ *
+ * For example, with project names ["@dx/app-x", "@dx/app-y"] and tag "@dx/app-x@1.0.0",
+ * this returns "@dx/app-x".
  */
 export function matchProjectName(
   tag: string,

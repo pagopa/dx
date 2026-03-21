@@ -3710,8 +3710,10 @@ async function getRepoInfo() {
   );
 }
 function isTagEntryArray(value) {
-  return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
+  return Array.isArray(value) && // we cast `any` to `unknown` first since Array.isArray()
+  // returns `any[]`, which is not strict enough for our type guard
+  value.every(
+    (item) => typeof item === "object" && item !== null && "tag" in item && "version" in item && "path" in item && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
   );
 }
 function resolveReleaseEntries() {

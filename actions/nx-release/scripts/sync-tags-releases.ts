@@ -7,7 +7,7 @@
  * missed across failed publish runs.
  */
 import { Octokit } from "@octokit/rest";
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -37,6 +37,9 @@ export async function extractChangelogSection(
 ): Promise<null | string> {
   // Treat missing/empty version as "no extraction"
   if (!version || version.trim() === "") {
+    console.warn(
+      `Version is empty or missing for changelog at ${clPath}, skipping section extraction`,
+    );
     return null;
   }
   try {
@@ -50,7 +53,11 @@ export async function extractChangelogSection(
       .slice(s, e < 0 ? undefined : e)
       .join("\n")
       .trim();
-  } catch {
+  } catch (err) {
+    console.warn(
+      `Could not read changelog at ${clPath} to extract section for version ${version}:`,
+      err,
+    );
     return null;
   }
 }
@@ -154,7 +161,7 @@ export async function run(base: string): Promise<void> {
         `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`,
       );
     }
-    await spawnInherit("git", tagArgs);
+    await execFileAsync("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -164,7 +171,7 @@ export async function run(base: string): Promise<void> {
     return;
   }
 
-  await spawnInherit("git", ["push", "origin", "--tags"]);
+  await execFileAsync("git", ["push", "origin", "--tags"]);
 
   for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
@@ -190,20 +197,6 @@ export async function run(base: string): Promise<void> {
     });
     console.log(`::notice::Created GitHub release: ${tag}`);
   }
-}
-
-export function spawnInherit(cmd: string, args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on("close", (code) =>
-      code === 0
-        ? resolve()
-        : reject(
-            new Error(`${cmd} ${args.join(" ")} exited with code ${code}`),
-          ),
-    );
-    child.on("error", reject);
-  });
 }
 
 export async function tagExistsOnRemote(tag: string): Promise<boolean> {
@@ -258,31 +251,41 @@ async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 function isPrDataArray(value: unknown): value is PrData[] {
   return (
     Array.isArray(value) &&
-    value.every(
+    // We cast to unknown[] first since Array.isArray() returns any[]
+    // which is not strict enough for our type guard
+    (value as unknown[]).every(
       (item) =>
         typeof item === "object" &&
         item !== null &&
-        typeof (item as Record<string, unknown>)["body"] === "string" &&
-        typeof (item as Record<string, unknown>)["number"] === "number" &&
-        ((item as Record<string, unknown>)["mergeCommit"] === undefined ||
-          (typeof (item as Record<string, unknown>)["mergeCommit"] ===
-            "object" &&
-            (item as Record<string, unknown>)["mergeCommit"] !== null)),
+        "body" in item &&
+        "number" in item &&
+        "mergeCommit" in item &&
+        typeof item["body"] === "string" &&
+        typeof item["number"] === "number" &&
+        (item["mergeCommit"] === undefined ||
+          (typeof item["mergeCommit"] === "object" &&
+            item["mergeCommit"] !== null)),
     )
   );
 }
 
 function parseTagEntries(raw: unknown): TagEntry[] {
   if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
+  return (raw as unknown[]).flatMap((item) => {
     if (typeof item !== "object" || item === null) return [];
-    const r = item as Record<string, unknown>;
-    if (typeof r["tag"] !== "string") return [];
+    if ("tag" in item && typeof item["tag"] !== "string") return [];
     return [
       {
-        path: typeof r["path"] === "string" ? r["path"] : null,
-        tag: r["tag"],
-        version: typeof r["version"] === "string" ? r["version"] : "",
+        path:
+          "path" in item && typeof item["path"] === "string"
+            ? item["path"]
+            : null,
+        tag:
+          "tag" in item && typeof item["tag"] === "string" ? item["tag"] : "",
+        version:
+          "version" in item && typeof item["version"] === "string"
+            ? item["version"]
+            : "",
       },
     ];
   });

@@ -21,8 +21,7 @@ async function buildTagEntries(newTags) {
 }
 async function getNxProjectNames() {
   try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
+    const { stdout } = await execFileAsync("nx", [
       "show",
       "projects",
       "--json"

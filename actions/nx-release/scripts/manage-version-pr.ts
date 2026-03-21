@@ -125,14 +125,18 @@ async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 function isTagEntryArray(value: unknown): value is TagEntry[] {
   return (
     Array.isArray(value) &&
-    value.every(
+    // we cast `any` to `unknown` first since Array.isArray()
+    // returns `any[]`, which is not strict enough for our type guard
+    (value as unknown[]).every(
       (item) =>
         typeof item === "object" &&
         item !== null &&
-        typeof (item as Record<string, unknown>)["tag"] === "string" &&
-        typeof (item as Record<string, unknown>)["version"] === "string" &&
-        ((item as Record<string, unknown>)["path"] === null ||
-          typeof (item as Record<string, unknown>)["path"] === "string"),
+        "tag" in item &&
+        "version" in item &&
+        "path" in item &&
+        typeof item["tag"] === "string" &&
+        typeof item["version"] === "string" &&
+        (item["path"] === null || typeof item["path"] === "string"),
     )
   );
 }
