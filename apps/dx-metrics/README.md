@@ -128,17 +128,17 @@ The import script authenticates to GitHub with this precedence:
 
 GitHub App variables:
 
-| Variable                      | Description                                  |
-| ----------------------------- | -------------------------------------------- |
-| `GITHUB_APP_ID`               | Numeric GitHub App ID                        |
-| `GITHUB_APP_INSTALLATION_ID`  | Numeric installation ID for the target org   |
-| `GITHUB_APP_PRIVATE_KEY`      | GitHub App private key in PEM format         |
+| Variable                     | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| `GITHUB_APP_ID`              | Numeric GitHub App ID                      |
+| `GITHUB_APP_INSTALLATION_ID` | Numeric installation ID for the target org |
+| `GITHUB_APP_PRIVATE_KEY`     | GitHub App private key in PEM format       |
 
 Fallback variable:
 
-| Variable         | Description                  |
-| ---------------- | ---------------------------- |
-| `GITHUB_TOKEN`   | GitHub personal access token |
+| Variable       | Description                  |
+| -------------- | ---------------------------- |
+| `GITHUB_TOKEN` | GitHub personal access token |
 
 ## Development
 
