@@ -40,7 +40,8 @@ DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx d
 ```bash
 export GITHUB_APP_ID=123456
 export GITHUB_APP_INSTALLATION_ID=7890123
-export GITHUB_APP_PRIVATE_KEY="$(cat /path/to/github-app-private-key.pem)"
+# Convert PEM file to a single line with \n escapes
+export GITHUB_APP_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' /path/to/github-app-private-key.pem)"
 export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
 npx tsx scripts/import.ts --since 2026-01-01
 ```
