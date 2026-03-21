@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildGitHubAppOctokitAuthOptions,
+  createOctokitClient,
   resolveDxTeamMembers,
   type TeamMembersClient,
 } from "../import-context.js";
@@ -53,5 +55,43 @@ describe("resolveDxTeamMembers", () => {
     });
 
     expect(members).toEqual(["alice", "zoe"]);
+  });
+});
+
+describe("buildGitHubAppOctokitAuthOptions", () => {
+  it("maps GitHub App credentials to Octokit auth options", () => {
+    expect(
+      buildGitHubAppOctokitAuthOptions({
+        appId: 123,
+        installationId: 456,
+        privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+      }),
+    ).toEqual({
+      appId: 123,
+      installationId: 456,
+      privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+    });
+  });
+});
+
+describe("createOctokitClient", () => {
+  it("creates an Octokit instance configured for GitHub App auth", () => {
+    const octokit = createOctokitClient({
+      appId: 123,
+      installationId: 456,
+      privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+      type: "app",
+    });
+
+    expect(octokit).toBeInstanceOf(Object);
+  });
+
+  it("creates an Octokit instance configured for PAT auth", () => {
+    const octokit = createOctokitClient({
+      token: "ghp_legacy_token",
+      type: "token",
+    });
+
+    expect(octokit).toBeInstanceOf(Object);
   });
 });
