@@ -56,13 +56,6 @@ const GitHubAppAuthSchema = z.object({
 const readOptionalEnvironmentString = (value?: string): string | undefined =>
   value && value.trim().length > 0 ? value : undefined;
 
-const formatValidationIssues = (issues: z.ZodIssue[]): string =>
-  issues
-    .map(({ message, path }) =>
-      path.length > 0 ? `${path.join(".")}: ${message}` : message,
-    )
-    .join("; ");
-
 export function loadImportConfig(filePath: string): ImportFileConfig {
   try {
     const contents = fs.readFileSync(filePath, "utf8");
@@ -107,7 +100,7 @@ export function resolveGitHubAppAuth(
 
   if (!result.success) {
     throw new Error(
-      `Invalid GitHub App credentials: ${formatValidationIssues(result.error.issues)}`,
+      `Invalid GitHub App credentials: ${z.prettifyError(result.error)}`,
     );
   }
 
