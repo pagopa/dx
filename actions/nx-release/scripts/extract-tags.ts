@@ -11,6 +11,7 @@
  */
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
@@ -19,6 +20,11 @@ export interface TagEntry {
   tag: string;
   version: string;
 }
+
+const stringArraySchema = z.array(z.string());
+const projectRootSchema = z.object({
+  root: z.string().min(1),
+});
 
 /**
  * Maps each Nx-generated tag to its project root path and version.
@@ -64,12 +70,8 @@ export async function getNxProjectNames(): Promise<string[]> {
       return [];
     }
     const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (!Array.isArray(parsed)) return [];
-    // Type predicate ensures safe return without assertion
-    if (parsed.every((s): s is string => typeof s === "string")) {
-      return parsed;
-    }
-    return [];
+    const result = stringArraySchema.safeParse(parsed);
+    return result.success ? result.data : [];
   } catch (err) {
     console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];
@@ -98,9 +100,8 @@ export async function getNxProjectRoot(name: string): Promise<null | string> {
       return null;
     }
     const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const root = (parsed as Record<string, unknown>)["root"];
-    return typeof root === "string" && root ? root : null;
+    const result = projectRootSchema.safeParse(parsed);
+    return result.success ? result.data.root : null;
   } catch (err) {
     console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
     return null;

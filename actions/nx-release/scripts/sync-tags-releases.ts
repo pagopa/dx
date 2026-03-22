@@ -11,21 +11,43 @@ import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
-export interface TagEntry {
-  path: null | string;
-  tag: string;
-  // version was added later; may be absent in PR bodies written before this field.
-  version: string;
-}
+const tagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string(),
+});
 
-interface PrData {
-  body: string;
-  mergeCommit?: { oid: string };
-  number: number;
-}
+export type TagEntry = z.infer<typeof tagEntrySchema>;
+
+const tagEntryInputSchema = z.object({
+  path: z.string().nullable().optional(),
+  tag: z.string().optional(),
+  version: z.string().optional(),
+}).transform((value) => ({
+  path: value.path ?? null,
+  tag: value.tag ?? "",
+  version: value.version ?? "",
+}));
+
+const prDataSchema = z.object({
+  body: z.string(),
+  mergeCommit: z
+    .object({
+      oid: z.string(),
+    })
+    .optional(),
+  number: z.number(),
+});
+
+const prDataArraySchema = z.array(prDataSchema);
+
+const releaseNotFoundSchema = z.object({
+  status: z.literal(404),
+});
 
 /**
  * Extracts the changelog section matching `version` from a CHANGELOG.md file.
@@ -77,12 +99,7 @@ export async function releaseExists(
     return true;
   } catch (err: unknown) {
     // 404 means release doesn't exist
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "status" in err &&
-      err.status === 404
-    ) {
+    if (releaseNotFoundSchema.safeParse(err).success) {
       return false;
     }
     // Other errors should be logged but treated as "doesn't exist"
@@ -118,7 +135,8 @@ export async function run(base: string): Promise<void> {
       number: pr.number,
     }));
 
-  if (!isPrDataArray(mergedPrs)) {
+  const mergedPrsResult = prDataArraySchema.safeParse(mergedPrs);
+  if (!mergedPrsResult.success) {
     throw new Error("Unexpected PR list response: not an array of PR data");
   }
 
@@ -126,7 +144,7 @@ export async function run(base: string): Promise<void> {
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
   // Store merge commit SHA for each tag to ensure tags point to the correct commit.
   const allEntries = new Map<string, TagEntry & { mergeCommitSha?: string }>();
-  for (const pr of mergedPrs) {
+  for (const pr of mergedPrsResult.data) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
@@ -248,46 +266,15 @@ async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
   );
 }
 
-function isPrDataArray(value: unknown): value is PrData[] {
-  return (
-    Array.isArray(value) &&
-    // We cast to unknown[] first since Array.isArray() returns any[]
-    // which is not strict enough for our type guard
-    (value as unknown[]).every(
-      (item) =>
-        typeof item === "object" &&
-        item !== null &&
-        "body" in item &&
-        "number" in item &&
-        "mergeCommit" in item &&
-        typeof item["body"] === "string" &&
-        typeof item["number"] === "number" &&
-        (item["mergeCommit"] === undefined ||
-          (typeof item["mergeCommit"] === "object" &&
-            item["mergeCommit"] !== null)),
-    )
-  );
-}
-
 function parseTagEntries(raw: unknown): TagEntry[] {
-  if (!Array.isArray(raw)) return [];
-  return (raw as unknown[]).flatMap((item) => {
-    if (typeof item !== "object" || item === null) return [];
-    if ("tag" in item && typeof item["tag"] !== "string") return [];
-    return [
-      {
-        path:
-          "path" in item && typeof item["path"] === "string"
-            ? item["path"]
-            : null,
-        tag:
-          "tag" in item && typeof item["tag"] === "string" ? item["tag"] : "",
-        version:
-          "version" in item && typeof item["version"] === "string"
-            ? item["version"]
-            : "",
-      },
-    ];
+  const arrayResult = z.array(z.unknown()).safeParse(raw);
+  if (!arrayResult.success) return [];
+
+  return arrayResult.data.flatMap((item) => {
+    const parsed = tagEntryInputSchema.safeParse(item);
+
+    if (!parsed.success) return [];
+    return [parsed.data];
   });
 }
 

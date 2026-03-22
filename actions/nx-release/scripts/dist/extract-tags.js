@@ -1,8 +1,13 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
+import { z } from 'zod';
 
 // scripts/extract-tags.ts
 var execFileAsync = promisify(execFile);
+var stringArraySchema = z.array(z.string());
+var projectRootSchema = z.object({
+  root: z.string().min(1)
+});
 async function buildTagEntries(newTags) {
   const projectNames = await getNxProjectNames();
   return Promise.all(
@@ -36,11 +41,8 @@ async function getNxProjectNames() {
       return [];
     }
     const parsed = JSON.parse(stdout.slice(jsonStart));
-    if (!Array.isArray(parsed)) return [];
-    if (parsed.every((s) => typeof s === "string")) {
-      return parsed;
-    }
-    return [];
+    const result = stringArraySchema.safeParse(parsed);
+    return result.success ? result.data : [];
   } catch (err) {
     console.error("[extract-tags] getNxProjectNames failed:", err);
     return [];
@@ -64,9 +66,8 @@ async function getNxProjectRoot(name) {
       return null;
     }
     const parsed = JSON.parse(stdout.slice(jsonStart));
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const root = parsed["root"];
-    return typeof root === "string" && root ? root : null;
+    const result = projectRootSchema.safeParse(parsed);
+    return result.success ? result.data.root : null;
   } catch (err) {
     console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
     return null;

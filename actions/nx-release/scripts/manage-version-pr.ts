@@ -9,6 +9,7 @@ import { execFile } from "node:child_process";
 import { appendFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
 
@@ -23,6 +24,14 @@ interface TagEntry {
   tag: string;
   version: string;
 }
+
+const tagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string(),
+});
+
+const tagEntryArraySchema = z.array(tagEntrySchema);
 
 /** Writes an output key/value for downstream GitHub Action steps. */
 async function appendOutput(key: string, value: string): Promise<void> {
@@ -121,26 +130,6 @@ async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
   );
 }
 
-/** Validates that a value is a TagEntry array. */
-function isTagEntryArray(value: unknown): value is TagEntry[] {
-  return (
-    Array.isArray(value) &&
-    // we cast `any` to `unknown` first since Array.isArray()
-    // returns `any[]`, which is not strict enough for our type guard
-    (value as unknown[]).every(
-      (item) =>
-        typeof item === "object" &&
-        item !== null &&
-        "tag" in item &&
-        "version" in item &&
-        "path" in item &&
-        typeof item["tag"] === "string" &&
-        typeof item["version"] === "string" &&
-        (item["path"] === null || typeof item["path"] === "string"),
-    )
-  );
-}
-
 /** Resolves release entries from RELEASE_TAGS env var. */
 function resolveReleaseEntries(): ReleaseEntry[] {
   const raw = process.env.RELEASE_TAGS ?? "[]";
@@ -154,13 +143,14 @@ function resolveReleaseEntries(): ReleaseEntry[] {
     );
     return [];
   }
-  if (!isTagEntryArray(parsed)) {
+  const validationResult = tagEntryArraySchema.safeParse(parsed);
+  if (!validationResult.success) {
     console.error(
       "[manage-version-pr] RELEASE_TAGS is not a valid TagEntry array",
     );
     return [];
   }
-  const entries = parsed;
+  const entries = validationResult.data;
   return entries
     .filter((e): e is TagEntry & { path: string } => e.path !== null)
     .map((e) => ({

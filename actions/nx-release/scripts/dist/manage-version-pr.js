@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
+import { z } from 'zod';
 
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -3633,6 +3634,12 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
   }
 );
 var execFileAsync = promisify(execFile);
+var tagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string()
+});
+var tagEntryArraySchema = z.array(tagEntrySchema);
 async function appendOutput(key, value) {
   const outputPath = process.env.GITHUB_OUTPUT;
   if (outputPath) {
@@ -3709,13 +3716,6 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-function isTagEntryArray(value) {
-  return Array.isArray(value) && // we cast `any` to `unknown` first since Array.isArray()
-  // returns `any[]`, which is not strict enough for our type guard
-  value.every(
-    (item) => typeof item === "object" && item !== null && "tag" in item && "version" in item && "path" in item && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
-  );
-}
 function resolveReleaseEntries() {
   const raw = process.env.RELEASE_TAGS ?? "[]";
   let parsed;
@@ -3728,13 +3728,14 @@ function resolveReleaseEntries() {
     );
     return [];
   }
-  if (!isTagEntryArray(parsed)) {
+  const validationResult = tagEntryArraySchema.safeParse(parsed);
+  if (!validationResult.success) {
     console.error(
       "[manage-version-pr] RELEASE_TAGS is not a valid TagEntry array"
     );
     return [];
   }
-  const entries = parsed;
+  const entries = validationResult.data;
   return entries.filter((e) => e.path !== null).map((e) => ({
     changelogPath: join(e.path, "CHANGELOG.md"),
     name: e.tag.slice(0, e.tag.length - e.version.length - 1),

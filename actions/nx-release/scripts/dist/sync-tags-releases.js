@@ -2,6 +2,7 @@ import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
+import { z } from 'zod';
 
 var __create = Object.create;
 var __defProp = Object.defineProperty;
@@ -3633,6 +3634,31 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
   }
 );
 var execFileAsync = promisify(execFile);
+z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string()
+});
+var tagEntryInputSchema = z.object({
+  path: z.string().nullable().optional(),
+  tag: z.string().optional(),
+  version: z.string().optional()
+}).transform((value) => ({
+  path: value.path ?? null,
+  tag: value.tag ?? "",
+  version: value.version ?? ""
+}));
+var prDataSchema = z.object({
+  body: z.string(),
+  mergeCommit: z.object({
+    oid: z.string()
+  }).optional(),
+  number: z.number()
+});
+var prDataArraySchema = z.array(prDataSchema);
+var releaseNotFoundSchema = z.object({
+  status: z.literal(404)
+});
 async function extractChangelogSection(clPath, version) {
   if (!version || version.trim() === "") {
     console.warn(
@@ -3665,7 +3691,7 @@ async function releaseExists(octokit, owner, repo, tag) {
     });
     return true;
   } catch (err) {
-    if (typeof err === "object" && err !== null && "status" in err && err.status === 404) {
+    if (releaseNotFoundSchema.safeParse(err).success) {
       return false;
     }
     console.warn(`Error checking release ${tag}:`, err);
@@ -3690,11 +3716,12 @@ async function run(base) {
     mergeCommit: pr.merge_commit_sha ? { oid: pr.merge_commit_sha } : void 0,
     number: pr.number
   }));
-  if (!isPrDataArray(mergedPrs)) {
+  const mergedPrsResult = prDataArraySchema.safeParse(mergedPrs);
+  if (!mergedPrsResult.success) {
     throw new Error("Unexpected PR list response: not an array of PR data");
   }
   const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of mergedPrs) {
+  for (const pr of mergedPrsResult.data) {
     if (!pr.body) continue;
     const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
     if (!m) continue;
@@ -3798,25 +3825,12 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-function isPrDataArray(value) {
-  return Array.isArray(value) && // We cast to unknown[] first since Array.isArray() returns any[]
-  // which is not strict enough for our type guard
-  value.every(
-    (item) => typeof item === "object" && item !== null && "body" in item && "number" in item && "mergeCommit" in item && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
-  );
-}
 function parseTagEntries(raw) {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) => {
-    if (typeof item !== "object" || item === null) return [];
-    if ("tag" in item && typeof item["tag"] !== "string") return [];
-    return [
-      {
-        path: "path" in item && typeof item["path"] === "string" ? item["path"] : null,
-        tag: "tag" in item && typeof item["tag"] === "string" ? item["tag"] : "",
-        version: "version" in item && typeof item["version"] === "string" ? item["version"] : ""
-      }
-    ];
+    const parsed = tagEntryInputSchema.safeParse(item);
+    if (!parsed.success) return [];
+    return [parsed.data];
   });
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
