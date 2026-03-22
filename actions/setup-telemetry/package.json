@@ -1,6 +1,6 @@
 {
   "name": "setup-telemetry-action",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "private": true,
   "description": "Setup OpenTelemetry",
   "main": "dist/index.js",
@@ -23,7 +23,7 @@
   "license": "UNLICENSED",
   "dependencies": {
     "@azure/monitor-opentelemetry": "^1.14.0",
-    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/api": "catalog:",
     "@opentelemetry/api-logs": "^0.206.0",
     "@opentelemetry/sdk-metrics": "^2.1.0",
     "@opentelemetry/resources": "^2.1.0",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",

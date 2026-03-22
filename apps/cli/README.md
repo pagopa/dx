@@ -178,13 +178,14 @@ dx savemoney [options]
 
 **Options:**
 
-| Option       | Alias | Description                                                           | Default      |
-| :----------- | :---- | :-------------------------------------------------------------------- | :----------- |
-| `--config`   | `-c`  | Path to a JSON configuration file.                                    | N/A          |
-| `--format`   | `-f`  | Report format (`table`, `json`, `detailed-json`).                     | `table`      |
-| `--days`     | `-d`  | Metric analysis period in days.                                       | `30`         |
-| `--location` | `-l`  | Preferred Azure location for resources.                               | `italynorth` |
-| `--verbose`  | `-v`  | Enable verbose mode with detailed logging for each resource analyzed. | `false`      |
+| Option       | Alias | Description                                                                                                                                  | Default      |
+| :----------- | :---- | :------------------------------------------------------------------------------------------------------------------------------------------- | :----------- |
+| `--config`   | `-c`  | Path to a YAML configuration file.                                                                                                           | N/A          |
+| `--format`   | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                  | `table`      |
+| `--days`     | `-d`  | Metric analysis period in days (overrides config file).                                                                                      | `30`         |
+| `--location` | `-l`  | Preferred Azure location for resources (overrides config file).                                                                              | `italynorth` |
+| `--verbose`  | `-v`  | Enable verbose mode with detailed logging for each resource analyzed.                                                                        | `false`      |
+| `--tags`     | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated). | N/A          |
 
 **Example usage:**
 
@@ -193,24 +194,38 @@ dx savemoney [options]
 dx savemoney
 
 # Use a configuration file
-dx savemoney --config config.json
+dx savemoney --config config.yaml
 
 # Output as JSON with verbose logging
 dx savemoney --format json --verbose
+
+# Linter-style output for CI pipelines
+dx savemoney --config config.yaml --format lint
+
+# Analyze only resources tagged environment=prod
+dx savemoney --config config.yaml --tags "environment=prod"
 
 # Analyze with specific timespan
 dx savemoney --days 60 --location italynorth
 ```
 
-**Configuration file example (`config.json`):**
+**Configuration file example (`config.yaml`):**
 
-```json
-{
-  "tenantId": "your-tenant-id",
-  "subscriptionIds": ["subscription-1", "subscription-2"],
-  "preferredLocation": "italynorth",
-  "timespanDays": 30
-}
+```yaml
+azure:
+  subscriptionIds:
+    - subscription-1
+    - subscription-2
+  preferredLocation: italynorth
+  timespanDays: 30
+  thresholds: # optional — omit to use built-in defaults
+    vm:
+      cpuPercent: 5
+    appService:
+      cpuPercent: 10
+      memoryPercent: 20
+    storage:
+      transactionsPerDay: 50
 ```
 
 **Analyzed Azure resources:**

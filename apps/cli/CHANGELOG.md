@@ -1,5 +1,63 @@
 # @pagopa/dx-cli
 
+## 0.18.8
+
+### Patch Changes
+
+- 70f8561: Enable RBAC-based access for the Key Vault integration used by the GitHub private runner created by the generated bootstrapper module
+- 039df6e: Fix pre-commit-terraform version definition in pre-commit-config.yaml template
+- 4f8e104: Register Azure providers when creating a subscription
+
+## 0.18.7
+
+### Patch Changes
+
+- d547c62: Update CLI commands for SaveMoney new features
+- Updated dependencies [d547c62]
+  - @pagopa/dx-savemoney@0.2.0
+
+## 0.18.6
+
+### Patch Changes
+
+- 01f9318: The encode of the `github-runner-app-key` in `base64` when stored in the common kv has been reverted. The secret is now stored as plain value and stripped for trailing newlines.
+
+## 0.18.5
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+- Updated dependencies [e0a3767]
+  - @pagopa/dx-savemoney@0.1.6
+
+## 0.18.4
+
+### Patch Changes
+
+- 4a5813b: Use workspace protocol for @pagopa/dx-savemoney
+- 1834d54: Improve user input validation and make sure to follow proper formatting of some parameters
+
+## 0.18.3
+
+### Patch Changes
+
+- 0f96dab: Add `corepack` as required tool for `init` command
+- 24e7b3b: Encode `github-runner-app-key` in `base64` when stored in the common kv
+
+## 0.18.2
+
+### Patch Changes
+
+- 8f76777: Update key vault properties to enable recover
+
+## 0.18.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+- Updated dependencies [2d3d8fb]
+  - @pagopa/dx-savemoney@0.1.5
+
 ## 0.18.0
 
 ### Minor Changes

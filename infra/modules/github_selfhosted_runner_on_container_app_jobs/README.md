@@ -11,16 +11,54 @@ This module creates a Container App Job to be used as a GitHub self-hosted runne
 - **Key Vault Access**: Grant access to the KeyVault instance with GitHub credentials.
 - **Auto GitHub Registration**: Automatically scale and register as self-hosted runner in the target repository.
 
-## Authentication Methods
+## Authentication
 
-This module supports two authentication methods:
+This module authenticates with GitHub using a **GitHub App**. Before applying,
+the Key Vault must contain the following secrets:
 
-1. **GitHub App Authentication (Recommended)**: Use `app_key_secret_name`, `app_id_secret_name`, and `installation_id_secret_name` in the `key_vault` variable.
-2. **PAT-based Authentication (Legacy)**: Use `secret_name` in the `key_vault` variable for backward compatibility.
+| Secret name                          | Description                                  |
+| ------------------------------------ | -------------------------------------------- |
+| `github-runner-app-id`               | The numeric GitHub App ID                    |
+| `github-runner-app-installation-id`  | The App installation ID on the organization  |
+| `github-runner-app-key`              | The App private key in PEM format            |
+
+See [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
+for step-by-step instructions on how to create the App and populate these secrets.
 
 ## Usage Example
 
-A usage example can be found in the [examples](https://github.com/pagopa-dx/terraform-azurerm-azure-container-app/tree/main/examples/basic) directory.
+```hcl
+module "github_runner" {
+  source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
+  version = "~> 1.0"
+
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    location        = "italynorth"
+    instance_number = "01"
+  }
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-repository"
+  }
+
+  container_app_environment = {
+    id       = data.azurerm_container_app_environment.runner.id
+    location = "italynorth"
+  }
+
+  key_vault = {
+    name                = "my-keyvault"
+    resource_group_name = "common-rg"
+  }
+
+  use_github_app = true
+
+  tags = local.tags
+}
+```
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->

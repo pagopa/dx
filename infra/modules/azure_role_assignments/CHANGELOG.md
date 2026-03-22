@@ -1,5 +1,18 @@
 # azure_role_assignments
 
+## 1.3.3
+
+### Patch Changes
+
+- 2ff654f: Improved variables documentation for the azure_role_assignments module.
+  The updates clarify allowed values for the `role` field (explicity listing "reader", "writer", and "owner") to assist both human users and AI agents.
+
+## 1.3.2
+
+### Patch Changes
+
+- 5279e57: Fix cosmos role assignment, removed the trailing slash from the scope when no collections are provided and the default `*` is used
+
 ## 1.3.1
 
 ### Patch Changes

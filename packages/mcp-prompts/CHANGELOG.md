@@ -1,5 +1,17 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.4
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
+## 0.2.3
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.2.2
 
 ### Patch Changes

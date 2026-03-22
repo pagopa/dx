@@ -1,5 +1,17 @@
 # Install Setup Telemetry
 
+## 0.1.2
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
+## 0.1.1
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,0 +1,88 @@
+flowchart LR
+    subgraph Networking["Network Layer"]
+        direction TB
+        vnet["Virtual Network (data)"]
+        vnet@{ icon: "azure:virtual-networks"}
+
+        subnet["APIM Subnet"]
+        subnet@{ icon: "azure:subnet"}
+
+        nsg["APIM NSG"]
+        nsg@{ icon: "azure:network-security-groups"}
+
+        nsg_assoc["Subnet-NSG Association"]
+
+        pep["Private Endpoint"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns_zones["Private DNS Zones (data)"]
+        dns_zones@{ icon: "azure:dns-zones"}
+
+        dns_records["APIM Private DNS A Records"]
+        dns_records@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Core["API Management Layer"]
+        direction TB
+        apim["API Management"]
+        apim@{ icon: "azure:api-management-services"}
+
+        kv_cert_data["Key Vault Certificates (data)"]
+        kv_cert_data@{ icon: "azure:key-vaults"}
+
+        apim_certs["APIM Certificates"]
+        apim_certs@{ icon: "azure:key-vaults"}
+
+        apim_lock["Management Lock"]
+    end
+
+    subgraph Monitoring["Monitoring Layer"]
+        direction TB
+        autoscale["Autoscale Setting"]
+        autoscale@{ icon: "azure:auto-scale"}
+
+        apim_logger["APIM Logger"]
+        apim_logger@{ icon: "azure:application-insights"}
+
+        apim_diag["APIM Diagnostic"]
+        apim_diag@{ icon: "azure:diagnostics-settings"}
+
+        monitor_diag["Monitor Diagnostic Setting"]
+        monitor_diag@{ icon: "azure:diagnostics-settings"}
+
+        metric_alerts["Metric Alerts"]
+        metric_alerts@{ icon: "azure:alerts"}
+
+        app_insights["Application Insights"]
+        app_insights@{ icon: "azure:application-insights"}
+
+        log_analytics["Log Analytics Workspace"]
+        log_analytics@{ icon: "azure:log-analytics-workspaces"}
+
+        action_group["Action Group"]
+        action_group@{ icon: "azure:alerts"}
+    end
+
+    vnet --> subnet
+    nsg --> nsg_assoc
+    subnet --> nsg_assoc
+    nsg_assoc --> apim
+
+    apim --> pep
+    dns_zones -.-> dns_records
+    pep -.-> dns_records
+    apim --> dns_records
+
+    kv_cert_data --> apim_certs
+    apim_certs --> apim
+    apim_lock --> apim
+
+    apim --> autoscale
+    apim --> apim_logger
+    apim_logger --> apim_diag
+    apim --> monitor_diag
+    apim --> metric_alerts
+
+    app_insights -.-> apim_logger
+    log_analytics -.-> monitor_diag
+    action_group -.-> metric_alerts
