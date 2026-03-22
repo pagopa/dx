@@ -23,15 +23,17 @@ const tagEntrySchema = z.object({
 
 export type TagEntry = z.infer<typeof tagEntrySchema>;
 
-const tagEntryInputSchema = z.object({
-  path: z.string().nullable().optional(),
-  tag: z.string().optional(),
-  version: z.string().optional(),
-}).transform((value) => ({
-  path: value.path ?? null,
-  tag: value.tag ?? "",
-  version: value.version ?? "",
-}));
+const tagEntryInputSchema = z
+  .object({
+    path: z.string().nullable().optional(),
+    tag: z.string().optional(),
+    version: z.string().optional(),
+  })
+  .transform((value) => ({
+    path: value.path ?? null,
+    tag: value.tag ?? "",
+    version: value.version ?? "",
+  }));
 
 const prDataSchema = z.object({
   body: z.string(),
