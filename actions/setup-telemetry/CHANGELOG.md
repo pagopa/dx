@@ -1,5 +1,11 @@
 # Install Setup Telemetry
 
+## 0.1.3
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
 ## 0.1.2
 
 ### Patch Changes

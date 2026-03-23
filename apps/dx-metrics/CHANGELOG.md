@@ -1,5 +1,11 @@
 # dx-metrics
 
+## 0.4.1
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
 ## 0.4.0
 
 ### Minor Changes
