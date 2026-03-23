@@ -18,4 +18,5 @@ jobs:
       environment: prod
       base_path: "infra/resources/"
       override_github_environment: infra-prod
+      use_labels: true
       use_private_agent: true
