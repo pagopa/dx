@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           if [ -f "nx.json" ]; then
-            echo "::notice:: Detected Nx for managing releases."
+            echo "Detected Nx for managing releases."
           else
             echo "::error:: No supported release tool detected. Please ensure Nx is configured."
             exit 1

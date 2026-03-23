@@ -25,7 +25,7 @@ async function run(): Promise<void> {
   const octokit = createOctokit();
   const { owner, repo } = await getRepoInfo();
 
-  console.error(`::notice::Fetching PR #${prNumber} to extract release tags`);
+  console.error(`Fetching PR #${prNumber} to extract release tags`);
 
   // Fetch the merged PR
   const { data: pr } = await octokit.pulls.get({
@@ -80,16 +80,16 @@ async function run(): Promise<void> {
 
   // Filter only public projects (to avoid publishing private packages)
   console.error(
-    `::notice::Filtering public projects from ${matchedProjects.size} matched projects`,
+    `Filtering public projects from ${matchedProjects.size} matched projects`,
   );
   const publicProjects: string[] = [];
   for (const projectName of matchedProjects) {
     const isPublic = await isPublicProject(projectName);
     if (isPublic) {
       publicProjects.push(projectName);
-      console.error(`::notice::✓ ${projectName} is public`);
+      console.error(`✓ ${projectName} is public`);
     } else {
-      console.error(`::notice::✗ ${projectName} is private, skipping`);
+      console.error(`✗ ${projectName} is private, skipping`);
     }
   }
 
@@ -100,7 +100,7 @@ async function run(): Promise<void> {
   }
 
   const projectsList = publicProjects.join(",");
-  console.error(`::notice::Public projects to build: ${projectsList}`);
+  console.error(`Public projects to build: ${projectsList}`);
   process.stdout.write(projectsList);
 }
 

@@ -17545,7 +17545,7 @@ async function run() {
   }
   const octokit = createOctokit();
   const { owner, repo } = await getRepoInfo();
-  console.error(`::notice::Fetching PR #${prNumber} to extract release tags`);
+  console.error(`Fetching PR #${prNumber} to extract release tags`);
   const { data: pr } = await octokit.pulls.get({
     owner,
     pull_number: parseInt(prNumber, 10),
@@ -17587,16 +17587,16 @@ async function run() {
     return;
   }
   console.error(
-    `::notice::Filtering public projects from ${matchedProjects.size} matched projects`
+    `Filtering public projects from ${matchedProjects.size} matched projects`
   );
   const publicProjects = [];
   for (const projectName of matchedProjects) {
     const isPublic = await isPublicProject(projectName);
     if (isPublic) {
       publicProjects.push(projectName);
-      console.error(`::notice::\u2713 ${projectName} is public`);
+      console.error(`\u2713 ${projectName} is public`);
     } else {
-      console.error(`::notice::\u2717 ${projectName} is private, skipping`);
+      console.error(`\u2717 ${projectName} is private, skipping`);
     }
   }
   if (publicProjects.length === 0) {
@@ -17605,7 +17605,7 @@ async function run() {
     return;
   }
   const projectsList = publicProjects.join(",");
-  console.error(`::notice::Public projects to build: ${projectsList}`);
+  console.error(`Public projects to build: ${projectsList}`);
   process.stdout.write(projectsList);
 }
 if (import.meta.url === `file://${process.argv[1]}`) {

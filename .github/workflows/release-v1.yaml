@@ -34,7 +34,7 @@ jobs:
         shell: bash
         run: |
           if [ -f ".changeset/config.json" ]; then
-            echo "::notice:: Detected Changesets for managing releases."
+            echo "Detected Changesets for managing releases."
           else
             echo "::error:: No supported release tool detected. Please ensure Changesets is configured."
             exit 1
