@@ -1,5 +1,13 @@
 # @pagopa/dx-cli
 
+## 0.18.8
+
+### Patch Changes
+
+- 70f8561: Enable RBAC-based access for the Key Vault integration used by the GitHub private runner created by the generated bootstrapper module
+- 039df6e: Fix pre-commit-terraform version definition in pre-commit-config.yaml template
+- 4f8e104: Register Azure providers when creating a subscription
+
 ## 0.18.7
 
 ### Patch Changes
