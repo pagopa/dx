@@ -25,8 +25,4 @@ resource "github_branch_protection" "main" {
     restrict_dismissals             = true
     pull_request_bypassers          = var.repository.pull_request_bypassers
   }
-
-  lifecycle {
-    prevent_destroy = true
-  }
 }
