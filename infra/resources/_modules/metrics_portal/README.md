@@ -13,7 +13,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | github.com/pagopa/dx//infra/modules/azure_container_app | allow-container-app-environment-to-have-public-connectivity |
+| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | pagopa-dx/azure-container-app/azurerm | ~> 4.2 |
 | <a name="module_container_app_key_vault_roles"></a> [container\_app\_key\_vault\_roles](#module\_container\_app\_key\_vault\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_postgres"></a> [postgres](#module\_postgres) | pagopa-dx/azure-postgres-server/azurerm | ~> 3.0 |
 

@@ -11,9 +11,8 @@ resource "azurerm_key_vault_secret" "azuread_client_secret" {
 
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
-  # source  = "pagopa-dx/azure-container-app/azurerm"
-  # version = "~> 1.0"
-  source = "github.com/pagopa/dx//infra/modules/azure_container_app?ref=allow-container-app-environment-to-have-public-connectivity"
+  source  = "pagopa-dx/azure-container-app/azurerm"
+  version = "~> 4.2"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name

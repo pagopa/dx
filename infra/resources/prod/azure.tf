@@ -14,9 +14,8 @@ resource "dx_available_subnet_cidr" "container_app" {
 
 # Container App Environment with dedicated subnet using pagopa-dx module
 module "container_app_infra" {
-  # source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  # version = "~> 1.1"
-  source = "github.com/pagopa/dx//infra/modules/azure_container_app_environment?ref=allow-container-app-environment-to-have-public-connectivity"
+  source  = "pagopa-dx/azure-container-app-environment/azurerm"
+  version = "~> 1.2"
 
   environment         = merge(local.azure_naming_config, { env_short = local.azure_naming_config.environment, app_name = "common" })
   resource_group_name = module.azure_core_values.common_resource_group_name
