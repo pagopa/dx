@@ -87,3 +87,25 @@ resource "azurerm_role_assignment" "integration_test_subscription_administrator"
   principal_id         = azurerm_user_assigned_identity.integration_tests[0].principal_id
   description          = "Allow integration tests identity to manage role assignments in the subscription"
 }
+
+# Grant read and write permissions on all keyvaults of the subscription
+# to allow e2e tests to create secrets in the keyvaults and read them back for verification
+resource "azurerm_role_assignment" "integration_test_keyvault_contributor" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = module.bootstrap.identities.infra.cd.principal_id
+  description          = "Allow e2e tests identity to manage secrets in all keyvaults of the subscription"
+}
+
+# Grant read and write permissions on all app configuration instances of the subscription
+# to allow e2e tests to create settings in the app configuration instances and read them back
+resource "azurerm_role_assignment" "integration_test_app_configuration_contributor" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "App Configuration Data Owner"
+  principal_id         = module.bootstrap.identities.infra.cd.principal_id
+  description          = "Allow e2e tests identity to manage settings in all app configuration instances of the subscription"
+}
