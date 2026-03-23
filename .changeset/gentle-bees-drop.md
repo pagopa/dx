@@ -1,5 +1,5 @@
 ---
-"azure_storage_account": major
+"azure_storage_account": patch
 ---
 
-Bump lower limit of azurerm provider to 4.0 and update dx provider constraint to ~> 0.8.
+Suppress Trivy warnings
