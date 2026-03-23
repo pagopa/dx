@@ -1,12 +1,16 @@
 /** This module creates and manages the shared runtime context for importers. */
 
-import type { Octokit } from "octokit";
-
+import { createAppAuth } from "@octokit/auth-app";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Octokit } from "octokit";
 import pg from "pg";
 
-import type { ImportSettings } from "./config";
+import type {
+  GitHubAppAuthSettings,
+  GitHubAuthSettings,
+  ImportSettings,
+} from "./config";
 
 import * as schema from "../../src/db/schema";
 
@@ -54,13 +58,21 @@ interface TeamMembersPage {
 const toSortedUniqueMembers = (members: readonly string[]): string[] =>
   [...new Set(members)].sort();
 
-// We use a dynamic import as module resolution is set to bundler
-// which doesn't support conditional exports.
-const createOctokitClient = async (githubToken?: string): Promise<Octokit> => {
-  const { Octokit } = await import("octokit");
+export const buildGitHubAppOctokitAuthOptions = (
+  githubApp: GitHubAppAuthSettings,
+): GitHubAppAuthSettings => ({
+  appId: githubApp.appId,
+  installationId: githubApp.installationId,
+  privateKey: githubApp.privateKey,
+});
 
-  return githubToken ? new Octokit({ auth: githubToken }) : new Octokit();
-};
+export const createOctokitClient = (githubAuth: GitHubAuthSettings): Octokit =>
+  githubAuth.type === "app"
+    ? new Octokit({
+        auth: buildGitHubAppOctokitAuthOptions(githubAuth),
+        authStrategy: createAppAuth,
+      })
+    : new Octokit({ auth: githubAuth.token });
 
 /** Resolves DX team members from the configured GitHub team slug. */
 export const resolveDxTeamMembers = async (
@@ -89,9 +101,9 @@ export async function closeImportContext(
 export async function createImportContext(
   settings: ImportSettings,
 ): Promise<ImportContext> {
-  const { databaseUrl, githubToken, ...config } = settings;
+  const { databaseUrl, githubAuth, ...config } = settings;
   const { db, pool } = createDatabaseConnection(databaseUrl);
-  const octokit = await createOctokitClient(githubToken);
+  const octokit = createOctokitClient(githubAuth);
   const dxTeamMembers = await resolveDxTeamMembers(octokit, config);
 
   const ensureRepo = async (name: string): Promise<number> => {
