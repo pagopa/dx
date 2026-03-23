@@ -42,6 +42,9 @@ import { importWorkflowRuns, importWorkflows } from "./lib/importers/workflows";
 
 const readEnvironmentOverrides = () => ({
   DATABASE_URL: process.env.DATABASE_URL,
+  GITHUB_APP_ID: process.env.GITHUB_APP_ID,
+  GITHUB_APP_INSTALLATION_ID: process.env.GITHUB_APP_INSTALLATION_ID,
+  GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
 });
 

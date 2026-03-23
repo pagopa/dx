@@ -14,7 +14,7 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 ## Prerequisites
 
 - Docker and Docker Compose
-- A GitHub personal access token with `repo` scope
+- GitHub App credentials or a GitHub PAT with access to the target organization and repositories
 
 ## Setup
 
@@ -38,10 +38,20 @@ DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx d
 3. **Import data (incremental):**
 
 ```bash
-export GITHUB_TOKEN=ghp_XXX
+export GITHUB_APP_ID=123456
+export GITHUB_APP_INSTALLATION_ID=7890123
+# Convert PEM file to a single line with \n escapes
+export GITHUB_APP_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' /path/to/github-app-private-key.pem)"
 export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
 npx tsx scripts/import.ts --since 2026-01-01
 ```
+
+If your secret store exposes the private key with escaped newlines (`\n`),
+`dx-metrics` normalizes it automatically before creating the GitHub App
+installation client.
+
+If GitHub App credentials are not configured, the import script falls back to
+`GITHUB_TOKEN`.
 
 4. **Access dashboards** at http://localhost:3000 (anonymous access; no GitHub login required)
 
@@ -108,6 +118,27 @@ Typical configuration fields include:
 
 Refer to the `config.json` used by `src/lib/config.ts` for the exact
 structure and values.
+
+### Import authentication variables
+
+The import script authenticates to GitHub with this precedence:
+
+1. GitHub App installation auth, when all GitHub App variables are configured
+2. `GITHUB_TOKEN`, when GitHub App credentials are absent
+
+GitHub App variables:
+
+| Variable                     | Description                                |
+| ---------------------------- | ------------------------------------------ |
+| `GITHUB_APP_ID`              | Numeric GitHub App ID                      |
+| `GITHUB_APP_INSTALLATION_ID` | Numeric installation ID for the target org |
+| `GITHUB_APP_PRIVATE_KEY`     | GitHub App private key in PEM format       |
+
+Fallback variable:
+
+| Variable       | Description                  |
+| -------------- | ---------------------------- |
+| `GITHUB_TOKEN` | GitHub personal access token |
 
 ## Development
 
