@@ -1,6 +1,5 @@
 ---
 "setup-telemetry-action": patch
-"@pagopa/eslint-config": patch
 "@pagopa/dx-mcpprompts": patch
 "pr-comment-action": patch
 "@pagopa/dx-savemoney": patch
