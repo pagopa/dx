@@ -13,7 +13,7 @@
 
 import * as core from "@actions/core";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { AzureCliCredential } from "@azure/identity";
+import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
@@ -216,7 +216,7 @@ async function uploadToAzure(
   destination: string,
   archivePath: string,
 ): Promise<void> {
-  const credential = new AzureCliCredential();
+  const credential = new DefaultAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
   const blockBlobClient = new BlobServiceClient(url, credential)
     .getContainerClient(container)
