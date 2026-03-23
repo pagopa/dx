@@ -56,6 +56,7 @@ async function createComment(
   } catch (error) {
     throw new Error(
       `Failed to create comment: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
@@ -166,6 +167,7 @@ function resolveCommentBody(inputs: ActionInputs): string {
     } catch (error) {
       throw new Error(
         `Failed to read comment body file: ${inputs.commentBodyFile}. Error: ${error instanceof Error ? error.message : String(error)}`,
+        { cause: error },
       );
     }
   }

@@ -187,11 +187,8 @@ describe("queryKnowledgeBaseStructured - Basic Functionality", () => {
 
     // resolveToWebsiteUrl should transform S3 URI to website URL
     expect(result[0].location).toBeDefined();
-    if (result[0].location?.webLocation?.url) {
-      expect(result[0].location.webLocation.url).toContain("https://");
-      // URL should have /index removed
-      expect(result[0].location.webLocation.url).not.toContain("/index");
-    }
+    expect(result[0].location?.webLocation?.url).toContain("https://");
+    expect(result[0].location?.webLocation?.url).not.toContain("/index");
   });
 
   it("should skip image content with warning logs", async () => {

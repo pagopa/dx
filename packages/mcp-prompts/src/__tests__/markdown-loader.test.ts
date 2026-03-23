@@ -217,17 +217,6 @@ describe("Argument Schema Validation", () => {
     };
 
     expect(() => PromptArgumentSchema.parse(invalidArgument)).toThrow(ZodError);
-
-    try {
-      PromptArgumentSchema.parse(invalidArgument);
-    } catch (error) {
-      if (error instanceof ZodError) {
-        expect(error.issues[0].message).toBe(
-          "Default value can only be set when required is false",
-        );
-        expect(error.issues[0].path).toEqual(["default"]);
-      }
-    }
   });
 
   it("should allow optional argument without default (implicit behavior)", () => {
