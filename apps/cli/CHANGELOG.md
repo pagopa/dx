@@ -1,5 +1,11 @@
 # @pagopa/dx-cli
 
+## 0.18.9
+
+### Patch Changes
+
+- 9e67b60: Wire Azure authorization request to the `init` command
+
 ## 0.18.8
 
 ### Patch Changes
