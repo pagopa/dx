@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.5
+
+### Patch Changes
+
+- f8c8514: Remove prevent_destroy from github_branch_protection resource
+
 ## 1.1.4
 
 ### Patch Changes
