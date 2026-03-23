@@ -217,7 +217,7 @@ export function resolveToWebsiteUrl(
     const match = location.s3Location.uri.match(/^s3:\/\/(?:[^/]+)\/(.+)$/);
     if (match) {
       const key = match[1];
-      let url = "";
+      let url;
       // Special case: llms-full.txt or llms.txt should be returned as https://dx.pagopa.it/<file>
       if (key === "llms-full.txt" || key === "llms.txt") {
         url = `https://dx.pagopa.it/${key}`;

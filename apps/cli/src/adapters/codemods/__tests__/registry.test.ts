@@ -31,16 +31,19 @@ describe("LocalCodemodRegistry", () => {
 
     const result = await registry.getAll();
 
+    expect.assertions(3);
+
     expect(result.isOk()).toBe(true);
-    if (result.isOk()) {
-      expect(result.value).toHaveLength(2);
-      expect(result.value).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: "a" }),
-          expect.objectContaining({ id: "b" }),
-        ]),
-      );
-    }
+
+    const expected = result.unwrapOr([]);
+
+    expect(expected).toHaveLength(2);
+    expect(expected).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ id: "a" }),
+        expect.objectContaining({ id: "b" }),
+      ]),
+    );
   });
 
   it("retrieves a codemod by id and returns undefined when missing", async () => {
@@ -50,15 +53,14 @@ describe("LocalCodemodRegistry", () => {
 
     const found = await registry.getById("a");
     expect(found.isOk()).toBe(true);
-    if (found.isOk()) {
-      expect(found.value).toBe(a);
-    }
+
+    const expected = found.unwrapOr(undefined);
+    expect(expected).toBe(a);
 
     const missing = await registry.getById("nope");
     expect(missing.isOk()).toBe(true);
-    if (missing.isOk()) {
-      expect(missing.value).toBeUndefined();
-    }
+    const missingValue = missing.unwrapOr(undefined);
+    expect(missingValue).toBeUndefined();
   });
 
   it("overwrites an existing codemod when adding with the same id", async () => {
@@ -71,9 +73,8 @@ describe("LocalCodemodRegistry", () => {
 
     const byId = await registry.getById("a");
     expect(byId.isOk()).toBe(true);
-    if (byId.isOk()) {
-      expect(byId.value).toBe(second);
-      expect(byId.value).not.toBe(first);
-    }
+    const byIdValue = byId.unwrapOr(undefined);
+    expect(byIdValue).toBe(second);
+    expect(byIdValue).not.toBe(first);
   });
 });

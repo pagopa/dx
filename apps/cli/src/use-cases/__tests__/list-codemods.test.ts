@@ -41,8 +41,7 @@ describe("listCodemods", () => {
     const result = await listCodemods(registry)();
 
     expect(result.isErr()).toBe(true);
-    if (result.isErr()) {
-      expect(result.error).toBe(error);
-    }
+    const value = result.isErr() ? result.error : null;
+    expect(value).toBe(error);
   });
 });

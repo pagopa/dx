@@ -4,6 +4,7 @@
   "private": true,
   "description": "Setup OpenTelemetry",
   "main": "dist/index.js",
+  "type": "module",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
