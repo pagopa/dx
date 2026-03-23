@@ -9,7 +9,7 @@ locals {
   azure_naming_config = {
     prefix          = "dx"
     environment     = "p"
-    location        = "itn"
+    location        = "italynorth"
     instance_number = 1
   }
 
