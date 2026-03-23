@@ -85,12 +85,13 @@ runs:
         NPM_CONFIG_PROVENANCE: true
         GITHUB_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
       run: |
         set -euo pipefail
 
         # Extract projects to build from the merged PR's release tags
-        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-          PR_NUMBER="${{ github.event.pull_request.number }}"
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
           PROJECTS_TO_BUILD=$(PR_NUMBER="$PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
 
           if [[ -n "$PROJECTS_TO_BUILD" ]]; then
