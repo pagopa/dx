@@ -187,3 +187,50 @@ run "container_app_env_diagnostics_enabled_plan" {
     error_message = "Log Analytics workspace ID should be set correctly"
   }
 }
+
+run "container_app_env_public_network_access_plan" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags = {
+      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CreatedBy      = "Terraform"
+      Environment    = "Dev"
+      BusinessUnit   = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_container_app/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create Container App Environment with public network access"
+    }
+
+    resource_group_name = run.setup_tests.resource_group_name
+
+    log_analytics_workspace_id = run.setup_tests.log_analytics_id
+
+    virtual_network = {
+      name                = "dx-d-itn-common-vnet-01"
+      resource_group_name = "dx-d-itn-network-rg-01"
+    }
+    subnet_cidr                   = "10.50.100.0/24"
+    public_network_access_enabled = true
+  }
+
+  assert {
+    condition     = azurerm_container_app_environment.this.internal_load_balancer_enabled == false
+    error_message = "internal_load_balancer_enabled should be false when public_network_access_enabled is true"
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.this) == 0
+    error_message = "No private endpoint should be created when public_network_access_enabled is true"
+  }
+}

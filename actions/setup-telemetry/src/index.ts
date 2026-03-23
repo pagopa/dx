@@ -73,6 +73,7 @@ async function startSession(): Promise<{
   } catch (err) {
     throw new Error(
       `Failed to create session directory: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
     );
   }
 
@@ -84,7 +85,9 @@ async function startSession(): Promise<{
   } catch (err) {
     // File already exists or other error - only throw on non-EEXIST errors
     if (err instanceof Error && "code" in err && err.code !== "EEXIST") {
-      throw new Error(`Failed to initialize events file: ${err.message}`);
+      throw new Error(`Failed to initialize events file: ${err.message}`, {
+        cause: err,
+      });
     }
   }
 

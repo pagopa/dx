@@ -583,3 +583,169 @@ run "container_app_diagnostics_enabled_plan" {
     error_message = "Log Analytics workspace ID should be set correctly"
   }
 }
+
+run "container_app_public_access_enabled_plan" {
+  command = plan
+
+  variables {
+    public_access_enabled = true
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.ingress[0].external_enabled == true
+    error_message = "Container app should have external ingress enabled when public_access_enabled is true"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.ingress[0].external_enabled == !false
+    error_message = "Container app should not have internal-only ingress when public_access_enabled is true"
+  }
+}
+
+run "container_app_authentication_plan" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = run.setup_tests.key_vault_secret1.secret_id
+      }
+    }
+  }
+
+  assert {
+    condition     = length([for s in azurerm_container_app.this.secret : s if s.name == "entra-id-client-secret"]) == 1
+    error_message = "The entra-id-client-secret should be injected into Container App secrets when authentication is configured"
+  }
+
+  assert {
+    condition = (
+      [for s in azurerm_container_app.this.secret : s if s.name == "entra-id-client-secret"][0].key_vault_secret_id
+      == run.setup_tests.key_vault_secret1.secret_id
+    )
+    error_message = "The entra-id-client-secret should reference the correct Key Vault secret"
+  }
+}
+
+# ---- Validation failure tests ----
+
+run "container_app_custom_domain_requires_public_access" {
+  command = plan
+
+  variables {
+    public_access_enabled = false
+    custom_domain = {
+      host_name = "api.example.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_requires_cert_or_dns" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "api.example.com"
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_cert_and_dns_are_compatible" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name      = "api.example.com"
+      certificate_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.App/managedEnvironments/env/certificates/cert"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  # Both fields together is valid: pre-uploaded cert + automatic CNAME routing.
+  # Only the CNAME is created; TXT and managed cert resources are skipped.
+  assert {
+    condition     = length(azurerm_dns_cname_record.this) == 1
+    error_message = "CNAME record should be created when dns is provided alongside certificate_id"
+  }
+
+  assert {
+    condition     = length(azurerm_dns_txt_record.validation) == 0
+    error_message = "TXT validation record should NOT be created when certificate_id is provided"
+  }
+
+  assert {
+    condition     = length(azapi_resource.managed_certificate) == 0
+    error_message = "Managed certificate should NOT be provisioned when certificate_id is provided"
+  }
+}
+
+run "container_app_custom_domain_hostname_must_be_subdomain" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "other.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_custom_domain_apex_not_supported" {
+  command = plan
+
+  variables {
+    custom_domain = {
+      host_name = "example.com"
+      dns = {
+        zone_name                = "example.com"
+        zone_resource_group_name = "rg-dns"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.custom_domain,
+  ]
+}
+
+run "container_app_authentication_invalid_kv_uri" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = "not-a-valid-kv-uri"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.authentication,
+  ]
+}

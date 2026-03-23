@@ -44,10 +44,10 @@ describe("applyCodemodById", () => {
     const result = await applyCodemodById(registry, info)("missing-id");
 
     expect(result.isErr()).toBe(true);
-    if (result.isErr()) {
-      expect(result.error).toBeInstanceOf(Error);
-      expect(result.error.message).toBe("Codemod with id missing-id not found");
-    }
+
+    const value = result.isErr() ? result.error : null;
+    expect(value).toBeInstanceOf(Error);
+    expect(value?.message).toBe("Codemod with id missing-id not found");
   });
 
   it("propagates getById errors", async () => {
@@ -62,9 +62,9 @@ describe("applyCodemodById", () => {
     const result = await applyCodemodById(registry, info)("foo");
 
     expect(result.isErr()).toBe(true);
-    if (result.isErr()) {
-      expect(result.error.message).toContain(registryError.message);
-    }
+    const value = result.isErr() ? result.error : null;
+    expect(value).toBeInstanceOf(Error);
+    expect(value?.message).toContain(registryError.message);
   });
 
   it("propagates apply errors", async () => {
@@ -85,9 +85,8 @@ describe("applyCodemodById", () => {
     const result = await applyCodemodById(registry, info)("foo");
 
     expect(result.isErr()).toBe(true);
-    if (result.isErr()) {
-      expect(result.error).toBeInstanceOf(Error);
-      expect(result.error.message).toContain(applyError.message);
-    }
+    const value = result.isErr() ? result.error : null;
+    expect(value).toBeInstanceOf(Error);
+    expect(value?.message).toContain(applyError.message);
   });
 });

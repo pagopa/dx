@@ -1,5 +1,19 @@
 # @pagopa/dx-cli
 
+## 0.18.10
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+- Updated dependencies [66b392d]
+  - @pagopa/dx-savemoney@0.2.1
+
+## 0.18.9
+
+### Patch Changes
+
+- 9e67b60: Wire Azure authorization request to the `init` command
+
 ## 0.18.8
 
 ### Patch Changes

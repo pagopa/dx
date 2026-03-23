@@ -1,5 +1,14 @@
 # @pagopa/dx-mcpserver
 
+## 0.1.5
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+- Updated dependencies [66b392d]
+  - @pagopa/dx-mcpprompts@0.2.5
+  - @pagopa/azure-tracing@0.4.13
+
 ## 0.1.4
 
 ### Patch Changes

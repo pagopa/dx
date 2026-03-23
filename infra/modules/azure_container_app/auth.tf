@@ -1,0 +1,29 @@
+resource "azapi_resource" "auth" {
+  count = var.authentication != null ? 1 : 0
+
+  type      = "Microsoft.App/containerApps/authConfigs@2024-03-01"
+  name      = "current"
+  parent_id = azurerm_container_app.this.id
+
+  body = {
+    properties = {
+      platform = {
+        enabled = true
+      }
+      globalValidation = {
+        unauthenticatedClientAction = "RedirectToLoginPage"
+        redirectToProvider          = "azureactivedirectory"
+      }
+      identityProviders = {
+        azureActiveDirectory = {
+          enabled = true
+          registration = {
+            clientId                = var.authentication.azure_active_directory.client_id
+            clientSecretSettingName = "entra-id-client-secret"
+            openIdIssuer            = "https://login.microsoftonline.com/${var.authentication.azure_active_directory.tenant_id}/v2.0"
+          }
+        }
+      }
+    }
+  }
+}
