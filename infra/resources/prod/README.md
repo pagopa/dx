@@ -19,7 +19,7 @@
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.4 |
 | <a name="provider_azuredx"></a> [azuredx](#provider\_azuredx) | ~> 0.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.64.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.65.0 |
 
 ## Modules
 
