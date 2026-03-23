@@ -13,7 +13,7 @@ export default defineConfig({
   ],
   format: ["esm"],
   minify: false,
-  noExternal: ["@octokit/rest"],
+  noExternal: ["@octokit/rest", "zod"],
   outDir: "scripts/dist",
   platform: "node",
   sourcemap: false,
