@@ -47,6 +47,8 @@ env:
   RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
   ARM_USE_OIDC: true
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
 jobs:
   build:
@@ -131,14 +133,11 @@ jobs:
 
     outputs:
       use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
-
     steps:
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Check for existing staging slot
         id: query-staging-slot
@@ -200,12 +199,10 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy
         env:
@@ -289,13 +286,12 @@ jobs:
       id-token: write
       contents: read
 
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
     steps:
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
-        env:
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Swap Staging and Production Slots
         uses: pagopa/dx/actions/incremental-rollout@main
