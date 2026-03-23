@@ -84,13 +84,30 @@ runs:
       env:
         NPM_CONFIG_PROVENANCE: true
         GITHUB_TOKEN: ${{ inputs.github-token }}
+        ACTION_PATH: ${{ github.action_path }}
       run: |
         set -euo pipefail
-        echo "::notice::Executing build command before publish"
-        nx run-many --target=build --projects="tag:*:public"
 
-        echo "::notice::Executing publish command"
-        nx release publish
+        # Extract projects to build from the merged PR's release tags
+        if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          PR_NUMBER="${{ github.event.pull_request.number }}"
+          PROJECTS_TO_BUILD=$(PR_NUMBER="$PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
+
+          if [[ -n "$PROJECTS_TO_BUILD" ]]; then
+            echo "::notice::Building projects: $PROJECTS_TO_BUILD"
+            nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
+            echo "::notice::Executing publish command"
+            nx release publish --projects="$PROJECTS_TO_BUILD"
+          else
+            echo "::notice::No projects to build (empty list from PR)"
+          fi
+        else
+          # workflow_dispatch: build all public projects as fallback
+          echo "::notice::Building all public projects (workflow_dispatch mode)"
+          nx run-many --target=build --projects="tag:*:public"
+          echo "::notice::Executing publish command"
+          nx release publish
+        fi
 
         echo "published=true" >> "$GITHUB_OUTPUT"
 

@@ -1,6 +1,4 @@
-import { execFile, spawn } from 'child_process';
-import { readFile } from 'fs/promises';
-import { join } from 'path';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
 var __create = Object.create;
@@ -3655,6 +3653,33 @@ function extractTagEntriesFromPRBody(prBody) {
     return [];
   }
 }
+async function getNxProjectNames() {
+  try {
+    const { stdout } = await execFileAsync("nx", [
+      "show",
+      "projects",
+      "--json"
+    ]);
+    let jsonStart = stdout.indexOf('["');
+    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
+    if (jsonStart === -1) {
+      console.error(
+        "nx show projects: no JSON array found in stdout:",
+        stdout.slice(0, 300)
+      );
+      return [];
+    }
+    const parsed = JSON.parse(stdout.slice(jsonStart));
+    if (!Array.isArray(parsed)) return [];
+    if (parsed.every((s) => typeof s === "string")) {
+      return parsed;
+    }
+    return [];
+  } catch (err) {
+    console.error("getNxProjectNames failed:", err);
+    return [];
+  }
+}
 async function getRepoInfo() {
   const ghRepo = process.env.GITHUB_REPOSITORY;
   if (ghRepo) {
@@ -3678,6 +3703,24 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
+async function isPublicProject(projectName) {
+  const metadata = await getNxProjectMetadata(projectName);
+  if (!metadata) return false;
+  const tags = metadata["tags"];
+  if (!Array.isArray(tags)) return false;
+  return tags.some(
+    (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
+  );
+}
+function matchProjectName(tag, projectNames) {
+  const candidates = projectNames.filter((name) => {
+    if (!tag.startsWith(name)) return false;
+    const charAfter = tag[name.length];
+    return charAfter !== void 0 && !/\w/.test(charAfter);
+  });
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => a.length >= b.length ? a : b);
+}
 function parseTagEntries(raw) {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) => {
@@ -3693,154 +3736,105 @@ function parseTagEntries(raw) {
     ];
   });
 }
-
-// scripts/sync-tags-releases.ts
-var execFileAsync2 = promisify(execFile);
-async function extractChangelogSection(clPath, version) {
-  if (!version || version.trim() === "") {
-    return null;
-  }
+async function getNxProjectMetadata(projectName) {
   try {
-    const lines = (await readFile(clPath, "utf8")).split("\n");
-    const escapedVersion = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pat = new RegExp(`^##\\s+.*${escapedVersion}`);
-    const s = lines.findIndex((l) => pat.test(l));
-    if (s < 0) return null;
-    const e = lines.findIndex((l, i) => i > s && /^##\s/.test(l));
-    return lines.slice(s, e < 0 ? void 0 : e).join("\n").trim();
-  } catch {
-    return null;
-  }
-}
-async function releaseExists(octokit, owner, repo, tag) {
-  try {
-    await octokit.repos.getReleaseByTag({
-      owner,
-      repo,
-      tag
-    });
-    return true;
-  } catch (err) {
-    if (typeof err === "object" && err !== null && "status" in err && err.status === 404) {
-      return false;
+    const { stdout } = await execFileAsync("nx", [
+      "show",
+      "project",
+      projectName,
+      "--json"
+    ]);
+    const jsonStart = stdout.indexOf("{");
+    if (jsonStart === -1) {
+      console.error(
+        `nx show project ${projectName}: no JSON object found in stdout:`,
+        stdout.slice(0, 200)
+      );
+      return null;
     }
-    console.warn(`Error checking release ${tag}:`, err);
-    return false;
+    const parsed = JSON.parse(stdout.slice(jsonStart));
+    if (typeof parsed !== "object" || parsed === null) return null;
+    return parsed;
+  } catch (err) {
+    console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
+    return null;
   }
 }
-async function run(base) {
+
+// scripts/extract-projects-to-build.ts
+async function run() {
+  const prNumber = process.env.PR_NUMBER;
+  if (!prNumber) {
+    throw new Error("PR_NUMBER environment variable is required");
+  }
   const octokit = createOctokit();
   const { owner, repo } = await getRepoInfo();
-  const { data: pulls } = await octokit.pulls.list({
-    base,
-    direction: "desc",
-    head: `${owner}:nx-release/main`,
+  console.error(`::notice::Fetching PR #${prNumber} to extract release tags`);
+  const { data: pr } = await octokit.pulls.get({
     owner,
-    per_page: 20,
-    repo,
-    sort: "updated",
-    state: "closed"
+    pull_number: parseInt(prNumber, 10),
+    repo
   });
-  const mergedPrs = pulls.filter((pr) => pr.merged_at !== null).map((pr) => ({
-    body: pr.body ?? "",
-    mergeCommit: pr.merge_commit_sha ? { oid: pr.merge_commit_sha } : void 0,
-    number: pr.number
-  }));
-  if (!isPrDataArray(mergedPrs)) {
-    throw new Error("Unexpected PR list response: not an array of PR data");
-  }
-  const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of mergedPrs) {
-    if (!pr.body) continue;
-    const mergeCommitSha = pr.mergeCommit?.oid;
-    const tagEntries = extractTagEntriesFromPRBody(pr.body);
-    for (const e of tagEntries) {
-      allEntries.set(e.tag, { ...e, mergeCommitSha });
-    }
-  }
-  if (allEntries.size === 0) {
-    console.log(
-      "::notice::No release tags found in merged Version Packages PRs"
-    );
+  if (!pr.body) {
+    console.error("::warning::PR body is empty, no projects to build");
+    process.stdout.write("");
     return;
   }
-  const newTags = [];
-  for (const entry of allEntries.values()) {
-    if (await tagExistsOnRemote(entry.tag)) {
-      console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
-      continue;
-    }
-    const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
-    if (entry.mergeCommitSha) {
-      tagArgs.push(entry.mergeCommitSha);
-      console.log(
-        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
-      );
+  const tagEntries = extractTagEntriesFromPRBody(pr.body);
+  if (tagEntries.length === 0) {
+    console.error(
+      "::warning::No nx-release-tags metadata found in PR body, no projects to build"
+    );
+    process.stdout.write("");
+    return;
+  }
+  const projectNames = await getNxProjectNames();
+  if (projectNames.length === 0) {
+    console.error("::warning::No Nx projects found in workspace");
+    process.stdout.write("");
+    return;
+  }
+  const matchedProjects = /* @__PURE__ */ new Set();
+  for (const entry of tagEntries) {
+    const projectName = matchProjectName(entry.tag, projectNames);
+    if (projectName) {
+      matchedProjects.add(projectName);
     } else {
-      console.log(
-        `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
+      console.error(
+        `::warning::Could not match tag ${entry.tag} to any Nx project`
       );
     }
-    await spawnInherit("git", tagArgs);
-    newTags.push(entry);
-    console.log(`::notice::Created tag: ${entry.tag}`);
   }
-  if (newTags.length === 0) {
-    console.log("::notice::No new tags to push");
+  if (matchedProjects.size === 0) {
+    console.error("::warning::No projects extracted from tags");
+    process.stdout.write("");
     return;
   }
-  await spawnInherit("git", ["push", "origin", "--tags"]);
-  for (const { path, tag, version } of newTags) {
-    let notes = `Release ${tag}`;
-    if (path) {
-      const clPath = join(path, "CHANGELOG.md");
-      const section = await extractChangelogSection(clPath, version);
-      if (section) notes = section;
-    }
-    if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`::notice::GitHub release ${tag} already exists, skipping`);
-      continue;
-    }
-    await octokit.repos.createRelease({
-      body: notes,
-      name: tag,
-      owner,
-      prerelease: version.includes("-"),
-      repo,
-      tag_name: tag
-    });
-    console.log(`::notice::Created GitHub release: ${tag}`);
-  }
-}
-function spawnInherit(cmd, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on(
-      "close",
-      (code) => code === 0 ? resolve() : reject(
-        new Error(`${cmd} ${args.join(" ")} exited with code ${code}`)
-      )
-    );
-    child.on("error", reject);
-  });
-}
-async function tagExistsOnRemote(tag) {
-  const { stdout } = await execFileAsync2("git", [
-    "ls-remote",
-    "--tags",
-    "origin",
-    `refs/tags/${tag}`
-  ]);
-  return stdout.trim().length > 0;
-}
-function isPrDataArray(value) {
-  return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["body"] === "string" && typeof item["number"] === "number" && (item["mergeCommit"] === void 0 || typeof item["mergeCommit"] === "object" && item["mergeCommit"] !== null)
+  console.error(
+    `::notice::Filtering public projects from ${matchedProjects.size} matched projects`
   );
+  const publicProjects = [];
+  for (const projectName of matchedProjects) {
+    const isPublic = await isPublicProject(projectName);
+    if (isPublic) {
+      publicProjects.push(projectName);
+      console.error(`::notice::\u2713 ${projectName} is public`);
+    } else {
+      console.error(`::notice::\u2717 ${projectName} is private, skipping`);
+    }
+  }
+  if (publicProjects.length === 0) {
+    console.error("::warning::No public projects found to build");
+    process.stdout.write("");
+    return;
+  }
+  const projectsList = publicProjects.join(",");
+  console.error(`::notice::Public projects to build: ${projectsList}`);
+  process.stdout.write(projectsList);
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run(process.env.BASE_BRANCH ?? "main").catch((err) => {
-    console.error("Unexpected error in sync-tags-releases:", err);
+  run().catch((err) => {
+    console.error("Unexpected error in extract-projects-to-build:", err);
     process.exit(1);
   });
 }
@@ -3853,5 +3847,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   (* v8 ignore next -- @preserve *)
   (* v8 ignore else -- @preserve *)
 */
-
-export { extractChangelogSection, releaseExists, run, spawnInherit, tagExistsOnRemote };

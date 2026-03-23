@@ -9,16 +9,12 @@
  *
  * Used to populate the nx-release-tags metadata comment in the Version Packages PR body.
  */
-import { execFile } from "node:child_process";
-import { promisify } from "node:util";
-
-const execFileAsync = promisify(execFile);
-
-export interface TagEntry {
-  path: null | string;
-  tag: string;
-  version: string;
-}
+import {
+  getNxProjectNames,
+  getNxProjectRoot,
+  matchProjectName,
+  type TagEntry,
+} from "./shared.js";
 
 /**
  * Maps each Nx-generated tag to its project root path and version.
@@ -42,87 +38,6 @@ export async function buildTagEntries(newTags: string[]): Promise<TagEntry[]> {
       return { path, tag, version };
     }),
   );
-}
-
-/** Returns all Nx project names in the workspace. */
-export async function getNxProjectNames(): Promise<string[]> {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "projects",
-      "--json",
-    ]);
-    // nx may print non-JSON text before the array (e.g. "[Maven Analyzer] ...").
-    // Look for '["' (array of strings) or '[]' (empty array) to skip any prefix.
-    let jsonStart = stdout.indexOf('["');
-    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
-    if (jsonStart === -1) {
-      console.error(
-        "[extract-tags] nx show projects: no JSON array found in stdout:",
-        stdout.slice(0, 300),
-      );
-      return [];
-    }
-    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (!Array.isArray(parsed)) return [];
-    // Type predicate ensures safe return without assertion
-    if (parsed.every((s): s is string => typeof s === "string")) {
-      return parsed;
-    }
-    return [];
-  } catch (err) {
-    console.error("[extract-tags] getNxProjectNames failed:", err);
-    return [];
-  }
-}
-
-/**
- * Returns the root directory for a given Nx project name, or null on failure.
- */
-export async function getNxProjectRoot(name: string): Promise<null | string> {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "project",
-      name,
-      "--json",
-    ]);
-    // nx may print banner/daemon text before the JSON object — find the first '{'
-    const jsonStart = stdout.indexOf("{");
-    if (jsonStart === -1) {
-      console.error(
-        `[extract-tags] nx show project ${name}: no JSON object found in stdout:`,
-        stdout.slice(0, 200),
-      );
-      return null;
-    }
-    const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const root = (parsed as Record<string, unknown>)["root"];
-    return typeof root === "string" && root ? root : null;
-  } catch (err) {
-    console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
-    return null;
-  }
-}
-
-/**
- * Finds the longest project name that is a prefix of the tag, followed by a
- * non-word separator character (e.g. `@`, `/`).
- */
-export function matchProjectName(
-  tag: string,
-  projectNames: string[],
-): null | string {
-  const candidates = projectNames.filter((name) => {
-    if (!tag.startsWith(name)) return false;
-    const charAfter = tag[name.length];
-    return charAfter !== undefined && !/\w/.test(charAfter);
-  });
-  if (candidates.length === 0) return null;
-  return candidates.reduce((a, b) => (a.length >= b.length ? a : b));
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

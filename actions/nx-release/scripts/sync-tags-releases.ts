@@ -12,14 +12,14 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
 
-const execFileAsync = promisify(execFile);
+import {
+  createOctokit,
+  extractTagEntriesFromPRBody,
+  getRepoInfo,
+  type TagEntry,
+} from "./shared.js";
 
-export interface TagEntry {
-  path: null | string;
-  tag: string;
-  // version was added later; may be absent in PR bodies written before this field.
-  version: string;
-}
+const execFileAsync = promisify(execFile);
 
 interface PrData {
   body: string;
@@ -121,10 +121,9 @@ export async function run(base: string): Promise<void> {
   const allEntries = new Map<string, TagEntry & { mergeCommitSha?: string }>();
   for (const pr of mergedPrs) {
     if (!pr.body) continue;
-    const m = pr.body.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
-    if (!m) continue;
     const mergeCommitSha = pr.mergeCommit?.oid;
-    for (const e of parseTagEntries(JSON.parse(m[1]))) {
+    const tagEntries = extractTagEntriesFromPRBody(pr.body);
+    for (const e of tagEntries) {
       allEntries.set(e.tag, { ...e, mergeCommitSha });
     }
   }
@@ -216,45 +215,6 @@ export async function tagExistsOnRemote(tag: string): Promise<boolean> {
   return stdout.trim().length > 0;
 }
 
-/** Creates an authenticated Octokit instance. */
-function createOctokit(): Octokit {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    throw new Error(
-      "GITHUB_TOKEN environment variable is required but not set",
-    );
-  }
-  return new Octokit({ auth: token });
-}
-
-/** Parses owner and repo from GITHUB_REPOSITORY env var or git remote. */
-async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
-  const ghRepo = process.env.GITHUB_REPOSITORY;
-  if (ghRepo) {
-    const [owner, repo] = ghRepo.split("/");
-    if (owner && repo) return { owner, repo };
-  }
-
-  // Fallback: parse from git remote
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "remote",
-      "get-url",
-      "origin",
-    ]);
-    const match = stdout.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
-    if (match) {
-      return { owner: match[1], repo: match[2] };
-    }
-  } catch (err) {
-    console.error("Failed to get repo info from git remote:", err);
-  }
-
-  throw new Error(
-    "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote",
-  );
-}
-
 function isPrDataArray(value: unknown): value is PrData[] {
   return (
     Array.isArray(value) &&
@@ -270,22 +230,6 @@ function isPrDataArray(value: unknown): value is PrData[] {
             (item as Record<string, unknown>)["mergeCommit"] !== null)),
     )
   );
-}
-
-function parseTagEntries(raw: unknown): TagEntry[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
-    if (typeof item !== "object" || item === null) return [];
-    const r = item as Record<string, unknown>;
-    if (typeof r["tag"] !== "string") return [];
-    return [
-      {
-        path: typeof r["path"] === "string" ? r["path"] : null,
-        tag: r["tag"],
-        version: typeof r["version"] === "string" ? r["version"] : "",
-      },
-    ];
-  });
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

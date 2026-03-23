@@ -1,6 +1,6 @@
-import { execFile } from 'child_process';
 import { appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
+import { execFile } from 'child_process';
 import { promisify } from 'util';
 
 var __create = Object.create;
@@ -3633,13 +3633,6 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
   }
 );
 var execFileAsync = promisify(execFile);
-async function appendOutput(key, value) {
-  const outputPath = process.env.GITHUB_OUTPUT;
-  if (outputPath) {
-    await appendFile(outputPath, `${key}=${value}
-`);
-  }
-}
 function createOctokit() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
@@ -3648,6 +3641,38 @@ function createOctokit() {
     );
   }
   return new Octokit2({ auth: token });
+}
+async function getRepoInfo() {
+  const ghRepo = process.env.GITHUB_REPOSITORY;
+  if (ghRepo) {
+    const [owner, repo] = ghRepo.split("/");
+    if (owner && repo) return { owner, repo };
+  }
+  try {
+    const { stdout } = await execFileAsync("git", [
+      "remote",
+      "get-url",
+      "origin"
+    ]);
+    const match = stdout.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
+    if (match) {
+      return { owner: match[1], repo: match[2] };
+    }
+  } catch (err) {
+    console.error("Failed to get repo info from git remote:", err);
+  }
+  throw new Error(
+    "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
+  );
+}
+
+// scripts/manage-version-pr.ts
+async function appendOutput(key, value) {
+  const outputPath = process.env.GITHUB_OUTPUT;
+  if (outputPath) {
+    await appendFile(outputPath, `${key}=${value}
+`);
+  }
 }
 async function extractLatestSection(changelogPath) {
   try {
@@ -3685,29 +3710,6 @@ async function formatReleaseSection(entry) {
   output.push(...bodyLines);
   output.push("");
   return output.join("\n");
-}
-async function getRepoInfo() {
-  const ghRepo = process.env.GITHUB_REPOSITORY;
-  if (ghRepo) {
-    const [owner, repo] = ghRepo.split("/");
-    if (owner && repo) return { owner, repo };
-  }
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "remote",
-      "get-url",
-      "origin"
-    ]);
-    const match = stdout.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
-    if (match) {
-      return { owner: match[1], repo: match[2] };
-    }
-  } catch (err) {
-    console.error("Failed to get repo info from git remote:", err);
-  }
-  throw new Error(
-    "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
-  );
 }
 function isTagEntryArray(value) {
   return Array.isArray(value) && value.every(

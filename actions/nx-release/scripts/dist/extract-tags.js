@@ -1,8 +1,76 @@
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 
-// scripts/extract-tags.ts
+// scripts/shared.ts
 var execFileAsync = promisify(execFile);
+async function getNxProjectNames() {
+  try {
+    const { stdout } = await execFileAsync("nx", [
+      "show",
+      "projects",
+      "--json"
+    ]);
+    let jsonStart = stdout.indexOf('["');
+    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
+    if (jsonStart === -1) {
+      console.error(
+        "nx show projects: no JSON array found in stdout:",
+        stdout.slice(0, 300)
+      );
+      return [];
+    }
+    const parsed = JSON.parse(stdout.slice(jsonStart));
+    if (!Array.isArray(parsed)) return [];
+    if (parsed.every((s) => typeof s === "string")) {
+      return parsed;
+    }
+    return [];
+  } catch (err) {
+    console.error("getNxProjectNames failed:", err);
+    return [];
+  }
+}
+async function getNxProjectRoot(name) {
+  const metadata = await getNxProjectMetadata(name);
+  if (!metadata) return null;
+  const root = metadata["root"];
+  return typeof root === "string" && root ? root : null;
+}
+function matchProjectName(tag, projectNames) {
+  const candidates = projectNames.filter((name) => {
+    if (!tag.startsWith(name)) return false;
+    const charAfter = tag[name.length];
+    return charAfter !== void 0 && !/\w/.test(charAfter);
+  });
+  if (candidates.length === 0) return null;
+  return candidates.reduce((a, b) => a.length >= b.length ? a : b);
+}
+async function getNxProjectMetadata(projectName) {
+  try {
+    const { stdout } = await execFileAsync("nx", [
+      "show",
+      "project",
+      projectName,
+      "--json"
+    ]);
+    const jsonStart = stdout.indexOf("{");
+    if (jsonStart === -1) {
+      console.error(
+        `nx show project ${projectName}: no JSON object found in stdout:`,
+        stdout.slice(0, 200)
+      );
+      return null;
+    }
+    const parsed = JSON.parse(stdout.slice(jsonStart));
+    if (typeof parsed !== "object" || parsed === null) return null;
+    return parsed;
+  } catch (err) {
+    console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
+    return null;
+  }
+}
+
+// scripts/extract-tags.ts
 async function buildTagEntries(newTags) {
   const projectNames = await getNxProjectNames();
   return Promise.all(
@@ -19,69 +87,6 @@ async function buildTagEntries(newTags) {
     })
   );
 }
-async function getNxProjectNames() {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "projects",
-      "--json"
-    ]);
-    let jsonStart = stdout.indexOf('["');
-    if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
-    if (jsonStart === -1) {
-      console.error(
-        "[extract-tags] nx show projects: no JSON array found in stdout:",
-        stdout.slice(0, 300)
-      );
-      return [];
-    }
-    const parsed = JSON.parse(stdout.slice(jsonStart));
-    if (!Array.isArray(parsed)) return [];
-    if (parsed.every((s) => typeof s === "string")) {
-      return parsed;
-    }
-    return [];
-  } catch (err) {
-    console.error("[extract-tags] getNxProjectNames failed:", err);
-    return [];
-  }
-}
-async function getNxProjectRoot(name) {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "project",
-      name,
-      "--json"
-    ]);
-    const jsonStart = stdout.indexOf("{");
-    if (jsonStart === -1) {
-      console.error(
-        `[extract-tags] nx show project ${name}: no JSON object found in stdout:`,
-        stdout.slice(0, 200)
-      );
-      return null;
-    }
-    const parsed = JSON.parse(stdout.slice(jsonStart));
-    if (typeof parsed !== "object" || parsed === null) return null;
-    const root = parsed["root"];
-    return typeof root === "string" && root ? root : null;
-  } catch (err) {
-    console.error(`[extract-tags] getNxProjectRoot(${name}) failed:`, err);
-    return null;
-  }
-}
-function matchProjectName(tag, projectNames) {
-  const candidates = projectNames.filter((name) => {
-    if (!tag.startsWith(name)) return false;
-    const charAfter = tag[name.length];
-    return charAfter !== void 0 && !/\w/.test(charAfter);
-  });
-  if (candidates.length === 0) return null;
-  return candidates.reduce((a, b) => a.length >= b.length ? a : b);
-}
 if (import.meta.url === `file://${process.argv[1]}`) {
   const newTags = (process.env.NEW_TAGS ?? "").split("\n").map((l) => l.trim()).filter(Boolean);
   if (newTags.length === 0) {
@@ -94,4 +99,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
 }
 
-export { buildTagEntries, getNxProjectNames, getNxProjectRoot, matchProjectName };
+export { buildTagEntries };

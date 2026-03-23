@@ -4,23 +4,14 @@
  * latest changelog section from each project, and creates or updates the PR
  * using GitHub API (Octokit).
  */
-import { Octokit } from "@octokit/rest";
-import { execFile } from "node:child_process";
 import { appendFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { promisify } from "node:util";
 
-const execFileAsync = promisify(execFile);
+import { createOctokit, getRepoInfo, type TagEntry } from "./shared.js";
 
 interface ReleaseEntry {
   changelogPath: string;
   name: string;
-  version: string;
-}
-
-interface TagEntry {
-  path: null | string;
-  tag: string;
   version: string;
 }
 
@@ -30,17 +21,6 @@ async function appendOutput(key: string, value: string): Promise<void> {
   if (outputPath) {
     await appendFile(outputPath, `${key}=${value}\n`);
   }
-}
-
-/** Creates an authenticated Octokit instance. */
-function createOctokit(): Octokit {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) {
-    throw new Error(
-      "GITHUB_TOKEN environment variable is required but not set",
-    );
-  }
-  return new Octokit({ auth: token });
 }
 
 /** Extracts the latest release section from a changelog file. */
@@ -91,34 +71,6 @@ async function formatReleaseSection(entry: ReleaseEntry): Promise<string> {
   output.push(...bodyLines);
   output.push("");
   return output.join("\n");
-}
-
-/** Parses owner and repo from GITHUB_REPOSITORY env var or git remote. */
-async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
-  const ghRepo = process.env.GITHUB_REPOSITORY;
-  if (ghRepo) {
-    const [owner, repo] = ghRepo.split("/");
-    if (owner && repo) return { owner, repo };
-  }
-
-  // Fallback: parse from git remote
-  try {
-    const { stdout } = await execFileAsync("git", [
-      "remote",
-      "get-url",
-      "origin",
-    ]);
-    const match = stdout.match(/github\.com[:/]([^/]+)\/([^/\s]+?)(?:\.git)?$/);
-    if (match) {
-      return { owner: match[1], repo: match[2] };
-    }
-  } catch (err) {
-    console.error("Failed to get repo info from git remote:", err);
-  }
-
-  throw new Error(
-    "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote",
-  );
 }
 
 /** Validates that a value is a TagEntry array. */
