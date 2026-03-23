@@ -1,5 +1,6 @@
 import { appendFile, readFile } from 'fs/promises';
 import { join } from 'path';
+import { z } from 'zod';
 import { execFile } from 'child_process';
 import { promisify } from 'util';
 
@@ -3711,11 +3712,12 @@ async function formatReleaseSection(entry) {
   output.push("");
   return output.join("\n");
 }
-function isTagEntryArray(value) {
-  return Array.isArray(value) && value.every(
-    (item) => typeof item === "object" && item !== null && typeof item["tag"] === "string" && typeof item["version"] === "string" && (item["path"] === null || typeof item["path"] === "string")
-  );
-}
+var TagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string()
+});
+var TagEntryArraySchema = z.array(TagEntrySchema);
 function resolveReleaseEntries() {
   const raw = process.env.RELEASE_TAGS ?? "[]";
   let parsed;
@@ -3728,13 +3730,15 @@ function resolveReleaseEntries() {
     );
     return [];
   }
-  if (!isTagEntryArray(parsed)) {
+  const result = TagEntryArraySchema.safeParse(parsed);
+  if (!result.success) {
     console.error(
-      "[manage-version-pr] RELEASE_TAGS is not a valid TagEntry array"
+      "[manage-version-pr] RELEASE_TAGS validation failed:",
+      result.error.format()
     );
     return [];
   }
-  const entries = parsed;
+  const entries = result.data;
   return entries.filter((e) => e.path !== null).map((e) => ({
     changelogPath: join(e.path, "CHANGELOG.md"),
     name: e.tag.slice(0, e.tag.length - e.version.length - 1),

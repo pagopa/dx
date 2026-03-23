@@ -1,4 +1,4 @@
-import { execFile, spawn } from 'child_process';
+import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { promisify } from 'util';
@@ -3781,7 +3781,7 @@ async function run(base) {
         `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
       );
     }
-    await spawnInherit("git", tagArgs);
+    await execFileAsync2("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -3789,7 +3789,7 @@ async function run(base) {
     console.log("::notice::No new tags to push");
     return;
   }
-  await spawnInherit("git", ["push", "origin", "--tags"]);
+  await execFileAsync2("git", ["push", "origin", "--tags"]);
   for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
     if (path) {
@@ -3811,18 +3811,6 @@ async function run(base) {
     });
     console.log(`::notice::Created GitHub release: ${tag}`);
   }
-}
-function spawnInherit(cmd, args) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on(
-      "close",
-      (code) => code === 0 ? resolve() : reject(
-        new Error(`${cmd} ${args.join(" ")} exited with code ${code}`)
-      )
-    );
-    child.on("error", reject);
-  });
 }
 async function tagExistsOnRemote(tag) {
   const { stdout } = await execFileAsync2("git", [
@@ -3854,4 +3842,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   (* v8 ignore else -- @preserve *)
 */
 
-export { extractChangelogSection, releaseExists, run, spawnInherit, tagExistsOnRemote };
+export { extractChangelogSection, releaseExists, run, tagExistsOnRemote };

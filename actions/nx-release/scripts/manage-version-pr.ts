@@ -6,6 +6,7 @@
  */
 import { appendFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod";
 
 import { createOctokit, getRepoInfo, type TagEntry } from "./shared.js";
 
@@ -73,21 +74,14 @@ async function formatReleaseSection(entry: ReleaseEntry): Promise<string> {
   return output.join("\n");
 }
 
-/** Validates that a value is a TagEntry array. */
-function isTagEntryArray(value: unknown): value is TagEntry[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as Record<string, unknown>)["tag"] === "string" &&
-        typeof (item as Record<string, unknown>)["version"] === "string" &&
-        ((item as Record<string, unknown>)["path"] === null ||
-          typeof (item as Record<string, unknown>)["path"] === "string"),
-    )
-  );
-}
+/** Zod schema for TagEntry validation. */
+const TagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string(),
+});
+
+const TagEntryArraySchema = z.array(TagEntrySchema);
 
 /** Resolves release entries from RELEASE_TAGS env var. */
 function resolveReleaseEntries(): ReleaseEntry[] {
@@ -102,13 +96,17 @@ function resolveReleaseEntries(): ReleaseEntry[] {
     );
     return [];
   }
-  if (!isTagEntryArray(parsed)) {
+
+  const result = TagEntryArraySchema.safeParse(parsed);
+  if (!result.success) {
     console.error(
-      "[manage-version-pr] RELEASE_TAGS is not a valid TagEntry array",
+      "[manage-version-pr] RELEASE_TAGS validation failed:",
+      result.error.format(),
     );
     return [];
   }
-  const entries = parsed;
+
+  const entries = result.data;
   return entries
     .filter((e): e is TagEntry & { path: string } => e.path !== null)
     .map((e) => ({

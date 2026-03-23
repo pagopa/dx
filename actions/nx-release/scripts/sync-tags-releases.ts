@@ -7,7 +7,7 @@
  * missed across failed publish runs.
  */
 import { Octokit } from "@octokit/rest";
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -153,7 +153,7 @@ export async function run(base: string): Promise<void> {
         `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`,
       );
     }
-    await spawnInherit("git", tagArgs);
+    await execFileAsync("git", tagArgs);
     newTags.push(entry);
     console.log(`::notice::Created tag: ${entry.tag}`);
   }
@@ -163,7 +163,7 @@ export async function run(base: string): Promise<void> {
     return;
   }
 
-  await spawnInherit("git", ["push", "origin", "--tags"]);
+  await execFileAsync("git", ["push", "origin", "--tags"]);
 
   for (const { path, tag, version } of newTags) {
     let notes = `Release ${tag}`;
@@ -189,20 +189,6 @@ export async function run(base: string): Promise<void> {
     });
     console.log(`::notice::Created GitHub release: ${tag}`);
   }
-}
-
-export function spawnInherit(cmd: string, args: string[]): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, { stdio: "inherit" });
-    child.on("close", (code) =>
-      code === 0
-        ? resolve()
-        : reject(
-            new Error(`${cmd} ${args.join(" ")} exited with code ${code}`),
-          ),
-    );
-    child.on("error", reject);
-  });
 }
 
 export async function tagExistsOnRemote(tag: string): Promise<boolean> {
