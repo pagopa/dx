@@ -162,7 +162,7 @@ jobs:
       # Outputs (provider, plan-path, credentials) are passed to the apply job.
       - name: Upload Terraform Plan
         id: upload_plan
-        uses: pagopa/dx/actions/terraform-plan-storage-upload@poc-store-plan-artifact-in-csp
+        uses: pagopa/dx/actions/terraform-plan-storage-upload@main
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ steps.directory.outputs.dir }}
@@ -197,7 +197,7 @@ jobs:
       # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
       # Storage coordinates come directly from the tf_plan job outputs — no terraform init required.
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-storage-download@poc-store-plan-artifact-in-csp
+        uses: pagopa/dx/actions/terraform-plan-storage-download@main
         with:
           provider: ${{ needs.tf_plan.outputs.plan_provider }}
           plan-path: ${{ needs.tf_plan.outputs.plan_path }}
