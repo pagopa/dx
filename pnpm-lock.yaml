@@ -164,7 +164,7 @@ importers:
         version: 3.2.4(vitest@3.2.4)
       eslint:
         specifier: 'catalog:'
-        version: 9.39.2(jiti@2.6.1)
+        version: 10.1.0(jiti@2.6.1)
       prettier:
         specifier: 'catalog:'
         version: 3.8.1
