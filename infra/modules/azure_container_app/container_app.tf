@@ -14,7 +14,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = true
+    external_enabled           = var.public_access_enabled
     target_port                = var.target_port
     traffic_weight {
       percentage      = 100
@@ -35,6 +35,16 @@ resource "azurerm_container_app" "this" {
     content {
       name                = replace(lower(secret.value.name), "_", "-")
       key_vault_secret_id = secret.value.key_vault_secret_id
+      identity            = var.user_assigned_identity_id
+    }
+  }
+
+  # Add Entra ID client secret if authentication is configured
+  dynamic "secret" {
+    for_each = var.authentication != null ? [1] : []
+    content {
+      name                = "entra-id-client-secret"
+      key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
       identity            = var.user_assigned_identity_id
     }
   }
@@ -192,4 +202,33 @@ resource "azurerm_container_app" "this" {
   }
 
   tags = local.tags
+}
+
+resource "azurerm_container_app_custom_domain" "this" {
+  count = var.custom_domain != null ? 1 : 0
+
+  container_app_id = azurerm_container_app.this.id
+  # azurerm_container_app_custom_domain uses the full FQDN (with dots) as its name, which is
+  # the expected format per the provider documentation ("The hostname of the Custom Domain").
+  name = var.custom_domain.host_name
+
+  # When a pre-uploaded certificate is provided via certificate_id, bind with SniEnabled directly.
+  # When using an auto-provisioned managed certificate (managed_certificate azapi resource),
+  # start Disabled; azapi_update_resource.bind_certificate later changes it to SniEnabled.
+  # ignore_changes prevents Terraform from reverting the binding on subsequent applies.
+  certificate_binding_type                 = var.custom_domain.certificate_id != null ? "SniEnabled" : "Disabled"
+  container_app_environment_certificate_id = var.custom_domain.certificate_id
+
+  lifecycle {
+    ignore_changes = [
+      certificate_binding_type,
+      container_app_environment_certificate_id,
+    ]
+  }
+
+  depends_on = [
+    azurerm_dns_cname_record.this,
+    azurerm_dns_txt_record.validation,
+    time_sleep.dns_propagation,
+  ]
 }
