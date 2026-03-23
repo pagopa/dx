@@ -49,10 +49,13 @@ export async function loadAzureConfig(
       };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        throw new Error(`Invalid config file:\n${z.prettifyError(error)}`);
+        throw new Error(`Invalid config file:\n${z.prettifyError(error)}`, {
+          cause: error,
+        });
       }
       throw new Error(
         `Failed to load config file: ${error instanceof Error ? error.message : error}`,
+        { cause: error },
       );
     }
   }
