@@ -75,11 +75,6 @@ variable "target_port" {
   type        = number
   description = "The port on which the container app will listen for incoming traffic."
   default     = 8080
-
-  validation {
-    condition     = var.target_port >= 1 && var.target_port <= 65535
-    error_message = "target_port must be between 1 and 65535."
-  }
 }
 
 variable "public_access_enabled" {
