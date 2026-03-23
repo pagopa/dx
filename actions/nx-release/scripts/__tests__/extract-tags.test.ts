@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { matchProjectName } from "../extract-tags.js";
+import { matchProjectName } from "../shared.js";
 
 const NX_NAMES = ["@dx/app-x", "@dx/app-y", "@dx/app-zs", "it.pagopa.dx:app-x"];
 
