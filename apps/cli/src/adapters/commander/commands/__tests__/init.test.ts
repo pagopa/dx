@@ -1,5 +1,5 @@
 /**
- * Tests for requestAzureAuthorizations in the init command.
+ * Tests for authorizeCloudAccounts in the init command.
  */
 
 import { errAsync, okAsync } from "neverthrow";
@@ -14,7 +14,7 @@ import {
   AuthorizationService,
   IdentityAlreadyExistsError,
 } from "../../../../domain/authorization.js";
-import { requestAzureAuthorizations } from "../init.js";
+import { authorizeCloudAccounts } from "../init.js";
 
 const makeEnvPayload = (
   overrides: Partial<EnvironmentPayload> = {},
@@ -37,12 +37,12 @@ const makeEnvPayload = (
   ...overrides,
 });
 
-describe("requestAzureAuthorizations", () => {
+describe("authorizeCloudAccounts", () => {
   it("returns empty array when init is undefined (env already initialized)", async () => {
     const authService = mock<AuthorizationService>();
     const envPayload = makeEnvPayload({ init: undefined });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual([]);
@@ -55,7 +55,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual([]);
@@ -84,7 +84,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [account] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual([expectedPr]);
@@ -119,7 +119,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [account] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(authService.requestAuthorization).toHaveBeenCalledWith(
@@ -143,7 +143,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [account] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual([]);
@@ -183,7 +183,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [account1, account2] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     const prs = result._unsafeUnwrap();
@@ -208,7 +208,7 @@ describe("requestAzureAuthorizations", () => {
       init: { cloudAccountsToInitialize: [account] },
     });
 
-    const result = await requestAzureAuthorizations(authService)(envPayload);
+    const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
     expect(result._unsafeUnwrap()).toEqual([]);

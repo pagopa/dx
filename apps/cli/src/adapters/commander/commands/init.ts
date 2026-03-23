@@ -229,11 +229,9 @@ const handleGeneratorError = (err: unknown) => {
 };
 
 /**
- * Requests Azure authorization for each newly initialized cloud account.
- * Creates a PR on eng-azure-authorization to add the bootstrap identity
- * to the directory readers. Failures are logged but do not block the flow.
+ * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
  */
-export const requestAzureAuthorizations =
+export const authorizeCloudAccounts =
   (authorizationService: AuthorizationService) =>
   (
     envPayload: EnvironmentPayload,
@@ -342,7 +340,7 @@ export const makeInitCommand = ({
         .andThen(({ envPayload, monorepoPayload }) =>
           handleNewGitHubRepository(gitHubService)(monorepoPayload).andThen(
             (repoPr) =>
-              requestAzureAuthorizations(authorizationService)(envPayload).map(
+              authorizeCloudAccounts(authorizationService)(envPayload).map(
                 (authorizationPrs) => ({ ...repoPr, authorizationPrs }),
               ),
           ),
