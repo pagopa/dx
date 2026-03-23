@@ -17398,6 +17398,13 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
   }
 );
 var execFileAsync = promisify(execFile);
+external_exports.array(external_exports.string());
+external_exports.object({
+  path: external_exports.string().nullable(),
+  tag: external_exports.string(),
+  version: external_exports.string()
+});
+external_exports.record(external_exports.string(), external_exports.unknown());
 function createOctokit() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
@@ -17476,12 +17483,12 @@ async function formatReleaseSection(entry) {
   output.push("");
   return output.join("\n");
 }
-var TagEntrySchema = external_exports.object({
+var TagEntrySchema2 = external_exports.object({
   path: external_exports.string().nullable(),
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var TagEntryArraySchema = external_exports.array(TagEntrySchema);
+var TagEntryArraySchema = external_exports.array(TagEntrySchema2);
 function resolveReleaseEntries() {
   const raw = process.env.RELEASE_TAGS ?? "[]";
   let parsed;
@@ -17498,7 +17505,7 @@ function resolveReleaseEntries() {
   if (!result.success) {
     console.error(
       "[manage-version-pr] RELEASE_TAGS validation failed:",
-      result.error.format()
+      result.error
     );
     return [];
   }

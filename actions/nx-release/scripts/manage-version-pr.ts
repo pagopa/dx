@@ -101,7 +101,7 @@ function resolveReleaseEntries(): ReleaseEntry[] {
   if (!result.success) {
     console.error(
       "[manage-version-pr] RELEASE_TAGS validation failed:",
-      result.error.format(),
+      result.error,
     );
     return [];
   }

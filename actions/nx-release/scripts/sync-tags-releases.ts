@@ -11,6 +11,7 @@ import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 import {
   createOctokit,
@@ -21,11 +22,22 @@ import {
 
 const execFileAsync = promisify(execFile);
 
-interface PrData {
-  body: string;
-  mergeCommit?: { oid: string };
-  number: number;
-}
+/** Zod schemas for runtime validation */
+const OctokitErrorSchema = z.object({
+  status: z.number(),
+});
+
+const PrDataSchema = z.object({
+  body: z.string(),
+  mergeCommit: z
+    .object({
+      oid: z.string(),
+    })
+    .optional(),
+  number: z.number(),
+});
+
+const PrDataArraySchema = z.array(PrDataSchema);
 
 /**
  * Extracts the changelog section matching `version` from a CHANGELOG.md file.
@@ -70,12 +82,8 @@ export async function releaseExists(
     return true;
   } catch (err: unknown) {
     // 404 means release doesn't exist
-    if (
-      typeof err === "object" &&
-      err !== null &&
-      "status" in err &&
-      err.status === 404
-    ) {
+    const errorCheck = OctokitErrorSchema.safeParse(err);
+    if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
     }
     // Other errors should be logged but treated as "doesn't exist"
@@ -111,15 +119,18 @@ export async function run(base: string): Promise<void> {
       number: pr.number,
     }));
 
-  if (!isPrDataArray(mergedPrs)) {
+  const validationResult = PrDataArraySchema.safeParse(mergedPrs);
+  if (!validationResult.success) {
+    console.error("PR data validation failed:", validationResult.error);
     throw new Error("Unexpected PR list response: not an array of PR data");
   }
+  const validatedPrs = validationResult.data;
 
   // Collect all tag entries from every merged Version Packages PR.
   // Map keyed by tag deduplicates across PRs (e.g. same package bumped multiple times).
   // Store merge commit SHA for each tag to ensure tags point to the correct commit.
   const allEntries = new Map<string, TagEntry & { mergeCommitSha?: string }>();
-  for (const pr of mergedPrs) {
+  for (const pr of validatedPrs) {
     if (!pr.body) continue;
     const mergeCommitSha = pr.mergeCommit?.oid;
     const tagEntries = extractTagEntriesFromPRBody(pr.body);
@@ -199,23 +210,6 @@ export async function tagExistsOnRemote(tag: string): Promise<boolean> {
     `refs/tags/${tag}`,
   ]);
   return stdout.trim().length > 0;
-}
-
-function isPrDataArray(value: unknown): value is PrData[] {
-  return (
-    Array.isArray(value) &&
-    value.every(
-      (item) =>
-        typeof item === "object" &&
-        item !== null &&
-        typeof (item as Record<string, unknown>)["body"] === "string" &&
-        typeof (item as Record<string, unknown>)["number"] === "number" &&
-        ((item as Record<string, unknown>)["mergeCommit"] === undefined ||
-          (typeof (item as Record<string, unknown>)["mergeCommit"] ===
-            "object" &&
-            (item as Record<string, unknown>)["mergeCommit"] !== null)),
-    )
-  );
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {

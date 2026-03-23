@@ -10,8 +10,20 @@
 import { Octokit } from "@octokit/rest";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import { z } from "zod";
 
 const execFileAsync = promisify(execFile);
+
+/** Zod schemas for runtime validation */
+const StringArraySchema = z.array(z.string());
+
+const TagEntrySchema = z.object({
+  path: z.string().nullable(),
+  tag: z.string(),
+  version: z.string(),
+});
+
+const ProjectMetadataSchema = z.record(z.string(), z.unknown());
 
 export interface TagEntry {
   path: null | string;
@@ -69,12 +81,12 @@ export async function getNxProjectNames(): Promise<string[]> {
       return [];
     }
     const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (!Array.isArray(parsed)) return [];
-    // Type predicate ensures safe return without assertion
-    if (parsed.every((s): s is string => typeof s === "string")) {
-      return parsed;
+    const result = StringArraySchema.safeParse(parsed);
+    if (!result.success) {
+      console.error("nx show projects: validation failed:", result.error);
+      return [];
     }
-    return [];
+    return result.data;
   } catch (err) {
     console.error("getNxProjectNames failed:", err);
     return [];
@@ -163,19 +175,13 @@ export function matchProjectName(
  * Filters out invalid entries.
  */
 export function parseTagEntries(raw: unknown): TagEntry[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.flatMap((item) => {
-    if (typeof item !== "object" || item === null) return [];
-    const r = item as Record<string, unknown>;
-    if (typeof r["tag"] !== "string") return [];
-    return [
-      {
-        path: typeof r["path"] === "string" ? r["path"] : null,
-        tag: r["tag"],
-        version: typeof r["version"] === "string" ? r["version"] : "",
-      },
-    ];
-  });
+  const schema = z.array(TagEntrySchema);
+  const result = schema.safeParse(raw);
+  if (!result.success) {
+    console.error("parseTagEntries: validation failed:", result.error);
+    return [];
+  }
+  return result.data;
 }
 
 /**
@@ -203,8 +209,15 @@ async function getNxProjectMetadata(
       return null;
     }
     const parsed: unknown = JSON.parse(stdout.slice(jsonStart));
-    if (typeof parsed !== "object" || parsed === null) return null;
-    return parsed as Record<string, unknown>;
+    const result = ProjectMetadataSchema.safeParse(parsed);
+    if (!result.success) {
+      console.error(
+        `nx show project ${projectName}: validation failed:`,
+        result.error,
+      );
+      return null;
+    }
+    return result.data;
   } catch (err) {
     console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
     return null;
