@@ -1,0 +1,99 @@
+---
+title: "Securing Function Apps with Managed Identity: No More Function Keys"
+description:
+  The Azure Function App Terraform module now supports Entra ID authentication,
+  letting APIM authenticate via Managed Identity instead of shared function
+  keys.
+slug: function-app-managed-identity-auth
+hide_table_of_contents: false
+date: 2026-03-24T10:00
+toc_min_heading_level: 2
+toc_max_heading_level: 2
+---
+
+Managing shared secrets is a hidden cost of running APIs: function keys must be
+stored in Key Vault, injected by APIM, and rotated periodically. One leaked key
+means any caller can invoke your Function App. The DX team has shipped an update
+to the **Azure Function App Terraform module** that eliminates this pattern
+entirely.
+
+<!-- truncate -->
+
+## What Changed
+
+The
+[`azure-function-app`](https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest)
+module now accepts an `entra_id_authentication` variable. When set, the Function
+App enforces **token-based authentication**: every inbound request must carry a
+valid JWT issued by Entra ID. Unauthenticated calls receive HTTP 401 — no key
+required, no secret to rotate.
+
+APIM obtains the token automatically using its **system-assigned Managed
+Identity**, so the integration remains seamless from the caller's perspective.
+
+## How It Works
+
+```mermaid
+sequenceDiagram
+    participant APIM
+    participant Entra ID
+    participant Function App
+
+    APIM->>Entra ID: 1. Request token (Managed Identity)
+    Entra ID-->>APIM: 2. Signed JWT
+    APIM->>Function App: 3. Call with Authorization: Bearer <JWT>
+    Function App->>Function App: 4. Validate token
+    Function App-->>APIM: 5. Response (or 401)
+```
+
+The module configures `auth_settings_v2` under the hood, wiring the Entra ID
+v2.0 endpoint and an allowlist of caller client IDs. Only APIM identities
+explicitly listed in `allowed_callers_client_ids` can authenticate.
+
+## Getting Started
+
+```hcl
+module "function_app" {
+  source  = "pagopa-dx/azure-function-app/azurerm"
+  version = "~> 4.1"
+
+  # ... other required parameters ...
+
+  entra_id_authentication = {
+    audience_client_id         = data.azuread_application.my_app.client_id
+    allowed_callers_client_ids = [data.azuread_service_principal.apim.client_id]
+    tenant_id                  = data.azurerm_subscription.current.tenant_id
+  }
+}
+```
+
+On the APIM side, replace the `x-functions-key` header with the
+`authentication-managed-identity` policy element — that's the only policy change
+needed.
+
+:::info
+
+The Entra ID application must be created manually. Infrastructure contributors
+do not have the required permissions to create Entra registrations via
+Terraform. Open a ticket in
+[**#team_devex_help**](https://pagopa.slack.com/channels/team_devex_help) to
+request one.
+
+:::
+
+## Key Benefits
+
+| Aspect         | Before (key-based)          | After (Managed Identity)          |
+| -------------- | --------------------------- | --------------------------------- |
+| Secrets        | Function key in Key Vault   | None — token-based                |
+| Caller control | Any holder of the key       | Only `allowed_callers_client_ids` |
+| Key rotation   | Manual, periodic            | Not needed                        |
+| Blast radius   | All APIs share the same key | Per-caller allowlist              |
+
+## Learn More
+
+For step-by-step configuration, APIM policy examples, and a recommended
+blue-green migration strategy for existing Function Apps, read the full guide:
+
+👉
+[**Authenticating APIM to Function Apps with Managed Identity**](/docs/infrastructure/azure/integrating-services/apim-function-app-authentication)
