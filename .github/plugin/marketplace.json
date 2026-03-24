@@ -11,8 +11,16 @@
   },
   "plugins": [
     {
-      "name": "terraform",
-      "source": "terraform"
+      "name": "cloud",
+      "source": "cloud"
+    },
+    {
+      "name": "typescript",
+      "source": "typescript"
+    },
+    {
+      "name": "monorepo",
+      "source": "monorepo"
     }
   ]
 }
