@@ -75,20 +75,17 @@ needed.
 
 The Entra ID application must be created manually. Infrastructure contributors
 do not have the required permissions to create Entra registrations via
-Terraform. Open a ticket in
-[**#team_devex_help**](https://pagopa.slack.com/channels/team_devex_help) to
-request one.
+Terraform. Open a ticket in **#team_devex_help** Slack channel to request one.
 
 :::
 
 ## Key Benefits
 
-| Aspect         | Before (key-based)          | After (Managed Identity)          |
-| -------------- | --------------------------- | --------------------------------- |
-| Secrets        | Function key in Key Vault   | None — token-based                |
-| Caller control | Any holder of the key       | Only `allowed_callers_client_ids` |
-| Key rotation   | Manual, periodic            | Not needed                        |
-| Blast radius   | All APIs share the same key | Per-caller allowlist              |
+| Aspect         | Before (key-based)        | After (Managed Identity)          |
+| -------------- | ------------------------- | --------------------------------- |
+| Secrets        | Function key in Key Vault | None — token-based                |
+| Caller control | Any holder of the key     | Only `allowed_callers_client_ids` |
+| Key rotation   | Manual, periodic          | Not needed                        |
 
 ## Learn More
 
@@ -96,4 +93,4 @@ For step-by-step configuration, APIM policy examples, and a recommended
 blue-green migration strategy for existing Function Apps, read the full guide:
 
 👉
-[**Authenticating APIM to Function Apps with Managed Identity**](/docs/infrastructure/azure/integrating-services/apim-function-app-authentication)
+[**Authenticating APIM to Function Apps with Managed Identity**](https://dx.pagopa.it/docs/infrastructure/azure/integrating-services/apim-function-app-authentication)
