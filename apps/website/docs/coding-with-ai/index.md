@@ -17,3 +17,6 @@ development using PagoPA's DX ecosystem, including:
 - [Prompts Catalog](./prompts-catalog): Explore a curated list of MCP prompts
   designed to help you accomplish common development tasks within the PagoPA DX
   ecosystem.
+- [Plugin Marketplace](./plugin-marketplace): Discover and install curated
+  GitHub Copilot plugins that extend your AI assistant with domain-specific
+  skills, agents, and commands for cloud, monorepo, and TypeScript development.
