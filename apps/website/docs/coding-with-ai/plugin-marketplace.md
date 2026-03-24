@@ -24,17 +24,17 @@ team. You only need to run this once.
 
 ### Install a Plugin
 
-Install any plugin listed in the marketplace using its name and the `@devex`
+Install any plugin listed in the marketplace using its name and the `@pagopa-dx`
 registry suffix:
 
 ```bash
-copilot plugin install <plugin_name>@devex
+copilot plugin install <plugin_name>@pagopa-dx
 ```
 
 For example, to install the `cloud` plugin:
 
 ```bash
-copilot plugin install cloud@devex
+copilot plugin install cloud@pagopa-dx
 ```
 
 Browse the full list of available plugins in the
@@ -45,5 +45,5 @@ Browse the full list of available plugins in the
 Keep your installed plugins up to date with the latest skills and commands:
 
 ```bash
-copilot plugin update <plugin_name>@devex
+copilot plugin update <plugin_name>@pagopa-dx
 ```
