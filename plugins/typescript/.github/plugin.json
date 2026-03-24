@@ -8,7 +8,6 @@
   "repository": "https://github.com/pagopa/dx",
   "keywords": ["typescript", "javascript", "development"],
   "skills": ["./skills"],
-  "commands": ["./commands"],
   "agents": ["./agents"],
   "mcpServers": ".mcp.json"
 }

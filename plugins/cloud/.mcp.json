@@ -12,10 +12,6 @@
       "type": "http",
       "url": "https://knowledge-mcp.global.api.aws"
     },
-    "atlassian-mcp-server": {
-      "type": "http",
-      "url": "https://mcp.atlassian.com/v1/mcp"
-    },
     "terraform": {
       "command": "docker",
       "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:0.4.0"]

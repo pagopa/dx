@@ -1,6 +1,6 @@
 {
   "name": "monorepo",
-  "description": "A plugin to manage monorepo projects",
+  "description": "A plugin to manage monorepo environments, nx setups, jira boards and project management",
   "version": "0.0.1",
   "author": {
     "name": "PagoPA DX Team"
@@ -8,7 +8,6 @@
   "repository": "https://github.com/pagopa/dx",
   "keywords": ["nx", "monorepo", "project management", "development"],
   "skills": ["./skills"],
-  "commands": ["./commands"],
   "agents": ["./agents"],
   "mcpServers": ".mcp.json"
 }
