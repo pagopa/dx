@@ -14,3 +14,13 @@ variable "tags" {
   description = "A map of tags to assign to the resources."
   default     = {}
 }
+
+variable "test_kind" {
+  type        = string
+  description = "A value between integration and e2e"
+
+  validation {
+    condition     = contains(["integration", "e2e"], var.test_kind)
+    error_message = "The test_kind variable must be either 'integration' or 'e2e'."
+  }
+}
