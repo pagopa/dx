@@ -7,6 +7,7 @@ on:
     paths:
       - "infra/bootstrapper/**"
 permissions:
+  id-token: write
   contents: read
 jobs:
   release:
