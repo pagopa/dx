@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Curated plugins for our team",
-    "version": "0.0.1",
+    "version": "0.1.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -19,16 +19,8 @@
       "source": "typescript"
     },
     {
-      "name": "monorepo",
-      "source": "monorepo"
-    },
-    {
-      "name": "nx",
-      "description": "Claude Code plugin for Nx - helps with generators, documentation, and CI monitoring with self-healing integration",
-      "source": {
-        "source": "github",
-        "repo": "nrwl/nx-ai-agents-config"
-      }
+      "name": "project-management",
+      "source": "project-management"
     }
   ]
 }
