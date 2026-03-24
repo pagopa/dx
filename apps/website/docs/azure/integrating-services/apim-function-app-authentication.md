@@ -140,7 +140,7 @@ policy element:
 ```xml
 <inbound>
   <base />
-  <authentication-managed-identity resource="<audience_client_id>"
+  <authentication-managed-identity resource="<audience_client_id>" />
 </inbound>
 ```
 
