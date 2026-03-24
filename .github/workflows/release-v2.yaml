@@ -30,13 +30,13 @@ jobs:
           fetch-depth: 0
 
       - name: Detect Release tool
-        id: changeset-detect
+        id: nx-detect
         shell: bash
         run: |
-          if [ -f ".changeset/config.json" ]; then
-            echo "Detected Changesets for managing releases."
+          if [ -f "nx.json" ]; then
+            echo "Detected Nx for managing releases."
           else
-            echo "::error:: No supported release tool detected. Please ensure Changesets is configured."
+            echo "::error:: No supported release tool detected. Please ensure Nx is configured."
             exit 1
           fi
 
@@ -63,12 +63,14 @@ jobs:
         shell: bash
         run: npm ci
 
-      - name: Create Release Pull Request or Publish to npm
-        id: release
-        uses: changesets/action@c48e67d110a68bc90ccf1098e9646092baacaa87 # v1.6.0
+      - name: Install Nx CLI
+        shell: bash
+        run: |
+          sudo add-apt-repository ppa:nrwl/nx
+          sudo apt update
+          sudo apt install nx
+
+      - name: Nx Publish
+        uses: pagopa/dx/actions/nx-release@main
         with:
-          version: ${{ steps.node-setup.outputs.package-manager }} run version
-          publish: ${{ steps.node-setup.outputs.package-manager }} run release
-        env:
-          GITHUB_TOKEN: ${{ secrets.github-token }}
-          NPM_CONFIG_PROVENANCE: true
+          github-token: ${{ secrets.github-token }}
