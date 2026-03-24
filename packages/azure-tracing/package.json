@@ -72,7 +72,7 @@
     "@opentelemetry/api-logs": "catalog:opentelemetry",
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
-    "@t3-oss/env-core": "^0.13.10",
+    "@t3-oss/env-core": "^0.13.11",
     "import-in-the-middle": "^1.15.0",
     "zod": "^3.25.76"
   },
