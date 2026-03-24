@@ -46,9 +46,9 @@ sequenceDiagram
     Function App-->>APIM: 5. Response (or 401)
 ```
 
-The module configures `auth_settings_v2` under the hood, wiring the Entra ID
-v2.0 endpoint and an allowlist of caller client IDs. Only APIM identities
-explicitly listed in `allowed_callers_client_ids` can authenticate.
+The module wires up Entra ID authentication (EasyAuth) under the hood: every
+inbound request is validated against the tenant endpoint, and only APIM
+identities explicitly listed in `allowed_callers_client_ids` can authenticate.
 
 ## Getting Started
 

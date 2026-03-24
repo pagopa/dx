@@ -113,13 +113,12 @@ module "function_app" {
 }
 ```
 
-When `entra_id_authentication` is set, the module configures `auth_settings_v2`
-on the Function App to:
+When `entra_id_authentication` is set, the module automatically configures the
+Function App to:
 
-- Require a valid JWT on every request (`require_authentication = true`)
+- Require a valid JWT on every request
 - Return HTTP 401 for unauthenticated calls
-  (`unauthenticated_action = "Return401"`)
-- Validate the token against the Entra ID v2.0 endpoint
+- Validate the token against the Entra ID endpoint
 - Restrict access to the specified caller client IDs
 
 The module also exposes the `entra_id_authentication` output, which contains the
@@ -152,7 +151,11 @@ corresponding Terraform output).
 
 The `authentication-managed-identity` policy uses the **system-assigned identity
 of the APIM instance** to request the token. Make sure the APIM instance has a
-system-assigned identity enabled.
+system-assigned identity enabled. You can verify this with:
+
+```bash
+az apim show --name "<apim-name>" --resource-group "<resource-group>" --query "identity.type" -o tsv
+```
 
 :::
 
