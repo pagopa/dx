@@ -10,7 +10,6 @@ catalog:
   '@azure/identity': ^4.13.0
   '@logtape/logtape': ^1.3.7
   '@modelcontextprotocol/sdk': ^1.26.0
-  '@opentelemetry/api': ^1.9.0
   '@tsconfig/node24': 24.0.4
   '@types/node': ^22.19.15
   '@types/semver': ^7.7.1
@@ -28,6 +27,18 @@ catalog:
   vitest: ^3.2.4
   vitest-mock-extended: ^3.1.0
   zod: ^4.3.6
+
+catalogs:
+  opentelemetry:
+    '@azure/monitor-opentelemetry': 1.13.1
+    '@azure/monitor-opentelemetry-exporter': ^1.0.0-beta.32
+    '@opentelemetry/api': ^1.9.0
+    '@opentelemetry/api-logs': ^0.206.0
+    '@opentelemetry/sdk-metrics': ^2.1.0
+    '@opentelemetry/resources': ^2.1.0
+    '@opentelemetry/sdk-trace-base': ^2.1.0
+    '@opentelemetry/instrumentation': ^0.205.0
+    '@opentelemetry/instrumentation-undici': ^0.16.2
 
 cleanupUnusedCatalogs: true
 

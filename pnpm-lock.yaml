@@ -15,9 +15,6 @@ catalogs:
     '@modelcontextprotocol/sdk':
       specifier: ^1.26.0
       version: 1.26.0
-    '@opentelemetry/api':
-      specifier: ^1.9.0
-      version: 1.9.0
     '@tsconfig/node24':
       specifier: 24.0.4
       version: 24.0.4
@@ -69,6 +66,34 @@ catalogs:
     zod:
       specifier: ^4.3.6
       version: 4.3.6
+  opentelemetry:
+    '@azure/monitor-opentelemetry':
+      specifier: 1.13.1
+      version: 1.13.1
+    '@azure/monitor-opentelemetry-exporter':
+      specifier: ^1.0.0-beta.32
+      version: 1.0.0-beta.32
+    '@opentelemetry/api':
+      specifier: ^1.9.0
+      version: 1.9.0
+    '@opentelemetry/api-logs':
+      specifier: ^0.206.0
+      version: 0.206.0
+    '@opentelemetry/instrumentation':
+      specifier: ^0.205.0
+      version: 0.205.0
+    '@opentelemetry/instrumentation-undici':
+      specifier: ^0.16.2
+      version: 0.16.2
+    '@opentelemetry/resources':
+      specifier: ^2.1.0
+      version: 2.2.0
+    '@opentelemetry/sdk-metrics':
+      specifier: ^2.1.0
+      version: 2.2.0
+    '@opentelemetry/sdk-trace-base':
+      specifier: ^2.1.0
+      version: 2.2.0
 
 importers:
 
@@ -225,19 +250,19 @@ importers:
   actions/setup-telemetry:
     dependencies:
       '@opentelemetry/api':
-        specifier: 'catalog:'
+        specifier: catalog:opentelemetry
         version: 1.9.0
       '@opentelemetry/api-logs':
-        specifier: ^0.206.0
+        specifier: catalog:opentelemetry
         version: 0.206.0
       '@opentelemetry/resources':
-        specifier: ^2.1.0
+        specifier: catalog:opentelemetry
         version: 2.2.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-metrics':
-        specifier: ^2.1.0
+        specifier: catalog:opentelemetry
         version: 2.2.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/sdk-trace-base':
-        specifier: ^2.1.0
+        specifier: catalog:opentelemetry
         version: 2.2.0(@opentelemetry/api@1.9.0)
       '@pagopa/azure-tracing':
         specifier: workspace:^
@@ -841,22 +866,22 @@ importers:
         specifier: ^4.7.2
         version: 4.7.3
       '@azure/monitor-opentelemetry':
-        specifier: 1.13.1
+        specifier: catalog:opentelemetry
         version: 1.13.1
       '@azure/monitor-opentelemetry-exporter':
-        specifier: ^1.0.0-beta.32
+        specifier: catalog:opentelemetry
         version: 1.0.0-beta.32
       '@opentelemetry/api':
-        specifier: 'catalog:'
+        specifier: catalog:opentelemetry
         version: 1.9.0
       '@opentelemetry/api-logs':
-        specifier: ^0.205.0
-        version: 0.205.0
+        specifier: catalog:opentelemetry
+        version: 0.206.0
       '@opentelemetry/instrumentation':
-        specifier: ^0.205.0
+        specifier: catalog:opentelemetry
         version: 0.205.0(@opentelemetry/api@1.9.0)
       '@opentelemetry/instrumentation-undici':
-        specifier: ^0.16.2
+        specifier: catalog:opentelemetry
         version: 0.16.2(@opentelemetry/api@1.9.0)
       '@t3-oss/env-core':
         specifier: ^0.13.10
