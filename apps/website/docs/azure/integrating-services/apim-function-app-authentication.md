@@ -56,8 +56,7 @@ The Entra ID application **must be created manually**. Individual contributors
 Terraform or manually from the Azure Portal.
 
 To request the creation of an Entra ID application, open a ticket in the
-[**#team_devex_help**](https://pagopa.slack.com/channels/team_devex_help) Slack
-channel.
+**#team_devex_help** Slack channel.
 
 :::
 
@@ -100,19 +99,7 @@ module "function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
   version = "~> 4.1"
 
-  environment         = local.environment
-  resource_group_name = azurerm_resource_group.main.name
-
-  virtual_network = {
-    name                = local.virtual_network.name
-    resource_group_name = local.virtual_network.resource_group_name
-  }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.248.0/24"
-
-  health_check_path = "/health"
-  app_settings      = {}
-  slot_app_settings = {}
+  ...
 
   entra_id_authentication = {
     # The client ID of the Entra app representing this Function App
@@ -216,9 +203,8 @@ APIM backend → old        ──┘     APIM backend → new (test policy)
 
 **Step 1 — Request the Entra ID application**
 
-Open a ticket in
-[**#team_devex_help**](https://pagopa.slack.com/channels/team_devex_help) to
-have the Entra ID application created for the new instance.
+Open a ticket in **#team_devex_help** to have the Entra ID application created
+for the new instance.
 
 **Step 2 — Create the new Function App instance**
 
