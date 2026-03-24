@@ -1,0 +1,14 @@
+{
+  "name": "typescript",
+  "description": "A plugin to manage TypeScript projects",
+  "version": "0.0.1",
+  "author": {
+    "name": "PagoPA DX Team"
+  },
+  "repository": "https://github.com/pagopa/dx",
+  "keywords": ["typescript", "javascript", "development"],
+  "skills": ["./skills"],
+  "commands": ["./commands"],
+  "agents": ["./agents"],
+  "mcpServers": ".mcp.json"
+}

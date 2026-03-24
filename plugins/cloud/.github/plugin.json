@@ -1,0 +1,13 @@
+{
+  "name": "cloud",
+  "description": "A plugin to manage cloud infrastructure",
+  "version": "0.0.1",
+  "author": {
+    "name": "PagoPA DX Team"
+  },
+  "repository": "https://github.com/pagopa/dx",
+  "keywords": ["cloud", "infrastructure", "iac", "terraform", "aws", "azure"],
+  "skills": ["./skills"],
+  "commands": ["./commands"],
+  "mcpServers": ".mcp.json"
+}
