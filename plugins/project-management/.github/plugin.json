@@ -1,7 +1,7 @@
 {
   "name": "project-management",
   "description": "A plugin to manage project workflows, backlog refinement, and team collaboration",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "author": {
     "name": "PagoPA DX Team"
   },
