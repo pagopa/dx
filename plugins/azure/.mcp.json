@@ -7,14 +7,6 @@
     "dx-mcp-server": {
       "type": "http",
       "url": "https://api.dx.pagopa.it/mcp"
-    },
-    "aws-knowledge-mcp-server": {
-      "type": "http",
-      "url": "https://knowledge-mcp.global.api.aws"
-    },
-    "terraform": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:0.4.0"]
     }
   },
   "inputs": []

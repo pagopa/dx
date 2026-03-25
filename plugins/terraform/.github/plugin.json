@@ -1,12 +1,12 @@
 {
-  "name": "cloud",
-  "description": "A plugin to manage cloud infrastructure",
+  "name": "terraform",
+  "description": "A plugin to manage cloud infrastructure via terraform IaC",
   "version": "0.1.0",
   "author": {
     "name": "PagoPA DX Team"
   },
   "repository": "https://github.com/pagopa/dx",
-  "keywords": ["cloud", "infrastructure", "iac", "terraform", "aws", "azure"],
+  "keywords": ["cloud", "infrastructure", "iac", "terraform"],
   "skills": ["./skills"],
   "commands": ["./commands"],
   "mcpServers": ".mcp.json"
