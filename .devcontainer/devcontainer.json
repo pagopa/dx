@@ -33,6 +33,10 @@
     "ghcr.io/devcontainers/features/aws-cli:1": {},
     "ghcr.io/devcontainers/features/copilot-cli:1": {}
   },
+  "postCreateCommand": {
+    "install-ripgrep": "sudo apt-get update && sudo apt-get install --no-install-recommends -y ripgrep",
+    "alias-xdg-open": "echo 'alias xdg-open=\"code --openExternal\"' >> ~/.bashrc"
+  },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
   },
