@@ -19,5 +19,6 @@
     "project-management@pagopa-dx": true,
     "typescript@pagopa-dx": true,
     "nx@nrwl": true
-  }
+  },
+  "companyAnnouncements": ["Welcome to PagoPA DX Copilot"]
 }
