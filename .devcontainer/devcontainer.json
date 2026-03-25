@@ -67,12 +67,13 @@
     "jetbrains": {
       "plugins": [
         "org.intellij.plugins.hcl",
-        "com.github.copilot",
         "com.intellij.mermaid",
         "mdx.js",
         "dev.nx.console",
         "ru.adelf.idea.dotenv",
-        "mobi.hsz.idea.gitignore"
+        "mobi.hsz.idea.gitignore",
+        "org.editorconfig.editorconfigjetbrains",
+        "intellij.prettierJS"
       ]
     }
   }
