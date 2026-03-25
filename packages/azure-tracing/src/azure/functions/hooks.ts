@@ -34,7 +34,7 @@ interface AzureFunctionsApp {
  * to the instrumentation package and remove this workaround.
  *
  * @example
- * In your application, where you add the Azure Functions hooks (like `app.http() and so on), you
+ * In your application, where you add the Azure Functions hooks (like `app.http()` and so on), you
  * can add the following code:
  *
  * registerAzureFunctionHooks(app);

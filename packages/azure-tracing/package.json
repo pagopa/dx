@@ -76,15 +76,19 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@azure/functions": "^4.11.2",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "tsup": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "tsup",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   }
 }
