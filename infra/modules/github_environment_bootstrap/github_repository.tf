@@ -27,16 +27,6 @@ resource "github_repository" "this" {
   archive_on_destroy  = true
   allow_update_branch = true
 
-  security_and_analysis {
-    secret_scanning {
-      status = "enabled"
-    }
-
-    secret_scanning_push_protection {
-      status = "enabled"
-    }
-  }
-
   dynamic "pages" {
     for_each = var.repository.pages_enabled ? [var.repository.pages_enabled] : []
     content {
