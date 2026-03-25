@@ -15,23 +15,8 @@ Browse the full list of available plugins in the
 ## Team Setup (Recommended)
 
 To avoid asking every developer to manually add the marketplace, commit a
-`.vscode/settings.json` file to your repository with the following content:
-
-```json title=".github/copilot/settings.json"
-{
-  "extraKnownMarketplaces": {
-    "pagopa-dx": {
-      "source": {
-        "source": "github",
-        "repo": "pagopa/dx"
-      }
-    }
-  }
-}
-```
-
-Optionally, you can also enable specific plugins by default for the entire team
-members:
+`.github/copilot/settings.json` file to your repository with the following
+content:
 
 ```json
 {
@@ -54,6 +39,11 @@ members:
   // highlight-end
 }
 ```
+
+:::note This configuration format is specific to GitHub Copilot
+
+If you use a different agent, follow its own plugin/marketplace documentation.
+:::
 
 When a developer opens the project in VS Code with Copilot enabled, the
 marketplace is automatically registered. The enabled plugins appear with a
