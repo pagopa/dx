@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Creating a DX-Ready Monorepo on GitHub
 
-This guide explains how to creating a new monorepo using the DX CLI `init`
+This guide explains how to create a new monorepo using the DX CLI `init`
 command. The command automates all repository scaffolding, cloud environment
 setup, and GitHub runner provisioning in a single interactive session.
 
@@ -39,8 +39,7 @@ for your product's entry in `authorizations/<your-product>/data/apps.json` and
 looking for an app with the name pattern `<team>-github-runner-internal` (e.g.
 `engineering-github-runner-internal`).
 
-If the app already exists, skip to
-[Step 2](#step-2--retrieve-the-three-required-values-retrieve-the-three-required-values).
+If the app already exists, skip to [Step 2](#app-step2).
 
 :::
 
@@ -77,7 +76,7 @@ Refer to the
 [internal procedure](https://pagopa.atlassian.net/wiki/spaces/Technology/pages/2628976829/Creazione+GithubApp+configurazione+repo)
 for additional context.
 
-### Step 2 — Retrieve the three required values {#retrieve-the-three-required-values}
+### Step 2 — Retrieve the three required values {#app-step2}
 
 Once the GitHub App exists, only **App Administrators** can access its settings.
 Navigate to:
@@ -136,7 +135,7 @@ order before merging the generated Pull Request.
 
 ### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
-The `init` command initialises the Terraform state for `infra/repository`
+The `init` command initializes the Terraform state for `infra/repository`
 locally. Migrate it to a remote backend so the whole team can share it.
 
 If you are unsure which remote backend to use, copy the `backend` block from
