@@ -1,0 +1,30 @@
+{
+  "name": "pagopa-dx",
+  "owner": {
+    "name": "PagoPA S.p.A.",
+    "email": "team-devex@pagopa.it"
+  },
+  "metadata": {
+    "description": "Curated plugins for the PagoPA organization, designed to enhance developer productivity and streamline workflows across various domains.",
+    "version": "0.1.0",
+    "pluginRoot": "plugins"
+  },
+  "plugins": [
+    {
+      "name": "azure",
+      "source": "azure"
+    },
+    {
+      "name": "terraform",
+      "source": "terraform"
+    },
+    {
+      "name": "typescript",
+      "source": "typescript"
+    },
+    {
+      "name": "project-management",
+      "source": "project-management"
+    }
+  ]
+}

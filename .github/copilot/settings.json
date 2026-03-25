@@ -1,0 +1,17 @@
+{
+  "extraKnownMarketplaces": {
+    "pagopa-dx": {
+      "source": {
+        "source": "directory",
+        "path": "./"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "azure@pagopa-dx": true,
+    "terraform@pagopa-dx": true,
+    "project-management@pagopa-dx": true,
+    "typescript@pagopa-dx": true
+  },
+  "companyAnnouncements": ["Welcome to PagoPA DX Copilot"]
+}

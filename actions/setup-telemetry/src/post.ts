@@ -6,7 +6,6 @@
  * events and exceptions, then flushes all telemetry to Azure Application Insights.
  */
 
-import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import {
   context as otelContext,
   SpanKind,
@@ -15,6 +14,7 @@ import {
 } from "@opentelemetry/api";
 import { logs } from "@opentelemetry/api-logs";
 import { resourceFromAttributes } from "@opentelemetry/resources";
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
@@ -187,7 +187,7 @@ async function post(): Promise<void> {
     "service.namespace": "dx",
   });
 
-  useAzureMonitor({
+  initAzureMonitor([], {
     azureMonitorExporterOptions: {
       connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "dx-mcp-server": {
+      "type": "http",
+      "url": "https://api.dx.pagopa.it/mcp"
+    },
+    "terraform": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "hashicorp/terraform-mcp-server:0.4.0"]
+    }
+  },
+  "inputs": []
+}
