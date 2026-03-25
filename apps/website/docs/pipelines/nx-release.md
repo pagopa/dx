@@ -42,12 +42,14 @@ releases.
 - npm packages require
   [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements)
   configured (`id-token: write` permission must be granted)
-- Public packages must have the `npm:public` tag in their Nx project
-  configuration
+- Public packages must be tagged as public in their Nx project configuration.
+  The `nx-release` workflow treats any tag equal to `public` or ending with
+  `:public` (for example, `npm:public`) as publishable.
 
 ### Marking a package as public
 
-In the project's `project.json`:
+To mark a package as public, add a tag that is either `public` or ends with
+`:public` (for example, `npm:public`) in the project's `project.json`:
 
 ```json
 {
