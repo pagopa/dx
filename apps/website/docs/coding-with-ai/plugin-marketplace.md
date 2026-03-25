@@ -17,7 +17,7 @@ Browse the full list of available plugins in the
 To avoid asking every developer to manually add the marketplace, commit a
 `.vscode/settings.json` file to your repository with the following content:
 
-```json
+```json title=".github/copilot/settings.json"
 {
   "extraKnownMarketplaces": {
     "pagopa-dx": {
