@@ -35,6 +35,8 @@ resource "github_repository" "this" {
   }
 
   lifecycle {
+    # Since the security_and_analysis options are not managed by the DX Team, we
+    # are ignoring any changes to them to avoid conflicts with the Terraform state.
     ignore_changes = [
       security_and_analysis
     ]
