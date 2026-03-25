@@ -1,5 +1,11 @@
 # github_environment_bootstrap
 
+## 1.1.6
+
+### Patch Changes
+
+- e5bc61e: Update documentation with minor tweaks
+
 ## 1.1.5
 
 ### Patch Changes
