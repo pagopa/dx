@@ -4,13 +4,13 @@ sidebar_position: 10
 
 # Automate versioning and publishing with Changesets
 
-:::info Nx monorepo?
-If your [Nx](https://nx.dev) repository uses Nx Release (version plans) for versioning and publishing, see **[Automate versioning and publishing with Nx](./nx-release.md)** instead.
-:::
+:::info Nx monorepo? If your [Nx](https://nx.dev) repository uses Nx Release
+(version plans) for versioning and publishing, see
+**[Automate versioning and publishing with Nx](./nx-release.md)** instead. :::
 
-A reusable GitHub workflow that automates package versioning and publishing using
-[Changesets](https://github.com/changesets/changesets).
-This workflow is package-manager agnostic and works with pnpm, yarn, and npm.
+A reusable GitHub workflow that automates package versioning and publishing
+using [Changesets](https://github.com/changesets/changesets). This workflow is
+package-manager agnostic and works with pnpm, yarn, and npm.
 
 ## Features
 

@@ -132,7 +132,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}
-  cancel-in-progress: false
+  cancel-in-progress: false # Especially during publish, we don't want to cancel the workflow run
 
 jobs:
   release:
@@ -160,9 +160,9 @@ packages. Omitting either trigger will break the release flow.
 
 ## Inputs
 
-| Input         | Description                                                | Required | Default       |
-| ------------- | ---------------------------------------------------------- | -------- | ------------- |
-| `environment` | Repository Environment that holds the `github-token` value | Yes      | `app-prod-cd` |
+| Input         | Description                                              | Required | Default       |
+| ------------- | -------------------------------------------------------- | -------- | ------------- |
+| `environment` | Repository Environment to associate with the release job | Yes      | `app-prod-cd` |
 
 ## Secrets
 
