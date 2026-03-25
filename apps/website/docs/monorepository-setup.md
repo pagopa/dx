@@ -4,240 +4,165 @@ sidebar_position: 2
 
 # Creating a DX-Ready Monorepo on GitHub
 
-This guide provides step-by-step instructions for creating and setting up a new
-mono-repository on GitHub using DX tools.
+This guide explains how to creating a new monorepo using the DX CLI `init`
+command. The command automates all repository scaffolding, cloud environment
+setup, and GitHub runner provisioning in a single interactive session.
 
-## Setup GitHub Repository
-
-Start by creating the repository on GitHub:
-
-```bash
-gh repo create <org>/<repo-name> \
-  --add-readme \
-  --description <some-text> \
-  --disable-wiki \
-  --public \
-  --clone
+```mermaid
+flowchart LR
+    A[Prerequisites] --> B[Prepare GitHub App]
+    B --> C[Run dx init]
+    C --> D[Apply infrastructure]
+    D --> E[Register repository]
 ```
 
-Then, follow these steps to complete the configuration.
+## Prerequisites
 
-### Ensure an Appropriate Repository Access Control
+Before running the `init` command, ensure you have all the required tools
+installed and the right access in place. See the
+[DX CLI requirements](./dx-cli/index.md#requirements) for the full list of
+tools, versions, and login instructions.
 
-To ensure proper access control, follow these steps:
+## Prepare the GitHub App {#obtaining-github-app-credentials}
 
-- [Grant access](https://pagopa.atlassian.net/wiki/search?text=github%20gestione%20utenze)
-  to your peers who need it.
-- Provide `Admin` access to the
-  [GitHub bot user associated with your product](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20for%20projects)
-- Optionally: provide `Admin` access to `@engineering-team-devex` to ensure
-  future support for DX tooling.
+The `init` command needs three GitHub App values to configure the self-hosted
+GitHub runner. Follow the steps below **before** running `dx init`.
 
-### Define CODEOWNERS
+:::info[One GitHub App per product]
 
-Define a `CODEOWNERS` file to manage repository ownership.
+Each product at PagoPA has its own dedicated GitHub App. You do not need to ask
+a GitHub Admin to create one unless it doesn't exist yet for your product.
 
-See
-[GitHub documentation](https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file)
+You can check if an app already exists by browsing the
+[authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+for your product's entry in `authorizations/<your-product>/data/apps.json` and
+looking for an app with the name pattern `<team>-github-runner-internal` (e.g.
+`engineering-github-runner-internal`).
 
-### Create Dot Files
+If the app already exists, skip to
+[Step 2](#step-2--retrieve-the-three-required-values-retrieve-the-three-required-values).
 
-Create the following dotfiles at the root of your repository:
+:::
 
-- `.terraform-version`: Specify the Terraform version to use (typically
-  [the latest available](https://developer.hashicorp.com/terraform/install?product_intent=terraform)).
-- `.gitignore`: Add rules to manage Terraform files.
-- `.pre-commit-config.yaml`: Define pre-commit hooks.
-- `.editorconfig`: Enforce consistent coding styles.
-- `.tflint.hcl`: Configure TFLint for Terraform linting.
-- `.trivyignore`: Define rules for Trivy vulnerability scanning.
+### Step 1 — Request a GitHub App (only if it doesn't exist yet)
 
-### Managing GitHub Repository via Terraform
+Open a Pull Request against the
+[authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+adding a new entry under `authorizations/<your-product>/data/apps.json`. Leave
+the `repositories` array **empty** for now — you will populate it after
+`dx init` completes:
 
-It is recommended to manage your GitHub repository configuration using
-Terraform. This allows you to maintain your repository settings as code,
-ensuring consistency and ease of management. The module
-[github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/latest)
-streamlines this process.
+```json
+{
+  "apps": [
+    {
+      "app_name": "<product>-github-runner-internal",
+      "org_wide": false,
+      "description": "GitHub Runner App for <product>",
+      "repositories": [],
+      "app_managers": {
+        "teams": ["<your-product-engineering-leader-team>"],
+        "users": []
+      }
+    }
+  ]
+}
+```
 
-1. Create a folder named `infra/repository` at the root of your repository.
-2. Define the module in this folder. Refer to the
-   [module README](https://registry.terraform.io/modules/pagopa-dx/github-environment-bootstrap/github/latest?tab=readme)
-   for detailed instructions.
+The app name must follow the pattern `<team>-<name>-internal` (e.g.
+`engineering-github-runner-internal`).
 
-#### Authenticating with GitHub for Terraform Operations
+Once the PR is ready, contact the **Technology team** to have the app created.
+Refer to the
+[internal procedure](https://pagopa.atlassian.net/wiki/spaces/Technology/pages/2628976829/Creazione+GithubApp+configurazione+repo)
+for additional context.
 
-Changes to your repository via Terraform are applied from your local machine
-using the `terraform apply` command. This requires authentication with GitHub to
-ensure that the changes are applied correctly.
+### Step 2 — Retrieve the three required values {#retrieve-the-three-required-values}
 
-Before proceeding, ensure that you and your team have the
-[required permissions](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
-to make changes to the repository.
+Once the GitHub App exists, only **App Administrators** can access its settings.
+Navigate to:
+[https://github.com/organizations/pagopa/settings/apps](https://github.com/organizations/pagopa/settings/apps)
 
-Then, use one of the following methods to authenticate with GitHub:
+Retrieve the following three values:
 
-1. Using the [GitHub CLI](https://cli.github.com/) (recommended)
-2. Using a Personal Access Token (PAT)
+| Value                 | Where to find it                                                                                                                   |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| **App ID**            | App settings page → **About** section → **App ID**                                                                                 |
+| **Installation ID**   | App settings page → **Install App** → click on the installation → the numeric ID is in the URL (e.g. `.../installations/12345678`) |
+| **Private key (PEM)** | App settings page → **Private keys** section → **Generate a private key** → download the `.pem` file                               |
 
-##### Authenticate with GH CLI (recommended)
+Keep these three values at hand: `dx init` will prompt you for them.
 
-Open your shell and run the command:
+### Step 3 — Authenticate with GitHub and Azure
+
+Log in to GitHub using the CLI:
 
 ```bash
-
 gh auth login
-
 ```
 
-Follow the instructions on screen and you are ready to go.
+Log in to Azure:
 
-##### Authenticate with PAT token
-
-To apply changes to your repository via Terraform, you can authenticate using a
-Personal Access Token (PAT). A single PAT with the following permissions is
-required for all repositories managed through Terraform:
-
-- `read`: `metadata`
-- `read+write`: `variables`, `administration`, `environments`, `secrets`
-
-If you do not already have a Personal Access Token (PAT), follow these steps:
-
-1. Go to your GitHub settings, under `Developer settings`, and create a new
-   fine-grained PAT:
-   - Add these permissions:
-     - `read`: `metadata`
-     - `read+write`: `variables`, `administration`, `environments`, `secrets`
-   - Select `Only select repositories` and add the new repository.
-   - Add a meaningful description like "PAT to manage GitHub locally via
-     Terraform."
-2. In your local environment, set the `GITHUB_TOKEN` variable to the value of
-   the generated PAT.
-
-##### Add a new repository to the GitHub PAT
-
-If you already have the PAT in both your GitHub account and your CLI profile,
-ensure that the new repository is accessible from that PAT.
-
-1. Go to your GitHub settings, under `Developer settings`, and select the
-   existing fine-grained PAT.
-2. Under `Only select repositories`, add your new repository.
-
-:::warning
-
-PATs have an expiration date.
-[Be sure to renew them periodically](https://pagopa.atlassian.net/wiki/search?text=github%20bot%20pat).
-
-:::
-
-### Link GitHub to AWS, Azure or both {#link-github-to-csp}
-
-:::info[Requirements]
-
-Before starting, ensure the Key Vault referenced in
-`github_private_runner.key_vault` contains the following secrets for GitHub App
-authentication:
-
-- `github-runner-app-id`: the numeric GitHub App ID
-- `github-runner-app-installation-id`: the installation ID of the GitHub App on
-  the target organization
-- `github-runner-app-key`: the private key of the GitHub App in PEM format
-
-See [Obtaining GitHub App credentials](#obtaining-github-app-credentials) for
-step-by-step instructions on how to create a GitHub App and retrieve these
-values.
-
-:::
-
-Once the GitHub repository is created, link it to your cloud provider(s) using
-the proper Terraform module:
-
-1. Create a folder named `infra/bootstrapper` at the root of your repository.
-2. For AWS, use
-   [aws-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/aws-github-environment-bootstrap/aws/latest)
-3. For Azure, use
-   [azure-github-environment-bootstrap](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest)
-   and set `use_github_app = true` inside `github_private_runner`:
-
-   ```hcl
-   module "bootstrap" {
-     source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-     version = "~> 3.0"
-
-     # ... other required variables ...
-
-     github_private_runner = {
-       container_app_environment_id       = data.azurerm_container_app_environment.runner.id
-       container_app_environment_location = "italynorth"
-       key_vault = {
-         name                = "my-keyvault"
-         resource_group_name = "my-rg"
-       }
-       use_github_app = true
-     }
-   }
-   ```
-
-Note, you can use both modules in the same repository if needed.
-
-:::info[Azure Permissions for Initial Setup]
-
-The initial `terraform apply` for the Bootstrap module must be run locally by an
-Azure account that has the `Role Based Access Control Administrator` and
-`Contributor` roles assigned at the subscription level.
-
-Within the PagoPA context, you can obtain the necessary RBAC role by opening a
-Pull Request against the company Azure authorization repository, adding this
-administrative roles to the product Engineering Leader. For example in Azure:
-
-```terraform
-  ...
-  {
-    name = "io-p-adgroup-eng-leader-team"
-    members = [
-      ...
-      "eng.lead.or.delegate@example.com", // Add the user's email here
-      ...
-    ],
-    roles = [
-      "Role Based Access Control Administrator",
-    ],
-  },
-  ...
+```bash
+az login
 ```
 
+:::warning[Azure session expiry]
+
+Within PagoPA, `az login` sessions expire every **12 hours**. If the command
+fails with an authentication error, run `az login` again before retrying.
+
 :::
 
-### Obtaining GitHub App credentials {#obtaining-github-app-credentials}
+## Run `dx init` {#run-dx-init}
 
-The self-hosted runner modules authenticate with GitHub using a **GitHub App**.
-A GitHub App provides fine-grained permissions, does not expire, and is not tied
-to any individual user account.
+With prerequisites in place and the three GitHub App values ready, run:
 
-You need to create a GitHub App and store three secrets in the Key Vault
-referenced by the runner module:
+```bash
+npx @pagopa/dx-cli init
+```
 
-| Key Vault secret name               | Description                                               |
-| ----------------------------------- | --------------------------------------------------------- |
-| `github-runner-app-id`              | The numeric ID of the GitHub App                          |
-| `github-runner-app-installation-id` | The installation ID of the App on the target organization |
-| `github-runner-app-key`             | The App private key in PEM format                         |
+The command is fully interactive. Refer to the
+[`init` command documentation](./dx-cli/index.md#init--initialize-resources) for
+the full list of prompts and what each one expects.
 
-#### 1. Create a GitHub App
+When the command completes, a Pull Request will be open on the new GitHub
+repository with the initial project structure ready to review.
 
-1. In PagoPA context, see
-   [the documentation](https://pagopa.atlassian.net/wiki/search?text=Creazione%20GithubApp%20configurazione%20repo)
-2. Generate and download a private key as exposed in the above link and keep it
-   safe, you will need its contents shortly.
+## After `dx init` Completes
 
-#### 2. Retrieve the App ID
+After the command completes successfully, work through the following steps in
+order before merging the generated Pull Request.
 
-The **App ID** is shown on the App settings page under **About** → **App ID**.
+### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
-#### 3. Store the secrets in Key Vault
+The `init` command initialises the Terraform state for `infra/repository`
+locally. Migrate it to a remote backend so the whole team can share it.
 
-Store the three values as Key Vault secrets using the Azure CLI as break lines
-are important:
+If you are unsure which remote backend to use, copy the `backend` block from
+`infra/bootstrapper/<env>/backend.tf` and adapt it for `infra/repository`. Then
+run:
+
+```bash
+cd infra/repository
+terraform init -migrate-state
+```
+
+Confirm the migration when prompted.
+
+### Step 2 — Apply `infra/core` (if present)
+
+If the repository does **not** include an `infra/core` folder, skip this step.
+Otherwise, apply the configuration:
+
+```bash
+cd infra/core/<env>
+terraform init
+terraform apply
+```
+
+Store the three GitHub App values to the Key Vault using the Azure CLI
+(**don't** use the Portal):
 
 ```bash
 az keyvault secret set \
@@ -256,5 +181,38 @@ az keyvault secret set \
   --file "<path-to-private-key.pem>"
 ```
 
-Once the secrets are in place, the runner module can be configured with
-`use_github_app = true` and it will automatically read these values at runtime.
+:::info[Secrets already present?]
+
+If the GitHub App already existed before running `dx init`, or if `infra/core`
+was not applied (e.g. the core infrastructure is shared with other
+repositories), the secrets are likely already stored in your product's shared
+Key Vault (typically named `common-kv-01`). In that case you can skip this step.
+
+:::
+
+### Step 3 — Verify and apply `infra/bootstrapper`
+
+Open `infra/bootstrapper/<env>/data.tf` and verify that the Entra ID groups
+referenced there exist and match your team context.
+
+Once verified, apply the bootstrapper:
+
+```bash
+cd infra/bootstrapper/<env>
+terraform init
+terraform apply
+```
+
+### Step 4 — Register the new repository
+
+Open a Pull Request against the
+[authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+to do two things:
+
+1. **Add the new repository to the organization census** — follow your product's
+   existing conventions in the authorization repo.
+2. **Add the new repository to the GitHub App** — update the `repositories`
+   array in `authorizations/<your-product>/data/apps.json` (the entry you
+   created in Step 1 of
+   [Prepare the GitHub App](#obtaining-github-app-credentials), or the existing
+   entry if the app already existed) to include the new repository name.
