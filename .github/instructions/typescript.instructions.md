@@ -16,6 +16,8 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
+- Use lint tasks to automate code styling and ordering; avoid manual fixes for imports or methods ordering.
+- Avoid dynamic imports (`import()`) unless absolutely necessary for conditional loading.
 - Add a short file header that states the module purpose and how it fits into the overall architecture.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
 - Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
@@ -80,7 +82,7 @@ try {
 ```
 
 - Avoid deeply nested control flow; prefer early returns or small helper functions.
-- Use asynchronous functions for I/O-bound operations. Never use `writeFileSync` or similar blocking calls in production code.
+- Use asynchronous functions for I/O-bound operations. Never use `writeFileSync` or similar blocking calls.
 - Favor dependency injection over instantiating collaborators with `new` inside methods.
 - Use ES Modules (`import`/`export`) and include `.js`/`.ts` extensions in new code.
 
