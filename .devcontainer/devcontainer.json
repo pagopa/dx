@@ -34,8 +34,7 @@
     "ghcr.io/devcontainers/features/copilot-cli:1": {}
   },
   "postStartCommand": {
-    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}",
-    "check-plugin-updates": "code --command 'workbench.extensions.action.checkForUpdates' 2>/dev/null || true"
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
   },
   "containerEnv": {
     "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
@@ -63,25 +62,7 @@
         "github.copilot",
         "github.copilot-chat",
         "nrwl.angular-console"
-      ],
-      "settings": {
-        "chat.plugins.enabled": true,
-        "chat.plugins.marketplaces": ["pagopa/dx"],
-        "extraKnownMarketplaces": {
-          "pagopa-dx": {
-            "source": {
-              "source": "github",
-              "repo": "pagopa/dx"
-            }
-          }
-        },
-        "enabledPlugins": {
-          "cloud@pagopa-dx": true,
-          "project-management@pagopa-dx": true,
-          "nx@pagopa-dx": true,
-          "typescript@pagopa-dx": true
-        }
-      }
+      ]
     }
   }
 }
