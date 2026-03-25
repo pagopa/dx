@@ -25,6 +25,14 @@
     {
       "name": "project-management",
       "source": "project-management"
+    },
+    {
+      "name": "nx",
+      "description": "Claude Code plugin for Nx - helps with generators, documentation, and CI monitoring with self-healing integration",
+      "source": {
+        "source": "github",
+        "repo": "nrwl/nx-ai-agents-config"
+      }
     }
   ]
 }

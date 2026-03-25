@@ -33,7 +33,7 @@ content:
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
     "typescript@pagopa-dx": true,
-    "nx@nrwl": true
+    "nx@pagopa-dx": true
   }
 }
 ```
