@@ -33,6 +33,7 @@ Guidelines and architectural context for DevEx initiative development.
 
 - [DX Documentation site](https://dx.pagopa.it/docs/)
 - [Local Instructions](.github/instructions/): TypeScript, Terraform, PR, and Commit guidelines.
+- [GitHub Conventions skill](.github/skills/github-conventions/SKILL.md): Rules for commit messages, PR titles/descriptions, and branch naming — use this skill whenever committing or opening a pull request.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
