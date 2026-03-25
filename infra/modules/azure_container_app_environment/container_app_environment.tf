@@ -5,7 +5,7 @@ resource "azurerm_container_app_environment" "this" {
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
   infrastructure_subnet_id       = var.subnet_id == null ? azurerm_subnet.this[0].id : var.subnet_id
-  internal_load_balancer_enabled = true
+  internal_load_balancer_enabled = !var.public_network_access_enabled
 
   workload_profile {
     name                  = "Consumption"

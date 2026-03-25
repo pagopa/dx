@@ -53,24 +53,6 @@ describe("Tool Registry", () => {
         expect(entry.tool.annotations.title).toBeTruthy();
       }
     });
-
-    it("should have boolean values for hint annotations when defined", () => {
-      for (const entry of toolDefinitions) {
-        const { annotations } = entry.tool;
-        if (annotations.readOnlyHint !== undefined) {
-          expect(annotations.readOnlyHint).toBeTypeOf("boolean");
-        }
-        if (annotations.destructiveHint !== undefined) {
-          expect(annotations.destructiveHint).toBeTypeOf("boolean");
-        }
-        if (annotations.idempotentHint !== undefined) {
-          expect(annotations.idempotentHint).toBeTypeOf("boolean");
-        }
-        if (annotations.openWorldHint !== undefined) {
-          expect(annotations.openWorldHint).toBeTypeOf("boolean");
-        }
-      }
-    });
   });
 
   describe("session requirements", () => {

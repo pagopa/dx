@@ -1,4 +1,7 @@
-#tfsec:ignore:azure-storage-queue-services-logging-enabled
+#trivy:ignore:AZU-0012 Default Action Deny
+#trivy:ignore:AZU-0057 Storage account should have logging enabled
+#trivy:ignore:AZU-0058 Enable Geo Redundant Backups
+#trivy:ignore:AZU-0061 Infrastructure Encryption Enabled
 resource "azurerm_storage_account" "this" {
   name                            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "storage_account" }))
   resource_group_name             = var.resource_group_name

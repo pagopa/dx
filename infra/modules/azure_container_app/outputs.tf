@@ -22,3 +22,11 @@ output "principal_id" {
   value       = azurerm_container_app.this.identity[0].principal_id
   description = "The principal ID of the system-assigned managed identity associated with this Container App."
 }
+
+output "custom_domain" {
+  value = var.custom_domain != null ? {
+    id   = azurerm_container_app_custom_domain.this[0].id
+    name = azurerm_container_app_custom_domain.this[0].name
+  } : null
+  description = "Custom domain binding. Only populated if the 'custom_domain' variable was provided."
+}

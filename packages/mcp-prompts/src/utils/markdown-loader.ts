@@ -177,6 +177,7 @@ export async function parseMarkdownPrompt(
       `Failed to parse markdown prompt ${filepath}: ${
         error instanceof Error ? error.message : String(error)
       }`,
+      { cause: error },
     );
   }
 }

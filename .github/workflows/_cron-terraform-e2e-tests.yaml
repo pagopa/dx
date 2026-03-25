@@ -19,7 +19,7 @@ env:
 jobs:
   terraform-e2e-tests:
     name: Run Terraform E2E Tests
-    runs-on: self-hosted
+    runs-on: dev
     environment: integration-tests
     permissions:
       id-token: write

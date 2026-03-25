@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.5
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
 ## 0.2.4
 
 ### Patch Changes

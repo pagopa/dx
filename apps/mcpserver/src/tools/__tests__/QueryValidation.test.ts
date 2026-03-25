@@ -28,11 +28,9 @@ describe("Query Validation", () => {
       shortQueries.forEach((input) => {
         const result = queryDocSchema.safeParse(input);
         expect(result.success).toBe(false);
-        if (!result.success) {
-          expect(result.error.errors[0].message).toBe(
-            "Query must be at least 3 characters",
-          );
-        }
+        expect(result.error?.errors[0].message).toBe(
+          "Query must be at least 3 characters",
+        );
       });
     });
 
@@ -41,11 +39,9 @@ describe("Query Validation", () => {
       const result = queryDocSchema.safeParse(longQuery);
 
       expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error.errors[0].message).toBe(
-          "Query must not exceed 500 characters",
-        );
-      }
+      expect(result.error?.errors[0].message).toBe(
+        "Query must not exceed 500 characters",
+      );
     });
 
     it("should reject missing query field", () => {

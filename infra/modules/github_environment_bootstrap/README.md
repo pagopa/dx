@@ -40,7 +40,8 @@ provider "github" {
 }
 
 module "github_environment_bootstrap" {
-  source = "./modules/github_environment_bootstrap"
+  source  = "pagopa-dx/github-environment-bootstrap/github"
+  version = "~> 1.1"
 
   repository = {
     name                = "example-repo"
@@ -48,7 +49,8 @@ module "github_environment_bootstrap" {
     topics              = ["terraform", "github", "automation"]
     default_branch_name = "main"
     jira_boards_ids     = ["CES", "CAI"]
-  }#
+    reviewers_teams     = ["team1", "team2"]
+  }
 }
 ```
 
@@ -56,7 +58,7 @@ This example demonstrates how to use the module to create a GitHub repository wi
 
 For additional support, refer to the [GitHub Provider Documentation](https://registry.terraform.io/providers/integrations/github/latest/docs).
 
-## Gotchas
+## Gotchas
 
 ### Import GitHub repository in the Terraform state file
 
@@ -84,16 +86,14 @@ optional properties of the `repository` variable:
 
 The default branch name can be changed via the `default_branch_name` property.
 
-### Customizing GitHub configuration
+### Setting up a custom GitHub environment
 
-If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module.
-For example, if you need a `release`
-GitHub environment with a special deployment policy you can add:
+If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module. A custom GitHub environment can be set up with a specific deployment policy using module's outputs:
 
 ```hcl
 resource "github_repository_environment" "release" {
   environment = "release"
-  repository  = module.repo.repository.name
+  repository  = module.github_environment_bootstrap.name
 
   deployment_branch_policy {
     protected_branches     = false
@@ -102,7 +102,7 @@ resource "github_repository_environment" "release" {
 }
 
 resource "github_repository_environment_deployment_policy" "release_branch" {
-  repository     = module.repo.repository.name
+  repository     = module.github_environment_bootstrap.name
   environment    = github_repository_environment.release.environment
   branch_pattern = "main"
 }

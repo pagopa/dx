@@ -41,7 +41,7 @@ describe("createBuilder", () => {
     const builder = await createBuilder("azure-dashboard-raw", params);
 
     expect(builder).toBeDefined();
-    expect(mockResolver.resolve).toHaveBeenCalled();
+    expect(mockResolver.resolve).toHaveBeenCalledWith();
   });
 
   it("should create azure-dashboard builder", async () => {
@@ -55,7 +55,7 @@ describe("createBuilder", () => {
     const builder = await createBuilder("azure-dashboard", params);
 
     expect(builder).toBeDefined();
-    expect(mockResolver.resolve).toHaveBeenCalled();
+    expect(mockResolver.resolve).toHaveBeenCalledWith();
   });
 
   it("should throw InvalidBuilderError when resolver fails", async () => {

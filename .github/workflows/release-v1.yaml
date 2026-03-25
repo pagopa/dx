@@ -29,6 +29,17 @@ jobs:
           fetch-tags: "true"
           fetch-depth: 0
 
+      - name: Detect Release tool
+        id: changeset-detect
+        shell: bash
+        run: |
+          if [ -f ".changeset/config.json" ]; then
+            echo "Detected Changesets for managing releases."
+          else
+            echo "::error:: No supported release tool detected. Please ensure Changesets is configured."
+            exit 1
+          fi
+
       - name: Setup Node.js
         id: node-setup
         uses: pagopa/dx/.github/actions/node-setup@main

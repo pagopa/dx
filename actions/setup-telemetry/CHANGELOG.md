@@ -1,5 +1,20 @@
 # Install Setup Telemetry
 
+## 0.1.4
+
+### Patch Changes
+
+- d634c90: Remove the `@azure/monitor-opentelemetry` and add `@pagopa/azure-tracing` dependency.
+
+  By doing this, every time we update the internal `@pagopa/azure-tracing` package, we are propagating the
+  changes to the `setup-telemetry` action as well.
+
+## 0.1.3
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
 ## 0.1.2
 
 ### Patch Changes

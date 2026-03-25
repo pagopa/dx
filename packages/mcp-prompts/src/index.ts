@@ -44,7 +44,7 @@ export const getPrompts = async (): Promise<CatalogEntry[]> => {
   const promptDir = path.join(dirname, "..", "prompts");
   console.log("Prompts directory resolved to:", promptDir);
 
-  let markdownPrompts: CatalogEntry[] = [];
+  let markdownPrompts: CatalogEntry[];
 
   try {
     await fs.access(promptDir);
