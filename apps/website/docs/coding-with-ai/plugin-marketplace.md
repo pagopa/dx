@@ -43,6 +43,7 @@ members:
       }
     }
   },
+  // highlight-start
   "enabledPlugins": {
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
@@ -50,6 +51,7 @@ members:
     "typescript@pagopa-dx": true,
     "nx@nrwl": true
   }
+  // highlight-end
 }
 ```
 
