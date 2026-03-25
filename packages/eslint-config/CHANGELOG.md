@@ -1,5 +1,11 @@
 # @pagopa/eslint-config
 
+## 6.0.1
+
+### Patch Changes
+
+- 64f68dc: Update ESLint configuration to include additional test file patterns
+
 ## 6.0.0
 
 ### Major Changes
