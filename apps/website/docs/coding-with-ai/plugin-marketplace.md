@@ -55,39 +55,3 @@ members:
 When a developer opens the project in VS Code with Copilot enabled, the
 marketplace is automatically registered. The enabled plugins appear with a
 recommendation badge in the Extensions view.
-
-## Getting Started
-
-### Add the Marketplace Manually
-
-If you prefer to add the marketplace from the command line:
-
-```bash
-copilot plugin marketplace add pagopa/dx
-```
-
-### Install a Plugin
-
-Install any plugin listed in the marketplace using its name and the `@pagopa-dx`
-registry suffix:
-
-```bash
-copilot plugin install <plugin_name>@pagopa-dx
-```
-
-For example, to install the `cloud` plugin:
-
-```bash
-copilot plugin install cloud@pagopa-dx
-```
-
-Browse the full list of available plugins in the
-[`plugins/` directory on GitHub](https://github.com/pagopa/dx/tree/main/plugins).
-
-### Update a Plugin
-
-Keep your installed plugins up to date with the latest skills and commands:
-
-```bash
-copilot plugin update <plugin_name>@pagopa-dx
-```
