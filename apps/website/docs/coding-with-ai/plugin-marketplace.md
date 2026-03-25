@@ -30,7 +30,7 @@ To avoid asking every developer to manually add the marketplace, commit a
 }
 ```
 
-Optionally, you can also enable specific plugins by default for all team
+Optionally, you can also enable specific plugins by default for the entire team
 members:
 
 ```json
