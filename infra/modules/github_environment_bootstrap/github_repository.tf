@@ -33,6 +33,12 @@ resource "github_repository" "this" {
       build_type = "workflow"
     }
   }
+
+  lifecycle {
+    ignore_changes = [
+      security_and_analysis
+    ]
+  }
 }
 
 resource "github_repository_autolink_reference" "jira_board" {
