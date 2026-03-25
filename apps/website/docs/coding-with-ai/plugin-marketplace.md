@@ -18,7 +18,7 @@ To avoid asking every developer to manually add the marketplace, commit a
 `.github/copilot/settings.json` file to your repository with the following
 content:
 
-```json
+```json title=".github/copilot/settings.json"
 {
   "extraKnownMarketplaces": {
     "pagopa-dx": {
@@ -28,7 +28,6 @@ content:
       }
     }
   },
-  // highlight-start
   "enabledPlugins": {
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
@@ -36,7 +35,6 @@ content:
     "typescript@pagopa-dx": true,
     "nx@nrwl": true
   }
-  // highlight-end
 }
 ```
 
