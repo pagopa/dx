@@ -17,7 +17,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Do not create global utility or types packages; keep helpers and types close to where they are used.
 - Avoid barrel files; import directly from source files.
 - Use lint tasks to automate code styling and ordering; avoid manual fixes for imports or methods ordering.
-- Avoid dynamic imports (`import()`) unless absolutely necessary for conditional loading.
+- Avoid dynamic imports (`import()`) unless absolutely necessary for conditional loading, JSON/module metadata imports, or intentionally deferring module loading/side effects.
 - Add a short file header that states the module purpose and how it fits into the overall architecture.
 - Prefer `const`, immutable structures, and pure functions over `let`/`var` mutations.
 - Favor functional programming patterns for control flow over imperative statements. Anyway, don't force functional programming or other paradigms in areas where they add complexity: suitable for frontend or SDK layers, but not mandatory everywhere.
