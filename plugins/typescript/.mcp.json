@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "dx-mcp-server": {
+      "type": "http",
+      "url": "https://api.dx.pagopa.it/mcp"
+    }
+  },
+  "inputs": []
+}
