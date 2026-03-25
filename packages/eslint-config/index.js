@@ -11,7 +11,11 @@ export default [
   prettier,
   perfectionist.configs["recommended-natural"],
   {
-    files: ["**/tests/**", "**/__tests__/**"],
+    files: [
+      "**/tests/**/*.{js,ts}",
+      "**/__tests__/**/*.{js,ts}",
+      "**/*.{test,spec}.{js,ts}",
+    ],
     ...vitest.configs.recommended,
     rules: {
       ...vitest.configs.recommended.rules,
