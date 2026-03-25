@@ -1,5 +1,13 @@
 # Install Setup Telemetry
 
+## 0.1.5
+
+### Patch Changes
+
+- 37cb5e9: Upgrade OpenTelemetry dependencies
+- Updated dependencies [37cb5e9]
+  - @pagopa/azure-tracing@0.4.14
+
 ## 0.1.4
 
 ### Patch Changes
