@@ -11,8 +11,12 @@
   },
   "plugins": [
     {
-      "name": "cloud",
-      "source": "cloud"
+      "name": "azure",
+      "source": "azure"
+    },
+    {
+      "name": "terraform",
+      "source": "terraform"
     },
     {
       "name": "typescript",
