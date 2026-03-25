@@ -47,7 +47,8 @@ members:
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
-    "typescript@pagopa-dx": true
+    "typescript@pagopa-dx": true,
+    "nx@nrwl": true
   }
 }
 ```
