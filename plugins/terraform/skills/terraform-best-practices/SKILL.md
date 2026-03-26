@@ -24,12 +24,6 @@ else
 fi
 ```
 
-After cloning, ensure `.dx/` is git-ignored so it does not pollute the host repository:
-
-```bash
-grep -qxF '.dx/' .gitignore 2>/dev/null || echo '.dx/' >> .gitignore
-```
-
 ### 2. Read Local DX Documentation Files
 
 **Always read the DX Terraform documentation** before generating code.
