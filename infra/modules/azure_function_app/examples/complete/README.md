@@ -1,5 +1,12 @@
 # complete
 
+> **Note**: This example is kept for backward compatibility. For dedicated, focused examples see:
+> - [examples/default](../default) — classic key-based authentication
+> - [examples/with_entra_auth](../with_entra_auth) — Entra ID (Managed Identity) authentication
+
+This example deploys two Function Apps side-by-side to illustrate the difference between
+**key-based** and **Entra ID (Managed Identity)** authentication in a single Terraform root.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
