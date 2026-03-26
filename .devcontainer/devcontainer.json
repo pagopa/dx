@@ -31,7 +31,10 @@
     "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+      "packages": "ripgrep,xdg-utils"
+    }
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
