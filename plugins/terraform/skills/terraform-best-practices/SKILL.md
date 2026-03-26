@@ -13,7 +13,7 @@ When generating Terraform code, follow these instructions:
 
 ### 1. Clone the DX Repository locally
 
-**If `git origin` DOES NOT point to `https://github.com/pagopa/dx`**, clone it into the current working directory
+Clone `https://github.com/pagopa/dx` into the current working directory
 or pull it to ensure the documentation is up to date:
 
 ```bash
