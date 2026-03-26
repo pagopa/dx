@@ -139,7 +139,7 @@ runs:
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
             npx nx release publish --projects="$PROJECTS_TO_BUILD"
           else
-            echo "::warning::No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
+            echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
           fi
         fi
 
