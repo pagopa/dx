@@ -88,15 +88,15 @@ paths:
         - $ref: "#/parameters/PaginationRequest"
 definitions:
   ProblemJson:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ProblemJson"
+    $ref: "./external/io-functions-commons-definitions.yaml#/ProblemJson"
   ServiceId:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServiceId"
+    $ref: "./external/io-functions-commons-definitions.yaml#/ServiceId"
   ServiceName:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServiceName"
+    $ref: "./external/io-functions-commons-definitions.yaml#/ServiceName"
   ServicePublic:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/ServicePublic"
+    $ref: "./external/io-functions-commons-definitions.yaml#/ServicePublic"
   PaginatedServiceTupleCollection:
-    $ref: "https://raw.githubusercontent.com/pagopa/io-functions-commons/v25.5.1/openapi/definitions.yaml#/PaginatedServiceTupleCollection"
+    $ref: "./external/io-functions-commons-definitions.yaml#/PaginatedServiceTupleCollection"
 responses: {}
 parameters:
   PageSize:
