@@ -17522,7 +17522,7 @@ async function run() {
   const prTitle = process.env.PR_TITLE ?? "Version Packages";
   const releaseTags = process.env.RELEASE_TAGS ?? "[]";
   const intro = [
-    "This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published to npm automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to main, this PR will be updated.",
+    "This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to main, this PR will be updated.",
     "",
     "# Releases",
     ""
@@ -17538,7 +17538,6 @@ async function run() {
   prBody += `
 
 <!-- nx-release-tags: ${releaseTags} -->`;
-  console.log("::notice::Building PR with Octokit API");
   const octokit = createOctokit();
   const { owner, repo } = await getRepoInfo();
   const { data: existingPrs } = await octokit.pulls.list({
@@ -17558,8 +17557,8 @@ async function run() {
       title: prTitle
     });
     const prUrl = existingPrs[0].html_url;
-    console.log(`::notice::Updated existing release PR #${prNumber}`);
-    console.log(`::notice::PR URL: ${prUrl}`);
+    console.log(`Updated existing release PR #${prNumber}`);
+    console.log(`PR URL: ${prUrl}`);
     await appendOutput("pull-request-number", prNumber.toString());
     await appendOutput("pull-request-url", prUrl);
   } else {
@@ -17571,8 +17570,8 @@ async function run() {
       repo,
       title: prTitle
     });
-    console.log(`::notice::Created new release PR #${newPr.number}`);
-    console.log(`::notice::PR URL: ${newPr.html_url}`);
+    console.log(`Created new release PR #${newPr.number}`);
+    console.log(`PR URL: ${newPr.html_url}`);
     await appendOutput("pull-request-number", newPr.number.toString());
     await appendOutput("pull-request-url", newPr.html_url);
   }
