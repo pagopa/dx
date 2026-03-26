@@ -1,6 +1,6 @@
 ---
 name: terraform-best-practices
-description: Generate Terraform code following PagoPA DX best practices. Reads DX documentation, enforces module-first usage from the pagopa-dx Registry namespace, collects required values from the existing workspace, and validates all generated code before presenting it to the user.
+description: Generate Terraform code following PagoPA DX best practices. Reads DX documentation, enforces module-first usage from the pagopa-dx Registry namespace, discovers module capabilities dynamically, collects required values from the existing workspace, and validates all generated code before presenting it to the user.
 ---
 
 # Terraform DX Best Practices (Local)
@@ -9,63 +9,45 @@ description: Generate Terraform code following PagoPA DX best practices. Reads D
 
 When generating Terraform code, follow these instructions:
 
-> **⚡ Parallelism**: Steps 1 (read DX docs), 2 (search Registry modules), and 8 (fetch Technology Radar) are fully independent. **Launch them in parallel using subagents** whenever possible — do not wait for one to finish before starting the next. Merge all results before proceeding to code generation.
+> **⚡ Parallelism**: Steps 2 (read DX docs), 3 (search modules), and 12 (fetch Technology Radar) are fully independent. **Launch them in parallel using subagents** whenever possible — do not wait for one to finish before starting the next. Merge all results before proceeding to code generation.
 
-### 1. Read Local DX Documentation Files
+### 1. Clone the DX Repository locally
 
-**Always read the DX documentation files** before generating code. These files are the authoritative source for DX best practices.
+**If `git origin` DOES NOT point to `https://github.com/pagopa/dx`**, clone it into the current working directory
+or pull it to ensure the documentation is up to date:
 
-**If the DX repository is available locally** (the workspace contains `apps/website/docs/`), read the files below via `read_file` before generating any code:
-
-```
-apps/website/docs/terraform/index.md
-apps/website/docs/terraform/code-style.md
-apps/website/docs/terraform/infra-folder-structure.md
-apps/website/docs/terraform/pre-commit-terraform.md
-apps/website/docs/terraform/using-terraform-registry-modules.md
-apps/website/docs/azure/using-azure-registry-provider.md
+```bash
+if [ ! -d ".dx" ]; then
+  git clone --depth 1 https://github.com/pagopa/dx ".dx"
+else
+  git -C ".dx" pull --ff-only
+fi
 ```
 
-**If the DX repository is NOT present locally**, use one of the following fallbacks (in order of preference):
+After cloning, ensure `.dx/` is git-ignored so it does not pollute the host repository:
 
-1. **Clone to a persistent local directory**: keep the repo in `~/.dx` so it can be reused across sessions. Always clone or pull to ensure the documentation is up to date. Run in a terminal:
-   ```bash
-   if [ ! -d "$HOME/.dx" ]; then
-     git clone --depth 1 https://github.com/pagopa/dx "$HOME/.dx"
-   else
-     git -C "$HOME/.dx" pull --ff-only
-   fi
-   ```
-   Then read the files from `~/.dx/apps/website/docs/terraform/`.
-2. **GitHub file tools**: if GitHub file-reading tools are available, fetch each file from the `pagopa/dx` repository at path `apps/website/docs/terraform/<filename>`.
-3. **Raw GitHub URL**: use `fetch_webpage` on:
-   ```
-   https://raw.githubusercontent.com/pagopa/dx/main/apps/website/docs/terraform/<filename>
-   ```
+```bash
+grep -qxF '.dx/' .gitignore 2>/dev/null || echo '.dx/' >> .gitignore
+```
 
-If a file does not exist (locally or remotely), note it in the README with `<!-- local-missing: <filename> -->` and continue without it.
+### 2. Read Local DX Documentation Files
 
-Other retrieval methods (DX Search API, MCP documentation tools, internal knowledge) may return useful context, but are not the preferred source. Treat them as supplementary only — always verify against the authoritative files above when available.
+**Always read the DX Terraform documentation** before generating code.
+All markdown sources within `.dx/apps/website/docs/terraform/` are the authoritative source for DX best practices.
 
-### 2. Search DX Modules Before Writing Any Resource
+### 3. Search Terraform DX Modules Before Writing Any Resource
 
-**CRITICAL — Module-first rule**: before writing **any** `resource` block, you MUST check whether a `pagopa-dx/*` module already wraps that resource type. This applies to every resource: compute, storage, networking, IAM/RBAC role assignments, monitoring, and more.
+**CRITICAL — Module-first rule**: before writing **any** Terraform `resource` block, you MUST check whether a `pagopa-dx/*` module already wraps that resource type. This applies to every resource: compute, storage, networking, IAM/RBAC role assignments, monitoring, and more.
 
 #### Procedure
 
 1. **List all available DX modules** — do this once at the start:
-   - **If Terraform MCP tools are available** (preferred): call `search_modules` with query `pagopa-dx` to get the full catalogue.
-   - **Otherwise**, query the Terraform Registry API:
-     ```
-     GET https://registry.terraform.io/v1/modules?namespace=pagopa-dx&limit=100
-     ```
-     The response has an array `modules[]` with fields `name`, `provider`, `version`. Use `version` as the latest available.
-2. **For each resource you plan to create**, scan the module list for a match (e.g., if you need `azurerm_role_assignment` → look for a module named `azure-role-assignments`; if you need `azurerm_cosmosdb_account` → look for `azure-cosmos-account`).
-3. **If a matching module exists**:
-   - Call `get_module_details` (MCP) or fetch `https://registry.terraform.io/modules/pagopa-dx/<module>/azurerm/latest` to read its inputs, outputs, and usage examples.
-   - Call `get_latest_module_version` to pin the version with `~> major.minor`.
+   - Scan the `.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
+2. **If a matching module exists**:
+   - Read the module's `README.md` and `examples/` to understand its capabilities and usage patterns (see step 4 below).
+   - Get the module's latest published version via `https://registry.terraform.io/v1/modules/pagopa-dx/<module>/<provider>` and pin it with `~> major.minor`. Use `package.json` if available as a fallback to check the latest version.
    - **Use the module instead of raw resources.**
-4. **Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
+3. **Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
 
 #### Common modules you may overlook
 
@@ -75,25 +57,44 @@ The `pagopa-dx` namespace contains modules for many resource types beyond comput
 
 Whenever the implementation involves managing sensitive values, secrets, or anything stored in Azure Key Vault, **stop and invoke the `azure-keyvault-secret` skill** before writing any code. It covers the correct and secure patterns for handling secrets in Terraform, including how to avoid storing sensitive data in state.
 
-### 3. Ask User for Required Values
+### 4. Discover Module Capabilities from Source, Not Just Summaries
+
+For each relevant DX module, inspect the underlying source in `.dx/infra/modules/` so you understand what the module can really do, not just its published usage snippet.
+
+Read these files when available:
+
+- `README.md`
+- `variables.tf`
+- `outputs.tf`
+- `main.tf` and other supporting `.tf` files
+- `examples/`
+- `CHANGELOG.md`
+
+Use the module source to build a **capability map**:
+
+- Top-level optional variables with defaults become candidate capabilities.
+- Nested objects and lists become sub-capabilities.
+- `validation` blocks define constraints the user must respect.
+- Examples and implementation files show how a capability changes behavior in practice.
+
+Do **not** rely on a hardcoded list of features for a module. Discover them dynamically from `variables.tf` and the module source.
+
+### 5. Ask User for Required Values
 
 **Before asking the user, check for values in the existing infrastructure:**
 
-1. **Determine the target folder** from `infra-folder-structure.md` (read in step 1) based on the user's request — for example, ongoing environment resources go in `infra/resources/<env>/`, bootstrapping goes in `infra/bootstrapper/<env>/`. Then look for existing `.tf` files in that folder to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter). Ask the user only if the documentation does not clarify which folder to use.
+1. **Determine the target folder** from `infra-folder-structure.md` (read in step 2) based on the user's request — for example, ongoing environment resources go in `infra/resources/<env>/`, bootstrapping goes in `infra/bootstrapper/<env>/`. Then look for existing `.tf` files in that folder to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter). Ask the user only if the documentation does not clarify which folder to use.
 
-2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources. Invite the user to review the full output list on the Terraform Registry:
-   ```
-   https://registry.terraform.io/modules/pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>/latest
-   ```
+2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources.
 
 **Only ask the user for values that could not be inferred from the steps above:**
 
-- **Module use_case**: present all available `use_case` options with their descriptions (see section 4 below)
+- **Module use_case**: present all available `use_case` options with their descriptions (see step 5 below)
 - `environment` values not already found: prefix, env_short, location, domain, app_name, instance_number
 - `tags` values not already found: BusinessUnit, ManagementTeam
 - Backend state configuration
 
-### 4. Ask One Question at a Time
+### 6. Ask One Question at a Time
 
 **Never bundle multiple values into a single question.** Ask each unknown value in a separate, focused question. This reduces errors and makes it easier for the user to answer accurately.
 
@@ -129,23 +130,70 @@ Use free-form only for values with no fixed set (`prefix`, `domain`, `app_name`)
 
 Then ask: _"Which `use_case` best fits your needs?"_
 
-### 5. Never Assume Default Values
+#### Dynamic capability questions
+
+Derive further user questions from the module capability map built from `variables.tf` (see step 4).
+
+For each optional capability:
+
+1. Explain **what it does** in plain language.
+2. Explain the **default behavior** if the user leaves it unconfigured.
+3. Explain **what changes** if the user enables it, disables it, or chooses a different value (behavior, security, scale, resilience, cost, operations).
+4. Ask whether the user needs it.
+5. If enabled, ask follow-up questions for sub-fields.
+
+Examples of the kinds of capabilities this should catch dynamically include public vs private exposure, custom domains, Entra ID auth, Key Vault secret references, autoscaling, sizing, diagnostic settings, retention, private endpoints, or replica creation.
+
+When the set of valid answers is known, offer choices instead of free-form input.
+
+### 7. Never Assume Default Values
 
 If project-specific configuration is not found in the workspace, ask the user.
 
-### 6. Never Leave Placeholder Comments
+### 8. Summarize Current and Planned State
 
-**Always write complete, working code.** Never leave comments that instruct where to add something the agent could implement directly. Examples of what to avoid:
+Before writing or editing Terraform, briefly present to the user:
 
-```hcl
-# Add your app settings here
-# TODO: configure Cosmos DB endpoint
-# Add Key Vault reference for secrets
-```
+1. **Current state**: a concise summary of the existing infrastructure relevant to the request.
+2. **Planned changes**: what will be added, modified, or removed, and why.
 
-If information needed to generate the code is missing, ask the user before writing anything — do not emit skeleton code with inline instructions as a substitute.
+Keep it focused on the affected resources and their direct dependencies — a full infrastructure inventory is not needed.
+This summary ensures the user understands the impact before code is generated.
 
-### 7. Validate and Fix Generated Code
+### 9. Write Complete, Commented Terraform — No Skeletons, No Placeholders
+
+**Always write complete, working code.** Never leave comments that merely instruct the user what to add later.
+
+#### Comment rule for user-choosable parameters
+
+For **every user-choosable parameter** in the generated IaC, add an inline comment, just above it, that explains:
+
+1. **What the parameter controls**
+2. **What changes if the value changes**
+
+This rule applies to all non-defaulted parameters that the user can choose, including but not limited to:
+
+- top-level module inputs
+- nested object fields
+- configurable list items
+- booleans, sizing, scaling, networking, diagnostics, retention, authentication, and similar design choices
+
+Skip comments for purely mechanical wiring such as obvious IDs, names derived from the standard pattern, or direct output-to-input connections with no design choice involved.
+
+### 10. Auto-wire Implicit Capabilities
+
+Some capabilities should not be left to chance once the user has chosen a higher-level feature. Wire them automatically when needed:
+
+- **Role assignments** when an identity needs data-plane or secret access
+- **Managed identity** when services must read Key Vault or other protected resources
+- **Private endpoints / private DNS wiring** when a private service pattern is selected
+- **Write-only secret resources** for Key Vault-managed secrets
+- **Required tags** according to DX conventions
+- **Explicit dependencies** where Terraform ordering would otherwise be ambiguous
+
+If a capability is automatically added, explain it briefly to the user so the generated topology stays understandable.
+
+### 11. Validate and Fix Generated Code
 
 After generating all files, **always run validation** in the target directory before presenting the code to the user:
 
@@ -158,7 +206,7 @@ Never present code to the user if `terraform validate` fails.
 
 > For common errors and fixes, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-### 8. Align with the Technology Radar
+### 12. Align with the Technology Radar
 
 Before choosing any Azure/AWS service or technology, verify its **adoption status** in the PagoPA DX Technology Radar:
 
