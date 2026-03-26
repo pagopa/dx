@@ -10,7 +10,7 @@ interface MCPPromptsPluginData {
   prompts: CatalogEntry[];
 }
 
-export default function MCPPrompts(): JSX.Element {
+export default function MCPPrompts() {
   const { prompts } = usePluginData(
     "mcp-prompts-loader",
   ) as MCPPromptsPluginData;
