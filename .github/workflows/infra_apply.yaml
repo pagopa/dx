@@ -64,16 +64,16 @@ jobs:
         with:
           default_version: "1.10.4"
 
-  # tf-modules-check:
-  #   uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
-  #   name: Check terraform registry modules hashes
-  #   needs: [get-terraform-version]
-  #   secrets: inherit
-  #   with:
-  #     terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-  #     check_to_run: lock_modules
-  #     folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-  #     verbose: true
+  tf-modules-check:
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    name: Check terraform registry modules hashes
+    needs: [get-terraform-version]
+    secrets: inherit
+    with:
+      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+      check_to_run: lock_modules
+      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      verbose: true
 
   tf_plan:
     name: "Terraform Plan"
@@ -162,7 +162,7 @@ jobs:
       # Outputs (provider, plan-path, credentials) are passed to the apply job.
       - name: Upload Terraform Plan
         id: upload_plan
-        uses: pagopa/dx/actions/terraform-plan-storage-upload@fix-infra-apply-writing-artifacts-to-storage-account-2 #main
+        uses: pagopa/dx/actions/terraform-plan-storage-upload@main
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ steps.directory.outputs.dir }}
@@ -197,7 +197,7 @@ jobs:
       # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
       # Storage coordinates come directly from the tf_plan job outputs — no terraform init required.
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-storage-download@fix-infra-apply-writing-artifacts-to-storage-account-2 #main
+        uses: pagopa/dx/actions/terraform-plan-storage-download@main
         with:
           provider: ${{ needs.tf_plan.outputs.plan_provider }}
           plan-path: ${{ needs.tf_plan.outputs.plan_path }}
@@ -207,18 +207,18 @@ jobs:
           aws-bucket: ${{ needs.tf_plan.outputs.plan_aws_bucket }}
           aws-region: ${{ needs.tf_plan.outputs.plan_aws_region }}
 
-      # - name: Terraform Init
-      #   working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-      #   run: |
-      #     terraform init -input=false
+      - name: Terraform Init
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        run: |
+          terraform init -input=false
 
-      # - name: Terraform Apply
-      #   working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-      #   run: |
-      #     set -o pipefail
-      #     terraform apply \
-      #       -lock-timeout=120s \
-      #       -auto-approve \
-      #       -input=false \
-      #       "$TFPLAN_FILE" \
-      #       | grep -v "hidden-link:"
+      - name: Terraform Apply
+        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        run: |
+          set -o pipefail
+          terraform apply \
+            -lock-timeout=120s \
+            -auto-approve \
+            -input=false \
+            "$TFPLAN_FILE" \
+            | grep -v "hidden-link:"
