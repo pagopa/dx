@@ -27,7 +27,9 @@ fi
 2. **If a module exists**: read its `README.md`, `variables.tf`, `outputs.tf`, `main.tf`, and `examples/`. Pin version from `package.json` with `~> major.minor`. **Use the module instead of raw resources.**
 3. **Raw resources only** when no DX module covers the type.
 
-Build a **capability map** from each module's `variables.tf`: optional variables with defaults → capabilities; nested objects → sub-capabilities; `validation` blocks → constraints. Do not rely on hardcoded feature lists — discover dynamically.
+Build a **capability map** from each module's `variables.tf`: optional variables with defaults → capabilities; nested objects → sub-capabilities; `validation` blocks → constraints.
+
+Use `examples/` and implementation files to understand use cases and how a capability changes behavior in practice. Do not rely on hardcoded feature lists — discover dynamically.
 
 > **Secrets**: when handling sensitive values or Key Vault resources, invoke the `azure-keyvault-secret` skill first.
 
@@ -107,8 +109,10 @@ warn user that this may cause issues in the future. If possible, suggest an `ado
 - [ ] `dx_available_subnet_cidr` for every new subnet — no hardcoded CIDRs
 - [ ] Module versions pinned with `~> major.minor`
 - [ ] Target directory follows `.dx/apps/website/docs/terraform/infra-folder-structure.md`; 2+ related resources in `_modules/`
+- [ ] `environment` input follows the standard DX shape used by the surrounding workspace
 - [ ] Required tags on all resources; no hardcoded secrets
 - [ ] Key Vault secrets follow `azure-keyvault-secret` skill
+- [ ] Services that support Key Vault integration use references instead of hardcoded secret values
 - [ ] Tech Radar: all services `adopt`/`trial`; `hold` items have comment + user ack
 - [ ] No placeholder comments — all code complete and working
 - [ ] `terraform init` + `terraform validate` pass; `terraform plan` reviewed if possible
@@ -118,7 +122,6 @@ warn user that this may cause issues in the future. If possible, suggest an `ado
 
 ## Resources
 
-- [DX Documentation](https://dx.pagopa.it/docs/)
-- [Terraform Best Practices](https://dx.pagopa.it/docs/terraform/)
-- [Azure Naming Conventions](https://dx.pagopa.it/docs/azure/azure-naming-convention)
-- [DX Terraform Modules](https://registry.terraform.io/namespaces/pagopa-dx)
+- [DX Documentation](`.dx/apps/website/docs/`) — primary source for best practices, module capabilities, and folder structure
+- [Terraform Best Practices](`.dx/apps/website/docs/terraform/`)
+- [Azure Conventions](`.dx/apps/website/docs/azure/`)
