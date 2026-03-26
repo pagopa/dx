@@ -250,13 +250,6 @@ Each entry has a `ring` field:
 | `assess` | Promising but not yet validated   | Avoid unless explicitly requested by the user                     |
 | `hold`   | Deprecated or discouraged         | **Do not use** — warn the user and suggest an `adopt` alternative |
 
-**Relevant services for Terraform code** (non-exhaustive — always check the live radar):
-
-- ✅ `adopt`: Azure App Service, Azure Function App, Azure Cosmos DB, Azure Storage Account, Azure Key Vault, Azure API Management, Azure Application Insights, Azure Managed Identity, Azure Cache for Redis, Azure Database for PostgreSQL Flexible, AWS Lambda, AWS S3, AWS DynamoDB, AWS SQS, AWS ECS Fargate
-- 🔬 `trial`: Azure Container Apps
-- 👀 `assess`: Azure Service Bus
-- 🚫 `hold`: Azure Database for MySQL Flexible Server
-
 If the user requests a service flagged as `hold`, issue an explicit warning:
 
 > ⚠️ **[Service name]** is marked as **hold** in the PagoPA DX Technology Radar. It is discouraged for new projects. Consider using **[adopt alternative]** instead.
@@ -320,9 +313,10 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 
 ## Additional Resources
 
-For detailed documentation, search the DX knowledge base or visit:
+For detailed documentation, search the local DX knowledge:
 
-- [DX Documentation](https://dx.pagopa.it/docs/)
-- [Terraform Best Practices](https://dx.pagopa.it/docs/terraform/)
-- [Azure Naming Conventions](https://dx.pagopa.it/docs/azure/azure-naming-convention)
-- [DX Terraform Modules](https://registry.terraform.io/namespaces/pagopa-dx)
+- `.dx/apps/website/docs/` — DX documentation.
+- `.dx/apps/website/docs/terraform/` - DX Terraform best practices are documented here, including folder structure, code style, module usage, and more.
+- `.dx/infra/modules/` — source code of all DX Terraform modules, which you should read to understand their capabilities before using them.
+- `.dx/infra/modules/<module>/README.md` and `examples/` — detailed documentation and usage examples for each DX module.
+- `.dx/apps/website/docs/azure` — Azure-related documentation.
