@@ -186,13 +186,15 @@ Before writing or editing Terraform, briefly present to the user:
 Keep it focused on the affected resources and their direct dependencies — a full infrastructure inventory is not needed.
 This summary ensures the user understands the impact before code is generated.
 
+When describing changes, explain eventual exception to standard patterns, and the reason behind every non-obvious design choice.
+
 ### 9. Write Complete, Commented Terraform — No Skeletons, No Placeholders
 
 **Always write complete, working code.** Never leave comments that merely instruct the user what to add later.
 
 #### Comment rule for user-choosable parameters
 
-For **every user-choosable parameter** in the generated IaC, add an inline comment, just above it, that explains:
+For **every non-obvious user-choosable parameter** in the generated IaC, add an inline comment, just above it, that explains:
 
 1. **What the parameter controls**
 2. **What changes if the value changes**
@@ -204,7 +206,8 @@ This rule applies to all non-defaulted parameters that the user can choose, incl
 - configurable list items
 - booleans, sizing, scaling, networking, diagnostics, retention, authentication, and similar design choices
 
-Skip comments for purely mechanical wiring such as obvious IDs, names derived from the standard pattern, or direct output-to-input connections with no design choice involved.
+Skip comments for purely mechanical wiring such as obvious IDs, names derived from the standard pattern
+or direct output-to-input connections with no design choice involved. Do not leak internal implementation details.
 
 ### 10. Auto-wire Implicit Capabilities
 
