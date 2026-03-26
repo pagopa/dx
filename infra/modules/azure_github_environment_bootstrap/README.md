@@ -391,7 +391,7 @@ provider "azurerm" {
 
 The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to new needs. In fact, the module export all the ids and names of the resources that creates, so it is straightforward to add further resources.
 
-### Creating a resource group for the repository
+### Creating additional resource groups for the repository
 
 > **Note:** The module already creates a default resource group for the repository's Azure resources. Use `additional_resource_group_ids` when you need to manage resources in a separate group.
 
@@ -405,7 +405,7 @@ resource "azurerm_resource_group" "myapp" {
   tags = local.tags
 }
 
-module "bootstrapper" {
+module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 3.0"
 
