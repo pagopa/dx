@@ -64,7 +64,6 @@ Read these files when available:
 - `outputs.tf`
 - `main.tf` and other supporting `.tf` files
 - `examples/`
-- `CHANGELOG.md`
 
 Use the module source to build a **capability map**:
 
@@ -89,6 +88,40 @@ Do **not** rely on a hardcoded list of features for a module. Discover them dyna
 - `environment` values not already found: prefix, env_short, location, domain, app_name, instance_number
 - `tags` values not already found: BusinessUnit, ManagementTeam
 - Backend state configuration
+
+### 5a. Decide the Code Structure: Flat vs Local Module
+
+After identifying the target folder, decide whether the new resources should live
+inline in the env folder (`dev/`, `prod/`) or be extracted into a **local module**
+under `infra/resources/_modules/<service-name>/`.
+
+**Use a local module when:**
+
+- You are creating **2 or more related resources for a single logical service** (e.g., an app
+  - its CosmosDB + its storage account).
+- The same group of resources might be reused across environments or will grow over time.
+
+**Use inline resources when:**
+
+- You are adding a single, standalone resource with no co-located siblings.
+- You are patching an existing pattern that is already flat.
+
+**If a local module is warranted:**
+
+1.  Create `infra/resources/_modules/<service-name>/` with these files:
+    - `main.tf` — DX registry module calls and `azurerm_*` resources not covered by DX modules
+    - `variables.tf` — all inputs with `description` and `validation` blocks
+    - `iam.tf` — all `module "..._role_assignments"` and any `azurerm_role_assignment` resources
+    - `outputs.tf` — expose IDs, names, and endpoints that callers need
+2.  Instantiate the local module from the env file (`infra/resources/<env>/main.tf` or (better) a
+    dedicated `<service>.tf`) passing all required variables.
+3.  **Never create `variables.tf` in root env folders** — configuration belongs in `locals.tf`
+    (from `code-style.md`). Pass values to the local module via `locals`.
+
+If the user has not indicated a preference, ask:
+
+> "Should these resources be organized as a local module in `_modules/`?
+> This is recommended when the service will grow or be reused across environments."
 
 ### 6. Ask One Question at a Time
 
@@ -252,7 +285,9 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 ### Project Structure
 
 - [ ] Target directory derived from DX documentation (`infra-folder-structure.md`) based on what the user is trying to do — only ask the user if the documentation does not clarify it
-- [ ] Local modules (if any) are in an `_modules/` folder relative to the target infra directory
+- [ ] When 2+ related resources are created for a single service, they are wrapped in a local module under `_modules/<service>/`
+  - [ ] The local module is instantiated from the env folder via `locals.tf` — no `variables.tf` in root env folders
+  - [ ] Outputs needed by the caller are declared in `outputs.tf`
 
 ### Configuration
 
