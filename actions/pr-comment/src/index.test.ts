@@ -391,7 +391,12 @@ describe("PR Comment Manager Action", () => {
         "Failed to delete existing comments: Comment not found",
       );
       // Should still create the new comment
-      expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith();
+      expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
+        body: "New test comment",
+        issue_number: 123,
+        owner: "test-owner",
+        repo: "test-repo",
+      });
     });
 
     it("should handle case-insensitive search pattern matching", async () => {
