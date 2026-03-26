@@ -66,6 +66,18 @@
         "github.copilot-chat",
         "nrwl.angular-console"
       ]
+    },
+    "jetbrains": {
+      "plugins": [
+        "org.intellij.plugins.hcl",
+        "com.intellij.mermaid",
+        "mdx.js",
+        "dev.nx.console",
+        "ru.adelf.idea.dotenv",
+        "mobi.hsz.idea.gitignore",
+        "org.editorconfig.editorconfigjetbrains",
+        "intellij.prettierJS"
+      ]
     }
   }
 }
