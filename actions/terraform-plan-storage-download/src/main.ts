@@ -13,13 +13,13 @@
 
 import * as core from "@actions/core";
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { AzureCliCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { execFileSync } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { getAzureCredential } from "./azure-credentials.js";
 import { type Context, ContextSchema } from "./schema.js";
 
 async function downloadFromAzure(
@@ -28,7 +28,10 @@ async function downloadFromAzure(
   blobName: string,
   destFile: string,
 ): Promise<void> {
-  const credential = getAzureCredential();
+  // AzureCliCredential is used explicitly to avoid DefaultAzureCredential
+  // silently selecting the runner VM's Managed Identity on self-hosted runners.
+  // csp-login (azure/login) always authenticates the az CLI before this step.
+  const credential = new AzureCliCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
   const blobClient = new BlobServiceClient(url, credential)
     .getContainerClient(container)
