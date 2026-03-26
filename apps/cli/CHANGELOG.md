@@ -1,3 +1,13 @@
+## 0.18.11 (2026-03-26)
+
+### 🩹 Fixes
+
+- Add .tflint.hcl to the monorepo template ([#1505](https://github.com/pagopa/dx/pull/1505))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 # @pagopa/dx-cli
 
 ## 0.18.10
