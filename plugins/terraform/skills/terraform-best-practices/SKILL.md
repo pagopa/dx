@@ -9,7 +9,7 @@ description: Generate Terraform code following PagoPA DX best practices. Reads D
 
 When generating Terraform code, follow these instructions:
 
-> **⚡ Parallelism**: After completing step 1 (clone the DX repository so `.dx/` exists), steps 2 (read DX docs), 3 (search modules), and 12 (fetch Technology Radar) are independent from each other. **Launch them in parallel using subagents** whenever possible — do not wait for one to finish before starting the next. Merge all results before proceeding to code generation.
+> **⚡ Parallelism**: Steps 2 (read DX docs), 3 (search modules), and 12 (fetch Technology Radar) are fully independent. **Launch them in parallel using subagents** whenever possible — do not wait for one to finish before starting the next. Merge all results before proceeding to code generation.
 
 ### 1. Clone the DX Repository locally
 
@@ -35,7 +35,7 @@ All markdown sources within `.dx/apps/website/docs/terraform/` are the authorita
 
 #### Procedure
 
-For each resource you intend to create, search the catalogue for a matching module:
+For each resource you intend to create, start a subagent tosearch the catalogue for a matching module and gather its details:
 
 1. **List all available DX modules** — do this once at the start:
    - Scan the `.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
