@@ -89,7 +89,7 @@ jobs:
   detect-projects:
     name: Detect Terraform Projects
     runs-on: ubuntu-latest
-    needs: [gate, get-terraform-version]
+    needs: get-terraform-version
     if: ${{ needs.gate.outputs.run == 'true' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
