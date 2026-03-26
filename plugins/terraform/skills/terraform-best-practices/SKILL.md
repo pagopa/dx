@@ -35,6 +35,8 @@ All markdown sources within `.dx/apps/website/docs/terraform/` are the authorita
 
 #### Procedure
 
+For each resource you intend to create, search the catalogue for a matching module:
+
 1. **List all available DX modules** — do this once at the start:
    - Scan the `.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
 2. **If a matching module exists**:
