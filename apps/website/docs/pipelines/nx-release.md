@@ -122,17 +122,10 @@ on:
     branches:
       - main
     paths:
-      - ".nx/version-plans/**"
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
+      - ".nx/version-plans/**" # Optional, but recommended to avoid unnecessary workflow runs on unrelated changes
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name }}
-  cancel-in-progress: false # Especially during publish, we don't want to cancel the workflow run
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   release:
@@ -147,16 +140,6 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
-
-:::danger Trigger options
-
-It's crucial to include both `push` and `pull_request` triggers as shown above.
-The `push` trigger ensures that the workflow runs when version plans are added
-or updated, while the `pull_request` trigger allows the workflow to respond to
-the merging of the `Version Packages` PR, which is essential for publishing the
-packages. Omitting either trigger will break the release flow.
-
-:::
 
 ## Inputs
 
