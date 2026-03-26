@@ -1,5 +1,11 @@
 # docs
 
+## 0.13.0
+
+### Minor Changes
+
+- 4e4d4b7: Document agent plugins marketplace usage
+
 ## 0.12.9
 
 ### Patch Changes
