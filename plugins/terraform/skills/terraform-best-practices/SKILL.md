@@ -41,7 +41,7 @@ For each resource you intend to create, start a subagent tosearch the catalogue 
    - Scan the `.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
 2. **If a matching module exists**:
    - Read the module's `README.md` and `examples/` to understand its capabilities and usage patterns (see step 4 below).
-   - Get the module's latest published version via `https://registry.terraform.io/v1/modules/pagopa-dx/<module>/<provider>` and pin it with `~> major.minor`. Use `package.json` if available as a fallback to check the latest version.
+   - Get the module's latest published version via `https://registry.terraform.io/v1/modules/pagopa-dx/<module>` and pin it with `~> major.minor`. Use `package.json` if available as a fallback to check the latest version.
    - **Use the module instead of raw resources.**
 3. **Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
 
