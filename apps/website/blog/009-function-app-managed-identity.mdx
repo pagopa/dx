@@ -13,7 +13,9 @@ toc_max_heading_level: 2
 
 Managing shared secrets is a hidden cost of running APIs: function keys must be
 stored in Key Vault, injected by APIM, and rotated periodically. One leaked key
-means any caller can invoke your Function App. The DX team has shipped an update
+means any caller can invoke your Function App. Beyond security concerns, shared
+keys obscure your architecture: you lose track of who the caller is and how
+changes to your Function App may ripple through your system. The DX team has shipped an update
 to the **Azure Function App Terraform module** that eliminates this pattern
 entirely.
 
