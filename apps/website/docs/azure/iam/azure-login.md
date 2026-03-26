@@ -87,7 +87,7 @@ GitHub Actions to log into Azure for the specified `Entity`:
 
 ```yaml
 - name: Azure Login
-  uses: azure/login@v2
+  uses: azure/login@v3
   with:
     client-id: ${{ env.ARM_CLIENT_ID }}
     tenant-id: ${{ env.ARM_TENANT_ID }}

@@ -19,7 +19,7 @@ data "azurerm_subnet" "pep" {
 }
 
 # tflint-ignore: terraform_required_providers
-resource "random_password" "password" {
+ephemeral "random_password" "password" {
   length  = 16
   special = true
 }
@@ -64,14 +64,6 @@ resource "azurerm_key_vault_secret" "postgres_username" {
   expiration_date = "1982-12-31T00:00:00Z"
 }
 
-resource "azurerm_key_vault_secret" "postgres_password" {
-  name            = "${provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql" }))}-password"
-  value           = random_password.password.result
-  key_vault_id    = azurerm_key_vault.example.id
-  content_type    = "password"
-  expiration_date = "1982-12-31T00:00:00Z"
-}
-
 module "azure_postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
   version = "~> 2.0"
@@ -82,10 +74,13 @@ module "azure_postgres" {
 
   use_case = "default"
 
-  administrator_credentials = {
-    name     = azurerm_key_vault_secret.postgres_username.value
-    password = azurerm_key_vault_secret.postgres_password.value
-  }
+  admin_username         = azurerm_key_vault_secret.postgres_username.value
+  admin_password         = ephemeral.random_password.password.result
+  admin_password_version = 1
+
+  # The module creates a Key Vault secret for the admin password automatically.
+  # Requires Key Vault Secrets Officer role on the vault for the Terraform identity.
+  key_vault_id = azurerm_key_vault.example.id
 
   subnet_pep_id = data.azurerm_subnet.pep.id
 

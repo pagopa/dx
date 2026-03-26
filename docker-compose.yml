@@ -1,0 +1,21 @@
+# Used only for local development. Not intended for production use.
+services:
+  postgresql:
+    image: postgres:16-alpine@sha256:20edbde7749f822887a1a022ad526fde0a47d6b2be9a8364433605cf65099416
+    profiles: [dx-metrics]
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgresql
+      POSTGRES_PASSWORD: postgresql
+      POSTGRES_DB: postgresql
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgresql"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgresql-data:

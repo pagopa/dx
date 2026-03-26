@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpprompts",
-  "version": "0.2.2",
+  "version": "0.2.5",
   "type": "module",
   "private": true,
   "description": "Centralized catalog of MCP prompts for PagoPA DX tools",
@@ -34,12 +34,12 @@
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "tsup": "catalog:",
-    "tsx": "^4.20.6",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

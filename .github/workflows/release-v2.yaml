@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "Environment to deploy to (e.g., app-prod-cd)"
+        required: true
+        type: string
+        default: "app-prod-cd"
+    secrets:
+      github-token:
+        description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
+        required: true
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    permissions:
+      contents: write
+      id-token: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          fetch-tags: "true"
+          fetch-depth: 0
+
+      - name: Detect Release tool
+        id: nx-detect
+        shell: bash
+        run: |
+          if [ -f "nx.json" ]; then
+            echo "Detected Nx for managing releases."
+          else
+            echo "::error:: No supported release tool detected. Please ensure Nx is configured."
+            exit 1
+          fi
+
+      - name: Setup Node.js
+        id: node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Update npm (for provenance support)
+        shell: bash
+        run: npm install -g npm@11.8.0
+
+      - name: Install dependencies (pnpm)
+        if: steps.node-setup.outputs.package-manager == 'pnpm'
+        shell: bash
+        run: pnpm install --frozen-lockfile
+
+      - name: Install dependencies (yarn)
+        if: steps.node-setup.outputs.package-manager == 'yarn'
+        shell: bash
+        run: yarn install --immutable
+
+      - name: Install dependencies (npm)
+        if: steps.node-setup.outputs.package-manager == 'npm'
+        shell: bash
+        run: npm ci
+
+      - name: Install Nx CLI
+        shell: bash
+        run: |
+          sudo add-apt-repository ppa:nrwl/nx
+          sudo apt update
+          sudo apt install nx
+
+      - name: Nx Publish
+        uses: pagopa/dx/actions/nx-release@main
+        with:
+          github-token: ${{ secrets.github-token }}

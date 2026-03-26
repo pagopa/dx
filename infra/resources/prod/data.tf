@@ -4,3 +4,5 @@ data "azurerm_application_insights" "this" {
   name                = module.azure_core_values.application_insights.name
   resource_group_name = module.azure_core_values.application_insights.resource_group_name
 }
+
+data "azurerm_client_config" "current" {}

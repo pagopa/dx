@@ -1,5 +1,29 @@
 # @pagopa/azure-tracing
 
+## 0.4.15
+
+### Patch Changes
+
+- 8e43808: Migrate zod dependency from v3 to v4 (catalog version ^4.3.6)
+
+## 0.4.14
+
+### Patch Changes
+
+- 37cb5e9: Upgrade OpenTelemetry dependencies
+
+## 0.4.13
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
+## 0.4.12
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.4.11
 
 ### Patch Changes

@@ -1,5 +1,29 @@
 # azure_storage_account
 
+## 2.2.3
+
+### Patch Changes
+
+- 13b31e8: Suppress Trivy warnings
+
+## 2.2.2
+
+### Patch Changes
+
+- 9294e5e: Add diagram to README.md representing the module architecture.
+
+## 2.2.1
+
+### Patch Changes
+
+- 13b39a8: Replace deprecated property `enable_rbac_authorization` with `rbac_authorization_enabled`
+
+## 2.2.0
+
+### Minor Changes
+
+- fd857b0: Add `primary_blob_endpoint` and `primary_table_endpoint` outputs to the Azure Storage Account module.
+
 ## 2.1.4
 
 ### Patch Changes

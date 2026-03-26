@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.4.11",
+  "version": "0.4.15",
   "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "repository": {
@@ -65,27 +65,30 @@
     }
   },
   "dependencies": {
-    "@azure/functions": "^4.7.2",
-    "@azure/monitor-opentelemetry": "1.13.1",
-    "@azure/monitor-opentelemetry-exporter": "^1.0.0-beta.32",
-    "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/api-logs": "^0.205.0",
-    "@opentelemetry/instrumentation": "^0.205.0",
-    "@opentelemetry/instrumentation-undici": "^0.16.2",
-    "@t3-oss/env-core": "^0.13.8",
-    "import-in-the-middle": "^1.15.0",
-    "zod": "^3.25.76"
+    "@azure/monitor-opentelemetry": "catalog:opentelemetry",
+    "@azure/monitor-opentelemetry-exporter": "catalog:opentelemetry",
+    "@opentelemetry/api": "catalog:opentelemetry",
+    "@opentelemetry/api-logs": "catalog:opentelemetry",
+    "@opentelemetry/instrumentation": "catalog:opentelemetry",
+    "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
+    "@t3-oss/env-core": "^0.13.11",
+    "import-in-the-middle": "^3.0.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
+    "@azure/functions": "^4.11.2",
     "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node22": "catalog:",
+    "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "tsup": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "scripts": {
     "build": "tsup",
+    "test": "vitest",
     "typecheck": "tsc --noEmit"
   }
 }

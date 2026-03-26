@@ -82,13 +82,32 @@ variable "storage_mb" {
   default     = 32768
 }
 
-variable "administrator_credentials" {
-  type = object({
-    name     = string
-    password = string
-  })
+variable "admin_username" {
+  type        = string
   sensitive   = true
-  description = "Administrator credentials for the PostgreSQL Flexible Server, including username and password."
+  description = "The administrator username for the PostgreSQL Flexible Server."
+}
+
+variable "admin_password" {
+  type        = string
+  sensitive   = true
+  description = "The administrator password for the PostgreSQL Flexible Server."
+  ephemeral   = true
+}
+
+variable "admin_password_version" {
+  type        = number
+  description = "Version counter for the administrator password. Start at 1 and increment on every rotation — this is the only signal Terraform has to re-apply a write-only value, since it cannot diff ephemeral inputs."
+  validation {
+    condition     = var.admin_password_version > 0 && floor(var.admin_password_version) == var.admin_password_version
+    error_message = "admin_password_version must be an integer greater than 0."
+  }
+}
+
+variable "key_vault_id" {
+  type        = string
+  default     = null
+  description = "Optional. When provided, the module creates an azurerm_key_vault_secret named '<db-name>-admin-password' in this vault using write-only attributes (value_wo). The Terraform identity must hold the Key Vault Secrets Officer role on the vault."
 }
 
 #--------#

@@ -2,11 +2,10 @@
   "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:a30da48cdf5f9144ff7f2156622e701e752fc258d77ca7bb00120624f1a95938",
   "features": {
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
+    "ghcr.io/pagopa/devcontainer-features/acli:1": {},
     "ghcr.io/devcontainers/features/azure-cli:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {
-      "extensions": [
-        "seachicken/gh-poi"
-      ]
+      "extensions": ["seachicken/gh-poi"]
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "latest",
@@ -32,7 +31,10 @@
     "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+      "packages": "ripgrep,xdg-utils"
+    }
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
@@ -63,6 +65,18 @@
         "github.copilot",
         "github.copilot-chat",
         "nrwl.angular-console"
+      ]
+    },
+    "jetbrains": {
+      "plugins": [
+        "org.intellij.plugins.hcl",
+        "com.intellij.mermaid",
+        "mdx.js",
+        "dev.nx.console",
+        "ru.adelf.idea.dotenv",
+        "mobi.hsz.idea.gitignore",
+        "org.editorconfig.editorconfigjetbrains",
+        "intellij.prettierJS"
       ]
     }
   }

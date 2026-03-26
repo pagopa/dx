@@ -27,21 +27,19 @@ resource "github_repository" "this" {
   archive_on_destroy  = true
   allow_update_branch = true
 
-  security_and_analysis {
-    secret_scanning {
-      status = "enabled"
-    }
-
-    secret_scanning_push_protection {
-      status = "enabled"
-    }
-  }
-
   dynamic "pages" {
     for_each = var.repository.pages_enabled ? [var.repository.pages_enabled] : []
     content {
       build_type = "workflow"
     }
+  }
+
+  lifecycle {
+    # Since the security_and_analysis options are not managed by the DX Team, we
+    # are ignoring any changes to them to avoid conflicts with the Terraform state.
+    ignore_changes = [
+      security_and_analysis
+    ]
   }
 }
 

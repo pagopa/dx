@@ -4,6 +4,12 @@
 
 This Terraform module provisions an Azure Storage Account with optional configurations for advanced features, networking, and monitoring.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](diagram.svg)
+
 ## Features
 
 - **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
@@ -282,8 +288,10 @@ No modules.
 |------|-------------|
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Storage Account. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Storage Account. |
+| <a name="output_primary_blob_endpoint"></a> [primary\_blob\_endpoint](#output\_primary\_blob\_endpoint) | The primary blob endpoint of the Azure Storage Account. |
 | <a name="output_primary_connection_string"></a> [primary\_connection\_string](#output\_primary\_connection\_string) | The primary connection string for the Azure Storage Account. |
 | <a name="output_primary_queue_endpoint"></a> [primary\_queue\_endpoint](#output\_primary\_queue\_endpoint) | The primary queue endpoint of the Azure Storage Account. |
+| <a name="output_primary_table_endpoint"></a> [primary\_table\_endpoint](#output\_primary\_table\_endpoint) | The primary table endpoint of the Azure Storage Account. |
 | <a name="output_primary_web_host"></a> [primary\_web\_host](#output\_primary\_web\_host) | The primary web host URL for the Azure Storage Account. |
 | <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | The principal ID of the managed identity associated with the Azure Storage Account. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the resource group containing the Azure Storage Account. |

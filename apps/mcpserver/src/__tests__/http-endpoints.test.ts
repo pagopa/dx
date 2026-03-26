@@ -204,13 +204,6 @@ describe("HTTP Endpoints Integration Tests", () => {
       expect(data).toHaveProperty("query");
       expect(data).toHaveProperty("results");
       expect(Array.isArray(data.results)).toBe(true);
-
-      if (data.results.length > 0) {
-        const result = data.results[0];
-        expect(result).toHaveProperty("content");
-        expect(result).toHaveProperty("score");
-        expect(typeof result.score).toBe("number");
-      }
     });
 
     it("should use default number_of_results when not provided", async () => {

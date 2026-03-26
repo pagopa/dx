@@ -8,8 +8,9 @@ import type { MonitorClient } from "@azure/arm-monitor";
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
-import type { AnalysisResult } from "../../types.js";
+import type { AnalysisResult, Thresholds } from "../../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   verboseLog,
@@ -32,6 +33,7 @@ export async function analyzeVM(
   monitorClient: MonitorClient,
   computeClient: ComputeManagementClient,
   timespanDays: number,
+  thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
@@ -114,12 +116,10 @@ export async function analyzeVM(
     timespanDays,
   );
 
-  if (cpuUsage !== null && cpuUsage < 1) {
-    // Less than 1% average CPU
+  if (cpuUsage !== null && cpuUsage < thresholds.vm.cpuPercent) {
     reason += `Low CPU usage (avg ${cpuUsage.toFixed(2)}%). `;
   }
-  if (networkIn !== null && networkIn < 1024 * 1024 * 3) {
-    // Less than 3MB average per day
+  if (networkIn !== null && networkIn < thresholds.vm.networkInBytesPerDay) {
     reason += `Low network traffic (${(networkIn / 1024 / 1024).toFixed(2)} MB/day avg). `;
   }
 

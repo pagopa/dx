@@ -1,0 +1,125 @@
+name: "Nx Release Manager"
+description: "Creates/updates Version Packages PR from Nx version plans, or publishes when version PR is merged."
+
+inputs:
+  github-token:
+    description: "GitHub token with contents:write and pull-requests:write permissions"
+    required: false
+    default: ${{ github.token }}
+  base-branch:
+    description: "Base branch where release flow runs"
+    required: false
+    default: "main"
+outputs:
+  pull-request-number:
+    description: "PR number created/updated for Version Packages"
+    value: ${{ steps.create-pr.outputs.pull-request-number }}
+  pull-request-url:
+    description: "PR URL created/updated for Version Packages"
+    value: ${{ steps.create-pr.outputs.pull-request-url }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure Git user
+      shell: bash
+      run: |
+        git config user.name "dx-pagopa-bot"
+        git config user.email "dx-pagopa-bot@pagopa.it"
+
+    - name: Create or update Version Packages PR
+      if: github.event_name == 'push'
+      id: create-pr
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        BASE_BRANCH: ${{ inputs.base-branch }}
+        RELEASE_BRANCH: "nx-release/main"
+        PR_TITLE: "Version Packages"
+        COMMIT_MESSAGE: "Version Packages"
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+
+        git fetch origin "$BASE_BRANCH" "$RELEASE_BRANCH" 2>/dev/null || true
+        git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
+
+        echo "::notice::Recording existing tags before version bump"
+        git tag -l | sort > /tmp/nx-tags-before.txt
+
+        echo "::notice::Executing version command"
+        nx release --preid rc --skip-publish
+
+        # Capture the exact tags Nx just created locally (not pushed yet).
+        # comm -13 outputs lines in the second file only = new tags.
+        NEW_TAGS=$(comm -13 /tmp/nx-tags-before.txt <(git tag -l | sort) | grep -v '^$' || true)
+        rm -f /tmp/nx-tags-before.txt
+
+        # Check if any files changed
+        if git diff HEAD --quiet; then
+          echo "::notice::No version changes produced by Nx release. Skipping PR update."
+          echo "pull-request-number=" >> "$GITHUB_OUTPUT"
+          echo "pull-request-url=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Resolve tag → project root path via nx (used for changelog extraction and
+        # GitHub Release notes). Must run before manage-version-pr so paths are available.
+        echo "::notice::NEW_TAGS=${NEW_TAGS}"
+        RELEASE_TAGS=$(NEW_TAGS="$NEW_TAGS" node "$ACTION_PATH/scripts/dist/extract-tags.js")
+        echo "::notice::RELEASE_TAGS=${RELEASE_TAGS}"
+
+        # Commit and push the version changes (bump + changelog)
+        git add -A
+        git commit -m "$COMMIT_MESSAGE"
+        git push --force-with-lease origin "$RELEASE_BRANCH"
+
+        # Create or update PR (script writes to GITHUB_OUTPUT)
+        RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/manage-version-pr.js"
+
+    - name: Publish with Nx release
+      if: github.event_name == 'pull_request' && github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'nx-release/') || github.event_name == 'workflow_dispatch'
+      id: publish
+      shell: bash
+      env:
+        NPM_CONFIG_PROVENANCE: true
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        ACTION_PATH: ${{ github.action_path }}
+        GITHUB_EVENT_NAME: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+      run: |
+        set -euo pipefail
+
+        # Extract projects to build from the merged PR's release tags
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          PROJECTS_TO_BUILD=$(PR_NUMBER="$PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
+
+          if [[ -n "$PROJECTS_TO_BUILD" ]]; then
+            echo "::notice::Building projects: $PROJECTS_TO_BUILD"
+            nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
+            echo "::notice::Executing publish command"
+            nx release publish --projects="$PROJECTS_TO_BUILD"
+          else
+            echo "::notice::No projects to build (empty list from PR)"
+          fi
+        else
+          # workflow_dispatch: build all public projects as fallback
+          echo "::notice::Building all public projects (workflow_dispatch mode)"
+          nx run-many --target=build --projects="tag:*:public"
+          echo "::notice::Executing publish command"
+          nx release publish
+        fi
+
+        echo "published=true" >> "$GITHUB_OUTPUT"
+
+    - name: Sync Git Tags and GitHub Releases
+      if: steps.publish.outputs.published == 'true'
+      id: tags
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        BASE_BRANCH: ${{ inputs.base-branch }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

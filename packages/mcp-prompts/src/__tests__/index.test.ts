@@ -85,11 +85,8 @@ describe("mcp-prompts", () => {
       // If there are any disabled prompts, enabled should be fewer than total
       const disabledCount = allPrompts.filter((p) => !p.enabled).length;
 
-      if (disabledCount > 0) {
-        expect(enabledPrompts.length).toBeLessThan(allPrompts.length);
-      } else {
-        expect(enabledPrompts.length).toBe(allPrompts.length);
-      }
+      const expectedCount = allPrompts.length - disabledCount;
+      expect(enabledPrompts.length).toBe(expectedCount);
     });
   });
 });

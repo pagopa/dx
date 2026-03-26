@@ -15,7 +15,7 @@ resource "azurerm_key_vault_key" "key" {
 
 # Add key vault access policy if it's the supported IAM mean and the key is in the same tenant
 resource "azurerm_key_vault_access_policy" "keys" {
-  for_each     = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && try(data.azurerm_key_vault.this["kv"].enable_rbac_authorization, false) == false ? toset(["kv"]) : toset([]))
+  for_each     = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && try(data.azurerm_key_vault.this["kv"].rbac_authorization_enabled, false) == false ? toset(["kv"]) : toset([]))
   key_vault_id = var.customer_managed_key.key_vault_id
   tenant_id    = data.azurerm_subscription.current.tenant_id
   object_id    = local.cmk_info.kv.principal_id
@@ -26,7 +26,7 @@ resource "azurerm_key_vault_access_policy" "keys" {
 
 # Add role assignment if it's the supported IAM mean and the key is in the same tenant
 resource "azurerm_role_assignment" "keys" {
-  for_each             = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && try(data.azurerm_key_vault.this["kv"].enable_rbac_authorization, false) == true ? toset(["kv"]) : toset([]))
+  for_each             = (local.cmk_flags.kv && try(local.cmk_info.kv.same_subscription, false) && try(data.azurerm_key_vault.this["kv"].rbac_authorization_enabled, false) == true ? toset(["kv"]) : toset([]))
   scope                = var.customer_managed_key.key_vault_id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = local.cmk_info.kv.principal_id

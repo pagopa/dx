@@ -38,6 +38,17 @@ variable "origins" {
   }
 }
 
+variable "origin_health_probe" {
+  type = object({
+    path         = optional(string, "/")
+    request_type = optional(string, "HEAD")
+  })
+
+  description = "Health probe configuration of the CDN origin group"
+
+  default = {}
+}
+
 variable "existing_cdn_frontdoor_profile_id" {
   type        = string
   description = "Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile."

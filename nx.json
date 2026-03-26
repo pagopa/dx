@@ -17,6 +17,7 @@
       "cache": true
     },
     "lint": {
+      "dependsOn": ["^build"],
       "options": {
         "fix": true
       },
@@ -65,9 +66,35 @@
     },
     "version": {}
   },
+  "release": {
+    "versionPlans": true,
+    "projectsRelationship": "independent",
+    "version": {},
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": true,
+          "applyUsernameToAuthors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    },
+    "git": {
+      "commit": false,
+      "tag": true,
+      "stageChanges": false
+    },
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/docker",
+      "exclude": ["apps/mcpserver/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"

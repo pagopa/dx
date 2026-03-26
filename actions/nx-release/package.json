@@ -1,0 +1,41 @@
+{
+  "name": "nx-release",
+  "description": "Action to automate releases of npm packages in an Nx monorepo. It creates a PR with the version changes and changelog updates, and when the PR is merged, it creates git tags and publishes the packages to npm.",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint --fix scripts",
+    "lint:check": "eslint scripts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "github",
+    "action",
+    "nx",
+    "pr",
+    "release"
+  ],
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "zod": "^4.3.6"
+  }
+}

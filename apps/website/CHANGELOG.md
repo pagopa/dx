@@ -1,5 +1,39 @@
 # docs
 
+## 0.13.0
+
+### Minor Changes
+
+- 4e4d4b7: Document agent plugins marketplace usage
+
+## 0.12.9
+
+### Patch Changes
+
+- 442a508: Fix link and update module usage examples in iam-cross-subscription
+  page
+
+## 0.12.8
+
+### Patch Changes
+
+- d547c62: Update CLI docs with new SaveMoney features
+
+## 0.12.7
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+- Updated dependencies [e0a3767]
+  - @pagopa/dx-mcpprompts@0.2.4
+
+## 0.12.6
+
+### Patch Changes
+
+- 107a7ef: Fix documentation about terraform local modules location in the
+  filesystem
+
 ## 0.12.5
 
 ### Patch Changes

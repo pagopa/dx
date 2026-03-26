@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.12.5",
+  "version": "0.13.0",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -29,10 +29,10 @@
     "@microsoft/docusaurus-plugin-application-insights": "^4.0.1",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "gray-matter": "^4.0.3",
-    "zod": "catalog:",
     "prism-react-renderer": "^2.4.1",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "^3.9.2",
@@ -41,7 +41,7 @@
     "@docusaurus/types": "^3.9.2",
     "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/react": "^18.3.27",
+    "@types/react": "^18.3.28",
     "@types/react-dom": "^18.3.7",
     "docusaurus-plugin-llms": "^0.2.2",
     "eslint": "catalog:",

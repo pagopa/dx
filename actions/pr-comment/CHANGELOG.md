@@ -1,5 +1,17 @@
 # pr-comment-action
 
+## 0.1.5
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
+## 0.1.4
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
 ## 0.1.3
 
 ### Patch Changes
