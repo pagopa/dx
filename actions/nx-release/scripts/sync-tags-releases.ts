@@ -102,7 +102,7 @@ export async function run(base: string): Promise<void> {
     direction: "desc",
     head: `${owner}:nx-release/main`,
     owner,
-    per_page: 5,
+    per_page: 20,
     repo,
     sort: "updated",
     state: "closed",
