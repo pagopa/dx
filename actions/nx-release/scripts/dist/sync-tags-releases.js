@@ -17514,7 +17514,7 @@ async function run(base) {
     direction: "desc",
     head: `${owner}:nx-release/main`,
     owner,
-    per_page: 20,
+    per_page: 5,
     repo,
     sort: "updated",
     state: "closed"
