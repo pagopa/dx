@@ -17522,7 +17522,7 @@ async function run() {
   const prTitle = process.env.PR_TITLE ?? "Version Packages";
   const releaseTags = process.env.RELEASE_TAGS ?? "[]";
   const intro = [
-    "This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to main, this PR will be updated.",
+    `This PR was opened by the [Nx Release](https://github.com/pagopa/dx/tree/main/actions/nx-release) GitHub Action. When you're ready to do a release, you can merge this and the packages will be published automatically. If you're not ready to do a release yet, that's fine, whenever you add more Nx version plans to ${baseBranch}, this PR will be updated.`,
     "",
     "# Releases",
     ""

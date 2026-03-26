@@ -126,19 +126,21 @@ runs:
           npx nx release publish
         else
           # push mode: extract projects from the latest merged Version Packages PR
-          LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number' 2>/dev/null || true)
+          LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
 
-          if [[ -n "$LATEST_PR_NUMBER" ]]; then
-            PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
+          if ! [[ "$LATEST_PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "::error::Could not find a merged Version Packages PR on base branch '$BASE_BRANCH'. Push mode requires a merged PR to determine target projects." >&2
+            exit 1
           fi
+
+          PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
             npx nx release publish --projects="$PROJECTS_TO_BUILD"
           else
-            # Fallback: no targeted projects found, build all public
-            npx nx run-many --target=build --projects="tag:*:public"
-            npx nx release publish
+            echo "::error::No projects extracted from the merged PR body. The PR may be malformed or lack version information." >&2
+            exit 1
           fi
         fi
 
