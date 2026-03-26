@@ -219,6 +219,7 @@ Some capabilities should not be left to chance once the user has chosen a higher
 - **Write-only secret resources** for Key Vault-managed secrets
 - **Required tags** according to DX conventions
 - **Explicit dependencies** where Terraform ordering would otherwise be ambiguous
+- **`dx_available_subnet_cidr` for every new subnet** — automatic CIDR allocation prevents overlaps and follows DX standards (required by `code-style.md`)
 
 If a capability is automatically added, explain it briefly to the user so the generated topology stays understandable.
 
@@ -278,6 +279,9 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 - [ ] **Always use DX Registry modules (`pagopa-dx/*`)** — only use raw resources if the specific use case is not supported
 - [ ] DX provider configured for resource naming (`pagopa-dx/azure` or `pagopa-dx/aws`)
 - [ ] `provider::dx::resource_name()` used for all resource names
+- [ ] **For every new subnet, use `dx_available_subnet_cidr` resource** to automatically allocate non-overlapping CIDR blocks
+  - Required by DX standards, see `.dx/apps/website/docs/terraform/code-style.md`
+  - Never manually calculate or hardcode new subnet CIDRs
 - [ ] Module versions specified using `~>` operator with major and minor versions only (e.g., `~> 1.5`)
   - Ensures compatibility while allowing patch updates
   - See [Semantic Versioning](https://dx.pagopa.it/docs/azure/using-azure-registry-provider#semantic-versioning) for details
