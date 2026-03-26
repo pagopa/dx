@@ -207,18 +207,18 @@ jobs:
           aws-bucket: ${{ needs.tf_plan.outputs.plan_aws_bucket }}
           aws-region: ${{ needs.tf_plan.outputs.plan_aws_region }}
 
-      - name: Terraform Init
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        run: |
-          terraform init -input=false
+      # - name: Terraform Init
+      #   working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+      #   run: |
+      #     terraform init -input=false
 
-      - name: Terraform Apply
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-        run: |
-          set -o pipefail
-          terraform apply \
-            -lock-timeout=120s \
-            -auto-approve \
-            -input=false \
-            "$TFPLAN_FILE" \
-            | grep -v "hidden-link:"
+      # - name: Terraform Apply
+      #   working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+      #   run: |
+      #     set -o pipefail
+      #     terraform apply \
+      #       -lock-timeout=120s \
+      #       -auto-approve \
+      #       -input=false \
+      #       "$TFPLAN_FILE" \
+      #       | grep -v "hidden-link:"
