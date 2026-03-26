@@ -9,7 +9,7 @@ import styles from "./index.module.css";
 
 type Props = WrapperProps<typeof NavbarType>;
 
-export default function NavbarWrapper(props: Props): JSX.Element {
+export default function NavbarWrapper(props: Props) {
   const location = useLocation();
   // Check if we're on the homepage (both root and with base path)
   const isHomePage =

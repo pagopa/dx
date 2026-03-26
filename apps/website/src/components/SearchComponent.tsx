@@ -11,7 +11,7 @@ interface SearchComponentProps {
 export default function SearchComponent({
   className = "",
   placeholder = "Search documentation, guides, and resources...",
-}: SearchComponentProps): JSX.Element {
+}: SearchComponentProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const history = useHistory();
 
