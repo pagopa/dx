@@ -1,5 +1,11 @@
 # @pagopa/azure-tracing
 
+## 0.4.15
+
+### Patch Changes
+
+- 8e43808: Migrate zod dependency from v3 to v4 (catalog version ^4.3.6)
+
 ## 0.4.14
 
 ### Patch Changes
