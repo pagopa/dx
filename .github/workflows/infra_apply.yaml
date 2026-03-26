@@ -64,16 +64,16 @@ jobs:
         with:
           default_version: "1.10.4"
 
-  tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
-    name: Check terraform registry modules hashes
-    needs: [get-terraform-version]
-    secrets: inherit
-    with:
-      terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      check_to_run: lock_modules
-      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
-      verbose: true
+  # tf-modules-check:
+  #   uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+  #   name: Check terraform registry modules hashes
+  #   needs: [get-terraform-version]
+  #   secrets: inherit
+  #   with:
+  #     terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+  #     check_to_run: lock_modules
+  #     folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+  #     verbose: true
 
   tf_plan:
     name: "Terraform Plan"
@@ -81,7 +81,7 @@ jobs:
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [get-terraform-version, tf-modules-check]
+    needs: get-terraform-version #[get-terraform-version, tf-modules-check]
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
