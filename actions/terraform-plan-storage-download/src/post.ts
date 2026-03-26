@@ -12,9 +12,9 @@
 
 import * as core from "@actions/core";
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { DefaultAzureCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 
+import { getAzureCredential } from "./azure-credentials.js";
 import { type PostState, PostStateSchema } from "./schema.js";
 
 async function deleteFromAzure(
@@ -22,7 +22,7 @@ async function deleteFromAzure(
   container: string,
   blobName: string,
 ): Promise<void> {
-  const credential = new DefaultAzureCredential();
+  const credential = getAzureCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
   const blobClient = new BlobServiceClient(url, credential)
     .getContainerClient(container)
