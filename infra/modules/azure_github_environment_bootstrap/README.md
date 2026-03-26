@@ -442,7 +442,7 @@ N.B.: the `lifecycle` block is necessary to avoid storing the secret in Terrafor
 
 When you create a custom GitHub environment (see [Setting up a custom GitHub environment](https://github.com/pagopa/dx/blob/main/infra/modules/github_environment_bootstrap/README.md#setting-up-a-custom-github-environment)), you may want to allow workflows running in that environment to authenticate with Azure using an existing managed identity. You can achieve this by creating a new federated identity credential on the identity.
 
-For example, to federate the `infra-<env>-cd` identity with a `automation` environment:
+For example, to federate the `infra-<env>-cd` identity with an environment named `automation`:
 
 ```hcl
 resource "azurerm_federated_identity_credential" "infra_cd_automation" {
