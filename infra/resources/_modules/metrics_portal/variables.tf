@@ -80,7 +80,7 @@ variable "auth_entra_id_client_id" {
 
 variable "import_job_image" {
   type        = string
-  description = "OCI image URI for the import job container, built from the dx-metrics Dockerfile.import (e.g., 'ghcr.io/pagopa/dx-metrics-import:latest')."
+  description = "OCI image URI for the import job container, built from the dx-metrics Dockerfile (--target import-runner, e.g., 'ghcr.io/pagopa/dx-metrics-import:latest')."
 }
 
 variable "import_job_cron_expression" {

@@ -47,3 +47,39 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "apps/dx-metrics/server.js"]
+
+# Import job runner — uses tsx to execute the TypeScript import script directly.
+# Build with: docker build --target import-runner -t ghcr.io/pagopa/dx-metrics-import:latest .
+FROM base AS import-runner
+WORKDIR /app/apps/dx-metrics
+
+ENV NODE_ENV=production
+
+# Expose tsx (devDependency) and other binaries from both the workspace root and the app.
+ENV PATH="/app/node_modules/.bin:/app/apps/dx-metrics/node_modules/.bin:${PATH}"
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 importuser
+
+# Copy only the files the import script needs.
+COPY --from=deps --chown=importuser:nodejs /app/node_modules /app/node_modules
+COPY --from=deps --chown=importuser:nodejs /app/apps/dx-metrics/node_modules ./node_modules
+
+# scripts/ contains the import orchestrator and all importers.
+COPY --chown=importuser:nodejs apps/dx-metrics/scripts ./scripts
+
+# src/db/schema.ts is the only src file imported by the import scripts.
+COPY --chown=importuser:nodejs apps/dx-metrics/src/db/schema.ts ./src/db/schema.ts
+
+# Runtime configuration and TypeScript settings.
+COPY --chown=importuser:nodejs apps/dx-metrics/config.json ./config.json
+COPY --chown=importuser:nodejs apps/dx-metrics/tsconfig.json ./tsconfig.json
+COPY --chown=importuser:nodejs apps/dx-metrics/package.json ./package.json
+
+# Shell entrypoint that computes --since from IMPORT_SINCE_DAYS and runs the import.
+COPY --chown=importuser:nodejs apps/dx-metrics/entrypoint.import.sh ./entrypoint.import.sh
+RUN chmod +x entrypoint.import.sh
+
+USER importuser
+
+ENTRYPOINT ["./entrypoint.import.sh"]
