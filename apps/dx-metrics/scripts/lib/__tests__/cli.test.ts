@@ -2,7 +2,12 @@
 
 import { describe, expect, it, vi } from "vitest";
 
-import { CliUsageError, computeSinceDate, HelpRequestedError, parseArgs } from "../cli";
+import {
+  CliUsageError,
+  computeSinceDate,
+  HelpRequestedError,
+  parseArgs,
+} from "../cli";
 
 describe("computeSinceDate", () => {
   it("returns a date 30 days ago by default", () => {
@@ -63,7 +68,10 @@ describe("parseArgs", () => {
   });
 
   it("parses --entity correctly", () => {
-    const args = parseArgs(["--since", "2024-01-01", "--entity", "commits"], "/tmp");
+    const args = parseArgs(
+      ["--since", "2024-01-01", "--entity", "commits"],
+      "/tmp",
+    );
     expect(args.entity).toBe("commits");
   });
 
