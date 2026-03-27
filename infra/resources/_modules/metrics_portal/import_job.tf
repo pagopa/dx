@@ -97,8 +97,8 @@ resource "azurerm_container_app_job" "import" {
     container {
       name   = "metrics-import"
       image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
-      cpu    = 0.5
-      memory = "1Gi"
+      cpu    = 1.5
+      memory = "3Gi"
 
       env {
         name        = "DATABASE_URL"
