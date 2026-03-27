@@ -18,6 +18,9 @@ catalogs:
     '@tsconfig/node24':
       specifier: 24.0.4
       version: 24.0.4
+    '@types/js-yaml':
+      specifier: ^4.0.9
+      version: 4.0.9
     '@types/node':
       specifier: ^22.19.15
       version: 22.19.15
@@ -36,6 +39,9 @@ catalogs:
     execa:
       specifier: ^9.6.1
       version: 9.6.1
+    js-yaml:
+      specifier: ^4.1.1
+      version: 4.1.1
     neverthrow:
       specifier: ^8.2.0
       version: 8.2.0
@@ -532,7 +538,7 @@ importers:
         specifier: ^0.38.0
         version: 0.38.4(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.4.2(prisma@7.4.2(@types/react@19.2.14)(magicast@0.3.5)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.15.6)(@types/react@19.2.14)(kysely@0.28.11)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.4.2(@types/react@19.2.14)(magicast@0.3.5)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(react@19.2.4)
       js-yaml:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1
       lucide-react:
         specifier: ^0.577.0
@@ -569,7 +575,7 @@ importers:
         specifier: ^4.0.0
         version: 4.2.1
       '@types/js-yaml':
-        specifier: ^4.0.9
+        specifier: 'catalog:'
         version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
@@ -684,7 +690,7 @@ importers:
         specifier: 'catalog:'
         version: 14.0.3
       js-yaml:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1
       tmp:
         specifier: ^0.2.5
@@ -700,7 +706,7 @@ importers:
         specifier: 'catalog:'
         version: 24.0.4
       '@types/js-yaml':
-        specifier: ^4.0.9
+        specifier: 'catalog:'
         version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
@@ -1038,7 +1044,7 @@ importers:
         specifier: 'catalog:'
         version: 1.3.7
       js-yaml:
-        specifier: ^4.1.1
+        specifier: 'catalog:'
         version: 4.1.1
       zod:
         specifier: 'catalog:'
@@ -1051,7 +1057,7 @@ importers:
         specifier: 'catalog:'
         version: 24.0.4
       '@types/js-yaml':
-        specifier: ^4.0.9
+        specifier: 'catalog:'
         version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
@@ -9640,10 +9646,6 @@ packages:
 
   js-tokens@9.0.1:
     resolution: {integrity: sha512-mxa9E9ITFOt0ban3j6L5MpjwegGz6lBQmM1IJkWeBZGcMxto50+eWdjC/52xDbS2vy0k7vIMK0Fe2wfL9OQSpQ==}
-
-  js-yaml@3.14.1:
-    resolution: {integrity: sha512-okMH7OXXJ7YrN9Ok3/SXrnu4iX9yOk+25nqX4imS2npuvTYDmo/QEZoqwZkYaIDk3jVvBOTOIEgEhaLOynBS9g==}
-    hasBin: true
 
   js-yaml@3.14.2:
     resolution: {integrity: sha512-PMSmkqxr106Xa156c2M265Z+FTrPl+oxd/rgOQy2tijQeK5TxQ43psO1ZCwhVOSdnn+RzkzlRz/eY4BgJBYVpg==}
@@ -23474,7 +23476,7 @@ snapshots:
 
   gray-matter@4.0.3:
     dependencies:
-      js-yaml: 3.14.1
+      js-yaml: 3.14.2
       kind-of: 6.0.3
       section-matter: 1.0.0
       strip-bom-string: 1.0.0
@@ -24224,11 +24226,6 @@ snapshots:
   js-tokens@4.0.0: {}
 
   js-tokens@9.0.1: {}
-
-  js-yaml@3.14.1:
-    dependencies:
-      argparse: 1.0.10
-      esprima: 4.0.1
 
   js-yaml@3.14.2:
     dependencies:
