@@ -2,19 +2,23 @@
 sidebar_position: 2
 ---
 
+import Tabs from "@theme/Tabs";
+import TabItem from "@theme/TabItem";
+
 # Creating a DX-Ready Monorepo on GitHub
 
 This guide explains how to create a new monorepo using the DX CLI `init`
 command. The command automates all repository scaffolding, cloud environment
 setup, and GitHub runner provisioning in a single interactive session.
 
-```mermaid
-flowchart LR
-    A[Prerequisites] --> B[Prepare GitHub App]
-    B --> C[Run dx init]
-    C --> D[Apply infrastructure]
-    D --> E[Register repository]
-```
+:::warning[Note for Developers]
+
+If you need to initialize a **new project** or a **new Azure subscription / AWS
+account**, you cannot proceed independently. Ask your Engineering Leader to
+follow this guide first — some steps require elevated permissions that are not
+available to Developers.
+
+:::
 
 ## Prerequisites
 
@@ -30,8 +34,9 @@ GitHub runner. Follow the steps below **before** running `dx init`.
 
 :::info[One GitHub App per product]
 
-Each product at PagoPA has its own dedicated GitHub App. You do not need to ask
-a GitHub Admin to create one unless it doesn't exist yet for your product.
+Each product at PagoPA has its own dedicated GitHub App for the self-hosted
+GitHub runner. You do not need to ask a GitHub Admin to create one unless it
+doesn't exist yet for your product.
 
 You can check if an app already exists by browsing the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
@@ -39,7 +44,7 @@ for your product's entry in `authorizations/<your-product>/data/apps.json` and
 looking for an app with the name pattern `<product>-github-runner-internal`
 (e.g. `engineering-github-runner-internal`).
 
-If the app already exists, skip to [Step 2](#app-step2).
+If the app already exists, proceed to Step 2.
 
 :::
 
@@ -76,7 +81,10 @@ Refer to the
 [internal procedure](https://pagopa.atlassian.net/wiki/spaces/Technology/pages/2628976829/Creazione+GithubApp+configurazione+repo)
 for additional context.
 
-### Step 2 — Retrieve the three required values {#app-step2}
+### Step 2 — Retrieve the required values
+
+<Tabs groupId="audience">
+<TabItem value="el" label="Engineering Leader">
 
 Once the GitHub App exists, only **App Administrators** can access its settings.
 Navigate to:
@@ -91,6 +99,20 @@ Retrieve the following three values:
 | **Private key (PEM)** | App settings page → **Private keys** section → **Generate a private key** → download the `.pem` file                               |
 
 Keep these three values at hand: `dx init` will prompt you for them.
+
+</TabItem>
+<TabItem value="ic" label="Developer">
+
+:::warning[Riservato all'Engineering Leader]
+
+Questo step richiede l'accesso alle impostazioni della GitHub App, disponibile
+solo agli App Administrator. Chiedi al tuo Engineering Leader di recuperare i
+valori e condividerteli prima di procedere.
+
+:::
+
+</TabItem>
+</Tabs>
 
 ### Step 3 — Authenticate with GitHub and Azure
 
@@ -113,9 +135,9 @@ fails with an authentication error, run `az login` again before retrying.
 
 :::
 
-## Run `dx init` {#run-dx-init}
+## Run `dx init`
 
-With prerequisites in place and the three GitHub App values ready, run:
+With prerequisites in place and the GitHub App values ready, run:
 
 ```bash
 npx @pagopa/dx-cli init
@@ -151,6 +173,9 @@ Confirm the migration when prompted.
 
 ### Step 2 — Apply `infra/core` (if present)
 
+<Tabs groupId="audience">
+<TabItem value="el" label="Engineering Leader">
+
 If the repository does **not** include an `infra/core` folder, skip this step.
 Otherwise, apply the configuration:
 
@@ -160,40 +185,23 @@ terraform init
 terraform apply
 ```
 
-### Step 3 - Store GitHub App credentials in Key Vault
+</TabItem>
+<TabItem value="ic" label="Developer">
 
-If you have created the GitHub App in Step 1 of
-[Prepare the GitHub App](#obtaining-github-app-credentials), you should have now
-the three required values (App ID, Installation ID, Private Key). These values
-must be saved as secrets in the Key Vault, using Azure CLI (**don't** use the
-Portal):
+:::warning[For Engineering Leader only]
 
-```bash
-az keyvault secret set \
-  --vault-name "<your-keyvault-name>" \
-  --name "github-runner-app-id" \
-  --value "<app-id>"
-
-az keyvault secret set \
-  --vault-name "<your-keyvault-name>" \
-  --name "github-runner-app-installation-id" \
-  --value "<installation-id>"
-
-az keyvault secret set \
-  --vault-name "<your-keyvault-name>" \
-  --name "github-runner-app-key" \
-  --file "<path-to-private-key.pem>"
-```
-
-:::info[Secrets already present?]
-
-If the GitHub App already existed before running `dx init`, the secrets are
-likely already stored in your product's shared Key Vault (typically named
-`x-y-itn-common-kv-01`). In that case you can skip this step.
+This step requires high permissions. Your Engineering Leader will handle this —
+please coordinate with them before merging the generated Pull Request.
 
 :::
 
-### Step 4 — Verify and apply `infra/bootstrapper`
+</TabItem>
+</Tabs>
+
+### Step 3 — Verify and apply `infra/bootstrapper`
+
+<Tabs groupId="audience">
+<TabItem value="el" label="Engineering Leader">
 
 Open `infra/bootstrapper/<env>/data.tf` and verify that the Entra ID groups
 referenced there exist and match your team context.
@@ -206,7 +214,28 @@ terraform init
 terraform apply
 ```
 
-### Step 5 — Register the new repository
+:::info[Automation under development]
+
+We are currently developing a pipeline that will automate the application of
+`infra/bootstrapper` at the merge of the PR, eliminating the need for this
+manual step.
+
+:::
+
+</TabItem>
+<TabItem value="ic" label="Developer">
+
+:::warning[For Engineering Leader only]
+
+This step requires high permissions. Your Engineering Leader will handle this —
+please coordinate with them before merging the generated Pull Request.
+
+:::
+
+</TabItem>
+</Tabs>
+
+### Step 4 — Register the new repository
 
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
@@ -215,7 +244,6 @@ to do two things:
 1. **Add the new repository to the organization census** — follow your product's
    existing conventions in the authorization repo.
 2. **Add the new repository to the GitHub App** — update the `repositories`
-   array in `authorizations/<your-product>/data/apps.json` (the entry you
-   created in Step 1 of
-   [Prepare the GitHub App](#obtaining-github-app-credentials), or the existing
-   entry if the app already existed) to include the new repository name.
+   array in `authorizations/<your-product>/data/apps.json` (the entry created in
+   Step 1 of Prepare the GitHub App, or the existing entry if the app already
+   existed) to include the new repository name.

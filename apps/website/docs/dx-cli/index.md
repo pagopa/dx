@@ -12,12 +12,12 @@ DevEx guidelines consistently and evolve repositories safely.
 
 The following tools must be installed on your machine:
 
-| Tool                                                                                                        | Version                                                       |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                                 |
-| [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                                        |
-| [GitHub CLI](https://cli.github.com/)                                                                       | latest                                                        |
-| [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only)                 |
+| Tool                                                                                                        | Version                                       |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                 |
+| [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                        |
+| [GitHub CLI](https://cli.github.com/)                                                                       | latest                                        |
+| [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only) |
 
 Before running any command that interacts with GitHub or a cloud provider,
 ensure you are logged in:
@@ -119,13 +119,13 @@ later with [`dx add environment`](#add---scaffold-new-components).
 
 **Initialization** _(conditional — only asked when the environment is new)_
 
-| Prompt                                             | What to enter                                                                                                                |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).                  |
-| **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account.         |
-| **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.md#obtaining-github-app-credentials) section. |
-| **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                         |
-| **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.                 |
+| Prompt                                             | What to enter                                                                                                                 |
+| -------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).                   |
+| **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account.          |
+| **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.mdx#obtaining-github-app-credentials) section. |
+| **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                          |
+| **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.                  |
 
 #### Example Usage
 

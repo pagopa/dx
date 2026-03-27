@@ -50,7 +50,7 @@ repository, even for a single project or workspace.
 
 To start adopting DX tools, define boundaries for team services and plan how to
 split team projects. Once ready, ensure you have a mono-repository on GitHub and
-start [configuring it using DX tools](monorepository-setup.md).
+start [configuring it using DX tools](monorepository-setup.mdx).
 
 ### Supported Platforms
 
@@ -86,7 +86,7 @@ optional but highly recommended.
 
 If you're building APIs, web applications, or services:
 
-1. **[Set up your development environment](monorepository-setup.md)** -
+1. **[Set up your development environment](monorepository-setup.mdx)** -
    Configure your workspace for PagoPA development
 1. **[Understand our conventions](github/index.md)** - Learn our Git workflows,
    naming conventions, and code standards

@@ -13,7 +13,7 @@ empowers developers to build with confidence but also enables AI to refine and
 evolve our codebases safely and predictably.
 
 Our DX tools are tailored for TypeScript excellence, relying on a solid monorepo
-foundation ([monorepo setup](../monorepository-setup.md)) and consistent npm
+foundation ([monorepo setup](../monorepository-setup.mdx)) and consistent npm
 script naming ([npm scripts conventions](./npm-scripts.md)).
 
 This setup unlocks powerful features, such as our streamlined DX code review
