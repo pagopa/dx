@@ -122,3 +122,12 @@ resource "azurerm_role_assignment" "infra_ci_rgs_ca_operator" {
   principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
   description          = "Allow ${var.repository.name} Infra CI identity to read Container App configuration at monorepository resource group scope"
 }
+
+resource "azurerm_role_assignment" "infra_ci_rgs_caj_operator" {
+  for_each = local.resource_group_ids
+
+  scope                = each.value
+  role_definition_name = "Container Apps Jobs Operator"
+  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
+  description          = "Allow ${var.repository.name} Infra CI identity to read Container Apps Jobs configuration at monorepository resource group scope"
+}
