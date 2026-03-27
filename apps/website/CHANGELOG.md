@@ -1,5 +1,13 @@
 # docs
 
+## 0.14.0
+
+### Minor Changes
+
+- 75f940f: Bump website dependencies including React to v19
+- 102e8a0: Create page to describe authentication with Managed Identity between
+  APIM and Function App
+
 ## 0.13.0
 
 ### Minor Changes
