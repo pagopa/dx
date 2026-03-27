@@ -6,7 +6,10 @@
   "nx": {
     "targets": {
       "build": {
-        "dependsOn": ["build:import", "^build"]
+        "dependsOn": [
+          "build:import",
+          "^build"
+        ]
       }
     }
   },
@@ -48,6 +51,7 @@
     "@vitest/coverage-v8": "catalog:",
     "baseline-browser-mapping": "^2.10.0",
     "drizzle-kit": "^0.30.0",
+    "esbuild": "^0.27.4",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "postcss": "^8.5.0",
