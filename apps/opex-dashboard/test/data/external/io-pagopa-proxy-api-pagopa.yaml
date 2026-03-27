@@ -1,0 +1,47 @@
+# Local test stub for io-pagopa-proxy definitions.
+# Keeps resolver tests offline and avoids raw GitHub throttling.
+swagger: '2.0'
+info:
+  title: Local io-pagopa-proxy test stub
+  version: '1.0.0'
+paths: {}
+definitions:
+  CodiceContestoPagamento:
+    type: object
+    additionalProperties: true
+  EnteBeneficiario:
+    type: object
+    additionalProperties: true
+  Iban:
+    type: object
+    additionalProperties: true
+  ImportoEuroCents:
+    type: object
+    additionalProperties: true
+  PaymentActivationsGetResponse:
+    type: object
+    additionalProperties: true
+  PaymentActivationsPostRequest:
+    type: object
+    additionalProperties: true
+  PaymentActivationsPostResponse:
+    type: object
+    additionalProperties: true
+  PaymentProblemJson:
+    type: object
+    additionalProperties: true
+  PaymentRequestsGetResponse:
+    type: object
+    additionalProperties: true
+  RptId:
+    type: object
+    additionalProperties: true
+  SpezzoneStrutturatoCausaleVersamento:
+    type: object
+    additionalProperties: true
+  SpezzoniCausaleVersamento:
+    type: object
+    additionalProperties: true
+  SpezzoniCausaleVersamentoItem:
+    type: object
+    additionalProperties: true
