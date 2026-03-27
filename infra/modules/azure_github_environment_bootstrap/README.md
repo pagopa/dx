@@ -28,7 +28,7 @@ module "bootstrap" {
     prefix          = "dx"
     env_short       = "d"
     location        = "italynorth"
-    domain          = "myapp"
+    domain          = "mydomain"
     instance_number = "01"
   }
 
@@ -46,7 +46,6 @@ module "bootstrap" {
   }
 
   repository = {
-    owner = "pagopa"
     name  = "my-repository"
   }
 
@@ -64,10 +63,7 @@ module "bootstrap" {
   private_dns_zone_resource_group_id = data.azurerm_resource_group.network.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards.id
 
-  tags = {
-    Environment = "Dev"
-    CreatedBy   = "Terraform"
-  }
+  tags = local.tags
 }
 ```
 
@@ -75,13 +71,21 @@ module "bootstrap" {
 
 Many input values for this module can be automatically retrieved using the companion module [`pagopa-dx/azure-core-values-exporter/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/latest). This module reads core infrastructure values from a shared Terraform state, eliminating the need to hardcode or manually look up resource IDs.
 
+:::note
+
+The `azure-core-values-exporter` module supports infrastructures created with [`pagopa-dx/azure-core-infra/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/latest).
+If your infrastructure was not created with `azure-core-infra`, you must manually retrieve and pass the required input values (for example `pep_vnet_id`, `private_dns_zone_resource_group_id`, `opex_resource_group_id`, and `github_private_runner.container_app_environment_id`) to this module.
+
+:::
+
 ### Core Values Exporter Integration
 
+First, retrieve core infrastructure values from the shared state
+
 ```hcl
-# First, retrieve core infrastructure values from the shared state
 module "core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 0.0"
+  version = "~> 0.4"
 
   core_state = {
     resource_group_name  = "dx-d-itn-tfstate-rg-01"
@@ -90,8 +94,11 @@ module "core_values" {
     key                  = "dx.core.dev.tfstate"
   }
 }
+```
 
-# Then use the exported values in the bootstrap module
+Then use the exported values in the bootstrap module:
+
+```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
   version = "~> 3.0"
@@ -391,33 +398,88 @@ provider "azurerm" {
 
 The module provides the basic configuration adhering to DX and Technology standards. However, it can be extended according to new needs. In fact, the module export all the ids and names of the resources that creates, so it is straightforward to add further resources.
 
-### Managing multiple resource groups
+### Creating additional resource groups for the repository
 
-This module includes a pre-configured resource group for deploying Azure resources. If you need additional resource groups, you can easily create them; the module will automatically assign all necessary roles.
+> **Note:** The module already creates a default resource group for the repository's Azure resources. Use `additional_resource_group_ids` when you need to manage resources in a separate group.
+
+If you need an additional resource group — for example, to isolate a specific domain or service within the monorepo — you can create it alongside the module and pass its ID via `additional_resource_group_ids`. The module will then automatically assign all necessary IAM roles to the managed identities on that resource group.
 
 ```hcl
-resource "azurerm_resource_group" "new_rg01" {
-  name     = "dx-d-itn-custom-rg-01"
+resource "azurerm_resource_group" "myapp" {
+  name     = "dx-d-itn-myapp-rg-01"
   location = "italynorth"
 
   tags = local.tags
 }
 
-resource "azurerm_resource_group" "new_rg02" {
-  name     = "dx-d-itn-custom-rg-02"
-  location = "italynorth"
-
-  tags = local.tags
-}
-
-module "bootstrapper" {
+module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~>x.0"
+  version = "~> 3.0"
+
+  # ... other required variables ...
 
   additional_resource_group_ids = [
-    azurerm_resource_group.new_rg01.id,
-    azurerm_resource_group.new_rg02.id,
+    azurerm_resource_group.myapp.id,
   ]
+}
+```
+
+### Adding secrets to an existing GitHub environment
+
+The module automatically configures the standard GitHub environments with the required secrets. You can add extra secrets to any of these environments using the `github_actions_environment_secret` resource and the `repository` output.
+
+For example, to add a custom secret to the `infra-prod-cd` environment:
+
+```hcl
+resource "github_actions_environment_secret" "infra_cd_custom_secret" {
+  repository      = module.bootstrapper.repository.name
+  environment     = "infra-prod-cd"
+  secret_name     = "MY_CUSTOM_SECRET"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [plaintext_value]
+  }
+}
+```
+
+N.B.: the `lifecycle` block is necessary to avoid storing the secret in Terraform state. Therefore, it is required to manually set the value via GitHub UI or GitHub CLI after the apply. Only if the value is not actually a sensitive value (e.g. ARM_CLIENT_ID as it must be federated to actually work), you can omit the `lifecycle` block and manage the secret value directly in Terraform.
+
+### Federating an existing identity with a new GitHub environment
+
+When you create a custom GitHub environment (see [Setting up a custom GitHub environment](https://github.com/pagopa/dx/blob/main/infra/modules/github_environment_bootstrap/README.md#setting-up-a-custom-github-environment)), you may want to allow workflows running in that environment to authenticate with Azure using an existing managed identity. You can achieve this by creating a new federated identity credential on the identity.
+
+For example, to federate the `infra-<env>-cd` identity with an environment named `automation`:
+
+```hcl
+resource "azurerm_federated_identity_credential" "infra_cd_automation" {
+  name                = "infra-<env>-cd-automation"
+  resource_group_name = module.bootstrapper.resource_group.name
+  parent_id           = module.bootstrapper.identities.infra.cd.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = "https://token.actions.githubusercontent.com"
+  subject             = "repo:${module.bootstrapper.repository.owner}/${module.bootstrapper.repository.name}:environment:automation"
+}
+```
+
+Workflows running in the `automation` environment will then be able to authenticate with Azure using the `infra-<env>-cd` managed identity.
+
+### Granting additional roles to managed identities on custom resources
+
+The module exposes the managed identities it creates via the `identities` output. You can use these to grant additional Azure roles on resources not covered by the module's built-in assignments.
+
+For example, to grant the `infra-env-cd` identity the **DNS Zone Contributor** role on a DNS zone retrieved with a data source:
+
+```hcl
+data "azurerm_dns_zone" "example" {
+  name                = "example.pagopa.it"
+  resource_group_name = "dx-d-itn-network-rg-01"
+}
+
+resource "azurerm_role_assignment" "infra_<env>_cd_dns_zone_contributor" {
+  scope                = data.azurerm_dns_zone.example.id
+  role_definition_name = "DNS Zone Contributor"
+  principal_id         = module.bootstrapper.identities.infra.cd.principal_id
 }
 ```
 
