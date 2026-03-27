@@ -31,7 +31,7 @@ infrastructure level by the Function App auth middleware.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azurerm | ~> 4.1 |
+| <a name="module_azure_function_app"></a> [azure\_function\_app](#module\_azure\_function\_app) | pagopa-dx/azure-function-app/azurerm | ~> 5.0 |
 
 ## Resources
 

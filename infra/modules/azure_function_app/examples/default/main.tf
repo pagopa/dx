@@ -13,6 +13,11 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
+data "azurerm_virtual_network" "example_vnet" {
+  name                = local.virtual_network.name
+  resource_group_name = local.virtual_network.resource_group_name
+}
+
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = local.environment.domain,
@@ -21,9 +26,14 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
+resource "dx_available_subnet_cidr" "example" {
+  virtual_network_id = data.azurerm_virtual_network.example_vnet.id
+  prefix_length      = 24
+}
+
 module "azure_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 5.0"
 
   environment         = local.environment
   use_case            = "default"
@@ -34,7 +44,7 @@ module "azure_function_app" {
     resource_group_name = local.virtual_network.resource_group_name
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.248.0/24"
+  subnet_cidr   = dx_available_subnet_cidr.example.cidr_block
 
   app_settings      = {}
   slot_app_settings = {}
