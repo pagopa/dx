@@ -14,8 +14,7 @@ The following tools must be installed on your machine:
 
 | Tool                                                                                                        | Version                                                       |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [Node.js](https://nodejs.org/)                                                                              | **22**                                                        |
-| [pnpm](https://pnpm.io/installation)                                                                        | latest (must be installed globally via `npm install -g pnpm`) |
+| [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                                 |
 | [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                                        |
 | [GitHub CLI](https://cli.github.com/)                                                                       | latest                                                        |
 | [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only)                 |
