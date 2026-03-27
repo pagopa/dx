@@ -36,8 +36,8 @@ a GitHub Admin to create one unless it doesn't exist yet for your product.
 You can check if an app already exists by browsing the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 for your product's entry in `authorizations/<your-product>/data/apps.json` and
-looking for an app with the name pattern `<team>-github-runner-internal` (e.g.
-`engineering-github-runner-internal`).
+looking for an app with the name pattern `<product>-github-runner-internal`
+(e.g. `engineering-github-runner-internal`).
 
 If the app already exists, skip to [Step 2](#app-step2).
 
@@ -68,7 +68,7 @@ the `repositories` array **empty** for now — you will populate it after
 }
 ```
 
-The app name must follow the pattern `<team>-<name>-internal` (e.g.
+The app name must follow the pattern `<product>-github-runner-internal` (e.g.
 `engineering-github-runner-internal`).
 
 Once the PR is ready, contact the **Technology team** to have the app created.
@@ -160,8 +160,13 @@ terraform init
 terraform apply
 ```
 
-Store the three GitHub App values to the Key Vault using the Azure CLI
-(**don't** use the Portal):
+### Step 3 - Store GitHub App credentials in Key Vault
+
+If you have created the GitHub App in Step 1 of
+[Prepare the GitHub App](#obtaining-github-app-credentials), you should have now
+the three required values (App ID, Installation ID, Private Key). These values
+must be saved as secrets in the Key Vault, using Azure CLI (**don't** use the
+Portal):
 
 ```bash
 az keyvault secret set \
@@ -182,14 +187,13 @@ az keyvault secret set \
 
 :::info[Secrets already present?]
 
-If the GitHub App already existed before running `dx init`, or if `infra/core`
-was not applied (e.g. the core infrastructure is shared with other
-repositories), the secrets are likely already stored in your product's shared
-Key Vault (typically named `common-kv-01`). In that case you can skip this step.
+If the GitHub App already existed before running `dx init`, the secrets are
+likely already stored in your product's shared Key Vault (typically named
+`x-y-itn-common-kv-01`). In that case you can skip this step.
 
 :::
 
-### Step 3 — Verify and apply `infra/bootstrapper`
+### Step 4 — Verify and apply `infra/bootstrapper`
 
 Open `infra/bootstrapper/<env>/data.tf` and verify that the Entra ID groups
 referenced there exist and match your team context.
@@ -202,7 +206,7 @@ terraform init
 terraform apply
 ```
 
-### Step 4 — Register the new repository
+### Step 5 — Register the new repository
 
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
