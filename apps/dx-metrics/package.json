@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "build:import": "esbuild scripts/import.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/import.mjs",
     "import": "tsx scripts/import.ts"
   },
   "dependencies": {

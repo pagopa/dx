@@ -8,3 +8,4 @@ output "postgres" {
   description = "Details of the PostgreSQL Flexible Server (name, ID, resource group)."
   sensitive   = true
 }
+
