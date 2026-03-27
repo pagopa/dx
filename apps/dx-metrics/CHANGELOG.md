@@ -1,5 +1,15 @@
 # dx-metrics
 
+## 0.5.0
+
+### Minor Changes
+
+- a46bb9b: Add container app job to import metrics on a schedule.
+
+### Patch Changes
+
+- f74034d: Reference React version from dedicated catalog
+
 ## 0.4.1
 
 ### Patch Changes
