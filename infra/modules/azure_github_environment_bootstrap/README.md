@@ -71,6 +71,13 @@ module "bootstrap" {
 
 Many input values for this module can be automatically retrieved using the companion module [`pagopa-dx/azure-core-values-exporter/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/latest). This module reads core infrastructure values from a shared Terraform state, eliminating the need to hardcode or manually look up resource IDs.
 
+:::note
+
+The `azure-core-values-exporter` module supports infrastructures created with [`pagopa-dx/azure-core-infra/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/latest).
+If your infrastructure was not created with `azure-core-infra`, you must manually retrieve and pass the required input values (for example `pep_vnet_id`, `private_dns_zone_resource_group_id`, `opex_resource_group_id`, and `github_private_runner.container_app_environment_id`) to this module.
+
+:::
+
 ### Core Values Exporter Integration
 
 First, retrieve core infrastructure values from the shared state
