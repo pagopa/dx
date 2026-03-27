@@ -35,11 +35,11 @@ The allowed sizes are:
 
 ## Usage Examples
 
-| Example | Description |
-| ------- | ----------- |
-| [examples/default](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/default) | Basic Function App using classic key-based authentication (`x-functions-key`) |
-| [examples/with_entra_auth](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/with_entra_auth) | Function App with Entra ID (Managed Identity) authentication — no shared secrets |
-| [examples/with_storage_account_queue](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/with_storage_account_queue) | Function App connected to an external Storage Account queue |
+| Example                                                                                                                                                | Description                                                                                        |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------|
+| [examples/default](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/default)                                       | **Recommended** -  Function App with Entra ID (Managed Identity) authentication — no shared secrets |
+| [examples/legacy](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/with_entra_auth)                                | **Legacy** - Function App using classic key-based authentication (`x-functions-key`)               |
+| [examples/with_storage_account_queue](https://github.com/pagopa-dx/terraform-azurerm-azure-function-app/tree/main/examples/with_storage_account_queue) | Function App connected to an external Storage Account queue                                        |
 
 ## Entra ID Authentication
 
