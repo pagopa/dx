@@ -1,5 +1,11 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.2.2
+
+### Patch Changes
+
+- 7261e20: Improve documentation with new examples and small tweaks
+
 ## 3.2.1
 
 ### Patch Changes
