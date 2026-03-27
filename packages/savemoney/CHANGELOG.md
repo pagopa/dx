@@ -1,5 +1,11 @@
 # @pagopa/dx-savemoney
 
+## 0.2.2
+
+### Patch Changes
+
+- f74034d: Move dependencies to the catalog
+
 ## 0.2.1
 
 ### Patch Changes

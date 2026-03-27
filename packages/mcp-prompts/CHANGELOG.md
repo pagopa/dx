@@ -1,5 +1,11 @@
 # @pagopa/dx-mcpprompts
 
+## 0.2.6
+
+### Patch Changes
+
+- f74034d: Migrate to zod v4
+
 ## 0.2.5
 
 ### Patch Changes
