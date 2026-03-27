@@ -150,7 +150,7 @@ Triggered manually. The action:
 
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
-- ✅ provenance enabled by default
+- ✅ NPM provenance enabled by default
 - ✅ Compatible with custom `releaseTagPattern` in `nx.json` (tag matching does not
   assume a specific separator between package name and version)
 
