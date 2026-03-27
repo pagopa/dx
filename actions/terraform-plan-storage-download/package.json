@@ -14,7 +14,7 @@
   "dependencies": {
     "@actions/core": "catalog:github-actions",
     "@aws-sdk/client-s3": "^3.808.0",
-    "@azure/identity": "^4.10.0",
+    "@azure/identity": "catalog:",
     "@azure/storage-blob": "^12.27.0",
     "zod": "catalog:"
   },
