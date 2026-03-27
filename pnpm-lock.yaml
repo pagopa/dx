@@ -5,6 +5,10 @@ settings:
   excludeLinksFromLockfile: false
 
 catalogs:
+  aws:
+    '@aws-sdk/client-s3':
+      specifier: ^3.808.0
+      version: 3.984.0
   default:
     '@azure/identity':
       specifier: ^4.13.0
@@ -329,7 +333,7 @@ importers:
         specifier: catalog:github-actions
         version: 3.0.0
       '@aws-sdk/client-s3':
-        specifier: ^3.808.0
+        specifier: catalog:aws
         version: 3.984.0
       '@azure/identity':
         specifier: 'catalog:'
@@ -366,7 +370,7 @@ importers:
         specifier: catalog:github-actions
         version: 3.0.0
       '@aws-sdk/client-s3':
-        specifier: ^3.808.0
+        specifier: catalog:aws
         version: 3.984.0
       '@azure/identity':
         specifier: 'catalog:'
@@ -629,7 +633,7 @@ importers:
         specifier: ^3.583.0
         version: 3.901.0
       '@aws-sdk/client-s3':
-        specifier: ^3.583.0
+        specifier: catalog:aws
         version: 3.984.0
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.583.0
