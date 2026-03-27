@@ -11,6 +11,17 @@ This guide explains how to create a new monorepo using the DX CLI `init`
 command. The command automates all repository scaffolding, cloud environment
 setup, and GitHub runner provisioning in a single interactive session.
 
+The diagram below shows an high level view of the flow explained in this
+document.
+
+```mermaid
+flowchart LR
+    A[Prerequisites] --> B[Prepare GitHub App]
+    B --> C[Run dx init]
+    C --> D[Apply infrastructure]
+    D --> E[Register repository]
+```
+
 :::warning[Note for Developers]
 
 If you need to initialize a **new project** or a **new Azure subscription / AWS
@@ -19,6 +30,30 @@ follow this guide first — some steps require elevated permissions that are not
 available to Developers.
 
 :::
+
+## Architecture Overview
+
+The diagram below shows what `dx init` provisions and how the resulting entities
+relate to each other.
+
+```mermaid
+flowchart TD
+    repo["GitHub Repository"]
+    envs["GitHub Environments"]
+    secrets["Environment Secrets<br/>(Azure / AWS credentials)"]
+    app["GitHub App"]
+    kv["Azure Key Vault<br/>(App ID · Installation ID · Private Key)"]
+    runner["Self-hosted GitHub Runner"]
+    rg["Azure Resource Group"]
+
+    repo -->|contains| envs
+    envs -->|store| secrets
+    secrets -->|"authenticate CI/CD workflows to"| rg
+    repo -->|uses| runner
+    app -->|credentials stored in| kv
+    kv -->|authenticates| runner
+    runner -->|hosted in| rg
+```
 
 ## Prerequisites
 
