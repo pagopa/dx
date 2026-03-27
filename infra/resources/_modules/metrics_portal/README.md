@@ -9,12 +9,6 @@
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.23 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0 |
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.23 |
-
 ## Modules
 
 | Name | Source | Version |
