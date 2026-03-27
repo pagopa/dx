@@ -9,6 +9,12 @@
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.23 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0 |
 
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.23 |
+
 ## Modules
 
 | Name | Source | Version |
@@ -39,10 +45,6 @@
 | <a name="input_container_app_user_assigned_identity_principal_id"></a> [container\_app\_user\_assigned\_identity\_principal\_id](#input\_container\_app\_user\_assigned\_identity\_principal\_id) | Principal ID of the user-assigned managed identity for the Container App to access Key Vault. | `string` | n/a | yes |
 | <a name="input_custom_domain_host_name"></a> [custom\_domain\_host\_name](#input\_custom\_domain\_host\_name) | Host name for the custom domain to be used by the Container App (e.g., 'metrics.dx.pagopa.it'). The domain must be configured in the specified DNS zone. | `string` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    environment     = string<br/>    location        = string<br/>    instance_number = string<br/>    domain          = optional(string)<br/>    app_name        = optional(string)<br/>  })</pre> | n/a | yes |
-| <a name="input_import_job_cron_expression"></a> [import\_job\_cron\_expression](#input\_import\_job\_cron\_expression) | Cron expression (UTC) for the import job schedule. Changing this value alters how often the import runs. | `string` | `"0 3 * * *"` | no |
-| <a name="input_import_job_image"></a> [import\_job\_image](#input\_import\_job\_image) | OCI image URI for the import job container, built from the dx-metrics Dockerfile (--target import-runner, e.g., 'ghcr.io/pagopa/dx-metrics-import:latest'). | `string` | n/a | yes |
-| <a name="input_import_job_replica_timeout"></a> [import\_job\_replica\_timeout](#input\_import\_job\_replica\_timeout) | Maximum time in seconds a single import execution is allowed to run before being terminated. | `number` | `14400` | no |
-| <a name="input_import_job_since_days"></a> [import\_job\_since\_days](#input\_import\_job\_since\_days) | Number of days to look back for each import run. The checkpoint system skips already-imported data, so a larger window is safe but uses more GitHub API quota. | `number` | `30` | no |
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | ID of the Key Vault where secrets (DB credentials, connection string) will be stored. | `string` | n/a | yes |
 | <a name="input_network_resource_group_name"></a> [network\_resource\_group\_name](#input\_network\_resource\_group\_name) | Name of the resource group containing network resources, used for DNS zone reference. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Name of the resource group containing private DNS zones (e.g. the network resource group). | `string` | n/a | yes |
@@ -56,6 +58,5 @@
 | Name | Description |
 |------|-------------|
 | <a name="output_container_app"></a> [container\_app](#output\_container\_app) | Details of the Container App hosting the Next.js application. |
-| <a name="output_import_job"></a> [import\_job](#output\_import\_job) | Details of the Container App Job running the scheduled metrics import task. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server (name, ID, resource group). |
 <!-- END_TF_DOCS -->

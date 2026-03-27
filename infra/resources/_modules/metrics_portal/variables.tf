@@ -77,26 +77,3 @@ variable "auth_entra_id_client_id" {
 }
 
 # --- Import Job Configuration ---
-
-variable "import_job_image" {
-  type        = string
-  description = "OCI image URI for the import job container, built from the dx-metrics Dockerfile (--target import-runner, e.g., 'ghcr.io/pagopa/dx-metrics-import:latest')."
-}
-
-variable "import_job_cron_expression" {
-  type        = string
-  description = "Cron expression (UTC) for the import job schedule. Changing this value alters how often the import runs."
-  default     = "0 3 * * *"
-}
-
-variable "import_job_since_days" {
-  type        = number
-  description = "Number of days to look back for each import run. The checkpoint system skips already-imported data, so a larger window is safe but uses more GitHub API quota."
-  default     = 30
-}
-
-variable "import_job_replica_timeout" {
-  type        = number
-  description = "Maximum time in seconds a single import execution is allowed to run before being terminated."
-  default     = 14400 # 4 hours
-}

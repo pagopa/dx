@@ -45,11 +45,9 @@ resource "azurerm_container_app_job" "import" {
   resource_group_name          = var.resource_group_name
   container_app_environment_id = var.container_app_env_id
 
-  # Maximum time (in seconds) a single execution is allowed to run.
-  # The import processes tens of GitHub repositories with multiple entity types;
-  replica_timeout_in_seconds = var.import_job_replica_timeout
+  # Allow up to 4 hours for a full import run across all repositories and entity types.
+  replica_timeout_in_seconds = 14400
 
-  # Retry once on failure before marking the execution as failed.
   replica_retry_limit = 1
 
   workload_profile_name = "Consumption"
@@ -63,13 +61,9 @@ resource "azurerm_container_app_job" "import" {
     ]
   }
 
-  # Cron-based trigger: runs the import on a recurring schedule.
   schedule_trigger_config {
-    # Cron expression in UTC defining when the import job runs.
-    # Changing this value alters the import frequency.
-    cron_expression = var.import_job_cron_expression
+    cron_expression = "0 3 * * *"
 
-    # One replica per execution — the import script is sequential.
     parallelism              = 1
     replica_completion_count = 1
   }
@@ -102,12 +96,9 @@ resource "azurerm_container_app_job" "import" {
   template {
     container {
       name   = "metrics-import"
-      image  = var.import_job_image
+      image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
       cpu    = 0.5
       memory = "1Gi"
-
-      # The image's ENTRYPOINT (entrypoint.import.sh) handles the --since date computation
-      # using IMPORT_SINCE_DAYS. No command override is needed.
 
       env {
         name        = "DATABASE_URL"
@@ -129,12 +120,9 @@ resource "azurerm_container_app_job" "import" {
         secret_name = "github-app-private-key"
       }
 
-      # Number of days to look back for each import run.
-      # The import script's checkpoint system skips already-imported data,
-      # so increasing this value is safe but uses more GitHub API quota.
       env {
         name  = "IMPORT_SINCE_DAYS"
-        value = tostring(var.import_job_since_days)
+        value = "30"
       }
 
       env {
