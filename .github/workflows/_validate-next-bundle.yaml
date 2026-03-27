@@ -50,7 +50,9 @@ jobs:
             --ts --no-eslint --no-tailwind \
             --app --src-dir --import-alias "@/*" \
             --turbopack --no-react-compiler \
-            --skip-install
+            --skip-install \
+            --agents-md
+
           rm apps/my-app/next.config.*
           echo "module.exports = { output: 'standalone' };" > apps/my-app/next.config.js
           "$PACKAGE_MANAGER" install
