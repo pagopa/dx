@@ -3,6 +3,13 @@
   "version": "0.4.1",
   "private": true,
   "type": "module",
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": ["build:import", "^build"]
+      }
+    }
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",

@@ -24,9 +24,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN corepack enable pnpm && pnpm nx build dx-metrics
 
-# Bundle the import script into a single JS file
-RUN pnpm build:import
-
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
