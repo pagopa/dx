@@ -56,7 +56,7 @@ jobs:
 
       - name: Push module to subrepository
         id: push-to-subrepository
-        uses: pagopa/dx/.github/actions/push-to-subrepo@main
+        uses: pagopa/dx/.github/actions/push-to-subrepo@fix-push-to-subrepo-with-checkout-action-v6
         with:
           name: ${{ matrix.module }}
           github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}
