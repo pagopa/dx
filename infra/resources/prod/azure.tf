@@ -58,7 +58,7 @@ module "metrics_portal" {
   container_app_image                               = "ghcr.io/pagopa/dx-metrics:latest"
 
   # Import job — daily cron that fetches GitHub data into PostgreSQL.
-  # Build from the same Dockerfile with --target import-runner.
+  # Build using apps/dx-metrics/Dockerfile.import (no --target stage required).
   import_job_image = "ghcr.io/pagopa/dx-metrics-import:latest"
 
   network_resource_group_name = module.azure_core_values.network_resource_group_name
