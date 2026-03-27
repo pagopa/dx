@@ -40,7 +40,7 @@ resource "azurerm_key_vault_secret" "github_app_private_key" {
 
 # Scheduled Container App Job for the data import task.
 resource "azurerm_container_app_job" "import" {
-  name                         = provider::dx::resource_name(merge(local.import_job_naming_config, { resource_type = "container_app_job" }))
+  name                         = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_job" }))
   location                     = var.environment.location
   resource_group_name          = var.resource_group_name
   container_app_environment_id = var.container_app_env_id
