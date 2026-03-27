@@ -89,7 +89,7 @@ jobs:
   detect-projects:
     name: Detect Terraform Projects
     runs-on: ubuntu-latest
-    needs: get-terraform-version
+    needs: [gate, get-terraform-version]
     if: ${{ needs.gate.outputs.run == 'true' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -109,24 +109,40 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          BASE_PATH="${BASE_PATH%/}"
           DIR="$BASE_PATH/$ENVIRONMENT"
 
-          if [ "$EVENT_NAME" = "pull_request" ]; then
-            CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$DIR")
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            CHANGED=$(find "$DIR" -maxdepth 2 -name '*.tf' -not -path "*/_modules/*" 2>/dev/null || true)
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$DIR" || true)
           else
-            if [ -n "${BEFORE:-}" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
-              CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR")
-            else
-              CHANGED=$(git diff --name-only HEAD~1 -- "$DIR")
-            fi
+            CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR" || true)
           fi
 
-          # dirname on each changed file gives base_path/env (single project)
-          # or base_path/env/dir (sub-project) — always the right Terraform root
-          MATRIX=$(echo "$CHANGED" \
-            | xargs -r dirname \
-            | sort -u \
-            | jq -R . | jq -sc .)
+          # The two layouts are mutually exclusive:
+          # - flat:          a .tf exists directly in $DIR → $DIR is the single project root
+          # - multi-project: no .tf directly in $DIR → each first-level subdir is a project root
+          IS_FLAT=$(printf '%s\n' "$CHANGED" | while IFS= read -r file; do
+            rel="${file#"${DIR}/"}"
+            case "$rel" in
+              */*) ;;                    # file in a subdir: not a flat indicator
+              *.tf) echo 1; break ;;    # .tf directly in $DIR: flat project
+            esac
+          done)
+
+          if [ -n "$IS_FLAT" ]; then
+            MATRIX=$(jq -cn --arg d "$DIR" '[$d]')
+          else
+            MATRIX=$(printf '%s\n' "$CHANGED" \
+              | while IFS= read -r file; do
+                  [ -z "$file" ] && continue
+                  rel="${file#"${DIR}/"}"
+                  case "$rel" in */*)  echo "${DIR}/${rel%%/*}" ;; esac
+                done \
+              | sort -u \
+              | jq -R . | jq -sc .)
+          fi
 
           MATRIX=${MATRIX:-[]}
           echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
