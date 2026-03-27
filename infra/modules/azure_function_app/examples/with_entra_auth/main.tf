@@ -35,12 +35,22 @@ data "azuread_service_principal" "apim" {
   display_name = "example-apim"
 }
 
+data "azurerm_virtual_network" "example_vnet" {
+  name                = local.virtual_network.name
+  resource_group_name = local.virtual_network.resource_group_name
+}
+
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = local.environment.domain,
     resource_type = "resource_group"
   }))
   location = local.environment.location
+}
+
+resource "dx_available_subnet_cidr" "example" {
+  virtual_network_id = data.azurerm_virtual_network.example_vnet.id
+  prefix_length      = 24
 }
 
 module "azure_function_app" {
@@ -56,7 +66,7 @@ module "azure_function_app" {
     resource_group_name = local.virtual_network.resource_group_name
   }
   subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.248.0/24"
+  subnet_cidr   = dx_available_subnet_cidr.example.cidr_block
 
   app_settings      = {}
   slot_app_settings = {}
@@ -68,9 +78,11 @@ module "azure_function_app" {
   # given audience. Only service principals listed in allowed_callers_client_ids
   # are permitted; all others receive HTTP 401.
   entra_id_authentication = {
-    audience_client_id         = data.azuread_application.function_app.client_id
-    allowed_callers_client_ids = [data.azuread_service_principal.apim.client_id]
-    tenant_id                  = data.azurerm_subscription.current.tenant_id
+    audience_client_id = data.azuread_application.function_app.client_id
+    allowed_callers_client_ids = [
+      data.azuread_service_principal.apim.client_id
+    ]
+    tenant_id = data.azurerm_subscription.current.tenant_id
   }
 
   tags = local.tags
