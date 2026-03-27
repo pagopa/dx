@@ -106,12 +106,8 @@ resource "azurerm_container_app_job" "import" {
       cpu    = 0.5
       memory = "1Gi"
 
-      # Compute the --since date dynamically from IMPORT_SINCE_DAYS and run the import.
-      command = ["/bin/sh"]
-      args = [
-        "-c",
-        "SINCE=$(node -e \"d=new Date();d.setDate(d.getDate()-$${IMPORT_SINCE_DAYS});process.stdout.write(d.toISOString().slice(0,10))\") && echo \"Starting import since $SINCE\" && exec npx tsx scripts/import.ts --since $SINCE"
-      ]
+      # The image's ENTRYPOINT (entrypoint.import.sh) handles the --since date computation
+      # using IMPORT_SINCE_DAYS. No command override is needed.
 
       env {
         name        = "DATABASE_URL"

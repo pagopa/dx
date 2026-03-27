@@ -47,24 +47,3 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "apps/dx-metrics/server.js"]
-
-# Import job runner — includes scripts and full dependencies for the data import task.
-# Build with: docker build --target import-runner -t ghcr.io/pagopa/dx-metrics-import:latest .
-FROM base AS import-runner
-WORKDIR /app/apps/dx-metrics
-
-ENV NODE_ENV=production
-
-COPY --from=deps /app/node_modules /app/node_modules
-COPY --from=deps /app/apps/dx-metrics/node_modules ./node_modules
-COPY --from=builder /app/apps/dx-metrics/scripts ./scripts
-COPY --from=builder /app/apps/dx-metrics/src ./src
-COPY --from=builder /app/apps/dx-metrics/config.json ./config.json
-COPY --from=builder /app/apps/dx-metrics/tsconfig.json ./tsconfig.json
-COPY --from=builder /app/apps/dx-metrics/package.json ./package.json
-COPY --from=builder /app/tsconfig.json /app/tsconfig.json
-
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 importuser
-
-USER importuser
