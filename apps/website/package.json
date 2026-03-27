@@ -30,8 +30,8 @@
     "@pagopa/dx-mcpprompts": "workspace:^",
     "gray-matter": "^4.0.3",
     "prism-react-renderer": "^2.4.1",
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
+    "react": "catalog:react",
+    "react-dom": "catalog:react",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -41,9 +41,9 @@
     "@docusaurus/types": "^3.9.2",
     "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
-    "@types/react": "^19.2.14",
-    "@types/react-dom": "^19.2.3",
-    "docusaurus-plugin-llms": "^0.2.2",
+    "@types/react": "catalog:react",
+    "@types/react-dom": "catalog:react",
+    "docusaurus-plugin-llms": "^0.3.0",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"

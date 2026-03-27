@@ -12,9 +12,9 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@aws-sdk/client-s3": "^3.808.0",
-    "@azure/identity": "^4.10.0",
+    "@actions/core": "catalog:github-actions",
+    "@aws-sdk/client-s3": "catalog:aws",
+    "@azure/identity": "catalog:",
     "@azure/storage-blob": "^12.27.0",
     "zod": "catalog:"
   },

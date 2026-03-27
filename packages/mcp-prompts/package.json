@@ -30,7 +30,7 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "gray-matter": "^4.0.3",
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
