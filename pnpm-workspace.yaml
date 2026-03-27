@@ -40,6 +40,10 @@ catalogs:
     '@opentelemetry/sdk-metrics': ^2.6.0
     '@opentelemetry/sdk-trace-base': ^2.6.0
 
+  github-actions:
+    '@actions/core': ^3.0.0
+    '@actions/github': ^9.0.0
+
 cleanupUnusedCatalogs: true
 
 linkWorkspacePackages: true
