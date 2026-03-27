@@ -1,6 +1,6 @@
 {
   "name": "pr-comment-action",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "type": "module",
   "private": true,
   "description": "TypeScript action for creating and managing PR comments",
@@ -21,19 +21,19 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.0"
+    "@actions/core": "^3.0.0",
+    "@actions/github": "^9.0.0"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
     "vitest-mock-extended": "catalog:"
   }
 }

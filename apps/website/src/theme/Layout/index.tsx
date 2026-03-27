@@ -8,7 +8,7 @@ import CookieConsent from "../../components/CookieConsent";
 import CookiePreferences from "../../components/CookiePreferences";
 import { useSearchTracking } from "../../hooks/useSearchTracking";
 
-export default function LayoutWrapper(props: Props): JSX.Element {
+export default function LayoutWrapper(props: Props) {
   const [showCookieBanner, setShowCookieBanner] = useState(false);
 
   // Initialize search tracking

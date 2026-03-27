@@ -78,7 +78,7 @@ jobs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.7
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
       - name: Get terraform version from .terraform-version file
         id: get-version
@@ -184,7 +184,7 @@ jobs:
           set -euo pipefail
           printf "dir=%q" "$WORKING_DIR" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         name: Checkout
 
       - name: Set Environment Variables
