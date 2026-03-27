@@ -45,13 +45,13 @@
     "@azure/arm-resources": "^7.0.0",
     "@azure/identity": "catalog:",
     "@logtape/logtape": "catalog:",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
-    "@types/js-yaml": "^4.0.9",
+    "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",

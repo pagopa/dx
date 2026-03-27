@@ -21,8 +21,8 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
-    "@actions/core": "^3.0.0",
-    "@actions/github": "^9.0.0"
+    "@actions/core": "catalog:github-actions",
+    "@actions/github": "catalog:github-actions"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
