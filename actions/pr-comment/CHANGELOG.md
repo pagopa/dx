@@ -1,5 +1,11 @@
 # pr-comment-action
 
+## 0.2.1
+
+### Patch Changes
+
+- f74034d: Reference GitHub Actions dependencies from dedicated catalog
+
 ## 0.2.0
 
 ### Minor Changes
