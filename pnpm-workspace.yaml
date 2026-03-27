@@ -53,7 +53,7 @@ catalogs:
     react-dom: ^19.2.4
 
   aws:
-    "@aws-sdk/client-s3": ^3.808.0
+    '@aws-sdk/client-s3': ^3.808.0
 
 cleanupUnusedCatalogs: true
 
