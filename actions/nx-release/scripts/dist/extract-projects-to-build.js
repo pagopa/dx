@@ -17429,7 +17429,8 @@ function extractTagEntriesFromPRBody(prBody) {
 }
 async function getNxProjectNames() {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "projects",
       "--json"
@@ -17507,7 +17508,8 @@ function parseTagEntries(raw) {
 }
 async function getNxProjectMetadata(projectName) {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "project",
       projectName,

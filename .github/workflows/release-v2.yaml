@@ -63,13 +63,6 @@ jobs:
         shell: bash
         run: npm ci
 
-      - name: Install Nx CLI
-        shell: bash
-        run: |
-          sudo add-apt-repository ppa:nrwl/nx
-          sudo apt update
-          sudo apt install nx
-
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         with:
