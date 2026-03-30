@@ -78,9 +78,8 @@ jobs:
         env:
           GOFLAGS: "-p=1"
         run: |
-          npx nx run \
-           run-many \
-           --target test:e2e
+          pnpm nx run-many \
+            --target test:e2e
         # --parallel=1
 
       - name: Notify Slack on failure
