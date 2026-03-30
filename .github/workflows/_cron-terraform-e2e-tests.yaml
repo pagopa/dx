@@ -79,10 +79,9 @@ jobs:
           GOFLAGS: "-p=1"
         run: |
           npx nx run \
-            azure_app_configuration:test:e2e
-        # # run-many \
-        #   # --target test:e2e \
-        #   --parallel=1
+           run-many \
+           --target test:e2e
+        # --parallel=1
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'
