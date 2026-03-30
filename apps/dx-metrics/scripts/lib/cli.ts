@@ -24,14 +24,34 @@ export class HelpRequestedError extends Error {
   }
 }
 
+/**
+ * Computes a "since" date by subtracting a number of days from today.
+ * Used as the fallback when --since is not provided on the CLI.
+ *
+ * @param importSinceDays - Raw string from the IMPORT_SINCE_DAYS env var.
+ * @param defaultDays - Fallback when the env var is missing or invalid (default 30).
+ * @returns An ISO date string in YYYY-MM-DD format.
+ */
+export function computeSinceDate(
+  importSinceDays?: string,
+  defaultDays = 30,
+): string {
+  const parsed = parseInt(importSinceDays ?? "", 10);
+  const days = Number.isFinite(parsed) && parsed >= 0 ? parsed : defaultDays;
+  const date = new Date();
+  date.setDate(date.getDate() - days);
+  return date.toISOString().slice(0, 10);
+}
+
 export function getHelpText(): string {
   return `
-Usage: npx tsx scripts/import.ts --since YYYY-MM-DD [options]
-
-Required:
-  --since YYYY-MM-DD        Start date for the import (e.g. 2024-01-01)
+Usage: npx tsx scripts/import.ts [options]
 
 Options:
+  --since YYYY-MM-DD        Start date for the import (e.g. 2024-01-01).
+                            If omitted, computed from the IMPORT_SINCE_DAYS
+                            environment variable (default: 30 days ago).
+
   --entity <type>           Import only the specified entity type (default: all)
                             Valid values:
                               all               Import everything
@@ -100,10 +120,6 @@ export function parseArgs(
     if (argument === "--force") {
       force = true;
     }
-  }
-
-  if (!since) {
-    throw new CliUsageError("--since YYYY-MM-DD is required.");
   }
 
   return { configPath, entity, force, since, trackerCsv };

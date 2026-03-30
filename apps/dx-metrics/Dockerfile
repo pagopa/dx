@@ -24,6 +24,9 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN corepack enable pnpm && pnpm nx build dx-metrics
 
+# Bundle the import script into a single JS file
+RUN pnpm build:import
+
 # Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
@@ -47,3 +50,27 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 CMD ["node", "apps/dx-metrics/server.js"]
+
+# Build with: docker build --target import-runner -t ghcr.io/pagopa/dx-metrics-import:latest .
+FROM base AS import-runner
+WORKDIR /app/apps/dx-metrics
+
+ENV NODE_ENV=production
+
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 importuser
+
+# Copy the bundled import script produced by the builder stage.
+COPY --from=builder --chown=importuser:nodejs /app/apps/dx-metrics/dist/import.mjs ./dist/import.mjs
+
+# Runtime npm dependencies (e.g. pg, drizzle-orm, octokit).
+COPY --from=deps --chown=importuser:nodejs /app/node_modules /app/node_modules
+COPY --from=deps --chown=importuser:nodejs /app/apps/dx-metrics/node_modules ./node_modules
+
+# Runtime configuration.
+COPY --chown=importuser:nodejs apps/dx-metrics/config.json ./config.json
+COPY --chown=importuser:nodejs apps/dx-metrics/package.json ./package.json
+
+USER importuser
+
+ENTRYPOINT ["node", "dist/import.mjs"]
