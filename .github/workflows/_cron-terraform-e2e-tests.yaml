@@ -79,8 +79,8 @@ jobs:
           GOFLAGS: "-p=1"
         run: |
           pnpm nx run-many \
-            --target test:e2e
-        # --parallel=1
+            --target test:e2e \
+            --parallel=1
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'
