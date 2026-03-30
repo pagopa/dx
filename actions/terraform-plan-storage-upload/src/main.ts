@@ -218,7 +218,7 @@ async function uploadToAzure(
 ): Promise<void> {
   // AzureCliCredential is used explicitly to avoid DefaultAzureCredential
   // silently selecting the runner VM's Managed Identity on self-hosted runners.
-  // csp-login (azure/login) always authenticates the az CLI before this step.
+  // Azure CLI must be authenticated before this step.
   const credential = new AzureCliCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
   const blockBlobClient = new BlobServiceClient(url, credential)
