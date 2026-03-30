@@ -150,7 +150,7 @@ resource "azurerm_role_assignment" "github_appconfig_writer" {
 # Terraform marks them as created. Without this delay, azurerm_key_vault_secret
 # may hit the public IP (403) before the private endpoint is actually active.
 resource "time_sleep" "wait_for_kv_private_endpoint" {
-  create_duration = "60s"
+  create_duration = "120s"
 
   depends_on = [azurerm_private_endpoint.kv]
 }
