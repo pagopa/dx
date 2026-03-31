@@ -58,7 +58,6 @@ with PagoPA DX standards.
 | Name | Description |
 |------|-------------|
 | `terraform-best-practices` | Generates Terraform code following PagoPA DX best practices. Enforces module-first usage from the `pagopa-dx` registry, discovers module capabilities dynamically, and validates all generated code before presenting it to the user. |
-| `azure-keyvault-secret` | Creates secure `azurerm_key_vault_secret` resources using the write-only `value_wo` pattern, keeping secret values out of Terraform state. Requires Terraform ≥ 1.11.0 and azurerm provider ≥ 4.23. |
 
 **Commands**
 
