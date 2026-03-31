@@ -68,8 +68,8 @@ resource "dx_available_subnet_cidr" "private_app" {
 
 resource "azurerm_subnet" "private_app" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = "e2e",
-    name          = "private",
+    domain        = "e2e"
+    name          = "cosno-na-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = data.azurerm_resource_group.e2e.name
@@ -90,7 +90,7 @@ resource "azurerm_subnet" "private_app" {
 
 resource "azurerm_container_group" "private_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { domain = "e2e", name = "private", resource_type = "container_instance" })
+    merge(local.naming_config, { domain = "e2e", name = "cosno-private", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_cdb.name

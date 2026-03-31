@@ -74,7 +74,7 @@ resource "dx_available_subnet_cidr" "private_app" {
 
 resource "azurerm_subnet" "private_app" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "appcs-private",
+    name          = "appcs-kv-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = local.e2e_virtual_network.resource_group_name
