@@ -52,7 +52,6 @@ env:
   RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
 jobs:
   build:
@@ -161,6 +160,7 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
         env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Deploy
@@ -258,6 +258,7 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
         env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Deploy to Staging Slot
@@ -284,6 +285,7 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
         env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Swap Staging and Production Slots

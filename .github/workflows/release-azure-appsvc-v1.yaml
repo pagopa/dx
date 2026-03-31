@@ -46,9 +46,7 @@ env:
   BUNDLE_NAME: ${{ inputs.workspace_name }}
   RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
-  ARM_USE_OIDC: true
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
 jobs:
   build:
@@ -137,6 +135,7 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
         env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Check for existing staging slot
@@ -202,6 +201,7 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
         env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Deploy
@@ -286,12 +286,12 @@ jobs:
       id-token: write
       contents: read
 
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-
     steps:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Swap Staging and Production Slots
         uses: pagopa/dx/actions/incremental-rollout@main

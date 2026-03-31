@@ -130,7 +130,6 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_USE_OIDC: true
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
       FUNCTION_APP_NAME: ${{ inputs.function_app_name }}
 
