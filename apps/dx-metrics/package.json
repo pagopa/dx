@@ -3,6 +3,16 @@
   "version": "0.4.1",
   "private": true,
   "type": "module",
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": [
+          "build:import",
+          "^build"
+        ]
+      }
+    }
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
@@ -11,6 +21,7 @@
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "build:import": "esbuild scripts/import.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/import.mjs",
     "import": "tsx scripts/import.ts"
   },
   "dependencies": {
@@ -40,6 +51,7 @@
     "@vitest/coverage-v8": "catalog:",
     "baseline-browser-mapping": "^2.10.0",
     "drizzle-kit": "^0.30.0",
+    "esbuild": "^0.27.4",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.1.6",
     "postcss": "^8.5.0",

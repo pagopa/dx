@@ -1,6 +1,6 @@
 {
   "name": "@pagopa-dx/terraform-plan-storage-download",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "type": "module",
   "private": true,
   "description": "GitHub Action to download and extract a Terraform plan bundle from the state backend storage",

@@ -1,0 +1,40 @@
+name: Publish DX Metrics Import Job Image
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/dx-metrics/package.json"
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+  attestations: write
+
+jobs:
+  publish:
+    name: Build and Publish Import Job Image
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-cd
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Docker Build and Push
+        uses: pagopa/dx/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: ./apps/dx-metrics/Dockerfile
+          dockerfile_context: .
+          build_target: import-runner
+          docker_image_name: pagopa/dx-metrics-import
+          docker_image_description: "Scheduled import job for the DX Metrics portal. Fetches GitHub engineering metrics and writes them to PostgreSQL."
+          docker_image_authors: PagoPA
+          build_platforms: linux/amd64
+          push_to_registry: true
