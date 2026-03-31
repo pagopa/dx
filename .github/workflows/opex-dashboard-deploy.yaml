@@ -4,7 +4,6 @@ on:
   workflow_call:
 
 env:
-  ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
@@ -87,6 +86,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
     env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tfplan-${{ github.sha }}
@@ -176,6 +176,7 @@ jobs:
       fail-fast: false
       max-parallel: 5
     env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tfplan-${{ github.sha }}
