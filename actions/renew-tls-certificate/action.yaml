@@ -54,12 +54,12 @@ runs:
         key_vault_cert_name=$(echo "${CERT_NAME//./-}")
         echo "kv_cert_name=$key_vault_cert_name" >> $GITHUB_OUTPUT
 
-    - name: Azure Login
-      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
-      with:
-        client-id: ${{ inputs.arm_client_id }}
-        tenant-id: ${{ inputs.arm_tenant_id }}
-        subscription-id: ${{ inputs.arm_subscription_id }}
+    - name: Cloud Login
+      uses: pagopa/dx/actions/csp-login@main
+      env:
+        ARM_CLIENT_ID: ${{ inputs.arm_client_id }}
+        ARM_TENANT_ID: ${{ inputs.arm_tenant_id }}
+        ARM_SUBSCRIPTION_ID: ${{ inputs.arm_subscription_id }}
 
     - name: Fetch and check certificate
       if: inputs.force_renewal != 'true'
