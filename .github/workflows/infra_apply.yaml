@@ -234,15 +234,22 @@ jobs:
           working-directory: ${{ steps.directory.outputs.dir }}
 
       - name: Save plan outputs to artifact
+        env:
+          PROVIDER: ${{ steps.upload_plan.outputs.provider }}
+          PLAN_PATH: ${{ steps.upload_plan.outputs['plan-path'] }}
+          AZURE_STORAGE_ACCOUNT: ${{ steps.upload_plan.outputs['azure-storage-account'] }}
+          AZURE_CONTAINER: ${{ steps.upload_plan.outputs['azure-container'] }}
+          AWS_BUCKET: ${{ steps.upload_plan.outputs['aws-bucket'] }}
+          AWS_REGION: ${{ steps.upload_plan.outputs['aws-region'] }}
         run: |
           set -euo pipefail
           jq -n \
-            --arg provider "${{ steps.upload_plan.outputs.provider }}" \
-            --arg plan_path "${{ steps.upload_plan.outputs.plan-path }}" \
-            --arg azure_storage_account "${{ steps.upload_plan.outputs.azure-storage-account }}" \
-            --arg azure_container "${{ steps.upload_plan.outputs.azure-container }}" \
-            --arg aws_bucket "${{ steps.upload_plan.outputs.aws-bucket }}" \
-            --arg aws_region "${{ steps.upload_plan.outputs.aws-region }}" \
+            --arg provider "$PROVIDER" \
+            --arg plan_path "$PLAN_PATH" \
+            --arg azure_storage_account "$AZURE_STORAGE_ACCOUNT" \
+            --arg azure_container "$AZURE_CONTAINER" \
+            --arg aws_bucket "$AWS_BUCKET" \
+            --arg aws_region "$AWS_REGION" \
             '{provider: $provider, plan_path: $plan_path, azure_storage_account: $azure_storage_account, azure_container: $azure_container, aws_bucket: $aws_bucket, aws_region: $aws_region}' \
             > plan-outputs.json
 
