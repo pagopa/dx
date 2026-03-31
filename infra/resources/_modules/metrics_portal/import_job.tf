@@ -96,7 +96,7 @@ resource "azurerm_container_app_job" "import" {
   template {
     container {
       name   = "metrics-import"
-      image  = "mcr.microsoft.com/azuredocs/containerapps-helloworld:latest"
+      image  = "ghcr.io/pagopa/dx-metrics-import:latest"
       cpu    = 1.5
       memory = "3Gi"
 
