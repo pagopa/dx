@@ -5,7 +5,7 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/opex-dashboard"
   },
-  "version": "0.2.2",
+  "version": "0.2.4",
   "description": "Generate operational dashboards from OpenAPI specifications",
   "main": "dist/index.js",
   "bin": {
@@ -39,14 +39,14 @@
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "commander": "catalog:",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "catalog:",
     "tmp": "^0.2.5",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
-    "@types/js-yaml": "^4.0.9",
+    "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@types/tmp": "^0.2.6",
     "@vitest/coverage-v8": "catalog:",

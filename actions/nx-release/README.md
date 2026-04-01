@@ -8,17 +8,17 @@ This action automates the Nx release flow in two phases:
 
 ### Phase 1: Create/Update Version Packages PR
 
-**Trigger**: When `.nx/version-plans/**` files are added or modified on the main branch.
+**Trigger**: On push to `main`, when `.nx/version-plans/**` changed and the directory still contains one or more files.
 
 > [!TIP]
-> To generate version plan files, you can use `nx release plan` command in your local environment.
-> E.g. `nx release plan --projects="@pagopa/package-name" --only-touched=false`
+> To generate version plan files, you can use `npx nx release plan` command in your local environment.
+> E.g. `npx nx release plan --projects="@pagopa/package-name" --only-touched=false`
 
 **Actions**:
 
 1. Detects new or modified version plan files by github events
 2. Checks out to `nx-release/main` branch
-3. Runs `nx release --skip-publish` to:
+3. Runs `npx nx release --skip-publish` to:
    - Consume version plans
    - Generate or update version bumps in `package.json`/`pom.xml`
    - Generate or update `CHANGELOG.md` files
@@ -32,18 +32,19 @@ This action automates the Nx release flow in two phases:
 
 ### Phase 2: Publish and Sync
 
-**Trigger**: When the `Version Packages` PR is merged (or manually via `workflow_dispatch`).
+**Trigger**: On push to `main`, when `.nx/version-plans/**` changed and the directory contains zero files. Or manually via `workflow_dispatch` for recovery.
 
 **Actions**:
 
-1. Runs `nx release publish` to build and publish packages to npm with provenance
-2. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
-3. Creates any missing annotated git tags and pushes them
-4. Creates any missing GitHub Releases with extracted changelog notes
+1. Extracts projects to publish from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
+2. Runs `npx nx release publish` with provenance enabled
+3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
+4. Creates any missing annotated git tags and pushes them
+5. Creates any missing GitHub Releases with extracted changelog notes
 
 > [!TIP]
-> `workflow_dispatch` can be used to recover from failed runs: the sync step scans all
-> past merged PRs and creates only the tags and releases that are still missing.
+> `workflow_dispatch` can be used to recover from failed runs: it builds and publishes all public projects
+> and the Sync step scans all past merged PRs to create any missing tags and releases.
 
 ## Inputs
 
@@ -72,18 +73,11 @@ This action automates the Nx release flow in two phases:
 name: Release
 
 on:
-  # Needed for the push github event to trigger the action when version plans are added/modified
   push:
     branches:
       - main
     paths:
       - ".nx/version-plans/**"
-  # Needed for the pull_request github event to trigger the action when Version Packages PR is merged
-  pull_request:
-    types:
-      - closed
-    branches:
-      - main
   # Can be triggered manually to recover any git tags/GitHub Releases missed by a failed publish
   workflow_dispatch:
 
@@ -117,15 +111,14 @@ jobs:
 
 ## Behavior
 
-The action runs in one of two modes, determined automatically by github event type.
+The action runs in one of three modes, determined automatically from the trigger and changes in `.nx/version-plans/**`.
 
 ### Mode: `Create PR`
 
-One or more `.nx/version-plans/**` files were **added or modified** on the base
-branch. The action:
+`.nx/version-plans/**` changed in the push and the directory still contains one or more files. The action:
 
 1. Checks out a `nx-release/main` branch
-2. Runs `nx release --skip-publish` to consume version plans and update
+2. Runs `npx nx release --skip-publish` to consume version plans and update
    `package.json`/`pom.xml` and `CHANGELOG.md` files
 3. Captures the git tags created locally by Nx (snapshot diff before/after)
 4. Commits all changes and force-pushes the branch
@@ -133,22 +126,31 @@ branch. The action:
    hidden `<!-- nx-release-tags: [...] -->` metadata comment in the body
 6. Outputs `pull-request-number` and `pull-request-url`
 
-### Mode: `Publish`
+### Mode: `Publish` (push)
 
-The `Version Packages` PR was **merged** (or `workflow_dispatch` was triggered). The action:
+`.nx/version-plans/**` changed in the push and the directory contains zero files. The action:
 
-1. Builds all public npm packages (`tag:npm:public`)
-2. Runs `nx release publish` with npm provenance enabled
+1. Finds the latest merged `Version Packages` PR and extracts the list of released projects
+2. Builds and publishes only those projects (falls back to all public if no PR is found)
 3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 4. Creates a GitHub Release per new tag with extracted changelog notes;
    pre-release builds (versions containing `-`) are marked as pre-releases
 
+### Mode: `Publish All` (workflow_dispatch)
+
+Triggered manually. The action:
+
+1. Builds and publishes **all** public projects (`tag:*:public`)
+2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
+   creates any missing annotated git tags, and pushes them
+3. Creates any missing GitHub Releases with extracted changelog notes
+
 ## Compatibility
 
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
-- ✅ npm provenance enabled by default
+- ✅ NPM provenance enabled by default
 - ✅ Compatible with custom `releaseTagPattern` in `nx.json` (tag matching does not
   assume a specific separator between package name and version)
 
@@ -158,18 +160,18 @@ The `Version Packages` PR was **merged** (or `workflow_dispatch` was triggered).
 
 - Ensure `.nx/version-plans/` directory exists
 - Verify `gh` CLI has authentication; check GITHUB_TOKEN is set
-- Check that version plans produce actual version changes (run `nx release --dry-run`)
+- Check that version plans produce actual version changes (run `npx nx release --dry-run`)
 
 ### Publish fails
 
-- Verify npm token is available (or OIDC/provenance is configured)
-- Check that packages are public on npm registry
-- Ensure `NPM_CONFIG_PROVENANCE=true` is set in workflow
+- Verify registry credentials are available (or OIDC/provenance is configured)
+- Check that released packages are configured for publication
+- Ensure `NPM_CONFIG_PROVENANCE=true` is set in workflow when needed
 
 ### Git tags or GitHub Releases missing after publish
 
-- Trigger `workflow_dispatch` on the release workflow; the Sync step will scan all
-  past merged `Version Packages` PRs and create any tags and releases still missing.
+- Trigger `workflow_dispatch` on the release workflow; it builds and publishes all public projects
+  and the Sync step scans all past merged `Version Packages` PRs to create any missing tags and releases.
 - If a PR body lacks the `<!-- nx-release-tags -->` comment, re-run the Create PR
   step on the `nx-release/main` branch to regenerate it.
 

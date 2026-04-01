@@ -118,3 +118,47 @@ emitCustomEvent("taskCreated", { id: task.id })("CreateTaskHandler");
 ```
 
 This is especially useful for tracing domain-specific actions (e.g., resource creation, user actions, error tracking).
+
+## Dependency Constraints
+
+### `import-in-the-middle` version must match `@azure/monitor-opentelemetry`
+
+> [!WARNING]
+> Do **not** upgrade `import-in-the-middle` independently of `@azure/monitor-opentelemetry`. Doing so will silently break HTTP tracing (including CosmosDB calls) in ESM environments.
+
+#### Why this constraint exists
+
+The ESM instrumentation in this package works by registering a module loader hook via [`import-in-the-middle`](https://github.com/DataDog/import-in-the-middle) (iitm):
+
+```ts
+// packages/azure-tracing/src/azure/functions/index.mts
+const { registerOptions } = createAddHookMessageChannel(); // uses iitm@X
+register("import-in-the-middle/hook.mjs", ...);           // registers iitm@X as the active loader
+```
+
+`@azure/monitor-opentelemetry` internally creates an `HttpInstrumentation` instance that patches `node:https` (the transport layer used by CosmosDB, among others). This instrumentation registers its hooks using **its own** resolved version of iitm (transitively via `@opentelemetry/instrumentation`).
+
+Each major version of `import-in-the-middle` maintains **completely isolated internal state** — hook registries are not shared across versions. If the loader is registered with `iitm@X` but `HttpInstrumentation` pushes its hooks into `iitm@Y`'s registry, the loader never sees them. The result: `node:https` is never patched, and all HTTP dependency spans (including CosmosDB) are silently dropped.
+
+The table below shows what was validated empirically against Application Insights:
+
+| `import-in-the-middle` direct dep | `@azure/monitor-opentelemetry` | Loader iitm | HttpInstrumentation iitm |
+| --------------------------------- | ------------------------------ | ----------- | ------------------------ |
+| `^1.15.0`                         | `1.13.1`                       | `1.15.0`    | `1.15.0` ✅              |
+| `^3.0.0`                          | `1.13.1`                       | `3.0.0`     | `1.15.0` ❌              |
+| `^1.15.0`                         | `1.16.0`                       | `1.15.0`    | `2.0.6` ❌               |
+| **`^2.0.0`**                      | **`1.16.0`**                   | **`2.0.6`** | **`2.0.6`** ✅           |
+
+#### How to determine the correct version
+
+When upgrading `@azure/monitor-opentelemetry`, check which version of `@opentelemetry/instrumentation` it depends on, then look up the `import-in-the-middle` range that instrumentation version requires:
+
+```bash
+# Check what instrumentation version monitor-otel uses
+npm view @azure/monitor-opentelemetry@<version> dependencies | grep '@opentelemetry/instrumentation'
+
+# Check what iitm range that instrumentation version requires
+npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in-the-middle'
+```
+
+Set `import-in-the-middle` in `package.json` to the same major range as the result.

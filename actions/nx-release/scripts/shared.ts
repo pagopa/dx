@@ -64,7 +64,8 @@ export function extractTagEntriesFromPRBody(prBody: string): TagEntry[] {
 /** Returns all Nx project names in the workspace. */
 export async function getNxProjectNames(): Promise<string[]> {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "projects",
       "--json",
@@ -193,7 +194,8 @@ async function getNxProjectMetadata(
   projectName: string,
 ): Promise<null | Record<string, unknown>> {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "project",
       projectName,

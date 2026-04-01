@@ -1,5 +1,17 @@
 # @pagopa/opex-dashboard
 
+## 0.2.4
+
+### Patch Changes
+
+- f74034d: Move dependencies to the catalog
+
+## 0.2.3
+
+### Patch Changes
+
+- 7696364: Replace external reference in OpenAPI specs used for testing
+
 ## 0.2.2
 
 ### Patch Changes

@@ -17540,22 +17540,20 @@ async function run(base) {
     }
   }
   if (allEntries.size === 0) {
-    console.log(
-      "::notice::No release tags found in merged Version Packages PRs"
-    );
+    console.log("No release tags found in merged Version Packages PRs");
     return;
   }
   const newTags = [];
   for (const entry of allEntries.values()) {
     if (await tagExistsOnRemote(entry.tag)) {
-      console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
+      console.log(`Tag ${entry.tag} already exists, skipping`);
       continue;
     }
     const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
     if (entry.mergeCommitSha) {
       tagArgs.push(entry.mergeCommitSha);
       console.log(
-        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
+        `Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
       );
     } else {
       console.log(
@@ -17564,10 +17562,10 @@ async function run(base) {
     }
     await execFileAsync2("git", tagArgs);
     newTags.push(entry);
-    console.log(`::notice::Created tag: ${entry.tag}`);
+    console.log(`Created tag: ${entry.tag}`);
   }
   if (newTags.length === 0) {
-    console.log("::notice::No new tags to push");
+    console.log("No new tags to push");
     return;
   }
   await execFileAsync2("git", ["push", "origin", "--tags"]);
@@ -17579,7 +17577,7 @@ async function run(base) {
       if (section) notes = section;
     }
     if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`::notice::GitHub release ${tag} already exists, skipping`);
+      console.log(`GitHub release ${tag} already exists, skipping`);
       continue;
     }
     await octokit.repos.createRelease({
@@ -17590,7 +17588,7 @@ async function run(base) {
       repo,
       tag_name: tag
     });
-    console.log(`::notice::Created GitHub release: ${tag}`);
+    console.log(`Created GitHub release: ${tag}`);
   }
 }
 async function tagExistsOnRemote(tag) {

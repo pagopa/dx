@@ -51,6 +51,7 @@ env:
   BUNDLE_NAME: bundle
   RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
   WEB_APP_NAME: ${{ inputs.web_app_name }}
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
 
 jobs:
   build:
@@ -60,7 +61,7 @@ jobs:
       WORKSPACE: ${{ inputs.workspace_name }}
 
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         name: Checkout
 
       - name: Prune
@@ -156,13 +157,11 @@ jobs:
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
         env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Deploy
         if: ${{ !inputs.use_staging_slot }}
@@ -256,13 +255,11 @@ jobs:
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
         env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Deploy to Staging Slot
         run: |
@@ -285,13 +282,11 @@ jobs:
       contents: read
 
     steps:
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
         env:
-          ARM_USE_OIDC: true
-          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Swap Staging and Production Slots
         if: ${{ inputs.use_staging_slot }}

@@ -1,0 +1,279 @@
+# Local test stub for io-functions-commons definitions.
+# Keeps resolver tests offline and avoids raw GitHub throttling.
+
+AcceptedTosVersion:
+  type: object
+  additionalProperties: true
+AppVersion:
+  type: object
+  additionalProperties: true
+Attachment:
+  type: object
+  additionalProperties: true
+BasicServicePreference:
+  type: object
+  additionalProperties: true
+BlockedInboxOrChannels:
+  type: object
+  additionalProperties: true
+CertData:
+  type: object
+  additionalProperties: true
+CertDataHeader:
+  type: object
+  additionalProperties: true
+CommonServiceMetadata:
+  type: object
+  additionalProperties: true
+CreatedMessageWithContent:
+  type: object
+  additionalProperties: true
+CreatedMessageWithContentAndEnrichedData:
+  type: object
+  additionalProperties: true
+CreatedMessageWithContentResponse:
+  type: object
+  additionalProperties: true
+CreatedMessageWithoutContent:
+  type: object
+  additionalProperties: true
+CreatedMessageWithoutContentCollection:
+  type: object
+  additionalProperties: true
+DepartmentName:
+  type: object
+  additionalProperties: true
+EUCovidCert:
+  type: object
+  additionalProperties: true
+EmailAddress:
+  type: object
+  additionalProperties: true
+EnrichedMessage:
+  type: object
+  additionalProperties: true
+ExtendedProfile:
+  type: object
+  additionalProperties: true
+FiscalCode:
+  type: object
+  additionalProperties: true
+IsEmailEnabled:
+  type: object
+  additionalProperties: true
+IsEmailValidated:
+  type: object
+  additionalProperties: true
+IsInboxEnabled:
+  type: object
+  additionalProperties: true
+IsTestProfile:
+  type: object
+  additionalProperties: true
+IsWebhookEnabled:
+  type: object
+  additionalProperties: true
+LegalData:
+  type: object
+  additionalProperties: true
+LegalMessage:
+  type: object
+  additionalProperties: true
+LegalMessageCertData:
+  type: object
+  additionalProperties: true
+LegalMessageEml:
+  type: object
+  additionalProperties: true
+LegalMessageWithContent:
+  type: object
+  additionalProperties: true
+LimitedProfile:
+  type: object
+  additionalProperties: true
+MessageBodyMarkdown:
+  type: object
+  additionalProperties: true
+MessageCategory:
+  type: object
+  additionalProperties: true
+MessageCategoryBase:
+  type: object
+  additionalProperties: true
+MessageCategoryPN:
+  type: object
+  additionalProperties: true
+MessageCategoryPayment:
+  type: object
+  additionalProperties: true
+MessageContent:
+  type: object
+  additionalProperties: true
+MessageContentBase:
+  type: object
+  additionalProperties: true
+MessageResponseNotificationStatus:
+  type: object
+  additionalProperties: true
+MessageResponseWithContent:
+  type: object
+  additionalProperties: true
+MessageStatusArchivingChange:
+  type: object
+  additionalProperties: true
+MessageStatusAttributes:
+  type: object
+  additionalProperties: true
+MessageStatusBulkChange:
+  type: object
+  additionalProperties: true
+MessageStatusChange:
+  type: object
+  additionalProperties: true
+MessageStatusReadingChange:
+  type: object
+  additionalProperties: true
+MessageSubject:
+  type: object
+  additionalProperties: true
+NewMessageContent:
+  type: object
+  additionalProperties: true
+NotificationChannel:
+  type: object
+  additionalProperties: true
+NotificationChannelStatusValue:
+  type: object
+  additionalProperties: true
+OrganizationFiscalCode:
+  type: object
+  additionalProperties: true
+OrganizationName:
+  type: object
+  additionalProperties: true
+PaginatedCreatedMessageWithoutContentCollection:
+  type: object
+  additionalProperties: true
+PaginatedPublicMessagesCollection:
+  type: object
+  additionalProperties: true
+PaginatedServiceTupleCollection:
+  type: object
+  additionalProperties: true
+PaginationResponse:
+  type: object
+  additionalProperties: true
+Payee:
+  type: object
+  additionalProperties: true
+PaymentAmount:
+  type: object
+  additionalProperties: true
+PaymentData:
+  type: object
+  additionalProperties: true
+PaymentDataBase:
+  type: object
+  additionalProperties: true
+PaymentDataWithRequiredPayee:
+  type: object
+  additionalProperties: true
+PaymentNoticeNumber:
+  type: object
+  additionalProperties: true
+PreferredLanguage:
+  type: object
+  additionalProperties: true
+PreferredLanguages:
+  type: object
+  additionalProperties: true
+PrescriptionData:
+  type: object
+  additionalProperties: true
+ProblemJson:
+  type: object
+  additionalProperties: true
+Profile:
+  type: object
+  additionalProperties: true
+PublicMessage:
+  type: object
+  additionalProperties: true
+PublicMessagesCollection:
+  type: object
+  additionalProperties: true
+ServiceCategory:
+  type: object
+  additionalProperties: true
+ServiceId:
+  type: object
+  additionalProperties: true
+ServiceMetadata:
+  type: object
+  additionalProperties: true
+ServiceName:
+  type: object
+  additionalProperties: true
+ServicePreference:
+  type: object
+  additionalProperties: true
+ServicePreferencesSettings:
+  type: object
+  additionalProperties: true
+ServicePublic:
+  type: object
+  additionalProperties: true
+ServiceScope:
+  type: object
+  additionalProperties: true
+ServiceTuple:
+  type: object
+  additionalProperties: true
+ServicesPreferencesMode:
+  type: object
+  additionalProperties: true
+SpecialServiceCategory:
+  type: object
+  additionalProperties: true
+SpecialServiceMetadata:
+  type: object
+  additionalProperties: true
+StandardServiceCategory:
+  type: object
+  additionalProperties: true
+StandardServiceMetadata:
+  type: object
+  additionalProperties: true
+ThirdPartyAttachment:
+  type: object
+  additionalProperties: true
+ThirdPartyData:
+  type: object
+  additionalProperties: true
+ThirdPartyMessage:
+  type: object
+  additionalProperties: true
+ThirdPartyMessageWithContent:
+  type: object
+  additionalProperties: true
+TimeToLiveSeconds:
+  type: object
+  additionalProperties: true
+Timestamp:
+  type: object
+  additionalProperties: true
+UpsertServicePreference:
+  type: object
+  additionalProperties: true
+UserDataProcessing:
+  type: object
+  additionalProperties: true
+UserDataProcessingChoice:
+  type: object
+  additionalProperties: true
+UserDataProcessingChoiceRequest:
+  type: object
+  additionalProperties: true
+UserDataProcessingStatus:
+  type: object
+  additionalProperties: true

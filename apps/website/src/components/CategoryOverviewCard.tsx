@@ -24,7 +24,7 @@ export default function CategoryOverviewCard({
   icon,
   onExplore,
   promptCount,
-}: CategoryOverviewCardProps): JSX.Element {
+}: CategoryOverviewCardProps) {
   return (
     <div className={styles.categoryOverviewCard}>
       <div className={styles.categoryCardHeader}>

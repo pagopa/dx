@@ -140,16 +140,14 @@ export async function run(base: string): Promise<void> {
   }
 
   if (allEntries.size === 0) {
-    console.log(
-      "::notice::No release tags found in merged Version Packages PRs",
-    );
+    console.log("No release tags found in merged Version Packages PRs");
     return;
   }
 
   const newTags: (TagEntry & { mergeCommitSha?: string })[] = [];
   for (const entry of allEntries.values()) {
     if (await tagExistsOnRemote(entry.tag)) {
-      console.log(`::notice::Tag ${entry.tag} already exists, skipping`);
+      console.log(`Tag ${entry.tag} already exists, skipping`);
       continue;
     }
     // Create tag on the merge commit SHA if available, otherwise on current HEAD
@@ -157,7 +155,7 @@ export async function run(base: string): Promise<void> {
     if (entry.mergeCommitSha) {
       tagArgs.push(entry.mergeCommitSha);
       console.log(
-        `::notice::Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`,
+        `Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`,
       );
     } else {
       console.log(
@@ -166,11 +164,11 @@ export async function run(base: string): Promise<void> {
     }
     await execFileAsync("git", tagArgs);
     newTags.push(entry);
-    console.log(`::notice::Created tag: ${entry.tag}`);
+    console.log(`Created tag: ${entry.tag}`);
   }
 
   if (newTags.length === 0) {
-    console.log("::notice::No new tags to push");
+    console.log("No new tags to push");
     return;
   }
 
@@ -186,7 +184,7 @@ export async function run(base: string): Promise<void> {
     }
 
     if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`::notice::GitHub release ${tag} already exists, skipping`);
+      console.log(`GitHub release ${tag} already exists, skipping`);
       continue;
     }
 
@@ -198,7 +196,7 @@ export async function run(base: string): Promise<void> {
       repo,
       tag_name: tag,
     });
-    console.log(`::notice::Created GitHub release: ${tag}`);
+    console.log(`Created GitHub release: ${tag}`);
   }
 }
 

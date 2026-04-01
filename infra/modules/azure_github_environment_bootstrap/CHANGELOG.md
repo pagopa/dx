@@ -1,5 +1,17 @@
 # Azure GitHub Environment Bootstrap
 
+## 3.2.3
+
+### Patch Changes
+
+- 30aec4f: Add Container App Jobs Operator role to the infra_ci identity. This allows operating on the container app jobs contained in the selected additional_resource_group_ids.
+
+## 3.2.2
+
+### Patch Changes
+
+- 7261e20: Improve documentation with new examples and small tweaks
+
 ## 3.2.1
 
 ### Patch Changes

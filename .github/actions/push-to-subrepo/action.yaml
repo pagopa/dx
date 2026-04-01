@@ -45,7 +45,13 @@ runs:
 
         # Configure Git for authentication
         git config --global url."https://api:${GITHUB_PAT}@github.com/".insteadOf "https://github.com/"
-        git config --unset http."https://github.com/".extraheader
+        if git config --local --get-all http."https://github.com/".extraheader >/dev/null 2>&1; then
+          git config --local --unset-all http."https://github.com/".extraheader
+        fi
+
+        if git config --global --get-all http."https://github.com/".extraheader >/dev/null 2>&1; then
+          git config --global --unset-all http."https://github.com/".extraheader
+        fi
 
     - name: Push Subtree to Repository
       shell: bash

@@ -1,5 +1,11 @@
 # nx-release
 
+## 0.0.2
+
+### Patch Changes
+
+- 44b3eab: Switch release mode detection from GitHub event type to `.nx/version-plans` directory state on push to main; remove `::notice::` annotations; use `npx nx` for all Nx commands; make PR body generic (no npm reference)
+
 ## 0.0.1
 
 ### Patch Changes
