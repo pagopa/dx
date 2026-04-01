@@ -107,6 +107,58 @@ describe("PagoPA AuthorizationService", () => {
       });
     });
 
+    it("should preserve existing fields in the JSON file", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["existing-identity"],
+            some_other_field: "keep-me",
+          },
+          entra_groups: {
+            readers: ["reader-group"],
+          },
+          other_top_level: true,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-789",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/44",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+
+      // New identity was added
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-identity-id",
+      );
+      // Existing identity preserved
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "existing-identity",
+      );
+      // Extra nested field preserved
+      expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
+      // Other top-level objects preserved
+      expect(updatedParsed.entra_groups).toEqual({ readers: ["reader-group"] });
+      expect(updatedParsed.other_top_level).toBe(true);
+    });
+
     it("should append identity to an existing non-empty list", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
