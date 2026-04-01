@@ -39,6 +39,7 @@ const BootstrapIdentityId = z
  */
 export const requestAuthorizationInputSchema = z.object({
   bootstrapIdentityId: BootstrapIdentityId,
+  repoName: z.string().min(1),
   subscriptionName: SubscriptionName,
 });
 
