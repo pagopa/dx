@@ -32,6 +32,7 @@ const makeEnv = () => {
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
+    repoName: "test-repo",
     subscriptionName: "test-subscription",
   });
 
@@ -69,7 +70,7 @@ directory_readers = {
       );
 
       expect(gitHubService.createBranch).toHaveBeenCalledWith({
-        branchName: "feats/add-test-subscription-bootstrap-identity",
+        branchName: "feats/add-test-repo-test-subscription-bootstrap-identity",
         fromRef: "main",
         owner: "pagopa",
         repo: "eng-azure-authorization",
@@ -78,13 +79,13 @@ directory_readers = {
       expect(gitHubService.getFileContent).toHaveBeenCalledWith({
         owner: "pagopa",
         path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
-        ref: "feats/add-test-subscription-bootstrap-identity",
+        ref: "feats/add-test-repo-test-subscription-bootstrap-identity",
         repo: "eng-azure-authorization",
       });
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
-          branch: "feats/add-test-subscription-bootstrap-identity",
+          branch: "feats/add-test-repo-test-subscription-bootstrap-identity",
           message: "Add directory reader for test-subscription",
           owner: "pagopa",
           path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
@@ -96,7 +97,7 @@ directory_readers = {
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
         body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
-        head: "feats/add-test-subscription-bootstrap-identity",
+        head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa",
         repo: "eng-azure-authorization",
         title: "Add directory reader for test-subscription",

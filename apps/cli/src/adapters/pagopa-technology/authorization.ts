@@ -70,9 +70,9 @@ export const makeAuthorizationService = (
     input: RequestAuthorizationInput,
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
     const logger = getLogger(["dx-cli", "pagopa-authorization"]);
-    const { bootstrapIdentityId, subscriptionName } = input;
+    const { bootstrapIdentityId, repoName, subscriptionName } = input;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars`;
-    const branchName = `feats/add-${subscriptionName}-bootstrap-identity`;
+    const branchName = `feats/add-${repoName}-${subscriptionName}-bootstrap-identity`;
 
     return (
       // Step 1: Create branch first to avoid race condition with main branch updates
