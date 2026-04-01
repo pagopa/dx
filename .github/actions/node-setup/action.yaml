@@ -21,17 +21,7 @@ runs:
   steps:
     - name: Enable Corepack
       shell: bash
-      run: |
-        # On self-hosted runners the job runs as a non-root user
-        # and lacks write access to /usr/bin, causing `corepack enable` to fail
-        # with EACCES. Install shims into a user-writable directory instead and
-        # expose it on PATH via GITHUB_PATH.
-        if ! corepack enable 2>/dev/null; then
-          echo "Command failed, falling back to user-local shims"
-          mkdir -p "$HOME/.local/bin"
-          corepack enable --install-directory "$HOME/.local/bin"
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-        fi
+      run: corepack enable
 
     - name: Detect Node.js package manager
       id: detect-pm
