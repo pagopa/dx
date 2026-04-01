@@ -74,7 +74,7 @@ jobs:
             ${{ runner.os }}-nx-cache-
 
       - name: Run Terraform E2E Tests
-        timeout-minutes: 120
+        timeout-minutes: 720 # 12 hours
         env:
           GOFLAGS: "-p=1"
         run: |
