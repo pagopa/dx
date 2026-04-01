@@ -2,12 +2,13 @@
 /**
  * render-svg.mjs — Convert a Mermaid .mmd file to .svg with inlined cloud provider icons.
  *
- * Icons are loaded from:
- *   - Azure: NakayamaKento/AzureIcons (566 service-specific icons, prefix "Azure")
+ * Icon packs registered at render time:
+ *   - Azure: NakayamaKento/AzureIcons (566 service icons, prefix "azure")
+ *     Diagram syntax: azure:icon-name  e.g. azure:virtual-networks
  *   - AWS:   @iconify-json/logos (67 AWS service icons, prefix "logos")
+ *     Diagram syntax: logos:aws-*      e.g. logos:aws-lambda
  *
- * Both packs are passed to mmdc via --iconPacksNamesAndUrls / --iconPacks so that
- * icons are fully inlined as SVG paths in the output — no external references needed.
+ * Icons are fully inlined as SVG paths in the output — no external references at view time.
  *
  * Usage:
  *   node render-svg.mjs <input.mmd> [output.svg]
@@ -35,9 +36,9 @@ if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
     "  output.svg — SVG output path (default: replaces .mmd extension with .svg)",
   );
   console.log("");
-  console.log("Icon packs loaded at render time:");
-  console.log(`  Azure → ${AZURE_ICONS_URL}`);
-  console.log(`  AWS   → ${AWS_LOGOS_PACK} (via unpkg CDN)`);
+  console.log("Icon packs registered at render time:");
+  console.log(`  azure: -> ${AZURE_ICONS_URL}`);
+  console.log(`  logos: -> ${AWS_LOGOS_PACK} (via unpkg CDN)`);
   process.exit(args.length === 0 ? 1 : 0);
 }
 
@@ -51,7 +52,7 @@ if (!existsSync(inputFile)) {
   process.exit(1);
 }
 
-console.log(`Rendering: ${inputFile} → ${outputFile}`);
+console.log(`Rendering: ${inputFile} -> ${outputFile}`);
 console.log("Loading icon packs (requires internet access)...");
 
 const { cmd, cmdArgs } = resolveMmdc();
@@ -67,7 +68,7 @@ const mmdcArgs = [
   "-b",
   "transparent",
   "--iconPacksNamesAndUrls",
-  `Azure#${AZURE_ICONS_URL}`,
+  `azure#${AZURE_ICONS_URL}`,
   "--iconPacks",
   AWS_LOGOS_PACK,
 ];
@@ -80,14 +81,13 @@ if (result.error) {
 }
 
 if (result.status !== 0) {
+  console.error("Rendering failed.");
+  console.error("  Validate syntax at: https://mermaid.live");
   console.error(
-    "Rendering failed. Validate the Mermaid syntax at https://mermaid.live",
+    "  Check Azure icon names: https://github.com/NakayamaKento/AzureIcons",
   );
   console.error(
-    "Ensure icon names exist: Azure → https://github.com/NakayamaKento/AzureIcons",
-  );
-  console.error(
-    "                         AWS   → https://icon-sets.iconify.design/logos/",
+    "  Check AWS icon names: https://icon-sets.iconify.design/logos/ (filter aws-)",
   );
   process.exit(1);
 }
@@ -98,8 +98,8 @@ if (!existsSync(outputFile)) {
 }
 
 const sizeKb = (statSync(outputFile).size / 1024).toFixed(1);
-console.log(`✓ SVG generated: ${outputFile} (${sizeKb} KB)`);
-console.log("  Icons are fully inlined — no external dependencies in the SVG.");
+console.log(`SVG generated: ${outputFile} (${sizeKb} KB)`);
+console.log("Icons are fully inlined — no external dependencies.");
 
 /**
  * Resolve the mmdc command, in priority order:
@@ -110,19 +110,16 @@ console.log("  Icons are fully inlined — no external dependencies in the SVG."
  * @returns {{ cmd: string, cmdArgs: string[] }}
  */
 function resolveMmdc() {
-  // 1. Local node_modules
   const localBin = resolve(process.cwd(), "node_modules/.bin/mmdc");
   if (existsSync(localBin)) {
     return { cmd: localBin, cmdArgs: [] };
   }
 
-  // 2. Global mmdc
   const globalCheck = spawnSync("mmdc", ["--version"], { encoding: "utf8" });
   if (globalCheck.status === 0) {
     return { cmd: "mmdc", cmdArgs: [] };
   }
 
-  // 3. npx fallback
   console.log(
     "mmdc not found — downloading via npx @mermaid-js/mermaid-cli ...",
   );
