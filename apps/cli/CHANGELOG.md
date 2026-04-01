@@ -1,3 +1,10 @@
+## 0.18.12 (2026-04-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.2
+- Updated @pagopa/dx-savemoney to 0.2.3
+
 ## 0.18.11 (2026-03-26)
 
 ### 🩹 Fixes
