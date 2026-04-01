@@ -1,5 +1,3 @@
-# azure_function_app_exposed
-
 ## 3.0.1
 
 ### Patch Changes

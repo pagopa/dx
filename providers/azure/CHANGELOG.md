@@ -1,5 +1,3 @@
-# provider-azure
-
 ## 0.8.4
 
 ### Patch Changes

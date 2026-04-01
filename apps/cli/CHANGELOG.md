@@ -15,8 +15,6 @@
 
 - Luca Cavallaro
 
-# @pagopa/dx-cli
-
 ## 0.18.10
 
 ### Patch Changes

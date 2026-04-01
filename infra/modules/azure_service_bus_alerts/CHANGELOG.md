@@ -1,5 +1,3 @@
-# azure_service_bus_alerts
-
 ## 0.2.0
 
 ### Minor Changes

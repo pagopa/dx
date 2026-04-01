@@ -1,5 +1,3 @@
-# azure_api_management
-
 ## 2.2.3
 
 ### Patch Changes

@@ -1,5 +1,3 @@
-# azure_app_service_plan_autoscaler
-
 ## 2.0.1
 
 ### Patch Changes

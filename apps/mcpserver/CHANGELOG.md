@@ -5,8 +5,6 @@
 - Updated @pagopa/azure-tracing to 0.4.17
 - Updated @pagopa/eslint-config to 6.0.2
 
-# @pagopa/dx-mcpserver
-
 ## 0.1.5
 
 ### Patch Changes

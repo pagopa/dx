@@ -1,5 +1,3 @@
-# azure_container_app
-
 ## 4.2.0
 
 ### Minor Changes

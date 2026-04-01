@@ -1,5 +1,3 @@
-# pre_commit_scripts
-
 ## 0.1.0
 
 ### Minor Changes

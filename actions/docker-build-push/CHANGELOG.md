@@ -1,5 +1,3 @@
-# @pagopa/docker-build-push
-
 ## 0.0.2
 
 ### Patch Changes

@@ -1,5 +1,3 @@
-# azure_app_configuration
-
 ## 0.1.1
 
 ### Patch Changes
