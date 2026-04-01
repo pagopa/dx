@@ -63,24 +63,95 @@ jobs:
         with:
           default_version: "1.10.4"
 
+  detect-projects:
+    name: Detect Terraform Projects
+    runs-on: ubuntu-latest
+    needs: [get-terraform-version]
+    outputs:
+      matrix: ${{ steps.detect.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Detect Terraform projects
+        id: detect
+        env:
+          BASE_PATH: ${{ inputs.base_path }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BEFORE: ${{ github.event.before }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          BASE_PATH="${BASE_PATH%/}"
+          DIR="$BASE_PATH/$ENVIRONMENT"
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            CHANGED=$(find "$DIR" -maxdepth 2 -name '*.tf' -not -path "*/_modules/*" 2>/dev/null || true)
+          elif [ "$EVENT_NAME" = "pull_request" ]; then
+            CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$DIR" || true)
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR" || true)
+          fi
+
+          # The two layouts are mutually exclusive:
+          # - flat:          a .tf exists directly in $DIR → $DIR is the single project root
+          # - multi-project: no .tf directly in $DIR → each first-level subdir is a project root
+          IS_FLAT=$(printf '%s\n' "$CHANGED" | while IFS= read -r file; do
+            rel="${file#"${DIR}/"}"
+            case "$rel" in
+              */*) ;;                    # file in a subdir: not a flat indicator
+              *.tf) echo 1; break ;;    # .tf directly in $DIR: flat project
+            esac
+          done)
+
+          if [ -n "$IS_FLAT" ]; then
+            MATRIX=$(jq -cn --arg d "$DIR" '[$d]')
+          else
+            MATRIX=$(printf '%s\n' "$CHANGED" \
+              | while IFS= read -r file; do
+                  [ -z "$file" ] && continue
+                  rel="${file#"${DIR}/"}"
+                  case "$rel" in */*)  echo "${DIR}/${rel%%/*}" ;; esac
+                done \
+              | sort -u \
+              | jq -R . | jq -sc .)
+          fi
+
+          MATRIX=${MATRIX:-[]}
+          echo "matrix=$MATRIX" >> "$GITHUB_OUTPUT"
+          echo "Detected matrix: $MATRIX"
+
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
-    needs: [get-terraform-version]
+    needs: [get-terraform-version, detect-projects]
+    if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect-projects.outputs.matrix) }}
     with:
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
       check_to_run: lock_modules
-      folder: ${{ inputs.base_path }}/${{ inputs.environment }}/
+      folder: ${{ matrix.dir }}/
       verbose: true
 
   tf_plan:
     name: "Terraform Plan"
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect-projects.outputs.matrix) }}
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [get-terraform-version, tf-modules-check]
+    needs: [get-terraform-version, tf-modules-check, detect-projects]
+    if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
@@ -93,34 +164,26 @@ jobs:
       TF_HTTP_USERNAME: ${{ secrets.STATEGRAPH_USERNAME }}
       TF_HTTP_PASSWORD: ${{ secrets.STATEGRAPH_TOKEN }}
     outputs:
-      working_dir: ${{ steps.directory.outputs.dir }}
       terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
-      plan_provider: ${{ steps.upload_plan.outputs.provider }}
-      plan_path: ${{ steps.upload_plan.outputs.plan-path }}
-      plan_azure_storage_account: ${{ steps.upload_plan.outputs.azure-storage-account }}
-      plan_azure_container: ${{ steps.upload_plan.outputs.azure-container }}
-      plan_aws_bucket: ${{ steps.upload_plan.outputs.aws-bucket }}
-      plan_aws_region: ${{ steps.upload_plan.outputs.aws-region }}
 
     steps:
-      # Set the directory where the Terraform files are located
-      # The directory the value is then available in ${{ steps.directory.outputs.dir }}
+      # The working directory comes from the matrix; available in ${{ steps.directory.outputs.dir }}
       - name: Set directory
         id: directory
         env:
-          ENVIRONMENT: ${{ inputs.environment }}
-          BASE_PATH: ${{ inputs.base_path }}
+          WORKING_DIR: ${{ matrix.dir }}
         run: |
           set -euo pipefail
-          if [ -z "$ENVIRONMENT" ]; then
-            echo "Environment must be provided."
-            exit 1
-          else
-            # The directory is expected to be in the format
-            #  ${inputs.base_path}/"$ENVIRONMENT""
-            # Example: infra/resources/prod
-            printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
-          fi
+          printf "dir=%q" "$WORKING_DIR" >> "$GITHUB_OUTPUT"
+
+      - name: Set artifact name
+        id: artifact
+        env:
+          WORKING_DIR: ${{ matrix.dir }}
+        run: |
+          set -euo pipefail
+          SLUG=$(echo "$WORKING_DIR" | tr '/' '-')
+          echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         name: Checkout
@@ -149,6 +212,7 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init -input=false
+
       - name: Terraform Plan
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
@@ -169,10 +233,41 @@ jobs:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ steps.directory.outputs.dir }}
 
+      - name: Save plan outputs to artifact
+        env:
+          PROVIDER: ${{ steps.upload_plan.outputs.provider }}
+          PLAN_PATH: ${{ steps.upload_plan.outputs['plan-path'] }}
+          AZURE_STORAGE_ACCOUNT: ${{ steps.upload_plan.outputs['azure-storage-account'] }}
+          AZURE_CONTAINER: ${{ steps.upload_plan.outputs['azure-container'] }}
+          AWS_BUCKET: ${{ steps.upload_plan.outputs['aws-bucket'] }}
+          AWS_REGION: ${{ steps.upload_plan.outputs['aws-region'] }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg provider "$PROVIDER" \
+            --arg plan_path "$PLAN_PATH" \
+            --arg azure_storage_account "$AZURE_STORAGE_ACCOUNT" \
+            --arg azure_container "$AZURE_CONTAINER" \
+            --arg aws_bucket "$AWS_BUCKET" \
+            --arg aws_region "$AWS_REGION" \
+            '{provider: $provider, plan_path: $plan_path, azure_storage_account: $azure_storage_account, azure_container: $azure_container, aws_bucket: $aws_bucket, aws_region: $aws_region}' \
+            > plan-outputs.json
+
+      - name: Upload plan outputs artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}-outputs
+          path: plan-outputs.json
+
   tf_apply:
     name: "Terraform Apply"
+    strategy:
+      fail-fast: false
+      matrix:
+        dir: ${{ fromJSON(needs.detect-projects.outputs.matrix) }}
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    needs: [get-terraform-version, tf_plan]
+    needs: [get-terraform-version, tf_plan, detect-projects]
+    if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
@@ -189,34 +284,62 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         name: Checkout
 
+      - name: Set artifact name
+        id: artifact
+        env:
+          WORKING_DIR: ${{ matrix.dir }}
+        run: |
+          set -euo pipefail
+          SLUG=$(echo "$WORKING_DIR" | tr '/' '-')
+          echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
+
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
-          terraform_version: ${{ needs.tf_plan.outputs.terraform_version }}
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+
+      # Download plan outputs artifact from tf_plan
+      - name: Download plan outputs artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}-outputs
+          path: /tmp/plan-outputs
+
+      - name: Read plan outputs
+        id: plan_outputs
+        run: |
+          set -euo pipefail
+          FILE=/tmp/plan-outputs/plan-outputs.json
+          echo "provider=$(jq -r .provider "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "plan_path=$(jq -r .plan_path "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "azure_storage_account=$(jq -r .azure_storage_account "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "azure_container=$(jq -r .azure_container "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "aws_bucket=$(jq -r .aws_bucket "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "aws_region=$(jq -r .aws_region "$FILE")" >> "$GITHUB_OUTPUT"
 
       # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
-      # Storage coordinates come directly from the tf_plan job outputs — no terraform init required.
+      # Storage coordinates come from the plan outputs artifact.
       - name: Download Terraform Plan
         uses: pagopa/dx/actions/terraform-plan-storage-download@main
         with:
-          provider: ${{ needs.tf_plan.outputs.plan_provider }}
-          plan-path: ${{ needs.tf_plan.outputs.plan_path }}
-          working-directory: ${{ needs.tf_plan.outputs.working_dir }}
-          azure-storage-account: ${{ needs.tf_plan.outputs.plan_azure_storage_account }}
-          azure-container: ${{ needs.tf_plan.outputs.plan_azure_container }}
-          aws-bucket: ${{ needs.tf_plan.outputs.plan_aws_bucket }}
-          aws-region: ${{ needs.tf_plan.outputs.plan_aws_region }}
+          provider: ${{ steps.plan_outputs.outputs.provider }}
+          plan-path: ${{ steps.plan_outputs.outputs.plan_path }}
+          working-directory: ${{ matrix.dir }}
+          azure-storage-account: ${{ steps.plan_outputs.outputs.azure_storage_account }}
+          azure-container: ${{ steps.plan_outputs.outputs.azure_container }}
+          aws-bucket: ${{ steps.plan_outputs.outputs.aws_bucket }}
+          aws-region: ${{ steps.plan_outputs.outputs.aws_region }}
 
       - name: Terraform Init
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        working-directory: ${{ matrix.dir }}
         run: |
           terraform init -input=false
 
       - name: Terraform Apply
-        working-directory: ${{ needs.tf_plan.outputs.working_dir }}
+        working-directory: ${{ matrix.dir }}
         run: |
           set -o pipefail
           terraform apply \
