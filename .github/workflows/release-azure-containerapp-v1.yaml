@@ -116,8 +116,8 @@ jobs:
 
           echo "short_sha=$sha" >> $GITHUB_OUTPUT
 
-      - name: Azure Login
-        uses: pagopa/dx/.github/actions/azure-login@main
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Configure AZ CLI
         run: |
