@@ -144,19 +144,19 @@ describe("PagoPA AuthorizationService", () => {
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
 
-      // New identity was added
-      expect(updatedParsed.directory_readers.service_principals_name).toContain(
-        "test-bootstrap-identity-id",
-      );
-      // Existing identity preserved
-      expect(updatedParsed.directory_readers.service_principals_name).toContain(
-        "existing-identity",
-      );
-      // Extra nested field preserved
-      expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
-      // Other top-level objects preserved
-      expect(updatedParsed.entra_groups).toEqual({ readers: ["reader-group"] });
-      expect(updatedParsed.other_top_level).toBe(true);
+      expect(updatedParsed).toStrictEqual({
+        directory_readers: {
+          service_principals_name: [
+            "existing-identity",
+            "test-bootstrap-identity-id",
+          ],
+          some_other_field: "keep-me",
+        },
+        entra_groups: {
+          readers: ["reader-group"],
+        },
+        other_top_level: true,
+      });
     });
 
     it("should append identity to an existing non-empty list", async () => {

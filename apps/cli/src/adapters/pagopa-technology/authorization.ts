@@ -21,11 +21,15 @@ import {
 } from "../../domain/authorization.js";
 import { GitHubService } from "../../domain/github.js";
 
-const authorizationFileSchema = z.object({
-  directory_readers: z.object({
-    service_principals_name: z.array(z.string()),
-  }),
-});
+const authorizationFileSchema = z
+  .object({
+    directory_readers: z
+      .object({
+        service_principals_name: z.array(z.string()),
+      })
+      .loose(),
+  })
+  .loose();
 
 const addIdentity = (
   content: string,
@@ -49,17 +53,22 @@ const addIdentity = (
     );
   }
 
-  const { service_principals_name } = result.data.directory_readers;
+  const jsonContent = result.data;
 
-  if (service_principals_name.includes(identityId)) {
+  if (
+    jsonContent.directory_readers.service_principals_name.includes(identityId)
+  ) {
     return err(new IdentityAlreadyExistsError(identityId));
   }
 
   const updated = {
-    ...result.data,
+    ...jsonContent,
     directory_readers: {
-      ...result.data.directory_readers,
-      service_principals_name: [...service_principals_name, identityId],
+      ...jsonContent.directory_readers,
+      service_principals_name: [
+        ...jsonContent.directory_readers.service_principals_name,
+        identityId,
+      ],
     },
   };
 
