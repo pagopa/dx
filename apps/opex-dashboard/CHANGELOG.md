@@ -1,3 +1,9 @@
+## 0.2.5 (2026-04-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.2
+
 # @pagopa/opex-dashboard
 
 ## 0.2.4
