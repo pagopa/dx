@@ -120,7 +120,7 @@ When creating a new Terraform module:
 7. **Create examples/**: Add `fixtures.tf` and `mut.tf` for E2E tests
 8. **Create test apps**: Go HTTP servers exposing APIs for verification
 9. **Generate tests/README.md**: Use [templates/test-readme.md](templates/test-readme.md)
-10. **Finalize**: Run unit/contract tests, update mut.tf to registry+1, run `pnpm changeset`
+10. **Finalize**: Run unit/contract tests, update mut.tf to registry+1, run `pnpm nx release plan`
 
 ### Scenario 2: Modify Existing Module
 
@@ -132,7 +132,7 @@ When modifying a module with modern tests:
 4. **Update integration tests**: Add scenarios for new configurations if needed
 5. **Update E2E tests**: Add test functions for new scenarios if needed
 6. **Update test apps**: Add/modify endpoints to match new functionality
-7. **Version bump**: Run `pnpm changeset`, update mut.tf if needed
+7. **Version bump**: Run `pnpm nx release plan`, update mut.tf if needed
 
 ### Scenario 3: Upgrade Legacy Tests
 
@@ -143,7 +143,7 @@ When a module has legacy tests (single file, no modern structure):
 3. **Generate modern test suite**: Follow "New Module" scenario
 4. **Create missing components**: Add setup/, examples/, apps/, e2e_test.go
 5. **Verify coverage**: Execute unit/contract tests, ensure no regression
-6. **Version bump**: Update mut.tf to registry+1, run `pnpm changeset`
+6. **Version bump**: Update mut.tf to registry+1, run `pnpm nx release plan`
 
 ## Best Practices
 
@@ -174,7 +174,7 @@ When a module has legacy tests (single file, no modern structure):
 - **Test naming**: `module_name_feature_being_tested` pattern
 - **Domain naming**: Use "int" (not "integration") and "e2e" for Azure length limits
 - **Module reference**: Local `source = "../.."` during development, registry+version before commit
-- **Version bump**: Run `pnpm changeset` for patch bump when adding/modifying tests
+- **Version bump**: Run `pnpm nx release plan` for patch bump when adding/modifying tests
 - **Execute tests**: Always run unit/contract after changes; skip slow integration/e2e
 - **Legacy cleanup**: Delete old test files completely when upgrading
 - **Examples structure**: Must have fixtures.tf (infrastructure) + mut.tf (module)

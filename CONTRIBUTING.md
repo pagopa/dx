@@ -60,14 +60,14 @@ This project uses specific versions of `node`, `pnpm` and `terraform`. To make s
 
 ## Release management
 
-We use [changesets](https://github.com/changesets/changesets) to automate package versioning and releases.
+We use [Nx Release](https://nx.dev/features/manage-releases) to automate package versioning and releases.
 
-Each Pull Request that includes changes that require a version bump must include a _changeset file_ that describes the introduced changes.
+Each Pull Request that includes changes that require a version bump must include a _version plan file_ that describes the introduced changes.
 
-To create a _changeset file_ run the following command and follow the instructions.
+To create a _version plan file_ run the following command and follow the instructions.
 
 ```bash
-pnpm changeset
+pnpm nx release plan
 ```
 
 ## Useful commands
