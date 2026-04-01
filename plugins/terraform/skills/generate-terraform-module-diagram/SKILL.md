@@ -250,7 +250,7 @@ Paste the diagram code there to check for syntax errors before rendering.
 Run the render script included in this skill:
 
 ```bash
-node .github/skills/generate-terraform-module-diagram/scripts/render-svg.mjs {module_path}/diagram.mmd
+node scripts/render-svg.mjs {module_path}/diagram.mmd
 ```
 
 This produces `{module_path}/diagram.svg` with icons **fully inlined** as SVG paths — visible offline, in GitHub, in VS Code, everywhere, no external fetching needed at view time.
