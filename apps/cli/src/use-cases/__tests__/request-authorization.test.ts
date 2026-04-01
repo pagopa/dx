@@ -19,6 +19,7 @@ import { requestAuthorization } from "../request-authorization.js";
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
     bootstrapIdentityId: "test-bootstrap-identity-id",
+    repoName: "test-repo",
     subscriptionName: "test-subscription",
   });
 
