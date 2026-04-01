@@ -127,7 +127,9 @@ describe("PagoPA AuthorizationService", () => {
       });
       gitHubService.updateFile.mockResolvedValue(undefined);
       gitHubService.createPullRequest.mockResolvedValue(
-        new PullRequest("https://github.com/pagopa/eng-azure-authorization/pull/43"),
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/43",
+        ),
       );
 
       const result = await authorizationService.requestAuthorization(input);
@@ -136,12 +138,12 @@ describe("PagoPA AuthorizationService", () => {
 
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
-      expect(
-        updatedParsed.directory_readers.service_principals_name,
-      ).toContain("test-bootstrap-identity-id");
-      expect(
-        updatedParsed.directory_readers.service_principals_name,
-      ).toContain("existing-identity");
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "existing-identity",
+      );
     });
   });
 
