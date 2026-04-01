@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"strings"
-	"sync/atomic"
 	"testing"
 	"time"
 
@@ -13,55 +12,31 @@ import (
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
 
-var suiteSetupFailed atomic.Bool
+func TestAppConfigurationE2E(t *testing.T) {
+	t.Run("NetworkSettings", func(t *testing.T) {
+		runAppConfigurationScenario(t, "../examples/network_access/", "validate_private_connectivity", func(t *testing.T, terraformOptions *terraform.Options) {
+			appConfigName := terraform.Output(t, terraformOptions, "name")
+			publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
+			privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
 
-func TestAppConfigurationNetworkSettings(t *testing.T) {
-	fixtureFolder := "../examples/network_access/"
-
-	defer func() {
-		if t.Failed() {
-			suiteSetupFailed.Store(true)
-		}
-	}()
-
-	defer test_structure.RunTestStage(t, "teardown", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-		terraform.Destroy(t, terraformOptions)
+			probeSetting(t, privateApp, appConfigName, 200)
+			probeSetting(t, publicApp, appConfigName, 502)
+		})
 	})
 
-	test_structure.RunTestStage(t, "setup", func() {
-		terraformOptions := &terraform.Options{
-			TerraformDir: fixtureFolder,
-		}
+	t.Run("KeyVaultIntegration", func(t *testing.T) {
+		runAppConfigurationScenario(t, "../examples/keyvault_integration/", "validate_keyvault_integration", func(t *testing.T, terraformOptions *terraform.Options) {
+			appConfigName := terraform.Output(t, terraformOptions, "name")
+			privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
 
-		test_structure.SaveTerraformOptions(t, fixtureFolder, terraformOptions)
-
-		terraform.InitAndApply(t, terraformOptions)
+			probeSetting(t, privateApp, appConfigName, 200)
+			probeSecret(t, privateApp, appConfigName, 200)
+		})
 	})
-
-	if t.Failed() {
-		return
-	}
-
-	test_structure.RunTestStage(t, "validate_private_connectivity", func() {
-		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-
-		appConfigName := terraform.Output(t, terraformOptions, "name")
-		publicApp := terraform.Output(t, terraformOptions, "public_app_ip_address")
-		privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
-
-		probeSetting(t, privateApp, appConfigName, 200)
-		probeSetting(t, publicApp, appConfigName, 502)
-	})
-
 }
 
-func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
-	if suiteSetupFailed.Load() {
-		t.Skip("skipping: previous test setup failed")
-	}
-
-	fixtureFolder := "../examples/keyvault_integration/"
+func runAppConfigurationScenario(t *testing.T, fixtureFolder string, validateStage string, validate func(t *testing.T, terraformOptions *terraform.Options)) {
+	t.Helper()
 
 	defer test_structure.RunTestStage(t, "teardown", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
@@ -78,20 +53,10 @@ func TestAppConfigurationKeyVaultIntegration(t *testing.T) {
 		terraform.InitAndApply(t, terraformOptions)
 	})
 
-	if t.Failed() {
-		return
-	}
-
-	test_structure.RunTestStage(t, "validate_keyvault_integration", func() {
+	test_structure.RunTestStage(t, validateStage, func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
-
-		appConfigName := terraform.Output(t, terraformOptions, "name")
-		privateApp := terraform.Output(t, terraformOptions, "private_app_ip_address")
-
-		probeSetting(t, privateApp, appConfigName, 200)
-		probeSecret(t, privateApp, appConfigName, 200)
+		validate(t, terraformOptions)
 	})
-
 }
 
 func probeSetting(t *testing.T, appIPAddress string, appConfigName string, expectedStatus int) {
