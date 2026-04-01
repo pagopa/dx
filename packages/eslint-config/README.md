@@ -4,10 +4,11 @@ This package provides PagoPA's `eslint.config.js` as an extensible shared config
 
 ## Usage
 
-1. Install `eslint` and `@pagopa/eslint-config`
+1. Install `eslint` and `@pagopa/eslint-config` and its peer dependencies: `eslint` and `prettier`
 
    ```shell
-   pnpm add -D eslint @pagopa/eslint-config
+   pnpm add -D eslint @pagopa/eslint-config eslint
+   pnpm add -D -E prettier
    ```
 
 2. Create a file names `eslint.config.js` at the root of your workspace with the following content
