@@ -3,12 +3,13 @@
  *
  * Implements the AuthorizationService interface for the PagoPA Azure
  * authorization workflow. Encapsulates all platform-specific details:
- * the target GitHub repository, file paths, branch naming, HCL file
+ * the target GitHub repository, file paths, branch naming, JSON file
  * parsing, and pull request creation.
  */
 
 import { getLogger } from "@logtape/logtape";
 import { err, errAsync, ok, okAsync, Result, ResultAsync } from "neverthrow";
+import { z } from "zod";
 
 import {
   AuthorizationError,
@@ -20,17 +21,27 @@ import {
 } from "../../domain/authorization.js";
 import { GitHubService } from "../../domain/github.js";
 
-// Matches the service_principals_name list inside the directory_readers block.
-const DIRECTORY_READERS_REGEX =
-  /(directory_readers\s*=\s*\{[\s\S]*?service_principals_name\s*=\s*\[)([\s\S]*?)(][\s\S]*?})/;
+const authorizationFileSchema = z.object({
+  directory_readers: z.object({
+    service_principals_name: z.array(z.string()),
+  }),
+});
 
 const addIdentity = (
   content: string,
   identityId: string,
 ): Result<string, AuthorizationError> => {
-  const match = content.match(DIRECTORY_READERS_REGEX);
+  let parsed;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return err(
+      new InvalidAuthorizationFileFormatError("File content is not valid JSON"),
+    );
+  }
 
-  if (!match) {
+  const result = authorizationFileSchema.safeParse(parsed);
+  if (!result.success) {
     return err(
       new InvalidAuthorizationFileFormatError(
         "Could not find directory_readers.service_principals_name list",
@@ -38,25 +49,21 @@ const addIdentity = (
     );
   }
 
-  const [, prefix, existingItems, suffix] = match;
+  const { service_principals_name } = result.data.directory_readers;
 
-  if (existingItems.includes(`"${identityId}"`)) {
+  if (service_principals_name.includes(identityId)) {
     return err(new IdentityAlreadyExistsError(identityId));
   }
 
-  // Build the new list content following HCL formatting rules:
-  // - Items are indented with 4 spaces; the LAST item must NOT have a trailing comma
-  const newListContent =
-    existingItems.trim().length > 0
-      ? `${existingItems.replace(/,?\s*$/, "")},\n    "${identityId}"\n  `
-      : `\n    "${identityId}"\n  `;
+  const updated = {
+    ...result.data,
+    directory_readers: {
+      ...result.data.directory_readers,
+      service_principals_name: [...service_principals_name, identityId],
+    },
+  };
 
-  return ok(
-    content.replace(
-      DIRECTORY_READERS_REGEX,
-      `${prefix}${newListContent}${suffix}`,
-    ),
-  );
+  return ok(JSON.stringify(updated, null, 2));
 };
 
 const REPO_OWNER = "pagopa";
@@ -71,7 +78,7 @@ export const makeAuthorizationService = (
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
     const logger = getLogger(["dx-cli", "pagopa-authorization"]);
     const { bootstrapIdentityId, repoName, subscriptionName } = input;
-    const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars`;
+    const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars.json`;
     const branchName = `feats/add-${repoName}-${subscriptionName}-bootstrap-identity`;
 
     return (
