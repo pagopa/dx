@@ -266,6 +266,38 @@ mmdc \
   --iconPacks @iconify-json/logos
 ```
 
+**If `mmdc` is not installed**, install it first:
+
+```bash
+# Run once without installing
+npx -y @mermaid-js/mermaid-cli \
+  -i {module_path}/diagram.mmd \
+  -o {module_path}/diagram.svg \
+  -t dark \
+  -b transparent \
+  --iconPacksNamesAndUrls "azure#https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json" \
+  --iconPacks @iconify-json/logos
+
+# Or global install (recommended for repeated use)
+npm install -g @mermaid-js/mermaid-cli
+```
+
+> Requires Node.js >= 18. On first run, mmdc downloads Chromium (~170 MB, one-time). Full docs: https://github.com/mermaid-js/mermaid-cli
+
+**If `mmdc` fails with a sandbox error** (common in Linux CI or containers), create a puppeteer config and pass it with `-p`:
+
+```bash
+echo '{"args":["--no-sandbox"]}' > /tmp/puppeteer.json
+mmdc \
+  -i {module_path}/diagram.mmd \
+  -o {module_path}/diagram.svg \
+  -t dark \
+  -b transparent \
+  -p /tmp/puppeteer.json \
+  --iconPacksNamesAndUrls "azure#https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json" \
+  --iconPacks @iconify-json/logos
+```
+
 > **Troubleshooting**: If icons show as empty squares with a question mark inside, verify the icon name exists in the pack.
 > Azure icons: https://github.com/NakayamaKento/AzureIcons
 > AWS icons: https://icon-sets.iconify.design/logos/ (filter `aws-`)

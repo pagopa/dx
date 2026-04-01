@@ -20,7 +20,9 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync, statSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 
 const AZURE_ICONS_URL =
   "https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json";
@@ -56,6 +58,8 @@ console.log(`Rendering: ${inputFile} -> ${outputFile}`);
 console.log("Loading icon packs (requires internet access)...");
 
 const { cmd, cmdArgs } = resolveMmdc();
+const { puppeteerConfigPath, cleanup: cleanupPuppeteerConfig } =
+  await resolvePuppeteerConfigPath();
 
 const mmdcArgs = [
   ...cmdArgs,
@@ -71,16 +75,20 @@ const mmdcArgs = [
   `azure#${AZURE_ICONS_URL}`,
   "--iconPacks",
   AWS_LOGOS_PACK,
+  "-p",
+  puppeteerConfigPath,
 ];
 
 const result = spawnSync(cmd, mmdcArgs, { stdio: "inherit", encoding: "utf8" });
 
 if (result.error) {
+  await cleanupPuppeteerConfig();
   console.error(`Render error: ${result.error.message}`);
   process.exit(1);
 }
 
 if (result.status !== 0) {
+  await cleanupPuppeteerConfig();
   console.error("Rendering failed.");
   console.error("  Validate syntax at: https://mermaid.live");
   console.error(
@@ -93,6 +101,7 @@ if (result.status !== 0) {
 }
 
 if (!existsSync(outputFile)) {
+  await cleanupPuppeteerConfig();
   console.error("SVG file was not created despite a successful exit code.");
   process.exit(1);
 }
@@ -100,6 +109,7 @@ if (!existsSync(outputFile)) {
 const sizeKb = (statSync(outputFile).size / 1024).toFixed(1);
 console.log(`SVG generated: ${outputFile} (${sizeKb} KB)`);
 console.log("Icons are fully inlined — no external dependencies.");
+await cleanupPuppeteerConfig();
 
 /**
  * Resolve the mmdc command, in priority order:
@@ -124,4 +134,28 @@ function resolveMmdc() {
     "mmdc not found — downloading via npx @mermaid-js/mermaid-cli ...",
   );
   return { cmd: "npx", cmdArgs: ["-y", "@mermaid-js/mermaid-cli"] };
+}
+
+async function resolvePuppeteerConfigPath() {
+  const existingConfigPath =
+    process.env.puppeteer_config ?? process.env.PUPPETEER_CONFIG;
+
+  if (existingConfigPath) {
+    return {
+      puppeteerConfigPath: existingConfigPath,
+      cleanup: async () => {},
+    };
+  }
+
+  const tempDir = await mkdtemp(join(tmpdir(), "mermaid-puppeteer-"));
+  const tempConfigPath = join(tempDir, "puppeteer-config.json");
+
+  await writeFile(tempConfigPath, '{"args": ["--no-sandbox"]}\n', "utf8");
+
+  return {
+    puppeteerConfigPath: tempConfigPath,
+    cleanup: async () => {
+      await rm(tempDir, { recursive: true, force: true });
+    },
+  };
 }
