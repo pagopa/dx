@@ -20,7 +20,7 @@ jobs:
   terraform-e2e-tests:
     name: Run Terraform E2E Tests
     runs-on: dev
-    environment: integration-tests
+    environment: automation-dev-cd
     permissions:
       id-token: write
       contents: read
