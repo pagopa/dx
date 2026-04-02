@@ -1,6 +1,6 @@
 ---
 title: "pnpm"
-ring: assess
+ring: adopt
 tags: [nodejs, javascript, typescript, tool]
 ---
 
