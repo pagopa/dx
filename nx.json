@@ -103,7 +103,7 @@
   "plugins": [
     {
       "plugin": "@nx/docker",
-      "exclude": ["apps/mcpserver/Dockerfile"],
+      "exclude": ["apps/*/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
