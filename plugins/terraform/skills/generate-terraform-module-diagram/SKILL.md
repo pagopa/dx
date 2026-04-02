@@ -247,15 +247,7 @@ Paste the diagram code there to check for syntax errors before rendering.
 
 ## Step 5: Convert `diagram.mmd` to `diagram.svg`
 
-Run the render script included in this skill:
-
-```bash
-node scripts/render-svg.mjs {module_path}/diagram.mmd
-```
-
-This produces `{module_path}/diagram.svg` with icons **fully inlined** as SVG paths — visible offline, in GitHub, in VS Code, everywhere, no external fetching needed at view time.
-
-**Equivalent direct `mmdc` command**:
+Run direct `mmdc` command:
 
 ```bash
 mmdc \
@@ -266,7 +258,7 @@ mmdc \
   --iconPacks @iconify-json/logos
 ```
 
-**If `mmdc` is not installed**, install it first:
+**If `mmdc` is not installed**, run it withot installing globally using `npx`:
 
 ```bash
 # Run once without installing
@@ -277,7 +269,11 @@ npx -y @mermaid-js/mermaid-cli \
   -b transparent \
   --iconPacksNamesAndUrls "azure#https://raw.githubusercontent.com/NakayamaKento/AzureIcons/refs/heads/main/icons.json" \
   --iconPacks @iconify-json/logos
+```
 
+Or install `mmdc` globally for repeated use:
+
+```bash
 # Or global install (recommended for repeated use)
 npm install -g @mermaid-js/mermaid-cli
 ```
