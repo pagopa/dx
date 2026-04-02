@@ -10,4 +10,10 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = [var.vnet_cidr]
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      ddos_protection_plan, # Otherwise when the plan is applied by the policy, Terraform forces the recreation at every plan due to provider issue
+    ]
+  }
 }
