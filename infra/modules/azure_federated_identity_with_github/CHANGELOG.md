@@ -1,5 +1,3 @@
-# azure_federated_identity_with_github
-
 ## 1.0.4
 
 ### Patch Changes

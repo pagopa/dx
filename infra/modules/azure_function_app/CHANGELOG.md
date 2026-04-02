@@ -1,5 +1,3 @@
-# azure_function_app
-
 ## 5.0.2
 
 ### Patch Changes

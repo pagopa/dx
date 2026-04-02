@@ -1,5 +1,3 @@
-# renew-tls-certificate
-
 ## 0.0.1
 
 ### Patch Changes

@@ -1,5 +1,3 @@
-# pnpm-plugin-pagopa
-
 ## 1.0.0
 
 ### Major Changes

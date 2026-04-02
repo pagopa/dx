@@ -1,5 +1,3 @@
-# aws_core_values_exporter
-
 ## 0.1.2
 
 ### Patch Changes

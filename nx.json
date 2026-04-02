@@ -3,34 +3,21 @@
   "parallel": 10,
   "targetDefaults": {
     "build": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "{projectRoot}/src/**/*.ts"
-      ],
-      "outputs": [
-        "{projectRoot}/dist/**",
-        "{projectRoot}/bin/**"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
+      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
       "cache": true
     },
     "typecheck": {
-      "dependsOn": [
-        "^build"
-      ],
-      "inputs": [
-        "{projectRoot}/src/**/*.ts"
-      ],
+      "dependsOn": ["^build"],
+      "inputs": ["{projectRoot}/src/**/*.ts"],
       "cache": true
     },
     "format:check": {
       "cache": true
     },
     "lint": {
-      "dependsOn": [
-        "^build"
-      ],
+      "dependsOn": ["^build"],
       "options": {
         "fix": true
       },
@@ -48,41 +35,28 @@
       }
     },
     "tf-init": {
-      "inputs": [
-        "{projectRoot}/**/*.tf"
-      ]
+      "inputs": ["{projectRoot}/**/*.tf"]
     },
     "test:unit": {
-      "dependsOn": [
-        "tf-init"
-      ],
-      "inputs": [
-        "{projectRoot}/**/*.tf",
-        "{projectRoot}/**/unit.tftest.hcl"
-      ]
+      "dependsOn": ["tf-init"],
+      "inputs": ["{projectRoot}/**/*.tf", "{projectRoot}/**/unit.tftest.hcl"]
     },
     "test:contract": {
-      "dependsOn": [
-        "tf-init"
-      ],
+      "dependsOn": ["tf-init"],
       "inputs": [
         "{projectRoot}/**/*.tf",
         "{projectRoot}/**/contract.tftest.hcl"
       ]
     },
     "test:integration": {
-      "dependsOn": [
-        "tf-init"
-      ],
+      "dependsOn": ["tf-init"],
       "inputs": [
         "{projectRoot}/**/*.tf",
         "{projectRoot}/**/integration.tftest.hcl"
       ]
     },
     "test:e2e": {
-      "dependsOn": [
-        "tf-init"
-      ],
+      "dependsOn": ["tf-init"],
       "inputs": [
         "{projectRoot}/**/*.tf",
         "{projectRoot}/**/*.go",
@@ -94,6 +68,15 @@
   },
   "release": {
     "versionPlans": true,
+    "projects": [
+      "apps/*",
+      "packages/*",
+      "actions/*",
+      "infra/modules/*",
+      "providers/*",
+      "containers/*",
+      "infra/scripts"
+    ],
     "projectsRelationship": "independent",
     "version": {},
     "changelog": {
@@ -120,9 +103,7 @@
   "plugins": [
     {
       "plugin": "@nx/docker",
-      "exclude": [
-        "apps/mcpserver/Dockerfile"
-      ],
+      "exclude": ["apps/mcpserver/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
@@ -133,10 +114,7 @@
       "options": {
         "testTargetName": "test"
       },
-      "include": [
-        "apps/**",
-        "packages/**"
-      ]
+      "include": ["apps/**", "packages/**"]
     },
     {
       "plugin": "@nx/eslint/plugin",

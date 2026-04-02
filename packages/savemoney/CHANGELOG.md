@@ -4,8 +4,6 @@
 
 - Updated @pagopa/eslint-config to 6.0.2
 
-# @pagopa/dx-savemoney
-
 ## 0.2.2
 
 ### Patch Changes

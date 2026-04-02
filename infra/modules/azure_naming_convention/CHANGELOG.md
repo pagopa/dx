@@ -1,5 +1,3 @@
-# azure_naming_convention
-
 ## 0.0.8
 
 ### Patch Changes

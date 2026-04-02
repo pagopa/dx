@@ -1,5 +1,3 @@
-# azure_app_service_exposed
-
 ## 3.0.0
 
 ### Major Changes
