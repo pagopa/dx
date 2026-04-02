@@ -3,8 +3,7 @@ import { ResultAsync } from "neverthrow";
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { checkMonorepoScripts } from "./package-json.js";
-import { checkPreCommitConfig } from "./repository.js";
-import { checkTurboConfig } from "./repository.js";
+import { checkNxConfig, checkPreCommitConfig } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
 import { checkWorkspaces } from "./workspace.js";
 
@@ -40,8 +39,8 @@ export const runDoctor = async (dependencies: Dependencies, config: Config) => {
       () => new Error("Error checking pre-commit configuration"),
     ),
     ResultAsync.fromPromise(
-      checkTurboConfig(dependencies, repositoryRoot, config),
-      () => new Error("Error checking Turbo configuration"),
+      checkNxConfig(dependencies, repositoryRoot, config),
+      () => new Error("Error checking Nx configuration"),
     ),
     ResultAsync.fromPromise(
       checkMonorepoScripts(dependencies, repositoryRoot),
@@ -49,7 +48,7 @@ export const runDoctor = async (dependencies: Dependencies, config: Config) => {
     ),
     ResultAsync.fromPromise(
       checkWorkspaces(dependencies, repositoryRoot),
-      () => new Error("Error checking monorepo scripts"),
+      () => new Error("Error checking workspaces"),
     ),
   ];
   return ResultAsync.combine(doctorChecks).match(
