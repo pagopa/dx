@@ -9,7 +9,6 @@
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.7 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.12 |
 
 ## Modules
 
