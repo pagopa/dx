@@ -1,3 +1,18 @@
+## 0.18.13 (2026-04-02)
+
+### 🩹 Fixes
+
+- Include the project repository name in the branch name created on `eng-azure-authorization` when requesting Azure subscription authorization. ([#1545](https://github.com/pagopa/dx/pull/1545))
+
+  Previously the branch was named `feats/add-<subscription>-bootstrap-identity`, which caused a conflict when multiple teams initialized projects on the same Azure subscription at the same time.
+
+  The branch is now named `feats/add-<repo>-<subscription>-bootstrap-identity`, making it unique per (repository, subscription) pair.
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.18.12 (2026-04-01)
 
 ### 🧱 Updated Dependencies
@@ -14,8 +29,6 @@
 ### ❤️ Thank You
 
 - Luca Cavallaro
-
-# @pagopa/dx-cli
 
 ## 0.18.10
 

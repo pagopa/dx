@@ -4,8 +4,6 @@
 
 - Updated @pagopa/eslint-config to 6.0.2
 
-# @pagopa/opex-dashboard
-
 ## 0.2.4
 
 ### Patch Changes

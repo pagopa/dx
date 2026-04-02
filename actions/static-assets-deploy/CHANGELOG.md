@@ -1,5 +1,3 @@
-# static-assets-deploy
-
 ## 0.0.1
 
 ### Patch Changes

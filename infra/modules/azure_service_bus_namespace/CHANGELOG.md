@@ -1,5 +1,3 @@
-# azure_service_bus_namespace
-
 ## 0.1.0
 
 ### Minor Changes

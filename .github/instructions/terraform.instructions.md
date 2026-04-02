@@ -20,4 +20,4 @@ applyTo: "**/*.tf, **/*.tfvars"
 
 - Every Terraform module MUST include a `README.md`, `examples/`, and a `tests/` directory.
 - Follow the structure and conventions found in `infra/modules/`.
-- Include a `package.json` and use `pnpm changeset` for any user-facing changes.
+- Include a `package.json` and use `pnpm nx release plan` for any user-facing changes.

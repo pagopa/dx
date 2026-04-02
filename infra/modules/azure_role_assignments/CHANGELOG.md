@@ -1,5 +1,3 @@
-# azure_role_assignments
-
 ## 1.3.3
 
 ### Patch Changes

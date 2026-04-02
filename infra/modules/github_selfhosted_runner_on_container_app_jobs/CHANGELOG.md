@@ -1,5 +1,3 @@
-# github_selfhosted_runner_on_container_app_jobs
-
 ## 1.3.1
 
 ### Patch Changes
