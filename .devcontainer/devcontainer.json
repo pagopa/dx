@@ -31,7 +31,10 @@
     "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
     "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
     "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1": {}
+    "ghcr.io/devcontainers/features/copilot-cli:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
+      "packages": "ripgrep,xdg-utils"
+    }
   },
   "postStartCommand": {
     "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
@@ -62,6 +65,18 @@
         "github.copilot",
         "github.copilot-chat",
         "nrwl.angular-console"
+      ]
+    },
+    "jetbrains": {
+      "plugins": [
+        "org.intellij.plugins.hcl",
+        "com.intellij.mermaid",
+        "mdx.js",
+        "dev.nx.console",
+        "ru.adelf.idea.dotenv",
+        "mobi.hsz.idea.gitignore",
+        "org.editorconfig.editorconfigjetbrains",
+        "intellij.prettierJS"
       ]
     }
   }

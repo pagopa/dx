@@ -1,4 +1,14 @@
-# github_environment_bootstrap
+## 1.1.7
+
+### Patch Changes
+
+- fd5eb9c: Remove the `security_and_analysis` block to prevent the `PATCH https://api.github.com/repos/pagopa/<repo-name>: 422` error
+
+## 1.1.6
+
+### Patch Changes
+
+- e5bc61e: Update documentation with minor tweaks
 
 ## 1.1.5
 

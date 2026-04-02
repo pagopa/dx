@@ -1,4 +1,32 @@
-# docs
+## 0.14.1
+
+### Patch Changes
+
+- f74034d: Upgrade docusaurus plugin
+
+  The
+  [newer version of the docusaurus plugin is backward compatible with the previous version](https://github.com/rachfop/docusaurus-plugin-llms/releases/tag/v0.3.0),
+  so this change should not cause any issues.
+
+- 0893d68: Fix broken link in blog post
+  apps/website/blog/009-function-app-managed-identity.mdx
+- f74034d: Reference React version from dedicated catalog
+- Updated dependencies [f74034d]
+  - @pagopa/dx-mcpprompts@0.2.6
+
+## 0.14.0
+
+### Minor Changes
+
+- 75f940f: Bump website dependencies including React to v19
+- 102e8a0: Create page to describe authentication with Managed Identity between
+  APIM and Function App
+
+## 0.13.0
+
+### Minor Changes
+
+- 4e4d4b7: Document agent plugins marketplace usage
 
 ## 0.12.9
 

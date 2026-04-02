@@ -1,4 +1,8 @@
-# azure_function_app
+## 5.0.2
+
+### Patch Changes
+
+- 90e7dd0: Update Azure Function App module examples
 
 ## 5.0.1
 

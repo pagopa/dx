@@ -29,6 +29,9 @@ inputs:
           key1=value1
           key2=value2
         ```
+  build_target:
+    required: false
+    description: "Target build stage in a multi-stage Dockerfile (e.g., 'import-runner'). Omit to build the default final stage."
   build_platforms:
     required: true
     description: |
@@ -184,6 +187,7 @@ runs:
         cache-to: type=gha,mode=min
         build-args: ${{ env.BUILD_ARGS }}
         platforms: ${{ env.BUILD_PLATFORMS }}
+        target: ${{ inputs.build_target }}
         provenance: false
 
     # Create an entry in github.com/org/repo/attestations

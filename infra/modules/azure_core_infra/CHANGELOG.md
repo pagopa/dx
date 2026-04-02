@@ -1,4 +1,25 @@
-# azure_core_infra
+## 3.1.1 (2026-04-02)
+
+### 🩹 Fixes
+
+- Ignore DDoS protection plan in VNet ([#1560](https://github.com/pagopa/dx/pull/1560))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+
+## 3.1.0 (2026-04-02)
+
+### 🚀 Features
+
+- The Azure core module now creates the private DNS zone for Managed Redis resources. ([#1555](https://github.com/pagopa/dx/pull/1555))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+- Copilot @Copilot
 
 ## 3.0.0
 

@@ -34,3 +34,6 @@ provider "dx" {
 
 provider "random" {
 }
+
+provider "time" {
+}

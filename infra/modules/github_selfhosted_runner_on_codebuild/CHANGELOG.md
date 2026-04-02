@@ -1,5 +1,3 @@
-# github_selfhosted_runner_on_codebuild
-
 ## 1.1.0
 
 ### Minor Changes

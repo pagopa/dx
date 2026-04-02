@@ -1,5 +1,3 @@
-# @pagopa/opex-dashboard-generate-action
-
 ## 0.1.0
 
 ### Minor Changes

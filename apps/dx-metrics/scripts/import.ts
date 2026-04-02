@@ -10,6 +10,7 @@ import {
 } from "./lib/checkpoints";
 import {
   CliUsageError,
+  computeSinceDate,
   getHelpText,
   HelpRequestedError,
   parseArgs,
@@ -66,6 +67,10 @@ const handleCliError = (error: unknown): never => {
 async function main(): Promise<void> {
   const overallStartTime = Date.now();
   const args = parseArgs(process.argv.slice(2), process.cwd());
+
+  if (!args.since) {
+    args.since = computeSinceDate(process.env.IMPORT_SINCE_DAYS);
+  }
   const fileConfig = loadImportConfig(args.configPath);
   const settings = resolveImportSettings(
     fileConfig,

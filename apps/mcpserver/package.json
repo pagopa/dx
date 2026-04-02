@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "type": "module",
   "description": "An MCP server that supports developers using DX tools.",
   "repository": {
@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.583.0",
-    "@aws-sdk/client-s3": "^3.583.0",
+    "@aws-sdk/client-s3": "catalog:aws",
     "@aws-sdk/s3-request-presigner": "^3.583.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",

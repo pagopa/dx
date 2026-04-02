@@ -1,4 +1,16 @@
-# pr-comment-action
+## 0.2.1
+
+### Patch Changes
+
+- f74034d: Reference GitHub Actions dependencies from dedicated catalog
+
+## 0.2.0
+
+### Minor Changes
+
+- 63a37d7: Upgrade `@actions/core` from `^1.11.1` to `^3.0.0` and `@actions/github` from `^6.0.0` to `^9.0.0`.
+
+  Also fixed a pre-existing bug in the test suite where `toHaveBeenCalledWith()` was called without arguments, causing a false assertion in the "should handle comment deletion errors gracefully" test case.
 
 ## 0.1.5
 

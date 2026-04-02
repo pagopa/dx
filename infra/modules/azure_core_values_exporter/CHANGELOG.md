@@ -1,5 +1,3 @@
-# azure_core_values_exporter
-
 ## 0.4.0
 
 ### Minor Changes

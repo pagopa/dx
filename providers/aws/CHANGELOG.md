@@ -1,5 +1,3 @@
-# provider-aws
-
 ## 0.1.4
 
 ### Patch Changes

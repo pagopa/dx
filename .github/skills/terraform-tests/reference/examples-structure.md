@@ -50,5 +50,5 @@ module "example" {
 **Critical**: When committing tests for a module:
 
 1. Update `mut.tf` to reference the module from the registry with version + 1
-2. Run `pnpm changeset` and create a **patch** version bump
-3. The changeset ensures the version referenced in tests will exist after publish
+2. Run `pnpm nx release plan` and create a **patch** version bump
+3. The version plan ensures the version referenced in tests will exist after publish

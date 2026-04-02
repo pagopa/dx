@@ -47,7 +47,7 @@ resource "dx_available_subnet_cidr" "private_app" {
 
 resource "azurerm_subnet" "private_app" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "appcs-private",
+    name          = "appcs-na-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = local.e2e_virtual_network.resource_group_name
@@ -103,53 +103,23 @@ resource "azurerm_container_group" "private_app" {
   tags = local.tags
 }
 
-module "role_appcs_private" {
-  source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
-
-  principal_id    = azurerm_container_group.private_app.identity[0].principal_id
-  subscription_id = data.azurerm_subscription.current.subscription_id
-
-  app_config = [
-    {
-      name                = module.private_appcs.name
-      resource_group_name = module.private_appcs.resource_group_name
-      description         = "Allow private Container Instance to read from App Configuration"
-      role                = "reader"
-    }
-  ]
+resource "azurerm_role_assignment" "role_appcs_private" {
+  scope                = module.private_appcs.id
+  role_definition_name = "App Configuration Data Reader"
+  principal_id         = azurerm_container_group.private_app.identity[0].principal_id
+  description          = "Allow private Container Instance to read from App Configuration"
 }
 
-module "role_appcs_public" {
-  source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
-
-  principal_id    = azurerm_container_group.public_app.identity[0].principal_id
-  subscription_id = data.azurerm_subscription.current.subscription_id
-
-  app_config = [
-    {
-      name                = module.private_appcs.name
-      resource_group_name = module.private_appcs.resource_group_name
-      description         = "Allow public Container Instance to read from App Configuration"
-      role                = "reader"
-    }
-  ]
+resource "azurerm_role_assignment" "role_appcs_public" {
+  scope                = module.private_appcs.id
+  role_definition_name = "App Configuration Data Reader"
+  principal_id         = azurerm_container_group.public_app.identity[0].principal_id
+  description          = "Allow public Container Instance to read from App Configuration"
 }
 
-module "integration_github_roles" {
-  source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
-
-  principal_id    = data.azurerm_user_assigned_identity.integration_github.principal_id
-  subscription_id = data.azurerm_subscription.current.subscription_id
-
-  app_config = [
-    {
-      name                = module.private_appcs.name
-      resource_group_name = module.private_appcs.resource_group_name
-      description         = "Allow GitHub to write settings on App Configuration"
-      role                = "writer"
-    }
-  ]
+resource "azurerm_role_assignment" "integration_github_roles" {
+  scope                = module.private_appcs.id
+  role_definition_name = "App Configuration Data Owner"
+  principal_id         = data.azurerm_user_assigned_identity.integration_github.principal_id
+  description          = "Allow GitHub to write settings on App Configuration"
 }

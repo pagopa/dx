@@ -51,7 +51,7 @@ const trackSearchEvent = (
  * to track user search behavior with debouncing to avoid multiple events.
  */
 export const useSearchTracking = (): void => {
-  const debounceTimerRef = useRef<NodeJS.Timeout>();
+  const debounceTimerRef = useRef<NodeJS.Timeout>(undefined);
   const lastTrackedQueryRef = useRef<string>("");
 
   useEffect(() => {

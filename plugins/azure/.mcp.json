@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "azure-learn-mcp-server": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    },
+    "dx-mcp-server": {
+      "type": "http",
+      "url": "https://api.dx.pagopa.it/mcp"
+    }
+  },
+  "inputs": []
+}

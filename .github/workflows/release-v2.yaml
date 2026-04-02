@@ -24,7 +24,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-tags: "true"
           fetch-depth: 0
@@ -62,13 +62,6 @@ jobs:
         if: steps.node-setup.outputs.package-manager == 'npm'
         shell: bash
         run: npm ci
-
-      - name: Install Nx CLI
-        shell: bash
-        run: |
-          sudo add-apt-repository ppa:nrwl/nx
-          sudo apt update
-          sudo apt install nx
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main

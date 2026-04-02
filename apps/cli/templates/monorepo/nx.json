@@ -1,0 +1,79 @@
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "parallel": 10,
+  "targetDefaults": {
+    "lint": {
+      "dependsOn": ["^build"],
+      "options": {
+        "fix": true
+      },
+      "configurations": {
+        "ci": {
+          "fix": false
+        }
+      }
+    },
+    "test": {
+      "configurations": {
+        "ci": {
+          "coverage": true
+        }
+      }
+    }
+  },
+  "release": {
+    "versionPlans": true,
+    "projectsRelationship": "independent",
+    "version": {},
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": true,
+          "applyUsernameToAuthors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    },
+    "git": {
+      "commit": false,
+      "tag": true,
+      "stageChanges": false
+    },
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
+    }
+  },
+  "plugins": [
+    {
+      "plugin": "@nx/vitest",
+      "options": {
+        "testTargetName": "test"
+      },
+      "include": ["apps/**", "packages/**"]
+    },
+    {
+      "plugin": "@nx/eslint/plugin",
+      "options": {
+        "targetName": "lint"
+      }
+    },
+    {
+      "plugin": "@nx/js/typescript",
+      "options": {
+        "typecheck": {
+          "targetName": "typecheck"
+        },
+        "build": {
+          "targetName": "build",
+          "configName": "tsconfig.json",
+          "buildDepsName": "build-deps",
+          "watchDepsName": "watch-deps"
+        }
+      }
+    }
+  ],
+  "analytics": false
+}

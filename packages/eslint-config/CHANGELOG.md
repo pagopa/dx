@@ -1,4 +1,18 @@
-# @pagopa/eslint-config
+## 6.0.2 (2026-04-01)
+
+### 🩹 Fixes
+
+- Update installation instructions to include peer dependencies ([#1546](https://github.com/pagopa/dx/pull/1546))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 6.0.1
+
+### Patch Changes
+
+- 64f68dc: Update ESLint configuration to include additional test file patterns
 
 ## 6.0.0
 

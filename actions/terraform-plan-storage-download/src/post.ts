@@ -12,7 +12,7 @@
 
 import * as core from "@actions/core";
 import { DeleteObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { DefaultAzureCredential } from "@azure/identity";
+import { AzureCliCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 
 import { type PostState, PostStateSchema } from "./schema.js";
@@ -22,7 +22,10 @@ async function deleteFromAzure(
   container: string,
   blobName: string,
 ): Promise<void> {
-  const credential = new DefaultAzureCredential();
+  // AzureCliCredential is used explicitly to avoid DefaultAzureCredential
+  // silently selecting the runner VM's Managed Identity on self-hosted runners.
+  // csp-login (azure/login) always authenticates the az CLI before this step.
+  const credential = new AzureCliCredential();
   const url = `https://${storageAccount}.blob.core.windows.net`;
   const blobClient = new BlobServiceClient(url, credential)
     .getContainerClient(container)

@@ -21,20 +21,30 @@ runs:
   steps:
     - name: Enable Corepack
       shell: bash
-      run: corepack enable
+      run: |
+        # On self-hosted runners the job runs as a non-root user
+        # and lacks write access to /usr/bin, causing `corepack enable` to fail
+        # with EACCES. Install shims into a user-writable directory instead and
+        # expose it on PATH via GITHUB_PATH.
+        if ! corepack enable 2>/dev/null; then
+          echo "Command failed, falling back to user-local shims"
+          mkdir -p "$HOME/.local/bin"
+          corepack enable --install-directory "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+        fi
 
     - name: Detect Node.js package manager
       id: detect-pm
       uses: pagopa/dx/actions/detect-node-package-manager@main
 
-    - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+    - uses: actions/setup-node@53b83947a5a98c8d113130e565377fae1a50d02f # v6.3.0
       with:
         node-version-file: .node-version
         cache: ${{ steps.detect-pm.outputs.package-manager }}
 
     - name: Setup turbo cache
       if: ${{ env.TURBO_CACHE_DIR != '' }}
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with:
         path: ${{ inputs.working_dir }}/${{ env.TURBO_CACHE_DIR }}
         key: ${{ runner.os }}-turbo-${{ github.sha }}

@@ -1,4 +1,8 @@
-# azure_storage_account
+## 2.2.3
+
+### Patch Changes
+
+- 13b31e8: Suppress Trivy warnings
 
 ## 2.2.2
 

@@ -13779,7 +13779,8 @@ external_exports.object({
 var ProjectMetadataSchema = external_exports.record(external_exports.string(), external_exports.unknown());
 async function getNxProjectNames() {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "projects",
       "--json"
@@ -13822,7 +13823,8 @@ function matchProjectName(tag, projectNames) {
 }
 async function getNxProjectMetadata(projectName) {
   try {
-    const { stdout } = await execFileAsync("nx", [
+    const { stdout } = await execFileAsync("npx", [
+      "nx",
       "show",
       "project",
       projectName,

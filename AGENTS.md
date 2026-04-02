@@ -5,8 +5,8 @@ Guidelines and architectural context for DevEx initiative development.
 ## Core Rules
 
 - **No Unsolicited PRs**: NEVER commit or open pull requests without explicit user instructions.
-- **Changesets Mandatory**: Every PR with user-facing changes MUST include a changeset: `pnpm changeset`.
-- **Breaking Changes**: Be extremely cautious with breaking changes for reusable Terraform modules and GitHub workflows. Always provide clear migration paths in changesets. When renaming resources or changing interfaces, try to keep backward compatibility.
+- **Version Plans Mandatory**: Every PR with user-facing changes MUST include a version plan: `pnpm nx release plan`.
+- **Breaking Changes**: Be extremely cautious with breaking changes for reusable Terraform modules and GitHub workflows. Always provide clear migration paths in version plans. When renaming resources or changing interfaces, try to keep backward compatibility.
 
 ## Repository Map
 
@@ -33,6 +33,7 @@ Guidelines and architectural context for DevEx initiative development.
 
 - [DX Documentation site](https://dx.pagopa.it/docs/)
 - [Local Instructions](.github/instructions/): TypeScript, Terraform, PR, and Commit guidelines.
+- [GitHub Conventions skill](.github/skills/github-conventions/SKILL.md): Rules for commit messages, PR titles/descriptions, and branch naming — use this skill whenever committing or opening a pull request.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

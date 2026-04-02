@@ -17,6 +17,7 @@
       "cache": true
     },
     "lint": {
+      "dependsOn": ["^build"],
       "options": {
         "fix": true
       },
@@ -31,7 +32,8 @@
         "ci": {
           "coverage": true
         }
-      }
+      },
+      "dependsOn": ["^build"]
     },
     "tf-init": {
       "inputs": ["{projectRoot}/**/*.tf"]
@@ -65,9 +67,43 @@
     },
     "version": {}
   },
+  "release": {
+    "versionPlans": true,
+    "projects": [
+      "apps/*",
+      "packages/*",
+      "actions/*",
+      "infra/modules/*",
+      "providers/*",
+      "infra/scripts"
+    ],
+    "projectsRelationship": "independent",
+    "version": {},
+    "changelog": {
+      "projectChangelogs": {
+        "createRelease": false,
+        "file": "{projectRoot}/CHANGELOG.md",
+        "renderOptions": {
+          "authors": true,
+          "applyUsernameToAuthors": true,
+          "commitReferences": true,
+          "versionTitleDate": true
+        }
+      }
+    },
+    "git": {
+      "commit": false,
+      "tag": true,
+      "stageChanges": false
+    },
+    "releaseTag": {
+      "pattern": "{projectName}@{version}"
+    }
+  },
   "plugins": [
     {
       "plugin": "@nx/docker",
+      "exclude": ["apps/*/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
@@ -100,5 +136,6 @@
         }
       }
     }
-  ]
+  ],
+  "analytics": false
 }

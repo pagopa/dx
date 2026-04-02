@@ -1,5 +1,3 @@
-# aws_github_environment_bootstrap
-
 ## 0.0.6
 
 ### Patch Changes
