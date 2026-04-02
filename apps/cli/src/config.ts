@@ -1,11 +1,11 @@
 export type Config = {
   minVersions: {
-    turbo: string;
+    nx: string;
   };
 };
 
 export const getConfig = (): Config => ({
   minVersions: {
-    turbo: "2",
+    nx: "22",
   },
 });

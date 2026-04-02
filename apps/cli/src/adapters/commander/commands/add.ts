@@ -1,3 +1,5 @@
+import { getLogger } from "@logtape/logtape";
+import chalk from "chalk";
 /**
  * Add command - Scaffold new components into existing workspaces
  *
@@ -8,15 +10,114 @@
  * - environment: Add a new deployment environment to the project
  */
 import { Command } from "commander";
-import { ResultAsync } from "neverthrow";
+import { okAsync, ResultAsync } from "neverthrow";
 
+import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
+
+import {
+  AuthorizationResult,
+  AuthorizationService,
+  requestAuthorizationInputSchema,
+} from "../../../domain/authorization.js";
+import { environmentShort } from "../../../domain/environment.js";
+import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import {
   getPlopInstance,
   runDeploymentEnvironmentGenerator,
 } from "../../plop/index.js";
 import { checkPreconditions } from "./init.js";
 
-const addEnvironmentAction = () =>
+/**
+ * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
+ */
+export const authorizeCloudAccounts =
+  (authorizationService: AuthorizationService) =>
+  (
+    envPayload: EnvironmentPayload,
+  ): ResultAsync<AuthorizationResult[], never> => {
+    const accountsToInitialize =
+      envPayload.init?.cloudAccountsToInitialize ?? [];
+
+    if (accountsToInitialize.length === 0) {
+      return okAsync([]);
+    }
+
+    const logger = getLogger(["dx-cli", "add-environment"]);
+    const { name, prefix } = envPayload.env;
+    const envShort = environmentShort[name];
+
+    const requestAll = async (): Promise<AuthorizationResult[]> => {
+      const results: AuthorizationResult[] = [];
+
+      for (const account of accountsToInitialize) {
+        if (!isAzureLocation(account.defaultLocation)) {
+          logger.warn(
+            "Skipping authorization for {account}: unsupported location",
+            { account: account.displayName },
+          );
+          continue;
+        }
+
+        const locShort = locationShort[account.defaultLocation];
+        const input = requestAuthorizationInputSchema.safeParse({
+          bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+          repoName: envPayload.github.repo,
+          subscriptionName: account.displayName,
+        });
+
+        if (!input.success) {
+          logger.warn("Skipping authorization for {account}: invalid input", {
+            account: account.displayName,
+          });
+          continue;
+        }
+
+        const result = await authorizationService.requestAuthorization(
+          input.data,
+        );
+
+        result.match(
+          (authResult) => results.push(authResult),
+          (error) =>
+            logger.warn("Authorization request failed for {account}: {error}", {
+              account: account.displayName,
+              error: error.message,
+            }),
+        );
+      }
+
+      return results;
+    };
+
+    return ResultAsync.fromPromise(requestAll(), () => []).orElse(() =>
+      okAsync([]),
+    );
+  };
+
+type AddResult = {
+  authorizationPrs: AuthorizationResult[];
+};
+
+const displaySummary = (result: AddResult) => {
+  const { authorizationPrs } = result;
+  console.log(chalk.green.bold("\nCloud environment created successfully!"));
+
+  let step = 1;
+  console.log(chalk.green.bold("\nNext Steps:"));
+  if (authorizationPrs.length > 0) {
+    console.log(`${step++}. Review the Azure authorization Pull Request(s):`);
+    for (const authPr of authorizationPrs) {
+      console.log(`   - ${chalk.underline(authPr.url)}`);
+    }
+  }
+  console.log(
+    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+  );
+};
+
+const addEnvironmentAction = (
+  authorizationService: AuthorizationService,
+): ResultAsync<AddResult, Error> =>
   checkPreconditions()
     .andThen(() =>
       ResultAsync.fromPromise(
@@ -29,9 +130,20 @@ const addEnvironmentAction = () =>
         runDeploymentEnvironmentGenerator(plop),
         () => new Error("Failed to run the deployment environment generator"),
       ),
+    )
+    .andThen((payload) =>
+      authorizeCloudAccounts(authorizationService)(payload).map(
+        (authorizationPrs) => ({
+          authorizationPrs,
+        }),
+      ),
     );
 
-export const makeAddCommand = (): Command =>
+export type AddCommandDependencies = {
+  authorizationService: AuthorizationService;
+};
+
+export const makeAddCommand = (deps: AddCommandDependencies): Command =>
   new Command()
     .name("add")
     .description("Add a new component to your workspace")
@@ -39,9 +151,11 @@ export const makeAddCommand = (): Command =>
       new Command("environment")
         .description("Add a new deployment environment")
         .action(async function () {
-          const result = await addEnvironmentAction();
+          const result = await addEnvironmentAction(deps.authorizationService);
           if (result.isErr()) {
             this.error(result.error.message);
+          } else {
+            displaySummary(result.value);
           }
         }),
     );

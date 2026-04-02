@@ -1,6 +1,6 @@
 ---
 title: "Turborepo"
-ring: adopt
+ring: hold
 tags: [typescript, monorepo, dx, tool]
 ---
 
@@ -12,9 +12,12 @@ cross-package testing, and more.
 
 ## Use cases
 
-We strongly recommend using Turborepo for managing multiple packages in a single
-repository, as it can help streamline your development workflow and improve code
-sharing across packages.
+Use Turborepo only when your scope is mostly JavaScript/TypeScript and you do
+not need broader polyglot orchestration.
+
+For new monorepo initiatives, prefer [Nx](./nx.md). We put Turborepo on hold in
+favor of Nx because we need stronger support beyond JavaScript/TypeScript,
+including Terraform and Java workloads in the same workspace.
 
 ## Reference of usage in our organization
 

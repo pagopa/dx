@@ -47,7 +47,7 @@ export const makeMockDependencies = (): {
 
 export const makeMockConfig = (): Config => ({
   minVersions: {
-    turbo: "2.5.0",
+    nx: "22",
   },
 });
 
