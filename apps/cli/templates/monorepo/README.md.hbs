@@ -132,7 +132,7 @@ pnpm nx release plan
 - When opening a Pull Request with a change intended to be published, add a version plan file that describes the change and the version bump type (patch, minor, major) for each involved app or package.
 - Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly.
 Only apps and packages mentioned in the version plan files will be bumped.
-- Review the `Version Packages` PR and merge it when ready. Version plans files will be deleted.
+- Review the `Version Packages` PR and merge it when ready. Version plan files will be deleted.
 - A Release entry is created for each app or package whose version has been bumped.
 
 ### Folder structure
