@@ -75,7 +75,6 @@
       "actions/*",
       "infra/modules/*",
       "providers/*",
-      "containers/*",
       "infra/scripts"
     ],
     "projectsRelationship": "independent",
