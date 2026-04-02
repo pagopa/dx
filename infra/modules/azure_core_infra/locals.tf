@@ -34,5 +34,6 @@ locals {
     "container_app"            = "privatelink.italynorth.azurecontainerapps.io"
     "apim"                     = "privatelink.azure-api.net"
     "appcs"                    = "privatelink.azconfig.io"
+    "redis_managed"            = "privatelink.redis.azure.net"
   }
 }
