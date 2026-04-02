@@ -38,12 +38,10 @@ resource "azurerm_virtual_network_peering" "common_to_tests" {
   resource_group_name = var.vnet_common.resource_group_name
 
   virtual_network_name = var.vnet_common.name
-  local_subnet_names   = local.common_subnets
 
   remote_virtual_network_id = azurerm_virtual_network.tests[each.value].id
-  remote_subnet_names       = local.tests_subnets
 
-  peer_complete_virtual_networks_enabled = false
+  peer_complete_virtual_networks_enabled = true
   allow_virtual_network_access           = true
 
   triggers = {
@@ -59,12 +57,10 @@ resource "azurerm_virtual_network_peering" "tests_to_common" {
   resource_group_name = azurerm_virtual_network.tests[each.value].resource_group_name
 
   virtual_network_name = azurerm_virtual_network.tests[each.value].name
-  local_subnet_names   = local.tests_subnets
 
   remote_virtual_network_id = var.vnet_common.id
-  remote_subnet_names       = local.common_subnets
 
-  peer_complete_virtual_networks_enabled = false
+  peer_complete_virtual_networks_enabled = true
   allow_virtual_network_access           = false
 
   triggers = {

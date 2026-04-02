@@ -14,10 +14,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_integration_github_roles"></a> [integration\_github\_roles](#module\_integration\_github\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 | <a name="module_private_appcs"></a> [private\_appcs](#module\_private\_appcs) | pagopa-dx/azure-app-configuration/azurerm | ~> 0.0 |
-| <a name="module_role_appcs_private"></a> [role\_appcs\_private](#module\_role\_appcs\_private) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
-| <a name="module_role_appcs_public"></a> [role\_appcs\_public](#module\_role\_appcs\_public) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.0 |
 
 ## Resources
 
@@ -27,6 +24,9 @@
 | [azurerm_container_group.private_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group) | resource |
 | [azurerm_container_group.public_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_group) | resource |
 | [azurerm_resource_group.e2e_appcs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_role_assignment.integration_github_roles](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.role_appcs_private](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.role_appcs_public](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_subnet.private_app](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [dx_available_subnet_cidr.private_app](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/available_subnet_cidr) | resource |
 | [random_integer.appcs_instance](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |

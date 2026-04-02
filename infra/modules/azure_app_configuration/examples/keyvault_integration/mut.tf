@@ -25,6 +25,10 @@ module "appcs_with_kv" {
     ]
   }]
 
+  depends_on = [
+    azurerm_private_endpoint.kv
+  ]
+
   tags = local.tags
 }
 
@@ -35,7 +39,8 @@ resource "azurerm_app_configuration_key" "test_setting" {
   content_type           = "application/json"
 
   depends_on = [
-    azurerm_role_assignment.github_appconfig_writer
+    azurerm_role_assignment.github_appconfig_writer,
+    azurerm_private_endpoint.kv
   ]
 }
 
@@ -47,6 +52,7 @@ resource "azurerm_app_configuration_key" "test_secret" {
 
   depends_on = [
     azurerm_role_assignment.github_appconfig_writer,
-    azurerm_key_vault_secret.test_secret
+    azurerm_key_vault_secret.test_secret,
+    azurerm_private_endpoint.kv
   ]
 }
