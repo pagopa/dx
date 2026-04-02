@@ -96,6 +96,10 @@ jobs:
             CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR" || true)
           fi
 
+          if [ "$EVENT_NAME" != "workflow_dispatch" ] && printf '%s\n' "$CHANGED" | grep -qE "^${DIR}/_modules/"; then
+            CHANGED=$(find "$DIR" -maxdepth 2 -name '*.tf' -not -path "*/_modules/*" 2>/dev/null || true)
+          fi
+
           # The two layouts are mutually exclusive:
           # - flat:          a .tf exists directly in $DIR → $DIR is the single project root
           # - multi-project: no .tf directly in $DIR → each first-level subdir is a project root
