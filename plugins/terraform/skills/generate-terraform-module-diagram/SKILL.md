@@ -304,17 +304,48 @@ mmdc \
 
 1. Read the current `README.md` in the module directory
 2. Find the `## Diagram` section or the `<!-- BEGIN_TF_DOCS -->` marker
+3. Build the GitHub raw link pointing to the default branch
+
+### Building the Raw GitHub URL
+
+The skill is called with a known module path. Extract repository metadata to build the raw link:
+
+```bash
+# Get repository URL and extract owner/repo
+REMOTE_URL=$(git remote get-url origin)
+# Extract owner and repo from both HTTPS and SSH formats:
+# HTTPS: https://github.com/owner/repo.git
+# SSH: git@github.com:owner/repo.git
+OWNER=$(echo "$REMOTE_URL" | sed -E 's/.*[:/]([^/]+)\/[^/]+\.git$/\1/')
+REPO=$(echo "$REMOTE_URL" | sed -E 's/.*\/([^/]+)\.git$/\1/')
+
+# Detect default branch (usually main or master)
+DEFAULT_BRANCH=$(git symbolic-ref refs/remotes/origin/HEAD --short | cut -d'/' -f2)
+DEFAULT_BRANCH=${DEFAULT_BRANCH:-main}
+
+# Use the known module path provided by the skill caller
+MODULE_PATH="infra/modules/my-module"  # Replace with actual path from skill context
+
+# Build the raw GitHub URL
+RAW_URL="https://raw.githubusercontent.com/$OWNER/$REPO/$DEFAULT_BRANCH/$MODULE_PATH/diagram.svg"
+```
+
+Example:
+
+```
+https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/example/diagram.svg
+```
 
 **If `## Diagram` already exists**: replace its entire content with the image reference.
 
 **If `## Diagram` does not exist**: insert the complete section immediately before `<!-- BEGIN_TF_DOCS -->`.
 
-Use this exact format:
+Use this format in the README:
 
 ```markdown
 ## Diagram
 
-![diagram](./diagram.svg)
+![diagram](https://raw.githubusercontent.com/$OWNER/$REPO/$DEFAULT_BRANCH/$MODULE_PATH/diagram.svg)
 ```
 
 **Visual structure of README**:
@@ -325,7 +356,7 @@ Use this exact format:
 
 ## Diagram               <- last manual section
 
-![diagram](./diagram.svg)
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/example/diagram.svg)
 
 <!-- BEGIN_TF_DOCS -->   <- auto-generated content starts here
 ```
@@ -333,7 +364,9 @@ Use this exact format:
 Rules:
 
 - Heading is exactly `## Diagram`
-- Content is only `![diagram](./diagram.svg)` — no legend, no extra text
+- URL points to the **default branch** (main/master), not the feature branch
+- URL includes the module path from repository root
+- File is always named `diagram.svg` in the module directory
 - Never place the section after `<!-- BEGIN_TF_DOCS -->`
 
 ---
