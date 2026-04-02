@@ -29,9 +29,9 @@ The workflow automates the full release lifecycle in two steps:
 
 :::tip Recovery
 
-If something goes wrong mid-publish, trigger `workflow_dispatch` manually. The
-workflow will pick up from where it left off, creating only the missing tags and
-releases.
+If something goes wrong mid-publish, re-run the action or trigger
+`workflow_dispatch` manually. The workflow will pick up from where it left off,
+creating only the missing tags and releases.
 
 :::
 
@@ -57,6 +57,15 @@ To mark a package as public, add a tag that is either `public` or ends with
 }
 ```
 
+:::note
+
+Nx via `@nx/js` plugin adds `npm:public` tag automatically on public projects,
+so if you are using that plugin you don't need to add the tag manually. But for
+non-public projects, or if you are not using @nx/js, you need to add the tag
+manually as described above.
+
+:::
+
 ### nx.json configuration
 
 Add the following `release` block to your `nx.json`:
@@ -65,6 +74,11 @@ Add the following `release` block to your `nx.json`:
 {
   "release": {
     "versionPlans": true,
+    "projects": [
+      "apps/*",
+      "packages/*",
+      ... other project globs
+    ],
     "projectsRelationship": "independent",
     "version": {},
     "changelog": {
@@ -91,14 +105,15 @@ Add the following `release` block to your `nx.json`:
 }
 ```
 
-| Option                 | Value                     | Why                                                                                                                                                                                                      |
-| ---------------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `versionPlans`         | `true`                    | Enables file-based versioning (similar to Changesets): version increments are described in dedicated files committed to the repo                                                                         |
-| `projectsRelationship` | `"independent"`           | Each package has its own version; there is no single workspace-wide version                                                                                                                              |
-| `createRelease`        | `false`                   | GitHub Releases are created automatically by the workflow after the PR is merged, not at changelog generation time                                                                                       |
-| `git.commit`           | `false`                   | The workflow handles commits itself; letting Nx commit would interfere with the PR creation logic                                                                                                        |
-| `git.tag`              | `true`                    | Nx creates tags locally so the workflow can reference them; they are pushed only after the PR is merged                                                                                                  |
-| `releaseTag.pattern`   | `{projectName}@{version}` | Follows the [default Nx independent release convention](https://nx.dev/docs/guides/nx-release/release-projects-independently#create-a-git-tag-for-each-project); defining it explicitly improves clarity |
+| Option                 | Value                        | Why                                                                                                                                                                                                      |
+| ---------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `versionPlans`         | `true`                       | Enables file-based versioning (similar to Changesets): version increments are described in dedicated files committed to the repo                                                                         |
+| `projects`             | `["projects_path_1/*", ...]` | Glob patterns matching all projects to include in the release process; required for Nx to discover and release all packages                                                                              |
+| `projectsRelationship` | `"independent"`              | Each package has its own version; there is no single workspace-wide version                                                                                                                              |
+| `createRelease`        | `false`                      | GitHub Releases are created automatically by the workflow after the PR is merged, not at changelog generation time                                                                                       |
+| `git.commit`           | `false`                      | The workflow handles commits itself; letting Nx commit would interfere with the PR creation logic                                                                                                        |
+| `git.tag`              | `true`                       | Nx creates tags locally so the workflow can reference them; they are pushed only after the PR is merged                                                                                                  |
+| `releaseTag.pattern`   | `{projectName}@{version}`    | Follows the [default Nx independent release convention](https://nx.dev/docs/guides/nx-release/release-projects-independently#create-a-git-tag-for-each-project); defining it explicitly improves clarity |
 
 :::note
 
