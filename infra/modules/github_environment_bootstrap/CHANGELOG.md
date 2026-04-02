@@ -1,5 +1,3 @@
-# github_environment_bootstrap
-
 ## 1.1.7
 
 ### Patch Changes

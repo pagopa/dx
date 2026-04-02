@@ -1,5 +1,3 @@
-# azure_cosmos_account
-
 ## 0.4.0
 
 ### Minor Changes

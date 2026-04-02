@@ -1,5 +1,3 @@
-# azure_cdn
-
 ## 0.6.0
 
 ### Minor Changes

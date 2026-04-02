@@ -1,5 +1,3 @@
-# @pagopa/convert-mermaid-svg
-
 ## 0.1.0
 
 ### Minor Changes

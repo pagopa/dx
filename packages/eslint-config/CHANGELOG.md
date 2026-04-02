@@ -8,8 +8,6 @@
 
 - Luca Cavallaro
 
-# @pagopa/eslint-config
-
 ## 6.0.1
 
 ### Patch Changes

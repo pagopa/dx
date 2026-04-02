@@ -1,5 +1,3 @@
-# azure_storage_account
-
 ## 2.2.3
 
 ### Patch Changes

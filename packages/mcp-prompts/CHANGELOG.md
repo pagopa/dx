@@ -1,5 +1,3 @@
-# @pagopa/dx-mcpprompts
-
 ## 0.2.6
 
 ### Patch Changes
