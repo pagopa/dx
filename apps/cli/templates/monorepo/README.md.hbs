@@ -48,49 +48,38 @@ cd {{ repoName }}
 nodenv install
 ```
 
-3. Build all the workspaces contained by this repo
-```bash
-pnpm build
+2. Install dependencies using `pnpm`
+
+```bashbash
+pnpm install
 ```
 
-## Release management
-
-We use [changesets](https://github.com/changesets/changesets) to automate package versioning and releases.
-
-Each Pull Request that includes changes that require a version bump must include a _changeset file_ that describes the introduced changes.
-
-To create a _changeset file_ run the following command and follow the instructions.
-
+4. Build all the workspaces contained by this repo
 ```bash
-pnpm changeset
+pnpm nx run-many -t build
 ```
 
 ## Useful commands
 
-This project uses `pnpm` and `turbo` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
+This project uses `pnpm` and `nx` with workspaces to manage projects and dependencies. Here is a list of useful commands to work in this repo.
 
 ### Work with workspaces
 
 ```bash
-# build all the workspaces using turbo
-pnpm build
-# or
-pnpm turbo build
+# build all the workspaces using Nx
+pnpm nx run-many -t build
 
 # to execute COMMAND on WORKSPACE_NAME
 pnpm --filter WORKSPACE_NAME COMMAND
 # to execute COMMAND on all workspaces
 pnpm -r COMMAND
-
-# run the typecheck script on all workspaces
-pnpm -r typecheck
 ```
 
 ### Add dependencies
 
 ```bash
 # add a dependency to the workspace root
-pnpm -w add turbo
+pnpm -w add vitest
 
 # add vitest as devDependency on citizen-func
 pnpm --filter citizen-func add -D vitest
@@ -128,15 +117,22 @@ User documentation doesn't usually go in here. For public packages, it must go i
 
 ## Releases
 
-Releases are handled using [Changeset](https://github.com/changesets/changesets).
-Changeset takes care of bumping packages, updating the changelog, and tagging the repository accordingly.
+We use [Nx Release](https://nx.dev/features/manage-releases) to automate package versioning and releases.
+
+Each Pull Request that includes changes that require a version bump must include a _version plan file_ that describes the introduced changes.
+
+To create a _version plan file_ run the following command and follow the instructions.
+
+```bash
+pnpm nx release plan
+```
 
 #### How it works
 
-- When opening a Pull Request with a change intended to be published, [add a changeset file](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md) to the proposed changes.
-- Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly (see https://github.com/changesets/changesets/blob/main/docs/decisions.md#how-changesets-are-combined).
-Only apps and packages mentioned in the changeset files will be bumped.
-- Review the `Version Packages` PR and merge it when ready. Changeset files will be deleted.
+- When opening a Pull Request with a change intended to be published, add a version plan file that describes the change and the version bump type (patch, minor, major) for each involved app or package.
+- Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly.
+Only apps and packages mentioned in the version plan files will be bumped.
+- Review the `Version Packages` PR and merge it when ready. Version plans files will be deleted.
 - A Release entry is created for each app or package whose version has been bumped.
 
 ### Folder structure

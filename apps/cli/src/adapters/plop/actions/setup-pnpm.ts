@@ -1,4 +1,4 @@
-import { $ } from "execa";
+import { $ as $_ } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import path from "node:path";
 
@@ -17,16 +17,16 @@ export default function (plop: NodePlopAPI) {
         // Disable corepack download prompt
         .concat([["COREPACK_ENABLE_DOWNLOAD_PROMPT", "0"]]),
     );
-    const pnpm$ = $({
+    const $ = $_({
       cwd,
       env,
       extendEnv: false, // Don't include process.env variables
     });
-    await pnpm$`corepack enable`;
-    await pnpm$`corepack use pnpm@latest`;
-    await pnpm$`pnpm -w add -D turbo @changesets/cli @devcontainers/cli`;
-    await pnpm$`pnpm changeset init`;
-    await pnpm$`pnpm devcontainer templates apply -t ghcr.io/pagopa/devcontainer-templates/node:1`;
+    await $`corepack enable`;
+    await $`corepack use pnpm@latest`;
+    await $`npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
+    await $`pnpm -w add -D @devcontainers/cli @nx/js @nx/eslint @nx/vitest`;
+    await $`pnpm devcontainer templates apply -t ghcr.io/pagopa/devcontainer-templates/node:1`;
     return "Monorepo bootstrapped";
   });
 }
