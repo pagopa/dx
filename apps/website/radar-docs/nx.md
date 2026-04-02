@@ -38,12 +38,21 @@ assistants. This helps tools like GitHub Copilot query targets and
 configurations, run tasks, and use generators with reliable, workspace-aware
 guidance.
 
+**Release automation**: Nx provides `nx release` to automate versioning,
+changelog generation, and package publishing across interdependent packages in
+your monorepo. It analyzes commit history and dependency changes to determine
+version bumps (following semantic versioning), generates changelogs
+automatically, and publishes packages. This is a built-in alternative to tools
+like [Changeset](./changeset.md) for monorepos using Nx.
+
 ## Use cases
 
 - Orchestrating build, test, lint, and typecheck tasks across all packages in a
   monorepo
 - Running only affected tasks on pull requests to keep CI fast
 - Visualizing and auditing project interdependencies
+- Automating version bumps, changelog generation, and package publishing with
+  `nx release` across interdependent packages
 
 ## Reference of usage in our organization
 
