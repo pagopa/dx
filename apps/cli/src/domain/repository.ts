@@ -58,21 +58,30 @@ export const checkPreCommitConfig = async (
   });
 };
 
-export const checkTurboConfig = async (
+export const checkNxConfig = async (
   dependencies: Pick<Dependencies, "packageJsonReader" | "repositoryReader">,
   repositoryRoot: string,
   config: Config,
 ): Promise<ValidationCheckResult> => {
   const { packageJsonReader, repositoryReader } = dependencies;
-  const checkName = "Turbo Configuration";
+  const checkName = "Nx Configuration";
 
-  const turboResult = await repositoryReader.fileExists(
-    fs.join(repositoryRoot, "turbo.json"),
+  const nxResult = await repositoryReader.fileExists(
+    fs.join(repositoryRoot, "nx.json"),
   );
-  if (turboResult.isErr()) {
+  if (nxResult.isErr()) {
     return ok({
       checkName,
-      errorMessage: turboResult.error.message,
+      errorMessage: nxResult.error.message,
+      isValid: false,
+    });
+  }
+
+  if (!nxResult.value) {
+    return ok({
+      checkName,
+      errorMessage:
+        "nx.json not found in repository root. Make sure to have Nx configured for the monorepo.",
       isValid: false,
     });
   }
@@ -89,22 +98,20 @@ export const checkTurboConfig = async (
     });
   }
 
-  const turboVersion = dependenciesResult.value.get(
-    "turbo" as Dependency["name"],
-  );
-  if (!turboVersion) {
+  const nxVersion = dependenciesResult.value.get("nx" as Dependency["name"]);
+  if (!nxVersion) {
     return ok({
       checkName,
       errorMessage:
-        "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+        "Nx dependency not found in devDependencies. Please add 'nx' to your devDependencies.",
       isValid: false,
     });
   }
 
-  if (!isVersionValid(turboVersion, config.minVersions.turbo)) {
+  if (!isVersionValid(nxVersion, config.minVersions.nx)) {
     return ok({
       checkName,
-      errorMessage: `Turbo version (${turboVersion}) is too low. Minimum required version is ${config.minVersions.turbo}.`,
+      errorMessage: `Nx version (${nxVersion}) is too low. Minimum required version is ${config.minVersions.nx}.`,
       isValid: false,
     });
   }
@@ -113,6 +120,6 @@ export const checkTurboConfig = async (
     checkName,
     isValid: true,
     successMessage:
-      "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+      "Nx configuration is present in the monorepo root and Nx dependency is installed",
   });
 };

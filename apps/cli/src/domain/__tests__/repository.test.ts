@@ -1,7 +1,7 @@
 import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { checkPreCommitConfig, checkTurboConfig } from "../repository.js";
+import { checkNxConfig, checkPreCommitConfig } from "../repository.js";
 import {
   makeMockConfig,
   makeMockDependencies,
@@ -51,34 +51,34 @@ describe("checkPreCommitConfig", () => {
   });
 });
 
-describe("checkTurboConfig", () => {
+describe("checkNxConfig", () => {
   const config = makeMockConfig();
   const repositoryRoot = makeMockRepositoryRoot();
 
-  it("should return ok result with successful validation when turbo.json exists and turbo dependency is present", async () => {
+  it("should return ok result with successful validation when nx.json exists and nx dependency is present", async () => {
     const deps = makeMockDependencies();
 
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync(new Map().set("turbo", "^2.5.2")),
+      okAsync(new Map().set("nx", "^22.6.1")),
     );
 
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
+        checkName: "Nx Configuration",
         isValid: true,
         successMessage:
-          "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+          "Nx configuration is present in the monorepo root and Nx dependency is installed",
       }),
     );
     expect(deps.repositoryReader.fileExists).toHaveBeenCalledWith(
-      "a/repo/root/turbo.json",
+      "a/repo/root/nx.json",
     );
   });
 
-  it("should return ok result with failed validation when turbo.json exists but turbo dependency is missing", async () => {
+  it("should return ok result with failed validation when nx.json exists but Nx dependency is missing", async () => {
     const deps = makeMockDependencies();
 
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
@@ -86,86 +86,103 @@ describe("checkTurboConfig", () => {
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
 
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
+        checkName: "Nx Configuration",
         errorMessage:
-          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+          "Nx dependency not found in devDependencies. Please add 'nx' to your devDependencies.",
         isValid: false,
       }),
     );
   });
 
-  it("should return ok result with failed validation when turbo.json does not exist", async () => {
+  it("should return ok result with failed validation when nx.json does not exist", async () => {
     const deps = makeMockDependencies();
 
     const errorMessage =
-      "turbo.json not found in repository root. Make sure to have Turbo configured for the monorepo.";
+      "nx.json not found in repository root. Make sure to have Nx configured for the monorepo.";
     deps.repositoryReader.fileExists.mockReturnValueOnce(
       errAsync(new Error(errorMessage)),
     );
 
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
+        checkName: "Nx Configuration",
         errorMessage,
         isValid: false,
       }),
     );
   });
 
-  it("should return the error message when turbo is not listed in devDependencies", async () => {
+  it("should return ok result with failed validation when fileExists returns ok(false)", async () => {
+    const deps = makeMockDependencies();
+
+    deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(false));
+
+    const result = await checkNxConfig(deps, repositoryRoot, config);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Configuration",
+        errorMessage:
+          "nx.json not found in repository root. Make sure to have Nx configured for the monorepo.",
+        isValid: false,
+      }),
+    );
+  });
+
+  it("should return the error message when nx is not listed in devDependencies", async () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
       okAsync(new Map().set("eslint", "^8.0.0")),
     );
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
+        checkName: "Nx Configuration",
         errorMessage:
-          "Turbo dependency not found in devDependencies. Please add 'turbo' to your devDependencies.",
+          "Nx dependency not found in devDependencies. Please add 'nx' to your devDependencies.",
         isValid: false,
       }),
     );
   });
 
-  it("should return the error message when turbo version is less than minimum", async () => {
+  it("should return the error message when nx version is less than minimum", async () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync(new Map().set("turbo", "1.0.0")),
+      okAsync(new Map().set("nx", "1.0.0")),
     );
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
-        errorMessage: `Turbo version (1.0.0) is too low. Minimum required version is ${config.minVersions.turbo}.`,
+        checkName: "Nx Configuration",
+        errorMessage: `Nx version (1.0.0) is too low. Minimum required version is ${config.minVersions.nx}.`,
         isValid: false,
       }),
     );
   });
 
-  it("should return the success message when turbo version is ok", async () => {
+  it("should return the success message when nx version is ok", async () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
     deps.packageJsonReader.getDependencies.mockReturnValueOnce(
-      okAsync(new Map().set("turbo", config.minVersions.turbo)),
+      okAsync(new Map().set("nx", config.minVersions.nx)),
     );
-    const result = await checkTurboConfig(deps, repositoryRoot, config);
+    const result = await checkNxConfig(deps, repositoryRoot, config);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Turbo Configuration",
+        checkName: "Nx Configuration",
         isValid: true,
         successMessage:
-          "Turbo configuration is present in the monorepo root and turbo dependency is installed",
+          "Nx configuration is present in the monorepo root and Nx dependency is installed",
       }),
     );
   });
