@@ -7,31 +7,17 @@ import * as path from "node:path";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
-import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
-
-import {
-  AuthorizationResult,
-  AuthorizationService,
-  requestAuthorizationInputSchema,
-} from "../../../domain/authorization.js";
-import { environmentShort } from "../../../domain/environment.js";
 import {
   GitHubService,
   PullRequest,
   Repository,
 } from "../../../domain/github.js";
-import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import { tf$ } from "../../execa/terraform.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
-import {
-  getPlopInstance,
-  runDeploymentEnvironmentGenerator,
-  runMonorepoGenerator,
-} from "../../plop/index.js";
+import { getPlopInstance, runMonorepoGenerator } from "../../plop/index.js";
 import { exitWithError } from "../index.js";
 
 type InitResult = {
-  authorizationPrs: AuthorizationResult[];
   pr?: PullRequest;
   repository?: Repository;
 };
@@ -62,7 +48,7 @@ const withSpinner = <T>(
   );
 
 const displaySummary = (initResult: InitResult) => {
-  const { authorizationPrs, pr, repository } = initResult;
+  const { pr, repository } = initResult;
   console.log(chalk.green.bold("\nWorkspace created successfully!"));
 
   if (repository) {
@@ -82,13 +68,6 @@ const displaySummary = (initResult: InitResult) => {
     console.log(
       `${step++}. Review the Pull Request in the GitHub repository: ${chalk.underline(pr.url)}`,
     );
-
-    if (authorizationPrs.length > 0) {
-      console.log(`${step++}. Review the Azure authorization Pull Request(s):`);
-      for (const authPr of authorizationPrs) {
-        console.log(`   - ${chalk.underline(authPr.url)}`);
-      }
-    }
 
     console.log(
       `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
@@ -239,80 +218,11 @@ const handleGeneratorError = (err: unknown) => {
   return new Error("Failed to run the generator");
 };
 
-/**
- * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
- */
-export const authorizeCloudAccounts =
-  (authorizationService: AuthorizationService) =>
-  (
-    envPayload: EnvironmentPayload,
-  ): ResultAsync<AuthorizationResult[], never> => {
-    const accountsToInitialize =
-      envPayload.init?.cloudAccountsToInitialize ?? [];
-
-    if (accountsToInitialize.length === 0) {
-      return okAsync([]);
-    }
-
-    const logger = getLogger(["dx-cli", "init"]);
-    const { name, prefix } = envPayload.env;
-    const envShort = environmentShort[name];
-
-    const requestAll = async (): Promise<AuthorizationResult[]> => {
-      const results: AuthorizationResult[] = [];
-
-      for (const account of accountsToInitialize) {
-        if (!isAzureLocation(account.defaultLocation)) {
-          logger.warn(
-            "Skipping authorization for {account}: unsupported location",
-            { account: account.displayName },
-          );
-          continue;
-        }
-
-        const locShort = locationShort[account.defaultLocation];
-        const input = requestAuthorizationInputSchema.safeParse({
-          bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
-          repoName: envPayload.github.repo,
-          subscriptionName: account.displayName,
-        });
-
-        if (!input.success) {
-          logger.warn("Skipping authorization for {account}: invalid input", {
-            account: account.displayName,
-          });
-          continue;
-        }
-
-        const result = await authorizationService.requestAuthorization(
-          input.data,
-        );
-
-        result.match(
-          (authResult) => results.push(authResult),
-          (error) =>
-            logger.warn("Authorization request failed for {account}: {error}", {
-              account: account.displayName,
-              error: error.message,
-            }),
-        );
-      }
-
-      return results;
-    };
-
-    return ResultAsync.fromPromise(requestAll(), () => []).orElse(() =>
-      okAsync([]),
-    );
-  };
-
 type InitCommandDependencies = {
-  authorizationService: AuthorizationService;
   gitHubService: GitHubService;
 };
 
 export const makeInitCommand = ({
-  authorizationService,
   gitHubService,
 }: InitCommandDependencies): Command =>
   new Command()
@@ -320,9 +230,6 @@ export const makeInitCommand = ({
     .description("Initialize a new DX workspace")
     .action(async function () {
       await checkPreconditions()
-        .andTee(() => {
-          console.log(chalk.blue.bold("\nWorkspace Info"));
-        })
         .andThen(() =>
           ResultAsync.fromPromise(
             getPlopInstance(),
@@ -333,29 +240,11 @@ export const makeInitCommand = ({
           ResultAsync.fromPromise(
             runMonorepoGenerator(plop, gitHubService),
             handleGeneratorError,
-          )
-            .andTee((payload) => {
-              process.chdir(payload.repoName);
-              console.log(chalk.blue.bold("\nCloud Environment"));
-            })
-            .andThen((monorepoPayload) =>
-              ResultAsync.fromPromise(
-                runDeploymentEnvironmentGenerator(plop, {
-                  owner: monorepoPayload.repoOwner,
-                  repo: monorepoPayload.repoName,
-                }),
-                handleGeneratorError,
-              ).map((envPayload) => ({ envPayload, monorepoPayload })),
-            ),
-        )
-        .andTee(() => console.log()) // Print a new line before the gh repo creation logs
-        .andThen(({ envPayload, monorepoPayload }) =>
-          handleNewGitHubRepository(gitHubService)(monorepoPayload).andThen(
-            (repoPr) =>
-              authorizeCloudAccounts(authorizationService)(envPayload).map(
-                (authorizationPrs) => ({ ...repoPr, authorizationPrs }),
-              ),
           ),
         )
+        .andTee((payload) => {
+          process.chdir(payload.repoName);
+        })
+        .andThen((payload) => handleNewGitHubRepository(gitHubService)(payload))
         .match(displaySummary, exitWithError(this));
     });

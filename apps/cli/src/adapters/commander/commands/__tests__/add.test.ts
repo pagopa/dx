@@ -14,7 +14,7 @@ import {
   AuthorizationService,
   IdentityAlreadyExistsError,
 } from "../../../../domain/authorization.js";
-import { authorizeCloudAccounts } from "../init.js";
+import { authorizeCloudAccounts } from "../add.js";
 
 const makeEnvPayload = (
   overrides: Partial<EnvironmentPayload> = {},
