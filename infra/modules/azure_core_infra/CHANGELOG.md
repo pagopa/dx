@@ -1,3 +1,14 @@
+## 3.1.1 (2026-04-02)
+
+### 🩹 Fixes
+
+- Ignore DDoS protection plan in VNet ([#1560](https://github.com/pagopa/dx/pull/1560))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+
 ## 3.1.0 (2026-04-02)
 
 ### 🚀 Features
