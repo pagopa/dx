@@ -42,7 +42,7 @@ export const authorizeCloudAccounts =
       return okAsync([]);
     }
 
-    const logger = getLogger(["dx-cli", "init"]);
+    const logger = getLogger(["dx-cli", "add-environment"]);
     const { name, prefix } = envPayload.env;
     const envShort = environmentShort[name];
 
