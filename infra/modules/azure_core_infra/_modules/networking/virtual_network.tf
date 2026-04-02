@@ -13,7 +13,7 @@ resource "azurerm_virtual_network" "vnet" {
 
   lifecycle {
     ignore_changes = [
-      ddos_protection_plan, # Otherwise when the plan is applied by the policy, Terraform forces the recreation at every plan due to provider issue
+      ddos_protection_plan, # The plan is applied by an Azure Policy, so Terraform will always display a drift
     ]
   }
 }
