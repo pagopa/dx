@@ -8,10 +8,10 @@ tags: [typescript, monorepo, dx, tool]
 teams build, test, and ship code at scale across different languages and
 frameworks.
 
-We put [Turborepo](./turborepo.md) on hold because its core focus is JS/TS,
-while we need a broader, polyglot setup. Nx better supports our direction to run
-and coordinate workloads beyond JavaScript/TypeScript, including Terraform and
-Java, in the same workspace.
+We put [Turborepo](./turborepo.md) on hold because its core focus is
+JavaScript/TypeScript, while we need a broader, polyglot setup. Nx better
+supports our direction to run and coordinate workloads beyond
+JavaScript/TypeScript, including Terraform and Java, in the same workspace.
 
 ## Key capabilities
 
@@ -34,8 +34,9 @@ architecture of the workspace.
 
 **MCP server / AI integration**: Nx ships an MCP server (`@nx/mcp`) and
 ready-made agent skills that expose workspace context and best practices to AI
-assistants. This helps tools like Copilot query targets and configurations, run
-tasks, and use generators with reliable, workspace-aware guidance.
+assistants. This helps tools like GitHub Copilot query targets and
+configurations, run tasks, and use generators with reliable, workspace-aware
+guidance.
 
 ## Use cases
 

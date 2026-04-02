@@ -16,8 +16,8 @@ Use Turborepo only when your scope is mostly JavaScript/TypeScript and you do
 not need broader polyglot orchestration.
 
 For new monorepo initiatives, prefer [Nx](./nx.md). We put Turborepo on hold in
-favor of Nx because we need stronger support beyond JS/TS, including Terraform
-and Java workloads in the same workspace.
+favor of Nx because we need stronger support beyond JavaScript/TypeScript,
+including Terraform and Java workloads in the same workspace.
 
 ## Reference of usage in our organization
 
