@@ -45,7 +45,7 @@ jobs:
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@CES-1790-fix-e-2-e-test-terraform
 
       - name: Setup Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
