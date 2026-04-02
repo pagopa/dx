@@ -10,4 +10,10 @@ resource "azurerm_virtual_network" "vnet" {
   address_space       = [var.vnet_cidr]
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      ddos_protection_plan, # The plan is applied by an Azure Policy, so Terraform will always display a drift
+    ]
+  }
 }
