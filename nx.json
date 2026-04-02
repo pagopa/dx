@@ -32,7 +32,8 @@
         "ci": {
           "coverage": true
         }
-      }
+      },
+      "dependsOn": ["^build"]
     },
     "tf-init": {
       "inputs": ["{projectRoot}/**/*.tf"]
