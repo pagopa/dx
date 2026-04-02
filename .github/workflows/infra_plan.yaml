@@ -110,13 +110,20 @@ jobs:
           set -euo pipefail
           BASE_PATH="${BASE_PATH%/}"
           DIR="$BASE_PATH/$ENVIRONMENT"
+          MODULES_DIR="$BASE_PATH/_modules"
 
           if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
             CHANGED=$(find "$DIR" -maxdepth 2 -name '*.tf' -not -path "*/_modules/*" 2>/dev/null || true)
           elif [ "$EVENT_NAME" = "pull_request" ]; then
             CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$DIR" || true)
+            MODULES_CHANGED=$(git diff --name-only "origin/${BASE_REF}...HEAD" -- "$MODULES_DIR" || true)
           else
             CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$DIR" || true)
+            MODULES_CHANGED=$(git diff --name-only "$BEFORE" "$SHA" -- "$MODULES_DIR" || true)
+          fi
+
+          if [ "$EVENT_NAME" != "workflow_dispatch" ] && [ -n "${MODULES_CHANGED:-}" ]; then
+            CHANGED=$(find "$DIR" -maxdepth 2 -name '*.tf' -not -path "*/_modules/*" 2>/dev/null || true)
           fi
 
           # The two layouts are mutually exclusive:
