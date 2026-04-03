@@ -7,7 +7,7 @@ export default defineConfig({
   sourcemap: false,
   clean: true,
   minify: true,
-  target: "node20",
+  target: "node24",
   bundle: true,
   platform: "node",
   noExternal: [/.*/],

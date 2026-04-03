@@ -7,6 +7,6 @@ inputs:
     required: true
 
 runs:
-  using: "node20"
-  main: "dist/index.js"
-  post: "dist/post.js"
+  using: "node24"
+  main: "dist/index.cjs"
+  post: "dist/post.cjs"
