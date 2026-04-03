@@ -30,8 +30,10 @@ foster effective collaboration across teams using git and GitHub.
   practices for quality code
 - **[Auto-merge](./pull-requests/auto-merge.md)** - Automated merging to reduce
   manual overhead
-- **[Changesets](./pull-requests/changeset.md)** - Semantic versioning and
-  changelogs for coordinated releases
+- **[Version Plan](./pull-requests/version-plan.md)** - Semantic versioning and
+  changelogs with Nx Release (recommended)
+- **[Changeset](./pull-requests/changeset.md)** - Legacy alternative for
+  repositories still using Changesets
 
 [**Learn all PR collaboration practices →**](./pull-requests/index.md)
 
