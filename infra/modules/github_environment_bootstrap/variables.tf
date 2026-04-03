@@ -13,12 +13,13 @@ variable "repository" {
     app_cd_policy_tags       = optional(set(string), [])
     jira_boards_ids          = optional(list(string), [])
     pages_enabled            = optional(bool, false)
-    has_downloads            = optional(bool, false)
-    has_issues               = optional(bool, false)
-    has_projects             = optional(bool, false)
-    homepage_url             = optional(string, null)
-    pull_request_bypassers   = optional(list(string), [])
-    environments             = optional(list(string), ["prod"])
+    # The `has_downloads` property will be removed in the next major release. See https://github.com/orgs/community/discussions/102145#discussioncomment-8351756
+    has_downloads          = optional(bool, false)
+    has_issues             = optional(bool, false)
+    has_projects           = optional(bool, false)
+    homepage_url           = optional(string, null)
+    pull_request_bypassers = optional(list(string), [])
+    environments           = optional(list(string), ["prod"])
   })
 
   description = "Details about the GitHub repository, including its name, description, topics, default branch, and optional Jira board IDs."

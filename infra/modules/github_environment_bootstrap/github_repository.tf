@@ -20,7 +20,6 @@ resource "github_repository" "this" {
   has_wiki        = false
   has_discussions = false
   has_issues      = var.repository.has_issues
-  has_downloads   = var.repository.has_downloads
 
   vulnerability_alerts = true
 
