@@ -8,6 +8,35 @@ description: Documentation for @pagopa/dx-cli commands and usage.
 The `@pagopa/dx-cli` is a command-line tool that helps teams implement PagoPA
 DevEx guidelines consistently and evolve repositories safely.
 
+## Requirements {#requirements}
+
+The following tools must be installed on your machine:
+
+| Tool                                                                                                        | Version                                       |
+| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                 |
+| [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                        |
+| [GitHub CLI](https://cli.github.com/)                                                                       | latest                                        |
+| [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only) |
+
+Before running any command that interacts with GitHub or a cloud provider,
+ensure you are logged in:
+
+```bash
+gh auth login
+```
+
+```bash
+az login
+```
+
+:::warning[Azure session expiry]
+
+Within PagoPA, `az login` sessions expire every **12 hours**. If a command fails
+with an authentication error, run `az login` again before retrying.
+
+:::
+
 ## Installation
 
 You can invoke the CLI directly via `npx` without installing globally:
@@ -36,34 +65,17 @@ Bootstrap a new project following DevEx conventions.
 
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
   a devcontainer configuration.
-- GitHub environments corresponding to the specified cloud environments
-- A self-hosted GitHub Runner with permissions to perform cloud operations, in
-  order to run workflows (GitHub Actions) that require cloud access
 
-**Additionally provisions (if no Terraform state file is detected for the
-project):**
+#### Prompt Reference
 
-- A VPN to let users access private cloud resources
-- Standardized network configuration
-- Standardized monitoring configuration
-- Infrastructure required to manage the Terraform state file (e.g., Azure
-  Storage Account with blob locking)
+The `init` command is interactive. The tables below explain what each prompt
+expects and where to find the required values.
 
-This interactive command will prompt you for several inputs and then generate
-the project structure accordingly.
-
-#### Requirements
-
-:::info[Supported Cloud Providers]
-
-Currently, only Azure is supported as cloud provider for the `init` command.
-
-:::
-
-To work properly, the command requires access to GitHub and the target cloud
-provider. For this reason, before running the command ensure you are logged
-within GitHub (`gh auth login`) and the cloud provider CLI (`az login` for
-Azure).
+| Prompt                  | What to enter                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------- |
+| **Name**                | The GitHub repository name. Use lowercase letters and hyphens (e.g., `eng-myteam-myproject`). |
+| **GitHub Organization** | The GitHub organization that will own the repository. Defaults to `pagopa`.                   |
+| **Description**         | A short description of the project (optional).                                                |
 
 #### Example Usage
 
@@ -73,25 +85,10 @@ npx @pagopa/dx-cli init
 ✔ Terraform is installed!
 ✔ You are logged in to Azure (andrea.grillo@pagopa.it)
 
-Workspace Info
 ? Name test-project
 ? GitHub Organization pagopa-dx
 ? Description a custom description
 ✔ Workspace files created successfully!
-
-Cloud Environment
-? Environment name PROD
-? Cloud provider(s) Microsoft Azure
-? Account(s) (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
- ◯ DEV-ENGINEERING
- ◯ DEV-IO
-❯◯ DEV-DEVEX
- ◯ UAT-DEVEX
-(Move up and down to reveal more choices)
-
-[...]
-
-✔ Environment created successfully!
 
 ✔ GitHub repository created successfully!
 ✔ Code pushed to GitHub successfully!
@@ -118,6 +115,87 @@ Scaffold new components in your project following DevEx guidelines.
 | Component Type | Description                                |
 | -------------- | ------------------------------------------ |
 | `environment`  | Add a new cloud environment to the project |
+
+#### `environement`
+
+Add a new cloud environment following DevEx conventions.
+
+**Always provisions**:
+
+- GitHub environments corresponding to the specified cloud environments
+- A self-hosted GitHub Runner with permissions to perform cloud operations, in
+  order to run workflows (GitHub Actions) that require cloud access
+
+**Additionally provisions (if no Terraform state file is detected for the
+project):**
+
+- A VPN to let users access private cloud resources
+- Standardized network configuration
+- Standardized monitoring configuration
+- Infrastructure required to manage the Terraform state file (e.g., Azure
+  Storage Account with blob locking)
+
+This interactive command will prompt you for several inputs and then generate
+the project structure accordingly.
+
+:::info[Supported Cloud Providers]
+
+Currently, only Azure is supported as cloud provider for the `add environment`
+command.
+
+:::
+
+##### Prompt Reference
+
+The `add environment` command is interactive. The tables below explain what each
+prompt expects and where to find the required values.
+
+| Prompt                               | What to enter                                                                                                                                          |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Environment name**                 | Select `PROD`, `UAT`, or `DEV`.                                                                                                                        |
+| **Cloud provider(s)**                | Select `Microsoft Azure` (currently the only supported provider).                                                                                      |
+| **Account(s)**                       | Select one or more Azure subscriptions belonging to your product. Contact your Engineering Leader if you are unsure which subscriptions to pick.       |
+| **Prefix**                           | A short identifier (2–4 characters) used in Azure resource names. It should match the prefix already in use for your product (e.g., `dx`, `io`, `pn`). |
+| **Domain**                           | An optional sub-grouping for the project (e.g., `payments`). Leave empty if not needed.                                                                |
+| **Cost center**                      | Select the cost center for your team.                                                                                                                  |
+| **Business unit**                    | The business unit or team that owns this project (free text).                                                                                          |
+| **Management team**                  | The team responsible for managing the environment (free text, e.g., `devex`).                                                                          |
+| **Default location for \<account\>** | The primary Azure region for the selected account (e.g., `Italy North`). Asked once per selected account.                                              |
+
+**Initialization** _(conditional — only asked when the environment is new)_
+
+| Prompt                                             | What to enter                                                                                                        |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).          |
+| **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account. |
+| **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.mdx#setting-up-a-github-app) section. |
+| **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
+| **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
+
+##### Example Usage
+
+```text
+npx @pagopa/dx-cli add environment
+
+✔ Terraform is installed!
+✔ You are logged in to Azure (andrea.grillo@pagopa.it)
+
+? Environment name PROD
+? Cloud provider(s) Microsoft Azure
+? Account(s) (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
+ ◯ DEV-ENGINEERING
+ ◯ DEV-IO
+❯◯ DEV-DEVEX
+ ◯ UAT-DEVEX
+(Move up and down to reveal more choices)
+
+[...]
+
+✔ Environment created successfully!
+```
+
+After the command completes, you will have a new GitHub repository with an open
+Pull Request to merge the initial project structure.
 
 ### `doctor` – Repository Validation
 
