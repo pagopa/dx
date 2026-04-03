@@ -5,18 +5,36 @@ sidebar_position: 2
 import Tabs from "@theme/Tabs";
 import TabItem from "@theme/TabItem";
 
-# Creating a DX-Ready Monorepo on GitHub
+# Creating a Monorepo
 
-This guide explains how to create a new monorepo using the DX CLI command. The
+This guide explains how to create a new workspace using the DX CLI command. The
 command automates all repository scaffolding, cloud environment setup, and
 GitHub runner provisioning in a single interactive session.
 
+## Glossary
+
+- **Product**: A PagoPA initiative (for example, IO or SelfCare) that owns
+  repositories, teams, and delivery processes.
+- **Workspace**: The monorepository that contains the source code for projects
+  and infrastructure.
+- **Engineering Leader (EL)**: The role with elevated permissions responsible
+  for governance and approvals on critical steps such as app setup and
+  infrastructure apply.
+
+## Setup Flow
+
 ```mermaid
-flowchart LR
-    A[Prerequisites] --> B["Prepare GitHub App<br/>(new product only)"]
-    B --> C["Run dx init"]
-    C --> D[Apply infrastructure]
-    D --> E[Register repository]
+flowchart TD
+  A{New or<br> existing product?}
+  A -->|New| C["Get GitHub App<br/><b>(EL required)</b>"]
+  A -->|Existing| H[Set Azure team]
+
+  C --> H
+  H --> G[Run @pagopa/dx-cli]
+  G --> I["Apply infra<br/><b>(EL required)</b>"]
+  I --> L[Register repository]
+  style C fill:#fffacd,color:#000
+  style I fill:#fffacd,color:#000
 ```
 
 ## Setting up your team on Azure {#setting-up-your-team-on-azure}
