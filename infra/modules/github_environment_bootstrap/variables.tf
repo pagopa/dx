@@ -13,6 +13,8 @@ variable "repository" {
     app_cd_policy_tags       = optional(set(string), [])
     jira_boards_ids          = optional(list(string), [])
     pages_enabled            = optional(bool, false)
+    # TODO: Remove the has_downloads property in the next major release, as it is deprecated by GitHub and not supported by the GitHub provider.
+    # See https://github.com/orgs/community/discussions/102145#discussioncomment-8351756
     has_downloads            = optional(bool, false)
     has_issues               = optional(bool, false)
     has_projects             = optional(bool, false)
