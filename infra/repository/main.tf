@@ -10,7 +10,6 @@ module "github_repository" {
     topics                 = ["developer-experience"]
     reviewers_teams        = ["engineering-team-devex"]
     pages_enabled          = false
-    has_downloads          = true
     has_projects           = true
     has_issues             = true
     app_cd_policy_tags     = ["@pagopa/dx-mcpserver@**"]
