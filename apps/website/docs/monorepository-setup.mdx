@@ -7,83 +7,63 @@ import TabItem from "@theme/TabItem";
 
 # Creating a DX-Ready Monorepo on GitHub
 
-This guide explains how to create a new monorepo using the DX CLI `init`
-command. The command automates all repository scaffolding, cloud environment
-setup, and GitHub runner provisioning in a single interactive session.
-
-The diagram below shows a high-level view of the flow explained in this
-document.
+This guide explains how to create a new monorepo using the DX CLI command. The
+command automates all repository scaffolding, cloud environment setup, and
+GitHub runner provisioning in a single interactive session.
 
 ```mermaid
 flowchart LR
-    A[Prerequisites] --> B[Prepare GitHub App]
-    B --> C[Run dx init]
+    A[Prerequisites] --> B["Prepare GitHub App<br/>(new product only)"]
+    B --> C["Run dx init"]
     C --> D[Apply infrastructure]
     D --> E[Register repository]
 ```
 
-:::warning[Note for Developers]
+## Setting up your team on Azure {#setting-up-your-team-on-azure}
 
-If you need to initialize a **new project** or a **new Azure subscription / AWS
-account**, you cannot proceed independently. Ask your Engineering Leader to
-follow this guide first — some steps require elevated permissions that are not
-available to Developers.
+:::warning[For Engineering Leader only]
+
+This step requires high permissions. Your Engineering Leader will handle this —
+please coordinate with them before merging the generated Pull Request.
 
 :::
 
-## Architecture Overview
+Before starting, you should group people in Azure Entra ID.
 
-The diagram below shows what `dx init` provisions and how the resulting entities
-relate to each other.
+Finally, add yourself to the
+[group](https://github.com/search?q=repo%3Apagopa%2Feng-azure-authorization%20sec-p-adgroup-externals&type=code)
+that gives you the required roles.
 
-```mermaid
-flowchart TD
-    repo["GitHub Repository"]
-    envs["GitHub Environments"]
-    secrets["Environment Secrets<br/>(Azure / AWS credentials)"]
-    app["GitHub App"]
-    kv["Azure Key Vault<br/>(App ID · Installation ID · Private Key)"]
-    runner["Self-hosted GitHub Runner"]
-    rg["Azure Resource Group"]
+## Setting up a GitHub App
 
-    repo -->|contains| envs
-    envs -->|store| secrets
-    secrets -->|"authenticate CI/CD workflows to"| rg
-    repo -->|uses| runner
-    app -->|credentials stored in| kv
-    kv -->|authenticates| runner
-    runner -->|hosted in| rg
-```
+:::warning[For new product only]
 
-## Prerequisites
+This step is required only if you are setting up a Azure subscription or AWS
+account. Otherwise, go to the [next section](#run-@pagopa/dx--cli).
 
-Before running the `init` command, ensure you have all the required tools
-installed and the right access in place. See the
-[DX CLI requirements](./dx-cli/index.md#requirements) for the full list of
-tools, versions, and login instructions.
+:::
 
-## Prepare the GitHub App {#obtaining-github-app-credentials}
-
-The `init` command needs three GitHub App values to configure the self-hosted
-GitHub runner. Follow the steps below **before** running `dx init`.
+The `init` command needs a GitHub App to configure the self-hosted GitHub
+runner.
 
 :::info[One GitHub App per product]
 
-Each product at PagoPA has its own dedicated GitHub App for the self-hosted
-GitHub runner. You do not need to ask a GitHub Admin to create one unless it
-doesn't exist yet for your product.
+Each product at PagoPA (IO, SelfCare, etc.) has its own dedicated GitHub App for
+the self-hosted GitHub runner. You do not need to ask a
+[GitHub Admin](https://github.com/orgs/pagopa/teams?query=engineering-cloud) to
+create one unless it doesn't exist yet for your product.
 
 You can check if an app already exists by browsing the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 for your product's entry in `authorizations/<your-product>/data/apps.json` and
-looking for an app with the name pattern `<product>-github-runner-internal`
-(e.g. `engineering-github-runner-internal`).
+looking for an app with the name pattern `<product>-github-runner-internal`.
 
-If the app already exists, proceed to Step 2.
+If the app already exists, proceed to
+[Step 2](#step-2--retrieve-the-required-values).
 
 :::
 
-### Step 1 — Request a GitHub App (only if it doesn't exist yet)
+### Step 1 — Request a GitHub App (only if it doesn't exist yet) {#step-1--request-a-github-app-only-if-it-doesnt-exist-yet}
 
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
@@ -108,18 +88,15 @@ the `repositories` array **empty** for now — you will populate it after
 }
 ```
 
-The app name must follow the pattern `<product>-github-runner-internal` (e.g.
-`engineering-github-runner-internal`).
+The app name must follow the pattern `<product>-github-runner-internal`.
 
-Once the PR is ready, contact the **Technology team** to have the app created.
-Refer to the
+Once the PR is ready, contact the
+[GitHub App admins](https://github.com/orgs/pagopa/teams?query=engineering-cloud)
+to have the app created. Refer to the
 [internal procedure](https://pagopa.atlassian.net/wiki/spaces/Technology/pages/2628976829/Creazione+GithubApp+configurazione+repo)
 for additional context.
 
-### Step 2 — Retrieve the required values
-
-<Tabs groupId="audience">
-<TabItem value="el" label="Engineering Leader">
+### Step 2 — Retrieve the required values {#step-2--retrieve-the-required-values}
 
 Once the GitHub App exists, only **App Administrators** can access its settings.
 Navigate to:
@@ -133,67 +110,14 @@ Retrieve the following three values:
 | **Installation ID**   | App settings page → **Install App** → click on the installation → the numeric ID is in the URL (e.g. `.../installations/12345678`) |
 | **Private key (PEM)** | App settings page → **Private keys** section → **Generate a private key** → download the `.pem` file                               |
 
-Keep these three values at hand: `dx init` will prompt you for them.
+Keep these three values at hand: `@pagopa/dx-cli` will prompt you for them.
 
-</TabItem>
-<TabItem value="ic" label="Developer">
+## Run `@pagopa/dx-cli` {#run-@pagopa/dx--cli}
 
-:::warning[For Engineering Leader only]
-
-This step requires access to the GitHub App settings, which is available only to
-App Administrators. Ask your Engineering Leader to retrieve the values and share
-them with you before proceeding.
-
-:::
-
-</TabItem>
-</Tabs>
-
-## Ensure you have the right permissions
-
-<Tabs groupId="audience">
-<TabItem value="el" label="Engineering Leader">
-
-In PagoPA context, you must be able to connect VNets with DDos protection plans.
-
-To do so, be sure to join the
-[group](https://github.com/search?q=repo%3Apagopa%2Feng-azure-authorization%20sec-p-adgroup-externals&type=code)
-that gives you the required roles.
-
-</TabItem>
-<TabItem value="ic" label="Developer">
-
-:::warning[For Engineering Leader only]
-
-This step involves your Engineering Leader only.
-
-:::
-
-</TabItem>
-</Tabs>
-
-## Authenticate with GitHub and Azure
-
-Log in to GitHub using the CLI:
-
-```bash
-gh auth login
-```
-
-Log in to Azure:
-
-```bash
-az login
-```
-
-:::warning[Azure session expiry]
-
-Within PagoPA, `az login` sessions expire every **12 hours**. If the command
-fails with an authentication error, run `az login` again before retrying.
-
-:::
-
-## Run `dx init`
+Before running the `init` command, ensure you have all the required tools
+installed and the right access in place. See the
+[`dx-cli` requirements](./dx-cli/index.md#requirements) for the full list of
+tools, versions, and login instructions.
 
 With prerequisites in place and the GitHub App values ready, run:
 
@@ -201,26 +125,42 @@ With prerequisites in place and the GitHub App values ready, run:
 npx @pagopa/dx-cli init
 ```
 
-The command is fully interactive. Refer to the
-[`init` command documentation](./dx-cli/index.md#init--initialize-resources) for
-the full list of prompts and what each one expects.
+When done, a Pull Request will be open on the new GitHub repository with the
+initial project structure ready to review.
 
-When the command completes, a Pull Request will be open on the new GitHub
-repository with the initial project structure ready to review.
+When the command completes, add an environment:
 
-## After `dx init` Completes
+```bash
+cd <repo>
+npx @pagopa/dx-cli add environment
+```
+
+These commands are fully interactive. Refer to the
+[commands documentation](./dx-cli/index.md#usage) for the full list of prompts
+and what each one expects.
+
+Commit and push to GitHub the working changes.
+
+## After `@pagopa/dx-cli` Completes
 
 After the command completes successfully, work through the following steps in
 order before merging the generated Pull Request.
 
 ### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
-The `init` command initializes the Terraform state for `infra/repository`
-locally. Migrate it to a remote backend so the whole team can share it.
+The `@pagopa/dx-cli` command initializes the Terraform state for
+`infra/repository` locally. Migrate it to a remote backend so the whole team can
+share it.
 
 If you are unsure which remote backend to use, copy the `backend` block from
-`infra/bootstrapper/<env>/backend.tf` and adapt it for `infra/repository`. Then
-run:
+`infra/bootstrapper/<env>/backend.tf` and adapt it for `infra/repository`:
+
+```bash
+cp infra/bootstrapper/<env>/backend.tf infra/repository/backend.tf
+perl -pi -e 's/bootstrapper\.(dev|uat|prod)/repository/g' infra/bootstrapper/prod/providers.tf
+```
+
+Then migrate state run:
 
 ```bash
 cd infra/repository
@@ -229,22 +169,7 @@ terraform init -migrate-state
 
 Confirm the migration when prompted.
 
-### Step 2 — Apply `infra/core` (if present)
-
-<Tabs groupId="audience">
-<TabItem value="el" label="Engineering Leader">
-
-If the repository does **not** include an `infra/core` folder, skip this step.
-Otherwise, apply the configuration:
-
-```bash
-cd infra/core/<env>
-terraform init
-terraform apply
-```
-
-</TabItem>
-<TabItem value="ic" label="Developer">
+### Step 2 — Verify and Apply Terraform configs
 
 :::warning[For Engineering Leader only]
 
@@ -253,16 +178,28 @@ please coordinate with them before merging the generated Pull Request.
 
 :::
 
-</TabItem>
-</Tabs>
+:::info[Automation under development]
 
-### Step 3 — Verify and apply `infra/bootstrapper`
+We are currently developing a pipeline that will automate the step 2,
+eliminating the need for this manual step.
 
-<Tabs groupId="audience">
-<TabItem value="el" label="Engineering Leader">
+:::
+
+#### Core (for new projects only)
+
+Apply the Terraform configuration:
+
+```bash
+cd infra/core/<env>
+terraform init
+terraform apply
+```
+
+#### Bootstrapper
 
 Open `infra/bootstrapper/<env>/data.tf` and verify that the Entra ID groups
-referenced there exist and match your team context.
+referenced there are the ones set in
+[Setting Up Your Team on Azure](setting-up-your-team-on-azure).
 
 Once verified, apply the bootstrapper:
 
@@ -272,36 +209,15 @@ terraform init
 terraform apply
 ```
 
-:::info[Automation under development]
-
-We are currently developing a pipeline that will automate the application of
-`infra/bootstrapper` at the merge of the PR, eliminating the need for this
-manual step.
-
-:::
-
-</TabItem>
-<TabItem value="ic" label="Developer">
-
-:::warning[For Engineering Leader only]
-
-This step requires high permissions. Your Engineering Leader will handle this —
-please coordinate with them before merging the generated Pull Request.
-
-:::
-
-</TabItem>
-</Tabs>
-
-### Step 4 — Register the new repository
+### Step 3 — Register the new repository
 
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 to do two things:
 
-1. **Add the new repository to the organization census** — follow your product's
-   existing conventions in the authorization repo.
+1. **Add the new repository to the organization census**, including GitHub user
+   permissions
 2. **Add the new repository to the GitHub App** — update the `repositories`
-   array in `authorizations/<your-product>/data/apps.json` (the entry created in
-   Step 1 of Prepare the GitHub App, or the existing entry if the app already
-   existed) to include the new repository name.
+   array in `authorizations/<your-product>/data/apps.json` of the
+   [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
+   to include the new one.
