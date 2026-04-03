@@ -48,23 +48,18 @@ creating only the missing tags and releases.
 
 ### Marking a package as public
 
-To mark a package as public, add a tag that is either `public` or ends with
-`:public` (for example, `npm:public`) in the project's `project.json`:
+To mark a package as public, set `"private": false` in the package's
+`package.json` file. This is necessary for the publish workflow to process the
+package:
 
 ```json
 {
-  "tags": ["npm:public"]
+  "name": "@pagopa/my-package",
+  "version": "1.0.0",
+  "private": false,
+  ... other package.json fields
 }
 ```
-
-:::note
-
-Nx via `@nx/js` plugin adds `npm:public` tag automatically on public projects,
-so if you are using that plugin you don't need to add the tag manually. But for
-non-public projects, or if you are not using `@nx/js`, you need to add the tag
-manually as described above.
-
-:::
 
 ### nx.json configuration
 
