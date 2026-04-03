@@ -41,22 +41,52 @@ flowchart TD
 
 :::warning[For Engineering Leader only]
 
-This step requires high permissions. Your Engineering Leader will handle this —
-please coordinate with them before merging the generated Pull Request.
+This step is intended for Engineering Leaders only.
 
 :::
 
-Before starting, you should group people in Azure Entra ID.
+Before applying any infrastructure, you need to organize your team into Azure
+Entra ID groups via Azure
+[authorization repository](https://github.com/orgs/pagopa/repositories?q=eng-azure-au).
+
+Ensure to have the following groups in your configuration, eventually split by
+domains:
+
+| Group                                           | Required roles                                                              |
+| ----------------------------------------------- | --------------------------------------------------------------------------- |
+| `<product>-<env>-adgroup-[<domain>]-admins`     | `Contributor`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` |
+| `<product>-<env>-adgroup-[<domain>]-developers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`           |
+| `<product>-<env>-adgroup-[<domain>]-externals`  | `Reader`                                                                    |
+
+Once defined, assign each team member to one of the following groups based on
+the responsibilities you want to grant them:
+
+| Group        | Who belongs here                                                                      |
+| ------------ | ------------------------------------------------------------------------------------- |
+| `admins`     | Engineers with high privileges. They can also apply `core` and `bootstrapper` modules |
+| `developers` | Engineers with development access on resources defined in the monorepository          |
+| `externals`  | External collaborators with limited access                                            |
+
+Finally, add people to the `vpn` group to grant them access to private
+resources.
+
+:::note
+
+All Entra ID groups must be created by the
+[authorization team](https://github.com/orgs/pagopa/teams?query=engineering-cloud)
+before merging the PR.
+
+:::
 
 Finally, add yourself to the
 [group](https://github.com/search?q=repo%3Apagopa%2Feng-azure-authorization%20sec-p-adgroup-externals&type=code)
-that gives you the required roles.
+that gives you required roles on networking level.
 
 ## Setting up a GitHub App
 
 :::warning[For new product only]
 
-This step is required only if you are setting up a Azure subscription or AWS
+This step is required only if you are setting up an Azure subscription or AWS
 account. Otherwise, go to the [next section](#run-@pagopa/dx--cli).
 
 :::
@@ -66,8 +96,8 @@ runner.
 
 :::info[One GitHub App per product]
 
-Each product at PagoPA (IO, SelfCare, etc.) has its own dedicated GitHub App for
-the self-hosted GitHub runner. You do not need to ask a
+Each product at PagoPA has its own dedicated GitHub App for the self-hosted
+GitHub runner. You do not need to ask a
 [GitHub Admin](https://github.com/orgs/pagopa/teams?query=engineering-cloud) to
 create one unless it doesn't exist yet for your product.
 
