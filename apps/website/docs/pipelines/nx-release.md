@@ -61,7 +61,7 @@ To mark a package as public, add a tag that is either `public` or ends with
 
 Nx via `@nx/js` plugin adds `npm:public` tag automatically on public projects,
 so if you are using that plugin you don't need to add the tag manually. But for
-non-public projects, or if you are not using @nx/js, you need to add the tag
+non-public projects, or if you are not using `@nx/js`, you need to add the tag
 manually as described above.
 
 :::
