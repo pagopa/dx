@@ -49,7 +49,7 @@ Before starting development:
 2. After making changes, create a version plan:
 
    ```bash
-   nx release plan
+   pnpm nx release plan
    ```
 
 This will prompt you to:
@@ -168,7 +168,7 @@ The script performs several important steps:
 
 After successful initialization, you'll need to:
 
-1. Start developing you module
+1. Start developing your module
 2. Create a version plan to produce the first release
 
 ### Adding the Module to the Terraform Registry

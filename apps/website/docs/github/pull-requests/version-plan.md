@@ -45,8 +45,8 @@ what bump type to apply (_patch_ / _minor_ / _major_ / _prerelease_ / _prepatch_
 Alternatively, you can create the file manually — see the
 [Nx version plans documentation](https://nx.dev/docs/guides/nx-release/file-based-versioning-version-plans).
 
-When you later run `nx release`, Nx uses the files in `.nx/version-plans/` as
-the source of truth for version bumps.
+When you later run `pnpm nx release`, Nx uses the files in `.nx/version-plans/`
+as the source of truth for version bumps.
 
 ## Breaking Changes
 
