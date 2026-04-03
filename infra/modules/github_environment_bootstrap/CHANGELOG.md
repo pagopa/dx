@@ -1,3 +1,13 @@
+## 1.1.8 (2026-04-03)
+
+### 🩹 Fixes
+
+- Do not use the `has_downloads` attribute since it's been deprecated ([#1568](https://github.com/pagopa/dx/pull/1568))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 1.1.7
 
 ### Patch Changes

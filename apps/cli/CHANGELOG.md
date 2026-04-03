@@ -1,3 +1,16 @@
+## 0.19.0 (2026-04-03)
+
+### 🚀 Features
+
+- Update dx doctor to check for Nx ([#1554](https://github.com/pagopa/dx/pull/1554))
+- Generated workspaces now use Nx instead of Turborepo ([#1551](https://github.com/pagopa/dx/pull/1551))
+- Remove environment initialization from init command ([#1552](https://github.com/pagopa/dx/pull/1552))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Luca Cavallaro
+
 ## 0.18.13 (2026-04-02)
 
 ### 🩹 Fixes
