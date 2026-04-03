@@ -1,3 +1,23 @@
+## 0.15.0 (2026-04-03)
+
+### 🚀 Features
+
+- Add website docs for DX Copilot plugins ([#1540](https://github.com/pagopa/dx/pull/1540))
+
+### 🩹 Fixes
+
+- Update docs with new nx-release action page ([#1486](https://github.com/pagopa/dx/pull/1486), [#1510](https://github.com/pagopa/dx/issues/1510))
+- Improve documentation for monorepositories and dx-cli init command ([#1487](https://github.com/pagopa/dx/pull/1487))
+- Align documentation for Nx Release instead of Changeset, add new page for Version Plans ([#1570](https://github.com/pagopa/dx/pull/1570))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+- Mario Mupo @mamu0
+
 ## 0.14.1
 
 ### Patch Changes

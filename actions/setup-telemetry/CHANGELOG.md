@@ -1,3 +1,15 @@
+## 0.1.6 (2026-04-03)
+
+### 🩹 Fixes
+
+- Upgrade node version to node24 ([#1567](https://github.com/pagopa/dx/pull/1567))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Marco Comi
+
 ## 0.1.5
 
 ### Patch Changes
