@@ -235,7 +235,9 @@ eliminating the need for this manual step.
 
 #### Core (for new projects only)
 
-Apply the Terraform configuration:
+Apply the
+[Core](https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/latest)
+Terraform configuration:
 
 ```bash
 cd infra/core/<env>
@@ -249,7 +251,8 @@ Open `infra/bootstrapper/<env>/data.tf` and verify that the Entra ID groups
 referenced there are the ones set in
 [Setting Up Your Team on Azure](setting-up-your-team-on-azure).
 
-Once verified, apply the bootstrapper:
+Once verified, apply the
+[bootstrapper](https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/latest):
 
 ```bash
 cd infra/bootstrapper/<env>
