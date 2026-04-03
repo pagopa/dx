@@ -5,8 +5,8 @@ sidebar_position: 11
 # Automate versioning and publishing with Nx
 
 A reusable GitHub workflow that automates package versioning and publishing for
-[Nx](https://nx.dev) monorepos, mirroring the
-[Changesets](https://github.com/changesets/action) release flow.
+[Nx](https://nx.dev) monorepos using
+[Nx Release](https://nx.dev/features/manage-releases) with version plans.
 
 ## Features
 
@@ -102,7 +102,7 @@ Add the following `release` block to your `nx.json`:
 
 | Option                 | Value                        | Why                                                                                                                                                                                                      |
 | ---------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `versionPlans`         | `true`                       | Enables file-based versioning (similar to Changesets): version increments are described in dedicated files committed to the repo                                                                         |
+| `versionPlans`         | `true`                       | Enables file-based versioning via [version plans](../github/pull-requests/version-plan.md): version increments are described in dedicated files committed to the repo                                    |
 | `projects`             | `["projects_path_1/*", ...]` | Glob patterns matching all projects to include in the release process; required for Nx to discover and release all packages                                                                              |
 | `projectsRelationship` | `"independent"`              | Each package has its own version; there is no single workspace-wide version                                                                                                                              |
 | `createRelease`        | `false`                      | GitHub Releases are created automatically by the workflow after the PR is merged, not at changelog generation time                                                                                       |

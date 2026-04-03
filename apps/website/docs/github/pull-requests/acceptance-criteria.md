@@ -11,8 +11,8 @@ criteria:
 - A PR must contain the **smallest number of changes** possible allowing the
   feedback loop to be as quick as possible.
 - If backward compatibility is broken, an explanation must be included. Make
-  sure to include a **migration guide** within the changelog, using
-  [changeset](changeset.md).
+  sure to include a **migration guide** within the changelog, using a
+  [version plan](version-plan.md) with a `major` bump.
 - The changes must include passing unit tests. The only exception is for tests
   that expose an existing bug.
 - No bugs, logical issues, uncovered edge cases, or known vulnerabilities should
@@ -24,5 +24,12 @@ criteria:
 - The CI pipeline must run successfully without errors when the PR is _ready for
   review_. For Draft PRs, it is reasonable to have unresolved issues as the PR
   is still in progress.
-- The PR should contain a [changeset](changeset.md) file to properly handle the
-  versioning of the project.
+- The PR should contain a [version plan](version-plan.md) file to properly
+  handle the versioning of the project.
+
+:::note
+
+If your repository uses Changesets instead of Nx Release, use a
+[changeset](changeset.md) file in place of a version plan.
+
+:::
