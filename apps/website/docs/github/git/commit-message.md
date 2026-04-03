@@ -37,8 +37,11 @@ It is used to generate changelogs and automate versioning.
 :::note
 
 Since
-[we use Changesets to handle versioning and changelogs](../pull-requests/changeset.md),
+[we use Nx Release with version plans to handle versioning and changelogs](../pull-requests/version-plan.md),
 we do not require Conventional Commits. Instead, we focus on clear, structured
 messages that enhance readability.
+
+If you are using Changesets instead, refer to the
+[Changeset guide](../pull-requests/changeset.md).
 
 :::

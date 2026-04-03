@@ -31,11 +31,12 @@ module containing its own code, tests, and examples.
 
 ## Module Development and Versioning
 
-We use [Changeset](https://github.com/changesets/changesets) for version
-management and changelog generation. This helps maintain a clear history of
-changes and ensures proper [semantic versioning](https://semver.org/).
+We use [Nx Release](https://nx.dev/features/manage-releases) with version plans
+for version management and changelog generation. This helps maintain a clear
+history of changes and ensures proper
+[semantic versioning](https://semver.org/).
 
-### Managing Changes with Changeset
+### Managing Changes with Nx Release
 
 Before starting development:
 
@@ -45,22 +46,35 @@ Before starting development:
    pnpm install
    ```
 
-2. After making changes, create a changeset:
+2. After making changes, create a version plan:
+
    ```bash
-   pnpm changeset
+   nx release plan
    ```
 
 This will prompt you to:
 
-- Select the type of change (major/minor/patch)
+- Select which packages to include
+- Select the type of change
+  (major/minor/patch/premajor/preminor/prepatch/prerelease)
 - Provide a description of your changes
-- Review and confirm
+
+For more details, see the
+[version plan guide](../github/pull-requests/version-plan.md).
+
+:::note
+
+If your repository is still using Changesets, run `pnpm changeset` instead and
+refer to the [Changeset guide](../github/pull-requests/changeset.md).
+
+:::
 
 ### Publishing Process
 
 When you're ready to publish your changes:
 
-1. The Changeset release action will automatically create a pull request
+1. The [Nx release workflow](../pipelines/nx-release.md) will automatically
+   create a `Version Packages` pull request
 2. Review and merge the pull request to trigger:
    - Version bumping
    - Changelog updates
@@ -155,7 +169,7 @@ The script performs several important steps:
 After successful initialization, you'll need to:
 
 1. Start developing you module
-2. Create a changeset to produce the first release
+2. Create a version plan to produce the first release
 
 ### Adding the Module to the Terraform Registry
 
@@ -163,8 +177,9 @@ After completing all previous steps and ensuring that the module has been pushed
 to its sub-repository:
 
 1. **Ensure the Tag Exists**  
-   Before proceeding, merge the changeset Pull Request titled **"Version
-   packages"** into the main branch of the sub-repository.
+   Before proceeding, merge the **"Version Packages"** pull request (created
+   automatically by the Nx release workflow) into the main branch of the
+   sub-repository.
    - This step is essential because the Terraform Registry requires at least one
      version tag (`X.Y.Z`) for the module to be listed and published.
 
@@ -185,7 +200,7 @@ to its sub-repository:
 
 ## Best Practices and Tips
 
-- Always create a changeset for any meaningful code changes
+- Always create a version plan for any meaningful code changes
 - Provide clear, descriptive changelog messages that help users understand the
   impact of changes
 - Test your modules thoroughly before publishing

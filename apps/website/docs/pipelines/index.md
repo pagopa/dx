@@ -21,10 +21,10 @@ application deployment, and infrastructure automation.
 
 ### 📦 Release & Versioning
 
-- **[Release with Changesets](./release.md)** - Automate versioning and
-  publishing with Changesets
 - **[Release with Nx](./nx-release.md)** - Automate versioning and publishing
-  for Nx monorepos
+  for Nx monorepos (recommended)
+- **[Release with Changesets](./release.md)** - Automate versioning and
+  publishing with Changesets (legacy)
 
 ### 🚀 Application Deployment
 
