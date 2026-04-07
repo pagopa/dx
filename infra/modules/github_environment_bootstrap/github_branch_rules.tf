@@ -1,6 +1,11 @@
+resource "github_branch" "main" {
+  branch     = var.repository.default_branch_name
+  repository = github_repository.this.name
+}
+
 resource "github_branch_default" "main" {
   repository = github_repository.this.name
-  branch     = var.repository.default_branch_name
+  branch     = github_branch.main.branch
 }
 
 resource "github_branch_protection" "main" {
