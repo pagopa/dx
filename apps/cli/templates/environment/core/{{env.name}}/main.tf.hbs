@@ -12,7 +12,9 @@ module "azure-{{displayName}}_core" {
     app_name = "core"
   })
 
-  tags = local.tags
+  tags = merge(local.tags, {
+    Source = "https://github.com/{{@root.github.owner}}/{{@root.github.repo}}/blob/main/infra/core/{{@root.env.name}}"
+  })
 }
 
 {{/each}}

@@ -1,3 +1,9 @@
+locals {
+  bootstrapper_tags = merge(local.tags, {
+    Source = "https://github.com/{{@root.github.owner}}/{{@root.github.repo}}/blob/main/infra/bootstrapper/{{@root.env.name}}"
+  })
+}
+
 {{#each cloudAccountsByCsp.azure}}
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
@@ -45,7 +51,7 @@ module "azure-{{displayName}}_bootstrap" {
   nat_gateway_resource_group_id      = data.azurerm_resource_group.common_itn_01.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards.id
 
-  tags = local.tags
+  tags = local.bootstrapper_tags
 }
 {{else}}
 module "azure-{{displayName}}_core_values" {
@@ -112,7 +118,7 @@ module "azure-{{displayName}}_bootstrap" {
   private_dns_zone_resource_group_id = module.azure-{{displayName}}_core_values.network_resource_group_id
   opex_resource_group_id             = module.azure-{{displayName}}_core_values.opex_resource_group_id
 
-  tags = local.tags
+  tags = local.bootstrapper_tags
 }
 {{/if}}
 {{/each}}
