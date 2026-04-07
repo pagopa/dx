@@ -42,7 +42,6 @@ if [ -n "$CWD" ] && [ -d "$CWD/.git" ]; then
       if [ "$DX_KB_RESOLVED" = "$CWD_RESOLVED" ]; then
         exit 0
       fi
-      rm -rf "$DX_KB_PATH"
     fi
 
     mkdir -p "$(dirname "$DX_KB_PATH")"
@@ -54,12 +53,10 @@ fi
 # --- Case 2: Already cloned — update ---
 if [ -d "$DX_KB_PATH/.git" ]; then
   git -C "$DX_KB_PATH" pull --ff-only 2>/dev/null || {
-    rm -rf "$DX_KB_PATH"
     git clone --depth 1 "$DX_REPO_URL" "$DX_KB_PATH" 2>/dev/null
   }
   exit 0
 fi
 
 # --- Case 3: Not present — fresh clone ---
-rm -rf "$DX_KB_PATH" 2>/dev/null || true
 git clone --depth 1 "$DX_REPO_URL" "$DX_KB_PATH" 2>/dev/null
