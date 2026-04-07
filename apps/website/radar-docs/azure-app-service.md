@@ -1,8 +1,12 @@
 ---
 title: "Azure App Service"
-ring: adopt
+ring: hold
 tags: [cloud, azure, computing, dx]
 ---
+
+> **Deprecation notice**: We are moving away from Azure App Service in favour of
+> [Azure Container Apps](./azure-container-apps.md). New projects should use
+> Container Apps instead.
 
 [Azure App Service](https://azure.microsoft.com/en-us/products/app-service) is a
 fully managed platform offered by Microsoft Azure that enables developers to
