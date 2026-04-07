@@ -4,7 +4,7 @@ ring: hold
 tags: [cloud, azure, computing, dx]
 ---
 
-> **Deprecation notice**: We are moving away from Azure App Service in favour of
+> **Deprecation notice**: We are moving away from Azure App Service in favor of
 > [Azure Container Apps](./azure-container-apps.md). New projects should use
 > Container Apps instead.
 

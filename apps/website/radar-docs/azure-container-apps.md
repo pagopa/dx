@@ -24,7 +24,7 @@ applications, automatically managing underlying resources.
 
 ## Use cases
 
-Azure Container Apps is ideal for microservices architectures, event-driven
+Azure Container Apps is ideal for microservice architectures, event-driven
 applications, and scenarios requiring rapid scaling based on demand. It is
 suitable for applications that need to scale to zero when idle, such as
 background processing, APIs, and web applications with variable traffic
