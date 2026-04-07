@@ -10,7 +10,7 @@ is a fully managed in-memory data store built on
 distribution of Redis by Redis Inc. It is the evolution of Azure Cache for
 Redis, offering higher performance, better reliability, and additional
 capabilities such as active geo-replication, Redis modules (RediSearch,
-RedisJSON, RedisBloom, RedisTimeSeries), and support for Redis 7.4.x.
+RedisJSON, RedisBloom, RedisTimeSeries), and support for current Redis versions.
 
 ## Use cases
 

@@ -11,7 +11,7 @@ is designed to improve application performance by offloading database queries
 and enabling real-time analytics. The service supports multiple data structures,
 automatic scaling, and high availability with geo-replication options.
 
-## Deprecation
+## Status
 
 Microsoft is transitioning towards
 [Azure Managed Redis](https://learn.microsoft.com/en-us/azure/azure-cache-for-redis/managed-redis/managed-redis-overview)
