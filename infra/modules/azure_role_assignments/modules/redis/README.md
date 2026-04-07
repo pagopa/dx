@@ -1,5 +1,7 @@
 # redis
 
+> Note: for Azure Managed Redis (`is_managed = true`) the underlying provider/resource currently does not expose reader vs writer policy selection. `role` is optional for managed entries and ignored by the module.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -13,16 +13,19 @@ variable "redis" {
   type = list(object({
     cache_name          = string
     resource_group_name = string
-    role                = string
-    username            = string
+    role                = optional(string, null)
+    username            = optional(string, null)
     description         = string
+    is_managed          = optional(bool, false)
   }))
 
   validation {
     condition = alltrue([
-      for assignment in var.redis : contains(["reader", "writer", "owner"], assignment.role)
+      for assignment in var.redis : assignment.is_managed ? true : (
+        assignment.role != null && contains(["reader", "writer", "owner"], lower(assignment.role))
+      )
     ])
-    error_message = "The role must be set either to \"reader\", \"writer\" or \"owner\""
+    error_message = "For legacy Redis assignments (is_managed=false), role must be set either to \"reader\", \"writer\" or \"owner\". For Azure Managed Redis assignments, role is optional and ignored."
   }
 
   validation {
