@@ -10,9 +10,23 @@ set -euo pipefail
 DX_KB_PATH="${DX_KB_PATH:-$HOME/.dx}"
 DX_REPO_URL="https://github.com/pagopa/dx.git"
 
+if ! command -v git >/dev/null 2>&1; then
+  echo "Error: git is required but was not found in PATH." >&2
+  exit 1
+fi
+
 # Read sessionStart input from stdin
 INPUT=$(cat)
-CWD=$(echo "$INPUT" | jq -r '.cwd // empty')
+CWD=""
+if command -v jq >/dev/null 2>&1; then
+  CWD=$(printf '%s' "$INPUT" | jq -r '.cwd // empty' 2>/dev/null || printf '')
+fi
+
+resolve_path() {
+  (
+    cd "$1" 2>/dev/null && pwd -P
+  )
+}
 
 echo "Ensuring DX knowledge base is available at $DX_KB_PATH..."
 
@@ -20,10 +34,19 @@ echo "Ensuring DX knowledge base is available at $DX_KB_PATH..."
 if [ -n "$CWD" ] && [ -d "$CWD/.git" ]; then
   REMOTE=$(git -C "$CWD" remote get-url origin 2>/dev/null || echo "")
   if echo "$REMOTE" | grep -q "pagopa/dx"; then
-    # Create a symlink so skills always find content at $DX_KB_PATH
-    if [ ! -e "$DX_KB_PATH" ]; then
-      ln -sf "$CWD" "$DX_KB_PATH"
+    CWD_RESOLVED=$(resolve_path "$CWD")
+
+    # Ensure skills always find the current DX repo at $DX_KB_PATH
+    if [ -e "$DX_KB_PATH" ]; then
+      DX_KB_RESOLVED=$(resolve_path "$DX_KB_PATH" || true)
+      if [ "$DX_KB_RESOLVED" = "$CWD_RESOLVED" ]; then
+        exit 0
+      fi
+      rm -rf "$DX_KB_PATH"
     fi
+
+    mkdir -p "$(dirname "$DX_KB_PATH")"
+    ln -sfn "$CWD_RESOLVED" "$DX_KB_PATH"
     exit 0
   fi
 fi

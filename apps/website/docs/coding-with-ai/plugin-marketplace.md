@@ -53,7 +53,8 @@ full DX repository for documentation and module source code. When using **GitHub
 Copilot CLI** the plugin's `sessionStart` hook handles this automatically.
 
 For the **Copilot coding agent** (cloud) you need to set up a local clone of the
-DX repository in `$HOME/.dx`.
+DX repository. By default, clone it into `$HOME/.dx`; if you need to use a
+different location, set `DX_KB_PATH` to point to that clone.
 
 ## Available Plugins
 
