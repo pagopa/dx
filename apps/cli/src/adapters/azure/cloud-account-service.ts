@@ -12,6 +12,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
 import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 
 import {
@@ -49,6 +50,19 @@ const graphGroupMembershipResponseSchema = z.object({
   "@odata.nextLink": z.string().optional(),
   value: z.array(graphGroupMembershipItemSchema),
 });
+
+const builtInRoleDefinitionIds = {
+  contributor: "b24988ac-6180-42a0-ab88-20f7382dd24c",
+  keyVaultSecretsOfficer: "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+  owner: "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+  roleBasedAccessControlAdministrator: "f58310d9-a9f6-439a-9e8d-f62e7b41a168",
+  storageBlobDataContributor: "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+} as const;
+
+const bootstrapIdentityRoleDefinitionIds = [
+  builtInRoleDefinitionIds.roleBasedAccessControlAdministrator,
+  builtInRoleDefinitionIds.contributor,
+] as const;
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
@@ -134,9 +148,9 @@ export class AzureCloudAccountService implements CloudAccountService {
       );
 
       const requiredRoles = [
-        "8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
-        "ba92f5b4-2d11-453d-a403-e96b0029c9fe", // Storage Blob Data Contributor
-        "b86a8fe4-44ce-4948-aee5-eccb2c155cd7", // Key Vault Secrets Officer
+        builtInRoleDefinitionIds.owner, // Owner
+        builtInRoleDefinitionIds.storageBlobDataContributor, // Storage Blob Data Contributor
+        builtInRoleDefinitionIds.keyVaultSecretsOfficer, // Key Vault Secrets Officer
       ];
 
       const scope = `/subscriptions/${cloudAccountId}`;
@@ -246,14 +260,52 @@ export class AzureCloudAccountService implements CloudAccountService {
         cloudAccount.id,
       );
 
-      await msiClient.userAssignedIdentities.createOrUpdate(
+      const identity = await msiClient.userAssignedIdentities.createOrUpdate(
         resourceGroupName,
         identityName,
         parameters,
       );
 
+      assert.ok(
+        identity.principalId,
+        "Managed identity principal ID is undefined",
+      );
+      const identityPrincipalId = identity.principalId;
+
       logger.debug(
         "Created identity {identityName} in subscription {subscriptionId}",
+        { identityName, subscriptionId: cloudAccount.id },
+      );
+
+      const authorizationManagementClient = new AuthorizationManagementClient(
+        this.#credential,
+        cloudAccount.id,
+      );
+      const subscriptionScope = `/subscriptions/${cloudAccount.id}`;
+
+      await Promise.all(
+        bootstrapIdentityRoleDefinitionIds.map((roleDefinitionId) =>
+          authorizationManagementClient.roleAssignments.create(
+            subscriptionScope,
+            this.#createRoleAssignmentName(
+              subscriptionScope,
+              identityPrincipalId,
+              roleDefinitionId,
+            ),
+            {
+              principalId: identityPrincipalId,
+              principalType: "ServicePrincipal",
+              roleDefinitionId: this.#createRoleDefinitionResourceId(
+                cloudAccount.id,
+                roleDefinitionId,
+              ),
+            },
+          ),
+        ),
+      );
+
+      logger.debug(
+        "Assigned bootstrap roles to identity {identityName} in subscription {subscriptionId}",
         { identityName, subscriptionId: cloudAccount.id },
       );
 
@@ -511,6 +563,28 @@ export class AzureCloudAccountService implements CloudAccountService {
       }),
     );
     return results.every(Boolean);
+  }
+
+  #createRoleAssignmentName(
+    scope: string,
+    principalId: string,
+    roleDefinitionId: string,
+  ): string {
+    const hash = createHash("sha256")
+      .update(`${scope}:${principalId}:${roleDefinitionId}`)
+      .digest("hex");
+
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(
+      12,
+      16,
+    )}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+  }
+
+  #createRoleDefinitionResourceId(
+    subscriptionId: string,
+    roleDefinitionId: string,
+  ): string {
+    return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {
