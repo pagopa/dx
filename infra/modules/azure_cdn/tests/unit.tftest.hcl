@@ -542,3 +542,65 @@ run "cdn_route_without_custom_domains" {
     error_message = "Route must not link custom domains when none are provided"
   }
 }
+
+run "cdn_apex_domains_shared_key_vault" {
+  command = plan
+
+  override_data {
+    target = data.azurerm_key_vault.this
+    values = {
+      id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/rg-sec/providers/Microsoft.KeyVault/vaults/shared-kv"
+    }
+  }
+
+  variables {
+    custom_domains = [
+      {
+        host_name = "devex.pagopa.it"
+        dns = {
+          zone_name                = "devex.pagopa.it"
+          zone_resource_group_name = "rg-test"
+        }
+        custom_certificate = {
+          key_vault_certificate_versionless_id = "https://shared-kv.vault.azure.net/certificates/cert1"
+          key_vault_name                       = "shared-kv"
+          key_vault_resource_group_name        = "rg-sec"
+          key_vault_has_rbac_support           = true
+        }
+      },
+      {
+        host_name = "other.pagopa.it"
+        dns = {
+          zone_name                = "other.pagopa.it"
+          zone_resource_group_name = "rg-test"
+        }
+        custom_certificate = {
+          key_vault_certificate_versionless_id = "https://shared-kv.vault.azure.net/certificates/cert2"
+          key_vault_name                       = "shared-kv"
+          key_vault_resource_group_name        = "rg-sec"
+          key_vault_has_rbac_support           = true
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(data.azurerm_key_vault.this) == 1
+    error_message = "Expected exactly one Key Vault data source when two apex domains share the same Key Vault"
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_custom_domain.this) == 2
+    error_message = "Expected two custom domains to be created"
+  }
+
+  assert {
+    condition     = length(azurerm_cdn_frontdoor_secret.certificate) == 2
+    error_message = "Expected two Front Door secrets, one per apex domain"
+  }
+
+  assert {
+    condition     = length(azurerm_role_assignment.this) == 1
+    error_message = "Expected exactly one role assignment for the shared Key Vault"
+  }
+}
