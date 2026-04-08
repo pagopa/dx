@@ -20,6 +20,7 @@ export const initCloudAccounts = async (
           cloudAccount,
           payload.env,
           runnerAppCredentials,
+          payload.github,
           payload.tags,
         ),
       ),

@@ -1,18 +1,20 @@
 variable "repository" {
   type = object({
-    name                     = string
-    description              = string
-    topics                   = list(string)
-    default_branch_name      = optional(string, "main")
-    reviewers_teams          = list(string)
-    infra_cd_policy_branches = optional(set(string), ["main"])
-    opex_cd_policy_branches  = optional(set(string), ["main"])
-    app_cd_policy_branches   = optional(set(string), ["main"])
-    infra_cd_policy_tags     = optional(set(string), [])
-    opex_cd_policy_tags      = optional(set(string), [])
-    app_cd_policy_tags       = optional(set(string), [])
-    jira_boards_ids          = optional(list(string), [])
-    pages_enabled            = optional(bool, false)
+    name                            = string
+    description                     = string
+    topics                          = list(string)
+    default_branch_name             = optional(string, "main")
+    reviewers_teams                 = list(string)
+    infra_cd_policy_branches        = optional(set(string), ["main"])
+    opex_cd_policy_branches         = optional(set(string), ["main"])
+    app_cd_policy_branches          = optional(set(string), ["main"])
+    bootstrapper_cd_policy_branches = optional(set(string), ["main"])
+    infra_cd_policy_tags            = optional(set(string), [])
+    opex_cd_policy_tags             = optional(set(string), [])
+    app_cd_policy_tags              = optional(set(string), [])
+    bootstrapper_cd_policy_tags     = optional(set(string), [])
+    jira_boards_ids                 = optional(list(string), [])
+    pages_enabled                   = optional(bool, false)
     # The `has_downloads` property will be removed in the next major release. See https://github.com/orgs/community/discussions/102145#discussioncomment-8351756
     has_downloads          = optional(bool, false)
     has_issues             = optional(bool, false)

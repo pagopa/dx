@@ -23,6 +23,7 @@ import {
   type EnvironmentId,
   environmentShort,
 } from "../../domain/environment.js";
+import { type GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubAppCredentials } from "../../domain/github.js";
 import {
   type TerraformBackend,
@@ -209,6 +210,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     cloudAccount: CloudAccount,
     { name, prefix }: EnvironmentId,
     runnerAppCredentials: GitHubAppCredentials,
+    github: GitHubRepo,
     tags: Record<string, string> = {},
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
@@ -309,77 +311,69 @@ export class AzureCloudAccountService implements CloudAccountService {
         { identityName, subscriptionId: cloudAccount.id },
       );
 
-      // Retrieve tenant ID from the subscription
-      const subscriptionClient = new SubscriptionClient(this.#credential);
-      const subscription = await subscriptionClient.subscriptions.get(
-        cloudAccount.id,
-      );
-      assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
-
-      const kvClient = new KeyVaultManagementClient(
-        this.#credential,
-        cloudAccount.id,
-      );
-
-      const keyVaultName = `${prefix}-${short.env}-${short.location}-common-kv-01`;
-
-      const secretsProtectionEnabled = short.env === "p";
-
-      const result = await kvClient.vaults.checkNameAvailability({
-        name: keyVaultName,
-        type: "Microsoft.KeyVault/vaults",
+      const terraformBackend = await this.getTerraformBackend(cloudAccount.id, {
+        name,
+        prefix,
       });
 
-      await kvClient.vaults.beginCreateOrUpdateAndWait(
+      if (terraformBackend) {
+        const terraformStateResourceGroupScope = `/subscriptions/${cloudAccount.id}/resourceGroups/${terraformBackend.resourceGroupName}`;
+
+        await authorizationManagementClient.roleAssignments.create(
+          terraformStateResourceGroupScope,
+          this.#createRoleAssignmentName(
+            terraformStateResourceGroupScope,
+            identityPrincipalId,
+            builtInRoleDefinitionIds.storageBlobDataContributor,
+          ),
+          {
+            principalId: identityPrincipalId,
+            principalType: "ServicePrincipal",
+            roleDefinitionId: this.#createRoleDefinitionResourceId(
+              cloudAccount.id,
+              builtInRoleDefinitionIds.storageBlobDataContributor,
+            ),
+          },
+        );
+
+        logger.debug(
+          "Assigned Storage Blob Data Contributor role to identity {identityName} on scope {scope}",
+          { identityName, scope: terraformStateResourceGroupScope },
+        );
+      }
+
+      const githubEnvironmentName = `bootstrapper-${name}-cd`;
+
+      await msiClient.federatedIdentityCredentials.createOrUpdate(
         resourceGroupName,
-        keyVaultName,
+        identityName,
+        githubEnvironmentName,
         {
-          location: cloudAccount.defaultLocation,
-          properties: {
-            createMode: result.nameAvailable ? "default" : "recover",
-            enabledForDiskEncryption: true,
-            enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
-            enableRbacAuthorization: true,
-            sku: {
-              family: "A",
-              name: "standard",
-            },
-            softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
-            tenantId: subscription.tenantId,
-          },
-          tags: {
-            Environment: name,
-            ...tags,
-          },
+          audiences: ["api://AzureADTokenExchange"],
+          issuer: "https://token.actions.githubusercontent.com",
+          subject: `repo:${github.owner}/${github.repo}:environment:${githubEnvironmentName}`,
         },
       );
 
       logger.debug(
-        "Created key vault {keyVaultName} in subscription {subscriptionId}",
-        { keyVaultName, subscriptionId: cloudAccount.id },
+        "Configured federated identity credential {credentialName} for identity {identityName} in subscription {subscriptionId}",
+        {
+          credentialName: githubEnvironmentName,
+          identityName,
+          subscriptionId: cloudAccount.id,
+        },
       );
 
-      const secretClient = new SecretClient(
-        `https://${keyVaultName}.vault.azure.net/`,
-        this.#credential,
-      );
-
-      await Promise.all([
-        secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
-        secretClient.setSecret(
-          "github-runner-app-installation-id",
-          runnerAppCredentials.installationId,
-        ),
-        secretClient.setSecret(
-          "github-runner-app-key",
-          runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
-        ),
-      ]);
-
-      logger.debug(
-        "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
-        { keyVaultName, subscriptionId: cloudAccount.id },
-      );
+      await this.#createCommonKeyVaultAndStoreRunnerAppSecrets({
+        cloudAccount,
+        name,
+        prefix,
+        resourceGroupName,
+        runnerAppCredentials,
+        shortEnv: short.env,
+        shortLocation: short.location,
+        tags,
+      });
     } catch (cause) {
       // Cleanup resource group if initialization fails
       await resourceManagementClient.resourceGroups.beginDeleteAndWait(
@@ -563,6 +557,97 @@ export class AzureCloudAccountService implements CloudAccountService {
       }),
     );
     return results.every(Boolean);
+  }
+
+  async #createCommonKeyVaultAndStoreRunnerAppSecrets({
+    cloudAccount,
+    name,
+    prefix,
+    resourceGroupName,
+    runnerAppCredentials,
+    shortEnv,
+    shortLocation,
+    tags,
+  }: {
+    cloudAccount: CloudAccount;
+    name: EnvironmentId["name"];
+    prefix: string;
+    resourceGroupName: string;
+    runnerAppCredentials: GitHubAppCredentials;
+    shortEnv: string;
+    shortLocation: string;
+    tags: Record<string, string>;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+    const subscriptionClient = new SubscriptionClient(this.#credential);
+    const subscription = await subscriptionClient.subscriptions.get(
+      cloudAccount.id,
+    );
+    assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+
+    const kvClient = new KeyVaultManagementClient(
+      this.#credential,
+      cloudAccount.id,
+    );
+
+    const keyVaultName = `${prefix}-${shortEnv}-${shortLocation}-common-kv-01`;
+    const secretsProtectionEnabled = shortEnv === "p";
+
+    const result = await kvClient.vaults.checkNameAvailability({
+      name: keyVaultName,
+      type: "Microsoft.KeyVault/vaults",
+    });
+
+    await kvClient.vaults.beginCreateOrUpdateAndWait(
+      resourceGroupName,
+      keyVaultName,
+      {
+        location: cloudAccount.defaultLocation,
+        properties: {
+          createMode: result.nameAvailable ? "default" : "recover",
+          enabledForDiskEncryption: true,
+          enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
+          enableRbacAuthorization: true,
+          sku: {
+            family: "A",
+            name: "standard",
+          },
+          softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
+          tenantId: subscription.tenantId,
+        },
+        tags: {
+          Environment: name,
+          ...tags,
+        },
+      },
+    );
+
+    logger.debug(
+      "Created key vault {keyVaultName} in subscription {subscriptionId}",
+      { keyVaultName, subscriptionId: cloudAccount.id },
+    );
+
+    const secretClient = new SecretClient(
+      `https://${keyVaultName}.vault.azure.net/`,
+      this.#credential,
+    );
+
+    await Promise.all([
+      secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
+      secretClient.setSecret(
+        "github-runner-app-installation-id",
+        runnerAppCredentials.installationId,
+      ),
+      secretClient.setSecret(
+        "github-runner-app-key",
+        runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
+      ),
+    ]);
+
+    logger.debug(
+      "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
+      { keyVaultName, subscriptionId: cloudAccount.id },
+    );
   }
 
   #createRoleAssignmentName(

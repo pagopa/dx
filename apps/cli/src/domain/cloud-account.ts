@@ -1,6 +1,7 @@
 import { z } from "zod/v4";
 
 import { type EnvironmentId } from "./environment.js";
+import { type GitHubRepo } from "./github-repo.js";
 import { type GitHubAppCredentials } from "./github.js";
 import { TerraformBackend } from "./remote-backend.js";
 
@@ -31,6 +32,7 @@ export type CloudAccountService = {
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
     runnerAppCredentials: GitHubAppCredentials,
+    github: GitHubRepo,
     tags?: Record<string, string>,
   ): Promise<void>;
 

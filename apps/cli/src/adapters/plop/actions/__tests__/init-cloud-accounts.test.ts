@@ -94,6 +94,10 @@ describe("initCloudAccounts", () => {
         installationId: "test-installation-id",
         key: "test-private-key",
       },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
       {},
     );
     expect(initializeMock).toHaveBeenCalledWith(
@@ -103,6 +107,10 @@ describe("initCloudAccounts", () => {
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",
+      },
+      {
+        owner: "pagopa",
+        repo: "dx",
       },
       {},
     );
@@ -180,6 +188,10 @@ describe("initCloudAccounts", () => {
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",
+      },
+      {
+        owner: "pagopa",
+        repo: "dx",
       },
       {},
     );
