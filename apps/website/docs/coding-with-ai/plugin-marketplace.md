@@ -46,6 +46,16 @@ When a developer opens the project in VS Code with Copilot enabled, the
 marketplace is automatically registered. The enabled plugins appear with a
 recommendation badge in the Extensions view.
 
+## DX Knowledge Base Hook (Coding Agent)
+
+Some plugin skills (e.g., `terraform-best-practices`) need local access to the
+full DX repository for documentation and module source code. When using **GitHub
+Copilot CLI** the plugin's `sessionStart` hook handles this automatically.
+
+For the **Copilot coding agent** (cloud) you need to set up a local clone of the
+DX repository. By default, clone it into `$HOME/.dx`; if you need to use a
+different location, set `DX_KB_PATH` to point to that clone.
+
 ## Available Plugins
 
 ### `terraform@pagopa-dx`
