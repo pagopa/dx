@@ -197,7 +197,7 @@ jobs:
           echo "Generated artifact name: ${ARTIFACT_NAME}"
 
       - name: Download generated Terraform files
-        uses: pagopa/dx/actions/terraform-plan-download@main
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: generated-terraform
           file_path: .
