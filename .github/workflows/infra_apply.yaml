@@ -261,10 +261,10 @@ jobs:
             > plan-outputs.json
 
       - name: Upload plan outputs artifact
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
-          name: ${{ steps.artifact.outputs.name }}-outputs
-          path: plan-outputs.json
+          bundle_name: ${{ steps.artifact.outputs.name }}-outputs
+          file_path: plan-outputs.json
 
   tf_apply:
     name: "Terraform Apply"
@@ -310,10 +310,10 @@ jobs:
 
       # Download plan outputs artifact from tf_plan
       - name: Download plan outputs artifact
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          name: ${{ steps.artifact.outputs.name }}-outputs
-          path: /tmp/plan-outputs
+          bundle_name: ${{ steps.artifact.outputs.name }}-outputs
+          file_path: /tmp/plan-outputs
 
       - name: Read plan outputs
         id: plan_outputs
