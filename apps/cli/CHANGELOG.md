@@ -1,3 +1,16 @@
+## 0.19.1 (2026-04-08)
+
+### 🩹 Fixes
+
+- Add `onlyBuiltDependencies` block to `pnpm-workspace.yaml` file to prevent warnings during `pnpm install` operation. ([#1580](https://github.com/pagopa/dx/pull/1580))
+
+  We want to allow the execution of the postinstall script for `nx`.
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.19.0 (2026-04-03)
 
 ### 🚀 Features
