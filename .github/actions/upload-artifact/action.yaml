@@ -11,9 +11,11 @@ inputs:
   include-hidden-files:
     description: "Whether to include hidden files in the provided path in the artifact"
     required: false
+    default: "false"
   retention-days:
     description: "Duration after which artifact will expire in days. Default is 7 days."
     required: false
+    default: "7"
 
 runs:
   using: "composite"
@@ -25,5 +27,5 @@ runs:
         name: ${{ inputs.bundle_name }}
         path: ${{ inputs.file_path }}
         if-no-files-found: error
-        retention-days: ${{ inputs.retention-days || 7 }}
-        include-hidden-files: ${{ inputs.include-hidden-files || false }}
+        retention-days: ${{ inputs.retention-days }}
+        include-hidden-files: ${{ inputs.include-hidden-files }}
