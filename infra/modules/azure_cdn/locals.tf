@@ -43,4 +43,17 @@ locals {
 
   # Check if existing Profile SKU is compatible with WAF
   compatible_sku = var.existing_cdn_frontdoor_profile_id != null ? data.azurerm_cdn_frontdoor_profile.existing[0].sku_name == "Standard_AzureFrontDoor" : true
+
+  # Construct Key Vault IDs from subscription ID and resource details
+  key_vault_ids = {
+    for k, v in merge(local.unique_key_vaults_rbac, local.unique_key_vaults_no_rbac) :
+    k => provider::azurerm::normalise_resource_id(
+      format(
+        "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s",
+        data.azurerm_client_config.current.subscription_id,
+        v[0].custom_certificate.key_vault_resource_group_name,
+        v[0].custom_certificate.key_vault_name
+      )
+    )
+  }
 }

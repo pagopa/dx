@@ -4,6 +4,10 @@
 
 - ce19de2: Add variable to manage origin group health probe configuration
 
+### Patch Changes
+
+- Fix duplicate key vault error when multiple apex domains share the same Key Vault by constructing Key Vault IDs programmatically instead of using a data source. This eliminates unnecessary Azure API calls and simplifies the module.
+
 ## 0.5.2
 
 ### Patch Changes
