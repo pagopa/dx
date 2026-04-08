@@ -1,8 +1,22 @@
+## 0.6.1 (2026-04-08)
+
+### 🩹 Fixes
+
+- Fix duplicate key error in `azurerm_key_vault` data source when multiple apex custom domains share the same Key Vault. The `for_each` expression now uses grouping (`...`) to deduplicate entries by Key Vault. ([#1582](https://github.com/pagopa/dx/pull/1582))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.6.0
 
 ### Minor Changes
 
 - ce19de2: Add variable to manage origin group health probe configuration
+
+### Patch Changes
+
+- Fix duplicate key vault error when multiple apex domains share the same Key Vault by constructing Key Vault IDs programmatically instead of using a data source. This eliminates unnecessary Azure API calls and simplifies the module.
 
 ## 0.5.2
 
