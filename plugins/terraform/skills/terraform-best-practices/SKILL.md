@@ -1,6 +1,6 @@
 ---
 name: terraform-best-practices
-description: Generate Terraform code following PagoPA DX best practices. Use this skill EVERY TIME you write, create, edit, or modify any Terraform file. Reads DX documentation, enforces module-first usage from the pagopa-dx Registry namespace, discovers module capabilities dynamically, collects required values from the existing workspace, and validates all generated code before presenting it to the user.
+description: Generate Terraform code following PagoPA DX best practices. Use this skill EVERY TIME you write, create, edit, or modify any Terraform file or when deciding on the architecture of a new infrastructure component. This skill covers everything from module usage to code structure, configuration, security, and alignment with the DX Technology Radar.
 ---
 
 # Terraform DX Best Practices (Local)
@@ -13,16 +13,12 @@ When generating Terraform code, follow these instructions:
 
 ### 1. Locate the DX Knowledge Base
 
-The DX repository must be available locally at `$HOME/.dx`.
-This is set up automatically by the plugin's `sessionStart` hook.
-
-If `$HOME/.dx` does not exist, check that the `terraform@pagopa-dx` plugin
-is installed — it includes a hook that clones the repository on session start.
+Ensure that the `pagopa/dx` repository is available locally at `~/.dx`.
 
 ### 2. Read Local DX Documentation Files
 
 **Always read the DX Terraform documentation** before generating code.
-All markdown sources within `$HOME/.dx/apps/website/docs/terraform/` are the authoritative source for DX best practices.
+All markdown sources within `~/.dx/apps/website/docs/terraform/` are the authoritative source for DX best practices.
 
 ### 3. Search Terraform DX Modules Before Writing Any Resource
 
@@ -33,10 +29,10 @@ All markdown sources within `$HOME/.dx/apps/website/docs/terraform/` are the aut
 For each resource you intend to create, start an explorer subagent to look for a matching module and gather its details:
 
 1. **List all available DX modules** — do this once at the start:
-   - Scan the `$HOME/.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
+   - Scan the `~/.dx/infra/modules/` directory — each subdirectory is a DX module. List them to build the catalogue.
 2. **If a matching module exists**:
    - Read the module's `README.md` and `examples/` to understand its capabilities and usage patterns (see step 4 below).
-   - Get the module's latest version in `$HOME/.dx/infra/modules/<module>/package.json` and pin it with `~> major.minor`.
+   - Get the module's latest version in `~/.dx/infra/modules/<module>/package.json` and pin it with `~> major.minor`.
    - **Use the module instead of raw resources.**
 3. **Only use raw `azurerm_*` / `aws_*` resources** if no DX module covers that resource type.
 
@@ -50,7 +46,7 @@ Whenever the implementation involves managing sensitive values, secrets, or anyt
 
 ### 4. Discover Module Capabilities from Source, Not Just Summaries
 
-For each relevant DX module, inspect the underlying source in `$HOME/.dx/infra/modules/` so you understand what the module can really do, not just its published usage snippet.
+For each relevant DX module, inspect the underlying source in `~/.dx/infra/modules/` so you understand what the module can really do, not just its published usage snippet.
 
 Read these files when available:
 
@@ -73,7 +69,7 @@ Do **not** rely on a hardcoded list of features for a module. Discover them dyna
 
 **Before asking the user, check for values in the existing infrastructure:**
 
-1. **Determine the target folder** from `$HOME/.dx/apps/website/docs/terraform/infra-folder-structure.md` (read in step 2) based on the user's request — for example, ongoing environment resources go in `infra/resources/<env>/`, bootstrapping goes in `infra/bootstrapper/<env>/`. Then look for existing `.tf` files in that folder to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter). Ask the user only if the documentation does not clarify which folder to use.
+1. **Determine the target folder** from `~/.dx/apps/website/docs/terraform/infra-folder-structure.md` (read in step 2) based on the user's request — for example, ongoing environment resources go in `infra/resources/<env>/`, bootstrapping goes in `infra/bootstrapper/<env>/`. Then look for existing `.tf` files in that folder to extract: `prefix`, `env_short`, `location`, `domain`, `instance_number`, resource group names, subscription ID references, and existing `tags` values (BusinessUnit, ManagementTeam, CostCenter). Ask the user only if the documentation does not clarify which folder to use.
 
 2. **Check for the core-values-exporter module**: If any `.tf` file in the infra already references a `pagopa-dx/<csp>-core-values-exporter/<azurerm|aws>` module (e.g., `pagopa-dx/azure-core-values-exporter/azurerm`), its outputs expose shared infrastructure values — VNet ID, VNet resource group, PEP subnet ID, and more. Reference them via `module.<name>.<output>` instead of declaring new `data` sources.
 
@@ -111,7 +107,7 @@ under `infra/resources/_modules/<service-name>/`.
 2.  Instantiate the local module from the env file (`infra/resources/<env>/main.tf` or (better) a
     dedicated `<service>.tf`) passing all required variables.
 3.  **Never create `variables.tf` in root env folders** — configuration belongs in `locals.tf`
-    (from `$HOME/.dx/apps/website/docs/terraform/code-style.md`). Pass values to the local module via `locals`.
+    (from `~/.dx/apps/website/docs/terraform/code-style.md`). Pass values to the local module via `locals`.
 
 If the user has not indicated a preference, ask:
 
@@ -268,7 +264,7 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 - [ ] DX provider configured for resource naming (`pagopa-dx/azure` or `pagopa-dx/aws`)
 - [ ] `provider::dx::resource_name()` used for all resource names
 - [ ] **For every new subnet, use `dx_available_subnet_cidr` resource** to automatically allocate non-overlapping CIDR blocks
-  - Required by DX standards, see `$HOME/.dx/apps/website/docs/terraform/code-style.md`
+  - Required by DX standards, see `~/.dx/apps/website/docs/terraform/code-style.md`
   - Never manually calculate or hardcode new subnet CIDRs
 - [ ] Module versions specified using `~>` operator with major and minor versions only (e.g., `~> 1.5`)
   - Ensures compatibility while allowing patch updates
@@ -313,8 +309,8 @@ If the user explicitly confirms they want to proceed, generate the code but add 
 
 For detailed documentation, search the local DX knowledge:
 
-- `$HOME/.dx/apps/website/docs/` — DX documentation.
-- `$HOME/.dx/apps/website/docs/terraform/` - DX Terraform best practices are documented here, including folder structure, code style, module usage, and more.
-- `$HOME/.dx/infra/modules/` — source code of all DX Terraform modules, which you should read to understand their capabilities before using them.
-- `$HOME/.dx/infra/modules/<module>/README.md` and `examples/` — detailed documentation and usage examples for each DX module.
-- `$HOME/.dx/apps/website/docs/azure` — Azure-related documentation.
+- `~/.dx/apps/website/docs/` — DX documentation.
+- `~/.dx/apps/website/docs/terraform/` - DX Terraform best practices are documented here, including folder structure, code style, module usage, and more.
+- `~/.dx/infra/modules/` — source code of all DX Terraform modules, which you should read to understand their capabilities before using them.
+- `~/.dx/infra/modules/<module>/README.md` and `examples/` — detailed documentation and usage examples for each DX module.
+- `~/.dx/apps/website/docs/azure` — Azure-related documentation.
