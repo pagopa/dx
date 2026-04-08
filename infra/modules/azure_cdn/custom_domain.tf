@@ -48,11 +48,11 @@ resource "azurerm_cdn_frontdoor_custom_domain_association" "this" {
 # Data source for key vaults - using composite key to ensure uniqueness
 data "azurerm_key_vault" "this" {
   for_each = { for custom_domain in var.custom_domains :
-    "${custom_domain.custom_certificate.key_vault_name}:${custom_domain.custom_certificate.key_vault_resource_group_name}" => custom_domain
+    "${custom_domain.custom_certificate.key_vault_name}:${custom_domain.custom_certificate.key_vault_resource_group_name}" => custom_domain...
   if lookup(local.is_apex, custom_domain.host_name, false) }
 
-  name                = each.value.custom_certificate.key_vault_name
-  resource_group_name = each.value.custom_certificate.key_vault_resource_group_name
+  name                = each.value[0].custom_certificate.key_vault_name
+  resource_group_name = each.value[0].custom_certificate.key_vault_resource_group_name
 }
 
 # Create role assignments for the Front Door's managed identity to access
