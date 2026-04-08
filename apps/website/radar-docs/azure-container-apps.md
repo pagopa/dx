@@ -20,7 +20,7 @@ applications, automatically managing underlying resources.
 
 - **Canary and Blue/Green Deployments**: Traffic can be split across multiple
   named revisions of the same app, enabling progressive rollouts, A/B testing,
-  and instant rollbacks with zero infrastructure changes.
+  and instant rollbacks with zero infrastructure changes nor restarts.
 
 ## Use cases
 
