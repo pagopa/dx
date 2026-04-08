@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "type": "command",
+        "bash": "./scripts/ensure-dx-kb.sh",
+        "timeoutSec": 120
+      }
+    ]
+  }
+}

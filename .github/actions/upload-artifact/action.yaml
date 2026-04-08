@@ -8,15 +8,24 @@ inputs:
   bundle_name:
     description: "Name of the bundle to upload"
     required: true
+  include-hidden-files:
+    description: "Whether to include hidden files in the provided path in the artifact"
+    required: false
+    default: "false"
+  retention-days:
+    description: "Duration after which artifact will expire in days. Default is 7 days."
+    required: false
+    default: "7"
 
 runs:
   using: "composite"
 
   steps:
     - name: Upload Artifact
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: ${{ inputs.bundle_name }}
         path: ${{ inputs.file_path }}
         if-no-files-found: error
-        retention-days: 7
+        retention-days: ${{ inputs.retention-days }}
+        include-hidden-files: ${{ inputs.include-hidden-files }}
