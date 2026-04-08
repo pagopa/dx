@@ -28,7 +28,7 @@
     "@octokit/auth-app": "^8.1.2",
     "@radix-ui/react-tooltip": "^1.2.8",
     "clsx": "^2.1.1",
-    "drizzle-orm": "^0.38.0",
+    "drizzle-orm": "^0.45.0",
     "js-yaml": "catalog:",
     "lucide-react": "^0.577.0",
     "next": "^16.1.7",
