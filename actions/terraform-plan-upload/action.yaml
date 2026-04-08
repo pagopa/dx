@@ -34,9 +34,8 @@ runs:
         rm -f "$PLAN_FILE"
 
     - name: Upload Terraform Plan as Artifact
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: pagopa/dx/.github/actions/upload-artifact@main
       with:
-        name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}.enc
-        if-no-files-found: error
+        bundle_name: ${{ inputs.artifact-name }}
+        file_path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}.enc
         retention-days: ${{ inputs.retention-days }}
