@@ -63,6 +63,7 @@ const builtInRoleDefinitionIds = {
 const bootstrapIdentityRoleDefinitionIds = [
   builtInRoleDefinitionIds.roleBasedAccessControlAdministrator,
   builtInRoleDefinitionIds.contributor,
+  builtInRoleDefinitionIds.storageBlobDataContributor,
 ] as const;
 
 export class AzureCloudAccountService implements CloudAccountService {
@@ -311,37 +312,6 @@ export class AzureCloudAccountService implements CloudAccountService {
         { identityName, subscriptionId: cloudAccount.id },
       );
 
-      const terraformBackend = await this.getTerraformBackend(cloudAccount.id, {
-        name,
-        prefix,
-      });
-
-      if (terraformBackend) {
-        const terraformStateResourceGroupScope = `/subscriptions/${cloudAccount.id}/resourceGroups/${terraformBackend.resourceGroupName}`;
-
-        await authorizationManagementClient.roleAssignments.create(
-          terraformStateResourceGroupScope,
-          this.#createRoleAssignmentName(
-            terraformStateResourceGroupScope,
-            identityPrincipalId,
-            builtInRoleDefinitionIds.storageBlobDataContributor,
-          ),
-          {
-            principalId: identityPrincipalId,
-            principalType: "ServicePrincipal",
-            roleDefinitionId: this.#createRoleDefinitionResourceId(
-              cloudAccount.id,
-              builtInRoleDefinitionIds.storageBlobDataContributor,
-            ),
-          },
-        );
-
-        logger.debug(
-          "Assigned Storage Blob Data Contributor role to identity {identityName} on scope {scope}",
-          { identityName, scope: terraformStateResourceGroupScope },
-        );
-      }
-
       const githubEnvironmentName = `bootstrapper-${name}-cd`;
 
       await msiClient.federatedIdentityCredentials.createOrUpdate(
@@ -515,7 +485,6 @@ export class AzureCloudAccountService implements CloudAccountService {
         subscriptionId: cloudAccount.id,
       },
     );
-
     const blobServiceClient = new BlobServiceClient(
       storageAccount.primaryEndpoints?.blob,
       this.#credential,

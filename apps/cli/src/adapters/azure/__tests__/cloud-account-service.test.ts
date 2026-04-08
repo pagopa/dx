@@ -303,7 +303,7 @@ describe("isInitialized", () => {
 });
 
 describe("initialize", () => {
-  test("assigns Contributor and Role Based Access Control Administrator to the bootstrap identity", async ({
+  test("assigns bootstrap roles to the bootstrap identity", async ({
     cloudAccountService,
   }) => {
     await cloudAccountService.initialize(
@@ -328,7 +328,7 @@ describe("initialize", () => {
       },
     );
 
-    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(2);
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(3);
     expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
       "/subscriptions/sub-1",
       expect.any(String),
@@ -349,6 +349,16 @@ describe("initialize", () => {
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
       }),
     );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      }),
+    );
     expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
       "dx-d-itn-common-rg-01",
       "dx-d-itn-bootstrap-id-01",
@@ -358,54 +368,6 @@ describe("initialize", () => {
         issuer: "https://token.actions.githubusercontent.com",
         subject: "repo:pagopa/dx:environment:bootstrapper-dev-cd",
       },
-    );
-  });
-
-  test("assigns Storage Blob Data Contributor on terraform backend resource group when backend exists", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
-      data: [
-        {
-          location: "italynorth",
-          name: "dxditntfstatest01",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-        },
-      ],
-      totalRecords: 1,
-    });
-
-    await cloudAccountService.initialize(
-      {
-        csp: "azure",
-        defaultLocation: "italynorth",
-        displayName: "Test subscription",
-        id: "sub-1",
-      },
-      {
-        name: "dev",
-        prefix: "dx",
-      },
-      {
-        id: "app-id",
-        installationId: "installation-id",
-        key: "private-key\n",
-      },
-      {
-        owner: "pagopa",
-        repo: "dx",
-      },
-    );
-
-    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
-      "/subscriptions/sub-1/resourceGroups/dx-d-itn-tfstate-rg-01",
-      expect.any(String),
-      expect.objectContaining({
-        principalId: "principal-1",
-        principalType: "ServicePrincipal",
-        roleDefinitionId:
-          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
-      }),
     );
   });
 });
