@@ -161,9 +161,9 @@ const initializeGitRepository = (repository: Repository) => {
     await git$`git remote add origin ${repository.origin}`;
     await git$`git fetch origin main`;
     await git$`git checkout -b ${branchName}`;
-    // Ignore any changes on the origin/main branch.
-    // Terraform will create the main branch with an initial commit containing the README file,
-    // but we want to replace it with the scaffolded code from the generator.
+    // Terraform creates `main` with an initial README commit.
+    // Reset to `origin/main` so this branch is based on the remote default branch,
+    // while keeping the scaffolded local files in the working tree for a clean PR diff.
     await git$`git reset origin/main`;
     await git$`git add .`;
     await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
