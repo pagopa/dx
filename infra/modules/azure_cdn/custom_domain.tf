@@ -45,23 +45,13 @@ resource "azurerm_cdn_frontdoor_custom_domain_association" "this" {
   cdn_frontdoor_route_ids        = [azurerm_cdn_frontdoor_route.this.id]
 }
 
-# Data source for key vaults - using composite key to ensure uniqueness
-data "azurerm_key_vault" "this" {
-  for_each = { for custom_domain in var.custom_domains :
-    "${custom_domain.custom_certificate.key_vault_name}:${custom_domain.custom_certificate.key_vault_resource_group_name}" => custom_domain...
-  if lookup(local.is_apex, custom_domain.host_name, false) }
-
-  name                = each.value[0].custom_certificate.key_vault_name
-  resource_group_name = each.value[0].custom_certificate.key_vault_resource_group_name
-}
-
 # Create role assignments for the Front Door's managed identity to access
 # the Key Vault that support RBAC - only once per key vault
 resource "azurerm_role_assignment" "this" {
   for_each = { for k, v in local.unique_key_vaults_rbac : k => v[0] }
 
   description          = "Role assignment for Front Door's managed identity to access the customer certificate in Key Vault"
-  scope                = data.azurerm_key_vault.this[each.key].id
+  scope                = local.key_vault_ids[each.key]
   role_definition_name = "Key Vault Secret User"
   principal_id         = local.profile_identity_id
 }
@@ -71,7 +61,7 @@ resource "azurerm_role_assignment" "this" {
 resource "azurerm_key_vault_access_policy" "this" {
   for_each = { for k, v in local.unique_key_vaults_no_rbac : k => v[0] }
 
-  key_vault_id = data.azurerm_key_vault.this[each.key].id
+  key_vault_id = local.key_vault_ids[each.key]
   tenant_id    = data.azurerm_client_config.current.tenant_id
   object_id    = local.profile_identity_id
 

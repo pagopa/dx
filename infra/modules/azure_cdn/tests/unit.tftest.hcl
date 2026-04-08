@@ -546,13 +546,6 @@ run "cdn_route_without_custom_domains" {
 run "cdn_apex_domains_shared_key_vault" {
   command = plan
 
-  override_data {
-    target = data.azurerm_key_vault.this
-    values = {
-      id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/rg-sec/providers/Microsoft.KeyVault/vaults/shared-kv"
-    }
-  }
-
   variables {
     custom_domains = [
       {
@@ -582,11 +575,6 @@ run "cdn_apex_domains_shared_key_vault" {
         }
       }
     ]
-  }
-
-  assert {
-    condition     = length(data.azurerm_key_vault.this) == 1
-    error_message = "Expected exactly one Key Vault data source when two apex domains share the same Key Vault"
   }
 
   assert {
