@@ -264,7 +264,7 @@ After generating all files, **always run validation** in the target directory be
 
 Never present code to the user if `terraform validate` fails.
 
-> For common errors and fixes, see [TROUBLESHOOTING.md](./references/troubleshooting.md).
+> For common errors and fixes, see [Terraform Troubleshooting](./references/troubleshooting.md).
 
 ## Review Phase
 
