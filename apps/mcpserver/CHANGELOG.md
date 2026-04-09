@@ -1,3 +1,13 @@
+## 0.2.0 (2026-04-09)
+
+### 🚀 Features
+
+- Implement a generation configuration prompt to reduce the scope of requests that a user can submit to the bedrock knowledge base ([#1586](https://github.com/pagopa/dx/pull/1586))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.1.6 (2026-04-01)
 
 ### 🧱 Updated Dependencies
