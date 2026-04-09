@@ -31,7 +31,9 @@ const {
   mockSetSecret,
 } = vi.hoisted(() => ({
   mockCreateFederatedIdentityCredential: vi.fn().mockResolvedValue({}),
-  mockCreateIdentity: vi.fn().mockResolvedValue({ principalId: "principal-1" }),
+  mockCreateIdentity: vi
+    .fn()
+    .mockResolvedValue({ clientId: "client-1", principalId: "principal-1" }),
   mockCreateKeyVault: vi.fn().mockResolvedValue({}),
   mockCreateResourceGroup: vi.fn().mockResolvedValue({}),
   mockDeleteResourceGroup: vi.fn().mockResolvedValue({}),
@@ -128,7 +130,10 @@ beforeEach(() => {
   queryResources.mockResolvedValue({ data: [], totalRecords: 0 });
   mockCreateFederatedIdentityCredential.mockClear();
   mockCreateIdentity.mockClear();
-  mockCreateIdentity.mockResolvedValue({ principalId: "principal-1" });
+  mockCreateIdentity.mockResolvedValue({
+    clientId: "client-1",
+    principalId: "principal-1",
+  });
   mockCreateKeyVault.mockClear();
   mockCreateResourceGroup.mockClear();
   mockDeleteResourceGroup.mockClear();
@@ -325,6 +330,14 @@ describe("initialize", () => {
       {
         owner: "pagopa",
         repo: "dx",
+      },
+      {
+        createBranch: vi.fn(),
+        createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+        createPullRequest: vi.fn(),
+        getFileContent: vi.fn(),
+        getRepository: vi.fn(),
+        updateFile: vi.fn(),
       },
     );
 

@@ -31,6 +31,13 @@ catalog:
   zod: ^4.3.6
 
 catalogs:
+  
+  aws:
+    '@aws-sdk/client-s3': ^3.808.0
+
+  github-actions:
+    '@actions/core': ^3.0.0
+    '@actions/github': ^9.0.0
   opentelemetry:
     '@azure/monitor-opentelemetry': 1.16.0
     '@azure/monitor-opentelemetry-exporter': ^1.0.0-beta.32
@@ -42,20 +49,15 @@ catalogs:
     '@opentelemetry/sdk-metrics': ^2.6.0
     '@opentelemetry/sdk-trace-base': ^2.6.0
 
-  github-actions:
-    '@actions/core': ^3.0.0
-    '@actions/github': ^9.0.0
-
   react:
     '@types/react': ^19.2.14
     '@types/react-dom': ^19.2.3
     react: ^19.2.4
     react-dom: ^19.2.4
 
-  aws:
-    '@aws-sdk/client-s3': ^3.808.0
-
 cleanupUnusedCatalogs: true
+ignoredBuiltDependencies:
+  - unrs-resolver
 
 linkWorkspacePackages: true
 

@@ -12,6 +12,7 @@ import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
+import { OctokitGitHubService } from "../octokit/index.js";
 import createDeploymentEnvironmentGenerator, {
   Payload as EnvironmentPayload,
   payloadSchema as environmentPayloadSchema,
@@ -123,6 +124,9 @@ export const setDeploymentEnvironmentGenerator = (
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
+  const gitHubService = new OctokitGitHubService(
+    new Octokit({ auth: process.env.GITHUB_TOKEN }),
+  );
 
   const templatesPath = path.join(
     import.meta.dirname,
@@ -134,6 +138,7 @@ export const setDeploymentEnvironmentGenerator = (
     templatesPath,
     cloudAccountRepository,
     cloudAccountService,
+    gitHubService,
     github,
   );
 };

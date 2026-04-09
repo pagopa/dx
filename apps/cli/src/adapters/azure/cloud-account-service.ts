@@ -24,7 +24,10 @@ import {
   environmentShort,
 } from "../../domain/environment.js";
 import { type GitHubRepo } from "../../domain/github-repo.js";
-import { GitHubAppCredentials } from "../../domain/github.js";
+import {
+  GitHubAppCredentials,
+  type GitHubService,
+} from "../../domain/github.js";
 import {
   type TerraformBackend,
   terraformBackendSchema,
@@ -212,6 +215,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
     runnerAppCredentials: GitHubAppCredentials,
     github: GitHubRepo,
+    gitHubService: GitHubService,
     tags: Record<string, string> = {},
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
@@ -274,6 +278,8 @@ export class AzureCloudAccountService implements CloudAccountService {
         "Managed identity principal ID is undefined",
       );
       const identityPrincipalId = identity.principalId;
+      assert.ok(identity.clientId, "Managed identity client ID is undefined");
+      const identityClientId = identity.clientId;
 
       logger.debug(
         "Created identity {identityName} in subscription {subscriptionId}",
@@ -333,6 +339,27 @@ export class AzureCloudAccountService implements CloudAccountService {
           subscriptionId: cloudAccount.id,
         },
       );
+
+      await Promise.all([
+        gitHubService.createOrUpdateEnvironmentSecret({
+          environmentName: githubEnvironmentName,
+          owner: github.owner,
+          repo: github.repo,
+          secretName: "ARM_CLIENT_ID",
+          secretValue: identityClientId,
+        }),
+        gitHubService.createOrUpdateEnvironmentSecret({
+          environmentName: githubEnvironmentName,
+          owner: github.owner,
+          repo: github.repo,
+          secretName: "ARM_SUBSCRIPTION_ID",
+          secretValue: cloudAccount.id,
+        }),
+      ]);
+
+      logger.debug("Set GitHub environment secrets for {environmentName}", {
+        environmentName: githubEnvironmentName,
+      });
 
       await this.#createCommonKeyVaultAndStoreRunnerAppSecrets({
         cloudAccount,

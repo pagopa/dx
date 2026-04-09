@@ -459,6 +459,9 @@ importers:
       inquirer:
         specifier: ^9.3.8
         version: 9.3.8(@types/node@22.19.15)
+      libsodium-wrappers:
+        specifier: ^0.8.2
+        version: 0.8.2
       neverthrow:
         specifier: 'catalog:'
         version: 8.2.0
@@ -493,6 +496,9 @@ importers:
       '@types/inquirer':
         specifier: ^9.0.9
         version: 9.0.9
+      '@types/libsodium-wrappers':
+        specifier: ^0.8.2
+        version: 0.8.2
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.15
@@ -6116,6 +6122,10 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
+  '@types/libsodium-wrappers@0.8.2':
+    resolution: {integrity: sha512-+2IDfSULPUskSjIYfZl9suIUsIE5PXwoKZiE/j0MZWd+M9nEGvJDsk/ztMZKNhL1lBL+1CaypW0dQSjqPW2dMg==}
+    deprecated: This is a stub types definition. libsodium-wrappers provides its own type definitions, so you do not need this installed.
+
   '@types/liftoff@4.0.3':
     resolution: {integrity: sha512-UgbL2kR5pLrWICvr8+fuSg0u43LY250q7ZMkC+XKC3E+rs/YBDEnQIzsnhU5dYsLlwMi3R75UvCL87pObP1sxw==}
 
@@ -9662,6 +9672,12 @@ packages:
   levn@0.4.1:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
+
+  libsodium-wrappers@0.8.2:
+    resolution: {integrity: sha512-VFLmfxkxo+U9q60tjcnSomQBRx2UzlRjKWJqvB4K1pUqsMQg4cu3QXA2nrcsj9A1qRsnJBbi2Ozx1hsiDoCkhw==}
+
+  libsodium@0.8.2:
+    resolution: {integrity: sha512-TsnGYMoZtpweT+kR+lOv5TVsnJ/9U0FZOsLFzFOMWmxqOAYXjX3fsrPAW+i1LthgDKXJnI9A8dWEanT1tnJKIw==}
 
   liftoff@5.0.1:
     resolution: {integrity: sha512-wwLXMbuxSF8gMvubFcFRp56lkFV69twvbU5vDPbaw+Q+/rF8j0HKjGbIdlSi+LuJm9jf7k9PB+nTxnsLMPcv2Q==}
@@ -19776,6 +19792,10 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
+  '@types/libsodium-wrappers@0.8.2':
+    dependencies:
+      libsodium-wrappers: 0.8.2
+
   '@types/liftoff@4.0.3':
     dependencies:
       '@types/fined': 1.1.5
@@ -20233,7 +20253,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.1
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -20256,6 +20276,14 @@ snapshots:
       '@vitest/utils': 3.2.4
       chai: 5.2.0
       tinyrainbow: 2.0.0
+
+  '@vitest/mocker@3.2.4(vite@7.0.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))':
+    dependencies:
+      '@vitest/spy': 3.2.4
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      vite: 7.0.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   '@vitest/mocker@3.2.4(vite@7.0.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
@@ -20294,7 +20322,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
     optional: true
 
   '@vitest/utils@3.2.4':
@@ -23964,6 +23992,12 @@ snapshots:
       prelude-ls: 1.2.1
       type-check: 0.4.0
 
+  libsodium-wrappers@0.8.2:
+    dependencies:
+      libsodium: 0.8.2
+
+  libsodium@0.8.2: {}
+
   liftoff@5.0.1:
     dependencies:
       extend: 3.0.2
@@ -27595,13 +27629,13 @@ snapshots:
     dependencies:
       ts-essentials: 10.1.1(typescript@5.9.3)
       typescript: 5.9.3
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)
 
   vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.19.15)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2):
     dependencies:
       '@types/chai': 5.2.2
       '@vitest/expect': 3.2.4
-      '@vitest/mocker': 3.2.4(vite@7.0.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 3.2.4(vite@7.0.2(@types/node@22.19.15)(jiti@2.6.1)(lightningcss@1.31.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2))
       '@vitest/pretty-format': 3.2.4
       '@vitest/runner': 3.2.4
       '@vitest/snapshot': 3.2.4
