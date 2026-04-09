@@ -55,13 +55,13 @@ export async function retrieveAndGenerate(
       },
       retrieveAndGenerateConfiguration: {
         knowledgeBaseConfiguration: {
-          knowledgeBaseId,
-          modelArn,
           generationConfiguration: {
             promptTemplate: {
               textPromptTemplate: SCOPED_PROMPT_TEMPLATE,
             },
           },
+          knowledgeBaseId,
+          modelArn,
           retrievalConfiguration: {
             vectorSearchConfiguration: {
               numberOfResults,
