@@ -25,6 +25,10 @@
     {
       "name": "project-management",
       "source": "project-management"
+    },
+    {
+      "name": "standards",
+      "source": "standards"
     }
   ]
 }
