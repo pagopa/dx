@@ -1,4 +1,3 @@
-# ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
@@ -21,91 +20,24 @@ variable "resource_group_name" {
   type        = string
   description = "The name of the Azure Resource Group where the resources will be deployed."
 }
-# ------------ CONTAINER ENVIRONMENT ------------ #
 
 variable "log_analytics_workspace_id" {
   type        = string
   description = "The ID of the Log Analytics workspace to use for the container app environment."
 }
 
-variable "public_network_access_enabled" {
-  type        = bool
-  default     = false
-  description = "If true, the Container App Environment exposes a public endpoint and allows internet ingress. If false (default), ingress is restricted to the internal virtual network only. Note: outbound access to internal resources (databases, etc.) is available in both cases via the infrastructure_subnet_id. When public_network_access_enabled is true, private endpoints cannot be used."
-}
-
-# ------------ NETWORKING ------------ #
-
-variable "subnet_id" {
-  type        = string
-  default     = null
-  description = "The ID of the subnet where the Container App Environment will be hosted. This is required if 'subnet_cidr' is not specified."
-}
-
-variable "subnet_cidr" {
-  type        = string
-  default     = null
-  description = "The CIDR block for the subnet used for Container App Environment connectivity. This is required if 'subnet_id' is not specified."
-
-  validation {
-    condition     = (var.subnet_id != null) != (var.subnet_cidr != null)
-    error_message = "Specify either 'subnet_cidr' or 'subnet_id', but not both."
-  }
-}
-
-variable "subnet_pep_id" {
-  type        = string
-  default     = null
-  description = "The ID of the subnet designated for hosting private endpoints. Required when public_network_access_enabled is false (default)."
-
-  validation {
-    condition     = var.public_network_access_enabled || var.subnet_pep_id != null
-    error_message = "subnet_pep_id is required when public_network_access_enabled is false."
-  }
-}
-
-variable "virtual_network" {
+variable "networking" {
   type = object({
-    name                = string
-    resource_group_name = string
+    virtual_network = object({
+      name                = string
+      resource_group_name = string
+    })
+    private_dns_zone_resource_group_name = optional(string, null)
+    public_network_access_enabled        = optional(bool, false)
   })
-  default = {
-    name                = null
-    resource_group_name = null
-  }
-  description = "An object defining the virtual network where the subnet will be created."
-
-  validation {
-    condition     = (var.subnet_id != null) != (var.virtual_network.name != null && var.virtual_network.resource_group_name != null)
-    error_message = "Specify the subnet_id or the virtual_network.name and virtual_network.resource_group_name, not both"
-  }
-}
-
-variable "private_dns_zone_resource_group_name" {
-  type        = string
-  default     = null
-  description = "The name of the resource group containing the private DNS zone for private endpoints. Defaults to the resource group of the Virtual Network if not specified."
-}
-
-# ------------ MONITORING & COMPLIANCE ------------ #
-variable "diagnostic_settings" {
-  type = object({
-    enabled                    = bool
-    log_analytics_workspace_id = optional(string, null)
-    storage_account_id         = optional(string, null)
-  })
-  description = "Diagnostic settings for Container App Environment logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account."
-  default = {
-    enabled                    = false
-    log_analytics_workspace_id = null
-  }
-
-  validation {
-    condition = (
-      !var.diagnostic_settings.enabled ||
-      var.diagnostic_settings.log_analytics_workspace_id != null ||
-      var.diagnostic_settings.storage_account_id != null
-    )
-    error_message = "Either log_analytics_workspace_id or storage_account_id must be provided when diagnostic settings are enabled."
-  }
+  description = <<-EOT
+    Networking configuration for the Container App Environment.
+    If networking.private_dns_zone_resource_group_name is not set, it is assumed that the private DNS zone is in the same resource group as the virtual network.
+    If networking.public_network_access_enabled is true, the environment will be configured for public access.
+  EOT
 }
