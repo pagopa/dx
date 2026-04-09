@@ -59,6 +59,16 @@ export class OctokitGitHubService implements GitHubService {
   ): Promise<void> {
     try {
       await sodium.ready;
+
+      await this.#octokit.request(
+        "PUT /repos/{owner}/{repo}/environments/{environment_name}",
+        {
+          environment_name: params.environmentName,
+          owner: params.owner,
+          repo: params.repo,
+        },
+      );
+
       const { data: publicKeyData } =
         await this.#octokit.rest.actions.getEnvironmentPublicKey({
           environment_name: params.environmentName,

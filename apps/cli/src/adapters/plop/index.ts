@@ -12,7 +12,6 @@ import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
-import { OctokitGitHubService } from "../octokit/index.js";
 import createDeploymentEnvironmentGenerator, {
   Payload as EnvironmentPayload,
   payloadSchema as environmentPayloadSchema,
@@ -95,9 +94,10 @@ export const runMonorepoGenerator = async (
  */
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
+  gitHubService: GitHubService,
   github?: GitHubRepo,
 ): Promise<EnvironmentPayload> => {
-  setDeploymentEnvironmentGenerator(plop, github);
+  setDeploymentEnvironmentGenerator(plop, gitHubService, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
@@ -119,14 +119,12 @@ export const runDeploymentEnvironmentGenerator = async (
  */
 export const setDeploymentEnvironmentGenerator = (
   plop: NodePlopAPI,
+  gitHubService: GitHubService,
   github?: GitHubRepo,
 ) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
-  const gitHubService = new OctokitGitHubService(
-    new Octokit({ auth: process.env.GITHUB_TOKEN }),
-  );
 
   const templatesPath = path.join(
     import.meta.dirname,
