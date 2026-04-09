@@ -7,6 +7,8 @@
     "@nx/eslint": "22.6.1",
     "@nx/js": "22.6.1",
     "@nx/vitest": "22.6.1",
+    "@swc-node/register": "^1.11.1",
+    "@swc/core": "^1.15.24",
     "@tsconfig/node24": "catalog:",
     "eslint": "catalog:",
     "nx": "22.6.1",
