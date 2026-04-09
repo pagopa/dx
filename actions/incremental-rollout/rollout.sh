@@ -165,5 +165,5 @@ Successfully swapped staging slot to production.
 
 > [!TIP]
 > You can enable the canary deployment by creating a script named \`canary-monitor.sh\` in the root of your repository.
-> Find more details in the [workflow documentation](https://dx.pagopa.it/docs/pipelines/release-azure-appsvc#canary-deployments).
+> Find more details in the [workflow documentation](https://dx.pagopa.it/docs/azure/application-deployment/release-azure-appsvc#canary-deployments).
 EOF
