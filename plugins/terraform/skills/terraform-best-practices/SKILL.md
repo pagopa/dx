@@ -264,6 +264,8 @@ After generating all files, **always run validation** in the target directory be
 3. Run `terraform plan` only if already authenticated; investigate and fix any errors reported.
 4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
 
+Never present code to the user if `terraform validate` fails.
+
 > For common errors and fixes, see [Terraform Troubleshooting](./references/troubleshooting.md).
 
 ## Review Phase
