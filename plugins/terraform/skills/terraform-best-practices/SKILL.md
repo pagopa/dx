@@ -1,7 +1,9 @@
 ---
 name: terraform-best-practices
-description: Generates Terraform changes that follow PagoPA DX conventions. Use when creating or modifying Terraform resources, modules, or infrastructure architecture in this repository, especially to prefer pagopa-dx modules, infer values from existing infrastructure, validate generated code, and check the DX Technology Radar.
+description: Generate Terraform changes that follow PagoPA DX conventions. Use when creating or modifying Terraform resources, modules, or infrastructure architecture in this repository, especially to prefer pagopa-dx modules, infer values from existing infrastructure, validate generated code, and check the DX Technology Radar.
 ---
+
+# Terraform Best Practices Skill
 
 ## Setup
 
@@ -105,7 +107,7 @@ If the workspace already uses a `pagopa-dx/<csp>-core-values-exporter/<provider>
 
 **Only ask the user for values that could not be inferred from the steps above:**
 
-- **Module use_case**: present all available `use_case` options with their descriptions (see step 5 below)
+- **Module use_case**: present all available `use_case` options with their descriptions (see step 6 below)
 - `environment` values not already found: prefix, env_short, location, domain, app_name, instance_number
 - `tags` values not already found: BusinessUnit, ManagementTeam
 - Backend state configuration
@@ -262,9 +264,7 @@ After generating all files, **always run validation** in the target directory be
 3. Run `terraform plan` only if already authenticated; investigate and fix any errors reported.
 4. **Iterate** until `validate` (and `plan` when applicable) pass with no errors.
 
-Never present code to the user if `terraform validate` fails.
-
-> For common errors and fixes, see [TROUBLESHOOTING.md](./references/troubleshooting.md).
+> For common errors and fixes, see [Terraform Troubleshooting](./references/troubleshooting.md).
 
 ## Review Phase
 
