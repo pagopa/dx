@@ -56,8 +56,6 @@ catalogs:
     react-dom: ^19.2.4
 
 cleanupUnusedCatalogs: true
-ignoredBuiltDependencies:
-  - unrs-resolver
 
 linkWorkspacePackages: true
 
