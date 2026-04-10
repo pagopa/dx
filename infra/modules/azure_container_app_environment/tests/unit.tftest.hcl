@@ -22,6 +22,8 @@ variables {
   resource_group_name        = "rg-test"
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ops/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
+  use_case = "development"
+
   networking = {
     virtual_network = {
       name                = "dx-d-itn-integration-vnet-01"
@@ -60,7 +62,7 @@ override_resource {
   }
 }
 
-# Private mode (default): verifies networking, diagnostic settings, and dev-env defaults
+# Private mode + development use_case (default in this suite): verifies networking, diagnostic settings, and development defaults
 run "azure_container_app_environment_private_defaults" {
   command = plan
 
@@ -126,24 +128,22 @@ run "azure_container_app_environment_public_access" {
   }
 }
 
-# Non-development environment: zone redundancy and management lock must be enabled
-run "azure_container_app_environment_non_dev_lock_and_zone_redundancy" {
+# Default use case: zone redundancy and management lock must be enabled
+run "azure_container_app_environment_default_use_case_lock_and_zone_redundancy" {
   command = plan
 
   variables {
-    environment = merge(var.environment, {
-      env_short = "p"
-    })
+    use_case = "default"
   }
 
   assert {
     condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == true
-    error_message = "Zone redundancy must be enabled in non-development environments"
+    error_message = "Zone redundancy must be enabled for use_case=default"
   }
 
   assert {
     condition     = length(azurerm_management_lock.cae_lock) == 1
-    error_message = "Management lock must be created in non-development environments"
+    error_message = "Management lock must be created for use_case=default"
   }
 }
 

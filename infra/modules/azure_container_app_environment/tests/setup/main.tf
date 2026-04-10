@@ -15,6 +15,10 @@ data "azurerm_resource_group" "test" {
   name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
 }
 
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group", name = "network" }))
+}
+
 data "azurerm_virtual_network" "vnet" {
   name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "virtual_network" }))
   resource_group_name = data.azurerm_resource_group.test.name
@@ -31,6 +35,10 @@ output "subscription_id" {
 
 output "resource_group_name" {
   value = data.azurerm_resource_group.test.name
+}
+
+output "network_resource_group_name" {
+  value = data.azurerm_resource_group.network.name
 }
 
 output "virtual_network" {

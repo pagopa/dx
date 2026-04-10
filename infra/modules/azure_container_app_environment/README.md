@@ -7,11 +7,11 @@ This Terraform module deploys an Azure Container App Environment along with nece
 ## Features
 
 - **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
-- **Flexible Ingress**: Choose between private (internal VNet only) or public ingress via the `public_network_access_enabled` variable (default: `false` — private mode).
+- **Flexible Ingress**: Choose between private (internal VNet only) or public ingress via `networking.public_network_access_enabled` (default: `false` — private mode).
 - **VNet Integration**: Container apps can always reach internal resources (databases, services) via the infrastructure subnet, regardless of ingress mode.
 - **Subnet Creation**: Creates a subnet for the Container App Environment.
-- **Private Endpoint**: Creates a private endpoint for secure management connectivity. Created only when `public_network_access_enabled` is `false` (private mode).
-- **Zone Redundancy**: Supports zone redundancy for high availability, enabled by default unless the environment is set to development.
+- **Private Endpoint**: Creates a private endpoint for secure management connectivity. Created only when `networking.public_network_access_enabled` is `false` (private mode).
+- **Zone Redundancy**: Supports zone redundancy for high availability.
 
 ## Usage Example
 
@@ -87,6 +87,7 @@ No modules.
 | <a name="input_networking"></a> [networking](#input\_networking) | Networking configuration for the Container App Environment.<br/>If networking.private\_dns\_zone\_resource\_group\_name is not set, it is assumed that the private DNS zone is in the same resource group as the virtual network.<br/>If networking.public\_network\_access\_enabled is true, the environment will be configured for public access. | <pre>object({<br/>    virtual_network = object({<br/>      name                = string<br/>      resource_group_name = string<br/>    })<br/>    private_dns_zone_resource_group_name = optional(string, null)<br/>    public_network_access_enabled        = optional(bool, false)<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the Azure Resource Group where the resources will be deployed. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Allowed values: 'default', 'development'. | `string` | `"default"` | no |
 
 ## Outputs
 
@@ -98,5 +99,5 @@ No modules.
 | <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | The principal ID of the Container App Environment's system-assigned managed identity. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the Azure Resource Group where the Container App Environment is deployed. |
 | <a name="output_static_ip_address"></a> [static\_ip\_address](#output\_static\_ip\_address) | The static public IP address of the Container App Environment. Available when public\_network\_access\_enabled is true. |
-| <a name="output_subnet"></a> [subnet](#output\_subnet) | Details about the craeted subnet for the Container App Environment. |
+| <a name="output_subnet"></a> [subnet](#output\_subnet) | Details about the created subnet for the Container App Environment. |
 <!-- END_TF_DOCS -->

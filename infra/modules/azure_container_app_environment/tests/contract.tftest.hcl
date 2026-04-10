@@ -22,6 +22,8 @@ variables {
   resource_group_name        = "rg-test"
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-ops/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
+  use_case = "default"
+
   networking = {
     virtual_network = {
       name                = "dx-d-itn-integration-vnet-01"
@@ -124,5 +126,37 @@ run "azure_container_app_environment_custom_dns_zone_rg" {
   assert {
     condition     = length(azurerm_private_endpoint.this) == 1
     error_message = "Private endpoint must be created when a custom private_dns_zone_resource_group_name is set"
+  }
+}
+
+# Contract: invalid use_case value must fail validation
+run "azure_container_app_environment_invalid_use_case" {
+  command = plan
+
+  variables {
+    use_case = "invalid"
+  }
+
+  expect_failures = [
+    var.use_case,
+  ]
+}
+
+# Contract: development use_case must disable zone redundancy and management lock
+run "azure_container_app_environment_development_use_case" {
+  command = plan
+
+  variables {
+    use_case = "development"
+  }
+
+  assert {
+    condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == false
+    error_message = "Zone redundancy must be disabled for use_case=development"
+  }
+
+  assert {
+    condition     = length(azurerm_management_lock.cae_lock) == 0
+    error_message = "Management lock must not be created for use_case=development"
   }
 }

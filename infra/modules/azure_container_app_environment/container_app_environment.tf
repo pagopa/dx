@@ -10,7 +10,7 @@ resource "azurerm_container_app_environment" "this" {
   infrastructure_subnet_id       = azurerm_subnet.this.id
   internal_load_balancer_enabled = !var.networking.public_network_access_enabled
   logs_destination               = "azure-monitor"
-  zone_redundancy_enabled        = var.environment.env_short != "d" ? true : false
+  zone_redundancy_enabled        = local.use_case_features.zone_redundancy_enabled
 
   workload_profile {
     name                  = "Consumption"
@@ -31,11 +31,15 @@ resource "azurerm_container_app_environment" "this" {
 }
 
 resource "azurerm_management_lock" "cae_lock" {
-  count = var.environment.env_short == "d" ? 0 : 1
+  count = local.use_case_features.lock_enabled ? 1 : 0
 
   name       = azurerm_container_app_environment.this.name
   scope      = azurerm_container_app_environment.this.id
   lock_level = "CanNotDelete"
 
   notes = "Lock for the Container App Environment"
+
+  depends_on = [
+    azurerm_monitor_diagnostic_setting.cae
+  ]
 }

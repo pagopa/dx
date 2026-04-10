@@ -19,7 +19,7 @@ output "subnet" {
     name                = azurerm_subnet.this.name
     resource_group_name = azurerm_subnet.this.resource_group_name
   }
-  description = "Details about the craeted subnet for the Container App Environment."
+  description = "Details about the created subnet for the Container App Environment."
 }
 
 output "principal_id" {

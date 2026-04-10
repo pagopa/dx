@@ -6,7 +6,7 @@ provider "azurerm" {
   }
 }
 
-provider "pagopa-dx" {}
+provider "dx" {}
 
 variables {
   environment = {
@@ -14,7 +14,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "int"
-    app_name        = "cae"
+    app_name        = "caem"
     instance_number = "01"
   }
 
@@ -48,14 +48,13 @@ run "azure_container_app_environment_apply_private" {
   command = apply
 
   variables {
-    environment                = merge(var.environment, { instance_number = "11" })
+    environment                = var.environment
     tags                       = var.tags
     resource_group_name        = run.setup.resource_group_name
     log_analytics_workspace_id = run.setup.log_analytics_workspace_id
     networking = {
       virtual_network                      = run.setup.virtual_network
-      private_dns_zone_resource_group_name = null
-      public_network_access_enabled        = false
+      private_dns_zone_resource_group_name = run.setup.network_resource_group_name
     }
   }
 
@@ -85,14 +84,13 @@ run "azure_container_app_environment_apply_public" {
   command = apply
 
   variables {
-    environment                = merge(var.environment, { instance_number = "12" })
+    environment                = var.environment
     tags                       = var.tags
     resource_group_name        = run.setup.resource_group_name
     log_analytics_workspace_id = run.setup.log_analytics_workspace_id
     networking = {
-      virtual_network                      = run.setup.virtual_network
-      private_dns_zone_resource_group_name = null
-      public_network_access_enabled        = true
+      virtual_network               = run.setup.virtual_network
+      public_network_access_enabled = true
     }
   }
 

@@ -1,3 +1,14 @@
+variable "use_case" {
+  type        = string
+  description = "Allowed values: 'default', 'development'."
+  default     = "default"
+
+  validation {
+    condition     = contains(["default", "development"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", \"development\"."
+  }
+}
+
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
