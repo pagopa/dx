@@ -4,6 +4,12 @@
 
 This Terraform module deploys an Azure Container App Environment along with necessary networking components.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](diagram.svg)
+
 ## Features
 
 - **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
