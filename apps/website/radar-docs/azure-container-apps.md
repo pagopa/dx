@@ -9,7 +9,7 @@ is a serverless container orchestration and management service provided by
 Microsoft Azure. It enables developers to easily deploy and scale containerized
 applications, automatically managing underlying resources.
 
-## Why we prefer Container Apps over App Service
+## Why choose Container Apps over App Service
 
 - **Event-Driven Scaling**: Scale beyond HTTP — trigger scaling on queue depth,
   custom events, or any KEDA-compatible source, and scale to zero when idle.
