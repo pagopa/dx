@@ -120,6 +120,26 @@ module "azure-{{displayName}}_bootstrap" {
 
   tags = local.bootstrapper_tags
 }
+
+{{#if @root.init}}
+resource "azurerm_role_assignment" "infra_cd_user_access_admin_common_rg_{{displayName}}" {
+  scope                = module.azure-{{displayName}}_core_values.common_resource_group_id
+  role_definition_name = "User Access Administrator"
+  principal_id         = module.azure-{{displayName}}_bootstrap.identities.infra.cd.principal_id
+}
+
+resource "azurerm_role_assignment" "infra_cd_kv_secrets_officer_common_{{displayName}}" {
+  scope                = module.azure-{{displayName}}_core_values.common_key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = module.azure-{{displayName}}_bootstrap.identities.infra.cd.principal_id
+}
+
+resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_{{displayName}}" {
+  scope                = module.azure-{{displayName}}_core_values.common_key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.azure-{{displayName}}_bootstrap.identities.infra.ci.principal_id
+}
+{{/if}}
 {{/if}}
 {{/each}}
 
