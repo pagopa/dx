@@ -6,8 +6,10 @@ on:
       - main
     paths:
       - "infra/bootstrapper/**"
+
 permissions:
   contents: read
+
 jobs:
   release:
     uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
