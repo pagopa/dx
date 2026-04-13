@@ -63,6 +63,8 @@ export const authorizeCloudAccounts =
         const locShort = locationShort[account.defaultLocation];
         const input = requestAuthorizationInputSchema.safeParse({
           bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+          envShort,
+          prefix,
           repoName: envPayload.github.repo,
           subscriptionName: account.displayName,
         });
