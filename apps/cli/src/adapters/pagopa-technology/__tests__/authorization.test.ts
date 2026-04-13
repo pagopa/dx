@@ -36,17 +36,20 @@ const makeSampleInput = (): RequestAuthorizationInput =>
     subscriptionName: "test-subscription",
   });
 
+const FILE_PATH =
+  "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars.json";
+
 // eslint-disable-next-line max-lines-per-function
 describe("PagoPA AuthorizationService", () => {
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      const originalContent = `
-directory_readers = {
-  service_principals_name = []
-}
-`.trim();
+      const originalContent = JSON.stringify(
+        { directory_readers: { service_principals_name: [] } },
+        null,
+        2,
+      );
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
@@ -78,7 +81,7 @@ directory_readers = {
 
       expect(gitHubService.getFileContent).toHaveBeenCalledWith({
         owner: "pagopa",
-        path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
+        path: FILE_PATH,
         ref: "feats/add-test-repo-test-subscription-bootstrap-identity",
         repo: "eng-azure-authorization",
       });
@@ -88,7 +91,7 @@ directory_readers = {
           branch: "feats/add-test-repo-test-subscription-bootstrap-identity",
           message: "Add directory reader for test-subscription",
           owner: "pagopa",
-          path: "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
+          path: FILE_PATH,
           repo: "eng-azure-authorization",
           sha: "original-sha-123",
         }),
@@ -103,6 +106,97 @@ directory_readers = {
         title: "Add directory reader for test-subscription",
       });
     });
+
+    it("should preserve existing fields in the JSON file", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["existing-identity"],
+            some_other_field: "keep-me",
+          },
+          entra_groups: {
+            readers: ["reader-group"],
+          },
+          other_top_level: true,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-789",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/44",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+
+      expect(updatedParsed).toStrictEqual({
+        directory_readers: {
+          service_principals_name: [
+            "existing-identity",
+            "test-bootstrap-identity-id",
+          ],
+          some_other_field: "keep-me",
+        },
+        entra_groups: {
+          readers: ["reader-group"],
+        },
+        other_top_level: true,
+      });
+    });
+
+    it("should append identity to an existing non-empty list", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["existing-identity"],
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-456",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/43",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "existing-identity",
+      );
+    });
   });
 
   describe("error handling", () => {
@@ -112,9 +206,7 @@ directory_readers = {
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockRejectedValue(
-        new FileNotFoundError(
-          "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars",
-        ),
+        new FileNotFoundError(FILE_PATH),
       );
 
       const result = await authorizationService.requestAuthorization(input);
@@ -122,7 +214,7 @@ directory_readers = {
       expect(result.isErr()).toBe(true);
       const error = result._unsafeUnwrapErr();
       expect(error.message).toContain("Unable to get");
-      expect(error.message).toContain("test-subscription/terraform.tfvars");
+      expect(error.message).toContain("terraform.tfvars.json");
 
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
@@ -130,13 +222,15 @@ directory_readers = {
     it("should return error when identity already exists", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      const content = `
-directory_readers = {
-  service_principals_name = [
-    "test-bootstrap-identity-id"
-  ]
-}
-`.trim();
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-bootstrap-identity-id"],
+          },
+        },
+        null,
+        2,
+      );
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
@@ -154,14 +248,33 @@ directory_readers = {
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
-    it("should return error when tfvars format is invalid", async () => {
+    it("should return error when file content is not valid JSON", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      const invalidContent = "invalid content without directory_readers";
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
-        content: invalidContent,
+        content: "not valid json {{",
+        sha: "sha-123",
+      });
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isErr()).toBe(true);
+      expect(result._unsafeUnwrapErr()).toBeInstanceOf(
+        InvalidAuthorizationFileFormatError,
+      );
+
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
+    });
+
+    it("should return error when JSON is missing expected keys", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: JSON.stringify({ unexpected_key: {} }),
         sha: "sha-123",
       });
 
@@ -197,11 +310,11 @@ directory_readers = {
     it("should return error when file update fails", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      const content = `
-directory_readers = {
-  service_principals_name = []
-}
-`.trim();
+      const content = JSON.stringify(
+        { directory_readers: { service_principals_name: [] } },
+        null,
+        2,
+      );
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
@@ -223,11 +336,11 @@ directory_readers = {
     it("should return error when PR creation fails", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      const content = `
-directory_readers = {
-  service_principals_name = []
-}
-`.trim();
+      const content = JSON.stringify(
+        { directory_readers: { service_principals_name: [] } },
+        null,
+        2,
+      );
 
       gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
