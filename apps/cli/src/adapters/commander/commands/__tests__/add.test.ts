@@ -92,6 +92,8 @@ describe("authorizeCloudAccounts", () => {
     expect(authService.requestAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
         bootstrapIdentityId: "dx-d-itn-bootstrap-id-01",
+        envShort: "d",
+        prefix: "dx",
         subscriptionName: "DEV-FooBar",
       }),
     );
@@ -125,6 +127,8 @@ describe("authorizeCloudAccounts", () => {
     expect(authService.requestAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
         bootstrapIdentityId: "io-p-weu-bootstrap-id-01",
+        envShort: "p",
+        prefix: "io",
         subscriptionName: "PROD-Bar",
       }),
     );

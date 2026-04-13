@@ -15,8 +15,10 @@ import {
   AuthorizationError,
   AuthorizationResult,
   AuthorizationService,
+  DEFAULT_GROUP_SPECS,
   IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
+  makeGroupName,
   RequestAuthorizationInput,
 } from "../../domain/authorization.js";
 import { GitHubService } from "../../domain/github.js";
@@ -28,13 +30,94 @@ const authorizationFileSchema = z
         service_principals_name: z.array(z.string()),
       })
       .loose(),
+    groups: z
+      .array(
+        z.object({
+          members: z.array(z.string()),
+          name: z.string(),
+          roles: z.array(z.string()),
+        }),
+      )
+      .optional(),
   })
   .loose();
+
+/**
+ * Checks if two role arrays are equivalent (same roles, order-independent).
+ */
+const rolesAreEqual = (
+  roles1: readonly string[],
+  roles2: readonly string[],
+): boolean => {
+  if (roles1.length !== roles2.length) {
+    return false;
+  }
+  const sorted1 = [...roles1].sort();
+  const sorted2 = [...roles2].sort();
+  return sorted1.every((role, idx) => role === sorted2[idx]);
+};
+
+/**
+ * Adds or updates the AD groups array in the parsed authorization JSON.
+ * - Missing default groups are added with empty members.
+ * - Existing groups with wrong roles have their roles updated; members are preserved.
+ * - Custom (non-default) groups are preserved unchanged.
+ */
+const upsertGroups = (
+  jsonContent: z.infer<typeof authorizationFileSchema>,
+  prefix: string,
+  envShort: string,
+): z.infer<typeof authorizationFileSchema> => {
+  type GroupEntry = { members: string[]; name: string; roles: string[] };
+
+  const expectedGroups: GroupEntry[] = DEFAULT_GROUP_SPECS.map((spec) => ({
+    members: [],
+    name: makeGroupName(prefix, envShort, spec.groupName),
+    roles: [...spec.roles],
+  }));
+
+  const existingGroups = jsonContent.groups ?? [];
+  const existingByName = new Map(
+    existingGroups.map((group) => [group.name, group]),
+  );
+  const processedNames = new Set<string>();
+
+  const finalGroups: GroupEntry[] = [];
+
+  for (const expected of expectedGroups) {
+    const existing = existingByName.get(expected.name);
+    processedNames.add(expected.name);
+
+    if (!existing) {
+      // Group is missing — add it with default roles and no members
+      finalGroups.push(expected);
+    } else if (!rolesAreEqual(existing.roles, expected.roles)) {
+      // Roles differ — update roles, preserve members
+      finalGroups.push({
+        members: [...existing.members],
+        name: expected.name,
+        roles: [...expected.roles],
+      });
+    } else {
+      // Already correct — keep as-is
+      finalGroups.push({ ...existing });
+    }
+  }
+
+  // Preserve any custom groups not in the default list
+  for (const existing of existingGroups) {
+    if (!processedNames.has(existing.name)) {
+      finalGroups.push({ ...existing });
+    }
+  }
+
+  return { ...jsonContent, groups: finalGroups };
+};
 
 const addIdentity = (
   content: string,
   identityId: string,
-): Result<string, AuthorizationError> => {
+): Result<z.infer<typeof authorizationFileSchema>, AuthorizationError> => {
   let parsed;
   try {
     parsed = JSON.parse(content);
@@ -61,7 +144,7 @@ const addIdentity = (
     return err(new IdentityAlreadyExistsError(identityId));
   }
 
-  const updated = {
+  return ok({
     ...jsonContent,
     directory_readers: {
       ...jsonContent.directory_readers,
@@ -70,9 +153,7 @@ const addIdentity = (
         identityId,
       ],
     },
-  };
-
-  return ok(JSON.stringify(updated, null, 2));
+  });
 };
 
 const REPO_OWNER = "pagopa";
@@ -86,7 +167,13 @@ export const makeAuthorizationService = (
     input: RequestAuthorizationInput,
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
     const logger = getLogger(["dx-cli", "pagopa-authorization"]);
-    const { bootstrapIdentityId, repoName, subscriptionName } = input;
+    const {
+      bootstrapIdentityId,
+      envShort,
+      prefix,
+      repoName,
+      subscriptionName,
+    } = input;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars.json`;
     const branchName = `feats/add-${repoName}-${subscriptionName}-bootstrap-identity`;
 
@@ -125,9 +212,10 @@ export const makeAuthorizationService = (
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Modify the file content, detecting duplicates and format errors
+        // Step 3: Add identity and upsert AD groups
         .andThen(({ content, sha }) =>
           addIdentity(content, bootstrapIdentityId)
+            .map((withIdentity) => upsertGroups(withIdentity, prefix, envShort))
             .mapErr((error) => {
               if (error instanceof IdentityAlreadyExistsError) {
                 logger.warn("Identity already exists", {
@@ -142,7 +230,11 @@ export const makeAuthorizationService = (
               return error;
             })
             .match(
-              (updatedContent) => okAsync({ sha, updatedContent }),
+              (updatedJson) =>
+                okAsync({
+                  sha,
+                  updatedContent: JSON.stringify(updatedJson, null, 2),
+                }),
               (error) => errAsync(error),
             ),
         )
@@ -152,7 +244,7 @@ export const makeAuthorizationService = (
             gitHubService.updateFile({
               branch: branchName,
               content: updatedContent,
-              message: `Add directory reader for ${subscriptionName}`,
+              message: `Add bootstrap identity and AD groups for ${subscriptionName}`,
               owner: REPO_OWNER,
               path: filePath,
               repo: REPO_NAME,
@@ -172,11 +264,11 @@ export const makeAuthorizationService = (
           ResultAsync.fromPromise(
             gitHubService.createPullRequest({
               base: BASE_BRANCH,
-              body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers for subscription \`${subscriptionName}\`.`,
+              body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
               head: branchName,
               owner: REPO_OWNER,
               repo: REPO_NAME,
-              title: `Add directory reader for ${subscriptionName}`,
+              title: `Add bootstrap identity and AD groups for ${subscriptionName}`,
             }),
             () =>
               new AuthorizationError(
