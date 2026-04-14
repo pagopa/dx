@@ -17548,6 +17548,7 @@ async function releaseExists(octokit, owner, repo, tag) {
 <<<<<<< HEAD
 =======
     }
+<<<<<<< HEAD
     if (err instanceof Error) {
       console.warn(
         `Error checking release ${tag}: ${err.name}: ${err.message}`,
@@ -17557,6 +17558,8 @@ async function releaseExists(octokit, owner, repo, tag) {
       console.warn(`Error checking release ${tag}:`, err);
 >>>>>>> 3932a707 (feat: revert and add new function for log remove)
     }
+=======
+>>>>>>> 4ae50ac7 (fix: revert)
     console.warn(`Error checking release ${tag}:`, err);
     return false;
   }
