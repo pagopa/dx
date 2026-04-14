@@ -8,7 +8,10 @@
 
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { useAzureMonitor } from "@azure/monitor-opentelemetry";
+import {
+  shutdownAzureMonitor,
+  useAzureMonitor,
+} from "@azure/monitor-opentelemetry";
 import {
   context as otelContext,
   SpanKind,
@@ -288,16 +291,13 @@ async function post(): Promise<void> {
       createChildSpans(spanMarkers, span);
     });
   } else {
-    core.info("No events file found");
+    core.warning("No events file found");
   }
 
   span.end();
 
-  await logs.getLoggerProvider().forceFlush?.();
-  await new Promise((r) => setTimeout(r, 2000));
-
   // Flush all telemetry to Application Insights before process exit
-  const FLUSH_TIMEOUT_MS = 2000;
+  const FLUSH_TIMEOUT_MS = 10000;
   try {
     const tracerProvider = trace.getTracerProvider() as {
       forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
@@ -309,13 +309,14 @@ async function post(): Promise<void> {
       tracerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
       loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
     ]);
+
+    core.info("Telemetry flushed");
+    shutdownAzureMonitor();
   } catch (flushErr) {
     core.warning(
       `Telemetry flush error (some data may be lost): ${flushErr instanceof Error ? flushErr.message : String(flushErr)}`,
     );
   }
-
-  core.info("Telemetry flushed");
 }
 
 // Process an individual event line
