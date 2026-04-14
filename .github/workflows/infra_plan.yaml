@@ -223,7 +223,7 @@ jobs:
           done
 
       - name: Setup Telemetry Session
-        uses: ./actions/setup-telemetry
+        uses: pagopa/dx/actions/setup-telemetry@639fa5e800b2147e78bdc09a9df04e7060a82b0a
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -278,7 +278,7 @@ jobs:
           fi
 
       - name: Start build span
-        uses: ./actions/log-telemetry-event
+        uses: pagopa/dx/actions/log-telemetry-event@639fa5e800b2147e78bdc09a9df04e7060a82b0a
         with:
           name: build
           span_phase: start
@@ -292,7 +292,7 @@ jobs:
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
 
       - name: End build span
-        uses: ./dx/actions/log-telemetry-event
+        uses: pagopa/dx/actions/log-telemetry-event@639fa5e800b2147e78bdc09a9df04e7060a82b0a
         with:
           name: build
           span_phase: end
