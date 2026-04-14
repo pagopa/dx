@@ -17523,14 +17523,7 @@ async function releaseExists(octokit, owner, repo, tag) {
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
     }
-    if (err instanceof Error) {
-      console.warn(
-        `Error checking release ${tag}: ${err.name}: ${err.message}`,
-        err
-      );
-    } else {
-      console.warn(`Error checking release ${tag}:`, err);
-    }
+    console.warn(`Error checking release ${tag}:`, err);
     return false;
   }
 }

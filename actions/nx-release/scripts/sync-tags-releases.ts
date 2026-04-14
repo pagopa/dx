@@ -85,15 +85,8 @@ export async function releaseExists(
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
     }
-    // Unexpected API errors should be logged but treated as "doesn't exist".
-    if (err instanceof Error) {
-      console.warn(
-        `Error checking release ${tag}: ${err.name}: ${err.message}`,
-        err,
-      );
-    } else {
-      console.warn(`Error checking release ${tag}:`, err);
-    }
+    // Other errors should be logged but treated as "doesn't exist"
+    console.warn(`Error checking release ${tag}:`, err);
     return false;
   }
 }
