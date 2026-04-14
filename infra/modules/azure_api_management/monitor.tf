@@ -14,6 +14,25 @@ resource "azurerm_api_management_logger" "this" {
   }
 }
 
+# Patch the logger to use the APIM system-assigned managed identity for authentication.
+# The azurerm provider does not expose the identityClientId credential field, so azapi is used
+# for this targeted update. Requires the Monitoring Metrics Publisher role on the AI resource.
+resource "azapi_update_resource" "apim_logger_mi_patch" {
+  count = var.application_insights.enabled && var.application_insights.use_managed_identity ? 1 : 0
+
+  type        = "Microsoft.ApiManagement/service/loggers@2022-08-01"
+  resource_id = azurerm_api_management_logger.this[0].id
+
+  body = {
+    properties = {
+      credentials = {
+        connectionString = var.application_insights.connection_string
+        identityClientId = "SystemAssigned"
+      }
+    }
+  }
+}
+
 resource "azurerm_api_management_diagnostic" "applicationinsights" {
   count = var.application_insights.enabled ? 1 : 0
 

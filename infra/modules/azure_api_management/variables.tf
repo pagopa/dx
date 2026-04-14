@@ -242,20 +242,22 @@ variable "lock_enable" {
 
 variable "application_insights" {
   type = object({
-    enabled             = bool
-    connection_string   = string
-    id                  = optional(string, null)
-    sampling_percentage = number
-    verbosity           = string
+    enabled               = bool
+    connection_string     = string
+    id                    = optional(string, null)
+    sampling_percentage   = number
+    verbosity             = string
+    use_managed_identity  = optional(bool, false)
   })
   default = {
-    enabled             = false
-    connection_string   = null
-    id                  = null
-    sampling_percentage = 0
-    verbosity           = "error"
+    enabled               = false
+    connection_string     = null
+    id                    = null
+    sampling_percentage   = 0
+    verbosity             = "error"
+    use_managed_identity  = false
   }
-  description = "Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100) and the verbosity level (verbose, information, error)."
+  description = "Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100); the verbosity level (verbose, information, error); and whether to authenticate using the APIM system-assigned managed identity instead of the connection string key (use_managed_identity, default false — requires the Monitoring Metrics Publisher role on the Application Insights resource)."
 
   validation {
     condition     = !var.application_insights.enabled || var.application_insights.connection_string != null

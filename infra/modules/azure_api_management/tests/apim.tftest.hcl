@@ -1,3 +1,5 @@
+provider "azapi" {}
+
 provider "azurerm" {
   features {
   }
@@ -1019,4 +1021,47 @@ run "autoscale_config_high_load_not_multiple_of_two" {
   expect_failures = [
     var.autoscale,
   ]
+}
+
+run "apim_logger_managed_identity" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "test"
+      instance_number = "01"
+    }
+
+    tags                = run.setup_tests.tags
+    resource_group_name = run.setup_tests.resource_group_name
+    use_case            = "cost_optimized"
+
+    publisher_email = "example@pagopa.it"
+    publisher_name  = "Example Publisher"
+
+    virtual_network = {
+      name                = run.setup_tests.vnet.name
+      resource_group_name = run.setup_tests.vnet.resource_group_name
+    }
+
+    application_insights = {
+      enabled              = true
+      connection_string    = "aConnectionString"
+      sampling_percentage  = 50
+      verbosity            = "error"
+      use_managed_identity = true
+    }
+
+    subnet_id     = run.setup_tests.subnet_id
+    subnet_pep_id = run.setup_tests.pep_id
+  }
+
+  assert {
+    condition     = length(azapi_update_resource.apim_logger_mi_patch) == 1
+    error_message = "The azapi MI patch resource should be created when use_managed_identity is true"
+  }
 }
