@@ -28,6 +28,9 @@
       }
     },
     "test": {
+      "dependsOn": [
+        "^build"
+      ],
       "configurations": {
         "ci": {
           "coverage": true
