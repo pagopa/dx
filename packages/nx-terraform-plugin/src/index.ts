@@ -28,10 +28,17 @@ export const createNodesV2: CreateNodesV2<unknown> = [
         }
 
         const name = getProjectNameFromRoot(root);
+
+        const projectType: ProjectType =
+          rootSegments.has("modules") || rootSegments.has("_modules")
+            ? "library"
+            : "application";
+
         return {
           projects: {
             [root]: {
               name,
+              projectType,
               // We assign the 'terraform' tag to all projects created from Terraform configuration files
               // So that they can be easily targeted in Nx commands with --projects=tag:terraform
               tags: ["terraform"],
