@@ -55,7 +55,7 @@ describe("getTerraformProjectFiles", () => {
   });
 });
 
-describe("deriveProjectNameFromRoot", () => {
+describe("getProjectNameFromRoot", () => {
   describe("infra segment removal", () => {
     it("removes 'infra' segment from path", () => {
       const result = getProjectNameFromRoot(
