@@ -223,7 +223,9 @@ jobs:
           done
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@main
+        uses: pagopa/dx/actions/setup-telemetry@13b31e8b7fc9a451fd26703648dea407f8c9e1be
+        with:
+          connection_string: "InstrumentationKey=e0ff8094-78fa-45e5-a21d-e62b453dc5d1;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=ce469d55-2ff7-4dfd-a249-cc787291e672"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -278,7 +280,7 @@ jobs:
           fi
 
       - name: Start build span
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@13b31e8b7fc9a451fd26703648dea407f8c9e1be
         with:
           name: build
           span_phase: start
@@ -292,7 +294,7 @@ jobs:
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
 
       - name: End build span
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@13b31e8b7fc9a451fd26703648dea407f8c9e1be
         with:
           name: build
           span_phase: end
