@@ -23,6 +23,8 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
+    "@actions/core": "catalog:github-actions",
+    "@actions/github": "catalog:github-actions",
     "@opentelemetry/api": "catalog:opentelemetry",
     "@opentelemetry/api-logs": "catalog:opentelemetry",
     "@opentelemetry/sdk-metrics": "catalog:opentelemetry",

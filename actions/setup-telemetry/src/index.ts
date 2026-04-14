@@ -6,6 +6,7 @@
  * for use by subsequent workflow steps and the post-execution handler.
  */
 
+import * as core from "@actions/core";
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
 import path from "node:path";
@@ -13,11 +14,12 @@ import { z } from "zod";
 
 const SESSION_DIR = ".otel-session";
 
-// Validate required environment variables
 const envSchema = z.object({
-  GITHUB_ENV: z.string().min(1),
   GITHUB_WORKSPACE: z.string().min(1),
-  INPUT_CONNECTION_STRING: z.string().min(1),
+});
+
+const inputSchema = z.object({
+  connectionString: z.string().min(1),
 });
 
 async function exportEnv(
@@ -25,40 +27,36 @@ async function exportEnv(
   start: number,
   correlationId: string,
 ): Promise<void> {
-  const envResult = envSchema.safeParse(process.env);
+  const inputResult = inputSchema.safeParse({
+    connectionString: core.getInput("connection_string", { required: true }),
+  });
 
-  if (!envResult.success) {
-    console.error(
-      "Missing required environment variables:",
-      z.prettifyError(envResult.error),
+  if (!inputResult.success) {
+    core.error(
+      `Missing or invalid action inputs:\n${z.prettifyError(inputResult.error)}`,
     );
-    throw new Error("Environment validation failed");
+    throw new Error("Input validation failed");
   }
 
-  const { GITHUB_ENV, INPUT_CONNECTION_STRING } = envResult.data;
-
-  const envVars =
-    [
-      `OTEL_EVENT_FILE=${eventsFile}`,
-      `OTEL_SESSION_START=${start}`,
-      `OTEL_CORRELATION_ID=${correlationId}`,
-      `APPLICATIONINSIGHTS_CONNECTION_STRING=${INPUT_CONNECTION_STRING}`,
-    ].join("\n") + "\n";
-
-  await fs.appendFile(GITHUB_ENV, envVars);
+  core.exportVariable("OTEL_EVENT_FILE", eventsFile);
+  core.exportVariable("OTEL_SESSION_START", String(start));
+  core.exportVariable("OTEL_CORRELATION_ID", correlationId);
+  core.exportVariable(
+    "APPLICATIONINSIGHTS_CONNECTION_STRING",
+    inputResult.data.connectionString,
+  );
 }
 
 async function run(): Promise<void> {
   try {
     const { correlationId, eventsFile, start } = await startSession();
     await exportEnv(eventsFile, start, correlationId);
-    console.log(
+    core.info(
       `Telemetry session started. Events file: ${eventsFile} correlationId=${correlationId}`,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error("setup-telemetry failed:", message);
-    process.exit(1);
+    core.setFailed(`setup-telemetry failed: ${message}`);
   }
 }
 
@@ -72,9 +70,8 @@ async function startSession(): Promise<{
     .safeParse(process.env);
 
   if (!envResult.success) {
-    console.error(
-      "Missing required environment variables:",
-      z.prettifyError(envResult.error),
+    core.error(
+      `Missing required environment variables:\n${z.prettifyError(envResult.error)}`,
     );
     throw new Error("Environment validation failed");
   }
