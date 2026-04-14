@@ -240,7 +240,8 @@ async function post(): Promise<void> {
 
   useAzureMonitor({
     azureMonitorExporterOptions: {
-      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+      connectionString:
+        "InstrumentationKey=e0ff8094-78fa-45e5-a21d-e62b453dc5d1;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=ce469d55-2ff7-4dfd-a249-cc787291e672",
     },
     enableLiveMetrics: false,
     resource,
