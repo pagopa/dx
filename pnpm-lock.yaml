@@ -288,6 +288,9 @@ importers:
       '@actions/github':
         specifier: catalog:github-actions
         version: 9.0.0
+      '@azure/monitor-opentelemetry':
+        specifier: ^1.16.0
+        version: 1.16.0
       '@opentelemetry/api':
         specifier: catalog:opentelemetry
         version: 1.9.0
@@ -303,9 +306,6 @@ importers:
       '@opentelemetry/sdk-trace-base':
         specifier: catalog:opentelemetry
         version: 2.6.0(@opentelemetry/api@1.9.0)
-      '@pagopa/azure-tracing':
-        specifier: workspace:^
-        version: link:../../packages/azure-tracing
       zod:
         specifier: 'catalog:'
         version: 4.3.6
