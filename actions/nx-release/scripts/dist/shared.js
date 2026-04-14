@@ -4210,7 +4210,7 @@ function $constructor(name, initializer3, params) {
   Object.defineProperty(_, "name", { value: name });
   return _;
 }
-var $brand = Symbol("zod_brand");
+var $brand = /* @__PURE__ */ Symbol("zod_brand");
 var $ZodAsyncError = class extends Error {
   constructor() {
     super(`Encountered Promise during synchronous parse. Use .parseAsync() instead.`);
@@ -4355,7 +4355,7 @@ function floatSafeRemainder(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-var EVALUATING = Symbol("evaluating");
+var EVALUATING = /* @__PURE__ */ Symbol("evaluating");
 function defineLazy(object2, key, getter) {
   let value = void 0;
   Object.defineProperty(object2, key, {
@@ -13428,8 +13428,8 @@ function yo_default() {
 
 // ../../node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/registries.js
 var _a;
-var $output = Symbol("ZodOutput");
-var $input = Symbol("ZodInput");
+var $output = /* @__PURE__ */ Symbol("ZodOutput");
+var $input = /* @__PURE__ */ Symbol("ZodInput");
 var $ZodRegistry = class {
   constructor() {
     this._map = /* @__PURE__ */ new WeakMap();
@@ -17405,14 +17405,31 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 var ProjectMetadataSchema = external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  if (!options?.suppressReleaseTag404Logs) {
+    return new Octokit2({ auth: token });
+  }
+  return new Octokit2({
+    auth: token,
+    log: {
+      debug: (...args) => console.debug(...args),
+      error: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.error(...args);
+      },
+      info: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.info(...args);
+      },
+      warn: (...args) => console.warn(...args)
+    }
+  });
 }
 function extractTagEntriesFromPRBody(prBody) {
   const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
@@ -17543,6 +17560,13 @@ async function getNxProjectMetadata(projectName) {
     console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
     return null;
   }
+}
+function shouldSuppressReleaseTag404Log(args) {
+  if (args.length === 0 || typeof args[0] !== "string") {
+    return false;
+  }
+  const firstArg = args[0];
+  return firstArg.includes("/releases/tags/") && firstArg.includes(" - 404 ") && firstArg.startsWith("GET ");
 }
 /*! Bundled license information:
 

@@ -703,7 +703,7 @@ function $constructor(name, initializer3, params) {
   Object.defineProperty(_, "name", { value: name });
   return _;
 }
-var $brand = Symbol("zod_brand");
+var $brand = /* @__PURE__ */ Symbol("zod_brand");
 var $ZodAsyncError = class extends Error {
   constructor() {
     super(`Encountered Promise during synchronous parse. Use .parseAsync() instead.`);
@@ -848,7 +848,7 @@ function floatSafeRemainder(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-var EVALUATING = Symbol("evaluating");
+var EVALUATING = /* @__PURE__ */ Symbol("evaluating");
 function defineLazy(object2, key, getter) {
   let value = void 0;
   Object.defineProperty(object2, key, {
@@ -9921,8 +9921,8 @@ function yo_default() {
 
 // ../../node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/registries.js
 var _a;
-var $output = Symbol("ZodOutput");
-var $input = Symbol("ZodInput");
+var $output = /* @__PURE__ */ Symbol("ZodOutput");
+var $input = /* @__PURE__ */ Symbol("ZodInput");
 var $ZodRegistry = class {
   constructor() {
     this._map = /* @__PURE__ */ new WeakMap();
@@ -17405,14 +17405,28 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  return new Octokit2({
+    auth: token,
+    log: {
+      debug: (...args) => console.debug(...args),
+      error: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.error(...args);
+      },
+      info: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.info(...args);
+      },
+      warn: (...args) => console.warn(...args)
+    }
+  });
 }
 function extractTagEntriesFromPRBody(prBody) {
   const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
@@ -17459,6 +17473,13 @@ function parseTagEntries(raw) {
   }
   return result.data;
 }
+function shouldSuppressReleaseTag404Log(args) {
+  if (args.length === 0 || typeof args[0] !== "string") {
+    return false;
+  }
+  const firstArg = args[0];
+  return firstArg.includes("/releases/tags/") && firstArg.includes(" - 404 ") && firstArg.startsWith("GET ");
+}
 
 // scripts/sync-tags-releases.ts
 var execFileAsync2 = promisify(execFile);
@@ -17491,9 +17512,32 @@ async function extractChangelogSection(clPath, version2) {
 }
 async function releaseExists(octokit, owner, repo, tag) {
   try {
+<<<<<<< HEAD
+    const suppressed404Paths = [tag, encodeURIComponent(tag)];
     await octokit.repos.getReleaseByTag({
       owner,
       repo,
+      request: {
+        // Suppress noisy 404 logs from Octokit when release doesn't exist
+        log: {
+          error: (...args) => {
+            const message = args.join(" ");
+            if (suppressed404Paths.some(
+              (candidateTag) => message.includes(
+                `GET /repos/${owner}/${repo}/releases/tags/${candidateTag} - 404`
+              )
+            )) {
+              return;
+            }
+            console.error(...args);
+          }
+        }
+      },
+=======
+    await octokit.repos.getReleaseByTag({
+      owner,
+      repo,
+>>>>>>> 3932a707 (feat: revert and add new function for log remove)
       tag
     });
     return true;
@@ -17501,6 +17545,17 @@ async function releaseExists(octokit, owner, repo, tag) {
     const errorCheck = OctokitErrorSchema.safeParse(err);
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
+<<<<<<< HEAD
+=======
+    }
+    if (err instanceof Error) {
+      console.warn(
+        `Error checking release ${tag}: ${err.name}: ${err.message}`,
+        err
+      );
+    } else {
+      console.warn(`Error checking release ${tag}:`, err);
+>>>>>>> 3932a707 (feat: revert and add new function for log remove)
     }
     console.warn(`Error checking release ${tag}:`, err);
     return false;
