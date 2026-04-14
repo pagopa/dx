@@ -35,5 +35,13 @@ export const loadEnv = () =>
       APPLICATIONINSIGHTS_CONNECTION_STRING: z
         .string()
         .describe("The connection string for Application Insights."),
+      APPLICATIONINSIGHTS_USE_MANAGED_IDENTITY: z
+        .enum(["true", "false"])
+        .optional()
+        .default("false")
+        .transform((v) => v === "true")
+        .describe(
+          "When set to 'true', uses Azure Managed Identity (DefaultAzureCredential) for authentication instead of the connection string key. The connection string is still required to identify the Application Insights resource endpoint.",
+        ),
     },
   });

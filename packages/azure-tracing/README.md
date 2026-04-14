@@ -43,10 +43,16 @@ For more background on this workaround, see:
 
 In order to enable tracing, you also need to set the following environment variables:
 
-| **Name**                                  | **Required** | **Default** |
-| ----------------------------------------- | ------------ | ----------- |
-| **APPINSIGHTS_SAMPLING_PERCENTAGE**       | false        | 5           |
-| **APPLICATIONINSIGHTS_CONNECTION_STRING** | true         | -           |
+| **Name**                                         | **Required** | **Default** |
+| ------------------------------------------------ | ------------ | ----------- |
+| **APPINSIGHTS_SAMPLING_PERCENTAGE**              | false        | 5           |
+| **APPLICATIONINSIGHTS_CONNECTION_STRING**        | true         | -           |
+| **APPLICATIONINSIGHTS_USE_MANAGED_IDENTITY**     | false        | false       |
+
+When `APPLICATIONINSIGHTS_USE_MANAGED_IDENTITY` is set to `true`, the package authenticates using `DefaultAzureCredential` from `@azure/identity` (which resolves to the resource's managed identity at runtime) instead of the shared key embedded in the connection string. The connection string is still required to identify the Application Insights resource endpoint.
+
+> [!NOTE]
+> To use managed identity authentication, the managed identity of the host resource (e.g. Function App, APIM) must be granted the **Monitoring Metrics Publisher** role on the Application Insights component.
 
 #### Step 2: Register Azure Function Lifecycle Hooks
 
