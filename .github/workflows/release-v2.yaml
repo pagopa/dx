@@ -64,6 +64,6 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@fix-remove-404-line-from-nx-release-tag-creation # main
         with:
           github-token: ${{ secrets.github-token }}

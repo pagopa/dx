@@ -31,15 +31,38 @@ export interface TagEntry {
   version: string;
 }
 
+interface CreateOctokitOptions {
+  suppressReleaseTag404Logs?: boolean;
+}
+
 /** Creates an authenticated Octokit instance. */
-export function createOctokit(): Octokit {
+export function createOctokit(options?: CreateOctokitOptions): Octokit {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set",
     );
   }
-  return new Octokit({ auth: token });
+
+  if (!options?.suppressReleaseTag404Logs) {
+    return new Octokit({ auth: token });
+  }
+
+  return new Octokit({
+    auth: token,
+    log: {
+      debug: (...args: unknown[]) => console.debug(...args),
+      error: (...args: unknown[]) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.error(...args);
+      },
+      info: (...args: unknown[]) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.info(...args);
+      },
+      warn: (...args: unknown[]) => console.warn(...args),
+    },
+  });
 }
 
 /**
@@ -224,4 +247,17 @@ async function getNxProjectMetadata(
     console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
     return null;
   }
+}
+
+function shouldSuppressReleaseTag404Log(args: unknown[]): boolean {
+  if (args.length === 0 || typeof args[0] !== "string") {
+    return false;
+  }
+
+  const firstArg = args[0];
+  return (
+    firstArg.includes("/releases/tags/") &&
+    firstArg.includes(" - 404 ") &&
+    firstArg.startsWith("GET ")
+  );
 }

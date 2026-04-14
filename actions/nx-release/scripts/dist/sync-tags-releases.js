@@ -17405,14 +17405,28 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  return new Octokit2({
+    auth: token,
+    log: {
+      debug: (...args) => console.debug(...args),
+      error: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.error(...args);
+      },
+      info: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.info(...args);
+      },
+      warn: (...args) => console.warn(...args)
+    }
+  });
 }
 function extractTagEntriesFromPRBody(prBody) {
   const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
@@ -17459,9 +17473,19 @@ function parseTagEntries(raw) {
   }
   return result.data;
 }
+function shouldSuppressReleaseTag404Log(args) {
+  if (args.length === 0 || typeof args[0] !== "string") {
+    return false;
+  }
+  const firstArg = args[0];
+  return firstArg.includes("/releases/tags/") && firstArg.includes(" - 404 ") && firstArg.startsWith("GET ");
+}
 
 // scripts/sync-tags-releases.ts
 var execFileAsync2 = promisify(execFile);
+var OctokitErrorSchema = external_exports.object({
+  status: external_exports.number()
+});
 var PrDataSchema = external_exports.object({
   body: external_exports.string(),
   mergeCommit: external_exports.object({
@@ -17488,23 +17512,21 @@ async function extractChangelogSection(clPath, version2) {
 }
 async function releaseExists(octokit, owner, repo, tag) {
   try {
-    for await (const page of octokit.paginate.iterator(
-      octokit.repos.listReleases,
-      {
-        owner,
-        per_page: 100,
-        repo
-      }
-    )) {
-      if (page.data.some((release) => release.tag_name === tag)) {
-        return true;
-      }
-    }
-    return false;
+    await octokit.repos.getReleaseByTag({
+      owner,
+      repo,
+      tag
+    });
+    return true;
   } catch (err) {
+    const errorCheck = OctokitErrorSchema.safeParse(err);
+    if (errorCheck.success && errorCheck.data.status === 404) {
+      return false;
+    }
     if (err instanceof Error) {
       console.warn(
-        `Error checking release ${tag}: ${err.name}: ${err.message}`
+        `Error checking release ${tag}: ${err.name}: ${err.message}`,
+        err
       );
     } else {
       console.warn(`Error checking release ${tag}:`, err);

@@ -17405,14 +17405,16 @@ external_exports.object({
   version: external_exports.string()
 });
 external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  {
+    return new Octokit2({ auth: token });
+  }
 }
 async function getRepoInfo() {
   const ghRepo = process.env.GITHUB_REPOSITORY;
