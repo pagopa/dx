@@ -293,8 +293,11 @@ async function post(): Promise<void> {
 
   span.end();
 
+  await logs.getLoggerProvider().forceFlush?.();
+  await new Promise((r) => setTimeout(r, 2000));
+
   // Flush all telemetry to Application Insights before process exit
-  const FLUSH_TIMEOUT_MS = 10_000;
+  const FLUSH_TIMEOUT_MS = 2000;
   try {
     const tracerProvider = trace.getTracerProvider() as {
       forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
