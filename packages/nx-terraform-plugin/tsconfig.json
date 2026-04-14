@@ -1,0 +1,15 @@
+{
+  "extends": "@tsconfig/node24/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "isolatedModules": true,
+    "declaration": true,
+    "importHelpers": true,
+    "lib": ["ES2023", "ES2024.Object", "ESNext.Collection"],
+    "target": "ES2023",
+    "customConditions": ["@nx/source"],
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src/**/*.ts"]
+}
