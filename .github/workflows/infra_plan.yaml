@@ -277,6 +277,12 @@ jobs:
             echo "$(date)" > ./.pr_plan_marker
           fi
 
+      - name: Start build span
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: build
+          span_phase: start
+
       - name: Terraform Plan
         id: plan
         uses: pagopa/dx/actions/filter-terraform-plan@main
@@ -284,6 +290,12 @@ jobs:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
+
+      - name: End build span
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: build
+          span_phase: end
 
       - name: Check Plan length
         id: check-length
