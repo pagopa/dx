@@ -30,7 +30,7 @@
     "@opentelemetry/sdk-metrics": "catalog:opentelemetry",
     "@opentelemetry/resources": "catalog:opentelemetry",
     "@opentelemetry/sdk-trace-base": "catalog:opentelemetry",
-    "@pagopa/azure-tracing": "workspace:^",
+    "@azure/monitor-opentelemetry": "^1.16.0",
     "zod": "catalog:"
   },
   "devDependencies": {
