@@ -272,3 +272,25 @@ run "app_config_role_assignments" {
     error_message = "The role assigned must be App Configuration Data Owner"
   }
 }
+
+run "application_insights_role_assignments" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    application_insights = [
+      {
+        name                = "dx-d-itn-test-ai-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        description         = "Allow publishing custom metrics to Application Insights"
+      }
+    ]
+  }
+
+  assert {
+    condition     = module.application_insights.azurerm_role_assignment["dx-d-itn-test-rg-01|dx-d-itn-test-ai-01"].role_definition_name == "Monitoring Metrics Publisher"
+    error_message = "The role assigned must be Monitoring Metrics Publisher"
+  }
+}

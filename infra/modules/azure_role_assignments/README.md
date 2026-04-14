@@ -11,7 +11,7 @@ Instead of memorizing dozens of Azure Built-in Role names (like _"Storage Blob D
 - **Standardized Abstraction**: Exposes only three generic roles (`"reader"`, `"writer"`, `"owner"`) across all supported services.
 - **Granular Scoping**: Assign roles at the account/namespace level, or drill down to specific queues, topics, containers, or collections.
 - **Multi-Resource Batching**: Pass lists of assignments for different services simultaneously to a single principal.
-- **Supported Resources**: Cosmos DB, Redis, Key Vault, Storage (Table, Blob, Queue), Event Hub, Service Bus, API Management, App Configuration.
+- **Supported Resources**: Cosmos DB, Redis, Key Vault, Storage (Table, Blob, Queue), Event Hub, Service Bus, API Management, App Configuration, Application Insights.
 - **Observability via description**: Each assignment requires a `description` to provide context on why the permission is needed, improving auditability and maintainability.
 
 ## 🚀 Quick Usage Example
@@ -59,20 +59,22 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 - A [Function App example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/function_app) demonstrating role assignments for a Function App.
 - A [Service Bus example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/service_bus) demonstrating role assignments for a Service Bus.
 - A [Users Assigned Identity example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/users_assigned_identity) showcasing role assignments for Storage Blobs, Queues, and Tables to a user.
+- An [Application Insights example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/application_insights) demonstrating how to grant the Monitoring Metrics Publisher role to a Function App.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.114, < 5.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_apim"></a> [apim](#module\_apim) | ./modules/apim | n/a |
 | <a name="module_app_config"></a> [app\_config](#module\_app\_config) | ./modules/app_config | n/a |
+| <a name="module_application_insights"></a> [application\_insights](#module\_application\_insights) | ./modules/application_insights | n/a |
 | <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | ./modules/cosmos | n/a |
 | <a name="module_event_hub"></a> [event\_hub](#module\_event\_hub) | ./modules/event_hub | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./modules/key_vault | n/a |
@@ -87,9 +89,10 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_apim"></a> [apim](#input\_apim) | List of role assignments for Azure API Management (APIM) instances.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the API Management instance<br/>- resource\_group\_name: Resource group containing the APIM instance<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_app_config"></a> [app\_config](#input\_app\_config) | List of role assignments for Azure App Configuration stores.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the App Configuration store<br/>- resource\_group\_name: Resource group containing the App Configuration store<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
+| <a name="input_application_insights"></a> [application\_insights](#input\_application\_insights) | List of role assignments for Azure Application Insights components.<br/>Assigns the Monitoring Metrics Publisher role, which allows publishing custom metrics.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the Application Insights component<br/>- resource\_group\_name: Resource group containing the Application Insights component<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_cosmos"></a> [cosmos](#input\_cosmos) | List of role assignments for Azure Cosmos DB accounts.<br/><br/>REQUIRED FIELDS:<br/>- account\_name: Name of the Cosmos DB account<br/>- resource\_group\_name: Resource group containing the account<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- database: Database name (default: "*" for all databases)<br/>- collections: List of collection names (default: ["*"] for all collections) | <pre>list(object({<br/>    account_name        = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>    database            = optional(string, "*")<br/>    collections         = optional(list(string), ["*"])<br/>  }))</pre> | `[]` | no |
 | <a name="input_event_hub"></a> [event\_hub](#input\_event\_hub) | List of role assignments for Azure Event Hubs.<br/><br/>REQUIRED FIELDS:<br/>- namespace\_name: Name of the Event Hubs namespace<br/>- resource\_group\_name: Resource group containing the namespace<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- event\_hub\_names: List of specific Event Hub names within the namespace (default: ["*"] for all Event Hubs) | <pre>list(object({<br/>    namespace_name      = string<br/>    resource_group_name = string<br/>    event_hub_names     = optional(list(string), ["*"])<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | List of role assignments for Azure Key Vault instances.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the Key Vault<br/>- resource\_group\_name: Resource group containing the Key Vault<br/>- description: Human-readable description of the role assignment purpose<br/>- roles: Object specifying base permissions for each Key Vault functionality:<br/>  - secrets: Role for secrets - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/>  - certificates: Role for certificates - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/>  - keys: Role for keys - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/><br/>OPTIONAL FIELDS:<br/>- has\_rbac\_support: Set to true if Key Vault uses Azure RBAC for authorization (default: true, access policies will be created for vaults without RBAC support otherwise, role assignments for vaults with RBAC support)<br/>- override\_roles: Advanced - list of Access Policies permissions to override module-defined ones. Has no effect when has\_rbac\_support is true. | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    has_rbac_support    = optional(bool, null)<br/>    description         = string<br/>    roles = object({<br/>      secrets      = optional(string, "")<br/>      certificates = optional(string, "")<br/>      keys         = optional(string, "")<br/>    })<br/><br/>    override_roles = optional(object({<br/>      secrets      = optional(list(string), [])<br/>      certificates = optional(list(string), [])<br/>      keys         = optional(list(string), [])<br/>      }), {<br/>      secrets      = []<br/>      certificates = []<br/>      keys         = []<br/>    })<br/>  }))</pre> | `[]` | no |

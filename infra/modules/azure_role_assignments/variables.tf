@@ -270,3 +270,22 @@ EOT
 
   default = []
 }
+
+variable "application_insights" {
+  description = <<EOT
+List of role assignments for Azure Application Insights components.
+Assigns the Monitoring Metrics Publisher role, which allows publishing custom metrics.
+
+REQUIRED FIELDS:
+- name: Name of the Application Insights component
+- resource_group_name: Resource group containing the Application Insights component
+- description: Human-readable description of the role assignment purpose
+EOT
+  type = list(object({
+    name                = string
+    resource_group_name = string
+    description         = string
+  }))
+
+  default = []
+}

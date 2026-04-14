@@ -63,3 +63,11 @@ module "app_config" {
   subscription_id = var.subscription_id
   app_config      = var.app_config
 }
+
+module "application_insights" {
+  source = "./modules/application_insights"
+
+  principal_id         = var.principal_id
+  subscription_id      = var.subscription_id
+  application_insights = var.application_insights
+}
