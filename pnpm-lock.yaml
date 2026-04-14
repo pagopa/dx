@@ -282,6 +282,12 @@ importers:
 
   actions/setup-telemetry:
     dependencies:
+      '@actions/core':
+        specifier: catalog:github-actions
+        version: 3.0.0
+      '@actions/github':
+        specifier: catalog:github-actions
+        version: 9.0.0
       '@opentelemetry/api':
         specifier: catalog:opentelemetry
         version: 1.9.0

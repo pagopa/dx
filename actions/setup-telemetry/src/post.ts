@@ -6,6 +6,8 @@
  * events and exceptions, then flushes all telemetry to Azure Application Insights.
  */
 
+import * as core from "@actions/core";
+import * as github from "@actions/github";
 import {
   context as otelContext,
   SpanKind,
@@ -18,12 +20,16 @@ import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
-// Debug logging helper
-const DEBUG = process.env.ACTIONS_STEP_DEBUG === "true";
-function debug(...args: unknown[]): void {
-  if (DEBUG) {
-    console.debug(...args);
-  }
+interface WorkflowContext {
+  actionPath: string;
+  actor: string;
+  eventName: string;
+  repository: string;
+  runAttempt: string;
+  runId: string;
+  serverUrl: string;
+  workflow: string;
+  workflowRef: string;
 }
 
 // Zod schemas for environment variables
@@ -31,13 +37,6 @@ const postEnvSchema = z.object({
   APPLICATIONINSIGHTS_CONNECTION_STRING: z.string().min(1),
   CSP_LIST: z.string().default(""),
   GITHUB_ACTION_PATH: z.string().default(""),
-  GITHUB_ACTOR: z.string().default(""),
-  GITHUB_EVENT_NAME: z.string().default(""),
-  GITHUB_REPOSITORY: z.string().default(""),
-  GITHUB_RUN_ATTEMPT: z.string().default(""),
-  GITHUB_RUN_ID: z.string().default(""),
-  GITHUB_SERVER_URL: z.string().default(""),
-  GITHUB_WORKFLOW: z.string().default("github-workflow"),
   GITHUB_WORKFLOW_REF: z.string().default(""),
   NODE_PACKAGE_MANAGER: z.string().default(""),
   OTEL_EVENT_FILE: z.string().optional(),
@@ -87,6 +86,51 @@ type SpanStartLine = z.infer<typeof spanStartLineSchema>;
 
 type TelemetryLine = z.infer<typeof telemetryLineSchema>;
 
+const githubContextSchema = z.object({
+  actor: z.string().min(1),
+  eventName: z.string().min(1),
+  repository: z.string().min(1),
+  runAttempt: z.number().int().positive(),
+  runId: z.number().int().positive(),
+  serverUrl: z.string().min(1),
+  workflow: z.string().min(1),
+});
+
+function getWorkflowContext(
+  env: z.infer<typeof postEnvSchema>,
+): WorkflowContext {
+  const githubContextResult = githubContextSchema.safeParse({
+    actor: github.context.actor,
+    eventName: github.context.eventName,
+    repository: `${github.context.repo.owner}/${github.context.repo.repo}`,
+    runAttempt: github.context.runAttempt,
+    runId: github.context.runId,
+    serverUrl: github.context.serverUrl,
+    workflow: github.context.workflow,
+  });
+
+  if (!githubContextResult.success) {
+    core.error(
+      `Missing or invalid GitHub context:\n${z.prettifyError(githubContextResult.error)}`,
+    );
+    throw new Error("GitHub context validation failed");
+  }
+
+  const githubContext = githubContextResult.data;
+
+  return {
+    actionPath: env.GITHUB_ACTION_PATH,
+    actor: githubContext.actor,
+    eventName: githubContext.eventName,
+    repository: githubContext.repository,
+    runAttempt: String(githubContext.runAttempt),
+    runId: String(githubContext.runId),
+    serverUrl: githubContext.serverUrl,
+    workflow: githubContext.workflow,
+    workflowRef: env.GITHUB_WORKFLOW_REF,
+  };
+}
+
 // Create child spans from processed markers
 function createChildSpans(
   spanMarkers: Record<string, SpanMarker[]>,
@@ -97,12 +141,12 @@ function createChildSpans(
   for (const [spanName, occurrences] of Object.entries(spanMarkers)) {
     for (const marker of occurrences) {
       if (!marker.start || !marker.end) {
-        debug(`Skipping incomplete span marker for "${spanName}"`);
+        core.debug(`Skipping incomplete span marker for "${spanName}"`);
         continue;
       }
 
       if (marker.end < marker.start) {
-        console.warn(
+        core.warning(
           `Skipping span "${spanName}" due to end time (${marker.end.toISOString()}) before start time (${marker.start.toISOString()})`,
         );
         continue;
@@ -150,13 +194,13 @@ function parseTelemetryLine(rawLine: string): null | TelemetryLine {
 
     const result = telemetryLineSchema.safeParse(parsed);
     if (!result.success) {
-      console.warn("Invalid telemetry line format");
-      debug("Validation error:", z.prettifyError(result.error));
+      core.warning("Invalid telemetry line format");
+      core.debug(`Validation error: ${z.prettifyError(result.error)}`);
       return null;
     }
     return result.data;
   } catch {
-    console.warn("Skipping malformed JSON telemetry line");
+    core.warning("Skipping malformed JSON telemetry line");
     return null;
   }
 }
@@ -165,25 +209,25 @@ async function post(): Promise<void> {
   // Validate environment variables
   const envResult = postEnvSchema.safeParse(process.env);
   if (!envResult.success) {
-    console.error(
-      "Missing or invalid environment variables:",
-      z.prettifyError(envResult.error),
+    core.error(
+      `Missing or invalid environment variables:\n${z.prettifyError(envResult.error)}`,
     );
     throw new Error("Environment validation failed");
   }
 
   const env = envResult.data;
+  const workflowContext = getWorkflowContext(env);
   const startMs = parseInt(env.OTEL_SESSION_START, 10);
   const eventsFile = env.OTEL_EVENT_FILE;
 
-  debug(`Post telemetry: file=${eventsFile}`);
+  core.debug(`Post telemetry: file=${eventsFile}`);
 
-  const workflowURL = `${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}`;
+  const workflowURL = `${workflowContext.serverUrl}/${workflowContext.repository}/actions/runs/${workflowContext.runId}`;
 
   const resource = resourceFromAttributes({
-    "enduser.id": env.GITHUB_ACTOR,
-    "service.instance.id": env.GITHUB_RUN_ID,
-    "service.name": env.GITHUB_WORKFLOW_REF,
+    "enduser.id": workflowContext.actor,
+    "service.instance.id": workflowContext.runId,
+    "service.name": workflowContext.workflowRef,
     "service.namespace": "dx",
   });
 
@@ -198,17 +242,17 @@ async function post(): Promise<void> {
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
 
-  const span = tracer.startSpan(env.GITHUB_WORKFLOW, {
+  const span = tracer.startSpan(workflowContext.workflow, {
     attributes: {
-      "cicd.pipeline.action.name": env.GITHUB_WORKFLOW,
-      "cicd.pipeline.attempt": env.GITHUB_RUN_ATTEMPT,
-      "cicd.pipeline.author": env.GITHUB_ACTOR,
-      "cicd.pipeline.path": env.GITHUB_ACTION_PATH,
-      "cicd.pipeline.repository": env.GITHUB_REPOSITORY,
+      "cicd.pipeline.action.name": workflowContext.workflow,
+      "cicd.pipeline.attempt": workflowContext.runAttempt,
+      "cicd.pipeline.author": workflowContext.actor,
+      "cicd.pipeline.path": workflowContext.actionPath,
+      "cicd.pipeline.repository": workflowContext.repository,
       "cicd.pipeline.result": env.PIPELINE_RESULT,
-      "cicd.pipeline.run.id": env.GITHUB_RUN_ID,
+      "cicd.pipeline.run.id": workflowContext.runId,
       "cicd.pipeline.run.url.full": workflowURL,
-      "cicd.pipeline.trigger": env.GITHUB_EVENT_NAME,
+      "cicd.pipeline.trigger": workflowContext.eventName,
       ...(env.NODE_PACKAGE_MANAGER
         ? { "node.package_manager": env.NODE_PACKAGE_MANAGER }
         : {}),
@@ -226,12 +270,21 @@ async function post(): Promise<void> {
       .split(/\n/)
       .filter((l) => l.trim().length);
 
+    if (lines.length === 0) {
+      core.info(`Events file found but empty: ${eventsFile}.`);
+    }
+
     otelContext.with(trace.setSpan(otelContext.active(), span), () => {
-      const spanMarkers = processLinesAndGetMarkers(lines, span, logger, env);
+      const spanMarkers = processLinesAndGetMarkers(
+        lines,
+        span,
+        logger,
+        workflowContext,
+      );
       createChildSpans(spanMarkers, span);
     });
   } else {
-    console.log("No events file found or empty");
+    core.info("No events file found");
   }
 
   span.end();
@@ -250,13 +303,12 @@ async function post(): Promise<void> {
       loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
     ]);
   } catch (flushErr) {
-    console.warn(
-      "Telemetry flush error (some data may be lost):",
-      flushErr instanceof Error ? flushErr.message : String(flushErr),
+    core.warning(
+      `Telemetry flush error (some data may be lost): ${flushErr instanceof Error ? flushErr.message : String(flushErr)}`,
     );
   }
 
-  console.log("Telemetry flushed");
+  core.info("Telemetry flushed");
 }
 
 // Process an individual event line
@@ -264,14 +316,14 @@ function processEventLine(
   line: EventLine,
   span: ReturnType<ReturnType<typeof trace.getTracer>["startSpan"]>,
   logger: ReturnType<ReturnType<typeof logs.getLoggerProvider>["getLogger"]>,
-  env: z.infer<typeof postEnvSchema>,
+  workflowContext: WorkflowContext,
 ): void {
   // Fix: Standard attributes should override custom ones (not vice versa)
   const attrs = {
     ...line.attributes,
-    "cicd.pipeline.repo": env.GITHUB_REPOSITORY,
-    "cicd.pipeline.run.id": env.GITHUB_RUN_ID,
-    "enduser.id": env.GITHUB_ACTOR,
+    "cicd.pipeline.repo": workflowContext.repository,
+    "cicd.pipeline.run.id": workflowContext.runId,
+    "enduser.id": workflowContext.actor,
   };
 
   if (line.exception) {
@@ -300,7 +352,7 @@ function processLinesAndGetMarkers(
   lines: string[],
   span: ReturnType<ReturnType<typeof trace.getTracer>["startSpan"]>,
   logger: ReturnType<ReturnType<typeof logs.getLoggerProvider>["getLogger"]>,
-  env: z.infer<typeof postEnvSchema>,
+  workflowContext: WorkflowContext,
 ): Record<string, SpanMarker[]> {
   const spanMarkers: Record<string, SpanMarker[]> = {};
 
@@ -323,7 +375,7 @@ function processLinesAndGetMarkers(
         current.start = new Date(line.startSpan);
       } else if (isSpanEndLine(line)) {
         if (!current.start) {
-          console.warn(
+          core.warning(
             `Orphaned endSpan for '${spanName}' at ${line.endSpan}: no matching startSpan.`,
           );
           current = { end: new Date(line.endSpan) };
@@ -337,11 +389,13 @@ function processLinesAndGetMarkers(
 
     // Handle event lines
     if (isEventLine(line)) {
-      processEventLine(line, span, logger, env);
+      processEventLine(line, span, logger, workflowContext);
     }
   }
 
   return spanMarkers;
 }
 
-post();
+void post().catch((err) => {
+  core.setFailed(err instanceof Error ? err.message : String(err));
+});
