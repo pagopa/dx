@@ -222,6 +222,9 @@ jobs:
             printf "%q\n" "$i" >> "$GITHUB_ENV"
           done
 
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
