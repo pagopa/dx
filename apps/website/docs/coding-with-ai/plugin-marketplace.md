@@ -32,6 +32,7 @@ content:
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
+    "standards@pagopa-dx": true,
     "typescript@pagopa-dx": true
   }
 }
@@ -108,6 +109,18 @@ collaboration conventions.
 | Name                 | Description                                                                                                                                                                    |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `backlog-refinement` | Interactively refines and updates Jira backlog items, collecting user input before applying changes. Analyzes the codebase to provide context-aware descriptions and metadata. |
+
+---
+
+### `standards@pagopa-dx`
+
+Provides guidance to keep technology choices aligned with PagoPA DX standards.
+
+**Skills**
+
+| Name               | Description                                                                                                                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `technology-radar` | Aligns chosen technologies with the PagoPA DX Technology Radar. Checks the radar status of cloud services, languages, frameworks, and other technologies before recommending them in code or documentation, and warns on deprecated or discouraged options. |
 
 ---
 
