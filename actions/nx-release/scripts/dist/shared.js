@@ -17418,15 +17418,12 @@ function createOctokit(options) {
   return new Octokit2({
     auth: token,
     log: {
-      debug: (...args) => console.debug(...args),
+      debug: () => void 0,
       error: (...args) => {
         if (shouldSuppressReleaseTag404Log(args)) return;
         console.error(...args);
       },
-      info: (...args) => {
-        if (shouldSuppressReleaseTag404Log(args)) return;
-        console.info(...args);
-      },
+      info: () => void 0,
       warn: (...args) => console.warn(...args)
     }
   });
