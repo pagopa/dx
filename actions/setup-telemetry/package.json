@@ -23,12 +23,12 @@
   ],
   "license": "UNLICENSED",
   "dependencies": {
-    "@azure/monitor-opentelemetry": "^1.14.0",
     "@opentelemetry/api": "catalog:opentelemetry",
     "@opentelemetry/api-logs": "catalog:opentelemetry",
     "@opentelemetry/sdk-metrics": "catalog:opentelemetry",
     "@opentelemetry/resources": "catalog:opentelemetry",
     "@opentelemetry/sdk-trace-base": "catalog:opentelemetry",
+    "@pagopa/azure-tracing": "workspace:^",
     "zod": "catalog:"
   },
   "devDependencies": {

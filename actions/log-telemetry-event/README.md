@@ -20,16 +20,15 @@ Must be invoked after `setup-telemetry` has exported `OTEL_EVENT_FILE`. If `OTEL
 
 | Name           | Required | Description                                                             |
 | -------------- | -------- | ----------------------------------------------------------------------- |
-| `name`         | yes      | Logical event name (for custom events or exception label)               |
+| `name`         | yes      | Logical event name                                                      |
 | `body`         | no       | Textual message/value (shown as body)                                   |
 | `is_exception` | no       | `true` marks this event as an exception (span status will be set ERROR) |
-| `span_name`    | no       | Child span name (hot path identifier)                                   |
 | `span_phase`   | no       | `start` or `end` to delimit a child span                                |
 
 Rules:
 
-- If `span_name` and `span_phase` are both set, a span marker line is written instead of an event line.
-- If they are absent, a standard event or exception line is written.
+- If `name` and `span_phase` are both set, a span marker line is written instead of an event line.
+- If `span_phase` is absent, a standard event or exception line is written.
 - `is_exception` is ignored on span marker lines.
 
 ## NDJSON Line Formats
@@ -77,7 +76,7 @@ The consumer will pair `startSpan`/`endSpan` with the same `span` name in order 
 - name: Start build span
   uses: pagopa/dx/actions/log-telemetry-event@<ref>
   with:
-    span_name: build
+    name: build
     span_phase: start
 
 # ... build steps ...
@@ -85,7 +84,7 @@ The consumer will pair `startSpan`/`endSpan` with the same `span` name in order 
 - name: End build span
   uses: pagopa/dx/actions/log-telemetry-event@<ref>
   with:
-    span_name: build
+    name: build
     span_phase: end
 ```
 
@@ -93,15 +92,15 @@ It is also possible to interleave multiple spans:
 
 ```yaml
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: compile, span_phase: start }
+  with: { name: compile, span_phase: start }
 
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: test, span_phase: start }
+  with: { name: test, span_phase: start }
 # ...
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: compile, span_phase: end }
+  with: { name: compile, span_phase: end }
 - uses: pagopa/dx/actions/log-telemetry-event@<ref>
-  with: { span_name: test, span_phase: end }
+  with: { name: test, span_phase: end }
 ```
 
 ## Error Handling

@@ -223,7 +223,7 @@ jobs:
           done
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@639fa5e800b2147e78bdc09a9df04e7060a82b0a
+        uses: pagopa/dx/actions/setup-telemetry@CES-1928-instrumentare-con-application-insights-la-pipeline-di-terraform-plan
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -277,11 +277,15 @@ jobs:
             echo "$(date)" > ./.pr_plan_marker
           fi
 
-      - name: Start build span
-        uses: pagopa/dx/actions/log-telemetry-event@639fa5e800b2147e78bdc09a9df04e7060a82b0a
-        with:
-          name: build
-          span_phase: start
+      # - name: Start build span
+      #   uses: pagopa/dx/actions/log-telemetry-event@CES-1928-instrumentare-con-application-insights-la-pipeline-di-terraform-plan
+      #   with:
+      #     name: build
+      #     span_phase: start
+
+      - name: Debug
+        run: |
+          cat .otel-session/events.ndjson
 
       - name: Terraform Plan
         id: plan
@@ -291,11 +295,11 @@ jobs:
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
 
-      - name: End build span
-        uses: pagopa/dx/actions/log-telemetry-event@639fa5e800b2147e78bdc09a9df04e7060a82b0a
-        with:
-          name: build
-          span_phase: end
+      # - name: End build span
+      #   uses: pagopa/dx/actions/log-telemetry-event@CES-1928-instrumentare-con-application-insights-la-pipeline-di-terraform-plan
+      #   with:
+      #     name: build
+      #     span_phase: end
 
       - name: Check Plan length
         id: check-length
