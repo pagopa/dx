@@ -703,7 +703,7 @@ function $constructor(name, initializer3, params) {
   Object.defineProperty(_, "name", { value: name });
   return _;
 }
-var $brand = Symbol("zod_brand");
+var $brand = /* @__PURE__ */ Symbol("zod_brand");
 var $ZodAsyncError = class extends Error {
   constructor() {
     super(`Encountered Promise during synchronous parse. Use .parseAsync() instead.`);
@@ -848,7 +848,7 @@ function floatSafeRemainder(val, step) {
   const stepInt = Number.parseInt(step.toFixed(decCount).replace(".", ""));
   return valInt % stepInt / 10 ** decCount;
 }
-var EVALUATING = Symbol("evaluating");
+var EVALUATING = /* @__PURE__ */ Symbol("evaluating");
 function defineLazy(object2, key, getter) {
   let value = void 0;
   Object.defineProperty(object2, key, {
@@ -9921,8 +9921,8 @@ function yo_default() {
 
 // ../../node_modules/.pnpm/zod@4.3.6/node_modules/zod/v4/core/registries.js
 var _a;
-var $output = Symbol("ZodOutput");
-var $input = Symbol("ZodInput");
+var $output = /* @__PURE__ */ Symbol("ZodOutput");
+var $input = /* @__PURE__ */ Symbol("ZodInput");
 var $ZodRegistry = class {
   constructor() {
     this._map = /* @__PURE__ */ new WeakMap();
@@ -17463,8 +17463,10 @@ function parseTagEntries(raw) {
 // scripts/sync-tags-releases.ts
 var execFileAsync2 = promisify(execFile);
 var OctokitErrorSchema = external_exports.object({
-  status: external_exports.number()
+  status: external_exports.number(),
+  url: external_exports.string().optional()
 });
+var ReleaseByTagNotFoundMessageSchema = external_exports.string().regex(/\/releases\/tags\/.+\s-\s404\b/);
 var PrDataSchema = external_exports.object({
   body: external_exports.string(),
   mergeCommit: external_exports.object({
@@ -17499,10 +17501,25 @@ async function releaseExists(octokit, owner, repo, tag) {
     return true;
   } catch (err) {
     const errorCheck = OctokitErrorSchema.safeParse(err);
+    if (errorCheck.success && errorCheck.data.status === 404 && errorCheck.data.url?.includes("/releases/tags/")) {
+      return false;
+    }
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
     }
-    console.warn(`Error checking release ${tag}:`, err);
+    if (err instanceof Error) {
+      const msgCheck = ReleaseByTagNotFoundMessageSchema.safeParse(err.message);
+      if (msgCheck.success) {
+        return false;
+      }
+    }
+    if (err instanceof Error) {
+      console.warn(
+        `Error checking release ${tag}: ${err.name}: ${err.message}`
+      );
+    } else {
+      console.warn(`Error checking release ${tag}:`, err);
+    }
     return false;
   }
 }

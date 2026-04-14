@@ -25,7 +25,12 @@ const execFileAsync = promisify(execFile);
 /** Zod schemas for runtime validation */
 const OctokitErrorSchema = z.object({
   status: z.number(),
+  url: z.string().optional(),
 });
+
+const ReleaseByTagNotFoundMessageSchema = z
+  .string()
+  .regex(/\/releases\/tags\/.+\s-\s404\b/);
 
 const PrDataSchema = z.object({
   body: z.string(),
@@ -83,11 +88,30 @@ export async function releaseExists(
   } catch (err: unknown) {
     // 404 means release doesn't exist
     const errorCheck = OctokitErrorSchema.safeParse(err);
+    if (
+      errorCheck.success &&
+      errorCheck.data.status === 404 &&
+      errorCheck.data.url?.includes("/releases/tags/")
+    ) {
+      return false;
+    }
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
     }
+    if (err instanceof Error) {
+      const msgCheck = ReleaseByTagNotFoundMessageSchema.safeParse(err.message);
+      if (msgCheck.success) {
+        return false;
+      }
+    }
     // Other errors should be logged but treated as "doesn't exist"
-    console.warn(`Error checking release ${tag}:`, err);
+    if (err instanceof Error) {
+      console.warn(
+        `Error checking release ${tag}: ${err.name}: ${err.message}`,
+      );
+    } else {
+      console.warn(`Error checking release ${tag}:`, err);
+    }
     return false;
   }
 }
