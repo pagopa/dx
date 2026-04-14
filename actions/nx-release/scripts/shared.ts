@@ -51,15 +51,12 @@ export function createOctokit(options?: CreateOctokitOptions): Octokit {
   return new Octokit({
     auth: token,
     log: {
-      debug: (...args: unknown[]) => console.debug(...args),
+      debug: () => undefined,
       error: (...args: unknown[]) => {
         if (shouldSuppressReleaseTag404Log(args)) return;
         console.error(...args);
       },
-      info: (...args: unknown[]) => {
-        if (shouldSuppressReleaseTag404Log(args)) return;
-        console.info(...args);
-      },
+      info: () => undefined,
       warn: (...args: unknown[]) => console.warn(...args),
     },
   });
