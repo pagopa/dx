@@ -14,7 +14,7 @@
 
 ## Project Structure
 
-- [ ] Target directory derived from DX documentation (`infra-folder-structure.md`) based on what the user is trying to do — only ask the user if the documentation does not clarify it
+- [ ] Target directory derived from DX documentation (`~/.dx/apps/website/docs/terraform/infra-folder-structure.md`) based on what the user is trying to do — only ask the user if the documentation does not clarify it
 - [ ] When 2+ related resources are created for a single service, they are wrapped in a local module under `_modules/<service>/`
   - [ ] The local module is instantiated from the env folder via `locals.tf` — no `variables.tf` in root env folders
   - [ ] Outputs needed by the caller are declared in `outputs.tf`
