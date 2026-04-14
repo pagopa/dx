@@ -17462,11 +17462,6 @@ function parseTagEntries(raw) {
 
 // scripts/sync-tags-releases.ts
 var execFileAsync2 = promisify(execFile);
-var OctokitErrorSchema = external_exports.object({
-  status: external_exports.number(),
-  url: external_exports.string().optional()
-});
-var ReleaseByTagNotFoundMessageSchema = external_exports.string().regex(/\/releases\/tags\/.+\s-\s404\b/);
 var PrDataSchema = external_exports.object({
   body: external_exports.string(),
   mergeCommit: external_exports.object({
@@ -17493,26 +17488,20 @@ async function extractChangelogSection(clPath, version2) {
 }
 async function releaseExists(octokit, owner, repo, tag) {
   try {
-    await octokit.repos.getReleaseByTag({
-      owner,
-      repo,
-      tag
-    });
-    return true;
-  } catch (err) {
-    const errorCheck = OctokitErrorSchema.safeParse(err);
-    if (errorCheck.success && errorCheck.data.status === 404 && errorCheck.data.url?.includes("/releases/tags/")) {
-      return false;
-    }
-    if (errorCheck.success && errorCheck.data.status === 404) {
-      return false;
-    }
-    if (err instanceof Error) {
-      const msgCheck = ReleaseByTagNotFoundMessageSchema.safeParse(err.message);
-      if (msgCheck.success) {
-        return false;
+    for await (const page of octokit.paginate.iterator(
+      octokit.repos.listReleases,
+      {
+        owner,
+        per_page: 100,
+        repo
+      }
+    )) {
+      if (page.data.some((release) => release.tag_name === tag)) {
+        return true;
       }
     }
+    return false;
+  } catch (err) {
     if (err instanceof Error) {
       console.warn(
         `Error checking release ${tag}: ${err.name}: ${err.message}`

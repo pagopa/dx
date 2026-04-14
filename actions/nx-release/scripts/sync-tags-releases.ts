@@ -23,14 +23,6 @@ import {
 const execFileAsync = promisify(execFile);
 
 /** Zod schemas for runtime validation */
-const OctokitErrorSchema = z.object({
-  status: z.number(),
-  url: z.string().optional(),
-});
-
-const ReleaseByTagNotFoundMessageSchema = z
-  .string()
-  .regex(/\/releases\/tags\/.+\s-\s404\b/);
 
 const PrDataSchema = z.object({
   body: z.string(),
@@ -79,32 +71,24 @@ export async function releaseExists(
   tag: string,
 ): Promise<boolean> {
   try {
-    await octokit.repos.getReleaseByTag({
-      owner,
-      repo,
-      tag,
-    });
-    return true;
-  } catch (err: unknown) {
-    // 404 means release doesn't exist
-    const errorCheck = OctokitErrorSchema.safeParse(err);
-    if (
-      errorCheck.success &&
-      errorCheck.data.status === 404 &&
-      errorCheck.data.url?.includes("/releases/tags/")
-    ) {
-      return false;
-    }
-    if (errorCheck.success && errorCheck.data.status === 404) {
-      return false;
-    }
-    if (err instanceof Error) {
-      const msgCheck = ReleaseByTagNotFoundMessageSchema.safeParse(err.message);
-      if (msgCheck.success) {
-        return false;
+    // Avoid getReleaseByTag because missing tags return 404 and Octokit logs those requests.
+    // listReleases returns 200 with an array, so "not found" is handled without noisy logs.
+    for await (const page of octokit.paginate.iterator(
+      octokit.repos.listReleases,
+      {
+        owner,
+        per_page: 100,
+        repo,
+      },
+    )) {
+      if (page.data.some((release) => release.tag_name === tag)) {
+        return true;
       }
     }
-    // Other errors should be logged but treated as "doesn't exist"
+
+    return false;
+  } catch (err: unknown) {
+    // Unexpected API errors should be logged but treated as "doesn't exist".
     if (err instanceof Error) {
       console.warn(
         `Error checking release ${tag}: ${err.name}: ${err.message}`,
