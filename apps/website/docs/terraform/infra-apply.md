@@ -35,15 +35,15 @@ environments.
 
 ## Input
 
-| Parameter                     | Description                                                                                      | Type    | Req | Default |
-| ----------------------------- | ------------------------------------------------------------------------------------------------ | ------- | --- | ------- |
-| `environment`                 | Environment where the resources will be deployed                                                 | string  | ✓   |         |
+| Parameter                     | Description                                                                                                                                       | Type    | Req | Default |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --- | ------- |
+| `environment`                 | Environment where the resources will be deployed                                                                                                  | string  | ✓   |         |
 | `base_path`                   | Base path that contains the environment folders. The workflow inspects `<base_path>/<environment>` and auto-detects flat or multi-project layouts | string  | ✓   |         |
-| `env_vars`                    | List of environment variables to set up, given in `env=value` format                             | string  |     |         |
-| `use_private_agent`           | Use a private agent to run the Terraform plan                                                    | boolean |     | `false` |
-| `override_github_environment` | Set a value if GitHub Environment name is different from the TF environment folder               | string  |     | `''`    |
-| `use_labels`                  | Use labels to start the right environment's GitHub runner                                        | boolean |     | `false` |
-| `override_labels`             | Needed for special cases where the environment alone is not sufficient as a distinguishing label | string  |     | `''`    |
+| `env_vars`                    | List of environment variables to set up, given in `env=value` format                                                                              | string  |     |         |
+| `use_private_agent`           | Use a private agent to run the Terraform plan                                                                                                     | boolean |     | `false` |
+| `override_github_environment` | Set a value if GitHub Environment name is different from the TF environment folder                                                                | string  |     | `''`    |
+| `use_labels`                  | Use labels to start the right environment's GitHub runner                                                                                         | boolean |     | `false` |
+| `override_labels`             | Needed for special cases where the environment alone is not sufficient as a distinguishing label                                                  | string  |     | `''`    |
 
 ## How it Works
 
@@ -51,9 +51,11 @@ The workflow executes the following steps:
 
 1. Determines the Terraform version to use from the `.terraform-version` file
 2. Detects the Terraform project roots inside `<base_path>/<environment>`
-3. Checks the validity of Terraform registry module locks for each detected project
+3. Checks the validity of Terraform registry module locks for each detected
+   project
 4. Configures the environment and Azure credentials
-5. Executes a Terraform plan for each detected project and stores the related bundle
+5. Executes a Terraform plan for each detected project and stores the related
+   bundle
 6. Downloads the matching plan bundle for each detected project
 7. Applies the previously generated Terraform plan
 
@@ -64,8 +66,8 @@ The workflow automatically detects which directories must be applied:
 - **Flat layout**: if `.tf` files exist directly in `<base_path>/<environment>`,
   that directory is treated as the single Terraform project root.
 - **Multi-project layout**: if there are no `.tf` files directly in the
-  environment directory, each first-level subdirectory containing changed
-  files is treated as an independent project root.
+  environment directory, each first-level subdirectory containing changed files
+  is treated as an independent project root.
 - **Shared modules changed**: if files under `<base_path>/_modules` change, the
   workflow applies all Terraform projects in the target environment.
 - **Manual runs**: when triggered with `workflow_dispatch`, the workflow scans
@@ -135,7 +137,7 @@ strategies across multiple cloud providers or subscriptions.
 The typical execution flow in a CI/CD process includes:
 
 1. **Pull Request**: the `infra_plan` workflow is triggered to verify the
-    proposed changes
+   proposed changes
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
