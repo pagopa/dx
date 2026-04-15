@@ -221,7 +221,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Plan
-        uses: pagopa/dx/actions/filter-terraform-plan@main
+        uses: pagopa/dx/actions/filter-terraform-plan@feat-remove-grep-hidden-link-from-infra-apply #main
         env:
           ADDITIONAL_FLAGS: -target resource.azurerm_resource_group.test -out=${{ env.TFPLAN_FILE }}
         with:
