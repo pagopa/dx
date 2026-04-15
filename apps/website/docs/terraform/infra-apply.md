@@ -63,11 +63,16 @@ The workflow executes the following steps:
 
 The workflow automatically detects which directories must be applied:
 
-- **Flat layout**: if `.tf` files exist directly in `<base_path>/<environment>`,
-  that directory is treated as the single Terraform project root.
-- **Multi-project layout**: if there are no `.tf` files directly in the
+- **Flat layout**: if Terraform files exist directly in
+  `<base_path>/<environment>`, that directory is treated as the single Terraform
+  project root. This detection applies when:
+  - `workflow_dispatch` is triggered (full directory scan)
+  - Shared modules change (full environment scan)
+- **Multi-project layout**: if there are no Terraform files directly in the
+
   environment directory, each first-level subdirectory containing changed files
   is treated as an independent project root.
+
 - **Shared modules changed**: if files under `<base_path>/_modules` change, the
   workflow applies all Terraform projects in the target environment.
 - **Manual runs**: when triggered with `workflow_dispatch`, the workflow scans
