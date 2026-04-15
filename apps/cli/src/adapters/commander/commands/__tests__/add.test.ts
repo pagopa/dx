@@ -12,7 +12,6 @@ import {
   AuthorizationError,
   AuthorizationResult,
   AuthorizationService,
-  IdentityAlreadyExistsError,
 } from "../../../../domain/authorization.js";
 import { authorizeCloudAccounts } from "../add.js";
 
@@ -195,7 +194,7 @@ describe("authorizeCloudAccounts", () => {
     expect(prs[0]).toEqual(expectedPr);
   });
 
-  it("handles IdentityAlreadyExistsError gracefully", async () => {
+  it("returns empty array when authorization is a no-op (nothing changed)", async () => {
     const authService = mock<AuthorizationService>();
     const account = {
       csp: "azure" as const,
@@ -204,8 +203,9 @@ describe("authorizeCloudAccounts", () => {
       id: "sub-exists",
     };
 
+    // No-op result: Ok with no URL (identity + groups already configured)
     authService.requestAuthorization.mockReturnValue(
-      errAsync(new IdentityAlreadyExistsError("dx-d-itn-bootstrap-id-01")),
+      okAsync(new AuthorizationResult()),
     );
 
     const envPayload = makeEnvPayload({
@@ -215,6 +215,9 @@ describe("authorizeCloudAccounts", () => {
     const result = await authorizeCloudAccounts(authService)(envPayload);
 
     expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toEqual([]);
+    // The no-op result is still collected but has no URL
+    const prs = result._unsafeUnwrap();
+    expect(prs).toHaveLength(1);
+    expect(prs[0].url).toBeUndefined();
   });
 });

@@ -164,19 +164,10 @@ export class AuthorizationError extends Error {
 
 /**
  * Result returned by a successful authorization request.
+ * When url is undefined, the workflow was a no-op (nothing changed, no PR created).
  */
 export class AuthorizationResult {
-  constructor(public readonly url: string) {}
-}
-
-/**
- * Error thrown when attempting to add an identity that already exists.
- */
-export class IdentityAlreadyExistsError extends AuthorizationError {
-  constructor(identityId: string) {
-    super(`Identity "${identityId}" already exists`);
-    this.name = "IdentityAlreadyExistsError";
-  }
+  constructor(public readonly url?: string) {}
 }
 
 /**

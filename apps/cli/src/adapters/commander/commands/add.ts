@@ -108,9 +108,12 @@ const displaySummary = (result: AddResult) => {
 
   let step = 1;
   console.log(chalk.green.bold("\nNext Steps:"));
-  if (authorizationPrs.length > 0) {
+  const prsWithUrl = authorizationPrs.filter(
+    (pr): pr is AuthorizationResult & { url: string } => pr.url != null,
+  );
+  if (prsWithUrl.length > 0) {
     console.log(`${step++}. Review the Azure authorization Pull Request(s):`);
-    for (const authPr of authorizationPrs) {
+    for (const authPr of prsWithUrl) {
       console.log(`   - ${chalk.underline(authPr.url)}`);
     }
   }
