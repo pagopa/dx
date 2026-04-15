@@ -17405,14 +17405,16 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 var ProjectMetadataSchema = external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  {
+    return new Octokit2({ auth: token });
+  }
 }
 function extractTagEntriesFromPRBody(prBody) {
   const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);

@@ -17405,14 +17405,25 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 external_exports.record(external_exports.string(), external_exports.unknown());
-function createOctokit() {
+function createOctokit(options) {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
     throw new Error(
       "GITHUB_TOKEN environment variable is required but not set"
     );
   }
-  return new Octokit2({ auth: token });
+  return new Octokit2({
+    auth: token,
+    log: {
+      debug: () => void 0,
+      error: (...args) => {
+        if (shouldSuppressReleaseTag404Log(args)) return;
+        console.error(...args);
+      },
+      info: () => void 0,
+      warn: (...args) => console.warn(...args)
+    }
+  });
 }
 function extractTagEntriesFromPRBody(prBody) {
   const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
@@ -17458,6 +17469,13 @@ function parseTagEntries(raw) {
     return [];
   }
   return result.data;
+}
+function shouldSuppressReleaseTag404Log(args) {
+  if (args.length === 0 || typeof args[0] !== "string") {
+    return false;
+  }
+  const firstArg = args[0];
+  return firstArg.includes("/releases/tags/") && firstArg.includes(" - 404 ") && firstArg.startsWith("GET ");
 }
 
 // scripts/sync-tags-releases.ts
