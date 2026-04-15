@@ -106,7 +106,6 @@ const azureAccountSchema = z.object({
 
 const ensureAzLogin = async (): Promise<string> => {
   const { stdout } = await tf$`az account show`;
-  await tf$`az group list`;
   const parsed = JSON.parse(stdout);
   const { user } = azureAccountSchema.parse(parsed);
   return user.name;
