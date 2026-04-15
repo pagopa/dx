@@ -106,6 +106,9 @@ const azureAccountSchema = z.object({
 
 const ensureAzLogin = async (): Promise<string> => {
   const { stdout } = await tf$`az account show`;
+  // `az account show` reads the cached CLI context, but `az group list`
+  // fails when the current session token has expired.
+  await tf$`az group list`;
   const parsed = JSON.parse(stdout);
   const { user } = azureAccountSchema.parse(parsed);
   return user.name;
