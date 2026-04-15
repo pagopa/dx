@@ -60,6 +60,7 @@ The workflow executes the following steps:
 ## Project detection rules
 
 The workflow automatically detects which directories must be planned:
+
 - **Pull requests / change-driven runs**: project roots are derived from the
   changed file list. If files change directly under `<base_path>/<environment>`,
   the environment directory is treated as the Terraform project root. Otherwise,
