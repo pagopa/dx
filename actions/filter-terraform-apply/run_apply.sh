@@ -12,7 +12,7 @@ usage() {
   echo "Options / Environment Variables:"
   echo "  --plan-file           (Var: PLAN_FILE) The terraform plan file to apply. (Required)"
   echo "  --sensitive-keys      (Var: SENSITIVE_KEYS) A comma-separated list of sensitive keys. (Required)"
-  echo "  --test                Optional flag for testing (only sed commands will be executed)."
+  echo "  --test                Optional flag for testing (only output filtering will be executed)."
   echo "  -h, --help            Show this help message."
   exit 1
 }
@@ -49,35 +49,49 @@ if [[ -z "${PLAN_FILE:-}" || -z "${SENSITIVE_KEYS:-}" ]]; then
   usage
 fi
 
-SED_EXPRESSIONS=()
+mask_output() {
+  SENSITIVE_KEYS="$SENSITIVE_KEYS" perl -ne '
+    BEGIN {
+      $| = 1;
+      @keys = grep { length } map { s/^\s+|\s+$//gr } split /,/, ($ENV{SENSITIVE_KEYS} // q{});
+    }
 
-for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
-  trimmed_key=$(echo "$key" | xargs)
-  if [[ -n "$trimmed_key" ]]; then
-    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}[^\"]*\"?\s*=\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
-  fi
-done
+    for my $key (@keys) {
+      s/("?\Q$key\E[^"]*"?\s*=\s*)"[^"]*"/$1"[REDACTED]"/ig;
+    }
 
-SED_EXPRESSIONS+=(
-  -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[REDACTED]/gI"
-  -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
-)
+    s/-----BEGIN\s+.*?-----.*?-----END\s+.*?-----/[REDACTED]/ig;
+    s/("?[^"\s]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)"?\s*[:=]\s*)"([^"]{12,})"/$1"[REDACTED]"/ig;
+
+    print;
+  '
+}
 
 echo "--- Executing Apply ---"
 
 set +e
 
 if [[ "$MODE" == "test" ]]; then
-  sed -E "${SED_EXPRESSIONS[@]}"
+  mask_output
   exit 0
 fi
 
-terraform apply \
-  -lock-timeout=120s \
-  # -auto-approve \
-  -input=false \
-  "$PLAN_FILE" 2>&1 | \
-  sed -E "${SED_EXPRESSIONS[@]}"
+# Applying a saved plan file is already non-interactive in CI.
+if command -v stdbuf >/dev/null 2>&1; then
+  stdbuf -oL -eL terraform apply \
+    -lock-timeout=120s \
+    -auto-approve \
+    -input=false \
+    "$PLAN_FILE" 2>&1 | \
+    mask_output
+else
+  terraform apply \
+    -lock-timeout=120s \
+    -auto-approve \
+    -input=false \
+    "$PLAN_FILE" 2>&1 | \
+    mask_output
+fi
 
 APPLY_EXIT_CODE=${PIPESTATUS[0]}
 MASK_EXIT_CODE=${PIPESTATUS[1]}

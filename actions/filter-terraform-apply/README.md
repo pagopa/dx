@@ -30,3 +30,7 @@ need live apply logs without leaking secrets.
 
 The output is streamed in realtime while masking the same sensitive patterns
 handled by the Terraform plan filtering logic.
+
+When a saved Terraform plan file is passed, `terraform apply` is already
+non-interactive. Removing `-auto-approve` does not turn this action into a
+safe dry run: the saved plan is still applied.
