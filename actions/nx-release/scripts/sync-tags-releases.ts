@@ -67,6 +67,10 @@ export async function extractChangelogSection(
   }
 }
 
+const suppressed404Pattern = new RegExp(
+  `GET /repos/[^\\s]+/[^\\s]+/releases/tags/[^\\s]+ - 404\\b`,
+);
+
 export async function releaseExists(
   octokit: Octokit,
   owner: string,
@@ -74,9 +78,6 @@ export async function releaseExists(
   tag: string,
 ): Promise<boolean> {
   try {
-    const suppressed404Pattern = new RegExp(
-      `GET /repos/[^\\s]+/[^\\s]+/releases/tags/[^\\s]+ - 404\\b`,
-    );
     await octokit.repos.getReleaseByTag({
       owner,
       repo,
@@ -109,7 +110,7 @@ export async function releaseExists(
 }
 
 export async function run(base: string): Promise<void> {
-  const octokit = createOctokit({ suppressReleaseTag404Logs: true });
+  const octokit = createOctokit();
   const { owner, repo } = await getRepoInfo();
 
   // List merged PRs from nx-release/main branch
