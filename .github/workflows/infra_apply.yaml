@@ -345,12 +345,8 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Apply
-        working-directory: ${{ matrix.dir }}
-        run: |
-          set -o pipefail
-          terraform apply \
-            -lock-timeout=120s \
-            -auto-approve \
-            -input=false \
-            "$TFPLAN_FILE" \
-            | grep -v "hidden-link:"
+        uses: pagopa/dx/actions/filter-terraform-apply@feat-remove-grep-hidden-link-from-infra-apply #main
+        with:
+          base-path: ${{ matrix.dir }}
+          plan-file: ${{ env.TFPLAN_FILE }}
+          sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
