@@ -60,31 +60,35 @@ The workflow executes the following steps:
 ## Project detection rules
 
 The workflow automatically detects which directories must be planned:
-
-- **Flat layout**: if `.tf` files exist directly in `<base_path>/<environment>`,
-  that directory is treated as the single Terraform project root.
-- **Multi-project layout**: if there are no `.tf` files directly in the
-  environment directory, each first-level subdirectory containing changed files
-  is treated as an independent project root.
+- **Pull requests / change-driven runs**: project roots are derived from the
+  changed file list. If files change directly under `<base_path>/<environment>`,
+  the environment directory is treated as the Terraform project root. Otherwise,
+  each first-level subdirectory containing changed files is treated as an
+  independent project root.
 - **Shared modules changed**: if files under `<base_path>/_modules` change, the
-  workflow plans all Terraform projects in the target environment.
+  workflow scans the target environment and plans all detected Terraform
+  projects.
 - **Manual runs**: when triggered with `workflow_dispatch`, the workflow scans
   the whole environment and plans all detected projects.
+
+Because pull request detection is based on changed files rather than a full
+directory scan, a flat layout is only detected automatically when the changed
+files include paths directly under `<base_path>/<environment>`.
 
 If no Terraform project is detected, the plan jobs are skipped.
 
 ## Supported layouts
 
 ```text
-# Flat layout
-infra/resources/dev/
+<base_path>/<environment>/
   main.tf
   variables.tf
   outputs.tf
 
 # Multi-project layout
-infra/resources/dev/networking/
+<base_path>/<environment>/networking/
   main.tf
+<base_path>/<environment>/data/
 infra/resources/dev/data/
   main.tf
 ```
