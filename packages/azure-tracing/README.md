@@ -43,10 +43,16 @@ For more background on this workaround, see:
 
 In order to enable tracing, you also need to set the following environment variables:
 
-| **Name**                                  | **Required** | **Default** |
-| ----------------------------------------- | ------------ | ----------- |
-| **APPINSIGHTS_SAMPLING_PERCENTAGE**       | false        | 5           |
-| **APPLICATIONINSIGHTS_CONNECTION_STRING** | true         | -           |
+| **Name**                                      | **Required** | **Default** |
+| --------------------------------------------- | ------------ | ----------- |
+| **APPINSIGHTS_SAMPLING_PERCENTAGE**           | false        | 5           |
+| **APPLICATIONINSIGHTS_CONNECTION_STRING**     | true         | -           |
+| **APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED** | false        | false       |
+
+> [!WARNING]
+> Connection-string-only authentication (the current default) is **deprecated** and will be removed in the next major version.
+> Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to adopt Microsoft Entra ID authentication now.
+> See [Microsoft Entra ID Authentication](#microsoft-entra-id-authentication) for details.
 
 #### Step 2: Register Azure Function Lifecycle Hooks
 
@@ -118,6 +124,24 @@ emitCustomEvent("taskCreated", { id: task.id })("CreateTaskHandler");
 ```
 
 This is especially useful for tracing domain-specific actions (e.g., resource creation, user actions, error tracking).
+
+## Microsoft Entra ID Authentication
+
+> [!IMPORTANT]
+> Microsoft Entra ID authentication is the **recommended** and more secure way to connect to Application Insights.
+> Connection-string-only authentication is deprecated and will be removed in the **next major release**.
+
+Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to enable [Microsoft Entra ID authentication](https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication).
+The package uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/credential-chains#use-defaultazurecredential-for-flexibility) from `@azure/identity`, which automatically resolves the right credential for the environment:
+
+- **Azure (production)**: uses the Managed Identity assigned to the resource (App Service, Azure Function, Container App, etc.)
+- **Local development**: falls back to Azure CLI, Azure Developer CLI, or service principal env vars
+
+The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource.
+
+### Required Azure RBAC role
+
+The managed identity (or other principal) must have the **Monitoring Metrics Publisher** role on the Application Insights resource.
 
 ## Dependency Constraints
 
