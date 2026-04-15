@@ -16,7 +16,6 @@ import {
   AuthorizationResult,
   AuthorizationService,
   DEFAULT_GROUP_SPECS,
-  IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
   makeGroupName,
   RequestAuthorizationInput,
@@ -62,12 +61,16 @@ const rolesAreEqual = (
  * - Missing default groups are added with empty members.
  * - Existing groups with wrong roles have their roles updated; members are preserved.
  * - Custom (non-default) groups are preserved unchanged.
+ * Returns the updated JSON along with a flag indicating whether anything changed.
  */
 const upsertGroups = (
   jsonContent: z.infer<typeof authorizationFileSchema>,
   prefix: string,
   envShort: string,
-): z.infer<typeof authorizationFileSchema> => {
+): {
+  groupsChanged: boolean;
+  json: z.infer<typeof authorizationFileSchema>;
+} => {
   type GroupEntry = { members: string[]; name: string; roles: string[] };
 
   const expectedGroups: GroupEntry[] = DEFAULT_GROUP_SPECS.map((spec) => ({
@@ -83,6 +86,7 @@ const upsertGroups = (
   const processedNames = new Set<string>();
 
   const finalGroups: GroupEntry[] = [];
+  let groupsChanged = false;
 
   for (const expected of expectedGroups) {
     const existing = existingByName.get(expected.name);
@@ -91,6 +95,7 @@ const upsertGroups = (
     if (!existing) {
       // Group is missing — add it with default roles and no members
       finalGroups.push(expected);
+      groupsChanged = true;
     } else if (!rolesAreEqual(existing.roles, expected.roles)) {
       // Roles differ — update roles, preserve members
       finalGroups.push({
@@ -98,6 +103,7 @@ const upsertGroups = (
         name: expected.name,
         roles: [...expected.roles],
       });
+      groupsChanged = true;
     } else {
       // Already correct — keep as-is
       finalGroups.push({ ...existing });
@@ -111,12 +117,14 @@ const upsertGroups = (
     }
   }
 
-  return { ...jsonContent, groups: finalGroups };
+  return { groupsChanged, json: { ...jsonContent, groups: finalGroups } };
 };
 
-const addIdentity = (
+/**
+ * Parses and validates the authorization file content (JSON parsing + schema validation).
+ */
+const parseAuthorizationFile = (
   content: string,
-  identityId: string,
 ): Result<z.infer<typeof authorizationFileSchema>, AuthorizationError> => {
   let parsed;
   try {
@@ -136,24 +144,40 @@ const addIdentity = (
     );
   }
 
-  const jsonContent = result.data;
+  return ok(result.data);
+};
 
+/**
+ * Ensures the given identity is present in the service_principals_name list.
+ * Returns the (possibly updated) JSON and whether the identity was newly added.
+ * Never fails: if the identity already exists it is a no-op with identityAdded = false.
+ */
+const ensureIdentity = (
+  jsonContent: z.infer<typeof authorizationFileSchema>,
+  identityId: string,
+): {
+  identityAdded: boolean;
+  json: z.infer<typeof authorizationFileSchema>;
+} => {
   if (
     jsonContent.directory_readers.service_principals_name.includes(identityId)
   ) {
-    return err(new IdentityAlreadyExistsError(identityId));
+    return { identityAdded: false, json: jsonContent };
   }
 
-  return ok({
-    ...jsonContent,
-    directory_readers: {
-      ...jsonContent.directory_readers,
-      service_principals_name: [
-        ...jsonContent.directory_readers.service_principals_name,
-        identityId,
-      ],
+  return {
+    identityAdded: true,
+    json: {
+      ...jsonContent,
+      directory_readers: {
+        ...jsonContent.directory_readers,
+        service_principals_name: [
+          ...jsonContent.directory_readers.service_principals_name,
+          identityId,
+        ],
+      },
     },
-  });
+  };
 };
 
 const REPO_OWNER = "pagopa";
@@ -212,38 +236,47 @@ export const makeAuthorizationService = (
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Step 3: Add identity and upsert AD groups
-        .andThen(({ content, sha }) =>
-          addIdentity(content, bootstrapIdentityId)
-            .map((withIdentity) => upsertGroups(withIdentity, prefix, envShort))
-            .mapErr((error) => {
-              if (error instanceof IdentityAlreadyExistsError) {
-                logger.warn("Identity already exists", {
-                  identityId: bootstrapIdentityId,
-                  subscription: subscriptionName,
-                });
-              } else {
-                logger.error("Failed to modify tfvars", {
-                  error: error.message,
-                });
-              }
-              return error;
-            })
-            .match(
-              (updatedJson) =>
-                okAsync({
-                  sha,
-                  updatedContent: JSON.stringify(updatedJson, null, 2),
-                }),
-              (error) => errAsync(error),
-            ),
-        )
-        // Update the file on the new branch
-        .andThen(({ sha, updatedContent }) =>
-          ResultAsync.fromPromise(
+        // Step 3: Parse file, ensure identity is present, upsert AD groups.
+        // If nothing changed, short-circuit and skip the file update and PR creation.
+        .andThen(({ content, sha }) => {
+          const parseResult = parseAuthorizationFile(content);
+          if (parseResult.isErr()) {
+            logger.error("Failed to modify tfvars", {
+              error: parseResult.error.message,
+            });
+            return errAsync(parseResult.error);
+          }
+          const parsed = parseResult.value;
+
+          const { json: withIdentity, identityAdded } = ensureIdentity(
+            parsed,
+            bootstrapIdentityId,
+          );
+          if (!identityAdded) {
+            logger.warn("Identity already exists, checking groups", {
+              identityId: bootstrapIdentityId,
+              subscription: subscriptionName,
+            });
+          }
+
+          const { json: updatedJson, groupsChanged } = upsertGroups(
+            withIdentity,
+            prefix,
+            envShort,
+          );
+
+          if (!identityAdded && !groupsChanged) {
+            // Nothing to do — identity was already present and all groups are correct.
+            logger.info("No changes needed, skipping PR", {
+              subscription: subscriptionName,
+            });
+            return okAsync(new AuthorizationResult());
+          }
+
+          return ResultAsync.fromPromise(
             gitHubService.updateFile({
               branch: branchName,
-              content: updatedContent,
+              content: JSON.stringify(updatedJson, null, 2),
               message: `Add bootstrap identity and AD groups for ${subscriptionName}`,
               owner: REPO_OWNER,
               path: filePath,
@@ -254,32 +287,31 @@ export const makeAuthorizationService = (
               new AuthorizationError(
                 `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
               ),
-          ),
-        )
-        .orTee((error) => {
-          logger.error(error.message);
-        })
-        // Create a pull request for review
-        .andThen(() =>
-          ResultAsync.fromPromise(
-            gitHubService.createPullRequest({
-              base: BASE_BRANCH,
-              body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
-              head: branchName,
-              owner: REPO_OWNER,
-              repo: REPO_NAME,
-              title: `Add bootstrap identity and AD groups for ${subscriptionName}`,
-            }),
-            () =>
-              new AuthorizationError(
-                `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
+          )
+            .orTee((error) => {
+              logger.error(error.message);
+            })
+            .andThen(() =>
+              ResultAsync.fromPromise(
+                gitHubService.createPullRequest({
+                  base: BASE_BRANCH,
+                  body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
+                  head: branchName,
+                  owner: REPO_OWNER,
+                  repo: REPO_NAME,
+                  title: `Add bootstrap identity and AD groups for ${subscriptionName}`,
+                }),
+                () =>
+                  new AuthorizationError(
+                    `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
+                  ),
               ),
-          ),
-        )
-        .orTee((error) => {
-          logger.error(error.message);
+            )
+            .orTee((error) => {
+              logger.error(error.message);
+            })
+            .map((pr) => new AuthorizationResult(pr.url));
         })
-        .map((pr) => new AuthorizationResult(pr.url))
     );
   },
 });

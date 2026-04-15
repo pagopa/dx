@@ -10,7 +10,6 @@ import {
   AuthorizationError,
   AuthorizationResult,
   AuthorizationService,
-  IdentityAlreadyExistsError,
   RequestAuthorizationInput,
   requestAuthorizationInputSchema,
 } from "../../domain/authorization.js";
@@ -53,15 +52,13 @@ describe("requestAuthorization", () => {
     const input = makeSampleInput();
 
     authorizationService.requestAuthorization.mockReturnValue(
-      errAsync(new IdentityAlreadyExistsError("test-bootstrap-identity-id")),
+      errAsync(new AuthorizationError("Unable to update file")),
     );
 
     const result = await requestAuthorization(authorizationService)(input);
 
     expect(result.isErr()).toBe(true);
-    expect(result._unsafeUnwrapErr()).toBeInstanceOf(
-      IdentityAlreadyExistsError,
-    );
+    expect(result._unsafeUnwrapErr()).toBeInstanceOf(AuthorizationError);
   });
 
   it("should propagate generic authorization errors", async () => {

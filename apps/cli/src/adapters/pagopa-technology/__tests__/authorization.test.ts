@@ -8,7 +8,6 @@ import { mock } from "vitest-mock-extended";
 import {
   AuthorizationResult,
   DEFAULT_GROUP_SPECS,
-  IdentityAlreadyExistsError,
   InvalidAuthorizationFileFormatError,
   makeGroupName,
   RequestAuthorizationInput,
@@ -398,9 +397,10 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
-    it("should return error when identity already exists", async () => {
+    it("should upsert groups and create PR when identity already exists", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
+      // Identity already present, no groups yet
       const content = JSON.stringify(
         {
           directory_readers: {
@@ -416,15 +416,127 @@ describe("PagoPA AuthorizationService", () => {
         content,
         sha: "sha-123",
       });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/55",
+        ),
+      );
 
       const result = await authorizationService.requestAuthorization(input);
 
-      expect(result.isErr()).toBe(true);
-      expect(result._unsafeUnwrapErr()).toBeInstanceOf(
-        IdentityAlreadyExistsError,
+      expect(result.isOk()).toBe(true);
+      const authResult = result._unsafeUnwrap();
+      expect(authResult.url).toBe(
+        "https://github.com/pagopa/eng-azure-authorization/pull/55",
       );
 
+      // Identity must NOT be duplicated
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(
+        updatedParsed.directory_readers.service_principals_name,
+      ).toHaveLength(1);
+      expect(
+        updatedParsed.directory_readers.service_principals_name,
+      ).toContain("test-bootstrap-identity-id");
+
+      // All default groups must be created
+      expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
+    });
+
+    it("should skip update and PR when identity exists and groups are already correct", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+
+      // Build a file where the identity is present and all groups are already correct
+      const allGroups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-bootstrap-identity-id"],
+          },
+          groups: allGroups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content,
+        sha: "sha-noop",
+      });
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      // Should succeed as a no-op (no PR created)
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBeUndefined();
+
+      // File and PR must not be touched
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
+      expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
+    });
+
+    it("should update group roles and create PR when identity exists with wrong roles", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+
+      // Identity present, but externals group has wrong roles
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-bootstrap-identity-id"],
+          },
+          groups: [
+            {
+              members: ["bob@pagopa.it"],
+              name: "test-d-adgroup-externals",
+              roles: ["Reader"],
+            },
+          ],
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content,
+        sha: "sha-roles",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/56",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBe(
+        "https://github.com/pagopa/eng-azure-authorization/pull/56",
+      );
+
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+
+      const externalsGroup = updatedParsed.groups.find(
+        (g: { name: string }) => g.name === "test-d-adgroup-externals",
+      );
+      expect(externalsGroup.roles).toEqual(["Owner"]);
+      // Member preserved
+      expect(externalsGroup.members).toContain("bob@pagopa.it");
+      // Identity not duplicated
+      expect(
+        updatedParsed.directory_readers.service_principals_name,
+      ).toHaveLength(1);
     });
 
     it("should return error when file content is not valid JSON", async () => {
