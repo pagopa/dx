@@ -98,7 +98,6 @@ export async function releaseExists(
     });
     return true;
   } catch (err: unknown) {
-    // 404 means release doesn't exist
     const errorCheck = OctokitErrorSchema.safeParse(err);
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
@@ -110,7 +109,7 @@ export async function releaseExists(
 }
 
 export async function run(base: string): Promise<void> {
-  const octokit = createOctokit();
+  const octokit = createOctokit({ suppressReleaseTag404Logs: true });
   const { owner, repo } = await getRepoInfo();
 
   // List merged PRs from nx-release/main branch
