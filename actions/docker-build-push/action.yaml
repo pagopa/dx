@@ -61,7 +61,7 @@ runs:
   using: composite
   steps:
     - name: Setup Docker buildx
-      uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+      uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
 
     - name: Set up registry
       id: set-up-registry
@@ -83,7 +83,7 @@ runs:
 
     - name: Log in to the Container registry
       id: login-github
-      uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
       if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'ghcr' }}
       with:
         registry: ghcr.io
@@ -93,7 +93,7 @@ runs:
     - name: Log in to Amazon ECR
       id: login-ecr
       if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'ecr' }}
-      uses: aws-actions/amazon-ecr-login@062b18b96a7aff071d4dc91bc00c4c1a7945b076 # v2.0.1
+      uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # v2.1.2
 
     - name: Set Registry URL
       id: set-registry-url
@@ -142,7 +142,7 @@ runs:
 
     - name: Docker Meta
       id: meta
-      uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+      uses: docker/metadata-action@030e881283bb7a6894de51c315a6bfe6a94e05cf # v6.0.0
       env:
         IMAGE_NAME: ${{ inputs.docker_image_name }}
         DESCRIPTION: "${{ inputs.docker_image_description }}"
@@ -166,9 +166,11 @@ runs:
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
+        flavor: |
+          latest=false
 
     - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
-      uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+      uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
       id: push_registry
       env:
         DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
@@ -194,7 +196,7 @@ runs:
     # to verify the provenance of the image through
     # e.g. gh attestation verify oci://<img-uri> --owner org
     - name: Generate Artifact Attestation
-      uses: actions/attest-build-provenance@db473fddc028af60658334401dc6fa3ffd8669fd # v2.3.0
+      uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
       if: ${{ inputs.push_to_registry == 'true' && steps.set-up-registry.outputs.choice == 'ghcr' }}
       with:
         subject-name: ${{ steps.set-registry-url.outputs.image_uri }}
