@@ -8,7 +8,7 @@ This Terraform module deploys an Azure Container App Environment along with nece
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
 
-![diagram](diagram.svg)
+![diagram](https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/modules/azure_container_app_environment/diagram.svg)
 
 ## Features
 
