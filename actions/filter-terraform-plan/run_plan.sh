@@ -72,6 +72,7 @@ for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
   if [[ -n "$trimmed_key" ]]; then
     # Matches an optional-quoted key followed by =, then a quoted value;
     # it captures the left side, check if contain the sensitive key and replaces the value with "[REDACTED]" (case-insensitive).
+    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}[^\"]*\"?\s*=\s*)\"[^\"]*\"(\s*->\s*)\"[^\"]*\"/\\1\"[REDACTED]\"\\2\"[REDACTED]\"/I")
     SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}[^\"]*\"?\s*=\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
   fi
 done
@@ -83,6 +84,7 @@ SED_EXPRESSIONS+=(
 
   # Named secret/key assignments: only redact when the left-hand side is a known secret name
   # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
+  -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"(\s*->\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"\\5\"[REDACTED]\"/I"
   -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
 )
 

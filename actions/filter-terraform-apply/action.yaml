@@ -1,5 +1,5 @@
 name: "Run and Filter Terraform Apply"
-description: "Executes terraform apply and masks sensitive information from the realtime output."
+description: "Executes terraform apply and masks sensitive information from the output."
 
 inputs:
   base-path:

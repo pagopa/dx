@@ -11,6 +11,7 @@ hiddden-link = "http://non_sensitive_test.link"
 hidden-link: /app-insights-conn-string         = "[REDACTED]"
 hidden-link: /app-insights-instrumentation-key = "[REDACTED]"
 hidden-link: /app-insights-resource-id         = "[REDACTED]"
+hidden-link: /changed-resource-id              = "[REDACTED]" -> "[REDACTED]"
 
 test-sensible-key       = "[REDACTED]"
 test-super-sensible-key = "test"
