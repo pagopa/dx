@@ -248,7 +248,7 @@ export const makeAuthorizationService = (
           }
           const parsed = parseResult.value;
 
-          const { json: withIdentity, identityAdded } = ensureIdentity(
+          const { identityAdded, json: withIdentity } = ensureIdentity(
             parsed,
             bootstrapIdentityId,
           );
@@ -259,7 +259,7 @@ export const makeAuthorizationService = (
             });
           }
 
-          const { json: updatedJson, groupsChanged } = upsertGroups(
+          const { groupsChanged, json: updatedJson } = upsertGroups(
             withIdentity,
             prefix,
             envShort,

@@ -377,6 +377,7 @@ describe("PagoPA AuthorizationService", () => {
     });
   });
 
+  // eslint-disable-next-line max-lines-per-function
   describe("error handling", () => {
     it("should return error when file is not found", async () => {
       const { authorizationService, gitHubService } = makeEnv();
@@ -437,9 +438,9 @@ describe("PagoPA AuthorizationService", () => {
       expect(
         updatedParsed.directory_readers.service_principals_name,
       ).toHaveLength(1);
-      expect(
-        updatedParsed.directory_readers.service_principals_name,
-      ).toContain("test-bootstrap-identity-id");
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-identity-id",
+      );
 
       // All default groups must be created
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
