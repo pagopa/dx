@@ -74,14 +74,30 @@ export async function releaseExists(
   tag: string,
 ): Promise<boolean> {
   try {
+    const suppressed404Pattern = new RegExp(
+      `GET /repos/[^\\s]+/[^\\s]+/releases/tags/[^\\s]+ - 404\\b`,
+    );
     await octokit.repos.getReleaseByTag({
       owner,
       repo,
+      request: {
+        // Suppress noisy 404 logs from Octokit when release doesn't exist
+        log: {
+          error: (...args: unknown[]) => {
+            const message = args.join(" ");
+            if (suppressed404Pattern.test(message)) {
+              // Suppress this specific 404 error
+              return;
+            }
+            // Log other errors normally
+            console.error(...args);
+          },
+        },
+      },
       tag,
     });
     return true;
   } catch (err: unknown) {
-    // 404 means release doesn't exist
     const errorCheck = OctokitErrorSchema.safeParse(err);
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;
@@ -93,7 +109,7 @@ export async function releaseExists(
 }
 
 export async function run(base: string): Promise<void> {
-  const octokit = createOctokit();
+  const octokit = createOctokit({ suppressReleaseTag404Logs: true });
   const { owner, repo } = await getRepoInfo();
 
   // List merged PRs from nx-release/main branch
