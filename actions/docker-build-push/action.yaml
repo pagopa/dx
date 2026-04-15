@@ -166,8 +166,6 @@ runs:
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
-        flavor: |
-          latest=false
 
     - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
