@@ -67,9 +67,8 @@ export async function extractChangelogSection(
   }
 }
 
-const suppressed404Pattern = new RegExp(
-  `GET /repos/[^\\s]+/[^\\s]+/releases/tags/[^\\s]+ - 404\\b`,
-);
+const getReleaseByTag404Error =
+  /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
 
 export async function releaseExists(
   octokit: Octokit,
@@ -86,7 +85,7 @@ export async function releaseExists(
         log: {
           error: (...args: unknown[]) => {
             const message = args.join(" ");
-            if (suppressed404Pattern.test(message)) {
+            if (getReleaseByTag404Error.test(message)) {
               // Suppress this specific 404 error
               return;
             }
