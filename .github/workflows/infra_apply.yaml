@@ -221,9 +221,9 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Plan
-        uses: pagopa/dx/actions/filter-terraform-plan@feat-remove-grep-hidden-link-from-infra-apply #main
+        uses: pagopa/dx/actions/filter-terraform-plan@main
         env:
-          ADDITIONAL_FLAGS: -target resource.azurerm_resource_group.test -out=${{ env.TFPLAN_FILE }}
+          ADDITIONAL_FLAGS: -out=${{ env.TFPLAN_FILE }}
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -345,7 +345,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Apply
-        uses: pagopa/dx/actions/filter-terraform-apply@feat-remove-grep-hidden-link-from-infra-apply #main
+        uses: pagopa/dx/actions/filter-terraform-apply@main
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}
