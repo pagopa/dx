@@ -1,59 +1,36 @@
-import { ProjectFileMap } from "@nx/devkit";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import {
-  getProjectNameFromRoot,
-  getTerraformProjectFiles,
-} from "../project.ts";
+import { parseOptions } from "../options.ts";
+import { getProject, getProjectNameFromRoot } from "../project.ts";
 
-describe("getTerraformProjectFiles", () => {
-  it("returns only .tf files with the originating project", () => {
-    const projectFileMap: ProjectFileMap = {
-      terraformA: [
-        { file: path.join("infra", "resources", "dev", "main.tf"), hash: "" },
-        {
-          file: path.join("infra", "resources", "dev", "variables.tfvars"),
-          hash: "",
-        },
-      ],
-      terraformB: [
-        {
-          file: path.join("infra", "resources", "prod", "network.tf"),
-          hash: "",
-        },
-        {
-          file: path.join("infra", "resources", "prod", "README.md"),
-          hash: "",
-        },
-      ],
-    };
-
-    const result = getTerraformProjectFiles(projectFileMap);
-
-    expect(result).toEqual([
-      {
-        fileName: path.join("infra", "resources", "dev", "main.tf"),
-        project: "terraformA",
-      },
-      {
-        fileName: path.join("infra", "resources", "prod", "network.tf"),
-        project: "terraformB",
-      },
-    ]);
-  });
-
-  it("returns an empty array when no terraform files are present", () => {
-    const projectFileMap: ProjectFileMap = {
-      docs: [{ file: "README.md", hash: "" }],
-      scripts: [{ file: "scripts/check.sh", hash: "" }],
-    };
-
-    const result = getTerraformProjectFiles(projectFileMap);
-
-    expect(result).toEqual([]);
-  });
+const defaultOptions = parseOptions(undefined);
+const customOptions = parseOptions({
+  applyTargetName: "terraform-apply",
+  consoleTargetName: "terraform-console",
+  formatTargetName: "terraform-format",
+  initTargetName: "terraform-init",
+  outputTargetName: "terraform-output",
+  planTargetName: "terraform-plan",
+  testTargetName: "terraform-test",
+  validateTargetName: "terraform-validate",
 });
+
+const expectedNamedInputs = {
+  default: ["{projectRoot}/*.{tf,tfvars}"],
+  examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
+  tests: [
+    "{projectRoot}/tests/**/*.{tf,tfvars}",
+    "{projectRoot}/tests/**/*.tftest.hcl",
+  ],
+};
+
+const getTargetsOrThrow = (project: ReturnType<typeof getProject>) => {
+  if (!project.targets) {
+    throw new Error("Expected project targets to be defined");
+  }
+  return project.targets;
+};
 
 describe("getProjectNameFromRoot", () => {
   describe("infra segment removal", () => {
@@ -125,6 +102,115 @@ describe("getProjectNameFromRoot", () => {
     it("handles segments with no special characters", () => {
       const result = getProjectNameFromRoot(path.join("packages", "my-lib"));
       expect(result).toBe("my-lib");
+    });
+  });
+});
+
+describe("getProject", () => {
+  describe("when the root is an application", () => {
+    it("returns an application project with all targets", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const project = getProject(defaultOptions, root);
+      const targets = getTargetsOrThrow(project);
+
+      expect(project.name).toBe("resources-prod-my-stack");
+      expect(project.projectType).toBe("application");
+      expect(project.root).toBe(root);
+      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-console",
+        "tf-output",
+        "tf-plan",
+        "tf-apply",
+      ]);
+    });
+
+    it("marks mutable targets as non-cacheable", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["tf-console"]?.cache).toBe(false);
+      expect(targets["tf-output"]?.cache).toBe(false);
+      expect(targets["tf-plan"]?.cache).toBe(false);
+      expect(targets["tf-apply"]?.cache).toBe(false);
+    });
+
+    it("marks deterministic targets as cacheable", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["tf-init"]?.cache).toBe(true);
+      expect(targets["tf-fmt"]?.cache).toBe(true);
+      expect(targets["tf-test"]?.cache).toBe(true);
+      expect(targets["tf-validate"]?.cache).toBe(true);
+    });
+
+    it("sets correct dependency chains", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["tf-test"]?.dependsOn).toEqual(["tf-init"]);
+      expect(targets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
+      expect(targets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
+    });
+  });
+
+  describe("when the root is a library", () => {
+    it("classifies a modules root as a library without plan and apply", () => {
+      const root = path.join("infra", "modules", "network_stack");
+      const project = getProject(defaultOptions, root);
+      const targets = getTargetsOrThrow(project);
+
+      expect(project.name).toBe("modules-network-stack");
+      expect(project.projectType).toBe("library");
+      expect(project.root).toBe(root);
+      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-console",
+        "tf-output",
+      ]);
+    });
+
+    it("classifies an _modules root as a library", () => {
+      const root = path.join("infra", "_modules", "network_stack");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.projectType).toBe("library");
+      expect(getTargetsOrThrow(project)["tf-plan"]).toBeUndefined();
+      expect(getTargetsOrThrow(project)["tf-apply"]).toBeUndefined();
+    });
+  });
+
+  describe("when custom target names are configured", () => {
+    it("produces the same target implementations under different names", () => {
+      const root = path.join("infra", "resources", "dev", "stack");
+      const defaultTargets = getTargetsOrThrow(
+        getProject(defaultOptions, root),
+      );
+      const customTargets = getTargetsOrThrow(getProject(customOptions, root));
+
+      expect(Object.keys(defaultTargets)).not.toEqual(
+        Object.keys(customTargets),
+      );
+
+      const stripDependsOn = (targets: typeof defaultTargets) =>
+        Object.values(targets).map((target) => {
+          const targetWithoutDependsOn = { ...target };
+          delete targetWithoutDependsOn.dependsOn;
+          return targetWithoutDependsOn;
+        });
+
+      expect(stripDependsOn(defaultTargets)).toEqual(
+        stripDependsOn(customTargets),
+      );
     });
   });
 });
