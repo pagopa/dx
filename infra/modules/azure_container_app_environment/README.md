@@ -63,7 +63,7 @@ When working with private endpoints (currently in preview), the `terraform destr
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.20 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
 
@@ -74,7 +74,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_container_app_environment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/container_app_environment) | resource |
 | [azurerm_management_lock.cae_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_diagnostic_setting.cae](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -87,7 +87,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to use for the container app environment. | `string` | n/a | yes |
 | <a name="input_networking"></a> [networking](#input\_networking) | Networking configuration for the Container App Environment.<br/>If networking.private\_dns\_zone\_resource\_group\_name is not set, it is assumed that the private DNS zone is in the same resource group as the virtual network.<br/>If networking.public\_network\_access\_enabled is true, the environment will be configured for public access. | <pre>object({<br/>    virtual_network = object({<br/>      name                = string<br/>      resource_group_name = string<br/>    })<br/>    private_dns_zone_resource_group_name = optional(string, null)<br/>    public_network_access_enabled        = optional(bool, false)<br/>  })</pre> | n/a | yes |
@@ -98,7 +98,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_default_domain"></a> [default\_domain](#output\_default\_domain) | The default domain of the Container App Environment. Used for public ingress when public\_network\_access\_enabled is true. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Container App Environment resource. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Container App Environment resource. |
