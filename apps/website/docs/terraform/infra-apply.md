@@ -53,7 +53,7 @@ The workflow executes the following steps:
 2. Detects the Terraform project roots inside `<base_path>/<environment>`
 3. Checks the validity of Terraform registry module locks for each detected
    project
-4. Configures the environment and Azure credentials
+4. Configures the environment and CSP credentials
 5. Executes a Terraform plan for each detected project and stores the related
    bundle
 6. Downloads the matching plan bundle for each detected project
