@@ -48,8 +48,8 @@ const getTargets = (
   const cwd = "{projectRoot}";
 
   // Shared targets for applications and libraries.
-  // To speed up the development loop, frequently used tasks like "validate",
-  // "test", and "console" run independently of "init".
+  // To speed up the development loop, frequently used tasks like "validate"
+  // and "console" run independently of "init", while "test" depends on it.
   const targets: [string, TargetConfiguration][] = [
     [
       opts.initTargetName,
@@ -60,7 +60,10 @@ const getTargets = (
         options: {
           cwd,
         },
-        outputs: ["{projectRoot}/.terraform"],
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+        ],
       },
     ],
     [
