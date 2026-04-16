@@ -33,7 +33,7 @@ A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-servic
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.111.0, < 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.3 |
 
@@ -44,7 +44,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_monitor_autoscale_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_autoscale_setting) | resource |
 | [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_private_endpoint.service_bus_pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
@@ -54,7 +54,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_allowed_ips"></a> [allowed\_ips](#input\_allowed\_ips) | A list of IP addresses or CIDR blocks to allow access to the Service Bus Namespace. Use only if "use\_case" is not "default". | `list(string)` | `null` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
@@ -67,7 +67,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the Service Bus Namespace. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Service Bus namespace. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Service Bus namespace. |
