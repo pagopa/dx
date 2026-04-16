@@ -33,6 +33,11 @@ changes without leaking secrets.
   - When `true`, runs `terraform plan` with `-refresh=false -lock=false` to
     avoid refreshing remote state (useful for fast, repeated PR checks).
 
+- `plan-file` (optional, default: `""`)
+  - File name to save the terraform plan output for later use by `terraform apply` (for
+    example: `tf-outcome`). If not provided, the plan will not be saved to a file
+    and only the filtered output will be available.
+
 - `sensitive-keys` (required)
   - Comma-separated keys whose values will be replaced in the plan output (for
     example: `hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY`). Keys are matched
