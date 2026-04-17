@@ -99,7 +99,6 @@ fi
 terraform plan \
   -no-color \
   -lock-timeout=120s \
-  -target resource.azurerm_resource_group.test \
   $ADDITIONAL_FLAGS \
   -input=false 2>&1 | \
   mask_output | \

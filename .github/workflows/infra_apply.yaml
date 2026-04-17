@@ -221,7 +221,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Plan
-        uses: pagopa/dx/actions/filter-terraform-plan@feat-remove-grep-hidden-link-from-infra-apply #main
+        uses: pagopa/dx/actions/filter-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -344,7 +344,7 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Apply
-        uses: pagopa/dx/actions/filter-terraform-apply@feat-remove-grep-hidden-link-from-infra-apply #main
+        uses: pagopa/dx/actions/filter-terraform-apply@main
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}
