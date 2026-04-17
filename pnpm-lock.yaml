@@ -1070,14 +1070,14 @@ importers:
         specifier: ^17.0.0
         version: 17.0.0
       '@azure/arm-compute':
-        specifier: ^23.1.0
-        version: 23.1.0
+        specifier: ^23.3.0
+        version: 23.3.0
       '@azure/arm-monitor':
         specifier: ^7.0.0
         version: 7.0.0
       '@azure/arm-network':
-        specifier: ^34.1.0
-        version: 34.1.0
+        specifier: ^34.2.0
+        version: 34.2.0
       '@azure/arm-resources':
         specifier: ^7.0.0
         version: 7.0.0
@@ -1570,8 +1570,8 @@ packages:
     resolution: {integrity: sha512-GdiCA8IA1gO+qcCbFEPj+iLC4+3ByjfKzmeAnkP7MdlL84Yo30Huo/EwbZzwRjYybXYUBuFxGPBB+yeTT4Ebxg==}
     engines: {node: '>=14.0.0'}
 
-  '@azure/arm-compute@23.1.0':
-    resolution: {integrity: sha512-B79Ttt8t4cQBmBai9yddAvlHnJEWXuLJG0ehje5719qVRKDcJRg7i65tzHcvVIz1dF8Mtbh4JoZScoZMqtBvBw==}
+  '@azure/arm-compute@23.3.0':
+    resolution: {integrity: sha512-shWghknI8LhhQhiGDcz89WSbuXogRALmiZ0TOUD6Ezv6t1UhAu4ess+q7O/EMsaErAHqiqBpFpLS/aTc6GNqxA==}
     engines: {node: '>=20.0.0'}
 
   '@azure/arm-keyvault@4.0.0':
@@ -1586,8 +1586,8 @@ packages:
     resolution: {integrity: sha512-Wqg9j9qR+k1IxZXwKtegZWj6k1d6UUGOz4uHPmhyJOeiQrtZHXBcaWSZhtqJo5sy888TD6jVIQV/4znhbKYL9g==}
     engines: {node: '>=20.0.0'}
 
-  '@azure/arm-network@34.1.0':
-    resolution: {integrity: sha512-9yCdZPt9D2EYWEVZKWTLmG8mrXD4iclMycpV/xSVkzwiOIueTCRPF33ubyusYSOMgqovVVwijvC7NwwtTdXt0Q==}
+  '@azure/arm-network@34.2.0':
+    resolution: {integrity: sha512-APv9YZSyE57j7cVOeYu3W5R3/LeV9+HmLvW9H7h9aJYcWDETvj+mjMMfgYeuORjmyEwRhJP0hkhM6sDlXdj1Yw==}
     engines: {node: '>=20.0.0'}
 
   '@azure/arm-resourcegraph@4.2.1':
@@ -14424,7 +14424,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/arm-compute@23.1.0':
+  '@azure/arm-compute@23.3.0':
     dependencies:
       '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.10.1
@@ -14470,7 +14470,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@azure/arm-network@34.1.0':
+  '@azure/arm-network@34.2.0':
     dependencies:
       '@azure/abort-controller': 2.1.2
       '@azure/core-auth': 1.10.1
