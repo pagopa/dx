@@ -64,6 +64,7 @@ const builtInRoleDefinitionIds = {
 } as const;
 
 const bootstrapIdentityRoleDefinitionIds = [
+  // These roles let the bootstrap identity run the bootstrapper module from GitHub Actions without extra manual grants.
   builtInRoleDefinitionIds.roleBasedAccessControlAdministrator,
   builtInRoleDefinitionIds.contributor,
   builtInRoleDefinitionIds.storageBlobDataContributor,
@@ -292,6 +293,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       );
       const subscriptionScope = `/subscriptions/${cloudAccount.id}`;
 
+      // Grant the bootstrap identity the Azure permissions it needs to operate autonomously in the bootstrap workflow.
       await Promise.all(
         bootstrapIdentityRoleDefinitionIds.map((roleDefinitionId) =>
           authorizationManagementClient.roleAssignments.create(
@@ -320,6 +322,7 @@ export class AzureCloudAccountService implements CloudAccountService {
 
       const githubEnvironmentName = `bootstrapper-${name}-cd`;
 
+      // Federate the bootstrap identity with the GitHub environment so workflows can exchange their OIDC token for Azure access.
       await msiClient.federatedIdentityCredentials.createOrUpdate(
         resourceGroupName,
         identityName,
@@ -340,6 +343,7 @@ export class AzureCloudAccountService implements CloudAccountService {
         },
       );
 
+      // These secrets let the GitHub workflow target the bootstrap identity and subscription without extra setup.
       await Promise.all([
         gitHubService.createOrUpdateEnvironmentSecret({
           environmentName: githubEnvironmentName,

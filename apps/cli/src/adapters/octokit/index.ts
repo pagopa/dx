@@ -58,8 +58,10 @@ export class OctokitGitHubService implements GitHubService {
     params: CreateOrUpdateEnvironmentSecretParams,
   ): Promise<void> {
     try {
+      // GitHub requires environment secrets to be encrypted client-side with libsodium.
       await sodium.ready;
 
+      // Ensure the target environment exists before resolving its public key and storing secrets.
       await this.#octokit.request(
         "PUT /repos/{owner}/{repo}/environments/{environment_name}",
         {
