@@ -106,6 +106,8 @@ const azureAccountSchema = z.object({
 
 const ensureAzLogin = async (): Promise<string> => {
   const { stdout } = await tf$`az account show`;
+  // `az account show` reads the cached CLI context, but `az group list`
+  // fails when the current session token has expired.
   await tf$`az group list`;
   const parsed = JSON.parse(stdout);
   const { user } = azureAccountSchema.parse(parsed);
@@ -158,12 +160,13 @@ const initializeGitRepository = (repository: Repository) => {
   });
   const pushToOrigin = async () => {
     await git$`git init`;
-    await git$`git add README.md`;
-    await git$`git commit --no-gpg-sign -m "Create README.md"`;
-    await git$`git branch -M main`;
     await git$`git remote add origin ${repository.origin}`;
-    await git$`git push -u origin main`;
-    await git$`git switch -c ${branchName}`;
+    await git$`git fetch origin main`;
+    await git$`git checkout -b ${branchName}`;
+    // Terraform creates `main` with an initial README commit.
+    // Reset to `origin/main` so this branch is based on the remote default branch,
+    // while keeping the scaffolded local files in the working tree for a clean PR diff.
+    await git$`git reset origin/main`;
     await git$`git add .`;
     await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
     await git$`git push -u origin ${branchName}`;

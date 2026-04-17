@@ -32,6 +32,7 @@ content:
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
+    "standards@pagopa-dx": true,
     "typescript@pagopa-dx": true
   }
 }
@@ -45,6 +46,16 @@ If you use a different agent, follow its own plugin/marketplace documentation.
 When a developer opens the project in VS Code with Copilot enabled, the
 marketplace is automatically registered. The enabled plugins appear with a
 recommendation badge in the Extensions view.
+
+## DX Knowledge Base Hook (Coding Agent)
+
+Some plugin skills (e.g., `terraform-best-practices`) need local access to the
+full DX repository for documentation and module source code. When using **GitHub
+Copilot CLI** the plugin's `sessionStart` hook handles this automatically.
+
+For the **Copilot coding agent** (cloud) you need to set up a local clone of the
+DX repository. By default, clone it into `$HOME/.dx`; if you need to use a
+different location, set `DX_KB_PATH` to point to that clone.
 
 ## Available Plugins
 
@@ -98,6 +109,18 @@ collaboration conventions.
 | Name                 | Description                                                                                                                                                                    |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `backlog-refinement` | Interactively refines and updates Jira backlog items, collecting user input before applying changes. Analyzes the codebase to provide context-aware descriptions and metadata. |
+
+---
+
+### `standards@pagopa-dx`
+
+Provides guidance to keep technology choices aligned with PagoPA DX standards.
+
+**Skills**
+
+| Name               | Description                                                                                                                                                                                                                                                 |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `technology-radar` | Aligns chosen technologies with the PagoPA DX Technology Radar. Checks the radar status of cloud services, languages, frameworks, and other technologies before recommending them in code or documentation, and warns on deprecated or discouraged options. |
 
 ---
 

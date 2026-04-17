@@ -67,6 +67,9 @@ export async function extractChangelogSection(
   }
 }
 
+const getReleaseByTag404Error =
+  /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
+
 export async function releaseExists(
   octokit: Octokit,
   owner: string,
@@ -77,11 +80,24 @@ export async function releaseExists(
     await octokit.repos.getReleaseByTag({
       owner,
       repo,
+      request: {
+        // Suppress noisy 404 logs from Octokit when release doesn't exist
+        log: {
+          error: (...args: unknown[]) => {
+            const message = args.join(" ");
+            if (getReleaseByTag404Error.test(message)) {
+              // Suppress this specific 404 error
+              return;
+            }
+            // Log other errors normally
+            console.error(...args);
+          },
+        },
+      },
       tag,
     });
     return true;
   } catch (err: unknown) {
-    // 404 means release doesn't exist
     const errorCheck = OctokitErrorSchema.safeParse(err);
     if (errorCheck.success && errorCheck.data.status === 404) {
       return false;

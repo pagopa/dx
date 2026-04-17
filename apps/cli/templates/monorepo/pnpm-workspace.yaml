@@ -5,3 +5,6 @@ packages:
 linkWorkspacePackages: true
 packageImportMethod: "clone-or-copy"
 cleanupUnusedCatalogs: true
+
+onlyBuiltDependencies:
+  - nx

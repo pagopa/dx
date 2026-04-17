@@ -1,3 +1,14 @@
+## 0.1.7 (2026-04-08)
+
+### 🩹 Fixes
+
+- Set default value for Application Insights connection string ([#1566](https://github.com/pagopa/dx/pull/1566))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+
 ## 0.1.6 (2026-04-03)
 
 ### 🩹 Fixes

@@ -15,6 +15,7 @@ resource "github_repository" "this" {
   squash_merge_commit_message = "PR_BODY"
 
   delete_branch_on_merge = true
+  auto_init              = true
 
   has_projects    = var.repository.has_projects
   has_wiki        = false

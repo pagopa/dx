@@ -16,10 +16,10 @@ runs:
   using: composite
   steps:
     - name: Download Terraform Plan Artifact
-      uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+      uses: pagopa/dx/.github/actions/download-artifact@main
       with:
-        name: ${{ inputs.artifact-name }}
-        path: ${{ inputs.working-directory }}
+        bundle_name: ${{ inputs.artifact-name }}
+        file_path: ${{ inputs.working-directory }}
 
     - name: Decrypt Terraform Plan
       shell: bash
