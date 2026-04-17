@@ -30,7 +30,7 @@
     "@azure/arm-storage": "^19.1.0",
     "@azure/identity": "catalog:",
     "@azure/keyvault-secrets": "^4.9.0",
-    "@azure/storage-blob": "^12.29.1",
+    "@azure/storage-blob": "^12.31.0",
     "@logtape/logtape": "catalog:",
     "@microsoft/microsoft-graph-client": "^3.0.7",
     "@pagopa/dx-savemoney": "workspace:^",
