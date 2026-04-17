@@ -27,7 +27,7 @@ catalog:
   tsx: ^4.21.0
   typescript: ~5.9.3
   vitest: ^3.2.4
-  vitest-mock-extended: ^3.1.0
+  vitest-mock-extended: ^3.1.1
   zod: ^4.3.6
 
 catalogs:
@@ -37,7 +37,7 @@ catalogs:
 
   github-actions:
     '@actions/core': ^3.0.0
-    '@actions/github': ^9.0.0
+    '@actions/github': ^9.1.0
   opentelemetry:
     '@azure/monitor-opentelemetry': 1.16.0
     '@azure/monitor-opentelemetry-exporter': ^1.0.0-beta.32
