@@ -1,3 +1,13 @@
+## 0.5.1 (2026-04-17)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.0
 
 ### Minor Changes
