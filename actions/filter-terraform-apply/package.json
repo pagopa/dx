@@ -9,5 +9,8 @@
     "action",
     "terraform",
     "apply"
-  ]
+  ],
+  "scripts": {
+    "test": "sh test.sh"
+  }
 }
