@@ -904,7 +904,7 @@ importers:
     dependencies:
       '@azure/identity':
         specifier: 'catalog:'
-        version: 4.13.0
+        version: 4.13.1
       '@azure/monitor-opentelemetry':
         specifier: catalog:opentelemetry
         version: 1.16.0
