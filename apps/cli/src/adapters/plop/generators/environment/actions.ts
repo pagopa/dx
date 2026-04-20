@@ -7,11 +7,7 @@ import { Environment } from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { payloadSchema } from "./prompts.js";
 
-const addModule = (
-  env: Environment,
-  templatesPath: string,
-  extraData: Record<string, unknown> = {},
-) => {
+const addModule = (env: Environment, templatesPath: string, init = false) => {
   const cloudAccountsByCsp = Object.groupBy(
     env.cloudAccounts,
     (account) => account.csp,
@@ -23,7 +19,7 @@ const addModule = (
   return (name: string, terraformBackendKey: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp, includesProdIO, ...extraData },
+      data: { cloudAccountsByCsp, includesProdIO, init },
       destination: path.join(cwd, "infra"),
       force: true,
       templateFiles: path.join(templatesPath, name),
@@ -33,7 +29,7 @@ const addModule = (
     },
     {
       base: path.join(templatesPath, "shared"),
-      data: { cloudAccountsByCsp, terraformBackendKey, ...extraData },
+      data: { cloudAccountsByCsp, init, terraformBackendKey },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
       templateFiles: path.join(templatesPath, "shared"),
@@ -54,9 +50,7 @@ export default function getActions(
 
     const { env, github, init } = payloadSchema.parse(payload);
 
-    const addEnvironmentModule = addModule(env, templatesPath, {
-      init: !!init,
-    });
+    const addEnvironmentModule = addModule(env, templatesPath, !!init);
 
     const actions: ActionType[] = [
       {
