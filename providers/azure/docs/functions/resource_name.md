@@ -114,6 +114,7 @@ The following table lists the resource types and their abbreviations used in the
 | load_testing                              |        lt        |
 | log_analytics                             |       log        |
 | managed_identity                          |        id        |
+| managed_redis                             |       amr        |
 | nat_gateway                               |        ng        |
 | network_security_group                    |       nsg        |
 | postgre_endpoint                          |     psql-ep      |
