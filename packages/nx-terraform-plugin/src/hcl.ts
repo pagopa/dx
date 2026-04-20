@@ -1,7 +1,8 @@
 import { DependencyType, RawProjectGraphDependency } from "@nx/devkit";
 import path from "node:path";
 
-import { getProjectNameFromRoot, ProjectFile } from "./project.ts";
+import { ProjectFile } from "./project-file.ts";
+import { getProjectNameFromRoot } from "./project.ts";
 
 // Reads a Terraform configuration file and extracts static dependencies based on module sources
 // It looks for module blocks and their source attributes, and if the source is a relative path, it creates a dependency entry
