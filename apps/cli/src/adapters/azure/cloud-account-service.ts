@@ -365,15 +365,20 @@ export class AzureCloudAccountService implements CloudAccountService {
         environmentName: githubEnvironmentName,
       });
 
-      await this.#createCommonKeyVaultAndStoreRunnerAppSecrets({
+      const keyVaultName = await this.#createCommonKeyVault({
         cloudAccount,
         name,
         prefix,
         resourceGroupName,
-        runnerAppCredentials,
         shortEnv: short.env,
         shortLocation: short.location,
         tags,
+      });
+
+      await this.#storeRunnerAppSecrets({
+        cloudAccountId: cloudAccount.id,
+        keyVaultName,
+        runnerAppCredentials,
       });
     } catch (cause) {
       // Cleanup resource group if initialization fails
@@ -559,12 +564,11 @@ export class AzureCloudAccountService implements CloudAccountService {
     return results.every(Boolean);
   }
 
-  async #createCommonKeyVaultAndStoreRunnerAppSecrets({
+  async #createCommonKeyVault({
     cloudAccount,
     name,
     prefix,
     resourceGroupName,
-    runnerAppCredentials,
     shortEnv,
     shortLocation,
     tags,
@@ -573,11 +577,10 @@ export class AzureCloudAccountService implements CloudAccountService {
     name: EnvironmentId["name"];
     prefix: string;
     resourceGroupName: string;
-    runnerAppCredentials: GitHubAppCredentials;
     shortEnv: string;
     shortLocation: string;
     tags: Record<string, string>;
-  }): Promise<void> {
+  }): Promise<string> {
     const logger = getLogger(["gen", "env"]);
     const subscriptionClient = new SubscriptionClient(this.#credential);
     const subscription = await subscriptionClient.subscriptions.get(
@@ -627,27 +630,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       { keyVaultName, subscriptionId: cloudAccount.id },
     );
 
-    const secretClient = new SecretClient(
-      `https://${keyVaultName}.vault.azure.net/`,
-      this.#credential,
-    );
-
-    await Promise.all([
-      secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
-      secretClient.setSecret(
-        "github-runner-app-installation-id",
-        runnerAppCredentials.installationId,
-      ),
-      secretClient.setSecret(
-        "github-runner-app-key",
-        runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
-      ),
-    ]);
-
-    logger.debug(
-      "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
-      { keyVaultName, subscriptionId: cloudAccount.id },
-    );
+    return keyVaultName;
   }
 
   #createRoleAssignmentName(
@@ -739,6 +722,40 @@ export class AzureCloudAccountService implements CloudAccountService {
     logger.info(
       "All resource providers registered on subscription {subscriptionId}",
       { subscriptionId },
+    );
+  }
+
+  async #storeRunnerAppSecrets({
+    cloudAccountId,
+    keyVaultName,
+    runnerAppCredentials,
+  }: {
+    cloudAccountId: string;
+    keyVaultName: string;
+    runnerAppCredentials: GitHubAppCredentials;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+
+    const secretClient = new SecretClient(
+      `https://${keyVaultName}.vault.azure.net/`,
+      this.#credential,
+    );
+
+    await Promise.all([
+      secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
+      secretClient.setSecret(
+        "github-runner-app-installation-id",
+        runnerAppCredentials.installationId,
+      ),
+      secretClient.setSecret(
+        "github-runner-app-key",
+        runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
+      ),
+    ]);
+
+    logger.debug(
+      "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
+      { keyVaultName, subscriptionId: cloudAccountId },
     );
   }
 }
