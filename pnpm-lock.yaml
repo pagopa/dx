@@ -880,6 +880,8 @@ importers:
 
   infra/modules/azure_github_environment_bootstrap: {}
 
+  infra/modules/azure_merge_modules: {}
+
   infra/modules/azure_naming_convention: {}
 
   infra/modules/azure_postgres_server: {}

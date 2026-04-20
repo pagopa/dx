@@ -1,0 +1,12 @@
+{
+  "name": "azure_merge_modules",
+  "version": "0.0.0",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Creates an Azure custom role definition by merging compatible built-in roles into a single assignable role",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
+}
