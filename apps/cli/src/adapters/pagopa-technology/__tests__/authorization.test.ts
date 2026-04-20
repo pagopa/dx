@@ -76,17 +76,17 @@ describe("PagoPA AuthorizationService", () => {
         "https://github.com/pagopa/eng-azure-authorization/pull/42",
       );
 
+      expect(gitHubService.getFileContent).toHaveBeenCalledWith({
+        owner: "pagopa",
+        path: FILE_PATH,
+        ref: "main",
+        repo: "eng-azure-authorization",
+      });
+
       expect(gitHubService.createBranch).toHaveBeenCalledWith({
         branchName: "feats/add-test-repo-test-subscription-bootstrap-identity",
         fromRef: "main",
         owner: "pagopa",
-        repo: "eng-azure-authorization",
-      });
-
-      expect(gitHubService.getFileContent).toHaveBeenCalledWith({
-        owner: "pagopa",
-        path: FILE_PATH,
-        ref: "feats/add-test-repo-test-subscription-bootstrap-identity",
         repo: "eng-azure-authorization",
       });
 
@@ -375,6 +375,195 @@ describe("PagoPA AuthorizationService", () => {
         "existing-identity",
       );
     });
+
+    it("should use identity-only messages when groups are already correct", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      // Groups already correct, but identity is missing
+      const allGroups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: { service_principals_name: [] },
+          groups: allGroups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-identity-only",
+      });
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/60",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      expect(gitHubService.updateFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Add bootstrap identity for test-subscription",
+        }),
+      );
+      expect(gitHubService.createPullRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
+          title: "Add bootstrap identity for test-subscription",
+        }),
+      );
+    });
+
+    it("should use groups-only messages when identity already exists", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      // Identity present, no groups yet
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-bootstrap-identity-id"],
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-groups-only",
+      });
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/61",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+
+      expect(gitHubService.updateFile).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Configure AD groups for test-subscription",
+        }),
+      );
+      expect(gitHubService.createPullRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: "This PR configures AD groups for subscription `test-subscription`.",
+          title: "Configure AD groups for test-subscription",
+        }),
+      );
+    });
+
+    it("should preserve original group order and append missing defaults at end", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      // Start with custom group + one default group (externals) in deliberate order
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: { service_principals_name: [] },
+          groups: [
+            {
+              members: ["carol@pagopa.it"],
+              name: "test-d-adgroup-custom-team",
+              roles: ["Contributor"],
+            },
+            {
+              members: ["alice@pagopa.it"],
+              name: "test-d-adgroup-externals",
+              roles: ["Owner"],
+            },
+          ],
+        },
+        null,
+        2,
+      );
+
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-order",
+      });
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/62",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      const groupNames = updatedParsed.groups.map(
+        (g: { name: string }) => g.name,
+      );
+
+      // Original groups preserve their order
+      expect(groupNames[0]).toBe("test-d-adgroup-custom-team");
+      expect(groupNames[1]).toBe("test-d-adgroup-externals");
+      // Missing defaults appended after existing groups
+      expect(groupNames.length).toBe(DEFAULT_GROUP_SPECS.length + 1);
+    });
+
+    it("should preserve extra fields on group entries through round-trip", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      // Group with extra metadata field
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: { service_principals_name: [] },
+          groups: [
+            {
+              members: ["alice@pagopa.it"],
+              metadata: { created_by: "automation" },
+              name: "test-d-adgroup-admin",
+              roles: ["Owner"],
+            },
+          ],
+        },
+        null,
+        2,
+      );
+
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "sha-extra-fields",
+      });
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/63",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+
+      const adminGroup = updatedParsed.groups.find(
+        (g: { name: string }) => g.name === "test-d-adgroup-admin",
+      );
+      // Extra field preserved
+      expect(adminGroup.metadata).toEqual({ created_by: "automation" });
+      // Members preserved
+      expect(adminGroup.members).toContain("alice@pagopa.it");
+    });
   });
 
   // eslint-disable-next-line max-lines-per-function
@@ -383,7 +572,6 @@ describe("PagoPA AuthorizationService", () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockRejectedValue(
         new FileNotFoundError(FILE_PATH),
       );
@@ -395,6 +583,7 @@ describe("PagoPA AuthorizationService", () => {
       expect(error.message).toContain("Unable to get");
       expect(error.message).toContain("terraform.tfvars.json");
 
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
@@ -467,7 +656,6 @@ describe("PagoPA AuthorizationService", () => {
         2,
       );
 
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content,
         sha: "sha-noop",
@@ -479,7 +667,8 @@ describe("PagoPA AuthorizationService", () => {
       expect(result.isOk()).toBe(true);
       expect(result._unsafeUnwrap().url).toBeUndefined();
 
-      // File and PR must not be touched
+      // Branch, file update, and PR must not be touched
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
       expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
     });
@@ -544,7 +733,6 @@ describe("PagoPA AuthorizationService", () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content: "not valid json {{",
         sha: "sha-123",
@@ -557,6 +745,7 @@ describe("PagoPA AuthorizationService", () => {
         InvalidAuthorizationFileFormatError,
       );
 
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
@@ -564,7 +753,6 @@ describe("PagoPA AuthorizationService", () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      gitHubService.createBranch.mockResolvedValue(undefined);
       gitHubService.getFileContent.mockResolvedValue({
         content: JSON.stringify({ unexpected_key: {} }),
         sha: "sha-123",
@@ -577,13 +765,23 @@ describe("PagoPA AuthorizationService", () => {
         InvalidAuthorizationFileFormatError,
       );
 
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
     it("should return error when branch creation fails", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
+      const content = JSON.stringify(
+        { directory_readers: { service_principals_name: [] } },
+        null,
+        2,
+      );
 
+      gitHubService.getFileContent.mockResolvedValue({
+        content,
+        sha: "sha-123",
+      });
       gitHubService.createBranch.mockRejectedValue(
         new Error("Failed to create branch: branch already exists"),
       );
@@ -595,7 +793,6 @@ describe("PagoPA AuthorizationService", () => {
         "Unable to create branch",
       );
 
-      expect(gitHubService.getFileContent).not.toHaveBeenCalled();
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 

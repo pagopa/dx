@@ -194,7 +194,7 @@ describe("authorizeCloudAccounts", () => {
     expect(prs[0]).toEqual(expectedPr);
   });
 
-  it("returns empty array when authorization is a no-op (nothing changed)", async () => {
+  it("returns a no-op authorization result when nothing changed", async () => {
     const authService = mock<AuthorizationService>();
     const account = {
       csp: "azure" as const,

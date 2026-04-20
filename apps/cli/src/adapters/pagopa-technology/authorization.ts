@@ -31,11 +31,13 @@ const authorizationFileSchema = z
       .loose(),
     groups: z
       .array(
-        z.object({
-          members: z.array(z.string()),
-          name: z.string(),
-          roles: z.array(z.string()),
-        }),
+        z
+          .object({
+            members: z.array(z.string()),
+            name: z.string(),
+            roles: z.array(z.string()),
+          })
+          .loose(),
       )
       .optional(),
   })
@@ -71,49 +73,43 @@ const upsertGroups = (
   groupsChanged: boolean;
   json: z.infer<typeof authorizationFileSchema>;
 } => {
-  type GroupEntry = { members: string[]; name: string; roles: string[] };
-
-  const expectedGroups: GroupEntry[] = DEFAULT_GROUP_SPECS.map((spec) => ({
-    members: [],
-    name: makeGroupName(prefix, envShort, spec.groupName),
-    roles: [...spec.roles],
-  }));
+  const expectedByName = new Map(
+    DEFAULT_GROUP_SPECS.map((spec) => [
+      makeGroupName(prefix, envShort, spec.groupName),
+      spec,
+    ]),
+  );
 
   const existingGroups = jsonContent.groups ?? [];
-  const existingByName = new Map(
-    existingGroups.map((group) => [group.name, group]),
-  );
-  const processedNames = new Set<string>();
+  const seenDefaults = new Set<string>();
 
-  const finalGroups: GroupEntry[] = [];
+  // Walk existing groups in their original order, updating roles where needed
+  const finalGroups: typeof existingGroups = [];
   let groupsChanged = false;
 
-  for (const expected of expectedGroups) {
-    const existing = existingByName.get(expected.name);
-    processedNames.add(expected.name);
-
-    if (!existing) {
-      // Group is missing — add it with default roles and no members
-      finalGroups.push(expected);
-      groupsChanged = true;
-    } else if (!rolesAreEqual(existing.roles, expected.roles)) {
-      // Roles differ — update roles, preserve members
-      finalGroups.push({
-        members: [...existing.members],
-        name: expected.name,
-        roles: [...expected.roles],
-      });
-      groupsChanged = true;
+  for (const existing of existingGroups) {
+    const spec = expectedByName.get(existing.name);
+    if (!spec) {
+      // Custom group — preserve as-is
+      finalGroups.push(existing);
     } else {
-      // Already correct — keep as-is
-      finalGroups.push({ ...existing });
+      seenDefaults.add(existing.name);
+      if (!rolesAreEqual(existing.roles, spec.roles)) {
+        // Roles differ — update roles, preserve members and any extra fields
+        finalGroups.push({ ...existing, roles: [...spec.roles] });
+        groupsChanged = true;
+      } else {
+        finalGroups.push(existing);
+      }
     }
   }
 
-  // Preserve any custom groups not in the default list
-  for (const existing of existingGroups) {
-    if (!processedNames.has(existing.name)) {
-      finalGroups.push({ ...existing });
+  // Append missing default groups at the end
+  for (const spec of DEFAULT_GROUP_SPECS) {
+    const name = makeGroupName(prefix, envShort, spec.groupName);
+    if (!seenDefaults.has(name)) {
+      finalGroups.push({ members: [], name, roles: [...spec.roles] });
+      groupsChanged = true;
     }
   }
 
@@ -145,6 +141,39 @@ const parseAuthorizationFile = (
   }
 
   return ok(result.data);
+};
+
+/**
+ * Produces commit message, PR title, and PR body tailored to what actually changed.
+ */
+const makeChangeDescription = (
+  subscriptionName: string,
+  bootstrapIdentityId: string,
+  identityAdded: boolean,
+  groupsChanged: boolean,
+): { body: string; message: string; title: string } => {
+  if (identityAdded && groupsChanged) {
+    const title = `Add bootstrap identity and AD groups for ${subscriptionName}`;
+    return {
+      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
+      message: title,
+      title,
+    };
+  }
+  if (identityAdded) {
+    const title = `Add bootstrap identity for ${subscriptionName}`;
+    return {
+      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers for subscription \`${subscriptionName}\`.`,
+      message: title,
+      title,
+    };
+  }
+  const title = `Configure AD groups for ${subscriptionName}`;
+  return {
+    body: `This PR configures AD groups for subscription \`${subscriptionName}\`.`,
+    message: title,
+    title,
+  };
 };
 
 /**
@@ -202,42 +231,23 @@ export const makeAuthorizationService = (
     const branchName = `feats/add-${repoName}-${subscriptionName}-bootstrap-identity`;
 
     return (
-      // Step 1: Create branch first to avoid race condition with main branch updates
+      // Step 1: Read file from main to determine if changes are needed
       ResultAsync.fromPromise(
-        gitHubService.createBranch({
-          branchName,
-          fromRef: BASE_BRANCH,
+        gitHubService.getFileContent({
           owner: REPO_OWNER,
+          path: filePath,
+          ref: BASE_BRANCH,
           repo: REPO_NAME,
         }),
         () =>
           new AuthorizationError(
-            `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+            `Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`,
           ),
       )
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Step 2: Fetch file content from the newly created branch
-        .andThen(() =>
-          ResultAsync.fromPromise(
-            gitHubService.getFileContent({
-              owner: REPO_OWNER,
-              path: filePath,
-              ref: branchName,
-              repo: REPO_NAME,
-            }),
-            () =>
-              new AuthorizationError(
-                `Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`,
-              ),
-          ),
-        )
-        .orTee((error) => {
-          logger.error(error.message);
-        })
-        // Step 3: Parse file, ensure identity is present, upsert AD groups.
-        // If nothing changed, short-circuit and skip the file update and PR creation.
+        // Step 2: Parse file, ensure identity, upsert groups, detect no-op
         .andThen(({ content, sha }) => {
           const parseResult = parseAuthorizationFile(content);
           if (parseResult.isErr()) {
@@ -266,51 +276,80 @@ export const makeAuthorizationService = (
           );
 
           if (!identityAdded && !groupsChanged) {
-            // Nothing to do — identity was already present and all groups are correct.
+            // Nothing to do — no branch created, no PR needed.
             logger.info("No changes needed, skipping PR", {
               subscription: subscriptionName,
             });
             return okAsync(new AuthorizationResult());
           }
 
-          return ResultAsync.fromPromise(
-            gitHubService.updateFile({
-              branch: branchName,
-              content: JSON.stringify(updatedJson, null, 2),
-              message: `Add bootstrap identity and AD groups for ${subscriptionName}`,
-              owner: REPO_OWNER,
-              path: filePath,
-              repo: REPO_NAME,
-              sha,
-            }),
-            () =>
-              new AuthorizationError(
-                `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
-              ),
-          )
-            .orTee((error) => {
-              logger.error(error.message);
-            })
-            .andThen(() =>
-              ResultAsync.fromPromise(
-                gitHubService.createPullRequest({
-                  base: BASE_BRANCH,
-                  body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
-                  head: branchName,
-                  owner: REPO_OWNER,
-                  repo: REPO_NAME,
-                  title: `Add bootstrap identity and AD groups for ${subscriptionName}`,
-                }),
-                () =>
-                  new AuthorizationError(
-                    `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
-                  ),
-              ),
+          const { body, message, title } = makeChangeDescription(
+            subscriptionName,
+            bootstrapIdentityId,
+            identityAdded,
+            groupsChanged,
+          );
+
+          // Step 3: Create branch only when changes are needed
+          return (
+            ResultAsync.fromPromise(
+              gitHubService.createBranch({
+                branchName,
+                fromRef: BASE_BRANCH,
+                owner: REPO_OWNER,
+                repo: REPO_NAME,
+              }),
+              () =>
+                new AuthorizationError(
+                  `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                ),
             )
-            .orTee((error) => {
-              logger.error(error.message);
-            })
-            .map((pr) => new AuthorizationResult(pr.url));
+              .orTee((error) => {
+                logger.error(error.message);
+              })
+              // Step 4: Update file on the branch using the SHA read from main
+              .andThen(() =>
+                ResultAsync.fromPromise(
+                  gitHubService.updateFile({
+                    branch: branchName,
+                    content: JSON.stringify(updatedJson, null, 2),
+                    message,
+                    owner: REPO_OWNER,
+                    path: filePath,
+                    repo: REPO_NAME,
+                    sha,
+                  }),
+                  () =>
+                    new AuthorizationError(
+                      `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                    ),
+                ),
+              )
+              .orTee((error) => {
+                logger.error(error.message);
+              })
+              // Step 5: Create PR
+              .andThen(() =>
+                ResultAsync.fromPromise(
+                  gitHubService.createPullRequest({
+                    base: BASE_BRANCH,
+                    body,
+                    head: branchName,
+                    owner: REPO_OWNER,
+                    repo: REPO_NAME,
+                    title,
+                  }),
+                  () =>
+                    new AuthorizationError(
+                      `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
+                    ),
+                ),
+              )
+              .orTee((error) => {
+                logger.error(error.message);
+              })
+              .map((pr) => new AuthorizationResult(pr.url))
+          );
         })
     );
   },
