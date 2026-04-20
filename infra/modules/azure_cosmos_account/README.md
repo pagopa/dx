@@ -4,6 +4,10 @@
 
 This Terraform module provisions an Azure Cosmos DB Account with configurable settings, including failover locations, consistency policies, and backup configurations.
 
+## Diagram
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_cosmos_account/diagram.svg)
+
 ## Features
 
 - **Automatic Failover**: Supports automatic failover to ensure high availability.

@@ -1,0 +1,45 @@
+flowchart LR
+    subgraph Data["Cosmos DB"]
+        cosmos["Cosmos DB Account
+        (NoSQL / GlobalDocumentDB)"]
+
+        cosmos@{ icon: "azure:azure-cosmos-db"}
+
+        georep["Geo-Replication
+          (primary + secondary regions)"]
+    end
+
+    subgraph Network["Network"]
+        pep["Private Endpoint (SQL)"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns[("Private DNS Zone
+          privatelink.documents.azure.com")]
+
+        dns@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Identity["Identity & Access"]
+        role["CosmosDB SQL
+          Role Assignments"]
+
+        role@{ icon: "azure:managed-identities"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        diag["Diagnostic Settings"]
+
+        alert["Metric Alert
+          (Throughput Exceeded)"]
+
+        law["Log Analytics Workspace"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+    end
+
+    cosmos --> georep
+    Data --> Network
+    pep --> dns
+    Data --> Identity
+    diag --> law
+    Data -.-> Monitoring
+
