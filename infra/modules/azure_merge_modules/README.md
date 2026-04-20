@@ -2,7 +2,7 @@
 
 This module creates an Azure custom role definition by merging compatible built-in roles into a single assignable role.
 
-It is designed for the RBAC reduction strategy described in the RFC: define a smaller set of reusable custom roles, then assign those roles to Entra ID groups instead of assigning many built-in roles directly to users, managed identities, or service principals.
+It is designed for the RBAC reduction strategy: define a smaller set of reusable custom roles, then assign those roles to Entra ID groups instead of assigning many built-in roles directly to users, managed identities, or service principals.
 
 ## What This Module Does
 
@@ -74,20 +74,6 @@ If the role definition is created at management group scope, the role can still
 be assigned at supported descendant scopes through `assignable_scopes`. The
 module validates management group inputs conservatively because Terraform cannot
 infer management group membership from a subscription ARM ID alone.
-
-When the assignee principal is new, always set `principal_type` on
-`azurerm_role_assignment`. Microsoft documents that this reduces intermittent
-replication errors for newly created users, groups, service principals, and
-managed identities.
-
-## Propagation And Sleep
-
-I would not add a `time_sleep` to this module by default.
-
-- Creating the role definition and then the role assignment in the same plan does not need an artificial wait if the assignment references the module output.
-- Azure RBAC changes can still be eventually consistent after the assignment is created. Microsoft documents that role assignment changes can take up to about 10 minutes to become effective.
-- That delay matters for follow-up operations that immediately try to use the granted permissions, especially data-plane operations.
-- If a caller creates a role assignment and then immediately performs privileged operations with the assigned principal in the same apply, any wait should be added in the caller, not inside this module.
 
 ## Examples
 
