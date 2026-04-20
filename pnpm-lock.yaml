@@ -208,6 +208,9 @@ importers:
       '@octokit/rest':
         specifier: ^22.0.1
         version: 22.0.1
+      js-yaml:
+        specifier: 'catalog:'
+        version: 4.1.1
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -218,6 +221,9 @@ importers:
       '@tsconfig/node24':
         specifier: 'catalog:'
         version: 24.0.4
+      '@types/js-yaml':
+        specifier: 'catalog:'
+        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 22.19.17

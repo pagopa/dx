@@ -11,11 +11,39 @@ on:
     secrets:
       github-token:
         description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
-        required: true
+        required: false
 
 jobs:
+  summarize-version-plans:
+    name: Summarize Version Plans
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Skip forked pull requests
+        if: ${{ github.event.pull_request.head.repo.full_name != github.repository }}
+        shell: bash
+        run: echo "Skipping version plan summary for forked pull requests."
+
+      - name: Checkout repository
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Nx Version Plan Summary
+        if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: pagopa/dx/actions/nx-release@main
+        with:
+          github-token: ${{ secrets.github-token || github.token }}
+
   release:
     name: Release
+    if: ${{ github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     permissions:
@@ -66,4 +94,4 @@ jobs:
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         with:
-          github-token: ${{ secrets.github-token }}
+          github-token: ${{ secrets.github-token || github.token }}

@@ -48,6 +48,24 @@ Alternatively, you can create the file manually — see the
 When you later run `pnpm nx release`, Nx uses the files in `.nx/version-plans/`
 as the source of truth for version bumps.
 
+## Pull Request Summary Comment
+
+If your repository wires `pagopa/dx/.github/workflows/release-v2.yaml` to the
+`pull_request` event, every PR that contains active `.nx/version-plans/**` files
+receives a managed summary comment.
+
+The comment is generated from the version plan files currently present in the PR
+and includes:
+
+- the latest PR head SHA
+- the packages detected across all version plans
+- the highest bump type per package when duplicates exist
+- a details section listing the source version plan files
+
+The summary is updated in place when the PR changes and removed automatically
+when the PR no longer contains active version plan files. The auto-generated
+`Version Packages` PR is excluded.
+
 ## Breaking Changes
 
 When the code added in a PR breaks backward compatibility, a migration path or

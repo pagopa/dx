@@ -10,6 +10,7 @@ A reusable GitHub workflow that automates package versioning and publishing for
 
 ## Features
 
+- 💬 Posts a managed summary comment on pull requests that include version plans
 - 🔄 Automatically creates or updates a `Version Packages` pull request when new
   version plans are added
 - 📦 Publishes packages to npm when the `Version Packages` PR is merged
@@ -18,12 +19,15 @@ A reusable GitHub workflow that automates package versioning and publishing for
 
 ## How It Works
 
-The workflow automates the full release lifecycle in two steps:
+The workflow automates the full release lifecycle in three steps:
 
-1. **When you push a version plan to `main`** — the workflow opens (or updates)
+1. **When a pull request includes version plan files** — the workflow can post a
+   managed comment that summarizes the detected packages, bump types, and the
+   latest PR head SHA.
+2. **When you push a version plan to `main`** — the workflow opens (or updates)
    a `Version Packages` pull request that bumps versions and updates changelogs
    automatically.
-2. **When the `Version Packages` PR is merged** — the workflow publishes the
+3. **When the `Version Packages` PR is merged** — the workflow publishes the
    packages to npm with provenance, creates git tags, and creates the
    corresponding GitHub Releases.
 
@@ -128,11 +132,20 @@ Use the `release-v2.yaml` reusable workflow. Create a
 name: Release
 
 on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+    paths:
+      - ".nx/version-plans/**"
   push:
     branches:
       - main
     paths:
-      - ".nx/version-plans/**" # Optional, but recommended to avoid unnecessary workflow runs on unrelated changes
+      - ".nx/version-plans/**"
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -150,6 +163,11 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+The `pull_request` trigger is optional but recommended when you want a managed
+summary comment on feature PRs. The reusable workflow keeps that path light: it
+checks out the PR head and lets `nx-release` auto-detect the PR summary case,
+without installing dependencies.
 
 ## Inputs
 
@@ -177,6 +195,21 @@ permissions:
 A release starts by committing a **version plan** to `main`. A version plan is a
 small file that records which packages changed and how their version should be
 bumped.
+
+## Pull Request Summary
+
+When the same reusable workflow is also triggered on `pull_request`, it scans
+the active `.nx/version-plans/**` files in the PR and posts a managed comment.
+The comment includes:
+
+- the latest PR head SHA
+- the unique packages detected across all version plans
+- the highest bump type per package when duplicates exist
+- a details section listing the source version plan files
+
+The comment is updated in place on `synchronize` and removed automatically when
+the PR no longer contains active version plan files. The auto-generated
+`Version Packages` PR is excluded.
 
 ### 1. Generate the version plan
 
@@ -220,6 +253,11 @@ as well.
 - Ensure `.nx/version-plans/` contains version plan files on `main`
 - Verify the GitHub token has `pull-requests: write` permission
 - Run `nx release --dry-run` locally to check for errors
+
+### PR summary comment is not created
+
+- Ensure the caller workflow includes a `pull_request` trigger
+- Ensure the PR diff still contains active `.nx/version-plans/**` files
 
 ### Publish fails
 

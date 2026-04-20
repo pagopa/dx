@@ -4,7 +4,20 @@ A composite GitHub Action that mirrors [Changesets](https://github.com/changeset
 
 ## How It Works
 
-This action automates the Nx release flow in two phases:
+This action automates the Nx release flow in three phases:
+
+### Phase 0: Summarize Version Plans on Pull Requests
+
+**Trigger**: On `pull_request`, when the PR is not the managed `Version Packages` PR.
+
+**Actions**:
+
+1. Reads the changed files from the current pull request via GitHub API
+2. Keeps only active files under `.nx/version-plans/**`
+3. Parses each version plan frontmatter and validates bump types
+4. Aggregates unique packages and renders a managed markdown summary comment
+5. Creates, updates, or deletes the managed PR comment idempotently
+6. Skips the auto-generated `Version Packages` PR to avoid noisy self-comments
 
 ### Phase 1: Create/Update Version Packages PR
 
@@ -111,7 +124,18 @@ jobs:
 
 ## Behavior
 
-The action runs in one of three modes, determined automatically from the trigger and changes in `.nx/version-plans/**`.
+The action runs in one of four modes, all determined automatically from the event context and changes in `.nx/version-plans/**`.
+
+### Mode: `Summarize PR`
+
+Used automatically on `pull_request` workflows, except for the managed `Version Packages` PR. The action:
+
+1. Lists the files that belong to the current pull request
+2. Reads active `.nx/version-plans/**` files from the checked-out PR head
+3. Parses YAML frontmatter, validates bump types, and aggregates packages
+4. Upserts a managed comment with the latest PR head SHA and package table
+5. Deletes the managed comment when no active version plans remain in the PR
+6. Skips the managed `Version Packages` PR
 
 ### Mode: `Create PR`
 
@@ -151,6 +175,7 @@ Triggered manually. The action:
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
 - ✅ NPM provenance enabled by default
+- ✅ Managed PR comments are updated in place without duplication
 - ✅ Compatible with custom `releaseTagPattern` in `nx.json` (tag matching does not
   assume a specific separator between package name and version)
 
@@ -161,6 +186,13 @@ Triggered manually. The action:
 - Ensure `.nx/version-plans/` directory exists
 - Verify `gh` CLI has authentication; check GITHUB_TOKEN is set
 - Check that version plans produce actual version changes (run `npx nx release --dry-run`)
+
+### PR summary comment is missing
+
+- Ensure the workflow invokes the action on `pull_request`
+- Ensure the PR contains active files under `.nx/version-plans/`
+- Same-repository PRs can use `${{ github.token }}`; fork PRs are skipped by default for safety
+- Invalid version plan frontmatter fails the step intentionally so malformed bumps are visible early
 
 ### Publish fails
 

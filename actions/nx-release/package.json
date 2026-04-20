@@ -25,6 +25,7 @@
   "license": "UNLICENSED",
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
+    "@types/js-yaml": "catalog:",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
@@ -36,6 +37,7 @@
   },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
+    "js-yaml": "catalog:",
     "zod": "^4.3.6"
   }
 }
