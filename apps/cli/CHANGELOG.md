@@ -1,3 +1,26 @@
+## 0.19.2 (2026-04-17)
+
+### 🩹 Fixes
+
+- Update the `init` command git flow to handle repositories that are pre-initialized by Terraform (`auto_init`). ([#1583](https://github.com/pagopa/dx/pull/1583), [#1574](https://github.com/pagopa/dx/issues/1574))
+
+  Previously the CLI would push an initial commit directly to `main` and then create a feature branch — this fails when the remote already exists with a `main` branch.
+
+  The new flow connects to the existing remote, fetches the current state, and creates the feature branch from `origin/main` without checking out remote files (preserving locally generated files). The PR is then opened against `main` as usual.
+
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+- Parse Azure authorization with JSON format instead of HCL ([#1541](https://github.com/pagopa/dx/pull/1541))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.3
+- Updated @pagopa/dx-savemoney to 0.2.4
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.19.1 (2026-04-08)
 
 ### 🩹 Fixes

@@ -1,3 +1,13 @@
+## 0.2.1 (2026-04-17)
+
+### 🩹 Fixes
+
+- Replace deprecated property of diagnostic setting resource ([#1644](https://github.com/pagopa/dx/pull/1644))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.2.0
 
 ### Minor Changes

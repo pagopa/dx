@@ -1,3 +1,13 @@
+## 0.2.2 (2026-04-17)
+
+### 🩹 Fixes
+
+- Fix external link in the GitHub Action message. ([#1622](https://github.com/pagopa/dx/pull/1622))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.2.1
 
 ### Patch Changes
