@@ -21,7 +21,6 @@ variables {
 
   resource_group_name = "rg-test"
 
-  subnet_pep_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
   virtual_network = {
     name                = "vnet-test"
     resource_group_name = "dx-d-itn-network-rg-01"
@@ -47,6 +46,12 @@ variables {
 }
 
 mock_provider "azurerm" {
+  mock_data "azurerm_subscription" {
+    defaults = {
+      id              = "/subscriptions/00000000-0000-0000-0000-000000000000"
+      subscription_id = "00000000-0000-0000-0000-000000000000"
+    }
+  }
   mock_data "azurerm_private_dns_zone" {
     defaults = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
@@ -129,8 +134,7 @@ run "managed_redis_development_use_case" {
   variables {
     use_case = "development"
 
-    # Development use case does not require a PEP subnet, virtual network, or LAW
-    subnet_pep_id = null
+    # Development use case does not require a virtual network or LAW
     virtual_network = {
       name                = null
       resource_group_name = null
@@ -224,8 +228,8 @@ run "managed_redis_private_endpoint" {
   command = plan
 
   assert {
-    condition     = azurerm_private_endpoint.redis[0].subnet_id == var.subnet_pep_id
-    error_message = "Private endpoint must target the provided PEP subnet"
+    condition     = azurerm_private_endpoint.redis[0].subnet_id == local.subnet_pep_id
+    error_message = "Private endpoint must target the synthesized PEP subnet"
   }
 
   assert {

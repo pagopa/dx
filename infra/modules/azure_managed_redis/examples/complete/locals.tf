@@ -18,7 +18,6 @@ locals {
   }
 
   # Fill these in when running the example against a real subscription.
-  subnet_pep_id              = null
   virtual_network_name       = null
   virtual_network_rg_name    = null
   log_analytics_workspace_id = null

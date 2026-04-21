@@ -23,17 +23,6 @@ variable "resource_group_name" {
 }
 
 # ------------ NETWORK ------------ #
-variable "subnet_pep_id" {
-  type        = string
-  description = "The ID of the subnet designated for the private endpoint. Required for 'default' and 'high_throughput' use cases."
-  default     = null
-
-  validation {
-    condition     = var.use_case == "development" || var.subnet_pep_id != null
-    error_message = "subnet_pep_id is required when use_case is 'default' or 'high_throughput'."
-  }
-}
-
 variable "virtual_network" {
   type = object({
     name                = string

@@ -41,7 +41,6 @@ module "managed_redis" {
 
   use_case = "default"
 
-  subnet_pep_id = azurerm_subnet.pep.id
   virtual_network = {
     name                = data.azurerm_virtual_network.core.name
     resource_group_name = data.azurerm_virtual_network.core.resource_group_name
@@ -62,6 +61,7 @@ module "managed_redis" {
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
 - **Networking:** private by default (`default`, `high_throughput`). `development` provisions a public-only instance to simplify local iterations.
+- **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the provided `virtual_network.resource_group_name` unless `private_dns_zone_resource_group_name` is set.
 - **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.
 - **Port:** the default database listens on port `10000`.

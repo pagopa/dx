@@ -4,7 +4,7 @@ resource "azurerm_private_endpoint" "redis" {
   name                = local.private_endpoint_name
   location            = var.environment.location
   resource_group_name = var.resource_group_name
-  subnet_id           = var.subnet_pep_id
+  subnet_id           = local.subnet_pep_id
 
   private_service_connection {
     name                           = local.private_endpoint_name

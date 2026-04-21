@@ -16,8 +16,7 @@ Minimal end-to-end usage of the `azure_managed_redis` module against an existing
 
 The example expects the following resources to already exist in the target subscription:
 
-- A subnet dedicated to private endpoints (`subnet_pep_id`).
-- A virtual network whose Resource Group hosts the `privatelink.redis.azure.net` private DNS zone.
+- A virtual network that hosts the DX-standard PEP subnet (`snet-<prefix>-<env>-pep-<loc>-01`) and whose resource group hosts the `privatelink.redis.azure.net` private DNS zone.
 - A Log Analytics workspace.
 - _(Optional)_ an action group to receive metric alerts.
 

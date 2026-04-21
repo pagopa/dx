@@ -64,6 +64,17 @@ locals {
   managed_redis_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_redis" }))
   private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "private_endpoint" }))
 
+  pep_subnet_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain          = "",
+    name            = "pep",
+    resource_type   = "subnet",
+    instance_number = 1,
+  }))
+  vnet_id = var.virtual_network.name != null && var.virtual_network.resource_group_name != null ? provider::azurerm::normalise_resource_id(
+    "${data.azurerm_subscription.current.id}/resourceGroups/${var.virtual_network.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${var.virtual_network.name}"
+  ) : null
+  subnet_pep_id = local.vnet_id != null ? provider::azurerm::normalise_resource_id("${local.vnet_id}/subnets/${local.pep_subnet_name}") : null
+
   selected_sku_name = coalesce(var.sku_name_override, local.use_case_features.sku_name)
 
   selected_database = {
