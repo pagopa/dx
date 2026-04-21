@@ -4,6 +4,10 @@
 
 This Terraform module provisions an Azure Event Hub namespace, event hubs, consumer groups, authorization rules, private endpoints, and monitoring configurations.
 
+## Diagram
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_event_hub/diagram.svg)
+
 ## Features
 
 - **Event Hub Namespace**: Creates the Event Hub namespace, which acts as a container for Event Hubs.
