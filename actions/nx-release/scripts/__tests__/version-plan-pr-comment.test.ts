@@ -207,6 +207,23 @@ describe("renderVersionPlanComment", () => {
     expect(comment).toContain("Detected version plan files");
     expect(comment).toContain("abcdef1");
   });
+
+  it("escapes backslashes before other markdown metacharacters", () => {
+    const comment = renderVersionPlanComment({
+      commitSha: "abcdef1234567890",
+      owner: "pagopa",
+      repo: "dx",
+      versionPlanFiles: [
+        {
+          filePath: ".nx/version-plans/example.md",
+          releases: [{ bumpType: "minor", packageName: "@pagopa/example" }],
+          summary: String.raw`Preserve \| pipes`,
+        },
+      ],
+    });
+
+    expect(comment).toContain(String.raw`Preserve \\\| pipes`);
+  });
 });
 
 describe("isManagedVersionPackagesPullRequest", () => {
