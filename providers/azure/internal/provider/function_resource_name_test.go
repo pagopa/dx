@@ -406,7 +406,7 @@ func TestResourceNameFunction_NewResourceTypes(t *testing.T) {
 	}
 }
 
-func TestResourceNameFunction_ManagedRedisUsesDistinctAbbreviation(t *testing.T) {
+func TestResourceNameFunction_ManagedRedisUsesSupportedAbbreviation(t *testing.T) {
 	t.Parallel()
 
 	resource.UnitTest(t, resource.TestCase{
@@ -427,21 +427,9 @@ func TestResourceNameFunction_ManagedRedisUsesDistinctAbbreviation(t *testing.T)
 								instance_number = "1"
 							})
             }
-
-            output "legacy" {
-              value = provider::dx::resource_name({
-								prefix = "dx",
-								environment = "d",
-								location = "weu",
-								name = "cache",
-								resource_type = "redis_cache",
-								instance_number = "1"
-							})
-            }
             `,
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownOutputValue("managed", knownvalue.StringExact("dx-d-weu-cache-amr-01")),
-					statecheck.ExpectKnownOutputValue("legacy", knownvalue.StringExact("dx-d-weu-cache-redis-01")),
 				},
 			},
 		},
@@ -804,7 +792,6 @@ func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
 		},
 	})
 }
-
 
 func TestResourceNameFunction_NameIsBareAbbreviationPrefix(t *testing.T) {
 	t.Parallel()

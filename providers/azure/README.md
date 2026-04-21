@@ -248,7 +248,6 @@ The following table lists the resource types and their abbreviations used in the
 | function_queue_private_endpoint           |  func-queue-pep  |
 | dfunction_queue_private_endpoint          | dfunc-queue-pep  |
 | queue_storage                             |      queue       |
-| redis_cache                               |      redis       |
 | resource_group                            |        rg        |
 | servicebus_namespace                      |       sbns       |
 | servicebus_private_endpoint               |     sbns-pep     |
