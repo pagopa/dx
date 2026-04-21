@@ -9,7 +9,7 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 - System-assigned managed identity, provisioned automatically.
 - Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` and `high_throughput` use cases).
 - Diagnostic settings streaming `allLogs` and `AllMetrics` to a Log Analytics workspace.
-- Four built-in metric alerts (used memory %, connected clients, server load, cache misses) with sensible default thresholds.
+- Six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys, AMR errors) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
 - Typed configuration for the default database (protocol, clustering policy, eviction policy, modules).
 
@@ -20,6 +20,55 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 | `default`         | `Balanced_B3`          | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
 | `development`     | `Balanced_B0`          | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
 | `high_throughput` | `ComputeOptimized_X3`  | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+
+## Alerts
+
+When `use_case` is `default` or `high_throughput`, six Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
+
+### Default alert matrix
+
+| Alert                      | Metric                 | Agg     | Window / Freq | Threshold | Sev |
+| -------------------------- | ---------------------- | ------- | ------------- | --------- | --- |
+| Used memory — warn         | `usedmemorypercentage` | Maximum | PT15M / PT5M  | `> 75`    | 2   |
+| Used memory — critical     | `usedmemorypercentage` | Maximum | PT5M / PT1M   | `> 90`    | 1   |
+| Server load — warn         | `serverLoad`           | Maximum | PT15M / PT5M  | `> 80`    | 2   |
+| Server load — critical     | `serverLoad`           | Maximum | PT5M / PT1M   | `> 90`    | 1   |
+| Evicted keys               | `evictedkeys`          | Total   | PT15M / PT5M  | `> 0`     | 2   |
+| AMR errors                 | `errors`               | Total   | PT5M / PT1M   | `> 0`     | 1   |
+| Connected clients (opt-in) | `connectedclients`     | Maximum | PT15M / PT5M  | `null`    | 2   |
+
+The connected-clients alert is created only when `alerts.thresholds.connected_clients` is set explicitly.
+
+### Why these thresholds
+
+- **`usedmemorypercentage` at 75 (warn) / 90 (critical).** Microsoft recommends scaling up when used memory is consistently over 75% ([memory-management best practices](https://learn.microsoft.com/azure/redis/best-practices-memory-management#monitor-memory-usage), [development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)). 75% gives operators time to scale before the eviction policy starts removing keys. The 90% critical tier (short window, paging severity) catches the imminent OOM/failover scenario documented in [troubleshoot-server#high-memory-usage](https://learn.microsoft.com/azure/redis/troubleshoot-server#high-memory-usage). The module monitors the *percentage* metric so thresholds do not need re-tuning after a SKU change.
+
+- **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): *"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."* The 90% critical tier is treated as near-saturation — scale out or shard.
+
+- **`evictedkeys > 0` (sev 2).** Any non-zero eviction count means the cache is shedding keys under memory pressure, and with the default `volatile-lru` policy the application may be silently losing data ([troubleshoot-data-loss#key-eviction](https://learn.microsoft.com/azure/redis/troubleshoot-data-loss#partial-loss-of-keys)). This is a binary signal, not a percentage — zero is the healthy baseline.
+
+- **`errors > 0` (sev 1).** AMR emits a typed `errors` metric (`OOM`, `AuthFailure`, `Replication`, `UnresponsiveClients`, …). Any occurrence is operator-actionable, so we page immediately.
+
+- **`connectedclients` is opt-in.** Microsoft recommends alerting on this metric ([development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)), but the safe ceiling varies wildly across SKUs (B-series ≈ 1k connections, larger Enterprise SKUs ≥ 10k). The module exposes the threshold but does not pick a default; set `alerts.thresholds.connected_clients = <~75% of your SKU ceiling>` to enable it.
+
+- **Why `cachemisses` is not monitored.** Cache misses are a normal part of cache behavior; absolute counts convey no health information without a hit-rate ratio (which is not a built-in AMR metric). Microsoft does not list it in the [recommended alerts table](https://learn.microsoft.com/azure/redis/monitor-cache#alerts). For hit-rate visibility, build a workbook over `cachehits / (cachehits + cachemisses)`.
+
+- **Why dual severity.** The 75/80% warn levels give capacity engineers time to act with standard on-call processes; the 90% critical tier (shorter aggregation window, severity 1) is the pager trigger for imminent failover.
+
+### Overriding thresholds
+
+```hcl
+alerts = {
+  action_group_id = azurerm_monitor_action_group.core.id
+  thresholds = {
+    used_memory_percentage          = 80   # relax the warn level
+    used_memory_percentage_critical = 92
+    connected_clients               = 8000 # opt-in, ~75% of an E20 ceiling
+  }
+}
+```
+
+Unset fields fall back to the defaults above. Leaving `connected_clients` at `null` (the default) keeps that alert disabled.
 
 ## Usage
 

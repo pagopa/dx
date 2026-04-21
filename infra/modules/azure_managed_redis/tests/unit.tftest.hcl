@@ -123,8 +123,8 @@ run "managed_redis_default_use_case" {
   }
 
   assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 4
-    error_message = "Default use case must create the four default metric alerts"
+    condition     = length(azurerm_monitor_metric_alert.this) == 6
+    error_message = "Default use case must create the six default metric alerts (connected_clients is opt-in)"
   }
 }
 
@@ -263,22 +263,64 @@ run "managed_redis_default_alert_thresholds" {
   command = plan
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["used_memory_percentage"].criteria[0].threshold == 60
-    error_message = "used_memory_percentage must default to 60"
+    condition     = azurerm_monitor_metric_alert.this["used_memory_percentage"].criteria[0].threshold == 75
+    error_message = "used_memory_percentage must default to 75 (MS recommended scale-up level)"
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["server_load"].criteria[0].threshold == 60
-    error_message = "server_load must default to 60"
+    condition     = azurerm_monitor_metric_alert.this["used_memory_percentage_critical"].criteria[0].threshold == 90
+    error_message = "used_memory_percentage_critical must default to 90"
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["connected_clients"].criteria[0].threshold == 5000
-    error_message = "connected_clients must default to 5000"
+    condition     = azurerm_monitor_metric_alert.this["server_load"].criteria[0].threshold == 80
+    error_message = "server_load must default to 80 (MS recommended)"
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["cache_misses"].criteria[0].threshold == 1000
-    error_message = "cache_misses must default to 1000"
+    condition     = azurerm_monitor_metric_alert.this["server_load_critical"].criteria[0].threshold == 90
+    error_message = "server_load_critical must default to 90"
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.this["evicted_keys"].criteria[0].threshold == 0
+    error_message = "evicted_keys must default to 0 (any eviction is an alert)"
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.this["errors"].criteria[0].threshold == 0
+    error_message = "errors must default to 0 (any AMR typed error is actionable)"
+  }
+
+  assert {
+    condition     = !contains(keys(azurerm_monitor_metric_alert.this), "connected_clients")
+    error_message = "connected_clients must NOT be created by default (opt-in)"
+  }
+
+  assert {
+    condition     = !contains(keys(azurerm_monitor_metric_alert.this), "cache_misses")
+    error_message = "cache_misses alert has been removed"
+  }
+}
+
+run "managed_redis_connected_clients_opt_in" {
+  command = plan
+
+  variables {
+    alerts = {
+      thresholds = {
+        connected_clients = 8000
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.this["connected_clients"].criteria[0].threshold == 8000
+    error_message = "connected_clients alert must be created when threshold is set explicitly"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 7
+    error_message = "Setting connected_clients threshold must add a 7th alert"
   }
 }
