@@ -1,5 +1,5 @@
 {
-  "name": "azure_merge_modules",
+  "name": "azure_merge_roles",
   "version": "0.0.0",
   "private": true,
   "provider": "azurerm",

@@ -34,7 +34,7 @@ The AzureRM provider does not expose role definition `condition` and `condition_
 data "azurerm_subscription" "current" {}
 
 module "observability_reader" {
-  source = "pagopa-dx/azure-merge-modules/azurerm"
+  source = "pagopa-dx/azure-merge-roles/azurerm"
 
   scope      = data.azurerm_subscription.current.id
   role_name  = "dx-observability-reader"
@@ -106,4 +106,4 @@ infer management group membership from a subscription ARM ID alone.
 | Name | Description |
 |------|-------------|
 | custom_role_id | ID of the newly created custom role definition |
-| custom_role_name | Name of the newly created custom role definition |
+| custom_role_name | Display name of the newly created custom role definition |

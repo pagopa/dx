@@ -1,4 +1,4 @@
-# Tests for azure_merge_modules
+# Tests for azure_merge_roles
 
 This module currently provides fast local coverage through mocked Terraform tests:
 
@@ -18,8 +18,8 @@ pnpm run test:contract
 From the workspace root:
 
 ```bash
-pnpm nx run azure_merge_modules:test:unit
-pnpm nx run azure_merge_modules:test:contract
+pnpm nx run azure_merge_roles:test:unit
+pnpm nx run azure_merge_roles:test:contract
 ```
 
 ## Notes

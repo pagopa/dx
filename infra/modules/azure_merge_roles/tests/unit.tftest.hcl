@@ -1,4 +1,4 @@
-# Unit tests for azure_merge_modules.
+# Unit tests for azure_merge_roles.
 # Uses mocked role definitions to validate role construction without real Azure calls.
 
 variables {

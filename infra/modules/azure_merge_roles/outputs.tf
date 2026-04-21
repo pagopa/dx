@@ -9,6 +9,6 @@ output "custom_role_id" {
 }
 
 output "custom_role_name" {
-  description = "Name of the newly created custom role definition"
+  description = "Display name of the newly created custom role definition"
   value       = azurerm_role_definition.merged.name
 }

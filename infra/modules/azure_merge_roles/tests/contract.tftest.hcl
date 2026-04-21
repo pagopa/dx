@@ -1,4 +1,4 @@
-# Contract tests for azure_merge_modules.
+# Contract tests for azure_merge_roles.
 # Validates input constraints.
 
 variables {
