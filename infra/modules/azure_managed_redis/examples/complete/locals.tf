@@ -17,11 +17,10 @@ locals {
     instance_number = "01"
   }
 
-  subnet_pep_id                        = null
-  private_dns_zone_resource_group_name = null
-  log_analytics_workspace_id           = null
-  action_group_id                      = null
-  cmk_key_vault_key_id                 = null
-  cmk_user_assigned_identity_id        = null
-  geo_replication_linked_ids           = []
+  # Fill these in when running the example against a real subscription.
+  subnet_pep_id              = null
+  virtual_network_name       = null
+  virtual_network_rg_name    = null
+  log_analytics_workspace_id = null
+  action_group_id            = null
 }

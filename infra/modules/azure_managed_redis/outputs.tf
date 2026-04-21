@@ -1,11 +1,11 @@
-output "name" {
-  description = "The name of the Azure Managed Redis instance."
-  value       = azurerm_managed_redis.this.name
-}
-
 output "id" {
   description = "The ID of the Azure Managed Redis instance."
   value       = azurerm_managed_redis.this.id
+}
+
+output "name" {
+  description = "The name of the Azure Managed Redis instance."
+  value       = azurerm_managed_redis.this.name
 }
 
 output "resource_group_name" {
@@ -23,19 +23,12 @@ output "port" {
   value       = azurerm_managed_redis.this.default_database[0].port
 }
 
+output "principal_id" {
+  description = "The principal ID of the system-assigned identity of the Azure Managed Redis instance."
+  value       = azurerm_managed_redis.this.identity[0].principal_id
+}
+
 output "private_endpoint_ip_address" {
-  description = "The private IP address assigned to the Managed Redis private endpoint."
+  description = "The private IP address assigned to the Managed Redis private endpoint, or null when public networking is in use."
   value       = try(azurerm_private_endpoint.redis[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0], null)
-}
-
-output "diagnostic_settings" {
-  description = "Details of the diagnostic settings configured for the Azure Managed Redis instance."
-  value = {
-    id = try(azurerm_monitor_diagnostic_setting.this[0].id, null)
-  }
-}
-
-output "data_owner_object_ids" {
-  description = "The principal IDs granted Managed Redis data owner access."
-  value       = keys(azurerm_managed_redis_access_policy_assignment.data_owners)
 }

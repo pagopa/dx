@@ -15,7 +15,7 @@ resource "azurerm_private_endpoint" "redis" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [local.private_dns_zone_id]
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.redis[0].id]
   }
 
   tags = local.tags

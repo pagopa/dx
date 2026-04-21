@@ -19,15 +19,12 @@ module "managed_redis" {
   resource_group_name = azurerm_resource_group.example.name
   tags                = local.tags
 
-  force_public_network_access_enabled = local.subnet_pep_id == null
-  subnet_pep_id                       = local.subnet_pep_id
-  private_dns_zone_resource_group_name = local.private_dns_zone_resource_group_name
+  use_case = "default"
 
-  use_case                           = "default"
-  access_keys_authentication_enabled = false
-
-  authorized_teams = {
-    data_owners = [data.azurerm_client_config.current.object_id]
+  subnet_pep_id = local.subnet_pep_id
+  virtual_network = {
+    name                = local.virtual_network_name
+    resource_group_name = local.virtual_network_rg_name
   }
 
   database = {
@@ -37,37 +34,9 @@ module "managed_redis" {
     ]
   }
 
-  diagnostic_settings = local.log_analytics_workspace_id == null ? {
-    enabled = false
-  } : {
-    enabled                    = true
-    log_analytics_workspace_id = local.log_analytics_workspace_id
-  }
+  log_analytics_workspace_id = local.log_analytics_workspace_id
 
   alerts = {
-    enabled         = true
     action_group_id = local.action_group_id
-    thresholds = {
-      used_memory_percentage = 85
-      connected_clients      = 5000
-      server_load            = 85
-      cache_misses           = 1000
-    }
-  }
-
-  customer_managed_key = local.cmk_key_vault_key_id == null ? {
-    enabled = false
-  } : {
-    enabled                   = true
-    key_vault_key_id          = local.cmk_key_vault_key_id
-    user_assigned_identity_id = local.cmk_user_assigned_identity_id
-  }
-
-  geo_replication = length(local.geo_replication_linked_ids) == 0 ? {
-    enabled = false
-  } : {
-    enabled                  = true
-    group_name               = "example-amr-group"
-    linked_managed_redis_ids = local.geo_replication_linked_ids
   }
 }
