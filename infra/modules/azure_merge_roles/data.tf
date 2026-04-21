@@ -1,9 +1,11 @@
 # ============================================================================
 # DATA SOURCES
 # ============================================================================
-# Resolve every source built-in role once so the module can reuse the provider's
-# normalized view of the role definition instead of re-encoding role metadata.
+# Resolve every source role in the same scope as the merged role definition so
+# the module can merge both built-in roles and custom roles defined at that
+# scope without re-encoding role metadata.
 data "azurerm_role_definition" "source" {
-  for_each = toset(var.source_roles)
-  name     = each.key
+  for_each = local.source_roles_by_index
+  name     = each.value
+  scope    = var.scope
 }

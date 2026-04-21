@@ -10,7 +10,7 @@ variables {
 mock_provider "azurerm" {}
 
 override_data {
-  target = data.azurerm_role_definition.source["Reader"]
+  target = data.azurerm_role_definition.source["0"]
   values = {
     permissions = [
       {
@@ -24,7 +24,7 @@ override_data {
 }
 
 override_data {
-  target = data.azurerm_role_definition.source["Monitoring Reader"]
+  target = data.azurerm_role_definition.source["1"]
   values = {
     permissions = [
       {

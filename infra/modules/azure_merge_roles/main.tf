@@ -1,8 +1,8 @@
 # ============================================================================
 # RESOURCE - Custom Role Definition
 # ============================================================================
-# Create a new custom role that combines built-in roles while preserving each
-# source permission block. This keeps Azure RBAC exclusion semantics intact.
+# Create a new custom role that combines built-in roles into the single
+# permissions object Azure accepts for custom roles.
 
 resource "azurerm_role_definition" "merged" {
   name              = trimspace(var.role_name)
@@ -10,16 +10,12 @@ resource "azurerm_role_definition" "merged" {
   scope             = var.scope
   assignable_scopes = local.assignable_scopes
 
-  # Render one permissions block for each normalized source block so exclusions
-  # remain scoped to the block that originally declared them.
-  dynamic "permissions" {
-    for_each = local.permission_blocks
-
-    content {
-      actions          = permissions.value.actions
-      data_actions     = permissions.value.data_actions
-      not_actions      = permissions.value.not_actions
-      not_data_actions = permissions.value.not_data_actions
-    }
+  # Azure custom roles support a single permissions object, so the module
+  # compacts the merged result into one effective block.
+  permissions {
+    actions          = local.merged_permissions.actions
+    data_actions     = local.merged_permissions.data_actions
+    not_actions      = local.merged_permissions.not_actions
+    not_data_actions = local.merged_permissions.not_data_actions
   }
 }

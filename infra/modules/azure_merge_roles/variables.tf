@@ -22,12 +22,12 @@ variable "role_name" {
 }
 
 variable "source_roles" {
-  description = "List of built-in Azure role names to merge into a custom role definition."
+  description = "List of Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope."
   type        = list(string)
 
   validation {
     condition     = length(var.source_roles) > 0
-    error_message = "source_roles must contain at least one Azure built-in role name."
+    error_message = "source_roles must contain at least one Azure role name."
   }
 
   validation {
