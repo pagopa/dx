@@ -8,7 +8,7 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
 
-![diagram](diagram.svg)
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_storage_account/diagram.svg)
 
 ## Features
 
