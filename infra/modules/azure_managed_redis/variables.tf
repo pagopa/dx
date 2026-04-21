@@ -158,14 +158,17 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "alerts" {
-  description = "Metric alert configuration. Alerts are enabled by default for 'default' and 'high_throughput' use cases with sensible thresholds."
+  description = "Metric alert configuration. Alerts are enabled by default for 'default' and 'high_throughput' use cases with sensible thresholds. Set 'connected_clients' to opt into the connection-count alert (no universal default across SKUs)."
   type = object({
     action_group_id = optional(string, null)
     thresholds = optional(object({
-      used_memory_percentage = optional(number, 60)
-      connected_clients      = optional(number, 5000)
-      server_load            = optional(number, 60)
-      cache_misses           = optional(number, 1000)
+      used_memory_percentage          = optional(number, 75)
+      used_memory_percentage_critical = optional(number, 90)
+      server_load                     = optional(number, 80)
+      server_load_critical            = optional(number, 90)
+      evicted_keys                    = optional(number, 0)
+      errors                          = optional(number, 0)
+      connected_clients               = optional(number, null)
     }), {})
   })
   default = {}

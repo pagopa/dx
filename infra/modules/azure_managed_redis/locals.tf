@@ -94,52 +94,87 @@ locals {
   private_endpoint_enabled             = local.use_case_features.private_network_enabled
   private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, var.virtual_network.resource_group_name), null)
 
-  metric_alert_definitions = {
+  metric_alert_definitions = merge({
     used_memory_percentage = {
       aggregation      = "Maximum"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "usedmemorypercentage"
       operator         = "GreaterThan"
-      threshold        = try(var.alerts.thresholds.used_memory_percentage, 60)
+      threshold        = try(var.alerts.thresholds.used_memory_percentage, 75)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis used memory percentage is above threshold."
+      description      = "Managed Redis used memory percentage is above the warn threshold (75%). MS recommends scaling up at this level."
     }
-    connected_clients = {
+    used_memory_percentage_critical = {
       aggregation      = "Maximum"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
-      metric_name      = "connectedclients"
+      metric_name      = "usedmemorypercentage"
       operator         = "GreaterThan"
-      threshold        = try(var.alerts.thresholds.connected_clients, 5000)
-      frequency        = "PT5M"
-      window_size      = "PT15M"
-      severity         = 2
-      description      = "Managed Redis connected clients are above threshold."
+      threshold        = try(var.alerts.thresholds.used_memory_percentage_critical, 90)
+      frequency        = "PT1M"
+      window_size      = "PT5M"
+      severity         = 1
+      description      = "Managed Redis used memory percentage is critical. Eviction or OOM failover is imminent."
     }
     server_load = {
       aggregation      = "Maximum"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "serverLoad"
       operator         = "GreaterThan"
-      threshold        = try(var.alerts.thresholds.server_load, 60)
+      threshold        = try(var.alerts.thresholds.server_load, 80)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis server load is above threshold."
+      description      = "Managed Redis server load is above 80%. Sustained load at this level can lead to unplanned failovers."
     }
-    cache_misses = {
+    server_load_critical = {
+      aggregation      = "Maximum"
+      metric_namespace = "Microsoft.Cache/redisEnterprise"
+      metric_name      = "serverLoad"
+      operator         = "GreaterThan"
+      threshold        = try(var.alerts.thresholds.server_load_critical, 90)
+      frequency        = "PT1M"
+      window_size      = "PT5M"
+      severity         = 1
+      description      = "Managed Redis server load is near saturation. Scale out or shard."
+    }
+    evicted_keys = {
       aggregation      = "Total"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
-      metric_name      = "cachemisses"
+      metric_name      = "evictedkeys"
       operator         = "GreaterThan"
-      threshold        = try(var.alerts.thresholds.cache_misses, 1000)
+      threshold        = try(var.alerts.thresholds.evicted_keys, 0)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis cache misses are above threshold."
+      description      = "Managed Redis is evicting keys due to memory pressure; data loss may be occurring."
     }
-  }
+    errors = {
+      aggregation      = "Total"
+      metric_namespace = "Microsoft.Cache/redisEnterprise"
+      metric_name      = "errors"
+      operator         = "GreaterThan"
+      threshold        = try(var.alerts.thresholds.errors, 0)
+      frequency        = "PT1M"
+      window_size      = "PT5M"
+      severity         = 1
+      description      = "Managed Redis reported typed errors (OOM, AuthFailure, Replication, UnresponsiveClients)."
+    }
+    },
+    try(var.alerts.thresholds.connected_clients, null) == null ? {} : {
+      connected_clients = {
+        aggregation      = "Maximum"
+        metric_namespace = "Microsoft.Cache/redisEnterprise"
+        metric_name      = "connectedclients"
+        operator         = "GreaterThan"
+        threshold        = var.alerts.thresholds.connected_clients
+        frequency        = "PT5M"
+        window_size      = "PT15M"
+        severity         = 2
+        description      = "Managed Redis connected clients are above the configured threshold; approaching the SKU connection ceiling."
+      }
+  })
 
   metric_alerts = local.use_case_features.alerts_enabled ? local.metric_alert_definitions : {}
 }
