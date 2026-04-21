@@ -1,3 +1,5 @@
+data "azurerm_subscription" "current" {}
+
 data "azurerm_private_dns_zone" "redis" {
   count = local.private_endpoint_enabled ? 1 : 0
 

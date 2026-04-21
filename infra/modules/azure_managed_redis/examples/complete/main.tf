@@ -21,7 +21,6 @@ module "managed_redis" {
 
   use_case = "default"
 
-  subnet_pep_id = local.subnet_pep_id
   virtual_network = {
     name                = local.virtual_network_name
     resource_group_name = local.virtual_network_rg_name

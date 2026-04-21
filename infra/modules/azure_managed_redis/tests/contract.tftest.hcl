@@ -21,7 +21,6 @@ variables {
 
   resource_group_name = "rg-test"
 
-  subnet_pep_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
   virtual_network = {
     name                = "vnet-test"
     resource_group_name = "dx-d-itn-network-rg-01"
@@ -47,6 +46,12 @@ variables {
 }
 
 mock_provider "azurerm" {
+  mock_data "azurerm_subscription" {
+    defaults = {
+      id              = "/subscriptions/00000000-0000-0000-0000-000000000000"
+      subscription_id = "00000000-0000-0000-0000-000000000000"
+    }
+  }
   mock_data "azurerm_private_dns_zone" {
     defaults = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
@@ -63,18 +68,6 @@ run "invalid_use_case" {
 
   expect_failures = [
     var.use_case,
-  ]
-}
-
-run "missing_private_endpoint_subnet" {
-  command = plan
-
-  variables {
-    subnet_pep_id = null
-  }
-
-  expect_failures = [
-    var.subnet_pep_id,
   ]
 }
 
