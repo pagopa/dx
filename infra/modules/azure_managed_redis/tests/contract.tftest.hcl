@@ -21,63 +21,38 @@ variables {
 
   resource_group_name = "rg-test"
 
-  subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
-  private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
-  force_public_network_access_enabled  = false
+  subnet_pep_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
+  virtual_network = {
+    name                = "vnet-test"
+    resource_group_name = "dx-d-itn-network-rg-01"
+  }
+  private_dns_zone_resource_group_name = null
 
   use_case          = "default"
   sku_name_override = null
-
-  access_keys_authentication_enabled = false
-  authorized_teams = {
-    data_owners = []
-  }
-
-  geo_replication = {
-    enabled                  = false
-    group_name               = null
-    linked_managed_redis_ids = []
-  }
 
   database = {
     client_protocol   = null
     clustering_policy = null
     eviction_policy   = null
-    persistence = {
-      mode      = null
-      frequency = null
-    }
-    modules = []
+    modules           = []
   }
 
-  identity = null
-  customer_managed_key = {
-    enabled                   = false
-    key_vault_key_id          = null
-    user_assigned_identity_id = null
-  }
-
-  diagnostic_settings = {
-    enabled                                   = false
-    log_analytics_workspace_id                = null
-    diagnostic_setting_destination_storage_id = null
-  }
+  log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-monitor/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
   alerts = {
-    enabled         = false
     action_group_id = null
-    thresholds = {
-      used_memory_percentage = null
-      connected_clients      = null
-      server_load            = null
-      cache_misses           = null
-    }
+    thresholds      = {}
   }
-
-  enable_lock = null
 }
 
-mock_provider "azurerm" {}
+mock_provider "azurerm" {
+  mock_data "azurerm_private_dns_zone" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
+    }
+  }
+}
 
 run "invalid_use_case" {
   command = plan
@@ -103,11 +78,38 @@ run "missing_private_endpoint_subnet" {
   ]
 }
 
+run "missing_virtual_network" {
+  command = plan
+
+  variables {
+    virtual_network = {
+      name                = null
+      resource_group_name = null
+    }
+  }
+
+  expect_failures = [
+    var.virtual_network,
+  ]
+}
+
+run "missing_log_analytics_workspace" {
+  command = plan
+
+  variables {
+    log_analytics_workspace_id = null
+  }
+
+  expect_failures = [
+    var.log_analytics_workspace_id,
+  ]
+}
+
 run "invalid_sku_override" {
   command = plan
 
   variables {
-    sku_name_override = "Balanced_B9999"
+    sku_name_override = "MemoryOptimized_M10"
   }
 
   expect_failures = [
@@ -115,43 +117,15 @@ run "invalid_sku_override" {
   ]
 }
 
-run "invalid_geo_replication_without_group_name" {
+run "invalid_clustering_policy" {
   command = plan
 
   variables {
-    geo_replication = {
-      enabled                  = true
-      group_name               = null
-      linked_managed_redis_ids = []
-    }
-  }
-
-  expect_failures = [
-    var.geo_replication,
-  ]
-}
-
-run "invalid_geo_replication_with_persistence" {
-  command = plan
-
-  variables {
-    geo_replication = {
-      enabled    = true
-      group_name = "amr-group"
-      linked_managed_redis_ids = [
-        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-west/providers/Microsoft.Cache/redisEnterprise/amr-west"
-      ]
-    }
-
     database = {
       client_protocol   = null
-      clustering_policy = null
+      clustering_policy = "NoCluster"
       eviction_policy   = null
-      persistence = {
-        mode      = "rdb"
-        frequency = "1h"
-      }
-      modules = []
+      modules           = []
     }
   }
 
@@ -160,85 +134,17 @@ run "invalid_geo_replication_with_persistence" {
   ]
 }
 
-run "invalid_geo_replication_with_unsupported_module" {
+run "invalid_module_name" {
   command = plan
 
   variables {
-    geo_replication = {
-      enabled    = true
-      group_name = "amr-group"
-      linked_managed_redis_ids = [
-        "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-west/providers/Microsoft.Cache/redisEnterprise/amr-west"
-      ]
-    }
-
     database = {
       client_protocol   = null
       clustering_policy = null
       eviction_policy   = null
-      persistence = {
-        mode      = "disabled"
-        frequency = null
-      }
       modules = [
-        {
-          name = "RedisBloom"
-          args = null
-        }
+        { name = "UnknownModule", args = null }
       ]
-    }
-  }
-
-  expect_failures = [
-    var.database,
-  ]
-}
-
-run "invalid_cmk_configuration" {
-  command = plan
-
-  variables {
-    customer_managed_key = {
-      enabled                   = true
-      key_vault_key_id          = "https://kv-test.vault.azure.net/keys/redis-cmk/0123456789abcdef"
-      user_assigned_identity_id = null
-    }
-  }
-
-  expect_failures = [
-    var.customer_managed_key,
-  ]
-}
-
-run "invalid_diagnostic_settings_without_destinations" {
-  command = plan
-
-  variables {
-    diagnostic_settings = {
-      enabled                                   = true
-      log_analytics_workspace_id                = null
-      diagnostic_setting_destination_storage_id = null
-    }
-  }
-
-  expect_failures = [
-    var.diagnostic_settings,
-  ]
-}
-
-run "invalid_aof_frequency" {
-  command = plan
-
-  variables {
-    database = {
-      client_protocol   = null
-      clustering_policy = null
-      eviction_policy   = null
-      persistence = {
-        mode      = "aof"
-        frequency = "6h"
-      }
-      modules = []
     }
   }
 

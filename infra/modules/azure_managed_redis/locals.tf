@@ -18,58 +18,43 @@ locals {
     default = {
       sku_name                  = "Balanced_B3"
       high_availability_enabled = true
-      enable_lock               = true
+      private_network_enabled   = true
+      lock_enabled              = true
+      diagnostics_enabled       = true
       alerts_enabled            = true
+      persistence_mode          = "rdb"
       database = {
-        client_protocol       = "Encrypted"
-        clustering_policy     = "OSSCluster"
-        eviction_policy       = "VolatileLRU"
-        persistence_mode      = "rdb"
-        persistence_frequency = "12h"
-      }
-      alert_thresholds = {
-        used_memory_percentage = 80
-        connected_clients      = 5000
-        server_load            = 80
-        cache_misses           = 1000
+        client_protocol   = "Encrypted"
+        clustering_policy = "OSSCluster"
+        eviction_policy   = "VolatileLRU"
       }
     }
     development = {
       sku_name                  = "Balanced_B0"
       high_availability_enabled = false
-      enable_lock               = false
+      private_network_enabled   = false
+      lock_enabled              = false
+      diagnostics_enabled       = false
       alerts_enabled            = false
+      persistence_mode          = "disabled"
       database = {
-        client_protocol       = "Encrypted"
-        clustering_policy     = "OSSCluster"
-        eviction_policy       = "VolatileLRU"
-        persistence_mode      = "disabled"
-        persistence_frequency = null
-      }
-      alert_thresholds = {
-        used_memory_percentage = null
-        connected_clients      = null
-        server_load            = null
-        cache_misses           = null
+        client_protocol   = "Encrypted"
+        clustering_policy = "OSSCluster"
+        eviction_policy   = "VolatileLRU"
       }
     }
     high_throughput = {
       sku_name                  = "ComputeOptimized_X3"
       high_availability_enabled = true
-      enable_lock               = true
+      private_network_enabled   = true
+      lock_enabled              = true
+      diagnostics_enabled       = true
       alerts_enabled            = true
+      persistence_mode          = "rdb"
       database = {
-        client_protocol       = "Encrypted"
-        clustering_policy     = "OSSCluster"
-        eviction_policy       = "VolatileLRU"
-        persistence_mode      = "rdb"
-        persistence_frequency = "6h"
-      }
-      alert_thresholds = {
-        used_memory_percentage = 80
-        connected_clients      = 10000
-        server_load            = 80
-        cache_misses           = 2000
+        client_protocol   = "Encrypted"
+        clustering_policy = "OSSCluster"
+        eviction_policy   = "VolatileLRU"
       }
     }
   }
@@ -85,49 +70,18 @@ locals {
     client_protocol       = coalesce(try(var.database.client_protocol, null), local.use_case_features.database.client_protocol)
     clustering_policy     = coalesce(try(var.database.clustering_policy, null), local.use_case_features.database.clustering_policy)
     eviction_policy       = coalesce(try(var.database.eviction_policy, null), local.use_case_features.database.eviction_policy)
-    persistence_mode      = coalesce(try(var.database.persistence.mode, null), local.use_case_features.database.persistence_mode)
-    persistence_frequency = try(var.database.persistence.frequency, null) != null ? var.database.persistence.frequency : local.use_case_features.database.persistence_frequency
+    persistence_mode      = local.use_case_features.persistence_mode
+    persistence_frequency = local.use_case_features.persistence_mode == "rdb" ? "1h" : null
     modules = [
-      for module in try(var.database.modules, []) : {
-        name = module.name
-        args = try(module.args, null)
+      for m in try(var.database.modules, []) : {
+        name = m.name
+        args = try(m.args, null)
       }
     ]
   }
 
-  private_endpoint_enabled             = !var.force_public_network_access_enabled
-  private_dns_zone_resource_group_name = coalesce(var.private_dns_zone_resource_group_name, try(split("/", var.subnet_pep_id)[4], null))
-  private_dns_zone_id = local.private_endpoint_enabled ? format(
-    "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net",
-    split("/", var.subnet_pep_id)[2],
-    local.private_dns_zone_resource_group_name
-  ) : null
-
-  geo_replication_enabled = try(var.geo_replication.enabled, false)
-
-  base_identity = var.identity == null ? null : {
-    type         = var.identity.type
-    identity_ids = try(var.identity.identity_ids, [])
-  }
-
-  effective_identity = try(var.customer_managed_key.enabled, false) ? {
-    type = var.identity == null ? "UserAssigned" : (
-      var.identity.type == "SystemAssigned" ? "SystemAssigned, UserAssigned" : var.identity.type
-    )
-    identity_ids = distinct(compact(concat(
-      try(var.identity.identity_ids, []),
-      [var.customer_managed_key.user_assigned_identity_id]
-    )))
-  } : local.base_identity
-
-  alerts_enabled = coalesce(try(var.alerts.enabled, null), local.use_case_features.alerts_enabled)
-
-  alert_thresholds = {
-    used_memory_percentage = try(var.alerts.thresholds.used_memory_percentage, null) != null ? var.alerts.thresholds.used_memory_percentage : local.use_case_features.alert_thresholds.used_memory_percentage
-    connected_clients      = try(var.alerts.thresholds.connected_clients, null) != null ? var.alerts.thresholds.connected_clients : local.use_case_features.alert_thresholds.connected_clients
-    server_load            = try(var.alerts.thresholds.server_load, null) != null ? var.alerts.thresholds.server_load : local.use_case_features.alert_thresholds.server_load
-    cache_misses           = try(var.alerts.thresholds.cache_misses, null) != null ? var.alerts.thresholds.cache_misses : local.use_case_features.alert_thresholds.cache_misses
-  }
+  private_endpoint_enabled             = local.use_case_features.private_network_enabled
+  private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, var.virtual_network.resource_group_name), null)
 
   metric_alert_definitions = {
     used_memory_percentage = {
@@ -135,7 +89,7 @@ locals {
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "usedmemorypercentage"
       operator         = "GreaterThan"
-      threshold        = local.alert_thresholds.used_memory_percentage
+      threshold        = try(var.alerts.thresholds.used_memory_percentage, 60)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
@@ -146,7 +100,7 @@ locals {
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "connectedclients"
       operator         = "GreaterThan"
-      threshold        = local.alert_thresholds.connected_clients
+      threshold        = try(var.alerts.thresholds.connected_clients, 5000)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
@@ -157,7 +111,7 @@ locals {
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "serverLoad"
       operator         = "GreaterThan"
-      threshold        = local.alert_thresholds.server_load
+      threshold        = try(var.alerts.thresholds.server_load, 60)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
@@ -168,7 +122,7 @@ locals {
       metric_namespace = "Microsoft.Cache/redisEnterprise"
       metric_name      = "cachemisses"
       operator         = "GreaterThan"
-      threshold        = local.alert_thresholds.cache_misses
+      threshold        = try(var.alerts.thresholds.cache_misses, 1000)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
@@ -176,10 +130,5 @@ locals {
     }
   }
 
-  metric_alerts = local.alerts_enabled ? {
-    for key, definition in local.metric_alert_definitions : key => definition
-    if definition.threshold != null
-  } : {}
-
-  enable_lock = var.enable_lock != null ? var.enable_lock : local.use_case_features.enable_lock
+  metric_alerts = local.use_case_features.alerts_enabled ? local.metric_alert_definitions : {}
 }
