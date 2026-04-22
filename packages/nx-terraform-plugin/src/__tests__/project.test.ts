@@ -10,6 +10,7 @@ const customOptions = parseOptions({
   consoleTargetName: "terraform-console",
   formatTargetName: "terraform-format",
   initTargetName: "terraform-init",
+  lintTargetName: "terraform-lint",
   outputTargetName: "terraform-output",
   planTargetName: "terraform-plan",
   testTargetName: "terraform-test",
@@ -24,6 +25,21 @@ const expectedNamedInputs = {
     "{projectRoot}/tests/**/*.tftest.hcl",
   ],
 };
+
+const getExpectedLintTarget = (root: string) => ({
+  cache: true,
+  command: "tflint",
+  inputs: ["default", "examples", "tests", "{workspaceRoot}/.tflint.hcl"],
+  options: {
+    args: [
+      "--disable-rule=terraform_required_version",
+      "--disable-rule=terraform_required_providers",
+      "--config",
+      path.relative(root, ".tflint.hcl") || ".tflint.hcl",
+    ],
+    cwd: "{projectRoot}",
+  },
+});
 
 const getTargetsOrThrow = (project: ReturnType<typeof getProject>) => {
   if (!project.targets) {
@@ -149,6 +165,24 @@ describe("getProject", () => {
       expect(targets["tf-validate"]?.cache).toBe(true);
     });
 
+    it("adds tf-lint when the root tflint config exists", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root, true));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-lint",
+        "tf-console",
+        "tf-output",
+        "tf-plan",
+        "tf-apply",
+      ]);
+      expect(targets["tf-lint"]).toEqual(getExpectedLintTarget(root));
+    });
+
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
@@ -187,15 +221,33 @@ describe("getProject", () => {
       expect(getTargetsOrThrow(project)["tf-plan"]).toBeUndefined();
       expect(getTargetsOrThrow(project)["tf-apply"]).toBeUndefined();
     });
+
+    it("adds tf-lint to libraries when the root tflint config exists", () => {
+      const root = path.join("infra", "modules", "network_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root, true));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-lint",
+        "tf-console",
+        "tf-output",
+      ]);
+      expect(targets["tf-lint"]).toEqual(getExpectedLintTarget(root));
+    });
   });
 
   describe("when custom target names are configured", () => {
     it("produces the same target implementations under different names", () => {
       const root = path.join("infra", "resources", "dev", "stack");
       const defaultTargets = getTargetsOrThrow(
-        getProject(defaultOptions, root),
+        getProject(defaultOptions, root, true),
       );
-      const customTargets = getTargetsOrThrow(getProject(customOptions, root));
+      const customTargets = getTargetsOrThrow(
+        getProject(customOptions, root, true),
+      );
 
       expect(Object.keys(defaultTargets)).not.toEqual(
         Object.keys(customTargets),

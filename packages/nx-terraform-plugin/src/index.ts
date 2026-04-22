@@ -3,6 +3,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
 } from "@nx/devkit";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
 import { getStaticDependenciesFromFile } from "./fs.ts";
@@ -11,12 +12,16 @@ import { getTerraformProjectFiles } from "./project-file.ts";
 import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
+const rootTflintConfigFileName = ".tflint.hcl";
 
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // We create a terraform project for each directory containing .tf files
   "**/*.tf",
   async (configFiles, options, context) => {
     const opts = parseOptions(options);
+    const hasRootTflintConfig = existsSync(
+      path.join(context.workspaceRoot, rootTflintConfigFileName),
+    );
     return createNodesFromFiles(
       (configFile) => {
         const root = path.dirname(configFile);
@@ -28,7 +33,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
         }
         return {
           projects: {
-            [root]: getProject(opts, root),
+            [root]: getProject(opts, root, hasRootTflintConfig),
           },
         };
       },

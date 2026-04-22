@@ -39,13 +39,24 @@ const getProjectType = (root: string): ProjectType => {
 
 const getTargets = (
   opts: TerraformPluginOptions,
+  root: string,
   projectType: ProjectType,
+  hasRootTflintConfig: boolean,
 ): Record<string, TargetConfiguration> => {
+  const rootTflintConfigPath =
+    path.relative(root, ".tflint.hcl") || ".tflint.hcl";
   const defaultArgs = {
     fmt: ["-list=true", "-recursive=true"],
+    lint: [
+      "--disable-rule=terraform_required_version",
+      "--disable-rule=terraform_required_providers",
+      "--config",
+      rootTflintConfigPath,
+    ],
   };
 
-  const cwd = "{projectRoot}";
+  const projectCwd = "{projectRoot}";
+  const terraformInputs = ["default", "examples", "tests"];
 
   // Shared targets for applications and libraries.
   // To speed up the development loop, frequently used tasks like "validate"
@@ -56,9 +67,9 @@ const getTargets = (
       {
         cache: true,
         command: `terraform init`,
-        inputs: ["default", "examples", "tests"],
+        inputs: terraformInputs,
         options: {
-          cwd,
+          cwd: projectCwd,
         },
         outputs: [
           "{projectRoot}/.terraform",
@@ -76,10 +87,10 @@ const getTargets = (
             args: [...defaultArgs.fmt, "-check=true"],
           },
         },
-        inputs: ["default", "examples", "tests"],
+        inputs: terraformInputs,
         options: {
           args: [...defaultArgs.fmt, "-write=true"],
-          cwd,
+          cwd: projectCwd,
         },
       },
     ],
@@ -91,7 +102,7 @@ const getTargets = (
         dependsOn: [opts.initTargetName],
         inputs: ["default", "tests"],
         options: {
-          cwd,
+          cwd: projectCwd,
         },
       },
     ],
@@ -100,19 +111,37 @@ const getTargets = (
       {
         cache: true,
         command: `terraform validate`,
-        inputs: ["default", "examples", "tests"],
+        inputs: terraformInputs,
         options: {
-          cwd,
+          cwd: projectCwd,
         },
       },
     ],
+  ];
+
+  if (hasRootTflintConfig) {
+    targets.push([
+      opts.lintTargetName,
+      {
+        cache: true,
+        command: `tflint`,
+        inputs: [...terraformInputs, "{workspaceRoot}/.tflint.hcl"],
+        options: {
+          args: defaultArgs.lint,
+          cwd: projectCwd,
+        },
+      },
+    ]);
+  }
+
+  targets.push(
     [
       opts.consoleTargetName,
       {
         cache: false,
         command: `terraform console`,
         options: {
-          cwd,
+          cwd: projectCwd,
           tty: true,
         },
       },
@@ -124,11 +153,11 @@ const getTargets = (
         command: `terraform output`,
         dependsOn: [opts.initTargetName],
         options: {
-          cwd,
+          cwd: projectCwd,
         },
       },
     ],
-  ];
+  );
 
   if (projectType === "application") {
     targets.push(
@@ -139,7 +168,7 @@ const getTargets = (
           command: `terraform plan`,
           dependsOn: [opts.initTargetName],
           options: {
-            cwd,
+            cwd: projectCwd,
           },
         },
       ],
@@ -150,7 +179,7 @@ const getTargets = (
           command: `terraform apply`,
           dependsOn: [opts.initTargetName],
           options: {
-            cwd,
+            cwd: projectCwd,
             tty: true,
           },
         },
@@ -164,9 +193,10 @@ const getTargets = (
 export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
+  hasRootTflintConfig = false,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
-  const targets = getTargets(opts, projectType);
+  const targets = getTargets(opts, root, projectType, hasRootTflintConfig);
   return {
     name: getProjectNameFromRoot(root),
     namedInputs: {
