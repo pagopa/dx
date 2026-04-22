@@ -11,6 +11,12 @@ inputs:
   resource_type:
     description: "Type of Azure resource (e.g., 'appsvc' or 'containerapp')"
     required: true
+  current_revision_name:
+    description: "Current Azure Container App revision receiving production traffic"
+    required: false
+  target_revision_name:
+    description: "Azure Container App revision to receive rollout traffic"
+    required: false
 
 runs:
   using: "composite"
@@ -35,4 +41,6 @@ runs:
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
         RESOURCE_NAME: ${{ inputs.resource_name }}
         RESOURCE_TYPE: ${{ inputs.resource_type }}
+        CURRENT_REVISION_NAME: ${{ inputs.current_revision_name }}
+        TARGET_REVISION_NAME: ${{ inputs.target_revision_name }}
       run: rollout.sh "$RESOURCE_GROUP_NAME" "$RESOURCE_NAME" "$RESOURCE_TYPE"

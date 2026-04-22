@@ -138,16 +138,46 @@ jobs:
 
           echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
 
-      - name: Get Container App Current Revision
+      - name: Get Container App Production Revision
         id: get_current_revision
         run: |
           set -euo
 
-          current_revision=$(az containerapp revision list \
+          container_app=$(az containerapp show \
             --name "$CONTAINER_APP_NAME" \
-            --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' -o tsv)
+            --output json)
 
-          echo "::notice::Current revision: $current_revision"
+          current_revision=$(echo "$container_app" | jq -r '
+            . as $app
+            | (
+                [
+                  ($app.properties.configuration.ingress.traffic // [])
+                  | map(select((.weight // 0) > 0))
+                  | map(
+                      if (.revisionName // "") != "" then
+                        { revisionName: .revisionName, weight: (.weight // 0) }
+                      elif .latestRevision == true then
+                        { revisionName: $app.properties.latestRevisionName, weight: (.weight // 0) }
+                      else
+                        empty
+                      end
+                    )
+                  | sort_by(.weight, .revisionName)
+                  | last
+                  | .revisionName,
+                  $app.properties.latestReadyRevisionName,
+                  $app.properties.latestRevisionName
+                ]
+                | map(select(. != null and . != ""))
+                | first
+              ) // empty')
+
+          if [[ -z "$current_revision" ]]; then
+            echo "::error::Unable to determine the production revision for $CONTAINER_APP_NAME"
+            exit 1
+          fi
+
+          echo "::notice::Production revision: $current_revision"
           echo "current_revision_name=$current_revision" >> $GITHUB_OUTPUT
 
       - name: Create New Container App Revision
@@ -249,6 +279,8 @@ jobs:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
+          current_revision_name: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          target_revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
 
       - name: Deactivate Old Revision
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
