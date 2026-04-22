@@ -2,7 +2,7 @@
 {{#each this}}
 module "azure-{{displayName}}_core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 3.0"
+  version = "~> 2.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -11,8 +11,6 @@ module "azure-{{displayName}}_core" {
   environment = merge(local.environment, local.azure_accounts.{{displayName}}, {
     app_name = "core"
   })
-
-  vpn_enabled = true
 
   tags = merge(local.tags, {
     Source = "https://github.com/{{@root.github.owner}}/{{@root.github.repo}}/blob/main/infra/core/{{@root.env.name}}"
