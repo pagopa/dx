@@ -1,3 +1,13 @@
+## 0.20.0 (2026-04-22)
+
+### 🚀 Features
+
+- The core infrastructure now enables the creation of an Azure VPN. ([#1657](https://github.com/pagopa/dx/pull/1657))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.19.3 (2026-04-22)
 
 ### 🩹 Fixes
