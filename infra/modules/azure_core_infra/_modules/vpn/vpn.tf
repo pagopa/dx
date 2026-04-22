@@ -27,7 +27,7 @@ resource "azurerm_virtual_network_gateway" "this" {
   type          = "Vpn"
   vpn_type      = "RouteBased"
   active_active = false
-  enable_bgp    = var.cross_cloud_dns_enabled
+  bgp_enabled   = var.cross_cloud_dns_enabled
   sku           = local.use_cases[var.vpn_use_case].sku
   generation    = "Generation${local.use_cases[var.vpn_use_case].generation}"
 

@@ -3,7 +3,7 @@ locals {
     "default" = {
       generation             = "2"
       sku                    = "VpnGw2AZ"
-      vpn_connections_number = 2
+      vpn_connections_number = 1
     }
   }
 
