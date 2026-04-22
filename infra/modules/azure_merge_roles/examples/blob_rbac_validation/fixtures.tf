@@ -137,6 +137,33 @@ resource "azurerm_role_definition" "source_blob_delete_only" {
   assignable_scopes = [module.storage_account.id]
 }
 
+resource "azurerm_role_definition" "source_container_rw_without_delete" {
+  name        = local.role_names.source_container_rw_without_delete
+  description = "Allows blob container control-plane operations except delete so merge tests can validate not_actions preservation."
+  scope       = module.storage_account.id
+
+  permissions {
+    actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/*"]
+    not_actions = [
+      "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
+    ]
+  }
+
+  assignable_scopes = [module.storage_account.id]
+}
+
+resource "azurerm_role_definition" "source_container_delete_only" {
+  name        = local.role_names.source_container_delete_only
+  description = "Allows only blob container control-plane delete so merge tests can verify delete is restored by a separate permission block."
+  scope       = module.storage_account.id
+
+  permissions {
+    actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/delete"]
+  }
+
+  assignable_scopes = [module.storage_account.id]
+}
+
 resource "azurerm_role_assignment" "limited_probe" {
   scope              = module.storage_account.id
   role_definition_id = module.blob_rw_without_delete.custom_role_id
@@ -146,5 +173,17 @@ resource "azurerm_role_assignment" "limited_probe" {
 resource "azurerm_role_assignment" "full_probe" {
   scope              = module.storage_account.id
   role_definition_id = module.blob_rw_with_delete_restored.custom_role_id
+  principal_id       = azurerm_user_assigned_identity.full_probe.principal_id
+}
+
+resource "azurerm_role_assignment" "limited_probe_control_plane" {
+  scope              = module.storage_account.id
+  role_definition_id = module.container_rw_without_delete.custom_role_id
+  principal_id       = azurerm_user_assigned_identity.limited_probe.principal_id
+}
+
+resource "azurerm_role_assignment" "full_probe_control_plane" {
+  scope              = module.storage_account.id
+  role_definition_id = module.container_rw_with_delete_restored.custom_role_id
   principal_id       = azurerm_user_assigned_identity.full_probe.principal_id
 }

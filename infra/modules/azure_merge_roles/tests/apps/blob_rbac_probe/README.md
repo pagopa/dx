@@ -1,6 +1,6 @@
 # blob_rbac_probe
 
-This application exposes a single HTTP endpoint at `/probe` on port `8080` and validates Blob data-plane permissions with `DefaultAzureCredential`.
+This application exposes HTTP endpoints on port `8080` to validate both Blob data-plane permissions and Storage control-plane permissions with `DefaultAzureCredential`.
 
 ## HTTP Endpoint
 
@@ -11,6 +11,12 @@ This application exposes a single HTTP endpoint at `/probe` on port `8080` and v
   - `account` (required): Storage account name
   - `container` (required): Blob container name
 
+- Path: `/management-probe`
+- Port: `8080`
+- Method: `GET`
+- Query parameters:
+  - `account_id` (required): ARM resource ID of the target storage account
+
 ## Probe Operation
 
 The probe performs three operations against the target container using the managed identity attached to the hosting compute:
@@ -20,3 +26,5 @@ The probe performs three operations against the target container using the manag
 - Delete the blob
 
 The response always reports the three operation results separately so E2E tests can distinguish between an expected delete denial and an unexpected write or read failure.
+
+The management probe performs the analogous create, read, and delete flow through the Azure control plane for blob container resources. This lets the E2E suite verify `actions` and `not_actions` behavior separately from Blob `data_actions`.

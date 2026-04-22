@@ -2,6 +2,10 @@ output "storage_account_name" {
   value = module.storage_account.name
 }
 
+output "storage_account_id" {
+  value = module.storage_account.id
+}
+
 output "resource_group_name" {
   value = azurerm_resource_group.e2e_blob_rbac.name
 }

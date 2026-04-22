@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,15 @@ type probeResponse struct {
 	Write    probeOperation `json:"write"`
 	Read     probeOperation `json:"read"`
 	Delete   probeOperation `json:"delete"`
+}
+
+type managementProbeResponse struct {
+	Status        string         `json:"status"`
+	Error         string         `json:"error,omitempty"`
+	ContainerName string         `json:"container_name"`
+	Write         probeOperation `json:"write"`
+	Read          probeOperation `json:"read"`
+	Delete        probeOperation `json:"delete"`
 }
 
 func TestAzureMergeRolesBlobRBAC(t *testing.T) {
@@ -75,7 +85,28 @@ func TestAzureMergeRolesBlobRBAC(t *testing.T) {
 		storageAccountName := terraform.Output(t, terraformOptions, "storage_account_name")
 		containerName := terraform.Output(t, terraformOptions, "container_name")
 
+		// This stage locks the repository's permissive merge policy in a real
+		// Azure data-plane flow: a broad wildcard exclusion is overridden by a
+		// narrower permission block that restores delete.
 		probeBlobPermissions(t, appIP, storageAccountName, containerName, true)
+	})
+
+	test_structure.RunTestStage(t, "validate_limited_control_plane_role", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+
+		appIP := terraform.Output(t, terraformOptions, "limited_app_ip_address")
+		storageAccountID := terraform.Output(t, terraformOptions, "storage_account_id")
+
+		probeManagementContainerPermissions(t, appIP, storageAccountID, false)
+	})
+
+	test_structure.RunTestStage(t, "validate_delete_restored_control_plane_role", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, fixtureFolder)
+
+		appIP := terraform.Output(t, terraformOptions, "full_app_ip_address")
+		storageAccountID := terraform.Output(t, terraformOptions, "storage_account_id")
+
+		probeManagementContainerPermissions(t, appIP, storageAccountID, true)
 	})
 }
 
@@ -129,6 +160,53 @@ func probeBlobPermissions(t *testing.T, appIPAddress string, storageAccountName 
 	})
 }
 
+func probeManagementContainerPermissions(t *testing.T, appIPAddress string, storageAccountID string, expectDeleteSuccess bool) {
+	probeURL := fmt.Sprintf("http://%s:8080/management-probe?account_id=%s", appIPAddress, url.QueryEscape(storageAccountID))
+	expectation := "expect control-plane delete to be denied"
+	if expectDeleteSuccess {
+		expectation = "expect control-plane delete to succeed"
+	}
+
+	tlsConfig := tls.Config{}
+	maxRetries := 20
+	delay := 15 * time.Second
+	attempt := 0
+
+	t.Logf("Probing control-plane RBAC at %s (%s)", probeURL, expectation)
+
+	httpHelper.HttpGetWithRetryWithCustomValidation(t, probeURL, &tlsConfig, maxRetries, delay, func(statusCode int, body string) bool {
+		attempt++
+
+		if statusCode != 200 {
+			t.Logf("Control-plane probe attempt %d (%s) returned HTTP %d: %s", attempt, expectation, statusCode, compactLogText(body, 240))
+			return false
+		}
+
+		var response managementProbeResponse
+		if err := json.Unmarshal([]byte(body), &response); err != nil {
+			t.Logf("Control-plane probe attempt %d (%s) returned invalid JSON: %v: %s", attempt, expectation, err, compactLogText(body, 240))
+			return false
+		}
+
+		if validationIssue := validateManagementProbeResponse(response, expectDeleteSuccess); validationIssue != "" {
+			t.Logf("Control-plane probe attempt %d (%s) not ready yet: %s", attempt, expectation, validationIssue)
+			return false
+		}
+
+		t.Logf(
+			"Control-plane probe attempt %d (%s) succeeded: container=%s write=%s read=%s delete=%s",
+			attempt,
+			expectation,
+			response.ContainerName,
+			describeProbeOperation(response.Write),
+			describeProbeOperation(response.Read),
+			describeProbeOperation(response.Delete),
+		)
+
+		return true
+	})
+}
+
 func validateProbeResponse(response probeResponse, expectDeleteSuccess bool) string {
 	if response.Status != "ok" {
 		return fmt.Sprintf("status=%q error=%s", response.Status, compactLogText(response.Error, 240))
@@ -149,6 +227,38 @@ func validateProbeResponse(response probeResponse, expectDeleteSuccess bool) str
 	expectedContent := fmt.Sprintf("probe:%s", response.BlobName)
 	if response.Read.Content != expectedContent {
 		return fmt.Sprintf("unexpected read content=%s expected=%s", compactLogText(response.Read.Content, 120), compactLogText(expectedContent, 120))
+	}
+
+	if expectDeleteSuccess {
+		if !response.Delete.Success || strings.TrimSpace(response.Delete.Error) != "" {
+			return fmt.Sprintf("delete should succeed but got: %s", describeProbeOperation(response.Delete))
+		}
+
+		return ""
+	}
+
+	if response.Delete.Success || strings.TrimSpace(response.Delete.Error) == "" {
+		return fmt.Sprintf("delete should be denied but got: %s", describeProbeOperation(response.Delete))
+	}
+
+	return ""
+}
+
+func validateManagementProbeResponse(response managementProbeResponse, expectDeleteSuccess bool) string {
+	if response.Status != "ok" {
+		return fmt.Sprintf("status=%q error=%s", response.Status, compactLogText(response.Error, 240))
+	}
+
+	if response.ContainerName == "" {
+		return "missing container name"
+	}
+
+	if !response.Write.Success {
+		return fmt.Sprintf("write failed: %s", describeProbeOperation(response.Write))
+	}
+
+	if !response.Read.Success {
+		return fmt.Sprintf("read failed: %s", describeProbeOperation(response.Read))
 	}
 
 	if expectDeleteSuccess {
