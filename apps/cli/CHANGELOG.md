@@ -1,3 +1,13 @@
+## 0.20.1 (2026-04-22)
+
+### 🩹 Fixes
+
+- Update azure-core-infra module version from ~> 3.0 to ~> 4.0 ([#1658](https://github.com/pagopa/dx/pull/1658))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.20.0 (2026-04-22)
 
 ### 🚀 Features
