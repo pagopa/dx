@@ -1,3 +1,14 @@
+## 0.9.0 (2026-04-22)
+
+### 🚀 Features
+
+- Add `managed_redis` resource naming support ([#1647](https://github.com/pagopa/dx/pull/1647))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.8.4
 
 ### Patch Changes
