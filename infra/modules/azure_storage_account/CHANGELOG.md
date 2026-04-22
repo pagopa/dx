@@ -1,3 +1,13 @@
+## 2.2.4 (2026-04-22)
+
+### 🩹 Fixes
+
+- Fix diagram link in documentation ([#1652](https://github.com/pagopa/dx/pull/1652))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.2.3
 
 ### Patch Changes
