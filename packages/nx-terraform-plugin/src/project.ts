@@ -37,14 +37,30 @@ const getProjectType = (root: string): ProjectType => {
     : "application";
 };
 
+const getRootConfigPath = (root: string, configFileName: string) =>
+  path.relative(root, configFileName) || configFileName;
+
+const getTerraformDocsArgs = (root: string, projectType: ProjectType) => {
+  const rootTerraformDocsConfigPath = getRootConfigPath(
+    root,
+    ".terraform-docs.yml",
+  );
+  const args = ["--config", rootTerraformDocsConfigPath];
+  if (projectType === "library") {
+    args.push("--hide", "providers", "--lockfile=false");
+  }
+  args.push(".");
+  return args;
+};
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
+  hasRootTerraformDocsConfig: boolean,
 ): Record<string, TargetConfiguration> => {
-  const rootTflintConfigPath =
-    path.relative(root, ".tflint.hcl") || ".tflint.hcl";
+  const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const defaultArgs = {
     fmt: ["-list=true", "-recursive=true"],
     lint: [
@@ -57,6 +73,12 @@ const getTargets = (
 
   const projectCwd = "{projectRoot}";
   const terraformInputs = ["default", "examples", "tests"];
+  const terraformDocsInputs = [
+    "default",
+    "{projectRoot}/.terraform.lock.hcl",
+    "{projectRoot}/README.md",
+    "{workspaceRoot}/.terraform-docs.yml",
+  ];
 
   // Shared targets for applications and libraries.
   // To speed up the development loop, frequently used tasks like "validate"
@@ -134,6 +156,22 @@ const getTargets = (
     ]);
   }
 
+  if (hasRootTerraformDocsConfig) {
+    targets.push([
+      opts.docsTargetName,
+      {
+        cache: true,
+        command: `terraform-docs`,
+        inputs: terraformDocsInputs,
+        options: {
+          args: getTerraformDocsArgs(root, projectType),
+          cwd: projectCwd,
+        },
+        outputs: ["{projectRoot}/README.md"],
+      },
+    ]);
+  }
+
   targets.push(
     [
       opts.consoleTargetName,
@@ -194,9 +232,16 @@ export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
   hasRootTflintConfig = false,
+  hasRootTerraformDocsConfig = false,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
-  const targets = getTargets(opts, root, projectType, hasRootTflintConfig);
+  const targets = getTargets(
+    opts,
+    root,
+    projectType,
+    hasRootTflintConfig,
+    hasRootTerraformDocsConfig,
+  );
   return {
     name: getProjectNameFromRoot(root),
     namedInputs: {

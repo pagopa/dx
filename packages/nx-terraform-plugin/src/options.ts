@@ -8,6 +8,7 @@ const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
 const terraformPluginOptionsSchema = z.object({
   applyTargetName: targetNameSchema,
   consoleTargetName: targetNameSchema,
+  docsTargetName: targetNameSchema,
   formatTargetName: targetNameSchema,
   initTargetName: targetNameSchema,
   lintTargetName: targetNameSchema,
@@ -24,6 +25,7 @@ export type TerraformPluginOptions = z.infer<
 const defaultOptions: TerraformPluginOptions = {
   applyTargetName: "tf-apply",
   consoleTargetName: "tf-console",
+  docsTargetName: "tf-docs",
   formatTargetName: "tf-fmt",
   initTargetName: "tf-init",
   lintTargetName: "tf-lint",

@@ -13,6 +13,7 @@ import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const rootTflintConfigFileName = ".tflint.hcl";
+const rootTerraformDocsConfigFileName = ".terraform-docs.yml";
 
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // We create a terraform project for each directory containing .tf files
@@ -21,6 +22,9 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
     const opts = parseOptions(options);
     const hasRootTflintConfig = existsSync(
       path.join(context.workspaceRoot, rootTflintConfigFileName),
+    );
+    const hasRootTerraformDocsConfig = existsSync(
+      path.join(context.workspaceRoot, rootTerraformDocsConfigFileName),
     );
     return createNodesFromFiles(
       (configFile) => {
@@ -33,7 +37,12 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
         }
         return {
           projects: {
-            [root]: getProject(opts, root, hasRootTflintConfig),
+            [root]: getProject(
+              opts,
+              root,
+              hasRootTflintConfig,
+              hasRootTerraformDocsConfig,
+            ),
           },
         };
       },

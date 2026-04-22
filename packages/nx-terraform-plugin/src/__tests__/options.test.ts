@@ -7,6 +7,7 @@ describe("parseOptions", () => {
     expect(parseOptions(undefined)).toEqual({
       applyTargetName: "tf-apply",
       consoleTargetName: "tf-console",
+      docsTargetName: "tf-docs",
       formatTargetName: "tf-fmt",
       initTargetName: "tf-init",
       lintTargetName: "tf-lint",
@@ -22,6 +23,7 @@ describe("parseOptions", () => {
       parseOptions({
         applyTargetName: "tf-plan",
         consoleTargetName: "tf-console",
+        docsTargetName: "tf-docs",
         formatTargetName: "tf-fmt",
         initTargetName: "tf-init",
         lintTargetName: "tf-lint",
