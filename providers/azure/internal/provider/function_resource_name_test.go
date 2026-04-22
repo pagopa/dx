@@ -805,7 +805,6 @@ func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
 	})
 }
 
-
 func TestResourceNameFunction_NameIsBareAbbreviationPrefix(t *testing.T) {
 	t.Parallel()
 	// Regression test: name="cdn" with cdn_frontdoor_route (abbr="cdnr") must NOT be rejected.
