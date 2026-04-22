@@ -207,7 +207,7 @@ func (r *availableSubnetCidrResource) Delete(ctx context.Context, req resource.D
 	tflog.Info(ctx, "Deleting available subnet CIDR resource")
 }
 
-// PlanModifiers implements the plan modifiers for this resource
+// ModifyPlan implements the plan modifiers for this resource
 func (r *availableSubnetCidrResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	// In the creation phase, we don't modify the plan
 	// Leave the cidr_block attribute as "known after apply"
