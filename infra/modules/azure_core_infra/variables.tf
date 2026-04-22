@@ -43,17 +43,17 @@ variable "nat_enabled" {
 variable "vpn_enabled" {
   type        = bool
   description = "A boolean flag to enable or disable the creation of a VPN."
-  default     = false
+  default     = true
 }
 
 variable "vpn_use_case" {
   type        = string
-  description = "Site-to-Site VPN use case. Allowed values: 'default', 'high_availability'."
+  description = "Site-to-Site VPN use case. Allowed values: 'default'."
   default     = "default"
 
   validation {
-    condition     = contains(["default", "high_availability"], var.vpn_use_case)
-    error_message = "vpn_use_case must be either 'default' or 'high_availability'."
+    condition     = contains(["default"], var.vpn_use_case)
+    error_message = "vpn_use_case must be 'default'."
   }
 }
 

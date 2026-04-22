@@ -1,14 +1,9 @@
 locals {
   use_cases = {
     "default" = {
-      generation             = "1"
-      sku                    = "VpnGw1"
-      vpn_connections_number = 1
-    }
-    "high_availability" = {
       generation             = "2"
-      sku                    = "VpnGw2"
-      vpn_connections_number = 2
+      sku                    = "VpnGw2AZ"
+      vpn_connections_number = 1
     }
   }
 

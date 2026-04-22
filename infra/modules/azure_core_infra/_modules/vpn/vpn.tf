@@ -1,12 +1,14 @@
 resource "azurerm_public_ip" "this" {
   count = local.use_cases[var.vpn_use_case].vpn_connections_number
-  name = "${provider::dx::resource_name(merge(var.naming_config, {
-    name          = "vpn"
-    resource_type = "public_ip"
-  }))}-${count.index + 1}"
+  name = provider::dx::resource_name(merge(var.naming_config, {
+    name            = "vpn"
+    resource_type   = "public_ip"
+    instance_number = format("%02d", count.index + 1)
+  }))
   location            = var.location
   resource_group_name = var.resource_group_name
   allocation_method   = "Static"
+  zones               = ["1", "2"]
   tags                = var.tags
 }
 
@@ -25,8 +27,8 @@ resource "azurerm_virtual_network_gateway" "this" {
 
   type          = "Vpn"
   vpn_type      = "RouteBased"
-  active_active = local.use_cases[var.vpn_use_case].vpn_connections_number > 1 ? true : false
-  enable_bgp    = var.cross_cloud_dns_enabled
+  active_active = false
+  bgp_enabled   = var.cross_cloud_dns_enabled
   sku           = local.use_cases[var.vpn_use_case].sku
   generation    = "Generation${local.use_cases[var.vpn_use_case].generation}"
 
