@@ -28,7 +28,7 @@ type dxProviderModel struct {
 	Location    types.String `tfsdk:"location"`
 }
 
-// New crea una nuova istanza del provider
+// New creates a new provider instance.
 func New(version string) func() provider.Provider {
 	return func() provider.Provider {
 		return &dxProvider{
@@ -92,6 +92,7 @@ func (p *dxProvider) Resources(ctx context.Context) []func() resource.Resource {
 }
 
 // DataSources
+
 func (p *dxProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return nil
 }

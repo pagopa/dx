@@ -406,6 +406,48 @@ func TestResourceNameFunction_NewResourceTypes(t *testing.T) {
 	}
 }
 
+func TestResourceNameFunction_ManagedRedisUsesDistinctAbbreviation(t *testing.T) {
+	t.Parallel()
+
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+            output "managed" {
+              value = provider::dx::resource_name({
+								prefix = "dx",
+								environment = "d",
+								location = "weu",
+								name = "cache",
+								resource_type = "managed_redis",
+								instance_number = "1"
+							})
+            }
+
+            output "legacy" {
+              value = provider::dx::resource_name({
+								prefix = "dx",
+								environment = "d",
+								location = "weu",
+								name = "cache",
+								resource_type = "redis_cache",
+								instance_number = "1"
+							})
+            }
+            `,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("managed", knownvalue.StringExact("dx-d-weu-cache-amr-01")),
+					statecheck.ExpectKnownOutputValue("legacy", knownvalue.StringExact("dx-d-weu-cache-redis-01")),
+				},
+			},
+		},
+	})
+}
+
 func TestResourceNameFunction_InvalidEnvironment(t *testing.T) {
 	t.Parallel()
 	// Test invalid environment values
@@ -762,7 +804,6 @@ func TestResourceNameFunction_NameMatchesCompositeAbbreviation(t *testing.T) {
 		},
 	})
 }
-
 
 func TestResourceNameFunction_NameIsBareAbbreviationPrefix(t *testing.T) {
 	t.Parallel()
