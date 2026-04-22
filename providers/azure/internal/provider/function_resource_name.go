@@ -124,7 +124,8 @@ func getResourceAbbreviations() map[string]string {
 		"customer_key_cosmos_db_nosql": "cosno-cmk",
 		"postgresql":                   "psql",
 		"postgresql_replica":           "psql-replica",
-		"managed_redis":                "amr",
+		"managed_redis":               "amr",
+		"redis_cache":                  "redis",
 		"mysql":                        "mysql",
 
 		// Integration
