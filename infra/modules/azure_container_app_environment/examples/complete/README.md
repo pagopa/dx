@@ -6,7 +6,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.60 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
 
 ## Modules
 

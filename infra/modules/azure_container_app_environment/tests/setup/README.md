@@ -10,7 +10,7 @@ Reads persistent test infrastructure provisioned by `infra/resources/_modules/te
 | Name | Version |
 |------|---------|
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.20 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
 
 ## Modules
 
