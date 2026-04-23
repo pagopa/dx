@@ -4,6 +4,10 @@
 
 This Terraform module deploys an Azure Service Bus namespace. Currently it supports `Premium` SKUs only.
 
+## Diagram
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_service_bus_namespace/diagram.svg)
+
 ## Features
 
 - **Service Bus Namespace Deployment**: Deploys a Service Bus Namespace in the specified resource group.

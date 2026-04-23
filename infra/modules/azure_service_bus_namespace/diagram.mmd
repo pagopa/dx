@@ -1,0 +1,32 @@
+flowchart LR
+    subgraph Messaging["Service Bus"]
+        sb["Service Bus Namespace"]
+        sb@{ icon: "azure:azure-service-bus"}
+
+        autoscale["Autoscale Setting"]
+    end
+
+    subgraph Network["Network"]
+        pep["Private Endpoint"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns[("Private DNS Zone\nprivatelink.servicebus.windows.net")]
+        dns@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        diag["Diagnostic Settings"]
+
+        law["Log Analytics Workspace"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+
+        storage["Storage Account"]
+        storage@{ icon: "azure:storage-accounts"}
+    end
+
+    Messaging --> Network
+    pep --> dns
+    sb --> autoscale
+    diag --> law
+    diag --> storage
+    Messaging -.-> Monitoring
