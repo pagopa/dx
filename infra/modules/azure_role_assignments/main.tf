@@ -30,6 +30,14 @@ module "redis" {
   redis           = var.redis
 }
 
+module "managed_redis" {
+  source = "./modules/managed_redis"
+
+  principal_id    = var.principal_id
+  subscription_id = var.subscription_id
+  managed_redis   = var.managed_redis
+}
+
 module "storage_account" {
   source = "./modules/storage_account"
 

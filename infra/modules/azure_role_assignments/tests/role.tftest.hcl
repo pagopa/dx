@@ -272,3 +272,42 @@ run "app_config_role_assignments" {
     error_message = "The role assigned must be App Configuration Data Owner"
   }
 }
+
+run "managed_redis_role_assignments" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        name                = "dx-d-itn-test-amr-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "writer"
+        description         = "This is a writer"
+      },
+      {
+        name                = "dx-d-itn-test-amr-02"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+        description         = "This is an owner on a different instance"
+      }
+    ]
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-01|dx-d-itn-test-rg-01"].object_id == run.setup_tests.principal_id
+    error_message = "The access policy assignment must target the principal under test"
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-01|dx-d-itn-test-rg-01"].managed_redis_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+    error_message = "The access policy assignment must reference the expected Azure Managed Redis resource ID"
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-02|dx-d-itn-test-rg-01"].managed_redis_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"
+    error_message = "The access policy assignment must reference the second AMR instance ID"
+  }
+}
