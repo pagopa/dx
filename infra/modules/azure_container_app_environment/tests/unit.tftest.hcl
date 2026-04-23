@@ -166,3 +166,34 @@ run "azure_container_app_environment_subnet_delegation" {
     error_message = "Subnet must be delegated to Microsoft.App/environments"
   }
 }
+
+# PEP subnet naming: instance_number must match the instance number of the VNet
+run "azure_container_app_environment_pep_subnet_instance_number_follows_vnet" {
+  command = plan
+
+  variables {
+    networking = {
+      virtual_network = {
+        name                = "dx-d-itn-integration-vnet-02"
+        resource_group_name = "dx-d-itn-integration-rg-01"
+      }
+      private_dns_zone_resource_group_name = null
+      public_network_access_enabled        = false
+    }
+  }
+
+  override_resource {
+    target = dx_available_subnet_cidr.cae_subnet
+    values = {
+      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02/23/10.50.102.0_23"
+      virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02"
+      prefix_length      = 23
+      cidr_block         = "10.50.102.0/23"
+    }
+  }
+
+  assert {
+    condition     = endswith(azurerm_private_endpoint.this[0].subnet_id, "/subnets/dx-d-itn-pep-snet-02")
+    error_message = "PEP subnet name must use the instance number derived from the VNet name (expected suffix /subnets/dx-d-itn-pep-snet-02 for vnet-02)"
+  }
+}
