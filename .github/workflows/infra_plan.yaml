@@ -19,17 +19,20 @@ on:
         required: false
         default: false
       override_github_environment:
-        description: Set a value if GitHub Environment name is different than the TF environment folder
+        description: Set a value if GitHub Environment name is different than the TF
+          environment folder
         type: string
         required: false
         default: ""
       use_labels:
-        description: Use labels to start the right environment's GitHub runner. If use_labels is true, also use_private_agent must be set to true
+        description: Use labels to start the right environment's GitHub runner. If
+          use_labels is true, also use_private_agent must be set to true
         type: boolean
         required: false
         default: false
       override_labels:
-        description: Needed for special cases where the environment alone is not sufficient as a distinguishing label
+        description: Needed for special cases where the environment alone is not
+          sufficient as a distinguishing label
         type: string
         required: false
         default: ""
@@ -88,7 +91,7 @@ jobs:
   detect-projects:
     name: Detect Terraform Projects
     runs-on: ubuntu-latest
-    needs: [gate, get-terraform-version]
+    needs: [ gate, get-terraform-version ]
     if: ${{ needs.gate.outputs.run == 'true' }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -157,8 +160,9 @@ jobs:
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
-    needs: [gate, get-terraform-version, detect-projects]
-    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
+    needs: [ gate, get-terraform-version, detect-projects ]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix
+      != '[]' }}
     secrets: inherit
     strategy:
       fail-fast: false
@@ -172,8 +176,9 @@ jobs:
 
   tf_plan:
     name: "Terraform Plan"
-    needs: [gate, get-terraform-version, tf-modules-check, detect-projects]
-    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
+    needs: [ gate, get-terraform-version, tf-modules-check, detect-projects ]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix
+      != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -181,8 +186,12 @@ jobs:
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
-    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent &&
+      (inputs.override_labels != '' && inputs.override_labels ||
+      inputs.environment) || inputs.use_private_agent && 'self-hosted' ||
+      'ubuntu-latest' }}
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment
+      || inputs.override_github_environment}}-ci
     concurrency:
       group: ${{ github.workflow }}-${{ inputs.environment }}-${{ matrix.dir }}-ci
       cancel-in-progress: false
@@ -216,11 +225,10 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-
-          for i in "$ENV_VARS[@]"
-          do
-            printf "%q\n" "$i" >> "$GITHUB_ENV"
-          done
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              printf '%s\n' "$line" >> "$GITHUB_ENV"
+            done <<< "$ENV_VARS"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -303,7 +311,8 @@ jobs:
         id: set-plan-output
         if: always()
         env:
-          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          WORKFLOW_URL: "${{ github.server_url }}/${{ github.repository
+            }}/actions/runs/${{ github.run_id }}"
           OUTPUT_DIR: ${{ steps.directory.outputs.dir }}
           PLAN_OUTCOME: ${{ steps.plan.outcome }}
           COMPLETE_PLAN: ${{ steps.check-length.outputs.COMPLETE_PLAN }}

@@ -201,10 +201,10 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-          for i in "$ENV_VARS[@]"
-          do
-            printf "%q\n" "$i" >> "$GITHUB_ENV"
-          done
+            while IFS= read -r line; do
+              [ -z "$line" ] && continue
+              printf '%s\n' "$line" >> "$GITHUB_ENV"
+            done <<< "$ENV_VARS"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
