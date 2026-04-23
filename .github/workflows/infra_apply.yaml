@@ -211,10 +211,11 @@ jobs:
           line_number=0
           while IFS= read -r line; do
             line_number=$((line_number + 1))
+            line="${line%$'\r'}"
             [ -z "$line" ] && continue
 
             if [[ ! "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=.*$ ]]; then
-              echo "::error title=Invalid env_vars entry::env_vars line ${line_number} must be in NAME=VALUE format with a valid environment variable name. Got: ${line}"
+              echo "::error title=Invalid env_vars entry::env_vars line ${line_number} must be in NAME=VALUE format with a valid environment variable name."
               exit 1
             fi
 
