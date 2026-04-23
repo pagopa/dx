@@ -1,3 +1,18 @@
+## 0.10.0 (2026-04-23)
+
+### 🚀 Features
+
+- Add `import` feature to subnet CIDR generator. ([#1650](https://github.com/pagopa/dx/pull/1650))
+  Usage example:
+
+  ```terraform
+  terraform import dx_available_subnet_cidr.<name> "/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.Network/virtualNetworks/<vnet-name>/subnets/<subnet-name>"
+  ```
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.9.0 (2026-04-22)
 
 ### 🚀 Features
