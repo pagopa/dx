@@ -61,32 +61,46 @@ EOT
 
 variable "managed_redis" {
   description = <<EOT
-List of Azure Managed Redis (AMR) instance resource IDs to grant data-plane access to.
+List of Azure Managed Redis (AMR) role assignments.
 
-Each entry is a full Azure resource ID
-(e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name}).
+Each entry contains:
+- id:   Full Azure resource ID of the AMR instance
+  (e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name})
+- role: Permission level - one of "reader", "writer", or "owner"
 
-AMR assigns the built-in "default" access policy (full data-plane access).
-There are no role choices; access is binary (granted or not).
+Role mapping:
+- reader → Azure Managed Redis Reader (control-plane read-only)
+- writer → data-plane "default" access policy (Redis commands)
+- owner  → Azure Managed Redis Contributor (control-plane) + data-plane "default" access policy
 
 Note: this variable targets Azure Managed Redis. For legacy Azure Cache for
 Redis, use the `redis` variable instead.
 EOT
-  type        = list(string)
+  type = list(object({
+    id   = string
+    role = string
+  }))
 
   validation {
     condition = alltrue([
-      for id in var.managed_redis :
-      can(provider::azurerm::parse_resource_id(id))
-      && lower(provider::azurerm::parse_resource_id(id)["resource_provider"]) == "microsoft.cache"
-      && lower(provider::azurerm::parse_resource_id(id)["resource_type"]) == "redisenterprise"
+      for entry in var.managed_redis :
+      can(provider::azurerm::parse_resource_id(entry.id))
+      && lower(provider::azurerm::parse_resource_id(entry.id)["resource_provider"]) == "microsoft.cache"
+      && lower(provider::azurerm::parse_resource_id(entry.id)["resource_type"]) == "redisenterprise"
     ])
-    error_message = "Each entry must be a valid Microsoft.Cache/redisEnterprise resource ID."
+    error_message = "Each id must be a valid Microsoft.Cache/redisEnterprise resource ID."
   }
 
   validation {
-    condition     = length(var.managed_redis) == length(distinct(var.managed_redis))
-    error_message = "Each resource ID must appear at most once."
+    condition = alltrue([
+      for entry in var.managed_redis : contains(["reader", "writer", "owner"], entry.role)
+    ])
+    error_message = "Each role must be one of: reader, writer, owner."
+  }
+
+  validation {
+    condition     = length(var.managed_redis) == length(distinct([for entry in var.managed_redis : "${entry.id}|${entry.role}"]))
+    error_message = "Each (id, role) combination must appear at most once."
   }
 
   default = []

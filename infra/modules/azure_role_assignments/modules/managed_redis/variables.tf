@@ -5,15 +5,21 @@ variable "principal_id" {
 
 variable "managed_redis" {
   description = <<EOT
-List of Azure Managed Redis (AMR) instance resource IDs to grant data-plane access to.
+List of Azure Managed Redis (AMR) role assignments.
 
-Each entry is a full Azure resource ID, e.g.:
-  /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name}
+Each entry contains:
+- id:   Full Azure resource ID of the AMR instance
+- role: One of "reader", "writer", or "owner"
 
-AMR assigns the built-in "default" access policy (full data-plane access).
-There are no role choices; access is binary (granted or not).
+Role mapping:
+- reader → Azure Managed Redis Reader (control-plane read-only)
+- writer → data-plane "default" access policy (Redis commands)
+- owner  → Azure Managed Redis Contributor (control-plane) + data-plane "default" access policy
 EOT
-  type        = list(string)
+  type = list(object({
+    id   = string
+    role = string
+  }))
 
   default = []
 }

@@ -32,6 +32,7 @@ module "redis" {
 
 module "managed_redis" {
   source = "./modules/managed_redis"
+  count  = length(var.managed_redis) > 0 ? 1 : 0
 
   principal_id  = var.principal_id
   managed_redis = var.managed_redis

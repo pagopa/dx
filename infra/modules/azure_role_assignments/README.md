@@ -52,7 +52,10 @@ module "role_assignments" {
 
   # Grant data-plane access to Azure Managed Redis instances
   managed_redis = [
-    azurerm_managed_redis.cache.id,
+    {
+      id   = azurerm_managed_redis.cache.id
+      role = "writer"
+    },
   ]
 }
 ```
@@ -72,10 +75,11 @@ This module supports both Redis flavors through two distinct inputs:
 - `redis` — assignments for **Azure Cache for Redis** (legacy). Uses the
   built-in `Data Owner` / `Data Contributor` / `Data Reader` access policies
   and supports the `reader`, `writer`, and `owner` roles.
-- `managed_redis` — assignments for **Azure Managed Redis (AMR)**. AMR assigns
-  only the built-in `default` access policy (full data-plane access). Input is
-  a plain list of AMR resource IDs; the module validates each ID using
-  `provider::azurerm::parse_resource_id` and passes it directly to the resource.
+- `managed_redis` — assignments for **Azure Managed Redis (AMR)**. Supports three
+  roles: `reader` (control-plane read-only via _Azure Managed Redis Reader_),
+  `writer` (data-plane access via the built-in `default` access policy), and
+  `owner` (both control-plane via _Azure Managed Redis Contributor_ and data-plane
+  access). Input is a list of objects with `id` (AMR resource ID) and `role`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

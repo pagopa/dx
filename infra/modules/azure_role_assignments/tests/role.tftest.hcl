@@ -281,9 +281,39 @@ run "managed_redis_role_assignments" {
     subscription_id = run.setup_tests.subscription_id
 
     managed_redis = [
-      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
-      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02",
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role = "reader"
+      },
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role = "writer"
+      },
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"
+        role = "owner"
+      },
     ]
+  }
+
+  assert {
+    condition     = module.managed_redis[0].azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01|reader"].role_definition_name == "Azure Managed Redis Reader"
+    error_message = "The reader role must map to Azure Managed Redis Reader"
+  }
+
+  assert {
+    condition     = module.managed_redis[0].azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02|owner"].role_definition_name == "Azure Managed Redis Contributor"
+    error_message = "The owner role must map to Azure Managed Redis Contributor"
+  }
+
+  assert {
+    condition     = module.managed_redis[0].azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"].object_id == run.setup_tests.principal_id
+    error_message = "The writer role must create a data-plane access policy assignment"
+  }
+
+  assert {
+    condition     = module.managed_redis[0].azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"].object_id == run.setup_tests.principal_id
+    error_message = "The owner role must also create a data-plane access policy assignment"
   }
 }
 
@@ -295,7 +325,10 @@ run "managed_redis_rejects_invalid_id" {
     subscription_id = run.setup_tests.subscription_id
 
     managed_redis = [
-      "not-a-valid-resource-id",
+      {
+        id   = "not-a-valid-resource-id"
+        role = "reader"
+      },
     ]
   }
 
@@ -312,8 +345,34 @@ run "managed_redis_rejects_duplicate_ids" {
     subscription_id = run.setup_tests.subscription_id
 
     managed_redis = [
-      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
-      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role = "reader"
+      },
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role = "reader"
+      },
+    ]
+  }
+
+  expect_failures = [
+    var.managed_redis,
+  ]
+}
+
+run "managed_redis_rejects_invalid_role" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        id   = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role = "admin"
+      },
     ]
   }
 
