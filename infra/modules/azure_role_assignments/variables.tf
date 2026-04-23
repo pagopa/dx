@@ -61,27 +61,33 @@ EOT
 
 variable "managed_redis" {
   description = <<EOT
-List of data-plane access policy assignments for Azure Managed Redis (AMR) instances.
+List of Azure Managed Redis (AMR) instance resource IDs to grant data-plane access to.
 
-REQUIRED FIELDS:
-- name: Name of the Azure Managed Redis instance
-- resource_group_name: Resource group containing the instance
-- role: Permission level - MUST be one of: "writer", "owner". Both roles are
-  mapped to the built-in AMR "default" access policy (full data-plane access).
-  The "reader" role is intentionally not supported because Azure Managed Redis
-  has no built-in read-only policy; read-only access requires a custom access
-  policy declared on the AMR database and is tracked separately.
-- description: Human-readable description of the role assignment purpose.
+Each entry is a full Azure resource ID
+(e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name}).
 
-Note: this variable targets Azure Managed Redis. For the legacy Azure Cache for
-Redis, keep using the `redis` variable instead.
+AMR assigns the built-in "default" access policy (full data-plane access).
+There are no role choices; access is binary (granted or not).
+
+Note: this variable targets Azure Managed Redis. For legacy Azure Cache for
+Redis, use the `redis` variable instead.
 EOT
-  type = list(object({
-    name                = string
-    resource_group_name = string
-    role                = string
-    description         = string
-  }))
+  type        = list(string)
+
+  validation {
+    condition = alltrue([
+      for id in var.managed_redis :
+      can(provider::azurerm::parse_resource_id(id))
+      && lower(provider::azurerm::parse_resource_id(id)["resource_provider"]) == "microsoft.cache"
+      && lower(provider::azurerm::parse_resource_id(id)["resource_type"]) == "redisenterprise"
+    ])
+    error_message = "Each entry must be a valid Microsoft.Cache/redisEnterprise resource ID."
+  }
+
+  validation {
+    condition     = length(var.managed_redis) == length(distinct(var.managed_redis))
+    error_message = "Each resource ID must appear at most once."
+  }
 
   default = []
 }

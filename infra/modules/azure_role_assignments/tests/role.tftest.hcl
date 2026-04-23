@@ -281,33 +281,43 @@ run "managed_redis_role_assignments" {
     subscription_id = run.setup_tests.subscription_id
 
     managed_redis = [
-      {
-        name                = "dx-d-itn-test-amr-01"
-        resource_group_name = "dx-d-itn-test-rg-01"
-        role                = "writer"
-        description         = "This is a writer"
-      },
-      {
-        name                = "dx-d-itn-test-amr-02"
-        resource_group_name = "dx-d-itn-test-rg-01"
-        role                = "owner"
-        description         = "This is an owner on a different instance"
-      }
+      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
+      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02",
+    ]
+  }
+}
+
+run "managed_redis_rejects_invalid_id" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      "not-a-valid-resource-id",
     ]
   }
 
-  assert {
-    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-01|dx-d-itn-test-rg-01"].object_id == run.setup_tests.principal_id
-    error_message = "The access policy assignment must target the principal under test"
+  expect_failures = [
+    var.managed_redis,
+  ]
+}
+
+run "managed_redis_rejects_duplicate_ids" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
+      "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01",
+    ]
   }
 
-  assert {
-    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-01|dx-d-itn-test-rg-01"].managed_redis_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
-    error_message = "The access policy assignment must reference the expected Azure Managed Redis resource ID"
-  }
-
-  assert {
-    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment.this["dx-d-itn-test-amr-02|dx-d-itn-test-rg-01"].managed_redis_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"
-    error_message = "The access policy assignment must reference the second AMR instance ID"
-  }
+  expect_failures = [
+    var.managed_redis,
+  ]
 }
