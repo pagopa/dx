@@ -537,6 +537,7 @@ func (p *parsedSubnetID) vnetID() string {
 // parseSubnetResourceID extracts the relevant parts from an Azure subnet resource ID.
 // Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}
 func parseSubnetResourceID(id string) (*parsedSubnetID, error) {
+	id = strings.TrimSpace(strings.TrimRight(id, "/"))
 	parts := strings.Split(id, "/")
 	lower := strings.Split(strings.ToLower(id), "/")
 
