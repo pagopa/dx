@@ -225,10 +225,18 @@ jobs:
           ENV_VARS: ${{ inputs.env_vars }}
         run: |
           set -euo pipefail
-            while IFS= read -r line; do
-              [ -z "$line" ] && continue
-              printf '%s\n' "$line" >> "$GITHUB_ENV"
-            done <<< "$ENV_VARS"
+          line_number=0
+          while IFS= read -r line; do
+            line_number=$((line_number + 1))
+            [ -z "$line" ] && continue
+
+            if [[ ! "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=.*$ ]]; then
+              echo "::error title=Invalid env_vars entry::env_vars line ${line_number} must be in NAME=VALUE format with a valid environment variable name. Got: ${line}"
+              exit 1
+            fi
+
+            printf '%s\n' "$line" >> "$GITHUB_ENV"
+          done <<< "$ENV_VARS"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
