@@ -35,7 +35,9 @@ jobs:
           dockerfile_path: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/Dockerfile
           dockerfile_context: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe
           docker_image_name: ${{ env.IMAGE_NAME }}
-          docker_image_description: "Web app which exposes data-plane and control-plane endpoints to probe Azure Storage RBAC. Used for E2E tests of the Azure Merge Roles Terraform module."
+          docker_image_description: "Web app which exposes data-plane and control-plane
+            endpoints to probe Azure Storage RBAC. Used for E2E tests of the
+            Azure Merge Roles Terraform module."
           docker_image_authors: "PagoPA"
           build_platforms: "linux/amd64,linux/arm64"
           push_to_registry: true

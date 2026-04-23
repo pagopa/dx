@@ -41,9 +41,9 @@ type managementProbeResponse struct {
 }
 
 type storageAccountResource struct {
-	SubscriptionID   string
-	ResourceGroup    string
-	StorageAccount   string
+	SubscriptionID string
+	ResourceGroup  string
+	StorageAccount string
 }
 
 func main() {

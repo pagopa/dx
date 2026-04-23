@@ -1,5 +1,7 @@
 # DX - Azure Merge Roles
 
+![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-merge-roles/azurerm?label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-merge-roles%2Fazurerm%2Flatest&logo=terraform)
+
 This module creates an Azure custom role definition by merging compatible Azure roles into a single assignable role.
 
 It is designed for the RBAC reduction strategy: define a smaller set of reusable custom roles, then assign those roles to Entra ID groups instead of assigning many built-in roles directly to users, managed identities, or service principals.
@@ -94,25 +96,38 @@ infer management group membership from a subscription ARM ID alone.
 - It does not create Entra ID groups.
 - It does not create role assignments.
 
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| azurerm | >= 3.114, < 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.114, < 5.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azurerm_role_definition.merged](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.source](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| scope | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | string | n/a | yes |
-| role_name | Name of the custom role definition to create. | string | n/a | yes |
-| source_roles | List of Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at `scope`. | list(string) | n/a | yes |
-| assignable_scopes | Optional list of scopes where the custom role can be assigned. Defaults to `[scope]`. | list(string) | `null` | no |
-| description | Optional custom description for the merged role definition. Defaults to a generated description based on `source_roles`. | string | `null` | no |
+| <a name="input_assignable_scopes"></a> [assignable\_scopes](#input\_assignable\_scopes) | Optional list of scopes where the custom role can be assigned. Defaults to [scope]. | `list(string)` | `null` | no |
+| <a name="input_description"></a> [description](#input\_description) | Optional custom description for the merged role definition. Defaults to a generated description based on source\_roles. | `string` | `null` | no |
+| <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
+| <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |
+| <a name="input_source_roles"></a> [source\_roles](#input\_source\_roles) | List of Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| custom_role_id | ID of the newly created custom role definition |
-| custom_role_name | Display name of the newly created custom role definition |
+| <a name="output_custom_role_id"></a> [custom\_role\_id](#output\_custom\_role\_id) | ID of the newly created custom role definition |
+| <a name="output_custom_role_name"></a> [custom\_role\_name](#output\_custom\_role\_name) | Display name of the newly created custom role definition |
+<!-- END_TF_DOCS -->
