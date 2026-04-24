@@ -2,13 +2,14 @@
 
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-merge-roles/azurerm?label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-merge-roles%2Fazurerm%2Flatest&logo=terraform)
 
-This module creates an Azure custom role definition by merging compatible Azure roles into a single assignable role.
+This module creates an Azure custom role definition by merging two or more compatible Azure roles into a single assignable role.
 
 It is designed for the RBAC reduction strategy: define a smaller set of reusable custom roles, then assign those roles to Entra ID groups instead of assigning many built-in roles directly to users, managed identities, or service principals.
 
 ## What This Module Does
 
 - Resolves built-in or custom source roles at `scope` and compacts them into the single permissions object Azure custom roles accept.
+- Requires at least two source roles, so callers do not create a custom role that is equivalent to assigning one existing role directly.
 - Supports roles that include `not_actions` and `not_data_actions`.
 - Deduplicates merged permissions so the generated role definition remains stable.
 - Requires an explicit `scope` and defaults `assignable_scopes` to `[scope]`.
@@ -122,7 +123,7 @@ No modules.
 | <a name="input_description"></a> [description](#input\_description) | Optional custom description for the merged role definition. Defaults to a generated description based on source\_roles. | `string` | `null` | no |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |
-| <a name="input_source_roles"></a> [source\_roles](#input\_source\_roles) | List of Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a | yes |
+| <a name="input_source_roles"></a> [source\_roles](#input\_source\_roles) | List of at least two Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a | yes |
 
 ## Outputs
 

@@ -87,6 +87,16 @@ run "source_roles_must_not_be_empty" {
   expect_failures = [var.source_roles]
 }
 
+run "source_roles_must_contain_at_least_two_roles" {
+  command = plan
+
+  variables {
+    source_roles = ["Reader"]
+  }
+
+  expect_failures = [var.source_roles]
+}
+
 run "source_roles_must_not_contain_duplicates" {
   command = plan
 

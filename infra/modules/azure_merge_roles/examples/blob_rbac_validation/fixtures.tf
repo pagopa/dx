@@ -125,6 +125,18 @@ resource "azurerm_role_definition" "source_blob_rw_without_delete" {
   assignable_scopes = [module.storage_account.id]
 }
 
+resource "azurerm_role_definition" "source_blob_read_only" {
+  name        = local.role_names.source_blob_read_only
+  description = "Adds an explicit Blob read grant so the limited merged-role scenario still exercises a two-role merge without changing the effective permission set."
+  scope       = module.storage_account.id
+
+  permissions {
+    data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read"]
+  }
+
+  assignable_scopes = [module.storage_account.id]
+}
+
 resource "azurerm_role_definition" "source_blob_delete_only" {
   name        = local.role_names.source_blob_delete_only
   description = "Allows only Blob delete so merge tests can verify delete is restored by a separate permission block."
@@ -147,6 +159,18 @@ resource "azurerm_role_definition" "source_container_rw_without_delete" {
     not_actions = [
       "Microsoft.Storage/storageAccounts/blobServices/containers/delete",
     ]
+  }
+
+  assignable_scopes = [module.storage_account.id]
+}
+
+resource "azurerm_role_definition" "source_container_read_only" {
+  name        = local.role_names.source_container_read_only
+  description = "Adds an explicit blob container control-plane read grant so the limited merged-role scenario still exercises a two-role merge without changing the effective permission set."
+  scope       = module.storage_account.id
+
+  permissions {
+    actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/read"]
   }
 
   assignable_scopes = [module.storage_account.id]

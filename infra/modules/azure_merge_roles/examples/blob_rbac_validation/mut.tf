@@ -5,12 +5,14 @@ module "blob_rw_without_delete" {
   role_name = local.role_names.merged_limited
   source_roles = [
     azurerm_role_definition.source_blob_rw_without_delete.name,
+    azurerm_role_definition.source_blob_read_only.name,
   ]
 
   description = "Merged role used by the limited probe identity for Blob read/write without delete."
 
   depends_on = [
     azurerm_role_definition.source_blob_rw_without_delete,
+    azurerm_role_definition.source_blob_read_only,
   ]
 }
 
@@ -39,12 +41,14 @@ module "container_rw_without_delete" {
   role_name = local.role_names.merged_control_limited
   source_roles = [
     azurerm_role_definition.source_container_rw_without_delete.name,
+    azurerm_role_definition.source_container_read_only.name,
   ]
 
   description = "Merged control-plane role used by the limited probe identity for blob container create/read without delete."
 
   depends_on = [
     azurerm_role_definition.source_container_rw_without_delete,
+    azurerm_role_definition.source_container_read_only,
   ]
 }
 
