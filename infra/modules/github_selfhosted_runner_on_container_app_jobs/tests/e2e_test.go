@@ -23,7 +23,7 @@ const (
 	githubAPIVersion      = "2022-11-28"
 	githubRepositoryOwner = "pagopa"
 	githubRepositoryName  = "dx"
-	githubWorkflowFile    = "_release_github-e2e-selfhosted-runner.yaml"
+	githubWorkflowFile    = "_validate-terraform-e2e-selfhosted-runner.yaml"
 	pollInterval          = 15 * time.Second
 	runTimeout            = 20 * time.Minute
 )
