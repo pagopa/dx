@@ -61,12 +61,13 @@ EOT
 
 variable "managed_redis" {
   description = <<EOT
-List of Azure Managed Redis (AMR) role assignments.
+List of role assignments for Azure Managed Redis (AMR) instances.
 
-Each entry contains:
-- id:   Full Azure resource ID of the AMR instance
+REQUIRED FIELDS:
+- id: Full Azure resource ID of the Azure Managed Redis instance
   (e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name})
-- role: Permission level - one of "reader", "writer", or "owner"
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
 
 Role mapping:
 - reader → Azure Managed Redis Reader (control-plane read-only)
@@ -77,8 +78,9 @@ Note: this variable targets Azure Managed Redis. For legacy Azure Cache for
 Redis, use the `redis` variable instead.
 EOT
   type = list(object({
-    id   = string
-    role = string
+    id          = string
+    role        = string
+    description = string
   }))
 
   validation {

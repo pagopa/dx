@@ -8,8 +8,9 @@ variable "managed_redis" {
 List of Azure Managed Redis (AMR) role assignments.
 
 Each entry contains:
-- id:   Full Azure resource ID of the AMR instance
-- role: One of "reader", "writer", or "owner"
+- id:          Full Azure resource ID of the AMR instance
+- role:        One of "reader", "writer", or "owner"
+- description: Human-readable description of the role assignment purpose
 
 Role mapping:
 - reader → Azure Managed Redis Reader (control-plane read-only)
@@ -17,9 +18,17 @@ Role mapping:
 - owner  → Azure Managed Redis Contributor (control-plane) + data-plane "default" access policy
 EOT
   type = list(object({
-    id   = string
-    role = string
+    id          = string
+    role        = string
+    description = string
   }))
+
+  validation {
+    condition = alltrue([
+      for entry in var.managed_redis : contains(["reader", "writer", "owner"], entry.role)
+    ])
+    error_message = "Each role must be one of: reader, writer, owner."
+  }
 
   default = []
 }

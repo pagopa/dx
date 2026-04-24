@@ -4,6 +4,7 @@ resource "azurerm_role_assignment" "this" {
   role_definition_name = local.control_plane_role_name[each.value.role]
   scope                = each.value.id
   principal_id         = var.principal_id
+  description          = each.value.description
 }
 
 # Data-plane access policy assignments (writer, owner)
