@@ -4,6 +4,10 @@
 
 This module creates a Container App Job to be used as a GitHub self-hosted runner. Using a self-hosted runner is essential when you need to reach private resources in terms of networking from a GitHub workflow.
 
+## Diagram
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/github_selfhosted_runner_on_container_app_jobs/diagram.svg)
+
 ## Features
 
 - **Container App Job**: Deploys a Container App Job in the specified Azure Container App Environment.
@@ -16,11 +20,11 @@ This module creates a Container App Job to be used as a GitHub self-hosted runne
 This module authenticates with GitHub using a **GitHub App**. Before applying,
 the Key Vault must contain the following secrets:
 
-| Secret name                          | Description                                  |
-| ------------------------------------ | -------------------------------------------- |
-| `github-runner-app-id`               | The numeric GitHub App ID                    |
-| `github-runner-app-installation-id`  | The App installation ID on the organization  |
-| `github-runner-app-key`              | The App private key in PEM format            |
+| Secret name                         | Description                                 |
+| ----------------------------------- | ------------------------------------------- |
+| `github-runner-app-id`              | The numeric GitHub App ID                   |
+| `github-runner-app-installation-id` | The App installation ID on the organization |
+| `github-runner-app-key`             | The App private key in PEM format           |
 
 See [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
 for step-by-step instructions on how to create the App and populate these secrets.
