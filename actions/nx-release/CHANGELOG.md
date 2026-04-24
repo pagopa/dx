@@ -1,3 +1,17 @@
+## 0.0.3 (2026-04-17)
+
+### 🩹 Fixes
+
+- Suppress noisy 404 logs from Octokit when release tags are missing. ([#1632](https://github.com/pagopa/dx/pull/1632))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.3
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.0.2
 
 ### Patch Changes

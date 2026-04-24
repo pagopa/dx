@@ -43,7 +43,7 @@ resource "azurerm_monitor_diagnostic_setting" "event_hub_namespace" {
     category_group = "allLogs"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
   }
 }

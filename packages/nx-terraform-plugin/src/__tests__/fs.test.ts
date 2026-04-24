@@ -4,7 +4,7 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { getStaticDependenciesFromFile } from "../fs.ts";
-import { ProjectFile } from "../project.ts";
+import { ProjectFile } from "../project-file.ts";
 
 describe("getStaticDependenciesFromFile", () => {
   afterEach(() => {

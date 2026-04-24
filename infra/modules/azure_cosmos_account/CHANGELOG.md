@@ -1,3 +1,13 @@
+## 0.4.1 (2026-04-20)
+
+### 🩹 Fixes
+
+- Add module diagram ([#1642](https://github.com/pagopa/dx/pull/1642))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.4.0
 
 ### Minor Changes

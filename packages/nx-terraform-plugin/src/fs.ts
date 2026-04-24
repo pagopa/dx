@@ -2,7 +2,7 @@ import { RawProjectGraphDependency } from "@nx/devkit";
 import fs from "node:fs/promises";
 
 import { getStaticDependencies } from "./hcl.ts";
-import { ProjectFile } from "./project.ts";
+import { ProjectFile } from "./project-file.ts";
 
 export const getStaticDependenciesFromFile = async (
   file: ProjectFile,

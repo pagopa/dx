@@ -1,3 +1,19 @@
+## 1.2.0 (2026-04-17)
+
+### 🚀 Features
+
+- When creating a new GitHub repository, the default branch is going to be created with an initial commit. ([#1574](https://github.com/pagopa/dx/pull/1574))
+
+  This will make sure the branch exists and the branch protections are properly created.
+  Before these changes, branch protections were created even though the branch to protect did not yet exist.
+
+  After migrating to the new module version, the plan will show the creation of the default branch resource. This will not result in an error: the GitHub Terraform provider handles the case where the branch already exists by continuing execution rather than returning a failure (see [resource_github_branch.go](https://github.com/integrations/terraform-provider-github/blob/94f71cfc7bd1125c1faa3cee8aeca7ff7898cee3/github/resource_github_branch.go#L105-L106)).
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 1.1.8 (2026-04-03)
 
 ### 🩹 Fixes

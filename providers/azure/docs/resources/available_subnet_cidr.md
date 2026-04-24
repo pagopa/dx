@@ -73,7 +73,14 @@ resource "azurerm_subnet" "new_subnet_2" {
 
 ## Import
 
-This resource cannot be imported as it is a virtual resource that doesn't correspond to an actual Azure resource.
+An existing subnet can be imported by providing its Azure resource ID. The provider will look up the subnet in Azure and populate `cidr_block`, `virtual_network_id`, and `prefix_length` from the live resource.
+
+```shell
+terraform import dx_available_subnet_cidr.cae_subnet \
+  /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/my-vnet/subnets/my-subnet
+```
+
+After importing, verify that `virtual_network_id` and `prefix_length` in your Terraform configuration match the values in the imported state to avoid a plan diff.
 
 ## Notes
 

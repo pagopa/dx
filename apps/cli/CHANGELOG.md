@@ -1,3 +1,56 @@
+## 0.20.1 (2026-04-22)
+
+### 🩹 Fixes
+
+- Update azure-core-infra module version from ~> 3.0 to ~> 4.0 ([#1658](https://github.com/pagopa/dx/pull/1658))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.20.0 (2026-04-22)
+
+### 🚀 Features
+
+- The core infrastructure now enables the creation of an Azure VPN. ([#1657](https://github.com/pagopa/dx/pull/1657))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.19.3 (2026-04-22)
+
+### 🩹 Fixes
+
+- When a new environment is initialized, the identities federated with GitHub can access Key Vault and alter roles on the Core's common resource group ([#1620](https://github.com/pagopa/dx/pull/1620))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.19.2 (2026-04-17)
+
+### 🩹 Fixes
+
+- Update the `init` command git flow to handle repositories that are pre-initialized by Terraform (`auto_init`). ([#1583](https://github.com/pagopa/dx/pull/1583), [#1574](https://github.com/pagopa/dx/issues/1574))
+
+  Previously the CLI would push an initial commit directly to `main` and then create a feature branch — this fails when the remote already exists with a `main` branch.
+
+  The new flow connects to the existing remote, fetches the current state, and creates the feature branch from `origin/main` without checking out remote files (preserving locally generated files). The PR is then opened against `main` as usual.
+
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+- Parse Azure authorization with JSON format instead of HCL ([#1541](https://github.com/pagopa/dx/pull/1541))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.3
+- Updated @pagopa/dx-savemoney to 0.2.4
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.19.1 (2026-04-08)
 
 ### 🩹 Fixes

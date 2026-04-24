@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { getStaticDependencies } from "../hcl.ts";
-import { ProjectFile } from "../project.ts";
+import { ProjectFile } from "../project-file.ts";
 
 describe("getStaticDependencies", () => {
   it("extracts a dependency from a relative module source", () => {
