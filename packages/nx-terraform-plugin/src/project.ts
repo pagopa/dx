@@ -147,7 +147,7 @@ const getTargets = (
     ]);
   }
 
-  if (hasRootTerraformDocsConfig) {
+  if (hasRootTerraformDocsConfig && projectType === "library") {
     targets.push([
       opts.docsTargetName,
       {

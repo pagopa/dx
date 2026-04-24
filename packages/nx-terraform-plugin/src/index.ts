@@ -3,7 +3,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
 } from "@nx/devkit";
-import { access } from "node:fs/promises";
+import fs from "node:fs/promises";
 import path from "node:path";
 
 import { getStaticDependenciesFromFile } from "./fs.ts";
@@ -15,7 +15,7 @@ const ignoreModules = ["tests", "_tests", "examples", "example"];
 
 const fileExists = async (filePath: string) => {
   try {
-    await access(filePath);
+    await fs.access(filePath);
     return true;
   } catch (error) {
     if (

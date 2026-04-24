@@ -42,10 +42,7 @@ const getExpectedLintTarget = (root: string) => ({
   },
 });
 
-const getExpectedDocsTarget = (
-  root: string,
-  projectType: "application" | "library",
-) => ({
+const getExpectedDocsTarget = (root: string) => ({
   cache: true,
   command: "terraform-docs",
   inputs: [
@@ -55,21 +52,14 @@ const getExpectedDocsTarget = (
     "{workspaceRoot}/.terraform-docs.yml",
   ],
   options: {
-    args:
-      projectType === "library"
-        ? [
-            "--config",
-            path.relative(root, ".terraform-docs.yml") || ".terraform-docs.yml",
-            "--hide",
-            "providers",
-            "--lockfile=false",
-            ".",
-          ]
-        : [
-            "--config",
-            path.relative(root, ".terraform-docs.yml") || ".terraform-docs.yml",
-            ".",
-          ],
+    args: [
+      "--config",
+      path.relative(root, ".terraform-docs.yml") || ".terraform-docs.yml",
+      "--hide",
+      "providers",
+      "--lockfile=false",
+      ".",
+    ],
     cwd: "{projectRoot}",
   },
   outputs: ["{projectRoot}/README.md"],
@@ -217,7 +207,7 @@ describe("getProject", () => {
       expect(targets["tf-lint"]).toEqual(getExpectedLintTarget(root));
     });
 
-    it("adds tf-docs when the root terraform-docs config exists", () => {
+    it("does not add tf-docs when the root terraform-docs config exists", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(
         getProject(defaultOptions, root, false, true),
@@ -228,15 +218,12 @@ describe("getProject", () => {
         "tf-fmt",
         "tf-test",
         "tf-validate",
-        "tf-docs",
         "tf-console",
         "tf-output",
         "tf-plan",
         "tf-apply",
       ]);
-      expect(targets["tf-docs"]).toEqual(
-        getExpectedDocsTarget(root, "application"),
-      );
+      expect(targets["tf-docs"]).toBeUndefined();
     });
 
     it("sets correct dependency chains", () => {
@@ -309,15 +296,13 @@ describe("getProject", () => {
         "tf-console",
         "tf-output",
       ]);
-      expect(targets["tf-docs"]).toEqual(
-        getExpectedDocsTarget(root, "library"),
-      );
+      expect(targets["tf-docs"]).toEqual(getExpectedDocsTarget(root));
     });
   });
 
   describe("when custom target names are configured", () => {
     it("produces the same target implementations under different names", () => {
-      const root = path.join("infra", "resources", "dev", "stack");
+      const root = path.join("infra", "modules", "shared_stack");
       const defaultTargets = getTargetsOrThrow(
         getProject(defaultOptions, root, true, true),
       );
