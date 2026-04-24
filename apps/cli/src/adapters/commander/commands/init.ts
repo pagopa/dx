@@ -218,7 +218,7 @@ const handleGeneratorError = (err: unknown) => {
   if (err instanceof Error) {
     logger.error(err.message);
   }
-  return new Error("Failed to run the generator");
+  return new Error("Failed to run the generator", { cause: err });
 };
 
 type InitCommandDependencies = {
@@ -236,7 +236,7 @@ export const makeInitCommand = ({
         .andThen(() =>
           ResultAsync.fromPromise(
             getPlopInstance(),
-            () => new Error("Failed to initialize plop"),
+            (cause) => new Error("Failed to initialize plop", { cause }),
           ),
         )
         .andThen((plop) =>
