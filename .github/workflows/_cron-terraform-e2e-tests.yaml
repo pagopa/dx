@@ -85,7 +85,7 @@ jobs:
           GOFLAGS: "-p=1"
         run: |
           pnpm nx run-many \
-            --target test:e2e \
+            --target beta-test:e2e \
             --parallel=1
 
       - name: Notify Slack on failure
@@ -94,5 +94,7 @@ jobs:
         with:
           id: "Terraform E2E Tests"
           title: "*Terraform E2E Tests failed*"
-          text: "One or more end-to-end tests failed in the weekly run. Please check the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details."
+          text: "One or more end-to-end tests failed in the weekly run. Please check the
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+            github.run_id }}|workflow run> for details."
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
