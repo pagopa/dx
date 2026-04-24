@@ -25,8 +25,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
-// Make sure it implements the Resource interface
+// Make sure it implements the Resource and ResourceWithImportState interfaces
 var _ resource.Resource = &availableSubnetCidrResource{}
+var _ resource.ResourceWithImportState = &availableSubnetCidrResource{}
 
 func NewAvailableSubnetCidrResource() resource.Resource {
 	return &availableSubnetCidrResource{}
@@ -215,6 +216,112 @@ func (r *availableSubnetCidrResource) ModifyPlan(ctx context.Context, req resour
 	tflog.Info(ctx, "CIDR value will be calculated during apply")
 }
 
+// createAzureCredential returns an Azure credential, preferring Azure CLI and falling back to DefaultAzureCredential.
+func createAzureCredential(ctx context.Context) (azcore.TokenCredential, diag.Diagnostics) {
+	var diagnostics diag.Diagnostics
+
+	cliCred, err := azidentity.NewAzureCLICredential(nil)
+	if err != nil {
+		tflog.Warn(ctx, "Azure CLI credential failed, falling back to DefaultAzureCredential", map[string]interface{}{"error": err.Error()})
+
+		defaultCred, err := azidentity.NewDefaultAzureCredential(nil)
+		if err != nil {
+			diagnostics.AddError(
+				"Azure Authentication Failed",
+				fmt.Sprintf("Unable to create Azure credential with any method: %s", err),
+			)
+			return nil, diagnostics
+		}
+		return defaultCred, diagnostics
+	}
+	return cliCred, diagnostics
+}
+
+// ImportState imports an existing subnet CIDR reservation into Terraform state.
+// The import ID must be the Azure resource ID of the existing subnet:
+// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}
+func (r *availableSubnetCidrResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	subnetInfo, err := parseSubnetResourceID(req.ID)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf(
+				"The import ID must be an Azure subnet resource ID.\n"+
+					"Format: /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}\n\n"+
+					"Got: %s\nError: %s", req.ID, err,
+			),
+		)
+		return
+	}
+
+	cred, diags := createAzureCredential(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	subnetClient, err := armnetwork.NewSubnetsClient(subnetInfo.subscriptionID, cred, nil)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Azure Client Creation Failed",
+			fmt.Sprintf("Unable to create Azure Subnets client: %s", err),
+		)
+		return
+	}
+
+	subnet, err := subnetClient.Get(ctx, subnetInfo.resourceGroupName, subnetInfo.vnetName, subnetInfo.subnetName, nil)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Azure API Error",
+			fmt.Sprintf("Failed to get subnet '%s' in VNet '%s': %s", subnetInfo.subnetName, subnetInfo.vnetName, err),
+		)
+		return
+	}
+
+	var cidrBlock string
+	if subnet.Properties != nil && subnet.Properties.AddressPrefix != nil {
+		cidrBlock = *subnet.Properties.AddressPrefix
+	} else if subnet.Properties != nil && len(subnet.Properties.AddressPrefixes) > 0 {
+		cidrBlock = *subnet.Properties.AddressPrefixes[0]
+	} else {
+		resp.Diagnostics.AddError(
+			"Subnet Configuration Error",
+			fmt.Sprintf("Subnet '%s' has no address prefix defined.", subnetInfo.subnetName),
+		)
+		return
+	}
+
+	_, ipnet, err := net.ParseCIDR(cidrBlock)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"CIDR Parse Error",
+			fmt.Sprintf("Failed to parse CIDR '%s' returned by Azure: %s", cidrBlock, err),
+		)
+		return
+	}
+	prefixLen, _ := ipnet.Mask.Size()
+
+	vnetID := subnetInfo.vnetID()
+	resourceID := fmt.Sprintf("%s_%d_%s",
+		strings.ReplaceAll(vnetID, "/", "_"),
+		prefixLen,
+		strings.ReplaceAll(cidrBlock, "/", "_"))
+
+	var data availableSubnetCidrResourceModel
+	data.ID = types.StringValue(resourceID)
+	data.VirtualNetworkID = types.StringValue(vnetID)
+	data.PrefixLength = types.Int64Value(int64(prefixLen))
+	data.CidrBlock = types.StringValue(cidrBlock)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	tflog.Info(ctx, "Imported available subnet CIDR resource", map[string]interface{}{
+		"subnet_id":          req.ID,
+		"virtual_network_id": vnetID,
+		"prefix_length":      prefixLen,
+		"cidr_block":         cidrBlock,
+	})
+}
+
 // Helper function to find an available CIDR block
 func findAvailableCidrBlock(ctx context.Context, vnetID string, prefixLength int) (string, diag.Diagnostics) {
 	var diagnostics diag.Diagnostics
@@ -230,28 +337,10 @@ func findAvailableCidrBlock(ctx context.Context, vnetID string, prefixLength int
 	}
 
 	// --- Setup Azure Client with Fallback ---
-	var cred azcore.TokenCredential
-
-	// First try Azure CLI credential
-	cliCred, err := azidentity.NewAzureCLICredential(nil)
-	if err != nil {
-		tflog.Warn(ctx, "Azure CLI credential failed, falling back to DefaultAzureCredential", map[string]interface{}{"error": err.Error()})
-
-		// If CLI credential fails, fall back to DefaultAzureCredential
-		defaultCred, err := azidentity.NewDefaultAzureCredential(nil)
-		if err != nil {
-			diagnostics.AddError(
-				"Azure Authentication Failed",
-				fmt.Sprintf("Unable to create Azure credential with any method: %s", err),
-			)
-			return "", diagnostics
-		}
-
-		// Use DefaultAzureCredential if CLI credential is not available
-		cred = defaultCred
-	} else {
-		// Use Azure CLI credential if available
-		cred = cliCred
+	cred, diags := createAzureCredential(ctx)
+	diagnostics.Append(diags...)
+	if diagnostics.HasError() {
+		return "", diagnostics
 	}
 
 	// --- Get VNet Details ---
@@ -429,6 +518,47 @@ func (m *prefixLengthRequiresReplaceModifier) PlanModifyInt64(ctx context.Contex
 
 	// If we get here, the value has changed and we require recreation of the resource
 	resp.RequiresReplace = true
+}
+
+// parsedSubnetID holds the relevant parts extracted from an Azure subnet resource ID.
+type parsedSubnetID struct {
+	subscriptionID    string
+	resourceGroupName string
+	vnetName          string
+	subnetName        string
+}
+
+// vnetID reconstructs the VNet resource ID from the subnet ID parts.
+func (p *parsedSubnetID) vnetID() string {
+	return fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s",
+		p.subscriptionID, p.resourceGroupName, p.vnetName)
+}
+
+// parseSubnetResourceID extracts the relevant parts from an Azure subnet resource ID.
+// Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}
+func parseSubnetResourceID(id string) (*parsedSubnetID, error) {
+	id = strings.TrimSpace(strings.TrimRight(id, "/"))
+	parts := strings.Split(id, "/")
+	lower := strings.Split(strings.ToLower(id), "/")
+
+	if len(parts) != 11 || parts[0] != "" ||
+		lower[1] != "subscriptions" ||
+		lower[3] != "resourcegroups" ||
+		lower[5] != "providers" ||
+		lower[6] != "microsoft.network" ||
+		lower[7] != "virtualnetworks" ||
+		lower[9] != "subnets" {
+		return nil, fmt.Errorf(
+			"invalid Azure subnet ID format, expected '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}'",
+		)
+	}
+
+	return &parsedSubnetID{
+		subscriptionID:    parts[2],
+		resourceGroupName: parts[4],
+		vnetName:          parts[8],
+		subnetName:        parts[10],
+	}, nil
 }
 
 // parseVNetID extracts the relevant parts from an Azure VNet ID
