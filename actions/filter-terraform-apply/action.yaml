@@ -10,7 +10,7 @@ inputs:
     description: "The terraform plan file to pass to terraform apply."
     required: true
   sensitive-keys:
-    description: "A comma-separated list of sensitive keys to filter from the apply output."
+    description: "A comma-separated list of sensitive keys to strip from the output."
     required: true
 
 runs:

@@ -11,7 +11,7 @@ inputs:
     required: false
     default: "false"
   plan-file:
-    description: "The terraform plan file to output for terraform apply."
+    description: "The Terraform saved plan file."
     required: false
     default: ""
   sensitive-keys:
