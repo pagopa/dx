@@ -3,7 +3,7 @@ import {
   createNodesFromFiles,
   CreateNodesV2,
 } from "@nx/devkit";
-import { existsSync } from "node:fs";
+import { access } from "node:fs/promises";
 import path from "node:path";
 
 import { getStaticDependenciesFromFile } from "./fs.ts";
@@ -12,19 +12,34 @@ import { getTerraformProjectFiles } from "./project-file.ts";
 import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
-const rootTflintConfigFileName = ".tflint.hcl";
-const rootTerraformDocsConfigFileName = ".terraform-docs.yml";
+
+const fileExists = async (filePath: string) => {
+  try {
+    await access(filePath);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return false;
+    }
+    throw error;
+  }
+};
 
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // We create a terraform project for each directory containing .tf files
   "**/*.tf",
   async (configFiles, options, context) => {
     const opts = parseOptions(options);
-    const hasRootTflintConfig = existsSync(
-      path.join(context.workspaceRoot, rootTflintConfigFileName),
-    );
-    const hasRootTerraformDocsConfig = existsSync(
-      path.join(context.workspaceRoot, rootTerraformDocsConfigFileName),
+    const [hasRootTflintConfig, hasRootTerraformDocsConfig] = await Promise.all(
+      [
+        fileExists(path.join(context.workspaceRoot, ".tflint.hcl")),
+        fileExists(path.join(context.workspaceRoot, ".terraform-docs.yml")),
+      ],
     );
     return createNodesFromFiles(
       (configFile) => {
