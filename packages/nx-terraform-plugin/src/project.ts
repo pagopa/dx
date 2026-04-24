@@ -61,24 +61,10 @@ const getTargets = (
   hasRootTerraformDocsConfig: boolean,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
-  const defaultArgs = {
-    fmt: ["-list=true", "-recursive=true"],
-    lint: [
-      "--disable-rule=terraform_required_version",
-      "--disable-rule=terraform_required_providers",
-      "--config",
-      rootTflintConfigPath,
-    ],
-  };
+  const formatArgs = ["-list=true", "-recursive=true"];
 
-  const projectCwd = "{projectRoot}";
-  const terraformInputs = ["default", "examples", "tests"];
-  const terraformDocsInputs = [
-    "default",
-    "{projectRoot}/.terraform.lock.hcl",
-    "{projectRoot}/README.md",
-    "{workspaceRoot}/.terraform-docs.yml",
-  ];
+  const cwd = "{projectRoot}";
+  const inputs = ["default", "examples", "tests"];
 
   // Shared targets for applications and libraries.
   // To speed up the development loop, frequently used tasks like "validate"
@@ -89,9 +75,9 @@ const getTargets = (
       {
         cache: true,
         command: `terraform init`,
-        inputs: terraformInputs,
+        inputs,
         options: {
-          cwd: projectCwd,
+          cwd,
         },
         outputs: [
           "{projectRoot}/.terraform",
@@ -106,13 +92,13 @@ const getTargets = (
         command: `terraform fmt`,
         configurations: {
           ci: {
-            args: [...defaultArgs.fmt, "-check=true"],
+            args: [...formatArgs, "-check=true"],
           },
         },
-        inputs: terraformInputs,
+        inputs,
         options: {
-          args: [...defaultArgs.fmt, "-write=true"],
-          cwd: projectCwd,
+          args: [...formatArgs, "-write=true"],
+          cwd,
         },
       },
     ],
@@ -124,7 +110,7 @@ const getTargets = (
         dependsOn: [opts.initTargetName],
         inputs: ["default", "tests"],
         options: {
-          cwd: projectCwd,
+          cwd,
         },
       },
     ],
@@ -133,9 +119,9 @@ const getTargets = (
       {
         cache: true,
         command: `terraform validate`,
-        inputs: terraformInputs,
+        inputs,
         options: {
-          cwd: projectCwd,
+          cwd,
         },
       },
     ],
@@ -147,10 +133,15 @@ const getTargets = (
       {
         cache: true,
         command: `tflint`,
-        inputs: [...terraformInputs, "{workspaceRoot}/.tflint.hcl"],
+        inputs: [...inputs, "{workspaceRoot}/.tflint.hcl"],
         options: {
-          args: defaultArgs.lint,
-          cwd: projectCwd,
+          args: [
+            "--disable-rule=terraform_required_version",
+            "--disable-rule=terraform_required_providers",
+            "--config",
+            rootTflintConfigPath,
+          ],
+          cwd,
         },
       },
     ]);
@@ -162,10 +153,15 @@ const getTargets = (
       {
         cache: true,
         command: `terraform-docs`,
-        inputs: terraformDocsInputs,
+        inputs: [
+          "default",
+          "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/README.md",
+          "{workspaceRoot}/.terraform-docs.yml",
+        ],
         options: {
           args: getTerraformDocsArgs(root, projectType),
-          cwd: projectCwd,
+          cwd,
         },
         outputs: ["{projectRoot}/README.md"],
       },
@@ -179,7 +175,7 @@ const getTargets = (
         cache: false,
         command: `terraform console`,
         options: {
-          cwd: projectCwd,
+          cwd,
           tty: true,
         },
       },
@@ -191,7 +187,7 @@ const getTargets = (
         command: `terraform output`,
         dependsOn: [opts.initTargetName],
         options: {
-          cwd: projectCwd,
+          cwd,
         },
       },
     ],
@@ -206,7 +202,7 @@ const getTargets = (
           command: `terraform plan`,
           dependsOn: [opts.initTargetName],
           options: {
-            cwd: projectCwd,
+            cwd,
           },
         },
       ],
@@ -217,7 +213,7 @@ const getTargets = (
           command: `terraform apply`,
           dependsOn: [opts.initTargetName],
           options: {
-            cwd: projectCwd,
+            cwd,
             tty: true,
           },
         },
