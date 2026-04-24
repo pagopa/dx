@@ -26,12 +26,7 @@ variable "source_roles" {
   type        = list(string)
 
   validation {
-    condition     = length(var.source_roles) > 0
-    error_message = "source_roles must contain at least one Azure role name."
-  }
-
-  validation {
-    condition     = length(var.source_roles) == 0 || length(var.source_roles) >= 2
+    condition     = length(var.source_roles) >= 2
     error_message = "source_roles must contain at least two Azure role names. If you only need one role, assign it directly instead of creating an equivalent custom role."
   }
 
