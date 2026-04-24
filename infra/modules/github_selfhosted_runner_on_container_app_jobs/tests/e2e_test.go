@@ -149,7 +149,7 @@ func loadGitHubConfig(t *testing.T) githubConfig {
 	return githubConfig{
 		owner: githubRepositoryOwner,
 		repo:  githubRepositoryName,
-		ref:   envOrDefault("E2E_GITHUB_REF", "github_selfhosted_runner_on_container_app_jobs"), // TODO: revert to main
+		ref:   envOrDefault("E2E_GITHUB_REF", "main"),
 		token: requireEnv(t, "GITHUB_TOKEN", "GH_TOKEN"),
 	}
 }
