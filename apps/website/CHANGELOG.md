@@ -2,11 +2,13 @@
 
 ### 🚀 Features
 
-- Move fp-ts entry in Tech Radar to hold, and add deprecation rationale. ([#1590](https://github.com/pagopa/dx/pull/1590))
+- Move fp-ts entry in Tech Radar to hold, and add deprecation rationale.
+  ([#1590](https://github.com/pagopa/dx/pull/1590))
 
 ### 🩹 Fixes
 
-- Improve documentation for upgraded Terraform pipelines. ([#1631](https://github.com/pagopa/dx/pull/1631))
+- Improve documentation for upgraded Terraform pipelines.
+  ([#1631](https://github.com/pagopa/dx/pull/1631))
 - Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
 
 ### 🧱 Updated Dependencies
