@@ -53,7 +53,7 @@ run "azure_container_app_environment_apply_private" {
     resource_group_name        = run.setup.resource_group_name
     log_analytics_workspace_id = run.setup.log_analytics_workspace_id
     networking = {
-      virtual_network                      = run.setup.virtual_network
+      virtual_network_id                   = run.setup.vnet_id
       private_dns_zone_resource_group_name = run.setup.network_resource_group_name
     }
   }
@@ -89,7 +89,7 @@ run "azure_container_app_environment_apply_public" {
     resource_group_name        = run.setup.resource_group_name
     log_analytics_workspace_id = run.setup.log_analytics_workspace_id
     networking = {
-      virtual_network               = run.setup.virtual_network
+      virtual_network_id            = run.setup.vnet_id
       public_network_access_enabled = true
     }
   }

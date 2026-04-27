@@ -25,10 +25,7 @@ variables {
   use_case = "development"
 
   networking = {
-    virtual_network = {
-      name                = "dx-d-itn-integration-vnet-01"
-      resource_group_name = "dx-d-itn-integration-rg-01"
-    }
+    virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
     private_dns_zone_resource_group_name = null
     public_network_access_enabled        = false
   }
@@ -36,13 +33,6 @@ variables {
 
 mock_provider "azurerm" {}
 mock_provider "dx" {}
-
-override_data {
-  target = data.azurerm_subscription.current
-  values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000"
-  }
-}
 
 override_data {
   target = data.azurerm_private_dns_zone.this
@@ -55,10 +45,10 @@ override_data {
 override_resource {
   target = dx_available_subnet_cidr.cae_subnet
   values = {
-    id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/23/10.50.100.0_23"
+    id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/27/10.50.100.0_27"
     virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
-    prefix_length      = 23
-    cidr_block         = "10.50.100.0/23"
+    prefix_length      = 27
+    cidr_block         = "10.50.100.0/27"
   }
 }
 
@@ -112,9 +102,10 @@ run "azure_container_app_environment_public_access" {
   command = plan
 
   variables {
-    networking = merge(var.networking, {
+    networking = {
+      virtual_network_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
       public_network_access_enabled = true
-    })
+    }
   }
 
   assert {
@@ -173,10 +164,7 @@ run "azure_container_app_environment_pep_subnet_instance_number_follows_vnet" {
 
   variables {
     networking = {
-      virtual_network = {
-        name                = "dx-d-itn-integration-vnet-02"
-        resource_group_name = "dx-d-itn-integration-rg-01"
-      }
+      virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02"
       private_dns_zone_resource_group_name = null
       public_network_access_enabled        = false
     }
@@ -185,15 +173,49 @@ run "azure_container_app_environment_pep_subnet_instance_number_follows_vnet" {
   override_resource {
     target = dx_available_subnet_cidr.cae_subnet
     values = {
-      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02/23/10.50.102.0_23"
+      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02/27/10.50.102.0_27"
       virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-02"
-      prefix_length      = 23
-      cidr_block         = "10.50.102.0/23"
+      prefix_length      = 27
+      cidr_block         = "10.50.102.0/27"
     }
   }
 
   assert {
     condition     = endswith(azurerm_private_endpoint.this[0].subnet_id, "/subnets/dx-d-itn-pep-snet-02")
     error_message = "PEP subnet name must use the instance number derived from the VNet name (expected suffix /subnets/dx-d-itn-pep-snet-02 for vnet-02)"
+  }
+}
+
+# Subnet size: development use_case must request a /27 subnet
+run "azure_container_app_environment_development_use_case_subnet_size" {
+  command = plan
+
+  assert {
+    condition     = dx_available_subnet_cidr.cae_subnet.prefix_length == 27
+    error_message = "CAE subnet prefix length must be 27 for use_case=development"
+  }
+}
+
+# Subnet size: default use_case must request a /23 subnet
+run "azure_container_app_environment_default_use_case_subnet_size" {
+  command = plan
+
+  variables {
+    use_case = "default"
+  }
+
+  override_resource {
+    target = dx_available_subnet_cidr.cae_subnet
+    values = {
+      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/23/10.50.100.0_23"
+      virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+      prefix_length      = 23
+      cidr_block         = "10.50.100.0/23"
+    }
+  }
+
+  assert {
+    condition     = dx_available_subnet_cidr.cae_subnet.prefix_length == 23
+    error_message = "CAE subnet prefix length must be 23 for use_case=default"
   }
 }

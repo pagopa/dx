@@ -21,6 +21,11 @@ data "azurerm_log_analytics_workspace" "common" {
   }))
 }
 
+data "azurerm_virtual_network" "this" {
+  name                = local.virtual_network.name
+  resource_group_name = local.virtual_network.resource_group_name
+}
+
 module "container_app_environment" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
   version = "~> 2.0"
@@ -31,10 +36,7 @@ module "container_app_environment" {
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
   networking = {
-    virtual_network = {
-      name                = local.virtual_network.name
-      resource_group_name = local.virtual_network.resource_group_name
-    }
+    virtual_network_id = data.azurerm_virtual_network.this.id
   }
 
   tags = local.tags

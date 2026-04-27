@@ -25,10 +25,7 @@ variables {
   use_case = "default"
 
   networking = {
-    virtual_network = {
-      name                = "dx-d-itn-integration-vnet-01"
-      resource_group_name = "dx-d-itn-integration-rg-01"
-    }
+    virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
     private_dns_zone_resource_group_name = null
     public_network_access_enabled        = false
   }
@@ -36,13 +33,6 @@ variables {
 
 mock_provider "azurerm" {}
 mock_provider "dx" {}
-
-override_data {
-  target = data.azurerm_subscription.current
-  values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000"
-  }
-}
 
 override_data {
   target = data.azurerm_private_dns_zone.this
@@ -80,6 +70,11 @@ run "azure_container_app_environment_valid_private_config" {
     condition     = azurerm_private_endpoint.this[0].private_service_connection[0].subresource_names[0] == "managedEnvironments"
     error_message = "Private endpoint must target the managedEnvironments subresource"
   }
+
+  assert {
+    condition     = dx_available_subnet_cidr.cae_subnet.prefix_length == 23
+    error_message = "CAE subnet prefix length must be 23 for use_case=default"
+  }
 }
 
 # Contract: valid public configuration must not create a private endpoint
@@ -87,9 +82,10 @@ run "azure_container_app_environment_valid_public_config" {
   command = plan
 
   variables {
-    networking = merge(var.networking, {
+    networking = {
+      virtual_network_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
       public_network_access_enabled = true
-    })
+    }
   }
 
   assert {
@@ -103,24 +99,25 @@ run "azure_container_app_environment_valid_public_config" {
   }
 }
 
-# Contract: private DNS zone resource group falls back to the VNet resource group when not set
-run "azure_container_app_environment_dns_zone_rg_fallback" {
+# Contract: private DNS zone is auto-discovered in the VNet's resource group when private_dns_zone_resource_group_name is not set
+run "azure_container_app_environment_auto_dns_zone_discovery" {
   command = plan
 
   assert {
     condition     = length(azurerm_private_endpoint.this) == 1
-    error_message = "Private endpoint must be created when private_dns_zone_resource_group_name is null"
+    error_message = "Private endpoint must be created when private_dns_zone_id is null (auto-discovery mode)"
   }
 }
 
-# Contract: when a custom private DNS zone resource group is provided, it is used for the lookup
+# Contract: when a custom private_dns_zone_resource_group_name is provided, it is used for the lookup
 run "azure_container_app_environment_custom_dns_zone_rg" {
   command = plan
 
   variables {
-    networking = merge(var.networking, {
+    networking = {
+      virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
       private_dns_zone_resource_group_name = "rg-custom-dns"
-    })
+    }
   }
 
   assert {
@@ -150,6 +147,16 @@ run "azure_container_app_environment_development_use_case" {
     use_case = "development"
   }
 
+  override_resource {
+    target = dx_available_subnet_cidr.cae_subnet
+    values = {
+      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/27/10.50.100.0_27"
+      virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+      prefix_length      = 27
+      cidr_block         = "10.50.100.0/27"
+    }
+  }
+
   assert {
     condition     = azurerm_container_app_environment.this.zone_redundancy_enabled == false
     error_message = "Zone redundancy must be disabled for use_case=development"
@@ -158,5 +165,10 @@ run "azure_container_app_environment_development_use_case" {
   assert {
     condition     = length(azurerm_management_lock.cae_lock) == 0
     error_message = "Management lock must not be created for use_case=development"
+  }
+
+  assert {
+    condition     = dx_available_subnet_cidr.cae_subnet.prefix_length == 27
+    error_message = "CAE subnet prefix length must be 27 for use_case=development"
   }
 }

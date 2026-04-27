@@ -39,16 +39,14 @@ variable "log_analytics_workspace_id" {
 
 variable "networking" {
   type = object({
-    virtual_network = object({
-      name                = string
-      resource_group_name = string
-    })
+    virtual_network_id                   = string
     private_dns_zone_resource_group_name = optional(string, null)
     public_network_access_enabled        = optional(bool, false)
   })
   description = <<-EOT
     Networking configuration for the Container App Environment.
-    If networking.private_dns_zone_resource_group_name is not set, it is assumed that the private DNS zone is in the same resource group as the virtual network.
-    If networking.public_network_access_enabled is true, the environment will be configured for public access.
+    - virtual_network_id: The Azure Resource ID of the Virtual Network where the module will create a dedicated /23 subnet.
+    - private_dns_zone_resource_group_name: The resource group containing the Private DNS Zone for the container app environment. If not set, the zone is looked up in the VNet's resource group.
+    - public_network_access_enabled: If true, the environment is accessible from public networks (no private endpoint or internal load balancer). Defaults to false.
   EOT
 }

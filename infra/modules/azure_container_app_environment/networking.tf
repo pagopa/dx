@@ -1,12 +1,12 @@
 resource "dx_available_subnet_cidr" "cae_subnet" {
   virtual_network_id = local.vnet_id
-  prefix_length      = 23
+  prefix_length      = local.use_case_features.cae_subnet_prefix_length
 }
 
 resource "azurerm_subnet" "this" {
   name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_subnet" }))
-  virtual_network_name = var.networking.virtual_network.name
-  resource_group_name  = var.networking.virtual_network.resource_group_name
+  virtual_network_name = local.vnet_name
+  resource_group_name  = local.vnet_resource_group_name
   address_prefixes     = [dx_available_subnet_cidr.cae_subnet.cidr_block]
 
   delegation {
@@ -35,7 +35,7 @@ resource "azurerm_private_endpoint" "this" {
 
   private_dns_zone_group {
     name                 = "private-dns-zone-group"
-    private_dns_zone_ids = [data.azurerm_private_dns_zone.this[0].id]
+    private_dns_zone_ids = [local.private_dns_zone_id]
   }
 
   tags = local.tags

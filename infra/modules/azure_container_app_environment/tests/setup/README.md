@@ -41,5 +41,5 @@ No modules.
 | <a name="output_network_resource_group_name"></a> [network\_resource\_group\_name](#output\_network\_resource\_group\_name) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | n/a |
-| <a name="output_virtual_network"></a> [virtual\_network](#output\_virtual\_network) | n/a |
+| <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | n/a |
 <!-- END_TF_DOCS -->
