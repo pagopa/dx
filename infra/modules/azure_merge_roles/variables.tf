@@ -42,7 +42,7 @@ variable "assignable_scopes" {
   default     = null
 
   validation {
-    condition     = var.assignable_scopes == null || length(var.assignable_scopes) > 0
+    condition     = var.assignable_scopes == null ? true : length(var.assignable_scopes) > 0
     error_message = "assignable_scopes must be null or contain at least one scope."
   }
 
@@ -51,7 +51,7 @@ variable "assignable_scopes" {
     # For management group scopes Azure can target the management group itself
     # and descendant subscriptions, but Terraform cannot infer that hierarchy
     # from an ARM ID string alone, so we only validate the scope shape.
-    condition = var.assignable_scopes == null || alltrue([
+    condition = var.assignable_scopes == null ? true : alltrue([
       for assignable_scope in var.assignable_scopes : (
         startswith(var.scope, "/subscriptions/")
         ? startswith(assignable_scope, var.scope)
@@ -65,7 +65,7 @@ variable "assignable_scopes" {
   }
 
   validation {
-    condition     = var.assignable_scopes == null || length(var.assignable_scopes) == length(distinct(var.assignable_scopes))
+    condition     = var.assignable_scopes == null ? true : length(var.assignable_scopes) == length(distinct(var.assignable_scopes))
     error_message = "assignable_scopes must not contain duplicates."
   }
 }
