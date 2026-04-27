@@ -17454,23 +17454,21 @@ function isManagedVersionPackagesPullRequest(pullRequest) {
 function renderVersionPlanWarningComment(params) {
   return [
     VERSION_PLAN_WARNING_MARKER,
-    "### Nx Version Plan Warning",
+    "### \u26A0\uFE0F Nx Version Plan Warning",
     "",
     "Nx Release reports that this PR has touched projects without version plan coverage.",
     "",
-    "Run `pnpm nx release plan` locally and add or update the generated file in `.nx/version-plans/` so each affected project that needs release coverage is declared in the frontmatter.",
+    "Run `pnpm nx release plan` and add the generated version plans.",
     "",
     "<details>",
-    "<summary>`nx release plan:check` output</summary>",
+    "<summary>Nx Plan Check result:</summary>",
     "",
     "```text",
     params.nxPlanCheckOutput.trim(),
     "```",
     "</details>",
     "",
-    "This comment is managed automatically by Nx Release.",
-    "",
-    `[Version plan guide](${VERSION_PLAN_GUIDE_URL})`
+    `This comment is managed automatically by Nx Release. [Version plan guide](${VERSION_PLAN_GUIDE_URL})`
   ].join("\n");
 }
 async function syncVersionPlanWarningComment(params) {

@@ -102,10 +102,16 @@ describe("renderVersionPlanWarningComment", () => {
     });
 
     expect(comment).toContain(VERSION_PLAN_WARNING_MARKER);
-    expect(comment).toContain("### Nx Version Plan Warning");
-    expect(comment).toContain("Run `pnpm nx release plan` locally");
+    expect(comment).toContain("### ⚠️ Nx Version Plan Warning");
+    expect(comment).toContain(
+      "Run `pnpm nx release plan` and add the generated version plans.",
+    );
     expect(comment).toContain("Touched projects missing version plans");
+    expect(comment).toContain("<summary>Nx Plan Check result:</summary>");
     expect(comment).toContain("```text");
+    expect(comment).toContain(
+      "This comment is managed automatically by Nx Release. [Version plan guide]",
+    );
   });
 });
 
