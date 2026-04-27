@@ -25,10 +25,10 @@ export type TerraformPluginOptions = z.infer<
 const defaultOptions: TerraformPluginOptions = {
   applyTargetName: "tf-apply",
   consoleTargetName: "tf-console",
-  docsTargetName: "tf-docs",
+  docsTargetName: "terraform-docs",
   formatTargetName: "tf-fmt",
   initTargetName: "tf-init",
-  lintTargetName: "tf-lint",
+  lintTargetName: "tflint",
   outputTargetName: "tf-output",
   planTargetName: "tf-plan",
   testTargetName: "tf-test",
