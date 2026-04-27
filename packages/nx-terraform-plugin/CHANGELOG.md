@@ -1,3 +1,13 @@
+## 0.2.0 (2026-04-27)
+
+### 🚀 Features
+
+- Add inferred tflint and terraform-docs targets to the Terraform Nx plugin ([#1663](https://github.com/pagopa/dx/pull/1663))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.2.0-rc.0 (2026-04-20)
 
 ### 🚀 Features

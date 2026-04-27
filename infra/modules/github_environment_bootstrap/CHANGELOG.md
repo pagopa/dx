@@ -1,3 +1,15 @@
+## 1.3.0 (2026-04-27)
+
+### 🚀 Features
+
+- Add new environment for Bootstrap Identity configuration named "bootstrapper-ENV-cd" and update the related deployment policies to include this new environment. ([#1584](https://github.com/pagopa/dx/pull/1584))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+- Mario Mupo @mamu0
+
 ## 1.2.0 (2026-04-17)
 
 ### 🚀 Features
