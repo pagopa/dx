@@ -25,7 +25,7 @@ const (
 	githubRepositoryName  = "dx"
 	githubWorkflowFile    = "_validate-terraform-e2e-selfhosted-runner.yaml"
 	pollInterval          = 15 * time.Second
-	runTimeout            = 20 * time.Minute
+	runTimeout            = 10 * time.Minute
 )
 
 type githubConfig struct {
@@ -149,7 +149,7 @@ func loadGitHubConfig(t *testing.T) githubConfig {
 	return githubConfig{
 		owner: githubRepositoryOwner,
 		repo:  githubRepositoryName,
-		ref:   envOrDefault("E2E_GITHUB_REF", "main"),
+		ref:   envOrDefault("E2E_GITHUB_REF", "test-diagram-container-app-job"), // TODO: restore main
 		token: requireEnv(t, "GITHUB_TOKEN", "GH_TOKEN"),
 	}
 }
