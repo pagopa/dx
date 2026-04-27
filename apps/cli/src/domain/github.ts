@@ -7,6 +7,14 @@ export type CreateBranchParams = {
   repo: string;
 };
 
+export type CreateOrUpdateEnvironmentSecretParams = {
+  environmentName: string;
+  owner: string;
+  repo: string;
+  secretName: string;
+  secretValue: string;
+};
+
 export type FileContent = {
   content: string;
   sha: string; // needed for updating the file
@@ -26,6 +34,15 @@ export interface GitHubService {
    * @throws Error if branch creation fails
    */
   createBranch(params: CreateBranchParams): Promise<void>;
+
+  /**
+   * Creates or updates a secret in a GitHub repository environment.
+   * The value is automatically encrypted using the environment's public key.
+   * @throws Error if secret creation fails
+   */
+  createOrUpdateEnvironmentSecret(
+    params: CreateOrUpdateEnvironmentSecretParams,
+  ): Promise<void>;
 
   /**
    * Creates a pull request in a GitHub repository.

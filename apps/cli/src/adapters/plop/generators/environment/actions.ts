@@ -40,6 +40,18 @@ const addModule = (env: Environment, templatesPath: string, init = false) => {
   ];
 };
 
+const addWorkflowModule = (templatesPath: string): ActionType => {
+  const cwd = process.cwd();
+  return {
+    base: path.join(templatesPath, "workflow"),
+    destination: path.join(cwd, ".github", "workflows"),
+    force: true,
+    templateFiles: path.join(templatesPath, "workflow"),
+    type: "addMany",
+    verbose: true,
+  };
+};
+
 export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
@@ -56,6 +68,7 @@ export default function getActions(
       {
         type: "getTerraformBackend",
       },
+      addWorkflowModule(templatesPath),
       ...addEnvironmentModule(
         "bootstrapper",
         `${github.repo}.bootstrapper.${env.name}.tfstate`,
