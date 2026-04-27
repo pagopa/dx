@@ -10,26 +10,28 @@ A reusable GitHub workflow that automates package versioning and publishing for
 
 ## Features
 
-- 💬 Posts a managed summary comment on pull requests that include version plans
+- ⚠️ Can show a pull request warning when changes need a version plan but none
+  is present
 - 🔄 Automatically creates or updates a `Version Packages` pull request when new
-  version plans are added
+  version plans are pushed to `main`
 - 📦 Publishes packages to npm when the `Version Packages` PR is merged
 - 🎯 Agnostic: Works with pnpm, yarn, and npm
 - ♻️ Idempotent: `workflow_dispatch` can recover missed tags or releases
 
 ## How It Works
 
-The workflow automates the full release lifecycle in three steps:
+The workflow automates the release lifecycle in two steps:
 
-1. **When a pull request includes version plan files** — the workflow can post a
-   managed comment that summarizes the detected packages, bump types, and the
-   latest PR head SHA.
-2. **When you push a version plan to `main`** — the workflow opens (or updates)
+1. **When you push a version plan to `main`** — the workflow opens (or updates)
    a `Version Packages` pull request that bumps versions and updates changelogs
    automatically.
-3. **When the `Version Packages` PR is merged** — the workflow publishes the
+2. **When the `Version Packages` PR is merged** — the workflow publishes the
    packages to npm with provenance, creates git tags, and creates the
    corresponding GitHub Releases.
+
+If you also enable the DX validation workflow, pull requests can receive a
+warning comment when the changes look releasable but the PR does not include a
+matching version plan.
 
 :::tip Recovery
 
@@ -132,15 +134,6 @@ Use the `release-v2.yaml` reusable workflow. Create a
 name: Release
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - reopened
-      - synchronize
-    paths:
-      - ".nx/version-plans/**"
   push:
     branches:
       - main
@@ -164,10 +157,29 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The `pull_request` trigger is optional but recommended when you want a managed
-summary comment on feature PRs. The reusable workflow keeps that path light: it
-checks out the PR head and lets `nx-release` auto-detect the PR summary case,
-without installing dependencies.
+### Optional: enable the pull request warning
+
+If you also want a warning comment on pull requests, add a validation workflow
+that uses `validate-v1.yaml`:
+
+```yaml
+name: Validate
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  validate:
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    uses: pagopa/dx/.github/workflows/validate-v1.yaml@main
+```
+
+With this in place, pull requests receive a warning only when a version plan is
+missing or incomplete.
 
 ## Inputs
 
@@ -196,20 +208,15 @@ A release starts by committing a **version plan** to `main`. A version plan is a
 small file that records which packages changed and how their version should be
 bumped.
 
-## Pull Request Summary
+## Pull Request Warning
 
-When the same reusable workflow is also triggered on `pull_request`, it scans
-the active `.nx/version-plans/**` files in the PR and posts a managed comment.
-The comment includes:
+When the optional validation workflow is enabled, a pull request can receive a
+warning comment if it changes something that should have a version plan but does
+not include one.
 
-- the latest PR head SHA
-- the unique packages detected across all version plans
-- the highest bump type per package when duplicates exist
-- a details section listing the source version plan files
-
-The comment is updated in place on `synchronize` and removed automatically when
-the PR no longer contains active version plan files. The auto-generated
-`Version Packages` PR is excluded.
+To clear the warning, add or fix the files in `.nx/version-plans/` and push the
+update. The comment is refreshed automatically and disappears when everything is
+covered.
 
 ### 1. Generate the version plan
 
@@ -254,10 +261,12 @@ as well.
 - Verify the GitHub token has `pull-requests: write` permission
 - Run `nx release --dry-run` locally to check for errors
 
-### PR summary comment is not created
+### PR warning comment is not created
 
-- Ensure the caller workflow includes a `pull_request` trigger
-- Ensure the PR diff still contains active `.nx/version-plans/**` files
+- Ensure the validation workflow runs on `pull_request`
+- Ensure the PR really needs a version plan
+- Ensure the PR includes the correct files in `.nx/version-plans/`
+- The warning is only managed on same-repository pull requests
 
 ### Publish fails
 

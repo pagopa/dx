@@ -27,8 +27,6 @@ runs:
       env:
         BEFORE_SHA: ${{ github.event.before }}
         GITHUB_EVENT_NAME: ${{ github.event_name }}
-        PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
         set -euo pipefail
 
@@ -38,11 +36,7 @@ runs:
         fi
 
         if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-          if [[ "$PR_HEAD_REF" == "nx-release/main" || "$PR_TITLE" == "Version Packages" ]]; then
-            echo "mode=skip" >> "$GITHUB_OUTPUT"
-          else
-            echo "mode=summarize-pr" >> "$GITHUB_OUTPUT"
-          fi
+          echo "mode=warn-pr" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -70,15 +64,15 @@ runs:
         git config user.name "dx-pagopa-bot"
         git config user.email "dx-pagopa-bot@users.noreply.github.com"
 
-    - name: Summarize version plans on pull request
-      if: steps.release-mode.outputs.mode == 'summarize-pr'
+    - name: Warn missing version plan coverage on pull request
+      if: steps.release-mode.outputs.mode == 'warn-pr'
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
         GITHUB_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-        node "$ACTION_PATH/scripts/dist/summarize-version-plan-pr.js"
+        node "$ACTION_PATH/scripts/dist/warn-version-plan-coverage-pr.js"
 
     - name: Create or update Version Packages PR
       if: steps.release-mode.outputs.mode == 'create-pr'
