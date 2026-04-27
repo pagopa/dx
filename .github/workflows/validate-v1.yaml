@@ -26,7 +26,7 @@ jobs:
         run: pnpm install
 
       - name: Warn missing version plan coverage
-        uses: pagopa/dx/actions/nx-release@feat-add-summary-comment-pr-nx-release-action # main - Remove after tests
+        uses: pagopa/dx/actions/nx-release@main
         with:
           github-token: ${{ github.token }}
 
