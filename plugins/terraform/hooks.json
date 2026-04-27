@@ -1,11 +1,10 @@
 {
-  "version": 1,
   "hooks": {
-    "sessionStart": [
+    "SessionStart": [
       {
         "type": "command",
-        "bash": "./scripts/ensure-dx-kb.sh",
-        "timeoutSec": 120
+        "command": "${PLUGIN_ROOT}/scripts/ensure-dx-kb.sh",
+        "timeout": 120
       }
     ]
   }
