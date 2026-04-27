@@ -300,22 +300,22 @@ run "managed_redis_role_assignments" {
   }
 
   assert {
-    condition     = module.managed_redis[0].azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01|reader"].role_definition_name == "Azure Managed Redis Reader"
+    condition     = module.managed_redis.azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01|reader"].role_definition_name == "Azure Managed Redis Reader"
     error_message = "The reader role must map to Azure Managed Redis Reader"
   }
 
   assert {
-    condition     = module.managed_redis[0].azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02|owner"].role_definition_name == "Azure Managed Redis Contributor"
+    condition     = module.managed_redis.azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02|owner"].role_definition_name == "Azure Managed Redis Contributor"
     error_message = "The owner role must map to Azure Managed Redis Contributor"
   }
 
   assert {
-    condition     = module.managed_redis[0].azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"].object_id == run.setup_tests.principal_id
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"].object_id == run.setup_tests.principal_id
     error_message = "The writer role must create a data-plane access policy assignment"
   }
 
   assert {
-    condition     = module.managed_redis[0].azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"].object_id == run.setup_tests.principal_id
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"].object_id == run.setup_tests.principal_id
     error_message = "The owner role must also create a data-plane access policy assignment"
   }
 
@@ -323,7 +323,7 @@ run "managed_redis_role_assignments" {
   # produce exactly 2 data-plane access policy assignments — one per distinct
   # AMR id — because writer and owner on the same id share the "default" policy.
   assert {
-    condition     = length(module.managed_redis[0].azurerm_managed_redis_access_policy_assignment) == 2
+    condition     = length(module.managed_redis.azurerm_managed_redis_access_policy_assignment) == 2
     error_message = "Data-plane assignments must be deduplicated per AMR id (writer+owner on the same id share the default policy)"
   }
 }
