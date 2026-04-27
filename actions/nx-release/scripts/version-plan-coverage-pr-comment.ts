@@ -83,7 +83,7 @@ export function renderVersionPlanWarningComment(params: {
 }): string {
   return [
     VERSION_PLAN_WARNING_MARKER,
-    "### ⚠️ Nx Version Plan Warning",
+    "### ⚠️ Missing Nx Version Plan",
     "",
     "Nx Release reports that this PR has touched projects without version plan coverage.",
     "",

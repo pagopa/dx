@@ -102,7 +102,7 @@ describe("renderVersionPlanWarningComment", () => {
     });
 
     expect(comment).toContain(VERSION_PLAN_WARNING_MARKER);
-    expect(comment).toContain("### ⚠️ Nx Version Plan Warning");
+    expect(comment).toContain("### ⚠️ Missing Nx Version Plan");
     expect(comment).toContain(
       "Run `pnpm nx release plan` and add the generated version plans.",
     );

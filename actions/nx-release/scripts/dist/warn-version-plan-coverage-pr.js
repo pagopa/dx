@@ -17454,7 +17454,7 @@ function isManagedVersionPackagesPullRequest(pullRequest) {
 function renderVersionPlanWarningComment(params) {
   return [
     VERSION_PLAN_WARNING_MARKER,
-    "### \u26A0\uFE0F Nx Version Plan Warning",
+    "### \u26A0\uFE0F Missing Nx Version Plan",
     "",
     "Nx Release reports that this PR has touched projects without version plan coverage.",
     "",
