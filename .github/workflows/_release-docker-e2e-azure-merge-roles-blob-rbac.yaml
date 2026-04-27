@@ -20,7 +20,6 @@ jobs:
       packages: write
     env:
       IMAGE_NAME: "pagopa/e2e-azure-merge-roles-blob-rbac"
-      IMAGE_TAG: "latest"
 
     steps:
       - name: Checkout
@@ -28,7 +27,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: ./actions/docker-build-push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
