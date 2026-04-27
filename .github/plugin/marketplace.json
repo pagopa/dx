@@ -16,7 +16,6 @@
     },
     {
       "name": "terraform",
-      "version": "0.1.1",
       "source": "terraform"
     },
     {
