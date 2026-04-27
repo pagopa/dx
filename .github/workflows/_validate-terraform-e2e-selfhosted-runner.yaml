@@ -1,4 +1,5 @@
 name: E2E GitHub Self-Hosted Runner Smoke
+run-name: ${{ format('E2E GitHub Self-Hosted Runner {0}', inputs.test_id) }}
 
 on:
   workflow_dispatch:
