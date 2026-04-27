@@ -67,37 +67,37 @@ type workflowJobsResponse struct {
 	Jobs []workflowJob `json:"jobs"`
 }
 
-func TestGitHubSelfHostedRunnerPatE2E(t *testing.T) {
-	runRunnerScenario(t, runnerScenario{
-		name:          "pat",
-		fixtureFolder: "../examples/pat_based/",
-		requiredEnv: [][]string{
-			{"GITHUB_TOKEN", "GH_TOKEN"},
-			{"E2E_GITHUB_RUNNER_PAT"},
-		},
-		seedSecrets: func(t *testing.T, keyVaultName string) {
-			setKeyVaultSecret(t, keyVaultName, "github-runner-pat", requireEnv(t, "E2E_GITHUB_RUNNER_PAT"))
-		},
-	})
-}
-
-// func TestGitHubSelfHostedRunnerAppE2E(t *testing.T) {
+// func TestGitHubSelfHostedRunnerPatE2E(t *testing.T) {
 // 	runRunnerScenario(t, runnerScenario{
-// 		name:          "app",
-// 		fixtureFolder: "../examples/app_based/",
+// 		name:          "pat",
+// 		fixtureFolder: "../examples/pat_based/",
 // 		requiredEnv: [][]string{
 // 			{"GITHUB_TOKEN", "GH_TOKEN"},
-// 			{"E2E_GITHUB_APP_ID"},
-// 			{"E2E_GITHUB_APP_INSTALLATION_ID"},
-// 			{"E2E_GITHUB_APP_PRIVATE_KEY"},
+// 			{"E2E_GITHUB_RUNNER_PAT"},
 // 		},
 // 		seedSecrets: func(t *testing.T, keyVaultName string) {
-// 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-id", requireEnv(t, "E2E_GITHUB_APP_ID"))
-// 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-installation-id", requireEnv(t, "E2E_GITHUB_APP_INSTALLATION_ID"))
-// 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-key", requireEnv(t, "E2E_GITHUB_APP_PRIVATE_KEY"))
+// 			setKeyVaultSecret(t, keyVaultName, "github-runner-pat", requireEnv(t, "E2E_GITHUB_RUNNER_PAT"))
 // 		},
 // 	})
 // }
+
+func TestGitHubSelfHostedRunnerAppE2E(t *testing.T) {
+	runRunnerScenario(t, runnerScenario{
+		name:          "app",
+		fixtureFolder: "../examples/app_based/",
+		requiredEnv: [][]string{
+			{"GITHUB_TOKEN", "GH_TOKEN"},
+			{"E2E_GITHUB_APP_ID"},
+			{"E2E_GITHUB_APP_INSTALLATION_ID"},
+			{"E2E_GITHUB_APP_PRIVATE_KEY"},
+		},
+		seedSecrets: func(t *testing.T, keyVaultName string) {
+			setKeyVaultSecret(t, keyVaultName, "github-runner-app-id", requireEnv(t, "E2E_GITHUB_APP_ID"))
+			setKeyVaultSecret(t, keyVaultName, "github-runner-app-installation-id", requireEnv(t, "E2E_GITHUB_APP_INSTALLATION_ID"))
+			setKeyVaultSecret(t, keyVaultName, "github-runner-app-key", requireEnv(t, "E2E_GITHUB_APP_PRIVATE_KEY"))
+		},
+	})
+}
 
 func runRunnerScenario(t *testing.T, scenario runnerScenario) {
 	t.Helper()
@@ -118,6 +118,7 @@ func runRunnerScenario(t *testing.T, scenario runnerScenario) {
 		scenario.seedSecrets(t, keyVaultName)
 	})
 
+	// TODO: restore
 	// defer test_structure.RunTestStage(t, "teardown", func() {
 	// 	terraformOptions := test_structure.LoadTerraformOptions(t, scenario.fixtureFolder)
 	// 	terraform.Destroy(t, terraformOptions)
