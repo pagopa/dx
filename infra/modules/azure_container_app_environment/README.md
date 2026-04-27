@@ -15,7 +15,7 @@ The following diagram illustrates the architecture and relationships between the
 - **Azure Container App Environment**: Deploys an Azure Container App Environment for hosting containerized applications.
 - **Flexible Ingress**: Choose between private or public inbound access via `networking.public_network_access_enabled` (default: `false` — private mode).
 - **VNet Integration**: Container apps can always reach internal resources (databases, services) via the infrastructure subnet, regardless of ingress mode.
-- **Subnet Creation**: Creates a subnet for the Container App Environment.
+- **Automatic Subnet Creation**: Creates a dedicated subnet for the Container App Environment.
 - **Private Endpoint**: Creates a private endpoint for secure management connectivity. Created only when `networking.public_network_access_enabled` is `false` (private mode).
 - **Zone Redundancy**: Supports zone redundancy for high availability.
 
