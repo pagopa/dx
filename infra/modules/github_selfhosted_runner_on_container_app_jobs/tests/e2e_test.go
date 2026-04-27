@@ -67,19 +67,19 @@ type workflowJobsResponse struct {
 	Jobs []workflowJob `json:"jobs"`
 }
 
-// func TestGitHubSelfHostedRunnerPatE2E(t *testing.T) {
-// 	runRunnerScenario(t, runnerScenario{
-// 		name:          "pat",
-// 		fixtureFolder: "../examples/pat_based/",
-// 		requiredEnv: [][]string{
-// 			{"GITHUB_TOKEN", "GH_TOKEN"},
-// 			{"E2E_GITHUB_RUNNER_PAT"},
-// 		},
-// 		seedSecrets: func(t *testing.T, keyVaultName string) {
-// 			setKeyVaultSecret(t, keyVaultName, "github-runner-pat", requireEnv(t, "E2E_GITHUB_RUNNER_PAT"))
-// 		},
-// 	})
-// }
+func TestGitHubSelfHostedRunnerPatE2E(t *testing.T) {
+	runRunnerScenario(t, runnerScenario{
+		name:          "pat",
+		fixtureFolder: "../examples/pat_based/",
+		requiredEnv: [][]string{
+			{"GITHUB_TOKEN", "GH_TOKEN"},
+			{"E2E_GITHUB_RUNNER_PAT"},
+		},
+		seedSecrets: func(t *testing.T, keyVaultName string) {
+			setKeyVaultSecret(t, keyVaultName, "github-runner-pat", requireEnv(t, "E2E_GITHUB_RUNNER_PAT"))
+		},
+	})
+}
 
 func TestGitHubSelfHostedRunnerAppE2E(t *testing.T) {
 	runRunnerScenario(t, runnerScenario{
@@ -118,11 +118,10 @@ func runRunnerScenario(t *testing.T, scenario runnerScenario) {
 		scenario.seedSecrets(t, keyVaultName)
 	})
 
-	// TODO: restore
-	// defer test_structure.RunTestStage(t, "teardown", func() {
-	// 	terraformOptions := test_structure.LoadTerraformOptions(t, scenario.fixtureFolder)
-	// 	terraform.Destroy(t, terraformOptions)
-	// })
+	defer test_structure.RunTestStage(t, "teardown", func() {
+		terraformOptions := test_structure.LoadTerraformOptions(t, scenario.fixtureFolder)
+		terraform.Destroy(t, terraformOptions)
+	})
 
 	test_structure.RunTestStage(t, "validate_workflow_completion", func() {
 		terraformOptions := test_structure.LoadTerraformOptions(t, scenario.fixtureFolder)
@@ -150,7 +149,7 @@ func loadGitHubConfig(t *testing.T) githubConfig {
 	return githubConfig{
 		owner: githubRepositoryOwner,
 		repo:  githubRepositoryName,
-		ref:   envOrDefault("E2E_GITHUB_REF", "test-diagram-container-app-job"), // TODO: restore main
+		ref:   envOrDefault("E2E_GITHUB_REF", "main"),
 		token: requireEnv(t, "GITHUB_TOKEN", "GH_TOKEN"),
 	}
 }
