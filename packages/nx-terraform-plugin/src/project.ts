@@ -40,25 +40,11 @@ const getProjectType = (root: string): ProjectType => {
 const getRootConfigPath = (root: string, configFileName: string) =>
   path.relative(root, configFileName) || configFileName;
 
-const getTerraformDocsArgs = (root: string, projectType: ProjectType) => {
-  const rootTerraformDocsConfigPath = getRootConfigPath(
-    root,
-    ".terraform-docs.yml",
-  );
-  const args = ["--config", rootTerraformDocsConfigPath];
-  if (projectType === "library") {
-    args.push("--hide", "providers", "--lockfile=false");
-  }
-  args.push(".");
-  return args;
-};
-
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
-  hasRootTerraformDocsConfig: boolean,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -147,20 +133,24 @@ const getTargets = (
     ]);
   }
 
-  if (hasRootTerraformDocsConfig && projectType === "library") {
+  if (projectType === "library") {
     targets.push([
       opts.docsTargetName,
       {
         cache: true,
-        command: `terraform-docs`,
-        inputs: [
-          "default",
-          "{projectRoot}/.terraform.lock.hcl",
-          "{projectRoot}/README.md",
-          "{workspaceRoot}/.terraform-docs.yml",
-        ],
+        command: `terraform-docs markdown table`,
+        inputs: ["default", "{projectRoot}/README.md"],
         options: {
-          args: getTerraformDocsArgs(root, projectType),
+          args: [
+            "--output-file",
+            "README.md",
+            "--output-mode",
+            "inject",
+            "--hide",
+            "providers",
+            "--lockfile=false",
+            ".",
+          ],
           cwd,
         },
         outputs: ["{projectRoot}/README.md"],
@@ -228,16 +218,9 @@ export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
   hasRootTflintConfig = false,
-  hasRootTerraformDocsConfig = false,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
-  const targets = getTargets(
-    opts,
-    root,
-    projectType,
-    hasRootTflintConfig,
-    hasRootTerraformDocsConfig,
-  );
+  const targets = getTargets(opts, root, projectType, hasRootTflintConfig);
   return {
     name: getProjectNameFromRoot(root),
     namedInputs: {

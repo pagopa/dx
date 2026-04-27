@@ -35,11 +35,8 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   "**/*.tf",
   async (configFiles, options, context) => {
     const opts = parseOptions(options);
-    const [hasRootTflintConfig, hasRootTerraformDocsConfig] = await Promise.all(
-      [
-        fileExists(path.join(context.workspaceRoot, ".tflint.hcl")),
-        fileExists(path.join(context.workspaceRoot, ".terraform-docs.yml")),
-      ],
+    const hasRootTflintConfig = await fileExists(
+      path.join(context.workspaceRoot, ".tflint.hcl"),
     );
     return createNodesFromFiles(
       (configFile) => {
@@ -52,12 +49,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
         }
         return {
           projects: {
-            [root]: getProject(
-              opts,
-              root,
-              hasRootTflintConfig,
-              hasRootTerraformDocsConfig,
-            ),
+            [root]: getProject(opts, root, hasRootTflintConfig),
           },
         };
       },

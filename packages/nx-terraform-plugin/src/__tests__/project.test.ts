@@ -42,19 +42,16 @@ const getExpectedLintTarget = (root: string) => ({
   },
 });
 
-const getExpectedDocsTarget = (root: string) => ({
+const getExpectedDocsTarget = () => ({
   cache: true,
-  command: "terraform-docs",
-  inputs: [
-    "default",
-    "{projectRoot}/.terraform.lock.hcl",
-    "{projectRoot}/README.md",
-    "{workspaceRoot}/.terraform-docs.yml",
-  ],
+  command: "terraform-docs markdown table",
+  inputs: ["default", "{projectRoot}/README.md"],
   options: {
     args: [
-      "--config",
-      path.relative(root, ".terraform-docs.yml") || ".terraform-docs.yml",
+      "--output-file",
+      "README.md",
+      "--output-mode",
+      "inject",
       "--hide",
       "providers",
       "--lockfile=false",
@@ -207,11 +204,9 @@ describe("getProject", () => {
       expect(targets["tf-lint"]).toEqual(getExpectedLintTarget(root));
     });
 
-    it("does not add tf-docs when the root terraform-docs config exists", () => {
+    it("does not add tf-docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, false, true),
-      );
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
       expect(Object.keys(targets)).toEqual([
         "tf-init",
@@ -251,6 +246,7 @@ describe("getProject", () => {
         "tf-fmt",
         "tf-test",
         "tf-validate",
+        "tf-docs",
         "tf-console",
         "tf-output",
       ]);
@@ -275,17 +271,16 @@ describe("getProject", () => {
         "tf-test",
         "tf-validate",
         "tf-lint",
+        "tf-docs",
         "tf-console",
         "tf-output",
       ]);
       expect(targets["tf-lint"]).toEqual(getExpectedLintTarget(root));
     });
 
-    it("adds tf-docs to libraries when the root terraform-docs config exists", () => {
+    it("adds tf-docs to libraries", () => {
       const root = path.join("infra", "modules", "network_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, false, true),
-      );
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
       expect(Object.keys(targets)).toEqual([
         "tf-init",
@@ -296,7 +291,7 @@ describe("getProject", () => {
         "tf-console",
         "tf-output",
       ]);
-      expect(targets["tf-docs"]).toEqual(getExpectedDocsTarget(root));
+      expect(targets["tf-docs"]).toEqual(getExpectedDocsTarget());
     });
   });
 
@@ -304,10 +299,10 @@ describe("getProject", () => {
     it("produces the same target implementations under different names", () => {
       const root = path.join("infra", "modules", "shared_stack");
       const defaultTargets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, true),
+        getProject(defaultOptions, root, true),
       );
       const customTargets = getTargetsOrThrow(
-        getProject(customOptions, root, true, true),
+        getProject(customOptions, root, true),
       );
 
       expect(Object.keys(defaultTargets)).not.toEqual(
