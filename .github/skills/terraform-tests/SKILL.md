@@ -205,7 +205,7 @@ When a module has legacy tests (single file, no modern structure):
 - Integration and E2E infrastructures are completely separate
 - Always execute unit and contract tests after modifications to verify they pass
 - Do not run integration/e2e tests during development (slow, expensive)
-- Do not add comments to state the obvious (e.g. this file contains unit tests) or to declare what the specific test does (e.g. `3. Development use case`)
+- Do not add comments that merely restate the obvious or act as decorative/redundant headers (for example, `this file contains unit tests` or `3. Development use case` when the `run` name already conveys that); comments are fine when they add necessary context such as non-obvious intent, workarounds, assumptions, or edge cases
 
 ## Reference Documentation
 
