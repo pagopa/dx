@@ -1,3 +1,33 @@
+## 0.20.1 (2026-04-22)
+
+### 🩹 Fixes
+
+- Update azure-core-infra module version from ~> 3.0 to ~> 4.0 ([#1658](https://github.com/pagopa/dx/pull/1658))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.20.0 (2026-04-22)
+
+### 🚀 Features
+
+- The core infrastructure now enables the creation of an Azure VPN. ([#1657](https://github.com/pagopa/dx/pull/1657))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.19.3 (2026-04-22)
+
+### 🩹 Fixes
+
+- When a new environment is initialized, the identities federated with GitHub can access Key Vault and alter roles on the Core's common resource group ([#1620](https://github.com/pagopa/dx/pull/1620))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.19.2 (2026-04-17)
 
 ### 🩹 Fixes

@@ -26,7 +26,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~>4.42 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.62 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.8 |
 
 ## Modules
@@ -63,8 +63,8 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_test_enabled"></a> [test\_enabled](#input\_test\_enabled) | A boolean flag to enable or disable the creation of testing resources. | `bool` | `false` | no |
 | <a name="input_virtual_network_cidr"></a> [virtual\_network\_cidr](#input\_virtual\_network\_cidr) | The CIDR block defining the IP address range for the virtual network. | `string` | `"10.0.0.0/16"` | no |
-| <a name="input_vpn_enabled"></a> [vpn\_enabled](#input\_vpn\_enabled) | A boolean flag to enable or disable the creation of a VPN. | `bool` | `false` | no |
-| <a name="input_vpn_use_case"></a> [vpn\_use\_case](#input\_vpn\_use\_case) | Site-to-Site VPN use case. Allowed values: 'default', 'high\_availability'. | `string` | `"default"` | no |
+| <a name="input_vpn_enabled"></a> [vpn\_enabled](#input\_vpn\_enabled) | A boolean flag to enable or disable the creation of a VPN. | `bool` | `true` | no |
+| <a name="input_vpn_use_case"></a> [vpn\_use\_case](#input\_vpn\_use\_case) | Site-to-Site VPN use case. Allowed values: 'default'. | `string` | `"default"` | no |
 
 ## Outputs
 

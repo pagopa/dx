@@ -1,3 +1,55 @@
+# 4.0.0 (2026-04-22)
+
+### ⚠️  Breaking Changes
+
+- Support only the new VPN SKU `VpnGw2AZ` and remove the previous non-AZ SKUs. `VpnGw2AZ` is now the only supported option and is used by the `default` VPN use case. ([#1658](https://github.com/pagopa/dx/pull/1658))
+
+  ## Migration guide
+
+  Version 4 changes the VPN gateway created by `pagopa-dx/azure-core-infra/azurerm`:
+
+  - In v3, `vpn_use_case = "default"` created a Generation 1 gateway with SKU `VpnGw1`.
+  - In v3, `vpn_use_case = "high_availability"` created a Generation 2 gateway with SKU `VpnGw2`.
+  - In v3, `vpn_enabled` defaulted to `false`.
+  - In v4, only `vpn_use_case = "default"` is supported and it creates a Generation 2 zone-redundant gateway with SKU `VpnGw2AZ`.
+  - In v4, `vpn_enabled` defaults to `true`.
+
+  To migrate from v3 to v4:
+
+  1. Update the module version constraint from `~> 3.0` to `~> 4.0`.
+  2. Update the `azurerm` provider in the consuming stack to version `4.62.0` or newer.
+  3. If you do not want the module to provision a VPN, set `vpn_enabled = false` explicitly in the consuming stack. In v4, omitting this variable enables the VPN by default.
+  4. If your configuration sets `vpn_use_case = "high_availability"`, remove it or replace it with `vpn_use_case = "default"`.
+  5. Run `terraform init -upgrade` in the stack that consumes the module, then run `terraform plan`.
+  6. Review the plan carefully: moving from `VpnGw1` or `VpnGw2` to `VpnGw2AZ` can require changes to the Azure VPN gateway and its related public IPs. If the plan shows a replacement, schedule a maintenance window before applying it.
+  7. Apply the plan.
+
+  Example:
+
+  ```hcl
+  terraform {
+  	required_providers {
+  		azurerm = {
+  			source  = "hashicorp/azurerm"
+  			version = "~> 4.62"
+  		}
+  	}
+  }
+
+  module "azure" {
+  	source  = "pagopa-dx/azure-core-infra/azurerm"
+  	version = "~> 4.0"
+
+  	environment = local.azure_environment
+
+  	tags = local.tags
+  }
+  ```
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 3.1.1 (2026-04-02)
 
 ### 🩹 Fixes
