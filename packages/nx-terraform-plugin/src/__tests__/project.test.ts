@@ -8,8 +8,10 @@ const defaultOptions = parseOptions(undefined);
 const customOptions = parseOptions({
   applyTargetName: "terraform-apply",
   consoleTargetName: "terraform-console",
+  docsTargetName: "terraform-docs",
   formatTargetName: "terraform-format",
   initTargetName: "terraform-init",
+  lintTargetName: "terraform-lint",
   outputTargetName: "terraform-output",
   planTargetName: "terraform-plan",
   testTargetName: "terraform-test",
@@ -24,6 +26,41 @@ const expectedNamedInputs = {
     "{projectRoot}/tests/**/*.tftest.hcl",
   ],
 };
+
+const getExpectedLintTarget = (root: string) => ({
+  cache: true,
+  command: "tflint",
+  inputs: ["default", "examples", "tests", "{workspaceRoot}/.tflint.hcl"],
+  options: {
+    args: [
+      "--disable-rule=terraform_required_version",
+      "--disable-rule=terraform_required_providers",
+      "--config",
+      path.relative(root, ".tflint.hcl") || ".tflint.hcl",
+    ],
+    cwd: "{projectRoot}",
+  },
+});
+
+const getExpectedDocsTarget = () => ({
+  cache: true,
+  command: "terraform-docs markdown table",
+  inputs: ["default", "{projectRoot}/README.md"],
+  options: {
+    args: [
+      "--output-file",
+      "README.md",
+      "--output-mode",
+      "inject",
+      "--hide",
+      "providers",
+      "--lockfile=false",
+      ".",
+    ],
+    cwd: "{projectRoot}",
+  },
+  outputs: ["{projectRoot}/README.md"],
+});
 
 const getTargetsOrThrow = (project: ReturnType<typeof getProject>) => {
   if (!project.targets) {
@@ -149,6 +186,41 @@ describe("getProject", () => {
       expect(targets["tf-validate"]?.cache).toBe(true);
     });
 
+    it("adds tflint when the root tflint config exists", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root, true));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tflint",
+        "tf-console",
+        "tf-output",
+        "tf-plan",
+        "tf-apply",
+      ]);
+      expect(targets.tflint).toEqual(getExpectedLintTarget(root));
+    });
+
+    it("does not add terraform-docs to applications", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-console",
+        "tf-output",
+        "tf-plan",
+        "tf-apply",
+      ]);
+      expect(targets["terraform-docs"]).toBeUndefined();
+    });
+
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
@@ -174,6 +246,7 @@ describe("getProject", () => {
         "tf-fmt",
         "tf-test",
         "tf-validate",
+        "terraform-docs",
         "tf-console",
         "tf-output",
       ]);
@@ -187,15 +260,50 @@ describe("getProject", () => {
       expect(getTargetsOrThrow(project)["tf-plan"]).toBeUndefined();
       expect(getTargetsOrThrow(project)["tf-apply"]).toBeUndefined();
     });
+
+    it("adds tflint to libraries when the root tflint config exists", () => {
+      const root = path.join("infra", "modules", "network_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root, true));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tflint",
+        "terraform-docs",
+        "tf-console",
+        "tf-output",
+      ]);
+      expect(targets.tflint).toEqual(getExpectedLintTarget(root));
+    });
+
+    it("adds terraform-docs to libraries", () => {
+      const root = path.join("infra", "modules", "network_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "terraform-docs",
+        "tf-console",
+        "tf-output",
+      ]);
+      expect(targets["terraform-docs"]).toEqual(getExpectedDocsTarget());
+    });
   });
 
   describe("when custom target names are configured", () => {
     it("produces the same target implementations under different names", () => {
-      const root = path.join("infra", "resources", "dev", "stack");
+      const root = path.join("infra", "modules", "shared_stack");
       const defaultTargets = getTargetsOrThrow(
-        getProject(defaultOptions, root),
+        getProject(defaultOptions, root, true),
       );
-      const customTargets = getTargetsOrThrow(getProject(customOptions, root));
+      const customTargets = getTargetsOrThrow(
+        getProject(customOptions, root, true),
+      );
 
       expect(Object.keys(defaultTargets)).not.toEqual(
         Object.keys(customTargets),
