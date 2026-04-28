@@ -70,10 +70,9 @@ locals {
     resource_type   = "subnet",
     instance_number = 1,
   }))
-  vnet_id = var.virtual_network.name != null && var.virtual_network.resource_group_name != null ? provider::azurerm::normalise_resource_id(
-    "${data.azurerm_subscription.current.id}/resourceGroups/${var.virtual_network.resource_group_name}/providers/Microsoft.Network/virtualNetworks/${var.virtual_network.name}"
-  ) : null
-  subnet_pep_id = local.vnet_id != null ? provider::azurerm::normalise_resource_id("${local.vnet_id}/subnets/${local.pep_subnet_name}") : null
+  vnet_id                  = var.virtual_network_id != null ? provider::azurerm::normalise_resource_id(var.virtual_network_id) : null
+  vnet_resource_group_name = var.virtual_network_id != null ? provider::azurerm::parse_resource_id(var.virtual_network_id).resource_group_name : null
+  subnet_pep_id            = local.vnet_id != null ? provider::azurerm::normalise_resource_id("${local.vnet_id}/subnets/${local.pep_subnet_name}") : null
 
   selected_sku_name = coalesce(var.sku_name_override, local.use_case_features.sku_name)
 
@@ -92,7 +91,7 @@ locals {
   }
 
   private_endpoint_enabled             = local.use_case_features.private_network_enabled
-  private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, var.virtual_network.resource_group_name), null)
+  private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, local.vnet_resource_group_name), null)
 
   metric_alert_definitions = merge({
     used_memory_percentage = {

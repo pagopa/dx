@@ -18,8 +18,7 @@ locals {
   }
 
   # Fill these in when running the example against a real subscription.
-  virtual_network_name       = null
-  virtual_network_rg_name    = null
+  virtual_network_id         = null
   log_analytics_workspace_id = null
   action_group_id            = null
 }

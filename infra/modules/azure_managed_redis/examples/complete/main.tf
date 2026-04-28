@@ -21,10 +21,7 @@ module "managed_redis" {
 
   use_case = "default"
 
-  virtual_network = {
-    name                = local.virtual_network_name
-    resource_group_name = local.virtual_network_rg_name
-  }
+  virtual_network_id = local.virtual_network_id
 
   database = {
     modules = [
