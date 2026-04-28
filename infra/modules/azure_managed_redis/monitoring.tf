@@ -5,10 +5,6 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   target_resource_id         = azurerm_managed_redis.this.id
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  enabled_log {
-    category_group = "allLogs"
-  }
-
   enabled_metric {
     category = "AllMetrics"
   }
