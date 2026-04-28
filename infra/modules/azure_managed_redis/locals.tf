@@ -23,11 +23,6 @@ locals {
       diagnostics_enabled       = true
       alerts_enabled            = true
       persistence_mode          = "rdb"
-      database = {
-        client_protocol   = "Encrypted"
-        clustering_policy = "OSSCluster"
-        eviction_policy   = "VolatileLRU"
-      }
     }
     development = {
       sku_name                  = "Balanced_B0"
@@ -37,11 +32,6 @@ locals {
       diagnostics_enabled       = false
       alerts_enabled            = false
       persistence_mode          = "disabled"
-      database = {
-        client_protocol   = "Encrypted"
-        clustering_policy = "OSSCluster"
-        eviction_policy   = "VolatileLRU"
-      }
     }
     high_throughput = {
       sku_name                  = "ComputeOptimized_X3"
@@ -51,11 +41,6 @@ locals {
       diagnostics_enabled       = true
       alerts_enabled            = true
       persistence_mode          = "rdb"
-      database = {
-        client_protocol   = "Encrypted"
-        clustering_policy = "OSSCluster"
-        eviction_policy   = "VolatileLRU"
-      }
     }
   }
 
@@ -76,19 +61,7 @@ locals {
 
   selected_sku_name = coalesce(var.sku_name_override, local.use_case_features.sku_name)
 
-  selected_database = {
-    client_protocol       = "Encrypted"
-    clustering_policy     = "OSSCluster"
-    eviction_policy       = coalesce(try(var.database.eviction_policy, null), local.use_case_features.database.eviction_policy)
-    persistence_mode      = local.use_case_features.persistence_mode
-    persistence_frequency = local.use_case_features.persistence_mode == "rdb" ? "1h" : null
-    modules = [
-      for m in try(var.database.modules, []) : {
-        name = m.name
-        args = try(m.args, null)
-      }
-    ]
-  }
+  persistence_frequency = local.use_case_features.persistence_mode == "rdb" ? "1h" : null
 
   private_endpoint_enabled             = local.use_case_features.private_network_enabled
   private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, local.vnet_resource_group_name), null)

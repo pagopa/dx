@@ -89,44 +89,6 @@ variable "sku_name_override" {
   }
 }
 
-variable "database" {
-  description = "Advanced configuration for the default database. All fields are optional and fall back to the use_case preset."
-  type = object({
-    eviction_policy = optional(string, null)
-    modules = optional(list(object({
-      name = string
-      args = optional(string, null)
-    })), [])
-  })
-  default = {}
-
-  validation {
-    condition = try(var.database.eviction_policy, null) == null || contains([
-      "AllKeysLFU",
-      "AllKeysLRU",
-      "AllKeysRandom",
-      "VolatileLRU",
-      "VolatileLFU",
-      "VolatileTTL",
-      "VolatileRandom",
-      "NoEviction"
-    ], var.database.eviction_policy)
-    error_message = "database.eviction_policy must be null or a supported Azure Managed Redis eviction policy."
-  }
-
-  validation {
-    condition = alltrue([
-      for m in try(var.database.modules, []) : contains([
-        "RediSearch",
-        "RedisJSON",
-        "RedisBloom",
-        "RedisTimeSeries"
-      ], m.name)
-    ])
-    error_message = "database.modules[*].name must be one of RediSearch, RedisJSON, RedisBloom, or RedisTimeSeries."
-  }
-}
-
 # ------------ OBSERVABILITY ------------ #
 variable "log_analytics_workspace_id" {
   type        = string

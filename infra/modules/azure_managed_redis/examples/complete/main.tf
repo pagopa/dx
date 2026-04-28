@@ -23,13 +23,6 @@ module "managed_redis" {
 
   virtual_network_id = local.virtual_network_id
 
-  database = {
-    modules = [
-      { name = "RedisJSON" },
-      { name = "RediSearch" }
-    ]
-  }
-
   log_analytics_workspace_id = local.log_analytics_workspace_id
 
   alerts = {

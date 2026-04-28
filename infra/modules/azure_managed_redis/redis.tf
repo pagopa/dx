@@ -13,20 +13,11 @@ resource "azurerm_managed_redis" "this" {
 
   default_database {
     access_keys_authentication_enabled = false
-    client_protocol                    = local.selected_database.client_protocol
-    clustering_policy                  = local.selected_database.clustering_policy
-    eviction_policy                    = local.selected_database.eviction_policy
+    client_protocol                    = "Encrypted"
+    clustering_policy                  = "OSSCluster"
+    eviction_policy                    = "VolatileLRU"
 
-    persistence_redis_database_backup_frequency = local.selected_database.persistence_mode == "rdb" ? local.selected_database.persistence_frequency : null
-
-    dynamic "module" {
-      for_each = local.selected_database.modules
-
-      content {
-        name = module.value.name
-        args = module.value.args
-      }
-    }
+    persistence_redis_database_backup_frequency = local.persistence_frequency
   }
 
   tags = local.tags

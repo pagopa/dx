@@ -9,8 +9,7 @@ Minimal end-to-end usage of the `azure_managed_redis` module against an existing
   - `Balanced_B3` SKU, HA enabled, system-assigned identity, Entra-only authentication.
   - Private endpoint on the supplied PEP subnet and `privatelink.redis.azure.net` DNS zone.
   - Diagnostic settings streaming to the supplied Log Analytics workspace.
-  - The six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys, AMR errors) wired to the supplied action group. See the [Alerts section of the module README](../../README.md#alerts) for thresholds and rationale.
-- The `RedisJSON` and `RediSearch` modules enabled on the default database.
+  - The five built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) wired to the supplied action group. See the [Alerts section of the module README](../../README.md#alerts) for thresholds and rationale.
 
 ## Prerequisites
 

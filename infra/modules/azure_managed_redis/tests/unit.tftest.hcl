@@ -27,11 +27,6 @@ variables {
   use_case          = "default"
   sku_name_override = null
 
-  database = {
-    eviction_policy = null
-    modules         = []
-  }
-
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-monitor/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
   alerts = {
@@ -98,7 +93,7 @@ run "managed_redis_default_use_case" {
   }
 
   assert {
-    condition     = local.selected_database.persistence_mode == "rdb" && local.selected_database.persistence_frequency == "1h"
+    condition     = local.use_case_features.persistence_mode == "rdb" && local.persistence_frequency == "1h"
     error_message = "Default use case must resolve persistence to RDB every 1h"
   }
 
@@ -150,7 +145,7 @@ run "managed_redis_development_use_case" {
   }
 
   assert {
-    condition     = local.selected_database.persistence_mode == "disabled" && local.selected_database.persistence_frequency == null
+    condition     = local.use_case_features.persistence_mode == "disabled" && local.persistence_frequency == null
     error_message = "Development use case must disable persistence"
   }
 
@@ -193,7 +188,7 @@ run "managed_redis_high_throughput_use_case" {
   }
 
   assert {
-    condition     = local.selected_database.persistence_mode == "rdb" && local.selected_database.persistence_frequency == "1h"
+    condition     = local.use_case_features.persistence_mode == "rdb" && local.persistence_frequency == "1h"
     error_message = "High throughput use case must resolve persistence to RDB every 1h"
   }
 
@@ -230,22 +225,17 @@ run "managed_redis_private_endpoint" {
   }
 }
 
-run "managed_redis_custom_modules" {
+run "managed_redis_no_modules" {
   command = plan
 
-  variables {
-    database = {
-      eviction_policy = null
-      modules = [
-        { name = "RediSearch", args = "ON JSON PREFIX 1 docs:" },
-        { name = "RedisJSON", args = null }
-      ]
-    }
+  assert {
+    condition     = length(azurerm_managed_redis.this.default_database[0].module) == 0
+    error_message = "Module must never configure Redis modules on the default database"
   }
 
   assert {
-    condition     = length(azurerm_managed_redis.this.default_database[0].module) == 2
-    error_message = "Two Redis modules must be configured on the default database"
+    condition     = azurerm_managed_redis.this.default_database[0].eviction_policy == "VolatileLRU"
+    error_message = "Eviction policy must be hardcoded to VolatileLRU"
   }
 }
 
