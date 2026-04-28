@@ -3,8 +3,7 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "${PLUGIN_ROOT}/scripts/ensure-dx-kb.sh",
-        "timeout": 120
+        "bash": "${PLUGIN_ROOT}/hooks/scripts/ensure-dx-kb.sh"
       }
     ]
   }

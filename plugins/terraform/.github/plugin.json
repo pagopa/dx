@@ -9,6 +9,6 @@
   "keywords": ["cloud", "infrastructure", "iac", "terraform"],
   "skills": ["./skills"],
   "commands": ["./commands"],
-  "hooks": "hooks.json",
+  "hooks": "./hooks/hooks.json",
   "mcpServers": ".mcp.json"
 }
