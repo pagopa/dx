@@ -8,10 +8,10 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 - Microsoft Entra authentication only. Access keys are permanently disabled on the default database.
 - System-assigned managed identity, provisioned automatically.
 - Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` and `high_throughput` use cases).
-- Diagnostic settings streaming `allLogs` and `AllMetrics` to a Log Analytics workspace.
-- Six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys, AMR errors) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
+- Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
+- Six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
-- Typed configuration for the default database (protocol, clustering policy, eviction policy, modules).
+- Data-plane security hardening: `client_protocol` is always `Encrypted`, `clustering_policy` is always `OSSCluster`. Typed configuration for eviction policy and modules.
 
 ## Use cases
 
@@ -23,7 +23,7 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 
 ## Alerts
 
-When `use_case` is `default` or `high_throughput`, six Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
+When `use_case` is `default` or `high_throughput`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
 
 ### Default alert matrix
 
@@ -104,6 +104,7 @@ module "managed_redis" {
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
 - **Networking:** private by default (`default`, `high_throughput`). `development` provisions a public-only instance to simplify local iterations.
+- **Protocol & clustering:** `client_protocol` is hardcoded to `Encrypted` (TLS); `clustering_policy` is hardcoded to `OSSCluster` for data security and optimal clustering topology.
 - **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network_id` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the virtual network's resource group (extracted from `virtual_network_id` using `parse_resource_id`) unless `private_dns_zone_resource_group_name` is set.
 - **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.

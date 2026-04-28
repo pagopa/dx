@@ -77,8 +77,8 @@ locals {
   selected_sku_name = coalesce(var.sku_name_override, local.use_case_features.sku_name)
 
   selected_database = {
-    client_protocol       = coalesce(try(var.database.client_protocol, null), local.use_case_features.database.client_protocol)
-    clustering_policy     = coalesce(try(var.database.clustering_policy, null), local.use_case_features.database.clustering_policy)
+    client_protocol       = "Encrypted"
+    clustering_policy     = "OSSCluster"
     eviction_policy       = coalesce(try(var.database.eviction_policy, null), local.use_case_features.database.eviction_policy)
     persistence_mode      = local.use_case_features.persistence_mode
     persistence_frequency = local.use_case_features.persistence_mode == "rdb" ? "1h" : null

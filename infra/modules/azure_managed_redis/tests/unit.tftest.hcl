@@ -28,10 +28,8 @@ variables {
   sku_name_override = null
 
   database = {
-    client_protocol   = null
-    clustering_policy = null
-    eviction_policy   = null
-    modules           = []
+    eviction_policy = null
+    modules         = []
   }
 
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-monitor/providers/Microsoft.OperationalInsights/workspaces/law-test"
@@ -120,8 +118,8 @@ run "managed_redis_default_use_case" {
   }
 
   assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 6
-    error_message = "Default use case must create the six default metric alerts (connected_clients is opt-in)"
+    condition     = length(azurerm_monitor_metric_alert.this) == 5
+    error_message = "Default use case must create the five default metric alerts (connected_clients is opt-in)"
   }
 }
 
@@ -237,9 +235,7 @@ run "managed_redis_custom_modules" {
 
   variables {
     database = {
-      client_protocol   = null
-      clustering_policy = null
-      eviction_policy   = null
+      eviction_policy = null
       modules = [
         { name = "RediSearch", args = "ON JSON PREFIX 1 docs:" },
         { name = "RedisJSON", args = null }
@@ -282,11 +278,6 @@ run "managed_redis_default_alert_thresholds" {
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["errors"].criteria[0].threshold == 0
-    error_message = "errors must default to 0 (any AMR typed error is actionable)"
-  }
-
-  assert {
     condition     = !contains(keys(azurerm_monitor_metric_alert.this), "connected_clients")
     error_message = "connected_clients must NOT be created by default (opt-in)"
   }
@@ -314,7 +305,7 @@ run "managed_redis_connected_clients_opt_in" {
   }
 
   assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 7
-    error_message = "Setting connected_clients threshold must add a 7th alert"
+    condition     = length(azurerm_monitor_metric_alert.this) == 6
+    error_message = "Setting connected_clients threshold must add a 6th alert"
   }
 }
