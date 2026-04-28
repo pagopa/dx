@@ -65,6 +65,7 @@
     }
   },
   "dependencies": {
+    "@azure/identity": "catalog:",
     "@azure/monitor-opentelemetry": "catalog:opentelemetry",
     "@azure/monitor-opentelemetry-exporter": "catalog:opentelemetry",
     "@opentelemetry/api": "catalog:opentelemetry",
