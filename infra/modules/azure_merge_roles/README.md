@@ -19,9 +19,7 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 
 Azure RBAC computes effective permissions per role assignment as:
 
-`Actions - NotActions`
-
-and `NotActions` is not a deny rule across separate role assignments.
+`Actions - NotActions` and `NotActions` is not a deny rule across separate role assignments.
 
 Azure custom roles, however, are created with a single permissions object made of `actions`, `not_actions`, `data_actions`, and `not_data_actions` arrays. For that reason, this module computes one merged permission set instead of copying the original source blocks verbatim.
 
