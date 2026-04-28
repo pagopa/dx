@@ -21,10 +21,7 @@ variables {
 
   resource_group_name = "rg-test"
 
-  virtual_network = {
-    name                = "vnet-test"
-    resource_group_name = "dx-d-itn-network-rg-01"
-  }
+  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
   private_dns_zone_resource_group_name = null
 
   use_case          = "default"
@@ -75,14 +72,11 @@ run "missing_virtual_network" {
   command = plan
 
   variables {
-    virtual_network = {
-      name                = null
-      resource_group_name = null
-    }
+    virtual_network_id = null
   }
 
   expect_failures = [
-    var.virtual_network,
+    var.virtual_network_id,
   ]
 }
 
