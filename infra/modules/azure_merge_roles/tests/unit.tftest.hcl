@@ -4,6 +4,7 @@
 variables {
   scope        = "/subscriptions/00000000-0000-0000-0000-000000000000"
   role_name    = "dx-observability-reader"
+  reason       = "Grant observability read access without duplicating role assignments"
   source_roles = ["Reader", "Monitoring Reader"]
 }
 
@@ -78,42 +79,30 @@ run "merge_roles_flattens_source_permissions_into_one_effective_block" {
   }
 }
 
-run "assignable_scopes_default_to_scope" {
+run "role_definition_assignable_scope_is_fixed_to_scope" {
   command = plan
 
   assert {
-    condition     = length(local.assignable_scopes) == 1 && local.assignable_scopes[0] == "/subscriptions/00000000-0000-0000-0000-000000000000"
-    error_message = "assignable_scopes must default to [scope]"
+    condition     = length(azurerm_role_definition.merged.assignable_scopes) == 1 && azurerm_role_definition.merged.assignable_scopes[0] == "/subscriptions/00000000-0000-0000-0000-000000000000"
+    error_message = "the merged custom role must use scope as its only assignable scope"
   }
 
   assert {
-    condition     = local.merged_description == "Merged role from: Monitoring Reader, Reader"
-    error_message = "default description must be derived from source_roles"
+    condition     = local.merged_description == "Reason: Grant observability read access without duplicating role assignments | Source roles: Monitoring Reader, Reader"
+    error_message = "the merged description must include both the caller-provided reason and the sorted source role names"
   }
 }
 
-run "custom_description_and_assignable_scopes_are_applied" {
+run "custom_reason_is_embedded_in_generated_description" {
   command = plan
 
   variables {
-    description = "Custom role for observability read access"
-    assignable_scopes = [
-      "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability",
-      "/subscriptions/00000000-0000-0000-0000-000000000000",
-    ]
+    reason = "Let the platform team inspect metrics and support incidents"
   }
 
   assert {
-    condition = jsonencode(local.assignable_scopes) == jsonencode([
-      "/subscriptions/00000000-0000-0000-0000-000000000000",
-      "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability",
-    ])
-    error_message = "assignable_scopes must preserve the provided scopes after deduplication and sorting"
-  }
-
-  assert {
-    condition     = local.merged_description == "Custom role for observability read access"
-    error_message = "description must use the caller-provided value when present"
+    condition     = local.merged_description == "Reason: Let the platform team inspect metrics and support incidents | Source roles: Monitoring Reader, Reader"
+    error_message = "the merged description must rebuild itself from the provided reason and source roles"
   }
 }
 

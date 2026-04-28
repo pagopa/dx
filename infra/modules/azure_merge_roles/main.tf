@@ -8,7 +8,7 @@ resource "azurerm_role_definition" "merged" {
   name              = trimspace(var.role_name)
   description       = local.merged_description
   scope             = var.scope
-  assignable_scopes = local.assignable_scopes
+  assignable_scopes = [var.scope]
 
   # Azure custom roles support a single permissions object, so the module
   # compacts the merged result into one effective block.

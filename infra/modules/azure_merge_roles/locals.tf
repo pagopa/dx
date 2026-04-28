@@ -5,14 +5,7 @@ locals {
     for index, role_name in var.source_roles : tostring(index) => role_name
   }
 
-  # Default to the role definition scope unless the caller needs to narrow the
-  # role availability to a subset of child scopes.
-  assignable_scopes = sort(distinct(var.assignable_scopes == null ? [var.scope] : var.assignable_scopes))
-
-  merged_description = coalesce(
-    var.description,
-    "Merged role from: ${join(", ", sort(var.source_roles))}",
-  )
+  merged_description = "Reason: ${trimspace(var.reason)} | Source roles: ${join(", ", sort(var.source_roles))}"
 
   # Azure role definitions expose permissions as a list of permission objects,
   # not as one flat permission bag.

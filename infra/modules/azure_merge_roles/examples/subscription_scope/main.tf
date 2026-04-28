@@ -11,7 +11,7 @@ module "observability_reader" {
     "Monitoring Reader",
   ]
 
-  description = "Custom role for observability read access"
+  reason = "Grant observability read access without repeating multiple role assignments"
 }
 
 output "custom_role_id" {

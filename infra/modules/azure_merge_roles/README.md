@@ -10,9 +10,10 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 
 - Resolves built-in or custom source roles at `scope` and compacts them into the single permissions object Azure custom roles accept.
 - Requires at least two source roles, so callers do not create a custom role that is equivalent to assigning one existing role directly.
+- Requires a caller-provided `reason` so generated custom roles keep explicit business context instead of a bare auto-generated description.
 - Supports roles that include `not_actions` and `not_data_actions`.
 - Deduplicates merged permissions so the generated role definition remains stable.
-- Requires an explicit `scope` and defaults `assignable_scopes` to `[scope]`.
+- Requires an explicit `scope` and always uses that same scope as the role's only assignable scope.
 - Supports role definitions created at management group scope as well as subscription scope.
 
 ## Merge Strategy
@@ -52,14 +53,14 @@ module "observability_reader" {
     "Monitoring Reader",
   ]
 
-  description = "Custom role for observability read access"
+  reason = "Grant observability read access without repeating multiple role assignments"
 }
 
 resource "azurerm_role_assignment" "observability_reader" {
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = module.observability_reader.custom_role_name
-  principal_id         = var.principal_id
-  principal_type       = var.principal_type
+  scope              = data.azurerm_subscription.current.id
+  role_definition_id = module.observability_reader.custom_role_id
+  principal_id       = var.principal_id
+  principal_type     = var.principal_type
 }
 ```
 
@@ -71,18 +72,15 @@ scope = "/providers/Microsoft.Management/managementGroups/dx-platform"
 
 ## Assigning The Generated Role
 
-When you want to assign the custom role in the same Terraform apply, using
-`module.<name>.custom_role_name` is enough. The reference creates an implicit
-dependency, so Terraform will create the role definition before it creates the
-role assignment.
+When you want to assign the custom role in the same Terraform apply, prefer
+`role_definition_id = module.<name>.custom_role_id`. The reference creates an
+implicit dependency, so Terraform will create the role definition before it
+creates the role assignment.
 
-If you prefer a stricter reference, `role_definition_id = module.<name>.custom_role_id`
-also works.
-
-If the role definition is created at management group scope, the role can still
-be assigned at supported descendant scopes through `assignable_scopes`. The
-module validates management group inputs conservatively because Terraform cannot
-infer management group membership from a subscription ARM ID alone.
+The module always sets `assignable_scopes = [scope]`. With a subscription scope,
+the resulting custom role stays assignable within that subscription hierarchy.
+With a management group scope, it stays assignable within that management group
+hierarchy.
 
 ## Examples
 
@@ -117,8 +115,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_assignable_scopes"></a> [assignable\_scopes](#input\_assignable\_scopes) | Optional list of scopes where the custom role can be assigned. Defaults to [scope]. | `list(string)` | `null` | no |
-| <a name="input_description"></a> [description](#input\_description) | Optional custom description for the merged role definition. Defaults to a generated description based on source\_roles. | `string` | `null` | no |
+| <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |
 | <a name="input_source_roles"></a> [source\_roles](#input\_source\_roles) | List of at least two Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a | yes |

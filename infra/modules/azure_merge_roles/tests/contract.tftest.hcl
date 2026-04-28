@@ -4,6 +4,7 @@
 variables {
   scope        = "/subscriptions/00000000-0000-0000-0000-000000000000"
   role_name    = "dx-observability-reader"
+  reason       = "Grant observability read access without duplicating role assignments"
   source_roles = ["Reader", "Monitoring Reader"]
 }
 
@@ -52,18 +53,6 @@ run "management_group_scope_is_supported" {
 
   variables {
     scope = "/providers/Microsoft.Management/managementGroups/dx-platform"
-    assignable_scopes = [
-      "/providers/Microsoft.Management/managementGroups/dx-platform",
-      "/subscriptions/00000000-0000-0000-0000-000000000000",
-    ]
-  }
-
-  assert {
-    condition = jsonencode(local.assignable_scopes) == jsonencode([
-      "/providers/Microsoft.Management/managementGroups/dx-platform",
-      "/subscriptions/00000000-0000-0000-0000-000000000000",
-    ])
-    error_message = "management group scopes must allow management group and subscription assignable scopes"
   }
 }
 
@@ -107,22 +96,12 @@ run "source_roles_must_not_contain_duplicates" {
   expect_failures = [var.source_roles]
 }
 
-run "assignable_scopes_must_stay_within_scope" {
+run "reason_must_not_be_blank" {
   command = plan
 
   variables {
-    assignable_scopes = ["/subscriptions/11111111-1111-1111-1111-111111111111"]
+    reason = "  "
   }
 
-  expect_failures = [var.assignable_scopes]
-}
-
-run "description_must_not_be_blank" {
-  command = plan
-
-  variables {
-    description = "  "
-  }
-
-  expect_failures = [var.description]
+  expect_failures = [var.reason]
 }

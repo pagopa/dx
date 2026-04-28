@@ -8,7 +8,7 @@ module "blob_rw_without_delete" {
     azurerm_role_definition.source_blob_read_only.name,
   ]
 
-  description = "Merged role used by the limited probe identity for Blob read/write without delete."
+  reason = "Let the limited probe identity upload and read blobs while keeping delete excluded"
 
   depends_on = [
     azurerm_role_definition.source_blob_rw_without_delete,
@@ -26,7 +26,7 @@ module "blob_rw_with_delete_restored" {
     azurerm_role_definition.source_blob_delete_only.name,
   ]
 
-  description = "Merged role used by the full probe identity where delete is restored by a second permission block."
+  reason = "Let the full probe identity regain blob delete through a second source role"
 
   depends_on = [
     azurerm_role_definition.source_blob_rw_without_delete,
@@ -44,7 +44,7 @@ module "container_rw_without_delete" {
     azurerm_role_definition.source_container_read_only.name,
   ]
 
-  description = "Merged control-plane role used by the limited probe identity for blob container create/read without delete."
+  reason = "Let the limited probe identity create and read blob containers while keeping delete excluded"
 
   depends_on = [
     azurerm_role_definition.source_container_rw_without_delete,
@@ -62,7 +62,7 @@ module "container_rw_with_delete_restored" {
     azurerm_role_definition.source_container_delete_only.name,
   ]
 
-  description = "Merged control-plane role used by the full probe identity where container delete is restored by a second permission block."
+  reason = "Let the full probe identity regain blob container delete through a second source role"
 
   depends_on = [
     azurerm_role_definition.source_container_rw_without_delete,
