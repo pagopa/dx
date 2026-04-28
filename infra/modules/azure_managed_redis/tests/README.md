@@ -5,7 +5,7 @@ Two layers ship with the initial module release; the integration and e2e layers 
 | Layer     | File                  | Provider    | Scope                                                            |
 | --------- | --------------------- | ----------- | ---------------------------------------------------------------- |
 | Unit      | `unit.tftest.hcl`     | `mock`      | Asserts use_case presets, naming, identity, networking, alerts.  |
-| Contract  | `contract.tftest.hcl` | `mock`      | Asserts input validation rules (use_case, SKUs, modules, etc.).  |
+| Contract  | `contract.tftest.hcl` | `mock`      | Asserts input validation rules (use_case, SKUs, etc.).           |
 
 Both layers run exclusively with mocked providers and do not contact Azure.
 

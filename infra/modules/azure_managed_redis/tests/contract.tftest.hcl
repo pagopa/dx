@@ -27,11 +27,6 @@ variables {
   use_case          = "default"
   sku_name_override = null
 
-  database = {
-    eviction_policy = null
-    modules         = []
-  }
-
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-monitor/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
   alerts = {
@@ -99,22 +94,5 @@ run "invalid_sku_override" {
 
   expect_failures = [
     var.sku_name_override,
-  ]
-}
-
-run "invalid_module_name" {
-  command = plan
-
-  variables {
-    database = {
-      eviction_policy = null
-      modules = [
-        { name = "UnknownModule", args = null }
-      ]
-    }
-  }
-
-  expect_failures = [
-    var.database,
   ]
 }

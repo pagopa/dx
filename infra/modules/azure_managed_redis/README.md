@@ -11,7 +11,7 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 - Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
 - Six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
-- Data-plane security hardening: `client_protocol` is always `Encrypted`, `clustering_policy` is always `OSSCluster`. Typed configuration for eviction policy and modules.
+- Fully opinionated default database: `client_protocol = Encrypted`, `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`, no Redis modules.
 
 ## Use cases
 
@@ -90,13 +90,6 @@ module "managed_redis" {
   virtual_network_id = data.azurerm_virtual_network.core.id
 
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.this.id
-
-  database = {
-    modules = [
-      { name = "RedisJSON" },
-      { name = "RediSearch" }
-    ]
-  }
 }
 ```
 
@@ -104,7 +97,7 @@ module "managed_redis" {
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
 - **Networking:** private by default (`default`, `high_throughput`). `development` provisions a public-only instance to simplify local iterations.
-- **Protocol & clustering:** `client_protocol` is hardcoded to `Encrypted` (TLS); `clustering_policy` is hardcoded to `OSSCluster` for data security and optimal clustering topology.
+- **Database (fully opinionated, not configurable):** `client_protocol = Encrypted` (TLS), `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`. No Redis modules are installed.
 - **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network_id` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the virtual network's resource group (extracted from `virtual_network_id` using `parse_resource_id`) unless `private_dns_zone_resource_group_name` is set.
 - **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.
@@ -117,6 +110,7 @@ These features are intentionally left out of v0.x to keep the surface small. The
 - Customer-managed keys and user-assigned identities.
 - Geo-replication (`azurerm_managed_redis_geo_replication`). Consume the `id` output to wire it externally.
 - `authorized_teams` RBAC helper. Use `azure_role_assignments` or `azurerm_managed_redis_access_policy_assignment` directly.
+- Redis modules (`RediSearch`, `RedisJSON`, `RedisBloom`, `RedisTimeSeries`) and per-instance overrides for `eviction_policy`, `client_protocol`, and `clustering_policy`.
 
 ## Examples
 
