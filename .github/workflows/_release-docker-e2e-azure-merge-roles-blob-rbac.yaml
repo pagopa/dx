@@ -1,0 +1,42 @@
+# Build and publish the application Docker image for the E2E Azure Merge Roles - Blob RBAC probe scenario.
+
+name: Publish E2E Azure Merge Roles - Blob RBAC Probe
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/**"
+
+jobs:
+  publish:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+    env:
+      IMAGE_NAME: "pagopa/e2e-azure-merge-roles-blob-rbac"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: ./actions/docker-build-push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/Dockerfile
+          dockerfile_context: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_description: "Web app which exposes data-plane and control-plane
+            endpoints to probe Azure Storage RBAC. Used for E2E tests of the
+            Azure Merge Roles Terraform module."
+          docker_image_authors: "PagoPA"
+          build_platforms: "linux/amd64,linux/arm64"
+          push_to_registry: true
