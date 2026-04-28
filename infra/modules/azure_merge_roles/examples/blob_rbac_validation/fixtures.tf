@@ -4,7 +4,7 @@ resource "random_integer" "instance_number" {
 }
 
 resource "azurerm_resource_group" "e2e_blob_rbac" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     resource_type = "resource_group"
   }))
   location = local.environment.location

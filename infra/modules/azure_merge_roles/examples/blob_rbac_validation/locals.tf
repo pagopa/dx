@@ -19,14 +19,6 @@ locals {
     instance_number = format("%02d", random_integer.instance_number.result)
   }
 
-  naming_config = {
-    prefix          = local.environment.prefix
-    environment     = local.environment.env_short
-    location        = local.environment.location
-    name            = local.environment.app_name
-    instance_number = tonumber(local.environment.instance_number)
-  }
-
   docker_image   = "ghcr.io/pagopa/e2e-azure-merge-roles-blob-rbac:latest"
   container_name = "probe"
 
