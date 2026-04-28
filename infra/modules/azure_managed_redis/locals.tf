@@ -149,17 +149,6 @@ locals {
       severity         = 2
       description      = "Managed Redis is evicting keys due to memory pressure; data loss may be occurring."
     }
-    errors = {
-      aggregation      = "Total"
-      metric_namespace = "Microsoft.Cache/redisEnterprise"
-      metric_name      = "errors"
-      operator         = "GreaterThan"
-      threshold        = try(var.alerts.thresholds.errors, 0)
-      frequency        = "PT1M"
-      window_size      = "PT5M"
-      severity         = 1
-      description      = "Managed Redis reported typed errors (OOM, AuthFailure, Replication, UnresponsiveClients)."
-    }
     },
     try(var.alerts.thresholds.connected_clients, null) == null ? {} : {
       connected_clients = {
