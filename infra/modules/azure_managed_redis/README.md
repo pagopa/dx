@@ -28,13 +28,12 @@ When `use_case` is `default` or `high_throughput`, six Azure Monitor metric aler
 ### Default alert matrix
 
 | Alert                      | Metric                 | Agg     | Window / Freq | Threshold | Sev |
-| -------------------------- | ---------------------- | ------- | ------------- | --------- | --- |
+|----------------------------|------------------------|---------|---------------|-----------|-----|
 | Used memory — warn         | `usedmemorypercentage` | Maximum | PT15M / PT5M  | `> 75`    | 2   |
 | Used memory — critical     | `usedmemorypercentage` | Maximum | PT5M / PT1M   | `> 90`    | 1   |
 | Server load — warn         | `serverLoad`           | Maximum | PT15M / PT5M  | `> 80`    | 2   |
 | Server load — critical     | `serverLoad`           | Maximum | PT5M / PT1M   | `> 90`    | 1   |
 | Evicted keys               | `evictedkeys`          | Total   | PT15M / PT5M  | `> 0`     | 2   |
-| AMR errors                 | `errors`               | Total   | PT5M / PT1M   | `> 0`     | 1   |
 | Connected clients (opt-in) | `connectedclients`     | Maximum | PT15M / PT5M  | `null`    | 2   |
 
 The connected-clients alert is created only when `alerts.thresholds.connected_clients` is set explicitly.
@@ -46,8 +45,6 @@ The connected-clients alert is created only when `alerts.thresholds.connected_cl
 - **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): *"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."* The 90% critical tier is treated as near-saturation — scale out or shard.
 
 - **`evictedkeys > 0` (sev 2).** Any non-zero eviction count means the cache is shedding keys under memory pressure, and with the default `volatile-lru` policy the application may be silently losing data ([troubleshoot-data-loss#key-eviction](https://learn.microsoft.com/azure/redis/troubleshoot-data-loss#partial-loss-of-keys)). This is a binary signal, not a percentage — zero is the healthy baseline.
-
-- **`errors > 0` (sev 1).** AMR emits a typed `errors` metric (`OOM`, `AuthFailure`, `Replication`, `UnresponsiveClients`, …). Any occurrence is operator-actionable, so we page immediately.
 
 - **`connectedclients` is opt-in.** Microsoft recommends alerting on this metric ([development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)), but the safe ceiling varies wildly across SKUs (B-series ≈ 1k connections, larger Enterprise SKUs ≥ 10k). The module exposes the threshold but does not pick a default; set `alerts.thresholds.connected_clients = <~75% of your SKU ceiling>` to enable it.
 
