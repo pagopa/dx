@@ -23,20 +23,14 @@ variable "resource_group_name" {
 }
 
 # ------------ NETWORK ------------ #
-variable "virtual_network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  default = {
-    name                = null
-    resource_group_name = null
-  }
-  description = "The virtual network hosting the private endpoint. Required for 'default' and 'high_throughput' use cases, used to locate the 'privatelink.redis.azure.net' DNS zone."
+variable "virtual_network_id" {
+  type        = string
+  default     = null
+  description = "The resource ID of the virtual network hosting the private endpoint. Required for 'default' and 'high_throughput' use cases, used to locate the 'privatelink.redis.azure.net' DNS zone."
 
   validation {
-    condition     = var.use_case == "development" || (var.virtual_network.name != null && var.virtual_network.resource_group_name != null)
-    error_message = "virtual_network.name and virtual_network.resource_group_name are required when use_case is 'default' or 'high_throughput'."
+    condition     = var.use_case == "development" || var.virtual_network_id != null
+    error_message = "virtual_network_id is required when use_case is 'default' or 'high_throughput'."
   }
 }
 
