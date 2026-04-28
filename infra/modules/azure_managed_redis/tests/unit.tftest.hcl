@@ -21,10 +21,7 @@ variables {
 
   resource_group_name = "rg-test"
 
-  virtual_network = {
-    name                = "vnet-test"
-    resource_group_name = "dx-d-itn-network-rg-01"
-  }
+  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
   private_dns_zone_resource_group_name = null
 
   use_case          = "default"
@@ -135,10 +132,7 @@ run "managed_redis_development_use_case" {
     use_case = "development"
 
     # Development use case does not require a virtual network or LAW
-    virtual_network = {
-      name                = null
-      resource_group_name = null
-    }
+    virtual_network_id         = null
     log_analytics_workspace_id = null
   }
 
