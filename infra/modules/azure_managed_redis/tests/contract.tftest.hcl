@@ -28,10 +28,8 @@ variables {
   sku_name_override = null
 
   database = {
-    client_protocol   = null
-    clustering_policy = null
-    eviction_policy   = null
-    modules           = []
+    eviction_policy = null
+    modules         = []
   }
 
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-monitor/providers/Microsoft.OperationalInsights/workspaces/law-test"
@@ -104,31 +102,12 @@ run "invalid_sku_override" {
   ]
 }
 
-run "invalid_clustering_policy" {
-  command = plan
-
-  variables {
-    database = {
-      client_protocol   = null
-      clustering_policy = "NoCluster"
-      eviction_policy   = null
-      modules           = []
-    }
-  }
-
-  expect_failures = [
-    var.database,
-  ]
-}
-
 run "invalid_module_name" {
   command = plan
 
   variables {
     database = {
-      client_protocol   = null
-      clustering_policy = null
-      eviction_policy   = null
+      eviction_policy = null
       modules = [
         { name = "UnknownModule", args = null }
       ]

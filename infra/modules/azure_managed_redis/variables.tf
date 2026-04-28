@@ -92,25 +92,13 @@ variable "sku_name_override" {
 variable "database" {
   description = "Advanced configuration for the default database. All fields are optional and fall back to the use_case preset."
   type = object({
-    client_protocol   = optional(string, null)
-    clustering_policy = optional(string, null)
-    eviction_policy   = optional(string, null)
+    eviction_policy = optional(string, null)
     modules = optional(list(object({
       name = string
       args = optional(string, null)
     })), [])
   })
   default = {}
-
-  validation {
-    condition     = try(var.database.client_protocol, null) == null || contains(["Encrypted", "Plaintext"], var.database.client_protocol)
-    error_message = "database.client_protocol must be null, 'Encrypted', or 'Plaintext'."
-  }
-
-  validation {
-    condition     = try(var.database.clustering_policy, null) == null || contains(["EnterpriseCluster", "OSSCluster"], var.database.clustering_policy)
-    error_message = "database.clustering_policy must be null, 'EnterpriseCluster', or 'OSSCluster'."
-  }
 
   validation {
     condition = try(var.database.eviction_policy, null) == null || contains([
