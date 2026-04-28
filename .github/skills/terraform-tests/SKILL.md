@@ -3,7 +3,7 @@ name: terraform-tests
 description: Generate tests for Terraform modules. Use everytime tests are missing or need to be updated.
 metadata:
   author: pagopa-dx
-  version: "1.0"
+  version: "1.1"
 compatibility: requires terraform, go, and access to the internet
 ---
 
@@ -205,6 +205,7 @@ When a module has legacy tests (single file, no modern structure):
 - Integration and E2E infrastructures are completely separate
 - Always execute unit and contract tests after modifications to verify they pass
 - Do not run integration/e2e tests during development (slow, expensive)
+- Do not add comments that merely restate the obvious or act as decorative/redundant headers (for example, `this file contains unit tests` or `3. Development use case` when the `run` name already conveys that); comments are fine when they add necessary context such as non-obvious intent, workarounds, assumptions, or edge cases
 
 ## Reference Documentation
 

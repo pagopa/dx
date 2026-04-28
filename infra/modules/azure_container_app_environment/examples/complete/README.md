@@ -5,14 +5,14 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | <= 4.10.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.60 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | pagopa-dx/azure-container-app-environment/azurerm | ~> 1.0 |
+| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | pagopa-dx/azure-container-app-environment/azurerm | ~> 2.0 |
 
 ## Resources
 
@@ -20,7 +20,7 @@
 |------|------|
 | [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_log_analytics_workspace.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
-| [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+| [azurerm_virtual_network.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 

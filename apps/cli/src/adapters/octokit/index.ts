@@ -1,4 +1,5 @@
 import { $ } from "execa";
+import sodium from "libsodium-wrappers";
 import { ResultAsync } from "neverthrow";
 import { Octokit, RequestError } from "octokit";
 import semverParse from "semver/functions/parse.js";
@@ -6,6 +7,7 @@ import semverSort from "semver/functions/sort.js";
 
 import {
   CreateBranchParams,
+  CreateOrUpdateEnvironmentSecretParams,
   FileContent,
   FileNotFoundError,
   GetFileContentParams,
@@ -49,6 +51,60 @@ export class OctokitGitHubService implements GitHubService {
       throw new Error(`Failed to create branch: ${params.branchName}`, {
         cause: error,
       });
+    }
+  }
+
+  async createOrUpdateEnvironmentSecret(
+    params: CreateOrUpdateEnvironmentSecretParams,
+  ): Promise<void> {
+    try {
+      // GitHub requires environment secrets to be encrypted client-side with libsodium.
+      await sodium.ready;
+
+      // Ensure the target environment exists before resolving its public key and storing secrets.
+      await this.#octokit.request(
+        "PUT /repos/{owner}/{repo}/environments/{environment_name}",
+        {
+          environment_name: params.environmentName,
+          owner: params.owner,
+          repo: params.repo,
+        },
+      );
+
+      const { data: publicKeyData } =
+        await this.#octokit.rest.actions.getEnvironmentPublicKey({
+          environment_name: params.environmentName,
+          owner: params.owner,
+          repo: params.repo,
+        });
+
+      const publicKeyBytes = sodium.from_base64(
+        publicKeyData.key,
+        sodium.base64_variants.ORIGINAL,
+      );
+      const secretBytes = sodium.from_string(params.secretValue);
+      const encryptedBytes = sodium.crypto_box_seal(
+        secretBytes,
+        publicKeyBytes,
+      );
+      const encryptedValue = sodium.to_base64(
+        encryptedBytes,
+        sodium.base64_variants.ORIGINAL,
+      );
+
+      await this.#octokit.rest.actions.createOrUpdateEnvironmentSecret({
+        encrypted_value: encryptedValue,
+        environment_name: params.environmentName,
+        key_id: publicKeyData.key_id,
+        owner: params.owner,
+        repo: params.repo,
+        secret_name: params.secretName,
+      });
+    } catch (error) {
+      throw new Error(
+        `Failed to create or update secret ${params.secretName} in environment ${params.environmentName}`,
+        { cause: error },
+      );
     }
   }
 

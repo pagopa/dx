@@ -13,15 +13,18 @@ output "resource_group_name" {
   description = "The name of the Azure Resource Group where the Container App Environment is deployed."
 }
 
-output "user_assigned_identity" {
+output "subnet" {
   value = {
-    id           = azurerm_user_assigned_identity.cae_identity.id
-    name         = azurerm_user_assigned_identity.cae_identity.name
-    client_id    = azurerm_user_assigned_identity.cae_identity.client_id
-    principal_id = azurerm_user_assigned_identity.cae_identity.principal_id
+    id                  = azurerm_subnet.this.id
+    name                = azurerm_subnet.this.name
+    resource_group_name = azurerm_subnet.this.resource_group_name
   }
+  description = "Details about the created subnet for the Container App Environment."
+}
 
-  description = "Details about the user-assigned managed identity created to manage roles of the Container Apps of this Environment"
+output "principal_id" {
+  value       = azurerm_container_app_environment.this.identity[0].principal_id
+  description = "The principal ID of the Container App Environment's system-assigned managed identity."
 }
 
 output "default_domain" {
