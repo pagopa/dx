@@ -130,3 +130,11 @@ run "balanced_b0_allowed_for_development_use_case" {
     sku_name_override  = "Balanced_B0"
   }
 }
+
+run "pep_subnet_instance_number_derived_from_vnet_name" {
+  command = plan
+
+  variables {
+    virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-03/providers/Microsoft.Network/virtualNetworks/vnet-test-03"
+  }
+}

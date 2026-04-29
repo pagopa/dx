@@ -40,15 +40,18 @@ locals {
   managed_redis_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_redis" }))
   private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "private_endpoint" }))
 
+  vnet_id                  = var.virtual_network_id != null ? provider::azurerm::normalise_resource_id(var.virtual_network_id) : null
+  vnet_resource_group_name = var.virtual_network_id != null ? provider::azurerm::parse_resource_id(var.virtual_network_id).resource_group_name : null
+  vnet_name                = local.vnet_id != null ? provider::azurerm::parse_resource_id(local.vnet_id).resource_name : null
+  vnet_instance_number     = try(tonumber(element(split("-", local.vnet_name != null ? local.vnet_name : ""), length(split("-", local.vnet_name != null ? local.vnet_name : "")) - 1)), 1)
+
   pep_subnet_name = provider::dx::resource_name(merge(local.naming_config, {
     domain          = "",
     name            = "pep",
     resource_type   = "subnet",
-    instance_number = 1,
+    instance_number = local.vnet_instance_number,
   }))
-  vnet_id                  = var.virtual_network_id != null ? provider::azurerm::normalise_resource_id(var.virtual_network_id) : null
-  vnet_resource_group_name = var.virtual_network_id != null ? provider::azurerm::parse_resource_id(var.virtual_network_id).resource_group_name : null
-  subnet_pep_id            = local.vnet_id != null ? provider::azurerm::normalise_resource_id("${local.vnet_id}/subnets/${local.pep_subnet_name}") : null
+  subnet_pep_id = local.vnet_id != null ? provider::azurerm::normalise_resource_id("${local.vnet_id}/subnets/${local.pep_subnet_name}") : null
 
   selected_sku_name = coalesce(var.sku_name_override, local.use_case_features.sku_name)
 
@@ -67,7 +70,7 @@ locals {
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis used memory percentage is above the warn threshold (75%). MS recommends scaling up at this level."
+      description      = "Managed Redis used memory percentage is elevated; MS recommends scaling up at this level."
     }
     used_memory_percentage_critical = {
       aggregation      = "Maximum"
@@ -89,7 +92,7 @@ locals {
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis server load is above 80%. Sustained load at this level can lead to unplanned failovers."
+      description      = "Managed Redis server load is elevated. Sustained load at this level can lead to unplanned failovers."
     }
     server_load_critical = {
       aggregation      = "Maximum"

@@ -3,7 +3,6 @@
 ### 🩹 Fixes
 
 - Add roles: ([#1584](https://github.com/pagopa/dx/pull/1584))
-
   - Contributor
   - Storage Blob Data Contributor
   - Role Based Access Control Administrator
