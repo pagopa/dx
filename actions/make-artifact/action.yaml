@@ -34,6 +34,7 @@ runs:
         if grep -rq --include='next.config.*' 'standalone' .; then
           echo "::debug::The workspace contains a Next.js standalone app"
           mv .next/static .next/standalone/"$WORKSPACE_PATH"/.next
+          mv package.json .next/standalone/"$WORKSPACE_PATH"/
           if [ -d public ]; then
             mv public .next/standalone/"$WORKSPACE_PATH"
           fi
@@ -45,6 +46,10 @@ runs:
             mv .next/standalone/node_modules .next/standalone/"$WORKSPACE_PATH"
           fi
           cd .next/standalone/"$WORKSPACE_PATH"
+          # replace start script with "node ." and set main to server.js
+          # this is needed because the standalone build does not have the next CLI
+          PACKAGE_JSON=$(cat package.json)
+          jq '. += {"scripts": { "start": "node ." }, "main": "server.js"}' <<< "$PACKAGE_JSON" > package.json
           zip -r -q "$BUNDLE_NAME".zip .
           echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
           exit 0

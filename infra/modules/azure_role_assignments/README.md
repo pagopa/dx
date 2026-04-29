@@ -11,7 +11,7 @@ Instead of memorizing dozens of Azure Built-in Role names (like _"Storage Blob D
 - **Standardized Abstraction**: Exposes only three generic roles (`"reader"`, `"writer"`, `"owner"`) across all supported services.
 - **Granular Scoping**: Assign roles at the account/namespace level, or drill down to specific queues, topics, containers, or collections.
 - **Multi-Resource Batching**: Pass lists of assignments for different services simultaneously to a single principal.
-- **Supported Resources**: Cosmos DB, Redis, Key Vault, Storage (Table, Blob, Queue), Event Hub, Service Bus, API Management, App Configuration.
+- **Supported Resources**: Cosmos DB, Redis (Azure Cache for Redis & Azure Managed Redis), Key Vault, Storage (Table, Blob, Queue), Event Hub, Service Bus, API Management, App Configuration.
 - **Observability via description**: Each assignment requires a `description` to provide context on why the permission is needed, improving auditability and maintainability.
 
 ## 🚀 Quick Usage Example
@@ -49,6 +49,15 @@ module "role_assignments" {
       }
     }
   ]
+
+  # Grant data-plane access to Azure Managed Redis instances
+  managed_redis = [
+    {
+      id          = azurerm_managed_redis.cache.id
+      role        = "writer"
+      description = "Allow web app to write data to the managed Redis cache"
+    },
+  ]
 }
 ```
 
@@ -60,12 +69,26 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 - A [Service Bus example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/service_bus) demonstrating role assignments for a Service Bus.
 - A [Users Assigned Identity example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/users_assigned_identity) showcasing role assignments for Storage Blobs, Queues, and Tables to a user.
 
+## Redis support
+
+This module supports both Redis flavors through two distinct inputs:
+
+- `redis` — assignments for **Azure Cache for Redis** (legacy). Uses the
+  built-in `Data Owner` / `Data Contributor` / `Data Reader` access policies
+  and supports the `reader`, `writer`, and `owner` roles.
+- `managed_redis` — assignments for **Azure Managed Redis (AMR)**. Supports three
+  roles: `reader` (control-plane read-only via _Azure Managed Redis Reader_),
+  `writer` (data-plane access via the built-in `default` access policy), and
+  `owner` (both control-plane via _Azure Managed Redis Contributor_ and data-plane
+  access). Input is a list of objects with `id` (AMR resource ID), `role`, and
+  `description`.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.114, < 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.60 |
 
 ## Modules
 
@@ -76,6 +99,7 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 | <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | ./modules/cosmos | n/a |
 | <a name="module_event_hub"></a> [event\_hub](#module\_event\_hub) | ./modules/event_hub | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./modules/key_vault | n/a |
+| <a name="module_managed_redis"></a> [managed\_redis](#module\_managed\_redis) | ./modules/managed_redis | n/a |
 | <a name="module_redis"></a> [redis](#module\_redis) | ./modules/redis | n/a |
 | <a name="module_service_bus"></a> [service\_bus](#module\_service\_bus) | ./modules/service_bus | n/a |
 | <a name="module_storage_account"></a> [storage\_account](#module\_storage\_account) | ./modules/storage_account | n/a |
@@ -93,6 +117,7 @@ No resources.
 | <a name="input_cosmos"></a> [cosmos](#input\_cosmos) | List of role assignments for Azure Cosmos DB accounts.<br/><br/>REQUIRED FIELDS:<br/>- account\_name: Name of the Cosmos DB account<br/>- resource\_group\_name: Resource group containing the account<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- database: Database name (default: "*" for all databases)<br/>- collections: List of collection names (default: ["*"] for all collections) | <pre>list(object({<br/>    account_name        = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>    database            = optional(string, "*")<br/>    collections         = optional(list(string), ["*"])<br/>  }))</pre> | `[]` | no |
 | <a name="input_event_hub"></a> [event\_hub](#input\_event\_hub) | List of role assignments for Azure Event Hubs.<br/><br/>REQUIRED FIELDS:<br/>- namespace\_name: Name of the Event Hubs namespace<br/>- resource\_group\_name: Resource group containing the namespace<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- event\_hub\_names: List of specific Event Hub names within the namespace (default: ["*"] for all Event Hubs) | <pre>list(object({<br/>    namespace_name      = string<br/>    resource_group_name = string<br/>    event_hub_names     = optional(list(string), ["*"])<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | List of role assignments for Azure Key Vault instances.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the Key Vault<br/>- resource\_group\_name: Resource group containing the Key Vault<br/>- description: Human-readable description of the role assignment purpose<br/>- roles: Object specifying base permissions for each Key Vault functionality:<br/>  - secrets: Role for secrets - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/>  - certificates: Role for certificates - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/>  - keys: Role for keys - MUST be one of: "reader", "writer", "owner", or not set (empty for no access)<br/><br/>OPTIONAL FIELDS:<br/>- has\_rbac\_support: Set to true if Key Vault uses Azure RBAC for authorization (default: true, access policies will be created for vaults without RBAC support otherwise, role assignments for vaults with RBAC support)<br/>- override\_roles: Advanced - list of Access Policies permissions to override module-defined ones. Has no effect when has\_rbac\_support is true. | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    has_rbac_support    = optional(bool, null)<br/>    description         = string<br/>    roles = object({<br/>      secrets      = optional(string, "")<br/>      certificates = optional(string, "")<br/>      keys         = optional(string, "")<br/>    })<br/><br/>    override_roles = optional(object({<br/>      secrets      = optional(list(string), [])<br/>      certificates = optional(list(string), [])<br/>      keys         = optional(list(string), [])<br/>      }), {<br/>      secrets      = []<br/>      certificates = []<br/>      keys         = []<br/>    })<br/>  }))</pre> | `[]` | no |
+| <a name="input_managed_redis"></a> [managed\_redis](#input\_managed\_redis) | List of role assignments for Azure Managed Redis (AMR) instances.<br/><br/>REQUIRED FIELDS:<br/>- id: Full Azure resource ID of the Azure Managed Redis instance<br/>  (e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name})<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>Role mapping:<br/>- reader → Azure Managed Redis Reader (control-plane read-only)<br/>- writer → data-plane "default" access policy (Redis commands)<br/>- owner  → Azure Managed Redis Contributor (control-plane) + data-plane "default" access policy<br/><br/>Note: this variable targets Azure Managed Redis. For legacy Azure Cache for<br/>Redis, use the `redis` variable instead. | <pre>list(object({<br/>    id          = string<br/>    role        = string<br/>    description = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_principal_id"></a> [principal\_id](#input\_principal\_id) | The ID of the principal (user, group, service principal, or managed identity) to which roles will be assigned.<br/>  For managed identities, use the principal\_id output from the identity resource. | `string` | n/a | yes |
 | <a name="input_redis"></a> [redis](#input\_redis) | List of role assignments for Azure Cache for Redis instances.<br/><br/>REQUIRED FIELDS:<br/>- cache\_name: Name of the Redis cache instance<br/>- resource\_group\_name: Resource group containing the cache<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- username: Redis username for the access policy (used in Redis ACLs)<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    cache_name          = string<br/>    resource_group_name = string<br/>    role                = string<br/>    username            = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_service_bus"></a> [service\_bus](#input\_service\_bus) | List of role assignments for Azure Service Bus.<br/><br/>REQUIRED FIELDS:<br/>- namespace\_name: Name of the Service Bus namespace<br/>- resource\_group\_name: Resource group containing the namespace<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- queue\_names: List of specific queue names (default: [] for namespace-level access only)<br/>- topic\_names: List of specific topic names (default: [] for namespace-level access only)<br/>- subscriptions: Map of topic names to lists of subscription names. Each key is a topic name, each value is a list of subscription names under that topic. | <pre>list(object({<br/>    namespace_name      = string<br/>    resource_group_name = string<br/>    queue_names         = optional(list(string), [])<br/>    topic_names         = optional(list(string), [])<br/>    subscriptions       = optional(map(list(string)), {})<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |

@@ -12,6 +12,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
 import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { z } from "zod/v4";
 
 import {
@@ -22,7 +23,11 @@ import {
   type EnvironmentId,
   environmentShort,
 } from "../../domain/environment.js";
-import { GitHubAppCredentials } from "../../domain/github.js";
+import { type GitHubRepo } from "../../domain/github-repo.js";
+import {
+  GitHubAppCredentials,
+  type GitHubService,
+} from "../../domain/github.js";
 import {
   type TerraformBackend,
   terraformBackendSchema,
@@ -49,6 +54,21 @@ const graphGroupMembershipResponseSchema = z.object({
   "@odata.nextLink": z.string().optional(),
   value: z.array(graphGroupMembershipItemSchema),
 });
+
+const builtInRoleDefinitionIds = {
+  contributor: "b24988ac-6180-42a0-ab88-20f7382dd24c",
+  keyVaultSecretsOfficer: "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+  owner: "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+  roleBasedAccessControlAdministrator: "f58310d9-a9f6-439a-9e8d-f62e7b41a168",
+  storageBlobDataContributor: "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+} as const;
+
+const bootstrapIdentityRoleDefinitionIds = [
+  // These roles let the bootstrap identity run the bootstrapper module from GitHub Actions without extra manual grants.
+  builtInRoleDefinitionIds.roleBasedAccessControlAdministrator,
+  builtInRoleDefinitionIds.contributor,
+  builtInRoleDefinitionIds.storageBlobDataContributor,
+] as const;
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
@@ -134,9 +154,9 @@ export class AzureCloudAccountService implements CloudAccountService {
       );
 
       const requiredRoles = [
-        "8e3af657-a8ff-443c-a75c-2fe8c4bcb635", // Owner
-        "ba92f5b4-2d11-453d-a403-e96b0029c9fe", // Storage Blob Data Contributor
-        "b86a8fe4-44ce-4948-aee5-eccb2c155cd7", // Key Vault Secrets Officer
+        builtInRoleDefinitionIds.owner, // Owner
+        builtInRoleDefinitionIds.storageBlobDataContributor, // Storage Blob Data Contributor
+        builtInRoleDefinitionIds.keyVaultSecretsOfficer, // Key Vault Secrets Officer
       ];
 
       const scope = `/subscriptions/${cloudAccountId}`;
@@ -195,6 +215,8 @@ export class AzureCloudAccountService implements CloudAccountService {
     cloudAccount: CloudAccount,
     { name, prefix }: EnvironmentId,
     runnerAppCredentials: GitHubAppCredentials,
+    github: GitHubRepo,
+    gitHubService: GitHubService,
     tags: Record<string, string> = {},
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
@@ -246,88 +268,118 @@ export class AzureCloudAccountService implements CloudAccountService {
         cloudAccount.id,
       );
 
-      await msiClient.userAssignedIdentities.createOrUpdate(
+      const identity = await msiClient.userAssignedIdentities.createOrUpdate(
         resourceGroupName,
         identityName,
         parameters,
       );
+
+      assert.ok(
+        identity.principalId,
+        "Managed identity principal ID is undefined",
+      );
+      const identityPrincipalId = identity.principalId;
+      assert.ok(identity.clientId, "Managed identity client ID is undefined");
+      const identityClientId = identity.clientId;
 
       logger.debug(
         "Created identity {identityName} in subscription {subscriptionId}",
         { identityName, subscriptionId: cloudAccount.id },
       );
 
-      // Retrieve tenant ID from the subscription
-      const subscriptionClient = new SubscriptionClient(this.#credential);
-      const subscription = await subscriptionClient.subscriptions.get(
-        cloudAccount.id,
-      );
-      assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
-
-      const kvClient = new KeyVaultManagementClient(
+      const authorizationManagementClient = new AuthorizationManagementClient(
         this.#credential,
         cloudAccount.id,
       );
+      const subscriptionScope = `/subscriptions/${cloudAccount.id}`;
 
-      const keyVaultName = `${prefix}-${short.env}-${short.location}-common-kv-01`;
-
-      const secretsProtectionEnabled = short.env === "p";
-
-      const result = await kvClient.vaults.checkNameAvailability({
-        name: keyVaultName,
-        type: "Microsoft.KeyVault/vaults",
-      });
-
-      await kvClient.vaults.beginCreateOrUpdateAndWait(
-        resourceGroupName,
-        keyVaultName,
-        {
-          location: cloudAccount.defaultLocation,
-          properties: {
-            createMode: result.nameAvailable ? "default" : "recover",
-            enabledForDiskEncryption: true,
-            enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
-            enableRbacAuthorization: true,
-            sku: {
-              family: "A",
-              name: "standard",
+      // Grant the bootstrap identity the Azure permissions it needs to operate autonomously in the bootstrap workflow.
+      await Promise.all(
+        bootstrapIdentityRoleDefinitionIds.map((roleDefinitionId) =>
+          authorizationManagementClient.roleAssignments.create(
+            subscriptionScope,
+            this.#createRoleAssignmentName(
+              subscriptionScope,
+              identityPrincipalId,
+              roleDefinitionId,
+            ),
+            {
+              principalId: identityPrincipalId,
+              principalType: "ServicePrincipal",
+              roleDefinitionId: this.#createRoleDefinitionResourceId(
+                cloudAccount.id,
+                roleDefinitionId,
+              ),
             },
-            softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
-            tenantId: subscription.tenantId,
-          },
-          tags: {
-            Environment: name,
-            ...tags,
-          },
+          ),
+        ),
+      );
+
+      logger.debug(
+        "Assigned bootstrap roles to identity {identityName} in subscription {subscriptionId}",
+        { identityName, subscriptionId: cloudAccount.id },
+      );
+
+      const githubEnvironmentName = `bootstrapper-${name}-cd`;
+
+      // Federate the bootstrap identity with the GitHub environment so workflows can exchange their OIDC token for Azure access.
+      await msiClient.federatedIdentityCredentials.createOrUpdate(
+        resourceGroupName,
+        identityName,
+        githubEnvironmentName,
+        {
+          audiences: ["api://AzureADTokenExchange"],
+          issuer: "https://token.actions.githubusercontent.com",
+          subject: `repo:${github.owner}/${github.repo}:environment:${githubEnvironmentName}`,
         },
       );
 
       logger.debug(
-        "Created key vault {keyVaultName} in subscription {subscriptionId}",
-        { keyVaultName, subscriptionId: cloudAccount.id },
+        "Configured federated identity credential {credentialName} for identity {identityName} in subscription {subscriptionId}",
+        {
+          credentialName: githubEnvironmentName,
+          identityName,
+          subscriptionId: cloudAccount.id,
+        },
       );
 
-      const secretClient = new SecretClient(
-        `https://${keyVaultName}.vault.azure.net/`,
-        this.#credential,
-      );
-
+      // These secrets let the GitHub workflow target the bootstrap identity and subscription without extra setup.
       await Promise.all([
-        secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
-        secretClient.setSecret(
-          "github-runner-app-installation-id",
-          runnerAppCredentials.installationId,
-        ),
-        secretClient.setSecret(
-          "github-runner-app-key",
-          runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
-        ),
+        gitHubService.createOrUpdateEnvironmentSecret({
+          environmentName: githubEnvironmentName,
+          owner: github.owner,
+          repo: github.repo,
+          secretName: "ARM_CLIENT_ID",
+          secretValue: identityClientId,
+        }),
+        gitHubService.createOrUpdateEnvironmentSecret({
+          environmentName: githubEnvironmentName,
+          owner: github.owner,
+          repo: github.repo,
+          secretName: "ARM_SUBSCRIPTION_ID",
+          secretValue: cloudAccount.id,
+        }),
       ]);
 
-      logger.debug(
-        "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
-        { keyVaultName, subscriptionId: cloudAccount.id },
-      );
+      logger.debug("Set GitHub environment secrets for {environmentName}", {
+        environmentName: githubEnvironmentName,
+      });
+
+      const keyVaultName = await this.#createCommonKeyVault({
+        cloudAccount,
+        name,
+        prefix,
+        resourceGroupName,
+        shortEnv: short.env,
+        shortLocation: short.location,
+        tags,
+      });
+
+      await this.#storeRunnerAppSecrets({
+        cloudAccountId: cloudAccount.id,
+        keyVaultName,
+        runnerAppCredentials,
+      });
     } catch (cause) {
       // Cleanup resource group if initialization fails
       await resourceManagementClient.resourceGroups.beginDeleteAndWait(
@@ -469,7 +521,6 @@ export class AzureCloudAccountService implements CloudAccountService {
         subscriptionId: cloudAccount.id,
       },
     );
-
     const blobServiceClient = new BlobServiceClient(
       storageAccount.primaryEndpoints?.blob,
       this.#credential,
@@ -511,6 +562,97 @@ export class AzureCloudAccountService implements CloudAccountService {
       }),
     );
     return results.every(Boolean);
+  }
+
+  async #createCommonKeyVault({
+    cloudAccount,
+    name,
+    prefix,
+    resourceGroupName,
+    shortEnv,
+    shortLocation,
+    tags,
+  }: {
+    cloudAccount: CloudAccount;
+    name: EnvironmentId["name"];
+    prefix: string;
+    resourceGroupName: string;
+    shortEnv: string;
+    shortLocation: string;
+    tags: Record<string, string>;
+  }): Promise<string> {
+    const logger = getLogger(["gen", "env"]);
+    const subscriptionClient = new SubscriptionClient(this.#credential);
+    const subscription = await subscriptionClient.subscriptions.get(
+      cloudAccount.id,
+    );
+    assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+
+    const kvClient = new KeyVaultManagementClient(
+      this.#credential,
+      cloudAccount.id,
+    );
+
+    const keyVaultName = `${prefix}-${shortEnv}-${shortLocation}-common-kv-01`;
+    const secretsProtectionEnabled = shortEnv === "p";
+
+    const result = await kvClient.vaults.checkNameAvailability({
+      name: keyVaultName,
+      type: "Microsoft.KeyVault/vaults",
+    });
+
+    await kvClient.vaults.beginCreateOrUpdateAndWait(
+      resourceGroupName,
+      keyVaultName,
+      {
+        location: cloudAccount.defaultLocation,
+        properties: {
+          createMode: result.nameAvailable ? "default" : "recover",
+          enabledForDiskEncryption: true,
+          enablePurgeProtection: secretsProtectionEnabled ? true : undefined,
+          enableRbacAuthorization: true,
+          sku: {
+            family: "A",
+            name: "standard",
+          },
+          softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
+          tenantId: subscription.tenantId,
+        },
+        tags: {
+          Environment: name,
+          ...tags,
+        },
+      },
+    );
+
+    logger.debug(
+      "Created key vault {keyVaultName} in subscription {subscriptionId}",
+      { keyVaultName, subscriptionId: cloudAccount.id },
+    );
+
+    return keyVaultName;
+  }
+
+  #createRoleAssignmentName(
+    scope: string,
+    principalId: string,
+    roleDefinitionId: string,
+  ): string {
+    const hash = createHash("sha256")
+      .update(`${scope}:${principalId}:${roleDefinitionId}`)
+      .digest("hex");
+
+    return `${hash.slice(0, 8)}-${hash.slice(8, 12)}-${hash.slice(
+      12,
+      16,
+    )}-${hash.slice(16, 20)}-${hash.slice(20, 32)}`;
+  }
+
+  #createRoleDefinitionResourceId(
+    subscriptionId: string,
+    roleDefinitionId: string,
+  ): string {
+    return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {
@@ -580,6 +722,40 @@ export class AzureCloudAccountService implements CloudAccountService {
     logger.info(
       "All resource providers registered on subscription {subscriptionId}",
       { subscriptionId },
+    );
+  }
+
+  async #storeRunnerAppSecrets({
+    cloudAccountId,
+    keyVaultName,
+    runnerAppCredentials,
+  }: {
+    cloudAccountId: string;
+    keyVaultName: string;
+    runnerAppCredentials: GitHubAppCredentials;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+
+    const secretClient = new SecretClient(
+      `https://${keyVaultName}.vault.azure.net/`,
+      this.#credential,
+    );
+
+    await Promise.all([
+      secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
+      secretClient.setSecret(
+        "github-runner-app-installation-id",
+        runnerAppCredentials.installationId,
+      ),
+      secretClient.setSecret(
+        "github-runner-app-key",
+        runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
+      ),
+    ]);
+
+    logger.debug(
+      "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
+      { keyVaultName, subscriptionId: cloudAccountId },
     );
   }
 }

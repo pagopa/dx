@@ -59,6 +59,55 @@ EOT
   default = []
 }
 
+variable "managed_redis" {
+  description = <<EOT
+List of role assignments for Azure Managed Redis (AMR) instances.
+
+REQUIRED FIELDS:
+- id: Full Azure resource ID of the Azure Managed Redis instance
+  (e.g., /subscriptions/{subId}/resourceGroups/{rgName}/providers/Microsoft.Cache/redisEnterprise/{name})
+- role: Permission level - MUST be one of: "reader", "writer", "owner"
+- description: Human-readable description of the role assignment purpose
+
+Role mapping:
+- reader → Azure Managed Redis Reader (control-plane read-only)
+- writer → data-plane "default" access policy (Redis commands)
+- owner  → Azure Managed Redis Contributor (control-plane) + data-plane "default" access policy
+
+Note: this variable targets Azure Managed Redis. For legacy Azure Cache for
+Redis, use the `redis` variable instead.
+EOT
+  type = list(object({
+    id          = string
+    role        = string
+    description = string
+  }))
+
+  validation {
+    condition = alltrue([
+      for entry in var.managed_redis :
+      can(provider::azurerm::parse_resource_id(entry.id))
+      && lower(provider::azurerm::parse_resource_id(entry.id)["resource_provider"]) == "microsoft.cache"
+      && lower(provider::azurerm::parse_resource_id(entry.id)["resource_type"]) == "redisenterprise"
+    ])
+    error_message = "Each id must be a valid Microsoft.Cache/redisEnterprise resource ID."
+  }
+
+  validation {
+    condition = alltrue([
+      for entry in var.managed_redis : contains(["reader", "writer", "owner"], entry.role)
+    ])
+    error_message = "Each role must be one of: reader, writer, owner."
+  }
+
+  validation {
+    condition     = length(var.managed_redis) == length(distinct([for entry in var.managed_redis : "${entry.id}|${entry.role}"]))
+    error_message = "Each (id, role) combination must appear at most once."
+  }
+
+  default = []
+}
+
 variable "key_vault" {
   description = <<EOT
 List of role assignments for Azure Key Vault instances.

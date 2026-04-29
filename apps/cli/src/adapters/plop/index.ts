@@ -112,9 +112,10 @@ export const runMonorepoGenerator = async (
  */
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
+  gitHubService: GitHubService,
   github?: GitHubRepo,
 ): Promise<EnvironmentPayload> => {
-  setDeploymentEnvironmentGenerator(plop, github);
+  setDeploymentEnvironmentGenerator(plop, gitHubService, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
@@ -136,6 +137,7 @@ export const runDeploymentEnvironmentGenerator = async (
  */
 export const setDeploymentEnvironmentGenerator = (
   plop: NodePlopAPI,
+  gitHubService: GitHubService,
   github?: GitHubRepo,
 ) => {
   const credential = new AzureCliCredential();
@@ -152,6 +154,7 @@ export const setDeploymentEnvironmentGenerator = (
     templatesPath,
     cloudAccountRepository,
     cloudAccountService,
+    gitHubService,
     github,
   );
 };

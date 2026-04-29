@@ -1,18 +1,21 @@
 resource "azurerm_container_app_environment" "this" {
-  name                       = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app_environment" }))
-  location                   = var.environment.location
-  resource_group_name        = var.resource_group_name
-  log_analytics_workspace_id = var.log_analytics_workspace_id
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_environment" }))
+  location            = var.environment.location
+  resource_group_name = var.resource_group_name
 
-  infrastructure_subnet_id       = var.subnet_id == null ? azurerm_subnet.this[0].id : var.subnet_id
-  internal_load_balancer_enabled = !var.public_network_access_enabled
+  identity {
+    type = "SystemAssigned"
+  }
+
+  infrastructure_subnet_id       = azurerm_subnet.this.id
+  internal_load_balancer_enabled = !var.networking.public_network_access_enabled
+  logs_destination               = "azure-monitor"
+  zone_redundancy_enabled        = local.use_case_features.zone_redundancy_enabled
 
   workload_profile {
     name                  = "Consumption"
     workload_profile_type = "Consumption"
   }
-
-  zone_redundancy_enabled = var.environment.env_short != "d" ? true : false
 
   lifecycle {
     ignore_changes = [
@@ -28,9 +31,15 @@ resource "azurerm_container_app_environment" "this" {
 }
 
 resource "azurerm_management_lock" "cae_lock" {
+  count = local.use_case_features.lock_enabled ? 1 : 0
+
   name       = azurerm_container_app_environment.this.name
   scope      = azurerm_container_app_environment.this.id
   lock_level = "CanNotDelete"
 
   notes = "Lock for the Container App Environment"
+
+  depends_on = [
+    azurerm_monitor_diagnostic_setting.cae
+  ]
 }

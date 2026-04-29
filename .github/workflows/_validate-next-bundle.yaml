@@ -89,7 +89,8 @@ jobs:
           temp_dir=$(mktemp -d)
           unzip -d "$temp_dir" -q "$ARTIFACT_PATH"
 
-          PORT=$(($RANDOM+1024)) node "$temp_dir/server.js" &
+          cd "$temp_dir"
+          PORT=$(($RANDOM+1024)) npm start &
           sleep 2
 
           pid=$!

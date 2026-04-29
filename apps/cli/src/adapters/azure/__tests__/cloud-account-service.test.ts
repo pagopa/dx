@@ -1,5 +1,5 @@
 import { DefaultAzureCredential } from "@azure/identity";
-import { test as baseTest, describe, expect, vi } from "vitest";
+import { test as baseTest, beforeEach, describe, expect, vi } from "vitest";
 
 import { AzureCloudAccountService } from "../cloud-account-service.js";
 
@@ -12,6 +12,66 @@ const { mockProviderGet, mockProviderRegister } = vi.hoisted(() => ({
     .fn()
     .mockResolvedValue({ registrationState: "Registered" }),
   mockProviderRegister: vi.fn().mockResolvedValue({}),
+}));
+
+const { mockRoleAssignmentsCreate, mockRoleAssignmentsListForScope } =
+  vi.hoisted(() => ({
+    mockRoleAssignmentsCreate: vi.fn().mockResolvedValue({}),
+    mockRoleAssignmentsListForScope: vi.fn(),
+  }));
+
+const {
+  mockCreateFederatedIdentityCredential,
+  mockCreateIdentity,
+  mockCreateKeyVault,
+  mockCreateResourceGroup,
+  mockDeleteResourceGroup,
+  mockGetSubscription,
+  mockKeyVaultNameAvailability,
+  mockSetSecret,
+} = vi.hoisted(() => ({
+  mockCreateFederatedIdentityCredential: vi.fn().mockResolvedValue({}),
+  mockCreateIdentity: vi
+    .fn()
+    .mockResolvedValue({ clientId: "client-1", principalId: "principal-1" }),
+  mockCreateKeyVault: vi.fn().mockResolvedValue({}),
+  mockCreateResourceGroup: vi.fn().mockResolvedValue({}),
+  mockDeleteResourceGroup: vi.fn().mockResolvedValue({}),
+  mockGetSubscription: vi.fn().mockResolvedValue({ tenantId: "tenant-1" }),
+  mockKeyVaultNameAvailability: vi.fn().mockResolvedValue({
+    nameAvailable: true,
+  }),
+  mockSetSecret: vi.fn().mockResolvedValue({}),
+}));
+
+vi.mock("@azure/arm-authorization", () => ({
+  AuthorizationManagementClient: class {
+    roleAssignments = {
+      create: mockRoleAssignmentsCreate,
+      listForScope: mockRoleAssignmentsListForScope,
+    };
+  },
+}));
+
+vi.mock("@azure/arm-keyvault", () => ({
+  KeyVaultManagementClient: class {
+    vaults = {
+      beginCreateOrUpdateAndWait: mockCreateKeyVault,
+      checkNameAvailability: mockKeyVaultNameAvailability,
+    };
+  },
+}));
+
+vi.mock("@azure/arm-msi", () => ({
+  ManagedServiceIdentityClient: class {
+    federatedIdentityCredentials = {
+      createOrUpdate: mockCreateFederatedIdentityCredential,
+    };
+
+    userAssignedIdentities = {
+      createOrUpdate: mockCreateIdentity,
+    };
+  },
 }));
 
 vi.mock("@azure/identity", () => ({
@@ -30,6 +90,25 @@ vi.mock("@azure/arm-resources", () => ({
       get: mockProviderGet,
       register: mockProviderRegister,
     };
+
+    resourceGroups = {
+      beginDeleteAndWait: mockDeleteResourceGroup,
+      createOrUpdate: mockCreateResourceGroup,
+    };
+  },
+}));
+
+vi.mock("@azure/arm-resources-subscriptions", () => ({
+  SubscriptionClient: class {
+    subscriptions = {
+      get: mockGetSubscription,
+    };
+  },
+}));
+
+vi.mock("@azure/keyvault-secrets", () => ({
+  SecretClient: class {
+    setSecret = mockSetSecret;
   },
 }));
 
@@ -45,6 +124,30 @@ const test = baseTest.extend<{ cloudAccountService: AzureCloudAccountService }>(
     },
   },
 );
+
+beforeEach(() => {
+  queryResources.mockReset();
+  queryResources.mockResolvedValue({ data: [], totalRecords: 0 });
+  mockCreateFederatedIdentityCredential.mockClear();
+  mockCreateIdentity.mockClear();
+  mockCreateIdentity.mockResolvedValue({
+    clientId: "client-1",
+    principalId: "principal-1",
+  });
+  mockCreateKeyVault.mockClear();
+  mockCreateResourceGroup.mockClear();
+  mockDeleteResourceGroup.mockClear();
+  mockGetSubscription.mockClear();
+  mockGetSubscription.mockResolvedValue({ tenantId: "tenant-1" });
+  mockKeyVaultNameAvailability.mockClear();
+  mockKeyVaultNameAvailability.mockResolvedValue({ nameAvailable: true });
+  mockProviderGet.mockClear();
+  mockProviderGet.mockResolvedValue({ registrationState: "Registered" });
+  mockProviderRegister.mockClear();
+  mockRoleAssignmentsCreate.mockClear();
+  mockRoleAssignmentsListForScope.mockReset();
+  mockSetSecret.mockClear();
+});
 
 describe("getTerraformBackend", () => {
   test("returns undefined when no matching storage account is found", async ({
@@ -201,5 +304,83 @@ describe("isInitialized", () => {
     });
 
     expect(result).toBe(false);
+  });
+});
+
+describe("initialize", () => {
+  test("assigns bootstrap roles to the bootstrap identity", async ({
+    cloudAccountService,
+  }) => {
+    await cloudAccountService.initialize(
+      {
+        csp: "azure",
+        defaultLocation: "italynorth",
+        displayName: "Test subscription",
+        id: "sub-1",
+      },
+      {
+        name: "dev",
+        prefix: "dx",
+      },
+      {
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key\n",
+      },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      {
+        createBranch: vi.fn(),
+        createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+        createPullRequest: vi.fn(),
+        getFileContent: vi.fn(),
+        getRepository: vi.fn(),
+        updateFile: vi.fn(),
+      },
+    );
+
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(3);
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/f58310d9-a9f6-439a-9e8d-f62e7b41a168",
+      }),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
+      }),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      }),
+    );
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      "dx-d-itn-bootstrap-id-01",
+      "bootstrapper-dev-cd",
+      {
+        audiences: ["api://AzureADTokenExchange"],
+        issuer: "https://token.actions.githubusercontent.com",
+        subject: "repo:pagopa/dx:environment:bootstrapper-dev-cd",
+      },
+    );
   });
 });

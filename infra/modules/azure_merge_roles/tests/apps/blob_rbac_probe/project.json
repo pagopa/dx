@@ -1,0 +1,19 @@
+{
+  "$schema": "../../../../../../node_modules/nx/schemas/project-schema.json",
+  "name": "azure_merge_roles_tests_blob_rbac_probe",
+  "version": "0.1.0",
+  "description": "Simple application for Terraform E2E tests, exposing a single HTTP endpoint to verify merged Blob RBAC permissions with managed identity",
+  "private": true,
+  "targets": {
+    "docker:build": {
+      "options": {
+        "platform": "linux/amd64,linux/arm64"
+      }
+    },
+    "docker:run": {
+      "options": {
+        "p": "8080:8080"
+      }
+    }
+  }
+}

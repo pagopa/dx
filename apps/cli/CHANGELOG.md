@@ -1,3 +1,20 @@
+## 0.20.2 (2026-04-27)
+
+### 🩹 Fixes
+
+- Add roles: ([#1584](https://github.com/pagopa/dx/pull/1584))
+  - Contributor
+  - Storage Blob Data Contributor
+  - Role Based Access Control Administrator
+
+  to bootstrap managed identity for CD pipelines.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+- Mario Mupo @mamu0
+
 ## 0.20.1 (2026-04-22)
 
 ### 🩹 Fixes

@@ -1,3 +1,15 @@
+## 0.5.0 (2026-04-28)
+
+### 🚀 Features
+
+- Add Microsoft Entra ID (Managed Identity) authentication support via `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED` env var.  ([#1630](https://github.com/pagopa/dx/pull/1630))
+
+  Connection-string-only auth remains the default for backward compatibility but is now deprecated and will be removed in the next major release. Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to adopt the new secure authentication.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.4.18 (2026-04-17)
 
 ### 🧱 Updated Dependencies

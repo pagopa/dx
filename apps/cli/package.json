@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.20.1",
+  "version": "0.20.2",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {
@@ -40,6 +40,7 @@
     "execa": "catalog:",
     "glob": "^11.1.0",
     "inquirer": "^9.3.8",
+    "libsodium-wrappers": "^0.8.2",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.3",
     "octokit": "^5.0.5",
@@ -53,6 +54,7 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/inquirer": "^9.0.9",
+    "@types/libsodium-wrappers": "^0.8.2",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",

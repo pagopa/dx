@@ -4,8 +4,18 @@ import {
   CloudAccount,
   CloudAccountService,
 } from "../../../../domain/cloud-account.js";
+import { GitHubService } from "../../../../domain/github.js";
 import { Payload } from "../../generators/environment/prompts.js";
 import { initCloudAccounts } from "../init-cloud-accounts.js";
+
+const createMockGitHubService = (): GitHubService => ({
+  createBranch: vi.fn(),
+  createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+  createPullRequest: vi.fn(),
+  getFileContent: vi.fn(),
+  getRepository: vi.fn(),
+  updateFile: vi.fn(),
+});
 
 const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
@@ -83,7 +93,7 @@ describe("initCloudAccounts", () => {
       },
     });
 
-    await initCloudAccounts(payload, mockService);
+    await initCloudAccounts(payload, mockService, createMockGitHubService());
 
     expect(initializeMock).toHaveBeenCalledTimes(2);
     expect(initializeMock).toHaveBeenCalledWith(
@@ -94,6 +104,11 @@ describe("initCloudAccounts", () => {
         installationId: "test-installation-id",
         key: "test-private-key",
       },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      expect.any(Object),
       {},
     );
     expect(initializeMock).toHaveBeenCalledWith(
@@ -104,6 +119,11 @@ describe("initCloudAccounts", () => {
         installationId: "test-installation-id",
         key: "test-private-key",
       },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      expect.any(Object),
       {},
     );
   });
@@ -127,7 +147,7 @@ describe("initCloudAccounts", () => {
       },
     });
 
-    await initCloudAccounts(payload, mockService);
+    await initCloudAccounts(payload, mockService, createMockGitHubService());
 
     expect(initializeMock).not.toHaveBeenCalled();
   });
@@ -141,7 +161,7 @@ describe("initCloudAccounts", () => {
       init: undefined,
     });
 
-    await initCloudAccounts(payload, mockService);
+    await initCloudAccounts(payload, mockService, createMockGitHubService());
 
     expect(initializeMock).not.toHaveBeenCalled();
   });
@@ -171,7 +191,7 @@ describe("initCloudAccounts", () => {
       },
     });
 
-    await initCloudAccounts(payload, mockService);
+    await initCloudAccounts(payload, mockService, createMockGitHubService());
 
     expect(initializeMock).toHaveBeenCalledWith(
       cloudAccount,
@@ -181,6 +201,11 @@ describe("initCloudAccounts", () => {
         installationId: "test-installation-id",
         key: "test-private-key",
       },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      expect.any(Object),
       {},
     );
   });

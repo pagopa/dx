@@ -55,7 +55,12 @@ describe("actions", () => {
       payload: getPayload(false),
     },
   ])("correct order of actions", ({ payload }) => {
-    const actionsOrder = ["getTerraformBackend", "addMany", "addMany"];
+    const actionsOrder = [
+      "getTerraformBackend",
+      "addMany",
+      "addMany",
+      "addMany",
+    ];
 
     if (payload.init) {
       actionsOrder.unshift("initCloudAccounts", "provisionTerraformBackend");
