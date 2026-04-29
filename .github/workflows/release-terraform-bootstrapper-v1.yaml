@@ -60,6 +60,8 @@ jobs:
           app-id: ${{ secrets.GH_APP_ID }}
           owner: ${{ github.repository_owner }}
           private-key: ${{ secrets.GH_APP_KEY }}
+          repositories: |
+            ${{ github.repository }}
 
       - name: Verify GitHub App installation
         env:
