@@ -13,16 +13,6 @@ output "resource_group_name" {
   value       = azurerm_managed_redis.this.resource_group_name
 }
 
-output "hostname" {
-  description = "The hostname of the Azure Managed Redis instance."
-  value       = azurerm_managed_redis.this.hostname
-}
-
-output "port" {
-  description = "The default database port of the Azure Managed Redis instance."
-  value       = azurerm_managed_redis.this.default_database[0].port
-}
-
 output "principal_id" {
   description = "The principal ID of the system-assigned identity of the Azure Managed Redis instance."
   value       = azurerm_managed_redis.this.identity[0].principal_id

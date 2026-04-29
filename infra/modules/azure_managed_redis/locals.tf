@@ -33,15 +33,6 @@ locals {
       alerts_enabled            = false
       persistence_mode          = "disabled"
     }
-    high_throughput = {
-      sku_name                  = "ComputeOptimized_X3"
-      high_availability_enabled = true
-      private_network_enabled   = true
-      lock_enabled              = true
-      diagnostics_enabled       = true
-      alerts_enabled            = true
-      persistence_mode          = "rdb"
-    }
   }
 
   use_case_features = local.use_cases[var.use_case]

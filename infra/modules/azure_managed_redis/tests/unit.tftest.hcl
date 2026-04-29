@@ -170,34 +170,6 @@ run "managed_redis_development_use_case" {
   }
 }
 
-run "managed_redis_high_throughput_use_case" {
-  command = plan
-
-  variables {
-    use_case = "high_throughput"
-  }
-
-  assert {
-    condition     = azurerm_managed_redis.this.sku_name == "ComputeOptimized_X3"
-    error_message = "High throughput use case must resolve to ComputeOptimized_X3"
-  }
-
-  assert {
-    condition     = azurerm_managed_redis.this.high_availability_enabled == true
-    error_message = "High throughput use case must enable high availability"
-  }
-
-  assert {
-    condition     = local.use_case_features.persistence_mode == "rdb" && local.persistence_frequency == "1h"
-    error_message = "High throughput use case must resolve persistence to RDB every 1h"
-  }
-
-  assert {
-    condition     = length(azurerm_management_lock.this) == 1
-    error_message = "High throughput use case must create a management lock"
-  }
-}
-
 run "managed_redis_sku_override" {
   command = plan
 
