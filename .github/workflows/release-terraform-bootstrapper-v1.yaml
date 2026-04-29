@@ -53,6 +53,12 @@ jobs:
         run: |
           terraform init -input=false
 
+      - name: Resolve repository name
+        id: repository-name
+        run: |
+          set -euo pipefail
+          echo "value=${GITHUB_REPOSITORY#*/}" >> "$GITHUB_OUTPUT"
+
       - name: Create GitHub App token
         id: github-app-token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
@@ -61,7 +67,7 @@ jobs:
           owner: ${{ github.repository_owner }}
           private-key: ${{ secrets.GH_APP_KEY }}
           repositories: |
-            ${{ github.repository }}
+            ${{ steps.repository-name.outputs.value }}
 
       - name: Verify GitHub App installation
         env:
