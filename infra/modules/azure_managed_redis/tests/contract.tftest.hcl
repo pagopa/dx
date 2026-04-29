@@ -96,3 +96,37 @@ run "invalid_sku_override" {
     var.sku_name_override,
   ]
 }
+
+run "invalid_virtual_network_id_format" {
+  command = plan
+
+  variables {
+    virtual_network_id = "not-a-valid-resource-id"
+  }
+
+  expect_failures = [
+    var.virtual_network_id,
+  ]
+}
+
+run "balanced_b0_rejected_for_default_use_case" {
+  command = plan
+
+  variables {
+    sku_name_override = "Balanced_B0"
+  }
+
+  expect_failures = [
+    var.sku_name_override,
+  ]
+}
+
+run "balanced_b0_allowed_for_development_use_case" {
+  command = plan
+
+  variables {
+    use_case           = "development"
+    virtual_network_id = null
+    sku_name_override  = "Balanced_B0"
+  }
+}

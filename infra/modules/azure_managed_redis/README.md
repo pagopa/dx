@@ -9,7 +9,7 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 - System-assigned managed identity, provisioned automatically.
 - Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` and `high_throughput` use cases).
 - Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
-- Six built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
+- Five built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
 - Fully opinionated default database: `client_protocol = Encrypted`, `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`, no Redis modules.
 
@@ -122,9 +122,9 @@ These features are intentionally left out of v0.x to keep the surface small. The
 ```bash
 pnpm nx run azure_managed_redis:test:unit
 pnpm nx run azure_managed_redis:test:contract
-pnpm nx run azure_managed_redis:test:integration
-pnpm nx run azure_managed_redis:test:e2e
 ```
+
+Integration and end-to-end test layers are tracked as follow-ups under [CES-1909](https://pagopa.atlassian.net/browse/CES-1909).
 
 ## Notes
 

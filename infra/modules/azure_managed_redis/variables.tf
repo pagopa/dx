@@ -32,6 +32,11 @@ variable "virtual_network_id" {
     condition     = var.use_case == "development" || var.virtual_network_id != null
     error_message = "virtual_network_id is required when use_case is 'default' or 'high_throughput'."
   }
+
+  validation {
+    condition     = var.virtual_network_id == null || can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.virtual_network_id))
+    error_message = "virtual_network_id must be a valid Microsoft.Network/virtualNetworks resource ID."
+  }
 }
 
 variable "private_dns_zone_resource_group_name" {
@@ -54,7 +59,7 @@ variable "use_case" {
 
 variable "sku_name_override" {
   type        = string
-  description = "Optional explicit SKU name override. Only Balanced_* and ComputeOptimized_* SKUs are supported."
+  description = "Optional explicit SKU name override. Only Balanced_* and ComputeOptimized_* SKUs are supported. Balanced_B0 is restricted to the 'development' use_case because it does not support HA or data persistence."
   default     = null
 
   validation {
@@ -86,6 +91,11 @@ variable "sku_name_override" {
       "ComputeOptimized_X700",
     ], var.sku_name_override)
     error_message = "sku_name_override must be a supported Balanced_* or ComputeOptimized_* SKU."
+  }
+
+  validation {
+    condition     = var.sku_name_override != "Balanced_B0" || var.use_case == "development"
+    error_message = "Balanced_B0 does not support high availability or data persistence and is only allowed when use_case is 'development'."
   }
 }
 
