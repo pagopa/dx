@@ -245,6 +245,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     const parameters = {
       location: cloudAccount.defaultLocation,
       tags: {
+        CreatedBy: "DX CLI",
         Environment: name,
         ...tags,
       },
