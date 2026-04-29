@@ -140,3 +140,53 @@ Integration and end-to-end test layers are tracked as follow-ups under [CES-1909
 
 - Azure Managed Redis supersedes Azure Cache for Redis. Prefer this module for new workloads.
 - See the [Azure Managed Redis sizing calculator](https://amrsizingcalculator.com/) for SKU guidance.
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.23 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.9 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azurerm_managed_redis.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_redis) | resource |
+| [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
+| [azurerm_monitor_metric_alert.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_metric_alert) | resource |
+| [azurerm_private_endpoint.redis](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
+| [azurerm_private_dns_zone.redis](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and derive short location names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required when use\_case is 'default'. | `string` | `null` | no |
+| <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name containing the 'privatelink.redis.azure.net' private DNS zone. Defaults to the virtual network resource group. | `string` | `null` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
+| <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* and ComputeOptimized\_* SKUs are supported. Balanced\_B0 is restricted to the 'development' use\_case because it does not support HA or data persistence. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default' and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku\_name\_override. | `string` | `"default"` | no |
+| <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required when use\_case is 'default'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The full endpoint (hostname:port) of the Azure Managed Redis instance. |
+| <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Managed Redis instance. |
+| <a name="output_name"></a> [name](#output\_name) | The name of the Azure Managed Redis instance. |
+| <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | The principal ID of the system-assigned identity of the Azure Managed Redis instance. |
+| <a name="output_private_endpoint_ip_address"></a> [private\_endpoint\_ip\_address](#output\_private\_endpoint\_ip\_address) | The private IP address assigned to the Managed Redis private endpoint, or null when public networking is in use. The value is populated only after the private DNS zone group has provisioned a record set; on first apply it may resolve to null until the zone propagates. |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the resource group containing the Azure Managed Redis instance. |
+<!-- END_TF_DOCS -->
