@@ -1,4 +1,4 @@
-name: "Run and Filter Terraform Apply"
+name: "Terraform Apply (Sanitized)"
 description: "Executes terraform apply and masks sensitive information from the output."
 
 inputs:

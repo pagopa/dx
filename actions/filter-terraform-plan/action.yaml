@@ -1,4 +1,4 @@
-name: "Run and Filter Terraform Plan"
+name: "Terraform Plan (Sanitized)"
 description: "Executes terraform plan, removes sensitive information from the output, and strips all unnecessary log lines."
 
 inputs:
@@ -11,7 +11,11 @@ inputs:
     required: false
     default: "false"
   plan-file:
-    description: "The Terraform saved plan file."
+    description: |
+      Optional path for the Terraform saved plan file
+      (binary plan generated via terraform plan -out=<file> for later terraform apply).
+      If provided, the plan is saved to this file. The filtered human-readable output is
+      always written to filtered_plan.txt and exposed via filtered_plan_path.
     required: false
     default: ""
   sensitive-keys:
