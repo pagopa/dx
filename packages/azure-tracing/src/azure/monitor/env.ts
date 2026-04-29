@@ -35,5 +35,14 @@ export const loadEnv = () =>
       APPLICATIONINSIGHTS_CONNECTION_STRING: z
         .string()
         .describe("The connection string for Application Insights."),
+      APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: z
+        .enum(["true", "false"])
+        .optional()
+        .transform((value) => value === "true")
+        .describe(
+          "When set to 'true', enables Microsoft Entra ID (Managed Identity) authentication for Application Insights. " +
+            "Defaults to false (connection-string-only auth). " +
+            "This will become the default in the next major release.",
+        ),
     },
   });

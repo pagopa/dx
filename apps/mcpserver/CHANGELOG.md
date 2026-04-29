@@ -1,3 +1,25 @@
+## 0.2.2 (2026-04-28)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.0
+
+## 0.2.1 (2026-04-17)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.4.18
+- Updated @pagopa/eslint-config to 6.0.3
+- Updated @pagopa/dx-mcpprompts to 0.2.7
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.2.0 (2026-04-09)
 
 ### 🚀 Features

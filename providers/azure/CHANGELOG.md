@@ -1,3 +1,29 @@
+## 0.10.0 (2026-04-23)
+
+### 🚀 Features
+
+- Add `import` feature to subnet CIDR generator. ([#1650](https://github.com/pagopa/dx/pull/1650))
+  Usage example:
+
+  ```terraform
+  terraform import dx_available_subnet_cidr.<name> "/subscriptions/<subscription-id>/resourceGroups/<resource-group-name>/providers/Microsoft.Network/virtualNetworks/<vnet-name>/subnets/<subnet-name>"
+  ```
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.9.0 (2026-04-22)
+
+### 🚀 Features
+
+- Add `managed_redis` resource naming support ([#1647](https://github.com/pagopa/dx/pull/1647))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.8.4
 
 ### Patch Changes

@@ -7,7 +7,7 @@ import { Environment } from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { payloadSchema } from "./prompts.js";
 
-const addModule = (env: Environment, templatesPath: string) => {
+const addModule = (env: Environment, templatesPath: string, init = false) => {
   const cloudAccountsByCsp = Object.groupBy(
     env.cloudAccounts,
     (account) => account.csp,
@@ -19,7 +19,7 @@ const addModule = (env: Environment, templatesPath: string) => {
   return (name: string, terraformBackendKey: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp, includesProdIO },
+      data: { cloudAccountsByCsp, includesProdIO, init },
       destination: path.join(cwd, "infra"),
       force: true,
       templateFiles: path.join(templatesPath, name),
@@ -29,7 +29,7 @@ const addModule = (env: Environment, templatesPath: string) => {
     },
     {
       base: path.join(templatesPath, "shared"),
-      data: { cloudAccountsByCsp, terraformBackendKey },
+      data: { cloudAccountsByCsp, init, terraformBackendKey },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
       templateFiles: path.join(templatesPath, "shared"),
@@ -38,6 +38,18 @@ const addModule = (env: Environment, templatesPath: string) => {
       verbose: true,
     },
   ];
+};
+
+const addWorkflowModule = (templatesPath: string): ActionType => {
+  const cwd = process.cwd();
+  return {
+    base: path.join(templatesPath, "workflow"),
+    destination: path.join(cwd, ".github", "workflows"),
+    force: true,
+    templateFiles: path.join(templatesPath, "workflow"),
+    type: "addMany",
+    verbose: true,
+  };
 };
 
 export default function getActions(
@@ -50,12 +62,13 @@ export default function getActions(
 
     const { env, github, init } = payloadSchema.parse(payload);
 
-    const addEnvironmentModule = addModule(env, templatesPath);
+    const addEnvironmentModule = addModule(env, templatesPath, !!init);
 
     const actions: ActionType[] = [
       {
         type: "getTerraformBackend",
       },
+      addWorkflowModule(templatesPath),
       ...addEnvironmentModule(
         "bootstrapper",
         `${github.repo}.bootstrapper.${env.name}.tfstate`,

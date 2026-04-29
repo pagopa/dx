@@ -1,0 +1,41 @@
+flowchart LR
+    subgraph Networking["Network Layer"]
+        direction TB
+        vnet["Virtual Network (input)"]
+        vnet@{ icon: "azure:virtual-networks"}
+
+        subnet["CAE Subnet"]
+        subnet@{ icon: "azure:subnet"}
+
+        pep["Private Endpoint (private mode)"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns_zone["Private DNS Zone (data)"]
+        dns_zone@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Core["Container App Environment"]
+        direction TB
+        cae["Container App Environment"]
+        cae@{ icon: "azure:container-apps-environments"}
+
+        lock["Management Lock (default use_case)"]
+        lock@{icon: "azure:azure-information-protection"}
+    end
+
+    subgraph Monitoring["Monitoring Layer"]
+        direction TB
+        diag["Diagnostic Setting"]
+        diag@{ icon: "azure:diagnostics-settings"}
+
+        law["Log Analytics Workspace (input)"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+    end
+
+    vnet --> subnet
+    subnet --> cae
+    pep --> cae
+    dns_zone -.-> pep
+    lock --> cae
+    cae --> diag
+    law -.-> diag

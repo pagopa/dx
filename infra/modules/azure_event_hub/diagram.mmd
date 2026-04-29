@@ -1,0 +1,41 @@
+flowchart LR
+    subgraph Messaging["Event Hub"]
+        ns["Event Hub Namespace"]
+        ns@{ icon: "azure:event-hubs"}
+
+        hub["Event Hubs topics"]
+
+        cg["Consumer Groups"]
+
+        auth["Authorization Rules"]
+    end
+
+    subgraph Network["Network"]
+        pep["Private Endpoint"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns[("Private DNS Zone
+          privatelink.servicebus.windows.net")]
+        dns@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        diag["Diagnostic Settings"]
+
+        alert["Metric Alerts"]
+
+        law["Log Analytics Workspace"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+
+        storage["Storage Account"]
+        storage@{ icon: "azure:storage-accounts"}
+    end
+
+    ns --> hub
+    hub --> cg
+    hub --> auth
+    Messaging --> Network
+    pep --> dns
+    diag --> law
+    diag --> storage
+    Messaging -.-> Monitoring

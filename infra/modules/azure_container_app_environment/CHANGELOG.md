@@ -1,3 +1,126 @@
+# 2.0.0 (2026-04-27)
+
+### ⚠️  Breaking Changes
+
+- ## Major Changes ([#1617](https://github.com/pagopa/dx/pull/1617))
+
+  The module interface has been simplified. Multiple networking inputs have been consolidated into a single `networking` object, diagnostic settings are now always-on, and the identity model has been switched from user-assigned to system-assigned.
+
+  ### Outputs changed
+
+  | Output                   | Change                                                                                        |
+  | ------------------------ | --------------------------------------------------------------------------------------------- |
+  | `user_assigned_identity` | **Removed.** The module now uses a system-assigned identity.                                  |
+  | `principal_id`           | **New.** Principal ID of the system-assigned managed identity.                                |
+  | `subnet`                 | **New.** Exposes `id`, `name`, and `resource_group_name` of the automatically created subnet. |
+
+  ### Migration Guide (v1 → v2)
+
+  #### 1. Remove `subnet_id`, `subnet_cidr`, and `subnet_pep_id`
+
+  The module now manages its own subnet. Remove all three variables. The CAE subnet size is controlled by `use_case`: `/27` for `development`, `/23` for `default`. The PEP subnet is derived automatically from the VNet name.
+
+  ```hcl
+  # Before
+  module "cae" {
+    source = "..."
+
+    subnet_cidr   = "10.0.0.0/23"
+    subnet_pep_id = azurerm_subnet.pep.id
+    # or
+    subnet_id = azurerm_subnet.cae.id
+  }
+
+  # After — remove all three, no replacement needed
+  module "cae" {
+    source = "..."
+  }
+  ```
+
+  #### 2. Consolidate networking variables into `networking`
+
+  ```hcl
+  # Before
+  module "cae" {
+    source = "..."
+
+    virtual_network = {
+      name                = "my-vnet"
+      resource_group_name = "rg-network"
+    }
+    public_network_access_enabled        = false
+    private_dns_zone_resource_group_name = "rg-dns"
+    subnet_pep_id                        = azurerm_subnet.pep.id
+  }
+
+  # After
+  module "cae" {
+    source = "..."
+
+    networking = {
+      virtual_network_id                   = data.azurerm_virtual_network.this.id
+      public_network_access_enabled        = false    # optional, default false
+      private_dns_zone_resource_group_name = "rg-dns" # optional, defaults to vnet rg
+    }
+  }
+  ```
+
+  #### 3. Add `use_case` (optional, default `"default"`)
+
+  The new `use_case` variable controls environment-specific defaults:
+
+  | Feature         | `default` | `development` |
+  | --------------- | --------- | ------------- |
+  | CAE subnet size | `/23`     | `/27`         |
+  | Zone redundancy | enabled   | disabled      |
+  | Management lock | enabled   | disabled      |
+
+  ```hcl
+  module "cae" {
+    source = "..."
+
+    use_case = "development" # omit to keep default
+  }
+  ```
+
+  #### 4. Replace `diagnostic_settings` with `log_analytics_workspace_id`
+
+  ```hcl
+  # Before
+  module "cae" {
+    source = "..."
+
+    diagnostic_settings = {
+      enabled                    = true
+      log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+    }
+  }
+
+  # After
+  module "cae" {
+    source = "..."
+
+    log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
+  }
+  ```
+
+  #### 5. Update references to the identity output
+
+  ```hcl
+  # Before
+  principal_id = module.cae.user_assigned_identity.principal_id
+
+  # After
+  principal_id = module.cae.principal_id
+  ```
+
+  Remove any `azurerm_user_assigned_identity` or associated role assignments that were created outside the module for this purpose — the system-assigned identity is managed entirely by the module.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 1.2.0
 
 ### Minor Changes

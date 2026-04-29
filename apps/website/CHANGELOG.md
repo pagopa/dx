@@ -1,3 +1,28 @@
+## 0.16.0 (2026-04-17)
+
+### 🚀 Features
+
+- Move fp-ts entry in Tech Radar to hold, and add deprecation rationale.
+  ([#1590](https://github.com/pagopa/dx/pull/1590))
+
+### 🩹 Fixes
+
+- Improve documentation for upgraded Terraform pipelines.
+  ([#1631](https://github.com/pagopa/dx/pull/1631))
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.3
+- Updated @pagopa/dx-mcpprompts to 0.2.7
+
+### ❤️ Thank You
+
+- Christian Calabrese @christian-calabrese
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 0.15.0 (2026-04-03)
 
 ### 🚀 Features

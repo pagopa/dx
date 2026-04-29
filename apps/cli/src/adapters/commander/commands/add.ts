@@ -20,6 +20,7 @@ import {
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
 import { environmentShort } from "../../../domain/environment.js";
+import { type GitHubService } from "../../../domain/github.js";
 import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import {
   getPlopInstance,
@@ -117,6 +118,7 @@ const displaySummary = (result: AddResult) => {
 
 const addEnvironmentAction = (
   authorizationService: AuthorizationService,
+  gitHubService: GitHubService,
 ): ResultAsync<AddResult, Error> =>
   checkPreconditions()
     .andThen(() =>
@@ -127,7 +129,7 @@ const addEnvironmentAction = (
     )
     .andThen((plop) =>
       ResultAsync.fromPromise(
-        runDeploymentEnvironmentGenerator(plop),
+        runDeploymentEnvironmentGenerator(plop, gitHubService),
         () => new Error("Failed to run the deployment environment generator"),
       ),
     )
@@ -141,6 +143,7 @@ const addEnvironmentAction = (
 
 export type AddCommandDependencies = {
   authorizationService: AuthorizationService;
+  gitHubService: GitHubService;
 };
 
 export const makeAddCommand = (deps: AddCommandDependencies): Command =>
@@ -151,7 +154,10 @@ export const makeAddCommand = (deps: AddCommandDependencies): Command =>
       new Command("environment")
         .description("Add a new deployment environment")
         .action(async function () {
-          const result = await addEnvironmentAction(deps.authorizationService);
+          const result = await addEnvironmentAction(
+            deps.authorizationService,
+            deps.gitHubService,
+          );
           if (result.isErr()) {
             this.error(result.error.message);
           } else {
