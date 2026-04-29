@@ -21,12 +21,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Configure Git user
-      shell: bash
-      run: |
-        git config user.name "dx-pagopa-bot"
-        git config user.email "dx-pagopa-bot@users.noreply.github.com"
-
     - name: Determine release mode from version plans
       id: release-mode
       shell: bash
@@ -38,6 +32,11 @@ runs:
 
         if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
           echo "mode=publish-all" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+          echo "mode=warn-pr" >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
@@ -57,6 +56,23 @@ runs:
         else
           echo "mode=create-pr" >> "$GITHUB_OUTPUT"
         fi
+
+    - name: Configure Git user
+      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      shell: bash
+      run: |
+        git config user.name "dx-pagopa-bot"
+        git config user.email "dx-pagopa-bot@users.noreply.github.com"
+
+    - name: Warn missing version plan coverage on pull request
+      if: steps.release-mode.outputs.mode == 'warn-pr'
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+        node "$ACTION_PATH/scripts/dist/warn-version-plan-coverage-pr.js"
 
     - name: Create or update Version Packages PR
       if: steps.release-mode.outputs.mode == 'create-pr'

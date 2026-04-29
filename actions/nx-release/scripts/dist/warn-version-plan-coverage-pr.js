@@ -1,6 +1,5 @@
 import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
-import { join } from 'path';
 import { promisify } from 'util';
 
 var __create = Object.create;
@@ -17399,7 +17398,7 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
 );
 var execFileAsync = promisify(execFile);
 external_exports.array(external_exports.string());
-var TagEntrySchema = external_exports.object({
+external_exports.object({
   path: external_exports.string().nullable(),
   tag: external_exports.string(),
   version: external_exports.string()
@@ -17413,19 +17412,6 @@ function createOctokit() {
     );
   }
   return new Octokit2({ auth: token });
-}
-function extractTagEntriesFromPRBody(prBody) {
-  const match = prBody.match(/<!-- nx-release-tags: (\[[\s\S]*?\]) -->/);
-  if (!match) {
-    return [];
-  }
-  try {
-    const parsed = JSON.parse(match[1]);
-    return parseTagEntries(parsed);
-  } catch (err) {
-    console.error("Failed to parse nx-release-tags JSON:", err);
-    return [];
-  }
 }
 async function getRepoInfo() {
   const ghRepo = process.env.GITHUB_REPOSITORY;
@@ -17450,172 +17436,280 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-function parseTagEntries(raw) {
-  const schema = external_exports.array(TagEntrySchema);
-  const result = schema.safeParse(raw);
-  if (!result.success) {
-    console.error("parseTagEntries: validation failed:", result.error);
-    return [];
+
+// scripts/version-plan-coverage-pr-comment.ts
+var VERSION_PLAN_GUIDE_URL = "https://dx.pagopa.it/docs/github/pull-requests/version-plan";
+var VERSION_PLAN_WARNING_MARKER = "<!-- nx-release-version-plan-warning -->";
+var COMMENT_PAGE_SIZE = 100;
+var MANAGED_VERSION_PACKAGES_BRANCH = "nx-release/main";
+var MANAGED_VERSION_PACKAGES_TITLE = "Version Packages";
+var PullRequestCommentSchema = external_exports.object({
+  body: external_exports.string().nullable().optional(),
+  html_url: external_exports.string(),
+  id: external_exports.number().int().positive()
+});
+function isManagedVersionPackagesPullRequest(pullRequest) {
+  return pullRequest.headRefName === MANAGED_VERSION_PACKAGES_BRANCH || pullRequest.title.trim() === MANAGED_VERSION_PACKAGES_TITLE;
+}
+function renderVersionPlanWarningComment(params) {
+  return [
+    VERSION_PLAN_WARNING_MARKER,
+    "### \u26A0\uFE0F Missing Nx Version Plan",
+    "",
+    "Nx Release reports that this PR has touched projects without version plan coverage.",
+    "",
+    "Run `pnpm nx release plan` and add the generated version plans.",
+    "",
+    "<details>",
+    "<summary>Nx Plan Check result:</summary>",
+    "",
+    "```text",
+    params.nxPlanCheckOutput.trim(),
+    "```",
+    "</details>",
+    "",
+    `This comment is managed automatically by Nx Release. [Version plan guide](${VERSION_PLAN_GUIDE_URL})`
+  ].join("\n");
+}
+async function syncVersionPlanWarningComment(params) {
+  const managedComments = await listManagedWarningComments({
+    octokit: params.octokit,
+    owner: params.owner,
+    pullRequestNumber: params.pullRequestNumber,
+    repo: params.repo
+  });
+  if (!params.commentBody) {
+    if (managedComments.length === 0) {
+      return null;
+    }
+    for (const comment of managedComments) {
+      await params.octokit.rest.issues.deleteComment({
+        comment_id: comment.id,
+        owner: params.owner,
+        repo: params.repo
+      });
+    }
+    return {
+      commentId: managedComments[0].id,
+      commentUrl: managedComments[0].html_url,
+      operation: "deleted"
+    };
   }
-  return result.data;
+  const [primaryComment, ...duplicateComments] = managedComments;
+  for (const duplicateComment of duplicateComments) {
+    await params.octokit.rest.issues.deleteComment({
+      comment_id: duplicateComment.id,
+      owner: params.owner,
+      repo: params.repo
+    });
+  }
+  if (!primaryComment) {
+    const response2 = await params.octokit.rest.issues.createComment({
+      body: params.commentBody,
+      issue_number: params.pullRequestNumber,
+      owner: params.owner,
+      repo: params.repo
+    });
+    return {
+      commentId: response2.data.id,
+      commentUrl: response2.data.html_url,
+      operation: "created"
+    };
+  }
+  if ((primaryComment.body ?? "") === params.commentBody) {
+    return {
+      commentId: primaryComment.id,
+      commentUrl: primaryComment.html_url,
+      operation: "noop"
+    };
+  }
+  const response = await params.octokit.rest.issues.updateComment({
+    body: params.commentBody,
+    comment_id: primaryComment.id,
+    owner: params.owner,
+    repo: params.repo
+  });
+  return {
+    commentId: response.data.id,
+    commentUrl: response.data.html_url,
+    operation: "updated"
+  };
+}
+async function listManagedWarningComments(params) {
+  const comments = [];
+  let page = 1;
+  while (true) {
+    const response = await params.octokit.rest.issues.listComments({
+      issue_number: params.pullRequestNumber,
+      owner: params.owner,
+      page,
+      per_page: COMMENT_PAGE_SIZE,
+      repo: params.repo
+    });
+    const parsedComments = external_exports.array(PullRequestCommentSchema).safeParse(response.data);
+    if (!parsedComments.success) {
+      throw new Error(
+        `Failed to validate pull request comments payload: ${parsedComments.error.message}`
+      );
+    }
+    comments.push(
+      ...parsedComments.data.filter(
+        (comment) => comment.body?.includes(VERSION_PLAN_WARNING_MARKER)
+      )
+    );
+    if (parsedComments.data.length < COMMENT_PAGE_SIZE) {
+      return comments;
+    }
+    page += 1;
+  }
 }
 
-// scripts/sync-tags-releases.ts
-var execFileAsync2 = promisify(execFile);
-var OctokitErrorSchema = external_exports.object({
-  status: external_exports.number()
+// scripts/warn-version-plan-coverage-pr.ts
+var PullRequestEventSchema = external_exports.object({
+  pull_request: external_exports.object({
+    base: external_exports.object({ sha: external_exports.string() }),
+    head: external_exports.object({
+      ref: external_exports.string(),
+      repo: external_exports.object({ full_name: external_exports.string() }),
+      sha: external_exports.string()
+    }),
+    number: external_exports.number().int().positive(),
+    title: external_exports.string()
+  })
 });
-var PrDataSchema = external_exports.object({
-  body: external_exports.string(),
-  mergeCommit: external_exports.object({
-    oid: external_exports.string()
-  }).optional(),
-  number: external_exports.number()
-});
-var PrDataArraySchema = external_exports.array(PrDataSchema);
-async function extractChangelogSection(clPath, version2) {
-  if (!version2 || version2.trim() === "") {
-    return null;
-  }
-  try {
-    const lines = (await readFile(clPath, "utf8")).split("\n");
-    const escapedVersion = version2.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const pat = new RegExp(`^##\\s+.*${escapedVersion}`);
-    const s = lines.findIndex((l) => pat.test(l));
-    if (s < 0) return null;
-    const e = lines.findIndex((l, i) => i > s && /^##\s/.test(l));
-    return lines.slice(s, e < 0 ? void 0 : e).join("\n").trim();
-  } catch {
-    return null;
-  }
-}
-var getReleaseByTag404Error = /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
-async function releaseExists(octokit, owner, repo, tag) {
-  try {
-    await octokit.repos.getReleaseByTag({
-      owner,
-      repo,
-      request: {
-        // Suppress noisy 404 logs from Octokit when release doesn't exist
-        log: {
-          error: (...args) => {
-            const message = args.join(" ");
-            if (getReleaseByTag404Error.test(message)) {
-              return;
-            }
-            console.error(...args);
-          }
-        }
-      },
-      tag
-    });
-    return true;
-  } catch (err) {
-    const errorCheck = OctokitErrorSchema.safeParse(err);
-    if (errorCheck.success && errorCheck.data.status === 404) {
-      return false;
-    }
-    console.warn(`Error checking release ${tag}:`, err);
-    return false;
-  }
-}
-async function run(base) {
-  const octokit = createOctokit();
+var ANSI_ESCAPE_PATTERN = new RegExp(
+  String.raw`\u001B\[[0-?]*[ -/]*[@-~]`,
+  "g"
+);
+async function run() {
+  const pullRequest = await loadPullRequestContext();
   const { owner, repo } = await getRepoInfo();
-  const { data: pulls } = await octokit.pulls.list({
-    base,
-    direction: "desc",
-    head: `${owner}:nx-release/main`,
-    owner,
-    per_page: 20,
-    repo,
-    sort: "updated",
-    state: "closed"
-  });
-  const mergedPrs = pulls.filter((pr) => pr.merged_at !== null).map((pr) => ({
-    body: pr.body ?? "",
-    mergeCommit: pr.merge_commit_sha ? { oid: pr.merge_commit_sha } : void 0,
-    number: pr.number
-  }));
-  const validationResult = PrDataArraySchema.safeParse(mergedPrs);
-  if (!validationResult.success) {
-    console.error("PR data validation failed:", validationResult.error);
-    throw new Error("Unexpected PR list response: not an array of PR data");
-  }
-  const validatedPrs = validationResult.data;
-  const allEntries = /* @__PURE__ */ new Map();
-  for (const pr of validatedPrs) {
-    if (!pr.body) continue;
-    const mergeCommitSha = pr.mergeCommit?.oid;
-    const tagEntries = extractTagEntriesFromPRBody(pr.body);
-    for (const e of tagEntries) {
-      allEntries.set(e.tag, { ...e, mergeCommitSha });
-    }
-  }
-  if (allEntries.size === 0) {
-    console.log("No release tags found in merged Version Packages PRs");
-    return;
-  }
-  const newTags = [];
-  for (const entry of allEntries.values()) {
-    if (await tagExistsOnRemote(entry.tag)) {
-      console.log(`Tag ${entry.tag} already exists, skipping`);
-      continue;
-    }
-    const tagArgs = ["tag", "-a", entry.tag, "-m", `Release ${entry.tag}`];
-    if (entry.mergeCommitSha) {
-      tagArgs.push(entry.mergeCommitSha);
-      console.log(
-        `Creating tag ${entry.tag} on commit ${entry.mergeCommitSha.slice(0, 7)}`
-      );
-    } else {
-      console.log(
-        `::warning::No merge commit SHA found for ${entry.tag}, tagging current HEAD`
-      );
-    }
-    await execFileAsync2("git", tagArgs);
-    newTags.push(entry);
-    console.log(`Created tag: ${entry.tag}`);
-  }
-  if (newTags.length === 0) {
-    console.log("No new tags to push");
-    return;
-  }
-  await execFileAsync2("git", ["push", "origin", "--tags"]);
-  for (const { path, tag, version: version2 } of newTags) {
-    let notes = `Release ${tag}`;
-    if (path) {
-      const clPath = join(path, "CHANGELOG.md");
-      const section = await extractChangelogSection(clPath, version2);
-      if (section) notes = section;
-    }
-    if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`GitHub release ${tag} already exists, skipping`);
-      continue;
-    }
-    await octokit.repos.createRelease({
-      body: notes,
-      name: tag,
-      owner,
-      prerelease: version2.includes("-"),
-      repo,
-      tag_name: tag
+  const octokit = createOctokit();
+  let commentBody;
+  if (isManagedVersionPackagesPullRequest({
+    headRefName: pullRequest.head.ref,
+    title: pullRequest.title
+  })) {
+    console.log("Skipping warning comment on the managed Version Packages PR.");
+    commentBody = null;
+  } else {
+    commentBody = await buildWarningCommentBody({
+      baseSha: process.env.NX_BASE || pullRequest.base.sha,
+      headSha: process.env.NX_HEAD || pullRequest.head.sha
     });
-    console.log(`Created GitHub release: ${tag}`);
   }
+  const managedComment = await syncVersionPlanWarningComment({
+    commentBody,
+    octokit,
+    owner,
+    pullRequestNumber: pullRequest.number,
+    repo
+  });
+  if (!managedComment) {
+    console.log("No version plan warning comment change was required.");
+    return;
+  }
+  console.log(
+    `Version plan warning comment ${managedComment.operation}: ${managedComment.commentUrl}`
+  );
 }
-async function tagExistsOnRemote(tag) {
-  const { stdout } = await execFileAsync2("git", [
-    "ls-remote",
-    "--tags",
-    "origin",
-    `refs/tags/${tag}`
+async function buildWarningCommentBody(params) {
+  const nxPlanCheckOutput = await runNxReleasePlanCheck(params);
+  return nxPlanCheckOutput ? renderVersionPlanWarningComment({
+    nxPlanCheckOutput
+  }) : null;
+}
+async function execFileWithExitCode(command, args) {
+  return new Promise((resolve, reject) => {
+    execFile(
+      command,
+      args,
+      {
+        env: {
+          ...process.env,
+          FORCE_COLOR: "0"
+        },
+        maxBuffer: 10 * 1024 * 1024
+      },
+      (error48, stdout, stderr) => {
+        if (!error48) {
+          resolve({
+            exitCode: 0,
+            stderr,
+            stdout
+          });
+          return;
+        }
+        const exitCode = error48.code;
+        if (typeof exitCode === "number") {
+          resolve({
+            exitCode,
+            stderr,
+            stdout
+          });
+          return;
+        }
+        reject(
+          new Error(`Failed to execute ${command} ${args.join(" ")}`, {
+            cause: error48
+          })
+        );
+      }
+    );
+  });
+}
+async function loadPullRequestContext() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+  if (!eventPath) {
+    throw new Error("GITHUB_EVENT_PATH environment variable is required");
+  }
+  const rawEventPayload = await readFile(eventPath, "utf8");
+  let parsedPayload;
+  try {
+    parsedPayload = JSON.parse(rawEventPayload);
+  } catch (error48) {
+    throw new Error("Failed to parse GITHUB_EVENT_PATH payload", {
+      cause: error48
+    });
+  }
+  const parsedEvent = PullRequestEventSchema.safeParse(parsedPayload);
+  if (!parsedEvent.success) {
+    throw new Error(
+      `Pull request payload validation failed: ${parsedEvent.error.message}`
+    );
+  }
+  return parsedEvent.data.pull_request;
+}
+function normalizeCommandOutput(output) {
+  return output.replace(ANSI_ESCAPE_PATTERN, "").trim();
+}
+async function runNxReleasePlanCheck(params) {
+  const result = await execFileWithExitCode("pnpm", [
+    "nx",
+    "release",
+    "plan:check",
+    "--base",
+    params.baseSha,
+    "--head",
+    params.headSha
   ]);
-  return stdout.trim().length > 0;
+  const output = normalizeCommandOutput(
+    [result.stdout, result.stderr].filter(Boolean).join("\n")
+  );
+  if (result.exitCode === 0) {
+    return null;
+  }
+  if (output.includes("Touched projects missing version plans")) {
+    return output;
+  }
+  throw new Error(
+    output.length > 0 ? `nx release plan:check failed unexpectedly:
+${output}` : "nx release plan:check failed unexpectedly"
+  );
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
-  run(process.env.BASE_BRANCH ?? "main").catch((err) => {
-    console.error("Unexpected error in sync-tags-releases:", err);
+  run().catch((error48) => {
+    console.error("Unexpected error in warn-version-plan-coverage-pr:", error48);
     process.exit(1);
   });
 }
@@ -17629,4 +17723,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   (* v8 ignore else -- @preserve *)
 */
 
-export { extractChangelogSection, releaseExists, run, tagExistsOnRemote };
+export { run };
