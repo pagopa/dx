@@ -4,10 +4,10 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 
 ## Features
 
-- Three `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking.
+- Two `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads).
 - Microsoft Entra authentication only. Access keys are permanently disabled on the default database.
 - System-assigned managed identity, provisioned automatically.
-- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` and `high_throughput` use cases).
+- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` use case).
 - Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
 - Five built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
@@ -15,15 +15,25 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 
 ## Use cases
 
-| Use case          | SKU                    | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
-| ----------------- | ---------------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
-| `default`         | `Balanced_B3`          | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
-| `development`     | `Balanced_B0`          | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
-| `high_throughput` | `ComputeOptimized_X3`  | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+| Use case      | SKU             | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
+| ------------- | --------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
+| `default`     | `Balanced_B3`   | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+| `development` | `Balanced_B0`   | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
+
+### Scaling
+
+Both presets default to `Balanced` SKUs. To scale up — for example to a ComputeOptimized SKU for high-throughput workloads — set `sku_name_override` while keeping `use_case = "default"`:
+
+```hcl
+use_case          = "default"
+sku_name_override = "ComputeOptimized_X3"
+```
+
+`sku_name_override` accepts any `Balanced_*` or `ComputeOptimized_*` SKU. `Balanced_B0` is restricted to `use_case = "development"` because it does not support HA or data persistence.
 
 ## Alerts
 
-When `use_case` is `default` or `high_throughput`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
+When `use_case` is `default`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
 
 ### Default alert matrix
 
@@ -96,12 +106,12 @@ module "managed_redis" {
 ## Key defaults
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
-- **Networking:** private by default (`default`, `high_throughput`). `development` provisions a public-only instance to simplify local iterations.
+- **Networking:** private by default. `development` provisions a public-only instance to simplify local iterations.
 - **Database (fully opinionated, not configurable):** `client_protocol = Encrypted` (TLS), `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`. No Redis modules are installed.
 - **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network_id` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the virtual network's resource group (extracted from `virtual_network_id` using `parse_resource_id`) unless `private_dns_zone_resource_group_name` is set.
 - **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.
-- **Port:** the default database listens on port `10000`.
+- **Endpoint:** consumers connect via the `endpoint` output (`hostname:port`); the default database listens on port `10000`.
 
 ## Unsupported on purpose
 

@@ -26,11 +26,11 @@ variable "resource_group_name" {
 variable "virtual_network_id" {
   type        = string
   default     = null
-  description = "The resource ID of the virtual network hosting the private endpoint. Required for 'default' and 'high_throughput' use cases, used to locate the 'privatelink.redis.azure.net' DNS zone."
+  description = "The resource ID of the virtual network hosting the private endpoint. Required when use_case is 'default'; used to locate the 'privatelink.redis.azure.net' DNS zone."
 
   validation {
     condition     = var.use_case == "development" || var.virtual_network_id != null
-    error_message = "virtual_network_id is required when use_case is 'default' or 'high_throughput'."
+    error_message = "virtual_network_id is required when use_case is 'default'."
   }
 
   validation {
@@ -48,12 +48,12 @@ variable "private_dns_zone_resource_group_name" {
 # ------------ REDIS ------------ #
 variable "use_case" {
   type        = string
-  description = "DX preset for Azure Managed Redis. Allowed values are 'default', 'development', and 'high_throughput'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access."
+  description = "DX preset for Azure Managed Redis. Allowed values are 'default' and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku_name_override."
   default     = "default"
 
   validation {
-    condition     = contains(["default", "development", "high_throughput"], var.use_case)
-    error_message = "Allowed values for use_case are 'default', 'development', and 'high_throughput'."
+    condition     = contains(["default", "development"], var.use_case)
+    error_message = "Allowed values for use_case are 'default' and 'development'."
   }
 }
 
@@ -102,17 +102,17 @@ variable "sku_name_override" {
 # ------------ OBSERVABILITY ------------ #
 variable "log_analytics_workspace_id" {
   type        = string
-  description = "The ID of the Log Analytics workspace to send diagnostics to. Required unless use_case is 'development'."
+  description = "The ID of the Log Analytics workspace to send diagnostics to. Required when use_case is 'default'."
   default     = null
 
   validation {
     condition     = var.use_case == "development" || var.log_analytics_workspace_id != null
-    error_message = "log_analytics_workspace_id is required when use_case is 'default' or 'high_throughput'."
+    error_message = "log_analytics_workspace_id is required when use_case is 'default'."
   }
 }
 
 variable "alerts" {
-  description = "Metric alert configuration. Alerts are enabled by default for 'default' and 'high_throughput' use cases with sensible thresholds."
+  description = "Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds."
   type = object({
     action_group_id = optional(string, null)
     thresholds = optional(object({
