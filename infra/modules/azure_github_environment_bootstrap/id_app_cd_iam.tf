@@ -11,7 +11,7 @@ resource "azurerm_role_assignment" "app_cd_rgs_deploy" {
   for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "dx-app-cd-rg-deploy"
+  role_definition_name = "DX App CD Resource Groups"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
   description          = "Allow ${var.repository.name} App CD identity to deploy application resources at ${each.value} resource group scope"
 }

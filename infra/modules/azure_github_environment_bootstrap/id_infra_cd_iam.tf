@@ -1,7 +1,7 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_cd_subscription_admin" {
   scope                = var.subscription_id
-  role_definition_name = "dx-infra-cd-subscription-admin"
+  role_definition_name = "DX Infra CD Subscription"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage subscription infrastructure and IAM at subscription scope"
 }
@@ -11,7 +11,7 @@ resource "azurerm_role_assignment" "infra_cd_rgs_deploy" {
   for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "dx-infra-cd-rg-deploy"
+  role_definition_name = "DX Infra CD Resource Groups"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to deploy infrastructure resources at ${each.value} resource group scope"
 }
@@ -27,7 +27,7 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
 # Private DNS Zone
 resource "azurerm_role_assignment" "infra_cd_rg_private_networking" {
   scope                = var.private_dns_zone_resource_group_id
-  role_definition_name = "dx-infra-cd-private-networking"
+  role_definition_name = "DX Infra CD Private Networking"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage private DNS zones and endpoint networking at resource group level"
 }
@@ -37,7 +37,7 @@ resource "azurerm_role_assignment" "infra_cd_rg_nat_gw_private_networking" {
   count = (var.private_dns_zone_resource_group_id == var.nat_gateway_resource_group_id) || (var.nat_gateway_resource_group_id == null) ? 0 : 1 # avoid duplicated assignment on the same rg
 
   scope                = var.nat_gateway_resource_group_id
-  role_definition_name = "dx-infra-cd-private-networking"
+  role_definition_name = "DX Infra CD Private Networking"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to associate NAT Gateways to subnets at resource group level"
 }

@@ -11,7 +11,7 @@ resource "azurerm_role_assignment" "app_ci_rgs_reader" {
   for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "dx-app-ci-rg-reader"
+  role_definition_name = "DX App CI Resource Groups"
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
   description          = "Allow ${var.repository.name} App CI identity to read application configuration and Static Web App secrets at ${each.value} resource group scope"
 }
