@@ -1,3 +1,16 @@
+## 0.16.1 (2026-04-29)
+
+### 🩹 Fixes
+
+- Update Nx release docs for the PR warning flow ([#1651](https://github.com/pagopa/dx/pull/1651))
+
+  The documentation now explains the warning shown on pull requests, what it
+  means, and how to resolve it with a version plan.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.16.0 (2026-04-17)
 
 ### 🚀 Features

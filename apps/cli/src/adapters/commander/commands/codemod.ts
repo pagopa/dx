@@ -3,6 +3,7 @@ import { Command } from "commander";
 
 import { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
 import { ListCodemods } from "../../../use-cases/list-codemods.js";
+import { exitWithError } from "../index.js";
 
 export type CodemodCommandDependencies = {
   applyCodemodById: ApplyCodemodById;
@@ -23,7 +24,7 @@ export const makeCodemodCommand = ({
             .andTee((codemods) =>
               console.table(codemods, ["id", "description"]),
             )
-            .orTee((error) => this.error(error.message));
+            .orTee(exitWithError(this));
         }),
     )
     .addCommand(
@@ -36,6 +37,6 @@ export const makeCodemodCommand = ({
             .andTee(() => {
               logger.info("Codemod applied ✅");
             })
-            .orTee((error) => this.error(error.message));
+            .orTee(exitWithError(this));
         }),
     );

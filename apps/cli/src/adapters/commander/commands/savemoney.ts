@@ -3,6 +3,8 @@ import type { AzureConfig } from "@pagopa/dx-savemoney";
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command } from "commander";
 
+import { exitWithError, GlobalOptions } from "../index.js";
+
 export const makeSavemoneyCommand = () =>
   new Command("savemoney")
     .description(
@@ -24,12 +26,12 @@ export const makeSavemoneyCommand = () =>
       "Number of days for metrics analysis (overrides config file)",
       "30",
     )
-    .option("-v, --verbose", "Enable verbose logging")
     .option(
       "-t, --tags <tags...>",
       "Filter resources by tags (key=value key2=value2). Only resources matching ALL specified tags are analyzed.",
     )
     .action(async function (options) {
+      const { verbose } = this.optsWithGlobals<GlobalOptions>();
       try {
         // Load configuration from YAML (includes subscriptionIds, location, timespanDays, thresholds)
         const config: AzureConfig = await loadConfig(options.config);
@@ -43,13 +45,15 @@ export const makeSavemoneyCommand = () =>
           preferredLocation: options.location || config.preferredLocation,
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
-          verbose: options.verbose || false,
+          verbose: verbose ?? false,
         };
         // Run analysis
         await azure.analyzeAzureResources(finalConfig, options.format);
       } catch (error) {
-        this.error(
-          `Analysis failed: ${error instanceof Error ? error.message : error}`,
+        exitWithError(this)(
+          error instanceof Error
+            ? new Error(`Analysis failed: ${error.message}`, { cause: error })
+            : new Error(`Analysis failed: ${String(error)}`),
         );
       }
     });

@@ -1,9 +1,26 @@
+## 0.21.0 (2026-04-29)
+
+### 🚀 Features
+
+- Add a global `--verbose` / `-v` flag and improve error messages precision across every `dx` subcommand. ([#1667](https://github.com/pagopa/dx/pull/1667))
+
+  - The flag is now defined on the root program, so `dx --verbose <command>` (or `dx <command> --verbose`) works for `doctor`, `codemod`, `init`, `add`, `info` and `savemoney`. The existing subcommand-local `--verbose` on `savemoney` has been removed in favor of the inherited global option (same short/long names, same semantics).
+  - When `--verbose` is active, the logger is configured at `debug` level so that detailed progress information emitted by internal components (cloud-account initialization, plop generators, Azure/GitHub adapters, etc.) is visible.
+  - When a command fails in verbose mode, the CLI now prints the full error chain — including the underlying `cause` and the stack trace — instead of the top-level message alone.
+  - Fix: `dx init project` no longer reports `ERR dx-cli·init Error on '<step>' step. undefined`. The plop action-runner was reading a non-existent `failure.message` property; it now reads `failure.error` (the field actually populated by `node-plop`) and includes the failing step type in the surfaced message. When multiple actions fail in the same run, all of them are aggregated in the thrown error.
+  - Internal refactor: command handlers now propagate the original exception as `cause` when wrapping errors, and route failures through a shared `exitWithError` helper that decides between the concise and the detailed format based on the global verbose flag.
+
+  No migration required for consumers. Existing scripts that pass `--verbose` to `dx savemoney` continue to work unchanged.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.20.2 (2026-04-27)
 
 ### 🩹 Fixes
 
 - Add roles: ([#1584](https://github.com/pagopa/dx/pull/1584))
-
   - Contributor
   - Storage Blob Data Contributor
   - Role Based Access Control Administrator
