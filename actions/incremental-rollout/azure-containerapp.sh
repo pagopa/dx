@@ -20,7 +20,7 @@ __set_traffic() {
 }
 
 __swap_versions() {
-  __revert_traffic "$1" "$2"
+  __set_traffic "$1" "$2" "100"
 }
 
 __finalize() { :; }
