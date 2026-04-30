@@ -1,0 +1,12 @@
+{
+  "name": "azure_managed_redis",
+  "version": "0.0.0",
+  "private": true,
+  "provider": "azurerm",
+  "description": "Provisions Azure Managed Redis with DX-oriented defaults, networking, and observability",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
+}
