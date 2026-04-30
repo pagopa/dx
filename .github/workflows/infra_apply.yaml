@@ -237,14 +237,12 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Plan
-        working-directory: ${{ steps.directory.outputs.dir }}
-        run: |
-          set -o pipefail
-          terraform plan \
-            -lock-timeout=120s \
-            -out="$TFPLAN_FILE" \
-            -input=false \
-            | grep -v "hidden-link:"
+        uses: pagopa/dx/actions/filter-terraform-plan@main
+        with:
+          base-path: ${{ steps.directory.outputs.dir }}
+          sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
+          plan-file: ${{ env.TFPLAN_FILE }}
+
       # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
       # and upload it to the same storage backend used for the Terraform state.
       # The bundle path is derived automatically from the backend config.
@@ -366,12 +364,8 @@ jobs:
           terraform init -input=false
 
       - name: Terraform Apply
-        working-directory: ${{ matrix.dir }}
-        run: |
-          set -o pipefail
-          terraform apply \
-            -lock-timeout=120s \
-            -auto-approve \
-            -input=false \
-            "$TFPLAN_FILE" \
-            | grep -v "hidden-link:"
+        uses: pagopa/dx/actions/filter-terraform-apply@main
+        with:
+          base-path: ${{ matrix.dir }}
+          plan-file: ${{ env.TFPLAN_FILE }}
+          sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY

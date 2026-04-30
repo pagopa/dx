@@ -62,29 +62,24 @@ if [[ -z "$SENSITIVE_KEYS" || -z "$PLAN_FILE" ]]; then
   usage
 fi
 
-# --- Dynamically build the sed filter expressions ---
-# Builds an array of sed filter expressions from the comma-separated SENSITIVE_KEYS.
+mask_output() {
+  SENSITIVE_KEYS="$SENSITIVE_KEYS" perl -ne '
+    BEGIN {
+      @keys = grep { length } map { s/^\s+|\s+$//gr } split /,/, ($ENV{SENSITIVE_KEYS} // q{});
+    }
 
-SED_EXPRESSIONS=()
+    for my $key (@keys) {
+      s/("?\Q$key\E[^"]*"?\s*=\s*)"[^"]*"(\s*->\s*)"[^"]*"/$1"[REDACTED]"$2"[REDACTED]"/ig;
+      s/("?\Q$key\E[^"]*"?\s*=\s*)"[^"]*"/$1"[REDACTED]"/ig;
+    }
 
-for key in $(echo "$SENSITIVE_KEYS" | tr ',' '\n'); do
-  trimmed_key=$(echo "$key" | xargs)
-  if [[ -n "$trimmed_key" ]]; then
-    # Matches an optional-quoted key followed by =, then a quoted value;
-    # it captures the left side, check if contain the sensitive key and replaces the value with "[REDACTED]" (case-insensitive).
-    SED_EXPRESSIONS+=(-e "s/(\"?${trimmed_key}[^\"]*\"?\s*=\s*)\"[^\"]*\"/\\1\"[REDACTED]\"/I")
-  fi
-done
+    s/-----BEGIN\s+.*?-----.*?-----END\s+.*?-----/[REDACTED]/ig;
+    s/("?[^"\s]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)"?\s*[:=]\s*)"([^"]{12,})"(\s*->\s*)"([^"]{12,})"/$1"[REDACTED]"$5"[REDACTED]"/ig;
+    s/("?[^"\s]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)"?\s*[:=]\s*)"([^"]{12,})"/$1"[REDACTED]"/ig;
 
-# --- Add generic regex filters for high-risk patterns ---
-SED_EXPRESSIONS+=(
-  # Anything that looks like a private key block (keep - very specific)
-  -e "s/-----BEGIN[[:space:]]+.*?-----.*?-----END[[:space:]]+.*?-----/[REDACTED]/gI"
-
-  # Named secret/key assignments: only redact when the left-hand side is a known secret name
-  # Matches constructs like: Password=abcd..., "api_key": "abcd...", SharedAccessKey:abcd...
-  -e "s/(\"?[^\"[:space:]]*(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)([^A-Za-z0-9]|$)\"?\s*[:=]\s*)\"([^\"]{12,})\"/\\1\"[REDACTED]\"/I"
-)
+    print;
+  '
+}
 
 echo "--- Executing Plan ---"
 
@@ -92,7 +87,7 @@ echo "--- Executing Plan ---"
 set +e
 
 if [[ "$MODE" == "test" ]]; then
-  sed -E "${SED_EXPRESSIONS[@]}"
+  mask_output
   exit 0
 fi
 
@@ -106,7 +101,7 @@ terraform plan \
   -lock-timeout=120s \
   $ADDITIONAL_FLAGS \
   -input=false 2>&1 | \
-  sed -E "${SED_EXPRESSIONS[@]}" | \
+  mask_output | \
   tee "$PLAN_FILE"
 
 

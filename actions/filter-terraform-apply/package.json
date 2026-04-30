@@ -1,0 +1,16 @@
+{
+  "name": "filter-terraform-apply",
+  "description": "A GitHub action to run and filter terraform apply.",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "keywords": [
+    "github",
+    "action",
+    "terraform",
+    "apply"
+  ],
+  "scripts": {
+    "test": "sh test.sh"
+  }
+}
