@@ -123,33 +123,13 @@ run "function_app_is_correct_plan" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.function_storage_blob_data_owner != null
-    error_message = "Function App must have role assignment to manage blobs in the storage account"
+    condition     = azurerm_role_assignment.function_host_storage.role_definition_name == "DX Function Host Storage"
+    error_message = "Function App must use the merged host storage role assignment"
   }
 
   assert {
-    condition     = azurerm_role_assignment.function_storage_account_contributor != null
-    error_message = "Function App must have role assignment to manage the storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.function_storage_queue_data_contributor != null
-    error_message = "Function App must have role assignment to manage queues in the storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_function_storage_blob_data_owner != null
-    error_message = "Function App staging slot must have role assignment to manage blobs in the storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_function_storage_account_contributor != null
-    error_message = "Function App staging slot must have role assignment to manage the storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_function_storage_queue_data_contributor != null
-    error_message = "Function App staging slot must have role assignment to manage queues in the storage account"
+    condition     = azurerm_role_assignment.staging_function_host_storage[0].role_definition_name == "DX Function Host Storage"
+    error_message = "Function App staging slot must use the merged host storage role assignment"
   }
 
   assert {
@@ -178,33 +158,13 @@ run "function_app_with_durable_function" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.durable_function_storage_blob_data_contributor[0] != null
-    error_message = "Function App must have role assignment to manage blobs in the Durable Function storage account"
+    condition     = azurerm_role_assignment.durable_function_storage[0].role_definition_name == "DX Function Durable Storage"
+    error_message = "Function App must use the merged durable storage role assignment"
   }
 
   assert {
-    condition     = azurerm_role_assignment.durable_function_storage_queue_data_contributor[0] != null
-    error_message = "Function App must have role assignment to manage queues in the Durable Function storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.durable_function_storage_table_data_contributor[0] != null
-    error_message = "Function App must have role assignment to manage tables in the Durable Function storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_durable_function_storage_blob_data_contributor[0] != null
-    error_message = "Function App staging slot must have role assignment to manage blobs in the Durable Function storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_durable_function_storage_queue_data_contributor[0] != null
-    error_message = "Function App staging slot must have role assignment to manage queues in the Durable Function storage account"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.staging_durable_function_storage_table_data_contributor[0] != null
-    error_message = "Function App staging slot must have role assignment to manage tables in the Durable Function storage account"
+    condition     = azurerm_role_assignment.staging_durable_function_storage[0].role_definition_name == "DX Function Durable Storage"
+    error_message = "Function App staging slot must use the merged durable storage role assignment"
   }
 }
 
