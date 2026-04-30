@@ -52,9 +52,28 @@ jobs:
         working-directory: infra/bootstrapper/${{ inputs.environment }}
         run: |
           terraform init -input=false
+      - name: Create GitHub App token
+        id: github-app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+
+      - name: Verify GitHub App installation
+        env:
+          ACTUAL_INSTALLATION_ID: ${{ steps.github-app-token.outputs.installation-id }}
+          EXPECTED_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+        run: |
+          set -euo pipefail
+          if [ "$ACTUAL_INSTALLATION_ID" != "$EXPECTED_INSTALLATION_ID" ]; then
+            echo "::error::Resolved GitHub App installation ID does not match GH_APP_INSTALLATION_ID."
+            exit 1
+          fi
 
       - name: Terraform Apply
         working-directory: infra/bootstrapper/${{ inputs.environment }}
+        env:
+          GITHUB_TOKEN: ${{ steps.github-app-token.outputs.token }}
         run: |
           set -o pipefail
           terraform apply -auto-approve -input=false

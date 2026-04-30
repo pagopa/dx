@@ -308,9 +308,13 @@ describe("isInitialized", () => {
 });
 
 describe("initialize", () => {
-  test("assigns bootstrap roles to the bootstrap identity", async ({
+  test("assigns bootstrap roles and creates bootstrap environment secrets", async ({
     cloudAccountService,
   }) => {
+    const createOrUpdateEnvironmentSecret = vi
+      .fn()
+      .mockResolvedValue(undefined);
+
     await cloudAccountService.initialize(
       {
         csp: "azure",
@@ -333,7 +337,7 @@ describe("initialize", () => {
       },
       {
         createBranch: vi.fn(),
-        createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+        createOrUpdateEnvironmentSecret,
         createPullRequest: vi.fn(),
         getFileContent: vi.fn(),
         getRepository: vi.fn(),
@@ -382,5 +386,48 @@ describe("initialize", () => {
         subject: "repo:pagopa/dx:environment:bootstrapper-dev-cd",
       },
     );
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledTimes(6);
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "ARM_CLIENT_ID",
+      secretValue: "client-1",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "ARM_TENANT_ID",
+      secretValue: "tenant-1",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "ARM_SUBSCRIPTION_ID",
+      secretValue: "sub-1",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "GH_APP_ID",
+      secretValue: "app-id",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "GH_APP_INSTALLATION_ID",
+      secretValue: "installation-id",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "GH_APP_KEY",
+      secretValue: "private-key",
+    });
   });
 });
