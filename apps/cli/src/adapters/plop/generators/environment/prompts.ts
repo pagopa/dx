@@ -1,3 +1,4 @@
+import chalk from "chalk";
 import inquirer, { DistinctQuestion } from "inquirer";
 import { type DynamicPromptsFunction } from "node-plop";
 import * as assert from "node:assert/strict";
@@ -180,10 +181,11 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       return payload;
     }
 
+    console.log(formatInitializationDetails(initStatus));
+
     const initConfirm = await inquirer.prompt({
       default: true,
-      message:
-        "The environment is not initialized. Do you want to initialize it now?",
+      message: `The environment "${payload.env.name}" is not initialized. Proceed with the setup above?`,
       name: "init",
       type: "confirm",
     });
@@ -292,5 +294,55 @@ export const getCloudAccountToInitialize = (
   initStatus.issues
     .filter((issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED")
     .map((issue) => issue.cloudAccount);
+
+/**
+ * Build a human-readable description of the resources that will be created
+ * when initializing an environment, so users see the side effects before
+ * confirming. The exact resource names are intentionally omitted to avoid
+ * coupling the prompt copy to internal naming conventions.
+ */
+export const formatInitializationDetails = (
+  initStatus: EnvironmentInitStatus & { initialized: false },
+): string => {
+  const accountsToInit = getCloudAccountToInitialize(initStatus);
+  const missingBackend = initStatus.issues.some(
+    (issue) => issue.type === "MISSING_REMOTE_BACKEND",
+  );
+
+  const sections: string[] = [];
+
+  for (const account of accountsToInit) {
+    sections.push(
+      [
+        chalk.bold.cyan(`  Azure subscription "${account.displayName}":`),
+        `    • Bootstrap resource group and managed identity with subscription-scoped roles`,
+        `    • GitHub OIDC federated identity credential`,
+        `    • GitHub environment secrets (ARM_CLIENT_ID, ARM_SUBSCRIPTION_ID)`,
+        `    • Common Key Vault storing the GitHub runner app credentials`,
+      ].join("\n"),
+    );
+  }
+
+  if (missingBackend) {
+    sections.push(
+      [
+        chalk.bold.cyan(`  Terraform remote backend:`),
+        `    • Azure resource group and Storage Account for the Terraform state`,
+      ].join("\n"),
+    );
+  }
+
+  if (sections.length === 0) {
+    return "";
+  }
+
+  return [
+    "",
+    chalk.bold("The following resources will be created:"),
+    "",
+    ...sections,
+    "",
+  ].join("\n");
+};
 
 export default prompts;

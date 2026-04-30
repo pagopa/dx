@@ -3,7 +3,6 @@
 ### 🚀 Features
 
 - Add a global `--verbose` / `-v` flag and improve error messages precision across every `dx` subcommand. ([#1667](https://github.com/pagopa/dx/pull/1667))
-
   - The flag is now defined on the root program, so `dx --verbose <command>` (or `dx <command> --verbose`) works for `doctor`, `codemod`, `init`, `add`, `info` and `savemoney`. The existing subcommand-local `--verbose` on `savemoney` has been removed in favor of the inherited global option (same short/long names, same semantics).
   - When `--verbose` is active, the logger is configured at `debug` level so that detailed progress information emitted by internal components (cloud-account initialization, plop generators, Azure/GitHub adapters, etc.) is visible.
   - When a command fails in verbose mode, the CLI now prints the full error chain — including the underlying `cause` and the stack trace — instead of the top-level message alone.
