@@ -22,11 +22,17 @@ jobs:
     runs-on: dev
     environment: automation-dev-cd
     permissions:
+      actions: write
       id-token: write
       contents: read
     env:
       ARM_CLIENT_ID: ${{ secrets.INTEGRATION_ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
+      GITHUB_TOKEN: ${{ github.token }}
+      E2E_GITHUB_RUNNER_PAT: ${{ secrets.E2E_GITHUB_RUNNER_PAT }}
+      E2E_GITHUB_APP_ID: ${{ secrets.E2E_GITHUB_APP_ID }}
+      E2E_GITHUB_APP_INSTALLATION_ID: ${{ secrets.E2E_GITHUB_APP_INSTALLATION_ID }}
+      E2E_GITHUB_APP_PRIVATE_KEY: ${{ secrets.E2E_GITHUB_APP_PRIVATE_KEY }}
 
     steps:
       - name: Ensure Slack Webhook is Set
@@ -88,5 +94,7 @@ jobs:
         with:
           id: "Terraform E2E Tests"
           title: "*Terraform E2E Tests failed*"
-          text: "One or more end-to-end tests failed in the weekly run. Please check the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|workflow run> for details."
+          text: "One or more end-to-end tests failed in the weekly run. Please check the
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+            github.run_id }}|workflow run> for details."
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
