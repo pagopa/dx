@@ -71,27 +71,101 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = module.dx_app_ci_resource_group_reader.custom_role_name == "DX App CI Resource Groups"
-    error_message = "The App CI merged custom role must be created at subscription scope"
+    condition = (
+      module.dx_app_cd_resource_group_deploy.custom_role_name == "DX App CD Resource Groups" &&
+      startswith(
+        module.dx_app_cd_resource_group_deploy.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The App CD merged custom role must have the expected name and be created at subscription scope"
   }
 
   assert {
-    condition     = module.dx_infra_ci_subscription_reader.custom_role_name == "DX Infra CI Subscription"
-    error_message = "The Infra CI merged custom role must be created at subscription scope"
+    condition = (
+      module.dx_app_ci_resource_group_reader.custom_role_name == "DX App CI Resource Groups" &&
+      startswith(
+        module.dx_app_ci_resource_group_reader.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The App CI merged custom role must have the expected name and be created at subscription scope"
   }
 
   assert {
-    condition     = module.dx_infra_cd_subscription_admin.custom_role_name == "DX Infra CD Subscription"
-    error_message = "The Infra CD merged custom role must be created at subscription scope"
+    condition = (
+      module.dx_infra_cd_private_networking.custom_role_name == "DX Infra CD Private Networking" &&
+      startswith(
+        module.dx_infra_cd_private_networking.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Infra CD private networking merged custom role must have the expected name and be created at subscription scope"
   }
 
   assert {
-    condition     = module.dx_function_host_storage.custom_role_name == "DX Function Host Storage"
-    error_message = "The Function App host storage merged custom role must be created at subscription scope"
+    condition = (
+      module.dx_infra_cd_resource_group_deploy.custom_role_name == "DX Infra CD Resource Groups" &&
+      startswith(
+        module.dx_infra_cd_resource_group_deploy.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Infra CD merged custom role must have the expected name and be created at subscription scope"
   }
 
   assert {
-    condition     = module.dx_function_durable_storage.custom_role_name == "DX Function Durable Storage"
-    error_message = "The Function App durable storage merged custom role must be created at subscription scope"
+    condition = (
+      module.dx_infra_cd_subscription_admin.custom_role_name == "DX Infra CD Subscription" &&
+      startswith(
+        module.dx_infra_cd_subscription_admin.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Infra CD subscription merged custom role must have the expected name and be created at subscription scope"
+  }
+
+  assert {
+    condition = (
+      module.dx_infra_ci_resource_group_reader.custom_role_name == "DX Infra CI Resource Groups" &&
+      startswith(
+        module.dx_infra_ci_resource_group_reader.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Infra CI merged custom role must have the expected name and be created at subscription scope"
+  }
+
+  assert {
+    condition = (
+      module.dx_infra_ci_subscription_reader.custom_role_name == "DX Infra CI Subscription" &&
+      startswith(
+        module.dx_infra_ci_subscription_reader.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Infra CI subscription merged custom role must have the expected name and be created at subscription scope"
+  }
+
+  assert {
+    condition = (
+      module.dx_function_host_storage.custom_role_name == "DX Function Host Storage" &&
+      startswith(
+        module.dx_function_host_storage.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Function App host storage merged custom role must have the expected name and be created at subscription scope"
+  }
+
+  assert {
+    condition = (
+      module.dx_function_durable_storage.custom_role_name == "DX Function Durable Storage" &&
+      startswith(
+        module.dx_function_durable_storage.custom_role_id,
+        "${data.azurerm_subscription.current.id}/providers/Microsoft.Authorization/roleDefinitions/"
+      )
+    )
+    error_message = "The Function App durable storage merged custom role must have the expected name and be created at subscription scope"
   }
 }
