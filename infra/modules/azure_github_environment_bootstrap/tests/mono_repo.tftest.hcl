@@ -18,11 +18,14 @@ run "validate_github_id_app" {
 
   plan_options {
     target = [
+      azurerm_user_assigned_identity.app_ci,
       azurerm_user_assigned_identity.app_cd,
+      azurerm_federated_identity_credential.github_app_ci,
       azurerm_federated_identity_credential.github_app_cd,
+      azurerm_role_assignment.app_ci_subscription_reader,
+      azurerm_role_assignment.app_ci_rgs_reader,
       azurerm_role_assignment.app_cd_subscription_reader,
-      azurerm_role_assignment.app_cd_rgs_website_contributor,
-      azurerm_role_assignment.app_cd_rgs_cdn_profile_contributor,
+      azurerm_role_assignment.app_cd_rgs_deploy,
       azurerm_role_assignment.app_cd_tf_rg_blob_contributor,
     ]
   }
@@ -71,8 +74,18 @@ run "validate_github_id_app" {
   }
 
   assert {
+    condition     = azurerm_user_assigned_identity.app_ci != null
+    error_message = "The App CI user assigned identity is not set"
+  }
+
+  assert {
     condition     = azurerm_user_assigned_identity.app_cd.name == "dx-d-itn-test-app-github-cd-id-02"
     error_message = "The App CD user assigned identity has the wrong name"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci != null
+    error_message = "The App CI GitHub federation is not set"
   }
 
   assert {
@@ -81,18 +94,23 @@ run "validate_github_id_app" {
   }
 
   assert {
+    condition     = azurerm_role_assignment.app_ci_subscription_reader != null
+    error_message = "The App CI user assigned identity is not Reader of the subscription"
+  }
+
+  assert {
+    condition     = length(azurerm_role_assignment.app_ci_rgs_reader) == 1
+    error_message = "The App CI user assigned identity is not bound to the merged reader role of the resource group"
+  }
+
+  assert {
     condition     = azurerm_role_assignment.app_cd_subscription_reader != null
     error_message = "The App CD user assigned identity is not Reader of the subscription"
   }
 
   assert {
-    condition     = length(azurerm_role_assignment.app_cd_rgs_website_contributor) == 1
-    error_message = "The App CD user assigned identity is not Wesbsite Contributor of the resource group"
-  }
-
-  assert {
-    condition     = length(azurerm_role_assignment.app_cd_rgs_cdn_profile_contributor) == 1
-    error_message = "The App CD user assigned identity is not CDN Endpoint Contributor of the resource group"
+    condition     = length(azurerm_role_assignment.app_cd_rgs_deploy) == 1
+    error_message = "The App CD user assigned identity is not bound to the merged deploy role of the resource group"
   }
 
   assert {
@@ -111,38 +129,18 @@ run "validate_github_id_infra" {
       azurerm_federated_identity_credential.github_infra_ci,
       azurerm_federated_identity_credential.github_infra_cd,
       azurerm_role_assignment.infra_ci_subscription_reader,
-      azurerm_role_assignment.infra_ci_subscription_data_access,
-      azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader,
-      azurerm_role_assignment.infra_ci_rgs_cosmos_contributor,
+      azurerm_role_assignment.infra_ci_rgs_reader,
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
-      azurerm_role_assignment.infra_ci_rgs_kv_secr,
-      azurerm_role_assignment.infra_ci_rgs_kv_cert,
-      azurerm_role_assignment.infra_ci_rgs_kv_crypto,
-      azurerm_role_assignment.infra_ci_rgs_st_blob_reader,
-      azurerm_role_assignment.infra_ci_rgs_st_queue_reader,
-      azurerm_role_assignment.infra_ci_rgs_st_table_reader,
       azurerm_key_vault_access_policy.infra_ci_kv_common,
-      azurerm_role_assignment.infra_ci_rgs_ca_operator,
-      azurerm_role_assignment.infra_cd_subscription_reader,
-      azurerm_role_assignment.infra_cd_subscription_rbac_admin,
-      azurerm_role_assignment.infra_cd_rgs_contributor,
+      azurerm_role_assignment.infra_cd_subscription_admin,
+      azurerm_role_assignment.infra_cd_rgs_deploy,
       azurerm_role_assignment.infra_cd_vnet_network_contributor,
       azurerm_role_assignment.infra_cd_apim_service_contributor,
       azurerm_role_assignment.infra_cd_sbns_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
-      azurerm_role_assignment.infra_cd_rgs_user_access_admin,
-      azurerm_role_assignment.infra_cd_rgs_kv_secr,
-      azurerm_role_assignment.infra_cd_rgs_kv_cert,
-      azurerm_role_assignment.infra_cd_rgs_kv_crypto,
-      azurerm_role_assignment.infra_cd_rgs_st_blob_contributor,
-      azurerm_role_assignment.infra_ci_rgs_st_queue_contributor,
-      azurerm_role_assignment.infra_ci_rgs_st_table_contributor,
-      azurerm_role_assignment.infra_cd_rg_ext_network_dns_zone_contributor,
-      azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor,
-      azurerm_role_assignment.infra_cd_rg_network_contributor,
-      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_private_networking,
+      azurerm_role_assignment.infra_cd_rg_nat_gw_private_networking,
       azurerm_key_vault_access_policy.infra_cd_kv_common,
-      azurerm_role_assignment.infra_cd_rgs_ca_contributor,
     ]
   }
 
@@ -212,22 +210,12 @@ run "validate_github_id_infra" {
 
   assert {
     condition     = azurerm_role_assignment.infra_ci_subscription_reader != null
-    error_message = "The Infra CI managed identity can't read resources at subscription scope"
+    error_message = "The Infra CI managed identity can't read resources through the merged subscription role"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_subscription_data_access != null
-    error_message = "The Infra CI managed identity can't read resources' keys and data at subscription scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_cosmos_contributor != null
-    error_message = "The Infra CI managed identity can't read Cosmos DB keys at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader != null
-    error_message = "The Infra CI managed identity can't read resources configuration at subscription scope"
+    condition     = azurerm_role_assignment.infra_ci_rgs_reader != null
+    error_message = "The Infra CI managed identity can't read resource group resources through the merged reader role"
   }
 
   assert {
@@ -236,58 +224,18 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_kv_secr != null
-    error_message = "The Infra CI managed identity can't read Key Vault secrets at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_kv_cert != null
-    error_message = "The Infra CI managed identity can't read Key Vault certificates at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_kv_crypto != null
-    error_message = "The Infra CI managed identity can't read Key Vault keys at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_st_blob_reader != null
-    error_message = "The Infra CI managed identity can't read Storage Account blobs at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_st_queue_reader != null
-    error_message = "The Infra CI managed identity can't read Storage Account queues at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_st_table_reader != null
-    error_message = "The Infra CI managed identity can't read Storage Account tables at resource group scope"
-  }
-
-  assert {
     condition     = length(azurerm_key_vault_access_policy.infra_ci_kv_common) == 0
     error_message = "The Infra CI managed identity is not allowed to read from common Key Vault"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_rgs_ca_operator != null
-    error_message = "The Infra CI managed identity can't read Container Apps secrets at resource group scope"
+    condition     = azurerm_role_assignment.infra_cd_subscription_admin != null
+    error_message = "The Infra CD managed identity can't manage subscription resources through the merged admin role"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_subscription_reader != null
-    error_message = "The Infra CD managed identity can't read resources at subscription scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_subscription_rbac_admin != null
-    error_message = "The Infra CD managed identity can't manage IAM roles at subscription scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rgs_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to resources at resource group scope"
+    condition     = azurerm_role_assignment.infra_cd_rgs_deploy != null
+    error_message = "The Infra CD managed identity can't deploy resources through the merged resource group role"
   }
 
   assert {
@@ -360,10 +308,6 @@ run "validate_github_id_infra" {
     error_message = "The Infra CD managed identity is not allowed to write to common Key Vaults"
   }
 
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rgs_ca_contributor != null
-    error_message = "The Infra CD managed identity can't apply changes to Container Apps at resource group scope"
-  }
 }
 
 run "validate_github_id_infra_duplicate_nat_role_assignment" {
@@ -371,8 +315,8 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
 
   plan_options {
     target = [
-      azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor,
-      azurerm_role_assignment.infra_cd_rg_network_contributor,
+      azurerm_role_assignment.infra_cd_rg_nat_gw_private_networking,
+      azurerm_role_assignment.infra_cd_rg_private_networking,
     ]
   }
 
@@ -421,12 +365,12 @@ run "validate_github_id_infra_duplicate_nat_role_assignment" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor == []
+    condition     = azurerm_role_assignment.infra_cd_rg_nat_gw_private_networking == []
     error_message = "The Infra CD has a duplicate role on the same resource group"
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_rg_network_contributor != null
+    condition     = azurerm_role_assignment.infra_cd_rg_private_networking != null
     error_message = "The Infra CD has a duplicate role on the same resource group"
   }
 }
@@ -608,10 +552,8 @@ run "validate_rgs_iam" {
       azurerm_role_assignment.devs_group_rgs,
       azurerm_role_assignment.devs_group_tf_rgs_kv_secr,
       azurerm_role_assignment.externals_group_rgs,
-      azurerm_role_assignment.app_cd_rgs_website_contributor,
-      azurerm_role_assignment.app_cd_rgs_cdn_profile_contributor,
-      azurerm_role_assignment.infra_cd_rgs_contributor,
-      azurerm_role_assignment.infra_cd_rgs_user_access_admin,
+      azurerm_role_assignment.app_cd_rgs_deploy,
+      azurerm_role_assignment.infra_cd_rgs_deploy,
     ]
   }
 
@@ -693,22 +635,12 @@ run "validate_rgs_iam" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.app_cd_rgs_website_contributor[run.setup_tests.opex_resource_group_id] != null
-    error_message = "The App CD user assigned identity is not Website Contributor of the additional resource groups"
+    condition     = azurerm_role_assignment.app_cd_rgs_deploy[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The App CD user assigned identity is not bound to the merged deploy role of the additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.app_cd_rgs_cdn_profile_contributor[run.setup_tests.opex_resource_group_id] != null
-    error_message = "The App CD user assigned identity is not CDN Endpoint Contributor of the additional resource groups"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rgs_contributor[run.setup_tests.opex_resource_group_id] != null
-    error_message = "The Infra CD user assigned identity is not Contributor of the additional resource groups"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_rgs_user_access_admin[run.setup_tests.opex_resource_group_id] != null
-    error_message = "The Infra CD user assigned identity is not User Access Administrator of the additional resource groups"
+    condition     = azurerm_role_assignment.infra_cd_rgs_deploy[run.setup_tests.opex_resource_group_id] != null
+    error_message = "The Infra CD user assigned identity is not bound to the merged deploy role of the additional resource groups"
   }
 }
