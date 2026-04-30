@@ -3,6 +3,8 @@
 resource_group_name=$1
 resource_name=$2
 resource_type=$3  # e.g., "appsvc" or "containerapp"
+current_revision_name=${CURRENT_REVISION_NAME:-}
+target_revision_name=${TARGET_REVISION_NAME:-}
 
 set -euo pipefail
 
@@ -78,7 +80,7 @@ EOF
 revert_traffic() {
   local reason="$1"
   echo "::error::$reason. Reverting traffic to production."
-  __revert_traffic "$resource_group_name" "$resource_name"
+  __revert_traffic "$resource_group_name" "$resource_name" "$current_revision_name" "$target_revision_name"
   log_canary_event 0
   post_canary_gh_summary "Rollout failed ❌. $reason. Traffic reverted to production."
   exit 1
@@ -88,16 +90,16 @@ set_traffic() {
   local staging_percentage="$1"
   local production_percentage=$((100 - staging_percentage))
   echo "Setting traffic distribution: ${staging_percentage}% staging, ${production_percentage}% production"
-  __set_traffic "$resource_group_name" "$resource_name" "$staging_percentage"
+  __set_traffic "$resource_group_name" "$resource_name" "$staging_percentage" "$current_revision_name" "$target_revision_name"
   log_canary_event "$staging_percentage"
 }
 
 swap_versions() {
-  __swap_versions "$resource_group_name" "$resource_name"
+  __swap_versions "$resource_group_name" "$resource_name" "$current_revision_name" "$target_revision_name"
 }
 
 finalize() {
-  __finalize "$resource_group_name" "$resource_name"
+  __finalize "$resource_group_name" "$resource_name" "$current_revision_name" "$target_revision_name"
 }
 
 if [[ -r ./canary-monitor.sh ]]; then
