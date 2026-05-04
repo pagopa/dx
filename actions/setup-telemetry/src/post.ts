@@ -240,8 +240,7 @@ async function post(): Promise<void> {
 
   useAzureMonitor({
     azureMonitorExporterOptions: {
-      connectionString:
-        "InstrumentationKey=e0ff8094-78fa-45e5-a21d-e62b453dc5d1;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=ce469d55-2ff7-4dfd-a249-cc787291e672",
+      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     },
     enableLiveMetrics: false,
     resource,
@@ -297,22 +296,10 @@ async function post(): Promise<void> {
 
   span.end();
 
-  // Flush all telemetry to Application Insights before process exit
-  const FLUSH_TIMEOUT_MS = 10000;
+  // Shutdown flushes all processors and exports pending telemetry
   try {
-    const tracerProvider = trace.getTracerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    const loggerProvider = logs.getLoggerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    await Promise.all([
-      tracerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-      loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-    ]);
-
-    core.info("Telemetry flushed");
-    shutdownAzureMonitor();
+    await shutdownAzureMonitor();
+    core.info("Telemetry flushed and shutdown complete");
   } catch (flushErr) {
     core.warning(
       `Telemetry flush error (some data may be lost): ${flushErr instanceof Error ? flushErr.message : String(flushErr)}`,
