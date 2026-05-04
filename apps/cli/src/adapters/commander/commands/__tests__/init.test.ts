@@ -4,14 +4,21 @@ import { mock } from "vitest-mock-extended";
 
 import type { GitHubService } from "../../../../domain/github.js";
 
-const mocks = vi.hoisted(() => ({
-  getPlopInstance: vi.fn(async () => ({})),
-  oraPromise: vi.fn((promise: Promise<unknown>) => promise),
-  runMonorepoGenerator: vi.fn(async () => {
-    throw new Error("generator reached");
-  }),
-  tf$: vi.fn(async () => ({ stdout: "" })),
-}));
+const mocks = vi.hoisted(() => {
+  const tf$ = vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
+    void args;
+    return { stdout: "" };
+  });
+
+  return {
+    getPlopInstance: vi.fn(async () => ({})),
+    oraPromise: vi.fn((promise: Promise<unknown>) => promise),
+    runMonorepoGenerator: vi.fn(async () => {
+      throw new Error("generator reached");
+    }),
+    tf$,
+  };
+});
 
 vi.mock("ora", () => ({
   oraPromise: mocks.oraPromise,
@@ -72,7 +79,9 @@ describe("makeInitCommand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getPlopInstance.mockResolvedValue({});
-    mocks.runMonorepoGenerator.mockRejectedValue(new Error("generator reached"));
+    mocks.runMonorepoGenerator.mockRejectedValue(
+      new Error("generator reached"),
+    );
     mocks.tf$.mockImplementation(
       async (strings: TemplateStringsArray, ...values: unknown[]) => {
         const command = commandToString(strings, values);

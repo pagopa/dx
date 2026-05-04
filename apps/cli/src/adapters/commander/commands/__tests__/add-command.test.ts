@@ -5,14 +5,21 @@ import { mock } from "vitest-mock-extended";
 import type { AuthorizationService } from "../../../../domain/authorization.js";
 import type { GitHubService } from "../../../../domain/github.js";
 
-const mocks = vi.hoisted(() => ({
-  getPlopInstance: vi.fn(async () => ({})),
-  oraPromise: vi.fn((promise: Promise<unknown>) => promise),
-  runDeploymentEnvironmentGenerator: vi.fn(async () => {
-    throw new Error("generator reached");
-  }),
-  tf$: vi.fn(async () => ({ stdout: "" })),
-}));
+const mocks = vi.hoisted(() => {
+  const tf$ = vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
+    void args;
+    return { stdout: "" };
+  });
+
+  return {
+    getPlopInstance: vi.fn(async () => ({})),
+    oraPromise: vi.fn((promise: Promise<unknown>) => promise),
+    runDeploymentEnvironmentGenerator: vi.fn(async () => {
+      throw new Error("generator reached");
+    }),
+    tf$,
+  };
+});
 
 vi.mock("ora", () => ({
   oraPromise: mocks.oraPromise,

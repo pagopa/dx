@@ -27,7 +27,7 @@ import {
   runDeploymentEnvironmentGenerator,
 } from "../../plop/index.js";
 import { exitWithError } from "../index.js";
-import { checkPreconditions } from "./init.js";
+import { checkAddEnvironmentPreconditions } from "./init.js";
 
 /**
  * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
@@ -121,7 +121,7 @@ const addEnvironmentAction = (
   authorizationService: AuthorizationService,
   gitHubService: GitHubService,
 ): ResultAsync<AddResult, Error> =>
-  checkPreconditions()
+  checkAddEnvironmentPreconditions()
     .andThen(() =>
       ResultAsync.fromPromise(
         getPlopInstance(),
