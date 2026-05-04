@@ -20,6 +20,13 @@ ESLint helps with:
 - Enforcing code style conventions across the team
 - Integrating with build tools and CI/CD pipelines
 
+## DX ecosystem
+
+- [`@pagopa/eslint-config`](https://github.com/pagopa/dx/tree/main/packages/eslint-config)
+  is the shared flat config used by the DX ecosystem to standardize lint rules
+  across repositories and generated workspaces.
+- [Package documentation](https://github.com/pagopa/dx/blob/main/packages/eslint-config/README.md)
+
 ## Reference of usage in our organization
 
 - https://github.com/search?q=org%3Apagopa+eslintrc&type=code

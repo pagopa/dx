@@ -29,3 +29,8 @@ applications, and scenarios requiring rapid scaling based on demand. It is
 suitable for applications that need to scale to zero when idle, such as
 background processing, APIs, and web applications with variable traffic
 patterns.
+
+## DX ecosystem
+
+- [DX Terraform module for Azure Container App](https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/latest)
+- [DX deployment pipeline for Azure Container Apps](https://dx.pagopa.it/docs/azure/application-deployment/release-container-app)

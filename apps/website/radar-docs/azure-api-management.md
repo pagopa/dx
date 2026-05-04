@@ -22,6 +22,10 @@ enforcement of security policies, authentication, and authorization across your
 APIs, safeguarding against potential vulnerabilities and unauthorized access.
 Use it as a single entry point of your APIs.
 
+## DX ecosystem
+
+- [DX Terraform module for Azure API Management](https://registry.terraform.io/modules/pagopa-dx/azure-api-management/azurerm/latest)
+
 ## Repositories using Azure Apim
 
 Due to the pricing, a single APIM instance is used for each product shared among
