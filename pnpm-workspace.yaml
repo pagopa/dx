@@ -48,9 +48,9 @@ catalogs:
     '@opentelemetry/api-logs': ^0.213.0
     '@opentelemetry/instrumentation': ^0.213.0
     '@opentelemetry/instrumentation-undici': ^0.23.0
-    '@opentelemetry/resources': ^2.6.1
-    '@opentelemetry/sdk-metrics': ^2.6.1
-    '@opentelemetry/sdk-trace-base': ^2.6.1
+    '@opentelemetry/resources': ^2.7.1
+    '@opentelemetry/sdk-metrics': ^2.7.1
+    '@opentelemetry/sdk-trace-base': ^2.7.1
 
   react:
     '@types/react': ^19.2.14
