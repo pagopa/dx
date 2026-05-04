@@ -7,7 +7,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 
 usage() {
   echo "Usage: $0 [OPTIONS]"
-  echo "Executes 'terraform apply' and filters the output after completion."
+  echo "Executes 'terraform apply' and sanitize the output after completion."
   echo "The script accepts both command-line arguments and environment variables."
   echo "Command-line arguments take precedence."
   echo

@@ -1,6 +1,6 @@
 {
-  "name": "filter-terraform-plan",
-  "description": "A GitHub action to run and filter terraform plan.",
+  "name": "sanitize-terraform-plan",
+  "description": "A GitHub action to run and sanitize terraform plan output.",
   "version": "0.0.2",
   "type": "module",
   "private": true,

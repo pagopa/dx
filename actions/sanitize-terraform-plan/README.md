@@ -1,4 +1,4 @@
-# Filter Terraform Plan Action
+# Sanitize Terraform Plan Action
 
 ## Purpose
 
@@ -17,7 +17,7 @@ changes without leaking secrets.
   placeholder and removes noisy lines (state refresh/reads).
 - Reduces the plan to the `resource-diff` section when possible and extracts a
   summary line with counts of `adds`/`changes`/`destroys`.
-- Exposes the path to the filtered plan and a short summary as action outputs so
+- Exposes the path to the sanitized plan and a short summary as action outputs so
   the calling workflow can post it to a PR or store it as an artifact.
 - Exit semantics: the step fails on Terraform runtime errors (exit code 1). It
   succeeds for both "no changes" (0) and "changes detected" (2), so a plan that
@@ -44,18 +44,18 @@ changes without leaking secrets.
     case-insensitively and quoted/unquoted forms are handled.
 
 - `upload-artifact` (optional, default: `false`)
-  - When `true`, uploads the filtered plan as a workflow artifact for later
+  - When `true`, uploads the sanitized plan as a workflow artifact for later
     inspection.
 
 ## Outputs
 
 - `summary_line`
   - A single-line summary reporting how many resources will be
-    added/changed/destroyed (extracted from the filtered plan). Useful when the
+    added/changed/destroyed (extracted from the sanitized plan). Useful when the
     full plan is too large to post directly.
 
 - `filtered_plan_path`
-  - The filesystem path to the sanitized/filtered plan file produced by the
+  - The filesystem path to the sanitized plan file produced by the
     action (for example: `${{ inputs.base-path }}/filtered_plan.txt`).
 
 ## Practical example
@@ -67,7 +67,7 @@ a full integration; this snippet shows the essential call:
 ```yaml
 - name: Terraform Plan
   id: plan
-  uses: pagopa/dx/actions/filter-terraform-plan@main
+  uses: pagopa/dx/actions/sanitize-terraform-plan@main
   with:
     base-path: infra/resources/prod
     sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -94,7 +94,7 @@ fail the run depending on its policies.
   attach the full sanitized plan as an artifact.
 
 For implementation details and exact behavior refer to
-[dx/.github/actions/filter-terraform-plan/action.yaml](https://github.com/pagopa/dx/blob/main/actions/filter-terraform-plan/action.yaml),
+[dx/actions/sanitize-terraform-plan/action.yaml](https://github.com/pagopa/dx/blob/main/actions/sanitize-terraform-plan/action.yaml),
 or the
 [infra_plan.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml)
 in this repository.

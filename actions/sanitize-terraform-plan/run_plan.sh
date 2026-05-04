@@ -8,7 +8,7 @@ MODE="normal"
 # --- Help Function ---
 usage() {
   echo "Usage: $0 [OPTIONS]"
-  echo "Executes 'terraform plan' and filters the output."
+  echo "Executes 'terraform plan' and sanitize the output."
   echo "The script accepts both command-line arguments and environment variables."
   echo "Command-line arguments take precedence."
   echo

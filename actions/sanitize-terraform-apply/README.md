@@ -1,4 +1,4 @@
-# Filter Terraform Apply Action
+# Sanitize Terraform Apply Action
 
 ## Purpose
 
@@ -21,7 +21,7 @@ masked apply logs without leaking secrets.
 
 ```yaml
 - name: Terraform Apply
-  uses: pagopa/dx/actions/filter-terraform-apply@main
+  uses: pagopa/dx/actions/sanitize-terraform-apply@main
   with:
     base-path: infra/resources/prod
     plan-file: tf-outcome

@@ -189,7 +189,8 @@ importers:
 
   actions/docker-build-push: {}
 
-  actions/filter-terraform-plan: {}
+  actions/sanitize-terraform-plan: {}
+  actions/sanitize-terraform-apply: {}
 
   actions/incremental-rollout:
     devDependencies:

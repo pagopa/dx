@@ -2,7 +2,7 @@
 
 set -e
 
-TEST_DIR="../filter-terraform-plan/tests"
+TEST_DIR="../sanitize-terraform-plan/tests"
 SCRIPT_TO_TEST="./mask_output.sh"
 TEST_COUNT=0
 FAIL_COUNT=0

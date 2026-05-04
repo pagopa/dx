@@ -1,5 +1,5 @@
-name: "Terraform Apply (Sanitized)"
-description: "Executes terraform apply and masks sensitive information from the output."
+name: "Sanitize Terraform Apply"
+description: "Executes terraform apply and sanitizes sensitive information in the output."
 
 inputs:
   base-path:
@@ -10,13 +10,13 @@ inputs:
     description: "The terraform plan file to pass to terraform apply."
     required: true
   sensitive-keys:
-    description: "A comma-separated list of sensitive keys to strip from the output."
+    description: "A comma-separated list of sensitive keys to sanitize in the output."
     required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Run Terraform Apply and Filter Output
+    - name: Run Terraform Apply and Sanitize Output
       working-directory: ${{ inputs.base-path }}
       shell: bash
       run: |

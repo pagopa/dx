@@ -1,5 +1,5 @@
-name: "Terraform Plan (Sanitized)"
-description: "Executes terraform plan, removes sensitive information from the output, and strips all unnecessary log lines."
+name: "Sanitize Terraform Plan"
+description: "Executes terraform plan, sanitizes sensitive information in the output, and strips unnecessary log lines."
 
 inputs:
   base-path:
@@ -19,7 +19,7 @@ inputs:
     required: false
     default: ""
   sensitive-keys:
-    description: "A comma-separated list of sensitive keys to filter from the plan output."
+    description: "A comma-separated list of sensitive keys to sanitize in the plan output."
     required: true
 
 outputs:
@@ -27,13 +27,13 @@ outputs:
     description: "A summary line indicating the number of resources to be added, changed, or destroyed."
     value: ${{ steps.plan.outputs.summary_line }}
   filtered_plan_path:
-    description: "The path to the file containing the filtered output of the `terraform plan` command."
+    description: "The path to the file containing the sanitized output of the `terraform plan` command."
     value: ${{ steps.plan.outputs.filtered_plan_path }}
 
 runs:
   using: "composite"
   steps:
-    - name: Run Terraform Plan and Filter Output
+    - name: Run Terraform Plan and Sanitize Output
       id: plan
       working-directory: ${{ inputs.base-path }}
       shell: bash
