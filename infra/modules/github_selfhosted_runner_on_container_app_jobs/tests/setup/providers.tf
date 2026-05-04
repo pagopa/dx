@@ -1,12 +1,4 @@
 terraform {
-
-  backend "azurerm" {
-    resource_group_name  = "dx-d-itn-tfstate-rg-01"
-    storage_account_name = "dxditntfstatest01"
-    container_name       = "terraform-state"
-    key                  = "dx.ghrunner.example.pat_based.tfstate"
-  }
-
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -14,7 +6,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.10"
+      version = "~> 0.6"
     }
     random = {
       source  = "hashicorp/random"
@@ -24,5 +16,15 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy    = false
+      recover_soft_deleted_key_vaults = true
+    }
+    resource_group {
+      prevent_deletion_if_contains_resources = false
+    }
+  }
 }
+
+provider "random" {}
