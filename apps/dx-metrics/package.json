@@ -42,23 +42,23 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
+    "@tailwindcss/postcss": "^4.2.4",
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@types/pg": "^8.20.0",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@vitest/coverage-v8": "catalog:",
-    "baseline-browser-mapping": "^2.10.19",
+    "baseline-browser-mapping": "^2.10.25",
     "drizzle-kit": "^0.30.0",
     "esbuild": "^0.27.7",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.4",
-    "postcss": "^8.5.10",
-    "tailwindcss": "^4.2.2",
+    "postcss": "^8.5.13",
+    "tailwindcss": "^4.2.4",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.58.2",
+    "typescript-eslint": "^8.59.1",
     "vitest": "catalog:"
   }
 }
