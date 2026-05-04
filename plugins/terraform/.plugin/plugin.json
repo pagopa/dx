@@ -7,5 +7,6 @@
   },
   "repository": "https://github.com/pagopa/dx",
   "keywords": ["cloud", "infrastructure", "iac", "terraform"],
-  "commands": ["./commands"]
+  "commands": ["./commands"],
+  "hooks": "./hooks/hooks.json"
 }

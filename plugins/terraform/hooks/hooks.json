@@ -3,7 +3,7 @@
     "SessionStart": [
       {
         "type": "command",
-        "command": "${CLAUDE_PLUGIN_ROOT}/scripts/ensure-dx-kb.sh"
+        "command": "${PLUGIN_ROOT}/scripts/ensure-dx-kb.sh"
       }
     ]
   }
