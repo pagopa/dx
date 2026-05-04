@@ -5,13 +5,13 @@ tags: [dx, tool, cli, typescript]
 ---
 
 [DX CLI](https://dx.pagopa.it/docs/dx-cli) is the command-line interface used to
-apply PagoPA DevEx conventions consistently across repositories. It bundles
-project bootstrap, repository checks, codemods, and operational helpers in a
-single tool.
+apply engineering standards and conventions consistently across repositories. It
+bundles project bootstrap, repository checks, codemods, and operational helpers
+in a single tool.
 
 ## Use cases
 
-- Bootstrapping new repositories with PagoPA DX defaults
+- Bootstrapping new repositories with DX defaults
 - Running repository health checks with `dx doctor`
 - Applying codemods to migrate workspaces toward newer DX standards
 - Inspecting local project setup and available tooling
