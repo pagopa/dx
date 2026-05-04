@@ -76,6 +76,12 @@ const captureCommandErrorMessage = async (
   throw new Error("expected command to fail");
 };
 
+const getCalledCommands = () =>
+  mocks.tf$.mock.calls.map(
+    ([strings, ...values]: [TemplateStringsArray, ...unknown[]]) =>
+      commandToString(strings, values),
+  );
+
 describe("makeAddCommand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -87,12 +93,13 @@ describe("makeAddCommand", () => {
       async (strings: TemplateStringsArray, ...values: unknown[]) => {
         const command = commandToString(strings, values);
 
-        if (command === "terraform -version" || command === "corepack -v") {
-          return { stdout: "" };
-        }
-
-        if (command === "az account show" || command === "az group list") {
-          throw new Error("Azure login missing");
+        if (
+          command === "terraform -version" ||
+          command === "corepack -v" ||
+          command === "az account show" ||
+          command === "az group list"
+        ) {
+          return { stdout: '{"user":{"name":"test@example.com"}}' };
         }
 
         throw new Error(`Unexpected command: ${command}`);
@@ -110,7 +117,13 @@ describe("makeAddCommand", () => {
     );
 
     expect(message).toContain(
-      "Please log in to Azure CLI using `az login` before running this command.",
+      "Failed to run the deployment environment generator",
     );
+
+    const calledCommands = getCalledCommands();
+    expect(calledCommands).toContain("terraform -version");
+    expect(calledCommands).toContain("corepack -v");
+    expect(calledCommands).toContain("az account show");
+    expect(calledCommands).toContain("az group list");
   });
 });
