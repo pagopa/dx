@@ -174,11 +174,11 @@ run "managed_redis_sku_override" {
   command = plan
 
   variables {
-    sku_name_override = "ComputeOptimized_X10"
+    sku_name_override = "Balanced_B100"
   }
 
   assert {
-    condition     = azurerm_managed_redis.this.sku_name == "ComputeOptimized_X10"
+    condition     = azurerm_managed_redis.this.sku_name == "Balanced_B100"
     error_message = "SKU override must take precedence over the use case preset"
   }
 }

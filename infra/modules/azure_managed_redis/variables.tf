@@ -59,7 +59,7 @@ variable "use_case" {
 
 variable "sku_name_override" {
   type        = string
-  description = "Optional explicit SKU name override. Only Balanced_* and ComputeOptimized_* SKUs are supported. Balanced_B0 is restricted to the 'development' use_case because it does not support HA or data persistence."
+  description = "Optional explicit SKU name override. Only Balanced_* SKUs (B0-B250) are supported. Balanced_B0 is restricted to the 'development' use_case because it does not support HA or data persistence."
   default     = null
 
   validation {
@@ -74,23 +74,8 @@ variable "sku_name_override" {
       "Balanced_B100",
       "Balanced_B150",
       "Balanced_B250",
-      "Balanced_B350",
-      "Balanced_B500",
-      "Balanced_B700",
-      "Balanced_B1000",
-      "ComputeOptimized_X3",
-      "ComputeOptimized_X5",
-      "ComputeOptimized_X10",
-      "ComputeOptimized_X20",
-      "ComputeOptimized_X50",
-      "ComputeOptimized_X100",
-      "ComputeOptimized_X150",
-      "ComputeOptimized_X250",
-      "ComputeOptimized_X350",
-      "ComputeOptimized_X500",
-      "ComputeOptimized_X700",
     ], var.sku_name_override)
-    error_message = "sku_name_override must be a supported Balanced_* or ComputeOptimized_* SKU."
+    error_message = "sku_name_override must be a supported Balanced_* SKU (B0-B250)."
   }
 
   validation {
