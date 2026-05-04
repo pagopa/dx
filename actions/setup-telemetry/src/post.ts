@@ -9,9 +9,9 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import {
-  shutdownAzureMonitor,
-  useAzureMonitor,
-} from "@azure/monitor-opentelemetry";
+  AzureMonitorLogExporter,
+  AzureMonitorTraceExporter,
+} from "@azure/monitor-opentelemetry-exporter";
 import {
   context as otelContext,
   SpanKind,
@@ -24,6 +24,14 @@ import { resourceFromAttributes } from "@opentelemetry/resources";
 //   initAzureMonitor,
 //   stopAzureMonitor,
 // } from "@pagopa/azure-tracing/azure-monitor";
+import {
+  BasicTracerProvider,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
+import {
+  LoggerProvider,
+  SimpleLogRecordProcessor,
+} from "@opentelemetry/sdk-logs";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
@@ -238,13 +246,26 @@ async function post(): Promise<void> {
     "service.namespace": "dx",
   });
 
-  useAzureMonitor({
-    azureMonitorExporterOptions: {
-      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-    },
-    enableLiveMetrics: false,
+  const exporterOptions = {
+    connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+    disableOfflineStorage: true,
+  };
+
+  const traceExporter = new AzureMonitorTraceExporter(exporterOptions);
+  const logExporter = new AzureMonitorLogExporter(exporterOptions);
+
+  // Use SimpleSpanProcessor for immediate export (no batching race conditions)
+  const tracerProvider = new BasicTracerProvider({
     resource,
+    spanProcessors: [new SimpleSpanProcessor(traceExporter)],
   });
+  trace.setGlobalTracerProvider(tracerProvider);
+
+  const loggerProvider = new LoggerProvider({
+    resource,
+    processors: [new SimpleLogRecordProcessor(logExporter)],
+  });
+  logs.setGlobalLoggerProvider(loggerProvider);
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
@@ -296,9 +317,11 @@ async function post(): Promise<void> {
 
   span.end();
 
-  // Shutdown flushes all processors and exports pending telemetry
+  // Flush and shutdown - SimpleSpanProcessor exports synchronously on span.end(),
+  // but we still call shutdown to ensure all pending HTTP requests complete.
   try {
-    await shutdownAzureMonitor();
+    await tracerProvider.shutdown();
+    await loggerProvider.shutdown();
     core.info("Telemetry flushed and shutdown complete");
   } catch (flushErr) {
     core.warning(

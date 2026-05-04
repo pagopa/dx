@@ -28,9 +28,10 @@
     "@opentelemetry/api": "catalog:opentelemetry",
     "@opentelemetry/api-logs": "catalog:opentelemetry",
     "@opentelemetry/sdk-metrics": "catalog:opentelemetry",
+    "@opentelemetry/sdk-logs": "catalog:opentelemetry",
     "@opentelemetry/resources": "catalog:opentelemetry",
     "@opentelemetry/sdk-trace-base": "catalog:opentelemetry",
-    "@azure/monitor-opentelemetry": "^1.16.0",
+    "@azure/monitor-opentelemetry-exporter": "catalog:opentelemetry",
     "zod": "catalog:"
   },
   "devDependencies": {
