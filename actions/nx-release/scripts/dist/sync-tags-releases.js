@@ -17489,11 +17489,9 @@ async function extractChangelogSection(clPath, version2) {
     return null;
   }
 }
+var getReleaseByTag404Error = /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
 async function releaseExists(octokit, owner, repo, tag) {
   try {
-    const suppressed404Pattern = new RegExp(
-      `GET /repos/[^\\s]+/[^\\s]+/releases/tags/[^\\s]+ - 404\\b`
-    );
     await octokit.repos.getReleaseByTag({
       owner,
       repo,
@@ -17502,7 +17500,7 @@ async function releaseExists(octokit, owner, repo, tag) {
         log: {
           error: (...args) => {
             const message = args.join(" ");
-            if (suppressed404Pattern.test(message)) {
+            if (getReleaseByTag404Error.test(message)) {
               return;
             }
             console.error(...args);

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.20.2",
+  "version": "0.21.0",
   "type": "module",
   "description": "A CLI useful to manage DX tools.",
   "repository": {

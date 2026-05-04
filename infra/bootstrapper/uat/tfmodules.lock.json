@@ -18,16 +18,16 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
   },
   "azure.bootstrap": {
-    "hash": "146361285ceba1ff80050592f16dd056109d144e8556eac23e452dc6c838efe5",
-    "version": "3.2.0",
+    "hash": "46ea8808d1aef93aa000189a1c9c732864cf0a2c100faa6e8ed707a4a7b4d519",
+    "version": "3.2.3",
     "name": "azure_github_environment_bootstrap",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/3.2.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/3.2.3"
   },
   "azure.bootstrap.github_runner": {
-    "hash": "f75012aaacc6f6ee47671ac8cddf9a948fc0c36a6f066abd44a3e188e13ad82e",
-    "version": "1.3.0",
+    "hash": "f4909088f3486248481708b2784af18efbac7186b40aad0289038d2e66736d95",
+    "version": "1.3.1",
     "name": "github_selfhosted_runner_on_container_app_jobs",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm/1.3.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm/1.3.1"
   },
   "azure.core_values": {
     "hash": "8b9a3151a0e9ec1015b23f137107cd966629384e0cd954c69be07891ff198b1b",

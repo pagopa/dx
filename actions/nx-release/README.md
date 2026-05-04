@@ -2,9 +2,25 @@
 
 A composite GitHub Action that mirrors [Changesets](https://github.com/changesets/action) behavior for [Nx Release](https://nx.dev/features/manage-releases).
 
+In DX repositories, the validation workflow invokes this action on pull
+requests to manage version plan coverage warnings.
+
 ## How It Works
 
-This action automates the Nx release flow in two phases:
+This action automates the Nx release flow in three phases:
+
+### Phase 0: Warn on Missing Version Plan Coverage in Pull Requests
+
+**Trigger**: On `pull_request`, when the action is invoked by the validation workflow.
+
+**Actions**:
+
+1. Reads the pull request context from the GitHub event payload
+2. Computes affected Nx projects with `nx show projects --affected`
+3. Reads the changed `.nx/version-plans/**` files from the checked-out PR head
+4. Matches coverage against both Nx project names and `metadata.js.packageName` values when available
+5. Creates, updates, or deletes the managed PR warning comment idempotently
+6. Skips the auto-generated `Version Packages` PR to avoid noisy self-comments
 
 ### Phase 1: Create/Update Version Packages PR
 
@@ -111,7 +127,17 @@ jobs:
 
 ## Behavior
 
-The action runs in one of three modes, determined automatically from the trigger and changes in `.nx/version-plans/**`.
+The action runs in one of four modes, all determined automatically from the event context and changes in `.nx/version-plans/**`.
+
+### Mode: `Warn PR`
+
+Used automatically on `pull_request` workflows. The action:
+
+1. Computes affected Nx projects from the PR context
+2. Reads the changed version plan files from the checked-out branch
+3. Upserts a managed warning comment only when affected projects are missing coverage
+4. Deletes the warning comment when coverage becomes complete
+5. Skips the managed `Version Packages` PR
 
 ### Mode: `Create PR`
 
@@ -161,6 +187,12 @@ Triggered manually. The action:
 - Ensure `.nx/version-plans/` directory exists
 - Verify `gh` CLI has authentication; check GITHUB_TOKEN is set
 - Check that version plans produce actual version changes (run `npx nx release --dry-run`)
+
+### PR warning comment is missing
+
+- Ensure the repository validation workflow invokes this action on `pull_request`
+- Ensure the job checks out the repository before calling the local action
+- Ensure the PR affects Nx projects and that uncovered projects are not already declared in the changed `.nx/version-plans/**` files
 
 ### Publish fails
 

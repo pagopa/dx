@@ -30,5 +30,6 @@ locals {
     name                = replace("${local.project}tfstatest01", "-", "")
     resource_group_name = "${local.project}-tfstate-rg-01"
   }
+  tf_storage_account_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.tf_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${local.tf_storage_account.name}"
 }
 

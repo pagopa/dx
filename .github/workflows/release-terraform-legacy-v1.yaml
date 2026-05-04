@@ -68,8 +68,6 @@ jobs:
       - name: Get terraform version from .terraform-version file
         id: get-version
         uses: pagopa/dx/.github/actions/get-terraform-version@main
-        with:
-          default_version: "1.10.4"
 
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main

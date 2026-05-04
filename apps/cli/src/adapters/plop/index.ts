@@ -51,19 +51,37 @@ const validatePayload = async (
 
 export const getPlopInstance = async (): Promise<NodePlopAPI> => nodePlop();
 
-const runActions = async (generator: PlopGenerator, payload: Answers) => {
+export const runActions = async (
+  generator: PlopGenerator,
+  payload: Answers,
+) => {
   const logger = getLogger(["dx-cli", "init"]);
   const result = await generator.runActions(payload);
   if (result.failures.length > 0) {
-    for (const failure of result.failures) {
-      if (failure.error === "Aborted due to previous action failure") {
-        continue;
-      }
-      logger.error(`Error on {type} step. ${failure.message}`, {
-        type: failure.type,
-      });
-      throw new Error("One or more actions failed during generation.");
+    // Collect every failure to report rich context. node-plop's failure
+    // objects have shape `{ type, path, error }` (the `error` property holds
+    // the original error's message — see node-plop's generator-runner.js).
+    const relevant = result.failures.filter(
+      (failure) => failure.error !== "Aborted due to previous action failure",
+    );
+    if (relevant.length === 0) {
+      return;
     }
+    const summary = relevant
+      .map(
+        (failure) =>
+          `${failure.type || "action"}: ${failure.error ?? "unknown error"}`,
+      )
+      .join("; ");
+    for (const failure of relevant) {
+      logger.error("Error on {type} step: {error}", {
+        error: failure.error ?? "unknown error",
+        type: failure.type || "action",
+      });
+    }
+    throw new Error(
+      `One or more actions failed during generation (${summary}).`,
+    );
   }
 };
 

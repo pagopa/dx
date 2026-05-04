@@ -272,3 +272,126 @@ run "app_config_role_assignments" {
     error_message = "The role assigned must be App Configuration Data Owner"
   }
 }
+
+run "managed_redis_role_assignments" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role        = "reader"
+        description = "Allow test principal to read AMR control-plane metadata"
+      },
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role        = "writer"
+        description = "Allow test principal to write data to AMR instance 01"
+      },
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"
+        role        = "owner"
+        description = "Allow test principal full control over AMR instance 02"
+      },
+    ]
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01|reader"].role_definition_name == "Azure Managed Redis Reader"
+    error_message = "The reader role must map to Azure Managed Redis Reader"
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_role_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02|owner"].role_definition_name == "Azure Managed Redis Contributor"
+    error_message = "The owner role must map to Azure Managed Redis Contributor"
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"].object_id == run.setup_tests.principal_id
+    error_message = "The writer role must create a data-plane access policy assignment"
+  }
+
+  assert {
+    condition     = module.managed_redis.azurerm_managed_redis_access_policy_assignment["/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-02"].object_id == run.setup_tests.principal_id
+    error_message = "The owner role must also create a data-plane access policy assignment"
+  }
+
+  # Dedup check: 3 input entries (reader+writer on amr-01, owner on amr-02) must
+  # produce exactly 2 data-plane access policy assignments — one per distinct
+  # AMR id — because writer and owner on the same id share the "default" policy.
+  assert {
+    condition     = length(module.managed_redis.azurerm_managed_redis_access_policy_assignment) == 2
+    error_message = "Data-plane assignments must be deduplicated per AMR id (writer+owner on the same id share the default policy)"
+  }
+}
+
+run "managed_redis_rejects_invalid_id" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        id          = "not-a-valid-resource-id"
+        role        = "reader"
+        description = "Invalid id, expected to fail validation"
+      },
+    ]
+  }
+
+  expect_failures = [
+    var.managed_redis,
+  ]
+}
+
+run "managed_redis_rejects_duplicate_ids" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role        = "reader"
+        description = "Duplicate entry A"
+      },
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role        = "reader"
+        description = "Duplicate entry B"
+      },
+    ]
+  }
+
+  expect_failures = [
+    var.managed_redis,
+  ]
+}
+
+run "managed_redis_rejects_invalid_role" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    managed_redis = [
+      {
+        id          = "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.Cache/redisEnterprise/dx-d-itn-test-amr-01"
+        role        = "admin"
+        description = "Invalid role, expected to fail validation"
+      },
+    ]
+  }
+
+  expect_failures = [
+    var.managed_redis,
+  ]
+}

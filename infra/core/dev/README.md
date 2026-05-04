@@ -24,7 +24,7 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_aws"></a> [aws](#module\_aws) | pagopa-dx/aws-core-infra/aws | ~> 0.0 |
-| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 2.0 |
+| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 3.0 |
 | <a name="module_stategraph"></a> [stategraph](#module\_stategraph) | ../_modules/stategraph | n/a |
 
 ## Resources

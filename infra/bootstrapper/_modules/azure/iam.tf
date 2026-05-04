@@ -87,3 +87,12 @@ resource "azurerm_role_assignment" "integration_test_subscription_administrator"
   principal_id         = azurerm_user_assigned_identity.integration_tests[0].principal_id
   description          = "Allow integration tests identity to manage role assignments in the subscription"
 }
+
+resource "azurerm_role_assignment" "integration_test_tfstate_data_contributor" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = local.tf_storage_account_id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_user_assigned_identity.integration_tests[0].principal_id
+  description          = "Allow integration tests identity to write to tfstate Storage Account"
+}

@@ -26,6 +26,7 @@ import {
   getPlopInstance,
   runDeploymentEnvironmentGenerator,
 } from "../../plop/index.js";
+import { exitWithError } from "../index.js";
 import { checkPreconditions } from "./init.js";
 
 /**
@@ -124,13 +125,16 @@ const addEnvironmentAction = (
     .andThen(() =>
       ResultAsync.fromPromise(
         getPlopInstance(),
-        () => new Error("Failed to initialize plop"),
+        (cause) => new Error("Failed to initialize plop", { cause }),
       ),
     )
     .andThen((plop) =>
       ResultAsync.fromPromise(
         runDeploymentEnvironmentGenerator(plop, gitHubService),
-        () => new Error("Failed to run the deployment environment generator"),
+        (cause) =>
+          new Error("Failed to run the deployment environment generator", {
+            cause,
+          }),
       ),
     )
     .andThen((payload) =>
@@ -159,7 +163,7 @@ export const makeAddCommand = (deps: AddCommandDependencies): Command =>
             deps.gitHubService,
           );
           if (result.isErr()) {
-            this.error(result.error.message);
+            exitWithError(this)(result.error);
           } else {
             displaySummary(result.value);
           }

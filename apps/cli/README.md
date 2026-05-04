@@ -184,8 +184,9 @@ dx savemoney [options]
 | `--format`   | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                  | `table`      |
 | `--days`     | `-d`  | Metric analysis period in days (overrides config file).                                                                                      | `30`         |
 | `--location` | `-l`  | Preferred Azure location for resources (overrides config file).                                                                              | `italynorth` |
-| `--verbose`  | `-v`  | Enable verbose mode with detailed logging for each resource analyzed.                                                                        | `false`      |
 | `--tags`     | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated). | N/A          |
+
+> `--verbose` / `-v` is inherited from the root command. See [Global Options](#global-options).
 
 **Example usage:**
 
@@ -245,8 +246,18 @@ azure:
 
 ### Global Options
 
+These options are available on every subcommand:
+
+- `--verbose, -v`: Enable verbose output. Lowers the log level to `debug` so that detailed progress information is emitted, and — when a command fails — prints the full error details, including the underlying `cause` chain and stack trace, instead of only the top-level message. Defaults to `false`.
 - `--version, -V`: Display version number
 - `--help, -h`: Display help information
+
+**Example:**
+
+```bash
+# Re-run a failing command with full diagnostics
+dx --verbose init project
+```
 
 ---
 
