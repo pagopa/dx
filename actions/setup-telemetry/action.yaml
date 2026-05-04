@@ -5,7 +5,10 @@ inputs:
   connection_string:
     description: "Azure Application Insights connection string"
     required: false
-    default: "InstrumentationKey=e0ff8094-78fa-45e5-a21d-e62b453dc5d1;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=ce469d55-2ff7-4dfd-a249-cc787291e672"
+    default: "InstrumentationKey=9c95698f-d74e-4046-a555-ea5f632c307e;IngestionEndp\
+      oint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=\
+      https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=c6f1a\
+      f09-fbb3-4770-bf6d-cdaf821d2699"
 
 runs:
   using: "node24"
