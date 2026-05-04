@@ -28,6 +28,46 @@ resource "github_actions_secret" "lets_encrypt_registration" {
   }
 }
 
+resource "github_actions_secret" "e2e_gh_runner_pat" {
+  repository      = module.github_repository.name
+  secret_name     = "E2E_GITHUB_RUNNER_PAT"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
+resource "github_actions_secret" "e2e_gh_runner_app_id" {
+  repository      = module.github_repository.name
+  secret_name     = "E2E_GITHUB_APP_ID"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
+resource "github_actions_secret" "e2e_gh_runner_app_installation_id" {
+  repository      = module.github_repository.name
+  secret_name     = "E2E_GITHUB_APP_INSTALLATION_ID"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
+resource "github_actions_secret" "e2e_gh_runner_app_private_key" {
+  repository      = module.github_repository.name
+  secret_name     = "E2E_GITHUB_APP_PRIVATE_KEY"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
 locals {
   stategraph_environments = toset([
     for pair in setproduct(["dev", "uat", "prod"], ["ci", "cd"]) :
@@ -60,4 +100,3 @@ resource "github_actions_environment_secret" "stategraph_token" {
     ignore_changes = [remote_updated_at]
   }
 }
-

@@ -1,3 +1,16 @@
+## 0.1.0 (2026-04-29)
+
+### 🚀 Features
+
+- Add managed PR warnings for missing version plans ([#1651](https://github.com/pagopa/dx/pull/1651))
+
+  The validation flow can now run `nx release plan:check` on regular pull
+  requests and post or remove a managed warning comment based on the result.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.0.3 (2026-04-17)
 
 ### 🩹 Fixes

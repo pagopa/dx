@@ -1,4 +1,5 @@
 import "core-js/actual/set/index.js";
+import { configure, getConsoleSink } from "@logtape/logtape";
 import * as assert from "node:assert/strict";
 import { Octokit } from "octokit";
 
@@ -19,7 +20,46 @@ import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
 import { requestAuthorization } from "./use-cases/request-authorization.js";
 
+/**
+ * Returns `true` when `-v` or `--verbose` is present in argv.
+ *
+ * We inspect argv directly — instead of relying on Commander — because the
+ * logtape configuration must be in place before any command handler runs
+ * (including the ones that emit debug logs while parsing prompts).
+ */
+const detectVerboseFromArgv = (argv: readonly string[]): boolean =>
+  argv.includes("-v") || argv.includes("--verbose");
+
+const configureLogging = async (verbose: boolean): Promise<void> => {
+  const level = verbose ? "debug" : "info";
+  await configure({
+    loggers: [
+      { category: ["dx-cli"], lowestLevel: level, sinks: ["console"] },
+      // The environment generator (`gen.env`) emits debug messages about
+      // provisioned Azure resources; surfacing them is the main value of
+      // `--verbose` when running `dx init` / `dx add environment`.
+      { category: ["gen"], lowestLevel: level, sinks: ["console"] },
+      // `savemoney` already emits structured debug output by default.
+      { category: ["savemoney"], lowestLevel: "debug", sinks: ["console"] },
+      { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
+      {
+        category: ["logtape", "meta"],
+        lowestLevel: "warning",
+        sinks: ["console"],
+      },
+    ],
+    sinks: {
+      console: getConsoleSink(),
+      rawJson(record) {
+        console.log(record.rawMessage);
+      },
+    },
+  });
+};
+
 export const runCli = async (version: string) => {
+  await configureLogging(detectVerboseFromArgv(process.argv));
+
   // Creating the adapters
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();

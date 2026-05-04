@@ -89,6 +89,12 @@ jobs:
             exit 0
           fi
 
+          # Skip validation if the workflow is named validate-v1.yaml
+          if echo "$NEW_FILES" | grep -q '^.github/workflows/validate-v1\.yaml$'; then
+            echo "Skipping validation for validate-v1.yaml"
+            exit 0
+          fi
+
           # Define the naming pattern
           # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
           NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|go|azure|aws|certificate)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'

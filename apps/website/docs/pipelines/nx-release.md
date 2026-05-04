@@ -10,15 +10,17 @@ A reusable GitHub workflow that automates package versioning and publishing for
 
 ## Features
 
+- ⚠️ Can show a pull request warning when changes need a version plan but none
+  is present
 - 🔄 Automatically creates or updates a `Version Packages` pull request when new
-  version plans are added
+  version plans are pushed to `main`
 - 📦 Publishes packages to npm when the `Version Packages` PR is merged
 - 🎯 Agnostic: Works with pnpm, yarn, and npm
 - ♻️ Idempotent: `workflow_dispatch` can recover missed tags or releases
 
 ## How It Works
 
-The workflow automates the full release lifecycle in two steps:
+The workflow automates the release lifecycle in two steps:
 
 1. **When you push a version plan to `main`** — the workflow opens (or updates)
    a `Version Packages` pull request that bumps versions and updates changelogs
@@ -26,6 +28,10 @@ The workflow automates the full release lifecycle in two steps:
 2. **When the `Version Packages` PR is merged** — the workflow publishes the
    packages to npm with provenance, creates git tags, and creates the
    corresponding GitHub Releases.
+
+If you also enable the DX validation workflow, pull requests can receive a
+warning comment when the changes look releasable but the PR does not include a
+matching version plan.
 
 :::tip Recovery
 
@@ -132,7 +138,7 @@ on:
     branches:
       - main
     paths:
-      - ".nx/version-plans/**" # Optional, but recommended to avoid unnecessary workflow runs on unrelated changes
+      - ".nx/version-plans/**"
   workflow_dispatch:
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
@@ -150,6 +156,30 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+### Optional: enable the pull request warning
+
+If you also want a warning comment on pull requests, add a validation workflow
+that uses `validate-v1.yaml`:
+
+```yaml
+name: Validate
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  validate:
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
+    uses: pagopa/dx/.github/workflows/validate-v1.yaml@main
+```
+
+With this in place, pull requests receive a warning only when a version plan is
+missing or incomplete.
 
 ## Inputs
 
@@ -177,6 +207,16 @@ permissions:
 A release starts by committing a **version plan** to `main`. A version plan is a
 small file that records which packages changed and how their version should be
 bumped.
+
+## Pull Request Warning
+
+When the optional validation workflow is enabled, a pull request can receive a
+warning comment if it changes something that should have a version plan but does
+not include one.
+
+To clear the warning, add or fix the files in `.nx/version-plans/` and push the
+update. The comment is refreshed automatically and disappears when everything is
+covered.
 
 ### 1. Generate the version plan
 
@@ -220,6 +260,13 @@ as well.
 - Ensure `.nx/version-plans/` contains version plan files on `main`
 - Verify the GitHub token has `pull-requests: write` permission
 - Run `nx release --dry-run` locally to check for errors
+
+### PR warning comment is not created
+
+- Ensure the validation workflow runs on `pull_request`
+- Ensure the PR really needs a version plan
+- Ensure the PR includes the correct files in `.nx/version-plans/`
+- The warning is only managed on same-repository pull requests
 
 ### Publish fails
 
