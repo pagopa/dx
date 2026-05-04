@@ -8,7 +8,7 @@ inputs:
   default_version:
     description: "Default Terraform version to use if the `.terraform-version` file is not found and override_version is not provided."
     required: false
-    default: "1.10.4"
+    default: "1.15.0"
 
 outputs:
   terraform_version:
