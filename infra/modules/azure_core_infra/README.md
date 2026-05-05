@@ -13,6 +13,19 @@ This Terraform module provisions the core infrastructure required for the initia
 - **Private DNS Zones**: Configures private DNS zones for all resource types.
 - **Log Analytics Workspace**: Creates a Log Analytics Workspace for monitoring and diagnostics.
 - **GitHub Runner**: Provisions a GitHub Runner for CI/CD workflows.
+- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access.
+
+## Custom Role Naming
+
+Merged custom roles are created at subscription scope and their display name is prefixed with the current Azure subscription display name.
+
+This keeps the role names readable in the Azure portal while avoiding tenant-wide collisions when the same core module is deployed in multiple subscriptions of the same Microsoft Entra tenant.
+
+Example role names:
+
+- `<subscription display name> DX App CI Resource Groups`
+- `<subscription display name> DX Infra CD Subscription`
+- `<subscription display name> DX Function Host Storage`
 
 ## Usage Example
 
