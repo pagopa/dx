@@ -123,7 +123,10 @@ const checkAzLogin = () =>
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
-export const checkPreconditions = () =>
+export const checkInitPreconditions = () =>
+  checkTerraformCliIsInstalled().andThen(() => checkCorepackIsInstalled());
+
+export const checkAddEnvironmentPreconditions = () =>
   checkTerraformCliIsInstalled()
     .andThen(() => checkAzLogin())
     .andThen(() => checkCorepackIsInstalled());
@@ -232,7 +235,7 @@ export const makeInitCommand = ({
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
-      await checkPreconditions()
+      await checkInitPreconditions()
         .andThen(() =>
           ResultAsync.fromPromise(
             getPlopInstance(),
