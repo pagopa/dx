@@ -26,7 +26,8 @@ on:
         default: PagoPA
         description: Authors names to use as image label
       build_args:
-        description: List of build arguments to use for Dockerfile build, given in env=value format.
+        description: List of build arguments to use for Dockerfile build, given in
+          env=value format.
         type: string
         required: false
       build_platforms:
@@ -189,8 +190,7 @@ jobs:
           if [[ "$REVISION_MODE" == "Multiple" ]]; then
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
-              --revision-weight "$CURRENT_REVISION"=100 \
-              --revision-weight $new_revision=0 \
+              --revision-weight "$CURRENT_REVISION"=100 $new_revision=0 \
               --output table
           fi
 
@@ -231,7 +231,8 @@ jobs:
 
       - name: Get Container App Id
         id: get_container_app_id
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         run: |
           set -euo
 
@@ -244,14 +245,16 @@ jobs:
 
       - name: Check for New Revision Errors and Increment Traffic
         uses: pagopa/dx/actions/incremental-rollout@main
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
 
       - name: Deactivate Old Revision
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' && steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
         run: |
@@ -260,7 +263,8 @@ jobs:
             --revision "$CURRENT_REVISION_NAME"
 
       - name: Deactivate New Revision
-        if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' }}
+        if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
+          }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
