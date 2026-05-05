@@ -6,7 +6,7 @@ This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/r
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
 
-![diagram](./diagram.svg)
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_managed_redis/diagram.svg)
 
 ## Features
 
