@@ -245,7 +245,7 @@ jobs:
           echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
 
       - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@main
+        uses: pagopa/dx/actions/incremental-rollout@fixes/incremental-rollout
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         with:
