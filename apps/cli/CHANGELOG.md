@@ -1,3 +1,25 @@
+## 0.21.1 (2026-05-05)
+
+### 🩹 Fixes
+
+- Upgrade some dependencies ([#1690](https://github.com/pagopa/dx/pull/1690))
+- DX CLI bootstrap initialization now creates the bootstrapper environment secrets GH_APP_ID, GH_APP_INSTALLATION_ID, GH_APP_KEY, and ARM_TENANT_ID. ([#1680](https://github.com/pagopa/dx/pull/1680))
+  The bootstrapper workflow reads the GitHub App credentials from the new GH_APP_* secret names.
+
+- Stop requiring Azure login for dx init ([#1687](https://github.com/pagopa/dx/pull/1687))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.4
+- Updated @pagopa/dx-savemoney to 0.2.5
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.21.0 (2026-04-29)
 
 ### 🚀 Features
