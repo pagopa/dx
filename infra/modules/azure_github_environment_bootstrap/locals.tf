@@ -70,7 +70,17 @@ locals {
     id = provider::azurerm::normalise_resource_id("${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
 
-  parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
+  parsed_subscription_id        = provider::azurerm::parse_resource_id(var.subscription_id)
+  subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
+  custom_role_definition_names = {
+    dx_app_cd_resource_groups      = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
+    dx_app_ci_resource_groups      = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
+    dx_infra_cd_private_networking = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
+    dx_infra_cd_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
+    dx_infra_cd_subscription       = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
+    dx_infra_ci_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
+    dx_infra_ci_subscription       = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
+  }
 
   repo_secrets = {
     "ARM_TENANT_ID" = var.tenant_id

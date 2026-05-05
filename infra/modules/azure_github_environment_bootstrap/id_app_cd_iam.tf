@@ -10,11 +10,10 @@ resource "azurerm_role_assignment" "app_cd_subscription_reader" {
 resource "azurerm_role_assignment" "app_cd_rgs_deploy" {
   for_each = local.resource_group_ids
 
-  scope                = each.value
-  role_definition_id   = try(var.custom_role_definition_ids.dx_app_cd_resource_groups, null)
-  role_definition_name = try(var.custom_role_definition_ids.dx_app_cd_resource_groups, null) == null ? "DX App CD Resource Groups" : null
-  principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply the DX deploy role at ${each.value} resource group scope"
+  scope              = each.value
+  role_definition_id = data.azurerm_role_definition.dx_app_cd_resource_groups.id
+  principal_id       = azurerm_user_assigned_identity.app_cd.principal_id
+  description        = "Allow ${var.repository.name} App CD identity to apply the DX deploy role at ${each.value} resource group scope"
 }
 
 resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {

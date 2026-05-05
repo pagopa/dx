@@ -1,10 +1,9 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_ci_subscription_reader" {
-  scope                = var.subscription_id
-  role_definition_id   = try(var.custom_role_definition_ids.dx_infra_ci_subscription, null)
-  role_definition_name = try(var.custom_role_definition_ids.dx_infra_ci_subscription, null) == null ? "DX Infra CI Subscription" : null
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read DX repository resources at subscription scope"
+  scope              = var.subscription_id
+  role_definition_id = data.azurerm_role_definition.dx_infra_ci_subscription.id
+  principal_id       = azurerm_user_assigned_identity.infra_ci.principal_id
+  description        = "Allow ${var.repository.name} Infra CI identity to read DX repository resources at subscription scope"
 }
 
 # Storage Account - Terraform state file
@@ -19,11 +18,10 @@ resource "azurerm_role_assignment" "infra_ci_tf_st_blob_contributor" {
 resource "azurerm_role_assignment" "infra_ci_rgs_reader" {
   for_each = local.resource_group_ids
 
-  scope                = each.value
-  role_definition_id   = try(var.custom_role_definition_ids.dx_infra_ci_resource_groups, null)
-  role_definition_name = try(var.custom_role_definition_ids.dx_infra_ci_resource_groups, null) == null ? "DX Infra CI Resource Groups" : null
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read the DX resource group bundle at ${each.value} scope"
+  scope              = each.value
+  role_definition_id = data.azurerm_role_definition.dx_infra_ci_resource_groups.id
+  principal_id       = azurerm_user_assigned_identity.infra_ci.principal_id
+  description        = "Allow ${var.repository.name} Infra CI identity to read the DX resource group bundle at ${each.value} scope"
 }
 
 resource "azurerm_key_vault_access_policy" "infra_ci_kv_common" {
