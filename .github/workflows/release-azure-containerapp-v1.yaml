@@ -211,7 +211,8 @@ jobs:
 
             health_state=$(az containerapp revision list \
               --name "$CONTAINER_APP_NAME" \
-              --query "[?contains(name, '$NEW_REVISION_NAME')].{Health:properties.healthState}|[0].Health" -o tsv)
+              --query "[?contains(name, "$NEW_REVISION_NAME")].{Health:properties.healthState}|[0].Health" \
+              --output tsv)
 
             echo "::notice::Current health state: $health_state (attempt $((attempt+1))/$max_attempts)"
 
