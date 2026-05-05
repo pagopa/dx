@@ -83,7 +83,6 @@ expects and where to find the required values.
 npx @pagopa/dx-cli init
 
 ✔ Terraform is installed!
-✔ You are logged in to Azure (andrea.grillo@pagopa.it)
 
 ? Name test-project
 ? GitHub Organization pagopa-dx

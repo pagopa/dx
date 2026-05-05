@@ -291,7 +291,7 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        uses: pagopa/dx/actions/filter-terraform-plan@main
+        uses: pagopa/dx/actions/sanitize-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -301,7 +301,7 @@ jobs:
         id: check-length
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
-          # If the filtered plan is too long use the summary line, otherwise use the full filtered plan
+          # If the sanitized plan is too long use the summary line, otherwise use the full sanitized plan
           if [ "$(wc -c < ${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"})" -gt 60000 ]; then
             echo "${SUMMARY_LINE}" > plan_output.txt
             echo "COMPLETE_PLAN=false" >> $GITHUB_OUTPUT

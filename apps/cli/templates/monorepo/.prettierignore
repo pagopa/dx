@@ -3,3 +3,4 @@
 
 # Ignore built files
 dist
+CHANGELOG.md

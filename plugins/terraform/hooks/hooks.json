@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "${PLUGIN_ROOT}/scripts/ensure-dx-kb.sh"
+      }
+    ]
+  }
+}

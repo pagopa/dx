@@ -189,8 +189,6 @@ importers:
 
   actions/docker-build-push: {}
 
-  actions/filter-terraform-plan: {}
-
   actions/incremental-rollout:
     devDependencies:
       prettier:
@@ -289,6 +287,10 @@ importers:
         version: 3.1.1(typescript@5.9.3)(vitest@3.2.4)
 
   actions/renew-tls-certificate: {}
+
+  actions/sanitize-terraform-apply: {}
+
+  actions/sanitize-terraform-plan: {}
 
   actions/setup-telemetry:
     dependencies:
