@@ -28,7 +28,7 @@ describe("Query Validation", () => {
       shortQueries.forEach((input) => {
         const result = queryDocSchema.safeParse(input);
         expect(result.success).toBe(false);
-        expect(result.error?.errors[0].message).toBe(
+        expect(result.error?.issues[0]?.message).toBe(
           "Query must be at least 3 characters",
         );
       });
@@ -39,7 +39,7 @@ describe("Query Validation", () => {
       const result = queryDocSchema.safeParse(longQuery);
 
       expect(result.success).toBe(false);
-      expect(result.error?.errors[0].message).toBe(
+      expect(result.error?.issues[0]?.message).toBe(
         "Query must not exceed 500 characters",
       );
     });
