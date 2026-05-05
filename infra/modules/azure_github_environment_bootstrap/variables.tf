@@ -84,21 +84,6 @@ variable "subscription_id" {
   description = "The Azure subscription ID where resources will be created."
 }
 
-variable "custom_role_definition_ids" {
-  type = object({
-    dx_app_cd_resource_groups      = optional(string, null)
-    dx_app_ci_resource_groups      = optional(string, null)
-    dx_infra_cd_private_networking = optional(string, null)
-    dx_infra_cd_resource_groups    = optional(string, null)
-    dx_infra_cd_subscription       = optional(string, null)
-    dx_infra_ci_resource_groups    = optional(string, null)
-    dx_infra_ci_subscription       = optional(string, null)
-  })
-  default = null
-
-  description = "Optional IDs of custom role definitions exported by the core infrastructure module. When set, DX custom role assignments use role_definition_id instead of role_definition_name."
-}
-
 variable "tenant_id" {
   type        = string
   description = "The Azure tenant ID where resources will be created."
