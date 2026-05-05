@@ -190,8 +190,7 @@ jobs:
           if [[ "$REVISION_MODE" == "Multiple" ]]; then
             az containerapp ingress traffic set \
               --name "$CONTAINER_APP_NAME" \
-              --revision-weight "$CURRENT_REVISION"=100 \
-              --revision-weight $new_revision=0 \
+              --revision-weight "$CURRENT_REVISION"=100 $new_revision=0 \
               --output table
           fi
 
@@ -245,7 +244,7 @@ jobs:
           echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
 
       - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@fixes/incremental-rollout
+        uses: pagopa/dx/actions/incremental-rollout@main
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         with:
