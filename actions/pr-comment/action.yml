@@ -24,7 +24,7 @@ outputs:
     description: "The URL of the created comment"
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.cjs"
 
 branding:
