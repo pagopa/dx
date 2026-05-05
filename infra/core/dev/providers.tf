@@ -26,8 +26,12 @@ terraform {
     }
   }
 
-  backend "http" {
-    address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/3464191c-439c-4520-8c90-9f49ccfc8944"
+  # backend "http" {
+  #   address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/3464191c-439c-4520-8c90-9f49ccfc8944"
+  # }
+
+  backend "local" {
+    path = "/tmp/dx-core-dev-vpn-migration.tfstate"
   }
 }
 
