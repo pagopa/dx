@@ -5,15 +5,6 @@ locals {
     ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
   })
 
-  naming_config = {
-    prefix          = var.environment.prefix
-    environment     = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    name            = var.environment.app_name
-    instance_number = tonumber(var.environment.instance_number)
-  }
-
   use_cases = {
     default = {
       sku_name                  = "Balanced_B3"
@@ -37,17 +28,17 @@ locals {
 
   use_case_features = local.use_cases[var.use_case]
 
-  managed_redis_name    = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_redis" }))
-  private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "private_endpoint" }))
+  managed_redis_name    = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_redis" }))
+  private_endpoint_name = provider::dx::resource_name(merge(var.environment, { resource_type = "private_endpoint" }))
 
   vnet_id                  = var.virtual_network_id != null ? provider::azurerm::normalise_resource_id(var.virtual_network_id) : null
   vnet_resource_group_name = var.virtual_network_id != null ? provider::azurerm::parse_resource_id(var.virtual_network_id).resource_group_name : null
   vnet_name                = local.vnet_id != null ? provider::azurerm::parse_resource_id(local.vnet_id).resource_name : null
-  vnet_instance_number     = try(tonumber(element(split("-", local.vnet_name != null ? local.vnet_name : ""), length(split("-", local.vnet_name != null ? local.vnet_name : "")) - 1)), 1)
+  vnet_instance_number     = try(tonumber(split("-", local.vnet_name != null ? local.vnet_name : "")[length(split("-", local.vnet_name != null ? local.vnet_name : "")) - 1]), 1)
 
-  pep_subnet_name = provider::dx::resource_name(merge(local.naming_config, {
+  pep_subnet_name = provider::dx::resource_name(merge(var.environment, {
     domain          = "",
-    name            = "pep",
+    app_name        = "pep",
     resource_type   = "subnet",
     instance_number = local.vnet_instance_number,
   }))

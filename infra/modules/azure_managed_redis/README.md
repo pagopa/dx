@@ -2,6 +2,12 @@
 
 This module provisions [Azure Managed Redis](https://learn.microsoft.com/azure/redis/overview) (AMR) with opinionated PagoPA DX defaults: Entra-only data-plane authentication, private networking, diagnostics wired to Log Analytics, and metric alerts with sensible thresholds.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](./diagram.svg)
+
 ## Features
 
 - Two `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads).
