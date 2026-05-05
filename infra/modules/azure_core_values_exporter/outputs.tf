@@ -58,6 +58,11 @@ output "github_runner" {
   }
 }
 
+output "custom_role_definition_ids" {
+  description = "IDs of the custom role definitions created by the core infrastructure module."
+  value       = try(local.values.custom_role_definition_ids, null)
+}
+
 # Networking
 
 output "common_vnet" {

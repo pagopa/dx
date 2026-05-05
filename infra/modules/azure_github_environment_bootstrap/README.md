@@ -119,6 +119,7 @@ module "bootstrap" {
   pep_vnet_id                        = module.core_values.common_vnet.id
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
+  custom_role_definition_ids         = module.core_values.custom_role_definition_ids
 
   additional_resource_group_ids = [
     module.core_values.common_resource_group_id,
@@ -140,6 +141,7 @@ The following table shows which bootstrap module inputs can be populated from Co
 | `pep_vnet_id`                                         | `module.core_values.common_vnet.id`                                                        |
 | `private_dns_zone_resource_group_id`                  | `module.core_values.network_resource_group_id`                                             |
 | `opex_resource_group_id`                              | `module.core_values.opex_resource_group_id`                                                |
+| `custom_role_definition_ids`                          | `module.core_values.custom_role_definition_ids`                                            |
 | `additional_resource_group_ids`                       | `module.core_values.common_resource_group_id`, `module.core_values.test_resource_group_id` |
 
 For a complete production example using Core Values Exporter, see the [DX bootstrapper implementation](https://github.com/pagopa/dx/tree/main/infra/bootstrapper/_modules/azure).
@@ -162,6 +164,7 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `tenant_id`                          | string       |    ✅    | Azure tenant ID                                        |
 | `tags`                               | map(string)  |    ✅    | Tags for all resources                                 |
 | `additional_resource_group_ids`      | set(string)  |    ❌    | Extra resource groups for role assignments             |
+| `custom_role_definition_ids`         | object       |    ❌    | Custom role definition IDs exported by core            |
 | `apim_id`                            | string       |    ❌    | API Management instance ID                             |
 | `sbns_id`                            | string       |    ❌    | Service Bus Namespace ID                               |
 | `log_analytics_workspace_id`         | string       |    ❌    | Log Analytics Workspace ID                             |
@@ -307,6 +310,14 @@ tags = {
 ```
 
 ### Optional Variables
+
+#### `custom_role_definition_ids`
+
+Optional IDs of the DX custom role definitions exported by `azure-core-infra`, typically forwarded through `azure-core-values-exporter`. When provided, the module uses `role_definition_id` for DX custom role assignments instead of resolving them by name.
+
+```hcl
+custom_role_definition_ids = module.core_values.custom_role_definition_ids
+```
 
 #### `additional_resource_group_ids`
 
@@ -582,6 +593,7 @@ This module includes practical examples to help you get started quickly:
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
 | <a name="input_apim_id"></a> [apim\_id](#input\_apim\_id) | The ID of the Azure API Management (APIM) instance. | `string` | `null` | no |
+| <a name="input_custom_role_definition_ids"></a> [custom\_role\_definition\_ids](#input\_custom\_role\_definition\_ids) | Optional IDs of custom role definitions exported by the core infrastructure module. When set, DX custom role assignments use role\_definition\_id instead of role\_definition\_name. | <pre>object({<br/>    dx_app_cd_resource_groups      = optional(string, null)<br/>    dx_app_ci_resource_groups      = optional(string, null)<br/>    dx_infra_cd_private_networking = optional(string, null)<br/>    dx_infra_cd_resource_groups    = optional(string, null)<br/>    dx_infra_cd_subscription       = optional(string, null)<br/>    dx_infra_ci_resource_groups    = optional(string, null)<br/>    dx_infra_ci_subscription       = optional(string, null)<br/>  })</pre> | `null` | no |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id       = string<br/>    container_app_environment_location = string<br/>    replica_timeout_in_seconds         = optional(number, 1800)<br/>    polling_interval_in_seconds        = optional(number, 30)<br/>    min_instances                      = optional(number, 0)<br/>    max_instances                      = optional(number, 30)<br/>    labels                             = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
