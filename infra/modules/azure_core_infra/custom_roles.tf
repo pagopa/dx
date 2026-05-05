@@ -3,7 +3,7 @@ module "dx_app_cd_resource_group_deploy" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX App CD Resource Groups"
+  role_name = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
   reason    = "Merged role for DX App CD identities at resource group scope"
   source_roles = [
     "Website Contributor",
@@ -19,7 +19,7 @@ module "dx_app_ci_resource_group_reader" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX App CI Resource Groups"
+  role_name = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
   reason    = "Merged role for DX App CI identities at resource group scope"
   source_roles = [
     "PagoPA IaC Reader",
@@ -32,7 +32,7 @@ module "dx_infra_cd_private_networking" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Infra CD Private Networking"
+  role_name = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
   reason    = "Merged role for DX Infra CD identities managing private DNS networking"
   source_roles = [
     "Private DNS Zone Contributor",
@@ -45,7 +45,7 @@ module "dx_infra_cd_resource_group_deploy" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Infra CD Resource Groups"
+  role_name = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
   reason    = "Merged role for DX Infra CD identities at resource group scope"
   source_roles = [
     "Contributor",
@@ -65,7 +65,7 @@ module "dx_infra_cd_subscription_admin" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Infra CD Subscription"
+  role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
   reason    = "Merged role for DX Infra CD identities at subscription scope"
   source_roles = [
     "Reader",
@@ -78,7 +78,7 @@ module "dx_infra_ci_resource_group_reader" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Infra CI Resource Groups"
+  role_name = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
   reason    = "Merged role for DX Infra CI identities at resource group scope"
   source_roles = [
     "DocumentDB Account Contributor",
@@ -98,7 +98,7 @@ module "dx_infra_ci_subscription_reader" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Infra CI Subscription"
+  role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
   reason    = "Merged role for DX Infra CI identities at subscription scope"
   source_roles = [
     "Reader",
@@ -112,7 +112,7 @@ module "dx_function_host_storage" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Function Host Storage"
+  role_name = "${local.subscription_role_name_prefix} DX Function Host Storage"
   reason    = "Merged role for Function App host storage access"
   source_roles = [
     "Storage Blob Data Owner",
@@ -126,7 +126,7 @@ module "dx_function_durable_storage" {
   version = "~> 0.0"
 
   scope     = data.azurerm_subscription.current.id
-  role_name = "DX Function Durable Storage"
+  role_name = "${local.subscription_role_name_prefix} DX Function Durable Storage"
   reason    = "Merged role for Function App durable storage access"
   source_roles = [
     "Storage Blob Data Contributor",
