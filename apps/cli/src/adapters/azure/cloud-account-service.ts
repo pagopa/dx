@@ -245,6 +245,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     const parameters = {
       location: cloudAccount.defaultLocation,
       tags: {
+        CreatedBy: "DX CLI",
         Environment: name,
         ...tags,
       },
@@ -291,6 +292,12 @@ export class AzureCloudAccountService implements CloudAccountService {
         this.#credential,
         cloudAccount.id,
       );
+      const subscriptionClient = new SubscriptionClient(this.#credential);
+      const subscription = await subscriptionClient.subscriptions.get(
+        cloudAccount.id,
+      );
+      assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+      const tenantId = subscription.tenantId;
       const subscriptionScope = `/subscriptions/${cloudAccount.id}`;
 
       // Grant the bootstrap identity the Azure permissions it needs to operate autonomously in the bootstrap workflow.
@@ -343,26 +350,14 @@ export class AzureCloudAccountService implements CloudAccountService {
         },
       );
 
-      // These secrets let the GitHub workflow target the bootstrap identity and subscription without extra setup.
-      await Promise.all([
-        gitHubService.createOrUpdateEnvironmentSecret({
-          environmentName: githubEnvironmentName,
-          owner: github.owner,
-          repo: github.repo,
-          secretName: "ARM_CLIENT_ID",
-          secretValue: identityClientId,
-        }),
-        gitHubService.createOrUpdateEnvironmentSecret({
-          environmentName: githubEnvironmentName,
-          owner: github.owner,
-          repo: github.repo,
-          secretName: "ARM_SUBSCRIPTION_ID",
-          secretValue: cloudAccount.id,
-        }),
-      ]);
-
-      logger.debug("Set GitHub environment secrets for {environmentName}", {
-        environmentName: githubEnvironmentName,
+      await this.#storeBootstrapperEnvironmentSecrets({
+        cloudAccountId: cloudAccount.id,
+        github,
+        githubEnvironmentName,
+        gitHubService,
+        identityClientId,
+        runnerAppCredentials,
+        tenantId,
       });
 
       const keyVaultName = await this.#createCommonKeyVault({
@@ -373,6 +368,7 @@ export class AzureCloudAccountService implements CloudAccountService {
         shortEnv: short.env,
         shortLocation: short.location,
         tags,
+        tenantId,
       });
 
       await this.#storeRunnerAppSecrets({
@@ -572,6 +568,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     shortEnv,
     shortLocation,
     tags,
+    tenantId,
   }: {
     cloudAccount: CloudAccount;
     name: EnvironmentId["name"];
@@ -580,13 +577,9 @@ export class AzureCloudAccountService implements CloudAccountService {
     shortEnv: string;
     shortLocation: string;
     tags: Record<string, string>;
+    tenantId: string;
   }): Promise<string> {
     const logger = getLogger(["gen", "env"]);
-    const subscriptionClient = new SubscriptionClient(this.#credential);
-    const subscription = await subscriptionClient.subscriptions.get(
-      cloudAccount.id,
-    );
-    assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
 
     const kvClient = new KeyVaultManagementClient(
       this.#credential,
@@ -616,7 +609,7 @@ export class AzureCloudAccountService implements CloudAccountService {
             name: "standard",
           },
           softDeleteRetentionInDays: secretsProtectionEnabled ? 14 : 7,
-          tenantId: subscription.tenantId,
+          tenantId,
         },
         tags: {
           Environment: name,
@@ -723,6 +716,76 @@ export class AzureCloudAccountService implements CloudAccountService {
       "All resource providers registered on subscription {subscriptionId}",
       { subscriptionId },
     );
+  }
+
+  async #storeBootstrapperEnvironmentSecrets({
+    cloudAccountId,
+    github,
+    githubEnvironmentName,
+    gitHubService,
+    identityClientId,
+    runnerAppCredentials,
+    tenantId,
+  }: {
+    cloudAccountId: string;
+    github: GitHubRepo;
+    githubEnvironmentName: string;
+    gitHubService: GitHubService;
+    identityClientId: string;
+    runnerAppCredentials: GitHubAppCredentials;
+    tenantId: string;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+
+    await Promise.all([
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "ARM_CLIENT_ID",
+        secretValue: identityClientId,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "ARM_TENANT_ID",
+        secretValue: tenantId,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "ARM_SUBSCRIPTION_ID",
+        secretValue: cloudAccountId,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "GH_APP_ID",
+        secretValue: runnerAppCredentials.id,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "GH_APP_INSTALLATION_ID",
+        secretValue: runnerAppCredentials.installationId,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
+        secretName: "GH_APP_KEY",
+        secretValue: runnerAppCredentials.key.trimEnd(),
+      }),
+    ]);
+
+    logger.debug("Set GitHub environment secrets for {environmentName}", {
+      environmentName: githubEnvironmentName,
+      subscriptionId: cloudAccountId,
+    });
   }
 
   async #storeRunnerAppSecrets({

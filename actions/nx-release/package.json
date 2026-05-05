@@ -38,6 +38,6 @@
   "dependencies": {
     "@octokit/rest": "^22.0.1",
     "js-yaml": "catalog:",
-    "zod": "^4.3.6"
+    "zod": "catalog:"
   }
 }
