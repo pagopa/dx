@@ -1,7 +1,8 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
   scope                = var.subscription_id
-  role_definition_name = "DX Infra CD Subscription"
+  role_definition_id   = try(var.custom_role_definition_ids.dx_infra_cd_subscription, null)
+  role_definition_name = try(var.custom_role_definition_ids.dx_infra_cd_subscription, null) == null ? "DX Infra CD Subscription" : null
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage the DX subscription admin bundle"
 }
@@ -11,7 +12,8 @@ resource "azurerm_role_assignment" "infra_cd_rgs_deploy" {
   for_each = local.resource_group_ids
 
   scope                = each.value
-  role_definition_name = "DX Infra CD Resource Groups"
+  role_definition_id   = try(var.custom_role_definition_ids.dx_infra_cd_resource_groups, null)
+  role_definition_name = try(var.custom_role_definition_ids.dx_infra_cd_resource_groups, null) == null ? "DX Infra CD Resource Groups" : null
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to apply the DX deploy role at ${each.value} resource group scope"
 }
@@ -27,7 +29,8 @@ resource "azurerm_role_assignment" "infra_cd_vnet_network_contributor" {
 # Private DNS Zone
 resource "azurerm_role_assignment" "infra_cd_rg_private_networking" {
   scope                = var.private_dns_zone_resource_group_id
-  role_definition_name = "DX Infra CD Private Networking"
+  role_definition_id   = try(var.custom_role_definition_ids.dx_infra_cd_private_networking, null)
+  role_definition_name = try(var.custom_role_definition_ids.dx_infra_cd_private_networking, null) == null ? "DX Infra CD Private Networking" : null
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to manage the DX private networking bundle at resource group level"
 }

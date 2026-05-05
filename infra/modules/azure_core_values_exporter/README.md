@@ -1,6 +1,6 @@
 # DX - Azure Core Values Exporter
 
-This Terraform module enables the standardized export and sharing of core Azure infrastructure values across projects and environments.  
+This Terraform module enables the standardized export and sharing of core Azure infrastructure values across projects and environments.
 It is designed to harmonize the configuration of cloud resources by exposing key outputs such as resource group names, network details, and shared service endpoints from the main `azure-core-infra` state, making them easily consumable by dependent modules and project-specific stacks.
 
 ## Supported Backends
@@ -84,6 +84,7 @@ No modules.
 | <a name="output_common_test_snet"></a> [common\_test\_snet](#output\_common\_test\_snet) | Details of the test subnet, including its name and ID. |
 | <a name="output_common_vnet"></a> [common\_vnet](#output\_common\_vnet) | Details of the common virtual network, including its name and ID. |
 | <a name="output_common_vpn_snet"></a> [common\_vpn\_snet](#output\_common\_vpn\_snet) | Details of the VPN subnet, including its name and ID. |
+| <a name="output_custom_role_definition_ids"></a> [custom\_role\_definition\_ids](#output\_custom\_role\_definition\_ids) | IDs of the custom role definitions created by the core infrastructure module. |
 | <a name="output_dns_forwarder"></a> [dns\_forwarder](#output\_dns\_forwarder) | n/a |
 | <a name="output_github_runner"></a> [github\_runner](#output\_github\_runner) | Details of the GitHub runner, including environment ID, resource group name, and subnet ID. |
 | <a name="output_network_resource_group_id"></a> [network\_resource\_group\_id](#output\_network\_resource\_group\_id) | The ID of the network resource group. |

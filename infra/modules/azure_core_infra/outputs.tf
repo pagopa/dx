@@ -57,6 +57,21 @@ output "github_runner" {
   }
 }
 
+output "custom_role_definition_ids" {
+  description = "IDs of the custom role definitions created by the core infrastructure module."
+  value = {
+    dx_app_cd_resource_groups      = module.dx_app_cd_resource_group_deploy.custom_role_id
+    dx_app_ci_resource_groups      = module.dx_app_ci_resource_group_reader.custom_role_id
+    dx_infra_cd_private_networking = module.dx_infra_cd_private_networking.custom_role_id
+    dx_infra_cd_resource_groups    = module.dx_infra_cd_resource_group_deploy.custom_role_id
+    dx_infra_cd_subscription       = module.dx_infra_cd_subscription_admin.custom_role_id
+    dx_infra_ci_resource_groups    = module.dx_infra_ci_resource_group_reader.custom_role_id
+    dx_infra_ci_subscription       = module.dx_infra_ci_subscription_reader.custom_role_id
+    dx_function_host_storage       = module.dx_function_host_storage.custom_role_id
+    dx_function_durable_storage    = module.dx_function_durable_storage.custom_role_id
+  }
+}
+
 # Networking
 
 output "common_vnet" {
