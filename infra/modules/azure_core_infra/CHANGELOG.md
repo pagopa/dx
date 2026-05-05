@@ -1,3 +1,13 @@
+## 4.1.1 (2026-05-05)
+
+### 🩹 Fixes
+
+- Prefix merged custom role names with the Azure subscription display name to avoid tenant-wide name collisions across subscriptions. ([#1693](https://github.com/pagopa/dx/pull/1693))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.1.0 (2026-05-05)
 
 ### 🚀 Features
