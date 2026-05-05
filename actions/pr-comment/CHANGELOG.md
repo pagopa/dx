@@ -1,3 +1,13 @@
+## 0.3.0 (2026-05-05)
+
+### 🚀 Features
+
+- Upgrade pr-comment action to support Node 24.x runtime ([#1695](https://github.com/pagopa/dx/pull/1695))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.2.3 (2026-05-05)
 
 ### 🧱 Updated Dependencies
