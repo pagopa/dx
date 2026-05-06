@@ -1,5 +1,5 @@
 {
-  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:a30da48cdf5f9144ff7f2156622e701e752fc258d77ca7bb00120624f1a95938",
+  "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:aa263c6fdd7c1bc990eead3922224fe8afbf5d85eaf3b6b9260786ab94d74933",
   "features": {
     "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
     "ghcr.io/pagopa/devcontainer-features/acli:1": {},
@@ -23,7 +23,9 @@
       "pnpmVersion": "none",
       "nvmInstallPath": "/opt/nvm"
     },
-    "ghcr.io/devcontainers/features/go:1": {},
+    "ghcr.io/devcontainers/features/go:1": {
+      "golangciLintVersion": "2.11.4"
+    },
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
       "moby": false
     },

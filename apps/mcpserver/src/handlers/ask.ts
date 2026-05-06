@@ -16,10 +16,7 @@ import {
 
 const AskBodySchema = z.object({
   query: z
-    .string({
-      invalid_type_error: "Missing required field: query",
-      required_error: "Missing required field: query",
-    })
+    .string({ error: "Missing required field: query" })
     .trim()
     .min(1, "Missing required field: query"),
 });
@@ -42,7 +39,11 @@ export async function handleAskEndpoint(
     const result = AskBodySchema.safeParse(jsonBody);
 
     if (!result.success) {
-      return sendErrorResponse(res, 400, result.error.errors[0].message);
+      const firstIssue = result.error.issues[0];
+      if (!firstIssue) {
+        throw new Error("Request validation failed without any issues");
+      }
+      return sendErrorResponse(res, 400, firstIssue.message);
     }
 
     const { query } = result.data;
