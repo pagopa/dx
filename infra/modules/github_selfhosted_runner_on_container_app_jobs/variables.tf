@@ -17,7 +17,10 @@ variable "environment" {
     instance_number = string
   })
 
-  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+  description = <<-EOT
+    Values which are used to generate resource names and location short names.
+    They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains.
+  EOT
 }
 
 variable "repository" {

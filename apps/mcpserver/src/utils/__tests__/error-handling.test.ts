@@ -2,7 +2,7 @@ import type { InternalAxiosRequestConfig } from "axios";
 
 import { AxiosError, AxiosHeaders } from "axios";
 import { describe, expect, it } from "vitest";
-import { ZodError } from "zod";
+import { z, ZodError } from "zod";
 
 import { handleApiError, isAxiosError, isZodError } from "../error-handling.js";
 
@@ -117,55 +117,63 @@ describe("handleApiError - Axios network errors", () => {
 
 describe("handleApiError - Zod validation errors", () => {
   it("should format single validation error", () => {
-    const error = new ZodError([
-      {
-        code: "too_small",
-        inclusive: true,
-        message: "String must contain at least 3 character(s)",
-        minimum: 3,
-        path: ["query"],
-        type: "string",
-      },
-    ]);
-    expect(handleApiError(error)).toBe(
+    const result = z
+      .object({
+        query: z.string().min(3, "String must contain at least 3 character(s)"),
+      })
+      .safeParse({ query: "" });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      throw new Error("Expected validation to fail");
+    }
+
+    expect(handleApiError(result.error)).toBe(
       "Error: Invalid input - query: String must contain at least 3 character(s)",
     );
   });
 
   it("should format multiple validation errors", () => {
-    const error = new ZodError([
-      {
-        code: "too_small",
-        inclusive: true,
-        message: "String must contain at least 3 character(s)",
-        minimum: 3,
-        path: ["query"],
-        type: "string",
-      },
-      {
-        code: "invalid_type",
-        expected: "number",
-        message: "Expected number, received string",
-        path: ["page"],
-        received: "string",
-      },
-    ]);
-    expect(handleApiError(error)).toBe(
+    const result = z
+      .intersection(
+        z.object({
+          query: z
+            .string()
+            .min(3, "String must contain at least 3 character(s)"),
+        }),
+        z.object({
+          page: z.number({ error: "Expected number, received string" }),
+        }),
+      )
+      .safeParse({ page: "one", query: "" });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      throw new Error("Expected validation to fail");
+    }
+
+    expect(handleApiError(result.error)).toBe(
       "Error: Invalid input - query: String must contain at least 3 character(s); page: Expected number, received string",
     );
   });
 
   it("should handle nested path errors", () => {
-    const error = new ZodError([
-      {
-        code: "invalid_type",
-        expected: "string",
-        message: "Required",
-        path: ["data", "nested", "field"],
-        received: "undefined",
-      },
-    ]);
-    expect(handleApiError(error)).toBe(
+    const result = z
+      .object({
+        data: z.object({
+          nested: z.object({
+            field: z.string({ error: "Required" }),
+          }),
+        }),
+      })
+      .safeParse({ data: { nested: {} } });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      throw new Error("Expected validation to fail");
+    }
+
+    expect(handleApiError(result.error)).toBe(
       "Error: Invalid input - data.nested.field: Required",
     );
   });

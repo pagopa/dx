@@ -13,6 +13,19 @@ This Terraform module provisions the core infrastructure required for the initia
 - **Private DNS Zones**: Configures private DNS zones for all resource types.
 - **Log Analytics Workspace**: Creates a Log Analytics Workspace for monitoring and diagnostics.
 - **GitHub Runner**: Provisions a GitHub Runner for CI/CD workflows.
+- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access.
+
+## Custom Role Naming
+
+Merged custom roles are created at subscription scope and their display name is prefixed with the current Azure subscription display name.
+
+This keeps the role names readable in the Azure portal while avoiding tenant-wide collisions when the same core module is deployed in multiple subscriptions of the same Microsoft Entra tenant.
+
+Example role names:
+
+- `<subscription display name> DX App CI Resource Groups`
+- `<subscription display name> DX Infra CD Subscription`
+- `<subscription display name> DX Function Host Storage`
 
 ## Usage Example
 
@@ -36,6 +49,15 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | <a name="module_application_insights"></a> [application\_insights](#module\_application\_insights) | ./_modules/application_insights | n/a |
 | <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
 | <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
+| <a name="module_dx_app_cd_resource_group_deploy"></a> [dx\_app\_cd\_resource\_group\_deploy](#module\_dx\_app\_cd\_resource\_group\_deploy) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_app_ci_resource_group_reader"></a> [dx\_app\_ci\_resource\_group\_reader](#module\_dx\_app\_ci\_resource\_group\_reader) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_function_durable_storage"></a> [dx\_function\_durable\_storage](#module\_dx\_function\_durable\_storage) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_function_host_storage"></a> [dx\_function\_host\_storage](#module\_dx\_function\_host\_storage) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_infra_cd_private_networking"></a> [dx\_infra\_cd\_private\_networking](#module\_dx\_infra\_cd\_private\_networking) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_infra_cd_resource_group_deploy"></a> [dx\_infra\_cd\_resource\_group\_deploy](#module\_dx\_infra\_cd\_resource\_group\_deploy) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_infra_cd_subscription_admin"></a> [dx\_infra\_cd\_subscription\_admin](#module\_dx\_infra\_cd\_subscription\_admin) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_infra_ci_resource_group_reader"></a> [dx\_infra\_ci\_resource\_group\_reader](#module\_dx\_infra\_ci\_resource\_group\_reader) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
+| <a name="module_dx_infra_ci_subscription_reader"></a> [dx\_infra\_ci\_subscription\_reader](#module\_dx\_infra\_ci\_subscription\_reader) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.0 |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
 | <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
 | <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./_modules/nat_gateway | n/a |
@@ -52,6 +74,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 | [azurerm_resource_group.opex](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_resource_group.test](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 

@@ -1,4 +1,5 @@
 name: E2E GitHub Self-Hosted Runner Smoke
+run-name: ${{ format('E2E GitHub Self-Hosted Runner {0}', inputs.test_id) }}
 
 on:
   workflow_dispatch:
@@ -22,7 +23,7 @@ permissions:
 jobs:
   smoke:
     timeout-minutes: 20
-    runs-on: ${{ fromJSON(format('["self-hosted","{0}"]', inputs.runner_label)) }}
+    runs-on: ${{ inputs.runner_label }}
 
     steps:
       - name: Verify runner execution

@@ -1,0 +1,34 @@
+flowchart LR
+    subgraph Redis["Azure Managed Redis"]
+        amr["Managed Redis
+          (Entra-only, OSSCluster)"]
+        amr@{ icon: "azure:azure-managed-redis"}
+
+        lock["Management Lock
+          (CanNotDelete)"]
+        lock@{icon: "azure:azure-information-protection"}
+    end
+
+    subgraph Network["Network"]
+        pep["Private Endpoint
+          (redisEnterprise)"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns["Private DNS Zone
+          (privatelink.redis.azure.net)"]
+        dns@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        diag["Diagnostic Settings
+          (AllMetrics)"]
+        diag@{ icon: "azure:diagnostics-settings"}
+
+        law["Log Analytics Workspace"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+    end
+
+    Redis --> Network
+    pep --> dns
+    diag --> law
+    Redis -.-> Monitoring
