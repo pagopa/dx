@@ -49,81 +49,48 @@ jobs:
             exit 1
           fi
 
-          echo "Checking naming convention for new workflow files in .github/workflows directory"
+          echo "Checking naming convention for new or renamed workflow files in .github/workflows directory"
           BASE_BRANCH="origin/$BASE_REF"
           HEAD_BRANCH="origin/$HEAD_REF"
 
           echo "- FROM  Base ref: $BASE_BRANCH"
           echo "- TO    Head ref: $HEAD_BRANCH"
 
-          # Find all new files in the .github/workflows directory that are added in the pull request
-          NEW_FILES=$(git diff --name-only --diff-filter=A $BASE_BRANCH...$HEAD_BRANCH | grep '^.github/workflows/' || true)
+          # Define the naming pattern.
+          # Pattern is: [_]<scope>[-<description>][-vN].yaml
+          NAMING_PATTERN='^_?(release|validate|cron)(-[a-z0-9]+)*(-v[0-9]+)?\.yaml$'
+          FOUND_FILES=0
 
-          if [ -z "$NEW_FILES" ]; then
-            echo "No new workflow files detected. Skipping validation."
-            exit 0
-          fi
-
-          # Skip validation if the workflow is named _validate.yaml
-          # TODO(CES-1442): Update the naming convention to allow multi-language workflows
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/_validate\.yaml$'; then
-            echo "Skipping validation for _validate.yaml"
-            exit 0
-          fi
-
-          # Skip validation if the workflow is named _validate-next-bundle.yaml
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/_validate-next-bundle\.yaml$'; then
-            echo "Skipping validation for _validate-next-bundle.yaml"
-            exit 0
-          fi
-
-          # Skip validation if the workflow is named release-vN.yaml
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/release-v[0-9]\+\.yaml$'; then
-            echo "Skipping validation for release-vN.yaml"
-            exit 0
-          fi
-
-          # Skip validation if the workflow is named _release.yaml
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/_release\.yaml$'; then
-            echo "Skipping validation for _release.yaml"
-            exit 0
-          fi
-
-          # Skip validation if the workflow is named validate-v1.yaml
-          if echo "$NEW_FILES" | grep -q '^.github/workflows/validate-v1\.yaml$'; then
-            echo "Skipping validation for validate-v1.yaml"
-            exit 0
-          fi
-
-          # Define the naming pattern
-          # Pattern is: [_]<scope>-<type>-<description>[-vN].yaml
-          NAMING_PATTERN='^(_)?(cron|build|validate|release)-(docker|typescript|terraform|changesets|docusaurus|bash|go|azure|aws|certificate)-[a-z0-9-]+(-v[0-9]+)?\.yaml$'
-
-          # Check each new file
-          for FILE in $NEW_FILES; do
+          # Check each new or renamed file
+          while IFS= read -r -d '' FILE; do
+            FOUND_FILES=1
             FILE_NAME=$(basename "$FILE")
 
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
-              # If is a reusable workflow (don't start starts with '_'), ensure '-vN' is present
+              # Reusable workflows must end with an explicit major version.
               if ! [[ "$FILE_NAME" =~ -v[0-9]+\.yaml$ ]]; then
-                echo "Error: Internal workflow file '$FILE_NAME' must include '-vN' at the end."
-                echo "Example: validate-azure-example-v1.yaml"
+                echo "Error: Reusable workflow file '$FILE_NAME' must include '-vN' at the end."
+                echo "Example: release-v1.yaml"
                 exit 1
               fi
             fi
 
             if ! [[ "$FILE_NAME" =~ $NAMING_PATTERN ]]; then
               echo "Error: File '$FILE_NAME' does not follow the naming convention."
-              echo "Required format: [_]<scope>-<type>-<description>[-vN].yaml"
-              echo "  - <_> only if is an internal workflow"
-              echo "  - <scope> must be one of: cron, build, validate, release"
-              echo "  - <type> must be one of: docker, typescript, terraform, changesets, docusaurus, bash, go, azure, aws, certificate"
-              echo "  - <description> must be lowercase divided by hyphens (-)"
-              echo "  - <vN> where N is a major version (required if is a reusable workflow)"
+              echo "Required format: [_]<scope>[-<description>][-vN].yaml"
+              echo "  - <_> only for workflows that call reusable workflows"
+              echo "  - <scope> must be one of: release, validate, cron"
+              echo "  - <description> is optional and, if present, must be lowercase and divided by hyphens (-)"
+              echo "  - <vN> where N is a major version and is required for reusable workflows"
               echo "  - file extension must be .yaml"
-              echo "Example: validate-bash-script-checks.yaml or _cron-azure-backup-v1.yaml"
+              echo "Examples: release-v1.yaml, _release.yaml, _validate-next-bundle.yaml"
               exit 1
             fi
-          done
+          done < <(git diff --name-only --diff-filter=AR -M -z "$BASE_BRANCH...$HEAD_BRANCH" -- .github/workflows/)
 
-          echo "All new workflow files follow the naming convention."
+          if [ "$FOUND_FILES" -eq 0 ]; then
+            echo "No new or renamed workflow files detected. Skipping validation."
+            exit 0
+          fi
+
+          echo "All new or renamed workflow files follow the naming convention."
