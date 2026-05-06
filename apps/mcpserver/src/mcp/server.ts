@@ -89,8 +89,7 @@ export function createServer({
     // Build Zod schema from prompt arguments
     const argsSchemaShape: Record<
       string,
-      | z.ZodOptional<z.ZodType<string, z.ZodTypeDef, string>>
-      | z.ZodType<string, z.ZodTypeDef, string>
+      z.ZodOptional<z.ZodString> | z.ZodString
     > = {};
     for (const arg of catalogEntry.prompt.arguments) {
       const fieldSchema = z.string().describe(arg.description);
@@ -99,12 +98,10 @@ export function createServer({
         : fieldSchema.optional();
     }
 
-    const zodObject = z.object(argsSchemaShape);
-
     mcpServer.registerPrompt(
       catalogEntry.prompt.name,
       {
-        argsSchema: zodObject.shape,
+        argsSchema: argsSchemaShape,
         description: catalogEntry.prompt.description,
       },
       async (args: Record<string, unknown>): Promise<GetPromptResultType> => {
