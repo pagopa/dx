@@ -47,7 +47,7 @@ resource "azurerm_resource_group" "sut" {
 }
 
 resource "azurerm_user_assigned_identity" "uai" {
-  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_identity", name = "cosno" }))
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_identity", app_name = "cosno" }))
   resource_group_name = azurerm_resource_group.sut.name
   location            = azurerm_resource_group.sut.location
   tags                = var.tags

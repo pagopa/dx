@@ -7,7 +7,7 @@
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.10 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
 
 ## Modules
 
