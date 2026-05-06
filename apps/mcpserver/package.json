@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "type": "module",
   "description": "An MCP server that supports developers using DX tools.",
   "repository": {
@@ -28,7 +28,7 @@
     "@pagopa/azure-tracing": "workspace:^",
     "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.16.0",
-    "zod": "^3.25.76"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
