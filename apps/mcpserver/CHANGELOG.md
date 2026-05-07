@@ -1,3 +1,13 @@
+## 0.2.4 (2026-05-07)
+
+### 🩹 Fixes
+
+- Migrate the MCP server to Zod v4 ([#1698](https://github.com/pagopa/dx/pull/1698))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.2.3 (2026-05-05)
 
 ### 🩹 Fixes

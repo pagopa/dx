@@ -1,3 +1,13 @@
+## 0.21.2 (2026-05-07)
+
+### 🩹 Fixes
+
+- Add contextual side effect documentation to `init` and `add environment` commands ([#1682](https://github.com/pagopa/dx/pull/1682))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.21.1 (2026-05-05)
 
 ### 🩹 Fixes

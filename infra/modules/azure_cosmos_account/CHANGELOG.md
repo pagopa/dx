@@ -1,3 +1,16 @@
+## 0.4.2 (2026-05-07)
+
+### 🩹 Fixes
+
+- Internal refactoring which removes dead code ([#1700](https://github.com/pagopa/dx/pull/1700))
+- Upgrade dependencies ([#1699](https://github.com/pagopa/dx/pull/1699))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 0.4.1 (2026-04-20)
 
 ### 🩹 Fixes
