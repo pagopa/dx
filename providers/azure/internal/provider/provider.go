@@ -102,6 +102,8 @@ func (p *dxProvider) DataSources(ctx context.Context) []func() datasource.DataSo
 func (p *dxProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{
 		NewResourceNameFunction,
+		NewConvertLocationToLongFormatFunction,
+		NewConvertLocationToShortFormatFunction,
 	}
 }
 
