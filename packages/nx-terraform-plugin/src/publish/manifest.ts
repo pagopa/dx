@@ -1,7 +1,5 @@
 import { z } from "zod/v4";
 
-import { ModulePublishManifest } from "./types.ts";
-
 // Parses and validates module.json files for publishable Terraform modules.
 export const modulePublishManifestSchema = z.object({
   description: z.string().min(1),
@@ -14,6 +12,8 @@ export const modulePublishManifestSchema = z.object({
   version: z.string().min(1),
 });
 
+export type ModulePublishManifest = z.infer<typeof modulePublishManifestSchema>;
+
 export const parseModulePublishManifest = (
   input: unknown,
 ): ModulePublishManifest => {
@@ -21,7 +21,8 @@ export const parseModulePublishManifest = (
   if (!parseResult.success) {
     const validationErrors = parseResult.error.issues
       .map((issue) => {
-        const path = issue.path.length > 0 ? issue.path.join(".") : "module.json";
+        const path =
+          issue.path.length > 0 ? issue.path.join(".") : "module.json";
         return `${path}: ${issue.message}`;
       })
       .join("; ");

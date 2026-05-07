@@ -5,12 +5,16 @@ const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
     "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
 });
 
-const publishOptionsSchema = z.object({
+export const publishOptionsSchema = z.object({
+  github: z
+    .object({
+      owner: z.string().min(1, "github owner cannot be empty").optional(),
+    })
+    .optional(),
   mode: z.literal("github"),
-  github: z.object({
-    owner: z.string().min(1, "github owner cannot be empty"),
-  }),
 });
+
+export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
 const terraformPluginOptionsSchema = z.object({
   applyTargetName: targetNameSchema,
@@ -41,9 +45,6 @@ const defaultOptions: TerraformPluginOptions = {
   outputTargetName: "tf-output",
   planTargetName: "tf-plan",
   publish: {
-    github: {
-      owner: "pagopa-dx",
-    },
     mode: "github",
   },
   publishTargetName: "nx-release-publish",
@@ -72,10 +73,14 @@ export const parseOptions = (
     publish: {
       ...defaultOptions.publish,
       ...parseResult.data.publish,
-      github: {
-        ...defaultOptions.publish.github,
-        ...parseResult.data.publish?.github,
-      },
+      ...(defaultOptions.publish.github || parseResult.data.publish?.github
+        ? {
+            github: {
+              ...defaultOptions.publish.github,
+              ...parseResult.data.publish?.github,
+            },
+          }
+        : {}),
     },
   };
   // Check uniqueness of target names

@@ -14,14 +14,25 @@ describe("parseOptions", () => {
       outputTargetName: "tf-output",
       planTargetName: "tf-plan",
       publish: {
-        github: {
-          owner: "pagopa-dx",
-        },
         mode: "github",
       },
       publishTargetName: "nx-release-publish",
       testTargetName: "tf-test",
       validateTargetName: "tf-validate",
+    });
+  });
+
+  it("accepts publish options without github owner", () => {
+    expect(
+      parseOptions({
+        publish: {
+          mode: "github",
+        },
+      }),
+    ).toMatchObject({
+      publish: {
+        mode: "github",
+      },
     });
   });
 
