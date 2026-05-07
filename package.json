@@ -13,6 +13,7 @@
     "@nx/docker": "22.7.1",
     "@nx/eslint": "22.7.1",
     "@nx/js": "22.7.1",
+    "@nx/plugin": "22.7.1",
     "@nx/vitest": "22.7.1",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.33",

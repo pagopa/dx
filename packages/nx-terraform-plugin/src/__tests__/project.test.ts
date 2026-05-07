@@ -64,10 +64,10 @@ const getExpectedDocsTarget = () => ({
 
 const getExpectedPublishTarget = () => ({
   cache: false,
-  command:
-    "node tools/terraform-module-publish.mjs --projectRoot={projectRoot} --workspaceRoot={workspaceRoot}",
+  executor: "@pagopa/nx-terraform-plugin:nx-release-publish",
   options: {
-    cwd: "{projectRoot}",
+    projectRoot: "{projectRoot}",
+    workspaceRoot: "{workspaceRoot}",
   },
 });
 

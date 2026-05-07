@@ -54,5 +54,6 @@
         }
       }
     }
-  }
+  },
+  "executors": "./executors.json"
 }

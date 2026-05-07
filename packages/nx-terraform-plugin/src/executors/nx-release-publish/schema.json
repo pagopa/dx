@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "NxReleasePublish executor",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Terraform module project root",
+      "type": "string"
+    },
+    "provider": {
+      "description": "Terraform provider used in repository name",
+      "type": "string"
+    },
+    "workspaceRoot": {
+      "description": "Workspace root path",
+      "type": "string"
+    }
+  },
+  "required": []
+}

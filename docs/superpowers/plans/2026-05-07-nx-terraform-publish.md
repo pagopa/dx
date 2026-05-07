@@ -178,57 +178,46 @@ git commit -m "Infer nx-release-publish for publishable libraries"
 - [x] **Step 1: Write failing runtime contract tests**
 
 ```ts
-// packages/nx-terraform-plugin/src/__tests__/publish-runtime.test.ts
-await expect(
-  runPublish({
-    projectRoot: "infra/modules/azure_core_infra",
-    workspaceRoot: "/repo",
-    publish: { mode: "github", github: { owner: "pagopa-dx" } },
-  }),
-).resolves.toEqual({ repo: "terraform-azurerm-azure-core-infra" });
+// packages/nx-terraform-plugin/src/executors/nx-release-publish/nx-release-publish.spec.ts
+expect(
+  getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "azurerm"),
+).toBe("terraform-azurerm-azure-core-infra");
 ```
 
 - [x] **Step 2: Run tests to verify failure**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
-Expected: FAIL because runtime and runner do not exist
+Expected: FAIL because executor wiring/contract is not implemented
 
 - [x] **Step 3: Implement runner and argument contract**
 
-```js
-// tools/terraform-module-publish.mjs
-import { runPublishFromProcessArgs } from "../packages/nx-terraform-plugin/dist/publish/runtime.js";
-await runPublishFromProcessArgs(process.argv.slice(2), process.cwd());
+```bash
+# generated via @nx/plugin
+pnpm nx g @nx/plugin:executor packages/nx-terraform-plugin/src/executors/nx-release-publish --name nx-release-publish --unitTestRunner vitest
 ```
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/runtime.ts
-export interface PublishRuntimeInput {
-  workspaceRoot: string;
-  projectRoot: string;
-  publish: PublishOptions;
-}
-```
-
-```ts
-// packages/nx-terraform-plugin/src/project.ts target command
-command:
-  "node tools/terraform-module-publish.mjs --projectRoot={projectRoot} --workspaceRoot={workspaceRoot}",
+// packages/nx-terraform-plugin/src/project.ts target executor
+executor: "@pagopa/nx-terraform-plugin:nx-release-publish",
+options: {
+  projectRoot: "{projectRoot}",
+  workspaceRoot: "{workspaceRoot}",
+},
 ```
 
 - [x] **Step 4: Run tests to verify pass**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
-Expected: PASS for runtime parsing and command contract
+Expected: PASS for executor behavior and target wiring
 
 - [x] **Step 5: Commit**
 
 ```bash
-git add tools/terraform-module-publish.mjs \
-  packages/nx-terraform-plugin/src/publish/runtime.ts \
+git add packages/nx-terraform-plugin/executors.json \
+  packages/nx-terraform-plugin/src/executors/nx-release-publish \
   packages/nx-terraform-plugin/src/project.ts \
-  packages/nx-terraform-plugin/src/__tests__/publish-runtime.test.ts
-git commit -m "Add nx-release-publish runtime entrypoint"
+  packages/nx-terraform-plugin/src/__tests__/project.test.ts
+git commit -m "Add nx-release-publish Nx executor"
 ```
 
 ### Task 4: Implement GitHub repository ensure/create flow
