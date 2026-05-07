@@ -3,46 +3,50 @@ package provider
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/function"
 )
 
-// locationShortToLong maps short location codes to their full Azure region names.
+// locationShortToLong is the single source of truth mapping short location codes
+// to their full Azure region names. locationLongToShort is derived from this map.
 var locationShortToLong = map[string]string{
-	"swc": "swedencentral",
-	"spc": "spaincentral",
 	"gwc": "germanycentral",
 	"itn": "italynorth",
 	"neu": "northeurope",
+	"spc": "spaincentral",
+	"swc": "swedencentral",
 	"weu": "westeurope",
 }
 
-// locationLongToShort maps full Azure region names to their short codes.
-var locationLongToShort = map[string]string{
-	"swedencentral":  "swc",
-	"spaincentral":   "spc",
-	"germanycentral": "gwc",
-	"italynorth":     "itn",
-	"northeurope":    "neu",
-	"westeurope":     "weu",
+// locationLongToShort is derived from locationShortToLong at init time.
+var locationLongToShort map[string]string
+
+func init() {
+	locationLongToShort = make(map[string]string, len(locationShortToLong))
+	for short, long := range locationShortToLong {
+		locationLongToShort[long] = short
+	}
 }
 
-// validShortLocations returns a comma-separated list of valid short location codes.
+// validShortLocations returns a stable, sorted comma-separated list of valid short location codes.
 func validShortLocations() string {
 	keys := make([]string, 0, len(locationShortToLong))
 	for k := range locationShortToLong {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return strings.Join(keys, ", ")
 }
 
-// validLongLocations returns a comma-separated list of valid long location names.
+// validLongLocations returns a stable, sorted comma-separated list of valid long location names.
 func validLongLocations() string {
 	keys := make([]string, 0, len(locationLongToShort))
 	for k := range locationLongToShort {
 		keys = append(keys, k)
 	}
+	sort.Strings(keys)
 	return strings.Join(keys, ", ")
 }
 
