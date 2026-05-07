@@ -178,7 +178,7 @@ git commit -m "Infer nx-release-publish for publishable libraries"
 - [x] **Step 1: Write failing runtime contract tests**
 
 ```ts
-// packages/nx-terraform-plugin/src/executors/nx-release-publish/nx-release-publish.spec.ts
+// packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts
 expect(
   getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "azurerm"),
 ).toBe("terraform-azurerm-azure-core-infra");
@@ -193,12 +193,12 @@ Expected: FAIL because executor wiring/contract is not implemented
 
 ```bash
 # generated via @nx/plugin
-pnpm nx g @nx/plugin:executor packages/nx-terraform-plugin/src/executors/nx-release-publish --name nx-release-publish --unitTestRunner vitest
+pnpm nx g @nx/plugin:executor packages/nx-terraform-plugin/src/executors/publish --name publish --unitTestRunner vitest
 ```
 
 ```ts
 // packages/nx-terraform-plugin/src/project.ts target executor
-executor: "@pagopa/nx-terraform-plugin:nx-release-publish",
+executor: "@pagopa/nx-terraform-plugin:publish",
 options: {
   projectRoot: "{projectRoot}",
   workspaceRoot: "{workspaceRoot}",
@@ -214,7 +214,7 @@ Expected: PASS for executor behavior and target wiring
 
 ```bash
 git add packages/nx-terraform-plugin/executors.json \
-  packages/nx-terraform-plugin/src/executors/nx-release-publish \
+  packages/nx-terraform-plugin/src/executors/publish \
   packages/nx-terraform-plugin/src/project.ts \
   packages/nx-terraform-plugin/src/__tests__/project.test.ts
 git commit -m "Add nx-release-publish Nx executor"

@@ -1,8 +1,9 @@
 import { ExecutorContext } from "@nx/devkit";
 import { describe, expect, it } from "vitest";
 
-import executor, { getRepoNameFromProjectRoot } from "./nx-release-publish.ts";
 import type { NxReleasePublishExecutorSchema } from "./schema.d.ts";
+
+import executor, { getRepoNameFromProjectRoot } from "./publish.ts";
 
 const baseContext: ExecutorContext = {
   cwd: process.cwd(),
@@ -19,7 +20,7 @@ const baseContext: ExecutorContext = {
   root: "",
 };
 
-describe("NxReleasePublish Executor", () => {
+describe("Publish Executor", () => {
   it("derives a repo name from project root", () => {
     expect(
       getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "azurerm"),

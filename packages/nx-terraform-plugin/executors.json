@@ -1,9 +1,9 @@
 {
   "executors": {
-    "nx-release-publish": {
-      "implementation": "./src/executors/nx-release-publish/nx-release-publish",
-      "schema": "./src/executors/nx-release-publish/schema.json",
-      "description": "nx-release-publish executor"
+    "publish": {
+      "implementation": "./src/executors/publish/publish",
+      "schema": "./src/executors/publish/schema.json",
+      "description": "publish executor"
     }
   }
 }

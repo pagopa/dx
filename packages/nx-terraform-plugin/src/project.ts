@@ -163,7 +163,7 @@ const getTargets = (
         opts.publishTargetName,
         {
           cache: false,
-          executor: "@pagopa/nx-terraform-plugin:nx-release-publish",
+          executor: "@pagopa/nx-terraform-plugin:publish",
           options: {
             projectRoot: "{projectRoot}",
             workspaceRoot: "{workspaceRoot}",
