@@ -19,7 +19,7 @@ module "github_runner" {
 
   container_app_environment = {
     id                          = var.github_private_runner.container_app_environment_id
-    location                    = var.github_private_runner.container_app_environment_location
+    location                    = local.location_long
     replica_timeout_in_seconds  = var.github_private_runner.replica_timeout_in_seconds
     polling_interval_in_seconds = var.github_private_runner.polling_interval_in_seconds
     min_instances               = var.github_private_runner.min_instances

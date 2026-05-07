@@ -1,6 +1,6 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
-  scope              = var.subscription_id
+  scope              = data.azurerm_subscription.current.id
   role_definition_id = data.azurerm_role_definition.dx_infra_cd_subscription.id
   principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
   description        = "Allow ${var.repository.name} Infra CD identity to manage the DX subscription admin bundle"
@@ -79,15 +79,3 @@ resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
   description          = "Allow ${var.repository.name} Infra CD identity to apply changes to the Terraform state file Storage Account scope"
 }
-
-resource "azurerm_key_vault_access_policy" "infra_cd_kv_common" {
-  for_each = toset(var.keyvault_common_ids)
-
-  key_vault_id = each.key
-  tenant_id    = var.tenant_id
-  object_id    = azurerm_user_assigned_identity.infra_cd.principal_id
-
-  secret_permissions = ["Get", "List", "Set"]
-}
-
-# Storage Account - Blob, Queue and Table

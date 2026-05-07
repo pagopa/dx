@@ -1,20 +1,20 @@
 # Subscription
 resource "azurerm_role_assignment" "opex_ci_subscription_reader" {
-  scope                = var.subscription_id
+  scope                = data.azurerm_subscription.current.id
   role_definition_name = "Reader"
   principal_id         = azurerm_user_assigned_identity.opex_ci.principal_id
   description          = "Allow ${var.repository.name} Opex CI identity to read resources at subscription scope"
 }
 
 resource "azurerm_role_assignment" "opex_ci_subscription_data_access" {
-  scope                = var.subscription_id
+  scope                = data.azurerm_subscription.current.id
   role_definition_name = "Reader and Data Access"
   principal_id         = azurerm_user_assigned_identity.opex_ci.principal_id
   description          = "Allow ${var.repository.name} Opex CI identity to read resources' keys and data at subscription scope"
 }
 
 resource "azurerm_role_assignment" "opex_cd_subscription_reader" {
-  scope                = var.subscription_id
+  scope                = data.azurerm_subscription.current.id
   role_definition_name = "Reader"
   principal_id         = azurerm_user_assigned_identity.opex_cd.principal_id
   description          = "Allow ${var.repository.name} Opex CD identity to read resources at subscription scope"

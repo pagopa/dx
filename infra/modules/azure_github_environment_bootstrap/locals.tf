@@ -13,6 +13,11 @@ locals {
     "p" = "prod"
   }[var.environment.env_short]
 
+  location_long = {
+    "itn" = "italynorth",
+    "weu" = "westeurope"
+  }[var.environment.location]
+
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
       name          = var.environment.domain
@@ -67,10 +72,9 @@ locals {
   }
 
   tf_storage_account = {
-    id = provider::azurerm::normalise_resource_id("${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
+    id = provider::azurerm::normalise_resource_id("${data.azurerm_subscription.current.id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
 
-  parsed_subscription_id        = provider::azurerm::parse_resource_id(var.subscription_id)
   subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
   custom_role_definition_names = {
     dx_app_cd_resource_groups      = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
@@ -83,48 +87,48 @@ locals {
   }
 
   repo_secrets = {
-    "ARM_TENANT_ID" = var.tenant_id
+    "ARM_TENANT_ID" = data.azurerm_subscription.current.tenant_id
   }
 
   infra_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   app_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   opex_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   infra_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   app_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   opex_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 }

@@ -73,22 +73,6 @@ variable "opex_resource_group_id" {
   description = "The ID of the resource group containing Opex dashboards."
 }
 
-variable "keyvault_common_ids" {
-  type        = list(string)
-  default     = []
-  description = "A list of IDs for Key Vaults containing common secrets."
-}
-
-variable "subscription_id" {
-  type        = string
-  description = "The Azure subscription ID where resources will be created."
-}
-
-variable "tenant_id" {
-  type        = string
-  description = "The Azure tenant ID where resources will be created."
-}
-
 variable "repository" {
   type = object({
     owner = optional(string, "pagopa")

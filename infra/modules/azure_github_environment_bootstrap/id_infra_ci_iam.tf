@@ -1,6 +1,6 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_ci_subscription_reader" {
-  scope              = var.subscription_id
+  scope              = data.azurerm_subscription.current.id
   role_definition_id = data.azurerm_role_definition.dx_infra_ci_subscription.id
   principal_id       = azurerm_user_assigned_identity.infra_ci.principal_id
   description        = "Allow ${var.repository.name} Infra CI identity to read DX repository resources at subscription scope"
@@ -22,16 +22,6 @@ resource "azurerm_role_assignment" "infra_ci_rgs_reader" {
   role_definition_id = data.azurerm_role_definition.dx_infra_ci_resource_groups.id
   principal_id       = azurerm_user_assigned_identity.infra_ci.principal_id
   description        = "Allow ${var.repository.name} Infra CI identity to read the DX resource group bundle at ${each.value} scope"
-}
-
-resource "azurerm_key_vault_access_policy" "infra_ci_kv_common" {
-  for_each = toset(var.keyvault_common_ids)
-
-  key_vault_id = each.key
-  tenant_id    = var.tenant_id
-  object_id    = azurerm_user_assigned_identity.infra_ci.principal_id
-
-  secret_permissions = ["Get", "List"]
 }
 
 # API Management
