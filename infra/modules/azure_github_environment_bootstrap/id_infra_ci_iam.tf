@@ -23,13 +23,3 @@ resource "azurerm_role_assignment" "infra_ci_rgs_reader" {
   principal_id       = azurerm_user_assigned_identity.infra_ci.principal_id
   description        = "Allow ${var.repository.name} Infra CI identity to read the DX resource group bundle at ${each.value} scope"
 }
-
-# API Management
-resource "azurerm_role_assignment" "infra_ci_subscription_apim_secrets" {
-  count = local.has_apim
-
-  scope                = var.apim_id
-  role_definition_name = "PagoPA API Management Service List Secrets"
-  principal_id         = azurerm_user_assigned_identity.infra_ci.principal_id
-  description          = "Allow ${var.repository.name} Infra CI identity to read secrets at APIM scope"
-}

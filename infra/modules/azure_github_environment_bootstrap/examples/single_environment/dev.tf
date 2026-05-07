@@ -65,7 +65,6 @@ module "dev" {
     }
   }
 
-  pep_vnet_id                        = data.azurerm_virtual_network.common_dev.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.common_dev.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards_dev.id
 

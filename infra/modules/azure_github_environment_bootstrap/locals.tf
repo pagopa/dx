@@ -13,11 +13,6 @@ locals {
     "p" = "prod"
   }[var.environment.env_short]
 
-  location_long = {
-    "itn" = "italynorth",
-    "weu" = "westeurope"
-  }[var.environment.location]
-
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
       name          = var.environment.domain
@@ -34,10 +29,6 @@ locals {
       for rg in var.additional_resource_group_ids : rg => rg
     }
   )
-
-  has_apim                    = var.apim_id != null ? 1 : 0
-  has_sbns                    = var.sbns_id != null ? 1 : 0
-  has_log_analytics_workspace = var.log_analytics_workspace_id != null ? 1 : 0
 
   # %s is replaced by `ci` or `cd`
   ids = {

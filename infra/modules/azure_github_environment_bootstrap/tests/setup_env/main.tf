@@ -105,16 +105,8 @@ output "github_private_runner" {
   }
 }
 
-output "pep_vnet_id" {
-  value = data.azurerm_virtual_network.common.id
-}
-
 output "private_dns_zone_resource_group_id" {
   value = data.azurerm_resource_group.common.id
-}
-
-output "nat_gateway_resource_group_id" {
-  value = data.azurerm_resource_group.vnet.id
 }
 
 output "opex_resource_group_id" {
