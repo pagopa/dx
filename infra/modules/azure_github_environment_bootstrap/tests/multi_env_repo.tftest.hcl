@@ -39,9 +39,6 @@ run "validate_github_id_app" {
       instance_number = run.setup_tests.environment.instance_number
     }
 
-    subscription_id = run.setup_tests.subscription_id
-    tenant_id       = run.setup_tests.tenant_id
-
     entraid_groups = {
       admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
       devs_object_id      = run.setup_tests.entraid_groups.devs_object_id
@@ -125,14 +122,10 @@ run "validate_github_id_infra" {
       azurerm_role_assignment.infra_ci_subscription_reader,
       azurerm_role_assignment.infra_ci_rgs_reader,
       azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
-      azurerm_key_vault_access_policy.infra_ci_kv_common,
       azurerm_role_assignment.infra_cd_subscription_rbac_admin,
       azurerm_role_assignment.infra_cd_rgs_deploy,
-      azurerm_role_assignment.infra_cd_apim_service_contributor,
-      azurerm_role_assignment.infra_cd_sbns_contributor,
       azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
       azurerm_role_assignment.infra_cd_rg_private_networking,
-      azurerm_key_vault_access_policy.infra_cd_kv_common,
     ]
   }
 
@@ -144,9 +137,6 @@ run "validate_github_id_infra" {
       domain          = run.setup_tests.environment.domain
       instance_number = run.setup_tests.environment.instance_number
     }
-
-    subscription_id = run.setup_tests.subscription_id
-    tenant_id       = run.setup_tests.tenant_id
 
     entraid_groups = {
       admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
@@ -214,11 +204,6 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = length(azurerm_key_vault_access_policy.infra_ci_kv_common) == 0
-    error_message = "The Infra CI managed identity is not allowed to read from common Key Vault"
-  }
-
-  assert {
     condition     = azurerm_role_assignment.infra_cd_subscription_rbac_admin != null
     error_message = "The Infra CD managed identity is not assigned the merged subscription admin role"
   }
@@ -229,16 +214,6 @@ run "validate_github_id_infra" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_cd_apim_service_contributor == []
-    error_message = "The Infra CD managed identity can't apply changes to API Management service configurations at resource group scope"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.infra_cd_sbns_contributor == []
-    error_message = "The Infra CD managed identity can't apply changes to Service Bus Namespace configurations at resource group scope"
-  }
-
-  assert {
     condition     = azurerm_role_assignment.infra_cd_st_tf_blob_contributor != null
     error_message = "The Infra CD managed identity can't apply changes to the Terraform state file Storage Account scope"
   }
@@ -246,11 +221,6 @@ run "validate_github_id_infra" {
   assert {
     condition     = azurerm_role_assignment.infra_cd_rg_private_networking != null
     error_message = "The Infra CD managed identity can't apply the merged private networking role at resource group scope"
-  }
-
-  assert {
-    condition     = length(azurerm_key_vault_access_policy.infra_cd_kv_common) == 0
-    error_message = "The Infra CD managed identity is not allowed to write to common Key Vaults"
   }
 }
 
@@ -276,9 +246,6 @@ run "validate_rbac_entraid" {
       domain          = run.setup_tests.environment.domain
       instance_number = run.setup_tests.environment.instance_number
     }
-
-    subscription_id = run.setup_tests.subscription_id
-    tenant_id       = run.setup_tests.tenant_id
 
     entraid_groups = {
       admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
@@ -353,9 +320,6 @@ run "validate_github_id_opex" {
       domain          = run.setup_tests.environment.domain
       instance_number = run.setup_tests.environment.instance_number
     }
-
-    subscription_id = run.setup_tests.subscription_id
-    tenant_id       = run.setup_tests.tenant_id
 
     entraid_groups = {
       admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
@@ -443,9 +407,6 @@ run "validate_rgs_iam" {
       domain          = run.setup_tests.environment.domain
       instance_number = run.setup_tests.environment.instance_number
     }
-
-    subscription_id = run.setup_tests.subscription_id
-    tenant_id       = run.setup_tests.tenant_id
 
     entraid_groups = {
       admins_object_id    = run.setup_tests.entraid_groups.admins_object_id
