@@ -1,0 +1,96 @@
+name: Validate Workflow Naming
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+
+jobs:
+  validate-naming:
+    name: Validate Workflow Naming Convention
+    runs-on: ubuntu-latest
+    concurrency:
+      group: ${{ github.workflow }}-ci
+      cancel-in-progress: true
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
+
+      - name: Validate workflow file naming convention
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -eu
+
+          if [ -z "$BASE_REF" ]; then
+            echo "Error: BASE_REF is empty."
+            exit 1
+          fi
+
+          if [ -z "$HEAD_REF" ]; then
+            echo "Error: HEAD_REF is empty."
+            exit 1
+          fi
+
+          # Validate PR refs are safe strings (alphanumeric, /, _, -, ., ~)
+          if ! [[ "$BASE_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
+            echo "Error: Invalid base ref format: $BASE_REF"
+            exit 1
+          fi
+
+          if ! [[ "$HEAD_REF" =~ ^[a-zA-Z0-9/_.~-]+$ ]]; then
+            echo "Error: Invalid head ref format: $HEAD_REF"
+            exit 1
+          fi
+
+          echo "Checking naming convention for new or renamed workflow files in .github/workflows directory"
+          BASE_BRANCH="origin/$BASE_REF"
+          HEAD_BRANCH="origin/$HEAD_REF"
+
+          echo "- FROM  Base ref: $BASE_BRANCH"
+          echo "- TO    Head ref: $HEAD_BRANCH"
+
+          # Define the naming pattern.
+          # Pattern is: [_]<scope>[-<description>][-vN].yaml
+          NAMING_PATTERN='^_?(release|validate|cron)(-[a-z0-9]+)*(-v[0-9]+)?\.yaml$'
+          FOUND_FILES=0
+
+          # Check each new or renamed file
+          while IFS= read -r -d '' FILE; do
+            FOUND_FILES=1
+            FILE_NAME=$(basename "$FILE")
+
+            if ! [[ "$FILE_NAME" =~ ^_ ]]; then
+              # Reusable workflows must end with an explicit major version.
+              if ! [[ "$FILE_NAME" =~ -v[0-9]+\.yaml$ ]]; then
+                echo "Error: Reusable workflow file '$FILE_NAME' must include '-vN' at the end."
+                echo "Example: release-v1.yaml"
+                exit 1
+              fi
+            fi
+
+            if ! [[ "$FILE_NAME" =~ $NAMING_PATTERN ]]; then
+              echo "Error: File '$FILE_NAME' does not follow the naming convention."
+              echo "Required format: [_]<scope>[-<description>][-vN].yaml"
+              echo "  - <_> only for workflows that call reusable workflows"
+              echo "  - <scope> must be one of: release, validate, cron"
+              echo "  - <description> is optional and, if present, must be lowercase and divided by hyphens (-)"
+              echo "  - <vN> where N is a major version and is required for reusable workflows"
+              echo "  - file extension must be .yaml"
+              echo "Examples: release-v1.yaml, _release.yaml, _validate-next-bundle.yaml"
+              exit 1
+            fi
+          done < <(git diff --name-only --diff-filter=AR -M -z "$BASE_BRANCH...$HEAD_BRANCH" -- .github/workflows/)
+
+          if [ "$FOUND_FILES" -eq 0 ]; then
+            echo "No new or renamed workflow files detected. Skipping validation."
+            exit 0
+          fi
+
+          echo "All new or renamed workflow files follow the naming convention."
