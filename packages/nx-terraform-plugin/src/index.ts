@@ -10,6 +10,7 @@ import { getStaticDependenciesFromFile } from "./fs.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
 import { getProject } from "./project.ts";
+import { hasPublishableModuleManifest } from "./publish/discovery.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 
@@ -38,6 +39,23 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
     const hasRootTflintConfig = await fileExists(
       path.join(context.workspaceRoot, ".tflint.hcl"),
     );
+    const publishableRoots = new Set(
+      (
+        await Promise.all(
+          configFiles.map(async (configFile) => {
+            const root = path.dirname(configFile);
+            const rootSegments = new Set(root.split(path.sep));
+            if (ignoreModules.some((module) => rootSegments.has(module))) {
+              return null;
+            }
+            const absoluteRoot = path.join(context.workspaceRoot, root);
+            const hasPublishManifest =
+              await hasPublishableModuleManifest(absoluteRoot);
+            return hasPublishManifest ? root : null;
+          }),
+        )
+      ).filter((root): root is string => root !== null),
+    );
     return createNodesFromFiles(
       (configFile) => {
         const root = path.dirname(configFile);
@@ -49,7 +67,12 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
         }
         return {
           projects: {
-            [root]: getProject(opts, root, hasRootTflintConfig),
+            [root]: getProject(
+              opts,
+              root,
+              hasRootTflintConfig,
+              publishableRoots.has(root),
+            ),
           },
         };
       },

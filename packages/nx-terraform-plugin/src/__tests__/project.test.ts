@@ -62,12 +62,32 @@ const getExpectedDocsTarget = () => ({
   outputs: ["{projectRoot}/README.md"],
 });
 
+const getExpectedPublishTarget = () => ({
+  cache: false,
+  command: "node tools/terraform-module-publish.mjs",
+  options: {
+    cwd: "{projectRoot}",
+  },
+});
+
 const getTargetsOrThrow = (project: ReturnType<typeof getProject>) => {
   if (!project.targets) {
     throw new Error("Expected project targets to be defined");
   }
   return project.targets;
 };
+
+const stripDependsOn = (
+  targets: Record<
+    string,
+    NonNullable<ReturnType<typeof getProject>["targets"]>[string]
+  >,
+) =>
+  Object.values(targets).map((target) => {
+    const targetWithoutDependsOn = { ...target };
+    delete targetWithoutDependsOn.dependsOn;
+    return targetWithoutDependsOn;
+  });
 
 describe("getProjectNameFromRoot", () => {
   describe("infra segment removal", () => {
@@ -206,19 +226,23 @@ describe("getProject", () => {
 
     it("does not add terraform-docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+      const targets = getTargetsOrThrow(
+        getProject(defaultOptions, root, true, true),
+      );
 
       expect(Object.keys(targets)).toEqual([
         "tf-init",
         "tf-fmt",
         "tf-test",
         "tf-validate",
+        "tflint",
         "tf-console",
         "tf-output",
         "tf-plan",
         "tf-apply",
       ]);
       expect(targets["terraform-docs"]).toBeUndefined();
+      expect(targets["nx-release-publish"]).toBeUndefined();
     });
 
     it("sets correct dependency chains", () => {
@@ -293,6 +317,26 @@ describe("getProject", () => {
       ]);
       expect(targets["terraform-docs"]).toEqual(getExpectedDocsTarget());
     });
+
+    it("adds nx-release-publish when manifest is available", () => {
+      const root = path.join("infra", "modules", "network_stack");
+      const targets = getTargetsOrThrow(
+        getProject(defaultOptions, root, true, true),
+      );
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tflint",
+        "terraform-docs",
+        "nx-release-publish",
+        "tf-console",
+        "tf-output",
+      ]);
+      expect(targets["nx-release-publish"]).toEqual(getExpectedPublishTarget());
+    });
   });
 
   describe("when custom target names are configured", () => {
@@ -308,13 +352,6 @@ describe("getProject", () => {
       expect(Object.keys(defaultTargets)).not.toEqual(
         Object.keys(customTargets),
       );
-
-      const stripDependsOn = (targets: typeof defaultTargets) =>
-        Object.values(targets).map((target) => {
-          const targetWithoutDependsOn = { ...target };
-          delete targetWithoutDependsOn.dependsOn;
-          return targetWithoutDependsOn;
-        });
 
       expect(stripDependsOn(defaultTargets)).toEqual(
         stripDependsOn(customTargets),

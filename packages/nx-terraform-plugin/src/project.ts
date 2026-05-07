@@ -45,6 +45,7 @@ const getTargets = (
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
+  hasPublishManifest: boolean,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -156,6 +157,19 @@ const getTargets = (
         outputs: ["{projectRoot}/README.md"],
       },
     ]);
+
+    if (hasPublishManifest) {
+      targets.push([
+        opts.publishTargetName,
+        {
+          cache: false,
+          command: "node tools/terraform-module-publish.mjs",
+          options: {
+            cwd,
+          },
+        },
+      ]);
+    }
   }
 
   targets.push(
@@ -218,9 +232,16 @@ export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
   hasRootTflintConfig = false,
+  hasPublishManifest = false,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
-  const targets = getTargets(opts, root, projectType, hasRootTflintConfig);
+  const targets = getTargets(
+    opts,
+    root,
+    projectType,
+    hasRootTflintConfig,
+    hasPublishManifest,
+  );
   return {
     name: getProjectNameFromRoot(root),
     namedInputs: {

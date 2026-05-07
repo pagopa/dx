@@ -94,7 +94,7 @@ git commit -m "Add publish and module manifest schemas"
 - Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/publish-discovery.test.ts`
 
-- [ ] **Step 1: Write failing tests for target inference gate**
+- [x] **Step 1: Write failing tests for target inference gate**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/project.test.ts
@@ -113,12 +113,12 @@ expect(Object.keys(getProject(defaultOptions, appRoot, true, true).targets ?? {}
 expect(await hasPublishableModuleManifest(root)).toBe(true); // module.json exists + valid
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: FAIL because publish gating is not implemented
 
-- [ ] **Step 3: Implement manifest-aware inference**
+- [x] **Step 3: Implement manifest-aware inference**
 
 ```ts
 // packages/nx-terraform-plugin/src/publish/discovery.ts
@@ -151,12 +151,12 @@ if (projectType === "library" && hasPublishManifest) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for publish target inference rules
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/index.ts \
