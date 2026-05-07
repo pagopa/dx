@@ -31,6 +31,7 @@ the SQL API, which receives excellent support directly from the vendor.
 io-services-cms is an example of an application that reads and writes on a
 Cosmos DB using SQL API:
 
+- [DX Terraform module for Azure Cosmos DB accounts](https://registry.terraform.io/modules/pagopa-dx/azure-cosmos-account/azurerm/latest)
 - [application repository](https://github.com/pagopa/io-services-cms)
 - [infrastructure definition](https://github.com/pagopa/io-services-cms/blob/10a0d758781e1e2ed7f3a4e5fc3e0d8044719724/infra/src/database_cms.tf#L2C28-L2C28)
   to provision Cosmos DB geo-replicated account and its databases and containers

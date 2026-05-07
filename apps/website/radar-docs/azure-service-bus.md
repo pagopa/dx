@@ -28,3 +28,11 @@ to the
 [architecture center](https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/messaging#technology-choices-for-a-message-broker)
 and the
 [Service Bus documentation](https://learn.microsoft.com/en-us/azure/service-bus-messaging/compare-messaging-services).
+
+## DX ecosystem
+
+- [DX Terraform module for Azure Service Bus namespaces](https://registry.terraform.io/modules/pagopa-dx/azure-service-bus-namespace/azurerm/latest)
+
+## Reference of usage in our organization
+
+- [Module examples in the DX repository](https://github.com/pagopa/dx/tree/main/infra/modules/azure_service_bus_namespace)

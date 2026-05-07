@@ -32,6 +32,7 @@ providing durable storage for various workloads. All Function Apps deployed in
 the infrastructure have an associated Azure Storage Account to manage state,
 queues, and other necessary storage needs.
 
+- [DX Terraform module for Azure Storage Account](https://registry.terraform.io/modules/pagopa-dx/azure-storage-account/azurerm/latest)
 - [Storage definition](https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/storage_account.tf)
   to provision Storage Accounts for different services, including log management
   and notification processing.

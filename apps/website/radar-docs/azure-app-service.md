@@ -22,6 +22,9 @@ in different languages.
 
 io-backend is an example of a Typescript backend application:
 
+- [DX Terraform module for Azure App Service (legacy workloads)](https://registry.terraform.io/modules/pagopa-dx/azure-app-service/azurerm/latest)
+- [DX Terraform module for publicly exposed Azure App Service (legacy workloads)](https://registry.terraform.io/modules/pagopa-dx/azure-app-service-exposed/azurerm/latest)
+- [DX deployment pipeline for Azure App Service and Function Apps](https://dx.pagopa.it/docs/azure/application-deployment/release-azure-appsvc)
 - [application repository](https://github.com/pagopa/io-backend)
 - [infrastructure repository](https://github.com/pagopa/io-infra/blob/6d26bd3d90dc2103d4a0f1cb8212bddfc1af5340/src/core/app_backend.tf#L642)
   to provision App Service using internal Terraform modules
