@@ -116,11 +116,31 @@ run "additional_actions_must_not_contain_blank_values" {
   expect_failures = [var.additional_actions]
 }
 
+run "additional_actions_must_reject_unsupported_regex_characters" {
+  command = plan
+
+  variables {
+    additional_actions = ["Microsoft.Authorization/roleAssignments[write]"]
+  }
+
+  expect_failures = [var.additional_actions]
+}
+
 run "additional_data_actions_must_not_contain_blank_values" {
   command = plan
 
   variables {
     additional_data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write", "   "]
+  }
+
+  expect_failures = [var.additional_data_actions]
+}
+
+run "additional_data_actions_must_reject_unsupported_regex_characters" {
+  command = plan
+
+  variables {
+    additional_data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs[write]"]
   }
 
   expect_failures = [var.additional_data_actions]

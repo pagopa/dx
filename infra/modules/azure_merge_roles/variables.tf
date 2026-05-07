@@ -37,7 +37,7 @@ variable "source_roles" {
 }
 
 variable "additional_actions" {
-  description = "Optional list of extra control-plane actions to append to the merged custom role definition."
+  description = "Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions."
   type        = list(string)
   default     = []
 
@@ -45,16 +45,26 @@ variable "additional_actions" {
     condition     = alltrue([for action in var.additional_actions : trimspace(action) != ""])
     error_message = "additional_actions must not contain blank actions."
   }
+
+  validation {
+    condition     = alltrue([for action in var.additional_actions : can(regex("^[0-9A-Za-z./*]+$", trimspace(action)))])
+    error_message = "additional_actions entries may contain only Azure RBAC action characters: letters, digits, '/', '.', and '*'."
+  }
 }
 
 variable "additional_data_actions" {
-  description = "Optional list of extra data-plane actions to append to the merged custom role definition."
+  description = "Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents."
   type        = list(string)
   default     = []
 
   validation {
     condition     = alltrue([for action in var.additional_data_actions : trimspace(action) != ""])
     error_message = "additional_data_actions must not contain blank actions."
+  }
+
+  validation {
+    condition     = alltrue([for action in var.additional_data_actions : can(regex("^[0-9A-Za-z./*]+$", trimspace(action)))])
+    error_message = "additional_data_actions entries may contain only Azure RBAC action characters: letters, digits, '/', '.', and '*'."
   }
 }
 

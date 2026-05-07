@@ -18,6 +18,16 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 - Requires an explicit `scope` and always uses that same scope as the role's only assignable scope.
 - Supports role definitions created at management group scope as well as subscription scope.
 
+## Choosing Additional Permissions
+
+Most callers should start with `source_roles` only and leave both `additional_*` inputs empty.
+
+Use `additional_actions` only when the merged role still misses Azure management-plane operations, such as reading or writing role assignments, locks, or resource settings.
+
+Use `additional_data_actions` only when the merged role still misses permissions on the resource contents themselves, such as reading, writing, or deleting blob data.
+
+In this module, `additional` means permissions that are not already granted by the selected `source_roles`, but that you still want in the final merged custom role.
+
 ## Merge Strategy
 
 Azure RBAC computes effective permissions per role assignment as:
@@ -82,6 +92,8 @@ Use `additional_actions` only for extra control-plane grants that are not alread
 
 Use `additional_data_actions` only for extra data-plane grants that are not already included in `source_roles`. The module deduplicates them against the merged source data actions and applies the same permissive overlap policy used for `not_data_actions`.
 
+Both inputs accept only Azure RBAC action characters: letters, digits, `/`, `.`, and `*`.
+
 ## Assigning The Generated Role
 
 When you want to assign the custom role in the same Terraform apply, prefer
@@ -127,8 +139,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to append to the merged custom role definition. | `list(string)` | `[]` | no |
-| <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to append to the merged custom role definition. | `list(string)` | `[]` | no |
+| <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions. | `list(string)` | `[]` | no |
+| <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents. | `list(string)` | `[]` | no |
 | <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |
