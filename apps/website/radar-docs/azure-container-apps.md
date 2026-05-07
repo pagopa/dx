@@ -33,4 +33,5 @@ patterns.
 ## DX ecosystem
 
 - [DX Terraform module for Azure Container App](https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/latest)
+- [DX Terraform module for Azure Container App Environment](https://registry.terraform.io/modules/pagopa-dx/azure-container-app-environment/azurerm/latest)
 - [DX deployment pipeline for Azure Container Apps](https://dx.pagopa.it/docs/azure/application-deployment/release-container-app)
