@@ -913,7 +913,27 @@ importers:
 
   infra/modules/azure_service_bus_namespace: {}
 
-  infra/modules/azure_storage_account: {}
+  infra/modules/azure_storage_account:
+    dependencies:
+      '@azure/identity':
+        specifier: 'catalog:'
+        version: 4.13.1
+      '@azure/storage-blob':
+        specifier: catalog:azure
+        version: 12.31.0
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.2
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+      tsx:
+        specifier: 'catalog:'
+        version: 4.21.0
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
 
   infra/modules/github_environment_bootstrap: {}
 
