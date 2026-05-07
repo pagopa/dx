@@ -22,6 +22,7 @@ on-premises instances.
 Azure Database for PostgreSQL - Flexible Server is our standard for PostgreSQL
 deployments and is utilized in various services, including:
 
+- [DX Terraform module for Azure PostgreSQL](https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/latest)
 - Bonus & Payments - Carta Giovani Nazionale
   [infrastructure definition with DX module](https://github.com/pagopa/io-cgn/blob/main/infra-pe/resources/_modules/postgresql_db/postgresql_db.tf)
   | [application repository](https://github.com/pagopa/io-cgn)

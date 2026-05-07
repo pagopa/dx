@@ -19,6 +19,9 @@ We use Azure Function App to run code snippets written in different languages.
 
 io-messages is an example of a Typescript function app:
 
+- [DX Terraform module for Azure Function App](https://registry.terraform.io/modules/pagopa-dx/azure-function-app/azurerm/latest)
+- [DX Terraform module for publicly exposed Azure Function App](https://registry.terraform.io/modules/pagopa-dx/azure-function-app-exposed/azurerm/latest)
+- [DX deployment pipeline for Azure Function Apps and App Service](https://dx.pagopa.it/docs/azure/application-deployment/release-azure-appsvc)
 - [application repository](https://github.com/pagopa/io-functions-app-messages)
 - [infrastructure repository](https://github.com/pagopa/io-infra/blob/6d26bd3d90dc2103d4a0f1cb8212bddfc1af5340/src/core/app_messages.tf#L151)
   to provision Function App using internal Terraform modules
