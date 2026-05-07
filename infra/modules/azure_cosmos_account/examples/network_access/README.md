@@ -7,14 +7,14 @@
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.13.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.7.1 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_private_cosmos_account"></a> [private\_cosmos\_account](#module\_private\_cosmos\_account) | pagopa-dx/azure-cosmos-account/azurerm | >= 0.3 |
-| <a name="module_public_cosmos_account"></a> [public\_cosmos\_account](#module\_public\_cosmos\_account) | pagopa-dx/azure-cosmos-account/azurerm | >= 0.3 |
+| <a name="module_private_cosmos_account"></a> [private\_cosmos\_account](#module\_private\_cosmos\_account) | pagopa-dx/azure-cosmos-account/azurerm | ~> 0.4 |
+| <a name="module_public_cosmos_account"></a> [public\_cosmos\_account](#module\_public\_cosmos\_account) | pagopa-dx/azure-cosmos-account/azurerm | ~> 0.4 |
 
 ## Resources
 

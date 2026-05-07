@@ -1,13 +1,10 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
-  naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location
-    domain          = var.environment.domain,
-    name            = var.environment.app_name,
-    instance_number = tonumber(var.environment.instance_number),
-  }
+  tags = merge(var.tags,
+    {
+      ModuleSource  = "DX",
+      ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"),
+      ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
+  })
 
   primary_location = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
 
@@ -42,7 +39,7 @@ locals {
     max_staleness_prefix    = var.consistency_policy.consistency_level == "BoundedStaleness" ? var.consistency_policy.max_staleness_prefix : null
   } : local.consistency_presets[local.selected_preset]
 
-  private_endpoint_name = provider::pagopa-dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
+  private_endpoint_name = provider::pagopa-dx::resource_name(merge(var.environment, { resource_type = "cosmos_private_endpoint" }))
 
   # "Cosmos DB Built-in Data Reader/Contributor" IDs
   cosmos_db_data_reader_role_id      = "${azurerm_cosmosdb_account.this.id}/sqlRoleDefinitions/00000000-0000-0000-0000-000000000001"

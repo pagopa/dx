@@ -1,7 +1,7 @@
 resource "azurerm_resource_group" "e2e_cdb" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     domain        = "e2e"
-    name          = "cdb",
+    app_name      = "cdb",
     resource_type = "resource_group"
   }))
   location = local.environment.location
@@ -39,7 +39,7 @@ resource "azurerm_cosmosdb_sql_container" "private_items" {
 
 resource "azurerm_container_group" "public_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { domain = "e2e", name = "public", resource_type = "container_instance" })
+    merge(local.environment, { domain = "e2e", app_name = "public", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_cdb.name
@@ -67,9 +67,9 @@ resource "dx_available_subnet_cidr" "private_app" {
 }
 
 resource "azurerm_subnet" "private_app" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     domain        = "e2e"
-    name          = "cosno-na-private"
+    app_name      = "cosno-na-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = data.azurerm_resource_group.e2e.name
@@ -90,7 +90,7 @@ resource "azurerm_subnet" "private_app" {
 
 resource "azurerm_container_group" "private_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { domain = "e2e", name = "cosno-private", resource_type = "container_instance" })
+    merge(local.environment, { domain = "e2e", app_name = "cosno-private", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_cdb.name
