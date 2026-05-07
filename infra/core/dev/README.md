@@ -17,14 +17,14 @@
 |------|---------|
 | <a name="provider_aws"></a> [aws](#provider\_aws) | 0.1.4 |
 | <a name="provider_azuread"></a> [azuread](#provider\_azuread) | 2.53.1 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.61.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.71.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_aws"></a> [aws](#module\_aws) | pagopa-dx/aws-core-infra/aws | ~> 0.0 |
-| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 3.0 |
+| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 4.1 |
 | <a name="module_stategraph"></a> [stategraph](#module\_stategraph) | ../_modules/stategraph | n/a |
 
 ## Resources

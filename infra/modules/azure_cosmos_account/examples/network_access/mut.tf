@@ -1,6 +1,6 @@
 module "private_cosmos_account" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = ">= 0.3"
+  version = "~> 0.4"
 
   environment         = merge(local.environment, { domain = "private" })
   resource_group_name = azurerm_resource_group.e2e_cdb.name
@@ -26,7 +26,7 @@ module "private_cosmos_account" {
 
 module "public_cosmos_account" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = ">= 0.3"
+  version = "~> 0.4"
 
   environment         = merge(local.environment, { domain = "public" })
   resource_group_name = azurerm_resource_group.e2e_cdb.name

@@ -1,3 +1,15 @@
+## 4.1.2 (2026-05-07)
+
+### 🩹 Fixes
+
+- Set the required three availability zones on the VPN gateway public IPs so the module converges on the zone-redundant layout required by the v4 VPN gateway. ([#1702](https://github.com/pagopa/dx/pull/1702))
+
+  This change can replace the VPN public IPs and the gateway in stacks that still need to converge, so apply it during a maintenance window.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.1.1 (2026-05-05)
 
 ### 🩹 Fixes
