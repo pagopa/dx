@@ -1,4 +1,6 @@
 terraform {
+  required_version = "~> 1.9"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -24,15 +26,6 @@ data "azurerm_client_config" "current" {}
 data "azurerm_container_app_environment" "runner" {
   name                = local.runner.cae_name
   resource_group_name = local.runner.cae_resource_group_name
-}
-
-data "azurerm_virtual_network" "common" {
-  name                = local.vnet.name
-  resource_group_name = local.vnet.resource_group_name
-}
-
-data "azurerm_resource_group" "vnet" {
-  name = local.vnet.resource_group_name
 }
 
 data "azurerm_resource_group" "dashboards" {
@@ -109,16 +102,8 @@ output "github_private_runner" {
   }
 }
 
-output "pep_vnet_id" {
-  value = data.azurerm_virtual_network.common.id
-}
-
 output "private_dns_zone_resource_group_id" {
   value = data.azurerm_resource_group.common.id
-}
-
-output "nat_gateway_resource_group_id" {
-  value = data.azurerm_resource_group.vnet.id
 }
 
 output "opex_resource_group_id" {

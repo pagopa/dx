@@ -30,10 +30,6 @@ locals {
     }
   )
 
-  has_apim                    = var.apim_id != null ? 1 : 0
-  has_sbns                    = var.sbns_id != null ? 1 : 0
-  has_log_analytics_workspace = var.log_analytics_workspace_id != null ? 1 : 0
-
   # %s is replaced by `ci` or `cd`
   ids = {
     #e.g. io-p-itn-ipatente-app-github-cd-id-01
@@ -67,54 +63,63 @@ locals {
   }
 
   tf_storage_account = {
-    id = provider::azurerm::normalise_resource_id("${var.subscription_id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
+    id = provider::azurerm::normalise_resource_id("${data.azurerm_subscription.current.id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
 
-  parsed_subscription_id = provider::azurerm::parse_resource_id(var.subscription_id)
+  subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
+  custom_role_definition_names = {
+    dx_app_cd_resource_groups      = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
+    dx_app_ci_resource_groups      = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
+    dx_infra_cd_private_networking = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
+    dx_infra_cd_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
+    dx_infra_cd_subscription       = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
+    dx_infra_ci_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
+    dx_infra_ci_subscription       = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
+  }
 
   repo_secrets = {
-    "ARM_TENANT_ID" = var.tenant_id
+    "ARM_TENANT_ID" = data.azurerm_subscription.current.tenant_id
   }
 
   infra_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   app_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   opex_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   infra_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   app_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 
   opex_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.opex_cd.client_id
-      "ARM_SUBSCRIPTION_ID" = local.parsed_subscription_id.subscription_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
     }
   }
 }

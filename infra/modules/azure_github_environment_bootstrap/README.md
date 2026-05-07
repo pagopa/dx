@@ -22,7 +22,7 @@ Here's a minimal example to get started:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   environment = {
     prefix          = "dx"
@@ -59,7 +59,6 @@ module "bootstrap" {
     use_github_app = true
   }
 
-  pep_vnet_id                        = data.azurerm_virtual_network.common.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.network.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards.id
 
@@ -74,7 +73,7 @@ Many input values for this module can be automatically retrieved using the compa
 :::note
 
 The `azure-core-values-exporter` module supports infrastructures created with [`pagopa-dx/azure-core-infra/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/latest).
-If your infrastructure was not created with `azure-core-infra`, you must manually retrieve and pass the required input values (for example `pep_vnet_id`, `private_dns_zone_resource_group_id`, `opex_resource_group_id`, and `github_private_runner.container_app_environment_id`) to this module.
+If your infrastructure was not created with `azure-core-infra`, you must manually retrieve and pass the required input values (for example `private_dns_zone_resource_group_id`, `opex_resource_group_id`, and `github_private_runner.container_app_environment_id`) to this module.
 
 :::
 
@@ -101,7 +100,7 @@ Then use the exported values in the bootstrap module:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   # ... other required variables ...
 
@@ -116,7 +115,6 @@ module "bootstrap" {
     use_github_app = true
   }
 
-  pep_vnet_id                        = module.core_values.common_vnet.id
   private_dns_zone_resource_group_id = module.core_values.network_resource_group_id
   opex_resource_group_id             = module.core_values.opex_resource_group_id
 
@@ -137,7 +135,6 @@ The following table shows which bootstrap module inputs can be populated from Co
 | `github_private_runner.container_app_environment_id`  | `module.core_values.github_runner.environment_id`                                          |
 | `github_private_runner.key_vault.name`                | `module.core_values.common_key_vault.name`                                                 |
 | `github_private_runner.key_vault.resource_group_name` | `module.core_values.common_key_vault.resource_group_name`                                  |
-| `pep_vnet_id`                                         | `module.core_values.common_vnet.id`                                                        |
 | `private_dns_zone_resource_group_id`                  | `module.core_values.network_resource_group_id`                                             |
 | `opex_resource_group_id`                              | `module.core_values.opex_resource_group_id`                                                |
 | `additional_resource_group_ids`                       | `module.core_values.common_resource_group_id`, `module.core_values.test_resource_group_id` |
@@ -155,7 +152,6 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `terraform_storage_account`          | object       |    ✅    | Storage account for Terraform state files              |
 | `repository`                         | object       |    ✅    | GitHub repository details                              |
 | `github_private_runner`              | object       |    ✅    | Self-hosted runner configuration                       |
-| `pep_vnet_id`                        | string       |    ✅    | VNet ID for private endpoints                          |
 | `private_dns_zone_resource_group_id` | string       |    ✅    | Resource group with private DNS zones                  |
 | `opex_resource_group_id`             | string       |    ✅    | Resource group for Opex dashboards                     |
 | `subscription_id`                    | string       |    ✅    | Azure subscription ID                                  |
@@ -165,7 +161,6 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `apim_id`                            | string       |    ❌    | API Management instance ID                             |
 | `sbns_id`                            | string       |    ❌    | Service Bus Namespace ID                               |
 | `log_analytics_workspace_id`         | string       |    ❌    | Log Analytics Workspace ID                             |
-| `nat_gateway_resource_group_id`      | string       |    ❌    | NAT Gateway resource group ID                          |
 | `keyvault_common_ids`                | list(string) |    ❌    | Common Key Vault IDs                                   |
 
 ### Required Variables
@@ -259,14 +254,6 @@ github_private_runner = {
 }
 ```
 
-#### `pep_vnet_id`
-
-The ID of the Virtual Network containing private endpoints. Required for network contributor role assignment.
-
-```hcl
-pep_vnet_id = data.azurerm_virtual_network.common.id
-```
-
 #### `private_dns_zone_resource_group_id`
 
 Resource group containing private DNS zones. The module assigns DNS zone contributor role for private endpoint DNS registration.
@@ -286,6 +273,15 @@ opex_resource_group_id = data.azurerm_resource_group.dashboards.id
 #### `subscription_id` and `tenant_id`
 
 Azure subscription and tenant identifiers.
+
+The module also uses `subscription_id` to resolve the merged DX custom role definitions created by `azure-core-infra` at subscription scope. Custom role names are resolved using the current subscription display name prefix.
+
+For example, if the Azure subscription display name is `DX Dev Subscription`, the module resolves custom roles such as:
+
+- `DX Dev Subscription DX App CI Resource Groups`
+- `DX Dev Subscription DX App CD Resource Groups`
+- `DX Dev Subscription DX Infra CI Subscription`
+- `DX Dev Subscription DX Infra CD Subscription`
 
 ```hcl
 subscription_id = data.azurerm_subscription.current.id
@@ -341,14 +337,6 @@ Log Analytics Workspace ID. When provided, the infra CD identity receives Log An
 
 ```hcl
 log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-```
-
-#### `nat_gateway_resource_group_id`
-
-Resource group containing NAT Gateways. When provided, the infra CD identity receives Network Contributor role.
-
-```hcl
-nat_gateway_resource_group_id = data.azurerm_resource_group.nat.id
 ```
 
 #### `keyvault_common_ids`
@@ -414,7 +402,7 @@ resource "azurerm_resource_group" "myapp" {
 
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   # ... other required variables ...
 
@@ -527,56 +515,23 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_federated_identity_credential.github_infra_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_opex_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_opex_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
-| [azurerm_key_vault_access_policy.infra_cd_kv_common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
-| [azurerm_key_vault_access_policy.infra_ci_kv_common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_resource_group.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.admins_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.admins_group_rgs_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.admins_group_rgs_kv_data](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_cd_rgs_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_cd_rgs_cae_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_cd_rgs_cdn_profile_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_cd_rgs_static_webapp_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_cd_rgs_website_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.app_cd_rgs_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_cd_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_cd_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_ci_rgs_static_webapp_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.app_ci_subscription_pagopa_iac_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.app_ci_rgs_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_tf_rgs_kv_secr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.externals_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_apim_service_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_log_analytics_workspace_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rg_nat_gw_network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rg_network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rg_private_dns_zone_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_ca_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_kv_cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_kv_crypto](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_kv_secr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_st_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_rgs_user_access_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_sbns_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.infra_cd_rg_private_networking](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.infra_cd_rgs_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.infra_cd_st_tf_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.infra_cd_subscription_rbac_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_cd_vnet_network_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_ca_operator](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_caj_operator](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_cosmos_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_kv_cert](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_kv_crypto](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_kv_secr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_st_blob_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_st_queue_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_st_queue_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_st_table_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_rgs_st_table_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_subscription_apim_secrets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_subscription_data_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.infra_ci_subscription_pagopa_iac_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.infra_ci_rgs_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.infra_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.infra_ci_tf_st_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.opex_cd_rg_monitoring_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -600,27 +555,27 @@ This module includes practical examples to help you get started quickly:
 | [github_actions_environment_secret.opex_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.opex_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_secret.repo_secrets](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_secret) | resource |
+| [azurerm_role_definition.dx_app_cd_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_app_ci_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_cd_private_networking](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_cd_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_cd_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_ci_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_ci_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
-| <a name="input_apim_id"></a> [apim\_id](#input\_apim\_id) | The ID of the Azure API Management (APIM) instance. | `string` | `null` | no |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id       = string<br/>    container_app_environment_location = string<br/>    replica_timeout_in_seconds         = optional(number, 1800)<br/>    polling_interval_in_seconds        = optional(number, 30)<br/>    min_instances                      = optional(number, 0)<br/>    max_instances                      = optional(number, 30)<br/>    labels                             = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
-| <a name="input_keyvault_common_ids"></a> [keyvault\_common\_ids](#input\_keyvault\_common\_ids) | A list of IDs for Key Vaults containing common secrets. | `list(string)` | `[]` | no |
-| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics Workspace for monitoring and diagnostics. | `string` | `null` | no |
-| <a name="input_nat_gateway_resource_group_id"></a> [nat\_gateway\_resource\_group\_id](#input\_nat\_gateway\_resource\_group\_id) | The ID of the resource group hosting NAT Gateways. | `string` | `null` | no |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
-| <a name="input_pep_vnet_id"></a> [pep\_vnet\_id](#input\_pep\_vnet\_id) | The ID of the Virtual Network (VNet) containing the subnet dedicated to Private Endpoints. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner and name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
-| <a name="input_sbns_id"></a> [sbns\_id](#input\_sbns\_id) | The ID of the Azure Service Bus Namespace. | `string` | `null` | no |
-| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription ID where resources will be created. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
-| <a name="input_tenant_id"></a> [tenant\_id](#input\_tenant\_id) | The Azure tenant ID where resources will be created. | `string` | n/a | yes |
 | <a name="input_terraform_storage_account"></a> [terraform\_storage\_account](#input\_terraform\_storage\_account) | Details of the Storage Account (name and resource group) hosting the Terraform state file. | <pre>object({<br/>    resource_group_name = string<br/>    name                = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
