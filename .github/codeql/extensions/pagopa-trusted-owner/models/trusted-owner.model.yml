@@ -1,0 +1,9 @@
+# Trust all actions published by the pagopa owner for the actions/unpinned-tag
+# query, so within this repo using pagopa/* actions can keep mutable refs without
+# raising this specific CodeQL alert.
+extensions:
+  - addsTo:
+      pack: codeql/actions-all
+      extensible: trustedActionsOwnerDataModel
+    data:
+      - ["pagopa"]
