@@ -12,7 +12,7 @@ Current constraints and decisions:
 - `module.json` (minimum) requires `version` and `description`.
 - Publish mode initially supports only `github`.
 - Repository creation is always attempted when the target repository does not exist.
-- `orgName` should be centralized at plugin level and overridable per module.
+- `githubOrgName` should be centralized at plugin level and overridable per module.
 - Version ownership is delegated to Nx Release integration (to be finalized later).
 
 ## Goals
@@ -20,7 +20,7 @@ Current constraints and decisions:
 1. Infer `nx-release-publish` only for eligible Terraform module libraries.
 2. Replace workflow-centric subrepo publishing logic with plugin-managed logic reusable in local and CI execution.
 3. Preserve current subrepo synchronization behavior (module content alignment in target repo).
-4. Add first-class organization resolution (`plugin default` + `module override`).
+4. Add first-class GitHub organization resolution (`plugin default` + `module override`).
 5. Support automatic repository creation when missing.
 
 ## Non-Goals (for first iteration)
@@ -50,7 +50,7 @@ Plugin-level configuration (new section in plugin options):
 {
   "publish": {
     "mode": "github",
-    "orgName": "pagopa-dx"
+    "githubOrgName": "pagopa-dx"
   }
 }
 ```
@@ -61,14 +61,14 @@ Module-level manifest (`{projectRoot}/module.json`):
 {
   "version": "1.2.3",
   "description": "Terraform module description",
-  "orgName": "optional-module-specific-org"
+  "githubOrgName": "optional-module-specific-org"
 }
 ```
 
 Resolution precedence:
 
-1. `module.json.orgName` (if set)
-2. plugin `publish.orgName`
+1. `module.json.githubOrgName` (if set)
+2. plugin `publish.githubOrgName`
 3. fail with explicit configuration error
 
 ### 3. Publish execution engine
@@ -110,15 +110,14 @@ Use existing naming convention compatibility:
 Provider resolution is explicit to avoid ambiguity:
 
 1. `module.json.provider` (if present)
-2. `{projectRoot}/package.json.provider` (existing convention)
-3. fallback to `"azurerm"` (current workflow default behavior)
+2. fallback to `"azurerm"` (current workflow default behavior)
 
 ## Error Handling
 
 Hard-fail (no silent fallback) with actionable messages for:
 
 1. Invalid/missing `module.json` on inferred publish target path.
-2. Unresolved org name.
+2. Unresolved GitHub org name.
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Git remote/subtree/push failures.
 
@@ -127,13 +126,13 @@ Eligibility errors prevent target inference; execution errors fail the target.
 ## Testing Strategy
 
 1. **Options/Schema tests**
-   - Validate publish config parsing (`mode`, `orgName`).
+   - Validate publish config parsing (`mode`, `githubOrgName`).
 2. **Inference tests**
    - `library + valid module.json` => includes `nx-release-publish`.
    - `library + missing/invalid module.json` => excludes target.
    - `application` => excludes target.
 3. **Resolution tests**
-   - `module.json.orgName` overrides plugin default.
+   - `module.json.githubOrgName` overrides plugin default.
    - plugin default is used when module override absent.
    - missing both => explicit error.
 4. **Publish service tests**
