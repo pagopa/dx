@@ -105,12 +105,17 @@ runs:
         git subtree split --prefix="$PREFIX_PATH" -b "$BRANCH_NAME"
 
         # Check if the main branch exists on the remote
-        git fetch "$REMOTE_NAME" main --tags
+        if git ls-remote --exit-code --heads "$REMOTE_NAME" refs/heads/main >/dev/null; then
+          git fetch "$REMOTE_NAME" main --tags
 
-        # Merge the changes without overwriting the history
-        git branch temp-branch "$REMOTE_NAME/main"
-        git checkout "$BRANCH_NAME"
-        git merge --allow-unrelated-histories -s ours --no-edit temp-branch
+          # Merge the changes without overwriting the history
+          git branch temp-branch "$REMOTE_NAME/main"
+          git checkout "$BRANCH_NAME"
+          git merge --allow-unrelated-histories -s ours --no-edit temp-branch
+        else
+          echo "Remote main branch does not exist yet. First-time push."
+          git checkout "$BRANCH_NAME"
+        fi
 
         # Define the tag name
         if [[ "$REPO_TYPE" == "provider" ]]; then
