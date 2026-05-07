@@ -1,5 +1,5 @@
 /**
- * PagoPA Technology Authorization Adapter
+ * PagoPA Technology Azure Authorization Adapter
  *
  * Implements the AuthorizationService interface for the PagoPA Azure
  * authorization workflow. Encapsulates all platform-specific details:
@@ -15,14 +15,16 @@ import {
   AuthorizationError,
   AuthorizationResult,
   AuthorizationService,
-  DEFAULT_GROUP_SPECS,
   InvalidAuthorizationFileFormatError,
-  makeGroupName,
   RequestAuthorizationInput,
 } from "../../domain/authorization.js";
 import { GitHubService } from "../../domain/github.js";
+import {
+  DEFAULT_GROUP_SPECS,
+  makeAzureAdGroupName,
+} from "./azure-authorization-config.js";
 
-const authorizationFileSchema = z
+const azureAuthorizationFileSchema = z
   .object({
     directory_readers: z
       .object({
@@ -66,16 +68,16 @@ const rolesAreEqual = (
  * Returns the updated JSON along with a flag indicating whether anything changed.
  */
 const upsertGroups = (
-  jsonContent: z.infer<typeof authorizationFileSchema>,
+  jsonContent: z.infer<typeof azureAuthorizationFileSchema>,
   prefix: string,
   envShort: string,
 ): {
   groupsChanged: boolean;
-  json: z.infer<typeof authorizationFileSchema>;
+  json: z.infer<typeof azureAuthorizationFileSchema>;
 } => {
   const expectedByName = new Map(
     DEFAULT_GROUP_SPECS.map((spec) => [
-      makeGroupName(prefix, envShort, spec.groupName),
+      makeAzureAdGroupName(prefix, envShort, spec.groupName),
       spec,
     ]),
   );
@@ -106,7 +108,7 @@ const upsertGroups = (
 
   // Append missing default groups at the end
   for (const spec of DEFAULT_GROUP_SPECS) {
-    const name = makeGroupName(prefix, envShort, spec.groupName);
+    const name = makeAzureAdGroupName(prefix, envShort, spec.groupName);
     if (!seenDefaults.has(name)) {
       finalGroups.push({ members: [], name, roles: [...spec.roles] });
       groupsChanged = true;
@@ -121,7 +123,7 @@ const upsertGroups = (
  */
 const parseAuthorizationFile = (
   content: string,
-): Result<z.infer<typeof authorizationFileSchema>, AuthorizationError> => {
+): Result<z.infer<typeof azureAuthorizationFileSchema>, AuthorizationError> => {
   let parsed;
   try {
     parsed = JSON.parse(content);
@@ -131,7 +133,7 @@ const parseAuthorizationFile = (
     );
   }
 
-  const result = authorizationFileSchema.safeParse(parsed);
+  const result = azureAuthorizationFileSchema.safeParse(parsed);
   if (!result.success) {
     return err(
       new InvalidAuthorizationFileFormatError(
@@ -182,11 +184,11 @@ const makeChangeDescription = (
  * Never fails: if the identity already exists it is a no-op with identityAdded = false.
  */
 const ensureIdentity = (
-  jsonContent: z.infer<typeof authorizationFileSchema>,
+  jsonContent: z.infer<typeof azureAuthorizationFileSchema>,
   identityId: string,
 ): {
   identityAdded: boolean;
-  json: z.infer<typeof authorizationFileSchema>;
+  json: z.infer<typeof azureAuthorizationFileSchema>;
 } => {
   if (
     jsonContent.directory_readers.service_principals_name.includes(identityId)
@@ -213,13 +215,13 @@ const REPO_OWNER = "pagopa";
 const REPO_NAME = "eng-azure-authorization";
 const BASE_BRANCH = "main";
 
-export const makeAuthorizationService = (
+export const makeAzureAuthorizationService = (
   gitHubService: GitHubService,
 ): AuthorizationService => ({
   requestAuthorization(
     input: RequestAuthorizationInput,
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
-    const logger = getLogger(["dx-cli", "pagopa-authorization"]);
+    const logger = getLogger(["dx-cli", "pagopa-azure-authorization"]);
     const {
       bootstrapIdentityId,
       envShort,

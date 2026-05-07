@@ -60,7 +60,7 @@ const EnvShort = z
   .brand<"EnvShort">();
 
 /**
- * Input validation schema for the request authorization use case.
+ * Input validation schema for the authorization workflow.
  */
 export const requestAuthorizationInputSchema = z.object({
   bootstrapIdentityId: BootstrapIdentityId,
@@ -69,73 +69,6 @@ export const requestAuthorizationInputSchema = z.object({
   repoName: z.string().min(1),
   subscriptionName: SubscriptionName,
 });
-
-/**
- * Configuration for an AD group with its roles and members.
- */
-export type GroupConfig = {
-  readonly members: readonly string[];
-  readonly name: string;
-  readonly roles: readonly string[];
-};
-
-/**
- * Specification for a default AD group (name suffix + default roles).
- */
-type DefaultGroupSpec = {
-  readonly groupName: string;
-  readonly roles: readonly string[];
-};
-
-/**
- * Default AD groups that should exist for each subscription.
- * Naming pattern: <prefix>-<envShort>-adgroup-<groupName>
- */
-export const DEFAULT_GROUP_SPECS: readonly DefaultGroupSpec[] = [
-  { groupName: "admin", roles: ["Owner"] },
-  { groupName: "developers", roles: ["Owner"] },
-  {
-    groupName: "operations",
-    roles: [
-      "Reader",
-      "Monitoring Contributor",
-      "Support Request Contributor",
-      "Storage Blob Data Reader",
-      "Storage Queue Data Reader",
-      "Cosmos DB Account Reader Role",
-    ],
-  },
-  { groupName: "security", roles: ["Reader", "Support Request Contributor"] },
-  {
-    groupName: "technical-project-managers",
-    roles: ["Reader", "Monitoring Contributor", "Support Request Contributor"],
-  },
-  {
-    groupName: "product-owners",
-    roles: ["Reader", "Support Request Contributor"],
-  },
-  { groupName: "externals", roles: ["Owner"] },
-  {
-    groupName: "oncall",
-    roles: [
-      "Reader",
-      "Monitoring Contributor",
-      "Support Request Contributor",
-      "Storage Blob Data Reader",
-      "Storage Queue Data Reader",
-      "Cosmos DB Account Reader Role",
-    ],
-  },
-];
-
-/**
- * Generates the full AD group name from its components.
- */
-export const makeGroupName = (
-  prefix: string,
-  envShort: string,
-  groupName: string,
-): string => `${prefix}-${envShort}-adgroup-${groupName}`;
 
 /**
  * Service interface for requesting cloud authorization.

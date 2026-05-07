@@ -7,9 +7,7 @@ import { mock } from "vitest-mock-extended";
 
 import {
   AuthorizationResult,
-  DEFAULT_GROUP_SPECS,
   InvalidAuthorizationFileFormatError,
-  makeGroupName,
   RequestAuthorizationInput,
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
@@ -18,7 +16,11 @@ import {
   GitHubService,
   PullRequest,
 } from "../../../domain/github.js";
-import { makeAuthorizationService } from "../authorization.js";
+import {
+  DEFAULT_GROUP_SPECS,
+  makeAzureAdGroupName as makeGroupName,
+} from "../azure-authorization-config.js";
+import { makeAzureAuthorizationService as makeAuthorizationService } from "../azure-authorization.js";
 
 const makeEnv = () => {
   const gitHubService = mock<GitHubService>();
