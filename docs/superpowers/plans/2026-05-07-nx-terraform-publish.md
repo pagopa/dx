@@ -175,7 +175,7 @@ git commit -m "Infer nx-release-publish for publishable libraries"
 - Create: `packages/nx-terraform-plugin/src/__tests__/publish-runtime.test.ts`
 - Modify: `packages/nx-terraform-plugin/src/project.ts`
 
-- [ ] **Step 1: Write failing runtime contract tests**
+- [x] **Step 1: Write failing runtime contract tests**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/publish-runtime.test.ts
@@ -188,12 +188,12 @@ await expect(
 ).resolves.toEqual({ repo: "terraform-azurerm-azure-core-infra" });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: FAIL because runtime and runner do not exist
 
-- [ ] **Step 3: Implement runner and argument contract**
+- [x] **Step 3: Implement runner and argument contract**
 
 ```js
 // tools/terraform-module-publish.mjs
@@ -216,12 +216,12 @@ command:
   "node tools/terraform-module-publish.mjs --projectRoot={projectRoot} --workspaceRoot={workspaceRoot}",
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for runtime parsing and command contract
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add tools/terraform-module-publish.mjs \

@@ -163,7 +163,8 @@ const getTargets = (
         opts.publishTargetName,
         {
           cache: false,
-          command: "node tools/terraform-module-publish.mjs",
+          command:
+            "node tools/terraform-module-publish.mjs --projectRoot={projectRoot} --workspaceRoot={workspaceRoot}",
           options: {
             cwd,
           },
