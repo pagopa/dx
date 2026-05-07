@@ -5,10 +5,10 @@ variable "repository" {
     topics                          = list(string)
     default_branch_name             = optional(string, "main")
     reviewers_teams                 = list(string)
-    infra_cd_policy_branches        = optional(set(string), ["main"])
-    opex_cd_policy_branches         = optional(set(string), ["main"])
-    app_cd_policy_branches          = optional(set(string), ["main"])
-    bootstrapper_cd_policy_branches = optional(set(string), ["main"])
+    infra_cd_policy_branches        = optional(set(string))
+    opex_cd_policy_branches         = optional(set(string))
+    app_cd_policy_branches          = optional(set(string))
+    bootstrapper_cd_policy_branches = optional(set(string))
     infra_cd_policy_tags            = optional(set(string), [])
     opex_cd_policy_tags             = optional(set(string), [])
     app_cd_policy_tags              = optional(set(string), [])
@@ -30,7 +30,7 @@ variable "repository" {
     - `default_branch_name`: the main integration branch (default: "main").
     - `reviewers_teams`: teams required to review and approve PRs.
     - `pull_request_bypassers`: users/teams allowed to merge without approval.
-    - `infra/opex/app/bootstrapper_cd_policy_branches`: branches that trigger CD deployments.
+    - `infra/opex/app/bootstrapper_cd_policy_branches`: branches that trigger CD deployments. When omitted, they default to `default_branch_name`.
     - `infra/opex/app/bootstrapper_cd_policy_tags`: tags that trigger CD deployments.
     - `jira_boards_ids`: linked Jira board identifiers.
     - `pages_enabled`, `has_issues`, `has_projects`, `has_downloads`, `homepage_url`: GitHub repository feature toggles.
