@@ -28,11 +28,6 @@ locals {
     resource_group_name = "${local.project}-common-rg-01"
   }
 
-  vnet = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
-  }
-
   tf_storage_account = {
     name                = "tf%sdx"
     resource_group_name = "terraform-state-rg"

@@ -9,11 +9,6 @@ data "azurerm_container_app_environment" "runner_dev" {
   resource_group_name = format(local.runner.cae_resource_group_name, "d")
 }
 
-data "azurerm_virtual_network" "common_dev" {
-  name                = format(local.vnet.name, "d")
-  resource_group_name = format(local.vnet.resource_group_name, "d")
-}
-
 data "azurerm_resource_group" "dashboards_dev" {
   name = "dashboards"
 }
@@ -65,7 +60,6 @@ module "dev" {
     }
   }
 
-  pep_vnet_id                        = data.azurerm_virtual_network.common_dev.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.common_dev.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards_dev.id
 

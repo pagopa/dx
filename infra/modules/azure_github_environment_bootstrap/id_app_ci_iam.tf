@@ -1,6 +1,6 @@
 # Subscription
 resource "azurerm_role_assignment" "app_ci_subscription_reader" {
-  scope                = var.subscription_id
+  scope                = data.azurerm_subscription.current.id
   role_definition_name = "Reader"
   principal_id         = azurerm_user_assigned_identity.app_ci.principal_id
   description          = "Allow ${var.repository.name} App CI identity to read resources at subscription scope"

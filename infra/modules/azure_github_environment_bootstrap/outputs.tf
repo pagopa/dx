@@ -26,7 +26,7 @@ output "github_private_runner" {
 
 output "subscription_id" {
   description = "The Azure Subscription ID of the Terraform state file."
-  value       = local.parsed_subscription_id.subscription_id
+  value       = data.azurerm_subscription.current.subscription_id
 }
 
 output "identities" {

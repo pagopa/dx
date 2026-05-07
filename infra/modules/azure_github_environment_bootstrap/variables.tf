@@ -34,59 +34,14 @@ variable "terraform_storage_account" {
   description = "Details of the Storage Account (name and resource group) hosting the Terraform state file."
 }
 
-variable "pep_vnet_id" {
-  type        = string
-  description = "The ID of the Virtual Network (VNet) containing the subnet dedicated to Private Endpoints."
-}
-
-variable "apim_id" {
-  type        = string
-  description = "The ID of the Azure API Management (APIM) instance."
-  default     = null
-}
-
-variable "sbns_id" {
-  type        = string
-  description = "The ID of the Azure Service Bus Namespace."
-  default     = null
-}
-
-variable "log_analytics_workspace_id" {
-  type        = string
-  description = "The ID of the Log Analytics Workspace for monitoring and diagnostics."
-  default     = null
-}
-
 variable "private_dns_zone_resource_group_id" {
   type        = string
   description = "The ID of the resource group containing private DNS zones."
 }
 
-variable "nat_gateway_resource_group_id" {
-  type        = string
-  default     = null
-  description = "The ID of the resource group hosting NAT Gateways."
-}
-
 variable "opex_resource_group_id" {
   type        = string
   description = "The ID of the resource group containing Opex dashboards."
-}
-
-variable "keyvault_common_ids" {
-  type        = list(string)
-  default     = []
-  description = "A list of IDs for Key Vaults containing common secrets."
-}
-
-variable "subscription_id" {
-  type        = string
-  description = "The Azure subscription ID where resources will be created."
-}
-
-variable "tenant_id" {
-  type        = string
-  description = "The Azure tenant ID where resources will be created."
 }
 
 variable "repository" {
