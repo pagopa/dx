@@ -1,3 +1,13 @@
+## 0.11.0 (2026-05-07)
+
+### 🚀 Features
+
+- Add utility functions to convert Azure location strings from and to short and long formats ([#1706](https://github.com/pagopa/dx/pull/1706))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.10.0 (2026-04-23)
 
 ### 🚀 Features
