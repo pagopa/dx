@@ -22,14 +22,28 @@ locals {
     }
   ]
 
-  merged_permissions = {
-    actions = sort(distinct(flatten([
-      for permission in local.normalized_source_permissions : permission.actions
-    ])))
+  normalized_additional_actions = sort(distinct([
+    for action in var.additional_actions : trimspace(action)
+  ]))
 
-    data_actions = sort(distinct(flatten([
-      for permission in local.normalized_source_permissions : permission.data_actions
-    ])))
+  normalized_additional_data_actions = sort(distinct([
+    for action in var.additional_data_actions : trimspace(action)
+  ]))
+
+  merged_permissions = {
+    actions = sort(distinct(concat(
+      flatten([
+        for permission in local.normalized_source_permissions : permission.actions
+      ]),
+      local.normalized_additional_actions,
+    )))
+
+    data_actions = sort(distinct(concat(
+      flatten([
+        for permission in local.normalized_source_permissions : permission.data_actions
+      ]),
+      local.normalized_additional_data_actions,
+    )))
 
     # Azure custom roles accept a single permissions object. Preserve an
     # exclusion only when no other permission block overlaps it strongly enough
@@ -43,25 +57,41 @@ locals {
       for excluded_action in distinct(flatten([
         for permission in local.normalized_source_permissions : permission.not_actions
       ])) : excluded_action
-      if !anytrue([
-        for permission in local.normalized_source_permissions : (
-          !contains([for denied_action in permission.not_actions : lower(denied_action)], lower(excluded_action)) &&
-          anytrue([
-            for allowed_action in permission.actions : (
-              length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
-              length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
-              (
-                length(regexall("\\*", allowed_action)) > 0 &&
-                length(regexall("\\*", excluded_action)) > 0 &&
+      if !(
+        anytrue([
+          for permission in local.normalized_source_permissions : (
+            !contains([for denied_action in permission.not_actions : lower(denied_action)], lower(excluded_action)) &&
+            anytrue([
+              for allowed_action in permission.actions : (
+                length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+                length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
                 (
-                  startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
-                  startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                  length(regexall("\\*", allowed_action)) > 0 &&
+                  length(regexall("\\*", excluded_action)) > 0 &&
+                  (
+                    startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                    startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                  )
                 )
               )
+            ])
+          )
+        ]) ||
+        anytrue([
+          for allowed_action in local.normalized_additional_actions : (
+            length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+            length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
+            (
+              length(regexall("\\*", allowed_action)) > 0 &&
+              length(regexall("\\*", excluded_action)) > 0 &&
+              (
+                startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+              )
             )
-          ])
-        )
-      ])
+          )
+        ])
+      )
     ])
 
     # Apply the same permissive overlap policy to data-plane permissions.
@@ -69,25 +99,41 @@ locals {
       for excluded_action in distinct(flatten([
         for permission in local.normalized_source_permissions : permission.not_data_actions
       ])) : excluded_action
-      if !anytrue([
-        for permission in local.normalized_source_permissions : (
-          !contains([for denied_action in permission.not_data_actions : lower(denied_action)], lower(excluded_action)) &&
-          anytrue([
-            for allowed_action in permission.data_actions : (
-              length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
-              length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
-              (
-                length(regexall("\\*", allowed_action)) > 0 &&
-                length(regexall("\\*", excluded_action)) > 0 &&
+      if !(
+        anytrue([
+          for permission in local.normalized_source_permissions : (
+            !contains([for denied_action in permission.not_data_actions : lower(denied_action)], lower(excluded_action)) &&
+            anytrue([
+              for allowed_action in permission.data_actions : (
+                length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+                length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
                 (
-                  startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
-                  startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                  length(regexall("\\*", allowed_action)) > 0 &&
+                  length(regexall("\\*", excluded_action)) > 0 &&
+                  (
+                    startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                    startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                  )
                 )
               )
+            ])
+          )
+        ]) ||
+        anytrue([
+          for allowed_action in local.normalized_additional_data_actions : (
+            length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+            length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
+            (
+              length(regexall("\\*", allowed_action)) > 0 &&
+              length(regexall("\\*", excluded_action)) > 0 &&
+              (
+                startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+              )
             )
-          ])
-        )
-      ])
+          )
+        ])
+      )
     ])
   }
 }

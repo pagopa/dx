@@ -13,6 +13,8 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 - Requires a caller-provided `reason` so generated custom roles keep explicit business context instead of a bare auto-generated description.
 - Supports roles that include `not_actions` and `not_data_actions`.
 - Deduplicates merged permissions so the generated role definition remains stable.
+- Supports caller-provided `additional_actions` when the merged role must grant extra control-plane permissions beyond the merged source roles.
+- Supports caller-provided `additional_data_actions` when the merged role must grant extra data-plane permissions beyond the merged source roles.
 - Requires an explicit `scope` and always uses that same scope as the role's only assignable scope.
 - Supports role definitions created at management group scope as well as subscription scope.
 
@@ -46,11 +48,17 @@ data "azurerm_subscription" "current" {}
 module "observability_reader" {
   source = "pagopa-dx/azure-merge-roles/azurerm"
 
-  scope      = data.azurerm_subscription.current.id
-  role_name  = "dx-observability-reader"
+  scope       = data.azurerm_subscription.current.id
+  role_name   = "dx-observability-reader"
   source_roles = [
     "Reader",
     "Monitoring Reader",
+  ]
+  additional_actions = [
+    "Microsoft.Authorization/roleAssignments/read",
+  ]
+  additional_data_actions = [
+    "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
   ]
 
   reason = "Grant observability read access without repeating multiple role assignments"
@@ -69,6 +77,10 @@ The `scope` input can also point to a management group, for example:
 ```hcl
 scope = "/providers/Microsoft.Management/managementGroups/dx-platform"
 ```
+
+Use `additional_actions` only for extra control-plane grants that are not already included in `source_roles`. The module deduplicates them against the merged source actions and applies the same permissive overlap policy used for `not_actions`.
+
+Use `additional_data_actions` only for extra data-plane grants that are not already included in `source_roles`. The module deduplicates them against the merged source data actions and applies the same permissive overlap policy used for `not_data_actions`.
 
 ## Assigning The Generated Role
 
@@ -115,6 +127,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to append to the merged custom role definition. | `list(string)` | `[]` | no |
+| <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to append to the merged custom role definition. | `list(string)` | `[]` | no |
 | <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |

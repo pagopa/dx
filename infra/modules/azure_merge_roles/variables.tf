@@ -36,6 +36,28 @@ variable "source_roles" {
   }
 }
 
+variable "additional_actions" {
+  description = "Optional list of extra control-plane actions to append to the merged custom role definition."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for action in var.additional_actions : trimspace(action) != ""])
+    error_message = "additional_actions must not contain blank actions."
+  }
+}
+
+variable "additional_data_actions" {
+  description = "Optional list of extra data-plane actions to append to the merged custom role definition."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for action in var.additional_data_actions : trimspace(action) != ""])
+    error_message = "additional_data_actions must not contain blank actions."
+  }
+}
+
 variable "reason" {
   description = "Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names."
   type        = string
