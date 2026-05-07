@@ -1,3 +1,15 @@
+## 0.17.0 (2026-05-07)
+
+### 🚀 Features
+
+- Update Technology Radar to include DX tools ([#1686](https://github.com/pagopa/dx/pull/1686))
+
+### ❤️ Thank You
+
+- Christian Calabrese @christian-calabrese
+- Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.16.2 (2026-05-05)
 
 ### 🩹 Fixes
