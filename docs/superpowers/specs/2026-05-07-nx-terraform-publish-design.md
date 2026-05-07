@@ -12,7 +12,7 @@ Current constraints and decisions:
 - `module.json` (minimum) requires `version` and `description`.
 - Publish mode initially supports only `github`.
 - Repository creation is always attempted when the target repository does not exist.
-- `githubOrgName` should be centralized at plugin level and overridable per module.
+- `github.owner` should be centralized at plugin level and overridable per module.
 - Version ownership is delegated to Nx Release integration (to be finalized later).
 
 ## Goals
@@ -50,7 +50,9 @@ Plugin-level configuration (new section in plugin options):
 {
   "publish": {
     "mode": "github",
-    "githubOrgName": "pagopa-dx"
+    "github": {
+      "owner": "pagopa-dx"
+    }
   }
 }
 ```
@@ -61,14 +63,16 @@ Module-level manifest (`{projectRoot}/module.json`):
 {
   "version": "1.2.3",
   "description": "Terraform module description",
-  "githubOrgName": "optional-module-specific-org"
+  "github": {
+    "owner": "optional-module-specific-org"
+  }
 }
 ```
 
 Resolution precedence:
 
-1. `module.json.githubOrgName` (if set)
-2. plugin `publish.githubOrgName`
+1. `module.json.github.owner` (if set)
+2. plugin `publish.github.owner`
 3. fail with explicit configuration error
 
 ### 3. Publish execution engine
@@ -117,7 +121,7 @@ Provider resolution is explicit to avoid ambiguity:
 Hard-fail (no silent fallback) with actionable messages for:
 
 1. Invalid/missing `module.json` on inferred publish target path.
-2. Unresolved GitHub org name.
+2. Unresolved GitHub owner.
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Git remote/subtree/push failures.
 
@@ -126,13 +130,13 @@ Eligibility errors prevent target inference; execution errors fail the target.
 ## Testing Strategy
 
 1. **Options/Schema tests**
-   - Validate publish config parsing (`mode`, `githubOrgName`).
+   - Validate publish config parsing (`mode`, `publish.github.owner`).
 2. **Inference tests**
    - `library + valid module.json` => includes `nx-release-publish`.
    - `library + missing/invalid module.json` => excludes target.
    - `application` => excludes target.
 3. **Resolution tests**
-   - `module.json.githubOrgName` overrides plugin default.
+   - `module.json.github.owner` overrides plugin default.
    - plugin default is used when module override absent.
    - missing both => explicit error.
 4. **Publish service tests**
