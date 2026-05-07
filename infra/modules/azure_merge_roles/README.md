@@ -118,12 +118,11 @@ hierarchy.
 - It does not create role assignments.
 
 <!-- BEGIN_TF_DOCS -->
-
 ## Requirements
 
-| Name                                                               | Version |
-| ------------------------------------------------------------------ | ------- |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | ~> 4.0  |
+| Name | Version |
+|------|---------|
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
 ## Modules
 
@@ -131,27 +130,26 @@ No modules.
 
 ## Resources
 
-| Name                                                                                                                                 | Type        |
-| ------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
-| [azurerm_role_definition.merged](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition)    | resource    |
+| Name | Type |
+|------|------|
+| [azurerm_role_definition.merged](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.source](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 
 ## Inputs
 
-| Name                                                                                                   | Description                                                                                                                                             | Type           | Default | Required |
-| ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | :------: |
-| <a name="input_additional_actions"></a> [additional_actions](#input_additional_actions)                | Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions.                      | `list(string)` | `[]`    |    no    |
-| <a name="input_additional_data_actions"></a> [additional_data_actions](#input_additional_data_actions) | Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents.                     | `list(string)` | `[]`    |    no    |
-| <a name="input_reason"></a> [reason](#input_reason)                                                    | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names.                 | `string`       | n/a     |   yes    |
-| <a name="input_role_name"></a> [role_name](#input_role_name)                                           | Name of the custom role definition to create.                                                                                                           | `string`       | n/a     |   yes    |
-| <a name="input_scope"></a> [scope](#input_scope)                                                       | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID.                      | `string`       | n/a     |   yes    |
-| <a name="input_source_roles"></a> [source_roles](#input_source_roles)                                  | List of at least two Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a     |   yes    |
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions. | `list(string)` | `[]` | no |
+| <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents. | `list(string)` | `[]` | no |
+| <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
+| <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
+| <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |
+| <a name="input_source_roles"></a> [source\_roles](#input\_source\_roles) | List of at least two Azure role names to merge into a custom role definition. Roles can be built-in or custom, as long as they are resolvable at scope. | `list(string)` | n/a | yes |
 
 ## Outputs
 
-| Name                                                                                | Description                                              |
-| ----------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| <a name="output_custom_role_id"></a> [custom_role_id](#output_custom_role_id)       | ID of the newly created custom role definition           |
-| <a name="output_custom_role_name"></a> [custom_role_name](#output_custom_role_name) | Display name of the newly created custom role definition |
-
+| Name | Description |
+|------|-------------|
+| <a name="output_custom_role_id"></a> [custom\_role\_id](#output\_custom\_role\_id) | ID of the newly created custom role definition |
+| <a name="output_custom_role_name"></a> [custom\_role\_name](#output\_custom\_role\_name) | Display name of the newly created custom role definition |
 <!-- END_TF_DOCS -->
