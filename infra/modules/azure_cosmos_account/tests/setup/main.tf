@@ -1,13 +1,4 @@
 locals {
-  naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location,
-    domain          = var.environment.domain,
-    name            = var.environment.app_name,
-    instance_number = tonumber(var.environment.instance_number),
-  }
-
   existing_resources = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -50,13 +41,13 @@ data "azurerm_private_dns_zone" "cosmos" {
 }
 
 resource "azurerm_resource_group" "sut" {
-  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
   location = var.environment.location
   tags     = var.tags
 }
 
 resource "azurerm_user_assigned_identity" "uai" {
-  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "managed_identity", name = "cosno" }))
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_identity", app_name = "cosno" }))
   resource_group_name = azurerm_resource_group.sut.name
   location            = azurerm_resource_group.sut.location
   tags                = var.tags
@@ -69,7 +60,7 @@ resource "random_integer" "kv_instance" {
 
 #tfsec:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "kv" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", domain = "int", instance_number = random_integer.kv_instance.result }))
+  name                          = provider::dx::resource_name(merge(var.environment, { resource_type = "key_vault", domain = "int", instance_number = random_integer.kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
   resource_group_name           = azurerm_resource_group.sut.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
@@ -115,7 +106,7 @@ resource "time_sleep" "wait_for_kv_rbac_propagation" {
 }
 
 resource "azurerm_key_vault_key" "cmk" {
-  name            = provider::dx::resource_name(merge(local.naming_config, { resource_type = "customer_key_cosmos_db_nosql" }))
+  name            = provider::dx::resource_name(merge(var.environment, { resource_type = "customer_key_cosmos_db_nosql" }))
   key_vault_id    = azurerm_key_vault.kv.id
   key_type        = "RSA"
   key_size        = 2048
@@ -134,7 +125,7 @@ output "resource_group_name" {
 }
 
 output "pvt_service_connection_name" {
-  value = provider::dx::resource_name(merge(local.naming_config, { resource_type = "cosmos_private_endpoint" }))
+  value = provider::dx::resource_name(merge(var.environment, { resource_type = "cosmos_private_endpoint" }))
 }
 
 output "private_dns_zone_resource_group_name" {
