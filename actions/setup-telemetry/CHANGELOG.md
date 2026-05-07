@@ -1,3 +1,10 @@
+## 0.1.10 (2026-05-05)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.1
+- Updated @pagopa/eslint-config to 6.0.4
+
 ## 0.1.9 (2026-04-28)
 
 ### 🧱 Updated Dependencies

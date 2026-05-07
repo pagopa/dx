@@ -1,3 +1,29 @@
+## 0.2.4 (2026-05-07)
+
+### 🩹 Fixes
+
+- Migrate the MCP server to Zod v4 ([#1698](https://github.com/pagopa/dx/pull/1698))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.2.3 (2026-05-05)
+
+### 🩹 Fixes
+
+- Upgrade some dependencies ([#1690](https://github.com/pagopa/dx/pull/1690))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.1
+- Updated @pagopa/eslint-config to 6.0.4
+- Updated @pagopa/dx-mcpprompts to 0.2.8
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.2.2 (2026-04-28)
 
 ### 🧱 Updated Dependencies

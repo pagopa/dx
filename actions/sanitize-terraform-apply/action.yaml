@@ -1,0 +1,27 @@
+name: "Sanitize Terraform Apply"
+description: "Executes terraform apply and sanitizes sensitive information in the output."
+
+inputs:
+  base-path:
+    description: "The directory where terraform apply will be executed. (Defaults to the root of the repository)"
+    required: false
+    default: "."
+  plan-file:
+    description: "The terraform plan file to pass to terraform apply."
+    required: true
+  sensitive-keys:
+    description: "A comma-separated list of sensitive keys to sanitize in the output."
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Terraform Apply and Sanitize Output
+      working-directory: ${{ inputs.base-path }}
+      shell: bash
+      run: |
+        bash $GITHUB_ACTION_PATH/run_apply.sh
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        PLAN_FILE: ${{ inputs.plan-file }}
+        SENSITIVE_KEYS: ${{ inputs.sensitive-keys }}

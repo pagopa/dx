@@ -79,6 +79,43 @@ run "merge_roles_flattens_source_permissions_into_one_effective_block" {
   }
 }
 
+run "merge_roles_appends_additional_actions_to_control_plane_permissions" {
+  command = plan
+
+  variables {
+    additional_actions = ["  Microsoft.Authorization/roleAssignments/write  ", "*/read"]
+  }
+
+  assert {
+    condition = jsonencode(local.merged_permissions.actions) == jsonencode([
+      "*/read",
+      "Microsoft.Authorization/roleAssignments/write",
+      "Microsoft.Insights/*/read",
+      "Microsoft.Support/*",
+    ])
+    error_message = "merged_permissions.actions must append trimmed additional_actions and deduplicate values already granted by source roles"
+  }
+}
+
+run "merge_roles_appends_additional_data_actions_to_data_plane_permissions" {
+  command = plan
+
+  variables {
+    additional_data_actions = [
+      "  Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write  ",
+      "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+    ]
+  }
+
+  assert {
+    condition = jsonencode(local.merged_permissions.data_actions) == jsonencode([
+      "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read",
+      "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/write",
+    ])
+    error_message = "merged_permissions.data_actions must append trimmed additional_data_actions and deduplicate values already granted by source roles"
+  }
+}
+
 run "role_definition_assignable_scope_is_fixed_to_scope" {
   command = plan
 
@@ -206,6 +243,98 @@ run "merge_roles_drops_exclusions_regranted_by_other_source_roles" {
   assert {
     condition     = length(azurerm_role_definition.merged.permissions) == 1
     error_message = "the merged custom role must still emit a single permissions block when exclusions are re-granted"
+  }
+}
+
+run "additional_actions_drop_overlapping_control_plane_exclusions" {
+  command = plan
+
+  variables {
+    additional_actions = ["Microsoft.Authorization/roleAssignments/delete"]
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["0"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Authorization/*"]
+          data_actions     = []
+          not_actions      = ["Microsoft.Authorization/roleAssignments/delete"]
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["1"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Insights/*/read"]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  assert {
+    condition     = jsonencode(local.merged_permissions.not_actions) == jsonencode([])
+    error_message = "merged_permissions.not_actions must drop exclusions overlapped by caller-provided additional_actions"
+  }
+
+  assert {
+    condition     = contains(local.merged_permissions.actions, "Microsoft.Authorization/roleAssignments/delete")
+    error_message = "merged_permissions.actions must retain caller-provided additional_actions after the overlap policy is applied"
+  }
+}
+
+run "additional_data_actions_drop_overlapping_data_plane_exclusions" {
+  command = plan
+
+  variables {
+    additional_data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete"]
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["0"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Authorization/*"]
+          data_actions     = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/*"]
+          not_actions      = []
+          not_data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete"]
+        },
+      ]
+    }
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["1"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Insights/*/read"]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  assert {
+    condition     = jsonencode(local.merged_permissions.not_data_actions) == jsonencode([])
+    error_message = "merged_permissions.not_data_actions must drop exclusions overlapped by caller-provided additional_data_actions"
+  }
+
+  assert {
+    condition     = contains(local.merged_permissions.data_actions, "Microsoft.Storage/storageAccounts/blobServices/containers/blobs/delete")
+    error_message = "merged_permissions.data_actions must retain caller-provided additional_data_actions after the overlap policy is applied"
   }
 }
 

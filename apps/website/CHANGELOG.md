@@ -1,3 +1,18 @@
+## 0.16.2 (2026-05-05)
+
+### 🩹 Fixes
+
+- Upgrade some dependencies ([#1690](https://github.com/pagopa/dx/pull/1690))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.4
+- Updated @pagopa/dx-mcpprompts to 0.2.8
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.16.1 (2026-04-29)
 
 ### 🩹 Fixes

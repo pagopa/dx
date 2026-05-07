@@ -4,6 +4,7 @@ locals {
     "italynorth" = "itn",
     "westeurope" = "weu"
   })[var.environment.location]
+  subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
 
   project = "${var.environment.prefix}-${var.environment.env_short}-${local.location_short}"
   naming_config = {

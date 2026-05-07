@@ -271,6 +271,68 @@ The following table lists the resource types and their abbreviations used in the
 | local_network_gateway                     |       lgw        |
 | virtual_network_gateway_connection        |      vgwcn       |
 
+### convert_location_to_long_format
+
+Converts a short location code to its full Azure region name.
+
+**Inputs:**
+
+| Name           |  Type  | Required | Description          |
+| :------------- | :----: | :------: | :------------------- |
+| location_short | String |   Yes    | Short location code. |
+
+**Example:**
+
+```hcl
+output "location_long" {
+  value = provider::dx::convert_location_to_long_format("itn")
+}
+```
+
+- **Output**: italynorth
+
+**Supported Locations:**
+
+| Short code | Full name        |
+| :--------: | :--------------- |
+|   `itn`    | `italynorth`     |
+|   `weu`    | `westeurope`     |
+|   `neu`    | `northeurope`    |
+|   `swc`    | `swedencentral`  |
+|   `spc`    | `spaincentral`   |
+|   `gwc`    | `germanycentral` |
+
+### convert_location_to_short_format
+
+Converts a full Azure region name to its short location code.
+
+**Inputs:**
+
+| Name          |  Type  | Required | Description             |
+| :------------ | :----: | :------: | :---------------------- |
+| location_long | String |   Yes    | Full Azure region name. |
+
+**Example:**
+
+```hcl
+output "location_short" {
+  value = provider::dx::convert_location_to_short_format("italynorth")
+}
+```
+
+- **Output**: itn
+
+**Supported Locations:**
+
+| Full name        | Short code |
+| :--------------- | :--------: |
+| `italynorth`     |   `itn`    |
+| `westeurope`     |   `weu`    |
+| `northeurope`    |   `neu`    |
+| `swedencentral`  |   `swc`    |
+| `spaincentral`   |   `spc`    |
+| `germanycentral` |   `gwc`    |
+
 ## Example Configuration
 
 ```hcl

@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph Environment["Container Apps Environment (input)"]
+        job["Container App Job
+        (Self-Hosted Runner)"]
+        job@{ icon: "azure:worker-container-app"}
+    end
+
+    subgraph Security["Identity & Access"]
+        mi["Managed Identity
+        (System-Assigned)"]
+        mi@{ icon: "azure:managed-identities"}
+
+        kvaccess["KV Access Policy
+        or RBAC Role"]
+    end
+
+    subgraph Secrets["Key Vault (input)"]
+        kv["GitHub Credentials
+        (PAT or App Key)"]
+        kv@{ icon: "azure:key-vaults"}
+    end
+
+    gh["GitHub Actions
+    (KEDA Trigger)"]
+
+    %% Dependencies
+    gh -.-> job
+    job --> mi
+    mi --> kvaccess
+    kvaccess --> kv

@@ -1,3 +1,43 @@
+## 4.1.2 (2026-05-07)
+
+### 🩹 Fixes
+
+- Set the required three availability zones on the VPN gateway public IPs so the module converges on the zone-redundant layout required by the v4 VPN gateway. ([#1702](https://github.com/pagopa/dx/pull/1702))
+
+  This change can replace the VPN public IPs and the gateway in stacks that still need to converge, so apply it during a maintenance window.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.1.1 (2026-05-05)
+
+### 🩹 Fixes
+
+- Prefix merged custom role names with the Azure subscription display name to avoid tenant-wide name collisions across subscriptions. ([#1693](https://github.com/pagopa/dx/pull/1693))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.1.0 (2026-05-05)
+
+### 🚀 Features
+
+- Add merged custom roles in the core infrastructure module for App CI, App CD, Infra CI, Infra CD, and Function App storage access. ([#1684](https://github.com/pagopa/dx/pull/1684))
+
+  ## Migration Guide
+
+  When you apply the upgrade, Terraform will create new merged custom roles at subscription scope. In practice this change is expected to produce creates only, because the RBAC model is being introduced centrally in the core infrastructure module.
+
+  The main operational prerequisite is sequencing: apply this upgrade before upgrading the bootstrap or Function App modules that assign these merged roles.
+
+  The main operational risk is limited to Azure RBAC propagation after the apply itself: newly created role definitions may not be immediately available for dependent role assignments, so dependent module upgrades may need to wait a short time before they are applied.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 4.0.0 (2026-04-22)
 
 ### ⚠️  Breaking Changes

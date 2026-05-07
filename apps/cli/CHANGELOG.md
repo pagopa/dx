@@ -1,9 +1,40 @@
+## 0.21.2 (2026-05-07)
+
+### 🩹 Fixes
+
+- Add contextual side effect documentation to `init` and `add environment` commands ([#1682](https://github.com/pagopa/dx/pull/1682))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.21.1 (2026-05-05)
+
+### 🩹 Fixes
+
+- Upgrade some dependencies ([#1690](https://github.com/pagopa/dx/pull/1690))
+- DX CLI bootstrap initialization now creates the bootstrapper environment secrets GH_APP_ID, GH_APP_INSTALLATION_ID, GH_APP_KEY, and ARM_TENANT_ID. ([#1680](https://github.com/pagopa/dx/pull/1680))
+  The bootstrapper workflow reads the GitHub App credentials from the new GH_APP_* secret names.
+
+- Stop requiring Azure login for dx init ([#1687](https://github.com/pagopa/dx/pull/1687))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.4
+- Updated @pagopa/dx-savemoney to 0.2.5
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.21.0 (2026-04-29)
 
 ### 🚀 Features
 
 - Add a global `--verbose` / `-v` flag and improve error messages precision across every `dx` subcommand. ([#1667](https://github.com/pagopa/dx/pull/1667))
-
   - The flag is now defined on the root program, so `dx --verbose <command>` (or `dx <command> --verbose`) works for `doctor`, `codemod`, `init`, `add`, `info` and `savemoney`. The existing subcommand-local `--verbose` on `savemoney` has been removed in favor of the inherited global option (same short/long names, same semantics).
   - When `--verbose` is active, the logger is configured at `debug` level so that detailed progress information emitted by internal components (cloud-account initialization, plop generators, Azure/GitHub adapters, etc.) is visible.
   - When a command fails in verbose mode, the CLI now prints the full error chain — including the underlying `cause` and the stack trace — instead of the top-level message alone.
