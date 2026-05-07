@@ -16,6 +16,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_cosmosdb_sql_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_role_assignment) | resource |
+| [azurerm_role_assignment.control_plane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 
 ## Inputs
 
@@ -27,5 +28,8 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_azurerm_cosmosdb_sql_role_assignment"></a> [azurerm\_cosmosdb\_sql\_role\_assignment](#output\_azurerm\_cosmosdb\_sql\_role\_assignment) | n/a |
+| <a name="output_azurerm_role_assignment"></a> [azurerm\_role\_assignment](#output\_azurerm\_role\_assignment) | n/a |
 <!-- END_TF_DOCS -->
