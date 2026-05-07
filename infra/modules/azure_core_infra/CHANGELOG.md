@@ -1,3 +1,13 @@
+## 4.2.0 (2026-05-07)
+
+### 🚀 Features
+
+- Added required networking and API Management permissions to infra CI and infra CD merged custom roles ([#1676](https://github.com/pagopa/dx/pull/1676), [#1684](https://github.com/pagopa/dx/issues/1684))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.1.2 (2026-05-07)
 
 ### 🩹 Fixes

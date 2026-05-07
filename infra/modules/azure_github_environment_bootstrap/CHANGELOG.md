@@ -1,3 +1,35 @@
+# 4.0.0 (2026-05-07)
+
+### ⚠️  Breaking Changes
+
+- Replace the bootstrap module's individual built-in RBAC assignments with assignments to merged custom roles for App CI, App CD, Infra CI, and Infra CD. ([#1676](https://github.com/pagopa/dx/pull/1676), [#1684](https://github.com/pagopa/dx/issues/1684))
+
+  The module resolves those merged custom role definitions at subscription scope through `data.azurerm_role_definition`, using the current subscription display name prefix to match the core naming convention.
+
+  From this version onward, `azure_github_environment_bootstrap` requires `azure_core_infra` version `4.1.1` or later.
+
+  ## Migration Guide
+
+  When you apply the upgrade, Terraform will replace several existing built-in role assignments with merged-role assignments. In practice this change is expected to produce more deletes than creates while the RBAC model is consolidated.
+
+  The main operational risk is limited to the apply window itself: GitHub workflows that rely on these identities may temporarily fail while the old assignments are being removed and the new merged assignments are being created.
+
+- Simplify `azure_github_environment_bootstrap` now that merged custom roles cover the extra networking and service-specific permissions that were previously granted through direct role assignments in this module. ([#1676](https://github.com/pagopa/dx/pull/1676), [#1684](https://github.com/pagopa/dx/issues/1684))
+
+  Removed inputs: `subscription_id`, `tenant_id`, `pep_vnet_id`, `apim_id`, `sbns_id`, `log_analytics_workspace_id`, `nat_gateway_resource_group_id`, and `keyvault_common_ids`.
+
+  The module now resolves subscription scope from the configured `azurerm` provider and no longer creates the direct VNet, NAT Gateway, APIM, Service Bus, Log Analytics, or common Key Vault policy assignments. Examples, tests, and the local Azure bootstrapper consumer were updated accordingly.
+
+  ## Migration Guide
+
+  1. Stop passing the removed inputs.
+  2. Upgrade `azure_core_infra` together with this module so the merged Infra CI and Infra CD roles include the required networking and service permissions.
+  3. Expect Terraform to remove the obsolete direct role assignments on the next apply.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 3.2.3
 
 ### Patch Changes
