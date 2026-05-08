@@ -97,6 +97,52 @@ run "merge_roles_appends_additional_actions_to_control_plane_permissions" {
   }
 }
 
+run "merge_roles_handles_case_insensitive_overlap_with_additional_actions" {
+  command = plan
+
+  variables {
+    additional_actions = ["microsoft.app/managedenvironments/*/read"]
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["0"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Authorization/*"]
+          data_actions     = []
+          not_actions      = ["Microsoft.App/managedEnvironments/*/read"]
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["1"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Insights/*/read"]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  assert {
+    condition     = jsonencode(local.merged_permissions.not_actions) == jsonencode([])
+    error_message = "merged_permissions.not_actions must treat additional_actions case-insensitively when checking overlap"
+  }
+
+  assert {
+    condition     = contains(local.merged_permissions.actions, "microsoft.app/managedenvironments/*/read")
+    error_message = "merged_permissions.actions must retain the caller-provided additional action when source exclusions use a different casing"
+  }
+}
+
 run "merge_roles_appends_additional_data_actions_to_data_plane_permissions" {
   command = plan
 
