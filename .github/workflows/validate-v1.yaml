@@ -2,6 +2,13 @@ name: Validate
 
 on:
   workflow_call:
+    secrets:
+      app-client-id:
+        description: "GitHub App Client ID for authentication"
+        required: true
+      app-private-key:
+        description: "GitHub App private key for authentication"
+        required: true
 
 jobs:
   warn-missing-version-plans:
@@ -28,7 +35,8 @@ jobs:
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
         with:
-          github-token: ${{ github.token }}
+          app-client-id: ${{ secrets.app-client-id }}
+          app-private-key: ${{ secrets.app-private-key }}
 
   ci:
     name: Code Review
