@@ -1,3 +1,13 @@
+## 0.1.2 (2026-05-08)
+
+### 🩹 Fixes
+
+- Exclude known deprecated permissions from the merged roles such as `Microsoft.Classic` ([#1718](https://github.com/pagopa/dx/pull/1718))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.1.1 (2026-05-08)
 
 ### 🩹 Fixes
