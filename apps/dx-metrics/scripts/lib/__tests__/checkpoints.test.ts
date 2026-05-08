@@ -2,21 +2,23 @@
 
 import { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
+  type CheckpointContext,
   cleanStaleCheckpoints,
   completeCheckpoint,
   failCheckpoint,
   hasCheckpoint,
   startCheckpoint,
 } from "../checkpoints";
-import type { ImportContext } from "../import-context";
 
 const dialect = new PgDialect();
 
-const renderExecutedSql = (context: ImportContext) => {
-  const [statement] = vi.mocked(context.db.execute).mock.calls[0] ?? [];
+const renderExecutedSql = (
+  execute: ReturnType<typeof makeContext<Record<string, unknown>>>["execute"],
+) => {
+  const [statement] = execute.mock.calls[0] ?? [];
 
   if (!(statement instanceof SQL)) {
     throw new Error("Expected a SQL statement");
@@ -25,26 +27,34 @@ const renderExecutedSql = (context: ImportContext) => {
   return dialect.sqlToQuery(statement);
 };
 
-const makeContext = (executeResult: { rows: unknown[] }) =>
-  ({
+const makeContext = <TRow extends Record<string, unknown>>(rows: readonly TRow[]) => {
+  const execute = vi.fn(async () => ({ rows: [...rows] }));
+  const context = {
     db: {
-      execute: vi.fn().mockResolvedValue(executeResult),
+      execute,
     },
-  }) as unknown as ImportContext;
+  } satisfies CheckpointContext;
+
+  return { context, execute };
+};
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 describe("hasCheckpoint", () => {
   it("normalizes the since date and computes the freshness cutoff in code", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-08T12:00:00.000Z"));
 
-    const context = makeContext({ rows: [{ has_checkpoint: 1 }] });
+    const { context, execute } = makeContext([{ has_checkpoint: 1 }]);
     const result = await hasCheckpoint(
       context,
       "pull-requests",
       "dx",
       "2026-04-08",
     );
-    const rendered = renderExecutedSql(context);
+    const rendered = renderExecutedSql(execute);
 
     expect(result).toBe(true);
     expect(rendered.sql).toContain("entity_type =");
@@ -57,12 +67,10 @@ describe("hasCheckpoint", () => {
       "2026-04-08",
       new Date("2026-05-07T13:00:00.000Z"),
     ]);
-
-    vi.useRealTimers();
   });
 
   it("returns false when since date is invalid", async () => {
-    const context = makeContext({ rows: [] });
+    const { context, execute } = makeContext([]);
     const result = await hasCheckpoint(
       context,
       "pull-requests",
@@ -70,11 +78,23 @@ describe("hasCheckpoint", () => {
       "not-a-date",
     );
     expect(result).toBe(false);
-    expect(context.db.execute).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+  });
+
+  it("returns false when the calendar date overflows", async () => {
+    const { context, execute } = makeContext([]);
+    const result = await hasCheckpoint(
+      context,
+      "pull-requests",
+      "dx",
+      "2026-02-31",
+    );
+    expect(result).toBe(false);
+    expect(execute).not.toHaveBeenCalled();
   });
 
   it("returns false when no matching checkpoint exists in db", async () => {
-    const context = makeContext({ rows: [] });
+    const { context } = makeContext([]);
     const result = await hasCheckpoint(
       context,
       "pull-requests",
@@ -85,7 +105,7 @@ describe("hasCheckpoint", () => {
   });
 
   it("returns false when no global checkpoint exists (null repoName)", async () => {
-    const context = makeContext({ rows: [] });
+    const { context } = makeContext([]);
     const result = await hasCheckpoint(
       context,
       "code-search",
@@ -96,14 +116,14 @@ describe("hasCheckpoint", () => {
   });
 
   it("uses the global entity key when repoName is null", async () => {
-    const context = makeContext({ rows: [{ has_checkpoint: 1 }] });
+    const { context, execute } = makeContext([{ has_checkpoint: 1 }]);
     const result = await hasCheckpoint(
       context,
       "code-search",
       null,
       "2026-04-08",
     );
-    const rendered = renderExecutedSql(context);
+    const rendered = renderExecutedSql(execute);
 
     expect(result).toBe(true);
     expect(rendered.params[0]).toBe("code-search");
@@ -113,15 +133,15 @@ describe("hasCheckpoint", () => {
 
 describe("cleanStaleCheckpoints", () => {
   it("updates running sync_runs to interrupted", async () => {
-    const context = makeContext({ rows: [] });
+    const { context, execute } = makeContext([]);
     await cleanStaleCheckpoints(context);
-    expect(context.db.execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledOnce();
   });
 });
 
 describe("startCheckpoint", () => {
   it("inserts a running sync_run and returns its id", async () => {
-    const context = makeContext({ rows: [{ id: 42 }] });
+    const { context, execute } = makeContext([{ id: 42 }]);
     const id = await startCheckpoint(
       context,
       "pull-requests",
@@ -129,10 +149,10 @@ describe("startCheckpoint", () => {
       "2026-04-08",
       1,
     );
-    const rendered = renderExecutedSql(context);
+    const rendered = renderExecutedSql(execute);
 
     expect(id).toBe(42);
-    expect(context.db.execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledOnce();
     expect(rendered.params).toEqual([
       "pull-requests:dx",
       1,
@@ -141,27 +161,27 @@ describe("startCheckpoint", () => {
   });
 
   it("throws when since date is invalid", async () => {
-    const context = makeContext({ rows: [] });
+    const { context, execute } = makeContext([]);
 
     await expect(
       startCheckpoint(context, "pull-requests", "dx", "not-a-date", 1),
-    ).rejects.toThrow("Invalid since date: not-a-date");
-    expect(context.db.execute).not.toHaveBeenCalled();
+    ).rejects.toThrow("Invalid since date: not-a-date. Expected format: YYYY-MM-DD");
+    expect(execute).not.toHaveBeenCalled();
   });
 });
 
 describe("completeCheckpoint", () => {
   it("updates the sync_run to done", async () => {
-    const context = makeContext({ rows: [] });
+    const { context, execute } = makeContext([]);
     await completeCheckpoint(context, 42);
-    expect(context.db.execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledOnce();
   });
 });
 
 describe("failCheckpoint", () => {
   it("updates the sync_run to failed", async () => {
-    const context = makeContext({ rows: [] });
+    const { context, execute } = makeContext([]);
     await failCheckpoint(context, 42);
-    expect(context.db.execute).toHaveBeenCalledOnce();
+    expect(execute).toHaveBeenCalledOnce();
   });
 });
