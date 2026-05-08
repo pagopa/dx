@@ -1,3 +1,14 @@
+## 0.2.0 (2026-05-08)
+
+### 🚀 Features
+
+- Update the authentication method to use a GitHub App instead of a PAT token ([#1721](https://github.com/pagopa/dx/pull/1721), [#1720](https://github.com/pagopa/dx/issues/1720))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.1.1 (2026-05-05)
 
 ### 🩹 Fixes
