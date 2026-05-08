@@ -327,6 +327,7 @@ describe("initialize", () => {
         prefix: "dx",
       },
       {
+        clientId: "app-client-id",
         id: "app-id",
         installationId: "installation-id",
         key: "private-key\n",
@@ -386,7 +387,7 @@ describe("initialize", () => {
         subject: "repo:pagopa/dx:environment:bootstrapper-dev-cd",
       },
     );
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledTimes(6);
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledTimes(7);
     expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
       environmentName: "bootstrapper-dev-cd",
       owner: "pagopa",
@@ -414,6 +415,13 @@ describe("initialize", () => {
       repo: "dx",
       secretName: "GH_APP_ID",
       secretValue: "app-id",
+    });
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName: "bootstrapper-dev-cd",
+      owner: "pagopa",
+      repo: "dx",
+      secretName: "GH_APP_CLIENT_ID",
+      secretValue: "app-client-id",
     });
     expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
       environmentName: "bootstrapper-dev-cd",

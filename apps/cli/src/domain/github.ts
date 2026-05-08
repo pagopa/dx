@@ -132,6 +132,7 @@ export class RepositoryNotFoundError extends Error {
 }
 
 export const githubAppCredentialsSchema = z.object({
+  clientId: z.string().nonempty(),
   id: z.string().nonempty(),
   installationId: z.string().nonempty(),
   key: z.string().nonempty(),
