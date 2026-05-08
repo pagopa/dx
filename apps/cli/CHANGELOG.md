@@ -1,3 +1,16 @@
+## 0.21.3 (2026-05-08)
+
+### 🩹 Fixes
+
+- The DX CLI now asks for the GitHub app client-id for bootstrap apply workflow ([#1725](https://github.com/pagopa/dx/pull/1725))
+- Add AD group management to the authorization workflow ([#1619](https://github.com/pagopa/dx/pull/1619), [#1400](https://github.com/pagopa/dx/issues/1400), [#1541](https://github.com/pagopa/dx/issues/1541))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.21.2 (2026-05-07)
 
 ### 🩹 Fixes

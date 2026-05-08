@@ -1,3 +1,13 @@
+## 2.1.0 (2026-05-08)
+
+### 🚀 Features
+
+- Add owner role for Cosmos DB. The owner allows the writer permissions to the data-plane and the total ownership on the control-plane of the selected Cosmos DB account. ([#1712](https://github.com/pagopa/dx/pull/1712))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 2.0.0 (2026-04-28)
 
 ### ⚠️  Breaking Changes
