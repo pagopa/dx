@@ -10,15 +10,17 @@ locals {
   }
 
   control_plane_assignments = {
-    for entry in var.cosmos :
-    "${entry.account_name}|${entry.resource_group_name}|${entry.role}" => {
-      account_name        = entry.account_name
-      account_id          = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}"
-      resource_group_name = entry.resource_group_name
-      role                = entry.role
-      description         = entry.description
-    }
-    if entry.role == "owner"
+    for key, entries in {
+      for entry in var.cosmos :
+      "${entry.account_name}|${entry.resource_group_name}" => {
+        account_name        = entry.account_name
+        account_id          = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}"
+        resource_group_name = entry.resource_group_name
+        role                = entry.role
+        description         = entry.description
+      }...
+      if entry.role == "owner"
+    } : key => entries[0]
   }
 
   data_plane_assignments = {

@@ -360,6 +360,14 @@ run "cosmos_role_assignments" {
         description         = "This is an owner"
         database            = "db2"
         collections         = ["collection3"]
+      },
+      {
+        account_name        = "dx-d-itn-test-cosmos-02"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+        description         = "This is an owner"
+        database            = "db3"
+        collections         = ["collection4"]
       }
     ]
   }
@@ -375,18 +383,28 @@ run "cosmos_role_assignments" {
   }
 
   assert {
-    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01|owner"].role_definition_name == "DocumentDB Account Contributor"
+    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01"].role_definition_name == "DocumentDB Account Contributor"
     error_message = "The owner role must create the Cosmos DB control-plane role assignment"
   }
 
   assert {
-    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01|owner"].description == "This is an owner"
+    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01"].description == "This is an owner"
     error_message = "The owner role must have the correct description"
+  }
+
+  assert {
+    condition     = length(module.cosmos.azurerm_role_assignment) == 1
+    error_message = "Owner assignments on the same Cosmos account must share a single control-plane role assignment"
   }
 
   assert {
     condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-02|db2|collection3|owner"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-02/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
     error_message = "The owner role must map to writer permissions on the Cosmos DB data plane"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-02|db3|collection4|owner"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-02/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+    error_message = "Multiple owner assignments on the same Cosmos account must still create data-plane writer assignments for each scoped resource"
   }
 }
 
