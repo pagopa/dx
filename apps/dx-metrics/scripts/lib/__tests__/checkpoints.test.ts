@@ -27,7 +27,9 @@ const renderExecutedSql = (
   return dialect.sqlToQuery(statement);
 };
 
-const makeContext = <TRow extends Record<string, unknown>>(rows: readonly TRow[]) => {
+const makeContext = <TRow extends Record<string, unknown>>(
+  rows: readonly TRow[],
+) => {
   const execute = vi.fn(async () => ({ rows: [...rows] }));
   const context = {
     db: {
@@ -165,7 +167,9 @@ describe("startCheckpoint", () => {
 
     await expect(
       startCheckpoint(context, "pull-requests", "dx", "not-a-date", 1),
-    ).rejects.toThrow("Invalid since date: not-a-date. Expected format: YYYY-MM-DD");
+    ).rejects.toThrow(
+      "Invalid since date: not-a-date. Expected format: YYYY-MM-DD",
+    );
     expect(execute).not.toHaveBeenCalled();
   });
 });
