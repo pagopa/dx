@@ -413,9 +413,7 @@ export function SimplePieChart({
             }: {
               name?: number | string;
               percent?: number;
-            }) =>
-              `${name} (${((percent || 0) * 100).toFixed(0)}%)`
-            }
+            }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
             labelLine
             outerRadius={80}
           >
