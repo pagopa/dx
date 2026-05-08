@@ -1,3 +1,13 @@
+## 0.1.1 (2026-05-08)
+
+### 🩹 Fixes
+
+- Fixed case where actions and not actions would contain the same permission causing duplicated keys errors. ([#1713](https://github.com/pagopa/dx/pull/1713))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.1.0 (2026-05-07)
 
 ### 🚀 Features
