@@ -328,6 +328,86 @@ run "managed_redis_role_assignments" {
   }
 }
 
+
+run "cosmos_role_assignments" {
+  command = plan
+
+  variables {
+    principal_id    = run.setup_tests.principal_id
+    subscription_id = run.setup_tests.subscription_id
+
+    cosmos = [
+      {
+        account_name        = "dx-d-itn-test-cosmos-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "reader"
+        description         = "This is a reader"
+        database            = "db1"
+        collections         = ["collection1"]
+      },
+      {
+        account_name        = "dx-d-itn-test-cosmos-01"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "writer"
+        description         = "This is a writer"
+        database            = "db1"
+        collections         = ["collection2"]
+      },
+      {
+        account_name        = "dx-d-itn-test-cosmos-02"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+        description         = "This is an owner"
+        database            = "db2"
+        collections         = ["collection3"]
+      },
+      {
+        account_name        = "dx-d-itn-test-cosmos-02"
+        resource_group_name = "dx-d-itn-test-rg-01"
+        role                = "owner"
+        description         = "This is an owner"
+        database            = "db3"
+        collections         = ["collection4"]
+      }
+    ]
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-01|db1|collection1|reader"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-01/sqlRoleDefinitions/00000000-0000-0000-0000-000000000001"
+    error_message = "The reader role must map to the Cosmos DB Built-in Data Reader role"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-01|db1|collection2|writer"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-01/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+    error_message = "The writer role must map to the Cosmos DB Built-in Data Contributor role"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01"].role_definition_name == "DocumentDB Account Contributor"
+    error_message = "The owner role must create the Cosmos DB control-plane role assignment"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01"].description == "This is an owner"
+    error_message = "The owner role must have the correct description"
+  }
+
+  assert {
+    condition     = length(module.cosmos.azurerm_role_assignment) == 1
+    error_message = "Owner assignments on the same Cosmos account must share a single control-plane role assignment"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-02|db2|collection3|owner"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-02/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+    error_message = "The owner role must map to writer permissions on the Cosmos DB data plane"
+  }
+
+  assert {
+    condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-02|db3|collection4|owner"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-02/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
+    error_message = "Multiple owner assignments on the same Cosmos account must still create data-plane writer assignments for each scoped resource"
+  }
+}
+
 run "managed_redis_rejects_invalid_id" {
   command = plan
 
