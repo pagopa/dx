@@ -58,8 +58,8 @@ export async function hasCheckpoint(
           AND status = 'done'
           AND since_date IS NOT NULL
           AND completed_at IS NOT NULL
-          AND since_date <= ${requestedSinceDate}
-          AND completed_at >= ${requestedSinceDate}
+          AND since_date = ${requestedSinceDate}
+          AND completed_at >= NOW() - INTERVAL '23 hours'
         LIMIT 1`,
   );
 
