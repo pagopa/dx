@@ -48,13 +48,13 @@ describe("hasCheckpoint", () => {
 
     expect(result).toBe(true);
     expect(rendered.sql).toContain("entity_type =");
-    expect(rendered.sql).toContain("since_date =");
+    expect(rendered.sql).toContain("since_date::date =");
     expect(rendered.sql).not.toContain("since_date <=");
     expect(rendered.sql).toContain("completed_at >=");
     expect(rendered.sql).not.toContain("INTERVAL '23 hours'");
     expect(rendered.params).toEqual([
       "pull-requests:dx",
-      new Date("2026-04-08T00:00:00.000Z"),
+      "2026-04-08",
       new Date("2026-05-07T13:00:00.000Z"),
     ]);
 
@@ -107,7 +107,7 @@ describe("hasCheckpoint", () => {
 
     expect(result).toBe(true);
     expect(rendered.params[0]).toBe("code-search");
-    expect(rendered.params[1]).toEqual(new Date("2026-04-08T00:00:00.000Z"));
+    expect(rendered.params[1]).toBe("2026-04-08");
   });
 });
 

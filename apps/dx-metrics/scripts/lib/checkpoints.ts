@@ -18,6 +18,9 @@ const parseSinceDate = (since: string): Date | null => {
   return Number.isNaN(parsedSinceDate.getTime()) ? null : parsedSinceDate;
 };
 
+const formatSinceDate = (sinceDate: Date): string =>
+  sinceDate.toISOString().slice(0, 10);
+
 export async function cleanStaleCheckpoints(
   context: ImportContext,
 ): Promise<void> {
@@ -60,6 +63,7 @@ export async function hasCheckpoint(
     return false;
   }
 
+  const normalizedSinceDate = formatSinceDate(requestedSinceDate);
   const freshCheckpointCutoff = new Date(
     Date.now() - checkpointFreshnessWindowMs,
   );
@@ -71,7 +75,7 @@ export async function hasCheckpoint(
           AND status = 'done'
           AND since_date IS NOT NULL
           AND completed_at IS NOT NULL
-          AND since_date = ${requestedSinceDate}
+          AND since_date::date = ${normalizedSinceDate}::date
           AND completed_at >= ${freshCheckpointCutoff}
         LIMIT 1`,
   );
