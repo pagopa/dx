@@ -51,6 +51,7 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
   init: {
     cloudAccountsToInitialize: [],
     runnerAppCredentials: {
+      clientId: "test-app-client-id",
       id: "test-app-id",
       installationId: "test-installation-id",
       key: "test-private-key",
@@ -83,6 +84,7 @@ describe("initCloudAccounts", () => {
       init: {
         cloudAccountsToInitialize: [cloudAccount1, cloudAccount2],
         runnerAppCredentials: {
+          clientId: "test-app-client-id",
           id: "test-app-id",
           installationId: "test-installation-id",
           key: "test-private-key",
@@ -100,6 +102,7 @@ describe("initCloudAccounts", () => {
       cloudAccount1,
       expect.objectContaining({ name: "prod", prefix: "io" }),
       {
+        clientId: "test-app-client-id",
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",
@@ -115,6 +118,7 @@ describe("initCloudAccounts", () => {
       cloudAccount2,
       expect.objectContaining({ name: "prod", prefix: "io" }),
       {
+        clientId: "test-app-client-id",
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",
@@ -137,6 +141,7 @@ describe("initCloudAccounts", () => {
       init: {
         cloudAccountsToInitialize: [],
         runnerAppCredentials: {
+          clientId: "test-app-client-id",
           id: "test-app-id",
           installationId: "test-installation-id",
           key: "test-private-key",
@@ -181,6 +186,7 @@ describe("initCloudAccounts", () => {
       init: {
         cloudAccountsToInitialize: [cloudAccount],
         runnerAppCredentials: {
+          clientId: "test-app-client-id",
           id: "test-app-id",
           installationId: "test-installation-id",
           key: "test-private-key",
@@ -197,6 +203,7 @@ describe("initCloudAccounts", () => {
       cloudAccount,
       expect.objectContaining({ name: "uat", prefix: "pagopa" }),
       {
+        clientId: "test-app-client-id",
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",
