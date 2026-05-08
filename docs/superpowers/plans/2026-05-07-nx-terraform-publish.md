@@ -327,11 +327,10 @@ git commit -m "Add nx-release-publish Nx executor"
 ### Task 4: Implement GitHub repository ensure/create flow
 
 **Files:**
-- Create: `packages/nx-terraform-plugin/src/publish/github-client.ts`
-- Create: `packages/nx-terraform-plugin/src/publish/repository.ts`
+- Create: `packages/nx-terraform-plugin/src/github.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/publish-repository.test.ts`
 
-- [ ] **Step 1: Write failing tests for repo existence and auto-create**
+- [x] **Step 1: Write failing tests for repo existence and auto-create**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/publish-repository.test.ts
@@ -342,15 +341,15 @@ git commit -m "Add nx-release-publish Nx executor"
       .toEqual({ owner: "pagopa-dx", repo: "terraform-aws-x", created: true });
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: FAIL because ensure/create logic is missing
 
-- [ ] **Step 3: Implement GitHub client and ensureRepository**
+- [x] **Step 3: Implement GitHub client and ensureRepository**
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/github-client.ts
+// packages/nx-terraform-plugin/src/github.ts
 export interface GithubClient {
   getRepo(owner: string, repo: string): Promise<"found" | "not-found">;
   createRepo(owner: string, repo: string): Promise<void>;
@@ -358,7 +357,7 @@ export interface GithubClient {
 ```
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/repository.ts
+// packages/nx-terraform-plugin/src/github.ts
 export const ensureRepository = async (client, { owner, repo }) => {
   const status = await client.getRepo(owner, repo);
   if (status === "found") return { owner, repo, created: false };
@@ -367,7 +366,7 @@ export const ensureRepository = async (client, { owner, repo }) => {
 };
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for repository ensure/create behavior
@@ -375,8 +374,7 @@ Expected: PASS for repository ensure/create behavior
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/nx-terraform-plugin/src/publish/github-client.ts \
-  packages/nx-terraform-plugin/src/publish/repository.ts \
+git add packages/nx-terraform-plugin/src/github.ts \
   packages/nx-terraform-plugin/src/__tests__/publish-repository.test.ts
 git commit -m "Add GitHub repository ensure and creation flow"
 ```
