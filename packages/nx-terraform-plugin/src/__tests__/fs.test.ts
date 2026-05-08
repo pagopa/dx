@@ -3,6 +3,19 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const loggerMocks = vi.hoisted(() => ({
+  configurePackageLogger: vi.fn(async () => {}),
+  error: vi.fn(),
+  getPackageLogger: vi.fn(() => ({
+    error: loggerMocks.error,
+  })),
+}));
+
+vi.mock("../logger.ts", () => ({
+  configurePackageLogger: loggerMocks.configurePackageLogger,
+  getPackageLogger: loggerMocks.getPackageLogger,
+}));
+
 import { getStaticDependenciesFromFile } from "../fs.ts";
 import { ProjectFile } from "../project-file.ts";
 
@@ -46,16 +59,18 @@ module "foo" {
 
     const readError = new Error("cannot read terraform file");
     vi.spyOn(fs, "readFile").mockRejectedValue(readError);
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
 
     const dependencies = await getStaticDependenciesFromFile(file);
 
     expect(dependencies).toEqual([]);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      `Error reading file ${file.fileName}:`,
-      readError,
+    expect(loggerMocks.configurePackageLogger).toHaveBeenCalledWith();
+    expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["fs"]);
+    expect(loggerMocks.error).toHaveBeenCalledWith(
+      "Error reading file {fileName}",
+      {
+        error: readError,
+        fileName: file.fileName,
+      },
     );
   });
 });

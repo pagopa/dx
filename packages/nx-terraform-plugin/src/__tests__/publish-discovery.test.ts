@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { hasPublishableModuleManifest } from "../publish/discovery.ts";
+import { hasPublishableModuleManifest } from "../discovery.ts";
 
 describe("hasPublishableModuleManifest", () => {
   const createdDirs: string[] = [];
@@ -23,6 +23,7 @@ describe("hasPublishableModuleManifest", () => {
       path.join(root, "module.json"),
       JSON.stringify({
         description: "Terraform module",
+        provider: "aws",
         version: "1.2.3",
       }),
       "utf-8",

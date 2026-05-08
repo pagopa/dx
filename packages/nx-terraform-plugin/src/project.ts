@@ -5,6 +5,7 @@ import {
 } from "@nx/devkit";
 import path from "node:path";
 
+import { ModulePublishManifest } from "./manifest.ts";
 import { TerraformPluginOptions } from "./options.ts";
 
 // Derives a project name from the root path of a Terraform configuration directory
@@ -45,7 +46,7 @@ const getTargets = (
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
-  hasPublishManifest: boolean,
+  publishManifest: ModulePublishManifest | undefined,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -158,14 +159,18 @@ const getTargets = (
       },
     ]);
 
-    if (hasPublishManifest) {
+    if (publishManifest) {
       targets.push([
         opts.publishTargetName,
         {
           cache: false,
           executor: "@pagopa/nx-terraform-plugin:publish",
           options: {
+            description: publishManifest.description,
+            githubOwner: publishManifest.github?.owner,
             projectRoot: "{projectRoot}",
+            provider: publishManifest.provider,
+            version: publishManifest.version,
             workspaceRoot: "{workspaceRoot}",
           },
         },
@@ -233,16 +238,22 @@ export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
   hasRootTflintConfig = false,
-  hasPublishManifest = false,
+  publishManifest: ModulePublishManifest | undefined = undefined,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
+  const isPublishableLibrary =
+    projectType === "library" && publishManifest !== undefined;
   const targets = getTargets(
     opts,
     root,
     projectType,
     hasRootTflintConfig,
-    hasPublishManifest,
+    publishManifest,
   );
+  const tags = ["terraform"];
+  if (isPublishableLibrary) {
+    tags.push("terraform:public");
+  }
   return {
     name: getProjectNameFromRoot(root),
     namedInputs: {
@@ -256,8 +267,8 @@ export const getProject = (
     projectType,
     root,
     // We assign the 'terraform' tag to all projects created from Terraform configuration files
-    // So that they can be easily targeted in Nx commands with --projects=tag:terraform
-    tags: ["terraform"],
+    // and add 'terraform:public' for publishable module libraries discovered from module.json.
+    tags,
     targets,
   };
 };

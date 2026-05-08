@@ -9,8 +9,20 @@
       "description": "Terraform module project root",
       "type": "string"
     },
+    "description": {
+      "description": "Module description from module.json",
+      "type": "string"
+    },
     "provider": {
-      "description": "Terraform provider used in repository name",
+      "description": "Terraform provider from module.json",
+      "type": "string"
+    },
+    "version": {
+      "description": "Module version from module.json",
+      "type": "string"
+    },
+    "githubOwner": {
+      "description": "Optional GitHub owner override from module.json.github.owner",
       "type": "string"
     },
     "workspaceRoot": {
@@ -18,5 +30,5 @@
       "type": "string"
     }
   },
-  "required": []
+  "required": ["description", "projectRoot", "provider", "version"]
 }

@@ -4,16 +4,16 @@
 
 **Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish/sync to GitHub subrepos in `github` mode, including auto-create when missing.
 
-**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish` and delegate version lifecycle to Nx Release.
+**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), inject manifest metadata into inferred executor options, and require explicit metadata options for direct executor invocation.
 
-**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, Node child process (`git`/`gh`), Zod.
+**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, Node child process (`git`/`gh`), Zod, LogTape JSON Lines logging.
 
 ---
 
 ### Task 1: Add publish config and manifest schemas
 
 **Files:**
-- Create: `packages/nx-terraform-plugin/src/publish/manifest.ts`
+- Create: `packages/nx-terraform-plugin/src/manifest.ts`
 - Modify: `packages/nx-terraform-plugin/src/options.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/options.test.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts`
@@ -35,9 +35,10 @@ expect(() =>
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts
-expect(parseModuleManifest({ version: "1.2.3", description: "x" }).version).toBe(
-  "1.2.3",
-);
+expect(
+  parseModuleManifest({ version: "1.2.3", description: "x", provider: "aws" })
+    .version,
+).toBe("1.2.3");
 expect(() => parseModuleManifest({ version: "1.2.3" })).toThrow(
   "Invalid module.json",
 );
@@ -51,11 +52,11 @@ Expected: FAIL in new option/manifest assertions
 - [x] **Step 3: Implement schema/types in focused files**
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/manifest.ts
+// packages/nx-terraform-plugin/src/manifest.ts
 const moduleManifestSchema = z.object({
   version: z.string().min(1),
   description: z.string().min(1),
-  provider: z.string().min(1).optional(),
+  provider: z.string().min(1),
   github: z.object({ owner: z.string().min(1).optional() }).optional(),
 });
 export type ModulePublishManifest = z.infer<typeof moduleManifestSchema>;
@@ -79,7 +80,7 @@ Expected: PASS for options + manifest tests
 
 ```bash
 git add packages/nx-terraform-plugin/src/options.ts \
-  packages/nx-terraform-plugin/src/publish/manifest.ts \
+  packages/nx-terraform-plugin/src/manifest.ts \
   packages/nx-terraform-plugin/src/__tests__/options.test.ts \
   packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts
 git commit -m "Add publish and module manifest schemas"
@@ -90,7 +91,7 @@ git commit -m "Add publish and module manifest schemas"
 **Files:**
 - Modify: `packages/nx-terraform-plugin/src/index.ts`
 - Modify: `packages/nx-terraform-plugin/src/project.ts`
-- Create: `packages/nx-terraform-plugin/src/publish/discovery.ts`
+- Create: `packages/nx-terraform-plugin/src/discovery.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/publish-discovery.test.ts`
 
@@ -121,7 +122,7 @@ Expected: FAIL because publish gating is not implemented
 - [x] **Step 3: Implement manifest-aware inference**
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/discovery.ts
+// packages/nx-terraform-plugin/src/discovery.ts
 export const hasPublishableModuleManifest = async (root: string) => {
   const manifestPath = path.join(root, "module.json");
   const content = await fs.readFile(manifestPath, "utf-8");
@@ -161,11 +162,66 @@ Expected: PASS for publish target inference rules
 ```bash
 git add packages/nx-terraform-plugin/src/index.ts \
   packages/nx-terraform-plugin/src/project.ts \
-  packages/nx-terraform-plugin/src/publish/discovery.ts \
+  packages/nx-terraform-plugin/src/discovery.ts \
   packages/nx-terraform-plugin/src/__tests__/project.test.ts \
   packages/nx-terraform-plugin/src/__tests__/publish-discovery.test.ts
 git commit -m "Infer nx-release-publish for publishable libraries"
 ```
+
+- [x] **Follow-up optimization: infer publishability from discovered `module.json` files**
+
+Reworked `createNodesV2` discovery to scan with `**/*.{tf,module.json}` and derive
+`publishableRoots` from discovered manifest paths, removing per-file filesystem
+manifest reads during project graph creation.
+
+- [x] **Follow-up refactor: flatten `src/publish/*` into `src/*`**
+
+Moved manifest/discovery modules from `src/publish/` to `src/` and updated test
+imports accordingly to keep publish-related logic colocated with the plugin core.
+
+- [x] **Follow-up logging: emit invalid manifests as compact structured JSON**
+
+The package logger now uses LogTape's JSON Lines formatter globally. Invalid
+manifests discovered during inference are logged with:
+- message: `Invalid manifest file`
+- properties: `{ path, issues }`
+
+The raw issue payload is kept on `ModulePublishManifestError.issues`, typed as
+`z.core.$ZodIssue[]` to avoid the deprecated `ZodIssue` alias.
+
+- [x] **Follow-up behavior: add `terraform:public` tag for publishable modules**
+
+Publishable library projects (those with valid `module.json` and inferred
+`nx-release-publish`) now include tag `terraform:public` in addition to
+`terraform`.
+
+- [x] **Follow-up behavior: require manifest provider and remove provider default**
+
+`module.json.provider` is now required for publishable manifests and no
+`azurerm` fallback/default provider is assumed by executor behavior.
+
+- [x] **Follow-up bugfix: validate publishable roots via manifest parser**
+
+`createNodesV2` now validates discovered `module.json` roots through
+`hasPublishableModuleManifest` before assigning publishability, so invalid
+manifests do not infer `nx-release-publish` or `terraform:public`.
+
+- [x] **Follow-up design alignment: carry parsed manifest in discovery state**
+
+Discovery should parse `module.json` at detection time and pass parsed manifest
+data to project creation/executor wiring, replacing boolean-only publishability
+flags. This avoids mock-oriented validator indirection and keeps file-read +
+schema-validation as a single source of truth.
+
+Executor input contract:
+- inferred target execution receives manifest metadata automatically from discovery
+- direct `nx run ...:nx-release-publish` must provide manifest-derived metadata
+  explicitly in options (no implicit fallback reads).
+
+Implementation note:
+- discovery now returns `publishableManifestByRoot` (parsed payload), and project
+  target wiring passes flattened module properties (`description`, `provider`,
+  `version`, optional `githubOwner`) into publish executor options.
 
 ### Task 3: Add publish runner entrypoint and execution contract
 
@@ -180,8 +236,8 @@ git commit -m "Infer nx-release-publish for publishable libraries"
 ```ts
 // packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts
 expect(
-  getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "azurerm"),
-).toBe("terraform-azurerm-azure-core-infra");
+  getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "aws"),
+).toBe("terraform-aws-azure-core-infra");
 ```
 
 - [x] **Step 2: Run tests to verify failure**
@@ -231,11 +287,11 @@ git commit -m "Add nx-release-publish Nx executor"
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/publish-repository.test.ts
-expect(await ensureRepository(client, { owner: "pagopa-dx", repo: "terraform-azurerm-x" }))
-  .toEqual({ owner: "pagopa-dx", repo: "terraform-azurerm-x", created: false });
+    expect(await ensureRepository(client, { owner: "pagopa-dx", repo: "terraform-aws-x" }))
+      .toEqual({ owner: "pagopa-dx", repo: "terraform-aws-x", created: false });
 
-expect(await ensureRepository(clientMissing, { owner: "pagopa-dx", repo: "terraform-azurerm-x" }))
-  .toEqual({ owner: "pagopa-dx", repo: "terraform-azurerm-x", created: true });
+    expect(await ensureRepository(clientMissing, { owner: "pagopa-dx", repo: "terraform-aws-x" }))
+      .toEqual({ owner: "pagopa-dx", repo: "terraform-aws-x", created: true });
 ```
 
 - [ ] **Step 2: Run tests to verify failure**

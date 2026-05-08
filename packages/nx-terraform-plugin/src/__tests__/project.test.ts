@@ -27,6 +27,12 @@ const expectedNamedInputs = {
   ],
 };
 
+const publishManifest = {
+  description: "Terraform module description",
+  provider: "aws",
+  version: "1.2.3",
+};
+
 const getExpectedLintTarget = (root: string) => ({
   cache: true,
   command: "tflint",
@@ -66,7 +72,11 @@ const getExpectedPublishTarget = () => ({
   cache: false,
   executor: "@pagopa/nx-terraform-plugin:publish",
   options: {
+    description: "Terraform module description",
+    githubOwner: undefined,
     projectRoot: "{projectRoot}",
+    provider: "aws",
+    version: "1.2.3",
     workspaceRoot: "{workspaceRoot}",
   },
 });
@@ -228,7 +238,7 @@ describe("getProject", () => {
     it("does not add terraform-docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, true),
+        getProject(defaultOptions, root, true, publishManifest),
       );
 
       expect(Object.keys(targets)).toEqual([
@@ -321,9 +331,8 @@ describe("getProject", () => {
 
     it("adds nx-release-publish when manifest is available", () => {
       const root = path.join("infra", "modules", "network_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, true),
-      );
+      const project = getProject(defaultOptions, root, true, publishManifest);
+      const targets = getTargetsOrThrow(project);
 
       expect(Object.keys(targets)).toEqual([
         "tf-init",
@@ -337,6 +346,7 @@ describe("getProject", () => {
         "tf-output",
       ]);
       expect(targets["nx-release-publish"]).toEqual(getExpectedPublishTarget());
+      expect(project.tags).toEqual(["terraform", "terraform:public"]);
     });
   });
 

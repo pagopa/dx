@@ -9,11 +9,14 @@ Current constraints and decisions:
 - Publish target name must be `nx-release-publish` (Nx Release alignment).
 - Target is only inferred for Terraform projects with `projectType: "library"`.
 - A module is publishable only when a dedicated `module.json` manifest exists.
-- `module.json` (minimum) requires `version` and `description`.
+- `module.json` (minimum) requires `version`, `description`, and `provider`.
 - Publish mode initially supports only `github`.
 - Repository creation is always attempted when the target repository does not exist.
 - `github.owner` should be centralized at plugin level and overridable per module.
 - Version ownership is delegated to Nx Release integration (to be finalized later).
+- Publishable modules are tagged as `terraform:public` for Nx project selection.
+- Invalid `module.json` files are skipped from publish inference but logged as
+  structured JSON through the package logger.
 
 ## Goals
 
@@ -39,8 +42,24 @@ Current constraints and decisions:
 - Add inferred target `nx-release-publish` only if:
   - project is a Terraform `library`, and
   - `{projectRoot}/module.json` exists and validates.
+- Publishable libraries inferred by this rule also receive tag `terraform:public`.
+- When `module.json` is discovered, it is immediately read and parsed; only valid
+  parsed manifests are considered publishable and carried forward in discovery state.
+- Project creation should receive the parsed manifest payload (or `undefined`)
+  instead of a boolean publishability flag.
 
 Projects without valid manifest remain internal libraries and do not expose the publish target.
+
+### 1.1 Manifest validation and discovery logging
+
+- Manifest parsing raises a typed `ModulePublishManifestError`.
+- The error keeps the raw Zod issue objects on `issues`, using
+  `z.core.$ZodIssue[]` instead of the deprecated `ZodIssue` alias.
+- Discovery logs invalid manifests with a compact JSON Lines record:
+  - message: `Invalid manifest file`
+  - properties: `{ path, issues }`
+- Human-readable validation detail stays available through the error message, but
+  it is not duplicated in the structured log payload.
 
 ### 2. Configuration model
 
@@ -63,6 +82,7 @@ Module-level manifest (`{projectRoot}/module.json`):
 {
   "version": "1.2.3",
   "description": "Terraform module description",
+  "provider": "aws",
   "github": {
     "owner": "optional-module-specific-org"
   }
@@ -81,11 +101,15 @@ Implement a plugin-owned publish executor/service invoked by `nx-release-publish
 
 Responsibilities:
 
-1. Resolve module metadata (`module.json`) and defaults.
+1. Consume module metadata from executor inputs/options:
+   - inferred target execution: metadata is injected from discovery,
+   - direct executor invocation: caller must provide metadata explicitly.
 2. Build repo coordinates (`org`, `repo`).
 3. Ensure target repo exists (create if missing).
 4. Perform subtree-based synchronization preserving current history semantics.
 5. Push resulting branch/content to remote `main`.
+6. Keep executor input contract explicit: no implicit fallback read for direct
+   calls; missing required metadata in options is a hard error.
 
 This replaces workflow shell orchestration as primary implementation point.
 
@@ -113,28 +137,35 @@ Use existing naming convention compatibility:
 
 Provider resolution is explicit to avoid ambiguity:
 
-1. `module.json.provider` (if present)
-2. fallback to `"azurerm"` (current workflow default behavior)
+1. `module.json.provider` (required)
 
 ## Error Handling
 
 Hard-fail (no silent fallback) with actionable messages for:
 
 1. Invalid/missing `module.json` on inferred publish target path.
-2. Unresolved GitHub owner.
-3. GitHub repository creation failure (permission/conflict/rate limit).
-4. Git remote/subtree/push failures.
+2. Missing/invalid `module.json.provider`.
+3. Unresolved GitHub owner.
+4. GitHub repository creation failure (permission/conflict/rate limit).
+5. Git remote/subtree/push failures.
 
 Eligibility errors prevent target inference; execution errors fail the target.
+Manifest inference failures are also emitted as structured logger warnings so CI
+and local runs can inspect the raw issue list programmatically.
 
 ## Testing Strategy
 
 1. **Options/Schema tests**
    - Validate publish config parsing (`mode`, `publish.github.owner`).
 2. **Inference tests**
-   - `library + valid module.json` => includes `nx-release-publish`.
-   - `library + missing/invalid module.json` => excludes target.
-   - `application` => excludes target.
+    - `library + valid module.json` => includes `nx-release-publish`.
+    - `library + missing/invalid module.json` => excludes target.
+    - `library + module.json missing provider` => excludes target.
+    - malformed JSON or schema-invalid manifest never marks a module as publishable.
+    - invalid manifest discovery warning uses message `Invalid manifest file`
+      with `{ path, issues }` properties only.
+    - `application` => excludes target.
+    - `library + valid module.json` => includes `terraform:public` tag.
 3. **Resolution tests**
    - `module.json.github.owner` overrides plugin default.
    - plugin default is used when module override absent.
