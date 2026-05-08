@@ -2,8 +2,8 @@ name: "Nx Release Manager"
 description: "Creates/updates Version Packages PR from Nx version plans, or publishes releases on push to the base branch."
 
 inputs:
-  client-id:
-    description: "GitHub Client ID"
+  app-client-id:
+    description: "GitHub App Client ID"
     required: true
   app-private-key:
     description: "GitHub App private key"
@@ -27,8 +27,8 @@ runs:
       id: generate-token
       uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
       with:
-        client-id: ${{ inputs.client-id }}
-        private-key: ${{ inputs.app-private-key }}
+        app-client-id: ${{ inputs.app-client-id }}
+        app-private-key: ${{ inputs.app-private-key }}
 
     - name: Determine release mode from version plans
       id: release-mode
