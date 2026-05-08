@@ -380,6 +380,11 @@ run "cosmos_role_assignments" {
   }
 
   assert {
+    condition     = module.cosmos.azurerm_role_assignment["dx-d-itn-test-cosmos-02|dx-d-itn-test-rg-01|owner"].description == "This is an owner"
+    error_message = "The owner role must have the correct description"
+  }
+
+  assert {
     condition     = module.cosmos.azurerm_cosmosdb_sql_role_assignment["dx-d-itn-test-cosmos-02|db2|collection3|owner"].role_definition_id == "/subscriptions/${run.setup_tests.subscription_id}/resourceGroups/dx-d-itn-test-rg-01/providers/Microsoft.DocumentDB/databaseAccounts/dx-d-itn-test-cosmos-02/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002"
     error_message = "The owner role must map to writer permissions on the Cosmos DB data plane"
   }

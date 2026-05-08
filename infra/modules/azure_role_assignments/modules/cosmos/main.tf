@@ -2,6 +2,7 @@ resource "azurerm_role_assignment" "control_plane" {
   for_each = local.control_plane_assignments
 
   scope                = each.value.account_id
+  description          = each.value.description
   role_definition_name = local.control_plane_role_definition_name[lower(each.value.role)]
   principal_id         = var.principal_id
 }

@@ -16,6 +16,7 @@ locals {
       account_id          = "/subscriptions/${var.subscription_id}/resourceGroups/${entry.resource_group_name}/providers/Microsoft.DocumentDB/databaseAccounts/${entry.account_name}"
       resource_group_name = entry.resource_group_name
       role                = entry.role
+      description         = entry.description
     }
     if entry.role == "owner"
   }
