@@ -1,5 +1,6 @@
 /** Tests for the checkpoint tracking module. */
 
+import { SQL } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -13,6 +14,16 @@ import {
 import type { ImportContext } from "../import-context";
 
 const dialect = new PgDialect();
+
+const renderExecutedSql = (context: ImportContext) => {
+  const [statement] = vi.mocked(context.db.execute).mock.calls[0] ?? [];
+
+  if (!(statement instanceof SQL)) {
+    throw new Error("Expected a SQL statement");
+  }
+
+  return dialect.sqlToQuery(statement);
+};
 
 const makeContext = (executeResult: { rows: unknown[] }) =>
   ({
@@ -33,9 +44,7 @@ describe("hasCheckpoint", () => {
       "dx",
       "2026-04-08",
     );
-
-    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
-    const rendered = dialect.sqlToQuery(statement);
+    const rendered = renderExecutedSql(context);
 
     expect(result).toBe(true);
     expect(rendered.sql).toContain("entity_type =");
@@ -94,9 +103,7 @@ describe("hasCheckpoint", () => {
       null,
       "2026-04-08",
     );
-
-    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
-    const rendered = dialect.sqlToQuery(statement);
+    const rendered = renderExecutedSql(context);
 
     expect(result).toBe(true);
     expect(rendered.params[0]).toBe("code-search");
@@ -122,9 +129,7 @@ describe("startCheckpoint", () => {
       "2026-04-08",
       1,
     );
-
-    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
-    const rendered = dialect.sqlToQuery(statement);
+    const rendered = renderExecutedSql(context);
 
     expect(id).toBe(42);
     expect(context.db.execute).toHaveBeenCalledOnce();
