@@ -20,6 +20,9 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/nx-terraform-plugin"
   },
+  "scripts": {
+    "generate": "node scripts/generate-module-schema.ts"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
@@ -49,7 +52,7 @@
         "options": {
           "outputPath": "packages/nx-terraform-plugin/dist",
           "main": "packages/nx-terraform-plugin/src/index.ts",
-          "tsConfig": "packages/nx-terraform-plugin/tsconfig.json",
+          "tsConfig": "packages/nx-terraform-plugin/tsconfig.lib.json",
           "rootDir": "packages/nx-terraform-plugin/src",
           "generatePackageJson": false
         }

@@ -19,6 +19,8 @@ Current constraints and decisions:
   structured JSON through the package logger.
 - LogTape configuration is owned by the plugin entrypoint in `src/index.ts`;
   downstream modules only retrieve category loggers.
+- `module.json` is consumer-facing and should have a generated JSON Schema
+  artifact derived from the Zod manifest schema.
 
 ## Goals
 
@@ -33,6 +35,7 @@ Current constraints and decisions:
 1. Multi-platform publishing modes beyond GitHub.
 2. Changing Nx Release versioning flow in this phase.
 3. Provider publishing redesign (`providers/**`) in this phase.
+4. Replacing runtime Zod validation with JSON Schema validation.
 
 ## Architecture
 
@@ -66,6 +69,20 @@ Projects without valid manifest remain internal libraries and do not expose the 
   paths do not reconfigure logging.
 - Human-readable validation detail stays available through the error message,
   but it is not duplicated in the structured log payload.
+
+### 1.2 Consumer manifest schema generation
+
+- `modulePublishManifestSchema` remains the single source of truth.
+- The package should expose a generated `module-schema.json` file for consumers
+  that want to validate or autocomplete `module.json`.
+- Generation stays minimal:
+  - script file: `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
+  - package script: `generate`
+  - output file: `packages/nx-terraform-plugin/module-schema.json`
+- The generator script imports the Zod manifest schema, converts it through
+  Zod's JSON Schema API, and writes the JSON Schema file to disk.
+- Runtime plugin behavior continues to validate with Zod directly; the generated
+  schema is an external artifact, not a second validation path.
 
 ### 2. Configuration model
 
@@ -163,6 +180,7 @@ and local runs can inspect the raw issue list programmatically.
 
 1. **Options/Schema tests**
    - Validate publish config parsing (`mode`, `publish.github.owner`).
+   - Validate JSON Schema generation from the Zod manifest schema.
 2. **Inference tests**
     - `library + valid module.json` => includes `nx-release-publish`.
     - `library + missing/invalid module.json` => excludes target.

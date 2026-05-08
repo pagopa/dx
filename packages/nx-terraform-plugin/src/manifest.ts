@@ -15,11 +15,13 @@ export const modulePublishManifestSchema = z.object({
 export type ModulePublishManifest = z.infer<typeof modulePublishManifestSchema>;
 
 export class ModulePublishManifestError extends Error {
-  constructor(
-    readonly issues: z.core.$ZodIssue[],
-    readonly reasons: string[],
-  ) {
+  readonly issues: z.core.$ZodIssue[];
+  readonly reasons: string[];
+
+  constructor(issues: z.core.$ZodIssue[], reasons: string[]) {
     super(reasons.join("; "));
+    this.issues = issues;
+    this.reasons = reasons;
     this.name = "ModulePublishManifestError";
   }
 }

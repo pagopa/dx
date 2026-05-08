@@ -6,7 +6,7 @@
 
 **Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), inject manifest metadata into inferred executor options, and require explicit metadata options for direct executor invocation.
 
-**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, Node child process (`git`/`gh`), Zod, LogTape JSON Lines logging.
+**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, Node child process (`git`/`gh`), Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
 
 ---
 
@@ -195,6 +195,16 @@ Logging ownership note:
 - `src/logger.ts` now only exposes `getPackageLogger(...)`.
 - discovery/fs/publish modules no longer perform per-call logger setup.
 
+- [x] **Follow-up consumer UX: generate JSON Schema for `module.json`**
+
+`module.json` should expose a generated `module-schema.json` artifact for plugin
+consumers. Keep the implementation minimal:
+- add `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
+- add a package script `generate`
+- import `modulePublishManifestSchema`, convert it with Zod's JSON Schema API,
+  and write `packages/nx-terraform-plugin/module-schema.json`
+- keep Zod as the only runtime validator
+
 - [x] **Follow-up behavior: add `terraform:public` tag for publishable modules**
 
 Publishable library projects (those with valid `module.json` and inferred
@@ -228,6 +238,38 @@ Implementation note:
 - discovery now returns `publishableManifestByRoot` (parsed payload), and project
   target wiring passes flattened module properties (`description`, `provider`,
   `version`, optional `githubOwner`) into publish executor options.
+
+### Task 2a: Generate consumer JSON Schema for `module.json`
+
+**Files:**
+- Create: `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
+- Create: `packages/nx-terraform-plugin/module-schema.json`
+- Modify: `packages/nx-terraform-plugin/package.json`
+- Test: `packages/nx-terraform-plugin/src/__tests__/module-schema.test.ts`
+
+- [x] **Step 1: Add minimal generator script**
+
+```ts
+// packages/nx-terraform-plugin/scripts/generate-module-schema.ts
+// import modulePublishManifestSchema
+// convert with Zod's JSON Schema API
+// write module-schema.json
+```
+
+- [x] **Step 2: Add package script**
+
+```json
+{
+  "scripts": {
+    "generate": "node scripts/generate-module-schema.ts"
+  }
+}
+```
+
+- [x] **Step 3: Generate and commit `module-schema.json`**
+
+The generated file should be treated as a consumer artifact derived from the
+Zod schema, not as a second handwritten schema source.
 
 ### Task 3: Add publish runner entrypoint and execution contract
 
