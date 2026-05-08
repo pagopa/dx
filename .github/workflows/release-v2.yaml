@@ -9,8 +9,11 @@ on:
         type: string
         default: "app-prod-cd"
     secrets:
-      github-token:
-        description: "GitHub token for creating PRs and pushing commits. Should have contents:write and pull-requests:write permissions"
+      app-client-id:
+        description: "GitHub App Client ID for authentication"
+        required: true
+      app-private-key:
+        description: "GitHub App private key for authentication"
         required: true
 
 jobs:
@@ -66,4 +69,5 @@ jobs:
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         with:
-          github-token: ${{ secrets.github-token }}
+          app-client-id: ${{ secrets.app-client-id }}
+          app-private-key: ${{ secrets.app-private-key }}
