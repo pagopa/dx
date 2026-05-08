@@ -2,10 +2,12 @@ name: "Nx Release Manager"
 description: "Creates/updates Version Packages PR from Nx version plans, or publishes releases on push to the base branch."
 
 inputs:
-  github-token:
-    description: "GitHub token with contents:write and pull-requests:write permissions"
-    required: false
-    default: ${{ github.token }}
+  app-client-id:
+    description: "GitHub App Client ID"
+    required: true
+  app-private-key:
+    description: "GitHub App private key"
+    required: true
   base-branch:
     description: "Base branch where release flow runs"
     required: false
@@ -21,6 +23,13 @@ outputs:
 runs:
   using: "composite"
   steps:
+    - name: Generate GitHub App Token
+      id: generate-token
+      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
+      with:
+        client-id: ${{ inputs.app-client-id }}
+        private-key: ${{ inputs.app-private-key }}
+
     - name: Determine release mode from version plans
       id: release-mode
       shell: bash
@@ -69,7 +78,7 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/warn-version-plan-coverage-pr.js"
@@ -84,7 +93,7 @@ runs:
         RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         set -euo pipefail
 
@@ -125,7 +134,7 @@ runs:
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
@@ -164,7 +173,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

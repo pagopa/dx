@@ -33,11 +33,9 @@ export interface TagEntry {
 
 /** Creates an authenticated Octokit instance. */
 export function createOctokit(): Octokit {
-  const token = process.env.GITHUB_TOKEN;
+  const token = process.env.GH_TOKEN;
   if (!token) {
-    throw new Error(
-      "GITHUB_TOKEN environment variable is required but not set",
-    );
+    throw new Error("GH_TOKEN environment variable is required but not set");
   }
   return new Octokit({ auth: token });
 }

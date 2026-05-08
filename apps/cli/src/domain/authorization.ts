@@ -35,10 +35,37 @@ const BootstrapIdentityId = z
   .brand<"BootstrapIdentityId">();
 
 /**
- * Input validation schema for the request authorization use case.
+ * Branded type for resource prefix (e.g., "dx", "io").
+ * Validates that the prefix contains only lowercase letters to prevent injection.
+ */
+const ResourcePrefix = z
+  .string()
+  .min(1)
+  .regex(/^[a-z]+$/, {
+    message: "Resource prefix may contain only lowercase letters",
+  })
+  .brand<"ResourcePrefix">();
+
+/**
+ * Branded type for environment short name (e.g., "d", "u", "p").
+ * Validates single lowercase letter for environment.
+ */
+const EnvShort = z
+  .string()
+  .min(1)
+  .max(1)
+  .regex(/^[a-z]$/, {
+    message: "Environment short name must be a single lowercase letter",
+  })
+  .brand<"EnvShort">();
+
+/**
+ * Input validation schema for the authorization workflow.
  */
 export const requestAuthorizationInputSchema = z.object({
   bootstrapIdentityId: BootstrapIdentityId,
+  envShort: EnvShort,
+  prefix: ResourcePrefix,
   repoName: z.string().min(1),
   subscriptionName: SubscriptionName,
 });
@@ -70,19 +97,10 @@ export class AuthorizationError extends Error {
 
 /**
  * Result returned by a successful authorization request.
+ * When url is undefined, the workflow was a no-op (nothing changed, no PR created).
  */
 export class AuthorizationResult {
-  constructor(public readonly url: string) {}
-}
-
-/**
- * Error thrown when attempting to add an identity that already exists.
- */
-export class IdentityAlreadyExistsError extends AuthorizationError {
-  constructor(identityId: string) {
-    super(`Identity "${identityId}" already exists`);
-    this.name = "IdentityAlreadyExistsError";
-  }
+  constructor(public readonly url?: string) {}
 }
 
 /**
