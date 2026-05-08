@@ -1,3 +1,13 @@
+## 4.2.1 (2026-05-08)
+
+### 🩹 Fixes
+
+- Replace `metric` with `enabled_metric` as per deprecation notice in `azurerm_monitor_diagnostic_setting` resource ([#1715](https://github.com/pagopa/dx/pull/1715))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.2.0
 
 ### Minor Changes
