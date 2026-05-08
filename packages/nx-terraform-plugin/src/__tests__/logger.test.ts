@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const logtapeMocks = vi.hoisted(() => ({
   configure: vi.fn(async () => {}),
@@ -16,12 +16,15 @@ vi.mock("@logtape/logtape", () => ({
   getLogger: logtapeMocks.getLogger,
 }));
 
-import { configurePackageLogger, getPackageLogger } from "../logger.ts";
-
 describe("logger", () => {
-  it("configures logtape once for the package", async () => {
-    await configurePackageLogger();
-    await configurePackageLogger();
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("configures logtape when the plugin entrypoint loads", async () => {
+    vi.resetModules();
+
+    await import("../index.ts");
 
     expect(logtapeMocks.configure).toHaveBeenCalledTimes(1);
     expect(logtapeMocks.configure).toHaveBeenCalledWith({
@@ -47,7 +50,10 @@ describe("logger", () => {
     });
   });
 
-  it("creates category-prefixed loggers", () => {
+  it("creates category-prefixed loggers", async () => {
+    vi.resetModules();
+    const { getPackageLogger } = await import("../logger.ts");
+
     getPackageLogger(["publish"]);
 
     expect(logtapeMocks.getLogger).toHaveBeenCalledWith([

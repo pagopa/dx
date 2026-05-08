@@ -6,7 +6,6 @@ import type { NxReleasePublishExecutorSchema } from "./schema.d.ts";
 const loggerMocks = vi.hoisted(() => {
   const info = vi.fn();
   return {
-    configurePackageLogger: vi.fn(async () => {}),
     getPackageLogger: vi.fn(() => ({
       info,
     })),
@@ -15,7 +14,6 @@ const loggerMocks = vi.hoisted(() => {
 });
 
 vi.mock("../../logger.ts", () => ({
-  configurePackageLogger: loggerMocks.configurePackageLogger,
   getPackageLogger: loggerMocks.getPackageLogger,
 }));
 
@@ -58,7 +56,6 @@ describe("Publish Executor", () => {
     const output = await executor(options, context);
 
     expect(output.success).toBe(true);
-    expect(loggerMocks.configurePackageLogger).toHaveBeenCalledWith();
     expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["publish"]);
     expect(loggerMocks.info).toHaveBeenCalledWith(
       "Publishing Terraform module from {projectRoot} to repository {repoName}...",

@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { configurePackageLogger, getPackageLogger } from "./logger.ts";
+import { getPackageLogger } from "./logger.ts";
 import {
   ModulePublishManifest,
   ModulePublishManifestError,
@@ -26,14 +26,12 @@ export const readModulePublishManifest = async (
       return undefined;
     }
     if (error instanceof SyntaxError) {
-      await configurePackageLogger();
       logger.warn(
         `Invalid module manifest at ${manifestPath}. ${error.message}`,
       );
       return undefined;
     }
     if (error instanceof ModulePublishManifestError) {
-      await configurePackageLogger();
       logger.warn("Invalid manifest file", {
         issues: error.issues,
         path: manifestPath,

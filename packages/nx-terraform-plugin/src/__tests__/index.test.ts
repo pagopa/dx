@@ -3,17 +3,25 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const loggerMocks = vi.hoisted(() => ({
-  configurePackageLogger: vi.fn(async () => {}),
-  getPackageLogger: vi.fn(() => ({
-    warn: loggerMocks.warn,
+const logtapeMocks = vi.hoisted(() => ({
+  configure: vi.fn(async () => {}),
+  getConsoleSink: vi.fn(() => "console-sink"),
+  getJsonLinesFormatter: vi.fn(() => "json-lines-formatter"),
+  getLogger: vi.fn(() => ({
+    warn: logtapeMocks.warn,
   })),
+  getPackageLogger: vi.fn(() => ({
+    warn: logtapeMocks.warn,
+  })),
+  info: vi.fn(),
   warn: vi.fn(),
 }));
 
-vi.mock("../logger.ts", () => ({
-  configurePackageLogger: loggerMocks.configurePackageLogger,
-  getPackageLogger: loggerMocks.getPackageLogger,
+vi.mock("@logtape/logtape", () => ({
+  configure: logtapeMocks.configure,
+  getConsoleSink: logtapeMocks.getConsoleSink,
+  getJsonLinesFormatter: logtapeMocks.getJsonLinesFormatter,
+  getLogger: logtapeMocks.getLogger,
 }));
 
 import { createNodesV2, getDiscoveryStateWithValidation } from "../index.ts";
@@ -46,6 +54,7 @@ describe("getDiscoveryStateWithValidation", () => {
       path.join("infra", "_modules", "good-module", "module.json"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
       path.join("infra", "_modules", "invalid-module", "module.json"),
+      path.join("infra", "_modules", "invalid-module-two", "module.json"),
       path.join("infra", "_modules", "example", "module.json"),
       path.join("infra", "_modules", "tests", "main.tf"),
       path.join("infra", "resources", "prod", "main.tf"),
@@ -57,6 +66,10 @@ describe("getDiscoveryStateWithValidation", () => {
     );
     await fs.mkdir(
       path.join(workspaceRoot, "infra", "_modules", "invalid-module"),
+      { recursive: true },
+    );
+    await fs.mkdir(
+      path.join(workspaceRoot, "infra", "_modules", "invalid-module-two"),
       { recursive: true },
     );
     await fs.writeFile(
@@ -71,6 +84,20 @@ describe("getDiscoveryStateWithValidation", () => {
         description: "Terraform module description",
         provider: "aws",
         version: "1.2.3",
+      }),
+      "utf-8",
+    );
+    await fs.writeFile(
+      path.join(
+        workspaceRoot,
+        "infra",
+        "_modules",
+        "invalid-module-two",
+        "module.json",
+      ),
+      JSON.stringify({
+        description: "Terraform module without version",
+        provider: "aws",
       }),
       "utf-8",
     );
@@ -111,9 +138,12 @@ describe("getDiscoveryStateWithValidation", () => {
       provider: "aws",
       version: "1.2.3",
     });
-    expect(loggerMocks.configurePackageLogger).toHaveBeenCalledWith();
-    expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["discovery"]);
-    expect(loggerMocks.warn).toHaveBeenCalledWith(
+    expect(logtapeMocks.configure).toHaveBeenCalledTimes(1);
+    expect(logtapeMocks.getLogger).toHaveBeenCalledWith([
+      "nx-terraform-plugin",
+      "discovery",
+    ]);
+    expect(logtapeMocks.warn).toHaveBeenCalledWith(
       "Invalid manifest file",
       expect.objectContaining({
         issues: [
@@ -125,7 +155,19 @@ describe("getDiscoveryStateWithValidation", () => {
         path: expect.stringContaining("invalid-module/module.json"),
       }),
     );
-    expect(loggerMocks.warn).not.toHaveBeenCalledWith(
+    expect(logtapeMocks.warn).toHaveBeenCalledWith(
+      "Invalid manifest file",
+      expect.objectContaining({
+        issues: [
+          expect.objectContaining({
+            message: "Invalid input: expected string, received undefined",
+            path: ["version"],
+          }),
+        ],
+        path: expect.stringContaining("invalid-module-two/module.json"),
+      }),
+    );
+    expect(logtapeMocks.warn).not.toHaveBeenCalledWith(
       expect.stringContaining(
         "invalid-module/module.json. provider: Invalid input: expected string, received undefined",
       ),

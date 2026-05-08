@@ -2,7 +2,7 @@ import { PromiseExecutor } from "@nx/devkit";
 
 import type { NxReleasePublishExecutorSchema } from "./schema.d.ts";
 
-import { configurePackageLogger, getPackageLogger } from "../../logger.ts";
+import { getPackageLogger } from "../../logger.ts";
 
 export const getRepoNameFromProjectRoot = (
   projectRoot: string,
@@ -30,7 +30,6 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorSchema> = async (
     options.provider,
   );
 
-  await configurePackageLogger();
   const logger = getPackageLogger(["publish"]);
   logger.info(
     "Publishing Terraform module from {projectRoot} to repository {repoName}...",

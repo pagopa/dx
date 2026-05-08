@@ -1,4 +1,9 @@
 import {
+  configure,
+  getConsoleSink,
+  getJsonLinesFormatter,
+} from "@logtape/logtape";
+import {
   CreateDependencies,
   createNodesFromFiles,
   CreateNodesV2,
@@ -15,6 +20,26 @@ import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
+
+const packageLoggerConfiguration = configure({
+  loggers: [
+    {
+      category: ["nx-terraform-plugin"],
+      lowestLevel: "info",
+      sinks: ["console"],
+    },
+    {
+      category: ["logtape", "meta"],
+      lowestLevel: "warning",
+      sinks: ["console"],
+    },
+  ],
+  sinks: {
+    console: getConsoleSink({
+      formatter: getJsonLinesFormatter(),
+    }),
+  },
+});
 
 const isIgnoredRoot = (root: string) => {
   const rootSegments = new Set(root.split(path.sep));
@@ -85,6 +110,7 @@ export const getDiscoveryStateWithValidation = async (
   configFiles: readonly string[],
   workspaceRoot: string,
 ) => {
+  await packageLoggerConfiguration;
   const { moduleManifestRoots, terraformConfigFiles } =
     getDiscoveryState(configFiles);
   const publishableManifestByRoot = await getPublishableManifestByRoot(
@@ -138,6 +164,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
 export const createDependencies: CreateDependencies<
   TerraformPluginOptions
 > = async (opts, ctx) => {
+  await packageLoggerConfiguration;
   const filesToProcess = getTerraformProjectFiles(
     // Get from Nx only changed Terraform files, then derive static project-graph
     // dependencies from Terraform module source references in those files.

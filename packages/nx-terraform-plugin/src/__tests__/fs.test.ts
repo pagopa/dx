@@ -4,7 +4,6 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const loggerMocks = vi.hoisted(() => ({
-  configurePackageLogger: vi.fn(async () => {}),
   error: vi.fn(),
   getPackageLogger: vi.fn(() => ({
     error: loggerMocks.error,
@@ -12,7 +11,6 @@ const loggerMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../logger.ts", () => ({
-  configurePackageLogger: loggerMocks.configurePackageLogger,
   getPackageLogger: loggerMocks.getPackageLogger,
 }));
 
@@ -63,7 +61,6 @@ module "foo" {
     const dependencies = await getStaticDependenciesFromFile(file);
 
     expect(dependencies).toEqual([]);
-    expect(loggerMocks.configurePackageLogger).toHaveBeenCalledWith();
     expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["fs"]);
     expect(loggerMocks.error).toHaveBeenCalledWith(
       "Error reading file {fileName}",

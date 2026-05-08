@@ -189,6 +189,12 @@ manifests discovered during inference are logged with:
 The raw issue payload is kept on `ModulePublishManifestError.issues`, typed as
 `z.core.$ZodIssue[]` to avoid the deprecated `ZodIssue` alias.
 
+Logging ownership note:
+- `src/index.ts` owns the single package-wide `configure(...)` call through a
+  module-scoped promise awaited by discovery/dependency entrypoints.
+- `src/logger.ts` now only exposes `getPackageLogger(...)`.
+- discovery/fs/publish modules no longer perform per-call logger setup.
+
 - [x] **Follow-up behavior: add `terraform:public` tag for publishable modules**
 
 Publishable library projects (those with valid `module.json` and inferred
