@@ -29,5 +29,8 @@
     "sbom-validate": "sh sbom.sh --validate",
     "dx": "node ./apps/cli/bin/index.js",
     "validate": "nx affected --targets=build,test,lint,shellcheck,format:check,typecheck --configuration=ci"
+  },
+  "dependencies": {
+    "typescript-language-server": "^5.1.3"
   }
 }
