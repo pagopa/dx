@@ -9,8 +9,8 @@ on:
         type: string
         default: "app-prod-cd"
     secrets:
-      app-id:
-        description: "GitHub App ID for authentication"
+      client-id:
+        description: "GitHub Client ID for authentication"
         required: true
       app-private-key:
         description: "GitHub App private key for authentication"
@@ -69,5 +69,5 @@ jobs:
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         with:
-          app-id: ${{ secrets.app-id }}
+          client-id: ${{ secrets.client-id }}
           app-private-key: ${{ secrets.app-private-key }}
