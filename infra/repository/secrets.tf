@@ -100,3 +100,23 @@ resource "github_actions_environment_secret" "stategraph_token" {
     ignore_changes = [remote_updated_at]
   }
 }
+
+resource "github_actions_secret" "gh_release_app_key" {
+  repository      = module.github_repository.name
+  secret_name     = "GH_RELEASE_APP_KEY"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
+
+resource "github_actions_secret" "gh_release_client_id" {
+  repository      = module.github_repository.name
+  secret_name     = "GH_RELEASE_CLIENT_ID"
+  plaintext_value = "placeholder"
+
+  lifecycle {
+    ignore_changes = [remote_updated_at]
+  }
+}
