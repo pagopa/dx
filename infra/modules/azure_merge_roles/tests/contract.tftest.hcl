@@ -126,6 +126,16 @@ run "additional_actions_must_reject_unsupported_regex_characters" {
   expect_failures = [var.additional_actions]
 }
 
+run "additional_actions_must_reject_legacy_classic_provider_operations" {
+  command = plan
+
+  variables {
+    additional_actions = ["Microsoft.ClassicCompute/virtualMachines/extensions/*"]
+  }
+
+  expect_failures = [var.additional_actions]
+}
+
 run "additional_data_actions_must_not_contain_blank_values" {
   command = plan
 
@@ -141,6 +151,16 @@ run "additional_data_actions_must_reject_unsupported_regex_characters" {
 
   variables {
     additional_data_actions = ["Microsoft.Storage/storageAccounts/blobServices/containers/blobs[write]"]
+  }
+
+  expect_failures = [var.additional_data_actions]
+}
+
+run "additional_data_actions_must_reject_legacy_classic_provider_operations" {
+  command = plan
+
+  variables {
+    additional_data_actions = ["Microsoft.ClassicStorage/storageAccounts/read"]
   }
 
   expect_failures = [var.additional_data_actions]

@@ -15,6 +15,7 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 - Deduplicates merged permissions so the generated role definition remains stable.
 - Supports caller-provided `additional_actions` when the merged role must grant extra control-plane permissions beyond the permissions granted by the sum of the source roles.
 - Supports caller-provided `additional_data_actions` when the merged role must grant extra data-plane permissions beyond the data permissions granted by the sum of the source roles.
+- Drops legacy `Microsoft.Classic*` provider operations copied from built-in roles because Azure custom roles reject them with `InvalidActionOrNotAction`.
 - Requires an explicit `scope` and always uses that same scope as the role's only assignable scope.
 - Supports role definitions created at management group scope as well as subscription scope.
 
@@ -47,6 +48,8 @@ When multiple exclusions overlap the same re-granted action, the current policy 
 The current implementation preserves the permission fields exposed by `azurerm_role_definition`, including `actions`, `not_actions`, `data_actions`, and `not_data_actions`, but it must compact them into one effective permissions object because Azure rejects custom roles with multiple permission objects.
 
 Source roles are resolved at the same `scope` used to create the merged role definition. This allows the module to merge built-in roles together with custom roles already defined at that scope.
+
+Some built-in roles still expose legacy `Microsoft.Classic*` operations. Azure Resource Manager does not accept those operations inside custom role definitions, so this module removes them from merged source permissions and rejects them in `additional_actions` and `additional_data_actions`.
 
 The AzureRM provider does not expose role definition `condition` and `condition_version`, so conditional built-in roles cannot currently be reproduced bit-for-bit through this module. If that scenario becomes relevant, the module should move from `azurerm_role_definition` to an ARM-level implementation such as `azapi_resource` or a dedicated provider.
 
