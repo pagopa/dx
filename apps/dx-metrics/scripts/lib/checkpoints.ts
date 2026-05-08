@@ -1,18 +1,20 @@
 /** This module manages checkpoint tracking for incremental imports. */
 
 import { sql, type SQLWrapper } from "drizzle-orm";
+import { z } from "zod/v4";
 
 import type { ImportContext } from "./import-context";
 
 // 23 hours keeps same-day retries idempotent without blocking the next daily run.
 const checkpointFreshnessWindowMs = 23 * 60 * 60 * 1000;
 const sinceDatePattern = /^\d{4}-\d{2}-\d{2}$/;
+const checkpointIdRowSchema = z.object({ id: z.number() });
 
 export interface CheckpointContext {
   db: {
-    execute: <TRow extends Record<string, unknown> = Record<string, unknown>>(
+    execute: (
       query: SQLWrapper,
-    ) => Promise<{ rows: TRow[] }>;
+    ) => Promise<{ rows: readonly Record<string, unknown>[] }>;
   };
 }
 
@@ -36,6 +38,18 @@ const parseSinceDate = (since: string): Date | null => {
   }
 
   return formatSinceDate(parsedSinceDate) === since ? parsedSinceDate : null;
+};
+
+const parseCheckpointId = (
+  row: undefined | Record<string, unknown>,
+): number => {
+  const parsedRow = checkpointIdRowSchema.safeParse(row);
+
+  if (!parsedRow.success) {
+    throw new Error("Failed to read checkpoint id from database response");
+  }
+
+  return parsedRow.data.id;
 };
 
 export async function cleanStaleCheckpoints(
@@ -85,7 +99,7 @@ export async function hasCheckpoint(
     Date.now() - checkpointFreshnessWindowMs,
   );
 
-  const rows = await context.db.execute<{ has_checkpoint: number }>(
+  const rows = await context.db.execute(
     sql`SELECT 1 AS has_checkpoint
         FROM sync_runs
         WHERE entity_type = ${checkpointKey}
@@ -116,11 +130,11 @@ export async function startCheckpoint(
     );
   }
 
-  const rows = await context.db.execute<{ id: number }>(
+  const rows = await context.db.execute(
     sql`INSERT INTO sync_runs (entity_type, repository_id, since_date, status)
         VALUES (${checkpointKey}, ${repoId}, ${requestedSinceDate}, 'running')
         RETURNING id`,
   );
 
-  return rows.rows[0].id;
+  return parseCheckpointId(rows.rows[0]);
 }
