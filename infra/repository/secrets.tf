@@ -111,9 +111,9 @@ resource "github_actions_secret" "gh_release_app_key" {
   }
 }
 
-resource "github_actions_secret" "gh_release_app_id" {
+resource "github_actions_secret" "gh_release_client_id" {
   repository      = module.github_repository.name
-  secret_name     = "GH_RELEASE_APP_ID"
+  secret_name     = "GH_RELEASE_CLIENT_ID"
   plaintext_value = "placeholder"
 
   lifecycle {
