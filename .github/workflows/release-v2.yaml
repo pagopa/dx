@@ -10,7 +10,7 @@ on:
         default: "app-prod-cd"
     secrets:
       client-id:
-        description: "GitHub Client ID for authentication"
+        description: "GitHub App Client ID for authentication"
         required: true
       app-private-key:
         description: "GitHub App private key for authentication"
