@@ -28,8 +28,5 @@ No modules.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_azurerm_cosmosdb_sql_role_assignment"></a> [azurerm\_cosmosdb\_sql\_role\_assignment](#output\_azurerm\_cosmosdb\_sql\_role\_assignment) | n/a |
-| <a name="output_azurerm_role_assignment"></a> [azurerm\_role\_assignment](#output\_azurerm\_role\_assignment) | n/a |
+No outputs.
 <!-- END_TF_DOCS -->
