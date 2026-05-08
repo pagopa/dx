@@ -33,6 +33,7 @@ export const getPayload = (includeInit = false): Payload => {
     payload.init = {
       cloudAccountsToInitialize: [cloudAccount],
       runnerAppCredentials: {
+        clientId: "test-app-client-id",
         id: "test-app-id",
         installationId: "test-installation-id",
         key: "test-private-key",

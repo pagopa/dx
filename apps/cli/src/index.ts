@@ -12,7 +12,7 @@ import {
   getGitHubPAT,
   OctokitGitHubService,
 } from "./adapters/octokit/index.js";
-import { makeAuthorizationService } from "./adapters/pagopa-technology/authorization.js";
+import { makeAzureAuthorizationService } from "./adapters/pagopa-technology/azure-authorization.js";
 import { getConfig } from "./config.js";
 import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
@@ -77,7 +77,7 @@ export const runCli = async (version: string) => {
   });
 
   const gitHubService = new OctokitGitHubService(octokit);
-  const authorizationService = makeAuthorizationService(gitHubService);
+  const authorizationService = makeAzureAuthorizationService(gitHubService);
 
   const deps: Dependencies = {
     authorizationService,

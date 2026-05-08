@@ -770,6 +770,13 @@ export class AzureCloudAccountService implements CloudAccountService {
         environmentName: githubEnvironmentName,
         owner: github.owner,
         repo: github.repo,
+        secretName: "GH_APP_CLIENT_ID",
+        secretValue: runnerAppCredentials.clientId,
+      }),
+      gitHubService.createOrUpdateEnvironmentSecret({
+        environmentName: githubEnvironmentName,
+        owner: github.owner,
+        repo: github.repo,
         secretName: "GH_APP_INSTALLATION_ID",
         secretValue: runnerAppCredentials.installationId,
       }),

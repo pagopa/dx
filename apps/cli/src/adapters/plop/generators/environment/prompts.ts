@@ -240,6 +240,13 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
         },
         {
           filter: (value) => value.trim(),
+          message: "GitHub Runner App Client ID",
+          name: "runnerAppCredentials.clientId",
+          type: "input",
+          validate: (value) => value.length > 0,
+        },
+        {
+          filter: (value) => value.trim(),
           message: "GitHub Runner App Installation ID",
           name: "runnerAppCredentials.installationId",
           type: "input",

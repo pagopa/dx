@@ -52,6 +52,7 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
   init: {
     cloudAccountsToInitialize: [],
     runnerAppCredentials: {
+      clientId: "test-app-client-id",
       id: "test-app-id",
       installationId: "test-installation-id",
       key: "test-private-key",
@@ -98,6 +99,7 @@ describe("provisionTerraformBackend", () => {
       init: {
         cloudAccountsToInitialize: [],
         runnerAppCredentials: {
+          clientId: "test-app-client-id",
           id: "test-app-id",
           installationId: "test-installation-id",
           key: "test-private-key",
@@ -150,6 +152,7 @@ describe("provisionTerraformBackend", () => {
       init: {
         cloudAccountsToInitialize: [],
         runnerAppCredentials: {
+          clientId: "test-app-client-id",
           id: "test-app-id",
           installationId: "test-installation-id",
           key: "test-private-key",

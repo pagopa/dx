@@ -1,10 +1,18 @@
 // Tests for workspaceSchema transforms (lowercase and trim on domain).
-import { describe, expect, it } from "vitest";
+import inquirer from "inquirer";
+import { describe, expect, it, vi } from "vitest";
 
-import type { CloudAccount } from "../../../../../domain/cloud-account.js";
+import type {
+  CloudAccount,
+  CloudAccountRepository,
+  CloudAccountService,
+} from "../../../../../domain/cloud-account.js";
 import type { EnvironmentInitStatus } from "../../../../../domain/environment.js";
 
-import { formatInitializationDetails, workspaceSchema } from "../prompts.js";
+import prompts, {
+  formatInitializationDetails,
+  workspaceSchema,
+} from "../prompts.js";
 
 describe("workspaceSchema — domain transforms", () => {
   it("lowercases an uppercase domain", () => {
@@ -111,5 +119,108 @@ describe("formatInitializationDetails", () => {
     const status = notInitializedStatus([]);
 
     expect(formatInitializationDetails(status)).toBe("");
+  });
+});
+
+describe("prompts", () => {
+  it("prompts for the GitHub runner app client ID when initialization is required", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountRepository: CloudAccountRepository = {
+      list: vi.fn().mockResolvedValue([cloudAccount]),
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(false),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      })
+      .mockResolvedValueOnce({
+        init: true,
+      })
+      .mockResolvedValueOnce({
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      });
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+      })(inquirer);
+
+      const runnerCredentialQuestions = promptSpy.mock.calls[3]?.[0];
+
+      expect(runnerCredentialQuestions).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            message: "GitHub Runner App ID",
+            name: "runnerAppCredentials.id",
+          }),
+          expect.objectContaining({
+            message: "GitHub Runner App Client ID",
+            name: "runnerAppCredentials.clientId",
+          }),
+          expect.objectContaining({
+            message: "GitHub Runner App Installation ID",
+            name: "runnerAppCredentials.installationId",
+          }),
+          expect.objectContaining({
+            message: "GitHub Runner App Private Key",
+            name: "runnerAppCredentials.key",
+          }),
+        ]),
+      );
+
+      expect(result.init?.runnerAppCredentials).toEqual({
+        clientId: "app-client-id",
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      });
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
   });
 });

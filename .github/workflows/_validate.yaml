@@ -13,3 +13,6 @@ jobs:
       actions: read
       pull-requests: write
     uses: ./.github/workflows/validate-v1.yaml
+    secrets:
+      app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+      app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}

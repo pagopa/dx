@@ -122,7 +122,8 @@ jobs:
 
       - uses: pagopa/dx/actions/nx-release@main
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          app-client-id: ${{ secrets.GH_RELEASE_CLIENT_ID }}
+          app-private-key: ${{ secrets.GH_RELEASE_APP_KEY }}
 ```
 
 ## Behavior
@@ -185,7 +186,7 @@ Triggered manually. The action:
 ### PR not created
 
 - Ensure `.nx/version-plans/` directory exists
-- Verify `gh` CLI has authentication; check GITHUB_TOKEN is set
+- Verify `gh` CLI has authentication; check GH_TOKEN is set
 - Check that version plans produce actual version changes (run `npx nx release --dry-run`)
 
 ### PR warning comment is missing
