@@ -101,9 +101,9 @@ resource "github_actions_environment_secret" "stategraph_token" {
   }
 }
 
-resource "github_actions_secret" "gh_release_app_key" {
+resource "github_actions_secret" "gh_app_release_app_key" {
   repository      = module.github_repository.name
-  secret_name     = "GH_RELEASE_APP_KEY"
+  secret_name     = "GH_APP_RELEASE_APP_KEY"
   plaintext_value = "placeholder"
 
   lifecycle {
@@ -111,9 +111,9 @@ resource "github_actions_secret" "gh_release_app_key" {
   }
 }
 
-resource "github_actions_secret" "gh_release_client_id" {
+resource "github_actions_secret" "gh_app_release_client_id" {
   repository      = module.github_repository.name
-  secret_name     = "GH_RELEASE_CLIENT_ID"
+  secret_name     = "GH_APP_RELEASE_CLIENT_ID"
   plaintext_value = "placeholder"
 
   lifecycle {
