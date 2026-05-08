@@ -20,4 +20,5 @@ jobs:
     with:
       environment: npm-prod-cd
     secrets:
-      github-token: ${{ secrets.BOT_GH_TOKEN }}
+      app-id: ${{ secrets.GH_RELEASE_APP_ID }}
+      app-private-key: ${{ secrets.GH_RELEASE_APP_KEY }}
