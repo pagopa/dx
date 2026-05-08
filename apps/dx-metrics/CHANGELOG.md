@@ -1,3 +1,14 @@
+## 0.5.3 (2026-05-08)
+
+### 🩹 Fixes
+
+- Fix dx-metrics checkpoints to match exact since dates and expire after 23 hours. ([#1727](https://github.com/pagopa/dx/pull/1727))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.5.2 (2026-05-05)
 
 ### 🩹 Fixes
