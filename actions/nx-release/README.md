@@ -122,7 +122,7 @@ jobs:
 
       - uses: pagopa/dx/actions/nx-release@main
         with:
-          client-id: ${{ secrets.GH_RELEASE_CLIENT_ID }}
+          app-client-id: ${{ secrets.GH_RELEASE_CLIENT_ID }}
           app-private-key: ${{ secrets.GH_RELEASE_APP_KEY }}
 ```
 
