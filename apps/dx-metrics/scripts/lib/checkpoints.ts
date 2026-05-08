@@ -3,8 +3,6 @@
 import { sql, type SQLWrapper } from "drizzle-orm";
 import { z } from "zod/v4";
 
-import type { ImportContext } from "./import-context";
-
 // 23 hours keeps same-day retries idempotent without blocking the next daily run.
 const checkpointFreshnessWindowMs = 23 * 60 * 60 * 1000;
 const sinceDatePattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -46,7 +44,9 @@ const parseCheckpointId = (
   const parsedRow = checkpointIdRowSchema.safeParse(row);
 
   if (!parsedRow.success) {
-    throw new Error("Failed to read checkpoint id from database response");
+    throw new Error("Failed to read checkpoint id from database response", {
+      cause: parsedRow.error,
+    });
   }
 
   return parsedRow.data.id;
