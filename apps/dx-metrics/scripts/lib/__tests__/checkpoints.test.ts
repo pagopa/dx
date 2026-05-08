@@ -22,6 +22,36 @@ const makeContext = (executeResult: { rows: unknown[] }) =>
   }) as unknown as ImportContext;
 
 describe("hasCheckpoint", () => {
+  it("normalizes the since date and computes the freshness cutoff in code", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-08T12:00:00.000Z"));
+
+    const context = makeContext({ rows: [{ has_checkpoint: 1 }] });
+    const result = await hasCheckpoint(
+      context,
+      "pull-requests",
+      "dx",
+      "2026-04-08",
+    );
+
+    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
+    const rendered = dialect.sqlToQuery(statement);
+
+    expect(result).toBe(true);
+    expect(rendered.sql).toContain("entity_type =");
+    expect(rendered.sql).toContain("since_date =");
+    expect(rendered.sql).not.toContain("since_date <=");
+    expect(rendered.sql).toContain("completed_at >=");
+    expect(rendered.sql).not.toContain("INTERVAL '23 hours'");
+    expect(rendered.params).toEqual([
+      "pull-requests:dx",
+      new Date("2026-04-08T00:00:00.000Z"),
+      new Date("2026-05-07T13:00:00.000Z"),
+    ]);
+
+    vi.useRealTimers();
+  });
+
   it("returns false when since date is invalid", async () => {
     const context = makeContext({ rows: [] });
     const result = await hasCheckpoint(
@@ -43,31 +73,6 @@ describe("hasCheckpoint", () => {
       "2026-04-08",
     );
     expect(result).toBe(false);
-  });
-
-  it("matches only checkpoints with the same since date and a fresh completion", async () => {
-    const context = makeContext({ rows: [{ has_checkpoint: 1 }] });
-    const result = await hasCheckpoint(
-      context,
-      "pull-requests",
-      "dx",
-      "2026-04-08",
-    );
-
-    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
-    const rendered = dialect.sqlToQuery(statement);
-
-    expect(result).toBe(true);
-    expect(rendered.sql).toContain("entity_type = $1");
-    expect(rendered.sql).toContain("since_date = $2");
-    expect(rendered.sql).not.toContain("since_date <=");
-    expect(rendered.sql).toContain(
-      "completed_at >= NOW() - INTERVAL '23 hours'",
-    );
-    expect(rendered.params).toEqual([
-      "pull-requests:dx",
-      new Date("2026-04-08"),
-    ]);
   });
 
   it("returns false when no global checkpoint exists (null repoName)", async () => {
@@ -94,7 +99,8 @@ describe("hasCheckpoint", () => {
     const rendered = dialect.sqlToQuery(statement);
 
     expect(result).toBe(true);
-    expect(rendered.params).toEqual(["code-search", new Date("2026-04-08")]);
+    expect(rendered.params[0]).toBe("code-search");
+    expect(rendered.params[1]).toEqual(new Date("2026-04-08T00:00:00.000Z"));
   });
 });
 
@@ -116,8 +122,26 @@ describe("startCheckpoint", () => {
       "2026-04-08",
       1,
     );
+
+    const [statement] = vi.mocked(context.db.execute).mock.calls[0];
+    const rendered = dialect.sqlToQuery(statement);
+
     expect(id).toBe(42);
     expect(context.db.execute).toHaveBeenCalledOnce();
+    expect(rendered.params).toEqual([
+      "pull-requests:dx",
+      1,
+      new Date("2026-04-08T00:00:00.000Z"),
+    ]);
+  });
+
+  it("throws when since date is invalid", async () => {
+    const context = makeContext({ rows: [] });
+
+    await expect(
+      startCheckpoint(context, "pull-requests", "dx", "not-a-date", 1),
+    ).rejects.toThrow("Invalid since date: not-a-date");
+    expect(context.db.execute).not.toHaveBeenCalled();
   });
 });
 
