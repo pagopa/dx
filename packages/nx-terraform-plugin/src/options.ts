@@ -1,16 +1,14 @@
 import { z } from "zod/v4";
 
+import { pluginPublishOptionsSchema } from "./publish-options.ts";
+
 const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
   message:
     "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
 });
 
 export const publishOptionsSchema = z.object({
-  github: z
-    .object({
-      owner: z.string().min(1, "github owner cannot be empty").optional(),
-    })
-    .optional(),
+  github: pluginPublishOptionsSchema.shape.github,
   mode: z.literal("github"),
 });
 

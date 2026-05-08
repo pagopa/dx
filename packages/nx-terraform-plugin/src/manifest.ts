@@ -1,15 +1,14 @@
 import { z } from "zod/v4";
 
+import { publishSchema } from "./publish-options.ts";
+
 // Parses and validates module.json files for publishable Terraform modules.
-export const modulePublishManifestSchema = z.object({
-  description: z.string().min(1),
+export const modulePublishManifestSchema = publishSchema.extend({
   github: z
     .object({
       owner: z.string().min(1).optional(),
     })
     .optional(),
-  provider: z.string().min(1),
-  version: z.string().min(1),
 });
 
 export type ModulePublishManifest = z.infer<typeof modulePublishManifestSchema>;

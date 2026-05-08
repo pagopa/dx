@@ -36,6 +36,19 @@ describe("parseOptions", () => {
     });
   });
 
+  it("accepts plugin-level github owner defaults", () => {
+    expect(
+      parseOptions({
+        publish: {
+          github: {
+            owner: "pagopa-dx",
+          },
+          mode: "github",
+        },
+      }).publish.github?.owner,
+    ).toBe("pagopa-dx");
+  });
+
   it("rejects empty github owner", () => {
     expect(() =>
       parseOptions({
