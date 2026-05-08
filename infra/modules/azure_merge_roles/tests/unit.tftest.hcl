@@ -97,6 +97,53 @@ run "merge_roles_appends_additional_actions_to_control_plane_permissions" {
   }
 }
 
+run "merge_roles_filters_legacy_classic_provider_operations_from_source_roles" {
+  command = plan
+
+  override_data {
+    target = data.azurerm_role_definition.source["0"]
+    values = {
+      permissions = [
+        {
+          actions = [
+            "Microsoft.Authorization/*",
+            "Microsoft.ClassicCompute/virtualMachines/extensions/*",
+          ]
+          data_actions = []
+          not_actions = [
+            "Microsoft.ClassicNetwork/virtualNetworks/read",
+          ]
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["1"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Insights/*/read"]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  assert {
+    condition     = !contains(local.merged_permissions.actions, "Microsoft.ClassicCompute/virtualMachines/extensions/*")
+    error_message = "merged_permissions.actions must drop Microsoft.Classic* provider operations that Azure custom roles reject"
+  }
+
+  assert {
+    condition     = !contains(local.merged_permissions.not_actions, "Microsoft.ClassicNetwork/virtualNetworks/read")
+    error_message = "merged_permissions.not_actions must also drop Microsoft.Classic* provider operations that Azure custom roles reject"
+  }
+}
+
 run "merge_roles_handles_case_insensitive_overlap_with_additional_actions" {
   command = plan
 

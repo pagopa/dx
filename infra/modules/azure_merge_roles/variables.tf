@@ -50,6 +50,11 @@ variable "additional_actions" {
     condition     = alltrue([for action in var.additional_actions : can(regex("^[0-9A-Za-z./*]+$", trimspace(action)))])
     error_message = "additional_actions entries may contain only Azure RBAC action characters: letters, digits, '/', '.', and '*'."
   }
+
+  validation {
+    condition     = alltrue([for action in var.additional_actions : !startswith(lower(trimspace(action)), "microsoft.classic")])
+    error_message = "additional_actions must not contain legacy Microsoft.Classic* provider operations because Azure custom roles reject them."
+  }
 }
 
 variable "additional_data_actions" {
@@ -65,6 +70,11 @@ variable "additional_data_actions" {
   validation {
     condition     = alltrue([for action in var.additional_data_actions : can(regex("^[0-9A-Za-z./*]+$", trimspace(action)))])
     error_message = "additional_data_actions entries may contain only Azure RBAC action characters: letters, digits, '/', '.', and '*'."
+  }
+
+  validation {
+    condition     = alltrue([for action in var.additional_data_actions : !startswith(lower(trimspace(action)), "microsoft.classic")])
+    error_message = "additional_data_actions must not contain legacy Microsoft.Classic* provider operations because Azure custom roles reject them."
   }
 }
 

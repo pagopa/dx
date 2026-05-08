@@ -5,6 +5,10 @@ locals {
     for index, role_name in var.source_roles : tostring(index) => role_name
   }
 
+  # Azure custom roles reject legacy Microsoft.Classic* provider operations
+  # even when they still appear inside some built-in role definitions.
+  unsupported_action_provider_prefixes = ["microsoft.classic"]
+
   merged_description = "Reason: ${trimspace(var.reason)} | Source roles: ${join(", ", sort(var.source_roles))}"
 
   # Azure role definitions expose permissions as a list of permission objects,
@@ -13,15 +17,39 @@ locals {
     for role_definition in values(data.azurerm_role_definition.source) : role_definition.permissions
   ])
 
+  # Normalize every source permission list once so the merge logic can work on
+  # deduplicated values and does not need to repeat legacy-provider filtering.
   normalized_source_permissions = [
     for permission in local.source_permissions : {
-      actions          = sort(distinct(tolist(try(permission.actions, []))))
-      data_actions     = sort(distinct(tolist(try(permission.data_actions, []))))
-      not_actions      = sort(distinct(tolist(try(permission.not_actions, []))))
-      not_data_actions = sort(distinct(tolist(try(permission.not_data_actions, []))))
+      actions = sort(distinct([
+        for action in tolist(try(permission.actions, [])) : action
+        if !anytrue([
+          for prefix in local.unsupported_action_provider_prefixes : startswith(lower(action), prefix)
+        ])
+      ]))
+      data_actions = sort(distinct([
+        for action in tolist(try(permission.data_actions, [])) : action
+        if !anytrue([
+          for prefix in local.unsupported_action_provider_prefixes : startswith(lower(action), prefix)
+        ])
+      ]))
+      not_actions = sort(distinct([
+        for action in tolist(try(permission.not_actions, [])) : action
+        if !anytrue([
+          for prefix in local.unsupported_action_provider_prefixes : startswith(lower(action), prefix)
+        ])
+      ]))
+      not_data_actions = sort(distinct([
+        for action in tolist(try(permission.not_data_actions, [])) : action
+        if !anytrue([
+          for prefix in local.unsupported_action_provider_prefixes : startswith(lower(action), prefix)
+        ])
+      ]))
     }
   ]
 
+  # Additional grants follow the same normalization path as source permissions
+  # so overlap checks compare trimmed, stable values.
   normalized_additional_actions = sort(distinct([
     for action in var.additional_actions : trimspace(action)
   ]))
@@ -31,6 +59,8 @@ locals {
   ]))
 
   merged_permissions = {
+    # The final allowed permission sets are the union of all source roles plus
+    # any caller-provided additions.
     actions = sort(distinct(concat(
       flatten([
         for permission in local.normalized_source_permissions : permission.actions
@@ -77,6 +107,9 @@ locals {
             ])
           )
         ]) ||
+        # Additional actions must also participate in overlap detection,
+        # otherwise an explicit extra grant could remain blocked by a kept
+        # exclusion from a source role.
         anytrue([
           for allowed_action in local.normalized_additional_actions : (
             length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
@@ -119,6 +152,8 @@ locals {
             ])
           )
         ]) ||
+        # Apply the same rule to additional data-plane grants so explicit blob,
+        # queue, or table permissions can override overlapping exclusions.
         anytrue([
           for allowed_action in local.normalized_additional_data_actions : (
             length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
