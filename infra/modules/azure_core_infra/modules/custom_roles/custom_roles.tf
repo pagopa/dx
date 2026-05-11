@@ -2,7 +2,7 @@ module "dx_app_cd_resource_group_deploy" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
   reason    = "Merged role for DX App CD identities at resource group scope"
   source_roles = [
@@ -18,7 +18,7 @@ module "dx_app_ci_resource_group_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
   reason    = "Merged role for DX App CI identities at resource group scope"
   source_roles = [
@@ -31,7 +31,7 @@ module "dx_infra_cd_private_networking" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
   reason    = "Merged role for DX Infra CD identities managing private DNS networking"
   source_roles = [
@@ -44,7 +44,7 @@ module "dx_infra_cd_resource_group_deploy" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
   reason    = "Merged role for DX Infra CD identities at resource group scope"
   source_roles = [
@@ -64,7 +64,7 @@ module "dx_infra_cd_subscription_admin" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
   reason    = "Merged role for DX Infra CD identities at subscription scope"
   source_roles = [
@@ -100,7 +100,7 @@ module "dx_infra_ci_resource_group_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
   reason    = "Merged role for DX Infra CI identities at resource group scope"
   source_roles = [
@@ -120,7 +120,7 @@ module "dx_infra_ci_subscription_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
   reason    = "Merged role for DX Infra CI identities at subscription scope"
   source_roles = [
@@ -135,7 +135,7 @@ module "dx_function_host_storage" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Function Host Storage"
   reason    = "Merged role for Function App host storage access"
   source_roles = [
@@ -149,7 +149,7 @@ module "dx_function_durable_storage" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
   version = "~> 0.1"
 
-  scope     = data.azurerm_subscription.current.id
+  scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Function Durable Storage"
   reason    = "Merged role for Function App durable storage access"
   source_roles = [
