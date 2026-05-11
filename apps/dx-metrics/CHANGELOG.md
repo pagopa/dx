@@ -1,3 +1,14 @@
+## 0.5.4 (2026-05-11)
+
+### 🩹 Fixes
+
+- Address typecheck errors across various files by updating imports and enhancing type definitions. Ensure proper handling of SQL execution and checkpoint management with improved type safety. ([#1729](https://github.com/pagopa/dx/pull/1729))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Danilo Spinelli
+
 ## 0.5.3 (2026-05-08)
 
 ### 🩹 Fixes
