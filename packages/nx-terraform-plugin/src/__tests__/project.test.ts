@@ -416,6 +416,38 @@ describe("getProject libraries", () => {
         ).targets?.["nx-release-publish"],
       ).toBeUndefined();
     });
+
+    it("rethrows unexpected publish inference errors without warning", async () => {
+      vi.resetModules();
+      vi.doMock("../publish-options.ts", async (importOriginal) => {
+        const actual =
+          await importOriginal<typeof import("../publish-options.ts")>();
+
+        return {
+          ...actual,
+          mergePublishOptions: () => {
+            throw new Error("unexpected merge failure");
+          },
+        };
+      });
+
+      const { getProject: getProjectWithUnexpectedFailure } =
+        await import("../project.ts");
+      const moduleRoot = path.join("infra", "modules", "network_stack");
+
+      expect(() =>
+        getProjectWithUnexpectedFailure(
+          defaultOptions,
+          moduleRoot,
+          true,
+          publishManifestWithOwner,
+        ),
+      ).toThrowError("unexpected merge failure");
+      expect(loggerMocks.warn).not.toHaveBeenCalled();
+
+      vi.doUnmock("../publish-options.ts");
+      vi.resetModules();
+    });
   });
 });
 

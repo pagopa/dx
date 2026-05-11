@@ -70,11 +70,15 @@ const getPublishTarget = (
       },
     ];
   } catch (error) {
-    logger.warn("Invalid publish options", {
-      issues: error instanceof PublishOptionsError ? error.issues : [],
-      path: path.join(root, "module.json"),
-    });
-    return undefined;
+    if (error instanceof PublishOptionsError) {
+      logger.warn("Invalid publish options", {
+        issues: error.issues,
+        path: path.join(root, "module.json"),
+      });
+      return undefined;
+    }
+
+    throw error;
   }
 };
 
