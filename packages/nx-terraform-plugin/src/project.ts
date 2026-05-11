@@ -1,3 +1,7 @@
+/**
+ * Builds inferred Nx Terraform project definitions and targets from config roots.
+ */
+
 import {
   ProjectConfiguration,
   ProjectType,
@@ -5,8 +9,12 @@ import {
 } from "@nx/devkit";
 import path from "node:path";
 
+import { getPackageLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { TerraformPluginOptions } from "./options.ts";
+import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
+
+const logger = getPackageLogger(["project"]);
 
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
@@ -40,6 +48,35 @@ const getProjectType = (root: string): ProjectType => {
 
 const getRootConfigPath = (root: string, configFileName: string) =>
   path.relative(root, configFileName) || configFileName;
+
+const getPublishTarget = (
+  opts: TerraformPluginOptions,
+  root: string,
+  publishManifest: ModulePublishManifest,
+): [string, TargetConfiguration] | undefined => {
+  try {
+    const publishOptions = mergePublishOptions(opts.publish, publishManifest);
+    return [
+      opts.publishTargetName,
+      {
+        cache: false,
+        executor: "@pagopa/nx-terraform-plugin:publish",
+        options: {
+          ...publishOptions,
+          githubOwner: publishOptions.github.owner,
+          projectRoot: "{projectRoot}",
+          workspaceRoot: "{workspaceRoot}",
+        },
+      },
+    ];
+  } catch (error) {
+    logger.warn("Invalid publish options", {
+      issues: error instanceof PublishOptionsError ? error.issues : [],
+      path: path.join(root, "module.json"),
+    });
+    return undefined;
+  }
+};
 
 const getTargets = (
   opts: TerraformPluginOptions,
@@ -160,21 +197,10 @@ const getTargets = (
     ]);
 
     if (publishManifest) {
-      targets.push([
-        opts.publishTargetName,
-        {
-          cache: false,
-          executor: "@pagopa/nx-terraform-plugin:publish",
-          options: {
-            description: publishManifest.description,
-            githubOwner: publishManifest.github?.owner,
-            projectRoot: "{projectRoot}",
-            provider: publishManifest.provider,
-            version: publishManifest.version,
-            workspaceRoot: "{workspaceRoot}",
-          },
-        },
-      ]);
+      const publishTarget = getPublishTarget(opts, root, publishManifest);
+      if (publishTarget) {
+        targets.push(publishTarget);
+      }
     }
   }
 

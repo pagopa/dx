@@ -1,8 +1,22 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const loggerMocks = vi.hoisted(() => ({
+  warn: vi.fn(),
+}));
+
+vi.mock("../logger.ts", () => ({
+  getPackageLogger: vi.fn(() => ({
+    warn: loggerMocks.warn,
+  })),
+}));
 
 import { parseOptions } from "../options.ts";
 import { getProject, getProjectNameFromRoot } from "../project.ts";
+
+afterEach(() => {
+  loggerMocks.warn.mockReset();
+});
 
 const defaultOptions = parseOptions(undefined);
 const customOptions = parseOptions({
@@ -31,6 +45,13 @@ const publishManifest = {
   description: "Terraform module description",
   provider: "aws",
   version: "1.2.3",
+};
+
+const publishManifestWithOwner = {
+  ...publishManifest,
+  github: {
+    owner: "pagopa-dx",
+  },
 };
 
 const getExpectedLintTarget = (root: string) => ({
@@ -68,12 +89,15 @@ const getExpectedDocsTarget = () => ({
   outputs: ["{projectRoot}/README.md"],
 });
 
-const getExpectedPublishTarget = () => ({
+const getExpectedPublishTarget = (githubOwner: string) => ({
   cache: false,
   executor: "@pagopa/nx-terraform-plugin:publish",
   options: {
     description: "Terraform module description",
-    githubOwner: undefined,
+    github: {
+      owner: githubOwner,
+    },
+    githubOwner,
     projectRoot: "{projectRoot}",
     provider: "aws",
     version: "1.2.3",
@@ -174,7 +198,7 @@ describe("getProjectNameFromRoot", () => {
   });
 });
 
-describe("getProject", () => {
+describe("getProject applications", () => {
   describe("when the root is an application", () => {
     it("returns an application project with all targets", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
@@ -265,7 +289,9 @@ describe("getProject", () => {
       expect(targets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
     });
   });
+});
 
+describe("getProject libraries", () => {
   describe("when the root is a library", () => {
     it("classifies a modules root as a library without plan and apply", () => {
       const root = path.join("infra", "modules", "network_stack");
@@ -329,9 +355,14 @@ describe("getProject", () => {
       expect(targets["terraform-docs"]).toEqual(getExpectedDocsTarget());
     });
 
-    it("adds nx-release-publish when manifest is available", () => {
+    it("adds nx-release-publish when merged publish options are valid", () => {
       const root = path.join("infra", "modules", "network_stack");
-      const project = getProject(defaultOptions, root, true, publishManifest);
+      const project = getProject(
+        defaultOptions,
+        root,
+        true,
+        publishManifestWithOwner,
+      );
       const targets = getTargetsOrThrow(project);
 
       expect(Object.keys(targets)).toEqual([
@@ -345,11 +376,50 @@ describe("getProject", () => {
         "tf-console",
         "tf-output",
       ]);
-      expect(targets["nx-release-publish"]).toEqual(getExpectedPublishTarget());
+      expect(targets["nx-release-publish"]).toEqual(
+        getExpectedPublishTarget("pagopa-dx"),
+      );
       expect(project.tags).toEqual(["terraform", "terraform:public"]);
     });
-  });
 
+    it("uses the plugin default github owner when the manifest does not override it", () => {
+      const optionsWithDefaultOwner = parseOptions({
+        publish: {
+          github: {
+            owner: "pagopa-dx",
+          },
+          mode: "github",
+        },
+      });
+      const root = path.join("infra", "modules", "network_stack");
+      const project = getProject(
+        optionsWithDefaultOwner,
+        root,
+        true,
+        publishManifest,
+      );
+
+      expect(getTargetsOrThrow(project)["nx-release-publish"]).toEqual(
+        getExpectedPublishTarget("pagopa-dx"),
+      );
+    });
+
+    it("skips nx-release-publish when merged publish options are invalid", () => {
+      const moduleRoot = path.join("infra", "modules", "network_stack");
+
+      expect(
+        getProject(
+          parseOptions({ publish: { mode: "github" } }),
+          moduleRoot,
+          true,
+          publishManifest,
+        ).targets?.["nx-release-publish"],
+      ).toBeUndefined();
+    });
+  });
+});
+
+describe("getProject custom target names", () => {
   describe("when custom target names are configured", () => {
     it("produces the same target implementations under different names", () => {
       const root = path.join("infra", "modules", "shared_stack");

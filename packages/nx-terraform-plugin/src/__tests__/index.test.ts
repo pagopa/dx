@@ -36,6 +36,7 @@ describe("getDiscoveryStateWithValidation", () => {
   const createdDirs: string[] = [];
 
   afterEach(async () => {
+    vi.clearAllMocks();
     await Promise.all(
       createdDirs
         .splice(0)
@@ -171,6 +172,61 @@ describe("getDiscoveryStateWithValidation", () => {
       expect.stringContaining(
         "invalid-module/module.json. provider: Invalid input: expected string, received undefined",
       ),
+    );
+  });
+
+  it("warns and skips publish target inference when merged publish options are invalid", async () => {
+    const workspaceRoot = await fs.mkdtemp(
+      path.join(os.tmpdir(), "nx-tf-plugin-"),
+    );
+    createdDirs.push(workspaceRoot);
+
+    const moduleRoot = path.join("infra", "_modules", "missing-owner");
+    const configFiles = [
+      path.join(moduleRoot, "main.tf"),
+      path.join(moduleRoot, "module.json"),
+    ];
+
+    await fs.mkdir(path.join(workspaceRoot, moduleRoot), { recursive: true });
+    await fs.writeFile(path.join(workspaceRoot, moduleRoot, "main.tf"), "", {
+      encoding: "utf-8",
+    });
+    await fs.writeFile(
+      path.join(workspaceRoot, moduleRoot, "module.json"),
+      JSON.stringify({
+        description: "Terraform module description",
+        provider: "aws",
+        version: "1.2.3",
+      }),
+      "utf-8",
+    );
+
+    const result = await createNodesV2[1](
+      configFiles,
+      {
+        publish: {
+          mode: "github",
+        },
+      },
+      {
+        nxJsonConfiguration: {},
+        workspaceRoot,
+      },
+    );
+
+    expect(
+      result[0]?.[1].projects?.[moduleRoot]?.targets?.["nx-release-publish"],
+    ).toBeUndefined();
+    expect(logtapeMocks.warn).toHaveBeenCalledWith(
+      "Invalid publish options",
+      expect.objectContaining({
+        issues: [
+          expect.objectContaining({
+            path: ["github", "owner"],
+          }),
+        ],
+        path: expect.stringContaining("module.json"),
+      }),
     );
   });
 });
