@@ -71,27 +71,27 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = module.dx_app_ci_resource_group_reader.custom_role_name == "${data.azurerm_subscription.current.display_name} DX App CI Resource Groups"
+    condition     = module.custom_roles.dx_app_ci_resource_group_reader == "${data.azurerm_subscription.current.display_name} DX App CI Resource Groups"
     error_message = "The App CI merged custom role must include the subscription display name as prefix"
   }
 
   assert {
-    condition     = module.dx_infra_ci_subscription_reader.custom_role_name == "${data.azurerm_subscription.current.display_name} DX Infra CI Subscription"
+    condition     = module.custom_roles.dx_infra_ci_subscription_reader == "${data.azurerm_subscription.current.display_name} DX Infra CI Subscription"
     error_message = "The Infra CI merged custom role must include the subscription display name as prefix"
   }
 
   assert {
-    condition     = module.dx_infra_cd_subscription_admin.custom_role_name == "${data.azurerm_subscription.current.display_name} DX Infra CD Subscription"
+    condition     = module.custom_roles.dx_infra_cd_subscription_admin == "${data.azurerm_subscription.current.display_name} DX Infra CD Subscription"
     error_message = "The Infra CD merged custom role must include the subscription display name as prefix"
   }
 
   assert {
-    condition     = module.dx_function_host_storage.custom_role_name == "${data.azurerm_subscription.current.display_name} DX Function Host Storage"
+    condition     = module.custom_roles.dx_function_host_storage == "${data.azurerm_subscription.current.display_name} DX Function Host Storage"
     error_message = "The Function App host storage merged custom role must include the subscription display name as prefix"
   }
 
   assert {
-    condition     = module.dx_function_durable_storage.custom_role_name == "${data.azurerm_subscription.current.display_name} DX Function Durable Storage"
+    condition     = module.custom_roles.dx_function_durable_storage == "${data.azurerm_subscription.current.display_name} DX Function Durable Storage"
     error_message = "The Function App durable storage merged custom role must include the subscription display name as prefix"
   }
 }

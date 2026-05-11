@@ -34,5 +34,11 @@ No requirements.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_dx_app_ci_resource_group_reader"></a> [dx\_app\_ci\_resource\_group\_reader](#output\_dx\_app\_ci\_resource\_group\_reader) | The merged custom role name for the App CI resource group reader role. |
+| <a name="output_dx_function_durable_storage"></a> [dx\_function\_durable\_storage](#output\_dx\_function\_durable\_storage) | The merged custom role name for the Function App durable storage role. |
+| <a name="output_dx_function_host_storage"></a> [dx\_function\_host\_storage](#output\_dx\_function\_host\_storage) | The merged custom role name for the Function App host storage role. |
+| <a name="output_dx_infra_cd_subscription_admin"></a> [dx\_infra\_cd\_subscription\_admin](#output\_dx\_infra\_cd\_subscription\_admin) | The merged custom role name for the Infra CD subscription admin role. |
+| <a name="output_dx_infra_ci_subscription_reader"></a> [dx\_infra\_ci\_subscription\_reader](#output\_dx\_infra\_ci\_subscription\_reader) | The merged custom role name for the Infra CI subscription reader role. |
 <!-- END_TF_DOCS -->
