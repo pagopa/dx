@@ -1,3 +1,13 @@
+## 4.2.1 (2026-05-11)
+
+### 🩹 Fixes
+
+- Relocate custom roles to a dedicated submodule for better accessibility from repositories that don't need the entire azure-core-infra resources. ([#1731](https://github.com/pagopa/dx/pull/1731))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.2.0 (2026-05-07)
 
 ### 🚀 Features
