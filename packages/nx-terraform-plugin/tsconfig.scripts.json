@@ -1,7 +1,9 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
-    "noEmit": true
+    "noEmit": true,
+    "rewriteRelativeImportExtensions": true,
+    "isolatedModules": true
   },
   "include": [
     "scripts/**/*.ts"

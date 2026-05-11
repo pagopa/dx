@@ -12,7 +12,8 @@ Current constraints and decisions:
 - `module.json` (minimum) requires `version`, `description`, and `provider`.
 - Publish mode initially supports only `github`.
 - Repository creation is always attempted when the target repository does not exist.
-- `github.owner` should be centralized at plugin level and overridable per module.
+- `github.owner` should be centralized at plugin level and overridable per module,
+  but the final merged publish configuration must always provide it.
 - Version ownership is delegated to Nx Release integration (to be finalized later).
 - Publishable modules are tagged as `terraform:public` for Nx project selection.
 - Invalid `module.json` files are skipped from publish inference but logged as
@@ -112,11 +113,41 @@ Module-level manifest (`{projectRoot}/module.json`):
 }
 ```
 
-Resolution precedence:
+Schema model:
 
-1. `module.json.github.owner` (if set)
-2. plugin `publish.github.owner`
-3. fail with explicit configuration error
+1. **Publish schema (source of truth)**  
+   Required final shape used for actual publishing:
+   - `description`
+   - `version`
+   - `provider`
+   - `github.owner`
+2. **Plugin publish options schema**  
+   Derived from the publish schema with `pick({ github: true })`, then relaxed so
+   `github.owner` stays optional. This schema validates only plugin-level defaults.
+3. **Module manifest schema**  
+   Derived from the same publish schema while keeping `description`, `version`,
+   and `provider` required, but relaxing `github.owner` so a module can rely on
+   the plugin default.
+
+Merge and validation flow:
+
+1. Parse plugin publish defaults with the plugin publish options schema.
+2. Parse `module.json` with the module manifest schema.
+3. Merge plugin defaults with manifest values, with manifest values overriding the
+   plugin defaults.
+4. Validate the merged result against the required publish schema.
+5. Only modules whose merged publish options pass this validation are treated as
+   publishable.
+
+Warning behavior for invalid merged publish options:
+
+- message: `Invalid publish options`
+- properties: `{ path, issues }`
+- effect during inference: skip `nx-release-publish` target generation
+
+The executor also revalidates its final input against the same required publish
+schema as a defensive check, so `githubOwner` is never treated as optional at
+execution time.
 
 ### 3. Publish execution engine
 
@@ -124,7 +155,7 @@ Implement a plugin-owned publish executor/service invoked by `nx-release-publish
 
 Responsibilities:
 
-1. Consume module metadata from executor inputs/options:
+1. Consume validated publish metadata from executor inputs/options:
    - inferred target execution: metadata is injected from discovery,
    - direct executor invocation: caller must provide metadata explicitly.
 2. Build repo coordinates (`org`, `repo`).
@@ -135,20 +166,29 @@ Responsibilities:
    calls; missing required metadata in options is a hard error.
 
 This replaces workflow shell orchestration as primary implementation point.
+Concrete integrations should stay out of the flat `src/` root:
+
+- `src/executors/publish/publish.ts` stays as the thin Nx boundary
+- `src/adapters/github/publisher.ts` owns the GitHub-mode publish orchestration
+- `src/adapters/github/octokit.ts` owns direct GitHub API calls (Octokit)
+- avoid extra runtime factories or transport interfaces when simple direct adapter
+  functions are enough
 
 ## Publish Flow (`github` mode)
 
 For each eligible module:
 
 1. Parse and validate `module.json`.
-2. Resolve organization and repository identity.
-3. Check repository existence via GitHub API.
-4. If missing, create repository.
-5. Configure git remote.
-6. Run subtree split from `infra/modules/<module>`.
-7. Fetch remote `main` and merge preserving unrelated-history compatibility as current flow does.
-8. Push aligned content to remote `main`.
-9. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+2. Merge plugin publish defaults with manifest values.
+3. Validate the merged result against the required publish schema.
+4. Resolve organization and repository identity from the validated merged options.
+5. Check repository existence via GitHub API.
+6. If missing, create repository.
+7. Configure git remote.
+8. Run subtree split from `infra/modules/<module>`.
+9. Fetch remote `main` and merge preserving unrelated-history compatibility as current flow does.
+10. Push aligned content to remote `main`.
+11. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
 End condition: destination repo `main` matches module subtree content and history policy.
 
@@ -167,14 +207,14 @@ Provider resolution is explicit to avoid ambiguity:
 Hard-fail (no silent fallback) with actionable messages for:
 
 1. Invalid/missing `module.json` on inferred publish target path.
-2. Missing/invalid `module.json.provider`.
-3. Unresolved GitHub owner.
-4. GitHub repository creation failure (permission/conflict/rate limit).
-5. Git remote/subtree/push failures.
+2. Invalid merged publish options (including missing final `github.owner`).
+3. GitHub repository creation failure (permission/conflict/rate limit).
+4. Git remote/subtree/push failures.
 
 Eligibility errors prevent target inference; execution errors fail the target.
-Manifest inference failures are also emitted as structured logger warnings so CI
-and local runs can inspect the raw issue list programmatically.
+Manifest inference failures and merged publish option failures are also emitted
+as structured logger warnings so CI and local runs can inspect the raw issue
+list programmatically.
 
 ## Testing Strategy
 
@@ -182,24 +222,29 @@ and local runs can inspect the raw issue list programmatically.
    - Validate publish config parsing (`mode`, `publish.github.owner`).
    - Validate JSON Schema generation from the Zod manifest schema.
 2. **Inference tests**
-    - `library + valid module.json` => includes `nx-release-publish`.
-    - `library + missing/invalid module.json` => excludes target.
-    - `library + module.json missing provider` => excludes target.
-    - malformed JSON or schema-invalid manifest never marks a module as publishable.
-    - invalid manifest discovery warning uses message `Invalid manifest file`
-      with `{ path, issues }` properties only.
-    - `application` => excludes target.
-    - `library + valid module.json` => includes `terraform:public` tag.
+     - `library + valid module.json` => includes `nx-release-publish`.
+     - `library + missing/invalid module.json` => excludes target.
+     - `library + module.json missing provider` => excludes target.
+     - malformed JSON or schema-invalid manifest never marks a module as publishable.
+     - invalid manifest discovery warning uses message `Invalid manifest file`
+       with `{ path, issues }` properties only.
+     - valid manifest + missing owner in both manifest and plugin defaults =>
+       warning `Invalid publish options` with `{ path, issues }`, and no publish
+       target.
+     - `application` => excludes target.
+     - `library + valid module.json` => includes `terraform:public` tag.
 3. **Resolution tests**
-   - `module.json.github.owner` overrides plugin default.
-   - plugin default is used when module override absent.
-   - missing both => explicit error.
+     - `module.json.github.owner` overrides plugin default.
+     - plugin default is used when module override absent.
+     - missing both => merged publish validation failure.
 4. **Publish service tests**
-   - repository exists path;
-   - repository auto-create path;
-   - failure propagation for API/git failures.
+    - repository exists path;
+    - repository auto-create path;
+    - failure propagation for API/git failures.
 5. **Regression tests**
-   - Existing targets remain unchanged for non-publish concerns.
+    - Existing targets remain unchanged for non-publish concerns.
+    - executor rejects invalid final publish options instead of silently treating
+      `githubOwner` as optional.
 
 ## Migration and Rollout
 

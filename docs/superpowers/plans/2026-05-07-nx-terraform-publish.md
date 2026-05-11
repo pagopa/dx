@@ -4,9 +4,9 @@
 
 **Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish/sync to GitHub subrepos in `github` mode, including auto-create when missing.
 
-**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), inject manifest metadata into inferred executor options, and require explicit metadata options for direct executor invocation.
+**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation.
 
-**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, Node child process (`git`/`gh`), Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
+**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, `execa`, Octokit, Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
 
 ---
 
@@ -382,12 +382,16 @@ git commit -m "Add GitHub repository ensure and creation flow"
 ### Task 5: Implement subtree sync and publish orchestration
 
 **Files:**
-- Create: `packages/nx-terraform-plugin/src/publish/git.ts`
-- Create: `packages/nx-terraform-plugin/src/publish/github-publisher.ts`
-- Modify: `packages/nx-terraform-plugin/src/publish/runtime.ts`
-- Test: `packages/nx-terraform-plugin/src/__tests__/publish-github-publisher.test.ts`
+- Create: `packages/nx-terraform-plugin/src/adapters/github/octokit.ts`
+- Create: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Modify: `packages/nx-terraform-plugin/src/executors/publish/publish.ts`
+- Modify: `packages/nx-terraform-plugin/src/project.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts`
+- Test: `packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
 
-- [ ] **Step 1: Write failing orchestration tests**
+- [x] **Step 1: Write failing orchestration tests**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/publish-github-publisher.test.ts
@@ -402,29 +406,29 @@ expect(deps.runGit).toHaveBeenCalledWith([
 ]);
 ```
 
-- [ ] **Step 2: Run tests to verify failure**
+- [x] **Step 2: Run tests to verify failure**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: FAIL because publish orchestrator is missing
 
-- [ ] **Step 3: Implement orchestrator and git command layer**
+- [x] **Step 3: Implement orchestrator and git command layer**
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/git.ts
-export type RunGit = (args: string[], cwd: string) => Promise<void>;
+// packages/nx-terraform-plugin/src/adapters/github/octokit.ts
+// concrete repository ensure/create implementation backed by Octokit
 ```
 
 ```ts
-// packages/nx-terraform-plugin/src/publish/github-publisher.ts
-await ensureRepository(client, { owner, repo });
-await runGit(["remote", "add", remoteName, repoUrl], workspaceRoot);
-await runGit(["subtree", "split", `--prefix=${modulePath}`, "-b", branch], workspaceRoot);
-await runGit(["fetch", remoteName, "main", "--tags"], workspaceRoot);
-await runGit(["merge", "--allow-unrelated-histories", "-s", "ours", "--no-edit", "temp-branch"], workspaceRoot);
-await runGit(["push", remoteName, `${branch}:main`], workspaceRoot);
+// packages/nx-terraform-plugin/src/adapters/github/publisher.ts
+await ensureGitHubRepository({ owner, repo });
+await execa("git", ["remote", "add", remoteName, repoUrl], { cwd: workspaceRoot });
+await execa("git", ["subtree", "split", `--prefix=${modulePath}`, "-b", branch], { cwd: workspaceRoot });
+await execa("git", ["fetch", remoteName, "main", "--tags"], { cwd: workspaceRoot });
+await execa("git", ["merge", "--allow-unrelated-histories", "-s", "ours", "--no-edit", branch], { cwd: workspaceRoot });
+await execa("git", ["push", remoteName, `${branch}:main`], { cwd: workspaceRoot });
 ```
 
-- [ ] **Step 4: Run tests to verify pass**
+- [x] **Step 4: Run tests to verify pass**
 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for orchestration sequence and input mapping
@@ -432,11 +436,295 @@ Expected: PASS for orchestration sequence and input mapping
 - [ ] **Step 5: Commit**
 
 ```bash
-git add packages/nx-terraform-plugin/src/publish/git.ts \
-  packages/nx-terraform-plugin/src/publish/github-publisher.ts \
-  packages/nx-terraform-plugin/src/publish/runtime.ts \
-  packages/nx-terraform-plugin/src/__tests__/publish-github-publisher.test.ts
+git add packages/nx-terraform-plugin/src/adapters/github/octokit.ts \
+  packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
+  packages/nx-terraform-plugin/src/executors/publish/publish.ts \
+  packages/nx-terraform-plugin/src/project.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts \
+  packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts \
+  packages/nx-terraform-plugin/src/__tests__/project.test.ts
 git commit -m "Orchestrate GitHub publish with subtree sync"
+```
+
+### Task 5a: Introduce required publish schema and merged validation helper
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/options.ts`
+- Modify: `packages/nx-terraform-plugin/src/manifest.ts`
+- Create: `packages/nx-terraform-plugin/src/publish-options.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/options.test.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts`
+
+- [x] **Step 1: Write the failing schema/helper tests**
+
+```ts
+// packages/nx-terraform-plugin/src/__tests__/options.test.ts
+expect(
+  parseOptions({
+    publish: { github: { owner: "pagopa-dx" } },
+  }).publish.github?.owner,
+).toBe("pagopa-dx");
+```
+
+```ts
+// packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts
+expect(
+  mergePublishOptions(
+    { github: { owner: "pagopa-dx" } },
+    { description: "x", provider: "aws", version: "1.2.3" },
+  ),
+).toEqual({
+  description: "x",
+  github: { owner: "pagopa-dx" },
+  provider: "aws",
+  version: "1.2.3",
+});
+
+expect(() =>
+  mergePublishOptions(
+    {},
+    { description: "x", provider: "aws", version: "1.2.3" },
+  ),
+).toThrow("Invalid publish options");
+```
+
+- [x] **Step 2: Run tests to verify they fail**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: FAIL because the required publish schema / merge helper does not exist yet
+
+- [x] **Step 3: Write the minimal schema/helper implementation**
+
+```ts
+// packages/nx-terraform-plugin/src/publish-options.ts
+export const publishSchema = z.object({
+  description: z.string().min(1),
+  github: z.object({ owner: z.string().min(1) }),
+  provider: z.string().min(1),
+  version: z.string().min(1),
+});
+
+export class PublishOptionsError extends Error {
+  constructor(readonly issues: z.core.$ZodIssue[]) {
+    super("Invalid publish options");
+    this.name = "PublishOptionsError";
+  }
+}
+
+export const pluginPublishOptionsSchema = publishSchema
+  .pick({ github: true })
+  .extend({
+    github: z.object({ owner: z.string().min(1).optional() }).optional(),
+  });
+
+export const mergePublishOptions = (
+  pluginPublishOptions: PluginPublishOptions,
+  manifest: ModulePublishManifest,
+) => {
+  const parseResult = publishSchema.safeParse({
+    ...pluginPublishOptions,
+    ...manifest,
+    github: {
+      ...pluginPublishOptions.github,
+      ...manifest.github,
+    },
+  });
+
+  if (!parseResult.success) {
+    throw new PublishOptionsError(parseResult.error.issues);
+  }
+
+  return parseResult.data;
+};
+```
+
+```ts
+// packages/nx-terraform-plugin/src/manifest.ts
+export const modulePublishManifestSchema = publishSchema.extend({
+  github: z.object({ owner: z.string().min(1).optional() }).optional(),
+});
+```
+
+```ts
+// packages/nx-terraform-plugin/src/options.ts
+publish: z.object({
+  mode: z.literal("github"),
+  github: pluginPublishOptionsSchema.shape.github,
+}),
+```
+
+- [x] **Step 4: Run tests to verify they pass**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: PASS with the new publish schema family and merged validation helper
+
+- [x] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/options.ts \
+  packages/nx-terraform-plugin/src/manifest.ts \
+  packages/nx-terraform-plugin/src/publish-options.ts \
+  packages/nx-terraform-plugin/src/__tests__/options.test.ts \
+  packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts
+git commit -m "Add merged publish options validation"
+```
+
+### Task 5b: Gate target inference with validated merged publish options
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/project.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/index.test.ts`
+
+- [ ] **Step 1: Write the failing inference/warning tests**
+
+```ts
+// packages/nx-terraform-plugin/src/__tests__/project.test.ts
+expect(
+  getProject(
+    parseOptions({ publish: { mode: "github" } }),
+    moduleRoot,
+    true,
+    validManifestWithoutOwner,
+  ).targets?.["nx-release-publish"],
+).toBeUndefined();
+```
+
+```ts
+// packages/nx-terraform-plugin/src/__tests__/index.test.ts
+expect(logtapeMocks.warn).toHaveBeenCalledWith(
+  "Invalid publish options",
+  expect.objectContaining({
+    issues: [
+      expect.objectContaining({
+        path: ["github", "owner"],
+      }),
+    ],
+    path: expect.stringContaining("module.json"),
+  }),
+);
+```
+
+- [ ] **Step 2: Run tests to verify they fail**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: FAIL because project inference still treats `githubOwner` as optional
+
+- [ ] **Step 3: Write the minimal inference implementation**
+
+```ts
+// packages/nx-terraform-plugin/src/project.ts
+try {
+  const publishOptions = mergePublishOptions(opts.publish, publishManifest);
+  targets.push([
+    opts.publishTargetName,
+    {
+      cache: false,
+      executor: "@pagopa/nx-terraform-plugin:publish",
+      options: {
+        ...publishOptions,
+        githubOwner: publishOptions.github.owner,
+        projectRoot: "{projectRoot}",
+        workspaceRoot: "{workspaceRoot}",
+      },
+    },
+  ]);
+} catch (error) {
+  logger.warn("Invalid publish options", {
+    issues: error instanceof PublishOptionsError ? error.issues : [],
+    path: path.join(root, "module.json"),
+  });
+}
+```
+
+- [ ] **Step 4: Run tests to verify they pass**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: PASS and modules missing both default owner and manifest owner skip publish target inference
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/project.ts \
+  packages/nx-terraform-plugin/src/__tests__/project.test.ts \
+  packages/nx-terraform-plugin/src/__tests__/index.test.ts
+git commit -m "Validate merged publish options during inference"
+```
+
+### Task 5c: Revalidate required publish options in the executor
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/executors/publish/publish.ts`
+- Test: `packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts`
+
+- [x] **Step 1: Write the failing executor validation tests**
+
+```ts
+// packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts
+await expect(
+  executor({
+    description: "x",
+    projectRoot: "infra/modules/example",
+    provider: "aws",
+    version: "1.2.3",
+    workspaceRoot: "/repo",
+  }),
+).resolves.toEqual({ success: false });
+
+expect(logs.warn).toHaveBeenCalledWith(
+  "Invalid publish options",
+  expect.objectContaining({
+    issues: [
+      expect.objectContaining({
+        path: ["github", "owner"],
+      }),
+    ],
+  }),
+);
+```
+
+- [x] **Step 2: Run tests to verify they fail**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: FAIL because the executor still treats `githubOwner` as optional
+
+- [x] **Step 3: Write the minimal executor validation**
+
+```ts
+// packages/nx-terraform-plugin/src/executors/publish/publish.ts
+const parseResult = publishSchema.safeParse({
+  description: options.description,
+  github: { owner: options.githubOwner },
+  provider: options.provider,
+  version: options.version,
+});
+
+if (!parseResult.success || !options.projectRoot || !options.workspaceRoot) {
+  logger.warn("Invalid publish options", {
+    issues: parseResult.success ? [] : parseResult.error.issues,
+    path: options.projectRoot ?? "publish options",
+  });
+  return { success: false };
+}
+```
+
+- [x] **Step 4: Run tests to verify they pass**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
+Expected: PASS and the executor no longer silently skips publish when owner is missing
+
+- [x] **Step 5: Run package verification**
+
+Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test && NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:lint && NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:build --skipNxCache`  
+Expected: PASS
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/executors/publish/publish.ts \
+  packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts
+git commit -m "Require final publish options in executor"
 ```
 
 ### Task 6: Wire docs/changelog and retire workflow usage path

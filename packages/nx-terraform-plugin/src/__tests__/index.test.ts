@@ -25,6 +25,7 @@ vi.mock("@logtape/logtape", () => ({
 }));
 
 import { createNodesV2, getDiscoveryStateWithValidation } from "../index.ts";
+import { parseOptions } from "../options.ts";
 
 describe("createNodesV2", () => {
   it("discovers both terraform and module manifests", () => {
@@ -203,11 +204,11 @@ describe("getDiscoveryStateWithValidation", () => {
 
     const result = await createNodesV2[1](
       configFiles,
-      {
+      parseOptions({
         publish: {
           mode: "github",
         },
-      },
+      }),
       {
         nxJsonConfiguration: {},
         workspaceRoot,
