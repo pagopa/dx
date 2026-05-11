@@ -15,11 +15,12 @@ export interface EnvironmentOverrides {
   GITHUB_APP_ID?: string;
   GITHUB_APP_INSTALLATION_ID?: string;
   GITHUB_APP_PRIVATE_KEY?: string;
+  GITHUB_CLIENT_ID?: string;
   GITHUB_TOKEN?: string;
 }
 
 export interface GitHubAppAuthSettings {
-  appId: number;
+  appId: number | string;
   installationId: number;
   privateKey: string;
 }
@@ -48,13 +49,40 @@ export function normalizeGitHubAppPrivateKey(privateKey: string): string {
 }
 
 const GitHubAppAuthSchema = z.object({
-  appId: z.coerce.number().int().positive(),
   installationId: z.coerce.number().int().positive(),
   privateKey: z.string().min(1).transform(normalizeGitHubAppPrivateKey),
 });
 
+const GitHubAppIdSchema = z.coerce.number().int().positive();
+
 const readOptionalEnvironmentString = (value?: string): string | undefined =>
   value && value.trim().length > 0 ? value : undefined;
+
+const resolveGitHubAppIdentifier = (
+  environment: Pick<EnvironmentOverrides, "GITHUB_APP_ID" | "GITHUB_CLIENT_ID">,
+): number | string | undefined => {
+  const clientId = readOptionalEnvironmentString(environment.GITHUB_CLIENT_ID);
+
+  if (clientId) {
+    return clientId;
+  }
+
+  const appId = readOptionalEnvironmentString(environment.GITHUB_APP_ID);
+
+  if (!appId) {
+    return undefined;
+  }
+
+  const result = GitHubAppIdSchema.safeParse(appId);
+
+  if (!result.success) {
+    throw new Error(
+      `Invalid GitHub App credentials: ${z.prettifyError(result.error)}`,
+    );
+  }
+
+  return result.data;
+};
 
 export function loadImportConfig(filePath: string): ImportFileConfig {
   try {
@@ -73,8 +101,8 @@ export function loadImportConfig(filePath: string): ImportFileConfig {
 export function resolveGitHubAppAuth(
   environment: EnvironmentOverrides,
 ): GitHubAppAuthSettings | undefined {
+  const appId = resolveGitHubAppIdentifier(environment);
   const rawGitHubAppAuth = {
-    appId: readOptionalEnvironmentString(environment.GITHUB_APP_ID),
     installationId: readOptionalEnvironmentString(
       environment.GITHUB_APP_INSTALLATION_ID,
     ),
@@ -82,17 +110,20 @@ export function resolveGitHubAppAuth(
       environment.GITHUB_APP_PRIVATE_KEY,
     ),
   };
-  const hasAnyGitHubAppCredential = Object.values(rawGitHubAppAuth).some(
-    (value) => value !== undefined,
-  );
+  const hasAnyGitHubAppCredential =
+    appId !== undefined ||
+    Object.values(rawGitHubAppAuth).some((value) => value !== undefined);
 
   if (!hasAnyGitHubAppCredential) {
     return undefined;
   }
 
-  if (Object.values(rawGitHubAppAuth).some((value) => value === undefined)) {
+  if (
+    appId === undefined ||
+    Object.values(rawGitHubAppAuth).some((value) => value === undefined)
+  ) {
     throw new Error(
-      "Incomplete GitHub App credentials. Set GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY.",
+      "Incomplete GitHub App credentials. Set GITHUB_CLIENT_ID or GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY.",
     );
   }
 
@@ -104,7 +135,10 @@ export function resolveGitHubAppAuth(
     );
   }
 
-  return result.data;
+  return {
+    appId,
+    ...result.data,
+  };
 }
 
 export function resolveGitHubAuth(
@@ -129,7 +163,7 @@ export function resolveGitHubAuth(
   }
 
   throw new Error(
-    "GitHub authentication is required. Configure either GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY, or GITHUB_TOKEN.",
+    "GitHub authentication is required. Configure either GITHUB_CLIENT_ID or GITHUB_APP_ID, plus GITHUB_APP_INSTALLATION_ID and GITHUB_APP_PRIVATE_KEY, or GITHUB_TOKEN.",
   );
 }
 

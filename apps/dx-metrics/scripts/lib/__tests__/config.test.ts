@@ -10,7 +10,7 @@ describe("resolveImportSettings", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
-        GITHUB_APP_ID: "123",
+        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
@@ -24,7 +24,7 @@ describe("resolveImportSettings", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
-        GITHUB_APP_ID: "123",
+        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
@@ -33,7 +33,7 @@ describe("resolveImportSettings", () => {
 
     expect(settings.dxRepo).toBe("dx");
     expect(settings.githubAuth).toEqual({
-      appId: 123,
+      appId: "Iv1.client-id",
       installationId: 456,
       privateKey:
         "-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----",
@@ -55,21 +55,7 @@ describe("resolveImportSettings", () => {
     });
   });
 
-  it("throws when GitHub App credentials are incomplete", () => {
-    expect(() =>
-      resolveImportSettings(
-        { dxTeamSlug: "engineering-team-devex" },
-        {
-          GITHUB_APP_ID: "123",
-          GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
-        },
-      ),
-    ).toThrow(
-      "Incomplete GitHub App credentials. Set GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY.",
-    );
-  });
-
-  it("prefers GitHub App credentials over the PAT when both are configured", () => {
+  it("falls back to GITHUB_APP_ID when GITHUB_CLIENT_ID is not configured", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
@@ -77,7 +63,6 @@ describe("resolveImportSettings", () => {
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
-        GITHUB_TOKEN: "ghp_legacy_token",
       },
     );
 
@@ -90,11 +75,60 @@ describe("resolveImportSettings", () => {
     });
   });
 
+  it("throws when GitHub App credentials are incomplete", () => {
+    expect(() =>
+      resolveImportSettings(
+        { dxTeamSlug: "engineering-team-devex" },
+        {
+          GITHUB_CLIENT_ID: "Iv1.client-id",
+          GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
+        },
+      ),
+    ).toThrow(
+      "Incomplete GitHub App credentials. Set GITHUB_CLIENT_ID or GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY.",
+    );
+  });
+
+  it("prefers GITHUB_CLIENT_ID over GITHUB_APP_ID and GITHUB_TOKEN", () => {
+    const settings = resolveImportSettings(
+      { dxTeamSlug: "engineering-team-devex" },
+      {
+        GITHUB_CLIENT_ID: "Iv1.client-id",
+        GITHUB_APP_ID: "123",
+        GITHUB_APP_INSTALLATION_ID: "456",
+        GITHUB_APP_PRIVATE_KEY:
+          "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
+        GITHUB_TOKEN: "ghp_legacy_token",
+      },
+    );
+
+    expect(settings.githubAuth).toEqual({
+      appId: "Iv1.client-id",
+      installationId: 456,
+      privateKey:
+        "-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----",
+      type: "app",
+    });
+  });
+
+  it("rejects a non-numeric GITHUB_APP_ID when GITHUB_CLIENT_ID is absent", () => {
+    expect(() =>
+      resolveImportSettings(
+        { dxTeamSlug: "engineering-team-devex" },
+        {
+          GITHUB_APP_ID: "not-a-number",
+          GITHUB_APP_INSTALLATION_ID: "456",
+          GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
+        },
+      ),
+    ).toThrow("Invalid GitHub App credentials:");
+  });
+
   it("throws when neither GitHub App credentials nor the PAT are configured", () => {
     expect(() =>
       resolveImportSettings({ dxTeamSlug: "engineering-team-devex" }, {}),
     ).toThrow(
-      "GitHub authentication is required. Configure either GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, and GITHUB_APP_PRIVATE_KEY, or GITHUB_TOKEN.",
+      "GitHub authentication is required. Configure either GITHUB_CLIENT_ID or GITHUB_APP_ID, plus GITHUB_APP_INSTALLATION_ID and GITHUB_APP_PRIVATE_KEY, or GITHUB_TOKEN.",
     );
   });
 });

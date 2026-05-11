@@ -74,6 +74,20 @@ describe("buildGitHubAppOctokitAuthOptions", () => {
       privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
     });
   });
+
+  it("preserves a client ID string when building Octokit auth options", () => {
+    expect(
+      buildGitHubAppOctokitAuthOptions({
+        appId: "Iv1.client-id",
+        installationId: 456,
+        privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+      }),
+    ).toEqual({
+      appId: "Iv1.client-id",
+      installationId: 456,
+      privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+    });
+  });
 });
 
 describe("createOctokitClient", () => {
