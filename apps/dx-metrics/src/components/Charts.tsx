@@ -407,9 +407,13 @@ export function SimplePieChart({
             cy="50%"
             data={data}
             dataKey="value"
-            label={({ name, percent }) =>
-              `${name} (${((percent || 0) * 100).toFixed(0)}%)`
-            }
+            label={({
+              name,
+              percent,
+            }: {
+              name?: number | string;
+              percent?: number;
+            }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
             labelLine
             outerRadius={80}
           >

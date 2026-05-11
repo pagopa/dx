@@ -1,6 +1,6 @@
 /** Tests for the checkpoint tracking module. */
 
-import { SQL } from "drizzle-orm";
+import { SQL, type SQLWrapper } from "drizzle-orm";
 import { PgDialect } from "drizzle-orm/pg-core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -18,7 +18,13 @@ const dialect = new PgDialect();
 const renderExecutedSql = (
   execute: ReturnType<typeof makeContext<Record<string, unknown>>>["execute"],
 ) => {
-  const [statement] = execute.mock.calls[0] ?? [];
+  const firstCall = execute.mock.calls[0];
+
+  if (!firstCall) {
+    throw new Error("Expected execute to be called");
+  }
+
+  const [statement] = firstCall;
 
   if (!(statement instanceof SQL)) {
     throw new Error("Expected a SQL statement");
@@ -30,7 +36,7 @@ const renderExecutedSql = (
 const makeContext = <TRow extends Record<string, unknown>>(
   rows: readonly TRow[],
 ) => {
-  const execute = vi.fn(async () => ({ rows: [...rows] }));
+  const execute = vi.fn(async (_query: SQLWrapper) => ({ rows: [...rows] }));
   const context = {
     db: {
       execute,
