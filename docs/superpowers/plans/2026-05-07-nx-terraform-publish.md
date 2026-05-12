@@ -731,11 +731,11 @@ git commit -m "Require final publish options in executor"
 
 **Files:**
 - Modify: `packages/nx-terraform-plugin/src/index.ts`
-- Modify: `packages/nx-terraform-plugin/CHANGELOG.md`
+- Create: `.nx/version-plans/version-plan-<timestamp>.md`
 - Modify: `.github/workflows/_release-bash-modules-to-subrepo.yaml`
 - Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
 
-- [ ] **Step 1: Write failing regression test for workflow replacement boundary**
+- [x] **Step 1: Write failing regression test for workflow replacement boundary**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/project.test.ts
@@ -743,12 +743,12 @@ expect(Object.keys(getTargetsOrThrow(getProject(defaultOptions, moduleRoot, true
   .toContain("nx-release-publish");
 ```
 
-- [ ] **Step 2: Run tests to verify current gap**
+- [x] **Step 2: Run tests to verify current gap**
 
-Run: `pnpm nx test nx-terraform-plugin --runInBand`  
-Expected: FAIL if final wiring or naming differs from plan
+Run: `pnpm nx test nx-terraform-plugin`  
+Expected: PASS if wiring already matches the plan, or FAIL if final wiring or naming still differs
 
-- [ ] **Step 3: Finalize wiring and deprecate direct module workflow**
+- [x] **Step 3: Finalize wiring and deprecate direct module workflow**
 
 ```yaml
 # .github/workflows/_release-bash-modules-to-subrepo.yaml
@@ -760,18 +760,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          echo "This workflow is deprecated. Use nx-release-publish inferred targets from @pagopa/nx-terraform-plugin."
-          exit 1
+           echo "This workflow is deprecated. Use nx-release-publish inferred targets from @pagopa/nx-terraform-plugin."
+           exit 1
+ ```
+
+```bash
+pnpm nx release plan
 ```
+
+During the interactive prompt:
+
+1. select `@pagopa/nx-terraform-plugin`
+2. choose a `minor` bump
+3. use this release note line:
 
 ```md
-<!-- packages/nx-terraform-plugin/CHANGELOG.md -->
-- Add inferred nx-release-publish target for publishable Terraform modules with module.json.
+Add inferred nx-release-publish target for publishable Terraform modules with module.json.
 ```
 
-- [ ] **Step 4: Run full validation commands**
+Expected result: a new file is created under `.nx/version-plans/` and committed,
+while `CHANGELOG.md` remains untouched because Nx Release pipelines will consume
+the version plan and update changelogs later.
 
-Run: `pnpm nx test nx-terraform-plugin --runInBand`  
+- [x] **Step 4: Run full validation commands**
+
+Run: `pnpm nx test nx-terraform-plugin`  
 Expected: PASS
 
 Run: `pnpm nx lint nx-terraform-plugin`  
@@ -780,12 +793,12 @@ Expected: PASS
 Run: `pnpm nx build nx-terraform-plugin`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/index.ts \
   packages/nx-terraform-plugin/src/__tests__/project.test.ts \
-  packages/nx-terraform-plugin/CHANGELOG.md \
+  .nx/version-plans/version-plan-*.md \
   .github/workflows/_release-bash-modules-to-subrepo.yaml
 git commit -m "Wire nx-release-publish and deprecate module workflow path"
 ```

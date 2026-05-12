@@ -382,6 +382,23 @@ describe("getProject libraries", () => {
       expect(project.tags).toEqual(["terraform", "terraform:public"]);
     });
 
+    it("keeps nx-release-publish available for workflow replacement consumers", () => {
+      const moduleRoot = path.join("infra", "modules", "network_stack");
+
+      expect(
+        Object.keys(
+          getTargetsOrThrow(
+            getProject(
+              defaultOptions,
+              moduleRoot,
+              true,
+              publishManifestWithOwner,
+            ),
+          ),
+        ),
+      ).toContain("nx-release-publish");
+    });
+
     it("uses the plugin default github owner when the manifest does not override it", () => {
       const optionsWithDefaultOwner = parseOptions({
         publish: {

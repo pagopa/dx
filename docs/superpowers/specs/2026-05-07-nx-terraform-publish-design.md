@@ -250,9 +250,14 @@ list programmatically.
 
 1. Add plugin support while keeping existing workflow in place during transition.
 2. Validate output parity against current `_release-bash-modules-to-subrepo` behavior.
-3. Switch CI release pipeline to use Nx target orchestration once parity is confirmed.
-4. Retire deprecated workflow after successful rollout.
+3. Record release notes with `pnpm nx release plan` instead of editing
+   `CHANGELOG.md` directly; Nx Release pipelines remain the single writer for
+   changelog updates and version bumps.
+4. Switch CI release pipeline to use Nx target orchestration once parity is confirmed.
+5. Retire deprecated workflow after successful rollout.
 
 ## Open Follow-up
 
-1. Formalize Nx Release handoff for manifest version bump/update ownership and exact interface contract.
+1. Formalize Nx Release handoff for manifest version bump/update ownership and
+   exact interface contract, including the version-plan wording expected for
+   Terraform module publish support.
