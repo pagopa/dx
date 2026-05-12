@@ -371,7 +371,7 @@ export const ensureRepository = async (client, { owner, repo }) => {
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for repository ensure/create behavior
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/github.ts \
@@ -433,7 +433,7 @@ await execa("git", ["push", remoteName, `${branch}:main`], { cwd: workspaceRoot 
 Run: `pnpm nx test nx-terraform-plugin --runInBand`  
 Expected: PASS for orchestration sequence and input mapping
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/adapters/github/octokit.ts \
@@ -577,7 +577,7 @@ git commit -m "Add merged publish options validation"
 - Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
 - Test: `packages/nx-terraform-plugin/src/__tests__/index.test.ts`
 
-- [ ] **Step 1: Write the failing inference/warning tests**
+- [x] **Step 1: Write the failing inference/warning tests**
 
 ```ts
 // packages/nx-terraform-plugin/src/__tests__/project.test.ts
@@ -606,12 +606,12 @@ expect(logtapeMocks.warn).toHaveBeenCalledWith(
 );
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
 Expected: FAIL because project inference still treats `githubOwner` as optional
 
-- [ ] **Step 3: Write the minimal inference implementation**
+- [x] **Step 3: Write the minimal inference implementation**
 
 ```ts
 // packages/nx-terraform-plugin/src/project.ts
@@ -638,12 +638,12 @@ try {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test`  
 Expected: PASS and modules missing both default owner and manifest owner skip publish target inference
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/project.ts \
@@ -719,7 +719,7 @@ Expected: PASS and the executor no longer silently skips publish when owner is m
 Run: `NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:test && NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:lint && NX_DAEMON=false pnpm nx run @pagopa/nx-terraform-plugin:build --skipNxCache`  
 Expected: PASS
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/executors/publish/publish.ts \
