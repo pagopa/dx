@@ -52,8 +52,7 @@ module "dev" {
   repository = local.repository
 
   github_private_runner = {
-    container_app_environment_id       = data.azurerm_container_app_environment.runner_dev.id
-    container_app_environment_location = data.azurerm_container_app_environment.runner_dev.location
+    container_app_environment_id = data.azurerm_container_app_environment.runner_dev.id
     key_vault = {
       name                = format(local.runner.secret.kv_name, "d")
       resource_group_name = format(local.runner.secret.kv_resource_group_name, "d")

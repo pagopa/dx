@@ -55,8 +55,7 @@ run "validate_github_id_app" {
     }
 
     github_private_runner = {
-      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
-      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      container_app_environment_id = run.setup_tests.github_private_runner.container_app_environment_id
       key_vault = {
         name                = run.setup_tests.github_private_runner.key_vault.name
         resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
@@ -154,8 +153,7 @@ run "validate_github_id_infra" {
     }
 
     github_private_runner = {
-      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
-      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      container_app_environment_id = run.setup_tests.github_private_runner.container_app_environment_id
       key_vault = {
         name                = run.setup_tests.github_private_runner.key_vault.name
         resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
@@ -264,8 +262,7 @@ run "validate_rbac_entraid" {
     }
 
     github_private_runner = {
-      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
-      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      container_app_environment_id = run.setup_tests.github_private_runner.container_app_environment_id
       key_vault = {
         name                = run.setup_tests.github_private_runner.key_vault.name
         resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
@@ -338,8 +335,7 @@ run "validate_github_id_opex" {
     }
 
     github_private_runner = {
-      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
-      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      container_app_environment_id = run.setup_tests.github_private_runner.container_app_environment_id
       key_vault = {
         name                = run.setup_tests.github_private_runner.key_vault.name
         resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
@@ -425,8 +421,7 @@ run "validate_rgs_iam" {
     }
 
     github_private_runner = {
-      container_app_environment_id       = run.setup_tests.github_private_runner.container_app_environment_id
-      container_app_environment_location = run.setup_tests.github_private_runner.container_app_environment_location
+      container_app_environment_id = run.setup_tests.github_private_runner.container_app_environment_id
       key_vault = {
         name                = run.setup_tests.github_private_runner.key_vault.name
         resource_group_name = run.setup_tests.github_private_runner.key_vault.resource_group_name
