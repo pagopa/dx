@@ -16,7 +16,11 @@
     "selfcare",
     "plsm-service-management",
     "selfcare-infra",
-    "b2b-portals"
+    "b2b-portals",
+    "io-growth",
+    "io-wallet-sdk",
+    "wallet-conformance-test",
+    "io-platform-core"
   ],
   "dxTeamSlug": "engineering-team-devex",
   "dxRepo": "dx"
