@@ -1,9 +1,4 @@
 import {
-  configure,
-  getConsoleSink,
-  getJsonLinesFormatter,
-} from "@logtape/logtape";
-import {
   CreateDependencies,
   createNodesFromFiles,
   CreateNodesV2,
@@ -13,6 +8,7 @@ import path from "node:path";
 
 import { readModulePublishManifest } from "./discovery.ts";
 import { getStaticDependenciesFromFile } from "./fs.ts";
+import { configureLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
@@ -20,26 +16,6 @@ import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
-
-const packageLoggerConfiguration = configure({
-  loggers: [
-    {
-      category: ["nx-terraform-plugin"],
-      lowestLevel: "info",
-      sinks: ["console"],
-    },
-    {
-      category: ["logtape", "meta"],
-      lowestLevel: "warning",
-      sinks: ["console"],
-    },
-  ],
-  sinks: {
-    console: getConsoleSink({
-      formatter: getJsonLinesFormatter(),
-    }),
-  },
-});
 
 const isIgnoredRoot = (root: string) => {
   const rootSegments = new Set(root.split(path.sep));
@@ -110,7 +86,6 @@ export const getDiscoveryStateWithValidation = async (
   configFiles: readonly string[],
   workspaceRoot: string,
 ) => {
-  await packageLoggerConfiguration;
   const { moduleManifestRoots, terraformConfigFiles } =
     getDiscoveryState(configFiles);
   const publishableManifestByRoot = await getPublishableManifestByRoot(
@@ -128,6 +103,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // We discover both Terraform modules and module manifests in one pass.
   "**/{*.tf,module.json}",
   async (configFiles, options, context) => {
+    await configureLogger();
     const opts = parseOptions(options);
     const hasRootTflintConfig = await fileExists(
       path.join(context.workspaceRoot, ".tflint.hcl"),
@@ -164,7 +140,6 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
 export const createDependencies: CreateDependencies<
   TerraformPluginOptions
 > = async (opts, ctx) => {
-  await packageLoggerConfiguration;
   const filesToProcess = getTerraformProjectFiles(
     // Get from Nx only changed Terraform files, then derive static project-graph
     // dependencies from Terraform module source references in those files.

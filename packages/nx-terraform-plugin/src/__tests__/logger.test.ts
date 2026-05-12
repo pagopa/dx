@@ -21,10 +21,11 @@ describe("logger", () => {
     vi.clearAllMocks();
   });
 
-  it("configures logtape when the plugin entrypoint loads", async () => {
+  it("configures logtape through the shared logger helper", async () => {
     vi.resetModules();
+    const { configureLogger } = await import("../logger.ts");
 
-    await import("../index.ts");
+    await configureLogger();
 
     expect(logtapeMocks.configure).toHaveBeenCalledTimes(1);
     expect(logtapeMocks.configure).toHaveBeenCalledWith({

@@ -140,7 +140,6 @@ describe("getDiscoveryStateWithValidation", () => {
       provider: "aws",
       version: "1.2.3",
     });
-    expect(logtapeMocks.configure).toHaveBeenCalledTimes(1);
     expect(logtapeMocks.getLogger).toHaveBeenCalledWith([
       "nx-terraform-plugin",
       "discovery",

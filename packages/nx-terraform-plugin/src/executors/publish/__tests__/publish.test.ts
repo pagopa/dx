@@ -4,9 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NxReleasePublishExecutorSchema } from "../schema.ts";
 
 const loggerMocks = vi.hoisted(() => {
+  const configureLogger = vi.fn(async () => {});
   const info = vi.fn();
   const warn = vi.fn();
   return {
+    configureLogger,
     getPackageLogger: vi.fn(() => ({
       info,
       warn,
@@ -21,6 +23,7 @@ const publisherMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../../logger.ts", () => ({
+  configureLogger: loggerMocks.configureLogger,
   getPackageLogger: loggerMocks.getPackageLogger,
 }));
 
@@ -79,6 +82,7 @@ describe("Publish Executor", () => {
     const output = await executor(options, context);
 
     expect(output.success).toBe(true);
+    expect(loggerMocks.configureLogger).toHaveBeenCalledTimes(1);
     expect(publisherMocks.publishToGithub).toHaveBeenCalledWith({
       description: "Terraform module description",
       githubOwner: "pagopa-dx",
@@ -110,6 +114,7 @@ describe("Publish Executor", () => {
     const output = await executor(options, context);
 
     expect(output.success).toBe(false);
+    expect(loggerMocks.configureLogger).toHaveBeenCalledTimes(1);
     expect(loggerMocks.warn).toHaveBeenCalledWith(
       "Invalid publish options",
       expect.objectContaining({

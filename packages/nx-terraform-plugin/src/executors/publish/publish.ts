@@ -4,7 +4,7 @@ import {
   getRepoNameFromProjectRoot,
   publishToGithub,
 } from "../../adapters/github/publisher.ts";
-import { getPackageLogger } from "../../logger.ts";
+import { configureLogger, getPackageLogger } from "../../logger.ts";
 import {
   type NxReleasePublishExecutorInput,
   nxReleasePublishExecutorSchema,
@@ -17,6 +17,8 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
 ) => {
   const logger = getPackageLogger(["publish"]);
   const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
+
+  await configureLogger();
 
   if (!parseResult.success) {
     logger.warn("Invalid publish options", {

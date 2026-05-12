@@ -18,8 +18,9 @@ Current constraints and decisions:
 - Publishable modules are tagged as `terraform:public` for Nx project selection.
 - Invalid `module.json` files are skipped from publish inference but logged as
   structured JSON through the package logger.
-- LogTape configuration is owned by the plugin entrypoint in `src/index.ts`;
-  downstream modules only retrieve category loggers.
+- LogTape configuration is exposed from `src/logger.ts` through a shared
+  `configureLogger()` helper so both project discovery and the publish executor
+  can initialize structured logging before emitting records.
 - `module.json` is consumer-facing and should have a generated JSON Schema
   artifact derived from the Zod manifest schema.
 
@@ -61,13 +62,14 @@ Projects without valid manifest remain internal libraries and do not expose the 
 - Manifest parsing raises a typed `ModulePublishManifestError`.
 - The error keeps the raw Zod issue objects on `issues`, using
   `z.core.$ZodIssue[]` instead of the deprecated `ZodIssue` alias.
-- `src/index.ts` performs the package-wide LogTape setup once through a
-  module-scoped `configure(...)` promise using the JSON Lines formatter.
+- `src/logger.ts` exposes both `getPackageLogger(...)` and
+  `configureLogger()`, centralizing LogTape configuration with the JSON Lines
+  formatter.
 - Discovery logs invalid manifests with a compact JSON Lines record:
   - message: `Invalid manifest file`
   - properties: `{ path, issues }`
-- `src/logger.ts` is reduced to logger category access only, and discovery/fs
-  paths do not reconfigure logging.
+- Discovery and publish execution explicitly call `configureLogger()` before
+  emitting logs; helper modules still avoid inlining LogTape configuration.
 - Human-readable validation detail stays available through the error message,
   but it is not duplicated in the structured log payload.
 
