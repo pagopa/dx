@@ -11,7 +11,8 @@ Current constraints and decisions:
 - A module is publishable only when a dedicated `module.json` manifest exists.
 - `module.json` (minimum) requires `version`, `description`, and `provider`.
 - Publish mode initially supports only `github`.
-- Repository creation is always attempted when the target repository does not exist.
+- Repository creation is always attempted when the target repository does not
+  exist, for both GitHub organizations and personal user profiles.
 - `github.owner` should be centralized at plugin level and overridable per module,
   but the final merged publish configuration must always provide it.
 - Version ownership is delegated to Nx Release integration (to be finalized later).
@@ -29,7 +30,8 @@ Current constraints and decisions:
 1. Infer `nx-release-publish` only for eligible Terraform module libraries.
 2. Replace workflow-centric subrepo publishing logic with plugin-managed logic reusable in local and CI execution.
 3. Preserve current subrepo synchronization behavior (module content alignment in target repo).
-4. Add first-class GitHub organization resolution (`plugin default` + `module override`).
+4. Add first-class GitHub owner resolution (`plugin default` + `module override`)
+   for both organizations and personal profiles.
 5. Support automatic repository creation when missing.
 
 ## Non-Goals (for first iteration)
@@ -165,7 +167,7 @@ Responsibilities:
 1. Consume validated publish metadata from executor inputs/options:
    - inferred target execution: metadata is injected from discovery,
    - direct executor invocation: caller must provide metadata explicitly.
-2. Build repo coordinates (`org`, `repo`).
+2. Build repo coordinates (`owner`, `repo`).
 3. Ensure target repo exists (create if missing).
 4. Perform subtree-based synchronization preserving current history semantics.
 5. Push resulting branch/content to remote `main`.
@@ -188,14 +190,20 @@ For each eligible module:
 1. Parse and validate `module.json`.
 2. Merge plugin publish defaults with manifest values.
 3. Validate the merged result against the required publish schema.
-4. Resolve organization and repository identity from the validated merged options.
+4. Resolve owner and repository identity from the validated merged options.
 5. Check repository existence via GitHub API.
-6. If missing, create repository.
-7. Configure git remote.
-8. Run subtree split from `infra/modules/<module>`.
-9. Fetch remote `main` and merge preserving unrelated-history compatibility as current flow does.
-10. Push aligned content to remote `main`.
-11. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+6. If missing, resolve whether the owner is a GitHub organization or user profile.
+7. Create the repository with the matching Octokit API:
+   - organization => `repos.createInOrg`
+   - user profile => `repos.createForAuthenticatedUser`
+8. When the owner is a user profile, fail explicitly if it does not match the
+   authenticated GitHub user because GitHub does not allow creating repos for an
+   arbitrary user account.
+9. Configure git remote.
+10. Run subtree split from `infra/modules/<module>`.
+11. Fetch remote `main` and merge preserving unrelated-history compatibility as current flow does.
+12. Push aligned content to remote `main`.
+13. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
 End condition: destination repo `main` matches module subtree content and history policy.
 
@@ -216,7 +224,8 @@ Hard-fail (no silent fallback) with actionable messages for:
 1. Invalid/missing `module.json` on inferred publish target path.
 2. Invalid merged publish options (including missing final `github.owner`).
 3. GitHub repository creation failure (permission/conflict/rate limit).
-4. Git remote/subtree/push failures.
+4. Requested user-profile owner does not match the authenticated GitHub user.
+5. Git remote/subtree/push failures.
 
 Eligibility errors prevent target inference; execution errors fail the target.
 Manifest inference failures and merged publish option failures are also emitted
@@ -248,9 +257,11 @@ list programmatically.
      - plugin default is used when module override absent.
      - missing both => merged publish validation failure.
 4. **Publish service tests**
-    - repository exists path;
-    - repository auto-create path;
-    - failure propagation for API/git failures.
+     - repository exists path;
+     - organization repository auto-create path;
+     - user-profile repository auto-create path;
+     - explicit failure when user-profile owner differs from the authenticated user;
+     - failure propagation for API/git failures.
 5. **Regression tests**
     - Existing targets remain unchanged for non-publish concerns.
     - executor rejects invalid final publish options instead of silently treating

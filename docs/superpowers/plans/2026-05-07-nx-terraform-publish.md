@@ -728,6 +728,105 @@ git add packages/nx-terraform-plugin/src/executors/publish/publish.ts \
 git commit -m "Require final publish options in executor"
 ```
 
+### Task 5d: Support GitHub user and organization owners when creating repos
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/octokit.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts`
+
+- [x] **Step 1: Write the failing owner-resolution tests**
+
+```ts
+// packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts
+it("creates the repository in an organization when the owner is an org", async () => {
+  octokitMocks.get.mockRejectedValueOnce(notFoundError);
+  octokitMocks.getByUsername.mockResolvedValueOnce({ data: { login: "pagopa-dx", type: "Organization" } });
+
+  await ensureGitHubRepository("pagopa-dx", "terraform-aws-x");
+
+  expect(octokitMocks.createInOrg).toHaveBeenCalledWith({
+    name: "terraform-aws-x",
+    org: "pagopa-dx",
+    visibility: "public",
+  });
+  expect(octokitMocks.createForAuthenticatedUser).not.toHaveBeenCalled();
+});
+
+it("creates the repository for the authenticated user when the owner is a user profile", async () => {
+  octokitMocks.get.mockRejectedValueOnce(notFoundError);
+  octokitMocks.getByUsername.mockResolvedValueOnce({ data: { login: "octocat", type: "User" } });
+  octokitMocks.getAuthenticated.mockResolvedValueOnce({ data: { login: "octocat" } });
+
+  await ensureGitHubRepository("octocat", "terraform-aws-x");
+
+  expect(octokitMocks.createForAuthenticatedUser).toHaveBeenCalledWith({
+    name: "terraform-aws-x",
+    visibility: "public",
+  });
+  expect(octokitMocks.createInOrg).not.toHaveBeenCalled();
+});
+
+it("fails explicitly when the requested user owner differs from the authenticated user", async () => {
+  octokitMocks.get.mockRejectedValueOnce(notFoundError);
+  octokitMocks.getByUsername.mockResolvedValueOnce({ data: { login: "octocat", type: "User" } });
+  octokitMocks.getAuthenticated.mockResolvedValueOnce({ data: { login: "hubot" } });
+
+  await expect(
+    ensureGitHubRepository("octocat", "terraform-aws-x"),
+  ).rejects.toThrow(
+    "Cannot create repository for user owner \"octocat\" with authenticated user \"hubot\".",
+  );
+});
+```
+
+- [x] **Step 2: Run the focused test to verify it fails**
+
+Run: `pnpm exec vitest run src/adapters/github/__tests__/octokit.test.ts`  
+Expected: FAIL because the adapter still hardcodes `repos.createInOrg`
+
+- [x] **Step 3: Implement minimal owner detection in the Octokit adapter**
+
+```ts
+// packages/nx-terraform-plugin/src/adapters/github/octokit.ts
+const ownerResult = await octokit.rest.users.getByUsername({
+  username: owner,
+});
+
+if (ownerResult.data.type === "Organization") {
+  await octokit.rest.repos.createInOrg({
+    name: repo,
+    org: owner,
+    visibility: "public",
+  });
+  return;
+}
+
+const authenticatedUser = await octokit.rest.users.getAuthenticated();
+if (authenticatedUser.data.login !== owner) {
+  throw new Error(
+    `Cannot create repository for user owner "${owner}" with authenticated user "${authenticatedUser.data.login}".`,
+  );
+}
+
+await octokit.rest.repos.createForAuthenticatedUser({
+  name: repo,
+  visibility: "public",
+});
+```
+
+- [x] **Step 4: Run focused and package verification**
+
+Run: `pnpm exec vitest run src/adapters/github/__tests__/octokit.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
+Expected: PASS
+
+- [x] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/adapters/github/octokit.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts
+git commit -m "Support user-owned GitHub publish repos"
+```
+
 ### Task 6: Wire docs/changelog and retire workflow usage path
 
 **Files:**

@@ -28,9 +28,28 @@ export const ensureGitHubRepository = async (
     }
   }
 
-  await octokit.rest.repos.createInOrg({
+  const ownerProfile = await octokit.rest.users.getByUsername({
+    username: owner,
+  });
+
+  if (ownerProfile.data.type === "Organization") {
+    await octokit.rest.repos.createInOrg({
+      name: repo,
+      org: owner,
+      visibility: "public",
+    });
+    return;
+  }
+
+  const authenticatedUser = await octokit.rest.users.getAuthenticated();
+  if (authenticatedUser.data.login !== owner) {
+    throw new Error(
+      `Cannot create repository for user owner "${owner}" with authenticated user "${authenticatedUser.data.login}".`,
+    );
+  }
+
+  await octokit.rest.repos.createForAuthenticatedUser({
     name: repo,
-    org: owner,
     visibility: "public",
   });
 };
