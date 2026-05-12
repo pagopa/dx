@@ -8,16 +8,13 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
   }
 
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
-
-  subscription_id = data.azurerm_subscription.PROD_IO.id
-  tenant_id       = data.azurerm_subscription.PROD_IO.tenant_id
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
@@ -37,7 +34,6 @@ module "azure-{{displayName}}_bootstrap" {
 
   github_private_runner = {
     container_app_environment_id       = data.azurerm_container_app_environment.runner.id
-    container_app_environment_location = data.azurerm_container_app_environment.runner.location
     key_vault = {
       name                = data.azurerm_key_vault.common.name
       resource_group_name = data.azurerm_key_vault.common.resource_group_name
@@ -45,10 +41,7 @@ module "azure-{{displayName}}_bootstrap" {
     use_github_app = true
   }
 
-  apim_id                            = data.azurerm_api_management.apim.id
-  pep_vnet_id                        = data.azurerm_virtual_network.common.id
   private_dns_zone_resource_group_id = data.azurerm_resource_group.common_weu.id
-  nat_gateway_resource_group_id      = data.azurerm_resource_group.common_itn_01.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards.id
 
   tags = local.bootstrapper_tags
@@ -73,16 +66,13 @@ module "azure-{{displayName}}_core_values" {
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
   }
 
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
-
-  subscription_id = module.azure-{{displayName}}_core_values.subscription_id
-  tenant_id       = module.azure-{{displayName}}_core_values.tenant_id
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
@@ -102,7 +92,6 @@ module "azure-{{displayName}}_bootstrap" {
 
   github_private_runner = {
     container_app_environment_id       = module.azure-{{displayName}}_core_values.github_runner.environment_id
-    container_app_environment_location = local.azure_accounts.{{displayName}}.location
     labels = [
       "{{@root.env.name}}"
     ]
@@ -114,7 +103,6 @@ module "azure-{{displayName}}_bootstrap" {
     use_github_app = true
   }
 
-  pep_vnet_id                        = module.azure-{{displayName}}_core_values.common_vnet.id
   private_dns_zone_resource_group_id = module.azure-{{displayName}}_core_values.network_resource_group_id
   opex_resource_group_id             = module.azure-{{displayName}}_core_values.opex_resource_group_id
 
