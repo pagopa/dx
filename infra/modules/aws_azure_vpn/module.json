@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "A Terraform module for deploying a VPN connection between AWS and Azure.",
+  "provider": "aws",
+  "github": {
+    "owner": "lucacavallaro"
+  },
+  "version": "1.0.0"
+}
