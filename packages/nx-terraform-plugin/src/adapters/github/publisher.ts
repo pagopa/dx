@@ -1,6 +1,6 @@
 // Orchestrates GitHub publishing with direct Octokit and git subprocess calls.
 
-import { $ as $_ } from "execa";
+import { $ as $_, execa } from "execa";
 
 import { ensureGitHubRepository } from "./octokit.ts";
 
@@ -37,7 +37,26 @@ export const publishToGithub = async (
 
   await $`git remote add ${remote} ${repoUrl}`;
   await $`git subtree split --prefix=${input.projectRoot} -b ${branch}`;
-  await $`git fetch ${remote} main --tags`;
-  await $`git merge --allow-unrelated-histories -s ours --no-edit ${branch}`;
+  const remoteMainBranch = await execa(
+    "git",
+    ["ls-remote", "--exit-code", "--heads", remote, "refs/heads/main"],
+    {
+      cwd: input.workspaceRoot,
+      reject: false,
+    },
+  );
+
+  if (remoteMainBranch.exitCode === 0) {
+    await $`git fetch ${remote} main --tags`;
+    await $`git checkout ${branch}`;
+    await $`git merge --allow-unrelated-histories -s ours --no-edit ${remote}/main`;
+  } else if (remoteMainBranch.exitCode !== 2) {
+    throw new Error(
+      `Failed to check whether ${remote}/main exists (exit code ${remoteMainBranch.exitCode})${
+        remoteMainBranch.stderr === "" ? "" : `: ${remoteMainBranch.stderr}`
+      }`,
+    );
+  }
+
   await $`git push ${remote} ${branch}:main`;
 };

@@ -903,27 +903,35 @@ git add packages/nx-terraform-plugin/src/index.ts \
 git commit -m "Wire nx-release-publish and deprecate module workflow path"
 ```
 
-### Task 7: Release integration verification for `azure_core_infra`
+### Task 7: Release integration verification for `aws_azure_vpn`
 
 **Files:**
-- Create: `infra/modules/azure_core_infra/module.json` (if missing)
+- Create: `infra/modules/aws_azure_vpn/module.json` (if missing)
+- Delete: `infra/modules/aws_azure_vpn/package.json` (if replacing legacy module metadata)
 - Test: release invocation command output (no repository file changes required if sample already exists)
 
-- [ ] **Step 1: Write failing dry-run invocation expectation**
+Because `git subtree split` publishes committed history, the sample-module metadata
+replacement must be committed before the live publish run so the destination repo
+actually reflects `module.json` and the removal of the legacy `package.json`.
+
+- [x] **Step 1: Write failing dry-run invocation expectation**
 
 ```bash
-pnpm nx run modules-azure-core-infra:nx-release-publish --verbose
+pnpm nx run modules-aws-azure-vpn:nx-release-publish --verbose
 # Expected initially: FAIL with missing runtime integration detail, then fixed by previous tasks.
 ```
 
-- [ ] **Step 2: Run publish target after implementation**
+- [x] **Step 2: Run publish target after implementation**
 
-Run: `pnpm nx run modules-azure-core-infra:nx-release-publish --verbose`  
-Expected: PASS (or explicit auth failure only when credentials are absent), with resolved repo name and owner
+Run: `pnpm nx run modules-aws-azure-vpn:nx-release-publish --verbose`  
+Expected: PASS (or explicit auth failure only when credentials are absent), with
+resolved owner `lucacavallaro` and destination repo
+`terraform-aws-aws-azure-vpn`
 
-- [ ] **Step 3: Commit release integration adjustments**
+- [x] **Step 3: Commit release integration adjustments**
 
 ```bash
-git add infra/modules/azure_core_infra/module.json
+git add infra/modules/aws_azure_vpn/module.json \
+  infra/modules/aws_azure_vpn/package.json
 git commit -m "Add module manifest for nx-release-publish validation"
 ```

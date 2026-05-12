@@ -201,9 +201,12 @@ For each eligible module:
    arbitrary user account.
 9. Configure git remote.
 10. Run subtree split from `infra/modules/<module>`.
-11. Fetch remote `main` and merge preserving unrelated-history compatibility as current flow does.
-12. Push aligned content to remote `main`.
-13. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+11. If remote `main` already exists, fetch it and merge its history into the split
+    branch before pushing.
+12. If remote `main` does not exist yet (first publish to an empty repo), skip the
+    fetch/merge step and push the split branch directly to `main`.
+13. Push aligned content to remote `main`.
+14. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
 End condition: destination repo `main` matches module subtree content and history policy.
 
@@ -276,6 +279,18 @@ list programmatically.
    changelog updates and version bumps.
 4. Switch CI release pipeline to use Nx target orchestration once parity is confirmed.
 5. Retire deprecated workflow after successful rollout.
+
+Release verification note:
+
+- End-to-end verification should use a real publishable sample module under
+  `infra/modules/aws_azure_vpn`.
+- The verification manifest may be created as part of the task if it is missing,
+  so the rollout step stays reproducible across branches and clean worktrees.
+- The verification owner should be a personal GitHub account (`lucacavallaro`)
+  rather than a production organization, to avoid accidental repository creation
+  under shared orgs during live testing.
+- With the current naming rule, the expected destination repository is
+  `lucacavallaro/terraform-aws-aws-azure-vpn`.
 
 ## Open Follow-up
 
