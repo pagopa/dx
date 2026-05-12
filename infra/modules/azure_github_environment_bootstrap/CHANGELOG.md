@@ -1,3 +1,13 @@
+## 4.0.1 (2026-05-12)
+
+### 🩹 Fixes
+
+- Remove container_app_environment_location from github_private_runner input ([#1737](https://github.com/pagopa/dx/pull/1737))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 4.0.0 (2026-05-07)
 
 ### ⚠️  Breaking Changes
