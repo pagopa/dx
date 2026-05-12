@@ -1,7 +1,7 @@
 import { ExecutorContext } from "@nx/devkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { NxReleasePublishExecutorSchema } from "./schema.ts";
+import type { NxReleasePublishExecutorSchema } from "../schema.ts";
 
 const loggerMocks = vi.hoisted(() => {
   const info = vi.fn();
@@ -20,20 +20,22 @@ const publisherMocks = vi.hoisted(() => ({
   publishToGithub: vi.fn(),
 }));
 
-vi.mock("../../logger.ts", () => ({
+vi.mock("../../../logger.ts", () => ({
   getPackageLogger: loggerMocks.getPackageLogger,
 }));
 
-vi.mock("../../adapters/github/publisher.ts", async (importOriginal) => {
+vi.mock("../../../adapters/github/publisher.ts", async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("../../adapters/github/publisher.ts")>();
+    await importOriginal<
+      typeof import("../../../adapters/github/publisher.ts")
+    >();
   return {
     ...actual,
     publishToGithub: publisherMocks.publishToGithub,
   };
 });
 
-import executor, { getRepoNameFromProjectRoot } from "./publish.ts";
+import executor, { getRepoNameFromProjectRoot } from "../publish.ts";
 
 const baseContext: ExecutorContext = {
   cwd: process.cwd(),
