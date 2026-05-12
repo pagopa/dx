@@ -8,7 +8,7 @@ export const nxReleasePublishExecutorSchema = z.object({
   projectRoot: z.string().min(1),
   provider: publishSchema.shape.provider,
   version: publishSchema.shape.version,
-  workspaceRoot: z.string().min(1),
+  workspaceRoot: z.string(),
 });
 
 export type NxReleasePublishExecutorInput =

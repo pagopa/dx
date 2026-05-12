@@ -151,9 +151,10 @@ Warning behavior for invalid merged publish options:
 - properties: `{ path, issues }`
 - effect during inference: skip `nx-release-publish` target generation
 
-The executor also revalidates its final input against the same required publish
-schema as a defensive check, so `githubOwner` is never treated as optional at
-execution time.
+The executor also revalidates its final input through a dedicated
+`nxReleasePublishExecutorSchema` derived from the publish schema, so
+`githubOwner` is never treated as optional at execution time while
+`workspaceRoot` remains compatible with the raw string value Nx passes in.
 
 ### 3. Publish execution engine
 

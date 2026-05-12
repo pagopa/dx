@@ -698,16 +698,12 @@ Expected: FAIL because the executor still treats `githubOwner` as optional
 
 ```ts
 // packages/nx-terraform-plugin/src/executors/publish/publish.ts
-const parseResult = publishSchema.safeParse({
-  description: options.description,
-  github: { owner: options.githubOwner },
-  provider: options.provider,
-  version: options.version,
-});
+await configureLogger();
+const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
 
-if (!parseResult.success || !options.projectRoot || !options.workspaceRoot) {
+if (!parseResult.success) {
   logger.warn("Invalid publish options", {
-    issues: parseResult.success ? [] : parseResult.error.issues,
+    issues: parseResult.error.issues,
     path: options.projectRoot ?? "publish options",
   });
   return { success: false };
