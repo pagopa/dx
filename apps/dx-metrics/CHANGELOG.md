@@ -1,3 +1,13 @@
+## 0.5.5 (2026-05-12)
+
+### 🩹 Fixes
+
+- Add missing repositories ([#1734](https://github.com/pagopa/dx/pull/1734))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.4 (2026-05-11)
 
 ### 🩹 Fixes
