@@ -23,6 +23,9 @@
     "version": {
       "type": "string",
       "minLength": 1
+    },
+    "$schema": {
+      "type": "string"
     }
   },
   "required": [

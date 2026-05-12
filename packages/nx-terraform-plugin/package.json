@@ -21,7 +21,7 @@
     "directory": "packages/nx-terraform-plugin"
   },
   "scripts": {
-    "generate": "node scripts/generate-module-schema.ts"
+    "generate": "node src/generate-module-schema.ts"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

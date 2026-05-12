@@ -19,21 +19,30 @@ describe("module schema generation", () => {
     };
 
     expect(packageJson.scripts?.generate).toBe(
-      "node scripts/generate-module-schema.ts",
+      "node src/generate-module-schema.ts",
     );
   });
 
-  it("stores module-schema.json generated from the zod manifest schema", async () => {
-    await execFileAsync("node", ["scripts/generate-module-schema.ts"], {
+  it("stores module.schema.json with optional $schema support", async () => {
+    await execFileAsync("node", ["src/generate-module-schema.ts"], {
       cwd: packageRoot,
     });
 
+    const manifestSchemaAsJsonSchema = z.toJSONSchema(
+      modulePublishManifestSchema,
+    );
     const generatedSchema = JSON.parse(
-      await fs.readFile(path.join(packageRoot, "module-schema.json"), "utf-8"),
+      await fs.readFile(path.join(packageRoot, "module.schema.json"), "utf-8"),
     );
 
-    expect(generatedSchema).toEqual(
-      z.toJSONSchema(modulePublishManifestSchema),
-    );
+    expect(generatedSchema).toEqual({
+      ...manifestSchemaAsJsonSchema,
+      properties: {
+        ...manifestSchemaAsJsonSchema.properties,
+        $schema: {
+          type: "string",
+        },
+      },
+    });
   });
 });

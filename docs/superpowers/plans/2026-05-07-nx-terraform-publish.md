@@ -197,12 +197,14 @@ Logging ownership note:
 
 - [x] **Follow-up consumer UX: generate JSON Schema for `module.json`**
 
-`module.json` should expose a generated `module-schema.json` artifact for plugin
+`module.json` should expose a generated `module.schema.json` artifact for plugin
 consumers. Keep the implementation minimal:
-- add `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
+- add `packages/nx-terraform-plugin/src/generate-module-schema.ts`
 - add a package script `generate`
 - import `modulePublishManifestSchema`, convert it with Zod's JSON Schema API,
-  and write `packages/nx-terraform-plugin/module-schema.json`
+  extend the generated schema in the script so it accepts an optional top-level
+  `$schema` property, and write
+  `packages/nx-terraform-plugin/module.schema.json`
 - keep Zod as the only runtime validator
 
 - [x] **Follow-up behavior: add `terraform:public` tag for publishable modules**
@@ -242,18 +244,19 @@ Implementation note:
 ### Task 2a: Generate consumer JSON Schema for `module.json`
 
 **Files:**
-- Create: `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
-- Create: `packages/nx-terraform-plugin/module-schema.json`
+- Create: `packages/nx-terraform-plugin/src/generate-module-schema.ts`
+- Create: `packages/nx-terraform-plugin/module.schema.json`
 - Modify: `packages/nx-terraform-plugin/package.json`
 - Test: `packages/nx-terraform-plugin/src/__tests__/module-schema.test.ts`
 
 - [x] **Step 1: Add minimal generator script**
 
 ```ts
-// packages/nx-terraform-plugin/scripts/generate-module-schema.ts
+// packages/nx-terraform-plugin/src/generate-module-schema.ts
 // import modulePublishManifestSchema
 // convert with Zod's JSON Schema API
-// write module-schema.json
+// extend the generated schema to allow an optional top-level $schema property
+// write module.schema.json
 ```
 
 - [x] **Step 2: Add package script**
@@ -261,15 +264,17 @@ Implementation note:
 ```json
 {
   "scripts": {
-    "generate": "node scripts/generate-module-schema.ts"
+    "generate": "node src/generate-module-schema.ts"
   }
 }
 ```
 
-- [x] **Step 3: Generate and commit `module-schema.json`**
+- [x] **Step 3: Generate and commit `module.schema.json`**
 
 The generated file should be treated as a consumer artifact derived from the
-Zod schema, not as a second handwritten schema source.
+Zod schema, not as a second handwritten schema source. Keep the `$schema`
+compatibility isolated to the generator output rather than broadening the
+runtime Zod manifest schema.
 
 ### Task 3: Add publish runner entrypoint and execution contract
 

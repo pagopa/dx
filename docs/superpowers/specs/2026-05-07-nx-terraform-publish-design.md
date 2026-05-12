@@ -74,14 +74,18 @@ Projects without valid manifest remain internal libraries and do not expose the 
 ### 1.2 Consumer manifest schema generation
 
 - `modulePublishManifestSchema` remains the single source of truth.
-- The package should expose a generated `module-schema.json` file for consumers
+- The package should expose a generated `module.schema.json` file for consumers
   that want to validate or autocomplete `module.json`.
 - Generation stays minimal:
-  - script file: `packages/nx-terraform-plugin/scripts/generate-module-schema.ts`
+  - generator file: `packages/nx-terraform-plugin/src/generate-module-schema.ts`
   - package script: `generate`
-  - output file: `packages/nx-terraform-plugin/module-schema.json`
+  - output file: `packages/nx-terraform-plugin/module.schema.json`
 - The generator script imports the Zod manifest schema, converts it through
-  Zod's JSON Schema API, and writes the JSON Schema file to disk.
+  Zod's JSON Schema API, extends that generated schema in-script so consumers may
+  include an optional top-level `$schema` property, and writes the JSON Schema
+  file to disk.
+- The Zod manifest schema itself is not widened to support `$schema`; that
+  compatibility stays isolated to the generated JSON Schema artifact.
 - Runtime plugin behavior continues to validate with Zod directly; the generated
   schema is an external artifact, not a second validation path.
 
@@ -221,6 +225,9 @@ list programmatically.
 1. **Options/Schema tests**
    - Validate publish config parsing (`mode`, `publish.github.owner`).
    - Validate JSON Schema generation from the Zod manifest schema.
+   - Validate that the generated `module.schema.json` accepts an optional
+     top-level `$schema` property without changing the runtime Zod manifest
+     validator.
 2. **Inference tests**
      - `library + valid module.json` => includes `nx-release-publish`.
      - `library + missing/invalid module.json` => excludes target.
