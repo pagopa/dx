@@ -25,8 +25,13 @@ on:
         required: false
         default: PagoPA
         description: Authors names to use as image label
+      build_target:
+        type: string
+        required: false
+        description: Optional Docker build target for multi-stage Dockerfiles
       build_args:
-        description: List of build arguments to use for Dockerfile build, given in
+        description:
+          List of build arguments to use for Dockerfile build, given in
           env=value format.
         type: string
         required: false
@@ -80,6 +85,7 @@ jobs:
           docker_image_name: ${{ env.IMAGE_NAME }}
           docker_image_description: "${{ inputs.docker_image_description }}"
           docker_image_authors: ${{ inputs.docker_image_authors }}
+          build_target: ${{ inputs.build_target }}
           build_args: ${{ inputs.build_args }}
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: true
@@ -263,7 +269,8 @@ jobs:
             --revision "$CURRENT_REVISION_NAME"
 
       - name: Deactivate New Revision
-        if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
+        if:
+          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
           }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
