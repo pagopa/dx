@@ -100,6 +100,9 @@ Workspace created successfully!
 Next Steps:
 1. Review the Pull Request in the GitHub repository: https://github.com/pagopa-dx/test-project/pull/1
 2. Visit https://dx.pagopa.it/getting-started to deploy your first project
+
+GitHub Copilot:
+The repository includes test-project/.github/copilot/settings.json with the recommended PagoPA DX plugin marketplace settings. Keep it committed and edit the enabled plugins if your team does not use all of them.
 ```
 
 After the command completes, you will have a new GitHub repository with an open
