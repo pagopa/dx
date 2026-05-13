@@ -2,7 +2,7 @@
 
 import { asc, inArray } from "drizzle-orm";
 
-import { techRadarUsages } from "@/db/schema";
+import { techRadarUsages } from "@pagopa/dx-metrics-core/schema";
 import { buildTechRadarDashboardData } from "@/lib/tech-radar-dashboard";
 
 import type { Database } from "../shared/types";

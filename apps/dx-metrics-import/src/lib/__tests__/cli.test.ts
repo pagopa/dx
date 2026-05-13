@@ -1,13 +1,8 @@
 /** Tests for the CLI argument parser and helpers. */
 
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import {
-  CliUsageError,
-  computeSinceDate,
-  HelpRequestedError,
-  parseArgs,
-} from "../cli";
+import { computeSinceDate, HelpRequestedError, parseArgs } from "../cli";
 
 describe("computeSinceDate", () => {
   it("returns a date 30 days ago by default", () => {
@@ -65,6 +60,7 @@ describe("parseArgs", () => {
   it("returns empty since when --since is omitted", () => {
     const args = parseArgs([], "/tmp");
     expect(args.since).toBe("");
+    expect(args.configPath).toBeUndefined();
   });
 
   it("parses --entity correctly", () => {
@@ -83,6 +79,11 @@ describe("parseArgs", () => {
   it("parses --force flag", () => {
     const args = parseArgs(["--since", "2024-01-01", "--force"], "/tmp");
     expect(args.force).toBe(true);
+  });
+
+  it("resolves an explicit --config path", () => {
+    const args = parseArgs(["--config", "./custom-config.json"], "/tmp");
+    expect(args.configPath).toBe("/tmp/custom-config.json");
   });
 
   it("throws HelpRequestedError on --help", () => {

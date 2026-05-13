@@ -1,5 +1,5 @@
 /** Shared types for database-backed dashboard adapters. */
 
-import type { createDatabase } from "@/db/index";
+import type { Database } from "@pagopa/dx-metrics-core/database";
 
-export type Database = ReturnType<typeof createDatabase>;
+export type { Database };

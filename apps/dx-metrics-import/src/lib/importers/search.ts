@@ -1,10 +1,10 @@
 /** This module imports DX adoption data using GitHub code search. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { escapeForRegularExpression, sleep } from "../importer-helpers";
 
 const buildDxUsesPattern = (context: ImportContext): RegExp => {

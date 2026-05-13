@@ -1,10 +1,10 @@
 /** This module imports GitHub pull requests and their reviews. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { formatSecondsElapsed, sleep } from "../importer-helpers";
 
 const BOT_LOGINS = new Set(["dependabot", "dx-pagopa-bot", "renovate-pagopa"]);

@@ -1,27 +1,19 @@
 /** This module creates and manages the shared runtime context for importers. */
 
 import { createAppAuth } from "@octokit/auth-app";
+import {
+  createDatabaseConnection,
+  type DatabaseConnection,
+} from "@pagopa/dx-metrics-core/database";
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import { sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/node-postgres";
 import { Octokit } from "octokit";
-import pg from "pg";
 
 import type {
   GitHubAppAuthSettings,
   GitHubAuthSettings,
   ImportSettings,
 } from "./config";
-
-import * as schema from "../../src/db/schema";
-
-const createDatabaseConnection = (connectionString?: string) => {
-  const pool = connectionString
-    ? new pg.Pool({ connectionString })
-    : new pg.Pool();
-  const db = drizzle(pool, { schema });
-
-  return { db, pool };
-};
 
 export interface ImportContext {
   db: ImportDatabase;
@@ -31,8 +23,8 @@ export interface ImportContext {
   octokit: Octokit;
   organization: string;
   pool: ImportPool;
-  resolveTerrawizGitHubToken: ResolveTerrawizGitHubToken;
   repositories: string[];
+  resolveTerrawizGitHubToken: ResolveTerrawizGitHubToken;
   runtimeEnvironment: NodeJS.ProcessEnv;
 }
 
@@ -51,8 +43,6 @@ export interface TeamMembersClient {
     mapFn: (response: TeamMembersPage) => readonly string[],
   ) => Promise<readonly string[]>;
 }
-
-type DatabaseConnection = ReturnType<typeof createDatabaseConnection>;
 
 interface TeamMembersPage {
   readonly data: readonly { readonly login: string }[];
@@ -172,8 +162,8 @@ export async function createImportContext(
     octokit,
     organization: config.organization,
     pool,
-    resolveTerrawizGitHubToken,
     repositories: config.repositories,
+    resolveTerrawizGitHubToken,
     runtimeEnvironment,
   };
 }

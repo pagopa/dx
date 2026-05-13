@@ -1,10 +1,10 @@
 /** This module imports Techradar tool usage data via direct file existence checks. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { sleep } from "../importer-helpers";
 import { loadTechRadarTools } from "./tech-radar-catalog";
 
@@ -98,6 +98,7 @@ export async function importTechRadarRepositoryUsages(
 
       throw new Error(
         `Techradar detection failed for ${repositoryFullName} / ${tool.toolName}: ${getErrorMessage(error)}`,
+        { cause: error },
       );
     }
   }
