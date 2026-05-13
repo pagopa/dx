@@ -184,7 +184,7 @@ Responsibilities:
 2. Build repo coordinates (`owner`, `repo`).
 3. Ensure target repo exists (create if missing).
 4. Perform snapshot-based export from the module directory into a temporary publish repository.
-5. Force-push the resulting snapshot to remote `main`.
+5. Force-push the resulting snapshot to remote `main` and a version tag to the destination repo.
 6. Keep executor input contract explicit: no implicit fallback read for direct
    calls; missing required metadata in options is a hard error.
 
@@ -220,12 +220,16 @@ For each eligible module:
     the module directory rather than a history-preserving mirror.
 12. Create a single publish commit such as `Updated module`, using explicit commit
     metadata so the flow does not depend on local git config.
-13. Configure the GitHub remote in the temporary repository.
-14. Force-push the snapshot commit to remote `main`.
-15. Remove the temporary directory in best-effort mode after success or failure.
-16. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+13. Create or update a local git tag named exactly as `module.json.version`, pointing
+    to that snapshot commit.
+14. Configure the GitHub remote in the temporary repository.
+15. Force-push the snapshot commit to remote `main`.
+16. Force-push the version tag to the destination repository, overwriting any
+    existing remote tag with the same name.
+17. Remove the temporary directory in best-effort mode after success or failure.
+18. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
-End condition: destination repo `main` matches the current module directory snapshot, and remote history may be rewritten on each publish.
+End condition: destination repo `main` matches the current module directory snapshot, and the tag named after `module.json.version` points to that same exported snapshot commit.
 
 ## Repo Naming
 
@@ -245,7 +249,7 @@ Hard-fail (no silent fallback) with actionable messages for:
 2. Invalid merged publish options (including missing final `github.owner`).
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Requested user-profile owner does not match the authenticated GitHub user.
-5. Temporary repo init/copy/commit/remote/push failures.
+5. Temporary repo init/copy/commit/tag/remote/push failures.
 6. Best-effort temporary-directory cleanup failures should not hide an earlier primary publish failure;
    if cleanup is the only failing step after a successful publish, surface it
    explicitly.
@@ -306,6 +310,10 @@ list programmatically.
         in a temporary export repository;
       - the publish force-pushes an exact module snapshot to `main`, deleting
         files that no longer exist in the module directory;
+      - the publish creates or updates a tag named after `module.json.version`
+        and force-pushes it to the destination repository;
+      - tag-push failure fails the publish even if the branch push already
+        succeeded;
       - the temporary export repository is removed in best-effort cleanup after
         success and after mid-flow failures;
       - publish can run from a dirty workspace because it does not check out
