@@ -114,4 +114,49 @@ describe("parseModulePublishManifest", () => {
       ]),
     });
   });
+
+  describe("semver version validation", () => {
+    it("accepts valid semver versions", () => {
+      const validVersions = [
+        "1.2.3",
+        "0.0.1",
+        "10.20.30",
+        "1.2.3-beta.1",
+        "1.2.3-beta.1+build.7",
+        "1.0.0-alpha",
+        "1.0.0+20130313144700",
+      ];
+
+      for (const version of validVersions) {
+        expect(
+          parseModulePublishManifest({
+            description: "Test module",
+            provider: "aws",
+            version,
+          }),
+        ).toMatchObject({ version });
+      }
+    });
+
+    it("rejects invalid semver versions", () => {
+      const invalidVersions = [
+        "v1.2.3", // prefixed with v
+        "1.2", // partial version
+        "1", // partial version
+        "abc", // arbitrary string
+        "1.2.x", // placeholder
+        "", // empty string
+      ];
+
+      for (const version of invalidVersions) {
+        expect(() =>
+          parseModulePublishManifest({
+            description: "Test module",
+            provider: "aws",
+            version,
+          }),
+        ).toThrowError(ModulePublishManifestError);
+      }
+    });
+  });
 });
