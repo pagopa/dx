@@ -950,8 +950,8 @@ importers:
         specifier: ^0.13.11
         version: 0.13.11(typescript@5.9.3)(valibot@1.2.0(typescript@5.9.3))(zod@4.4.2)
       import-in-the-middle:
-        specifier: ^3.0.0
-        version: 3.0.0
+        specifier: ^2.0.0
+        version: 2.0.6
       zod:
         specifier: 'catalog:'
         version: 4.4.2
