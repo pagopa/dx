@@ -38,7 +38,7 @@ DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx d
 3. **Import data (incremental):**
 
 ```bash
-export GITHUB_APP_ID=123456
+export GITHUB_CLIENT_ID=Iv1.0123456789abcdef
 export GITHUB_APP_INSTALLATION_ID=7890123
 # Convert PEM file to a single line with \n escapes
 export GITHUB_APP_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' /path/to/github-app-private-key.pem)"
@@ -50,8 +50,12 @@ If your secret store exposes the private key with escaped newlines (`\n`),
 `dx-metrics` normalizes it automatically before creating the GitHub App
 installation client.
 
+When GitHub App credentials are configured, `dx-metrics` also generates a
+short-lived installation access token right before invoking `terrawiz`, so the
+Terraform module import does not require a separate `GITHUB_TOKEN`.
+
 If GitHub App credentials are not configured, the import script falls back to
-`GITHUB_TOKEN`.
+`GITHUB_TOKEN` for both Octokit and `terrawiz`.
 
 4. **Access dashboards** at http://localhost:3000 (anonymous access; no GitHub login required)
 
@@ -123,14 +127,21 @@ structure and values.
 
 The import script authenticates to GitHub with this precedence:
 
-1. GitHub App installation auth, when all GitHub App variables are configured
-2. `GITHUB_TOKEN`, when GitHub App credentials are absent
+1. GitHub App installation auth with `GITHUB_CLIENT_ID`, when `GITHUB_CLIENT_ID`,
+   `GITHUB_APP_INSTALLATION_ID`, and `GITHUB_APP_PRIVATE_KEY` are configured
+   - `dx-metrics` uses the App credentials directly for Octokit and mints a
+     temporary installation token for `terrawiz`
+2. GitHub App installation auth with `GITHUB_APP_ID`, when `GITHUB_CLIENT_ID` is
+   absent and `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, and
+   `GITHUB_APP_PRIVATE_KEY` are configured
+3. `GITHUB_TOKEN`, when GitHub App credentials are absent
 
 GitHub App variables:
 
 | Variable                     | Description                                |
 | ---------------------------- | ------------------------------------------ |
-| `GITHUB_APP_ID`              | Numeric GitHub App ID                      |
+| `GITHUB_CLIENT_ID`           | Preferred GitHub App client ID             |
+| `GITHUB_APP_ID`              | Fallback numeric GitHub App ID             |
 | `GITHUB_APP_INSTALLATION_ID` | Numeric installation ID for the target org |
 | `GITHUB_APP_PRIVATE_KEY`     | GitHub App private key in PEM format       |
 

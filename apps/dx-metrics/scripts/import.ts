@@ -46,7 +46,12 @@ const readEnvironmentOverrides = () => ({
   GITHUB_APP_ID: process.env.GITHUB_APP_ID,
   GITHUB_APP_INSTALLATION_ID: process.env.GITHUB_APP_INSTALLATION_ID,
   GITHUB_APP_PRIVATE_KEY: process.env.GITHUB_APP_PRIVATE_KEY,
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
   GITHUB_TOKEN: process.env.GITHUB_TOKEN,
+});
+
+const readRuntimeEnvironment = (): NodeJS.ProcessEnv => ({
+  ...process.env,
 });
 
 const handleCliError = (error: unknown): never => {
@@ -76,7 +81,7 @@ async function main(): Promise<void> {
     fileConfig,
     readEnvironmentOverrides(),
   );
-  const context = await createImportContext(settings);
+  const context = await createImportContext(settings, readRuntimeEnvironment());
   const stats = { skipped: 0 };
 
   try {

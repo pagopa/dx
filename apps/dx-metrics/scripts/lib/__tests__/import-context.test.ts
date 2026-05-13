@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import type { GitHubAppAuthSettings } from "../config.js";
 import {
   buildGitHubAppOctokitAuthOptions,
+  createTerrawizGitHubTokenResolver,
   createOctokitClient,
   resolveDxTeamMembers,
   type TeamMembersClient,
@@ -72,6 +74,20 @@ describe("buildGitHubAppOctokitAuthOptions", () => {
       privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
     });
   });
+
+  it("preserves a client ID string when building Octokit auth options", () => {
+    expect(
+      buildGitHubAppOctokitAuthOptions({
+        appId: "Iv1.client-id",
+        installationId: 456,
+        privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+      }),
+    ).toEqual({
+      appId: "Iv1.client-id",
+      installationId: 456,
+      privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+    });
+  });
 });
 
 describe("createOctokitClient", () => {
@@ -93,5 +109,53 @@ describe("createOctokitClient", () => {
     });
 
     expect(octokit).toBeInstanceOf(Object);
+  });
+});
+
+describe("createTerrawizGitHubTokenResolver", () => {
+  it("returns the configured PAT when PAT auth is used", async () => {
+    const createInstallationTokenResolver = vi.fn(
+      (_githubApp: GitHubAppAuthSettings) => async () =>
+        "ghs_installation_token",
+    );
+
+    const resolveTerrawizGitHubToken = createTerrawizGitHubTokenResolver(
+      {
+        token: "ghp_legacy_token",
+        type: "token",
+      },
+      createInstallationTokenResolver,
+    );
+
+    await expect(resolveTerrawizGitHubToken()).resolves.toBe(
+      "ghp_legacy_token",
+    );
+    expect(createInstallationTokenResolver).not.toHaveBeenCalled();
+  });
+
+  it("creates an installation token resolver when GitHub App auth is used", async () => {
+    const createInstallationTokenResolver = vi.fn(
+      (githubApp: GitHubAppAuthSettings) => async () =>
+        `ghs_${githubApp.installationId}`,
+    );
+
+    const resolveTerrawizGitHubToken = createTerrawizGitHubTokenResolver(
+      {
+        appId: 123,
+        installationId: 456,
+        privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+        type: "app",
+      },
+      createInstallationTokenResolver,
+    );
+
+    expect(createInstallationTokenResolver).toHaveBeenCalledWith(
+      expect.objectContaining({
+        appId: 123,
+        installationId: 456,
+        privateKey: "-----BEGIN PRIVATE KEY-----\nprivate-key",
+      }),
+    );
+    await expect(resolveTerrawizGitHubToken()).resolves.toBe("ghs_456");
   });
 });

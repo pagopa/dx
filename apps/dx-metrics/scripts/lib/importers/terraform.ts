@@ -1,15 +1,18 @@
 /** This module imports Terraform module usage and registry release metrics. */
 
-import { execSync } from "child_process";
+import { execFile } from "node:child_process";
+import * as fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { promisify } from "node:util";
 import { sql } from "drizzle-orm";
-import fs from "fs";
-import os from "os";
-import path from "path";
 
 import type { ImportContext } from "../import-context";
 
 import * as schema from "../../../src/db/schema";
 import { sleep } from "../importer-helpers";
+
+const execFileAsync = promisify(execFile);
 
 interface TerraformRegistryModule {
   name: string;
@@ -139,6 +142,18 @@ const sortVersions = (versions: string[]): string[] =>
     );
   });
 
+// terrawiz only supports GITHUB_TOKEN, so GitHub App auth must be translated
+// into a short-lived installation token at the child-process boundary.
+export const createTerrawizEnvironment = async (
+  context: Pick<
+    ImportContext,
+    "resolveTerrawizGitHubToken" | "runtimeEnvironment"
+  >,
+): Promise<NodeJS.ProcessEnv> => ({
+  ...context.runtimeEnvironment,
+  GITHUB_TOKEN: await context.resolveTerrawizGitHubToken(),
+});
+
 export async function importTerraformModules(
   context: ImportContext,
   repoName: string,
@@ -153,27 +168,45 @@ export async function importTerraformModules(
   );
 
   try {
-    execSync(
-      `npx --yes terrawiz scan github:${fullName} -f json -e ${temporaryFilePath}`,
+    await execFileAsync(
+      "npx",
+      [
+        "--yes",
+        "terrawiz",
+        "scan",
+        `github:${fullName}`,
+        "-f",
+        "json",
+        "-e",
+        temporaryFilePath,
+      ],
       {
-        env: { ...process.env },
+        env: await createTerrawizEnvironment(context),
         maxBuffer: 50 * 1024 * 1024,
-        stdio: "pipe",
         timeout: 5 * 60 * 1000,
       },
     );
 
     output = parseTerrawizOutput(
-      JSON.parse(fs.readFileSync(temporaryFilePath, "utf-8")),
+      JSON.parse(await fs.readFile(temporaryFilePath, "utf-8")),
     );
   } catch (error) {
     console.log(`    ⚠ terrawiz failed for ${fullName}: ${error}`);
     return;
   } finally {
     try {
-      fs.unlinkSync(temporaryFilePath);
-    } catch {
-      // Preserve cleanup best-effort behavior for the temporary terrawiz snapshot.
+      await fs.unlink(temporaryFilePath);
+    } catch (error) {
+      if (
+        typeof error !== "object" ||
+        error === null ||
+        !("code" in error) ||
+        error.code !== "ENOENT"
+      ) {
+        console.warn(
+          `    ⚠ Failed to remove temporary terrawiz snapshot ${temporaryFilePath}: ${String(error)}`,
+        );
+      }
     }
   }
 

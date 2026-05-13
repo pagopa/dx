@@ -31,11 +31,14 @@ export interface ImportContext {
   octokit: Octokit;
   organization: string;
   pool: ImportPool;
+  resolveTerrawizGitHubToken: ResolveTerrawizGitHubToken;
   repositories: string[];
+  runtimeEnvironment: NodeJS.ProcessEnv;
 }
 
 export type ImportDatabase = DatabaseConnection["db"];
 export type ImportPool = DatabaseConnection["pool"];
+export type ResolveTerrawizGitHubToken = () => Promise<string>;
 
 export interface TeamMembersClient {
   paginate: (
@@ -60,7 +63,7 @@ const toSortedUniqueMembers = (members: readonly string[]): string[] =>
 
 export const buildGitHubAppOctokitAuthOptions = (
   githubApp: GitHubAppAuthSettings,
-): GitHubAppAuthSettings => ({
+): Parameters<typeof createAppAuth>[0] => ({
   appId: githubApp.appId,
   installationId: githubApp.installationId,
   privateKey: githubApp.privateKey,
@@ -73,6 +76,27 @@ export const createOctokitClient = (githubAuth: GitHubAuthSettings): Octokit =>
         authStrategy: createAppAuth,
       })
     : new Octokit({ auth: githubAuth.token });
+
+const createGitHubAppInstallationTokenResolver = (
+  githubApp: GitHubAppAuthSettings,
+): ResolveTerrawizGitHubToken => {
+  const auth = createAppAuth(buildGitHubAppOctokitAuthOptions(githubApp));
+
+  return async () => {
+    const authentication = await auth({ type: "installation" });
+    return authentication.token;
+  };
+};
+
+export const createTerrawizGitHubTokenResolver = (
+  githubAuth: GitHubAuthSettings,
+  createInstallationTokenResolver: (
+    githubApp: GitHubAppAuthSettings,
+  ) => ResolveTerrawizGitHubToken = createGitHubAppInstallationTokenResolver,
+): ResolveTerrawizGitHubToken =>
+  githubAuth.type === "app"
+    ? createInstallationTokenResolver(githubAuth)
+    : async () => githubAuth.token;
 
 /** Resolves DX team members from the configured GitHub team slug. */
 export const resolveDxTeamMembers = async (
@@ -100,11 +124,14 @@ export async function closeImportContext(
 
 export async function createImportContext(
   settings: ImportSettings,
+  runtimeEnvironment: NodeJS.ProcessEnv,
 ): Promise<ImportContext> {
   const { databaseUrl, githubAuth, ...config } = settings;
   const { db, pool } = createDatabaseConnection(databaseUrl);
   const octokit = createOctokitClient(githubAuth);
   const dxTeamMembers = await resolveDxTeamMembers(octokit, config);
+  const resolveTerrawizGitHubToken =
+    createTerrawizGitHubTokenResolver(githubAuth);
 
   const ensureRepo = async (name: string): Promise<number> => {
     const fullName = `${config.organization}/${name}`;
@@ -145,7 +172,9 @@ export async function createImportContext(
     octokit,
     organization: config.organization,
     pool,
+    resolveTerrawizGitHubToken,
     repositories: config.repositories,
+    runtimeEnvironment,
   };
 }
 
