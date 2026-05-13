@@ -10,6 +10,8 @@ Current constraints and decisions:
 - Target is only inferred for Terraform projects with `projectType: "library"`.
 - A module is publishable only when a dedicated `module.json` manifest exists.
 - `module.json` (minimum) requires `version`, `description`, and `provider`.
+- `module.json.version` must be a valid semver string, including support for
+  prerelease and build metadata.
 - Publish mode initially supports only `github`.
 - Repository creation is always attempted when the target repository does not
   exist, for both GitHub organizations and personal user profiles.
@@ -62,6 +64,9 @@ Projects without valid manifest remain internal libraries and do not expose the 
 ### 1.1 Manifest validation and discovery logging
 
 - Manifest parsing raises a typed `ModulePublishManifestError`.
+- `manifest.ts` should define a reusable `semverSchema` with Zod's string-format
+  support and back it with the `semver` package, so the manifest version field is
+  validated by real semver parsing instead of an ad-hoc regex.
 - The error keeps the raw Zod issue objects on `issues`, using
   `z.core.$ZodIssue[]` instead of the deprecated `ZodIssue` alias.
 - `src/logger.ts` exposes both `getPackageLogger(...)` and
@@ -136,6 +141,15 @@ Schema model:
    Derived from the same publish schema while keeping `description`, `version`,
    and `provider` required, but relaxing `github.owner` so a module can rely on
    the plugin default.
+
+Version validation rule:
+
+- `modulePublishManifestSchema.version` must use `semverSchema`, not a generic
+  string validator.
+- Accepted values include standard semver releases plus prerelease/build metadata
+  (for example `1.2.3`, `1.2.3-beta.1`, `1.2.3+build.7`).
+- Non-semver values such as partial versions, arbitrary strings, or prefixed
+  forms like `v1.2.3` are invalid at runtime.
 
 Merge and validation flow:
 
@@ -263,8 +277,10 @@ list programmatically.
    - Validate publish config parsing (`mode`, `publish.github.owner`).
    - Validate JSON Schema generation from the Zod manifest schema.
    - Validate that the generated `module.schema.json` accepts an optional
-     top-level `$schema` property without changing the runtime Zod manifest
-     validator.
+      top-level `$schema` property without changing the runtime Zod manifest
+      validator.
+   - Validate that `module.json.version` accepts valid semver strings including
+     prerelease/build metadata and rejects invalid semver values.
 2. **Inference tests**
      - `library + valid module.json` => includes `nx-release-publish`.
      - `library + missing/invalid module.json` => excludes target.
