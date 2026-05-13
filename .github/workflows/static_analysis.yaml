@@ -27,6 +27,11 @@ on:
         description: If set, it runs the pre-commit on a single folder. Otherwise, it is run on all files.
         type: string
         required: false
+      dx_policies_ref:
+        description: Git ref used to fetch centralized DX Trivy custom policies.
+        type: string
+        required: false
+        default: main
       verbose:
         description: If enabled, it prints the verbose logging of pre-commit checks
         type: boolean
@@ -85,6 +90,17 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
+      - name: Checkout DX Trivy policies
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        if: ${{ github.repository != 'pagopa/dx' }}
+        with:
+          repository: pagopa/dx
+          ref: ${{ inputs.dx_policies_ref }}
+          path: ./
+          sparse-checkout: |
+            .trivy/checks/terraform
+          sparse-checkout-cone-mode: false
+
       - name: Git config
         run: |
           set -eu
@@ -96,6 +112,23 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
+
+      - name: Run Trivy custom policies
+        working-directory: ${{ inputs.folder }}
+        run: |
+          set -eu
+
+          trivy config "./" \
+            --misconfig-scanners terraform \
+            --raw-config-scanners terraform \
+            --skip-dirs "**/.terraform" \
+            --skip-dirs "**/tests/**" \
+            --ignorefile .trivyignore \
+            --tf-exclude-downloaded-modules \
+            --config-check ./.trivy/checks/terraform \
+            --check-namespaces user \
+            --severity HIGH \
+            --exit-code 1
 
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
