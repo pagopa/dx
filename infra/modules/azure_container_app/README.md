@@ -4,6 +4,12 @@
 
 This Terraform module deploys an Azure Container App in a provided Azure Container App Environment. It supports System Assigned Managed Identity and configurable scaling options.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/modules/azure_container_app/diagram.svg)
+
 ## Features
 
 - **Container App Deployment**: Deploys a containerized application in the specified Azure Container App Environment.

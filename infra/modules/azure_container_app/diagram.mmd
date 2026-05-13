@@ -1,0 +1,64 @@
+flowchart LR
+    subgraph Inputs["External Inputs"]
+        direction TB
+        cae["Container App Environment (input)"]
+        cae@{ icon: "azure:container-apps-environments"}
+
+        kv["Key Vault Secrets (optional)"]
+        kv@{ icon: "azure:key-vaults"}
+
+        uai["User Assigned Identity (optional)"]
+        uai@{ icon: "azure:managed-identities"}
+
+        acr["Azure Container Registry (optional)"]
+        acr@{ icon: "azure:container-registries"}
+    end
+
+    subgraph Core["Container App"]
+        direction TB
+        ca["Container App"]
+        ca@{ icon: "azure:worker-container-app" }
+    end
+
+    subgraph Auth["Authentication (optional)"]
+        direction TB
+        easyauth["EasyAuth\n(Entra ID)"]
+        easyauth@{ icon: "azure:multifactor-authentication" }
+    end
+
+    subgraph CustomDomain["Custom Domain (optional)"]
+        direction TB
+        cname["DNS CNAME Record"]
+        cname@{ icon: "azure:dns-zones"}
+
+        txt["DNS TXT Validation Record"]
+        txt@{ icon: "azure:dns-zones"}
+
+        cert["Azure Managed Certificate"]
+        cert@{ icon: "azure:app-service-certificates"}
+
+        binding["Custom Domain Binding"]
+        binding@{ icon: "azure:app-service-domains" }
+    end
+
+    subgraph Monitoring["Monitoring (optional)"]
+        direction TB
+        diag["Diagnostic Setting"]
+        diag@{ icon: "azure:diagnostics-settings"}
+
+        law["Log Analytics Workspace (input)"]
+        law@{ icon: "azure:log-analytics-workspaces"}
+    end
+
+    cae --> ca
+    kv -.-> ca
+    uai -.-> ca
+    acr -.-> ca
+    ca --> easyauth
+    ca --> cname
+    cname --> txt
+    txt --> cert
+    cert --> binding
+    ca --> diag
+    law -.-> diag
+    binding --> cae
