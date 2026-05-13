@@ -246,6 +246,9 @@ list programmatically.
 - `src/adapters/github/publisher.ts` should use Execa's tagged-template `$` API as
   the default command interface for git operations so orchestration reads like the
   shell flow it represents.
+- When publish uses `$` to create the snapshot commit in the temporary export
+  repository, configure it with `shell: true` so the quoted commit message path
+  works reliably in this environment.
 - When the flow needs to branch on exit status instead of throwing immediately
   (for example, probing optional cleanup steps), it should still use a
   configured `$` variant with non-throwing behavior rather than dropping to raw

@@ -66,6 +66,7 @@ export const publishToGithub = async (
         GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
         GIT_COMMITTER_NAME: "PagoPA DX Bot",
       },
+      shell: true,
     });
 
     await $`git init -b main`;

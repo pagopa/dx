@@ -158,7 +158,7 @@ it("excludes .git directory when copying module contents", async () => {
   expect(filterFn("/some/path/subdir/.git")).toBe(false);
 });
 
-it("uses explicit commit author and committer environment variables", async () => {
+it("uses shell mode plus explicit commit author and committer environment variables", async () => {
   createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
@@ -178,6 +178,7 @@ it("uses explicit commit author and committer environment variables", async () =
     throw new Error("Expected to find a call with env variables");
   }
 
+  expect(commitCall[0].shell).toBe(true);
   expect(commitCall[0].env).toMatchObject({
     GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
     GIT_AUTHOR_NAME: "PagoPA DX Bot",

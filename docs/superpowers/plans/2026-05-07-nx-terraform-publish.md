@@ -1231,7 +1231,11 @@ const copyModuleDirectoryContents = async (
 };
 
 const exportDirectory = await mkdtemp(join(tmpdir(), "terraform-publish-"));
-const export$ = $_({ cwd: exportDirectory, env: publishGitEnv });
+const export$ = $_({
+  cwd: exportDirectory,
+  env: publishGitEnv,
+  shell: true,
+});
 
 try {
   await copyModuleDirectoryContents(
