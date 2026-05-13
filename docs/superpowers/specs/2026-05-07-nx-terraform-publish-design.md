@@ -31,7 +31,7 @@ Current constraints and decisions:
 
 1. Infer `nx-release-publish` only for eligible Terraform module libraries.
 2. Replace workflow-centric subrepo publishing logic with plugin-managed logic reusable in local and CI execution.
-3. Align the target repository to an exact snapshot of the module directory, without requiring history preservation.
+3. Align the target repository to an exact snapshot of the module directory, while preserving exported repository history through additive release commits.
 4. Add first-class GitHub owner resolution (`plugin default` + `module override`)
    for both organizations and personal profiles.
 5. Support automatic repository creation when missing.
@@ -183,8 +183,8 @@ Responsibilities:
    - direct executor invocation: caller must provide metadata explicitly.
 2. Build repo coordinates (`owner`, `repo`).
 3. Ensure target repo exists (create if missing).
-4. Perform snapshot-based export from the module directory into a temporary publish repository.
-5. Force-push the resulting snapshot to remote `main` and a version tag to the destination repo.
+4. Perform snapshot-based export from the module directory into a temporary publish repository rooted on the destination repository state.
+5. Push a new release commit to remote `main` and update the version tag in the destination repo.
 6. Keep executor input contract explicit: no implicit fallback read for direct
    calls; missing required metadata in options is a hard error.
 
@@ -214,22 +214,28 @@ For each eligible module:
    authenticated GitHub user because GitHub does not allow creating repos for an
    arbitrary user account.
 9. Create a temporary directory outside the workspace.
-10. Initialize a fresh git repository there on branch `main`.
-11. Copy the current filesystem contents of `infra/modules/<module>` into that
-    temporary repository root, treating the exported repo as an exact snapshot of
-    the module directory rather than a history-preserving mirror.
-12. Create a single publish commit such as `Updated module`, using explicit commit
-    metadata so the flow does not depend on local git config.
-13. Create or update a local git tag named exactly as `module.json.version`, pointing
-    to that snapshot commit.
-14. Configure the GitHub remote in the temporary repository.
-15. Force-push the snapshot commit to remote `main`.
-16. Force-push the version tag to the destination repository, overwriting any
+10. Clone or initialize a temporary git repository there:
+    - if remote `main` already exists, fetch it and check out a local branch rooted on `origin/main`
+    - if the repository has no `main` branch yet, bootstrap a new local `main` branch in the empty repository
+11. Replace the temporary repository working tree contents with the current filesystem
+    snapshot of `infra/modules/<module>`, keeping `.git` intact so the export repo
+    remains an exact snapshot of the module directory after the commit.
+12. Stage all resulting additions, modifications, and deletions.
+13. Create a single publish commit with message `Release <version>`, using explicit
+    commit metadata so the flow does not depend on local git config.
+14. Create or update a local git tag named exactly as `module.json.version`, pointing
+    to that release commit.
+15. Configure the GitHub remote in the temporary repository when bootstrapping from
+    an empty local repo.
+16. Push the release commit to remote `main` without rewriting history.
+17. Force-push the version tag to the destination repository, overwriting any
     existing remote tag with the same name.
-17. Remove the temporary directory in best-effort mode after success or failure.
-18. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+18. Remove the temporary directory in best-effort mode after success or failure.
+19. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
-End condition: destination repo `main` matches the current module directory snapshot, and the tag named after `module.json.version` points to that same exported snapshot commit.
+End condition: destination repo `main` gains a new `Release <version>` commit whose
+tree matches the current module directory snapshot, and the tag named after
+`module.json.version` points to that same release commit.
 
 ## Repo Naming
 
@@ -249,7 +255,7 @@ Hard-fail (no silent fallback) with actionable messages for:
 2. Invalid merged publish options (including missing final `github.owner`).
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Requested user-profile owner does not match the authenticated GitHub user.
-5. Temporary repo init/copy/commit/tag/remote/push failures.
+5. Temporary repo clone/bootstrap/copy/commit/tag/remote/push failures.
 6. Best-effort temporary-directory cleanup failures should not hide an earlier primary publish failure;
    if cleanup is the only failing step after a successful publish, surface it
    explicitly.
