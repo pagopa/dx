@@ -1059,47 +1059,193 @@ git commit -m "Make publish rerunnable"
 **Files:**
 - Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
 - Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
-- Modify: `docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md`
-- Modify: `docs/superpowers/plans/2026-05-07-nx-terraform-publish.md`
 
 - [ ] **Step 1: Write failing export-based publish tests**
 
 ```ts
+const fsMocks = vi.hoisted(() => ({
+  cp: vi.fn(),
+  mkdtemp: vi.fn(),
+  readdir: vi.fn(),
+  rm: vi.fn(),
+}));
+
+vi.mock("node:fs/promises", () => ({
+  cp: fsMocks.cp,
+  mkdtemp: fsMocks.mkdtemp,
+  readdir: fsMocks.readdir,
+  rm: fsMocks.rm,
+}));
+
+const createGitCommandHarness = ({
+  exportDir,
+  onExportCommand,
+}: {
+  exportDir: string;
+  onExportCommand?: (
+    command: string,
+  ) => Promise<typeof defaultCommandResult> | typeof defaultCommandResult;
+}) => {
+  const workspaceCommands: string[] = [];
+  const exportCommands: string[] = [];
+
+  const workspace$ = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
+    workspaceCommands.push(String.raw(strings, ...values.map(String)));
+    return Promise.resolve(defaultCommandResult);
+  });
+
+  const export$ = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
+    const command = String.raw(strings, ...values.map(String));
+    exportCommands.push(command);
+    return Promise.resolve(onExportCommand?.(command) ?? defaultCommandResult);
+  });
+
+  execaMocks.$.mockImplementation((options?: { cwd?: string }) => {
+    if (options?.cwd === exportDir) {
+      return export$;
+    }
+
+    return workspace$;
+  });
+
+  return {
+    allCommands: [...workspaceCommands, ...exportCommands],
+    exportCommands,
+    workspaceCommands,
+  };
+};
+
 it("publishes from a temporary export repo with a single snapshot commit", async () => {
-  // expect temp repo init, copy, commit, remote add, and force-push to main
+  fsMocks.mkdtemp.mockResolvedValue("/tmp/terraform-publish-123");
+  fsMocks.readdir.mockResolvedValue([
+    { name: "README.md", isDirectory: () => false },
+    { name: "examples", isDirectory: () => true },
+    { name: ".git", isDirectory: () => true },
+  ]);
+
+  const { workspaceCommands, exportCommands } = createGitCommandHarness({
+    exportDir: "/tmp/terraform-publish-123",
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(fsMocks.cp).toHaveBeenCalledWith(
+    "/repo/infra/modules/azure_core_infra/README.md",
+    "/tmp/terraform-publish-123/README.md",
+    { recursive: true },
+  );
+  expect(fsMocks.cp).toHaveBeenCalledWith(
+    "/repo/infra/modules/azure_core_infra/examples",
+    "/tmp/terraform-publish-123/examples",
+    { recursive: true },
+  );
+  expect(exportCommands).toEqual([
+    "git init --initial-branch=main",
+    "git add .",
+    'git commit -m Updated module',
+    "git remote add origin https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git",
+    "git push origin HEAD:main --force",
+  ]);
+  expect(workspaceCommands).toEqual([]);
 });
 
 it("can publish from a dirty workspace because it does not checkout workspace branches", async () => {
-  // expect no workspace git checkout/split commands
+  fsMocks.mkdtemp.mockResolvedValue("/tmp/terraform-publish-123");
+  fsMocks.readdir.mockResolvedValue([]);
+
+  const { allCommands } = createGitCommandHarness({
+    exportDir: "/tmp/terraform-publish-123",
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(allCommands).not.toContain(
+    "git subtree split --prefix=infra/modules/azure_core_infra -b azure_core_infra-branch",
+  );
+  expect(allCommands).not.toContain("git checkout azure_core_infra-branch");
+  expect(allCommands).not.toContain("git branch -D azure_core_infra-branch");
+});
+
+it("removes the temporary export repo after a failed push", async () => {
+  const pushFailure = new Error("push failed");
+
+  fsMocks.mkdtemp.mockResolvedValue("/tmp/terraform-publish-123");
+  fsMocks.readdir.mockResolvedValue([]);
+
+  createGitCommandHarness({
+    exportDir: "/tmp/terraform-publish-123",
+    onExportCommand: (command) => {
+      if (command === "git push origin HEAD:main --force") {
+        return Promise.reject(pushFailure);
+      }
+
+      return defaultCommandResult;
+    },
+  });
+
+  await expect(publishToGithub(publishInput)).rejects.toBe(pushFailure);
+  expect(fsMocks.rm).toHaveBeenCalledWith("/tmp/terraform-publish-123", {
+    force: true,
+    recursive: true,
+  });
 });
 ```
 
 - [ ] **Step 2: Run focused test to verify RED**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`  
-Expected: FAIL because publish still uses subtree/branch orchestration
+Expected: FAIL because publish still uses subtree/branch orchestration and does not manage a temp export repo
 
 - [ ] **Step 3: Replace subtree flow with temp export repo publish**
 
 ```ts
-const exportDir = await mkdtemp(path.join(tmpdir(), "terraform-publish-"));
-const export$ = $_({
-  cwd: exportDir,
-  env: {
-    ...process.env,
-    GIT_AUTHOR_NAME: "pagopa-dx publish",
-    GIT_AUTHOR_EMAIL: "noreply@pagopa.it",
-    GIT_COMMITTER_NAME: "pagopa-dx publish",
-    GIT_COMMITTER_EMAIL: "noreply@pagopa.it",
-  },
-});
+import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
-await copyModuleDirectory(path.join(input.workspaceRoot, input.projectRoot), exportDir);
-await export$`git init --initial-branch=main`;
-await export$`git add .`;
-await export$`git commit -m "Updated module"`;
-await export$`git remote add origin ${repoUrl}`;
-await export$`git push origin HEAD:main --force`;
+const publishGitEnv = {
+  ...process.env,
+  GIT_AUTHOR_NAME: "pagopa-dx publish",
+  GIT_AUTHOR_EMAIL: "223556219+Copilot@users.noreply.github.com",
+  GIT_COMMITTER_NAME: "pagopa-dx publish",
+  GIT_COMMITTER_EMAIL: "223556219+Copilot@users.noreply.github.com",
+};
+
+const copyModuleDirectoryContents = async (
+  sourceDirectory: string,
+  targetDirectory: string,
+) => {
+  const entries = await readdir(sourceDirectory, { withFileTypes: true });
+
+  await Promise.all(
+    entries
+      .filter((entry) => entry.name !== ".git")
+      .map((entry) =>
+        cp(
+          join(sourceDirectory, entry.name),
+          join(targetDirectory, entry.name),
+          { recursive: true },
+        ),
+      ),
+  );
+};
+
+const exportDirectory = await mkdtemp(join(tmpdir(), "terraform-publish-"));
+const export$ = $_({ cwd: exportDirectory, env: publishGitEnv });
+
+try {
+  await copyModuleDirectoryContents(
+    join(input.workspaceRoot, input.projectRoot),
+    exportDirectory,
+  );
+  await export$`git init --initial-branch=main`;
+  await export$`git add .`;
+  await export$`git commit -m ${"Updated module"}`;
+  await export$`git remote add origin ${repoUrl}`;
+  await export$`git push origin HEAD:main --force`;
+} finally {
+  await rm(exportDirectory, { recursive: true, force: true });
+}
 ```
 
 - [ ] **Step 4: Run package verification**
@@ -1111,8 +1257,6 @@ Expected: PASS
 
 ```bash
 git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
-  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
-  docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md \
-  docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
 git commit -m "Replace subtree publish with export snapshots"
 ```

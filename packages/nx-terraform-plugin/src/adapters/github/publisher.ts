@@ -3,7 +3,7 @@
 import { $ as $_ } from "execa";
 import { cp, mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import { ensureGitHubRepository } from "./octokit.ts";
 
@@ -20,7 +20,9 @@ export const getRepoNameFromProjectRoot = (
   projectRoot: string,
   provider: string,
 ) => {
-  const moduleName = projectRoot.split("/").pop()?.replaceAll("_", "-") ?? "";
+  // Replace backslashes with forward slashes for cross-platform compatibility
+  const normalizedPath = projectRoot.replace(/\\/g, "/");
+  const moduleName = basename(normalizedPath).replaceAll("_", "-");
   return `terraform-${provider}-${moduleName}`;
 };
 
@@ -30,7 +32,9 @@ const copyModuleDirectoryContents = async (
 ): Promise<void> => {
   await cp(sourceDirectory, targetDirectory, {
     filter: (source) => {
-      const parts = source.split("/");
+      // Replace backslashes with forward slashes for cross-platform compatibility
+      const normalizedPath = source.replace(/\\/g, "/");
+      const parts = normalizedPath.split("/");
       return !parts.includes(".git");
     },
     recursive: true,

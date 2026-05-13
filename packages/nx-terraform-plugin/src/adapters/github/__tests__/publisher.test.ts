@@ -33,7 +33,7 @@ vi.mock("node:os", () => ({
   tmpdir: osMocks.tmpdir,
 }));
 
-import { publishToGithub } from "../publisher.ts";
+import { getRepoNameFromProjectRoot, publishToGithub } from "../publisher.ts";
 
 const defaultCommandResult = {
   exitCode: 0,
@@ -268,4 +268,42 @@ it("prioritizes publish failure over cleanup failure", async () => {
 
   // Should throw the publish error, not the cleanup error
   await expect(publishToGithub(publishInput)).rejects.toBe(publishError);
+});
+
+it("correctly extracts module name from Windows-style path", () => {
+  const result = getRepoNameFromProjectRoot(
+    "infra\\modules\\azure_core_infra",
+    "aws",
+  );
+  expect(result).toBe("terraform-aws-azure-core-infra");
+});
+
+it("correctly extracts module name from mixed-separator path", () => {
+  const result = getRepoNameFromProjectRoot(
+    "infra/modules\\azure_core_infra",
+    "azure",
+  );
+  expect(result).toBe("terraform-azure-azure-core-infra");
+});
+
+it("excludes .git directory when copying module contents with Windows paths", async () => {
+  createGitCommandHarness();
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  const cpCall = fsMocks.cp.mock.calls[0];
+  const filterFn = cpCall[2].filter;
+
+  // Test Windows-style paths
+  expect(filterFn("C:\\some\\path\\.git")).toBe(false);
+  expect(filterFn("C:\\some\\path\\.git\\config")).toBe(false);
+  expect(filterFn("C:\\some\\path\\file.txt")).toBe(true);
+  expect(filterFn("C:\\some\\path\\subdir\\.git")).toBe(false);
+  expect(filterFn("C:\\some\\path\\subdir\\.gitignore")).toBe(true);
 });
