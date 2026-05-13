@@ -14,7 +14,7 @@ resource "azurerm_container_app" "this" {
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = var.public_access_enabled
+    external_enabled           = !var.restrict_access_from_within_environment
     target_port                = var.target_port
     traffic_weight {
       percentage      = 100

@@ -1,4 +1,3 @@
-# ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
@@ -21,14 +20,11 @@ variable "resource_group_name" {
   type        = string
   description = "The name of the Azure Resource Group where the resources will be deployed."
 }
-# ------------ CONTAINER ENVIRONMENT ------------ #
 
 variable "container_app_environment_id" {
   type        = string
   description = "The ID of the Azure Container App Environment where the container app will be deployed."
 }
-
-# ------------ CONTAINER APP ------------ #
 
 variable "use_case" {
   type        = string
@@ -67,7 +63,7 @@ variable "revision_mode" {
 
   validation {
     condition     = contains(["Single", "Multiple"], var.revision_mode)
-    error_message = "Valid values for revision_mode are 'Single' and 'Multiple'."
+    error_message = "Valid values for revision_mode are \"Single\" and \"Multiple\"."
   }
 }
 
@@ -77,10 +73,13 @@ variable "target_port" {
   default     = 8080
 }
 
-variable "public_access_enabled" {
+variable "restrict_access_from_within_environment" {
   type        = bool
-  default     = true
-  description = "If true (default), the container app is accessible via a public FQDN. If false, the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
+  default     = false
+  description = <<-EOT
+    If \"true\", the container app is accessible only from other apps on the same Container App Environment.
+    If \"true\" (default), the access is managed by the Container App Environment."
+  EOT
 }
 
 variable "custom_domain" {
@@ -96,8 +95,8 @@ variable "custom_domain" {
   description = "Custom domain configuration for the container app. Provide 'certificate_id' to use a pre-uploaded azurerm_container_app_environment_certificate, or 'dns' to auto-provision an Azure-managed certificate (CNAME and TXT records are created automatically). At least one of 'certificate_id' or 'dns' must be specified."
 
   validation {
-    condition     = var.custom_domain == null || var.public_access_enabled == true
-    error_message = "public_access_enabled must be true when custom_domain is configured."
+    condition     = var.custom_domain == null || var.restrict_access_from_within_environment == false
+    error_message = "restrict_access_from_within_environment must be false when custom_domain is configured."
   }
 
   validation {
