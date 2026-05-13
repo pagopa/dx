@@ -12,17 +12,15 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | pagopa-dx/azure-container-app/azurerm | ~> 4.0 |
-| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | pagopa-dx/azure-container-app-environment/azurerm | ~> 1.0 |
+| <a name="module_container_app"></a> [container\_app](#module\_container\_app) | pagopa-dx/azure-container-app/azurerm | ~> 5.0 |
+| <a name="module_container_app_environment"></a> [container\_app\_environment](#module\_container\_app\_environment) | pagopa-dx/azure-container-app-environment/azurerm | ~> 2.0 |
 
 ## Resources
 
 | Name | Type |
 |------|------|
 | [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
-| [dx_available_subnet_cidr.next_cidr](https://registry.terraform.io/providers/pagopa-dx/azure/latest/docs/resources/available_subnet_cidr) | resource |
 | [azurerm_log_analytics_workspace.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
-| [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_virtual_network.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs

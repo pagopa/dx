@@ -17,6 +17,14 @@ locals {
         min = 1
         max = 8
       }
+    },
+    development = {
+      cpu    = 0.5
+      memory = "1Gi"
+      replicas = {
+        min = 0
+        max = 2
+      }
     }
   }
 
