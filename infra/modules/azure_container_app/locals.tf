@@ -27,4 +27,10 @@ locals {
 
   replica_minimum = try(var.autoscaler.replicas.minimum, local.use_case_features.replicas.min)
   replica_maximum = try(var.autoscaler.replicas.maximum, local.use_case_features.replicas.max)
+
+  container_app_identity_type = var.user_assigned_identity_id == null ? "SystemAssigned" : "SystemAssigned, UserAssigned"
+  container_app_identity_ids  = var.user_assigned_identity_id == null ? null : [var.user_assigned_identity_id]
+  container_app_secret_identity = (
+    var.user_assigned_identity_id == null ? "System" : var.user_assigned_identity_id
+  )
 }

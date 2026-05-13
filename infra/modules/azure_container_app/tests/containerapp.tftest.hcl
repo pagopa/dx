@@ -87,6 +87,16 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
+    condition     = azurerm_container_app.this.identity[0].type == "UserAssigned"
+    error_message = "The container app identity type should be UserAssigned when user_assigned_identity_id is provided"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.identity[0].identity_ids[0] == run.setup_tests.user_assigned_identity_id
+    error_message = "The container app identity_ids should contain the provided user-assigned identity id"
+  }
+
+  assert {
     condition     = output.url == azurerm_container_app.this.ingress[0].fqdn
     error_message = "The output url should expose the default ingress URL"
   }
@@ -191,6 +201,24 @@ run "container_app_is_correct_plan" {
       if env.secret_name != null
     ])
     error_message = "The container app environment secret values are not correct"
+  }
+}
+
+run "container_app_with_system_assigned_identity_when_user_assigned_is_null" {
+  command = plan
+
+  variables {
+    user_assigned_identity_id = null
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.identity[0].type == "SystemAssigned"
+    error_message = "The container app identity type should be SystemAssigned when user_assigned_identity_id is null"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.identity[0].identity_ids == null
+    error_message = "The container app identity_ids should be null when user_assigned_identity_id is null"
   }
 }
 

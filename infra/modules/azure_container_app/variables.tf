@@ -214,7 +214,11 @@ variable "container_app_templates" {
 
 variable "user_assigned_identity_id" {
   type        = string
-  description = "Id of the user-assigned managed identity created along with the Container App Environment. This is necessary to give identity roles (e.g. KeyVault access) to the Container App."
+  default     = null
+  description = <<-EOT
+    Id of a user-assigned managed identity.
+    If provided, the Container App will use this identity along with the system-assigned.
+  EOT
 }
 
 variable "acr_registry" {
