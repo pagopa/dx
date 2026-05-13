@@ -1,0 +1,8 @@
+{
+  "boundary": "@pagopa/azure-tracing",
+  "cosmosEndpoint": "http://<cosmos-emulator>",
+  "dependencyClient": "@azure/cosmos",
+  "ingestionEndpoint": "https://<azure-monitor-stub>",
+  "path": "record-replay",
+  "runtime": "node --import @pagopa/azure-tracing"
+}

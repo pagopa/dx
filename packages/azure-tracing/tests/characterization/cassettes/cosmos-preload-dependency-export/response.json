@@ -1,0 +1,6 @@
+{
+  "containerId": "items",
+  "databaseId": "<cosmos-database-id>",
+  "queryCount": 1,
+  "scenario": "integration-cosmos-preload"
+}

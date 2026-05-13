@@ -1,0 +1,52 @@
+{
+  "telemetry": [
+    {
+      "data": "http://<cosmos-emulator>/dbs",
+      "dependencyName": "POST /dbs",
+      "dependencyType": "Http",
+      "resultCode": "201",
+      "success": true,
+      "telemetryType": "dependency"
+    },
+    {
+      "data": "http://<cosmos-emulator>/dbs/<cosmos-database-id>",
+      "dependencyName": "DELETE /dbs/<cosmos-database-id>",
+      "dependencyType": "Http",
+      "resultCode": "204",
+      "success": true,
+      "telemetryType": "dependency"
+    },
+    {
+      "data": "http://<cosmos-emulator>/dbs/<cosmos-database-id>/colls",
+      "dependencyName": "POST /dbs/<cosmos-database-id>/colls",
+      "dependencyType": "Http",
+      "resultCode": "201",
+      "success": true,
+      "telemetryType": "dependency"
+    },
+    {
+      "data": "http://<cosmos-emulator>/dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyName": "POST /dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyType": "Http",
+      "resultCode": "200",
+      "success": true,
+      "telemetryType": "dependency"
+    },
+    {
+      "data": "http://<cosmos-emulator>/dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyName": "POST /dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyType": "Http",
+      "resultCode": "200",
+      "success": true,
+      "telemetryType": "dependency"
+    },
+    {
+      "data": "http://<cosmos-emulator>/dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyName": "POST /dbs/<cosmos-database-id>/colls/items/docs",
+      "dependencyType": "Http",
+      "resultCode": "201",
+      "success": true,
+      "telemetryType": "dependency"
+    }
+  ]
+}

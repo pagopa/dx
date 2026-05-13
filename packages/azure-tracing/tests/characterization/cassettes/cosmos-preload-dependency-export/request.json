@@ -1,0 +1,9 @@
+{
+  "containerId": "items",
+  "databaseId": "<cosmos-database-id>",
+  "nodeArgs": [
+    "--import",
+    "@pagopa/azure-tracing"
+  ],
+  "scenario": "integration-cosmos-preload"
+}

@@ -1,0 +1,17 @@
+{
+  "ignoredFields": [
+    "time",
+    "id",
+    "duration",
+    "ai.cloud.role",
+    "ai.cloud.roleInstance",
+    "ai.internal.sdkVersion",
+    "operationId",
+    "operationParentId"
+  ],
+  "placeholders": {
+    "azureMonitorStub": "https://<azure-monitor-stub>",
+    "cosmosDatabaseId": "<cosmos-database-id>",
+    "cosmosEmulator": "http://<cosmos-emulator>"
+  }
+}
