@@ -1,3 +1,13 @@
+## 0.5.6 (2026-05-13)
+
+### 🩹 Fixes
+
+- Add GitHub App support to run Terrawiz import without a separate GITHUB_TOKEN ([#1732](https://github.com/pagopa/dx/pull/1732))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.5 (2026-05-12)
 
 ### 🩹 Fixes
