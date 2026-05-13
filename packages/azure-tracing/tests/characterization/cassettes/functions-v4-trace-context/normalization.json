@@ -1,0 +1,13 @@
+{
+  "ignoredFields": [
+    "time",
+    "id",
+    "duration",
+    "ai.cloud.role",
+    "ai.cloud.roleInstance",
+    "ai.internal.sdkVersion"
+  ],
+  "placeholders": {
+    "azureMonitorStub": "https://<azure-monitor-stub>"
+  }
+}

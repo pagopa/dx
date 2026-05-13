@@ -1,0 +1,6 @@
+{
+  "boundary": "@pagopa/azure-tracing/azure-functions",
+  "ingestionEndpoint": "https://<azure-monitor-stub>",
+  "path": "record-replay",
+  "runtime": "direct-initAzureMonitor"
+}

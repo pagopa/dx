@@ -1,0 +1,11 @@
+{
+  "scenario": "functions-v4",
+  "traceparent": "00-11111111111111111111111111111111-2222222222222222-01",
+  "traceparentParts": {
+    "parentSpanId": "2222222222222222",
+    "traceFlags": "01",
+    "traceId": "11111111111111111111111111111111",
+    "version": "00"
+  },
+  "tracestate": "vendor=test"
+}

@@ -1,0 +1,13 @@
+{
+  "telemetry": [
+    {
+      "dependencyName": "functions-v4-child",
+      "dependencyType": "InProc",
+      "operationId": "11111111111111111111111111111111",
+      "operationParentId": "2222222222222222",
+      "resultCode": "0",
+      "success": true,
+      "telemetryType": "dependency"
+    }
+  ]
+}

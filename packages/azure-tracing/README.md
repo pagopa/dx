@@ -125,6 +125,67 @@ emitCustomEvent("taskCreated", { id: task.id })("CreateTaskHandler");
 
 This is especially useful for tracing domain-specific actions (e.g., resource creation, user actions, error tracking).
 
+## Local backend test workflows
+
+This package now ships an opt-in backend harness that reuses one shared local topology for both live integration tests and characterization cassettes.
+
+- `pnpm --filter @pagopa/azure-tracing test:integration`
+- `pnpm --filter @pagopa/azure-tracing test:characterization:record`
+- `pnpm --filter @pagopa/azure-tracing test:characterization:verify`
+
+The harness uses:
+
+- a local **HTTPS Azure Monitor ingestion stub** to observe exported telemetry envelopes
+- **Redis** via Testcontainers for live dependency spans
+- the **Azure Cosmos DB Linux emulator** via Testcontainers for live dependency spans
+
+The Cosmos scenario runs through `--import @pagopa/azure-tracing` on purpose: for ESM consumers, the preload path is the honest way to keep HTTP/Cosmos dependency instrumentation active.
+
+## Backend test report
+
+### Scope
+
+The backend suites protect the public tracing surface of `@pagopa/azure-tracing` at the Azure Monitor export boundary.
+They cover ongoing live telemetry checks for `initAzureMonitor` and `emitCustomEvent`, plus characterization coverage for Azure Functions v4/v3 trace-context helpers.
+
+### Suite overview
+
+| Path | Location | Boundary | Local infrastructure |
+| --- | --- | --- | --- |
+| Integration | `tests/integration/azure-monitor.live.test.ts` | Azure Monitor ingestion seam reached through the public package exports | HTTPS ingestion stub, Redis Testcontainer, Cosmos emulator Testcontainer |
+| Record-replay | `tests/characterization/azure-functions-propagation.test.ts` | Public Azure Functions helper exports (`azure-functions`, `azure-functions/v3`) | Same HTTPS ingestion stub and shared backend harness, plus cassette layers under `tests/characterization/cassettes/` |
+
+### Shared infrastructure
+
+- `tests/global-setup.ts` boots one shared HTTPS ingestion stub plus Redis and Cosmos containers once per backend Vitest run.
+- `tests/with-test-fixtures.ts` allocates disposable Redis namespaces and Cosmos databases so the containers stay shared while test data stays isolated.
+- `tests/support/scenario-runner.mjs` runs each scenario in a separate Node process. The Cosmos scenario intentionally uses `--import @pagopa/azure-tracing` because the ESM preload path is the honest way to keep dependency tracing active for HTTP/Cosmos clients.
+- The Azure Monitor side is a deterministic local stub, not a live Azure resource. This keeps the boundary focused on the exporter payload that this package owns.
+
+### Scenario table
+
+| Scenario | Location | Honest boundary exercised | Observable outcome | Infrastructure used |
+| --- | --- | --- | --- | --- |
+| HTTP + Redis + custom event live export | `tests/integration/azure-monitor.live.test.ts` | `initAzureMonitor()` + public logger export against the Azure Monitor ingestion seam | Azure Monitor envelopes contain one outbound HTTP dependency, Redis `SET`/`GET` dependencies, one custom event, and the outbound request carries a `traceparent` header | HTTPS ingestion stub, Redis Testcontainer |
+| Cosmos dependency export through preload | `tests/integration/azure-monitor.live.test.ts` | Package preload entrypoint (`--import @pagopa/azure-tracing`) with a real `@azure/cosmos` client | Azure Monitor envelopes contain real HTTP dependencies emitted by Cosmos SDK calls against the emulator (`POST /dbs`, document write, database delete) | HTTPS ingestion stub, Cosmos emulator Testcontainer |
+| Azure Functions v3 trace-context cassette | `tests/characterization/azure-functions-propagation.test.ts` | `withOtelContextFunctionV3()` from the published package | Recorded cassette proves the emitted dependency span keeps the `traceparent` trace id and parent span id as `ai.operation.id` / `ai.operation.parentId` | HTTPS ingestion stub, characterization cassettes |
+| Azure Functions v4 trace-context cassette | `tests/characterization/azure-functions-propagation.test.ts` | `registerAzureFunctionHooks()` from the published package | Recorded cassette proves the wrapped function span keeps the same propagated trace identifiers | HTTPS ingestion stub, characterization cassettes |
+
+### Rerun commands
+
+```bash
+pnpm exec nx test @pagopa/azure-tracing
+pnpm --filter @pagopa/azure-tracing test:integration
+pnpm --filter @pagopa/azure-tracing test:characterization:verify
+pnpm --filter @pagopa/azure-tracing test:characterization:record
+```
+
+### Current intentional gaps
+
+- The suites do **not** talk to a live Application Insights resource. They verify the Azure Monitor exporter contract through a local HTTPS ingestion stub instead.
+- Jaeger and a generic OpenTelemetry Collector are intentionally out of scope here: this package exports to Azure Monitor/Application Insights, so OTLP backends would test a different boundary.
+- The characterization suites intentionally stop short of a full Azure Functions host. They protect the published helper contract for trace-context propagation, not local Functions runtime wiring.
+
 ## Microsoft Entra ID Authentication
 
 > [!IMPORTANT]

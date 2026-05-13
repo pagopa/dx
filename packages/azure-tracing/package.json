@@ -77,12 +77,16 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@azure/cosmos": "^4.9.3",
     "@azure/functions": "^4.11.2",
     "@pagopa/eslint-config": "workspace:^",
+    "@testcontainers/redis": "^11.14.0",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "redis": "^5.12.1",
+    "testcontainers": "^11.14.0",
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
@@ -90,6 +94,9 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "test:integration": "pnpm build && pnpm exec vitest --config vitest.backend.config.ts tests/integration",
+    "test:characterization:record": "pnpm build && AZURE_TRACING_CASSETTE_MODE=record pnpm exec vitest --config vitest.backend.config.ts tests/characterization",
+    "test:characterization:verify": "pnpm build && AZURE_TRACING_CASSETTE_MODE=verify pnpm exec vitest --config vitest.backend.config.ts tests/characterization",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.backend-tests.json"
   }
 }
