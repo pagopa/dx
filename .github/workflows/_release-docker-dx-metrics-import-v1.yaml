@@ -7,6 +7,7 @@ on:
       - main
     paths:
       - "apps/dx-metrics-import/package.json"
+      - "packages/dx-metrics-core/**"
 
 permissions:
   contents: read
