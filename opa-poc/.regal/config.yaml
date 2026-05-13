@@ -1,0 +1,34 @@
+# Regal configuration tuned for this PoC.
+# Security/correctness rules stay enabled; pure cosmetics that fight the
+# didactic structure (one `package main` per story, long inline test inputs,
+# etc.) are silenced.
+rules:
+  idiomatic:
+    directory-package-mismatch:
+      level: ignore
+    no-defined-entrypoint:
+      level: ignore
+  imports:
+    unresolved-import:
+      level: ignore
+    unresolved-reference:
+      level: ignore
+  style:
+    default-over-else:
+      level: ignore
+    messy-rule:
+      level: ignore
+    line-length:
+      level: ignore
+    external-reference:
+      level: ignore
+    defer-assignment:
+      level: ignore
+  performance:
+    defer-assignment:
+      level: ignore
+    with-outside-test-context:
+      level: ignore
+  testing:
+    test-outside-test-package:
+      level: ignore
