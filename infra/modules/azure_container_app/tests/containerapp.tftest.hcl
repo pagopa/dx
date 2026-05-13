@@ -589,21 +589,21 @@ run "container_app_diagnostics_enabled_plan" {
   }
 }
 
-run "container_app_public_access_enabled_plan" {
+run "container_app_restrict_access_from_within_environment_plan" {
   command = plan
 
   variables {
-    public_access_enabled = true
+    restrict_access_from_within_environment = false
   }
 
   assert {
     condition     = azurerm_container_app.this.ingress[0].external_enabled == true
-    error_message = "Container app should have external ingress enabled when public_access_enabled is true"
+    error_message = "Container app should have external ingress enabled when restrict_access_from_within_environment is false"
   }
 
   assert {
     condition     = azurerm_container_app.this.ingress[0].external_enabled == !false
-    error_message = "Container app should not have internal-only ingress when public_access_enabled is true"
+    error_message = "Container app should not have internal-only ingress when restrict_access_from_within_environment is false"
   }
 }
 
@@ -640,7 +640,7 @@ run "container_app_custom_domain_requires_public_access" {
   command = plan
 
   variables {
-    public_access_enabled = false
+    restrict_access_from_within_environment = false
     custom_domain = {
       host_name = "api.example.com"
       dns = {
