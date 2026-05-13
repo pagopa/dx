@@ -87,6 +87,16 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
+    condition     = azurerm_container_app.this.identity[0].type == "UserAssigned"
+    error_message = "The container app identity type should be UserAssigned when user_assigned_identity_id is provided"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.identity[0].identity_ids[0] == run.setup_tests.user_assigned_identity_id
+    error_message = "The container app identity_ids should contain the provided user-assigned identity id"
+  }
+
+  assert {
     condition     = output.url == azurerm_container_app.this.ingress[0].fqdn
     error_message = "The output url should expose the default ingress URL"
   }

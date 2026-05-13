@@ -6,10 +6,8 @@ resource "azurerm_container_app" "this" {
   workload_profile_name        = "Consumption"
 
   identity {
-    type = "SystemAssigned, UserAssigned"
-    identity_ids = [
-      var.user_assigned_identity_id
-    ]
+    type         = local.container_app_identity_type
+    identity_ids = local.container_app_identity_ids
   }
 
   ingress {
@@ -26,7 +24,7 @@ resource "azurerm_container_app" "this" {
     for_each = var.acr_registry == null ? [] : [var.acr_registry]
     content {
       server   = registry.value
-      identity = var.user_assigned_identity_id
+      identity = local.container_app_secret_identity
     }
   }
 
@@ -35,7 +33,7 @@ resource "azurerm_container_app" "this" {
     content {
       name                = replace(lower(secret.value.name), "_", "-")
       key_vault_secret_id = secret.value.key_vault_secret_id
-      identity            = var.user_assigned_identity_id
+      identity            = local.container_app_secret_identity
     }
   }
 
@@ -45,7 +43,7 @@ resource "azurerm_container_app" "this" {
     content {
       name                = "entra-id-client-secret"
       key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
-      identity            = var.user_assigned_identity_id
+      identity            = local.container_app_secret_identity
     }
   }
 
