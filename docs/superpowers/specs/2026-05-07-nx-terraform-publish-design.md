@@ -206,7 +206,9 @@ For each eligible module:
 12. If remote `main` does not exist yet (first publish to an empty repo), skip the
     fetch/merge step and push the split branch directly to `main`.
 13. Push aligned content to remote `main`.
-14. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+14. Remove the temporary remote and temporary subtree branch in best-effort mode so
+    repeated publishes in the same workspace start from a clean local git state.
+15. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
 End condition: destination repo `main` matches module subtree content and history policy.
 
@@ -229,11 +231,28 @@ Hard-fail (no silent fallback) with actionable messages for:
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Requested user-profile owner does not match the authenticated GitHub user.
 5. Git remote/subtree/push failures.
+6. Best-effort cleanup failures should not hide an earlier primary publish failure;
+   if cleanup is the only failing step after a successful publish, surface it
+   explicitly.
 
 Eligibility errors prevent target inference; execution errors fail the target.
 Manifest inference failures and merged publish option failures are also emitted
 as structured logger warnings so CI and local runs can inspect the raw issue
 list programmatically.
+
+### Publish command execution style
+
+- `src/adapters/github/publisher.ts` should use Execa's tagged-template `$` API as
+  the default command interface for git operations so orchestration reads like the
+  shell flow it represents.
+- When the flow needs to branch on exit status instead of throwing immediately
+  (for example, checking whether remote `main` exists or performing cleanup), it
+  should still use a configured `$` variant with non-throwing behavior rather
+  than dropping to raw `execa`, unless a lower-level call is explicitly
+  documented as necessary.
+- Prefer naming that configured variant `safe$` and derive it from the same base
+  command configuration as `$`, so the non-throwing path keeps the same working
+  directory and other shared settings while making its intent explicit.
 
 ## Testing Strategy
 
@@ -264,6 +283,10 @@ list programmatically.
      - organization repository auto-create path;
      - user-profile repository auto-create path;
      - explicit failure when user-profile owner differs from the authenticated user;
+     - repeated publish invocations do not fail because a previous run left the
+       temporary remote or subtree branch behind;
+     - temporary remote and subtree branch are removed in best-effort cleanup
+       after success and after mid-flow failures;
      - failure propagation for API/git failures.
 5. **Regression tests**
     - Existing targets remain unchanged for non-publish concerns.

@@ -935,3 +935,118 @@ git add infra/modules/aws_azure_vpn/module.json \
   infra/modules/aws_azure_vpn/package.json
 git commit -m "Add module manifest for nx-release-publish validation"
 ```
+
+### Task 7a: Make publish rerunnable and standardize on `$`
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+
+- [ ] **Step 1: Write failing repeatability and command-style tests**
+
+```ts
+// packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
+it("removes the temporary remote and subtree branch after a successful publish", async () => {
+  const commands: string[] = [];
+  const git$ = vi.fn(async (strings: TemplateStringsArray, ...values: string[]) => {
+    commands.push(String.raw({ raw: strings }, ...values));
+    return { exitCode: 0, stderr: "", stdout: "" };
+  });
+
+  execaMocks.$.mockReturnValue(git$);
+
+  await publishToGithub({
+    description: "Terraform module description",
+    githubOwner: "pagopa-dx",
+    projectRoot: "infra/modules/azure_core_infra",
+    provider: "aws",
+    version: "1.2.3",
+    workspaceRoot: "/repo",
+  });
+
+  expect(commands).toContain(
+    "git remote remove pagopa-dx-terraform-aws-azure-core-infra",
+  );
+  expect(commands).toContain("git branch -D azure_core_infra-branch");
+});
+
+it("still cleans up temporary git state when publish fails after creating it", async () => {
+  const failure = Object.assign(new Error("push failed"), { exitCode: 1 });
+  const commands: string[] = [];
+  const git$ = vi.fn(async (strings: TemplateStringsArray, ...values: string[]) => {
+    const command = String.raw({ raw: strings }, ...values);
+    commands.push(command);
+    if (command.startsWith("git push ")) {
+      throw failure;
+    }
+    return { exitCode: 0, stderr: "", stdout: "" };
+  });
+
+  execaMocks.$.mockReturnValue(git$);
+
+  await expect(
+    publishToGithub({
+      description: "Terraform module description",
+      githubOwner: "pagopa-dx",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    }),
+  ).rejects.toBe(failure);
+
+  expect(commands).toContain(
+    "git remote remove pagopa-dx-terraform-aws-azure-core-infra",
+  );
+  expect(commands).toContain("git branch -D azure_core_infra-branch");
+});
+```
+
+- [ ] **Step 2: Run focused test to verify RED**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`  
+Expected: FAIL because publish does not yet guarantee best-effort cleanup and still
+mixes raw `execa` into the command flow
+
+- [ ] **Step 3: Implement minimal publish cleanup and `$`-first command execution**
+
+```ts
+// packages/nx-terraform-plugin/src/adapters/github/publisher.ts
+const $ = $_({ cwd: input.workspaceRoot });
+const safe$ = $({ reject: false });
+
+await ensureGitHubRepository(input.githubOwner, repo);
+
+try {
+  await $`git remote add ${remote} ${repoUrl}`;
+  await $`git subtree split --prefix=${input.projectRoot} -b ${branch}`;
+
+  const remoteMainBranch = await safe$`git ls-remote --exit-code --heads ${remote} refs/heads/main`;
+
+  if (remoteMainBranch.exitCode === 0) {
+    await $`git fetch ${remote} main --tags`;
+    await $`git checkout ${branch}`;
+    await $`git merge --allow-unrelated-histories -s ours --no-edit ${remote}/main`;
+  } else if (remoteMainBranch.exitCode !== 2) {
+    throw new Error(`Failed to check whether ${remote}/main exists...`);
+  }
+
+  await $`git push ${remote} ${branch}:main`;
+} finally {
+  await safe$`git remote remove ${remote}`;
+  await safe$`git branch -D ${branch}`;
+}
+```
+
+- [ ] **Step 4: Run package verification**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
+git commit -m "Make publish rerunnable"
+```
