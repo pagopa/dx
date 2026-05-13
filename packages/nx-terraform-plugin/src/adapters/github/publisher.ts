@@ -79,7 +79,41 @@ export const publishToGithub = async (
     }
   };
 
+  const ensureNoStaleRemote = async () => {
+    const remotes = await safe$`git remote`;
+
+    if (remotes.exitCode !== 0) {
+      throw new Error(
+        `Failed to list git remotes before publish (exit code ${remotes.exitCode})${
+          remotes.stderr === "" ? "" : `: ${remotes.stderr}`
+        }`,
+      );
+    }
+
+    if (remotes.stdout.split("\n").includes(remote)) {
+      await $`git remote remove ${remote}`;
+    }
+  };
+
+  const ensureNoStaleBranch = async () => {
+    const branches = await safe$`git branch --list ${branch}`;
+
+    if (branches.exitCode !== 0) {
+      throw new Error(
+        `Failed to list git branches before publish (exit code ${branches.exitCode})${
+          branches.stderr === "" ? "" : `: ${branches.stderr}`
+        }`,
+      );
+    }
+
+    if (branches.stdout.trim() !== "") {
+      await $`git branch -D ${branch}`;
+    }
+  };
+
   try {
+    await ensureNoStaleRemote();
+    await ensureNoStaleBranch();
     await $`git remote add ${remote} ${repoUrl}`;
     await $`git subtree split --prefix=${input.projectRoot} -b ${branch}`;
     const remoteMainBranch =

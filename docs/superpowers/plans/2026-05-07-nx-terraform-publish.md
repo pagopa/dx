@@ -942,7 +942,7 @@ git commit -m "Add module manifest for nx-release-publish validation"
 - Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
 - Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
 
-- [ ] **Step 1: Write failing repeatability and command-style tests**
+- [x] **Step 1: Write failing repeatability and command-style tests**
 
 ```ts
 // packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
@@ -1002,13 +1002,13 @@ it("still cleans up temporary git state when publish fails after creating it", a
 });
 ```
 
-- [ ] **Step 2: Run focused test to verify RED**
+- [x] **Step 2: Run focused test to verify RED**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`  
 Expected: FAIL because publish does not yet guarantee best-effort cleanup and still
 mixes raw `execa` into the command flow
 
-- [ ] **Step 3: Implement minimal publish cleanup and `$`-first command execution**
+- [x] **Step 3: Implement minimal publish cleanup and `$`-first command execution**
 
 ```ts
 // packages/nx-terraform-plugin/src/adapters/github/publisher.ts
@@ -1038,12 +1038,12 @@ try {
 }
 ```
 
-- [ ] **Step 4: Run package verification**
+- [x] **Step 4: Run package verification**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \

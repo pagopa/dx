@@ -118,6 +118,8 @@ it("ensures the target repository before syncing the module subtree", async () =
     `git push ${expectedRemote} ${expectedBranch}:main`,
   ]);
   expect(safeCommands).toEqual([
+    "git remote",
+    `git branch --list ${expectedBranch}`,
     `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
     `git remote remove ${expectedRemote}`,
     `git branch -D ${expectedBranch}`,
@@ -172,6 +174,8 @@ it("pushes the split branch directly when the remote main branch does not exist"
     `git push ${expectedRemote} ${expectedBranch}:main`,
   ]);
   expect(safeCommands).toEqual([
+    "git remote",
+    `git branch --list ${expectedBranch}`,
     `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
     `git remote remove ${expectedRemote}`,
     `git branch -D ${expectedBranch}`,
@@ -203,6 +207,8 @@ it("throws when checking the remote main branch fails unexpectedly", async () =>
     `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
   ]);
   expect(safeCommands).toEqual([
+    "git remote",
+    `git branch --list ${expectedBranch}`,
     `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
     `git remote remove ${expectedRemote}`,
     `git branch -D ${expectedBranch}`,
@@ -250,4 +256,83 @@ it("still cleans up temporary git state when publish fails after creating it", a
 
   expect(safeCommands).toContain(`git remote remove ${expectedRemote}`);
   expect(safeCommands).toContain(`git branch -D ${expectedBranch}`);
+});
+
+it("self-heals reruns by removing stale temporary git artifacts before recreating them", async () => {
+  let hasStaleRemote = true;
+  let hasStaleBranch = true;
+  const { safeCommands, strictCommands } = createGitCommandHarness({
+    onSafeCommand: (command) => {
+      if (command === "git remote") {
+        return {
+          ...defaultCommandResult,
+          stdout: hasStaleRemote ? `${expectedRemote}\norigin` : "origin",
+        };
+      }
+
+      if (command === `git branch --list ${expectedBranch}`) {
+        return {
+          ...defaultCommandResult,
+          stdout: hasStaleBranch ? expectedBranch : "",
+        };
+      }
+
+      return defaultCommandResult;
+    },
+    onStrictCommand: (command) => {
+      if (command === `git remote remove ${expectedRemote}`) {
+        hasStaleRemote = false;
+        return defaultCommandResult;
+      }
+
+      if (command === `git branch -D ${expectedBranch}`) {
+        hasStaleBranch = false;
+        return defaultCommandResult;
+      }
+
+      if (
+        command ===
+          `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git` &&
+        hasStaleRemote
+      ) {
+        return Promise.reject(new Error("remote already exists"));
+      }
+
+      if (
+        command ===
+          `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}` &&
+        hasStaleBranch
+      ) {
+        return Promise.reject(new Error("branch already exists"));
+      }
+
+      return defaultCommandResult;
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: "terraform-aws-azure-core-infra",
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(strictCommands).toEqual([
+    `git remote remove ${expectedRemote}`,
+    `git branch -D ${expectedBranch}`,
+    `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git`,
+    `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
+    `git fetch ${expectedRemote} main --tags`,
+    `git checkout ${expectedBranch}`,
+    `git merge --allow-unrelated-histories -s ours --no-edit ${expectedRemote}/main`,
+    `git push ${expectedRemote} ${expectedBranch}:main`,
+  ]);
+  expect(safeCommands).toEqual([
+    "git remote",
+    `git branch --list ${expectedBranch}`,
+    `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
+    `git remote remove ${expectedRemote}`,
+    `git branch -D ${expectedBranch}`,
+  ]);
 });
