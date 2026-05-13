@@ -2,19 +2,19 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.16.0, < 5.0"
+      version = "~> 4.70"
     }
     azapi = {
       source  = "azure/azapi"
-      version = ">= 2.0"
+      version = "~> 2.9"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.10"
     }
     time = {
       source  = "hashicorp/time"
-      version = ">= 0.9"
+      version = "~> 0.14"
     }
   }
 }

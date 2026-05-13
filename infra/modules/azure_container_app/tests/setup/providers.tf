@@ -2,15 +2,15 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.16.0, < 5.0"
+      version = "~> 4.70"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.10"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.7"
+      version = ">= 3.9"
     }
   }
 }
