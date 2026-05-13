@@ -1,6 +1,9 @@
 // Orchestrates GitHub publishing with direct Octokit and git subprocess calls.
 
 import { $ as $_ } from "execa";
+import { cp, mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 import { ensureGitHubRepository } from "./octokit.ts";
 
@@ -21,137 +24,74 @@ export const getRepoNameFromProjectRoot = (
   return `terraform-${provider}-${moduleName}`;
 };
 
+const copyModuleDirectoryContents = async (
+  sourceDirectory: string,
+  targetDirectory: string,
+): Promise<void> => {
+  await cp(sourceDirectory, targetDirectory, {
+    filter: (source) => {
+      const parts = source.split("/");
+      return !parts.includes(".git");
+    },
+    recursive: true,
+  });
+};
+
 export const publishToGithub = async (
   input: PublishToGithubInput,
 ): Promise<void> => {
-  const $ = $_({
-    cwd: input.workspaceRoot,
-  });
-  const safe$ = $({
-    reject: false,
-  });
   const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
-  const moduleDirectory = input.projectRoot.split("/").pop() ?? "";
-  const branch = `${moduleDirectory}-branch`;
-  const remote = `${input.githubOwner}-${repo}`;
   const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
+  const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
 
   await ensureGitHubRepository(input.githubOwner, repo);
 
   let publishError: unknown;
-  const cleanupFailures: string[] = [];
-
-  const recordCleanupFailure = (
-    artifactType: string,
-    artifactName: string,
-    exitCode: number,
-    stderr: string,
-  ) => {
-    cleanupFailures.push(
-      `Failed to remove temporary ${artifactType} ${artifactName} (exit code ${exitCode})${
-        stderr === "" ? "" : `: ${stderr}`
-      }`,
-    );
-  };
-
-  const runCleanupCommand = async (
-    artifactType: string,
-    artifactName: string,
-    command: () => Promise<{ exitCode?: number; stderr: string }>,
-  ) => {
-    try {
-      const result = await command();
-      const exitCode = result.exitCode ?? 1;
-      if (exitCode !== 0) {
-        recordCleanupFailure(
-          artifactType,
-          artifactName,
-          exitCode,
-          result.stderr,
-        );
-      }
-    } catch (error) {
-      cleanupFailures.push(
-        `Failed to remove temporary ${artifactType} ${artifactName}: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      );
-    }
-  };
-
-  const ensureNoStaleRemote = async () => {
-    const remotes = await safe$`git remote`;
-
-    if (remotes.exitCode !== 0) {
-      throw new Error(
-        `Failed to list git remotes before publish (exit code ${remotes.exitCode})${
-          remotes.stderr === "" ? "" : `: ${remotes.stderr}`
-        }`,
-      );
-    }
-
-    if (remotes.stdout.split("\n").includes(remote)) {
-      await $`git remote remove ${remote}`;
-    }
-  };
-
-  const ensureNoStaleBranch = async () => {
-    const branches = await safe$`git branch --list ${branch}`;
-
-    if (branches.exitCode !== 0) {
-      throw new Error(
-        `Failed to list git branches before publish (exit code ${branches.exitCode})${
-          branches.stderr === "" ? "" : `: ${branches.stderr}`
-        }`,
-      );
-    }
-
-    if (branches.stdout.trim() !== "") {
-      await $`git branch -D ${branch}`;
-    }
-  };
+  let tempExportDir: string | undefined;
 
   try {
-    await ensureNoStaleRemote();
-    await ensureNoStaleBranch();
-    await $`git remote add ${remote} ${repoUrl}`;
-    await $`git subtree split --prefix=${input.projectRoot} -b ${branch}`;
-    const remoteMainBranch =
-      await safe$`git ls-remote --exit-code --heads ${remote} refs/heads/main`;
+    tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 
-    if (remoteMainBranch.exitCode === 0) {
-      await $`git fetch ${remote} main --tags`;
-      await $`git checkout ${branch}`;
-      await $`git merge --allow-unrelated-histories -s ours --no-edit ${remote}/main`;
-    } else if (remoteMainBranch.exitCode !== 2) {
-      throw new Error(
-        `Failed to check whether ${remote}/main exists (exit code ${remoteMainBranch.exitCode})${
-          remoteMainBranch.stderr === "" ? "" : `: ${remoteMainBranch.stderr}`
-        }`,
-      );
-    }
+    await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
 
-    await $`git push ${remote} ${branch}:main`;
+    const $ = $_({
+      cwd: tempExportDir,
+      env: {
+        GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
+        GIT_AUTHOR_NAME: "PagoPA DX Bot",
+        GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
+        GIT_COMMITTER_NAME: "PagoPA DX Bot",
+      },
+    });
+
+    await $`git init -b main`;
+    await $`git add .`;
+    await $`git commit -m "Updated module"`;
+    await $`git remote add origin ${repoUrl}`;
+    await $`git push origin HEAD:main --force`;
   } catch (error) {
     publishError = error;
   }
 
-  await runCleanupCommand(
-    "remote",
-    remote,
-    () => safe$`git remote remove ${remote}`,
-  );
-  await runCleanupCommand(
-    "branch",
-    branch,
-    () => safe$`git branch -D ${branch}`,
-  );
+  if (tempExportDir !== undefined) {
+    try {
+      await rm(tempExportDir, { force: true, recursive: true });
+    } catch (cleanupError) {
+      if (publishError !== undefined) {
+        throw publishError;
+      }
+      const cleanupMessage = `Failed to remove temporary export directory ${tempExportDir}: ${
+        cleanupError instanceof Error
+          ? cleanupError.message
+          : String(cleanupError)
+      }`;
+      throw new Error(cleanupMessage, {
+        cause: cleanupError,
+      });
+    }
+  }
 
   if (publishError !== undefined) {
     throw publishError;
-  }
-
-  if (cleanupFailures.length > 0) {
-    throw new Error(cleanupFailures.join("\n"));
   }
 };

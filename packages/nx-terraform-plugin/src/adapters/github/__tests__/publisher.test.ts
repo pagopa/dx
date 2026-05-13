@@ -8,12 +8,29 @@ const execaMocks = vi.hoisted(() => ({
   $: vi.fn(),
 }));
 
+const fsMocks = vi.hoisted(() => ({
+  cp: vi.fn(),
+  mkdtemp: vi.fn(),
+  readdir: vi.fn(),
+  rm: vi.fn(),
+}));
+
+const osMocks = vi.hoisted(() => ({
+  tmpdir: vi.fn(),
+}));
+
 vi.mock("../octokit.ts", () => ({
   ensureGitHubRepository: githubMocks.ensureGitHubRepository,
 }));
 
 vi.mock("execa", () => ({
   $: execaMocks.$,
+}));
+
+vi.mock("node:fs/promises", () => fsMocks);
+
+vi.mock("node:os", () => ({
+  tmpdir: osMocks.tmpdir,
 }));
 
 import { publishToGithub } from "../publisher.ts";
@@ -33,215 +50,166 @@ const publishInput = {
   workspaceRoot: "/repo",
 };
 
-const expectedRemote = "pagopa-dx-terraform-aws-azure-core-infra";
-const expectedBranch = "azure_core_infra-branch";
-
-const isTemplateStringsArray = (
-  value: unknown,
-): value is TemplateStringsArray =>
-  Array.isArray(value) &&
-  typeof value === "object" &&
-  value !== null &&
-  "raw" in value &&
-  Array.isArray(value.raw);
+const expectedRepo = "terraform-aws-azure-core-infra";
+const expectedRepoUrl = `https://github.com/pagopa-dx/${expectedRepo}.git`;
+const expectedTempDir = "/tmp-prefix/export-repo-XXXXXX";
 
 const createGitCommandHarness = ({
-  onSafeCommand,
-  onStrictCommand,
+  onCommand,
 }: {
-  onSafeCommand?: (
+  onCommand?: (
     command: string,
-  ) => Promise<typeof defaultCommandResult> | typeof defaultCommandResult;
-  onStrictCommand?: (
-    command: string,
+    cwd: string | undefined,
   ) => Promise<typeof defaultCommandResult> | typeof defaultCommandResult;
 } = {}) => {
-  const safeCommands: string[] = [];
-  const strictCommands: string[] = [];
+  const commands: { command: string; cwd: string | undefined }[] = [];
 
-  const safeGit$ = vi.fn(
-    (strings: TemplateStringsArray, ...values: unknown[]) => {
-      const command = String.raw(strings, ...values.map(String));
-      safeCommands.push(command);
-      return Promise.resolve(onSafeCommand?.(command) ?? defaultCommandResult);
-    },
-  );
-
-  const git$ = vi.fn((first: unknown, ...values: unknown[]) => {
-    if (!isTemplateStringsArray(first)) {
-      return safeGit$;
-    }
-
-    const command = String.raw(first, ...values.map(String));
-    strictCommands.push(command);
-    return Promise.resolve(onStrictCommand?.(command) ?? defaultCommandResult);
+  const git$ = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
+    const command = String.raw(strings, ...values.map(String));
+    // Extract cwd from the last call to execaMocks.$
+    const lastCall =
+      execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
+    const cwd = lastCall?.[0]?.cwd as string | undefined;
+    commands.push({ command, cwd });
+    return Promise.resolve(onCommand?.(command, cwd) ?? defaultCommandResult);
   });
 
   execaMocks.$.mockReturnValue(git$);
 
   return {
+    commands,
     git$,
-    safeCommands,
-    strictCommands,
   };
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  osMocks.tmpdir.mockReturnValue("/tmp-prefix");
+  fsMocks.mkdtemp.mockResolvedValue(expectedTempDir);
+  fsMocks.readdir.mockResolvedValue([]);
+  fsMocks.rm.mockResolvedValue(undefined);
+  fsMocks.cp.mockResolvedValue(undefined);
 });
 
-it("ensures the target repository before syncing the module subtree", async () => {
-  const { git$, safeCommands, strictCommands } = createGitCommandHarness();
+it("creates a temporary export repo and publishes module contents to GitHub", async () => {
+  const { commands } = createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
     owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
+    repo: expectedRepo,
   });
 
   await publishToGithub(publishInput);
 
   expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
     "pagopa-dx",
-    "terraform-aws-azure-core-infra",
+    expectedRepo,
   );
-  expect(execaMocks.$).toHaveBeenCalledWith({
-    cwd: "/repo",
+  expect(osMocks.tmpdir).toHaveBeenCalledWith();
+  expect(fsMocks.mkdtemp).toHaveBeenCalledWith("/tmp-prefix/export-repo-");
+  expect(fsMocks.cp).toHaveBeenCalledWith(
+    "/repo/infra/modules/azure_core_infra",
+    expectedTempDir,
+    { filter: expect.any(Function), recursive: true },
+  );
+
+  expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
+    { command: "git init -b main", cwd: expectedTempDir },
+    { command: "git add .", cwd: expectedTempDir },
+    { command: 'git commit -m "Updated module"', cwd: expectedTempDir },
+    {
+      command: `git remote add origin ${expectedRepoUrl}`,
+      cwd: expectedTempDir,
+    },
+    { command: "git push origin HEAD:main --force", cwd: expectedTempDir },
+  ]);
+
+  expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
+    force: true,
+    recursive: true,
   });
-  expect(git$).toHaveBeenCalledWith({ reject: false });
-  expect(strictCommands).toEqual([
-    `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git`,
-    `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
-    `git fetch ${expectedRemote} main --tags`,
-    `git checkout ${expectedBranch}`,
-    `git merge --allow-unrelated-histories -s ours --no-edit ${expectedRemote}/main`,
-    `git push ${expectedRemote} ${expectedBranch}:main`,
-  ]);
-  expect(safeCommands).toEqual([
-    "git remote",
-    `git branch --list ${expectedBranch}`,
-    `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
-    `git remote remove ${expectedRemote}`,
-    `git branch -D ${expectedBranch}`,
-  ]);
 });
 
-it("checks out the split branch before merging remote history when the remote main branch exists", async () => {
-  const { strictCommands } = createGitCommandHarness();
+it("excludes .git directory when copying module contents", async () => {
+  createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
     owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
+    repo: expectedRepo,
   });
 
   await publishToGithub(publishInput);
 
-  expect(strictCommands).toContain(`git checkout ${expectedBranch}`);
-  expect(strictCommands.indexOf(`git checkout ${expectedBranch}`)).toBeLessThan(
-    strictCommands.indexOf(
-      `git merge --allow-unrelated-histories -s ours --no-edit ${expectedRemote}/main`,
-    ),
+  expect(fsMocks.cp).toHaveBeenCalledWith(
+    "/repo/infra/modules/azure_core_infra",
+    expectedTempDir,
+    { filter: expect.any(Function), recursive: true },
   );
+
+  // Verify filter function behavior
+  const cpCall = fsMocks.cp.mock.calls[0];
+  const filterFn = cpCall[2].filter;
+
+  expect(filterFn("/some/path/.git")).toBe(false);
+  expect(filterFn("/some/path/.git/config")).toBe(false);
+  expect(filterFn("/some/path/file.txt")).toBe(true);
+  expect(filterFn("/some/path/subdir/.git")).toBe(false);
 });
 
-it("pushes the split branch directly when the remote main branch does not exist", async () => {
-  const { safeCommands, strictCommands } = createGitCommandHarness({
-    onSafeCommand: (command) =>
-      command.startsWith("git ls-remote ")
-        ? { ...defaultCommandResult, exitCode: 2 }
-        : defaultCommandResult,
-  });
-
-  githubMocks.ensureGitHubRepository.mockResolvedValue({
-    created: true,
-    owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
-  });
-
-  await publishToGithub(publishInput);
-
-  expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
-    "pagopa-dx",
-    "terraform-aws-azure-core-infra",
-  );
-  expect(execaMocks.$).toHaveBeenCalledWith({
-    cwd: "/repo",
-  });
-  expect(strictCommands).toEqual([
-    `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git`,
-    `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
-    `git push ${expectedRemote} ${expectedBranch}:main`,
-  ]);
-  expect(safeCommands).toEqual([
-    "git remote",
-    `git branch --list ${expectedBranch}`,
-    `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
-    `git remote remove ${expectedRemote}`,
-    `git branch -D ${expectedBranch}`,
-  ]);
-});
-
-it("throws when checking the remote main branch fails unexpectedly", async () => {
-  const { safeCommands, strictCommands } = createGitCommandHarness({
-    onSafeCommand: (command) =>
-      command.startsWith("git ls-remote ")
-        ? {
-            ...defaultCommandResult,
-            exitCode: 128,
-            stderr: "fatal: unable to access remote",
-          }
-        : defaultCommandResult,
-  });
+it("uses explicit commit author and committer environment variables", async () => {
+  createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
     owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
-  });
-
-  await expect(publishToGithub(publishInput)).rejects.toThrow();
-
-  expect(strictCommands).toEqual([
-    `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git`,
-    `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
-  ]);
-  expect(safeCommands).toEqual([
-    "git remote",
-    `git branch --list ${expectedBranch}`,
-    `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
-    `git remote remove ${expectedRemote}`,
-    `git branch -D ${expectedBranch}`,
-  ]);
-});
-
-it("removes the temporary remote and subtree branch after a successful publish", async () => {
-  const { safeCommands } = createGitCommandHarness();
-
-  githubMocks.ensureGitHubRepository.mockResolvedValue({
-    created: false,
-    owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
+    repo: expectedRepo,
   });
 
   await publishToGithub(publishInput);
 
-  expect(safeCommands).toContain(`git remote remove ${expectedRemote}`);
-  expect(safeCommands).toContain(`git branch -D ${expectedBranch}`);
+  // Check that execa $ was called with env variables
+  const execaCalls = execaMocks.$.mock.calls;
+  const commitCall = execaCalls.find((call) => call[0]?.env !== undefined);
+
+  // Verify the call exists
+  if (commitCall === undefined) {
+    throw new Error("Expected to find a call with env variables");
+  }
+
+  expect(commitCall[0].env).toMatchObject({
+    GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
+    GIT_AUTHOR_NAME: "PagoPA DX Bot",
+    GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
+    GIT_COMMITTER_NAME: "PagoPA DX Bot",
+  });
 });
 
-it("still cleans up temporary git state when publish fails after creating it", async () => {
+it("cleans up temporary directory after successful publish", async () => {
+  createGitCommandHarness();
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
+    force: true,
+    recursive: true,
+  });
+});
+
+it("cleans up temporary directory even when publish fails", async () => {
   const failure = new Error("push failed");
-  const { safeCommands } = createGitCommandHarness({
-    onSafeCommand: (command) =>
-      command.startsWith("git ls-remote ")
-        ? { ...defaultCommandResult, exitCode: 2 }
-        : defaultCommandResult,
-    onStrictCommand: (command) => {
+  createGitCommandHarness({
+    onCommand: (command) => {
       if (command.startsWith("git push ")) {
         return Promise.reject(failure);
       }
-
       return defaultCommandResult;
     },
   });
@@ -249,90 +217,55 @@ it("still cleans up temporary git state when publish fails after creating it", a
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
     owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
+    repo: expectedRepo,
   });
 
   await expect(publishToGithub(publishInput)).rejects.toBe(failure);
 
-  expect(safeCommands).toContain(`git remote remove ${expectedRemote}`);
-  expect(safeCommands).toContain(`git branch -D ${expectedBranch}`);
+  expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
+    force: true,
+    recursive: true,
+  });
 });
 
-it("self-heals reruns by removing stale temporary git artifacts before recreating them", async () => {
-  let hasStaleRemote = true;
-  let hasStaleBranch = true;
-  const { safeCommands, strictCommands } = createGitCommandHarness({
-    onSafeCommand: (command) => {
-      if (command === "git remote") {
-        return {
-          ...defaultCommandResult,
-          stdout: hasStaleRemote ? `${expectedRemote}\norigin` : "origin",
-        };
-      }
+it("reports cleanup failure if cleanup fails but publish succeeded", async () => {
+  const cleanupError = new Error("ENOENT: no such file or directory");
+  createGitCommandHarness();
 
-      if (command === `git branch --list ${expectedBranch}`) {
-        return {
-          ...defaultCommandResult,
-          stdout: hasStaleBranch ? expectedBranch : "",
-        };
-      }
-
-      return defaultCommandResult;
-    },
-    onStrictCommand: (command) => {
-      if (command === `git remote remove ${expectedRemote}`) {
-        hasStaleRemote = false;
-        return defaultCommandResult;
-      }
-
-      if (command === `git branch -D ${expectedBranch}`) {
-        hasStaleBranch = false;
-        return defaultCommandResult;
-      }
-
-      if (
-        command ===
-          `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git` &&
-        hasStaleRemote
-      ) {
-        return Promise.reject(new Error("remote already exists"));
-      }
-
-      if (
-        command ===
-          `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}` &&
-        hasStaleBranch
-      ) {
-        return Promise.reject(new Error("branch already exists"));
-      }
-
-      return defaultCommandResult;
-    },
-  });
+  fsMocks.rm.mockRejectedValue(cleanupError);
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
     owner: "pagopa-dx",
-    repo: "terraform-aws-azure-core-infra",
+    repo: expectedRepo,
   });
 
-  await publishToGithub(publishInput);
+  await expect(publishToGithub(publishInput)).rejects.toThrow(
+    /Failed to remove temporary export directory/,
+  );
+});
 
-  expect(strictCommands).toEqual([
-    `git remote remove ${expectedRemote}`,
-    `git branch -D ${expectedBranch}`,
-    `git remote add ${expectedRemote} https://github.com/pagopa-dx/terraform-aws-azure-core-infra.git`,
-    `git subtree split --prefix=infra/modules/azure_core_infra -b ${expectedBranch}`,
-    `git fetch ${expectedRemote} main --tags`,
-    `git checkout ${expectedBranch}`,
-    `git merge --allow-unrelated-histories -s ours --no-edit ${expectedRemote}/main`,
-    `git push ${expectedRemote} ${expectedBranch}:main`,
-  ]);
-  expect(safeCommands).toEqual([
-    "git remote",
-    `git branch --list ${expectedBranch}`,
-    `git ls-remote --exit-code --heads ${expectedRemote} refs/heads/main`,
-    `git remote remove ${expectedRemote}`,
-    `git branch -D ${expectedBranch}`,
-  ]);
+it("prioritizes publish failure over cleanup failure", async () => {
+  const publishError = new Error("push failed");
+  const cleanupError = new Error("cleanup failed");
+
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command.startsWith("git push ")) {
+        return Promise.reject(publishError);
+      }
+      return defaultCommandResult;
+    },
+  });
+
+  fsMocks.rm.mockRejectedValue(cleanupError);
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  // Should throw the publish error, not the cleanup error
+  await expect(publishToGithub(publishInput)).rejects.toBe(publishError);
 });
