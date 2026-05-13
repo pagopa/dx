@@ -181,4 +181,5 @@ No modules.
 | <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | The principal ID of the system-assigned managed identity associated with this Container App. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the Azure Resource Group where the Container App is deployed. |
 | <a name="output_url"></a> [url](#output\_url) | The URL of the Container App. |
+| <a name="output_url_latest_revision"></a> [url\_latest\_revision](#output\_url\_latest\_revision) | The URL of the latest revision deployed Container App. |
 <!-- END_TF_DOCS -->

@@ -87,6 +87,11 @@ run "container_app_is_correct_plan" {
   }
 
   assert {
+    condition     = output.url == azurerm_container_app.this.ingress[0].fqdn
+    error_message = "The output url should expose the default ingress URL"
+  }
+
+  assert {
     condition     = azurerm_container_app.this.template[0].termination_grace_period_seconds == 30
     error_message = "The container app termination grace period is not correct"
   }
