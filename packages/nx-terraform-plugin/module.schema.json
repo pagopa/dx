@@ -22,7 +22,7 @@
     },
     "version": {
       "type": "string",
-      "minLength": 1
+      "format": "semver"
     },
     "$schema": {
       "type": "string"

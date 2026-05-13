@@ -161,7 +161,7 @@ describe("getDiscoveryStateWithValidation", () => {
       expect.objectContaining({
         issues: [
           expect.objectContaining({
-            message: "Invalid input: expected string, received undefined",
+            message: "Invalid semver version",
             path: ["version"],
           }),
         ],

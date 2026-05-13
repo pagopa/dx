@@ -1,13 +1,18 @@
 import * as semver from "semver";
-import { z } from "zod/v4";
+import { stringFormat, z } from "zod/v4";
 
 import type { ModulePublishManifest } from "./manifest.ts";
 
 // Validates semver version strings using the semver package.
 // Accepts standard semver format (e.g., 1.2.3, 1.0.0-alpha, 1.2.3+build).
 // Rejects prefixed versions (e.g., v1.2.3), partial versions (e.g., 1.2), and arbitrary strings.
-export const semverSchema = z.string().refine(
+export const semverSchema = stringFormat(
+  "semver",
   (value) => {
+    // Let Zod's type system handle non-string values (undefined, null, etc.)
+    if (typeof value !== "string") {
+      return true;
+    }
     // Reject empty strings or strings starting with 'v'
     if (!value || value.startsWith("v")) {
       return false;
@@ -15,9 +20,7 @@ export const semverSchema = z.string().refine(
     // Use semver.valid to validate proper semver format
     return semver.valid(value) !== null;
   },
-  {
-    message: "Invalid semver version",
-  },
+  "Invalid semver version",
 );
 
 // Defines the publish option schemas shared by plugin defaults and module manifests.
