@@ -1,3 +1,13 @@
+## 0.21.4 (2026-05-13)
+
+### 🩹 Fixes
+
+- The DX CLI now generates root modules for bootstrapper version 4, updating the module version and removing deprecated references to version 3. ([#1739](https://github.com/pagopa/dx/pull/1739))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.21.3 (2026-05-08)
 
 ### 🩹 Fixes
