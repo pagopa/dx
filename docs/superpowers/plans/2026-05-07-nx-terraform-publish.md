@@ -1060,7 +1060,7 @@ git commit -m "Make publish rerunnable"
 - Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
 - Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
 
-- [ ] **Step 1: Write failing export-based publish tests**
+- [x] **Step 1: Write failing export-based publish tests**
 
 ```ts
 const fsMocks = vi.hoisted(() => ({
@@ -1191,12 +1191,12 @@ it("removes the temporary export repo after a failed push", async () => {
 });
 ```
 
-- [ ] **Step 2: Run focused test to verify RED**
+- [x] **Step 2: Run focused test to verify RED**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`  
 Expected: FAIL because publish still uses subtree/branch orchestration and does not manage a temp export repo
 
-- [ ] **Step 3: Replace subtree flow with temp export repo publish**
+- [x] **Step 3: Replace subtree flow with temp export repo publish**
 
 ```ts
 import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
@@ -1252,15 +1252,57 @@ try {
 }
 ```
 
-- [ ] **Step 4: Run package verification**
+- [x] **Step 4: Run package verification**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
   packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
 git commit -m "Replace subtree publish with export snapshots"
 ```
+
+Completed in:
+- `5d4a7463` — `Replace subtree publish with export-repo approach`
+- `98d85640` — `Handle Windows path separators in publisher`
+- `a6e8251d` — `Enable shell mode for publish commits`
+
+### Task 7c: Require semantic-version manifest versions
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/publish-options.ts`
+- Modify: `packages/nx-terraform-plugin/package.json`
+- Modify: `packages/nx-terraform-plugin/module.schema.json`
+- Modify: `pnpm-lock.yaml`
+- Test: `packages/nx-terraform-plugin/src/__tests__/publish-manifest.test.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/index.test.ts`
+
+- [x] **Step 1: Add failing coverage for invalid and valid semver manifest versions**
+- [x] **Step 2: Run focused test to verify RED**
+- [x] **Step 3: Define `semverSchema` with Zod string format backed by the `semver` package**
+- [x] **Step 4: Regenerate the emitted JSON schema so manifest version exposes `format: "semver"`**
+- [x] **Step 5: Run package verification**
+- [x] **Step 6: Commit**
+
+Completed in:
+- `86449d0d` — `Validate module.json version as strict semver`
+- `0809a22c` — `Use Zod stringFormat for semver validation`
+
+### Task 7d: Export version tags with published modules
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+
+- [x] **Step 1: Add failing coverage for publishing a version tag from the export repository**
+- [x] **Step 2: Run focused test to verify RED**
+- [x] **Step 3: Create the tag from `module.json.version` and force-push it after the snapshot commit**
+- [x] **Step 4: Fail publish when the tag push fails, even if branch push already succeeded**
+- [x] **Step 5: Run package verification**
+- [x] **Step 6: Commit**
+
+Completed in:
+- `8923ea76` — `Add version tagging to module publisher`
