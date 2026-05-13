@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish/sync to GitHub subrepos in `github` mode, including auto-create when missing.
+**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish exact module snapshots to dedicated GitHub repositories in `github` mode, including auto-create when missing.
 
-**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and git subtree sync orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation.
+**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and temporary export-repo orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation.
 
 **Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, `execa`, Octokit, Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
 
@@ -384,7 +384,7 @@ git add packages/nx-terraform-plugin/src/github.ts \
 git commit -m "Add GitHub repository ensure and creation flow"
 ```
 
-### Task 5: Implement subtree sync and publish orchestration
+### Task 5: Implement publish orchestration
 
 **Files:**
 - Create: `packages/nx-terraform-plugin/src/adapters/github/octokit.ts`
@@ -403,11 +403,10 @@ git commit -m "Add GitHub repository ensure and creation flow"
 await publishToGithub(input, deps);
 expect(deps.ensureRepository).toHaveBeenCalledWith(expect.objectContaining({ owner: "pagopa-dx" }));
 expect(deps.runGit).toHaveBeenCalledWith([
-  "subtree",
-  "split",
-  "--prefix=infra/modules/azure_core_infra",
-  "-b",
-  "azure_core_infra-branch",
+  "push",
+  "origin",
+  "HEAD:main",
+  "--force",
 ]);
 ```
 
@@ -426,11 +425,14 @@ Expected: FAIL because publish orchestrator is missing
 ```ts
 // packages/nx-terraform-plugin/src/adapters/github/publisher.ts
 await ensureGitHubRepository({ owner, repo });
-await execa("git", ["remote", "add", remoteName, repoUrl], { cwd: workspaceRoot });
-await execa("git", ["subtree", "split", `--prefix=${modulePath}`, "-b", branch], { cwd: workspaceRoot });
-await execa("git", ["fetch", remoteName, "main", "--tags"], { cwd: workspaceRoot });
-await execa("git", ["merge", "--allow-unrelated-histories", "-s", "ours", "--no-edit", branch], { cwd: workspaceRoot });
-await execa("git", ["push", remoteName, `${branch}:main`], { cwd: workspaceRoot });
+const exportDir = await mkdtemp(path.join(tmpdir(), "terraform-publish-"));
+const export$ = $_({ cwd: exportDir });
+await export$`git init --initial-branch=main`;
+await copyModuleDirectory(modulePath, exportDir);
+await export$`git add .`;
+await export$`git commit -m "Updated module"`;
+await export$`git remote add origin ${repoUrl}`;
+await export$`git push origin HEAD:main --force`;
 ```
 
 - [x] **Step 4: Run tests to verify pass**
@@ -449,7 +451,7 @@ git add packages/nx-terraform-plugin/src/adapters/github/octokit.ts \
   packages/nx-terraform-plugin/src/adapters/github/__tests__/octokit.test.ts \
   packages/nx-terraform-plugin/src/executors/publish/publish.spec.ts \
   packages/nx-terraform-plugin/src/__tests__/project.test.ts
-git commit -m "Orchestrate GitHub publish with subtree sync"
+git commit -m "Orchestrate GitHub publish"
 ```
 
 ### Task 5a: Introduce required publish schema and merged validation helper
@@ -910,9 +912,10 @@ git commit -m "Wire nx-release-publish and deprecate module workflow path"
 - Delete: `infra/modules/aws_azure_vpn/package.json` (if replacing legacy module metadata)
 - Test: release invocation command output (no repository file changes required if sample already exists)
 
-Because `git subtree split` publishes committed history, the sample-module metadata
-replacement must be committed before the live publish run so the destination repo
-actually reflects `module.json` and the removal of the legacy `package.json`.
+Because publish exports the current filesystem contents of the module directory,
+the live publish run should reflect the working tree state under
+`infra/modules/aws_azure_vpn`, even when those changes are not part of Git
+history yet.
 
 - [x] **Step 1: Write failing dry-run invocation expectation**
 
@@ -1049,4 +1052,67 @@ Expected: PASS
 git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
   packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts
 git commit -m "Make publish rerunnable"
+```
+
+### Task 7b: Replace subtree publish with temporary export repo snapshots
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+- Modify: `docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md`
+- Modify: `docs/superpowers/plans/2026-05-07-nx-terraform-publish.md`
+
+- [ ] **Step 1: Write failing export-based publish tests**
+
+```ts
+it("publishes from a temporary export repo with a single snapshot commit", async () => {
+  // expect temp repo init, copy, commit, remote add, and force-push to main
+});
+
+it("can publish from a dirty workspace because it does not checkout workspace branches", async () => {
+  // expect no workspace git checkout/split commands
+});
+```
+
+- [ ] **Step 2: Run focused test to verify RED**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`  
+Expected: FAIL because publish still uses subtree/branch orchestration
+
+- [ ] **Step 3: Replace subtree flow with temp export repo publish**
+
+```ts
+const exportDir = await mkdtemp(path.join(tmpdir(), "terraform-publish-"));
+const export$ = $_({
+  cwd: exportDir,
+  env: {
+    ...process.env,
+    GIT_AUTHOR_NAME: "pagopa-dx publish",
+    GIT_AUTHOR_EMAIL: "noreply@pagopa.it",
+    GIT_COMMITTER_NAME: "pagopa-dx publish",
+    GIT_COMMITTER_EMAIL: "noreply@pagopa.it",
+  },
+});
+
+await copyModuleDirectory(path.join(input.workspaceRoot, input.projectRoot), exportDir);
+await export$`git init --initial-branch=main`;
+await export$`git add .`;
+await export$`git commit -m "Updated module"`;
+await export$`git remote add origin ${repoUrl}`;
+await export$`git push origin HEAD:main --force`;
+```
+
+- [ ] **Step 4: Run package verification**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
+  docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md \
+  docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
+git commit -m "Replace subtree publish with export snapshots"
 ```

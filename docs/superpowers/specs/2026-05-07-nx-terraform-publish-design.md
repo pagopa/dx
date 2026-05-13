@@ -29,7 +29,7 @@ Current constraints and decisions:
 
 1. Infer `nx-release-publish` only for eligible Terraform module libraries.
 2. Replace workflow-centric subrepo publishing logic with plugin-managed logic reusable in local and CI execution.
-3. Preserve current subrepo synchronization behavior (module content alignment in target repo).
+3. Align the target repository to an exact snapshot of the module directory, without requiring history preservation.
 4. Add first-class GitHub owner resolution (`plugin default` + `module override`)
    for both organizations and personal profiles.
 5. Support automatic repository creation when missing.
@@ -169,8 +169,8 @@ Responsibilities:
    - direct executor invocation: caller must provide metadata explicitly.
 2. Build repo coordinates (`owner`, `repo`).
 3. Ensure target repo exists (create if missing).
-4. Perform subtree-based synchronization preserving current history semantics.
-5. Push resulting branch/content to remote `main`.
+4. Perform snapshot-based export from the module directory into a temporary publish repository.
+5. Force-push the resulting snapshot to remote `main`.
 6. Keep executor input contract explicit: no implicit fallback read for direct
    calls; missing required metadata in options is a hard error.
 
@@ -199,18 +199,19 @@ For each eligible module:
 8. When the owner is a user profile, fail explicitly if it does not match the
    authenticated GitHub user because GitHub does not allow creating repos for an
    arbitrary user account.
-9. Configure git remote.
-10. Run subtree split from `infra/modules/<module>`.
-11. If remote `main` already exists, fetch it and merge its history into the split
-    branch before pushing.
-12. If remote `main` does not exist yet (first publish to an empty repo), skip the
-    fetch/merge step and push the split branch directly to `main`.
-13. Push aligned content to remote `main`.
-14. Remove the temporary remote and temporary subtree branch in best-effort mode so
-    repeated publishes in the same workspace start from a clean local git state.
-15. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+9. Create a temporary directory outside the workspace.
+10. Initialize a fresh git repository there on branch `main`.
+11. Copy the current filesystem contents of `infra/modules/<module>` into that
+    temporary repository root, treating the exported repo as an exact snapshot of
+    the module directory rather than a history-preserving mirror.
+12. Create a single publish commit such as `Updated module`, using explicit commit
+    metadata so the flow does not depend on local git config.
+13. Configure the GitHub remote in the temporary repository.
+14. Force-push the snapshot commit to remote `main`.
+15. Remove the temporary directory in best-effort mode after success or failure.
+16. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
-End condition: destination repo `main` matches module subtree content and history policy.
+End condition: destination repo `main` matches the current module directory snapshot, and remote history may be rewritten on each publish.
 
 ## Repo Naming
 
@@ -230,8 +231,8 @@ Hard-fail (no silent fallback) with actionable messages for:
 2. Invalid merged publish options (including missing final `github.owner`).
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Requested user-profile owner does not match the authenticated GitHub user.
-5. Git remote/subtree/push failures.
-6. Best-effort cleanup failures should not hide an earlier primary publish failure;
+5. Temporary repo init/copy/commit/remote/push failures.
+6. Best-effort temporary-directory cleanup failures should not hide an earlier primary publish failure;
    if cleanup is the only failing step after a successful publish, surface it
    explicitly.
 
@@ -246,10 +247,9 @@ list programmatically.
   the default command interface for git operations so orchestration reads like the
   shell flow it represents.
 - When the flow needs to branch on exit status instead of throwing immediately
-  (for example, checking whether remote `main` exists or performing cleanup), it
-  should still use a configured `$` variant with non-throwing behavior rather
-  than dropping to raw `execa`, unless a lower-level call is explicitly
-  documented as necessary.
+  (for example, probing optional cleanup steps), it should still use a
+  configured `$` variant with non-throwing behavior rather than dropping to raw
+  `execa`, unless a lower-level call is explicitly documented as necessary.
 - Prefer naming that configured variant `safe$` and derive it from the same base
   command configuration as `$`, so the non-throwing path keeps the same working
   directory and other shared settings while making its intent explicit.
@@ -282,12 +282,16 @@ list programmatically.
      - repository exists path;
      - organization repository auto-create path;
      - user-profile repository auto-create path;
-     - explicit failure when user-profile owner differs from the authenticated user;
-     - repeated publish invocations do not fail because a previous run left the
-       temporary remote or subtree branch behind;
-     - temporary remote and subtree branch are removed in best-effort cleanup
-       after success and after mid-flow failures;
-     - failure propagation for API/git failures.
+      - explicit failure when user-profile owner differs from the authenticated user;
+      - repeated publish invocations do not fail because publish state is isolated
+        in a temporary export repository;
+      - the publish force-pushes an exact module snapshot to `main`, deleting
+        files that no longer exist in the module directory;
+      - the temporary export repository is removed in best-effort cleanup after
+        success and after mid-flow failures;
+      - publish can run from a dirty workspace because it does not check out
+        branches or mutate workspace git state;
+      - failure propagation for API/git failures.
 5. **Regression tests**
     - Existing targets remain unchanged for non-publish concerns.
     - executor rejects invalid final publish options instead of silently treating
@@ -296,7 +300,7 @@ list programmatically.
 ## Migration and Rollout
 
 1. Add plugin support while keeping existing workflow in place during transition.
-2. Validate output parity against current `_release-bash-modules-to-subrepo` behavior.
+2. Validate content parity against current `_release-bash-modules-to-subrepo` behavior, while allowing the new flow to replace subtree history with snapshot commits.
 3. Record release notes with `pnpm nx release plan` instead of editing
    `CHANGELOG.md` directly; Nx Release pipelines remain the single writer for
    changelog updates and version bumps.
