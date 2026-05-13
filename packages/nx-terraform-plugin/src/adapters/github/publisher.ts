@@ -73,7 +73,9 @@ export const publishToGithub = async (
     await $`git add .`;
     await $`git commit -m "Updated module"`;
     await $`git remote add origin ${repoUrl}`;
+    await $`git tag ${input.version}`;
     await $`git push origin HEAD:main --force`;
+    await $`git push origin refs/tags/${input.version} --force`;
   } catch (error) {
     publishError = error;
   }

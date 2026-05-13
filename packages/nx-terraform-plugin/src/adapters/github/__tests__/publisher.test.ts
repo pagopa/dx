@@ -122,7 +122,12 @@ it("creates a temporary export repo and publishes module contents to GitHub", as
       command: `git remote add origin ${expectedRepoUrl}`,
       cwd: expectedTempDir,
     },
+    { command: "git tag 1.2.3", cwd: expectedTempDir },
     { command: "git push origin HEAD:main --force", cwd: expectedTempDir },
+    {
+      command: "git push origin refs/tags/1.2.3 --force",
+      cwd: expectedTempDir,
+    },
   ]);
 
   expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
@@ -307,4 +312,57 @@ it("excludes .git directory when copying module contents with Windows paths", as
   expect(filterFn("C:\\some\\path\\file.txt")).toBe(true);
   expect(filterFn("C:\\some\\path\\subdir\\.git")).toBe(false);
   expect(filterFn("C:\\some\\path\\subdir\\.gitignore")).toBe(true);
+});
+
+it("creates and force-pushes a tag named after version", async () => {
+  const { commands } = createGitCommandHarness();
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
+    { command: "git init -b main", cwd: expectedTempDir },
+    { command: "git add .", cwd: expectedTempDir },
+    { command: 'git commit -m "Updated module"', cwd: expectedTempDir },
+    {
+      command: `git remote add origin ${expectedRepoUrl}`,
+      cwd: expectedTempDir,
+    },
+    { command: "git tag 1.2.3", cwd: expectedTempDir },
+    { command: "git push origin HEAD:main --force", cwd: expectedTempDir },
+    {
+      command: "git push origin refs/tags/1.2.3 --force",
+      cwd: expectedTempDir,
+    },
+  ]);
+});
+
+it("fails publish if tag push fails after branch push succeeds", async () => {
+  const tagPushError = new Error("tag push failed");
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command.startsWith("git push origin refs/tags/")) {
+        return Promise.reject(tagPushError);
+      }
+      return defaultCommandResult;
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).rejects.toBe(tagPushError);
+
+  expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
+    force: true,
+    recursive: true,
+  });
 });
