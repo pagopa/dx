@@ -69,7 +69,9 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "plop": "plop"
+    "plop": "plop",
+    "test:characterization:record": "DX_CLI_CHARACTERIZATION_MODE=record vitest --config vitest.characterization.config.ts",
+    "test:characterization:verify": "vitest --config vitest.characterization.config.ts"
   },
   "engines": {
     "node": ">=22.0.0"

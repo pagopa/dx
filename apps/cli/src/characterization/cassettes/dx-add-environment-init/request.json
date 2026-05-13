@@ -1,0 +1,54 @@
+{
+  "azPrecheckStrategy": "Real az binary presence check; Azure login itself is emulated because this workflow has no credible local ARM login backend.",
+  "command": "dx add environment",
+  "promptAnswers": {
+    "env": {
+      "cloudAccounts": [
+        {
+          "csp": "azure",
+          "defaultLocation": "italynorth",
+          "displayName": "PROD-DEVEX",
+          "id": "sub-prod-devex"
+        }
+      ],
+      "name": "prod",
+      "prefix": "dx"
+    },
+    "github": {
+      "owner": "pagopa",
+      "repo": "eng-char-dx-add"
+    },
+    "init": {
+      "cloudAccountsToInitialize": [
+        {
+          "csp": "azure",
+          "defaultLocation": "italynorth",
+          "displayName": "PROD-DEVEX",
+          "id": "sub-prod-devex"
+        }
+      ],
+      "runnerAppCredentials": {
+        "clientId": "client-char-001",
+        "id": "app-char-001",
+        "installationId": "install-char-001",
+        "key": "<redacted-gh-app-key>"
+      },
+      "terraformBackend": {
+        "cloudAccount": {
+          "csp": "azure",
+          "defaultLocation": "italynorth",
+          "displayName": "PROD-DEVEX",
+          "id": "sub-prod-devex"
+        }
+      }
+    },
+    "tags": {
+      "BusinessUnit": "DevEx",
+      "CostCenter": "TS000",
+      "ManagementTeam": "Platform"
+    },
+    "workspace": {
+      "domain": "payments"
+    }
+  }
+}

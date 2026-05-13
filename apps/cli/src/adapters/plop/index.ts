@@ -8,7 +8,12 @@ import path from "node:path";
 import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
-import { GitHubRepo } from "../../domain/github-repo.js";
+import type {
+  CloudAccountRepository,
+  CloudAccountService,
+} from "../../domain/cloud-account.js";
+import type { GitHubRepo } from "../../domain/github-repo.js";
+
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
@@ -18,18 +23,38 @@ import createDeploymentEnvironmentGenerator, {
   PLOP_ENVIRONMENT_GENERATOR_NAME,
 } from "../plop/generators/environment/index.js";
 import createMonorepoGenerator, {
+  type MonorepoGeneratorDependencies,
   Payload as MonorepoPayload,
   payloadSchema as monorepoPayloadSchema,
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
 
-export const setMonorepoGenerator = (plop: NodePlopAPI) => {
+export type DeploymentEnvironmentGeneratorOptions = {
+  dependencies?: DeploymentEnvironmentGeneratorDependencies;
+  github?: GitHubRepo;
+  promptAnswers?: EnvironmentPayload;
+};
+
+export type MonorepoGeneratorOptions = {
+  promptAnswers?: MonorepoPayload;
+  setup?: MonorepoGeneratorDependencies;
+};
+
+type DeploymentEnvironmentGeneratorDependencies = {
+  cloudAccountRepository?: CloudAccountRepository;
+  cloudAccountService?: CloudAccountService;
+};
+
+export const setMonorepoGenerator = (
+  plop: NodePlopAPI,
+  deps: MonorepoGeneratorDependencies = {},
+) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
   const templatesPath = path.join(
     import.meta.dirname,
     "../../../templates/monorepo",
   );
-  createMonorepoGenerator(plop, templatesPath, octokit);
+  createMonorepoGenerator(plop, templatesPath, octokit, deps);
 };
 
 const validatePayload = async (
@@ -88,10 +113,11 @@ export const runActions = async (
 export const runMonorepoGenerator = async (
   plop: NodePlopAPI,
   githubService: GitHubService,
+  options: MonorepoGeneratorOptions = {},
 ): Promise<MonorepoPayload> => {
-  setMonorepoGenerator(plop);
+  setMonorepoGenerator(plop, options.setup);
   const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
-  const answers = await generator.runPrompts();
+  const answers = options.promptAnswers ?? (await generator.runPrompts());
   const payload = monorepoPayloadSchema.parse(answers);
   await validatePayload(payload, githubService);
   await oraPromise(runActions(generator, payload), {
@@ -113,11 +139,11 @@ export const runMonorepoGenerator = async (
 export const runDeploymentEnvironmentGenerator = async (
   plop: NodePlopAPI,
   gitHubService: GitHubService,
-  github?: GitHubRepo,
+  options: DeploymentEnvironmentGeneratorOptions = {},
 ): Promise<EnvironmentPayload> => {
-  setDeploymentEnvironmentGenerator(plop, gitHubService, github);
+  setDeploymentEnvironmentGenerator(plop, gitHubService, options);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-  const answers = await generator.runPrompts();
+  const answers = options.promptAnswers ?? (await generator.runPrompts());
   const payload = environmentPayloadSchema.parse(answers);
   await oraPromise(runActions(generator, payload), {
     failText: "Failed to create deployment environment",
@@ -138,11 +164,15 @@ export const runDeploymentEnvironmentGenerator = async (
 export const setDeploymentEnvironmentGenerator = (
   plop: NodePlopAPI,
   gitHubService: GitHubService,
-  github?: GitHubRepo,
+  options: DeploymentEnvironmentGeneratorOptions = {},
 ) => {
   const credential = new AzureCliCredential();
-  const cloudAccountRepository = new AzureSubscriptionRepository(credential);
-  const cloudAccountService = new AzureCloudAccountService(credential);
+  const cloudAccountRepository =
+    options.dependencies?.cloudAccountRepository ??
+    new AzureSubscriptionRepository(credential);
+  const cloudAccountService =
+    options.dependencies?.cloudAccountService ??
+    new AzureCloudAccountService(credential);
 
   const templatesPath = path.join(
     import.meta.dirname,
@@ -155,6 +185,6 @@ export const setDeploymentEnvironmentGenerator = (
     cloudAccountRepository,
     cloudAccountService,
     gitHubService,
-    github,
+    options.github,
   );
 };

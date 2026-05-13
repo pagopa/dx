@@ -1,0 +1,13 @@
+{
+  "backendStrategy": "In-process Azure cloud-account emulator plus GitHub service emulator; no real Azure or GitHub APIs are called.",
+  "localDependencies": [
+    "real terraform",
+    "real corepack",
+    "real az --version precheck",
+    "in-process GitHub service emulator",
+    "in-process Azure cloud-account repository emulator",
+    "in-process Azure cloud-account service emulator",
+    "in-process authorization PR emulator"
+  ],
+  "workspaceRoot": "<harness-root>/workspace"
+}

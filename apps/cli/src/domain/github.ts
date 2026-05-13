@@ -101,27 +101,36 @@ export class PullRequest {
   constructor(public readonly url: string) {}
 }
 
+const trimTrailingSlash = (value: string): string => value.replace(/\/+$/, "");
+
 export class Repository {
   get fullName(): string {
     return `${this.owner}/${this.name}`;
   }
 
   get origin(): string {
-    return `https://github.com/${this.owner}/${this.name}.git`;
+    return `${this.#baseUrl}/${this.owner}/${this.name}.git`;
   }
 
   get ssh(): string {
-    return `git@github.com:${this.owner}/${this.name}.git`;
+    return this.#baseUrl === "https://github.com"
+      ? `git@github.com:${this.owner}/${this.name}.git`
+      : this.origin;
   }
 
   get url(): string {
-    return `https://github.com/${this.owner}/${this.name}`;
+    return `${this.#baseUrl}/${this.owner}/${this.name}`;
   }
+
+  #baseUrl: string;
 
   constructor(
     public readonly name: string,
     public readonly owner: string,
-  ) {}
+    baseUrl = "https://github.com",
+  ) {
+    this.#baseUrl = trimTrailingSlash(baseUrl);
+  }
 }
 
 export class RepositoryNotFoundError extends Error {

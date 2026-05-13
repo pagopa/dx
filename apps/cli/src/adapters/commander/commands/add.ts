@@ -23,6 +23,7 @@ import { environmentShort } from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
 import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import {
+  type DeploymentEnvironmentGeneratorOptions,
   getPlopInstance,
   runDeploymentEnvironmentGenerator,
 } from "../../plop/index.js";
@@ -122,11 +123,17 @@ const displaySummary = (result: AddResult) => {
   );
 };
 
-const addEnvironmentAction = (
+export type AddEnvironmentActionOptions = {
+  generator?: DeploymentEnvironmentGeneratorOptions;
+  preconditions?: () => ResultAsync<unknown, Error>;
+};
+
+export const addEnvironmentAction = (
   authorizationService: AuthorizationService,
   gitHubService: GitHubService,
+  options: AddEnvironmentActionOptions = {},
 ): ResultAsync<AddResult, Error> =>
-  checkAddEnvironmentPreconditions()
+  (options.preconditions ?? checkAddEnvironmentPreconditions)()
     .andThen(() =>
       ResultAsync.fromPromise(
         getPlopInstance(),
@@ -135,7 +142,11 @@ const addEnvironmentAction = (
     )
     .andThen((plop) =>
       ResultAsync.fromPromise(
-        runDeploymentEnvironmentGenerator(plop, gitHubService),
+        runDeploymentEnvironmentGenerator(
+          plop,
+          gitHubService,
+          options.generator,
+        ),
         (cause) =>
           new Error("Failed to run the deployment environment generator", {
             cause,
@@ -155,7 +166,10 @@ export type AddCommandDependencies = {
   gitHubService: GitHubService;
 };
 
-export const makeAddCommand = (deps: AddCommandDependencies): Command =>
+export const makeAddCommand = (
+  deps: AddCommandDependencies,
+  options: AddEnvironmentActionOptions = {},
+): Command =>
   new Command()
     .name("add")
     .description("Add a new component to your workspace")
@@ -166,6 +180,7 @@ export const makeAddCommand = (deps: AddCommandDependencies): Command =>
           const result = await addEnvironmentAction(
             deps.authorizationService,
             deps.gitHubService,
+            options,
           );
           if (result.isErr()) {
             exitWithError(this)(result.error);

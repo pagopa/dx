@@ -1,0 +1,10 @@
+{
+  "pullRequest": {
+    "url": "https://github.local/pagopa/eng-char-dx-init/pull/1"
+  },
+  "repository": {
+    "name": "eng-char-dx-init",
+    "owner": "pagopa",
+    "url": "<git-remote-base-url>/pagopa/eng-char-dx-init"
+  }
+}

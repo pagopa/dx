@@ -15,7 +15,11 @@ import {
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
-import { getPlopInstance, runMonorepoGenerator } from "../../plop/index.js";
+import {
+  getPlopInstance,
+  type MonorepoGeneratorOptions,
+  runMonorepoGenerator,
+} from "../../plop/index.js";
 import { exitWithError } from "../index.js";
 
 type GitHubRepoCreationSkippedResult = {
@@ -40,10 +44,15 @@ type LocalWorkspace = {
   repository: Repository;
 };
 
+type RepositoryFactory = (name: string, owner: string) => Repository;
+
 type RepositoryPullRequest = {
   pr?: PullRequest;
   repository: Repository;
 };
+
+const defaultRepositoryFactory: RepositoryFactory = (name, owner) =>
+  new Repository(name, owner);
 
 const withSpinner = <T>(
   text: string,
@@ -171,10 +180,10 @@ export const checkAddEnvironmentPreconditions = () =>
     .andThen(() => checkAzLogin())
     .andThen(() => checkCorepackIsInstalled());
 
-const createRemoteRepository = ({
-  repoName,
-  repoOwner,
-}: MonorepoPayload): ResultAsync<Repository, Error> => {
+const createRemoteRepository = (
+  { repoName, repoOwner }: MonorepoPayload,
+  repositoryFactory: RepositoryFactory = defaultRepositoryFactory,
+): ResultAsync<Repository, Error> => {
   const logger = getLogger(["dx-cli", "init"]);
   const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
   const applyTerraform = async () => {
@@ -193,7 +202,7 @@ const createRemoteRepository = ({
     "GitHub repository created successfully!",
     "Failed to create GitHub repository.",
     applyTerraform(),
-  ).map(() => new Repository(repoName, repoOwner));
+  ).map(() => repositoryFactory(repoName, repoOwner));
 };
 
 const initializeGitRepository = (repository: Repository) => {
@@ -223,9 +232,12 @@ const initializeGitRepository = (repository: Repository) => {
 };
 
 const handleNewGitHubRepository =
-  (githubService: GitHubService) =>
+  (
+    githubService: GitHubService,
+    repositoryFactory: RepositoryFactory = defaultRepositoryFactory,
+  ) =>
   (payload: MonorepoPayload): ResultAsync<RepositoryPullRequest, Error> =>
-    createRemoteRepository(payload)
+    createRemoteRepository(payload, repositoryFactory)
       .andThen(initializeGitRepository)
       .andThen((localWorkspace) =>
         createPullRequest(githubService)(localWorkspace).map((pr) => ({
@@ -280,40 +292,80 @@ export const confirmGitHubRepoCreation = (
       new Error("Failed to read GitHub publish confirmation", { cause }),
   );
 
+export type InitActionOptions = {
+  confirmGitHubRepoCreation?: (
+    payload: MonorepoPayload,
+  ) => ResultAsync<boolean, Error>;
+  generator?: MonorepoGeneratorOptions;
+  preconditions?: () => ResultAsync<unknown, Error>;
+  prepareGitHubPublish?: (payload: MonorepoPayload) => Promise<void>;
+  repositoryFactory?: RepositoryFactory;
+};
+
 type InitCommandDependencies = {
   gitHubService: GitHubService;
 };
 
-export const makeInitCommand = ({
-  gitHubService,
-}: InitCommandDependencies): Command =>
+const maybePrepareGitHubPublish = (
+  payload: MonorepoPayload,
+  prepareGitHubPublish?: InitActionOptions["prepareGitHubPublish"],
+) =>
+  prepareGitHubPublish
+    ? ResultAsync.fromPromise(
+        prepareGitHubPublish(payload),
+        (cause) =>
+          new Error("Failed to prepare GitHub publish flow", { cause }),
+      )
+    : okAsync(undefined);
+
+export const initAction = (
+  { gitHubService }: InitCommandDependencies,
+  options: InitActionOptions = {},
+): ResultAsync<SummaryInput, Error> =>
+  (options.preconditions ?? checkInitPreconditions)()
+    .andThen(() =>
+      ResultAsync.fromPromise(
+        getPlopInstance(),
+        (cause) => new Error("Failed to initialize plop", { cause }),
+      ),
+    )
+    .andThen((plop) =>
+      ResultAsync.fromPromise(
+        runMonorepoGenerator(plop, gitHubService, options.generator),
+        handleGeneratorError,
+      ),
+    )
+    .andTee((payload) => {
+      process.chdir(payload.repoName);
+    })
+    .andThen((payload) =>
+      (options.confirmGitHubRepoCreation ?? confirmGitHubRepoCreation)(
+        payload,
+      ).andThen<SummaryInput, Error>((confirmed) =>
+        confirmed
+          ? maybePrepareGitHubPublish(
+              payload,
+              options.prepareGitHubPublish,
+            ).andThen(() =>
+              handleNewGitHubRepository(
+                gitHubService,
+                options.repositoryFactory,
+              )(payload),
+            )
+          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+      ),
+    );
+
+export const makeInitCommand = (
+  { gitHubService }: InitCommandDependencies,
+  options: InitActionOptions = {},
+): Command =>
   new Command()
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
-      await checkInitPreconditions()
-        .andThen(() =>
-          ResultAsync.fromPromise(
-            getPlopInstance(),
-            (cause) => new Error("Failed to initialize plop", { cause }),
-          ),
-        )
-        .andThen((plop) =>
-          ResultAsync.fromPromise(
-            runMonorepoGenerator(plop, gitHubService),
-            handleGeneratorError,
-          ),
-        )
-        .andTee((payload) => {
-          process.chdir(payload.repoName);
-        })
-        .andThen((payload) =>
-          confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
-            (confirmed) =>
-              confirmed
-                ? handleNewGitHubRepository(gitHubService)(payload)
-                : okAsync({ gitHubRepoCreationSkipped: true, payload }),
-          ),
-        )
-        .match(displaySummary, exitWithError(this));
+      await initAction({ gitHubService }, options).match(
+        displaySummary,
+        exitWithError(this),
+      );
     });

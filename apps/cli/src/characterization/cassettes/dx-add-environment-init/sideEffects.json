@@ -1,0 +1,120 @@
+{
+  "authorization": {
+    "requests": [
+      {
+        "bootstrapIdentityId": "dx-p-itn-bootstrap-id-01",
+        "envShort": "p",
+        "prefix": "dx",
+        "repoName": "eng-char-dx-add",
+        "subscriptionName": "PROD-DEVEX"
+      }
+    ]
+  },
+  "azure": {
+    "initializations": [
+      {
+        "cloudAccountId": "sub-prod-devex",
+        "cloudAccountName": "PROD-DEVEX",
+        "githubEnvironmentName": "bootstrapper-prod-cd",
+        "identityClientId": "dx-p-itn-bootstrap-id-01-client-id",
+        "keyVaultName": "dx-p-itn-github-runners-kv-01",
+        "tags": {
+          "BusinessUnit": "DevEx",
+          "CostCenter": "TS000",
+          "ManagementTeam": "Platform"
+        }
+      }
+    ],
+    "keyVaultSecrets": [
+      {
+        "keyVaultName": "dx-p-itn-github-runners-kv-01",
+        "names": [
+          "github-runner-app-id",
+          "github-runner-app-installation-id",
+          "github-runner-app-key"
+        ]
+      }
+    ],
+    "provisionedBackends": [
+      {
+        "cloudAccountId": "sub-prod-devex",
+        "resourceGroupName": "dx-p-itn-tfstate-rg-01",
+        "storageAccountName": "dxpitntfstatest01",
+        "subscriptionId": "sub-prod-devex",
+        "type": "azurerm"
+      }
+    ]
+  },
+  "generatedFiles": {
+    "bootstrapper": [
+      "prod/backend.tf",
+      "prod/data.tf",
+      "prod/locals.tf",
+      "prod/main.tf",
+      "prod/providers.tf"
+    ],
+    "core": [
+      "prod/backend.tf",
+      "prod/imports.tf",
+      "prod/locals.tf",
+      "prod/main.tf",
+      "prod/outputs.tf",
+      "prod/providers.tf"
+    ],
+    "workflows": ["_release-terraform-apply-bootstrapper-prod.yaml"]
+  },
+  "github": {
+    "environmentSecrets": [
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "ARM_CLIENT_ID",
+        "secretValue": "dx-p-itn-bootstrap-id-01-client-id"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "ARM_SUBSCRIPTION_ID",
+        "secretValue": "sub-prod-devex"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "ARM_TENANT_ID",
+        "secretValue": "tenant-characterization"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "GH_APP_CLIENT_ID",
+        "secretValue": "client-char-001"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "GH_APP_ID",
+        "secretValue": "app-char-001"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "GH_APP_INSTALLATION_ID",
+        "secretValue": "install-char-001"
+      },
+      {
+        "environmentName": "bootstrapper-prod-cd",
+        "owner": "pagopa",
+        "repo": "eng-char-dx-add",
+        "secretName": "GH_APP_KEY",
+        "secretValue": "<redacted-gh-app-key>"
+      }
+    ],
+    "pullRequests": []
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "backendStrategy": "Local filesystem bare repository created by real terraform apply via terraform_data + local-exec",
+  "localDependencies": [
+    "real corepack",
+    "real npx",
+    "real pnpm",
+    "real terraform",
+    "real git",
+    "in-process GitHub release emulator",
+    "in-process GitHub service emulator"
+  ],
+  "workspaceRoot": "<harness-root>/workspace/eng-char-dx-init"
+}

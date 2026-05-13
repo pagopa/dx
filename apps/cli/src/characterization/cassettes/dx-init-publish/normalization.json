@@ -1,0 +1,11 @@
+{
+  "placeholders": {
+    "<git-remote-base-url>": "<git-remote-base-url>",
+    "<git-remote-root>": "<git-remote-root>",
+    "<harness-root>": "<harness-root>",
+    "<workspace-root>": "<harness-root>/workspace/eng-char-dx-init"
+  },
+  "redactions": {
+    "GH_APP_KEY": "<redacted-gh-app-key>"
+  }
+}
