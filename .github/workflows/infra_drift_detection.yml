@@ -199,8 +199,12 @@ jobs:
               run_id: context.runId
             });
             const data = run.data;
-            // Converting commit message to single line
-            const commitMessageSingleLine = data.head_commit.message.replace(/\n/g, ' ');
+            // Strip hidden HTML comments from release metadata before posting to Slack.
+            const commitMessageSingleLine = data.head_commit.message
+              .replace(/<!--[\s\S]*?-->/g, ' ')
+              .replace(/\n/g, ' ')
+              .replace(/\s+/g, ' ')
+              .trim();
             // Set output for each value
             core.setOutput("workflow_url", data.html_url);
             core.setOutput("workflow_name", data.display_title);
