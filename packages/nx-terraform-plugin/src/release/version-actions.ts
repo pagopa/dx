@@ -1,4 +1,4 @@
-import type { ProjectGraph, ProjectGraphProjectNode, Tree } from "@nx/devkit";
+import type { ProjectGraph, Tree } from "@nx/devkit";
 
 import { VersionActions } from "nx/release";
 
@@ -18,20 +18,8 @@ import { VersionActions } from "nx/release";
  * `release.version.versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"`
  * in inferred Terraform project configuration.
  */
-export class TerraformVersionActions extends VersionActions {
+export default class TerraformVersionActions extends VersionActions {
   validManifestFilenames = ["module.json"];
-
-  // Constructor is required to accept the internal Nx types that are not publicly exported
-  // eslint-disable-next-line @typescript-eslint/no-useless-constructor
-  constructor(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    releaseGroup: any,
-    projectGraphNode: ProjectGraphProjectNode,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    finalConfigForProject: any,
-  ) {
-    super(releaseGroup, projectGraphNode, finalConfigForProject);
-  }
 
   /**
    * Registry-based version resolution is not supported for Terraform modules.
