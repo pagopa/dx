@@ -44,7 +44,7 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
     },
   );
 
-  await publishToGithub({
+  const publishResult = await publishToGithub({
     description: validatedOptions.description,
     githubOwner: validatedOptions.githubOwner,
     projectRoot: validatedOptions.projectRoot,
@@ -52,6 +52,10 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
     version: validatedOptions.version,
     workspaceRoot: validatedOptions.workspaceRoot,
   });
+
+  if (publishResult === "skipped") {
+    logger.info("Skipping release, tag already exists");
+  }
 
   return {
     success: true,

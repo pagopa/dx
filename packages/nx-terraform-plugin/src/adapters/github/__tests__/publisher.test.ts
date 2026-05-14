@@ -60,7 +60,10 @@ const createGitCommandHarness = ({
   onCommand?: (
     command: string,
     cwd: string | undefined,
-  ) => Promise<typeof defaultCommandResult> | typeof defaultCommandResult;
+  ) =>
+    | Promise<typeof defaultCommandResult>
+    | typeof defaultCommandResult
+    | undefined;
 } = {}) => {
   const commands: { command: string; cwd: string | undefined }[] = [];
 
@@ -79,7 +82,19 @@ const createGitCommandHarness = ({
         execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
       const cwd = lastCall?.[0]?.cwd as string | undefined;
       commands.push({ command, cwd });
-      return Promise.resolve(onCommand?.(command, cwd) ?? defaultCommandResult);
+      const commandResult = onCommand?.(command, cwd);
+      if (commandResult !== undefined) {
+        return Promise.resolve(commandResult);
+      }
+      if (
+        command.startsWith("git ls-remote --exit-code --tags origin refs/tags/")
+      ) {
+        return Promise.resolve({
+          ...defaultCommandResult,
+          exitCode: 2,
+        });
+      }
+      return Promise.resolve(defaultCommandResult);
     },
   );
 
@@ -130,6 +145,10 @@ it("publishes by committing on top of remote main without force-pushing history"
       cwd: expectedTempDir,
     },
     {
+      command: "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+      cwd: expectedTempDir,
+    },
+    {
       command: "git ls-remote --exit-code --heads origin main",
       cwd: expectedTempDir,
     },
@@ -157,8 +176,6 @@ it("bootstraps an empty remote repository on first publish", async () => {
       if (command === "git ls-remote --exit-code --heads origin main") {
         return { ...defaultCommandResult, exitCode: 2 };
       }
-
-      return defaultCommandResult;
     },
   });
 
@@ -194,8 +211,6 @@ it("removes stray export files before checking out remote main", async () => {
           return Promise.reject(checkoutFailure);
         }
       }
-
-      return defaultCommandResult;
     },
   });
 
@@ -209,7 +224,7 @@ it("removes stray export files before checking out remote main", async () => {
     repo: expectedRepo,
   });
 
-  await expect(publishToGithub(publishInput)).resolves.toBeUndefined();
+  await expect(publishToGithub(publishInput)).resolves.toBe("published");
   expect(fsMocks.rm).toHaveBeenCalledWith(`${expectedTempDir}/README.md`, {
     force: true,
     recursive: true,
@@ -296,7 +311,6 @@ it("cleans up temporary directory even when publish fails", async () => {
       if (command.startsWith("git push ")) {
         return Promise.reject(failure);
       }
-      return defaultCommandResult;
     },
   });
 
@@ -340,7 +354,6 @@ it("prioritizes publish failure over cleanup failure", async () => {
       if (command.startsWith("git push ")) {
         return Promise.reject(publishError);
       }
-      return defaultCommandResult;
     },
   });
 
@@ -412,6 +425,10 @@ it("creates and force-pushes a tag named after version", async () => {
       cwd: expectedTempDir,
     },
     {
+      command: "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+      cwd: expectedTempDir,
+    },
+    {
       command: "git ls-remote --exit-code --heads origin main",
       cwd: expectedTempDir,
     },
@@ -428,6 +445,35 @@ it("creates and force-pushes a tag named after version", async () => {
   ]);
 });
 
+it("skips publishing when the remote tag already exists", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (
+        command === "git ls-remote --exit-code --tags origin refs/tags/1.2.3"
+      ) {
+        return {
+          ...defaultCommandResult,
+          stdout: "abc123\trefs/tags/1.2.3",
+        };
+      }
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).resolves.toBe("skipped");
+
+  expect(commands.map((c) => c.command)).toEqual([
+    "git init -b main",
+    `git remote add origin ${expectedRepoUrl}`,
+    "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+  ]);
+});
+
 it("fails publish if tag push fails after branch push succeeds", async () => {
   const tagPushError = new Error("tag push failed");
   createGitCommandHarness({
@@ -435,7 +481,6 @@ it("fails publish if tag push fails after branch push succeeds", async () => {
       if (command.startsWith("git push origin refs/tags/")) {
         return Promise.reject(tagPushError);
       }
-      return defaultCommandResult;
     },
   });
 

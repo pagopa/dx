@@ -1313,7 +1313,7 @@ Completed in:
 - Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
 - Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
 
-- [ ] **Step 1: Write failing tests for release-commit publishing**
+- [x] **Step 1: Write failing tests for release-commit publishing**
 
 ```ts
 it("publishes by committing on top of remote main without force-pushing history", async () => {
@@ -1375,12 +1375,12 @@ it("bootstraps an empty remote repository on first publish", async () => {
 });
 ```
 
-- [ ] **Step 2: Run focused test to verify RED**
+- [x] **Step 2: Run focused test to verify RED**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
 Expected: FAIL because the publisher still creates an isolated snapshot repo, commits `Updated module`, and force-pushes `main`
 
-- [ ] **Step 3: Replace force-pushed snapshots with additive release commits**
+- [x] **Step 3: Replace force-pushed snapshots with additive release commits**
 
 ```ts
 const clearExportWorkingTree = async (exportDirectory: string): Promise<void> => {
@@ -1427,9 +1427,104 @@ await $`git push origin main`;
 await $`git push origin refs/tags/${input.version} --force`;
 ```
 
-- [ ] **Step 4: Run package verification**
+- [x] **Step 4: Run package verification**
 
 Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`
+Expected: PASS
+
+- [x] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
+  docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
+git commit -m "Preserve publish history with release commits"
+```
+
+Completed in:
+- `5b1e8b60` — `Preserve publish history with release commits`
+- `966f9595` — `Make publish rerunnable before checkout`
+
+### Task 7f: Skip gracefully when the release tag already exists
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Modify: `packages/nx-terraform-plugin/src/executors/publish/publish.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+- Test: `packages/nx-terraform-plugin/src/executors/publish/__tests__/publish.test.ts`
+- Modify: `docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md`
+- Modify: `docs/superpowers/plans/2026-05-07-nx-terraform-publish.md`
+
+- [x] **Step 1: Add failing coverage for remote-tag-exists handling**
+
+```ts
+it("skips publishing when the remote tag already exists", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git ls-remote --exit-code --tags origin refs/tags/1.2.3") {
+        return {
+          ...defaultCommandResult,
+          stdout: "abc123\trefs/tags/1.2.3",
+        };
+      }
+    },
+  });
+
+  await expect(publishToGithub(publishInput)).resolves.toBe("skipped");
+  expect(commands.map((c) => c.command)).toEqual([
+    "git init -b main",
+    `git remote add origin ${expectedRepoUrl}`,
+    "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+  ]);
+});
+```
+
+```ts
+it('logs "Skipping release, tag already exists" when publish is skipped', async () => {
+  publisherMocks.publishToGithub.mockResolvedValue("skipped");
+
+  const output = await executor(options, context);
+
+  expect(output.success).toBe(true);
+  expect(loggerMocks.info).toHaveBeenNthCalledWith(
+    2,
+    "Skipping release, tag already exists",
+  );
+});
+```
+
+- [x] **Step 2: Run focused test to verify RED**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts packages/nx-terraform-plugin/src/executors/publish/__tests__/publish.test.ts`  
+Expected: FAIL because publish currently tries to continue into the release flow and the executor does not emit the skip message
+
+- [x] **Step 3: Short-circuit on an existing remote tag**
+
+```ts
+export type PublishToGithubResult = "published" | "skipped";
+
+const remoteTag =
+  await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
+if (remoteTag.exitCode === 0) {
+  publishResult = "skipped";
+} else if (remoteTag.exitCode !== 2) {
+  throw new Error(`Failed to resolve remote tag ${input.version} for ${repoUrl}`);
+} else {
+  // continue with the release-commit publish flow
+}
+```
+
+```ts
+const publishResult = await publishToGithub(...);
+
+if (publishResult === "skipped") {
+  logger.info("Skipping release, tag already exists");
+}
+```
+
+- [x] **Step 4: Run package verification**
+
+Run: `pnpm nx reset && pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts packages/nx-terraform-plugin/src/executors/publish/__tests__/publish.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
 Expected: PASS
 
 - [ ] **Step 5: Commit**
@@ -1437,6 +1532,9 @@ Expected: PASS
 ```bash
 git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
   packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
+  packages/nx-terraform-plugin/src/executors/publish/publish.ts \
+  packages/nx-terraform-plugin/src/executors/publish/__tests__/publish.test.ts \
+  docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md \
   docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
-git commit -m "Preserve publish history with release commits"
+git commit -m "Skip existing release tags"
 ```

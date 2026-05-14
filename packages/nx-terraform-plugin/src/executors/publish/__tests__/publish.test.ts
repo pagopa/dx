@@ -101,6 +101,30 @@ describe("Publish Executor", () => {
     );
   });
 
+  it('logs "Skipping release, tag already exists" when publish is skipped', async () => {
+    const options: NxReleasePublishExecutorSchema = {
+      description: "Terraform module description",
+      githubOwner: "pagopa-dx",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    };
+    const context: ExecutorContext = {
+      ...baseContext,
+    };
+
+    publisherMocks.publishToGithub.mockResolvedValue("skipped");
+
+    const output = await executor(options, context);
+
+    expect(output.success).toBe(true);
+    expect(loggerMocks.info).toHaveBeenNthCalledWith(
+      2,
+      "Skipping release, tag already exists",
+    );
+  });
+
   it("fails when projectRoot is missing", async () => {
     const options = {
       description: "Terraform module description",

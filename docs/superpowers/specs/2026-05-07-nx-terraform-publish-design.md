@@ -215,27 +215,39 @@ For each eligible module:
    arbitrary user account.
 9. Create a temporary directory outside the workspace.
 10. Clone or initialize a temporary git repository there:
+    - clear any stray working-tree files in the temporary export repository
+      while preserving `.git` before checking out remote state, so rerunning
+      publish cannot fail with Git's "untracked working tree files would be
+      overwritten by checkout" error
     - if remote `main` already exists, fetch it and check out a local branch rooted on `origin/main`
     - if the repository has no `main` branch yet, bootstrap a new local `main` branch in the empty repository
-11. Replace the temporary repository working tree contents with the current filesystem
+11. Before creating a release commit, probe the destination tag on the remote:
+    - if `refs/tags/<version>` already exists, stop the publish flow cleanly and
+      report `Skipping release, tag already exists`
+    - if the tag does not exist, continue with the normal release flow
+12. Replace the temporary repository working tree contents with the current filesystem
     snapshot of `infra/modules/<module>`, keeping `.git` intact so the export repo
     remains an exact snapshot of the module directory after the commit.
-12. Stage all resulting additions, modifications, and deletions.
-13. Create a single publish commit with message `Release <version>`, using explicit
+13. Stage all resulting additions, modifications, and deletions.
+14. Create a single publish commit with message `Release <version>`, using explicit
     commit metadata so the flow does not depend on local git config.
-14. Create or update a local git tag named exactly as `module.json.version`, pointing
+15. Create or update a local git tag named exactly as `module.json.version`, pointing
     to that release commit.
-15. Configure the GitHub remote in the temporary repository when bootstrapping from
+16. Configure the GitHub remote in the temporary repository when bootstrapping from
     an empty local repo.
-16. Push the release commit to remote `main` without rewriting history.
-17. Force-push the version tag to the destination repository, overwriting any
+17. Push the release commit to remote `main` without rewriting history.
+18. Force-push the version tag to the destination repository, overwriting any
     existing remote tag with the same name.
-18. Remove the temporary directory in best-effort mode after success or failure.
-19. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
+19. Remove the temporary directory in best-effort mode after success or failure.
+20. Keep release/tag semantics compatible with Nx Release ownership (version source remains Nx Release flow).
 
-End condition: destination repo `main` gains a new `Release <version>` commit whose
-tree matches the current module directory snapshot, and the tag named after
-`module.json.version` points to that same release commit.
+End condition:
+- if the remote tag does not exist, destination repo `main` gains a new
+  `Release <version>` commit whose tree matches the current module directory
+  snapshot, and the tag named after `module.json.version` points to that same
+  release commit
+- if the remote tag already exists, publish exits successfully without creating a
+  duplicate release commit and reports `Skipping release, tag already exists`
 
 ## Repo Naming
 
@@ -255,7 +267,9 @@ Hard-fail (no silent fallback) with actionable messages for:
 2. Invalid merged publish options (including missing final `github.owner`).
 3. GitHub repository creation failure (permission/conflict/rate limit).
 4. Requested user-profile owner does not match the authenticated GitHub user.
-5. Temporary repo clone/bootstrap/copy/commit/tag/remote/push failures.
+5. Temporary repo clone/bootstrap/copy/commit/tag/remote/push failures,
+   except for the specific case where the destination tag already exists and the
+   executor intentionally skips the release.
 6. Best-effort temporary-directory cleanup failures should not hide an earlier primary publish failure;
    if cleanup is the only failing step after a successful publish, surface it
    explicitly.
@@ -314,10 +328,16 @@ list programmatically.
       - explicit failure when user-profile owner differs from the authenticated user;
       - repeated publish invocations do not fail because publish state is isolated
         in a temporary export repository;
+      - rerunnable publishes clear stray export-repo working-tree files before
+        checking out `origin/main`, so Git does not abort with "untracked
+        working tree files would be overwritten by checkout";
       - the publish force-pushes an exact module snapshot to `main`, deleting
         files that no longer exist in the module directory;
       - the publish creates or updates a tag named after `module.json.version`
-        and force-pushes it to the destination repository;
+        and force-pushes it to the destination repository when the remote tag
+        does not already exist;
+      - if the remote tag already exists, publish skips cleanly and reports
+        `Skipping release, tag already exists`;
       - tag-push failure fails the publish even if the branch push already
         succeeded;
       - the temporary export repository is removed in best-effort cleanup after

@@ -16,6 +16,8 @@ export interface PublishToGithubInput {
   workspaceRoot: string;
 }
 
+export type PublishToGithubResult = "published" | "skipped";
+
 export const getRepoNameFromProjectRoot = (
   projectRoot: string,
   provider: string,
@@ -57,7 +59,7 @@ const clearExportWorkingTree = async (
 
 export const publishToGithub = async (
   input: PublishToGithubInput,
-): Promise<void> => {
+): Promise<PublishToGithubResult> => {
   const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
   const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
   const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
@@ -65,6 +67,7 @@ export const publishToGithub = async (
   await ensureGitHubRepository(input.githubOwner, repo);
 
   let publishError: unknown;
+  let publishResult: PublishToGithubResult = "published";
   let tempExportDir: string | undefined;
 
   try {
@@ -86,24 +89,35 @@ export const publishToGithub = async (
 
     await $`git init -b main`;
     await $`git remote add origin ${repoUrl}`;
-    await clearExportWorkingTree(tempExportDir);
 
-    const remoteMain =
-      await safe$`git ls-remote --exit-code --heads origin main`;
-    if (remoteMain.exitCode === 0) {
-      await $`git fetch origin main`;
-      await $`git checkout -B main origin/main`;
-    } else if (remoteMain.exitCode !== 2) {
-      throw new Error(`Failed to resolve remote main for ${repoUrl}`);
+    const remoteTag =
+      await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
+    if (remoteTag.exitCode === 0) {
+      publishResult = "skipped";
+    } else if (remoteTag.exitCode !== 2) {
+      throw new Error(
+        `Failed to resolve remote tag ${input.version} for ${repoUrl}`,
+      );
+    } else {
+      await clearExportWorkingTree(tempExportDir);
+
+      const remoteMain =
+        await safe$`git ls-remote --exit-code --heads origin main`;
+      if (remoteMain.exitCode === 0) {
+        await $`git fetch origin main`;
+        await $`git checkout -B main origin/main`;
+      } else if (remoteMain.exitCode !== 2) {
+        throw new Error(`Failed to resolve remote main for ${repoUrl}`);
+      }
+
+      await clearExportWorkingTree(tempExportDir);
+      await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
+      await $`git add --all`;
+      await $`git commit -m "Release ${input.version}"`;
+      await $`git tag -f ${input.version}`;
+      await $`git push origin main`;
+      await $`git push origin refs/tags/${input.version} --force`;
     }
-
-    await clearExportWorkingTree(tempExportDir);
-    await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
-    await $`git add --all`;
-    await $`git commit -m "Release ${input.version}"`;
-    await $`git tag -f ${input.version}`;
-    await $`git push origin main`;
-    await $`git push origin refs/tags/${input.version} --force`;
   } catch (error) {
     publishError = error;
   }
@@ -129,4 +143,6 @@ export const publishToGithub = async (
   if (publishError !== undefined) {
     throw publishError;
   }
+
+  return publishResult;
 };
