@@ -81,9 +81,7 @@ describe("Package resolution from workspace root", () => {
     expect(output.resolved).toContain("/src/release/version-actions.ts");
   });
 
-  it(
-    "should load the module with TypeScript transpilation like Nx does",
-    () => {
+  it("should load the module with TypeScript transpilation like Nx does", () => {
     // Simulate Nx's actual loading behavior:
     // 1. Resolve the package name
     // 2. Register TypeScript transpilation (using tsx, ts-node, or similar)
@@ -146,7 +144,5 @@ describe("Package resolution from workspace root", () => {
     expect(output.classType).toBe("function");
     expect(output.className).toBe("TerraformVersionActions");
     expect(output.namedExports).toContain("default");
-    },
-    15_000,
-  );
+  }, 15_000);
 });
