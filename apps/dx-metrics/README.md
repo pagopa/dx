@@ -1,7 +1,10 @@
-# DX Metrics
+# DX Metrics Portal
 
 A Next.js web application for visualizing GitHub engineering metrics.
 Uses PostgreSQL for data storage and Recharts for dashboard visualization.
+
+The GitHub data importer lives in the separate `apps/dx-metrics-import`
+workspace app.
 
 ## Architecture
 
@@ -9,12 +12,11 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 - **PostgreSQL 16** — persistent data storage
 - **Drizzle ORM** — type-safe database access
 - **Recharts** — chart rendering
-- **Import script** — incremental data sync from GitHub API via Octokit
+- **DX Metrics importer** (`apps/dx-metrics-import`) — incremental data sync from GitHub API via Octokit
 
 ## Prerequisites
 
 - Docker and Docker Compose
-- GitHub App credentials or a GitHub PAT with access to the target organization and repositories
 
 ## Setup
 
@@ -25,66 +27,18 @@ Uses PostgreSQL for data storage and Recharts for dashboard visualization.
 docker compose --profile dx-metrics up -d
 ```
 
-2. **Setup database:**
+2. **Apply the shared database schema:**
 
-Only needed on first run, when applying new migrations, or when upgrading an
-existing database:
+Follow the Drizzle workflow documented in
+[`packages/dx-metrics-core`](../../packages/dx-metrics-core/README.md), where
+the shared schema lives.
 
-```bash
-# From apps/dx-metrics/
-DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql npx drizzle-kit push
-```
+3. **Populate the database (optional but recommended):**
 
-3. **Import data (incremental):**
-
-```bash
-export GITHUB_CLIENT_ID=Iv1.0123456789abcdef
-export GITHUB_APP_INSTALLATION_ID=7890123
-# Convert PEM file to a single line with \n escapes
-export GITHUB_APP_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' /path/to/github-app-private-key.pem)"
-export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
-npx tsx scripts/import.ts --since 2026-01-01
-```
-
-If your secret store exposes the private key with escaped newlines (`\n`),
-`dx-metrics` normalizes it automatically before creating the GitHub App
-installation client.
-
-When GitHub App credentials are configured, `dx-metrics` also generates a
-short-lived installation access token right before invoking `terrawiz`, so the
-Terraform module import does not require a separate `GITHUB_TOKEN`.
-
-If GitHub App credentials are not configured, the import script falls back to
-`GITHUB_TOKEN` for both Octokit and `terrawiz`.
+Follow the importer usage documented in
+[`apps/dx-metrics-import`](../dx-metrics-import/README.md).
 
 4. **Access dashboards** at http://localhost:3000 (anonymous access; no GitHub login required)
-
-## Import Script
-
-The import script supports incremental data sync from GitHub:
-
-```bash
-npx tsx scripts/import.ts --since YYYY-MM-DD [--entity <type>] [--tracker-csv <path>]
-```
-
-### Entity types
-
-- `all` (default) — import everything
-- `pull-requests` — pull requests per repository
-- `workflows` — GitHub Actions workflows
-- `workflow-runs` — workflow run history
-- `iac-pr` — IaC pull request lead times
-- `commits` — DX team member commits
-- `code-search` — code search results for DX adoption
-- `tech-radar` — discoverable tool usage mapped to DX Techradar
-- `terraform-registry` — Terraform registry releases
-- `tracker` — DX request tracker (from Slack CSV)
-
-### Tracker CSV Import
-
-```bash
-npx tsx scripts/import.ts --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
-```
 
 ## Starting the Application
 
@@ -107,49 +61,20 @@ chmod +x start.sh
 
 ## Configuration
 
-Application configuration is loaded at runtime from the configuration file
-(for example via `src/lib/config.ts` reading `config.json`), **not** from
-these environment variables.
+Portal defaults are sourced from the shared `@pagopa/dx-metrics-core`
+workspace package, **not** from these environment variables.
 
 Typical configuration fields include:
 
-| Field          | Default          | Description                                               |
-| -------------- | ---------------- | --------------------------------------------------------- |
-| `organization` | `pagopa`         | GitHub organization                                       |
-| `repositories` | (see config)     | List of repositories to analyze                           |
-| `dxTeamSlug`   | `engineering-dx` | GitHub team slug — members are resolved via API at import |
-| `dxRepo`       | `dx`             | The DX repository name                                    |
+| Field          | Default                  | Description                                               |
+| -------------- | ------------------------ | --------------------------------------------------------- |
+| `organization` | `pagopa`                 | GitHub organization                                       |
+| `repositories` | (see shared config)      | List of repositories to analyze                           |
+| `dxTeamSlug`   | `engineering-team-devex` | GitHub team slug — members are resolved via API at import |
+| `dxRepo`       | `dx`                     | The DX repository name                                    |
 
-Refer to the `config.json` used by `src/lib/config.ts` for the exact
-structure and values.
-
-### Import authentication variables
-
-The import script authenticates to GitHub with this precedence:
-
-1. GitHub App installation auth with `GITHUB_CLIENT_ID`, when `GITHUB_CLIENT_ID`,
-   `GITHUB_APP_INSTALLATION_ID`, and `GITHUB_APP_PRIVATE_KEY` are configured
-   - `dx-metrics` uses the App credentials directly for Octokit and mints a
-     temporary installation token for `terrawiz`
-2. GitHub App installation auth with `GITHUB_APP_ID`, when `GITHUB_CLIENT_ID` is
-   absent and `GITHUB_APP_ID`, `GITHUB_APP_INSTALLATION_ID`, and
-   `GITHUB_APP_PRIVATE_KEY` are configured
-3. `GITHUB_TOKEN`, when GitHub App credentials are absent
-
-GitHub App variables:
-
-| Variable                     | Description                                |
-| ---------------------------- | ------------------------------------------ |
-| `GITHUB_CLIENT_ID`           | Preferred GitHub App client ID             |
-| `GITHUB_APP_ID`              | Fallback numeric GitHub App ID             |
-| `GITHUB_APP_INSTALLATION_ID` | Numeric installation ID for the target org |
-| `GITHUB_APP_PRIVATE_KEY`     | GitHub App private key in PEM format       |
-
-Fallback variable:
-
-| Variable       | Description                  |
-| -------------- | ---------------------------- |
-| `GITHUB_TOKEN` | GitHub personal access token |
+Importer runtime configuration and GitHub authentication are documented in
+[`apps/dx-metrics-import`](../dx-metrics-import/README.md).
 
 ## Development
 
@@ -160,16 +85,5 @@ pnpm dev
 
 ## Database Connection
 
-When running outside Docker Compose (e.g., in development), the database URL needs to point to the Docker network gateway:
-
-```bash
-DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
-```
-
-To find the correct IP, inspect the Docker network:
-
-```bash
-docker network inspect dx-metrics_default
-```
-
-Look for the "Gateway" IP in the network config (usually 172.18.0.1 for the default bridge network).
+Database URL and schema-sync notes are documented in
+[`packages/dx-metrics-core`](../../packages/dx-metrics-core/README.md).

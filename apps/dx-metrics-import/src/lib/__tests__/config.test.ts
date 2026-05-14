@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  loadImportConfig,
   normalizeGitHubAppPrivateKey,
   resolveImportSettings,
 } from "../config.js";
@@ -10,10 +11,10 @@ describe("resolveImportSettings", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
-        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
+        GITHUB_CLIENT_ID: "Iv1.client-id",
       },
     );
 
@@ -24,10 +25,10 @@ describe("resolveImportSettings", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
-        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
+        GITHUB_CLIENT_ID: "Iv1.client-id",
       },
     );
 
@@ -40,7 +41,7 @@ describe("resolveImportSettings", () => {
       type: "app",
     });
     expect(settings.organization).toBe("pagopa");
-    expect(settings.repositories).toEqual([]);
+    expect(settings.repositories).toContain("dx");
   });
 
   it("falls back to the GitHub PAT when GitHub App credentials are not configured", () => {
@@ -80,8 +81,8 @@ describe("resolveImportSettings", () => {
       resolveImportSettings(
         { dxTeamSlug: "engineering-team-devex" },
         {
-          GITHUB_CLIENT_ID: "Iv1.client-id",
           GITHUB_APP_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----",
+          GITHUB_CLIENT_ID: "Iv1.client-id",
         },
       ),
     ).toThrow(
@@ -93,11 +94,11 @@ describe("resolveImportSettings", () => {
     const settings = resolveImportSettings(
       { dxTeamSlug: "engineering-team-devex" },
       {
-        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_APP_ID: "123",
         GITHUB_APP_INSTALLATION_ID: "456",
         GITHUB_APP_PRIVATE_KEY:
           "-----BEGIN PRIVATE KEY-----\\nprivate-key\\n-----END PRIVATE KEY-----",
+        GITHUB_CLIENT_ID: "Iv1.client-id",
         GITHUB_TOKEN: "ghp_legacy_token",
       },
     );
@@ -142,5 +143,15 @@ describe("normalizeGitHubAppPrivateKey", () => {
     ).toBe(
       "-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----",
     );
+  });
+});
+
+describe("loadImportConfig", () => {
+  it("falls back to the shared DX Metrics config when no file path is provided", () => {
+    expect(loadImportConfig()).toMatchObject({
+      dxRepo: "dx",
+      dxTeamSlug: "engineering-team-devex",
+      organization: "pagopa",
+    });
   });
 });

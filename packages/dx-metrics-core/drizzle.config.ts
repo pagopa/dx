@@ -1,3 +1,5 @@
+// DX Metrics shared Drizzle configuration. Keep schema tooling next to the
+// shared schema so portal and importer use the same source of truth.
 import { defineConfig } from "drizzle-kit";
 
 const databaseUrl = process.env.DATABASE_URL;
@@ -10,5 +12,5 @@ export default defineConfig({
   },
   dialect: "postgresql",
   out: "./drizzle",
-  schema: "./src/db/schema.ts",
+  schema: "./src/schema.ts",
 });

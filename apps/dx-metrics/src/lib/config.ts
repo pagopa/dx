@@ -1,11 +1,12 @@
-// Configuration constants - all values are sourced from config.json and cannot be overridden via environment.
-import rawConfig from "../../config.json";
+/** Portal-specific DX Metrics configuration derived from the shared core package. */
 
-export const ORGANIZATION: string = rawConfig.organization;
-export const REPOSITORIES: string[] = rawConfig.repositories;
+import { dxMetricsConfig } from "@pagopa/dx-metrics-core/config";
+
+export const ORGANIZATION: string = dxMetricsConfig.organization;
+export const REPOSITORIES: string[] = [...dxMetricsConfig.repositories];
 export const DEFAULT_REPOSITORY = REPOSITORIES[0] ?? "dx";
-export const DX_TEAM_SLUG: string = rawConfig.dxTeamSlug;
-export const DX_REPO: string = rawConfig.dxRepo;
+export const DX_TEAM_SLUG: string = dxMetricsConfig.dxTeamSlug;
+export const DX_REPO: string = dxMetricsConfig.dxRepo;
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 

@@ -3,7 +3,7 @@
 import path from "path";
 
 export interface ImportCliOptions {
-  configPath: string;
+  configPath?: string;
   entity: string;
   force: boolean;
   since: string;
@@ -45,7 +45,7 @@ export function computeSinceDate(
 
 export function getHelpText(): string {
   return `
-Usage: npx tsx scripts/import.ts [options]
+Usage: pnpm import -- [options]
 
 Options:
   --since YYYY-MM-DD        Start date for the import (e.g. 2024-01-01).
@@ -69,7 +69,7 @@ Options:
                               tracker           Tracker CSV data (requires --tracker-csv)
 
   --tracker-csv <path>      Path to the tracker CSV file (used with --entity tracker)
-  --config <path>           Path to config JSON file (default: config.json)
+  --config <path>           Path to config JSON file (default: shared DX Metrics config)
   --force                   Re-import even if a checkpoint already exists
   --help                    Show this help message
 `;
@@ -83,7 +83,7 @@ export function parseArgs(
   let entity = "all";
   let trackerCsv = "";
   let force = false;
-  let configPath = path.resolve(workingDirectory, "config.json");
+  let configPath: string | undefined;
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
