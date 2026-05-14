@@ -134,4 +134,31 @@ describe("ensureGitHubRepository", () => {
     expect(octokitMocks.createForAuthenticatedUser).not.toHaveBeenCalled();
     expect(octokitMocks.createInOrg).not.toHaveBeenCalled();
   });
+
+  it("fails with a clear error when a user-owned repository is published with app credentials", async () => {
+    const notFoundError = Object.assign(new Error("Not Found"), {
+      status: 404,
+    });
+    octokitMocks.get.mockRejectedValueOnce(notFoundError);
+    octokitMocks.getByUsername.mockResolvedValueOnce({
+      data: { type: "User" },
+    });
+    octokitMocks.getAuthenticated.mockRejectedValueOnce(
+      Object.assign(new Error("Resource not accessible by integration"), {
+        status: 403,
+      }),
+    );
+
+    await expect(
+      ensureGitHubRepository("pagopa-user", "terraform-aws-x"),
+    ).rejects.toThrow(
+      'Cannot create repository for user owner "pagopa-user" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.',
+    );
+
+    expect(octokitMocks.getByUsername).toHaveBeenCalledWith({
+      username: "pagopa-user",
+    });
+    expect(octokitMocks.createForAuthenticatedUser).not.toHaveBeenCalled();
+    expect(octokitMocks.createInOrg).not.toHaveBeenCalled();
+  });
 });

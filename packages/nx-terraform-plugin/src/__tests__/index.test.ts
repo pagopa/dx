@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, onTestFinished, vi } from "vitest";
 
 const logtapeMocks = vi.hoisted(() => ({
   configure: vi.fn(async () => {}),
@@ -34,22 +34,22 @@ describe("createNodesV2", () => {
 });
 
 describe("getDiscoveryStateWithValidation", () => {
-  const createdDirs: string[] = [];
-
-  afterEach(async () => {
-    vi.clearAllMocks();
-    await Promise.all(
-      createdDirs
-        .splice(0)
-        .map((directory) => fs.rm(directory, { force: true, recursive: true })),
-    );
-  });
-
-  it("collects only validated publishable roots and ignores test/example roots", async () => {
+  const createWorkspaceRoot = async () => {
     const workspaceRoot = await fs.mkdtemp(
       path.join(os.tmpdir(), "nx-tf-plugin-"),
     );
-    createdDirs.push(workspaceRoot);
+    onTestFinished(async () => {
+      await fs.rm(workspaceRoot, { force: true, recursive: true });
+    });
+    return workspaceRoot;
+  };
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("collects only validated publishable roots and ignores test/example roots", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
 
     const configFiles = [
       path.join("infra", "_modules", "good-module", "main.tf"),
@@ -176,10 +176,7 @@ describe("getDiscoveryStateWithValidation", () => {
   });
 
   it("warns and skips publish target inference when merged publish options are invalid", async () => {
-    const workspaceRoot = await fs.mkdtemp(
-      path.join(os.tmpdir(), "nx-tf-plugin-"),
-    );
-    createdDirs.push(workspaceRoot);
+    const workspaceRoot = await createWorkspaceRoot();
 
     const moduleRoot = path.join("infra", "_modules", "missing-owner");
     const configFiles = [

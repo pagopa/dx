@@ -4,6 +4,21 @@ import { Octokit } from "octokit";
 
 const getGitHubToken = () => process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
 
+const getAuthenticatedUserLogin = async (
+  octokit: Octokit,
+  owner: string,
+): Promise<string> => {
+  try {
+    const authenticatedUser = await octokit.rest.users.getAuthenticated();
+    return authenticatedUser.data.login;
+  } catch (error) {
+    throw new Error(
+      `Cannot create repository for user owner "${owner}" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.`,
+      { cause: error },
+    );
+  }
+};
+
 export const ensureGitHubRepository = async (
   owner: string,
   repo: string,
@@ -41,10 +56,13 @@ export const ensureGitHubRepository = async (
     return;
   }
 
-  const authenticatedUser = await octokit.rest.users.getAuthenticated();
-  if (authenticatedUser.data.login !== owner) {
+  const authenticatedUserLogin = await getAuthenticatedUserLogin(
+    octokit,
+    owner,
+  );
+  if (authenticatedUserLogin !== owner) {
     throw new Error(
-      `Cannot create repository for user owner "${owner}" with authenticated user "${authenticatedUser.data.login}".`,
+      `Cannot create repository for user owner "${owner}" with authenticated user "${authenticatedUserLogin}".`,
     );
   }
 
