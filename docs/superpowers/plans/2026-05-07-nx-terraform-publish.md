@@ -829,7 +829,7 @@ git add packages/nx-terraform-plugin/src/adapters/github/octokit.ts \
 git commit -m "Support user-owned GitHub publish repos"
 ```
 
-### Task 6: Wire docs/changelog and retire workflow usage path
+### Task 6: Wire docs/changelog without retiring the current workflow
 
 **Files:**
 - Modify: `packages/nx-terraform-plugin/src/index.ts`
@@ -850,21 +850,12 @@ expect(Object.keys(getTargetsOrThrow(getProject(defaultOptions, moduleRoot, true
 Run: `pnpm nx test nx-terraform-plugin`  
 Expected: PASS if wiring already matches the plan, or FAIL if final wiring or naming still differs
 
-- [x] **Step 3: Finalize wiring and deprecate direct module workflow**
+- [x] **Step 3: Finalize wiring while keeping the current workflow active**
 
-```yaml
-# .github/workflows/_release-bash-modules-to-subrepo.yaml
-on:
-  workflow_dispatch:
-
-jobs:
-  deprecated:
-    runs-on: ubuntu-latest
-    steps:
-      - run: |
-           echo "This workflow is deprecated. Use nx-release-publish inferred targets from @pagopa/nx-terraform-plugin."
-           exit 1
- ```
+Keep `.github/workflows/_release-bash-modules-to-subrepo.yaml` active in this
+branch. Do not deprecate, stub, or remove it here; workflow retirement will
+happen in a later, dedicated PR after the Nx-based publish path has been
+validated end-to-end.
 
 ```bash
 pnpm nx release plan
@@ -900,9 +891,8 @@ Expected: PASS
 ```bash
 git add packages/nx-terraform-plugin/src/index.ts \
   packages/nx-terraform-plugin/src/__tests__/project.test.ts \
-  .nx/version-plans/version-plan-*.md \
-  .github/workflows/_release-bash-modules-to-subrepo.yaml
-git commit -m "Wire nx-release-publish and deprecate module workflow path"
+  .nx/version-plans/version-plan-*.md
+git commit -m "Wire nx-release-publish planning"
 ```
 
 ### Task 7: Release integration verification for `aws_azure_vpn`

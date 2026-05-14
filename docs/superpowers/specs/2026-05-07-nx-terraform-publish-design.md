@@ -357,8 +357,10 @@ list programmatically.
 3. Record release notes with `pnpm nx release plan` instead of editing
    `CHANGELOG.md` directly; Nx Release pipelines remain the single writer for
    changelog updates and version bumps.
-4. Switch CI release pipeline to use Nx target orchestration once parity is confirmed.
-5. Retire deprecated workflow after successful rollout.
+4. Validate the Nx-based publish flow in this branch without deprecating or
+   removing the current workflow.
+5. Move CI release-pipeline switchover and workflow retirement to a later,
+   dedicated follow-up PR.
 
 Release verification note:
 
