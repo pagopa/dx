@@ -114,7 +114,6 @@ jobs:
           python -m pip freeze --local
 
       - name: Run Trivy custom policies
-        working-directory: ${{ inputs.folder }}
         run: |
           set -eu
 
