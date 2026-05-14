@@ -17,7 +17,9 @@ Current constraints and decisions:
   exist, for both GitHub organizations and personal user profiles.
 - `github.owner` should be centralized at plugin level and overridable per module,
   but the final merged publish configuration must always provide it.
-- Version ownership is delegated to Nx Release integration (to be finalized later).
+- Publishable Terraform modules delegate version ownership to Nx Release through
+  plugin-inferred per-project `release.version` config; `module.json.version`
+  remains the authoritative on-disk version source.
 - Publishable modules are tagged as `terraform:public` for Nx project selection.
 - Invalid `module.json` files are skipped from publish inference but logged as
   structured JSON through the package logger.
@@ -39,7 +41,8 @@ Current constraints and decisions:
 ## Non-Goals (for first iteration)
 
 1. Multi-platform publishing modes beyond GitHub.
-2. Changing Nx Release versioning flow in this phase.
+2. Replacing or overriding the workspace-level Nx Release flow for non-Terraform
+   projects in this phase.
 3. Provider publishing redesign (`providers/**`) in this phase.
 4. Replacing runtime Zod validation with JSON Schema validation.
 
@@ -58,6 +61,9 @@ Current constraints and decisions:
   parsed manifests are considered publishable and carried forward in discovery state.
 - Project creation should receive the parsed manifest payload (or `undefined`)
   instead of a boolean publishability flag.
+- Publishable libraries also receive inferred project-level `release.version`
+  configuration so Nx Release versioning and `nx-release-publish` share the same
+  eligibility boundary.
 
 Projects without valid manifest remain internal libraries and do not expose the publish target.
 
@@ -172,6 +178,42 @@ The executor also revalidates its final input through a dedicated
 `githubOwner` is never treated as optional at execution time while
 `workspaceRoot` remains compatible with the raw string value Nx passes in.
 
+### 2.1 Nx Release version integration
+
+Publishable Terraform libraries infer project-level Nx Release configuration:
+
+```json
+{
+    "release": {
+      "version": {
+        "versionActions": "@pagopa/nx-terraform-plugin/release/version-actions",
+        "currentVersionResolver": "disk",
+        "manifestRootsToUpdate": ["{projectRoot}"]
+      }
+  }
+}
+```
+
+Integration rules:
+
+1. The Terraform plugin infers this `release.version` block per project; we do
+   not set `release.version.versionActions` globally in `nx.json`.
+2. `module.json.version` is the authoritative on-disk version for publishable
+   Terraform modules.
+3. The custom version-actions implementation is resolved through the explicit
+   subpath `@pagopa/nx-terraform-plugin/release/version-actions`, extends Nx's
+   `VersionActions` base class, and uses `@nx/devkit` helpers to:
+   - read the current version from `{projectRoot}/module.json`,
+   - write the computed version back to `module.json` during `nx release version`,
+   - no-op dependency update hooks because this phase has no Terraform
+     manifest-level dependent-version rewriting requirement.
+4. The inferred `release.version` block is added only when the module is already
+   publishable (valid `module.json` and valid merged publish options), so
+   versioning and publish inference stay aligned.
+5. The publish executor consumes the version already present in `module.json`;
+   when invoked by Nx Release, that value has already been updated by the
+   versioning phase before `nx-release-publish` runs.
+
 ### 3. Publish execution engine
 
 Implement a plugin-owned publish executor/service invoked by `nx-release-publish` command wiring.
@@ -198,6 +240,10 @@ Concrete integrations should stay out of the flat `src/` root:
   functions are enough
 
 ## Publish Flow (`github` mode)
+
+When invoked by Nx Release, `module.json.version` has already been updated by
+the inferred Terraform `versionActions` implementation. The publish executor
+reads that current on-disk version and uses it as the release commit/tag value.
 
 For each eligible module:
 
@@ -306,25 +352,34 @@ list programmatically.
    - Validate that `module.json.version` accepts valid semver strings including
      prerelease/build metadata and rejects invalid semver values.
 2. **Inference tests**
-     - `library + valid module.json` => includes `nx-release-publish`.
-     - `library + missing/invalid module.json` => excludes target.
-     - `library + module.json missing provider` => excludes target.
-     - malformed JSON or schema-invalid manifest never marks a module as publishable.
-     - invalid manifest discovery warning uses message `Invalid manifest file`
+      - `library + valid module.json` => includes `nx-release-publish`.
+      - `library + valid module.json` => includes inferred `release.version`
+        with `versionActions`, `currentVersionResolver: "disk"`, and
+        `manifestRootsToUpdate: ["{projectRoot}"]`.
+      - `library + missing/invalid module.json` => excludes target.
+      - `library + missing/invalid module.json` => excludes inferred
+        `release.version`.
+      - `library + module.json missing provider` => excludes target.
+      - malformed JSON or schema-invalid manifest never marks a module as publishable.
+      - invalid manifest discovery warning uses message `Invalid manifest file`
        with `{ path, issues }` properties only.
      - valid manifest + missing owner in both manifest and plugin defaults =>
        warning `Invalid publish options` with `{ path, issues }`, and no publish
        target.
      - `application` => excludes target.
      - `library + valid module.json` => includes `terraform:public` tag.
-3. **Resolution tests**
-     - `module.json.github.owner` overrides plugin default.
-     - plugin default is used when module override absent.
-     - missing both => merged publish validation failure.
-4. **Publish service tests**
-     - repository exists path;
-     - organization repository auto-create path;
-     - user-profile repository auto-create path;
+3. **Nx Release version-action tests**
+      - custom version actions reads the current version from `module.json`.
+      - custom version actions writes the new version back to `module.json`.
+      - dependency update hooks are explicit no-ops for Terraform modules.
+4. **Resolution tests**
+      - `module.json.github.owner` overrides plugin default.
+      - plugin default is used when module override absent.
+      - missing both => merged publish validation failure.
+5. **Publish service tests**
+      - repository exists path;
+      - organization repository auto-create path;
+      - user-profile repository auto-create path;
       - explicit failure when user-profile owner differs from the authenticated user;
       - repeated publish invocations do not fail because publish state is isolated
         in a temporary export repository;
@@ -345,10 +400,10 @@ list programmatically.
       - publish can run from a dirty workspace because it does not check out
         branches or mutate workspace git state;
       - failure propagation for API/git failures.
-5. **Regression tests**
-    - Existing targets remain unchanged for non-publish concerns.
-    - executor rejects invalid final publish options instead of silently treating
-      `githubOwner` as optional.
+6. **Regression tests**
+     - Existing targets remain unchanged for non-publish concerns.
+     - executor rejects invalid final publish options instead of silently treating
+       `githubOwner` as optional.
 
 ## Migration and Rollout
 
@@ -356,7 +411,10 @@ list programmatically.
 2. Validate content parity against current `_release-bash-modules-to-subrepo` behavior, while allowing the new flow to replace subtree history with snapshot commits.
 3. Record release notes with `pnpm nx release plan` instead of editing
    `CHANGELOG.md` directly; Nx Release pipelines remain the single writer for
-   changelog updates and version bumps.
+   changelog updates and version bumps. For Terraform modules, version-plan
+   front matter must reference the Nx project name (for example
+   `"modules-aws-azure-vpn": minor`), not the destination GitHub repository
+   name.
 4. Validate the Nx-based publish flow in this branch without deprecating or
    removing the current workflow.
 5. Move CI release-pipeline switchover and workflow retirement to a later,
@@ -374,8 +432,13 @@ Release verification note:
 - With the current naming rule, the expected destination repository is
   `lucacavallaro/terraform-aws-aws-azure-vpn`.
 
-## Open Follow-up
+## Resolved Nx Release Handoff
 
-1. Formalize Nx Release handoff for manifest version bump/update ownership and
-   exact interface contract, including the version-plan wording expected for
-   Terraform module publish support.
+1. Terraform module version bumps are owned by Nx Release through plugin-inferred
+   per-project `release.version` config.
+2. `module.json.version` is read and written by the plugin-owned Nx Release
+   version-actions implementation exported by
+   `@pagopa/nx-terraform-plugin/release/version-actions`.
+3. Terraform module version plans must target the Nx project name (for example
+   `"modules-aws-azure-vpn": minor`), not the publish destination repository
+   name.

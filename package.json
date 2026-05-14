@@ -15,6 +15,7 @@
     "@nx/js": "22.7.1",
     "@nx/plugin": "22.7.1",
     "@nx/vitest": "22.7.1",
+    "@pagopa/nx-terraform-plugin": "workspace:^",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.33",
     "@tsconfig/node24": "catalog:",

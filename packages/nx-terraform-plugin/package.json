@@ -12,7 +12,15 @@
       "@nx/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
+      "require": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./release/version-actions": {
+      "@nx/source": "./src/release/version-actions.ts",
+      "types": "./dist/release/version-actions.d.ts",
+      "import": "./dist/release/version-actions.js",
+      "require": "./src/release/version-actions.ts",
+      "default": "./dist/release/version-actions.js"
     }
   },
   "repository": {
@@ -31,6 +39,7 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },

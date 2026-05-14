@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish exact module snapshots to dedicated GitHub repositories in `github` mode, including auto-create when missing and additive release commits in the exported repository.
+**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish exact module snapshots to dedicated GitHub repositories in `github` mode, and fully integrate their `module.json.version` lifecycle with Nx Release.
 
-**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and temporary export-repo orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation while the GitHub publisher exports module snapshots as `Release <version>` commits rooted on remote `main` instead of force-pushed history rewrites.
+**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, per-project Nx Release version wiring, and GitHub export-repo orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), infer project-level `release.version` for publishable Terraform modules, and require the merged publish schema plus custom `VersionActions` implementation to keep `module.json.version` aligned with Nx Release before the GitHub publisher exports module snapshots as `Release <version>` commits rooted on remote `main`.
 
-**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, `execa`, Octokit, Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
+**Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Nx Release `VersionActions`, Vitest, `execa`, Octokit, Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
 
 ---
 
@@ -275,6 +275,167 @@ The generated file should be treated as a consumer artifact derived from the
 Zod schema, not as a second handwritten schema source. Keep the `$schema`
 compatibility isolated to the generator output rather than broadening the
 runtime Zod manifest schema.
+
+### Task 2b: Infer per-project Nx Release version config and `module.json` version actions
+
+**Files:**
+- Create: `packages/nx-terraform-plugin/src/release/version-actions.ts`
+- Create: `packages/nx-terraform-plugin/src/release/__tests__/version-actions.test.ts`
+- Modify: `packages/nx-terraform-plugin/src/project.ts`
+- Test: `packages/nx-terraform-plugin/src/__tests__/project.test.ts`
+
+- [ ] **Step 1: Write failing tests for inferred release config and version actions**
+
+```ts
+// packages/nx-terraform-plugin/src/__tests__/project.test.ts
+expect(
+  getProject(defaultOptions, moduleRoot, true, publishManifestWithOwner).release,
+).toEqual({
+  version: {
+    currentVersionResolver: "disk",
+    manifestRootsToUpdate: ["{projectRoot}"],
+    versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+  },
+});
+
+expect(getProject(defaultOptions, moduleRoot, true).release).toBeUndefined();
+```
+
+```ts
+// packages/nx-terraform-plugin/src/release/__tests__/version-actions.test.ts
+const tree = createTreeWithEmptyWorkspace();
+tree.write(
+  "infra/modules/aws_azure_vpn/module.json",
+  JSON.stringify(
+    {
+      description: "VPN module",
+      provider: "aws",
+      version: "1.2.3",
+    },
+    null,
+    2,
+  ),
+);
+
+const versionActions = new TerraformModuleVersionActions(
+  releaseGroup,
+  projectNode,
+  {
+    currentVersionResolver: "disk",
+    manifestRootsToUpdate: ["{projectRoot}"],
+    preserveLocalDependencyProtocols: true,
+    versionPrefix: "auto",
+  },
+);
+
+await versionActions.init(tree);
+await expect(versionActions.readCurrentVersionFromSourceManifest(tree)).resolves
+  .toEqual({
+    currentVersion: "1.2.3",
+    manifestPath: "infra/modules/aws_azure_vpn/module.json",
+  });
+
+await versionActions.updateProjectVersion(tree, "1.3.0");
+expect(readJson(tree, "infra/modules/aws_azure_vpn/module.json").version).toBe(
+  "1.3.0",
+);
+```
+
+- [ ] **Step 2: Run focused tests to verify RED**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/__tests__/project.test.ts packages/nx-terraform-plugin/src/release/__tests__/version-actions.test.ts`  
+Expected: FAIL because Terraform projects do not yet infer `release.version` and the custom version-actions implementation does not exist
+
+- [ ] **Step 3: Implement per-project release wiring and custom version actions**
+
+```ts
+// packages/nx-terraform-plugin/src/project.ts
+const getReleaseConfig = (
+  publishManifest: ModulePublishManifest | undefined,
+): ProjectConfiguration["release"] | undefined =>
+  publishManifest
+    ? {
+        version: {
+          currentVersionResolver: "disk",
+          manifestRootsToUpdate: ["{projectRoot}"],
+          versionActions:
+            "@pagopa/nx-terraform-plugin/release/version-actions",
+        },
+      }
+    : undefined;
+```
+
+```ts
+// packages/nx-terraform-plugin/src/release/version-actions.ts
+/**
+ * Implements Nx Release version updates for Terraform module manifests.
+ */
+
+import { readJson, updateJson } from "@nx/devkit";
+import type { ProjectGraph, Tree } from "@nx/devkit";
+import { VersionActions } from "nx/release";
+
+export class TerraformModuleVersionActions extends VersionActions {
+  validManifestFilenames = ["module.json"];
+
+  async readCurrentVersionFromSourceManifest(tree: Tree) {
+    const manifestPath = `${this.projectGraphNode.data.root}/module.json`;
+    const manifest = readJson(tree, manifestPath);
+
+    return {
+      currentVersion: manifest.version,
+      manifestPath,
+    };
+  }
+
+  async readCurrentVersionFromRegistry() {
+    return null;
+  }
+
+  async readCurrentVersionOfDependency() {
+    return {
+      currentVersion: null,
+      dependencyCollection: null,
+    };
+  }
+
+  async updateProjectVersion(tree: Tree, newVersion: string) {
+    const manifestPath = `${this.projectGraphNode.data.root}/module.json`;
+
+    updateJson(tree, manifestPath, (json) => ({
+      ...json,
+      version: newVersion,
+    }));
+
+    return [`✍️  New version ${newVersion} written to manifest: ${manifestPath}`];
+  }
+
+  async updateProjectDependencies(
+    _tree: Tree,
+    _projectGraph: ProjectGraph,
+    _dependenciesToUpdate: Record<string, string>,
+  ) {
+    return [];
+  }
+}
+
+export default TerraformModuleVersionActions;
+```
+
+- [ ] **Step 4: Run focused tests to verify GREEN**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/__tests__/project.test.ts packages/nx-terraform-plugin/src/release/__tests__/version-actions.test.ts`  
+Expected: PASS, with inferred `release.version` present only for publishable Terraform libraries
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/project.ts \
+  packages/nx-terraform-plugin/src/release/version-actions.ts \
+  packages/nx-terraform-plugin/src/release/__tests__/version-actions.test.ts \
+  packages/nx-terraform-plugin/src/__tests__/project.test.ts
+git commit -m "Integrate Terraform module version actions with nx release"
+```
 
 ### Task 3: Add publish runner entrypoint and execution contract
 
@@ -1527,4 +1688,44 @@ git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
   docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md \
   docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
 git commit -m "Skip existing release tags"
+```
+
+### Task 7g: Verify Nx Release version bump flow and version-plan wording for Terraform modules
+
+**Files:**
+- Modify: `.nx/version-plans/version-plan-<timestamp>.md`
+- Test: `infra/modules/aws_azure_vpn/module.json`
+- Test: release CLI output (no committed repository changes required)
+
+- [ ] **Step 1: Create a dry-run version plan using the Nx project name**
+
+```bash
+pnpm nx release plan minor \
+  --projects modules-aws-azure-vpn \
+  --message "Add Nx Release-managed module.json version bumps for Terraform module publishing." \
+  --dry-run
+```
+
+Expected: the preview targets `modules-aws-azure-vpn`; it must not refer to
+`terraform-aws-aws-azure-vpn`, because version plans are keyed by Nx project
+name, not destination repository name.
+
+- [ ] **Step 2: Verify the custom version actions resolve for the Terraform module**
+
+Run: `pnpm nx release version minor --projects modules-aws-azure-vpn --dry-run`  
+Expected: PASS, with Nx Release resolving the plugin-owned Terraform
+`versionActions` implementation and previewing a version write to
+`infra/modules/aws_azure_vpn/module.json`
+
+- [ ] **Step 3: Run the plugin test suite after release wiring lands**
+
+Run: `pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`  
+Expected: PASS
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add docs/superpowers/specs/2026-05-07-nx-terraform-publish-design.md \
+  docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
+git commit -m "Document nx release handoff for Terraform modules"
 ```

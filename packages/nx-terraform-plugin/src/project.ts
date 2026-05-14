@@ -284,7 +284,8 @@ export const getProject = (
   if (isPublishableLibrary) {
     tags.push("terraform:public");
   }
-  return {
+
+  const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
       default: ["{projectRoot}/*.{tf,tfvars}"],
@@ -301,4 +302,17 @@ export const getProject = (
     tags,
     targets,
   };
+
+  // Add Nx Release configuration for publishable libraries
+  if (isPublishableLibrary) {
+    config.release = {
+      version: {
+        currentVersionResolver: "disk",
+        manifestRootsToUpdate: ["{projectRoot}"],
+        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+      },
+    };
+  }
+
+  return config;
 };
