@@ -1,7 +1,7 @@
 import { createTree } from "nx/src/devkit-testing-exports";
 import { describe, expect, it } from "vitest";
 
-import { TerraformVersionActions } from "../version-actions.ts";
+import TerraformVersionActions from "../version-actions.ts";
 
 // Helper functions to create mock objects for testing
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

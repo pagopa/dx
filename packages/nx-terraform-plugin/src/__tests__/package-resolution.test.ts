@@ -52,7 +52,7 @@ describe("Package resolution from workspace root", () => {
     expect(resolvedPath).toContain("/src/release/version-actions.ts");
   });
 
-  it("should expose TerraformVersionActions as a named export", () => {
+  it("should expose TerraformVersionActions as the default export", () => {
     const result = spawnSync(
       "node",
       [
@@ -62,9 +62,9 @@ describe("Package resolution from workspace root", () => {
         const resolved = require.resolve('${packageName}');
         const source = fs.readFileSync(resolved, 'utf-8');
         const hasNamedExport = source.includes('export class TerraformVersionActions');
-        const hasDefaultExport = source.includes('default');
+        const hasDefaultExport = source.includes('export default class TerraformVersionActions');
         console.log(JSON.stringify({ hasDefaultExport, hasNamedExport, resolved }));
-        process.exit(hasNamedExport && !hasDefaultExport ? 0 : 1);
+        process.exit(hasDefaultExport && !hasNamedExport ? 0 : 1);
         `,
       ],
       {
@@ -76,8 +76,8 @@ describe("Package resolution from workspace root", () => {
 
     expect(result.status).toBe(0);
     const output = JSON.parse(result.stdout);
-    expect(output.hasNamedExport).toBe(true);
-    expect(output.hasDefaultExport).toBe(false);
+    expect(output.hasNamedExport).toBe(false);
+    expect(output.hasDefaultExport).toBe(true);
     expect(output.resolved).toContain("/src/release/version-actions.ts");
   });
 
@@ -86,7 +86,7 @@ describe("Package resolution from workspace root", () => {
     // 1. Resolve the package name
     // 2. Register TypeScript transpilation (using tsx, ts-node, or similar)
     // 3. Require the resolved path
-    // 4. Verify the named export is the TerraformVersionActions class
+    // 4. Verify the default export is the TerraformVersionActions class
     const result = spawnSync(
       "pnpm",
       [
@@ -101,24 +101,24 @@ describe("Package resolution from workspace root", () => {
           // Step 2: Require the resolved path (with TS transpilation active via tsx)
            const module = require(resolved);
            
-           // Step 3: Verify the module structure
-           const hasDefault = typeof module.default !== 'undefined';
-           const hasVersionActions =
-             typeof module.TerraformVersionActions === 'function';
-           
-           // Step 4: Verify the named export is the TerraformVersionActions class
-           const className = module.TerraformVersionActions?.name || '';
-           
-           const result = {
-             hasDefault,
-             hasVersionActions,
-             className,
-             classType: typeof module.TerraformVersionActions,
-             namedExports: Object.keys(module),
-           };
-           
-           console.log(JSON.stringify(result, null, 2));
-           process.exit(hasVersionActions && !hasDefault ? 0 : 1);
+            // Step 3: Verify the module structure
+            const hasDefault = typeof module.default === 'function';
+            const hasVersionActions =
+              typeof module.TerraformVersionActions === 'function';
+            
+            // Step 4: Verify the default export is the TerraformVersionActions class
+            const className = module.default?.name || '';
+            
+            const result = {
+              hasDefault,
+              hasVersionActions,
+              className,
+              classType: typeof module.default,
+              namedExports: Object.keys(module),
+            };
+            
+            console.log(JSON.stringify(result, null, 2));
+            process.exit(hasDefault && !hasVersionActions ? 0 : 1);
          } catch (e) {
            console.error('Error:', e.message);
           console.error('Stack:', e.stack);
@@ -138,11 +138,11 @@ describe("Package resolution from workspace root", () => {
     // Parse the full JSON output (it's pretty-printed across multiple lines)
     const output = JSON.parse(result.stdout.trim());
 
-    // Verify only the named export is present
-    expect(output.hasDefault).toBe(false);
-    expect(output.hasVersionActions).toBe(true);
+    // Verify only the default export is present
+    expect(output.hasDefault).toBe(true);
+    expect(output.hasVersionActions).toBe(false);
     expect(output.classType).toBe("function");
     expect(output.className).toBe("TerraformVersionActions");
-    expect(output.namedExports).toContain("TerraformVersionActions");
+    expect(output.namedExports).toContain("default");
   });
 });
