@@ -6,18 +6,16 @@ name: Deploy Static Site to Azure
 
 # NOTE: use as trigger
 # on:
-#   push:
-#     branches:
-#       - main
-#     paths:
-#       - "apps/my-static-app/**" # Trigger only when this app changes
+#   release:
+#     types: [published]
 #   pull_request:
 #     types: [opened, synchronize, reopened, closed]
 #     branches:
 #       - main
 #     paths:
 #       - "apps/my-static-app/**"
-# To be sure that during a PR the preview will be triggered
+# Filter release events in the caller to the project-specific tag prefix.
+# Keep pull_request to ensure preview environments are managed during PRs.
 
 on:
   workflow_call:
@@ -64,7 +62,7 @@ on:
         value: ${{ jobs.build.outputs.bundle_name }}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}-${{ ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) && 'cd' || 'ci' }}
+  group: ${{ github.workflow }}-${{ github.ref }}-${{ ( github.event_name == 'release' || ( github.event_name == 'push' && ( github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') ) ) ) && 'cd' || 'ci' }}
   cancel-in-progress: true
 
 env:
@@ -110,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build]
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-${{ ( github.event_name == 'push' && github.ref == 'refs/heads/main' ) && 'cd' || 'ci' }}
+    environment: ${{ inputs.environment }}-${{ ( github.event_name == 'release' || ( github.event_name == 'push' && ( github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/') ) ) ) && 'cd' || 'ci' }}
     permissions:
       id-token: write
       contents: read
@@ -145,9 +143,9 @@ jobs:
           STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
           RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
-      - name: Deploy Preview
+      - name: Deploy Static Website
         id: deploy_preview
-        if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+        if: github.event_name == 'release' || github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
           azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
@@ -187,7 +185,7 @@ jobs:
               }
             }
 
-      - name: Delete Preview and Deploy production
+      - name: Delete Preview Environment
         if: github.event_name == 'pull_request' && github.event.action == 'closed'
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:

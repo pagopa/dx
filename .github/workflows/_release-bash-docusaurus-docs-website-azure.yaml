@@ -2,10 +2,8 @@ name: Deploy DX Website to Azure
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - "apps/website/**" # Trigger only when this app changes
+    tags:
+      - "docs@*"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -14,8 +12,20 @@ on:
       - "apps/website/**"
 
 jobs:
-  deploy_to_static_web_app:
-    uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main # Path to the reusable workflow
+  preview_static_web_app:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/release-azure-staticapp-v1.yaml
+    secrets: inherit
+    with:
+      workspace_name: "docs" # The 'name' from the app's package.json
+      output_dir: "build" # The build output directory name
+      static_web_app_name: "dx-p-itn-website-stapp-01"
+      resource_group_name: "dx-p-itn-common-rg-01"
+      environment: "app-prod"
+
+  release_static_web_app:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
+    uses: ./.github/workflows/release-azure-staticapp-v1.yaml
     secrets: inherit
     with:
       workspace_name: "docs" # The 'name' from the app's package.json
@@ -25,11 +35,10 @@ jobs:
       environment: "app-prod"
 
   feed_docs_knowledge_base:
-    # Only run after push to main with a "Version Packages" commit (changeset PR merge)
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'Version Packages')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
     name: Update MCP Server Knowledge Base
     environment: app-prod-ci
-    needs: deploy_to_static_web_app
+    needs: release_static_web_app
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -42,7 +51,7 @@ jobs:
       - name: Download Artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
-          bundle_name: ${{ needs.deploy_to_static_web_app.outputs.bundle_name }}
+          bundle_name: bundle
           file_path: "./${{ env.OUTPUT_DIR }}"
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
