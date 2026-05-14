@@ -1,3 +1,13 @@
+## 0.21.5 (2026-05-13)
+
+### 🩹 Fixes
+
+- Include DX Copilot plugin settings in the monorepo scaffold ([#1741](https://github.com/pagopa/dx/pull/1741))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.21.4 (2026-05-13)
 
 ### 🩹 Fixes
