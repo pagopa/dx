@@ -1,7 +1,7 @@
 // Orchestrates GitHub publishing with direct Octokit and git subprocess calls.
 
 import { $ as $_ } from "execa";
-import { cp, mkdtemp, rm } from "node:fs/promises";
+import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
@@ -41,6 +41,20 @@ const copyModuleDirectoryContents = async (
   });
 };
 
+const clearExportWorkingTree = async (
+  exportDirectory: string,
+): Promise<void> => {
+  const entries = await readdir(exportDirectory, { withFileTypes: true });
+
+  await Promise.all(
+    entries
+      .filter((entry) => entry.name !== ".git")
+      .map((entry) =>
+        rm(join(exportDirectory, entry.name), { force: true, recursive: true }),
+      ),
+  );
+};
+
 export const publishToGithub = async (
   input: PublishToGithubInput,
 ): Promise<void> => {
@@ -68,13 +82,27 @@ export const publishToGithub = async (
       },
       shell: true,
     });
+    const safe$ = $({ reject: false });
 
     await $`git init -b main`;
-    await $`git add .`;
-    await $`git commit -m "Updated module"`;
     await $`git remote add origin ${repoUrl}`;
-    await $`git tag ${input.version}`;
-    await $`git push origin HEAD:main --force`;
+    await clearExportWorkingTree(tempExportDir);
+
+    const remoteMain =
+      await safe$`git ls-remote --exit-code --heads origin main`;
+    if (remoteMain.exitCode === 0) {
+      await $`git fetch origin main`;
+      await $`git checkout -B main origin/main`;
+    } else if (remoteMain.exitCode !== 2) {
+      throw new Error(`Failed to resolve remote main for ${repoUrl}`);
+    }
+
+    await clearExportWorkingTree(tempExportDir);
+    await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
+    await $`git add --all`;
+    await $`git commit -m "Release ${input.version}"`;
+    await $`git tag -f ${input.version}`;
+    await $`git push origin main`;
     await $`git push origin refs/tags/${input.version} --force`;
   } catch (error) {
     publishError = error;

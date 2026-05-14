@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish exact module snapshots to dedicated GitHub repositories in `github` mode, including auto-create when missing.
+**Goal:** Add inferred `nx-release-publish` support to `@pagopa/nx-terraform-plugin` so publishable Terraform libraries (with `module.json`) can publish exact module snapshots to dedicated GitHub repositories in `github` mode, including auto-create when missing and additive release commits in the exported repository.
 
-**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and temporary export-repo orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation.
+**Architecture:** Keep project discovery and dependency logic unchanged, then layer publishability inference on top of library projects only. Isolate publish concerns into focused modules: manifest/config parsing, merged publish-option validation, GitHub repo management, and temporary export-repo orchestration. Wire target inference to `nx-release-publish`, pass parsed module manifests through discovery/project creation (instead of boolean-only state), build final publish options by merging plugin defaults with manifest values, and require the merged publish schema to pass both inference-time and executor-time validation while the GitHub publisher exports module snapshots as `Release <version>` commits rooted on remote `main` instead of force-pushed history rewrites.
 
 **Tech Stack:** TypeScript, Nx plugin inference (`@nx/devkit`), Vitest, `execa`, Octokit, Zod, LogTape JSON Lines logging, generated JSON Schema artifact.
 
@@ -1306,3 +1306,137 @@ Completed in:
 
 Completed in:
 - `8923ea76` — `Add version tagging to module publisher`
+
+### Task 7e: Preserve exported repository history with release commits
+
+**Files:**
+- Modify: `packages/nx-terraform-plugin/src/adapters/github/publisher.ts`
+- Test: `packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+
+- [ ] **Step 1: Write failing tests for release-commit publishing**
+
+```ts
+it("publishes by committing on top of remote main without force-pushing history", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git ls-remote --exit-code --heads origin main") {
+        return { ...defaultCommandResult, stdout: "abc123\trefs/heads/main" };
+      }
+      return defaultCommandResult;
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(commands.map((entry) => entry.command)).toEqual([
+    "git init -b main",
+    `git remote add origin ${expectedRepoUrl}`,
+    "git ls-remote --exit-code --heads origin main",
+    "git fetch origin main",
+    "git checkout -B main origin/main",
+    "git add --all",
+    'git commit -m "Release 1.2.3"',
+    "git tag -f 1.2.3",
+    "git push origin main",
+    "git push origin refs/tags/1.2.3 --force",
+  ]);
+});
+
+it("bootstraps an empty remote repository on first publish", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git ls-remote --exit-code --heads origin main") {
+        return Promise.reject(Object.assign(new Error("missing main"), { exitCode: 2 }));
+      }
+      return defaultCommandResult;
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: true,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(commands.map((entry) => entry.command)).toContain(
+    'git commit -m "Release 1.2.3"',
+  );
+  expect(commands.map((entry) => entry.command)).not.toContain(
+    "git push origin main --force",
+  );
+});
+```
+
+- [ ] **Step 2: Run focused test to verify RED**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts`
+Expected: FAIL because the publisher still creates an isolated snapshot repo, commits `Updated module`, and force-pushes `main`
+
+- [ ] **Step 3: Replace force-pushed snapshots with additive release commits**
+
+```ts
+const clearExportWorkingTree = async (exportDirectory: string): Promise<void> => {
+  const entries = await readdir(exportDirectory, { withFileTypes: true });
+
+  await Promise.all(
+    entries
+      .filter((entry) => entry.name !== ".git")
+      .map((entry) =>
+        rm(join(exportDirectory, entry.name), { force: true, recursive: true }),
+      ),
+  );
+};
+
+const $ = $_({
+  cwd: tempExportDir,
+  env: {
+    GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
+    GIT_AUTHOR_NAME: "PagoPA DX Bot",
+    GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
+    GIT_COMMITTER_NAME: "PagoPA DX Bot",
+  },
+  shell: true,
+});
+const safe$ = $({ reject: false });
+
+await $`git init -b main`;
+await $`git remote add origin ${repoUrl}`;
+
+const remoteMain = await safe$`git ls-remote --exit-code --heads origin main`;
+if (remoteMain.exitCode === 0) {
+  await $`git fetch origin main`;
+  await $`git checkout -B main origin/main`;
+} else if (remoteMain.exitCode !== 2) {
+  throw new Error(`Failed to resolve remote main for ${repoUrl}`);
+}
+
+await clearExportWorkingTree(tempExportDir);
+await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
+await $`git add --all`;
+await $`git commit -m ${`Release ${input.version}`}`;
+await $`git tag -f ${input.version}`;
+await $`git push origin main`;
+await $`git push origin refs/tags/${input.version} --force`;
+```
+
+- [ ] **Step 4: Run package verification**
+
+Run: `pnpm exec vitest run packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts && pnpm nx test nx-terraform-plugin && pnpm nx lint nx-terraform-plugin && pnpm nx build nx-terraform-plugin`
+Expected: PASS
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add packages/nx-terraform-plugin/src/adapters/github/publisher.ts \
+  packages/nx-terraform-plugin/src/adapters/github/__tests__/publisher.test.ts \
+  docs/superpowers/plans/2026-05-07-nx-terraform-publish.md
+git commit -m "Preserve publish history with release commits"
+```

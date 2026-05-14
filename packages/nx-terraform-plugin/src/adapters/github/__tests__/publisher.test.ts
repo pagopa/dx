@@ -64,15 +64,24 @@ const createGitCommandHarness = ({
 } = {}) => {
   const commands: { command: string; cwd: string | undefined }[] = [];
 
-  const git$ = vi.fn((strings: TemplateStringsArray, ...values: unknown[]) => {
-    const command = String.raw(strings, ...values.map(String));
-    // Extract cwd from the last call to execaMocks.$
-    const lastCall =
-      execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
-    const cwd = lastCall?.[0]?.cwd as string | undefined;
-    commands.push({ command, cwd });
-    return Promise.resolve(onCommand?.(command, cwd) ?? defaultCommandResult);
-  });
+  const git$ = vi.fn(
+    (
+      firstArg: TemplateStringsArray | { reject: boolean },
+      ...values: unknown[]
+    ) => {
+      if (!("raw" in firstArg)) {
+        return git$;
+      }
+
+      const command = String.raw(firstArg, ...values.map(String));
+      // Extract cwd from the last call to execaMocks.$
+      const lastCall =
+        execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
+      const cwd = lastCall?.[0]?.cwd as string | undefined;
+      commands.push({ command, cwd });
+      return Promise.resolve(onCommand?.(command, cwd) ?? defaultCommandResult);
+    },
+  );
 
   execaMocks.$.mockReturnValue(git$);
 
@@ -91,7 +100,7 @@ beforeEach(() => {
   fsMocks.cp.mockResolvedValue(undefined);
 });
 
-it("creates a temporary export repo and publishes module contents to GitHub", async () => {
+it("publishes by committing on top of remote main without force-pushing history", async () => {
   const { commands } = createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
@@ -116,14 +125,20 @@ it("creates a temporary export repo and publishes module contents to GitHub", as
 
   expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
     { command: "git init -b main", cwd: expectedTempDir },
-    { command: "git add .", cwd: expectedTempDir },
-    { command: 'git commit -m "Updated module"', cwd: expectedTempDir },
     {
       command: `git remote add origin ${expectedRepoUrl}`,
       cwd: expectedTempDir,
     },
-    { command: "git tag 1.2.3", cwd: expectedTempDir },
-    { command: "git push origin HEAD:main --force", cwd: expectedTempDir },
+    {
+      command: "git ls-remote --exit-code --heads origin main",
+      cwd: expectedTempDir,
+    },
+    { command: "git fetch origin main", cwd: expectedTempDir },
+    { command: "git checkout -B main origin/main", cwd: expectedTempDir },
+    { command: "git add --all", cwd: expectedTempDir },
+    { command: 'git commit -m "Release 1.2.3"', cwd: expectedTempDir },
+    { command: "git tag -f 1.2.3", cwd: expectedTempDir },
+    { command: "git push origin main", cwd: expectedTempDir },
     {
       command: "git push origin refs/tags/1.2.3 --force",
       cwd: expectedTempDir,
@@ -131,6 +146,71 @@ it("creates a temporary export repo and publishes module contents to GitHub", as
   ]);
 
   expect(fsMocks.rm).toHaveBeenCalledWith(expectedTempDir, {
+    force: true,
+    recursive: true,
+  });
+});
+
+it("bootstraps an empty remote repository on first publish", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git ls-remote --exit-code --heads origin main") {
+        return { ...defaultCommandResult, exitCode: 2 };
+      }
+
+      return defaultCommandResult;
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: true,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  expect(commands.map((c) => c.command)).toContain(
+    'git commit -m "Release 1.2.3"',
+  );
+  expect(commands.map((c) => c.command)).not.toContain(
+    "git push origin main --force",
+  );
+});
+
+it("removes stray export files before checking out remote main", async () => {
+  const checkoutFailure = new Error(
+    "error: The following untracked working tree files would be overwritten by checkout:",
+  );
+
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git checkout -B main origin/main") {
+        const removedBeforeCheckout = fsMocks.rm.mock.calls.some(
+          ([path]) => path === `${expectedTempDir}/README.md`,
+        );
+
+        if (!removedBeforeCheckout) {
+          return Promise.reject(checkoutFailure);
+        }
+      }
+
+      return defaultCommandResult;
+    },
+  });
+
+  fsMocks.readdir
+    .mockResolvedValueOnce([{ name: "README.md" }])
+    .mockResolvedValueOnce([{ name: "README.md" }]);
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).resolves.toBeUndefined();
+  expect(fsMocks.rm).toHaveBeenCalledWith(`${expectedTempDir}/README.md`, {
     force: true,
     recursive: true,
   });
@@ -327,14 +407,20 @@ it("creates and force-pushes a tag named after version", async () => {
 
   expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
     { command: "git init -b main", cwd: expectedTempDir },
-    { command: "git add .", cwd: expectedTempDir },
-    { command: 'git commit -m "Updated module"', cwd: expectedTempDir },
     {
       command: `git remote add origin ${expectedRepoUrl}`,
       cwd: expectedTempDir,
     },
-    { command: "git tag 1.2.3", cwd: expectedTempDir },
-    { command: "git push origin HEAD:main --force", cwd: expectedTempDir },
+    {
+      command: "git ls-remote --exit-code --heads origin main",
+      cwd: expectedTempDir,
+    },
+    { command: "git fetch origin main", cwd: expectedTempDir },
+    { command: "git checkout -B main origin/main", cwd: expectedTempDir },
+    { command: "git add --all", cwd: expectedTempDir },
+    { command: 'git commit -m "Release 1.2.3"', cwd: expectedTempDir },
+    { command: "git tag -f 1.2.3", cwd: expectedTempDir },
+    { command: "git push origin main", cwd: expectedTempDir },
     {
       command: "git push origin refs/tags/1.2.3 --force",
       cwd: expectedTempDir,
