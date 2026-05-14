@@ -117,6 +117,10 @@ jobs:
         run: |
           set -eu
 
+          pwd
+
+          ls
+
           trivy config "./" \
             --misconfig-scanners terraform \
             --raw-config-scanners terraform \
