@@ -43,7 +43,7 @@
     "libsodium-wrappers": "^0.8.4",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.3",
-    "octokit": "catalog:",
+    "octokit": "^5.0.5",
     "ora": "^9.4.0",
     "replace-in-file": "^8.4.0",
     "semver": "catalog:",

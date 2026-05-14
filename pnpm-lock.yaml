@@ -501,7 +501,7 @@ importers:
         specifier: ^0.32.3
         version: 0.32.3(@types/node@22.19.17)
       octokit:
-        specifier: 'catalog:'
+        specifier: ^5.0.5
         version: 5.0.5
       ora:
         specifier: ^9.4.0
