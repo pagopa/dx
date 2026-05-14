@@ -1,14 +1,11 @@
-import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
 import { z } from "zod/v4";
 
 import { modulePublishManifestSchema } from "../manifest.ts";
 
 const packageRoot = path.resolve(import.meta.dirname, "..", "..");
-const execFileAsync = promisify(execFile);
 
 describe("module schema generation", () => {
   it("exposes a generate script for the consumer manifest schema", async () => {
@@ -23,11 +20,7 @@ describe("module schema generation", () => {
     );
   });
 
-  it("stores module.schema.json with optional $schema support", async () => {
-    await execFileAsync("node", ["src/generate-module-schema.ts"], {
-      cwd: packageRoot,
-    });
-
+  it("keeps module.schema.json in sync with the manifest schema", async () => {
     const manifestSchemaAsJsonSchema = z.toJSONSchema(
       modulePublishManifestSchema,
     );

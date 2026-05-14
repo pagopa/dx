@@ -18,7 +18,7 @@ import { VersionActions } from "nx/release";
  * `release.version.versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"`
  * in inferred Terraform project configuration.
  */
-export default class TerraformVersionActions extends VersionActions {
+export class TerraformVersionActions extends VersionActions {
   validManifestFilenames = ["module.json"];
 
   /**

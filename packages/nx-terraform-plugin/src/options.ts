@@ -71,11 +71,11 @@ export const parseOptions = (
     publish: {
       ...defaultOptions.publish,
       ...parseResult.data.publish,
-      ...(defaultOptions.publish.github || parseResult.data.publish?.github
+      ...(parseResult.data.publish?.github
         ? {
             github: {
               ...defaultOptions.publish.github,
-              ...parseResult.data.publish?.github,
+              ...parseResult.data.publish.github,
             },
           }
         : {}),
