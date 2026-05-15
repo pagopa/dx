@@ -184,6 +184,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
+          deployment_environment: "production"
           skip_app_build: true
 
       - name: Preview Comments Cleanup
