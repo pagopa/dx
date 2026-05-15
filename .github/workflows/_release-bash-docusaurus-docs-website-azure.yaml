@@ -2,6 +2,8 @@ name: Deploy DX Website to Azure
 
 on:
   push:
+    # GitHub Actions does not evaluate path filters for tag pushes.
+    # Scope production deploys with the project-specific release tag prefix.
     tags:
       - "docs@*"
   pull_request:
@@ -11,20 +13,14 @@ on:
     paths:
       - "apps/website/**"
 
-jobs:
-  preview_static_web_app:
-    if: github.event_name == 'pull_request'
-    uses: ./.github/workflows/release-azure-staticapp-v1.yaml
-    secrets: inherit
-    with:
-      workspace_name: "docs" # The 'name' from the app's package.json
-      output_dir: "build" # The build output directory name
-      static_web_app_name: "dx-p-itn-website-stapp-01"
-      resource_group_name: "dx-p-itn-common-rg-01"
-      environment: "app-prod"
+permissions: {}
 
-  release_static_web_app:
-    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
+jobs:
+  deploy_to_static_web_app:
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     uses: ./.github/workflows/release-azure-staticapp-v1.yaml
     secrets: inherit
     with:
@@ -38,9 +34,11 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
     name: Update MCP Server Knowledge Base
     environment: app-prod-ci
-    needs: release_static_web_app
+    needs: deploy_to_static_web_app
     runs-on: ubuntu-latest
     permissions:
+      actions: read
+      contents: read
       id-token: write
     env:
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
