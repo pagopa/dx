@@ -89,11 +89,6 @@ jobs:
       bundle_name: ${{ env.BUNDLE_NAME }}
 
     steps:
-      - name: Warn Legacy Push Trigger Deprecation
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          echo "::warning::The push-to-main trigger for this reusable workflow is deprecated and will be removed in the next release. Migrate callers to an explicit release trigger, for example a project-specific tag push."
-
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
