@@ -43,20 +43,20 @@ runs:
         webhook-type: incoming-webhook
         payload: |
           {
-            "text": "${{ inputs.id }}",
+            "text": ${{ toJSON(inputs.id) }},
             "blocks": [
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ steps.check-values.outputs.title }}"
+                  "text": ${{ toJSON(steps.check-values.outputs.title) }}
                 }
               },
               {
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "${{ inputs.text }}"
+                  "text": ${{ toJSON(inputs.text) }}
                 }
               }
             ]
