@@ -24,8 +24,6 @@ name: Deploy Static Site to Azure
 # while pull request previews rely on Azure Static Web Apps' default preview behavior.
 # GitHub Actions does not apply path filters to tag pushes, so tag-based callers
 # should scope production deploys with a project-specific tag prefix.
-# Legacy push-to-main callers are still supported temporarily, but this
-# compatibility will be removed in the next release.
 
 on:
   workflow_call:
