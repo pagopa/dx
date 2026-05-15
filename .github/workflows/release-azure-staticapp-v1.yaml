@@ -20,6 +20,8 @@ name: Deploy Static Site to Azure
 # and pull request previews.
 # At runtime the workflow behavior stays generic: `pull_request` events target
 # preview environments, while any other caller event follows the production path.
+# The Azure deploy step targets the `default` environment for production-like
+# executions and the pull request number for preview environments.
 # GitHub Actions does not apply path filters to tag pushes, so tag-based callers
 # should scope production deploys with a project-specific tag prefix.
 # Legacy push-to-main callers are still supported temporarily, but this
@@ -164,6 +166,7 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
+          deployment_environment: ${{ github.event_name == 'pull_request' && format('PR{0}', github.event.pull_request.number) || 'default' }}
           skip_app_build: true
 
       - name: Preview Comments Cleanup
@@ -205,4 +208,5 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           app_location: "./${{ env.OUTPUT_DIR }}"
           action: "close"
+          deployment_environment: ${{ format('PR{0}', github.event.pull_request.number) }}
           skip_app_build: true
