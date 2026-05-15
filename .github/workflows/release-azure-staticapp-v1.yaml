@@ -175,9 +175,6 @@ jobs:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
-          # Production deploys target the explicit production environment.
-          # PR uploads fall back to Azure Static Web Apps' default preview behavior.
-          deployment_environment: ${{ github.event_name != 'pull_request' && 'production' || null }}
           skip_app_build: true
 
       - name: Preview Comments Cleanup
