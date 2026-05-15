@@ -20,8 +20,8 @@ name: Deploy Static Site to Azure
 # and pull request previews.
 # At runtime the workflow behavior stays generic: `pull_request` events target
 # preview environments, while any other caller event follows the production path.
-# The Azure deploy step targets the `default` environment for production-like
-# executions and the pull request number for preview environments.
+# The Azure deploy step omits `deployment_environment` for production-like
+# executions and uses a PR-derived name for preview environments.
 # GitHub Actions does not apply path filters to tag pushes, so tag-based callers
 # should scope production deploys with a project-specific tag prefix.
 # Legacy push-to-main callers are still supported temporarily, but this
@@ -84,6 +84,7 @@ env:
 jobs:
   build:
     name: Build Artifact
+    if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     permissions:
       contents: read
@@ -121,7 +122,7 @@ jobs:
     name: Deploy Static Website
     runs-on: ubuntu-latest
     needs: [build]
-    if: ${{ !github.event.act }}
+    if: ${{ always() && !github.event.act && ((github.event_name == 'pull_request' && github.event.action == 'closed') || needs.build.result == 'success') }}
     environment: ${{ inputs.environment }}-${{ github.event_name == 'pull_request' && 'ci' || 'cd' }}
     permissions:
       id-token: write
@@ -135,10 +136,15 @@ jobs:
           fetch-depth: 0
 
       - name: Download Artifact
+        if: github.event_name != 'pull_request' || github.event.action != 'closed'
         uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: "./${{ env.OUTPUT_DIR }}"
+
+      - name: Prepare Close Directory
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        run: mkdir -p "./${{ env.OUTPUT_DIR }}"
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -157,20 +163,31 @@ jobs:
           STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
           RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
-      - name: Deploy Static Website
-        id: deploy
-        if: github.event_name != 'pull_request' || github.event.action != 'closed'
+      - name: Deploy Static Website Preview
+        id: deploy-preview
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
         uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
         with:
           azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
-          deployment_environment: ${{ github.event_name == 'pull_request' && format('PR{0}', github.event.pull_request.number) || 'default' }}
+          deployment_environment: ${{ format('PR{0}', github.event.pull_request.number) }}
+          skip_app_build: true
+
+      - name: Deploy Static Website Production
+        id: deploy-production
+        if: github.event_name != 'pull_request'
+        uses: Azure/static-web-apps-deploy@4d27395796ac319302594769cfe812bd207490b1 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ steps.find_api_key.outputs.api_key }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "./${{ env.OUTPUT_DIR }}"
           skip_app_build: true
 
       - name: Preview Comments Cleanup
-        if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy.outcome == 'success'
+        if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy-preview.outcome == 'success'
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         with:
           script: |
