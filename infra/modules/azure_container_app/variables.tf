@@ -137,9 +137,13 @@ variable "secrets" {
   type = list(object({
     name                = string
     key_vault_secret_id = string
+    use_in_container    = optional(bool, true)
   }))
   default     = []
-  description = "A list of Key Vault secret references to be used as environment variables in the container app."
+  description = <<-EOT
+  List of Key Vault secret references to define in the Container App.
+  Set `use_in_container` to `false` to keep a secret available at Container App Environment level without exposing it as a container environment variable (useful for secrets deletion).
+  EOT
 }
 
 variable "container_app_templates" {
