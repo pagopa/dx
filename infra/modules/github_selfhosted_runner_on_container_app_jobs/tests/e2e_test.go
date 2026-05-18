@@ -24,6 +24,7 @@ const (
 	githubRepositoryOwner = "pagopa"
 	githubRepositoryName  = "dx"
 	githubWorkflowFile    = "_validate-terraform-e2e-selfhosted-runner.yaml"
+	azureOIDCAudience     = "api://AzureADTokenExchange"
 	pollInterval          = 15 * time.Second
 	runTimeout            = 10 * time.Minute
 )
@@ -242,11 +243,105 @@ func assertWorkflowJob(t *testing.T, cfg githubConfig, runID int64, runnerLabel 
 func setKeyVaultSecret(t *testing.T, keyVaultName string, secretName string, secretValue string) {
 	t.Helper()
 
+	refreshAzureCLISession(t)
+
 	command := exec.Command("az", "keyvault", "secret", "set", "--vault-name", keyVaultName, "--name", secretName, "--value", secretValue, "--only-show-errors")
 	output, err := command.CombinedOutput()
 	if err != nil {
 		t.Fatalf("set key vault secret %q in %q: %v: %s", secretName, keyVaultName, err, strings.TrimSpace(string(output)))
 	}
+}
+
+func refreshAzureCLISession(t *testing.T) {
+	t.Helper()
+
+	clientID := strings.TrimSpace(os.Getenv("ARM_CLIENT_ID"))
+	tenantID := strings.TrimSpace(os.Getenv("ARM_TENANT_ID"))
+	subscriptionID := strings.TrimSpace(os.Getenv("ARM_SUBSCRIPTION_ID"))
+	oidcRequestURL := strings.TrimSpace(os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL"))
+	oidcRequestToken := strings.TrimSpace(os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN"))
+
+	if clientID == "" || tenantID == "" || oidcRequestURL == "" || oidcRequestToken == "" {
+		return
+	}
+
+	federatedToken := fetchGitHubOIDCToken(t, oidcRequestURL, oidcRequestToken)
+
+	loginArgs := []string{
+		"login",
+		"--service-principal",
+		"--username", clientID,
+		"--tenant", tenantID,
+		"--federated-token", federatedToken,
+		"--output", "none",
+	}
+
+	if subscriptionID == "" {
+		loginArgs = append(loginArgs, "--allow-no-subscriptions")
+	}
+
+	loginCommand := exec.Command("az", loginArgs...)
+	loginOutput, err := loginCommand.CombinedOutput()
+	if err != nil {
+		t.Fatalf("refresh azure cli login: %v: %s", err, strings.TrimSpace(string(loginOutput)))
+	}
+
+	if subscriptionID == "" {
+		return
+	}
+
+	accountCommand := exec.Command("az", "account", "set", "--subscription", subscriptionID)
+	accountOutput, err := accountCommand.CombinedOutput()
+	if err != nil {
+		t.Fatalf("set azure cli subscription %q: %v: %s", subscriptionID, err, strings.TrimSpace(string(accountOutput)))
+	}
+}
+
+func fetchGitHubOIDCToken(t *testing.T, requestURL string, requestToken string) string {
+	t.Helper()
+
+	parsedURL, err := url.Parse(requestURL)
+	if err != nil {
+		t.Fatalf("parse github oidc request url: %v", err)
+	}
+
+	query := parsedURL.Query()
+	query.Set("audience", azureOIDCAudience)
+	parsedURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, parsedURL.String(), nil)
+	if err != nil {
+		t.Fatalf("create github oidc request: %v", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+requestToken)
+
+	resp, err := githubHTTPClient.Do(req)
+	if err != nil {
+		t.Fatalf("execute github oidc request: %v", err)
+	}
+	defer resp.Body.Close()
+
+	responsePayload, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Fatalf("read github oidc response: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("github oidc request returned status %d: %s", resp.StatusCode, strings.TrimSpace(string(responsePayload)))
+	}
+
+	var response struct {
+		Value string `json:"value"`
+	}
+	if err := json.Unmarshal(responsePayload, &response); err != nil {
+		t.Fatalf("decode github oidc response: %v", err)
+	}
+
+	if strings.TrimSpace(response.Value) == "" {
+		t.Fatal("github oidc response did not include a token")
+	}
+
+	return response.Value
 }
 
 func requestGitHub(t *testing.T, cfg githubConfig, method string, path string, payload any, expectedStatus int, responseBody any) {

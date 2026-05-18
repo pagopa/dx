@@ -79,6 +79,9 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
+      - name: Refresh Cloud Provider Login
+        uses: pagopa/dx/actions/csp-login@main
+
       - name: Run Terraform E2E Tests
         timeout-minutes: 720 # 12 hours
         env:
