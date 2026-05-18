@@ -34,7 +34,7 @@ resource "dx_available_subnet_cidr" "pep_subnet" {
 }
 
 resource "azurerm_subnet" "pep" {
-  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "subnet", app_name = "caem-pep" }))
+  name                 = provider::dx::resource_name(merge(var.environment, { domain = "", resource_type = "subnet", app_name = "pep" }))
   resource_group_name  = data.azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [dx_available_subnet_cidr.pep_subnet.cidr_block]
