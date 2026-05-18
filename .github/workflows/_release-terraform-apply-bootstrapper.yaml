@@ -14,6 +14,7 @@ permissions:
 jobs:
   release:
     strategy:
+      fail-fast: false
       matrix:
         environment: ["dev", "prod", "uat"]
     uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
