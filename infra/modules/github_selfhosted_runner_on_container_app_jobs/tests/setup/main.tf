@@ -1,23 +1,26 @@
 locals {
-  existing_resources = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location,
-    domain          = ""
-    name            = var.test_kind,
-    instance_number = tonumber(var.environment.instance_number),
-  }
+  vnet_address_space = "10.0.0.0/21"
 }
 
 data "azurerm_client_config" "current" {}
 
-data "azurerm_resource_group" "network" {
-  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
+resource "azurerm_virtual_network" "this" {
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "virtual_network" }))
+  location            = azurerm_resource_group.sut.location
+  resource_group_name = azurerm_resource_group.sut.name
+  address_space       = [local.vnet_address_space]
+
+  tags = var.tags
 }
 
-data "azurerm_virtual_network" "vnet" {
-  name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "virtual_network" }))
-  resource_group_name = data.azurerm_resource_group.network.name
+resource "dx_available_subnet_cidr" "pep_subnet" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = "27"
+}
+
+resource "dx_available_subnet_cidr" "cae_subnet" {
+  virtual_network_id = azurerm_virtual_network.this.id
+  prefix_length      = "27"
 }
 
 data "azurerm_log_analytics_workspace" "int" {
@@ -32,15 +35,17 @@ resource "azurerm_resource_group" "sut" {
   tags = var.tags
 }
 
-resource "dx_available_subnet_cidr" "cae_subnet" {
-  virtual_network_id = data.azurerm_virtual_network.vnet.id
-  prefix_length      = 27
+resource "azurerm_subnet" "pep" {
+  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "subnet", app_name = "pep" }))
+  resource_group_name  = azurerm_resource_group.sut.name
+  virtual_network_name = azurerm_virtual_network.this.name
+  address_prefixes     = [dx_available_subnet_cidr.pep_subnet.cidr_block]
 }
 
 resource "azurerm_subnet" "cae" {
-  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "subnet", name = "cae" }))
-  resource_group_name  = data.azurerm_resource_group.network.name
-  virtual_network_name = data.azurerm_virtual_network.vnet.name
+  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_subnet" }))
+  resource_group_name  = azurerm_resource_group.sut.name
+  virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [dx_available_subnet_cidr.cae_subnet.cidr_block]
 
   delegation {

@@ -28,17 +28,16 @@ resource "azurerm_virtual_network" "this" {
   tags = var.tags
 }
 
-resource "dx_available_subnet_cidr" "pip_subnet" {
+resource "dx_available_subnet_cidr" "pep_subnet" {
   virtual_network_id = azurerm_virtual_network.this.id
   prefix_length      = "27"
 }
-
 
 resource "azurerm_subnet" "pep" {
   name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "subnet", app_name = "pep" }))
   resource_group_name  = data.azurerm_resource_group.test.name
   virtual_network_name = azurerm_virtual_network.this.name
-  address_prefixes     = [dx_available_subnet_cidr.pip_subnet.cidr_block]
+  address_prefixes     = [dx_available_subnet_cidr.pep_subnet.cidr_block]
 }
 
 data "azurerm_private_dns_zone" "container_apps" {
