@@ -1,5 +1,6 @@
 /** This module loads and resolves configuration for the DX metrics import script. */
 
+import { defaultImportFileConfig } from "@pagopa/dx-metrics-core/config";
 import fs from "node:fs";
 import { z } from "zod";
 
@@ -84,7 +85,20 @@ const resolveGitHubAppIdentifier = (
   return result.data;
 };
 
-export function loadImportConfig(filePath: string): ImportFileConfig {
+const resolveImportFileConfig = (
+  fileConfig: ImportFileConfig,
+): Required<ImportFileConfig> => ({
+  dxRepo: fileConfig.dxRepo ?? defaultImportFileConfig.dxRepo,
+  dxTeamSlug: fileConfig.dxTeamSlug,
+  organization: fileConfig.organization ?? defaultImportFileConfig.organization,
+  repositories: fileConfig.repositories ?? defaultImportFileConfig.repositories,
+});
+
+export function loadImportConfig(filePath?: string): ImportFileConfig {
+  if (!filePath) {
+    return defaultImportFileConfig;
+  }
+
   try {
     const contents = fs.readFileSync(filePath, "utf8");
     const result = ImportFileConfigSchema.safeParse(JSON.parse(contents));
@@ -94,7 +108,9 @@ export function loadImportConfig(filePath: string): ImportFileConfig {
     return result.data;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    throw new Error(`Error loading config from ${filePath}: ${message}`);
+    throw new Error(`Error loading config from ${filePath}: ${message}`, {
+      cause: error,
+    });
   }
 }
 
@@ -171,12 +187,14 @@ export function resolveImportSettings(
   fileConfig: ImportFileConfig,
   environment: EnvironmentOverrides,
 ): ImportSettings {
+  const resolvedFileConfig = resolveImportFileConfig(fileConfig);
+
   return {
     databaseUrl: readOptionalEnvironmentString(environment.DATABASE_URL),
-    dxRepo: fileConfig.dxRepo ?? "dx",
-    dxTeamSlug: fileConfig.dxTeamSlug,
+    dxRepo: resolvedFileConfig.dxRepo,
+    dxTeamSlug: resolvedFileConfig.dxTeamSlug,
     githubAuth: resolveGitHubAuth(environment),
-    organization: fileConfig.organization ?? "pagopa",
-    repositories: fileConfig.repositories ?? [],
+    organization: resolvedFileConfig.organization,
+    repositories: resolvedFileConfig.repositories,
   };
 }

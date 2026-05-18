@@ -1,10 +1,9 @@
 /** This module imports tracker CSV snapshots into PostgreSQL. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import fs from "fs";
 
 import type { ImportContext } from "../import-context";
-
-import * as schema from "../../../src/db/schema";
 
 const splitCsvLine = (line: string): string[] => {
   const result: string[] = [];

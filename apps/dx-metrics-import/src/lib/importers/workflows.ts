@@ -1,10 +1,10 @@
 /** This module imports GitHub workflow definitions and workflow runs. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
 import yaml from "js-yaml";
 
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { formatSecondsElapsed } from "../importer-helpers";
 
 export async function importWorkflowRuns(

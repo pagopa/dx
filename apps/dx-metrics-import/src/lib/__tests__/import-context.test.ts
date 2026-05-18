@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import type { GitHubAppAuthSettings } from "../config.js";
+
 import {
   buildGitHubAppOctokitAuthOptions,
-  createTerrawizGitHubTokenResolver,
   createOctokitClient,
+  createTerrawizGitHubTokenResolver,
   resolveDxTeamMembers,
   type TeamMembersClient,
 } from "../import-context.js";
@@ -115,8 +116,7 @@ describe("createOctokitClient", () => {
 describe("createTerrawizGitHubTokenResolver", () => {
   it("returns the configured PAT when PAT auth is used", async () => {
     const createInstallationTokenResolver = vi.fn(
-      (_githubApp: GitHubAppAuthSettings) => async () =>
-        "ghs_installation_token",
+      () => async () => "ghs_installation_token",
     );
 
     const resolveTerrawizGitHubToken = createTerrawizGitHubTokenResolver(

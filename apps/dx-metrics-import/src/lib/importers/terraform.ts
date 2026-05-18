@@ -1,15 +1,15 @@
 /** This module imports Terraform module usage and registry release metrics. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
+import { sql } from "drizzle-orm";
 import { execFile } from "node:child_process";
 import * as fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
-import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { sleep } from "../importer-helpers";
 
 const execFileAsync = promisify(execFile);
@@ -161,7 +161,7 @@ export async function importTerraformModules(
   const fullName = `${context.organization}/${repoName}`;
   console.log(`  Scanning Terraform modules for ${fullName} (terrawiz)...`);
 
-  let output: TerrawizOutput = { modules: [] };
+  let modules: TerrawizOutput["modules"];
   const temporaryFilePath = path.join(
     os.tmpdir(),
     `terrawiz-${repoName}-${Date.now()}.json`,
@@ -187,9 +187,9 @@ export async function importTerraformModules(
       },
     );
 
-    output = parseTerrawizOutput(
+    modules = parseTerrawizOutput(
       JSON.parse(await fs.readFile(temporaryFilePath, "utf-8")),
-    );
+    ).modules;
   } catch (error) {
     console.log(`    ⚠ terrawiz failed for ${fullName}: ${error}`);
     return;
@@ -210,8 +210,7 @@ export async function importTerraformModules(
     }
   }
 
-  const modules = output.modules ?? [];
-  if (modules.length === 0) {
+  if (!modules || modules.length === 0) {
     console.log(`    ⚠ No Terraform modules found in ${fullName}`);
     return;
   }

@@ -39,7 +39,7 @@ const parseSinceDate = (since: string): Date | null => {
 };
 
 const parseCheckpointId = (
-  row: undefined | Record<string, unknown>,
+  row: Record<string, unknown> | undefined,
 ): number => {
   const parsedRow = checkpointIdRowSchema.safeParse(row);
 

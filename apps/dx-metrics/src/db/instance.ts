@@ -1,5 +1,5 @@
 /** Singleton database instance for the Next.js runtime. */
-import { createDatabase } from "./index";
+import { createDatabase } from "@pagopa/dx-metrics-core/database";
 
 const databaseUrl = process.env.DATABASE_URL;
 if (!databaseUrl)

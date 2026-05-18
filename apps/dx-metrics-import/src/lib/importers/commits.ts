@@ -1,8 +1,9 @@
 /** This module imports commit-derived metrics and IaC lead time data. */
 
+import * as schema from "@pagopa/dx-metrics-core/schema";
+
 import type { ImportContext } from "../import-context";
 
-import * as schema from "../../../src/db/schema";
 import { formatSecondsElapsed, sleep } from "../importer-helpers";
 
 const getCommitterLogin = (value: unknown): null | string => {
