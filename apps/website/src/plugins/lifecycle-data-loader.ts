@@ -8,32 +8,39 @@ import { z } from "zod";
 
 const VersionStatus = z.enum(["active", "maintenance", "deprecated", "eol"]);
 
-const VersionEntrySchema = z.object({
-  eolDate: z.string().optional(),
-  migrationGuideUrl: z.string().url().optional(),
-  notes: z.string().optional(),
-  status: VersionStatus,
-  supportedSince: z.string().optional(),
-  version: z.string(),
-});
+const VersionEntrySchema = z
+  .object({
+    eolDate: z.string().date().optional(),
+    migrationGuideUrl: z.string().url().optional(),
+    notes: z.string().optional(),
+    status: VersionStatus,
+    supportedSince: z.string().date().optional(),
+    version: z.string(),
+  })
+  .strict();
 
-const ToolLifecycleSchema = z.object({
-  category: z.enum(["runtime", "infra", "build-tool", "ci"]),
-  communicationChannels: z.array(z.string()).min(1),
-  id: z.string(),
-  lifecyclePolicy: z.string(),
-  name: z.string(),
-  vendorLifecycleUrl: z
-    .string()
-    .refine((val) => val.startsWith("/") || val.startsWith("http"), {
-      message: "Must be a URL or an absolute path",
-    }),
-  versions: z.array(VersionEntrySchema).min(1),
-});
+const ToolLifecycleSchema = z
+  .object({
+    category: z.enum(["runtime", "infra", "build-tool", "ci"]),
+    communicationChannels: z.array(z.string()).min(1),
+    id: z.string(),
+    lifecyclePolicy: z.string(),
+    name: z.string(),
+    vendorLifecycleUrl: z
+      .string()
+      .refine((val) => val.startsWith("/") || /^https?:\/\//.test(val), {
+        message: "Must be a URL (http(s)://) or an absolute path (/)",
+      }),
+    versions: z.array(VersionEntrySchema).min(1),
+  })
+  .strict();
 
-const LifecycleDataSchema = z.object({
-  tools: z.array(ToolLifecycleSchema).min(1),
-});
+const LifecycleDataSchema = z
+  .object({
+    $schema: z.string().optional(),
+    tools: z.array(ToolLifecycleSchema).min(1),
+  })
+  .strict();
 
 export type ToolLifecycle = z.infer<typeof ToolLifecycleSchema>;
 

@@ -2,19 +2,24 @@
 import { usePluginData } from "@docusaurus/useGlobalData";
 import React from "react";
 
-import type { ToolLifecycle, VersionEntry, VersionStatus } from "./types";
+import type {
+  ToolCategory,
+  ToolLifecycle,
+  VersionEntry,
+  VersionStatus,
+} from "./types";
 
 import styles from "./LifecycleTable.module.css";
 import { STATUS_META } from "./types";
 
-const CATEGORY_CLASS: Record<string, string> = {
+const CATEGORY_CLASS: Record<ToolCategory, string> = {
   "build-tool": styles.categoryBuildTool,
   ci: styles.categoryCi,
   infra: styles.categoryInfra,
   runtime: styles.categoryRuntime,
 };
 
-const CATEGORY_LABEL: Record<string, string> = {
+const CATEGORY_LABEL: Record<ToolCategory, string> = {
   "build-tool": "Build Tool",
   ci: "CI/CD",
   infra: "Infrastructure",
