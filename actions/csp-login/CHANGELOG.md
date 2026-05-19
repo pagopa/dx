@@ -1,3 +1,14 @@
+## 0.1.1 (2026-05-19)
+
+### 🩹 Fixes
+
+- Update configure-aws-credentials from v4.0.2 to v6.1.1 (Node 24) ([#1753](https://github.com/pagopa/dx/pull/1753))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.1.0
 
 ### Minor Changes

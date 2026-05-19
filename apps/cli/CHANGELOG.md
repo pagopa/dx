@@ -1,3 +1,13 @@
+## 0.21.6 (2026-05-19)
+
+### 🩹 Fixes
+
+- The federated credentials for the bootstrapper identity are now named with the pattern `${repoName}-${githubEnvironmentName}` to ensure they are unique and compliant with Azure naming rules, avoiding potential conflicts and issues with special characters in repository names. ([#1761](https://github.com/pagopa/dx/pull/1761))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.21.5 (2026-05-13)
 
 ### 🩹 Fixes
