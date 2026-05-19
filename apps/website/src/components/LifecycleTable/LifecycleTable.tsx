@@ -32,7 +32,7 @@ function StatusBadge({ status }: { readonly status: VersionStatus }) {
   const meta = STATUS_META[status];
   return (
     <span className={`${styles.statusBadge} ${STATUS_CLASS[status]}`}>
-      <span>{meta.icon}</span>
+      <span aria-hidden="true">{meta.icon}</span>
       {meta.label}
     </span>
   );

@@ -2,7 +2,7 @@
  * and exposes it to client components via global data. */
 import type { Plugin } from "@docusaurus/types";
 
-import fs from "node:fs";
+import fs from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 
@@ -54,7 +54,7 @@ export default function lifecycleDataLoaderPlugin(context: {
     },
 
     async loadContent(): Promise<readonly ToolLifecycle[]> {
-      const raw = fs.readFileSync(dataPath, "utf-8");
+      const raw = await fs.readFile(dataPath, "utf-8");
       const parsed: unknown = JSON.parse(raw);
       const result = LifecycleDataSchema.safeParse(parsed);
 
