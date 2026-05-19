@@ -187,6 +187,11 @@ run "managed_redis_private_endpoint" {
   command = plan
 
   assert {
+    condition     = azurerm_private_endpoint.redis[0].name == "dx-d-itn-modules-cache-amr-pep-01"
+    error_message = "Private endpoint name must use the managed_redis_private_endpoint type (amr-pep suffix)"
+  }
+
+  assert {
     condition     = azurerm_private_endpoint.redis[0].subnet_id == local.subnet_pep_id
     error_message = "Private endpoint must target the synthesized PEP subnet"
   }
