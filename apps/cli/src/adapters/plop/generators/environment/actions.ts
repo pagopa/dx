@@ -9,11 +9,11 @@ import { Payload } from "./prompts.js";
 import { payloadSchema } from "./prompts.js";
 
 const addModule = (
-  payload: Pick<Payload, "env" | "workspace">,
+  context: Pick<Payload, "env" | "workspace">,
   templatesPath: string,
   init = false,
 ) => {
-  const { env } = payload;
+  const { env } = context;
   const cloudAccountsByCsp = Object.groupBy(
     env.cloudAccounts,
     (account) => account.csp,
@@ -38,7 +38,7 @@ const addModule = (
       data: {
         cloudAccountsByCsp,
         init,
-        terraformBackendKey: terraformStateKey(payload, name),
+        terraformBackendKey: terraformStateKey(context, name),
       },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
@@ -65,12 +65,12 @@ const addWorkflowModule = (templatesPath: string): ActionType => {
 export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
-  return (payload: unknown) => {
+  return (input: unknown) => {
     const logger = getLogger(["gen", "env"]);
 
-    logger.debug("payload {payload}", { payload });
+    logger.debug("environment generator input {input}", { input });
 
-    const { env, init, workspace } = payloadSchema.parse(payload);
+    const { env, init, workspace } = payloadSchema.parse(input);
 
     const addEnvironmentModule = addModule(
       { env, workspace },

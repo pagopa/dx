@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { Payload } from "../../generators/environment/prompts.js";
 import { terraformStateKey } from "../terraform-state-key.js";
 
-const createMockPayload = (
+const createMockContext = (
   overrides: Partial<Pick<Payload, "env" | "workspace">> = {},
 ): Pick<Payload, "env" | "workspace"> => ({
   env: {
@@ -22,14 +22,14 @@ const createMockPayload = (
 
 describe("terraformStateKey", () => {
   it("returns keys using the prefix/domain/scope convention", () => {
-    const result = terraformStateKey(createMockPayload(), "bootstrapper");
+    const result = terraformStateKey(createMockContext(), "bootstrapper");
 
     expect(result).toBe("dx/shared/bootstrapper.tfstate");
   });
 
   it("supports hyphenated scopes", () => {
     const result = terraformStateKey(
-      createMockPayload({
+      createMockContext({
         workspace: { domain: "playground" },
       }),
       "mcp-server",
@@ -39,7 +39,7 @@ describe("terraformStateKey", () => {
   });
 
   it("rejects scopes that would create nested paths", () => {
-    expect(() => terraformStateKey(createMockPayload(), "core/root")).toThrow(
+    expect(() => terraformStateKey(createMockContext(), "core/root")).toThrow(
       /Terraform state scope may contain only lowercase letters, numbers, and hyphens/u,
     );
   });

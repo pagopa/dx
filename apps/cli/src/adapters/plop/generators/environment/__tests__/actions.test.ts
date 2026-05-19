@@ -93,7 +93,7 @@ describe("actions", () => {
       payload: getPayload(false),
     },
   ])(
-    "uses RFC state keys in shared backend actions",
+    "uses prefix/domain/scope state keys in shared backend actions",
     ({ expectedKeys, payload }) => {
       const actions = getActions("/templates/path")(payload);
 

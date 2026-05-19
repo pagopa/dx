@@ -5,12 +5,11 @@
  * prefix/domain/scope.tfstate convention for remote state keys.
  */
 import { type NodePlopAPI } from "node-plop";
-import * as assert from "node:assert/strict";
 import { z } from "zod/v4";
 
-import { Payload, payloadSchema } from "../generators/environment/prompts.js";
+import { payloadSchema } from "../generators/environment/prompts.js";
 
-const terraformStatePayloadSchema = payloadSchema.pick({
+const terraformStateContextSchema = payloadSchema.pick({
   env: true,
   workspace: true,
 });
@@ -25,23 +24,21 @@ const terraformStateScopeSchema = z
     "Terraform state scope may contain only lowercase letters, numbers, and hyphens",
   );
 
-type TerraformStatePayload = Pick<Payload, "env" | "workspace">;
+type TerraformStateContext = z.infer<typeof terraformStateContextSchema>;
 
 export const terraformStateKey = (
-  payload: TerraformStatePayload,
+  context: TerraformStateContext,
   scope: string,
 ): string => {
   const parsedScope = terraformStateScopeSchema.parse(scope);
 
-  return `${payload.env.prefix}/${payload.workspace.domain}/${parsedScope}.tfstate`;
+  return `${context.env.prefix}/${context.workspace.domain}/${parsedScope}.tfstate`;
 };
 
 export default (plop: NodePlopAPI) => {
-  plop.setHelper("terraformStateKey", (ctx, scope: string) => {
-    const result = terraformStatePayloadSchema.safeParse(ctx);
+  plop.setHelper("terraformStateKey", (input, scope: string) => {
+    const context = terraformStateContextSchema.parse(input);
 
-    assert.ok(result.success, "terraformStateKey: Invalid payload provided");
-
-    return terraformStateKey(result.data, scope);
+    return terraformStateKey(context, scope);
   });
 };
