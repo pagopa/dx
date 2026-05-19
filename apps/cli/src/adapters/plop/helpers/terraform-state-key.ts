@@ -30,15 +30,34 @@ export const terraformStateKey = (
   context: TerraformStateContext,
   scope: string,
 ): string => {
-  const parsedScope = terraformStateScopeSchema.parse(scope);
+  const parsedScope = terraformStateScopeSchema.safeParse(scope);
 
-  return `${context.env.prefix}/${context.workspace.domain}/${parsedScope}.tfstate`;
+  if (!parsedScope.success) {
+    throw new Error(
+      parsedScope.error.issues[0]?.message ?? "Invalid Terraform state scope",
+      {
+        cause: parsedScope.error,
+      },
+    );
+  }
+
+  return `${context.env.prefix}/${context.workspace.domain}/${parsedScope.data}.tfstate`;
 };
 
 export default (plop: NodePlopAPI) => {
   plop.setHelper("terraformStateKey", (input, scope: string) => {
-    const context = terraformStateContextSchema.parse(input);
+    const context = terraformStateContextSchema.safeParse(input);
 
-    return terraformStateKey(context, scope);
+    if (!context.success) {
+      throw new Error(
+        context.error.issues[0]?.message ??
+          "Invalid Terraform state helper input",
+        {
+          cause: context.error,
+        },
+      );
+    }
+
+    return terraformStateKey(context.data, scope);
   });
 };
