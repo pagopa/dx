@@ -1,9 +1,17 @@
 import { type ActionConfig } from "node-plop";
 import { describe, expect, test } from "vitest";
+import { z } from "zod/v4";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
 import { Payload } from "../prompts.js";
+
+const terraformBackendActionSchema = z.object({
+  data: z.object({
+    terraformBackendKey: z.string(),
+  }),
+  type: z.literal("addMany"),
+});
 
 export const getPayload = (includeInit = false): Payload => {
   const cloudAccount: CloudAccount = {
@@ -103,12 +111,7 @@ describe("actions", () => {
             action,
           ): action is ActionConfig & {
             data: { terraformBackendKey: string };
-          } =>
-            typeof action === "object" &&
-            action.type === "addMany" &&
-            typeof action.data === "object" &&
-            action.data !== null &&
-            Object.hasOwn(action.data, "terraformBackendKey"),
+          } => terraformBackendActionSchema.safeParse(action).success,
         )
         .map((action) => action.data.terraformBackendKey);
 
