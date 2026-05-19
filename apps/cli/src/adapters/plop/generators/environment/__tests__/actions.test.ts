@@ -1,6 +1,6 @@
 import { type ActionConfig } from "node-plop";
 import { describe, expect, test } from "vitest";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";

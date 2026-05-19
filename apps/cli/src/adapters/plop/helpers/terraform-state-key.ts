@@ -5,7 +5,7 @@
  * prefix/domain/scope.tfstate convention for remote state keys.
  */
 import { type NodePlopAPI } from "node-plop";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { payloadSchema } from "../generators/environment/prompts.js";
 
