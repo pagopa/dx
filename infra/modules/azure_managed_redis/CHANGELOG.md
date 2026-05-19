@@ -1,3 +1,14 @@
+## 0.1.1 (2026-05-19)
+
+### 🩹 Fixes
+
+- Use dedicated private endpoint type for managed Redis private endpoint name ([#1765](https://github.com/pagopa/dx/pull/1765))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.1.0 (2026-05-05)
 
 ### 🚀 Features
