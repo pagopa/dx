@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -16,6 +18,10 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	test_structure "github.com/gruntwork-io/terratest/modules/test-structure"
 )
+
+const azureOIDCAudience = "api://AzureADTokenExchange"
+
+var githubHTTPClient = &http.Client{Timeout: 30 * time.Second}
 
 type probeOperation struct {
 	Success bool   `json:"success"`
@@ -355,6 +361,10 @@ func azureResourceGroupExists(resourceGroupName string) (bool, error) {
 }
 
 func runAzureCommand(args ...string) (string, error) {
+	if err := refreshAzureCLISession(); err != nil {
+		return "", err
+	}
+
 	command := exec.Command("az", args...)
 	output, err := command.CombinedOutput()
 	if err != nil {
@@ -362,6 +372,99 @@ func runAzureCommand(args ...string) (string, error) {
 	}
 
 	return string(output), nil
+}
+
+func refreshAzureCLISession() error {
+	clientID := strings.TrimSpace(os.Getenv("ARM_CLIENT_ID"))
+	tenantID := strings.TrimSpace(os.Getenv("ARM_TENANT_ID"))
+	subscriptionID := strings.TrimSpace(os.Getenv("ARM_SUBSCRIPTION_ID"))
+	oidcRequestURL := strings.TrimSpace(os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL"))
+	oidcRequestToken := strings.TrimSpace(os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN"))
+
+	if clientID == "" || tenantID == "" || oidcRequestURL == "" || oidcRequestToken == "" {
+		return nil
+	}
+
+	federatedToken, err := fetchGitHubOIDCToken(oidcRequestURL, oidcRequestToken)
+	if err != nil {
+		return err
+	}
+
+	loginArgs := []string{
+		"login",
+		"--service-principal",
+		"--username", clientID,
+		"--tenant", tenantID,
+		"--federated-token", federatedToken,
+		"--output", "none",
+	}
+
+	if subscriptionID == "" {
+		loginArgs = append(loginArgs, "--allow-no-subscriptions")
+	}
+
+	loginCommand := exec.Command("az", loginArgs...)
+	loginOutput, err := loginCommand.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("refresh azure cli login: %w: %s", err, strings.TrimSpace(string(loginOutput)))
+	}
+
+	if subscriptionID == "" {
+		return nil
+	}
+
+	accountCommand := exec.Command("az", "account", "set", "--subscription", subscriptionID)
+	accountOutput, err := accountCommand.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("set azure cli subscription %q: %w: %s", subscriptionID, err, strings.TrimSpace(string(accountOutput)))
+	}
+
+	return nil
+}
+
+func fetchGitHubOIDCToken(requestURL string, requestToken string) (string, error) {
+	parsedURL, err := url.Parse(requestURL)
+	if err != nil {
+		return "", fmt.Errorf("parse github oidc request url: %w", err)
+	}
+
+	query := parsedURL.Query()
+	query.Set("audience", azureOIDCAudience)
+	parsedURL.RawQuery = query.Encode()
+
+	req, err := http.NewRequest(http.MethodGet, parsedURL.String(), nil)
+	if err != nil {
+		return "", fmt.Errorf("create github oidc request: %w", err)
+	}
+	req.Header.Set("Authorization", "Bearer "+requestToken)
+
+	resp, err := githubHTTPClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("execute github oidc request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	responsePayload, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("read github oidc response: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("github oidc request returned status %d: %s", resp.StatusCode, strings.TrimSpace(string(responsePayload)))
+	}
+
+	var response struct {
+		Value string `json:"value"`
+	}
+	if err := json.Unmarshal(responsePayload, &response); err != nil {
+		return "", fmt.Errorf("decode github oidc response: %w", err)
+	}
+
+	if strings.TrimSpace(response.Value) == "" {
+		return "", fmt.Errorf("github oidc response did not include a token")
+	}
+
+	return response.Value, nil
 }
 
 func cleanupTerraformState(t *testing.T, terraformDir string) {

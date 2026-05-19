@@ -328,12 +328,17 @@ export class AzureCloudAccountService implements CloudAccountService {
       );
 
       const githubEnvironmentName = `bootstrapper-${name}-cd`;
+      const federatedCredentialName = this.#createFederatedCredentialName({
+        github,
+        githubEnvironmentName,
+      });
 
-      // Federate the bootstrap identity with the GitHub environment so workflows can exchange their OIDC token for Azure access.
+      // Include a repository-derived suffix so different repositories can share
+      // the same bootstrap identity without overwriting each other's OIDC trust.
       await msiClient.federatedIdentityCredentials.createOrUpdate(
         resourceGroupName,
         identityName,
-        githubEnvironmentName,
+        federatedCredentialName,
         {
           audiences: ["api://AzureADTokenExchange"],
           issuer: "https://token.actions.githubusercontent.com",
@@ -344,7 +349,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       logger.debug(
         "Configured federated identity credential {credentialName} for identity {identityName} in subscription {subscriptionId}",
         {
-          credentialName: githubEnvironmentName,
+          credentialName: federatedCredentialName,
           identityName,
           subscriptionId: cloudAccount.id,
         },
@@ -624,6 +629,18 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     return keyVaultName;
+  }
+
+  #createFederatedCredentialName({
+    github,
+    githubEnvironmentName,
+  }: {
+    github: GitHubRepo;
+    githubEnvironmentName: string;
+  }): string {
+    const repoName = github.repo.replaceAll(/[^a-zA-Z0-9-]/g, "-");
+
+    return `${repoName}-${githubEnvironmentName}`;
   }
 
   #createRoleAssignmentName(

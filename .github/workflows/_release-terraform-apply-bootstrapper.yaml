@@ -12,7 +12,7 @@ jobs:
   release:
     strategy:
       matrix:
-        environment: ["dev", "prod"]
+        environment: ["dev", "uat", "prod"]
     uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
     name: Release Bootstrapper (${{ matrix.environment }})
     secrets: inherit

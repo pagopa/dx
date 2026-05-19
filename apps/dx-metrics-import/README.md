@@ -25,7 +25,7 @@ export GITHUB_CLIENT_ID=Iv1.0123456789abcdef
 export GITHUB_APP_INSTALLATION_ID=7890123
 export GITHUB_APP_PRIVATE_KEY="$(awk '{printf "%s\\n", $0}' /path/to/github-app-private-key.pem)"
 export DATABASE_URL=postgresql://postgresql:postgresql@172.18.0.1:5432/postgresql
-pnpm import -- --since 2026-01-01
+pnpm run import -- --since 2026-01-01
 ```
 
 ## Configuration
@@ -34,7 +34,7 @@ By default, the importer uses the shared DX Metrics defaults from
 `@pagopa/dx-metrics-core`. To override them, pass a JSON file:
 
 ```bash
-pnpm import -- --config ./config.json --since 2026-01-01
+pnpm run import -- --config ./config.json --since 2026-01-01
 ```
 
 ## Entity types
@@ -53,7 +53,7 @@ pnpm import -- --config ./config.json --since 2026-01-01
 ### Tracker CSV import
 
 ```bash
-pnpm import -- --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
+pnpm run import -- --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
 ```
 
 ## GitHub authentication

@@ -56,7 +56,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
-          go-version: "1.25"
+          go-version-file: "go.work"
 
       - name: Get terraform version from .terraform-version file
         id: get-version
@@ -78,6 +78,9 @@ jobs:
           key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-nx-cache-
+
+      - name: Refresh Cloud Provider Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Run Terraform E2E Tests
         timeout-minutes: 720 # 12 hours

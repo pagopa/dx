@@ -380,7 +380,7 @@ describe("initialize", () => {
     expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
       "dx-d-itn-common-rg-01",
       "dx-d-itn-bootstrap-id-01",
-      "bootstrapper-dev-cd",
+      "dx-bootstrapper-dev-cd",
       {
         audiences: ["api://AzureADTokenExchange"],
         issuer: "https://token.actions.githubusercontent.com",
@@ -437,5 +437,55 @@ describe("initialize", () => {
       secretName: "GH_APP_KEY",
       secretValue: "private-key",
     });
+  });
+
+  test("uses a repository-specific federated credential name", async ({
+    cloudAccountService,
+  }) => {
+    const createOrUpdateEnvironmentSecret = vi
+      .fn()
+      .mockResolvedValue(undefined);
+
+    await cloudAccountService.initialize(
+      {
+        csp: "azure",
+        defaultLocation: "italynorth",
+        displayName: "Test subscription",
+        id: "sub-1",
+      },
+      {
+        name: "dev",
+        prefix: "dx",
+      },
+      {
+        clientId: "app-client-id",
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key\n",
+      },
+      {
+        owner: "pagopa",
+        repo: "dx-playground",
+      },
+      {
+        createBranch: vi.fn(),
+        createOrUpdateEnvironmentSecret,
+        createPullRequest: vi.fn(),
+        getFileContent: vi.fn(),
+        getRepository: vi.fn(),
+        updateFile: vi.fn(),
+      },
+    );
+
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      "dx-d-itn-bootstrap-id-01",
+      "dx-playground-bootstrapper-dev-cd",
+      {
+        audiences: ["api://AzureADTokenExchange"],
+        issuer: "https://token.actions.githubusercontent.com",
+        subject: "repo:pagopa/dx-playground:environment:bootstrapper-dev-cd",
+      },
+    );
   });
 });
