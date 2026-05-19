@@ -1,14 +1,37 @@
 locals {
-  vnet_address_space = "10.0.0.0/21"
+  existing_resources = {
+    prefix          = var.environment.prefix
+    environment     = var.environment.env_short
+    location        = var.environment.location
+    domain          = ""
+    name            = var.test_kind
+    instance_number = tonumber(var.environment.instance_number)
+  }
 }
 
 data "azurerm_client_config" "current" {}
+
+data "azurerm_resource_group" "test" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
+}
+
+data "azurerm_log_analytics_workspace" "int" {
+  name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "log_analytics" }))
+  resource_group_name = data.azurerm_resource_group.test.name
+}
+
+resource "azurerm_resource_group" "sut" {
+  name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
+  location = var.environment.location
+
+  tags = var.tags
+}
 
 resource "azurerm_virtual_network" "this" {
   name                = provider::dx::resource_name(merge(var.environment, { resource_type = "virtual_network" }))
   location            = azurerm_resource_group.sut.location
   resource_group_name = azurerm_resource_group.sut.name
-  address_space       = [local.vnet_address_space]
+  address_space       = ["10.0.0.0/21"]
 
   tags = var.tags
 }
@@ -21,22 +44,12 @@ resource "dx_available_subnet_cidr" "pep_subnet" {
 resource "dx_available_subnet_cidr" "cae_subnet" {
   virtual_network_id = azurerm_virtual_network.this.id
   prefix_length      = "27"
-}
 
-data "azurerm_log_analytics_workspace" "int" {
-  name                = provider::dx::resource_name(merge(var.environment, { app_name = "integration", domain = "", resource_type = "log_analytics" }))
-  resource_group_name = provider::dx::resource_name(merge(var.environment, { app_name = "integration", domain = "", resource_type = "resource_group" }))
-}
-
-resource "azurerm_resource_group" "sut" {
-  name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
-  location = var.environment.location
-
-  tags = var.tags
+  depends_on = [azurerm_subnet.pep]
 }
 
 resource "azurerm_subnet" "pep" {
-  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "subnet", app_name = "pep" }))
+  name                 = provider::dx::resource_name(merge(var.environment, { resource_type = "private_endpoint_subnet" }))
   resource_group_name  = azurerm_resource_group.sut.name
   virtual_network_name = azurerm_virtual_network.this.name
   address_prefixes     = [dx_available_subnet_cidr.pep_subnet.cidr_block]
@@ -60,7 +73,7 @@ resource "azurerm_subnet" "cae" {
 resource "azurerm_container_app_environment" "runner" {
   name                           = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_environment" }))
   resource_group_name            = azurerm_resource_group.sut.name
-  location                       = var.environment.location
+  location                       = azurerm_resource_group.sut.location
   internal_load_balancer_enabled = false
   infrastructure_subnet_id       = azurerm_subnet.cae.id
   log_analytics_workspace_id     = data.azurerm_log_analytics_workspace.int.id
@@ -94,7 +107,12 @@ resource "random_integer" "kv_instance" {
 #tfsec:ignore:AVD-AZU-0016
 #tfsec:ignore:AVD-AZU-0017
 resource "azurerm_key_vault" "test" {
-  name                          = provider::dx::resource_name(merge(var.environment, { resource_type = "key_vault", instance_number = random_integer.kv_instance.result }))
+  name = provider::dx::resource_name(
+    merge(var.environment,
+      {
+        resource_type = "key_vault", instance_number = random_integer.kv_instance.result
+      }
+  ))
   location                      = azurerm_resource_group.sut.location
   resource_group_name           = azurerm_resource_group.sut.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
@@ -163,8 +181,4 @@ output "container_app_environment_location" {
 
 output "key_vault_name" {
   value = azurerm_key_vault.test.name
-}
-
-output "key_vault_resource_group_name" {
-  value = azurerm_resource_group.sut.name
 }
