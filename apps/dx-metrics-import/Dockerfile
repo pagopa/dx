@@ -15,8 +15,6 @@ COPY packages/dx-metrics-core ./packages/dx-metrics-core
 
 ENV NODE_ENV=production
 
-RUN pnpm nx build dx-metrics-import
-
 WORKDIR /app/apps/dx-metrics-import
 
 RUN addgroup --system --gid 1001 nodejs && \
@@ -24,4 +22,4 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 USER importuser
 
-ENTRYPOINT ["node", "dist/import.mjs"]
+ENTRYPOINT ["pnpm", "run", "import", "--"]
