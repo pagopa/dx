@@ -1,3 +1,14 @@
+## 0.1.2 (2026-05-19)
+
+### 🩹 Fixes
+
+- Keep `pg` external in the importer bundle so the job runtime avoids the ESM dynamic require failure. ([#1766](https://github.com/pagopa/dx/pull/1766))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.1.1 (2026-05-19)
 
 ### 🩹 Fixes
