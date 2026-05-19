@@ -16,8 +16,6 @@ const terraformStateContextSchema = payloadSchema.pick({
 
 const terraformStateNameSchema = z
   .string()
-  .trim()
-  .toLowerCase()
   .regex(
     /^[a-z0-9-]+$/,
     "Terraform state name may contain only lowercase letters, numbers, and hyphens",

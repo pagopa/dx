@@ -43,4 +43,16 @@ describe("terraformStateKey", () => {
       /Terraform state name may contain only lowercase letters, numbers, and hyphens/u,
     );
   });
+
+  it("rejects names with uppercase letters or surrounding spaces", () => {
+    expect(() => terraformStateKey(createMockContext(), "Mcp-Server")).toThrow(
+      /Terraform state name may contain only lowercase letters, numbers, and hyphens/u,
+    );
+
+    expect(() =>
+      terraformStateKey(createMockContext(), " mcp-server "),
+    ).toThrow(
+      /Terraform state name may contain only lowercase letters, numbers, and hyphens/u,
+    );
+  });
 });
