@@ -1,0 +1,153 @@
+.lifecycleContainer {
+  margin-top: 1.5rem;
+}
+
+/* ── Tool Section ── */
+
+.toolSection {
+  margin-bottom: 2.5rem;
+}
+
+.toolHeader {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.toolHeader h3 {
+  margin: 0;
+}
+
+.categoryBadge {
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.15rem 0.5rem;
+  text-transform: uppercase;
+}
+
+.categoryRuntime {
+  background: var(--ifm-color-primary-lightest);
+  color: var(--ifm-color-primary-darkest);
+}
+
+.categoryInfra {
+  background: #e8d5f5;
+  color: #4a1d6b;
+}
+
+.categoryBuildTool {
+  background: #d5e8f5;
+  color: #1a4a6b;
+}
+
+.categoryCi {
+  background: #f5e8d5;
+  color: #6b4a1a;
+}
+
+.policy {
+  color: var(--ifm-color-emphasis-600);
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+
+.vendorLink {
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.communicationSection {
+  font-size: 0.88rem;
+  margin-bottom: 1rem;
+}
+
+.communicationList {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.communicationList li {
+  margin-bottom: 0.2rem;
+}
+
+/* ── Table ── */
+
+.versionTable {
+  font-size: 0.9rem;
+}
+
+/* ── Status Badge ── */
+
+.statusBadge {
+  border-radius: 4px;
+  display: inline-flex;
+  font-size: 0.78rem;
+  font-weight: 600;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+}
+
+.statusActive {
+  background: #d4edda;
+  color: #155724;
+}
+
+.statusMaintenance {
+  background: #d1ecf1;
+  color: #0c5460;
+}
+
+.statusDeprecated {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.statusEol {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+/* ── Dark theme overrides ── */
+
+[data-theme="dark"] .statusActive {
+  background: #1a3a2a;
+  color: #a3d9b1;
+}
+
+[data-theme="dark"] .statusMaintenance {
+  background: #1a2e3a;
+  color: #a3d1d9;
+}
+
+[data-theme="dark"] .statusDeprecated {
+  background: #3a3520;
+  color: #d9c97a;
+}
+
+[data-theme="dark"] .statusEol {
+  background: #3a1a1d;
+  color: #d9a3a8;
+}
+
+[data-theme="dark"] .categoryRuntime {
+  background: #1a3a4a;
+  color: #a3d1e8;
+}
+
+[data-theme="dark"] .categoryInfra {
+  background: #2a1a3a;
+  color: #c9a3e8;
+}
+
+[data-theme="dark"] .categoryBuildTool {
+  background: #1a2a3a;
+  color: #a3c9e8;
+}
+
+[data-theme="dark"] .categoryCi {
+  background: #3a2a1a;
+  color: #e8c9a3;
+}

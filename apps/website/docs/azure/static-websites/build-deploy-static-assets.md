@@ -4,12 +4,18 @@ sidebar_position: 3
 
 # Deploying a Static Site to Azure
 
-The
-[Build and Deploy a Static Site to Azure](https://github.com/pagopa/dx/tree/main/.github/workflows/release-azure-staticassets-v1.yaml)
-is a reusable workflow (`workflow_call`) that automates the build and deployment
-of a static application from a monorepo. It handles everything from dependency
-installation to purging the cache on Azure Front Door or Azure CDN Classic,
-ensuring a streamlined and consistent deployment process.
+:::info Reusable Workflow
+
+| Workflow                                  | Version | Source                                                                                                                              |
+| ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Build and Deploy Static Site to Azure** | v1      | [`release-azure-staticassets-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-staticassets-v1.yaml) |
+
+:::
+
+The `release-azure-staticassets` reusable workflow (`workflow_call`) automates
+the build and deployment of a static application from a monorepo. It handles
+everything from dependency installation to purging the cache on Azure Front Door
+or Azure CDN Classic, ensuring a streamlined and consistent deployment process.
 
 ## How It Works
 

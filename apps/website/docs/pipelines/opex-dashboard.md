@@ -4,6 +4,14 @@ sidebar_position: 6
 
 # Deploy OpEx Dashboards
 
+:::info Reusable Workflow
+
+| Workflow                  | Version | Source                                                                                                              |
+| ------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------- |
+| **OpEx Dashboard Deploy** | latest  | [`opex-dashboard-deploy.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/opex-dashboard-deploy.yaml) |
+
+:::
+
 Reusable workflow for automatically detecting changes to dashboard configuration
 files and their referenced OpenAPI specifications, generating Azure Dashboard
 Terraform code, and deploying it to your infrastructure using parallel matrix

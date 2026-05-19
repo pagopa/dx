@@ -1,0 +1,185 @@
+{
+  "$schema": "./lifecycle-data.schema.json",
+  "tools": [
+    {
+      "id": "nodejs",
+      "name": "Node.js",
+      "category": "runtime",
+      "communicationChannels": [
+        "GitHub Actions warning messages in DX reusable workflows"
+      ],
+      "lifecyclePolicy": "All active Node.js LTS versions are supported. Current (odd-numbered) releases are supported on a best-effort basis.",
+      "vendorLifecycleUrl": "https://nodejs.org/en/about/previous-releases",
+      "versions": [
+        {
+          "version": "24.x",
+          "status": "active",
+          "supportedSince": "2025-05-01",
+          "notes": "Current release, supported in pipelines and devcontainers"
+        },
+        {
+          "version": "22.x",
+          "status": "active",
+          "supportedSince": "2024-10-29",
+          "eolDate": "2027-04-30",
+          "notes": "Active LTS"
+        },
+        {
+          "version": "20.x",
+          "status": "eol",
+          "supportedSince": "2023-10-24",
+          "eolDate": "2026-04-30",
+          "notes": "Vendor EOL reached — migrate to 22.x or 24.x"
+        }
+      ]
+    },
+    {
+      "id": "terraform",
+      "name": "Terraform",
+      "category": "infra",
+      "communicationChannels": [
+        "GitHub Actions warnings/errors in terraform plan/apply reusable workflows"
+      ],
+      "lifecyclePolicy": "Only the last two minor versions of the current major are actively supported in DX modules and pipelines.",
+      "vendorLifecycleUrl": "https://endoflife.date/terraform",
+      "versions": [
+        {
+          "version": "1.15.x",
+          "status": "active",
+          "supportedSince": "2025-04-01",
+          "notes": "Current stable, used in DX modules and pipelines"
+        },
+        {
+          "version": "1.14.x",
+          "status": "active",
+          "supportedSince": "2025-01-01",
+          "notes": "Supported — minimum required by most DX modules"
+        },
+        {
+          "version": "<= 1.13.x",
+          "status": "eol",
+          "eolDate": "2025-04-01",
+          "notes": "No longer tested or supported in DX modules"
+        },
+        {
+          "version": "Provider: azurerm (~> 4.x)",
+          "status": "active",
+          "notes": "Primary Azure provider used across core/resources/bootstrapper"
+        },
+        {
+          "version": "Provider: azapi (2.8.0)",
+          "status": "active",
+          "notes": "Used in infra/resources stacks"
+        },
+        {
+          "version": "Provider: aws (>= 5.0, < 7.0)",
+          "status": "active",
+          "notes": "Used in AWS modules and mixed-cloud stacks"
+        },
+        {
+          "version": "Provider: awscc (~> 1.0)",
+          "status": "active",
+          "notes": "Used where AWS Cloud Control resources are required"
+        },
+        {
+          "version": "Provider: azuread (~> 2.x)",
+          "status": "active",
+          "notes": "Used for Entra/Azure AD resources"
+        }
+      ]
+    },
+    {
+      "id": "nx",
+      "name": "Nx",
+      "category": "build-tool",
+      "communicationChannels": [
+        "Nx task failure output in CI/CD logs when an unsupported Nx version is detected"
+      ],
+      "lifecyclePolicy": "The latest major version is supported. Nx provides vendor support for 1 year per major release.",
+      "vendorLifecycleUrl": "https://nx.dev/docs/reference/releases",
+      "versions": [
+        {
+          "version": "22.x",
+          "status": "active",
+          "supportedSince": "2025-04-01",
+          "notes": "Current major — used in DX CLI, pipelines, and devcontainers"
+        },
+        {
+          "version": "21.x",
+          "status": "eol",
+          "eolDate": "2026-04-01",
+          "notes": "Vendor support window closed"
+        }
+      ]
+    },
+    {
+      "id": "nextjs",
+      "name": "Next.js",
+      "category": "build-tool",
+      "communicationChannels": [
+        "Build-time warnings/errors in app pipelines when an unsupported Next.js version is used"
+      ],
+      "lifecyclePolicy": "Only vendor-maintained majors are supported.",
+      "vendorLifecycleUrl": "https://nextjs.org/support-policy",
+      "versions": [
+        {
+          "version": "16.x",
+          "status": "active",
+          "supportedSince": "2026-01-01",
+          "notes": "Current maintained major"
+        },
+        {
+          "version": "15.x",
+          "status": "maintenance",
+          "notes": "Maintained by vendor"
+        },
+        {
+          "version": "<= 14.x",
+          "status": "eol",
+          "notes": "Not in vendor maintained window"
+        }
+      ]
+    },
+    {
+      "id": "pnpm",
+      "name": "pnpm",
+      "category": "build-tool",
+      "communicationChannels": [
+        "Installation and lockfile errors in CI logs when an unsupported pnpm version is detected"
+      ],
+      "lifecyclePolicy": "The latest major version is supported. Upgrade to the latest major when available.",
+      "vendorLifecycleUrl": "https://github.com/pnpm/pnpm/releases",
+      "versions": [
+        {
+          "version": "10.x",
+          "status": "active",
+          "supportedSince": "2025-01-01",
+          "notes": "Current major — pinned via Corepack in DX monorepos"
+        },
+        {
+          "version": "9.x",
+          "status": "eol",
+          "eolDate": "2025-06-01",
+          "notes": "No longer supported in DX templates and workflows"
+        }
+      ]
+    },
+    {
+      "id": "github-actions-workflows",
+      "name": "GitHub Actions (DX Reusable Workflows)",
+      "category": "ci",
+      "communicationChannels": [
+        "Workflow warning messages and job summaries during pipeline execution"
+      ],
+      "lifecyclePolicy": "Only the latest major version of each DX reusable workflow is supported. Breaking changes are communicated via version plan changelogs.",
+      "vendorLifecycleUrl": "/docs/pipelines",
+      "versions": [
+        {
+          "version": "Current",
+          "status": "active",
+          "notes": "Each workflow is independently versioned — check individual changelogs for details"
+        }
+      ]
+    }
+  ]
+}

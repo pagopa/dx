@@ -4,10 +4,17 @@ sidebar_position: 50
 
 # Detecting Drift in Infrastructure as Code
 
-The
-[existing Drift Detection workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml)
-is a GitHub Action that identifies drifts between the Terraform code and the
-current state of the resources provisioned on the target CSP.
+:::info Reusable Workflow
+
+| Workflow            | Version | Source                                                                                                            |
+| ------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Drift Detection** | latest  | [`infra_drift_detection.yml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_drift_detection.yml) |
+
+:::
+
+The drift detection workflow is a GitHub Action that identifies drifts between
+the Terraform code and the current state of the resources provisioned on the
+target CSP.
 
 :::note
 
