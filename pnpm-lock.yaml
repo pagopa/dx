@@ -640,6 +640,9 @@ importers:
       octokit:
         specifier: ^5.0.5
         version: 5.0.5
+      pg:
+        specifier: ^8.13.0
+        version: 8.20.0
       terrawiz:
         specifier: ^1.0.0
         version: 1.0.0
