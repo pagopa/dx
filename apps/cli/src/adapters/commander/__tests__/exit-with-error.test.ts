@@ -1,6 +1,7 @@
 import { Command } from "commander";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { CliError, ErrorCode, ExitCode } from "../exit-codes.js";
 import { exitWithError, isVerbose } from "../index.js";
 
 /**
@@ -11,6 +12,8 @@ const makeProgramWith = (child: Command, argv: string[]): Command => {
   const program = new Command()
     .name("dx")
     .option("-v, --verbose", "verbose output", false)
+    .option("-y, --non-interactive", "non interactive", false)
+    .option("--output <mode>", "output mode", "text")
     .exitOverride()
     .configureOutput({
       writeErr: () => {
@@ -103,4 +106,64 @@ describe("exitWithError", () => {
       /plain string failure/,
     );
   });
+
+  it("emits a JSON error envelope on stdout when --output=json", () => {
+    const cmd = new Command("run").action(() => undefined);
+    makeProgramWith(cmd, ["--output", "json", "run"]);
+    const written: string[] = [];
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process.stdout as any).write = (chunk: unknown): boolean => {
+      written.push(String(chunk));
+      return true;
+    };
+    const err = new CliError(ErrorCode.MISSING_INPUT, "missing field", {
+      details: { field: "name" },
+    });
+    let thrown: unknown;
+    try {
+      exitWithError(cmd)(err);
+    } catch (e) {
+      thrown = e;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process.stdout as any).write = originalWrite;
+
+    const envelope = JSON.parse(written.join("").trim());
+    expect(envelope).toMatchObject({
+      command: "run",
+      error: {
+        code: ErrorCode.MISSING_INPUT,
+        details: { field: "name" },
+        message: "missing field",
+      },
+      ok: false,
+    });
+    expect((thrown as null | { exitCode?: number })?.exitCode).toBe(
+      ExitCode.MISSING_INPUT,
+    );
+  });
+
+  it("uses GENERIC exit code in json mode for non-CliError values", () => {
+    const cmd = new Command("run").action(() => undefined);
+    makeProgramWith(cmd, ["--output", "json", "run"]);
+    const originalWrite = process.stdout.write.bind(process.stdout);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process.stdout as any).write = (): boolean => true;
+    let thrown: unknown;
+    try {
+      exitWithError(cmd)(new Error("boom"));
+    } catch (e) {
+      thrown = e;
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (process.stdout as any).write = originalWrite;
+    expect((thrown as null | { exitCode?: number })?.exitCode).toBe(
+      ExitCode.GENERIC,
+    );
+  });
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
