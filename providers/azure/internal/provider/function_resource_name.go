@@ -106,6 +106,7 @@ func getResourceAbbreviations() map[string]string {
 		"servicebus_private_endpoint":        "sbns-pep",
 		"apim_private_endpoint":              "apim-pep",
 		"app_configuration_private_endpoint": "appcs-pep",
+		"managed_redis_private_endpoint":     "amr-pep",
 
 		// Public IPs
 		"public_ip": "pip",

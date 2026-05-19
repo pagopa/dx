@@ -115,6 +115,7 @@ The following table lists the resource types and their abbreviations used in the
 | log_analytics                             |       log        |
 | managed_identity                          |        id        |
 | managed_redis                             |       amr        |
+| managed_redis_private_endpoint            |     amr-pep      |
 | nat_gateway                               |        ng        |
 | network_security_group                    |       nsg        |
 | postgre_endpoint                          |     psql-ep      |
