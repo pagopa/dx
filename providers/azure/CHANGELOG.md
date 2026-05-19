@@ -1,3 +1,14 @@
+## 0.12.0 (2026-05-19)
+
+### 🚀 Features
+
+- Add managed_redis_private_endpoint resource type ([#1763](https://github.com/pagopa/dx/pull/1763))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.11.0 (2026-05-07)
 
 ### 🚀 Features
