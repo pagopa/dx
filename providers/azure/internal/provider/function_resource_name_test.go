@@ -996,3 +996,33 @@ func TestResourceNameFunction_MissingEnvironmentAndEnvShort(t *testing.T) {
 		},
 	})
 }
+
+func TestResourceNameFunction_ManagedRedisPrivateEndpoint(t *testing.T) {
+	t.Parallel()
+	// managed_redis_private_endpoint must produce the amr-pep abbreviation
+	resource.UnitTest(t, resource.TestCase{
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_8_0),
+		},
+		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+        output "test" {
+          value = provider::dx::resource_name({
+						prefix = "dx",
+						environment = "d",
+						location = "itn",
+						name = "cache",
+						resource_type = "managed_redis_private_endpoint",
+						instance_number = "1"
+					})
+        }
+        `,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test", knownvalue.StringExact("dx-d-itn-cache-amr-pep-01")),
+				},
+			},
+		},
+	})
+}
