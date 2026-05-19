@@ -1,0 +1,46 @@
+/**
+ * Tests for Terraform state key generation used by the environment generator.
+ */
+import { describe, expect, it } from "vitest";
+
+import { Payload } from "../../generators/environment/prompts.js";
+import { terraformStateKey } from "../terraform-state-key.js";
+
+const createMockPayload = (
+  overrides: Partial<Pick<Payload, "env" | "workspace">> = {},
+): Pick<Payload, "env" | "workspace"> => ({
+  env: {
+    cloudAccounts: [],
+    name: "dev",
+    prefix: "dx",
+  },
+  workspace: {
+    domain: "shared",
+  },
+  ...overrides,
+});
+
+describe("terraformStateKey", () => {
+  it("returns keys using the prefix/domain/scope convention", () => {
+    const result = terraformStateKey(createMockPayload(), "bootstrapper");
+
+    expect(result).toBe("dx/shared/bootstrapper.tfstate");
+  });
+
+  it("supports hyphenated scopes", () => {
+    const result = terraformStateKey(
+      createMockPayload({
+        workspace: { domain: "playground" },
+      }),
+      "mcp-server",
+    );
+
+    expect(result).toBe("dx/playground/mcp-server.tfstate");
+  });
+
+  it("rejects scopes that would create nested paths", () => {
+    expect(() => terraformStateKey(createMockPayload(), "core/root")).toThrow(
+      /Terraform state scope may contain only lowercase letters, numbers, and hyphens/u,
+    );
+  });
+});

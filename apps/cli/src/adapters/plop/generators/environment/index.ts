@@ -12,6 +12,7 @@ import setProvisionTerraformBackendAction from "../../actions/provision-terrafor
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
+import setTerraformStateKeyHelper from "../../helpers/terraform-state-key.js";
 import getActions from "./actions.js";
 import getPrompts, { Payload, payloadSchema } from "./prompts.js";
 
@@ -29,6 +30,7 @@ export default function (
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
+  setTerraformStateKeyHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
   setProvisionTerraformBackendAction(plop, cloudAccountService);

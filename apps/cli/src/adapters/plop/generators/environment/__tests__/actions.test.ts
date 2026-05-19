@@ -79,4 +79,40 @@ describe("actions", () => {
 
     expect(actionTypes).toEqual(actionsOrder);
   });
+
+  test.each([
+    {
+      expectedKeys: [
+        "dx/mytest/bootstrapper.tfstate",
+        "dx/mytest/core.tfstate",
+      ],
+      payload: getPayload(true),
+    },
+    {
+      expectedKeys: ["dx/mytest/bootstrapper.tfstate"],
+      payload: getPayload(false),
+    },
+  ])(
+    "uses RFC state keys in shared backend actions",
+    ({ expectedKeys, payload }) => {
+      const actions = getActions("/templates/path")(payload);
+
+      const terraformBackendKeys = actions
+        .filter(
+          (
+            action,
+          ): action is ActionConfig & {
+            data: { terraformBackendKey: string };
+          } =>
+            typeof action === "object" &&
+            action.type === "addMany" &&
+            typeof action.data === "object" &&
+            action.data !== null &&
+            Object.hasOwn(action.data, "terraformBackendKey"),
+        )
+        .map((action) => action.data.terraformBackendKey);
+
+      expect(terraformBackendKeys).toEqual(expectedKeys);
+    },
+  );
 });
