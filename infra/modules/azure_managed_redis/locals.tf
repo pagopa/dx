@@ -29,7 +29,7 @@ locals {
   use_case_features = local.use_cases[var.use_case]
 
   managed_redis_name    = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_redis" }))
-  private_endpoint_name = provider::dx::resource_name(merge(var.environment, { resource_type = "private_endpoint" }))
+  private_endpoint_name = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_redis_private_endpoint" }))
 
   vnet_id                  = var.virtual_network_id != null ? provider::azurerm::normalise_resource_id(var.virtual_network_id) : null
   vnet_resource_group_name = var.virtual_network_id != null ? provider::azurerm::parse_resource_id(var.virtual_network_id).resource_group_name : null
