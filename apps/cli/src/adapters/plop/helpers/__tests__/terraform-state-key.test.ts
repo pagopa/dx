@@ -27,7 +27,7 @@ describe("terraformStateKey", () => {
     expect(result).toBe("dx/shared/bootstrapper.tfstate");
   });
 
-  it("supports hyphenated scopes", () => {
+  it("supports hyphenated names", () => {
     const result = terraformStateKey(
       createMockContext({
         workspace: { domain: "playground" },
@@ -38,9 +38,9 @@ describe("terraformStateKey", () => {
     expect(result).toBe("dx/playground/mcp-server.tfstate");
   });
 
-  it("rejects scopes that would create nested paths", () => {
+  it("rejects names that would create nested paths", () => {
     expect(() => terraformStateKey(createMockContext(), "core/root")).toThrow(
-      /Terraform state scope may contain only lowercase letters, numbers, and hyphens/u,
+      /Terraform state name may contain only lowercase letters, numbers, and hyphens/u,
     );
   });
 });
