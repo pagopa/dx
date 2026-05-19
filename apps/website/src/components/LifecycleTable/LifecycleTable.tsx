@@ -33,6 +33,20 @@ const STATUS_CLASS: Record<VersionStatus, string> = {
   maintenance: styles.statusMaintenance,
 };
 
+export function LifecycleTable() {
+  const { tools } = usePluginData("lifecycle-data-loader") as {
+    tools: readonly ToolLifecycle[];
+  };
+
+  return (
+    <div className={styles.lifecycleContainer}>
+      {tools.map((tool) => (
+        <ToolVersionTable key={tool.id} tool={tool} />
+      ))}
+    </div>
+  );
+}
+
 function StatusBadge({ status }: { readonly status: VersionStatus }) {
   const meta = STATUS_META[status];
   return (
@@ -111,19 +125,5 @@ function ToolVersionTable({ tool }: { readonly tool: ToolLifecycle }) {
         </tbody>
       </table>
     </section>
-  );
-}
-
-export function LifecycleTable() {
-  const { tools } = usePluginData("lifecycle-data-loader") as {
-    tools: readonly ToolLifecycle[];
-  };
-
-  return (
-    <div className={styles.lifecycleContainer}>
-      {tools.map((tool) => (
-        <ToolVersionTable key={tool.id} tool={tool} />
-      ))}
-    </div>
   );
 }

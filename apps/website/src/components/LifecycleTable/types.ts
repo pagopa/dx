@@ -1,14 +1,8 @@
 /** Types for the DX tooling lifecycle data model. */
 
-export type VersionStatus = "active" | "deprecated" | "eol" | "maintenance";
-
-export interface VersionEntry {
-  readonly eolDate?: string;
-  readonly migrationGuideUrl?: string;
-  readonly notes?: string;
-  readonly status: VersionStatus;
-  readonly supportedSince?: string;
-  readonly version: string;
+export interface StatusMeta {
+  readonly icon: string;
+  readonly label: string;
 }
 
 export type ToolCategory = "build-tool" | "ci" | "infra" | "runtime";
@@ -23,10 +17,16 @@ export interface ToolLifecycle {
   readonly versions: readonly VersionEntry[];
 }
 
-export interface StatusMeta {
-  readonly icon: string;
-  readonly label: string;
+export interface VersionEntry {
+  readonly eolDate?: string;
+  readonly migrationGuideUrl?: string;
+  readonly notes?: string;
+  readonly status: VersionStatus;
+  readonly supportedSince?: string;
+  readonly version: string;
 }
+
+export type VersionStatus = "active" | "deprecated" | "eol" | "maintenance";
 
 export const STATUS_META: Record<VersionStatus, StatusMeta> = {
   active: {
