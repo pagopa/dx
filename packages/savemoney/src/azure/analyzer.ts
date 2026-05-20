@@ -85,42 +85,46 @@ export async function analyzeAzureResources(
       sid,
     );
 
-    const tasks: Promise<void>[] = [];
+    // Track only in-flight promises, not every resource ever seen.
+    // Tasks remove themselves on completion so the Set stays small (bounded
+    // by the limiter's concurrency + queue size, not the total resource count).
+    const inFlight = new Set<Promise<void>>();
 
-    // Use the async iterator to avoid memory explosion for large environments
+    // Use the async iterator to avoid loading all resources into memory at once
     for await (const resource of resourceClient.resources.list()) {
       // Skip resources that don't match the requested tag filter
       if (!matchesTags(resource, config.filterTags)) {
         continue;
       }
 
-      tasks.push(
-        limit(async () => {
-          const { costRisk, reason, suspectedUnused } = await analyzeResource(
-            resource,
-            analyzers,
-            clients,
-            config.preferredLocation,
-            config.timespanDays,
-            thresholds,
-            config.verbose || false,
-          );
+      const task: Promise<void> = limit(async () => {
+        const { costRisk, reason, suspectedUnused } = await analyzeResource(
+          resource,
+          analyzers,
+          clients,
+          config.preferredLocation,
+          config.timespanDays,
+          thresholds,
+          config.verbose || false,
+        );
 
-          if (suspectedUnused) {
-            allReports.push({
-              analysis: {
-                costRisk,
-                reason: reason || "No specific findings.",
-                suspectedUnused,
-              },
-              resource,
-            });
-          }
-        }),
-      );
+        if (suspectedUnused) {
+          allReports.push({
+            analysis: {
+              costRisk,
+              reason: reason || "No specific findings.",
+              suspectedUnused,
+            },
+            resource,
+          });
+        }
+      });
+
+      inFlight.add(task);
+      void task.finally(() => inFlight.delete(task));
     }
 
-    await Promise.all(tasks);
+    await Promise.allSettled(inFlight);
   }
 
   // Sort to make the output more readable

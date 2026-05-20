@@ -125,8 +125,9 @@ function splitReasonIntoSentences(reason: string): string[] {
  * @param severity        Cost risk classification produced by the analyzer
  * @param reason          Concatenated reason string (sentences joined by ". ")
  * @param source          Provenance (default: "custom")
- * @param code            Optional finding code; falls back to the
- *                        resource type or "custom.unknown"
+ * @param code            Optional stable identifier for the finding kind
+ *                        (e.g. `"vm.deallocated"`). Defaults to
+ *                        `"custom.unknown"` when omitted.
  */
 export function findingsFromAnalysisResult(args: {
   code?: string;
