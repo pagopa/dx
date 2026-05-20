@@ -1,24 +1,13 @@
 /**
  * Tests for JsonCommandPresenter.
  *
- * JsonCommandPresenter emits NDJSON step events to stderr and a single JSON
- * result or error envelope to stdout. Tests verify the wire format and
- * that values flow through correctly.
+ * JsonCommandPresenter emits all output as NDJSON to stdout so agents can
+ * consume a single stream. Tests verify the wire format and that values
+ * flow through correctly.
  */
 import { describe, expect, it, vi } from "vitest";
 
 import { JsonCommandPresenter } from "../json-command-presenter.js";
-
-const captureStderr = () => {
-  const events: string[] = [];
-  const spy = vi
-    .spyOn(process.stderr, "write")
-    .mockImplementation((data: unknown) => {
-      events.push(String(data));
-      return true;
-    });
-  return { events, restore: () => spy.mockRestore() };
-};
 
 const captureStdout = () => {
   const written: string[] = [];
@@ -34,51 +23,51 @@ const captureStdout = () => {
 describe("JsonCommandPresenter", () => {
   describe("trackStep", () => {
     it("executes the task and returns its resolved value", async () => {
-      const stderr = captureStderr();
+      const stdout = captureStdout();
       const logger = new JsonCommandPresenter();
       const result = await logger.trackStep("check terraform", () =>
         Promise.resolve(42),
       );
       expect(result).toBe(42);
-      stderr.restore();
+      stdout.restore();
     });
 
-    it("emits start then success events to stderr", async () => {
-      const stderr = captureStderr();
+    it("emits start then success events to stdout", async () => {
+      const stdout = captureStdout();
       const logger = new JsonCommandPresenter();
       await logger.trackStep("check terraform", () => Promise.resolve("done"));
-      expect(stderr.events).toHaveLength(2);
-      expect(JSON.parse(stderr.events[0])).toMatchObject({
+      expect(stdout.written).toHaveLength(2);
+      expect(JSON.parse(stdout.written[0])).toMatchObject({
         name: "check terraform",
         status: "start",
         type: "step",
       });
-      expect(JSON.parse(stderr.events[1])).toMatchObject({
+      expect(JSON.parse(stdout.written[1])).toMatchObject({
         name: "check terraform",
         status: "success",
         type: "step",
       });
-      stderr.restore();
+      stdout.restore();
     });
 
-    it("emits error event to stderr and rethrows on task failure", async () => {
-      const stderr = captureStderr();
+    it("emits error event to stdout and rethrows on task failure", async () => {
+      const stdout = captureStdout();
       const logger = new JsonCommandPresenter();
       const error = new Error("terraform not found");
       await expect(
         logger.trackStep("check terraform", () => Promise.reject(error)),
       ).rejects.toThrow("terraform not found");
-      expect(JSON.parse(stderr.events[1])).toMatchObject({
+      expect(JSON.parse(stdout.written[1])).toMatchObject({
         error: "terraform not found",
         name: "check terraform",
         status: "error",
         type: "step",
       });
-      stderr.restore();
+      stdout.restore();
     });
 
     it("can run multiple sequential steps", async () => {
-      const stderr = captureStderr();
+      const stdout = captureStdout();
       const logger = new JsonCommandPresenter();
       const order: string[] = [];
       await logger.trackStep("step A", async () => {
@@ -88,7 +77,7 @@ describe("JsonCommandPresenter", () => {
         order.push("B");
       });
       expect(order).toEqual(["A", "B"]);
-      stderr.restore();
+      stdout.restore();
     });
   });
 
