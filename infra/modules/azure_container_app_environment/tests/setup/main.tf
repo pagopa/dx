@@ -30,7 +30,7 @@ resource "azurerm_virtual_network" "this" {
 
 resource "dx_available_subnet_cidr" "pep_subnet" {
   virtual_network_id = azurerm_virtual_network.this.id
-  prefix_length      = "27"
+  prefix_length      = 27
 }
 
 resource "azurerm_subnet" "pep" {

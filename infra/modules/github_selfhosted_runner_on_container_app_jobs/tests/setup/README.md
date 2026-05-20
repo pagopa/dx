@@ -43,7 +43,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    app_name        = optional(string)<br/>    domain          = optional(string)<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to setup resources | `map(string)` | n/a | yes |
 | <a name="input_test_kind"></a> [test\_kind](#input\_test\_kind) | Test type: must be 'integration' (setup module is not used by e2e tests) | `string` | n/a | yes |
 
