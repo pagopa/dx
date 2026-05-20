@@ -4,6 +4,12 @@
 
 This Terraform module deploys an Azure Container App in a provided Azure Container App Environment. It supports System Assigned Managed Identity and configurable scaling options.
 
+## Diagram
+
+The following diagram illustrates the architecture and relationships between the main components of this module:
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/modules/azure_container_app/diagram.svg)
+
 ## Features
 
 - **Container App Deployment**: Deploys a containerized application in the specified Azure Container App Environment.
@@ -126,10 +132,11 @@ A complete usage example can be found in the [example/complete](https://github.c
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | >= 2.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.16.0, < 5.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.9 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.70 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.10 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 
 ## Modules
 
