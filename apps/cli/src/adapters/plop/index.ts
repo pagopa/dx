@@ -4,7 +4,6 @@ import { AzureCliCredential } from "@azure/identity";
 import { getLogger } from "@logtape/logtape";
 import { Answers } from "inquirer";
 import nodePlop from "node-plop";
-import path from "node:path";
 import { Octokit } from "octokit";
 import { oraPromise } from "ora";
 
