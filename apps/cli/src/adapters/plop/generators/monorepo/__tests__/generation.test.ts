@@ -15,6 +15,10 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import {
+  cleanupTempDir,
+  shouldKeepTestArtifacts,
+} from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_MONOREPO_GENERATOR_NAME } from "../index.js";
 
@@ -38,6 +42,7 @@ const registerStubActions = (plop: NodePlopAPI) => {
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
+  let keepArtifacts: boolean;
 
   const payload: Payload = {
     repoDescription: "A test repository for DX",
@@ -47,6 +52,7 @@ describe("monorepo generator — file generation", () => {
 
   beforeAll(async () => {
     originalCwd = process.cwd();
+    keepArtifacts = shouldKeepTestArtifacts(process.env);
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
     process.chdir(tmpDir);
 
@@ -76,7 +82,7 @@ describe("monorepo generator — file generation", () => {
 
   afterAll(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tmpDir, { force: true, recursive: true });
+    await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
   it("creates the output directory named after repoName", async () => {

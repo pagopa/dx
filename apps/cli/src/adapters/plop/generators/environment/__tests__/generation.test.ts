@@ -26,6 +26,10 @@ import setProvisionTerraformBackendAction from "../../../actions/provision-terra
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
+import {
+  cleanupTempDir,
+  shouldKeepTestArtifacts,
+} from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
@@ -54,6 +58,7 @@ const registerEnvironmentSetup = (
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
+  let keepArtifacts: boolean;
 
   const mockTerraformBackend: TerraformBackend = {
     resourceGroupName: "dx-d-itn-tf-rg",
@@ -91,6 +96,7 @@ describe("environment generator — file generation (no init)", () => {
 
   beforeAll(async () => {
     originalCwd = process.cwd();
+    keepArtifacts = shouldKeepTestArtifacts(process.env);
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-env-test-"));
     process.chdir(tmpDir);
 
@@ -140,7 +146,7 @@ describe("environment generator — file generation (no init)", () => {
 
   afterAll(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tmpDir, { force: true, recursive: true });
+    await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
   it("generates the workflow file for the environment", async () => {
@@ -219,6 +225,7 @@ describe("environment generator — file generation (no init)", () => {
 describe("environment generator — file generation (with init)", () => {
   let tmpDir: string;
   let originalCwd: string;
+  let keepArtifacts: boolean;
 
   const mockTerraformBackend: TerraformBackend = {
     resourceGroupName: "dx-d-itn-tf-rg",
@@ -268,6 +275,7 @@ describe("environment generator — file generation (with init)", () => {
 
   beforeAll(async () => {
     originalCwd = process.cwd();
+    keepArtifacts = shouldKeepTestArtifacts(process.env);
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-env-init-test-"));
     process.chdir(tmpDir);
 
@@ -317,7 +325,7 @@ describe("environment generator — file generation (with init)", () => {
 
   afterAll(async () => {
     process.chdir(originalCwd);
-    await fs.rm(tmpDir, { force: true, recursive: true });
+    await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
   it("generates the core module when init is provided", async () => {
