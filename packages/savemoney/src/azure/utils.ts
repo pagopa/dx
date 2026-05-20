@@ -104,16 +104,33 @@ export function extractAggregatedValue(
 }
 
 /**
- * Fetches a specific metric for a resource from Azure Monitor.
+ * In-memory cache for Azure Monitor metric lookups, scoped to a single
+ * `analyzeAzureResources` run. Keyed on `resourceId|metricName|aggregation|timespanDays`.
  *
- * @param monitorClient - The Azure Monitor client instance
- * @param resourceId - The Azure resource ID
- * @param metricName - The name of the metric to fetch (e.g., "Percentage CPU")
- * @param aggregation - The aggregation type (e.g., "Average", "Total")
- * @param timespanDays - Number of days to look back for metrics
- * @returns The metric value or null if unavailable
+ * Promises are stored (not resolved values) so concurrent requests for
+ * the same metric coalesce into one network call.
+ *
+ * The cache is intentionally module-scoped: each run should call
+ * `resetMetricsCache()` before starting to avoid stale data across runs.
  */
-export async function getMetric(
+const metricsCache = new Map<string, Promise<null | number>>();
+
+/**
+ * Clears the in-memory metrics cache. Must be called at the start of
+ * every analysis run to guarantee fresh data.
+ */
+export function resetMetricsCache(): void {
+  metricsCache.clear();
+}
+
+/**
+ * @internal — exposed for tests only.
+ */
+export function _metricsCacheSize(): number {
+  return metricsCache.size;
+}
+
+async function fetchMetric(
   monitorClient: MonitorClient,
   resourceId: string,
   metricName: string,
@@ -157,6 +174,43 @@ export async function getMetric(
     );
     return null;
   }
+}
+
+/**
+ * Fetches a specific metric for a resource from Azure Monitor, with an
+ * in-memory cache scoped to the current run (see `resetMetricsCache`).
+ *
+ * Concurrent callers for the same `(resourceId, metricName, aggregation,
+ * timespanDays)` tuple share the same underlying request.
+ *
+ * @param monitorClient - The Azure Monitor client instance
+ * @param resourceId - The Azure resource ID
+ * @param metricName - The name of the metric to fetch (e.g., "Percentage CPU")
+ * @param aggregation - The aggregation type (e.g., "Average", "Total")
+ * @param timespanDays - Number of days to look back for metrics
+ * @returns The metric value or null if unavailable
+ */
+export async function getMetric(
+  monitorClient: MonitorClient,
+  resourceId: string,
+  metricName: string,
+  aggregation: string,
+  timespanDays: number,
+): Promise<null | number> {
+  const key = `${resourceId}|${metricName}|${aggregation}|${timespanDays}`;
+  const cached = metricsCache.get(key);
+  if (cached !== undefined) {
+    return cached;
+  }
+  const promise = fetchMetric(
+    monitorClient,
+    resourceId,
+    metricName,
+    aggregation,
+    timespanDays,
+  );
+  metricsCache.set(key, promise);
+  return promise;
 }
 
 /**

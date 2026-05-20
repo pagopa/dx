@@ -1,5 +1,21 @@
 /**
  * Azure resource analyzer - Main orchestration logic
+ *
+ * Iterates every resource in every configured subscription, dispatches it
+ * to the registered analyzers (see `./analyzers/registry.ts`), and feeds
+ * the resulting findings into the report generator.
+ *
+ * Phase 0 refactor:
+ *  - Resources are dispatched through a plugin-style `Analyzer` registry
+ *    instead of a hard-coded `switch` statement.
+ *  - Per-subscription resources are analyzed in parallel via a small
+ *    in-process limiter (default concurrency 8, configurable via
+ *    `AzureConfig.concurrency`).
+ *  - Azure Monitor metric calls are memoized for the duration of a run
+ *    (see `getMetric` + `resetMetricsCache` in `./utils.ts`).
+ *
+ * The output schema (`AzureDetailedResourceReport`) is unchanged so the
+ * existing report formats keep working untouched.
  */
 
 import { ContainerAppsAPIClient } from "@azure/arm-appcontainers";
@@ -13,25 +29,23 @@ import { getLogger } from "@logtape/logtape";
 
 import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 
+import { createLimiter } from "../concurrency.js";
 import {
   type AnalysisResult,
   DEFAULT_THRESHOLDS,
   mergeResults,
   type Thresholds,
 } from "../types.js";
-import { generateReport } from "./report.js";
 import {
-  analyzeAppServicePlan,
-  analyzeContainerApp,
-  analyzeDisk,
-  analyzeNic,
-  analyzePrivateEndpoint,
-  analyzePublicIp,
-  analyzeStaticSite,
-  analyzeStorageAccount,
-  analyzeVM,
-} from "./resources/index.js";
-import { matchesTags } from "./utils.js";
+  type Analyzer,
+  type AnalyzerContext,
+  type AzureClients,
+  createDefaultAnalyzers,
+} from "./analyzers/index.js";
+import { generateReport } from "./report.js";
+import { matchesTags, resetMetricsCache } from "./utils.js";
+
+const DEFAULT_CONCURRENCY = 8;
 
 /**
  * Analyzes resources in multiple Azure subscriptions and generates a report.
@@ -47,32 +61,31 @@ export async function analyzeAzureResources(
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 
+  // Metrics cache is scoped to the whole run, deduping concurrent and
+  // repeated metric lookups across resources and subscriptions.
+  resetMetricsCache();
+
+  const analyzers = createDefaultAnalyzers();
+  const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
+  const limit = createLimiter(config.concurrency ?? DEFAULT_CONCURRENCY);
+
   for (const subscriptionId of config.subscriptionIds) {
     logger.info(`Analyzing subscription: ${subscriptionId}`);
 
+    const sid = subscriptionId.trim();
+    const clients: AzureClients = {
+      compute: new ComputeManagementClient(credential, sid),
+      containerApps: new ContainerAppsAPIClient(credential, sid),
+      monitor: new MonitorClient(credential, sid),
+      network: new NetworkManagementClient(credential, sid),
+      webSite: new WebSiteManagementClient(credential, sid),
+    };
     const resourceClient = new armResources.ResourceManagementClient(
       credential,
-      subscriptionId.trim(),
-    );
-    const monitorClient = new MonitorClient(credential, subscriptionId.trim());
-    const computeClient = new ComputeManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const networkClient = new NetworkManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const webSiteClient = new WebSiteManagementClient(
-      credential,
-      subscriptionId.trim(),
-    );
-    const containerAppsClient = new ContainerAppsAPIClient(
-      credential,
-      subscriptionId.trim(),
+      sid,
     );
 
-    const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
+    const tasks: Promise<void>[] = [];
 
     // Use the async iterator to avoid memory explosion for large environments
     for await (const resource of resourceClient.resources.list()) {
@@ -81,30 +94,33 @@ export async function analyzeAzureResources(
         continue;
       }
 
-      const { costRisk, reason, suspectedUnused } = await analyzeResource(
-        resource,
-        monitorClient,
-        computeClient,
-        networkClient,
-        webSiteClient,
-        containerAppsClient,
-        config.preferredLocation,
-        config.timespanDays,
-        thresholds,
-        config.verbose || false,
-      );
+      tasks.push(
+        limit(async () => {
+          const { costRisk, reason, suspectedUnused } = await analyzeResource(
+            resource,
+            analyzers,
+            clients,
+            config.preferredLocation,
+            config.timespanDays,
+            thresholds,
+            config.verbose || false,
+          );
 
-      if (suspectedUnused) {
-        allReports.push({
-          analysis: {
-            costRisk,
-            reason: reason || "No specific findings.",
-            suspectedUnused,
-          },
-          resource: resource,
-        });
-      }
+          if (suspectedUnused) {
+            allReports.push({
+              analysis: {
+                costRisk,
+                reason: reason || "No specific findings.",
+                suspectedUnused,
+              },
+              resource,
+            });
+          }
+        }),
+      );
     }
+
+    await Promise.all(tasks);
   }
 
   // Sort to make the output more readable
@@ -119,34 +135,30 @@ export async function analyzeAzureResources(
 }
 
 /**
- * Analyzes a single Azure resource based on its type.
+ * Analyzes a single Azure resource by dispatching it to every registered
+ * analyzer that supports it. Generic checks (missing tags, location
+ * mismatch) are applied around the analyzer-specific logic.
  *
- * @param resource - The Azure resource to analyze
- * @param monitorClient - Azure Monitor client for metrics
- * @param computeClient - Azure Compute client
- * @param networkClient - Azure Network client
- * @param webSiteClient - Azure Web Site client
- * @param containerAppsClient - Azure Container Apps client
- * @param preferredLocation - Preferred Azure location
- * @param timespanDays - Number of days to analyze metrics
- * @param verbose - Whether verbose logging is enabled
+ * @param resource          The Azure resource to analyze
+ * @param analyzers         Registered analyzers (typically `createDefaultAnalyzers()`)
+ * @param clients           Bundle of Azure SDK clients shared across analyzers
+ * @param preferredLocation Preferred Azure region (resources elsewhere are flagged)
+ * @param timespanDays      Look-back window for Azure Monitor metrics
+ * @param thresholds        Numeric thresholds used during analysis
+ * @param verbose           Whether verbose logging is enabled
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeResource(
   resource: armResources.GenericResource,
-  monitorClient: MonitorClient,
-  computeClient: ComputeManagementClient,
-  networkClient: NetworkManagementClient,
-  webSiteClient: WebSiteManagementClient,
-  containerAppsClient: ContainerAppsAPIClient,
+  analyzers: Analyzer[],
+  clients: AzureClients,
   preferredLocation: string,
   timespanDays: number,
   thresholds: Thresholds,
   verbose = false,
 ): Promise<AnalysisResult> {
-  const type = resource.type?.toLowerCase() || "";
-  let result = {
-    costRisk: "low" as "high" | "low" | "medium",
+  let result: AnalysisResult = {
+    costRisk: "low",
     reason: "",
     suspectedUnused: false,
   };
@@ -157,100 +169,27 @@ export async function analyzeResource(
     result.reason += "No tags found. ";
   }
 
-  // Route to type-specific analysis hooks
-  switch (type) {
-    case "microsoft.app/containerapps": {
-      const containerAppResult = await analyzeContainerApp(
-        resource,
-        containerAppsClient,
-        monitorClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, containerAppResult);
-      break;
+  const ctx: AnalyzerContext = {
+    clients,
+    preferredLocation,
+    resource,
+    thresholds,
+    timespanDays,
+    verbose,
+  };
+
+  let matched = false;
+  for (const analyzer of analyzers) {
+    if (!analyzer.supports(resource)) {
+      continue;
     }
-    case "microsoft.compute/disks": {
-      const diskResult = await analyzeDisk(resource, computeClient, verbose);
-      result = mergeResults(result, diskResult);
-      break;
-    }
-    case "microsoft.compute/virtualmachines": {
-      const vmResult = await analyzeVM(
-        resource,
-        monitorClient,
-        computeClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, vmResult);
-      break;
-    }
-    case "microsoft.network/networkinterfaces": {
-      const nicResult = await analyzeNic(resource, networkClient, verbose);
-      result = mergeResults(result, nicResult);
-      break;
-    }
-    case "microsoft.network/privateendpoints": {
-      const peResult = await analyzePrivateEndpoint(
-        resource,
-        networkClient,
-        verbose,
-      );
-      result = mergeResults(result, peResult);
-      break;
-    }
-    case "microsoft.network/publicipaddresses": {
-      const pipResult = await analyzePublicIp(
-        resource,
-        networkClient,
-        monitorClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, pipResult);
-      break;
-    }
-    case "microsoft.storage/storageaccounts": {
-      const storageResult = await analyzeStorageAccount(
-        resource,
-        monitorClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, storageResult);
-      break;
-    }
-    case "microsoft.web/serverfarms": {
-      const aspResult = await analyzeAppServicePlan(
-        resource,
-        webSiteClient,
-        monitorClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, aspResult);
-      break;
-    }
-    case "microsoft.web/staticsites": {
-      const staticSiteResult = await analyzeStaticSite(
-        resource,
-        monitorClient,
-        timespanDays,
-        thresholds,
-        verbose,
-      );
-      result = mergeResults(result, staticSiteResult);
-      break;
-    }
-    default:
-      result.reason += "No specific analysis for this resource type. ";
-      break;
+    matched = true;
+    const specific = await analyzer.analyze(ctx);
+    result = mergeResults(result, specific);
+  }
+
+  if (!matched) {
+    result.reason += "No specific analysis for this resource type. ";
   }
 
   // Generic check for location

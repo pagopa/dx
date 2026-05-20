@@ -22,6 +22,23 @@ export const azure = azureModule;
 
 export * from "./types.js";
 
+// Phase 0: unified Finding model and analyzer plugin layer
+export {
+  type Finding,
+  type FindingCategory,
+  type FindingSource,
+  type Money,
+  type ResourceReport,
+  findingsFromAnalysisResult,
+} from "./finding.js";
+export {
+  type Analyzer,
+  type AnalyzerContext,
+  type AzureClients,
+  createDefaultAnalyzers,
+} from "./azure/analyzers/index.js";
+export { createLimiter, type Limiter } from "./concurrency.js";
+
 import type { AzureConfig } from "./azure/types.js";
 
 import { loadAzureConfig } from "./azure/config.js";
