@@ -16,7 +16,7 @@ import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
 export type CliDependencies = CodemodCommandDependencies;
 
 export type GlobalOptions = {
-  output?: "json" | "text";
+  output: "json" | "text";
   verbose?: boolean;
 };
 

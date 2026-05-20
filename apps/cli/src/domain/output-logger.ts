@@ -2,11 +2,11 @@
  * OutputLogger — domain port for all CLI output.
  *
  * Use-cases depend on this interface, not on any concrete output mechanism.
- * Adapters (TextOutputLogger, JsonOutputLogger) satisfy it at the commander
- * layer and are injected at the entry point.
+ * Adapters (TextOutputLogger, JsonOutputLogger) satisfy this port and are
+ * injected at the entry point.
  *
  * The interface deliberately does NOT handle process exit: callers report the
- * error through `reportError`, then let commander terminate the process with
+ * error through `reportError`, then let the host terminate the process with
  * the appropriate exit code.
  */
 
@@ -14,8 +14,8 @@
 export interface OutputLogger {
   /**
    * Formats and emits the error.
-   * Does NOT exit the process — that responsibility belongs to the commander
-   * adapter which calls `command.error(…, { exitCode })` after this.
+   * Does NOT exit the process — that responsibility belongs to the host
+   * after this returns.
    */
   reportError(error: unknown): void;
 
@@ -28,8 +28,8 @@ export interface OutputLogger {
 
   /**
    * Runs `task` while emitting start/end lifecycle events for the named step.
-   * In text mode this shows an ora spinner; in JSON mode it emits NDJSON
-   * step events on stderr.
+   * In text mode this shows an interactive progress indicator; in JSON mode it
+   * emits NDJSON step events on stderr.
    */
   runStep<T>(name: string, task: () => Promise<T>): Promise<T>;
 }

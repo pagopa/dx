@@ -1,8 +1,8 @@
 /**
  * Zod schema for the CLI environment variables.
  *
- * All access to `process.env` happens in the entrypoint (`src/index.ts`),
- * which parses the raw environment once and passes the validated result as
+ * Intended to centralize env parsing at the entrypoint (`src/index.ts`),
+ * which will parse the raw environment once and pass the validated result as
  * `CliEnv` to every command. This keeps env-var reads out of use-cases and
  * adapters and makes them fully testable.
  */
@@ -15,6 +15,6 @@ export const cliEnvSchema = z
     // convention used by `is-interactive` and `ora`.
     CI: z.string().optional(),
   })
-  .passthrough();
+  .loose();
 
 export type CliEnv = z.infer<typeof cliEnvSchema>;
