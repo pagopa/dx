@@ -56,7 +56,10 @@ describe("monorepo generator — file generation", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
     process.chdir(tmpDir);
 
-    const templatesPath = path.resolve(originalCwd, "templates/monorepo");
+    const templatesPath = path.resolve(
+      import.meta.dirname,
+      "../../../../../templates/monorepo",
+    );
 
     const plop = await nodePlop();
     registerStubActions(plop);

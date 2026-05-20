@@ -102,7 +102,10 @@ const runEnvironmentGenerator = async ({
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix));
   process.chdir(tmpDir);
 
-  const templatesPath = path.resolve(originalCwd, "templates/environment");
+  const templatesPath = path.resolve(
+    import.meta.dirname,
+    "../../../../../templates/environment",
+  );
 
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
