@@ -1,4 +1,4 @@
-import type { OutputLogger } from "../../../domain/output-logger.js";
+import type { CommandPresenter } from "../../../domain/command-presenter.js";
 /**
  * Output logger factory.
  *
@@ -7,13 +7,13 @@ import type { OutputLogger } from "../../../domain/output-logger.js";
  * output format: a user can request JSON output while still answering prompts,
  * and a CI system can set CI=true with text output.
  *
- * createOutputLogger selects the appropriate OutputLogger adapter based solely
+ * createCommandPresenter selects the appropriate CommandPresenter adapter based solely
  * on the requested output format.
  */
 import type { CliEnv } from "../env.js";
 
-import { JsonOutputLogger } from "./json.js";
-import { TextOutputLogger } from "./text.js";
+import { JsonCommandPresenter } from "./json-command-presenter.js";
+import { TextCommandPresenter } from "./text-command-presenter.js";
 
 /**
  * Returns true when the CLI should suppress interactive prompts.
@@ -24,10 +24,12 @@ import { TextOutputLogger } from "./text.js";
 export const isNonInteractive = (env: CliEnv): boolean => env.CI !== undefined;
 
 /**
- * Returns the appropriate OutputLogger adapter for the requested output mode.
+ * Returns the appropriate CommandPresenter adapter for the requested output mode.
  *
- * - "text" → TextOutputLogger (chalk + ora, for human terminal sessions)
- * - "json" → JsonOutputLogger (NDJSON on stderr, JSON envelope on stdout)
+ * - "text" → TextCommandPresenter (chalk + ora, for human terminal sessions)
+ * - "json" → JsonCommandPresenter (NDJSON on stderr, JSON envelope on stdout)
  */
-export const createOutputLogger = (output: "json" | "text"): OutputLogger =>
-  output === "json" ? new JsonOutputLogger() : new TextOutputLogger();
+export const createCommandPresenter = (
+  output: "json" | "text",
+): CommandPresenter =>
+  output === "json" ? new JsonCommandPresenter() : new TextCommandPresenter();

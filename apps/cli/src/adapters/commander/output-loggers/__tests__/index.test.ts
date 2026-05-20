@@ -1,11 +1,11 @@
 /**
- * Tests for isNonInteractive and createOutputLogger factory.
+ * Tests for isNonInteractive and createCommandPresenter factory.
  */
 import { describe, expect, it } from "vitest";
 
-import { createOutputLogger, isNonInteractive } from "../index.js";
-import { JsonOutputLogger } from "../json.js";
-import { TextOutputLogger } from "../text.js";
+import { createCommandPresenter, isNonInteractive } from "../index.js";
+import { JsonCommandPresenter } from "../json-command-presenter.js";
+import { TextCommandPresenter } from "../text-command-presenter.js";
 
 describe("isNonInteractive", () => {
   it("returns false when CI is not set", () => {
@@ -21,12 +21,12 @@ describe("isNonInteractive", () => {
   });
 });
 
-describe("createOutputLogger", () => {
-  it("returns a TextOutputLogger when output is 'text'", () => {
-    expect(createOutputLogger("text")).toBeInstanceOf(TextOutputLogger);
+describe("createCommandPresenter", () => {
+  it("returns a TextCommandPresenter when output is 'text'", () => {
+    expect(createCommandPresenter("text")).toBeInstanceOf(TextCommandPresenter);
   });
 
-  it("returns a JsonOutputLogger when output is 'json'", () => {
-    expect(createOutputLogger("json")).toBeInstanceOf(JsonOutputLogger);
+  it("returns a JsonCommandPresenter when output is 'json'", () => {
+    expect(createCommandPresenter("json")).toBeInstanceOf(JsonCommandPresenter);
   });
 });

@@ -1,5 +1,5 @@
 /**
- * JsonOutputLogger — structured adapter for the OutputLogger domain port.
+ * JsonCommandPresenter — structured adapter for the CommandPresenter domain port.
  *
  * Emits NDJSON step events to stderr for progress tracking and a single
  * JSON envelope to stdout for the final result or error. Intended for
@@ -9,11 +9,11 @@
  *   stderr: {"type":"step","status":"start"|"success"|"error","name":"...","error":"...?"}
  *   stdout: {"ok":true,"data":{...}} | {"ok":false,"error":"..."}
  */
-import type { OutputLogger } from "../../../domain/output-logger.js";
+import type { CommandPresenter } from "../../../domain/command-presenter.js";
 
 import { toErrorMessage } from "../error-reporting.js";
 
-export class JsonOutputLogger implements OutputLogger {
+export class JsonCommandPresenter implements CommandPresenter {
   reportError(error: unknown): void {
     process.stdout.write(
       JSON.stringify({ error: toErrorMessage(error), ok: false }) + "\n",
@@ -24,7 +24,7 @@ export class JsonOutputLogger implements OutputLogger {
     process.stdout.write(JSON.stringify({ data, ok: true }) + "\n");
   }
 
-  async runStep<T>(name: string, task: () => Promise<T>): Promise<T> {
+  async trackStep<T>(name: string, task: () => Promise<T>): Promise<T> {
     process.stderr.write(
       JSON.stringify({ name, status: "start", type: "step" }) + "\n",
     );

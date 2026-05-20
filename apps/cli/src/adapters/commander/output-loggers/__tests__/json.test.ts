@@ -1,13 +1,13 @@
 /**
- * Tests for JsonOutputLogger.
+ * Tests for JsonCommandPresenter.
  *
- * JsonOutputLogger emits NDJSON step events to stderr and a single JSON
+ * JsonCommandPresenter emits NDJSON step events to stderr and a single JSON
  * result or error envelope to stdout. Tests verify the wire format and
  * that values flow through correctly.
  */
 import { describe, expect, it, vi } from "vitest";
 
-import { JsonOutputLogger } from "../json.js";
+import { JsonCommandPresenter } from "../json-command-presenter.js";
 
 const captureStderr = () => {
   const events: string[] = [];
@@ -31,12 +31,12 @@ const captureStdout = () => {
   return { restore: () => spy.mockRestore(), written };
 };
 
-describe("JsonOutputLogger", () => {
-  describe("runStep", () => {
+describe("JsonCommandPresenter", () => {
+  describe("trackStep", () => {
     it("executes the task and returns its resolved value", async () => {
       const stderr = captureStderr();
-      const logger = new JsonOutputLogger();
-      const result = await logger.runStep("check terraform", () =>
+      const logger = new JsonCommandPresenter();
+      const result = await logger.trackStep("check terraform", () =>
         Promise.resolve(42),
       );
       expect(result).toBe(42);
@@ -45,8 +45,8 @@ describe("JsonOutputLogger", () => {
 
     it("emits start then success events to stderr", async () => {
       const stderr = captureStderr();
-      const logger = new JsonOutputLogger();
-      await logger.runStep("check terraform", () => Promise.resolve("done"));
+      const logger = new JsonCommandPresenter();
+      await logger.trackStep("check terraform", () => Promise.resolve("done"));
       expect(stderr.events).toHaveLength(2);
       expect(JSON.parse(stderr.events[0])).toMatchObject({
         name: "check terraform",
@@ -63,10 +63,10 @@ describe("JsonOutputLogger", () => {
 
     it("emits error event to stderr and rethrows on task failure", async () => {
       const stderr = captureStderr();
-      const logger = new JsonOutputLogger();
+      const logger = new JsonCommandPresenter();
       const error = new Error("terraform not found");
       await expect(
-        logger.runStep("check terraform", () => Promise.reject(error)),
+        logger.trackStep("check terraform", () => Promise.reject(error)),
       ).rejects.toThrow("terraform not found");
       expect(JSON.parse(stderr.events[1])).toMatchObject({
         error: "terraform not found",
@@ -79,12 +79,12 @@ describe("JsonOutputLogger", () => {
 
     it("can run multiple sequential steps", async () => {
       const stderr = captureStderr();
-      const logger = new JsonOutputLogger();
+      const logger = new JsonCommandPresenter();
       const order: string[] = [];
-      await logger.runStep("step A", async () => {
+      await logger.trackStep("step A", async () => {
         order.push("A");
       });
-      await logger.runStep("step B", async () => {
+      await logger.trackStep("step B", async () => {
         order.push("B");
       });
       expect(order).toEqual(["A", "B"]);
@@ -95,7 +95,7 @@ describe("JsonOutputLogger", () => {
   describe("reportResult", () => {
     it("emits an ok:true JSON envelope to stdout", () => {
       const stdout = captureStdout();
-      const logger = new JsonOutputLogger();
+      const logger = new JsonCommandPresenter();
       logger.reportResult({ repository: { name: "my-repo" } });
       expect(JSON.parse(stdout.written[0])).toEqual({
         data: { repository: { name: "my-repo" } },
@@ -108,7 +108,7 @@ describe("JsonOutputLogger", () => {
   describe("reportError", () => {
     it("emits an ok:false JSON envelope to stdout", () => {
       const stdout = captureStdout();
-      const logger = new JsonOutputLogger();
+      const logger = new JsonCommandPresenter();
       logger.reportError(new Error("something failed"));
       expect(JSON.parse(stdout.written[0])).toMatchObject({
         error: "something failed",
@@ -119,7 +119,7 @@ describe("JsonOutputLogger", () => {
 
     it("handles non-Error values without throwing", () => {
       const stdout = captureStdout();
-      const logger = new JsonOutputLogger();
+      const logger = new JsonCommandPresenter();
       expect(() => logger.reportError("plain string error")).not.toThrow();
       stdout.restore();
     });
