@@ -1,19 +1,15 @@
 import { getLogger } from "@logtape/logtape";
 import chalk from "chalk";
 import { Command } from "commander";
-import { $, ExecaError } from "execa";
 import inquirer from "inquirer";
 import { okAsync, ResultAsync } from "neverthrow";
-import * as path from "node:path";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
-import {
-  GitHubService,
-  PullRequest,
-  Repository,
-} from "../../../domain/github.js";
+import { PullRequest, Repository } from "../../../domain/github.js";
+import { type WorkspaceEffects } from "../../../domain/workspace-effects.js";
 import { tf$ } from "../../execa/terraform.js";
+import { type PlopDependencies } from "../../plop/dependencies.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import { getPlopInstance, runMonorepoGenerator } from "../../plop/index.js";
 import { exitWithError } from "../index.js";
@@ -34,16 +30,6 @@ const isGitHubRepoCreationSkipped = (
   input: SummaryInput,
 ): input is GitHubRepoCreationSkippedResult =>
   "gitHubRepoCreationSkipped" in input;
-
-type LocalWorkspace = {
-  branchName: string;
-  repository: Repository;
-};
-
-type RepositoryPullRequest = {
-  pr?: PullRequest;
-  repository: Repository;
-};
 
 const withSpinner = <T>(
   text: string,
@@ -171,91 +157,6 @@ export const checkAddEnvironmentPreconditions = () =>
     .andThen(() => checkAzLogin())
     .andThen(() => checkCorepackIsInstalled());
 
-const createRemoteRepository = ({
-  repoName,
-  repoOwner,
-}: MonorepoPayload): ResultAsync<Repository, Error> => {
-  const logger = getLogger(["dx-cli", "init"]);
-  const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-  const applyTerraform = async () => {
-    try {
-      await repo$`terraform init`;
-      await repo$`terraform apply -auto-approve`;
-    } catch (error) {
-      if (error instanceof ExecaError) {
-        logger.error(error.shortMessage);
-      }
-      throw error;
-    }
-  };
-  return withSpinner(
-    "Creating GitHub repository...",
-    "GitHub repository created successfully!",
-    "Failed to create GitHub repository.",
-    applyTerraform(),
-  ).map(() => new Repository(repoName, repoOwner));
-};
-
-const initializeGitRepository = (repository: Repository) => {
-  const branchName = "features/scaffold-workspace";
-  const git$ = $({
-    shell: true,
-  });
-  const pushToOrigin = async () => {
-    await git$`git init`;
-    await git$`git remote add origin ${repository.origin}`;
-    await git$`git fetch origin main`;
-    await git$`git checkout -b ${branchName}`;
-    // Terraform creates `main` with an initial README commit.
-    // Reset to `origin/main` so this branch is based on the remote default branch,
-    // while keeping the scaffolded local files in the working tree for a clean PR diff.
-    await git$`git reset origin/main`;
-    await git$`git add .`;
-    await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
-    await git$`git push -u origin ${branchName}`;
-  };
-  return withSpinner(
-    "Pushing code to GitHub...",
-    "Code pushed to GitHub successfully!",
-    "Failed to push code to GitHub.",
-    pushToOrigin(),
-  ).map(() => ({ branchName, repository }));
-};
-
-const handleNewGitHubRepository =
-  (githubService: GitHubService) =>
-  (payload: MonorepoPayload): ResultAsync<RepositoryPullRequest, Error> =>
-    createRemoteRepository(payload)
-      .andThen(initializeGitRepository)
-      .andThen((localWorkspace) =>
-        createPullRequest(githubService)(localWorkspace).map((pr) => ({
-          pr,
-          repository: localWorkspace.repository,
-        })),
-      );
-
-const createPullRequest =
-  (githubService: GitHubService) =>
-  ({
-    branchName,
-    repository,
-  }: LocalWorkspace): ResultAsync<PullRequest | undefined, Error> =>
-    withSpinner(
-      "Creating Pull Request...",
-      "Pull Request created successfully!",
-      "Failed to create Pull Request.",
-      githubService.createPullRequest({
-        base: "main",
-        body: "This PR contains the scaffolded monorepo structure.",
-        head: branchName,
-        owner: repository.owner,
-        repo: repository.name,
-        title: "Scaffold repository",
-      }),
-    )
-      // If PR creation fails, don't block the workflow
-      .orElse(() => okAsync(undefined));
-
 const handleGeneratorError = (err: unknown) => {
   const logger = getLogger(["dx-cli", "init"]);
   if (err instanceof Error) {
@@ -281,11 +182,13 @@ export const confirmGitHubRepoCreation = (
   );
 
 type InitCommandDependencies = {
-  gitHubService: GitHubService;
+  plopDependencies: PlopDependencies;
+  workspaceEffects: WorkspaceEffects;
 };
 
 export const makeInitCommand = ({
-  gitHubService,
+  plopDependencies,
+  workspaceEffects,
 }: InitCommandDependencies): Command =>
   new Command()
     .name("init")
@@ -300,7 +203,7 @@ export const makeInitCommand = ({
         )
         .andThen((plop) =>
           ResultAsync.fromPromise(
-            runMonorepoGenerator(plop, gitHubService),
+            runMonorepoGenerator(plop, plopDependencies),
             handleGeneratorError,
           ),
         )
@@ -311,7 +214,7 @@ export const makeInitCommand = ({
           confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
             (confirmed) =>
               confirmed
-                ? handleNewGitHubRepository(gitHubService)(payload)
+                ? workspaceEffects.publishRepository(payload)
                 : okAsync({ gitHubRepoCreationSkipped: true, payload }),
           ),
         )

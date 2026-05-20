@@ -17,9 +17,10 @@ import {
   RepositoryNotFoundError,
   UpdateFileParams,
 } from "../../domain/github.js";
+import { type ReleaseClient } from "../plop/dependencies.js";
 
 type GitHubReleaseParam = {
-  client: Octokit;
+  client: ReleaseClient;
   owner: string;
   repo: string;
 };

@@ -2,6 +2,8 @@ import { Command } from "commander";
 
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
+import { type WorkspaceEffects } from "../../domain/workspace-effects.js";
+import { type PlopDependencies } from "../plop/dependencies.js";
 import { makeAddCommand } from "./commands/add.js";
 import {
   CodemodCommandDependencies,
@@ -16,6 +18,7 @@ import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
 export type CliDependencies = CodemodCommandDependencies;
 
 export type GlobalOptions = {
+  dryRun?: boolean;
   verbose?: boolean;
 };
 
@@ -30,6 +33,8 @@ export const makeCli = (
   deps: Dependencies,
   config: Config,
   cliDeps: CliDependencies,
+  plopDeps: PlopDependencies,
+  workspaceEffects: WorkspaceEffects,
   version: string,
 ) => {
   const program = new Command();
@@ -42,14 +47,27 @@ export const makeCli = (
       "-v, --verbose",
       "Enable verbose output: debug-level logs and full error chain (with stack traces) when a command fails",
       false,
+    )
+    .option(
+      "--dry-run",
+      "Run in sandbox mode without real side effects on GitHub or Azure",
+      false,
     );
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
-  program.addCommand(makeInitCommand(deps));
+  program.addCommand(
+    makeInitCommand({ plopDependencies: plopDeps, workspaceEffects }),
+  );
   program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps));
-  program.addCommand(makeAddCommand(deps));
+  program.addCommand(
+    makeAddCommand({
+      authorizationService: deps.authorizationService,
+      gitHubService: deps.gitHubService,
+      plopDependencies: plopDeps,
+    }),
+  );
 
   return program;
 };

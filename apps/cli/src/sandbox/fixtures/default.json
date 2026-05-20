@@ -1,0 +1,27 @@
+{
+  "cloudAccounts": [
+    {
+      "id": "00000000-0000-0000-0000-000000000001",
+      "displayName": "DEV-MyProject",
+      "csp": "azure",
+      "defaultLocation": "italynorth",
+      "initialized": false,
+      "terraformBackendProvisioned": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "displayName": "PROD-MyProject",
+      "csp": "azure",
+      "defaultLocation": "italynorth",
+      "initialized": false,
+      "terraformBackendProvisioned": false
+    }
+  ],
+  "repositories": [
+    {
+      "name": "pagopa-github-terraform",
+      "owner": "pagopa",
+      "branches": ["main"]
+    }
+  ]
+}
