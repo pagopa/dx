@@ -22,14 +22,11 @@ import createMonorepoGenerator, {
   payloadSchema as monorepoPayloadSchema,
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
+import { resolveTemplatesPath } from "./templates-path.js";
 
 export const setMonorepoGenerator = (plop: NodePlopAPI) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-  const templatesPath = path.join(
-    import.meta.dirname,
-    "../../../templates/monorepo",
-  );
-  createMonorepoGenerator(plop, templatesPath, octokit);
+  createMonorepoGenerator(plop, resolveTemplatesPath("monorepo"), octokit);
 };
 
 const validatePayload = async (
@@ -144,14 +141,9 @@ export const setDeploymentEnvironmentGenerator = (
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
 
-  const templatesPath = path.join(
-    import.meta.dirname,
-    "../../../templates/environment",
-  );
-
   createDeploymentEnvironmentGenerator(
     plop,
-    templatesPath,
+    resolveTemplatesPath("environment"),
     cloudAccountRepository,
     cloudAccountService,
     gitHubService,

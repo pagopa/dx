@@ -15,6 +15,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
+import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
   shouldKeepTestArtifacts,
@@ -56,15 +57,10 @@ describe("monorepo generator — file generation", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
     process.chdir(tmpDir);
 
-    const templatesPath = path.resolve(
-      import.meta.dirname,
-      "../../../../../templates/monorepo",
-    );
-
     const plop = await nodePlop();
     registerStubActions(plop);
     plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
-      actions: getActions(templatesPath),
+      actions: getActions(resolveTemplatesPath("monorepo")),
       description: "A scaffold for a monorepo repository",
       prompts: [],
     });

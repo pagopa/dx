@@ -26,6 +26,7 @@ import setProvisionTerraformBackendAction from "../../../actions/provision-terra
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
+import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
   shouldKeepTestArtifacts,
@@ -102,16 +103,11 @@ const runEnvironmentGenerator = async ({
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix));
   process.chdir(tmpDir);
 
-  const templatesPath = path.resolve(
-    import.meta.dirname,
-    "../../../../../templates/environment",
-  );
-
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
 
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
-    actions: getActions(templatesPath),
+    actions: getActions(resolveTemplatesPath("environment")),
     description: "Generate a new deployment environment",
     prompts: [],
   });
