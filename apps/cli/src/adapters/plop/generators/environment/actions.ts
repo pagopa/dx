@@ -19,7 +19,7 @@ const addModule = (env: Environment, templatesPath: string, init = false) => {
   return (name: string, terraformBackendKey: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp, includesProdIO, init },
+      data: { cloudAccountsByCsp, includesProdIO, init: init || undefined },
       destination: path.join(cwd, "infra"),
       force: true,
       templateFiles: path.join(templatesPath, name),
@@ -29,7 +29,11 @@ const addModule = (env: Environment, templatesPath: string, init = false) => {
     },
     {
       base: path.join(templatesPath, "shared"),
-      data: { cloudAccountsByCsp, init, terraformBackendKey },
+      data: {
+        cloudAccountsByCsp,
+        init: init || undefined,
+        terraformBackendKey,
+      },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
       templateFiles: path.join(templatesPath, "shared"),
