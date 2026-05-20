@@ -13,8 +13,6 @@ import type { OutputLogger } from "../../../domain/output-logger.js";
 import { toErrorMessage } from "../error-reporting.js";
 
 export class TextOutputLogger implements OutputLogger {
-  constructor(private readonly commandName: string) {}
-
   reportError(error: unknown): void {
     console.error(chalk.red(toErrorMessage(error)));
   }

@@ -1,32 +1,32 @@
 /**
- * Tests for isAgenticMode and createOutputLogger factory.
+ * Tests for isNonInteractive and createOutputLogger factory.
  */
 import { describe, expect, it } from "vitest";
 
-import { isAgenticMode } from "../index.js";
+import { createOutputLogger, isNonInteractive } from "../index.js";
+import { JsonOutputLogger } from "../json.js";
+import { TextOutputLogger } from "../text.js";
 
-describe("isAgenticMode", () => {
-  it("returns false when CI is not set and output is text", () => {
-    expect(isAgenticMode({ CI: undefined }, "text")).toBe(false);
+describe("isNonInteractive", () => {
+  it("returns false when CI is not set", () => {
+    expect(isNonInteractive({ CI: undefined })).toBe(false);
   });
 
   it("returns true when CI is set to any value", () => {
-    expect(isAgenticMode({ CI: "true" }, "text")).toBe(true);
+    expect(isNonInteractive({ CI: "true" })).toBe(true);
   });
 
   it("returns true when CI is 'false' (presence is the signal, not the value)", () => {
-    expect(isAgenticMode({ CI: "false" }, "text")).toBe(true);
+    expect(isNonInteractive({ CI: "false" })).toBe(true);
+  });
+});
+
+describe("createOutputLogger", () => {
+  it("returns a TextOutputLogger when output is 'text'", () => {
+    expect(createOutputLogger("text")).toBeInstanceOf(TextOutputLogger);
   });
 
-  it("returns true when CI is '0'", () => {
-    expect(isAgenticMode({ CI: "0" }, "text")).toBe(true);
-  });
-
-  it("returns true when output is json regardless of CI", () => {
-    expect(isAgenticMode({ CI: undefined }, "json")).toBe(true);
-  });
-
-  it("returns true when both CI is set and output is json", () => {
-    expect(isAgenticMode({ CI: "true" }, "json")).toBe(true);
+  it("returns a JsonOutputLogger when output is 'json'", () => {
+    expect(createOutputLogger("json")).toBeInstanceOf(JsonOutputLogger);
   });
 });

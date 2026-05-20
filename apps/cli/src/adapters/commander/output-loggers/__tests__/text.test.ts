@@ -17,7 +17,7 @@ import { TextOutputLogger } from "../text.js";
 describe("TextOutputLogger", () => {
   describe("runStep", () => {
     it("executes the task and returns its resolved value", async () => {
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       const result = await logger.runStep("check terraform", () =>
         Promise.resolve(42),
       );
@@ -25,7 +25,7 @@ describe("TextOutputLogger", () => {
     });
 
     it("propagates task rejection as a thrown error", async () => {
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       const error = new Error("terraform not found");
       await expect(
         logger.runStep("check terraform", () => Promise.reject(error)),
@@ -33,7 +33,7 @@ describe("TextOutputLogger", () => {
     });
 
     it("can run multiple sequential steps", async () => {
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       const order: string[] = [];
       await logger.runStep("step A", async () => {
         order.push("A");
@@ -48,7 +48,7 @@ describe("TextOutputLogger", () => {
   describe("reportResult", () => {
     it("calls console.log without throwing", () => {
       const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       expect(() =>
         logger.reportResult({ repository: { name: "my-repo" } }),
       ).not.toThrow();
@@ -61,7 +61,7 @@ describe("TextOutputLogger", () => {
       const spy = vi
         .spyOn(console, "error")
         .mockImplementation(() => undefined);
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       expect(() =>
         logger.reportError(new Error("something failed")),
       ).not.toThrow();
@@ -72,7 +72,7 @@ describe("TextOutputLogger", () => {
       const spy = vi
         .spyOn(console, "error")
         .mockImplementation(() => undefined);
-      const logger = new TextOutputLogger("init");
+      const logger = new TextOutputLogger();
       expect(() => logger.reportError("plain string error")).not.toThrow();
       spy.mockRestore();
     });

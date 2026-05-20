@@ -1,20 +1,33 @@
+import type { OutputLogger } from "../../../domain/output-logger.js";
 /**
  * Output logger factory.
  *
- * isAgenticMode determines whether the CLI should operate in non-interactive
- * (agentic) mode. createOutputLogger will be introduced alongside
- * JsonOutputLogger in the next PR.
+ * isNonInteractive determines whether the CLI should suppress interactive
+ * prompts (e.g. when running in a CI pipeline). This is independent of the
+ * output format: a user can request JSON output while still answering prompts,
+ * and a CI system can set CI=true with text output.
+ *
+ * createOutputLogger selects the appropriate OutputLogger adapter based solely
+ * on the requested output format.
  */
 import type { CliEnv } from "../env.js";
 
+import { JsonOutputLogger } from "./json.js";
+import { TextOutputLogger } from "./text.js";
+
 /**
- * Returns true when the CLI should operate in agentic (non-interactive) mode.
+ * Returns true when the CLI should suppress interactive prompts.
  *
- * Agentic mode is triggered when:
- * - `CI` is set to any value (signals an automated pipeline — presence is the
- *   signal, not the value; follows the same convention used by `is-interactive`
- *   and `ora`)
- * - `--output=json` is passed (explicit structured output request)
+ * Triggered by the presence of the CI environment variable (any value),
+ * following the same convention used by `is-interactive` and `ora`.
  */
-export const isAgenticMode = (env: CliEnv, output: "json" | "text"): boolean =>
-  env.CI !== undefined || output === "json";
+export const isNonInteractive = (env: CliEnv): boolean => env.CI !== undefined;
+
+/**
+ * Returns the appropriate OutputLogger adapter for the requested output mode.
+ *
+ * - "text" → TextOutputLogger (chalk + ora, for human terminal sessions)
+ * - "json" → JsonOutputLogger (NDJSON on stderr, JSON envelope on stdout)
+ */
+export const createOutputLogger = (output: "json" | "text"): OutputLogger =>
+  output === "json" ? new JsonOutputLogger() : new TextOutputLogger();
