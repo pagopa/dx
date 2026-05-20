@@ -13,41 +13,17 @@
 import type { CostRisk } from "./types.js";
 
 /**
- * Where the finding originated from.
- *
- * - `custom`  → emitted by a savemoney analyzer plugin
- * - `advisor` → fetched from Azure Advisor recommendations
- * - `aws`     → reserved for future AWS Trusted Advisor / Compute Optimizer
- */
-export type FindingSource = "advisor" | "aws" | "custom";
-
-/**
- * Cloud category a finding belongs to. For now we focus on cost, but the
- * model is open to future Advisor categories.
- */
-export type FindingCategory =
-  | "cost"
-  | "operationalExcellence"
-  | "performance"
-  | "reliability"
-  | "security";
-
-/**
- * Monetary value associated with a finding, when known.
- * Amounts use ISO 4217 currency codes (e.g. "EUR", "USD").
- */
-export type Money = {
-  amount: number;
-  currency: string;
-};
-
-/**
  * A single, atomic observation about a resource.
  *
  * One resource can produce multiple findings (e.g. "no tags" + "low CPU").
  * Findings are designed to be deduplicated by `(resourceId, source, code)`.
  */
 export type Finding = {
+  /**
+   * Cloud category. Today every custom finding is "cost"; Advisor may
+   * surface other categories that we currently ignore.
+   */
+  category: FindingCategory;
   /**
    * Stable machine-readable identifier for the kind of finding, e.g.
    * `vm.deallocated`, `disk.unattached`, `advisor.right-size-vm`.
@@ -62,20 +38,15 @@ export type Finding = {
    */
   estimatedMonthlySavings?: Money;
   /**
-   * Cloud category. Today every custom finding is "cost"; Advisor may
-   * surface other categories that we currently ignore.
+   * Free-text, human-readable description. Backward compatible with the
+   * legacy `AnalysisResult.reason` field.
    */
-  category: FindingCategory;
+  reason: string;
   /**
    * Optional, machine-friendly hint about how to remediate. For Advisor
    * this typically maps to `shortDescription.solution`.
    */
   recommendedAction?: string;
-  /**
-   * Free-text, human-readable description. Backward compatible with the
-   * legacy `AnalysisResult.reason` field.
-   */
-  reason: string;
   /**
    * Fully qualified Azure / cloud resource ID this finding refers to.
    */
@@ -92,6 +63,35 @@ export type Finding = {
 };
 
 /**
+ * Cloud category a finding belongs to. For now we focus on cost, but the
+ * model is open to future Advisor categories.
+ */
+export type FindingCategory =
+  | "cost"
+  | "operationalExcellence"
+  | "performance"
+  | "reliability"
+  | "security";
+
+/**
+ * Where the finding originated from.
+ *
+ * - `custom`  → emitted by a savemoney analyzer plugin
+ * - `advisor` → fetched from Azure Advisor recommendations
+ * - `aws`     → reserved for future AWS Trusted Advisor / Compute Optimizer
+ */
+export type FindingSource = "advisor" | "aws" | "custom";
+
+/**
+ * Monetary value associated with a finding, when known.
+ * Amounts use ISO 4217 currency codes (e.g. "EUR", "USD").
+ */
+export type Money = {
+  amount: number;
+  currency: string;
+};
+
+/**
  * Aggregate view: one resource with the list of findings emitted for it.
  *
  * This is the type future report generators should consume. The current
@@ -103,19 +103,6 @@ export type ResourceReport<TResource = unknown> = {
   findings: Finding[];
   resource: TResource;
 };
-
-/**
- * Splits a concatenated reason string (sentences joined by ". ") into
- * individual non-empty sentences. Mirrors the logic already used by the
- * lint reporter so behaviour stays consistent.
- */
-function splitReasonIntoSentences(reason: string): string[] {
-  return reason
-    .split(/\.\s+|\.$/)
-    .map((s) => s.trim())
-    .filter((s) => s.length > 0)
-    .map((s) => (s.endsWith(".") ? s : `${s}.`));
-}
 
 /**
  * Adapter: converts a legacy `AnalysisResult` (single concatenated
@@ -149,4 +136,17 @@ export function findingsFromAnalysisResult(args: {
     severity,
     source,
   }));
+}
+
+/**
+ * Splits a concatenated reason string (sentences joined by ". ") into
+ * individual non-empty sentences. Mirrors the logic already used by the
+ * lint reporter so behaviour stays consistent.
+ */
+function splitReasonIntoSentences(reason: string): string[] {
+  return reason
+    .split(/\.\s+|\.$/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((s) => (s.endsWith(".") ? s : `${s}.`));
 }

@@ -10,6 +10,8 @@
  * Adding a new analyzer is a single insertion here.
  */
 
+import type { Analyzer } from "./types.js";
+
 import {
   analyzeAppServicePlan,
   analyzeContainerApp,
@@ -21,7 +23,6 @@ import {
   analyzeStorageAccount,
   analyzeVM,
 } from "../resources/index.js";
-import type { Analyzer } from "./types.js";
 
 /**
  * Builds the default set of analyzers in the same order they were

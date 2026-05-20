@@ -116,64 +116,10 @@ export function extractAggregatedValue(
 const metricsCache = new Map<string, Promise<null | number>>();
 
 /**
- * Clears the in-memory metrics cache. Must be called at the start of
- * every analysis run to guarantee fresh data.
- */
-export function resetMetricsCache(): void {
-  metricsCache.clear();
-}
-
-/**
  * @internal — exposed for tests only.
  */
 export function _metricsCacheSize(): number {
   return metricsCache.size;
-}
-
-async function fetchMetric(
-  monitorClient: MonitorClient,
-  resourceId: string,
-  metricName: string,
-  aggregation: string,
-  timespanDays: number,
-): Promise<null | number> {
-  try {
-    const timespan = `P${timespanDays}D`;
-    const result = await monitorClient.metrics.list(resourceId, {
-      aggregation,
-      metricnames: metricName,
-      timespan,
-    });
-
-    if (result.value.length === 0) {
-      return null;
-    }
-
-    const metric = result.value[0];
-
-    if (!metric.timeseries || metric.timeseries.length === 0) {
-      return null;
-    }
-
-    const timeserie = metric.timeseries[0];
-
-    if (!timeserie.data || timeserie.data.length === 0) {
-      return null;
-    }
-
-    const aggregatedValue = aggregateDataPoints(
-      timeserie.data as MetricDataPoint[],
-      aggregation,
-    );
-
-    return aggregatedValue;
-  } catch (error) {
-    const logger = getLogger(["savemoney", "azure", "metrics"]);
-    logger.error(
-      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return null;
-  }
 }
 
 /**
@@ -231,6 +177,14 @@ export function matchesTags(
   return [...filterTags.entries()].every(
     ([key, value]) => resourceTags[key] === value,
   );
+}
+
+/**
+ * Clears the in-memory metrics cache. Must be called at the start of
+ * every analysis run to guarantee fresh data.
+ */
+export function resetMetricsCache(): void {
+  metricsCache.clear();
 }
 
 /**
@@ -295,5 +249,51 @@ export function verboseLogResourceStart(
     logger.debug(`🔍 ANALYZING: ${resourceName}`);
     logger.debug(`   Type: ${resourceType}`);
     logger.debug("=".repeat(80));
+  }
+}
+
+async function fetchMetric(
+  monitorClient: MonitorClient,
+  resourceId: string,
+  metricName: string,
+  aggregation: string,
+  timespanDays: number,
+): Promise<null | number> {
+  try {
+    const timespan = `P${timespanDays}D`;
+    const result = await monitorClient.metrics.list(resourceId, {
+      aggregation,
+      metricnames: metricName,
+      timespan,
+    });
+
+    if (result.value.length === 0) {
+      return null;
+    }
+
+    const metric = result.value[0];
+
+    if (!metric.timeseries || metric.timeseries.length === 0) {
+      return null;
+    }
+
+    const timeserie = metric.timeseries[0];
+
+    if (!timeserie.data || timeserie.data.length === 0) {
+      return null;
+    }
+
+    const aggregatedValue = aggregateDataPoints(
+      timeserie.data as MetricDataPoint[],
+      aggregation,
+    );
+
+    return aggregatedValue;
+  } catch (error) {
+    const logger = getLogger(["savemoney", "azure", "metrics"]);
+    logger.error(
+      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
   }
 }

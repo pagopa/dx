@@ -13,31 +13,31 @@
  * This tool does NOT modify, tag, or delete any resources.
  */
 
-// Export common types
-export type { AzureConfig } from "./azure/types.js";
-
-// Export Azure module
-import * as azureModule from "./azure/index.js";
-export const azure = azureModule;
-
-export * from "./types.js";
-
-// Phase 0: unified Finding model and analyzer plugin layer
-export {
-  type Finding,
-  type FindingCategory,
-  type FindingSource,
-  type Money,
-  type ResourceReport,
-  findingsFromAnalysisResult,
-} from "./finding.js";
 export {
   type Analyzer,
   type AnalyzerContext,
   type AzureClients,
   createDefaultAnalyzers,
 } from "./azure/analyzers/index.js";
+
+// Export Azure module
+import * as azureModule from "./azure/index.js";
+export const azure = azureModule;
+
+// Export common types
+export type { AzureConfig } from "./azure/types.js";
+
 export { createLimiter, type Limiter } from "./concurrency.js";
+// Phase 0: unified Finding model and analyzer plugin layer
+export {
+  type Finding,
+  type FindingCategory,
+  findingsFromAnalysisResult,
+  type FindingSource,
+  type Money,
+  type ResourceReport,
+} from "./finding.js";
+export * from "./types.js";
 
 import type { AzureConfig } from "./azure/types.js";
 

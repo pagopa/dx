@@ -22,16 +22,16 @@ import type * as armResources from "@azure/arm-resources";
 import type { AnalysisResult, Thresholds } from "../../types.js";
 
 /**
- * Bundle of Azure SDK clients an analyzer might need. The orchestrator
- * builds them once per subscription and passes the same instances to
- * every analyzer.
+ * Contract every analyzer must satisfy.
  */
-export type AzureClients = {
-  containerApps: ContainerAppsAPIClient;
-  compute: ComputeManagementClient;
-  monitor: MonitorClient;
-  network: NetworkManagementClient;
-  webSite: WebSiteManagementClient;
+export type Analyzer = {
+  analyze(ctx: AnalyzerContext): Promise<AnalysisResult>;
+  /**
+   * Stable identifier of the analyzer (e.g. `azure.vm`, `azure.advisor`).
+   * Used for logging, telemetry and future deduplication logic.
+   */
+  readonly id: string;
+  supports(resource: armResources.GenericResource): boolean;
 };
 
 /**
@@ -47,14 +47,14 @@ export type AnalyzerContext = {
 };
 
 /**
- * Contract every analyzer must satisfy.
+ * Bundle of Azure SDK clients an analyzer might need. The orchestrator
+ * builds them once per subscription and passes the same instances to
+ * every analyzer.
  */
-export type Analyzer = {
-  analyze(ctx: AnalyzerContext): Promise<AnalysisResult>;
-  /**
-   * Stable identifier of the analyzer (e.g. `azure.vm`, `azure.advisor`).
-   * Used for logging, telemetry and future deduplication logic.
-   */
-  readonly id: string;
-  supports(resource: armResources.GenericResource): boolean;
+export type AzureClients = {
+  compute: ComputeManagementClient;
+  containerApps: ContainerAppsAPIClient;
+  monitor: MonitorClient;
+  network: NetworkManagementClient;
+  webSite: WebSiteManagementClient;
 };

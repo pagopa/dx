@@ -135,6 +135,17 @@ describe("matchesTags", () => {
 
 // ── metrics cache ──────────────────────────────────────────────────────────
 
+function makeFailingMonitorClient(calls: number[] = []) {
+  return {
+    metrics: {
+      list: vi.fn().mockImplementation(async () => {
+        calls.push(1);
+        throw new Error("network error");
+      }),
+    },
+  } as unknown as Parameters<typeof getMetric>[0];
+}
+
 function makeMonitorClient(returnValue: null | number, calls: number[] = []) {
   return {
     metrics: {
@@ -150,17 +161,6 @@ function makeMonitorClient(returnValue: null | number, calls: number[] = []) {
             },
           ],
         };
-      }),
-    },
-  } as unknown as Parameters<typeof getMetric>[0];
-}
-
-function makeFailingMonitorClient(calls: number[] = []) {
-  return {
-    metrics: {
-      list: vi.fn().mockImplementation(async () => {
-        calls.push(1);
-        throw new Error("network error");
       }),
     },
   } as unknown as Parameters<typeof getMetric>[0];
