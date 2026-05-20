@@ -39,6 +39,7 @@ const config: Config = {
       },
     ],
     require.resolve("./src/plugins/radar-data-loader.ts"),
+    require.resolve("./src/plugins/lifecycle-data-loader.ts"),
     [
       "@docusaurus/plugin-client-redirects",
       {

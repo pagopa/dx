@@ -4,6 +4,15 @@ sidebar_position: 11
 
 # Automate versioning and publishing with Nx
 
+:::info Reusable Workflows
+
+| Workflow                             | Version | Source                                                                                          |
+| ------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| **Validate** (PR version-plan check) | v1      | [`validate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v1.yaml) |
+| **Release** (publish to npm)         | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
+
+:::
+
 A reusable GitHub workflow that automates package versioning and publishing for
 [Nx](https://nx.dev) monorepos using
 [Nx Release](https://nx.dev/features/manage-releases) with version plans.

@@ -4,10 +4,17 @@ sidebar_position: 4
 
 # Validating Terraform HCL Code
 
-The
-[Static Analysis workflow](https://github.com/pagopa/dx/blob/main/.github/workflows/static_analysis.yaml)
-performs static validation of Terraform code using pre-commit hooks to ensure
-quality, compliance, and consistency of infrastructure code.
+:::info Reusable Workflow
+
+| Workflow                            | Version | Source                                                                                                  |
+| ----------------------------------- | ------- | ------------------------------------------------------------------------------------------------------- |
+| **Static Analysis - TF Validation** | latest  | [`static_analysis.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/static_analysis.yaml) |
+
+:::
+
+The static analysis workflow performs static validation of Terraform code using
+pre-commit hooks to ensure quality, compliance, and consistency of
+infrastructure code.
 
 :::note
 

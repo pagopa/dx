@@ -4,6 +4,14 @@ sidebar_position: 6
 
 # Deploying Infrastructure Changes
 
+:::info Reusable Workflow
+
+| Workflow                 | Version | Source                                                                                          |
+| ------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| **Infrastructure Apply** | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml) |
+
+:::
+
 This document describes the GitHub workflow that automates Terraform apply
 operations.
 

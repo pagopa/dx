@@ -4,6 +4,14 @@ sidebar_position: 1
 
 # Deploying an Azure Static Web App
 
+:::info Reusable Workflow
+
+| Workflow                        | Version | Source                                                                                                                        |
+| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| **Deploy Static Site to Azure** | v1      | [`release-azure-staticapp-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-staticapp-v1.yaml) |
+
+:::
+
 This guide provides a complete walkthrough for setting up and deploying a static
 website to Azure Static Web Apps using Terraform for infrastructure provisioning
 and GitHub Actions for automated CI/CD.
