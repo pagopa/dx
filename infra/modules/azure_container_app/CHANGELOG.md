@@ -1,3 +1,13 @@
+## 4.2.2 (2026-05-20)
+
+### 🩹 Fixes
+
+- Add `scheduled_for_deletion` to keep secrets in the Container App without exposing them as container environment variables. This is useful when a secret is not needed by the next application version. In these cases, first execute the deployment of the new container version, which removes the dependency on that secret. Then, set this property to `true` to not expose the secret to the container, but keeping it available at the Container App level. Then, remove the secret from the IaC configuration to remove it completely. ([#1760](https://github.com/pagopa/dx/pull/1760))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.2.1 (2026-05-08)
 
 ### 🩹 Fixes
