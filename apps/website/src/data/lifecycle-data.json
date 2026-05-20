@@ -103,12 +103,6 @@
           "status": "active",
           "supportedSince": "2025-04-01",
           "notes": "Current major — used in DX CLI, pipelines, and devcontainers"
-        },
-        {
-          "version": "21.x",
-          "status": "eol",
-          "eolDate": "2026-04-01",
-          "notes": "Vendor support window closed"
         }
       ]
     },
