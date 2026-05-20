@@ -5,7 +5,7 @@
  * 1. Concurrency cap is never exceeded (active tasks ≤ max at all times).
  * 2. All queued tasks are eventually executed.
  * 3. Results are returned correctly from the wrapped function.
- * 4. A concurrency of 0 or negative is normalised to 1 (fully sequential).
+ * 4. A concurrency of 0, negative, or non-finite (NaN/Infinity) is normalised to 1.
  * 5. An error thrown by a task propagates to the caller without breaking
  *    the limiter — subsequent tasks still run.
  * 6. Tasks run in FIFO order relative to when they were enqueued.
@@ -81,6 +81,25 @@ describe("createLimiter", () => {
 
     it("normalises negative values to 1", async () => {
       const limit = createLimiter(-5);
+      let active = 0;
+      let peakActive = 0;
+
+      await Promise.all(
+        Array.from({ length: 4 }, () =>
+          limit(async () => {
+            active++;
+            peakActive = Math.max(peakActive, active);
+            await delay(1);
+            active--;
+          }),
+        ),
+      );
+
+      expect(peakActive).toBe(1);
+    });
+
+    it("normalises NaN to 1", async () => {
+      const limit = createLimiter(NaN);
       let active = 0;
       let peakActive = 0;
 

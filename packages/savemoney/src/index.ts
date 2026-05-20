@@ -20,12 +20,14 @@ export {
   createDefaultAnalyzers,
 } from "./azure/analyzers/index.js";
 
+// Export common types
+export type { AzureConfig } from "./azure/types.js";
+
 // Export Azure module
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
 
-// Export common types
-export type { AzureConfig } from "./azure/types.js";
+export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 
 export { createLimiter, type Limiter } from "./concurrency.js";
 // Phase 0: unified Finding model and analyzer plugin layer

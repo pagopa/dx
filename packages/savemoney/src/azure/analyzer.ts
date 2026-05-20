@@ -43,7 +43,7 @@ import {
   createDefaultAnalyzers,
 } from "./analyzers/index.js";
 import { generateReport } from "./report.js";
-import { matchesTags, resetMetricsCache } from "./utils.js";
+import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
 
@@ -61,13 +61,17 @@ export async function analyzeAzureResources(
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 
-  // Metrics cache is scoped to the whole run, deduping concurrent and
-  // repeated metric lookups across resources and subscriptions.
-  resetMetricsCache();
+  // Fresh cache per run — keeps concurrent analyzeAzureResources calls isolated.
+  const runCache: MetricsCache = new Map();
 
   const analyzers = createDefaultAnalyzers();
   const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
-  const limit = createLimiter(config.concurrency ?? DEFAULT_CONCURRENCY);
+  const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
+  const limit = createLimiter(concurrency);
+
+  // Bound the in-flight Set to `2 × concurrency` so memory stays proportional
+  // to the limiter width, not the total resource count in a subscription.
+  const maxInFlight = concurrency * 2;
 
   for (const subscriptionId of config.subscriptionIds) {
     logger.info(`Analyzing subscription: ${subscriptionId}`);
@@ -85,16 +89,19 @@ export async function analyzeAzureResources(
       sid,
     );
 
-    // Track only in-flight promises, not every resource ever seen.
-    // Tasks remove themselves on completion so the Set stays small (bounded
-    // by the limiter's concurrency + queue size, not the total resource count).
     const inFlight = new Set<Promise<void>>();
 
-    // Use the async iterator to avoid loading all resources into memory at once
+    // Use the async iterator to avoid loading all resources into memory at once.
     for await (const resource of resourceClient.resources.list()) {
-      // Skip resources that don't match the requested tag filter
       if (!matchesTags(resource, config.filterTags)) {
         continue;
+      }
+
+      // Backpressure: wait for a slot before enqueuing the next task so that
+      // the inFlight Set stays bounded by maxInFlight instead of growing to the
+      // total resource count in the subscription.
+      while (inFlight.size >= maxInFlight) {
+        await Promise.race(inFlight).catch(() => undefined);
       }
 
       const task: Promise<void> = limit(async () => {
@@ -102,6 +109,7 @@ export async function analyzeAzureResources(
           resource,
           analyzers,
           clients,
+          runCache,
           config.preferredLocation,
           config.timespanDays,
           thresholds,
@@ -124,7 +132,14 @@ export async function analyzeAzureResources(
       void task.finally(() => inFlight.delete(task));
     }
 
-    await Promise.allSettled(inFlight);
+    // Drain remaining tasks; surface any unexpected errors so they don't
+    // disappear silently and produce an incomplete report without a signal.
+    const results = await Promise.allSettled(inFlight);
+    for (const result of results) {
+      if (result.status === "rejected") {
+        logger.error(`Resource analysis failed: ${String(result.reason)}`);
+      }
+    }
   }
 
   // Sort to make the output more readable
@@ -146,6 +161,7 @@ export async function analyzeAzureResources(
  * @param resource          The Azure resource to analyze
  * @param analyzers         Registered analyzers (typically `createDefaultAnalyzers()`)
  * @param clients           Bundle of Azure SDK clients shared across analyzers
+ * @param metricsCache      Run-scoped metrics cache to pass through to analyzers
  * @param preferredLocation Preferred Azure region (resources elsewhere are flagged)
  * @param timespanDays      Look-back window for Azure Monitor metrics
  * @param thresholds        Numeric thresholds used during analysis
@@ -156,6 +172,7 @@ export async function analyzeResource(
   resource: armResources.GenericResource,
   analyzers: Analyzer[],
   clients: AzureClients,
+  metricsCache: MetricsCache,
   preferredLocation: string,
   timespanDays: number,
   thresholds: Thresholds,
@@ -175,6 +192,7 @@ export async function analyzeResource(
 
   const ctx: AnalyzerContext = {
     clients,
+    metricsCache,
     preferredLocation,
     resource,
     thresholds,

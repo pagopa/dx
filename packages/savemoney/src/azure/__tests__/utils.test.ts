@@ -9,7 +9,7 @@
  * Tests for getMetric() cache behaviour:
  * 6. resetMetricsCache() clears state between runs.
  * 7. Concurrent calls for the same key coalesce into one network call.
- * 8. A failed call is cached as a rejected promise (not retried silently).
+ * 8. A failed call is cached as a fulfilled null result (not retried silently).
  */
 
 import type { GenericResource } from "@azure/arm-resources";
@@ -20,6 +20,7 @@ import {
   _metricsCacheSize,
   getMetric,
   matchesTags,
+  type MonitorClientLike,
   resetMetricsCache,
 } from "../utils.js";
 
@@ -135,7 +136,7 @@ describe("matchesTags", () => {
 
 // ── metrics cache ──────────────────────────────────────────────────────────
 
-function makeFailingMonitorClient(calls: number[] = []) {
+function makeFailingMonitorClient(calls: number[] = []): MonitorClientLike {
   return {
     metrics: {
       list: vi.fn().mockImplementation(async () => {
@@ -143,10 +144,13 @@ function makeFailingMonitorClient(calls: number[] = []) {
         throw new Error("network error");
       }),
     },
-  } as unknown as Parameters<typeof getMetric>[0];
+  };
 }
 
-function makeMonitorClient(returnValue: null | number, calls: number[] = []) {
+function makeMonitorClient(
+  returnValue: null | number,
+  calls: number[] = [],
+): MonitorClientLike {
   return {
     metrics: {
       list: vi.fn().mockImplementation(async () => {
@@ -163,7 +167,7 @@ function makeMonitorClient(returnValue: null | number, calls: number[] = []) {
         };
       }),
     },
-  } as unknown as Parameters<typeof getMetric>[0];
+  };
 }
 
 describe("getMetric — in-memory cache", () => {

@@ -13,6 +13,7 @@ import type { AnalysisResult, Thresholds } from "../../types.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
+  type MetricsCache,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
@@ -34,6 +35,7 @@ export async function analyzePublicIp(
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
+  cache?: MetricsCache,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -87,6 +89,7 @@ export async function analyzePublicIp(
       "BytesInDDoS",
       "Average",
       timespanDays,
+      cache,
     );
 
     if (bytesInDDoS !== null && bytesInDDoS < thresholds.publicIp.bytesInDDoS) {

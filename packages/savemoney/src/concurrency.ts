@@ -17,9 +17,10 @@ export type Limiter = <T>(fn: () => Promise<T>) => Promise<T>;
 /**
  * Creates a limiter that runs at most `concurrency` async tasks in parallel.
  *
- * A concurrency of `0` or less is normalised to `1` before being passed to
- * `p-limit` (which requires a minimum of 1 and throws otherwise).
+ * Values of `0`, negative numbers, or non-finite numbers (including `NaN`)
+ * are all normalised to `1` before being passed to `p-limit`.
  */
 export function createLimiter(concurrency: number): Limiter {
-  return pLimit(Math.max(1, Math.floor(concurrency)));
+  const safe = Number.isFinite(concurrency) ? Math.floor(concurrency) : 1;
+  return pLimit(Math.max(1, safe));
 }

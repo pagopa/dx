@@ -34,7 +34,14 @@ import {
 export function createDefaultAnalyzers(): Analyzer[] {
   return [
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzeContainerApp(
           resource,
           clients.containerApps,
@@ -42,6 +49,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.container-app",
       supports: (r) => r.type?.toLowerCase() === "microsoft.app/containerapps",
@@ -53,7 +61,14 @@ export function createDefaultAnalyzers(): Analyzer[] {
       supports: (r) => r.type?.toLowerCase() === "microsoft.compute/disks",
     },
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzeVM(
           resource,
           clients.monitor,
@@ -61,6 +76,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.vm",
       supports: (r) =>
@@ -81,7 +97,14 @@ export function createDefaultAnalyzers(): Analyzer[] {
         r.type?.toLowerCase() === "microsoft.network/privateendpoints",
     },
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzePublicIp(
           resource,
           clients.network,
@@ -89,26 +112,42 @@ export function createDefaultAnalyzers(): Analyzer[] {
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.public-ip",
       supports: (r) =>
         r.type?.toLowerCase() === "microsoft.network/publicipaddresses",
     },
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzeStorageAccount(
           resource,
           clients.monitor,
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.storage-account",
       supports: (r) =>
         r.type?.toLowerCase() === "microsoft.storage/storageaccounts",
     },
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzeAppServicePlan(
           resource,
           clients.webSite,
@@ -116,18 +155,27 @@ export function createDefaultAnalyzers(): Analyzer[] {
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.app-service-plan",
       supports: (r) => r.type?.toLowerCase() === "microsoft.web/serverfarms",
     },
     {
-      analyze: ({ clients, resource, thresholds, timespanDays, verbose }) =>
+      analyze: ({
+        clients,
+        metricsCache,
+        resource,
+        thresholds,
+        timespanDays,
+        verbose,
+      }) =>
         analyzeStaticSite(
           resource,
           clients.monitor,
           timespanDays,
           thresholds,
           verbose,
+          metricsCache,
         ),
       id: "azure.static-web-app",
       supports: (r) => r.type?.toLowerCase() === "microsoft.web/staticsites",

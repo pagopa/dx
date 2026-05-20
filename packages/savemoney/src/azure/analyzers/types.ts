@@ -20,6 +20,7 @@ import type { NetworkManagementClient } from "@azure/arm-network";
 import type * as armResources from "@azure/arm-resources";
 
 import type { AnalysisResult, Thresholds } from "../../types.js";
+import type { MetricsCache } from "../utils.js";
 
 /**
  * Contract every analyzer must satisfy.
@@ -39,6 +40,11 @@ export type Analyzer = {
  */
 export type AnalyzerContext = {
   clients: AzureClients;
+  /**
+   * Run-scoped metrics cache. Pass through to `getMetric` calls so that
+   * concurrent `analyzeAzureResources` invocations stay isolated.
+   */
+  metricsCache: MetricsCache;
   preferredLocation: string;
   resource: armResources.GenericResource;
   thresholds: Thresholds;

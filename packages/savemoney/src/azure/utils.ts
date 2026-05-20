@@ -9,6 +9,19 @@ import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../types.js";
 
+/** Per-run in-memory cache for Azure Monitor metric responses. */
+export type MetricsCache = Map<string, Promise<null | number>>;
+
+/**
+ * Minimal interface required by `getMetric` — only the `metrics.list` shape.
+ * Using a structural type instead of the full `MonitorClient` keeps tests
+ * strongly typed without unsafe casts and lets non-Azure callers supply a
+ * compatible mock.
+ */
+export type MonitorClientLike = {
+  metrics: Pick<MonitorClient["metrics"], "list">;
+};
+
 type MetricDataPoint = {
   average?: number;
   count?: number;
@@ -104,16 +117,11 @@ export function extractAggregatedValue(
 }
 
 /**
- * In-memory cache for Azure Monitor metric lookups, scoped to a single
- * `analyzeAzureResources` run. Keyed on `resourceId|metricName|aggregation|timespanDays`.
- *
- * Promises are stored (not resolved values) so concurrent requests for
- * the same metric coalesce into one network call.
- *
- * The cache is intentionally module-scoped: each run should call
- * `resetMetricsCache()` before starting to avoid stale data across runs.
+ * Module-scoped fallback cache. Used when callers of `getMetric` do not
+ * supply a run-scoped cache. Prefer passing an explicit `MetricsCache`
+ * instance through `AnalyzerContext` so concurrent runs stay isolated.
  */
-const metricsCache = new Map<string, Promise<null | number>>();
+const metricsCache: MetricsCache = new Map();
 
 /**
  * @internal — exposed for tests only.
@@ -124,27 +132,34 @@ export function _metricsCacheSize(): number {
 
 /**
  * Fetches a specific metric for a resource from Azure Monitor, with an
- * in-memory cache scoped to the current run (see `resetMetricsCache`).
+ * in-memory cache to deduplicate concurrent and repeated lookups within
+ * the same run.
  *
  * Concurrent callers for the same `(resourceId, metricName, aggregation,
  * timespanDays)` tuple share the same underlying request.
  *
- * @param monitorClient - The Azure Monitor client instance
+ * Pass an explicit `cache` (created per run in the orchestrator) to keep
+ * concurrent analysis runs isolated from each other. When omitted, the
+ * module-scoped fallback cache is used — safe for sequential runs.
+ *
+ * @param monitorClient - Azure Monitor client (or compatible mock)
  * @param resourceId - The Azure resource ID
  * @param metricName - The name of the metric to fetch (e.g., "Percentage CPU")
  * @param aggregation - The aggregation type (e.g., "Average", "Total")
  * @param timespanDays - Number of days to look back for metrics
+ * @param cache - Optional run-scoped cache; falls back to the module-scoped one
  * @returns The metric value or null if unavailable
  */
 export async function getMetric(
-  monitorClient: MonitorClient,
+  monitorClient: MonitorClientLike,
   resourceId: string,
   metricName: string,
   aggregation: string,
   timespanDays: number,
+  cache: MetricsCache = metricsCache,
 ): Promise<null | number> {
   const key = `${resourceId}|${metricName}|${aggregation}|${timespanDays}`;
-  const cached = metricsCache.get(key);
+  const cached = cache.get(key);
   if (cached !== undefined) {
     return cached;
   }
@@ -155,7 +170,7 @@ export async function getMetric(
     aggregation,
     timespanDays,
   );
-  metricsCache.set(key, promise);
+  cache.set(key, promise);
   return promise;
 }
 
@@ -180,8 +195,10 @@ export function matchesTags(
 }
 
 /**
- * Clears the in-memory metrics cache. Must be called at the start of
- * every analysis run to guarantee fresh data.
+ * Clears the module-scoped fallback metrics cache.
+ *
+ * Only needed when `getMetric` is called without an explicit `cache`
+ * argument. Prefer passing a run-scoped `MetricsCache` instead.
  */
 export function resetMetricsCache(): void {
   metricsCache.clear();
@@ -253,7 +270,7 @@ export function verboseLogResourceStart(
 }
 
 async function fetchMetric(
-  monitorClient: MonitorClient,
+  monitorClient: MonitorClientLike,
   resourceId: string,
   metricName: string,
   aggregation: string,
