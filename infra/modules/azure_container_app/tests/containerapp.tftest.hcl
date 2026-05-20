@@ -199,9 +199,9 @@ run "container_app_can_keep_secret_out_of_container_env" {
         key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
       },
       {
-        name                = run.setup_tests.key_vault_secret2.name
-        key_vault_secret_id = run.setup_tests.key_vault_secret2.secret_id
-        use_in_container    = false
+        name                   = run.setup_tests.key_vault_secret2.name
+        key_vault_secret_id    = run.setup_tests.key_vault_secret2.secret_id
+        scheduled_for_deletion = true
       }
     ]
   }

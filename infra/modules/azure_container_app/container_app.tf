@@ -116,7 +116,7 @@ resource "azurerm_container_app" "this" {
         dynamic "env" {
           for_each = [
             for secret in var.secrets : secret
-            if secret.use_in_container
+            if secret.scheduled_for_deletion
           ]
 
           content {
