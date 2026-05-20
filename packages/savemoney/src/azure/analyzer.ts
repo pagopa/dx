@@ -11,8 +11,9 @@
  *  - Per-subscription resources are analyzed in parallel via a small
  *    in-process limiter (default concurrency 8, configurable via
  *    `AzureConfig.concurrency`).
- *  - Azure Monitor metric calls are memoized for the duration of a run
- *    (see `getMetric` + `resetMetricsCache` in `./utils.ts`).
+ *  - Azure Monitor metric calls are memoized for the duration of a run via
+ *    a per-run `MetricsCache` passed through `AnalyzerContext`, so concurrent
+ *    calls to `analyzeAzureResources` stay fully isolated.
  *
  * The output schema (`AzureDetailedResourceReport`) is unchanged so the
  * existing report formats keep working untouched.
@@ -66,7 +67,14 @@ export async function analyzeAzureResources(
 
   const analyzers = createDefaultAnalyzers();
   const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
-  const concurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
+
+  // Normalise concurrency the same way createLimiter does to keep maxInFlight
+  // consistent. A raw value of 0/NaN would produce maxInFlight = 0/NaN and
+  // either deadlock or silently disable backpressure.
+  const rawConcurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
+  const concurrency = Number.isFinite(rawConcurrency)
+    ? Math.max(1, Math.floor(rawConcurrency))
+    : 1;
   const limit = createLimiter(concurrency);
 
   // Bound the in-flight Set to `2 × concurrency` so memory stays proportional
@@ -172,7 +180,7 @@ export async function analyzeResource(
   resource: armResources.GenericResource,
   analyzers: Analyzer[],
   clients: AzureClients,
-  metricsCache: MetricsCache,
+  metricsCache: MetricsCache = new Map(),
   preferredLocation: string,
   timespanDays: number,
   thresholds: Thresholds,
