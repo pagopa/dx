@@ -126,7 +126,9 @@ jobs:
             --config-check .dx-security/.trivy/checks/terraform \
             --check-namespaces user \
             --severity MEDIUM,HIGH,CRITICAL \
-            --exit-code 0 2>&1 | tee /tmp/trivy-output.log
+            --exit-code 0 > /tmp/trivy-output.log 2>&1 || true
+
+          cat /tmp/trivy-output.log
 
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
@@ -315,11 +317,16 @@ jobs:
                 "|--------|--------|---------|------|"
 
               # Add module details or show error
-              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE" || {
+              JQ_OUT=$(jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json) && {
+                echo "$JQ_OUT" >> "$GITHUB_STEP_SUMMARY"
+                echo "$JQ_OUT" >> "$SUMMARY_FILE"
+              } || {
                 add_markdown \
                   "Error processing JSON file. Raw content:" \
                   "\`\`\`json"
-                cat lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+                CAT_OUT=$(cat lock_output.json)
+                echo "$CAT_OUT" >> "$GITHUB_STEP_SUMMARY"
+                echo "$CAT_OUT" >> "$SUMMARY_FILE"
                 add_to_summary "\`\`\`"
               }
               add_to_summary "</details>"
@@ -335,7 +342,7 @@ jobs:
           fi
 
           # Trivy custom policies output
-          if [ -f "/tmp/trivy-output.log" ]; then
+          if [ -f "/tmp/trivy-output.log" ] && grep -q "Failures:" /tmp/trivy-output.log; then
             add_markdown \
               '> [!WARNING]' \
               '> ### ⚠️ Trivy detected forbidden Terraform patterns' \
@@ -347,7 +354,9 @@ jobs:
               '<summary>🔍 Trivy Findings</summary>' \
               '' \
               '```'
-            sed 's/\x1b\[[0-9;]*m//g' /tmp/trivy-output.log >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+            TRIVY_CLEAN=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/trivy-output.log)
+            echo "$TRIVY_CLEAN" >> "$GITHUB_STEP_SUMMARY"
+            echo "$TRIVY_CLEAN" >> "$SUMMARY_FILE"
             add_markdown '```' '</details>' ''
           fi
 
@@ -359,7 +368,9 @@ jobs:
               '<summary>📋 Pre-commit Output Log</summary>' \
               '' \
               '```'
-            sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+            PRECOMMIT_CLEAN=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log)
+            echo "$PRECOMMIT_CLEAN" >> "$GITHUB_STEP_SUMMARY"
+            echo "$PRECOMMIT_CLEAN" >> "$SUMMARY_FILE"
             add_markdown '```' '</details>'
           else
             add_to_summary "⚠️ No pre-commit output found. Check if pre-commit was executed."
