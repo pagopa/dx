@@ -126,9 +126,11 @@ jobs:
             --config-check .dx-security/.trivy/checks/terraform \
             --check-namespaces user \
             --severity MEDIUM,HIGH,CRITICAL \
-            --exit-code 0 > /tmp/trivy-output.log 2>&1 || true
+            --format json \
+            --skip-version-check \
+            --exit-code 0 > /tmp/trivy-output.json || true
 
-          cat /tmp/trivy-output.log
+          cat /tmp/trivy-output.json
 
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
@@ -342,22 +344,26 @@ jobs:
           fi
 
           # Trivy custom policies output
-          if [ -f "/tmp/trivy-output.log" ] && grep -q "Failures:" /tmp/trivy-output.log; then
+          if [ -f "/tmp/trivy-output.json" ] && jq -e '[.Results[]? | .Misconfigurations[]?] | length > 0' /tmp/trivy-output.json > /dev/null 2>&1; then
             add_markdown \
               '> [!WARNING]' \
               '> ### ⚠️ Trivy detected forbidden Terraform patterns' \
               '>' \
               '> The following findings must be resolved before this check becomes enforced.' \
               ''
-            add_markdown \
-              '<details>' \
-              '<summary>🔍 Trivy Findings</summary>' \
-              '' \
-              '```'
-            TRIVY_CLEAN=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/trivy-output.log)
-            echo "$TRIVY_CLEAN" >> "$GITHUB_STEP_SUMMARY"
-            echo "$TRIVY_CLEAN" >> "$SUMMARY_FILE"
-            add_markdown '```' '</details>' ''
+
+            TRIVY_TABLE=$(jq -r '
+              ["| Severity | ID | File | Line | Title |",
+               "|----------|----|------|------|-------|"] +
+              [.Results[] |
+                .Target as $target |
+                .Misconfigurations[]? |
+                "| " + .Severity + " | " + .AVDID + " | `" + $target + "` | L" + (.CauseMetadata.StartLine | tostring) + " | " + .Title + " |"
+              ] | .[]' /tmp/trivy-output.json)
+
+            echo "$TRIVY_TABLE" >> "$GITHUB_STEP_SUMMARY"
+            echo "$TRIVY_TABLE" >> "$SUMMARY_FILE"
+            add_to_summary ''
           fi
 
           # Pre-commit output
