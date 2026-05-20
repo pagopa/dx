@@ -29,7 +29,6 @@ export const azure = azureModule;
 
 export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 
-export { createLimiter, type Limiter } from "./concurrency.js";
 // Phase 0: unified Finding model and analyzer plugin layer
 export {
   type Finding,

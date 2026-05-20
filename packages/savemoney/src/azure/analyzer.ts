@@ -27,10 +27,10 @@ import { NetworkManagementClient } from "@azure/arm-network";
 import * as armResources from "@azure/arm-resources";
 import { DefaultAzureCredential } from "@azure/identity";
 import { getLogger } from "@logtape/logtape";
+import pLimit from "p-limit";
 
 import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 
-import { createLimiter } from "../concurrency.js";
 import {
   type AnalysisResult,
   DEFAULT_THRESHOLDS,
@@ -62,20 +62,17 @@ export async function analyzeAzureResources(
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 
-  // Fresh cache per run — keeps concurrent analyzeAzureResources calls isolated.
-  const runCache: MetricsCache = new Map();
-
   const analyzers = createDefaultAnalyzers();
   const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
 
-  // Normalise concurrency the same way createLimiter does to keep maxInFlight
+  // Normalise concurrency the same way p-limit does to keep maxInFlight
   // consistent. A raw value of 0/NaN would produce maxInFlight = 0/NaN and
   // either deadlock or silently disable backpressure.
   const rawConcurrency = config.concurrency ?? DEFAULT_CONCURRENCY;
   const concurrency = Number.isFinite(rawConcurrency)
     ? Math.max(1, Math.floor(rawConcurrency))
     : 1;
-  const limit = createLimiter(concurrency);
+  const limit = pLimit(concurrency);
 
   // Bound the in-flight Set to `2 × concurrency` so memory stays proportional
   // to the limiter width, not the total resource count in a subscription.
@@ -85,6 +82,11 @@ export async function analyzeAzureResources(
     logger.info(`Analyzing subscription: ${subscriptionId}`);
 
     const sid = subscriptionId.trim();
+
+    // Fresh cache per subscription — bounds peak memory to one subscription's
+    // worth of metrics and keeps concurrent analyzeAzureResources calls isolated.
+    const runCache: MetricsCache = new Map();
+
     const clients: AzureClients = {
       compute: new ComputeManagementClient(credential, sid),
       containerApps: new ContainerAppsAPIClient(credential, sid),
@@ -137,7 +139,11 @@ export async function analyzeAzureResources(
       });
 
       inFlight.add(task);
-      void task.finally(() => inFlight.delete(task));
+      // Suppress the unhandled-rejection that would occur between task creation
+      // and the Promise.allSettled drain below. The .catch() handler is a no-op
+      // because the actual error is still visible to allSettled (which logs it)
+      // via the original `task` reference kept in inFlight.
+      void task.catch(() => undefined).finally(() => inFlight.delete(task));
     }
 
     // Drain remaining tasks; surface any unexpected errors so they don't
