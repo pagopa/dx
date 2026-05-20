@@ -60,29 +60,41 @@
           "status": "eol",
           "eolDate": "2025-04-01",
           "notes": "No longer tested or supported in DX modules"
-        },
+        }
+      ]
+    },
+    {
+      "id": "terraform-providers",
+      "name": "Terraform Providers",
+      "category": "infra",
+      "communicationChannels": [
+        "GitHub Actions warnings/errors in terraform plan/apply reusable workflows"
+      ],
+      "lifecyclePolicy": "Only the provider versions pinned in DX modules are actively supported. Check each module's required_providers block for the exact constraints.",
+      "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
+      "versions": [
         {
-          "version": "Provider: azurerm (~> 4.x)",
+          "version": "azurerm (~> 4.x)",
           "status": "active",
           "notes": "Primary Azure provider used across core/resources/bootstrapper"
         },
         {
-          "version": "Provider: azapi (2.8.0)",
+          "version": "azapi (2.8.0)",
           "status": "active",
           "notes": "Used in infra/resources stacks"
         },
         {
-          "version": "Provider: aws (>= 5.0, < 7.0)",
+          "version": "aws (>= 5.0, < 7.0)",
           "status": "active",
           "notes": "Used in AWS modules and mixed-cloud stacks"
         },
         {
-          "version": "Provider: awscc (~> 1.0)",
+          "version": "awscc (~> 1.0)",
           "status": "active",
           "notes": "Used where AWS Cloud Control resources are required"
         },
         {
-          "version": "Provider: azuread (~> 2.x)",
+          "version": "azuread (~> 2.x)",
           "status": "active",
           "notes": "Used for Entra/Azure AD resources"
         }
