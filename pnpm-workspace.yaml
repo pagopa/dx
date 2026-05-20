@@ -20,6 +20,7 @@ catalog:
   execa: ^9.6.1
   js-yaml: ^4.1.1
   neverthrow: ^8.2.0
+  p-limit: ^7.3.0
   plop: ^4.0.5
   prettier: 3.8.3
   semver: ^7.7.4
