@@ -55,17 +55,82 @@ const registerEnvironmentSetup = (
   setInitCloudAccountsAction(plop, mockCloudAccountService, mockGitHubService);
 };
 
+const mockTerraformBackend: TerraformBackend = {
+  resourceGroupName: "dx-d-itn-tf-rg",
+  storageAccountName: "dxditntfst",
+  subscriptionId: "00000000-0000-0000-0000-000000000000",
+  type: "azurerm",
+};
+
+const createMockCloudAccountService = (
+  backend: TerraformBackend,
+  isInitialized: boolean,
+): CloudAccountService => ({
+  getTerraformBackend: vi.fn().mockResolvedValue(backend),
+  hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+  initialize: vi.fn().mockResolvedValue(undefined),
+  isInitialized: vi.fn().mockResolvedValue(isInitialized),
+  provisionTerraformBackend: vi.fn().mockResolvedValue(backend),
+});
+
+const createMockGitHubService = (): GitHubService => ({
+  createBranch: vi.fn().mockResolvedValue(undefined),
+  createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+  createPullRequest: vi.fn().mockResolvedValue(undefined),
+  getFileContent: vi.fn().mockResolvedValue(undefined),
+  getRepository: vi.fn().mockResolvedValue(undefined),
+  updateFile: vi.fn().mockResolvedValue(undefined),
+});
+
+const runEnvironmentGenerator = async ({
+  mockCloudAccountService,
+  mockGitHubService,
+  payload,
+  tmpDirPrefix,
+}: {
+  mockCloudAccountService: CloudAccountService;
+  mockGitHubService: GitHubService;
+  payload: Payload;
+  tmpDirPrefix: string;
+}): Promise<{
+  keepArtifacts: boolean;
+  originalCwd: string;
+  tmpDir: string;
+}> => {
+  const originalCwd = process.cwd();
+  const keepArtifacts = shouldKeepTestArtifacts(process.env);
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix));
+  process.chdir(tmpDir);
+
+  const templatesPath = path.resolve(originalCwd, "templates/environment");
+
+  const plop = await nodePlop();
+  registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
+
+  plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
+    actions: getActions(templatesPath),
+    description: "Generate a new deployment environment",
+    prompts: [],
+  });
+
+  const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
+  const result = await generator.runActions(payload);
+
+  const realFailures = result.failures.filter(
+    (f) => f.error !== "Aborted due to previous action failure",
+  );
+  if (realFailures.length > 0) {
+    const summary = realFailures.map((f) => `${f.type}: ${f.error}`).join("\n");
+    throw new Error(`Generator failed:\n${summary}`);
+  }
+
+  return { keepArtifacts, originalCwd, tmpDir };
+};
+
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
   let keepArtifacts: boolean;
-
-  const mockTerraformBackend: TerraformBackend = {
-    resourceGroupName: "dx-d-itn-tf-rg",
-    storageAccountName: "dxditntfst",
-    subscriptionId: "00000000-0000-0000-0000-000000000000",
-    type: "azurerm",
-  };
 
   const payload: Payload = {
     env: {
@@ -95,53 +160,15 @@ describe("environment generator — file generation (no init)", () => {
   };
 
   beforeAll(async () => {
-    originalCwd = process.cwd();
-    keepArtifacts = shouldKeepTestArtifacts(process.env);
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-env-test-"));
-    process.chdir(tmpDir);
-
-    const templatesPath = path.resolve(originalCwd, "templates/environment");
-
-    const mockCloudAccountService: CloudAccountService = {
-      getTerraformBackend: vi.fn().mockResolvedValue(mockTerraformBackend),
-      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
-      initialize: vi.fn().mockResolvedValue(undefined),
-      isInitialized: vi.fn().mockResolvedValue(true),
-      provisionTerraformBackend: vi
-        .fn()
-        .mockResolvedValue(mockTerraformBackend),
-    };
-
-    const mockGitHubService: GitHubService = {
-      createBranch: vi.fn().mockResolvedValue(undefined),
-      createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
-      createPullRequest: vi.fn().mockResolvedValue(undefined),
-      getFileContent: vi.fn().mockResolvedValue(undefined),
-      getRepository: vi.fn().mockResolvedValue(undefined),
-      updateFile: vi.fn().mockResolvedValue(undefined),
-    };
-
-    const plop = await nodePlop();
-    registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
-
-    plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
-      actions: getActions(templatesPath),
-      description: "Generate a new deployment environment",
-      prompts: [],
-    });
-
-    const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-    const result = await generator.runActions(payload);
-
-    const realFailures = result.failures.filter(
-      (f) => f.error !== "Aborted due to previous action failure",
-    );
-    if (realFailures.length > 0) {
-      const summary = realFailures
-        .map((f) => `${f.type}: ${f.error}`)
-        .join("\n");
-      throw new Error(`Generator failed:\n${summary}`);
-    }
+    ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload,
+      tmpDirPrefix: "dx-cli-env-test-",
+    }));
   });
 
   afterAll(async () => {
@@ -227,13 +254,6 @@ describe("environment generator — file generation (with init)", () => {
   let originalCwd: string;
   let keepArtifacts: boolean;
 
-  const mockTerraformBackend: TerraformBackend = {
-    resourceGroupName: "dx-d-itn-tf-rg",
-    storageAccountName: "dxditntfst",
-    subscriptionId: "00000000-0000-0000-0000-000000000000",
-    type: "azurerm",
-  };
-
   const cloudAccount = {
     csp: "azure" as const,
     defaultLocation: "italynorth",
@@ -274,53 +294,15 @@ describe("environment generator — file generation (with init)", () => {
   };
 
   beforeAll(async () => {
-    originalCwd = process.cwd();
-    keepArtifacts = shouldKeepTestArtifacts(process.env);
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-env-init-test-"));
-    process.chdir(tmpDir);
-
-    const templatesPath = path.resolve(originalCwd, "templates/environment");
-
-    const mockCloudAccountService: CloudAccountService = {
-      getTerraformBackend: vi.fn().mockResolvedValue(mockTerraformBackend),
-      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
-      initialize: vi.fn().mockResolvedValue(undefined),
-      isInitialized: vi.fn().mockResolvedValue(false),
-      provisionTerraformBackend: vi
-        .fn()
-        .mockResolvedValue(mockTerraformBackend),
-    };
-
-    const mockGitHubService: GitHubService = {
-      createBranch: vi.fn().mockResolvedValue(undefined),
-      createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
-      createPullRequest: vi.fn().mockResolvedValue(undefined),
-      getFileContent: vi.fn().mockResolvedValue(undefined),
-      getRepository: vi.fn().mockResolvedValue(undefined),
-      updateFile: vi.fn().mockResolvedValue(undefined),
-    };
-
-    const plop = await nodePlop();
-    registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
-
-    plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
-      actions: getActions(templatesPath),
-      description: "Generate a new deployment environment",
-      prompts: [],
-    });
-
-    const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-    const result = await generator.runActions(payload);
-
-    const realFailures = result.failures.filter(
-      (f) => f.error !== "Aborted due to previous action failure",
-    );
-    if (realFailures.length > 0) {
-      const summary = realFailures
-        .map((f) => `${f.type}: ${f.error}`)
-        .join("\n");
-      throw new Error(`Generator failed:\n${summary}`);
-    }
+    ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        false,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload,
+      tmpDirPrefix: "dx-cli-env-init-test-",
+    }));
   });
 
   afterAll(async () => {
