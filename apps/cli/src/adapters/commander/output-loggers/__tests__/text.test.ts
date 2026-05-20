@@ -9,7 +9,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // Mock oraPromise so tests don't spin up a real TTY spinner
 vi.mock("ora", () => ({
-  oraPromise: <T>(_promise: Promise<T>, _opts: unknown) => _promise,
+  oraPromise: <T>(_promise: Promise<T>) => _promise,
 }));
 
 import { TextOutputLogger } from "../text.js";
@@ -49,21 +49,29 @@ describe("TextOutputLogger", () => {
     it("calls console.log without throwing", () => {
       const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
       const logger = new TextOutputLogger("init");
-      expect(() => logger.reportResult({ repository: { name: "my-repo" } })).not.toThrow();
+      expect(() =>
+        logger.reportResult({ repository: { name: "my-repo" } }),
+      ).not.toThrow();
       spy.mockRestore();
     });
   });
 
   describe("reportError", () => {
     it("calls console.error without throwing", () => {
-      const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const spy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
       const logger = new TextOutputLogger("init");
-      expect(() => logger.reportError(new Error("something failed"))).not.toThrow();
+      expect(() =>
+        logger.reportError(new Error("something failed")),
+      ).not.toThrow();
       spy.mockRestore();
     });
 
     it("handles non-Error values without throwing", () => {
-      const spy = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      const spy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => undefined);
       const logger = new TextOutputLogger("init");
       expect(() => logger.reportError("plain string error")).not.toThrow();
       spy.mockRestore();
