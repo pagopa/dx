@@ -5,8 +5,15 @@ sidebar_label: Deploying App to Azure Container App
 
 # Deploying Apps to Azure Container App
 
-This documentation covers the Container App Release reusable workflow defined in
-[release-azure-containerapp-v1.yaml](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-containerapp-v1.yaml).
+:::info Reusable Workflow
+
+| Workflow                        | Version | Source                                                                                                                              |
+| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Release Azure Container App** | v1      | [`release-azure-containerapp-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-containerapp-v1.yaml) |
+
+:::
+
+This documentation covers the Container App Release reusable workflow.
 
 ## How It Works
 

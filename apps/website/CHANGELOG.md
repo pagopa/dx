@@ -1,3 +1,13 @@
+## 0.18.0 (2026-05-20)
+
+### 🚀 Features
+
+- Add tooling lifecycle and support page ([#1778](https://github.com/pagopa/dx/pull/1778))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.17.0 (2026-05-07)
 
 ### 🚀 Features

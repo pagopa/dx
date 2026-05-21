@@ -30,6 +30,9 @@ export default function TechRadarPage(): React.JSX.Element {
         <p className={styles.subtitle}>
           Technologies, tools, and practices we use, evaluate, or avoid.
         </p>
+        <p className={styles.subtitle}>
+          <a href="/docs/lifecycle">Tooling Lifecycle &amp; Support →</a>
+        </p>
       </div>
 
       {/* Ring legend */}

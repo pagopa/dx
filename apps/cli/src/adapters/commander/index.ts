@@ -1,4 +1,4 @@
-import { Command } from "commander";
+import { Command, Option } from "commander";
 
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
@@ -16,6 +16,7 @@ import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
 export type CliDependencies = CodemodCommandDependencies;
 
 export type GlobalOptions = {
+  output: "json" | "text";
   verbose?: boolean;
 };
 
@@ -42,6 +43,14 @@ export const makeCli = (
       "-v, --verbose",
       "Enable verbose output: debug-level logs and full error chain (with stack traces) when a command fails",
       false,
+    )
+    .addOption(
+      new Option(
+        "--output <mode>",
+        "Output mode: 'text' (human-readable, default) or 'json' (structured JSON envelope on stdout, NDJSON progress events on stderr)",
+      )
+        .choices(["text", "json"])
+        .default("text"),
     );
 
   program.addCommand(makeDoctorCommand(deps, config));

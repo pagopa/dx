@@ -1,0 +1,52 @@
+---
+sidebar_position: 4
+---
+
+import { LifecycleTable } from "@site/src/components/LifecycleTable/LifecycleTable";
+
+# Tooling Lifecycle & Support
+
+This page is the **single source of truth** for the lifecycle status of all
+tools maintained or supported by the DX team. It defines what "supported" means,
+how lifecycle decisions are made, and tracks the current status of each tool
+version.
+
+## What Does "DX Support" Mean?
+
+When DX declares a tool version as **supported**, we commit to:
+
+- **Pipelines**: CI/CD reusable workflows are tested and guaranteed to work with
+  that version.
+- **Terraform modules**: DX modules on the Terraform Registry are compatible and
+  tested.
+- **DX CLI**: The `dx` CLI operates correctly with that version.
+- **Devcontainers**: DX devcontainer templates include and configure that
+  version.
+
+When a version reaches **End of Life (EOL)**, DX no longer guarantees
+compatibility and may remove support at any time.
+
+## How Lifecycle Transitions Are Communicated
+
+Lifecycle transitions are communicated through:
+
+- DX periodic bulletins (DX Newsletter)
+- Tool-specific channels listed in each tool section below
+
+## Status Definitions
+
+| Status          | Meaning                                                      |
+| --------------- | ------------------------------------------------------------ |
+| **Active**      | Fully supported. Recommended for production use.             |
+| **Maintenance** | Supported but nearing end of life. Start planning migration. |
+| **Deprecated**  | Support will end soon. Migrate as soon as possible.          |
+| **End of Life** | No longer supported. May break without notice.               |
+
+## Current Support Status
+
+<LifecycleTable />
+
+## Related Resources
+
+- [Technology Radar](/radar) — DX technology adoption recommendations
+- [Getting Support](/docs/support) — How to get help from the DX team
