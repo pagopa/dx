@@ -13,6 +13,7 @@ import type { AnalysisResult, Thresholds } from "../../types.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
+  type MetricsCache,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
@@ -35,6 +36,7 @@ export async function analyzeVM(
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
+  cache?: MetricsCache,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -107,6 +109,7 @@ export async function analyzeVM(
     "Percentage CPU",
     "Average",
     timespanDays,
+    cache,
   );
   const networkIn = await getMetric(
     monitorClient,
@@ -114,6 +117,7 @@ export async function analyzeVM(
     "Network In Total",
     "Average",
     timespanDays,
+    cache,
   );
 
   if (cpuUsage !== null && cpuUsage < thresholds.vm.cpuPercent) {

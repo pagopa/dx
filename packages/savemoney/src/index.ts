@@ -13,6 +13,13 @@
  * This tool does NOT modify, tag, or delete any resources.
  */
 
+export {
+  type Analyzer,
+  type AnalyzerContext,
+  type AzureClients,
+  createDefaultAnalyzers,
+} from "./azure/analyzers/index.js";
+
 // Export common types
 export type { AzureConfig } from "./azure/types.js";
 
@@ -20,6 +27,17 @@ export type { AzureConfig } from "./azure/types.js";
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
 
+export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
+
+// Phase 0: unified Finding model and analyzer plugin layer
+export {
+  type Finding,
+  type FindingCategory,
+  findingsFromAnalysisResult,
+  type FindingSource,
+  type Money,
+  type ResourceReport,
+} from "./finding.js";
 export * from "./types.js";
 
 import type { AzureConfig } from "./azure/types.js";

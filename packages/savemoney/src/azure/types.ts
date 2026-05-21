@@ -16,6 +16,12 @@ import type {
  */
 export type AzureConfig = BaseConfig & {
   /**
+   * Maximum number of resources analyzed in parallel within a single
+   * subscription. Defaults to 8 when not provided. Set to 1 for a fully
+   * sequential run (useful for debugging or to be gentler on quotas).
+   */
+  concurrency?: number;
+  /**
    * Only analyze resources that match ALL the given tag key-value pairs.
    * If omitted, all resources are analyzed.
    */
