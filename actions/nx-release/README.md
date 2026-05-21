@@ -64,10 +64,11 @@ This action automates the Nx release flow in three phases:
 
 ## Inputs
 
-| Input          | Description                                                              | Default               | Required |
-| -------------- | ------------------------------------------------------------------------ | --------------------- | -------- |
-| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions | `${{ github.token }}` | false    |
-| `base-branch`  | Base branch where release flow runs                                      | `main`                | false    |
+| Input             | Description                                           | Default | Required |
+| ----------------- | ----------------------------------------------------- | ------- | -------- |
+| `app-client-id`   | GitHub App client ID used to mint the release token   |         | true     |
+| `app-private-key` | GitHub App private key used to mint the release token |         | true     |
+| `base-branch`     | Base branch where release flow runs                   | `main`  | false    |
 
 ## Outputs
 
@@ -80,7 +81,7 @@ This action automates the Nx release flow in three phases:
 
 - Repository configured with `nx.json` (Nx monorepo)
 - `gh` CLI available in the runner
-- GitHub token with appropriate permissions
+- GitHub App credentials with `contents:write` and `pull-requests:write` permissions on the repository
 - npm packages require [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) configured to enable provenance signing (`id-token: write` permission must be granted)
 
 ## Usage in Workflow
@@ -112,6 +113,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: "true"
+          persist-credentials: false
 
       - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
         with:
@@ -122,8 +124,8 @@ jobs:
 
       - uses: pagopa/dx/actions/nx-release@main
         with:
-          app-client-id: ${{ secrets.GH_RELEASE_CLIENT_ID }}
-          app-private-key: ${{ secrets.GH_RELEASE_APP_KEY }}
+          app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
 ```
 
 ## Behavior
@@ -148,10 +150,11 @@ Used automatically on `pull_request` workflows. The action:
 2. Runs `npx nx release --skip-publish` to consume version plans and update
    `package.json`/`pom.xml` and `CHANGELOG.md` files
 3. Captures the git tags created locally by Nx (snapshot diff before/after)
-4. Commits all changes and force-pushes the branch
-5. Creates or updates a pull request titled `Version Packages` with a
+4. Reconfigures git to use the GitHub App token for branch pushes, tags, and releases
+5. Commits all changes and force-pushes the branch
+6. Creates or updates a pull request titled `Version Packages` with a
    hidden `<!-- nx-release-tags: [...] -->` metadata comment in the body
-6. Outputs `pull-request-number` and `pull-request-url`
+7. Outputs `pull-request-number` and `pull-request-url`
 
 ### Mode: `Publish` (push)
 
@@ -186,7 +189,7 @@ Triggered manually. The action:
 ### PR not created
 
 - Ensure `.nx/version-plans/` directory exists
-- Verify `gh` CLI has authentication; check GH_TOKEN is set
+- Verify the workflow passes `app-client-id` and `app-private-key` and that the GitHub App has repository write permissions
 - Check that version plans produce actual version changes (run `npx nx release --dry-run`)
 
 ### PR warning comment is missing

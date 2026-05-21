@@ -66,12 +66,37 @@ runs:
           echo "mode=create-pr" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Configure GitHub App authentication for git operations
+      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      shell: bash
+      env:
+        GH_APP_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        git config --local --unset-all http.https://github.com/.extraheader || true
+        git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+    - name: Resolve GitHub App bot identity
+      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      id: app-bot
+      shell: bash
+      env:
+        APP_SLUG: ${{ steps.generate-token.outputs.app-slug }}
+        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+      run: |
+        set -euo pipefail
+
+        bot_login="${APP_SLUG}[bot]"
+        bot_user_id="$(gh api "/users/${bot_login}" --jq .id)"
+
+        echo "login=${bot_login}" >> "$GITHUB_OUTPUT"
+        echo "email=${bot_user_id}+${bot_login}@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+
     - name: Configure Git user
       if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       shell: bash
       run: |
-        git config user.name "dx-pagopa-bot"
-        git config user.email "dx-pagopa-bot@users.noreply.github.com"
+        git config user.name "${{ steps.app-bot.outputs.login }}"
+        git config user.email "${{ steps.app-bot.outputs.email }}"
 
     - name: Warn missing version plan coverage on pull request
       if: steps.release-mode.outputs.mode == 'warn-pr'
