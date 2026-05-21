@@ -27,11 +27,6 @@ on:
         description: If set, it runs the pre-commit on a single folder. Otherwise, it is run on all files.
         type: string
         required: false
-      dx_policies_ref:
-        description: Git ref used to fetch centralized DX Trivy custom policies.
-        type: string
-        required: false
-        default: main
       verbose:
         description: If enabled, it prints the verbose logging of pre-commit checks
         type: boolean
@@ -93,7 +88,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: pagopa/dx
-          ref: ${{ github.repository == 'pagopa/dx' && github.sha || inputs.dx_policies_ref }}
+          ref: main
           path: .dx-security
           sparse-checkout: |
             .trivy/checks/terraform
