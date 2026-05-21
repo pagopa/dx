@@ -13,6 +13,7 @@ import type { AnalysisResult, Thresholds } from "../../types.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
+  type MetricsCache,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
@@ -34,6 +35,7 @@ export async function analyzeAppServicePlan(
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
+  cache?: MetricsCache,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -79,6 +81,7 @@ export async function analyzeAppServicePlan(
       "CpuPercentage",
       "Average",
       timespanDays,
+      cache,
     );
 
     const memoryPercentage = await getMetric(
@@ -87,6 +90,7 @@ export async function analyzeAppServicePlan(
       "MemoryPercentage",
       "Average",
       timespanDays,
+      cache,
     );
 
     if (

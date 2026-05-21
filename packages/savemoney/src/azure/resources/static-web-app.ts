@@ -12,6 +12,7 @@ import type { AnalysisResult, Thresholds } from "../../types.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
+  type MetricsCache,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
@@ -32,6 +33,7 @@ export async function analyzeStaticSite(
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
+  cache?: MetricsCache,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -63,6 +65,7 @@ export async function analyzeStaticSite(
       "SiteHits",
       "Total",
       timespanDays,
+      cache,
     );
 
     const bytesSent = await getMetric(
@@ -71,6 +74,7 @@ export async function analyzeStaticSite(
       "BytesSent",
       "Total",
       timespanDays,
+      cache,
     );
 
     verboseLog(
