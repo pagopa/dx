@@ -29,6 +29,8 @@ runs:
       with:
         client-id: ${{ inputs.app-client-id }}
         private-key: ${{ inputs.app-private-key }}
+        permission-contents: write
+        permission-pull-requests: write
 
     - name: Determine release mode from version plans
       id: release-mode
@@ -151,7 +153,16 @@ runs:
         # Commit and push the version changes (bump + changelog)
         git add -A
         git commit -m "$COMMIT_MESSAGE"
-        git push --force-with-lease origin "$RELEASE_BRANCH"
+        if ! git push --force-with-lease origin "$RELEASE_BRANCH" 2>/tmp/nx-release-push.err; then
+          cat /tmp/nx-release-push.err >&2
+
+          if grep -Eq 'Permission to .+ denied to .+\[bot\]' /tmp/nx-release-push.err; then
+            echo "::error::GitHub App authentication succeeded, but the installation token could not push to ${GITHUB_REPOSITORY}. Check the installation's effective contents:write permission on this repository, make sure any newly granted app permissions were approved on the installation, and verify that no repository ruleset or branch protection blocks pushes to ${RELEASE_BRANCH}." >&2
+          fi
+
+          exit 1
+        fi
+        rm -f /tmp/nx-release-push.err
 
         # Create or update PR (script writes to GITHUB_OUTPUT)
         RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/manage-version-pr.js"
