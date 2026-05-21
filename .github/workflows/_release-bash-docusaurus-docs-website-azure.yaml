@@ -5,7 +5,7 @@ on:
     # GitHub Actions does not evaluate path filters for tag pushes.
     # Scope production deploys with the project-specific release tag prefix.
     tags:
-      - "docs@*"
+      - "docs@[0-9]+.[0-9]+.[0-9]+"
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
