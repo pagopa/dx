@@ -68,7 +68,6 @@ jobs:
     name: Terraform Validation
     runs-on: ubuntu-latest
     needs: [get-versions]
-    # Ensures execution even if get-versions is skipped
     if: ${{ always() }}
     env:
       TERRAFORM_VERSION: ${{ inputs.terraform_version || needs.get-versions.outputs.terraform_version }}
@@ -85,6 +84,16 @@ jobs:
           fetch-depth: 0
           ref: ${{ github.sha }}
 
+      - name: Checkout DX Trivy policies
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: pagopa/dx
+          ref: main
+          path: .dx-security
+          sparse-checkout: |
+            .trivy/checks/terraform
+          sparse-checkout-cone-mode: false
+
       - name: Git config
         run: |
           set -eu
@@ -96,6 +105,27 @@ jobs:
         run: |
           apk --no-cache add tar
           python -m pip freeze --local
+
+      - name: Run Trivy custom policies
+        run: |
+          set -eu
+
+          trivy config "./" \
+            --disable-telemetry \
+            --misconfig-scanners terraform \
+            --raw-config-scanners terraform \
+            --skip-dirs "**/.terraform" \
+            --skip-dirs "**/tests/**" \
+            --ignorefile .trivyignore \
+            --tf-exclude-downloaded-modules \
+            --config-check .dx-security/.trivy/checks/terraform \
+            --check-namespaces user \
+            --severity MEDIUM,HIGH,CRITICAL \
+            --format json \
+            --skip-version-check \
+            --exit-code 0 > /tmp/trivy-output.json || true
+
+          cat /tmp/trivy-output.json
 
       - name: Run pre-commit on specific folders
         if: ${{ inputs.folder != '' }}
@@ -284,11 +314,16 @@ jobs:
                 "|--------|--------|---------|------|"
 
               # Add module details or show error
-              jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE" || {
+              JQ_OUT=$(jq -r '.results[] | "| " + .module + " | " + .status + " | " + .version + " | " + (.path // "N/A") + " |"' lock_output.json) && {
+                echo "$JQ_OUT" >> "$GITHUB_STEP_SUMMARY"
+                echo "$JQ_OUT" >> "$SUMMARY_FILE"
+              } || {
                 add_markdown \
                   "Error processing JSON file. Raw content:" \
                   "\`\`\`json"
-                cat lock_output.json >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+                CAT_OUT=$(cat lock_output.json)
+                echo "$CAT_OUT" >> "$GITHUB_STEP_SUMMARY"
+                echo "$CAT_OUT" >> "$SUMMARY_FILE"
                 add_to_summary "\`\`\`"
               }
               add_to_summary "</details>"
@@ -303,6 +338,29 @@ jobs:
             add_to_summary ""
           fi
 
+          # Trivy custom policies output
+          if [ -f "/tmp/trivy-output.json" ] && jq -e '[.Results[]? | .Misconfigurations[]?] | length > 0' /tmp/trivy-output.json > /dev/null 2>&1; then
+            add_markdown \
+              '> [!WARNING]' \
+              '> ### ⚠️ Trivy detected forbidden Terraform patterns' \
+              '>' \
+              '> The following findings must be resolved before this check becomes enforced.' \
+              ''
+
+            TRIVY_TABLE=$(jq -r '
+              ["| Severity | ID | File | Line | Title |",
+               "|----------|----|------|------|-------|"] +
+              [.Results[] |
+                .Target as $target |
+                .Misconfigurations[]? |
+                "| " + .Severity + " | " + .AVDID + " | `" + $target + "` | L" + (.CauseMetadata.StartLine | tostring) + " | " + .Title + " |"
+              ] | .[]' /tmp/trivy-output.json)
+
+            echo "$TRIVY_TABLE" >> "$GITHUB_STEP_SUMMARY"
+            echo "$TRIVY_TABLE" >> "$SUMMARY_FILE"
+            add_to_summary ''
+          fi
+
           # Pre-commit output
           if [ -f "/tmp/pre-commit-output.log" ]; then
             # Show output log
@@ -311,7 +369,9 @@ jobs:
               '<summary>📋 Pre-commit Output Log</summary>' \
               '' \
               '```'
-            sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log >> "$GITHUB_STEP_SUMMARY" >> "$SUMMARY_FILE"
+            PRECOMMIT_CLEAN=$(sed 's/\x1b\[[0-9;]*m//g' /tmp/pre-commit-output.log)
+            echo "$PRECOMMIT_CLEAN" >> "$GITHUB_STEP_SUMMARY"
+            echo "$PRECOMMIT_CLEAN" >> "$SUMMARY_FILE"
             add_markdown '```' '</details>'
           else
             add_to_summary "⚠️ No pre-commit output found. Check if pre-commit was executed."
