@@ -94,9 +94,12 @@ runs:
     - name: Configure Git user
       if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       shell: bash
+      env:
+        BOT_LOGIN: ${{ steps.app-bot.outputs.login }}
+        BOT_EMAIL: ${{ steps.app-bot.outputs.email }}
       run: |
-        git config user.name "${{ steps.app-bot.outputs.login }}"
-        git config user.email "${{ steps.app-bot.outputs.email }}"
+        git config user.name "$BOT_LOGIN"
+        git config user.email "$BOT_EMAIL"
 
     - name: Warn missing version plan coverage on pull request
       if: steps.release-mode.outputs.mode == 'warn-pr'
