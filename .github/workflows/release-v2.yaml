@@ -68,7 +68,7 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@use-regex-for-tags-release-website-to-azure
         with:
           app-client-id: ${{ secrets.app-client-id }}
           app-private-key: ${{ secrets.app-private-key }}
