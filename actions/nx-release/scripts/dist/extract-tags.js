@@ -14510,13 +14510,18 @@ config(en_default());
 
 // scripts/shared.ts
 var execFileAsync = promisify(execFile);
+var NonEmptyStringSchema = external_exports.string().min(1);
+var ProjectTagsSchema = external_exports.array(external_exports.string());
 var StringArraySchema = external_exports.array(external_exports.string());
 external_exports.object({
   path: external_exports.string().nullable(),
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var ProjectMetadataSchema = external_exports.record(external_exports.string(), external_exports.unknown());
+var ProjectMetadataSchema = external_exports.object({
+  root: NonEmptyStringSchema.optional(),
+  tags: ProjectTagsSchema.optional()
+}).passthrough();
 async function getNxProjectNames() {
   try {
     const { stdout } = await execFileAsync("npx", [
@@ -14549,8 +14554,7 @@ async function getNxProjectNames() {
 async function getNxProjectRoot(name) {
   const metadata = await getNxProjectMetadata(name);
   if (!metadata) return null;
-  const root = metadata["root"];
-  return typeof root === "string" && root ? root : null;
+  return metadata.root ?? null;
 }
 function matchProjectName(tag, projectNames) {
   const candidates = projectNames.filter((name) => {

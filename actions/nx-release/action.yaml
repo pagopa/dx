@@ -113,10 +113,6 @@ runs:
 
         git fetch origin "$BASE_BRANCH" "$RELEASE_BRANCH" 2>/dev/null || true
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
-        # # Nx may invoke a plain `git push` internally. Point the current branch
-        # # at the release branch on origin so that push does not target main.
-        # git config --local "branch.${RELEASE_BRANCH}.remote" origin
-        # git config --local "branch.${RELEASE_BRANCH}.merge" "refs/heads/${RELEASE_BRANCH}"
 
         git tag -l | sort > /tmp/nx-tags-before.txt
 

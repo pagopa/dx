@@ -18138,13 +18138,18 @@ config(en_default());
 
 // scripts/shared.ts
 var execFileAsync = promisify(execFile);
+var NonEmptyStringSchema = external_exports.string().min(1);
+var ProjectTagsSchema = external_exports.array(external_exports.string());
 var StringArraySchema = external_exports.array(external_exports.string());
 var TagEntrySchema = external_exports.object({
   path: external_exports.string().nullable(),
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var ProjectMetadataSchema = external_exports.record(external_exports.string(), external_exports.unknown());
+var ProjectMetadataSchema = external_exports.object({
+  root: NonEmptyStringSchema.optional(),
+  tags: ProjectTagsSchema.optional()
+}).passthrough();
 function createOctokit() {
   const token = process.env.GH_TOKEN;
   if (!token) {
@@ -18220,11 +18225,11 @@ async function getRepoInfo() {
 async function isPublicProject(projectName) {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
-  const tags = metadata["tags"];
-  const hasPublicTag = Array.isArray(tags) && tags.some(
+  const tags = metadata.tags;
+  if (!tags) return false;
+  return tags.some(
     (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
   );
-  return hasPublicTag;
 }
 function matchProjectName(tag, projectNames) {
   const candidates = projectNames.filter((name) => {
