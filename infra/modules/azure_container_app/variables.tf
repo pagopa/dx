@@ -77,8 +77,8 @@ variable "restrict_access_from_within_environment" {
   type        = bool
   default     = false
   description = <<-EOT
-    If \"true\", the container app is accessible only from other apps on the same Container App Environment.
-    If \"true\" (default), the access is managed by the Container App Environment."
+    If true (default), the Container App is accessible via public internet or within the VNet, depending on the Container App Environment configuration.
+    If false, the container app is accessible only from other apps on the same Container App Environment.
   EOT
 }
 
