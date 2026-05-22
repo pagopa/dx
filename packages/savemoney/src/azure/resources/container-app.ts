@@ -13,6 +13,7 @@ import type { AnalysisResult, Thresholds } from "../../types.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
+  type MetricsCache,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
@@ -35,6 +36,7 @@ export async function analyzeContainerApp(
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
+  cache?: MetricsCache,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -84,6 +86,7 @@ export async function analyzeContainerApp(
       thresholds,
       reason,
       verbose,
+      cache,
     );
     reason = await checkNetworkMetrics(
       resource,
@@ -92,6 +95,7 @@ export async function analyzeContainerApp(
       thresholds,
       reason,
       verbose,
+      cache,
     );
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
@@ -117,6 +121,7 @@ async function checkNetworkMetrics(
   thresholds: Thresholds,
   reason: string,
   verbose: boolean,
+  cache?: MetricsCache,
 ): Promise<string> {
   let newReason = reason;
 
@@ -132,6 +137,7 @@ async function checkNetworkMetrics(
     "RxBytes",
     "Average",
     timespanDays,
+    cache,
   );
 
   const networkOut = await getMetric(
@@ -140,6 +146,7 @@ async function checkNetworkMetrics(
     "TxBytes",
     "Average",
     timespanDays,
+    cache,
   );
 
   verboseLog(
@@ -172,6 +179,7 @@ async function checkResourceMetrics(
   thresholds: Thresholds,
   reason: string,
   verbose: boolean,
+  cache?: MetricsCache,
 ): Promise<string> {
   let newReason = reason;
 
@@ -187,6 +195,7 @@ async function checkResourceMetrics(
     "UsageNanoCores",
     "Average",
     timespanDays,
+    cache,
   );
 
   const memoryUsage = await getMetric(
@@ -195,6 +204,7 @@ async function checkResourceMetrics(
     "WorkingSetBytes",
     "Average",
     timespanDays,
+    cache,
   );
 
   verboseLog(

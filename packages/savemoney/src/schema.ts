@@ -105,6 +105,11 @@ export const ThresholdsSchema = z
 
 const AzureSectionSchema = z
   .object({
+    /**
+     * Maximum number of resources analyzed in parallel within a single
+     * subscription. Defaults to 8 when not provided.
+     */
+    concurrency: z.number().int().positive().optional(),
     preferredLocation: z.string().default("italynorth"),
     subscriptionIds: z
       .array(z.string())
