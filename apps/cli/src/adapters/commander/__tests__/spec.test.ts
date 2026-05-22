@@ -29,31 +29,43 @@ describe("extractCliSpec", () => {
     const root = buildRoot();
     const spec = extractCliSpec(root, "1.2.3");
 
-    expect(spec.specVersion).toBe("1");
-    expect(spec.name).toBe("dx");
-    expect(spec.description).toBe("The CLI for DX-Platform");
-    expect(spec.version).toBe("1.2.3");
+    expect(spec).toMatchObject({
+      specVersion: "1",
+      name: "dx",
+      description: "The CLI for DX-Platform",
+      version: "1.2.3",
+    });
   });
 
   it("maps global options from the root command", () => {
     const root = buildRoot();
     const spec = extractCliSpec(root, "1.2.3");
 
-    const verbose = spec.globalOptions.find((o) => o.long === "--verbose");
-    expect(verbose).toBeDefined();
-    expect(verbose?.flags).toBe("-v, --verbose");
-    expect(verbose?.short).toBe("-v");
-    expect(verbose?.description).toBe("Enable verbose output");
-    expect(verbose?.defaultValue).toBe(false);
-    expect(verbose?.required).toBe(false);
-    expect(verbose?.optional).toBe(false);
-    expect(verbose?.choices).toEqual([]);
+    expect(
+      spec.globalOptions.find((o) => o.long === "--verbose"),
+    ).toStrictEqual({
+      choices: [],
+      defaultValue: false,
+      description: "Enable verbose output",
+      flags: "-v, --verbose",
+      long: "--verbose",
+      optional: false,
+      required: false,
+      short: "-v",
+    });
 
-    const output = spec.globalOptions.find((o) => o.long === "--output");
-    expect(output).toBeDefined();
-    expect(output?.choices).toEqual(["text", "json"]);
-    expect(output?.defaultValue).toBe("text");
-    expect(output?.required).toBe(true);
+    expect(spec.globalOptions.find((o) => o.long === "--output")).toStrictEqual(
+      {
+        choices: ["text", "json"],
+        defaultValue: "text",
+        description: "Output mode",
+        flags: "--output <mode>",
+        long: "--output",
+        optional: false,
+        required: true,
+        short: undefined,
+      },
+    );
   });
 
   it("excludes help and version options from globalOptions", () => {
@@ -74,14 +86,25 @@ describe("extractCliSpec", () => {
     );
 
     const spec = extractCliSpec(root, "1.2.3");
-    const doctor = spec.commands.find((c) => c.name === "doctor");
 
-    expect(doctor).toBeDefined();
-    expect(doctor?.description).toBe("Run health checks");
-    expect(doctor?.arguments).toEqual([]);
-    const fix = doctor?.options.find((o) => o.long === "--fix");
-    expect(fix).toBeDefined();
-    expect(fix?.defaultValue).toBe(false);
+    expect(spec.commands.find((c) => c.name === "doctor")).toStrictEqual({
+      name: "doctor",
+      description: "Run health checks",
+      arguments: [],
+      commands: [],
+      options: [
+        {
+          flags: "--fix",
+          short: undefined,
+          long: "--fix",
+          description: "Auto-fix issues",
+          defaultValue: false,
+          required: false,
+          optional: false,
+          choices: [],
+        },
+      ],
+    });
   });
 
   it("maps a subcommand argument (required)", () => {
@@ -96,12 +119,14 @@ describe("extractCliSpec", () => {
     const apply = spec.commands.find((c) => c.name === "apply");
 
     expect(apply?.arguments).toHaveLength(1);
-    const arg = apply?.arguments[0];
-    expect(arg?.name).toBe("id");
-    expect(arg?.description).toBe("The id of the item to apply");
-    expect(arg?.required).toBe(true);
-    expect(arg?.variadic).toBe(false);
-    expect(arg?.choices).toEqual([]);
+    expect(apply?.arguments[0]).toStrictEqual({
+      name: "id",
+      description: "The id of the item to apply",
+      required: true,
+      variadic: false,
+      defaultValue: undefined,
+      choices: [],
+    });
   });
 
   it("maps a variadic optional argument", () => {
@@ -114,10 +139,15 @@ describe("extractCliSpec", () => {
 
     const spec = extractCliSpec(root, "1.2.3");
     const run = spec.commands.find((c) => c.name === "run");
-    const arg = run?.arguments[0];
 
-    expect(arg?.required).toBe(false);
-    expect(arg?.variadic).toBe(true);
+    expect(run?.arguments[0]).toStrictEqual({
+      name: "scripts",
+      description: "Scripts to run",
+      required: false,
+      variadic: true,
+      defaultValue: undefined,
+      choices: [],
+    });
   });
 
   it("recursively maps nested subcommands", () => {

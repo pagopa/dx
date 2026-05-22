@@ -6,7 +6,15 @@
  */
 
 import { Command } from "commander";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  type MockInstance,
+  vi,
+} from "vitest";
 
 import type { CliSpec } from "../../../../domain/spec.js";
 
@@ -22,8 +30,7 @@ const makeMinimalSpec = (): CliSpec => ({
 });
 
 describe("makeSpecCommand", () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let stdoutSpy: ReturnType<typeof vi.spyOn<any, any>>;
+  let stdoutSpy: MockInstance;
 
   beforeEach(() => {
     stdoutSpy = vi
