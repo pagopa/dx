@@ -30,9 +30,9 @@ describe("extractCliSpec", () => {
     const spec = extractCliSpec(root, "1.2.3");
 
     expect(spec).toMatchObject({
-      specVersion: "1",
-      name: "dx",
       description: "The CLI for DX-Platform",
+      name: "dx",
+      specVersion: "1",
       version: "1.2.3",
     });
   });
@@ -88,20 +88,20 @@ describe("extractCliSpec", () => {
     const spec = extractCliSpec(root, "1.2.3");
 
     expect(spec.commands.find((c) => c.name === "doctor")).toStrictEqual({
-      name: "doctor",
-      description: "Run health checks",
       arguments: [],
       commands: [],
+      description: "Run health checks",
+      name: "doctor",
       options: [
         {
-          flags: "--fix",
-          short: undefined,
-          long: "--fix",
-          description: "Auto-fix issues",
-          defaultValue: false,
-          required: false,
-          optional: false,
           choices: [],
+          defaultValue: false,
+          description: "Auto-fix issues",
+          flags: "--fix",
+          long: "--fix",
+          optional: false,
+          required: false,
+          short: undefined,
         },
       ],
     });
@@ -120,12 +120,12 @@ describe("extractCliSpec", () => {
 
     expect(apply?.arguments).toHaveLength(1);
     expect(apply?.arguments[0]).toStrictEqual({
-      name: "id",
+      choices: [],
+      defaultValue: undefined,
       description: "The id of the item to apply",
+      name: "id",
       required: true,
       variadic: false,
-      defaultValue: undefined,
-      choices: [],
     });
   });
 
@@ -141,12 +141,12 @@ describe("extractCliSpec", () => {
     const run = spec.commands.find((c) => c.name === "run");
 
     expect(run?.arguments[0]).toStrictEqual({
-      name: "scripts",
+      choices: [],
+      defaultValue: undefined,
       description: "Scripts to run",
+      name: "scripts",
       required: false,
       variadic: true,
-      defaultValue: undefined,
-      choices: [],
     });
   });
 
