@@ -2,11 +2,11 @@ name: "Nx Release Manager"
 description: "Creates/updates Version Packages PR from Nx version plans, or publishes releases on push to the base branch."
 
 inputs:
-  app-client-id:
-    description: "GitHub App Client ID"
+  github-token:
+    description: "Pre-generated GitHub App installation token"
     required: true
-  app-private-key:
-    description: "GitHub App private key"
+  app-slug:
+    description: "GitHub App slug associated with github-token"
     required: true
   base-branch:
     description: "Base branch where release flow runs"
@@ -23,15 +23,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Generate GitHub App Token
-      id: generate-token
-      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
-      with:
-        client-id: ${{ inputs.app-client-id }}
-        private-key: ${{ inputs.app-private-key }}
-        permission-contents: write
-        permission-pull-requests: write
-
     - name: Determine release mode from version plans
       id: release-mode
       shell: bash
@@ -68,22 +59,15 @@ runs:
           echo "mode=create-pr" >> "$GITHUB_OUTPUT"
         fi
 
-    - name: Configure GitHub App authentication for git operations
-      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
-      shell: bash
-      env:
-        GH_APP_TOKEN: ${{ steps.generate-token.outputs.token }}
-      run: |
-        git config --local --unset-all http.https://github.com/.extraheader || true
-        git remote set-url origin "https://x-access-token:${GH_APP_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-
+    # Use the standard GitHub App bot noreply identity documented by
+    # actions/create-github-app-token for authored commits.
     - name: Resolve GitHub App bot identity
       if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       id: app-bot
       shell: bash
       env:
-        APP_SLUG: ${{ steps.generate-token.outputs.app-slug }}
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        APP_SLUG: ${{ inputs.app-slug }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
 
@@ -108,7 +92,7 @@ runs:
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/warn-version-plan-coverage-pr.js"
@@ -123,12 +107,16 @@ runs:
         RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
 
         git fetch origin "$BASE_BRANCH" "$RELEASE_BRANCH" 2>/dev/null || true
         git checkout -B "$RELEASE_BRANCH" "origin/$BASE_BRANCH"
+        # Nx may invoke a plain `git push` internally. Point the current branch
+        # at the release branch on origin so that push does not target main.
+        git config --local "branch.${RELEASE_BRANCH}.remote" origin
+        git config --local "branch.${RELEASE_BRANCH}.merge" "refs/heads/${RELEASE_BRANCH}"
 
         git tag -l | sort > /tmp/nx-tags-before.txt
 
@@ -173,7 +161,7 @@ runs:
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
@@ -212,7 +200,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

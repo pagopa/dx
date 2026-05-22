@@ -26,12 +26,21 @@ jobs:
       id-token: write
       pull-requests: write
     steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
+        with:
+          client-id: ${{ secrets.app-client-id }}
+          private-key: ${{ secrets.app-private-key }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-tags: "true"
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Detect Release tool
         id: nx-detect
@@ -68,7 +77,7 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@use-regex-for-tags-release-website-to-azure
+        uses: ./actions/nx-release
         with:
-          app-client-id: ${{ secrets.app-client-id }}
-          app-private-key: ${{ secrets.app-private-key }}
+          app-slug: ${{ steps.generate-token.outputs.app-slug }}
+          github-token: ${{ steps.generate-token.outputs.token }}

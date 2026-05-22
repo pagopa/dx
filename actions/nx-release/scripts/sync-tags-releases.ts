@@ -185,12 +185,11 @@ export async function run(base: string): Promise<void> {
 
   if (newTags.length === 0) {
     console.log("No new tags to push");
-    return;
+  } else {
+    await execFileAsync("git", ["push", "origin", "--tags"]);
   }
 
-  await execFileAsync("git", ["push", "origin", "--tags"]);
-
-  for (const { path, tag, version } of newTags) {
+  for (const { path, tag, version } of allEntries.values()) {
     let notes = `Release ${tag}`;
 
     if (path) {
