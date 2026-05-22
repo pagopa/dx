@@ -4,6 +4,7 @@
 
 import type * as armResources from "@azure/arm-resources";
 
+import type { Finding, FindingSource } from "../finding.js";
 import type {
   AnalysisResult,
   BaseConfig,
@@ -26,6 +27,14 @@ export type AzureConfig = BaseConfig & {
    * If omitted, all resources are analyzed.
    */
   filterTags?: Map<string, string>;
+  /**
+   * Which finding sources to include in the run.
+   * - `"custom"`  → enables the per-resource analyzer plugins
+   * - `"advisor"` → enables the Azure Advisor subscription-level analyzer
+   *
+   * Defaults to `["advisor", "custom"]` when omitted (i.e. all sources).
+   */
+  sources?: FindingSource[];
   subscriptionIds: string[];
   /**
    * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
@@ -35,10 +44,22 @@ export type AzureConfig = BaseConfig & {
 };
 
 /**
- * Detailed report for a single Azure resource with full resource object
+ * Detailed report for a single Azure resource with full resource object.
+ *
+ * Phase 1 introduces the optional `findings` field carrying the unified
+ * `Finding[]` model alongside the legacy `analysis` summary. The two are
+ * kept in sync by the orchestrator so existing report formats keep
+ * working untouched while new consumers (GUI, JSON exports, Phase 2
+ * pricing aggregation) can read structured findings directly.
  */
 export type AzureDetailedResourceReport = {
   analysis: AnalysisResult;
+  /**
+   * Structured findings attached to the resource. Always populated by the
+   * orchestrator (possibly empty). Optional only for backward compatibility
+   * with serialised payloads produced before Phase 1.
+   */
+  findings?: Finding[];
   resource: armResources.GenericResource;
 };
 

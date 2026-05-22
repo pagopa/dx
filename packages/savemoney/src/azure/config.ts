@@ -44,6 +44,7 @@ export async function loadAzureConfig(
       return {
         concurrency: parsed.azure.concurrency,
         preferredLocation: parsed.azure.preferredLocation,
+        sources: parsed.azure.sources,
         subscriptionIds: parsed.azure.subscriptionIds,
         thresholds: parsed.azure.thresholds,
         timespanDays: parsed.azure.timespanDays,
