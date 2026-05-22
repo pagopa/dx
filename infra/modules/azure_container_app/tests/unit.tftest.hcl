@@ -239,6 +239,53 @@ run "container_app_secret_name_normalization" {
   }
 }
 
+run "container_app_can_keep_secret_out_of_container_env" {
+  command = plan
+
+  variables {
+    secrets = [
+      {
+        name                = "MY_SECRET_VALUE"
+        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/my-secret"
+      },
+      {
+        name                   = "ANOTHER-SECRET"
+        key_vault_secret_id    = "https://kv-test.vault.azure.net/secrets/another-secret"
+        scheduled_for_deletion = true
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.secret) == 2
+    error_message = "All secrets should still be defined in the container app"
+  }
+
+  assert {
+    condition = length([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env if env.secret_name != null
+    ]) == 1
+    error_message = "Only secrets marked for container use should be injected as environment variables"
+  }
+
+  assert {
+    condition = contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.name if env.secret_name != null
+    ], "MY_SECRET_VALUE")
+    error_message = "Secrets enabled for container use should still be exposed as environment variables"
+  }
+
+  assert {
+    condition = !contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.name if env.secret_name != null
+    ], "ANOTHER-SECRET")
+    error_message = "Secrets disabled for container use should not be exposed as environment variables"
+  }
+}
+
 # Custom size: explicit cpu and memory override use_case defaults
 run "container_app_custom_size" {
   command = plan
