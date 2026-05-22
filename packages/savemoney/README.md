@@ -75,6 +75,7 @@ yarn add @pagopa/dx-savemoney
 
 - **Multi-Subscription Analysis**: Scans multiple Azure subscriptions in a single command.
 - **Intelligent Detection**: Uses Azure Monitor metrics (e.g. CPU, network traffic, transactions) to scientifically identify inactive resources.
+- **Azure Advisor Integration**: Fetches Cost recommendations directly from Azure Advisor, including Reserved Instance and Savings Plan opportunities with estimated monthly savings.
 - **Orphaned Resource Identification**: Detects commonly "forgotten" resources like unattached disks, unassociated public IPs, and unused network interfaces.
 - **Flexible Reporting**: Offers multiple output formats:
   - `table`: A human-readable summary for the terminal.
@@ -89,17 +90,18 @@ yarn add @pagopa/dx-savemoney
 
 The tool analyzes the following Azure resource types with specific detection methods and risk levels:
 
-| Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                      |
-| :---------------------- | :---------------------- | :-------: | :------------------------------------------------------------------------------------------------------------------ |
-| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                 |
-| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier                                |
-| **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB) |
-| **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                           |
-| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<~340KB per day)                  |
-| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                       |
-| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                               |
-| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                               |
-| **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)  |
+| Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                                                              |
+| :---------------------- | :---------------------- | :-------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                                                         |
+| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier                                                                        |
+| **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB)                                         |
+| **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                                                                   |
+| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<~340KB per day)                                                          |
+| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                                                               |
+| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                                                                       |
+| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                                                                       |
+| **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
+| **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
 
 #### Generic Checks
 
@@ -128,8 +130,9 @@ import { azure, loadConfig } from "@pagopa/dx-savemoney";
 // Load configuration (from file, env vars, or interactive prompt)
 const config = await loadConfig("./config.yaml");
 
-// Run analysis and generate report
-await azure.analyzeAzureResources(config, "table");
+// Run analysis, then generate report
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "table");
 ```
 
 #### Configuration Inputs
@@ -141,6 +144,7 @@ The tool requires the following configuration:
 | `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
 | `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
 | `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
+| `sources`           | `FindingSource[]`        |    ❌    | all sources  | Restrict analysis to specific sources: `"advisor"`, `"custom"`, or both   |
 | `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
 | `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
 | `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
@@ -250,16 +254,14 @@ import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 const config = await loadConfig("./config.yaml");
 // Analyze only resources tagged with environment=prod AND team=platform
-await azure.analyzeAzureResources(
-  {
-    ...config,
-    filterTags: new Map([
-      ["environment", "prod"],
-      ["team", "platform"],
-    ]),
-  },
-  "lint",
-);
+const reports = await azure.analyzeAzureResources({
+  ...config,
+  filterTags: new Map([
+    ["environment", "prod"],
+    ["team", "platform"],
+  ]),
+});
+await azure.generateReport(reports, "lint");
 ```
 
 ##### Basic Usage
@@ -269,7 +271,8 @@ import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 // Load from config file
 const config = await loadConfig("./config.yaml");
-await azure.analyzeAzureResources(config, "table");
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "table");
 ```
 
 ##### Custom Configuration
@@ -285,7 +288,8 @@ const config: AzureConfig = {
   verbose: true,
 };
 
-await azure.analyzeAzureResources(config, "json");
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "json");
 ```
 
 ##### Generate Detailed Report
@@ -295,7 +299,8 @@ import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
 const config = await loadConfig();
 // Generate detailed JSON with full resource metadata
-await azure.analyzeAzureResources(config, "detailed-json");
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "detailed-json");
 ```
 
 ##### Using Environment Variables
@@ -307,7 +312,8 @@ import { loadConfig, azure } from "@pagopa/dx-savemoney";
 // ARM_SUBSCRIPTION_ID=sub1,sub2
 
 const config = await loadConfig(); // Will read from env vars
-await azure.analyzeAzureResources(config, "json");
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "json");
 ```
 
 ## AWS (Coming Soon)

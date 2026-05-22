@@ -185,6 +185,7 @@ dx savemoney [options]
 | `--days`     | `-d`  | Metric analysis period in days (overrides config file).                                                                                      | `30`         |
 | `--location` | `-l`  | Preferred Azure location for resources (overrides config file).                                                                              | `italynorth` |
 | `--tags`     | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated). | N/A          |
+| `--source`   | `-s`  | Restrict findings to a specific source: `advisor`, `custom`, or `all`.                                                                       | `all`        |
 
 > `--verbose` / `-v` is inherited from the root command. See [Global Options](#global-options).
 
@@ -240,6 +241,7 @@ azure:
 - **Private Endpoints**: Unused or misconfigured endpoints
 - **Container Apps**: Not running, zero replicas, low resource usage
 - **Static Web Apps**: No traffic or very low usage patterns
+- **Azure Advisor recommendations**: Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other cost recommendations surfaced directly from Azure Advisor — with estimated monthly savings where available
 
 > [!NOTE]
 > Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.
