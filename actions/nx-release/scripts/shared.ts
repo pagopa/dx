@@ -141,13 +141,15 @@ export async function isPublicProject(projectName: string): Promise<boolean> {
   if (!metadata) return false;
 
   const tags = metadata["tags"];
-  if (!Array.isArray(tags)) return false;
+  const hasPublicTag =
+    Array.isArray(tags) &&
+    tags.some(
+      (tag) =>
+        tag === "public" ||
+        (typeof tag === "string" && tag.endsWith(":public")),
+    );
 
-  // Check for "public" tag or any "<distribution>:public" tag
-  return tags.some(
-    (tag) =>
-      tag === "public" || (typeof tag === "string" && tag.endsWith(":public")),
-  );
+  return hasPublicTag;
 }
 
 /**

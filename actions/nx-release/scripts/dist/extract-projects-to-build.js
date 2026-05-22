@@ -18221,10 +18221,10 @@ async function isPublicProject(projectName) {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
   const tags = metadata["tags"];
-  if (!Array.isArray(tags)) return false;
-  return tags.some(
+  const hasPublicTag = Array.isArray(tags) && tags.some(
     (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
   );
+  return hasPublicTag;
 }
 function matchProjectName(tag, projectNames) {
   const candidates = projectNames.filter((name) => {

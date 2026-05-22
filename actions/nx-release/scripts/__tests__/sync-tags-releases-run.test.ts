@@ -1,6 +1,17 @@
 import { promisify } from "node:util";
-
 import { beforeEach, describe, expect, it, vi } from "vitest";
+
+interface ExecFileResult {
+  stderr: string;
+  stdout: string;
+}
+
+interface PullListItem {
+  body: null | string;
+  merge_commit_sha: null | string;
+  merged_at: null | string;
+  number: number;
+}
 
 const {
   createReleaseMock,
@@ -10,10 +21,14 @@ const {
   listPullsMock,
 } = vi.hoisted(() => ({
   createReleaseMock: vi.fn(async () => undefined),
-  execFilePromiseMock: vi.fn(async () => ({ stderr: "", stdout: "" })),
+  execFilePromiseMock: vi.fn<
+    (file: string, args: readonly string[]) => Promise<ExecFileResult>
+  >(async () => ({ stderr: "", stdout: "" })),
   extractTagEntriesFromPRBodyMock: vi.fn(),
   getReleaseByTagMock: vi.fn(),
-  listPullsMock: vi.fn(async () => ({ data: [] })),
+  listPullsMock: vi.fn<() => Promise<{ data: PullListItem[] }>>(async () => ({
+    data: [],
+  })),
 }));
 
 vi.mock("node:child_process", () => ({
@@ -52,7 +67,6 @@ describe("run", () => {
       data: [
         {
           body: "<!-- nx-release-tags: [] -->",
-          merge_at: "2026-05-21T00:00:00Z",
           merge_commit_sha: "abcdef0123456789",
           merged_at: "2026-05-21T00:00:00Z",
           number: 1781,
@@ -69,14 +83,11 @@ describe("run", () => {
 
     execFilePromiseMock.mockImplementation(
       async (file: string, args: readonly string[]) => {
-        if (
-          file === "git" &&
-          args[0] === "ls-remote" &&
-          args[1] === "--tags"
-        ) {
+        if (file === "git" && args[0] === "ls-remote" && args[1] === "--tags") {
           return {
             stderr: "",
-            stdout: "abcdef0123456789\trefs/tags/@pagopa/azure-tracing@0.4.17\n",
+            stdout:
+              "abcdef0123456789\trefs/tags/@pagopa/azure-tracing@0.4.17\n",
           };
         }
 
