@@ -211,6 +211,35 @@ run "log_analytics_required_for_non_development_use_case" {
   ]
 }
 
+# --- secrets contract validation ---
+
+run "invalid_secret_binding_reference" {
+  command = plan
+
+  variables {
+    secrets = [
+      {
+        name                = "APP_SECRET"
+        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/app-secret"
+      }
+    ]
+
+    container_app_templates = [
+      {
+        image        = "nginx:latest"
+        secret_names = ["MISSING_SECRET"]
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+  }
+
+  expect_failures = [
+    azurerm_container_app.this,
+  ]
+}
+
 # --- custom_domain validation ---
 
 run "custom_domain_requires_public_access" {

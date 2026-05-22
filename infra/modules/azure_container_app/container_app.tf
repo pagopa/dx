@@ -114,7 +114,7 @@ resource "azurerm_container_app" "this" {
         dynamic "env" {
           for_each = [
             for secret in var.secrets : secret
-            if !secret.scheduled_for_deletion
+            if contains(container.value.secret_names, secret.name)
           ]
 
           content {
@@ -196,6 +196,14 @@ resource "azurerm_container_app" "this" {
   }
 
   lifecycle {
+    precondition {
+      condition = length(setsubtract(
+        toset(flatten([for template in var.container_app_templates : template.secret_names])),
+        toset([for secret in var.secrets : secret.name])
+      )) == 0
+      error_message = "Each container_app_templates[*].secret_names entry must match a secret defined in var.secrets."
+    }
+
     ignore_changes = [
       # The image is not managed by Terraform, but instead updated by CD pipelines
       template[0].container[0].image

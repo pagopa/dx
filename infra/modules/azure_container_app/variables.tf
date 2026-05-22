@@ -134,17 +134,14 @@ variable "authentication" {
 
 variable "secrets" {
   type = list(object({
-    name                   = string
-    key_vault_secret_id    = string
-    scheduled_for_deletion = optional(bool, false)
+    name                = string
+    key_vault_secret_id = string
   }))
   default     = []
   description = <<-EOT
   List of Key Vault secret references to define in the Container App.
-  Setting `scheduled_for_deletion` to `true` is useful when a secret is not needed by the NEXT version of the running application.
-  In these cases, first execute the deployment of the new container version, which removes the dependency on that secret.
-  Then, set this property to `true` to not expose the secret to the container, but keeping it available at the Container App level.
-  Then, remove the secret from the IaC configuration to remove it completely from the Container App secrets.
+  Secrets are exposed to containers only when explicitly referenced in `container_app_templates[*].secret_names`.
+  To remove a secret without downtime, first deploy the application version that no longer needs it, then remove it from every container `secret_names` list, and finally remove it from `secrets`.
   EOT
 }
 
@@ -153,6 +150,7 @@ variable "container_app_templates" {
     image        = string
     name         = optional(string, "")
     app_settings = optional(map(string), {})
+    secret_names = optional(list(string), [])
 
     liveness_probe = object({
       failure_count_threshold = optional(number, 3)
@@ -194,7 +192,7 @@ variable "container_app_templates" {
     }), null)
   }))
 
-  description = "List of containers to be deployed in the Container App. Each container can have its own settings, including liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name."
+  description = "List of containers to be deployed in the Container App. Each container can have its own settings, including app settings, secret bindings, and liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name."
 
   validation {
     condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])

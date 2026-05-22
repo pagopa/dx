@@ -239,19 +239,37 @@ run "container_app_secret_name_normalization" {
   }
 }
 
-run "container_app_can_keep_secret_out_of_container_env" {
+run "container_app_binds_secrets_per_container" {
   command = plan
 
   variables {
     secrets = [
       {
-        name                = "MY_SECRET_VALUE"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/my-secret"
+        name                = "APP_SECRET"
+        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/app-secret"
       },
       {
-        name                   = "ANOTHER-SECRET"
-        key_vault_secret_id    = "https://kv-test.vault.azure.net/secrets/another-secret"
-        scheduled_for_deletion = true
+        name                = "SIDECAR_SECRET"
+        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/sidecar-secret"
+      }
+    ]
+
+    container_app_templates = [
+      {
+        image        = "ghcr.io/pagopa/app:latest"
+        name         = "app"
+        secret_names = ["APP_SECRET"]
+        liveness_probe = {
+          path = "/health"
+        }
+      },
+      {
+        image        = "ghcr.io/pagopa/sidecar:latest"
+        name         = "sidecar"
+        secret_names = ["SIDECAR_SECRET"]
+        liveness_probe = {
+          path = "/status"
+        }
       }
     ]
   }
@@ -266,23 +284,39 @@ run "container_app_can_keep_secret_out_of_container_env" {
       for env in azurerm_container_app.this.template[0].container[0].env :
       env if env.secret_name != null
     ]) == 1
-    error_message = "Only secrets marked for container use should be injected as environment variables"
+    error_message = "The app container should receive only its explicitly bound secret"
   }
 
   assert {
     condition = contains([
       for env in azurerm_container_app.this.template[0].container[0].env :
       env.name if env.secret_name != null
-    ], "MY_SECRET_VALUE")
-    error_message = "Secrets enabled for container use should still be exposed as environment variables"
+    ], "APP_SECRET")
+    error_message = "The app container should receive APP_SECRET"
   }
 
   assert {
     condition = !contains([
       for env in azurerm_container_app.this.template[0].container[0].env :
       env.name if env.secret_name != null
-    ], "ANOTHER-SECRET")
-    error_message = "Secrets disabled for container use should not be exposed as environment variables"
+    ], "SIDECAR_SECRET")
+    error_message = "The app container must not receive the sidecar secret"
+  }
+
+  assert {
+    condition = contains([
+      for env in azurerm_container_app.this.template[0].container[1].env :
+      env.name if env.secret_name != null
+    ], "SIDECAR_SECRET")
+    error_message = "The sidecar container should receive SIDECAR_SECRET"
+  }
+
+  assert {
+    condition = !contains([
+      for env in azurerm_container_app.this.template[0].container[1].env :
+      env.name if env.secret_name != null
+    ], "APP_SECRET")
+    error_message = "The sidecar container must not receive the app secret"
   }
 }
 
