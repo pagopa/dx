@@ -35,6 +35,15 @@ jobs:
           filter: tree:0
           token: ${{ steps.generate-token.outputs.token }}
 
+      - name: Checkout workflow source
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          path: .dx-workflow-source
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          sparse-checkout: |
+            actions/nx-release
+
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
 
@@ -42,7 +51,7 @@ jobs:
         run: pnpm install
 
       - name: Warn missing version plan coverage
-        uses: ./actions/nx-release
+        uses: ./.dx-workflow-source/actions/nx-release
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
