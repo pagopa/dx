@@ -11,7 +11,9 @@ import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
 import { makeInitCommand } from "./commands/init.js";
 import { makeSavemoneyCommand } from "./commands/savemoney.js";
+import { makeSpecCommand } from "./commands/spec.js";
 import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
+import { extractCliSpec } from "./spec.js";
 
 export type CliDependencies = CodemodCommandDependencies;
 
@@ -59,6 +61,9 @@ export const makeCli = (
   program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps));
   program.addCommand(makeAddCommand(deps));
+
+  // spec is registered last so the closure captures the complete command tree.
+  program.addCommand(makeSpecCommand(() => extractCliSpec(program, version)));
 
   return program;
 };

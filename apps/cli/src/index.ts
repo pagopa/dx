@@ -30,6 +30,17 @@ import { requestAuthorization } from "./use-cases/request-authorization.js";
 const detectVerboseFromArgv = (argv: readonly string[]): boolean =>
   argv.includes("-v") || argv.includes("--verbose");
 
+/**
+ * Returns `true` when `spec` appears in argv, regardless of global flag
+ * ordering (e.g. `dx --verbose spec` or `dx --output json spec`).
+ *
+ * `spec` only appears as a subcommand name and never as a flag value in any
+ * existing command, so an `includes` check is safe and avoids the need to
+ * thread an auth factory through the entire command tree.
+ */
+const detectSpecCommandFromArgv = (argv: readonly string[]): boolean =>
+  argv.includes("spec");
+
 const configureLogging = async (verbose: boolean): Promise<void> => {
   const level = verbose ? "debug" : "info";
   await configure({
@@ -65,16 +76,18 @@ export const runCli = async (version: string) => {
   const packageJsonReader = makePackageJsonReader();
   const validationReporter = makeValidationReporter();
 
-  const auth = await getGitHubPAT();
+  // `spec` is credential-free: it only introspects the CLI structure and never
+  // calls GitHub. We skip the PAT assertion so agents can run it without any
+  // auth setup.
+  const isSpec = detectSpecCommandFromArgv(process.argv);
+  const auth = isSpec ? undefined : await getGitHubPAT();
 
   assert.ok(
-    auth,
+    isSpec || auth,
     "GitHub PAT is required. Please set the GH_TOKEN environment variable or login using GitHub CLI.",
   );
 
-  const octokit = new Octokit({
-    auth,
-  });
+  const octokit = new Octokit(auth ? { auth } : {});
 
   const gitHubService = new OctokitGitHubService(octokit);
   const authorizationService = makeAzureAuthorizationService(gitHubService);
