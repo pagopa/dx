@@ -74,9 +74,14 @@ runs:
         bot_login="${APP_SLUG}[bot]"
         bot_user_id="$(gh api "/users/${bot_login}" --jq .id)"
 
+        # Keep the standard GitHub App bot noreply identity so downstream git
+        # config produces a single recognizable bot author in PRs and releases.
         echo "login=${bot_login}" >> "$GITHUB_OUTPUT"
         echo "email=${bot_user_id}+${bot_login}@users.noreply.github.com" >> "$GITHUB_OUTPUT"
 
+    # release commits, tags, and GitHub Releases should appear as authored by
+    # the GitHub App bot, while the warn-pr path should remain a plain PR comment
+    # flow and must not alter the repository git identity.
     - name: Configure Git user
       if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       shell: bash
