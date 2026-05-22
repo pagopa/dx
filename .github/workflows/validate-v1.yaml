@@ -51,7 +51,7 @@ jobs:
         run: pnpm install
 
       - name: Warn missing version plan coverage
-        uses: ./.dx-workflow-source/actions/nx-release
+        uses: pagopa/dx/actions/nx-release@main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
