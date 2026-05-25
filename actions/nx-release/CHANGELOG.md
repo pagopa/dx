@@ -1,3 +1,13 @@
+## 0.3.1 (2026-05-25)
+
+### 🩹 Fixes
+
+- Ensure that each new tag is pushed individually to allow GitHub workflows to trigger for each tag, as GitHub does not create tag push events when more than three tags are pushed in a single operation. ([#1790](https://github.com/pagopa/dx/pull/1790))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.3.0 (2026-05-25)
 
 ### 🚀 Features
