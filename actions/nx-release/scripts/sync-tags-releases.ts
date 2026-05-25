@@ -186,7 +186,13 @@ export async function run(base: string): Promise<void> {
   if (newTags.length === 0) {
     console.log("No new tags to push");
   } else {
-    await execFileAsync("git", ["push", "origin", "--tags"]);
+    // Push tags one by one so GitHub emits a push event for each tag.
+    // GitHub does not create tag push events when more than three tags are
+    // pushed in a single operation.
+    for (const { tag } of newTags) {
+      await execFileAsync("git", ["push", "origin", `refs/tags/${tag}`]);
+      console.log(`Pushed tag: ${tag}`);
+    }
   }
 
   for (const { path, tag, version } of allEntries.values()) {
