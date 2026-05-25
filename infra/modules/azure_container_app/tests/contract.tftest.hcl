@@ -52,17 +52,17 @@ run "invalid_use_case" {
   ]
 }
 
-# --- revision_mode validation ---
+# --- deployment_strategy validation ---
 
-run "invalid_revision_mode" {
+run "invalid_deployment_strategy" {
   command = plan
 
   variables {
-    revision_mode = "invalid-mode"
+    deployment_strategy = "invalid-mode"
   }
 
   expect_failures = [
-    var.revision_mode,
+    var.deployment_strategy,
   ]
 }
 

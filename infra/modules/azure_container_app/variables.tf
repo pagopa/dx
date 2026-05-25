@@ -56,14 +56,19 @@ variable "size" {
   }
 }
 
-variable "revision_mode" {
+variable "deployment_strategy" {
   type        = string
-  description = "The revision mode for the container app. Valid values are 'Single' and 'Multiple'."
-  default     = "Multiple"
+  default     = "Incremental"
+  description = <<-EOT
+  The strategy for new deployments.
+  With `Incremental`, the new version the gradually deployed until it reaches the 100% of the traffic.
+  Optionally, you can provide a script to monitor specific APIs during this phase and using automatic rollbacks in case of issues.
+  With `Latest`, the new version immediately replaces the previous one as soon as it becomes responsive and required number of replicas are provisioned, with no gradual deployment.
+  EOT
 
   validation {
-    condition     = contains(["Single", "Multiple"], var.revision_mode)
-    error_message = "Valid values for revision_mode are \"Single\" and \"Multiple\"."
+    condition     = contains(["Latest", "Incremental"], var.deployment_strategy)
+    error_message = "Valid values for deployment_strategy are \"Latest\" and \"Incremental\"."
   }
 }
 

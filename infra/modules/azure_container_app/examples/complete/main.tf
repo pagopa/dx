@@ -54,7 +54,7 @@ module "container_app" {
     memory = "2Gi"
   }
 
-  revision_mode = "Single"
+  deployment_strategy = "Incremental"
   container_app_templates = [
     {
       image = "nginx:latest"
