@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
+import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   GitHubService,
   PullRequest,
@@ -280,17 +281,14 @@ export const confirmGitHubRepoCreation = (
       new Error("Failed to read GitHub publish confirmation", { cause }),
   );
 
-type InitCommandDependencies = {
-  gitHubService: GitHubService;
-};
-
-export const makeInitCommand = ({
-  gitHubService,
-}: InitCommandDependencies): Command =>
+export const makeInitCommand = (
+  requireGitHubAuth: GitHubAuthFactory,
+): Command =>
   new Command()
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
+      const { gitHubService } = await requireGitHubAuth();
       await checkInitPreconditions()
         .andThen(() =>
           ResultAsync.fromPromise(

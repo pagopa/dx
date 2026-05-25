@@ -5,9 +5,21 @@ import { RepositoryReader } from "./repository.js";
 import { ValidationReporter } from "./validation.js";
 
 export type Dependencies = {
-  authorizationService: AuthorizationService;
-  gitHubService: GitHubService;
   packageJsonReader: PackageJsonReader;
   repositoryReader: RepositoryReader;
+  requireGitHubAuth: GitHubAuthFactory;
   validationReporter: ValidationReporter;
 };
+
+/** Services that require a GitHub PAT to be instantiated. */
+export type GitHubAuthDeps = {
+  authorizationService: AuthorizationService;
+  gitHubService: GitHubService;
+};
+
+/**
+ * Lazily resolves GitHub-authenticated services.
+ * Commands that need GitHub access call this factory inside their action
+ * handler so that auth is only required when those commands actually run.
+ */
+export type GitHubAuthFactory = () => Promise<GitHubAuthDeps>;

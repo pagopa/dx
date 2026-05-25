@@ -57,10 +57,10 @@ export const makeCli = (
 
   program.addCommand(makeDoctorCommand(deps, config));
   program.addCommand(makeCodemodCommand(cliDeps));
-  program.addCommand(makeInitCommand(deps));
+  program.addCommand(makeInitCommand(deps.requireGitHubAuth));
   program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps));
-  program.addCommand(makeAddCommand(deps));
+  program.addCommand(makeAddCommand(deps.requireGitHubAuth));
 
   // spec is registered last so the closure captures the complete command tree.
   program.addCommand(makeSpecCommand(() => extractCliSpec(program, version)));
