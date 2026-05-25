@@ -67,7 +67,7 @@ variable "revision_mode" {
   }
 }
 
-variable "target_port" {
+variable "container_port" {
   type        = number
   description = "The port on which the container app will listen for incoming traffic."
   default     = 8080

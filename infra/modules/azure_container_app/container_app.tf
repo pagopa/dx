@@ -13,7 +13,7 @@ resource "azurerm_container_app" "this" {
   ingress {
     allow_insecure_connections = false
     external_enabled           = !var.restrict_access_from_within_environment
-    target_port                = var.target_port
+    target_port                = var.container_port
     traffic_weight {
       percentage      = 100
       latest_revision = true
@@ -127,7 +127,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.liveness_probe == null ? [] : [container.value.liveness_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = liveness_probe.value.transport
             failure_count_threshold = liveness_probe.value.failure_count_threshold
             initial_delay           = liveness_probe.value.initial_delay
@@ -150,7 +150,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.readiness_probe == null ? [] : [container.value.readiness_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = readiness_probe.value.transport
             failure_count_threshold = readiness_probe.value.failure_count_threshold
             interval_seconds        = readiness_probe.value.interval_seconds
@@ -174,7 +174,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.startup_probe == null ? [] : [container.value.startup_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = startup_probe.value.transport
             failure_count_threshold = startup_probe.value.failure_count_threshold
             interval_seconds        = startup_probe.value.interval_seconds

@@ -72,7 +72,7 @@ module "container_app" {
   ]
 
   container_app_environment_id = module.container_app_environment.id
-  target_port                  = 80
+  container_port               = 80
 
   autoscaler = {
     replicas = {
