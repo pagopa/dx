@@ -15,6 +15,8 @@ import { z } from "zod";
 const execFileAsync = promisify(execFile);
 
 /** Zod schemas for runtime validation */
+const NonEmptyStringSchema = z.string().min(1);
+const ProjectTagsSchema = z.array(z.string());
 const StringArraySchema = z.array(z.string());
 
 const TagEntrySchema = z.object({
@@ -23,13 +25,18 @@ const TagEntrySchema = z.object({
   version: z.string(),
 });
 
-const ProjectMetadataSchema = z.record(z.string(), z.unknown());
+const ProjectMetadataSchema = z.looseObject({
+  root: NonEmptyStringSchema.optional(),
+  tags: ProjectTagsSchema.optional(),
+});
 
 export interface TagEntry {
   path: null | string;
   tag: string;
   version: string;
 }
+
+type ProjectMetadata = z.infer<typeof ProjectMetadataSchema>;
 
 /** Creates an authenticated Octokit instance. */
 export function createOctokit(): Octokit {
@@ -98,9 +105,7 @@ export async function getNxProjectNames(): Promise<string[]> {
 export async function getNxProjectRoot(name: string): Promise<null | string> {
   const metadata = await getNxProjectMetadata(name);
   if (!metadata) return null;
-
-  const root = metadata["root"];
-  return typeof root === "string" && root ? root : null;
+  return metadata.root ?? null;
 }
 
 /** Parses owner and repo from GITHUB_REPOSITORY env var or git remote. */
@@ -140,10 +145,9 @@ export async function isPublicProject(projectName: string): Promise<boolean> {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
 
-  const tags = metadata["tags"];
-  if (!Array.isArray(tags)) return false;
+  const tags = metadata.tags;
+  if (!tags) return false;
 
-  // Check for "public" tag or any "<distribution>:public" tag
   return tags.some(
     (tag) =>
       tag === "public" || (typeof tag === "string" && tag.endsWith(":public")),
@@ -190,7 +194,7 @@ export function parseTagEntries(raw: unknown): TagEntry[] {
  */
 async function getNxProjectMetadata(
   projectName: string,
-): Promise<null | Record<string, unknown>> {
+): Promise<null | ProjectMetadata> {
   try {
     const { stdout } = await execFileAsync("npx", [
       "nx",
