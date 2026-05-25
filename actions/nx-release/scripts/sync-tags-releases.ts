@@ -189,6 +189,7 @@ export async function run(base: string): Promise<void> {
     // Push tags one by one so GitHub emits a push event for each tag.
     // GitHub does not create tag push events when more than three tags are
     // pushed in a single operation.
+    // https://docs.github.com/en/webhooks/webhook-events-and-payloads#push
     for (const { tag } of newTags) {
       await execFileAsync("git", ["push", "origin", `refs/tags/${tag}`]);
       console.log(`Pushed tag: ${tag}`);
