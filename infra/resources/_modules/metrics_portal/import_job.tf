@@ -36,6 +36,10 @@ resource "azurerm_key_vault_secret" "github_app_private_key" {
   # PEM-encoded private key used to sign JWTs for GitHub App authentication.
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = {
+    "file-encoding" = "utf-8"
+  }
 }
 
 # Scheduled Container App Job for the data import task.
