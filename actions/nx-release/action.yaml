@@ -2,11 +2,11 @@ name: "Nx Release Manager"
 description: "Creates/updates Version Packages PR from Nx version plans, or publishes releases on push to the base branch."
 
 inputs:
-  app-client-id:
-    description: "GitHub App Client ID"
+  github-token:
+    description: "Pre-generated GitHub App installation token"
     required: true
-  app-private-key:
-    description: "GitHub App private key"
+  app-slug:
+    description: "GitHub App slug associated with github-token"
     required: true
   base-branch:
     description: "Base branch where release flow runs"
@@ -23,13 +23,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Generate GitHub App Token
-      id: generate-token
-      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
-      with:
-        client-id: ${{ inputs.app-client-id }}
-        private-key: ${{ inputs.app-private-key }}
-
     - name: Determine release mode from version plans
       id: release-mode
       shell: bash
@@ -66,19 +59,45 @@ runs:
           echo "mode=create-pr" >> "$GITHUB_OUTPUT"
         fi
 
+    # warn-pr only upserts a PR comment. The other modes create commits, tags,
+    # or releases, so only they need a Git author identity.
+    - name: Resolve GitHub App bot identity
+      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      id: app-bot
+      shell: bash
+      env:
+        APP_SLUG: ${{ inputs.app-slug }}
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        set -euo pipefail
+
+        bot_login="${APP_SLUG}[bot]"
+        bot_user_id="$(gh api "/users/${bot_login}" --jq .id)"
+
+        # Keep the standard GitHub App bot noreply identity so downstream git
+        # config produces a single recognizable bot author in PRs and releases.
+        echo "login=${bot_login}" >> "$GITHUB_OUTPUT"
+        echo "email=${bot_user_id}+${bot_login}@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+
+    # release commits, tags, and GitHub Releases should appear as authored by
+    # the GitHub App bot, while the warn-pr path should remain a plain PR comment
+    # flow and must not alter the repository git identity.
     - name: Configure Git user
       if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       shell: bash
+      env:
+        BOT_LOGIN: ${{ steps.app-bot.outputs.login }}
+        BOT_EMAIL: ${{ steps.app-bot.outputs.email }}
       run: |
-        git config user.name "dx-pagopa-bot"
-        git config user.email "dx-pagopa-bot@users.noreply.github.com"
+        git config user.name "$BOT_LOGIN"
+        git config user.email "$BOT_EMAIL"
 
     - name: Warn missing version plan coverage on pull request
       if: steps.release-mode.outputs.mode == 'warn-pr'
       shell: bash
       env:
         ACTION_PATH: ${{ github.action_path }}
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/warn-version-plan-coverage-pr.js"
@@ -93,7 +112,7 @@ runs:
         RELEASE_BRANCH: "nx-release/main"
         PR_TITLE: "Version Packages"
         COMMIT_MESSAGE: "Version Packages"
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
 
@@ -123,7 +142,16 @@ runs:
         # Commit and push the version changes (bump + changelog)
         git add -A
         git commit -m "$COMMIT_MESSAGE"
-        git push --force-with-lease origin "$RELEASE_BRANCH"
+        if ! git push --force-with-lease origin "$RELEASE_BRANCH" 2>/tmp/nx-release-push.err; then
+          cat /tmp/nx-release-push.err >&2
+
+          if grep -Eq 'Permission to .+ denied to .+\[bot\]' /tmp/nx-release-push.err; then
+            echo "::error::GitHub App authentication succeeded, but the installation token could not push to ${GITHUB_REPOSITORY}. Check the installation's effective contents:write permission on this repository, make sure any newly granted app permissions were approved on the installation, and verify that no repository ruleset or branch protection blocks pushes to ${RELEASE_BRANCH}." >&2
+          fi
+
+          exit 1
+        fi
+        rm -f /tmp/nx-release-push.err
 
         # Create or update PR (script writes to GITHUB_OUTPUT)
         RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/manage-version-pr.js"
@@ -134,7 +162,7 @@ runs:
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
@@ -173,7 +201,7 @@ runs:
       env:
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
-        GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+        GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
         node "$ACTION_PATH/scripts/dist/sync-tags-releases.js"

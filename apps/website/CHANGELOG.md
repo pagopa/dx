@@ -1,3 +1,13 @@
+## 0.18.1 (2026-05-25)
+
+### 🩹 Fixes
+
+- Document required GitHub App permissions for self-hosted runners in the monorepo setup guide. ([#1787](https://github.com/pagopa/dx/pull/1787))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.18.0 (2026-05-20)
 
 ### 🚀 Features

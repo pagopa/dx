@@ -1,3 +1,9 @@
+## 0.22.1 (2026-05-25)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.2.6
+
 ## 0.22.0 (2026-05-20)
 
 ### 🚀 Features
