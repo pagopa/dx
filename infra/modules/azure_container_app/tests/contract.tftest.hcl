@@ -23,7 +23,7 @@ variables {
   container_app_environment_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/cae-test"
   log_analytics_workspace_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
-  container_app_templates = [
+  containers = [
     {
       image = "nginx:latest"
       liveness_probe = {
@@ -224,7 +224,7 @@ run "invalid_secret_binding_reference" {
       }
     ]
 
-    container_app_templates = [
+    containers = [
       {
         image        = "nginx:latest"
         secret_names = ["MISSING_SECRET"]
@@ -388,7 +388,7 @@ run "invalid_liveness_probe_transport" {
   command = plan
 
   variables {
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         liveness_probe = {
@@ -400,6 +400,6 @@ run "invalid_liveness_probe_transport" {
   }
 
   expect_failures = [
-    var.container_app_templates,
+    var.containers,
   ]
 }

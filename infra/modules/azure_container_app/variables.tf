@@ -145,12 +145,12 @@ variable "secrets" {
   default     = []
   description = <<-EOT
   List of Key Vault secret references to define in the Container App.
-  Secrets are exposed to containers only when explicitly referenced in `container_app_templates[*].secret_names`.
+  Secrets are exposed to containers only when explicitly referenced in `containers[*].secret_names`.
   To remove a secret without downtime, first deploy the application version that no longer needs it, then remove it from every container `secret_names` list, and finally remove it from `secrets`.
   EOT
 }
 
-variable "container_app_templates" {
+variable "containers" {
   type = list(object({
     image        = string
     name         = optional(string, "")
@@ -197,17 +197,23 @@ variable "container_app_templates" {
     }), null)
   }))
 
-  description = "List of containers to be deployed in the Container App. Each container can have its own settings, including app settings, secret bindings, and liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name."
+  description = <<-EOT
+  List of containers and related settings to be deployed in the same Container App.
+  The second and subsequent containers in the list will be deployed as sidecars.
+  Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), environment variables (app_settings), secrets to be exposed (secret_names) and liveness, readiness and startup probes.
+  Probes are used by Azure to determine container health status and to automatically restart it if necessary.
+  For more details on probe configuration, refer to https://learn.microsoft.com/en-us/azure/container-apps/containers#probes.
+  EOT
 
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
+    condition     = alltrue([for template in var.containers : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
     error_message = "Valid values for liveness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
   # as Terraform does not support lazy evaluation, a ternary operator is necessary to avoid crash on null values
   validation {
     condition = alltrue([
-      for template in var.container_app_templates :
+      for template in var.containers :
       template.readiness_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)
     ])
     error_message = "Valid values for readiness_probe transport are `HTTP`, `TCP` and `HTTPS`."
@@ -215,7 +221,7 @@ variable "container_app_templates" {
 
   validation {
     condition = alltrue([
-      for template in var.container_app_templates :
+      for template in var.containers :
       template.startup_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)
     ])
     error_message = "Valid values for startup_probe transport are `HTTP`, `TCP` and `HTTPS`."

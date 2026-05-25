@@ -55,7 +55,7 @@ module "container_app" {
   }
 
   deployment_strategy = "Incremental"
-  container_app_templates = [
+  containers = [
     {
       image = "nginx:latest"
       name  = "nginx"

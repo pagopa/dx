@@ -23,7 +23,7 @@ variables {
   container_app_environment_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/cae-test"
   log_analytics_workspace_id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
-  container_app_templates = [
+  containers = [
     {
       image = "nginx:latest"
       liveness_probe = {
@@ -128,7 +128,7 @@ run "container_app_container_name_from_complex_image" {
   command = plan
 
   variables {
-    container_app_templates = [
+    containers = [
       {
         image = "ghcr.io/pagopa/selfcare-dashboard-backend:sha-4b7f62d"
         liveness_probe = {
@@ -149,7 +149,7 @@ run "container_app_custom_container_name" {
   command = plan
 
   variables {
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         name  = "custom-nginx"
@@ -254,7 +254,7 @@ run "container_app_binds_secrets_per_container" {
       }
     ]
 
-    container_app_templates = [
+    containers = [
       {
         image        = "ghcr.io/pagopa/app:latest"
         name         = "app"
@@ -518,7 +518,7 @@ run "container_app_app_settings" {
   command = plan
 
   variables {
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         app_settings = {

@@ -55,7 +55,7 @@ run "apply_default" {
     container_app_environment_id = run.setup.container_app_environment_id
     log_analytics_workspace_id   = run.setup.log_analytics_workspace_id
 
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         liveness_probe = {
@@ -108,7 +108,7 @@ run "apply_development" {
     container_app_environment_id = run.setup.container_app_environment_id
     log_analytics_workspace_id   = null
 
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         liveness_probe = {
@@ -158,7 +158,7 @@ run "apply_with_http_scaler" {
       ]
     }
 
-    container_app_templates = [
+    containers = [
       {
         image = "nginx:latest"
         liveness_probe = {

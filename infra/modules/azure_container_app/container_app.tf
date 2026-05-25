@@ -94,7 +94,7 @@ resource "azurerm_container_app" "this" {
     }
 
     dynamic "container" {
-      for_each = var.container_app_templates
+      for_each = var.containers
       content {
         # get the name from the image if not set according to formats: registry.name/org/name:sha-value - nginix:latest
         name   = container.value.name == "" ? split(":", split("/", container.value.image)[length(split("/", container.value.image)) - 1])[0] : container.value.name
@@ -198,10 +198,10 @@ resource "azurerm_container_app" "this" {
   lifecycle {
     precondition {
       condition = length(setsubtract(
-        toset(flatten([for template in var.container_app_templates : template.secret_names])),
+        toset(flatten([for template in var.containers : template.secret_names])),
         toset([for secret in var.secrets : secret.name])
       )) == 0
-      error_message = "Each container_app_templates[*].secret_names entry must match a secret defined in var.secrets."
+      error_message = "Each containers[*].secret_names entry must match a secret defined in var.secrets."
     }
 
     ignore_changes = [
