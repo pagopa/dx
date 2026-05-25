@@ -1,3 +1,14 @@
+## 0.3.0 (2026-05-25)
+
+### 🚀 Features
+
+- Use GitHub App for GitHub authentication instead of a PAT ([#1781](https://github.com/pagopa/dx/pull/1781))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+
 ## 0.2.0 (2026-05-08)
 
 ### 🚀 Features

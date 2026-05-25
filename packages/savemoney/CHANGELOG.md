@@ -1,3 +1,19 @@
+## 0.2.6 (2026-05-25)
+
+### 🩹 Fixes
+
+- Impact-free refactoring to prepare SaveMoney for future implementations: ([#1775](https://github.com/pagopa/dx/pull/1775))
+
+  - Unified Finding model + adapter
+  - Interface wrapping existing analyzers
+  - Limiter
+  - In-memory cache
+  - Rewritten orchestrator (switch replaced by a registry, parallel loop)
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.2.5 (2026-05-05)
 
 ### 🧱 Updated Dependencies
