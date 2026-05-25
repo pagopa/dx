@@ -94,6 +94,27 @@ account. Otherwise, go to the [next section](#run-@pagopa/dx--cli).
 The `init` command needs a GitHub App to configure the self-hosted GitHub
 runner.
 
+Configure the GitHub App with the following permissions so the self-hosted
+runner can be managed correctly.
+
+#### Required permissions
+
+Repository permissions:
+
+| Permission       | Access         |
+| ---------------- | -------------- |
+| Actions          | `Read-only`    |
+| Administration   | `Read & write` |
+| Metadata         | `Read-only`    |
+
+Organization permissions:
+
+| Permission          | Access         |
+| ------------------- | -------------- |
+| Actions             | `Read-only`    |
+| Metadata            | `Read-only`    |
+| Self-hosted Runners | `Read & write` |
+
 :::info[One GitHub App per product]
 
 Each product at PagoPA has its own dedicated GitHub App for the self-hosted
