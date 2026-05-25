@@ -41,8 +41,17 @@ import type {
   SubscriptionContext,
 } from "./subscription.js";
 
+/** Minimal client shape used by the analyzer (and injectable in tests). */
+type AdvisorClientLike = {
+  recommendations: {
+    list(options?: { filter?: string }): AsyncIterable<RecInfo>;
+  };
+};
+
 /** Minimal shape of a recommendation entry needed by the helpers. */
 type RecInfo = {
+  category?: string;
+  extendedProperties?: Record<string, unknown>;
   id?: string;
   impact?: string;
   recommendationTypeId?: string;
@@ -82,7 +91,7 @@ export function createAdvisorAnalyzer(clientFactory?: {
   build(
     credential: SubscriptionContext["credential"],
     subscriptionId: string,
-  ): Pick<AdvisorManagementClient, "recommendations">;
+  ): AdvisorClientLike;
 }): SubscriptionAnalyzer {
   const build =
     clientFactory?.build ??
@@ -294,7 +303,19 @@ function updateSubGroup(
 ): void {
   if (recId && group.recIds.has(recId)) return; // true API duplicate
   if (recId) group.recIds.add(recId);
-  if (!savings || savings.currency !== group.currency) return;
+  if (!savings) return;
+  // Bootstrap currency from the first recommendation that carries savings.
+  // createSubGroup() defaults currency to "USD" when the first entry has no
+  // savings; without this check, later entries with a different currency (e.g.
+  // "EUR") would be silently dropped and no savings would ever be surfaced.
+  if (group.count === 0) {
+    group.currency = savings.currency;
+    group.uniqueSavingsKeys.add(`${savings.amount}`);
+    group.bestAmount = savings.amount;
+    group.count = 1;
+    return;
+  }
+  if (savings.currency !== group.currency) return;
   const key = `${savings.amount}`;
   if (group.uniqueSavingsKeys.has(key)) return; // scope variant, already seen
   group.uniqueSavingsKeys.add(key);

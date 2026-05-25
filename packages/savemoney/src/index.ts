@@ -21,7 +21,7 @@ export {
 } from "./azure/analyzers/index.js";
 
 // Export common types
-export type { AzureConfig } from "./azure/types.js";
+export type { AzureConfig, AzureSource } from "./azure/types.js";
 
 // Export Azure module
 import * as azureModule from "./azure/index.js";

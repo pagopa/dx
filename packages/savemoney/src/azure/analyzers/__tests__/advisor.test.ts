@@ -6,7 +6,7 @@
  * `recommendations.list()` async iterator the analyzer relies on.
  */
 
-import type { AdvisorManagementClient } from "@azure/arm-advisor";
+import type { TokenCredential } from "@azure/identity";
 
 import { describe, expect, it } from "vitest";
 
@@ -27,8 +27,11 @@ type RecLike = {
 };
 
 function makeCtx(): SubscriptionContext {
+  const credential: TokenCredential = {
+    getToken: async () => null,
+  };
   return {
-    credential: {} as SubscriptionContext["credential"],
+    credential,
     subscriptionId: "00000000-0000-0000-0000-000000000000",
     verbose: false,
   };
@@ -47,7 +50,7 @@ function makeFakeClient(recs: RecLike[]) {
         for (const r of recs) yield r;
       },
     },
-  } as unknown as Pick<AdvisorManagementClient, "recommendations">;
+  };
 }
 
 describe("createAdvisorAnalyzer", () => {

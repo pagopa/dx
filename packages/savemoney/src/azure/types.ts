@@ -4,7 +4,7 @@
 
 import type * as armResources from "@azure/arm-resources";
 
-import type { Finding, FindingSource } from "../finding.js";
+import type { Finding } from "../finding.js";
 import type {
   AnalysisResult,
   BaseConfig,
@@ -34,7 +34,7 @@ export type AzureConfig = BaseConfig & {
    *
    * Defaults to `["advisor", "custom"]` when omitted (i.e. all sources).
    */
-  sources?: FindingSource[];
+  sources?: AzureSource[];
   subscriptionIds: string[];
   /**
    * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
@@ -76,3 +76,10 @@ export type AzureResourceReport = {
   suspectedUnused: boolean;
   type: string;
 };
+
+/**
+ * Finding sources that are valid for Azure analysis.
+ * Narrowed from `FindingSource` to exclude "aws", which is not a valid
+ * filter for Azure runs and would silently produce an empty report.
+ */
+export type AzureSource = "advisor" | "custom";

@@ -31,8 +31,12 @@ import { DefaultAzureCredential } from "@azure/identity";
 import { getLogger } from "@logtape/logtape";
 import pLimit from "p-limit";
 
-import type { Finding, FindingSource } from "../finding.js";
-import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
+import type { Finding } from "../finding.js";
+import type {
+  AzureConfig,
+  AzureDetailedResourceReport,
+  AzureSource,
+} from "./types.js";
 
 import { findingsFromAnalysisResult } from "../finding.js";
 import {
@@ -53,7 +57,7 @@ import {
 import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
-const DEFAULT_SOURCES: FindingSource[] = ["advisor", "custom"];
+const DEFAULT_SOURCES: AzureSource[] = ["advisor", "custom"];
 
 const RISK_ORDER: Record<CostRisk, number> = { high: 0, low: 2, medium: 1 };
 
@@ -332,10 +336,22 @@ function mergeFinding(
   const existing = reportsById.get(idKey);
   if (existing) {
     existing.findings = [...(existing.findings ?? []), finding];
-    existing.analysis = mergeResults(
-      existing.analysis,
-      analysisFromFinding(finding),
-    );
+    const added = analysisFromFinding(finding);
+    // Use max costRisk (not last-wins) and join reasons with a space so we
+    // don't produce "Sentence one.Sentence two." when the existing reason is
+    // already trimmed (i.e. has no trailing separator space).
+    existing.analysis = {
+      costRisk:
+        RISK_ORDER[existing.analysis.costRisk] <= RISK_ORDER[added.costRisk]
+          ? existing.analysis.costRisk
+          : added.costRisk,
+      reason:
+        existing.analysis.reason && added.reason
+          ? `${existing.analysis.reason.trimEnd()} ${added.reason.trimStart()}`
+          : existing.analysis.reason || added.reason,
+      suspectedUnused:
+        existing.analysis.suspectedUnused || added.suspectedUnused,
+    };
     return;
   }
 

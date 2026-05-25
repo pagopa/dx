@@ -1,4 +1,4 @@
-import type { AzureConfig, FindingSource } from "@pagopa/dx-savemoney";
+import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
@@ -52,7 +52,7 @@ export const makeSavemoneyCommand = () =>
           sources:
             options.source === "all"
               ? (config.sources ?? ["advisor", "custom"])
-              : [options.source as FindingSource],
+              : [options.source as AzureSource],
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
           verbose: verbose ?? false,
@@ -82,7 +82,7 @@ export const makeSavemoneyCommand = () =>
  * and rejecting any other value with a Commander-friendly error so the
  * CLI prints the offending value and the allowed set.
  */
-function parseSourceOption(value: string): string {
+export function parseSourceOption(value: string): string {
   const allowed = new Set(["advisor", "all", "custom"]);
   if (!allowed.has(value)) {
     throw new InvalidArgumentError(
@@ -97,7 +97,7 @@ function parseSourceOption(value: string): string {
  * Returns an empty Map when the option is not provided or empty.
  * Supports values that contain "=" (only the first "=" is treated as separator).
  */
-function parseTagsOption(
+export function parseTagsOption(
   tagsOption: string[] | undefined,
 ): Map<string, string> {
   const result = new Map<string, string>();
