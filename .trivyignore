@@ -1,9 +1,5 @@
 # https://avd.aquasec.com/misconfig/azure/
 
-# Github repository shouldn’t be public.
-
-AVD-GIT-0001
-
 # Ensure plaintext value is not used for GitHub Action Environment Secret.
 
 AVD-GIT-0002
