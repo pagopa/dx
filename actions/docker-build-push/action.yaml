@@ -193,6 +193,8 @@ runs:
     - name: Scan Image with Trivy
       uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
       if: ${{ inputs.push_to_registry == 'false' && steps.set-up-registry.outputs.choice == 'ghcr' }}
+      env:
+        REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
       with:
         image-ref: ${{ env.REGISTRY_URL }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}
         format: table
