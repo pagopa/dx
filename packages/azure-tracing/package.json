@@ -13,7 +13,9 @@
       "integration": {
         "executor": "nx:run-commands",
         "cache": false,
-        "dependsOn": ["^build"],
+        "dependsOn": [
+          "^build"
+        ],
         "options": {
           "command": "pnpm run integration",
           "cwd": "packages/azure-tracing"
