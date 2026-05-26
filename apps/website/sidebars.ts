@@ -1,13 +1,14 @@
 import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
-const useExperimentalSidebarEmojis = true;
+const useExperimentalSidebarIcons = true;
 
-const withEmoji = (label: string, emoji: string): string =>
-  useExperimentalSidebarEmojis ? `${emoji} ${label}` : label;
+const categoryClass = (iconName: string): string | undefined =>
+  useExperimentalSidebarIcons ? `sidebar-icon-${iconName}` : undefined;
 
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     {
+      className: categoryClass("overview"),
       collapsed: false,
       items: [
         "index",
@@ -15,14 +16,16 @@ const sidebars: SidebarsConfig = {
         "tooling-lifecycle",
         "support",
       ],
-      label: withEmoji("Overview", "🧭"),
+      label: "Overview",
       type: "category",
     },
     {
+      className: categoryClass("github"),
       collapsed: false,
       items: [
         { id: "github/index", label: "Overview", type: "doc" },
         {
+          className: categoryClass("git"),
           collapsed: true,
           items: [
             { id: "github/git/index", label: "Overview", type: "doc" },
@@ -30,10 +33,11 @@ const sidebars: SidebarsConfig = {
             "github/git/commit-message",
             "github/git/git-config",
           ],
-          label: withEmoji("Git", "🌿"),
+          label: "Git",
           type: "category",
         },
         {
+          className: categoryClass("pull-requests"),
           collapsed: true,
           items: [
             { id: "github/pull-requests/index", label: "Overview", type: "doc" },
@@ -48,10 +52,11 @@ const sidebars: SidebarsConfig = {
               type: "doc",
             },
           ],
-          label: withEmoji("Pull Requests", "🔀"),
+          label: "Pull Requests",
           type: "category",
         },
         {
+          className: categoryClass("workflows"),
           collapsed: true,
           items: [
             { id: "pipelines/index", label: "Overview", type: "doc" },
@@ -61,14 +66,15 @@ const sidebars: SidebarsConfig = {
             "pipelines/keep-alive",
             "pipelines/opex-dashboard",
           ],
-          label: withEmoji("Workflows", "⚙️"),
+          label: "Workflows",
           type: "category",
         },
       ],
-      label: withEmoji("GitHub", "🐙"),
+      label: "GitHub",
       type: "category",
     },
     {
+      className: categoryClass("coding-with-ai"),
       collapsed: false,
       items: [
         { id: "coding-with-ai/index", label: "Overview", type: "doc" },
@@ -76,20 +82,22 @@ const sidebars: SidebarsConfig = {
         "coding-with-ai/plugin-marketplace",
         "coding-with-ai/prompts-catalog",
       ],
-      label: withEmoji("Coding with AI", "🤖"),
+      label: "Coding with AI",
       type: "category",
     },
     {
+      className: categoryClass("dx-cli"),
       collapsed: false,
       items: [
         "dx-cli/requirements",
         "dx-cli/installation",
         "dx-cli/usage",
       ],
-      label: withEmoji("DX CLI", "⌨️"),
+      label: "DX CLI",
       type: "category",
     },
     {
+      className: categoryClass("typescript"),
       collapsed: false,
       items: [
         { id: "typescript/index", label: "Overview", type: "doc" },
@@ -97,13 +105,15 @@ const sidebars: SidebarsConfig = {
         "typescript/eslint-config",
         "typescript/code-review",
       ],
-      label: withEmoji("TypeScript", "🔷"),
+      label: "TypeScript",
       type: "category",
     },
     {
+      className: categoryClass("cloud"),
       collapsed: false,
       items: [
         {
+          className: categoryClass("azure"),
           collapsed: true,
           items: [
             { id: "azure/index", label: "Overview", type: "doc" },
@@ -118,7 +128,7 @@ const sidebars: SidebarsConfig = {
                 "azure/iam/custom-roles",
                 "azure/iam/iam-cross-subscription",
               ],
-              label: withEmoji("IAM", "🛡️"),
+              label: "IAM",
               type: "category",
             },
             {
@@ -128,7 +138,7 @@ const sidebars: SidebarsConfig = {
                 "azure/apim/api-access-policies",
                 "azure/apim/debugging",
               ],
-              label: withEmoji("API Management", "🔌"),
+              label: "API Management",
               type: "category",
             },
             {
@@ -143,7 +153,7 @@ const sidebars: SidebarsConfig = {
                 "azure/app-configuration/appsettings-definition",
                 "azure/app-configuration/appsettings-deploy",
               ],
-              label: withEmoji("App Configuration", "🧩"),
+              label: "App Configuration",
               type: "category",
             },
             {
@@ -158,7 +168,7 @@ const sidebars: SidebarsConfig = {
                 "azure/application-deployment/release-container-app",
                 "azure/application-deployment/appservice-hidden-appsettings",
               ],
-              label: withEmoji("Application Deployment", "🚀"),
+              label: "Application Deployment",
               type: "category",
             },
             {
@@ -170,7 +180,7 @@ const sidebars: SidebarsConfig = {
                 "azure/networking/creating-tls-cert",
                 "azure/networking/peps-cross-subscription",
               ],
-              label: withEmoji("Networking", "🌐"),
+              label: "Networking",
               type: "category",
             },
             {
@@ -179,7 +189,7 @@ const sidebars: SidebarsConfig = {
                 { id: "azure/monitoring/index", label: "Overview", type: "doc" },
                 "azure/monitoring/azure-tracing",
               ],
-              label: withEmoji("Monitoring", "📈"),
+              label: "Monitoring",
               type: "category",
             },
             {
@@ -189,7 +199,7 @@ const sidebars: SidebarsConfig = {
                 "azure/policies/policy-catalog/index",
                 "azure/policies/policy-catalog/specific-tags",
               ],
-              label: withEmoji("Policies", "📜"),
+              label: "Policies",
               type: "category",
             },
             {
@@ -204,7 +214,7 @@ const sidebars: SidebarsConfig = {
                 "azure/static-websites/build-deploy-static-web-app",
                 "azure/static-websites/static-assets-deploy",
               ],
-              label: withEmoji("Static Websites", "🕸️"),
+              label: "Static Websites",
               type: "category",
             },
             {
@@ -219,15 +229,16 @@ const sidebars: SidebarsConfig = {
                 "azure/integrating-services/eventgrid-storage-functions",
                 "azure/integrating-services/using-service-bus",
               ],
-              label: withEmoji("Integrating Services", "🔗"),
+              label: "Integrating Services",
               type: "category",
             },
             "azure/archive-data",
           ],
-          label: withEmoji("Azure", "🟦"),
+          label: "Azure",
           type: "category",
         },
         {
+          className: categoryClass("terraform"),
           collapsed: true,
           items: [
             { id: "terraform/index", label: "Overview", type: "doc" },
@@ -241,30 +252,33 @@ const sidebars: SidebarsConfig = {
             "terraform/required-tags",
             "terraform/using-terraform-registry-modules",
           ],
-          label: withEmoji("Terraform", "🏗️"),
+          label: "Terraform",
           type: "category",
         },
         {
+          className: categoryClass("multi-csp"),
           collapsed: true,
           items: ["multi-csp/index"],
-          label: withEmoji("Multi-CSP", "🌍"),
+          label: "Multi-CSP",
           type: "category",
         },
       ],
-      label: withEmoji("Cloud", "☁️"),
+      label: "Cloud",
       type: "category",
     },
     {
+      className: categoryClass("containers"),
       collapsed: true,
       items: [
         { id: "containers/index", label: "Overview", type: "doc" },
         "dev-containers/index",
         "containers/docker-image-build",
       ],
-      label: withEmoji("Containers", "📦"),
+      label: "Containers",
       type: "category",
     },
     {
+      className: categoryClass("contributing"),
       collapsed: true,
       items: [
         { id: "contributing/index", label: "Overview", type: "doc" },
@@ -272,10 +286,11 @@ const sidebars: SidebarsConfig = {
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",
       ],
-      label: withEmoji("Contributing", "🛠️"),
+      label: "Contributing",
       type: "category",
     },
     {
+      className: categoryClass("deprecated-tools"),
       collapsed: true,
       items: [
         { id: "legacy/index", label: "Overview", type: "doc" },
@@ -283,7 +298,7 @@ const sidebars: SidebarsConfig = {
         "legacy/legacy-deploy-pipelines-azure",
         "legacy/legacy-publish-sdk",
       ],
-      label: withEmoji("Deprecated Tools", "🗃️"),
+      label: "Deprecated Tools",
       type: "category",
     },
   ],
