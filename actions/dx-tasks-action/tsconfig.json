@@ -3,9 +3,12 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "sourceMap": true,
+    "sourceMap": false,
     "declaration": true,
     "moduleResolution": "bundler",
     "module": "ESNext"
-  }
+  },
+  "include": [
+    "./src/**/*"
+  ]
 }

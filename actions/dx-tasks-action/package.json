@@ -12,10 +12,8 @@
     "dx",
     "tasks"
   ],
-  "dependencies": {
-    "@actions/core": "catalog:github-actions",
-    "@pagopa/dx-tasks": "workspace:^",
-    "zod": "catalog:"
+  "scripts": {
+    "build": "tsdown"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -23,32 +21,10 @@
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
-  },
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/esbuild:esbuild",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "bundle": true,
-          "deleteOutputPath": true,
-          "main": "actions/dx-tasks-action/src/index.ts",
-          "format": [
-            "esm"
-          ],
-          "minify": true,
-          "outputFileName": "index.js",
-          "outputPath": "actions/dx-tasks-action/dist",
-          "platform": "node",
-          "skipTypeCheck": true,
-          "target": "node24",
-          "thirdParty": true,
-          "tsConfig": "{projectRoot}/tsconfig.json"
-        }
-      }
-    }
+    "typescript": "catalog:",
+    "tsdown": "^0.22.0",
+    "@actions/core": "catalog:github-actions",
+    "@pagopa/dx-tasks": "workspace:^",
+    "zod": "catalog:"
   }
 }
