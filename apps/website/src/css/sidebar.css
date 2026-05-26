@@ -1,0 +1,179 @@
+/**
+ * Sidebar Redesign - Terramate-inspired styling
+ *
+ * Adopts Terramate's visual clarity: generous spacing, clear hierarchy
+ * via font-weight, subtle active indicator, and minimal decoration.
+ * Colors remain aligned with DX/PagoPA brand.
+ */
+
+/* ─── Sidebar Container ─── */
+.menu {
+  padding: 16px 12px;
+  font-weight: 400;
+}
+
+/* ─── Top-level list spacing ─── */
+.menu__list {
+  gap: 2px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Category groups: spacing between sections ─── */
+.menu__list .menu__list-item {
+  margin-top: 0;
+}
+
+/* Spacing between top-level categories */
+.theme-doc-sidebar-menu > .menu__list-item + .menu__list-item {
+  margin-top: 16px;
+}
+
+/* ─── Links: base styling ─── */
+.menu__link {
+  font-size: 14px;
+  line-height: 1.5;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 400;
+  color: var(--ifm-menu-color);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+  position: relative;
+  border-left: 2px solid transparent;
+}
+
+/* ─── Category headers (collapsible): bold, slightly larger ─── */
+.menu__link--sublist {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--pagopa-text-secondary, #4a4a4a);
+  padding: 8px 12px;
+  border-radius: 0;
+  border-left: none;
+}
+
+[data-theme="dark"] .menu__link--sublist {
+  color: var(--pagopa-text-secondary, #b3b3b3);
+}
+
+/* Category headers don't have background on hover */
+.menu__link--sublist:hover {
+  background: none;
+  color: var(--pagopa-text-primary, #1a1a1a);
+}
+
+[data-theme="dark"] .menu__link--sublist:hover {
+  color: var(--pagopa-text-primary, #ffffff);
+}
+
+/* ─── Collapsible wrapper ─── */
+.menu__list-item-collapsible {
+  border-radius: 0;
+}
+
+.menu__list-item-collapsible:hover {
+  background: none;
+}
+
+.menu__list-item-collapsible .menu__link {
+  font-weight: 600;
+}
+
+/* ─── Caret / chevron ─── */
+.menu__caret {
+  padding: 4px;
+}
+
+.menu__caret:before {
+  background: var(--ifm-menu-color-background-active);
+  height: 1.1rem;
+  width: 1.1rem;
+}
+
+/* ─── Nested items: indentation via left padding ─── */
+.menu__list .menu__list {
+  padding-left: 0;
+  margin-left: 8px;
+  border-left: 1px solid var(--ifm-color-emphasis-200);
+  margin-top: 4px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+
+[data-theme="dark"] .menu__list .menu__list {
+  border-left-color: var(--ifm-color-emphasis-300);
+}
+
+/* ─── Link hover state: subtle background ─── */
+.menu__link:hover:not(.menu__link--sublist) {
+  background-color: var(--ifm-color-emphasis-100);
+  color: var(--pagopa-text-primary, #1a1a1a);
+}
+
+[data-theme="dark"] .menu__link:hover:not(.menu__link--sublist) {
+  background-color: var(--ifm-color-emphasis-200);
+  color: var(--pagopa-text-primary, #ffffff);
+}
+
+/* ─── Active link: left border indicator (Terramate style) ─── */
+.menu__link--active:not(.menu__link--sublist) {
+  background-color: transparent;
+  color: var(--ifm-color-primary);
+  font-weight: 500;
+  border-left: 2px solid var(--ifm-color-primary);
+  border-radius: 0 6px 6px 0;
+}
+
+.menu__link--active:not(.menu__link--sublist):hover {
+  background-color: rgba(0, 161, 176, 0.06);
+  color: var(--ifm-color-primary);
+}
+
+[data-theme="dark"] .menu__link--active:not(.menu__link--sublist):hover {
+  background-color: rgba(38, 179, 194, 0.1);
+}
+
+/* ─── Active category ─── */
+.menu__link--sublist.menu__link--active {
+  color: var(--pagopa-text-primary, #1a1a1a);
+}
+
+[data-theme="dark"] .menu__link--sublist.menu__link--active {
+  color: var(--pagopa-text-primary, #ffffff);
+}
+
+/* ─── Thin sidebar separator from content ─── */
+.theme-doc-sidebar-container {
+  border-right: 1px solid var(--ifm-color-emphasis-200);
+}
+
+[data-theme="dark"] .theme-doc-sidebar-container {
+  border-right-color: var(--ifm-color-emphasis-300);
+}
+
+/* ─── Remove default thick border ─── */
+aside.theme-doc-sidebar-container {
+  --doc-sidebar-width: 280px;
+}
+
+/* ─── Scrollbar styling for sidebar ─── */
+.menu::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.menu::-webkit-scrollbar-thumb {
+  background-color: var(--ifm-color-emphasis-300);
+  border-radius: 4px;
+}
+
+.menu::-webkit-scrollbar-thumb:hover {
+  background-color: var(--ifm-color-emphasis-400);
+}

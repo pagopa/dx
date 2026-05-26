@@ -7,6 +7,9 @@
 /* Import Local Fonts - PagoPA Typography */
 @import url("./fonts.css");
 
+/* Sidebar Redesign - Terramate-inspired */
+@import url("./sidebar.css");
+
 /* PagoPA Color Palette - Updated with #00a1b0 */
 :root {
   --ifm-color-primary: #00a1b0;
