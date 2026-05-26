@@ -143,6 +143,11 @@ The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still require
 
 The managed identity (or other principal) must have the **Monitoring Metrics Publisher** role on the Application Insights resource.
 
+## Testing
+
+- `pnpm nx test @pagopa/azure-tracing` runs the default unit test suite.
+- `pnpm nx run @pagopa/azure-tracing:integration` runs the opt-in integration suite.
+
 ## Dependency Constraints
 
 ### `import-in-the-middle` version must match `@azure/monitor-opentelemetry`

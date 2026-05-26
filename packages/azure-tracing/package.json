@@ -8,6 +8,19 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/azure-tracing"
   },
+  "nx": {
+    "targets": {
+      "integration": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": ["^build"],
+        "options": {
+          "command": "pnpm run integration",
+          "cwd": "packages/azure-tracing"
+        }
+      }
+    }
+  },
   "keywords": [
     "azure",
     "azuremonitor",
@@ -94,7 +107,8 @@
   },
   "scripts": {
     "build": "tsup",
-    "test": "vitest",
+    "integration": "vitest run --config vitest.integration.config.js",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   }
 }
