@@ -16,12 +16,12 @@ const sidebars: SidebarsConfig = {
       type: "category",
     },
 
-    // ─── GitHub (open) ───
+    // ─── GitHub (open, sub-categories closed) ───
     {
       collapsed: false,
       items: [
         {
-          collapsed: false,
+          collapsed: true,
           items: [
             "github/git/branch-name",
             "github/git/commit-message",
@@ -32,7 +32,7 @@ const sidebars: SidebarsConfig = {
           type: "category",
         },
         {
-          collapsed: false,
+          collapsed: true,
           items: [
             "github/pull-requests/format",
             "github/pull-requests/acceptance-criteria",
@@ -50,7 +50,7 @@ const sidebars: SidebarsConfig = {
           type: "category",
         },
         {
-          collapsed: false,
+          collapsed: true,
           items: [
             "pipelines/triggers",
             "pipelines/release",
@@ -58,26 +58,13 @@ const sidebars: SidebarsConfig = {
             "pipelines/keep-alive",
             "pipelines/opex-dashboard",
           ],
-          label: "Pipelines",
+          label: "Workflows",
           link: { id: "pipelines/index", type: "doc" },
           type: "category",
         },
       ],
       label: "GitHub",
       link: { id: "github/index", type: "doc" },
-      type: "category",
-    },
-
-    // ─── TypeScript (open) ───
-    {
-      collapsed: false,
-      items: [
-        "typescript/npm-scripts",
-        "typescript/eslint-config",
-        "typescript/code-review",
-      ],
-      label: "TypeScript",
-      link: { id: "typescript/index", type: "doc" },
       type: "category",
     },
 
@@ -104,6 +91,19 @@ const sidebars: SidebarsConfig = {
       ],
       label: "DX CLI",
       link: undefined,
+      type: "category",
+    },
+
+    // ─── TypeScript (open) ───
+    {
+      collapsed: false,
+      items: [
+        "typescript/npm-scripts",
+        "typescript/eslint-config",
+        "typescript/code-review",
+      ],
+      label: "TypeScript",
+      link: { id: "typescript/index", type: "doc" },
       type: "category",
     },
 
@@ -253,18 +253,12 @@ const sidebars: SidebarsConfig = {
     // ─── Containers (closed) ───
     {
       collapsed: true,
-      items: ["containers/docker-image-build"],
+      items: [
+        "dev-containers/index",
+        "containers/docker-image-build",
+      ],
       label: "Containers",
       link: { id: "containers/index", type: "doc" },
-      type: "category",
-    },
-
-    // ─── Dev Containers (closed) ───
-    {
-      collapsed: true,
-      items: ["dev-containers/index"],
-      label: "Dev Containers",
-      link: undefined,
       type: "category",
     },
 
