@@ -20,7 +20,6 @@ resource "github_repository_environment" "app_ci" {
   }
 }
 
-
 resource "github_repository_environment" "opex_ci" {
   for_each    = toset(var.repository.environments)
   environment = "opex-${each.value}-ci"
