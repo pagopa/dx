@@ -118,6 +118,12 @@
   margin-left: 10px;
 }
 
+.theme-doc-sidebar-item-link-level-2 > .menu__link,
+.theme-doc-sidebar-item-link-level-3 > .menu__link,
+.theme-doc-sidebar-item-link-level-4 > .menu__link {
+  margin-left: 10px;
+}
+
 .theme-doc-sidebar-item-category-level-2:not(.menu__list-item--collapsed)
   > .menu__list,
 .theme-doc-sidebar-item-category-level-3:not(.menu__list-item--collapsed)
