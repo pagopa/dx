@@ -77,13 +77,18 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@azure/cosmos": "^4.9.3",
     "@azure/functions": "^4.11.2",
+    "@azure/storage-blob": "catalog:azure",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "redis": "^5.12.1",
+    "testcontainers": "^12.0.0",
     "tsup": "catalog:",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
