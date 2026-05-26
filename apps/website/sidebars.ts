@@ -1,5 +1,10 @@
 import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
+const useExperimentalSidebarEmojis = true;
+
+const withEmoji = (label: string, emoji: string): string =>
+  useExperimentalSidebarEmojis ? `${emoji} ${label}` : label;
+
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     {
@@ -10,7 +15,7 @@ const sidebars: SidebarsConfig = {
         "tooling-lifecycle",
         "support",
       ],
-      label: "Overview",
+      label: withEmoji("Overview", "🧭"),
       type: "category",
     },
     {
@@ -25,7 +30,7 @@ const sidebars: SidebarsConfig = {
             "github/git/commit-message",
             "github/git/git-config",
           ],
-          label: "Git",
+          label: withEmoji("Git", "🌿"),
           type: "category",
         },
         {
@@ -43,7 +48,7 @@ const sidebars: SidebarsConfig = {
               type: "doc",
             },
           ],
-          label: "Pull Requests",
+          label: withEmoji("Pull Requests", "🔀"),
           type: "category",
         },
         {
@@ -56,11 +61,11 @@ const sidebars: SidebarsConfig = {
             "pipelines/keep-alive",
             "pipelines/opex-dashboard",
           ],
-          label: "Workflows",
+          label: withEmoji("Workflows", "⚙️"),
           type: "category",
         },
       ],
-      label: "GitHub",
+      label: withEmoji("GitHub", "🐙"),
       type: "category",
     },
     {
@@ -71,7 +76,7 @@ const sidebars: SidebarsConfig = {
         "coding-with-ai/plugin-marketplace",
         "coding-with-ai/prompts-catalog",
       ],
-      label: "Coding with AI",
+      label: withEmoji("Coding with AI", "🤖"),
       type: "category",
     },
     {
@@ -81,7 +86,7 @@ const sidebars: SidebarsConfig = {
         "dx-cli/installation",
         "dx-cli/usage",
       ],
-      label: "DX CLI",
+      label: withEmoji("DX CLI", "⌨️"),
       type: "category",
     },
     {
@@ -92,7 +97,7 @@ const sidebars: SidebarsConfig = {
         "typescript/eslint-config",
         "typescript/code-review",
       ],
-      label: "TypeScript",
+      label: withEmoji("TypeScript", "🔷"),
       type: "category",
     },
     {
@@ -113,7 +118,7 @@ const sidebars: SidebarsConfig = {
                 "azure/iam/custom-roles",
                 "azure/iam/iam-cross-subscription",
               ],
-              label: "IAM",
+              label: withEmoji("IAM", "🛡️"),
               type: "category",
             },
             {
@@ -123,7 +128,7 @@ const sidebars: SidebarsConfig = {
                 "azure/apim/api-access-policies",
                 "azure/apim/debugging",
               ],
-              label: "API Management",
+              label: withEmoji("API Management", "🔌"),
               type: "category",
             },
             {
@@ -138,7 +143,7 @@ const sidebars: SidebarsConfig = {
                 "azure/app-configuration/appsettings-definition",
                 "azure/app-configuration/appsettings-deploy",
               ],
-              label: "App Configuration",
+              label: withEmoji("App Configuration", "🧩"),
               type: "category",
             },
             {
@@ -153,7 +158,7 @@ const sidebars: SidebarsConfig = {
                 "azure/application-deployment/release-container-app",
                 "azure/application-deployment/appservice-hidden-appsettings",
               ],
-              label: "Application Deployment",
+              label: withEmoji("Application Deployment", "🚀"),
               type: "category",
             },
             {
@@ -165,7 +170,7 @@ const sidebars: SidebarsConfig = {
                 "azure/networking/creating-tls-cert",
                 "azure/networking/peps-cross-subscription",
               ],
-              label: "Networking",
+              label: withEmoji("Networking", "🌐"),
               type: "category",
             },
             {
@@ -174,7 +179,7 @@ const sidebars: SidebarsConfig = {
                 { id: "azure/monitoring/index", label: "Overview", type: "doc" },
                 "azure/monitoring/azure-tracing",
               ],
-              label: "Monitoring",
+              label: withEmoji("Monitoring", "📈"),
               type: "category",
             },
             {
@@ -184,7 +189,7 @@ const sidebars: SidebarsConfig = {
                 "azure/policies/policy-catalog/index",
                 "azure/policies/policy-catalog/specific-tags",
               ],
-              label: "Policies",
+              label: withEmoji("Policies", "📜"),
               type: "category",
             },
             {
@@ -199,7 +204,7 @@ const sidebars: SidebarsConfig = {
                 "azure/static-websites/build-deploy-static-web-app",
                 "azure/static-websites/static-assets-deploy",
               ],
-              label: "Static Websites",
+              label: withEmoji("Static Websites", "🕸️"),
               type: "category",
             },
             {
@@ -214,12 +219,12 @@ const sidebars: SidebarsConfig = {
                 "azure/integrating-services/eventgrid-storage-functions",
                 "azure/integrating-services/using-service-bus",
               ],
-              label: "Integrating Services",
+              label: withEmoji("Integrating Services", "🔗"),
               type: "category",
             },
             "azure/archive-data",
           ],
-          label: "Azure",
+          label: withEmoji("Azure", "🟦"),
           type: "category",
         },
         {
@@ -236,17 +241,17 @@ const sidebars: SidebarsConfig = {
             "terraform/required-tags",
             "terraform/using-terraform-registry-modules",
           ],
-          label: "Terraform",
+          label: withEmoji("Terraform", "🏗️"),
           type: "category",
         },
         {
           collapsed: true,
           items: ["multi-csp/index"],
-          label: "Multi-CSP",
+          label: withEmoji("Multi-CSP", "🌍"),
           type: "category",
         },
       ],
-      label: "Cloud",
+      label: withEmoji("Cloud", "☁️"),
       type: "category",
     },
     {
@@ -256,7 +261,7 @@ const sidebars: SidebarsConfig = {
         "dev-containers/index",
         "containers/docker-image-build",
       ],
-      label: "Containers",
+      label: withEmoji("Containers", "📦"),
       type: "category",
     },
     {
@@ -267,7 +272,7 @@ const sidebars: SidebarsConfig = {
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",
       ],
-      label: "Contributing",
+      label: withEmoji("Contributing", "🛠️"),
       type: "category",
     },
     {
@@ -278,7 +283,7 @@ const sidebars: SidebarsConfig = {
         "legacy/legacy-deploy-pipelines-azure",
         "legacy/legacy-publish-sdk",
       ],
-      label: "Deprecated Tools",
+      label: withEmoji("Deprecated Tools", "🗃️"),
       type: "category",
     },
   ],
