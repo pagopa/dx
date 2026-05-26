@@ -2,15 +2,18 @@
  * Shared helpers for dependency-tracking integration tests that preload the
  * Azure tracing entrypoint and assert exported Application Insights envelopes.
  */
-import { spawn } from "node:child_process";
+import { execFile, type ExecFileOptions } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
 import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { type IncomingMessage, type ServerResponse } from "node:http";
 import { createServer } from "node:https";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { Readable } from "node:stream";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
 import { gunzipSync } from "node:zlib";
 import { z } from "zod";
 
@@ -48,7 +51,6 @@ const telemetryEnvelopeSchema = z
 const telemetryBatchSchema = z.array(telemetryEnvelopeSchema);
 
 export type RemoteDependencyData = z.infer<typeof remoteDependencyDataSchema>;
-
 export interface TelemetryCollector {
   readonly caCertificatePath: string;
   close: () => Promise<void>;
@@ -71,6 +73,10 @@ interface GeneratedCertificate {
   readonly privateKey: Buffer;
 }
 
+type Scenario = "cosmos" | "redis" | "storage";
+
+type TelemetryEnvelope = z.infer<typeof telemetryEnvelopeSchema>;
+
 export const dependencyTestTimeoutMs = 300_000;
 
 export const cosmosEmulatorKey =
@@ -78,6 +84,57 @@ export const cosmosEmulatorKey =
 
 const getHeaderValue = (value: readonly string[] | string | undefined) =>
   Array.isArray(value) ? value[0] : value;
+
+const execFileAsync = promisify(execFile);
+
+const acceptedTelemetryResponse = JSON.stringify({
+  errors: [],
+  itemsAccepted: 1,
+  itemsReceived: 1,
+});
+
+const toOutputString = (value: unknown) => {
+  if (Buffer.isBuffer(value)) {
+    return value.toString("utf8");
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return value === null || value === undefined ? "" : String(value);
+};
+
+const getErrorProperty = (error: unknown, property: string) =>
+  typeof error === "object" && error !== null
+    ? toOutputString(Object.getOwnPropertyDescriptor(error, property)?.value)
+    : "";
+
+const runProcess = async (
+  command: string,
+  args: readonly string[],
+  failureMessage: string,
+  options: ExecFileOptions = {},
+) => {
+  try {
+    await execFileAsync(command, [...args], {
+      ...options,
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+    });
+  } catch (error) {
+    throw new Error(
+      [
+        failureMessage,
+        `Exit code: ${getErrorProperty(error, "code") || "unknown"}`,
+        `Signal: ${getErrorProperty(error, "signal") || "none"}`,
+        `STDOUT:\n${getErrorProperty(error, "stdout")}`,
+        `STDERR:\n${getErrorProperty(error, "stderr")}`,
+      ].join("\n\n"),
+      { cause: error },
+    );
+  }
+};
 
 const decodeRequestBody = (
   contentEncoding: readonly string[] | string | undefined,
@@ -91,10 +148,90 @@ const decodeRequestBody = (
 
 const parseBatch = (body: string) => {
   try {
-    return telemetryBatchSchema.safeParse(JSON.parse(body));
-  } catch {
+    const parsedBody: unknown = JSON.parse(body);
+    return telemetryBatchSchema.safeParse(parsedBody);
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) {
+      throw error;
+    }
+
     return telemetryBatchSchema.safeParse(undefined);
   }
+};
+
+const extractRemoteDependency = (envelope: TelemetryEnvelope) =>
+  envelope.data?.baseType === "RemoteDependencyData" && envelope.data.baseData
+    ? [envelope.data.baseData]
+    : [];
+
+const getRequestRemoteDependencies = (request: CapturedRequest) => {
+  const parsedBatch = parseBatch(request.body);
+
+  return parsedBatch.success
+    ? parsedBatch.data.flatMap(extractRemoteDependency)
+    : [];
+};
+
+const readBuffer = async (stream: NodeJS.ReadableStream) => {
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of Readable.from(stream)) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  return Buffer.concat(chunks);
+};
+
+const collectTelemetryRequest = async (
+  requests: CapturedRequest[],
+  request: IncomingMessage,
+  response: ServerResponse,
+) => {
+  requests.push({
+    body: decodeRequestBody(
+      request.headers["content-encoding"],
+      await readBuffer(request),
+    ),
+    path: request.url ?? "/",
+  });
+
+  response.writeHead(200, { "content-type": "application/json" });
+  response.end(acceptedTelemetryResponse);
+};
+
+const createTelemetryRequestHandler =
+  (requests: CapturedRequest[]) =>
+  (request: IncomingMessage, response: ServerResponse) => {
+    void collectTelemetryRequest(requests, request, response).catch(
+      (error: unknown) => {
+        response.destroy(error instanceof Error ? error : undefined);
+      },
+    );
+  };
+
+const closeServer = (server: ReturnType<typeof createServer>) =>
+  new Promise<void>((resolve, reject) => {
+    server.close((error) => (error ? reject(error) : resolve()));
+  });
+
+const closeCollector = async (
+  server: ReturnType<typeof createServer>,
+  cleanupCertificate: () => Promise<void>,
+) => {
+  const errors = (
+    await Promise.allSettled([closeServer(server), cleanupCertificate()])
+  ).flatMap((result) => (result.status === "rejected" ? [result.reason] : []));
+
+  if (errors.length === 0) {
+    return;
+  }
+
+  throw errors.length === 1
+    ? errors[0]
+    : new AggregateError(
+        errors,
+        "Failed to stop the telemetry collector cleanly.",
+      );
 };
 
 const generateCollectorCertificate =
@@ -110,9 +247,8 @@ const generateCollectorCertificate =
       temporaryDirectory,
       "telemetry-collector.key.pem",
     );
-    const stderrChunks: Buffer[] = [];
 
-    const openssl = spawn(
+    await runProcess(
       "openssl",
       [
         "req",
@@ -132,41 +268,8 @@ const generateCollectorCertificate =
         "-out",
         caCertificatePath,
       ],
-      { stdio: ["ignore", "ignore", "pipe"] },
+      "openssl failed while generating the telemetry collector certificate.",
     );
-
-    openssl.stderr.on("data", (chunk) => {
-      stderrChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-    });
-
-    const { exitCode, signal } = await new Promise<{
-      exitCode: null | number;
-      signal: NodeJS.Signals | null;
-    }>((resolve, reject) => {
-      openssl.once("error", (error) => {
-        reject(
-          new Error(
-            "Failed to start openssl while generating the telemetry collector certificate.",
-            { cause: error },
-          ),
-        );
-      });
-
-      openssl.once("close", (code, closeSignal) => {
-        resolve({ exitCode: code, signal: closeSignal });
-      });
-    });
-
-    if (exitCode !== 0) {
-      throw new Error(
-        [
-          "openssl failed while generating the telemetry collector certificate.",
-          `Exit code: ${String(exitCode)}`,
-          `Signal: ${String(signal)}`,
-          `STDERR:\n${Buffer.concat(stderrChunks).toString("utf8")}`,
-        ].join("\n\n"),
-      );
-    }
 
     const [certificate, privateKey] = await Promise.all([
       readFile(caCertificatePath),
@@ -191,28 +294,7 @@ export const startTelemetryCollector =
         cert: generatedCertificate.certificate,
         key: generatedCertificate.privateKey,
       },
-      (request, response) => {
-        const chunks: Buffer[] = [];
-
-        request.on("data", (chunk) => {
-          chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-        });
-
-        request.on("end", () => {
-          requests.push({
-            body: decodeRequestBody(
-              request.headers["content-encoding"],
-              Buffer.concat(chunks),
-            ),
-            path: request.url ?? "/",
-          });
-
-          response.writeHead(200, { "content-type": "application/json" });
-          response.end(
-            JSON.stringify({ errors: [], itemsAccepted: 1, itemsReceived: 1 }),
-          );
-        });
-      },
+      createTelemetryRequestHandler(requests),
     );
 
     server.listen(0, "127.0.0.1");
@@ -227,21 +309,7 @@ export const startTelemetryCollector =
     const collectorOrigin = `https://${address.address}:${address.port}`;
 
     const getRemoteDependencies = () =>
-      requests.flatMap((request) => {
-        const parsedBatch = parseBatch(request.body);
-
-        if (!parsedBatch.success) {
-          return [];
-        }
-
-        return parsedBatch.data.flatMap((envelope) => {
-          if (envelope.data?.baseType !== "RemoteDependencyData") {
-            return [];
-          }
-
-          return envelope.data.baseData ? [envelope.data.baseData] : [];
-        });
-      });
+      requests.flatMap(getRequestRemoteDependencies);
 
     const waitForRemoteDependencies = async (
       predicate: (dependency: RemoteDependencyData) => boolean,
@@ -267,36 +335,7 @@ export const startTelemetryCollector =
 
     return {
       caCertificatePath: generatedCertificate.caCertificatePath,
-      close: async () => {
-        const errors: unknown[] = [];
-
-        await new Promise<void>((resolve) => {
-          server.close((error) => {
-            if (error) {
-              errors.push(error);
-            }
-
-            resolve();
-          });
-        });
-
-        try {
-          await generatedCertificate.cleanup();
-        } catch (error) {
-          errors.push(error);
-        }
-
-        if (errors.length === 1) {
-          throw errors[0];
-        }
-
-        if (errors.length > 1) {
-          throw new AggregateError(
-            errors,
-            "Failed to stop the telemetry collector cleanly.",
-          );
-        }
-      },
+      close: () => closeCollector(server, generatedCertificate.cleanup),
       connectionString: [
         "InstrumentationKey=00000000-0000-0000-0000-000000000000",
         `IngestionEndpoint=${collectorOrigin}`,
@@ -313,60 +352,24 @@ const mergeNodeOptions = (existingNodeOptions: string | undefined) =>
     .join(" ");
 
 export const runDependencyScenario = async (
-  scenario: "cosmos" | "redis" | "storage",
+  scenario: Scenario,
   env: NodeJS.ProcessEnv,
   collectorCertificatePath: string,
 ) => {
-  const child = spawn(process.execPath, [scenarioScriptPath, scenario], {
-    cwd: packageRoot,
-    env: {
-      ...process.env,
-      ...env,
-      NODE_EXTRA_CA_CERTS: collectorCertificatePath,
-      NODE_OPTIONS: mergeNodeOptions(process.env.NODE_OPTIONS),
+  await runProcess(
+    process.execPath,
+    [scenarioScriptPath, scenario],
+    `The ${scenario} scenario failed.`,
+    {
+      cwd: packageRoot,
+      env: {
+        ...process.env,
+        ...env,
+        NODE_EXTRA_CA_CERTS: collectorCertificatePath,
+        NODE_OPTIONS: mergeNodeOptions(process.env.NODE_OPTIONS),
+      },
     },
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-
-  const stderrChunks: Buffer[] = [];
-  const stdoutChunks: Buffer[] = [];
-
-  child.stderr.on("data", (chunk) => {
-    stderrChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  });
-
-  child.stdout.on("data", (chunk) => {
-    stdoutChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  });
-
-  const { exitCode, signal } = await new Promise<{
-    exitCode: null | number;
-    signal: NodeJS.Signals | null;
-  }>((resolve, reject) => {
-    child.once("error", (error) => {
-      reject(
-        new Error(`Failed to start the ${scenario} scenario process.`, {
-          cause: error,
-        }),
-      );
-    });
-
-    child.once("close", (code, closeSignal) => {
-      resolve({ exitCode: code, signal: closeSignal });
-    });
-  });
-
-  if (exitCode !== 0) {
-    throw new Error(
-      [
-        `The ${scenario} scenario failed.`,
-        `Exit code: ${String(exitCode)}`,
-        `Signal: ${String(signal)}`,
-        `STDOUT:\n${Buffer.concat(stdoutChunks).toString("utf8")}`,
-        `STDERR:\n${Buffer.concat(stderrChunks).toString("utf8")}`,
-      ].join("\n\n"),
-    );
-  }
+  );
 };
 
 export const createStorageConnectionString = (host: string, port: number) =>
