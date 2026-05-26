@@ -28,16 +28,20 @@ test(
     try {
       const redisPort = redisContainer.getMappedPort(6379);
 
-      await runDependencyScenario("redis", {
-        APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
-        APPLICATIONINSIGHTS_CONNECTION_STRING:
-          telemetryCollector.connectionString,
-        APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
-        APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
-        REDIS_KEY: redisKey,
-        REDIS_URL: `redis://${redisContainer.getHost()}:${redisPort}`,
-        REDIS_VALUE: redisValue,
-      });
+      await runDependencyScenario(
+        "redis",
+        {
+          APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
+          APPLICATIONINSIGHTS_CONNECTION_STRING:
+            telemetryCollector.connectionString,
+          APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
+          APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
+          REDIS_KEY: redisKey,
+          REDIS_URL: `redis://${redisContainer.getHost()}:${redisPort}`,
+          REDIS_VALUE: redisValue,
+        },
+        telemetryCollector.caCertificatePath,
+      );
 
       const dependencies = await telemetryCollector.waitForRemoteDependencies(
         (dependency) =>

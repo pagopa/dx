@@ -5,8 +5,10 @@
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { readFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm } from "node:fs/promises";
 import { createServer } from "node:https";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 import { gunzipSync } from "node:zlib";
@@ -18,14 +20,6 @@ const preloadModulePath = fileURLToPath(
 );
 const scenarioScriptPath = fileURLToPath(
   new URL("./fixtures/run-dependency-scenario.ts", import.meta.url),
-);
-const collectorCertificatePath = new URL(
-  "./fixtures/telemetry-collector.cert.pem",
-  import.meta.url,
-);
-const collectorPrivateKeyPath = new URL(
-  "./fixtures/telemetry-collector.key.pem",
-  import.meta.url,
 );
 
 const azuriteAccountKey =
@@ -56,6 +50,7 @@ const telemetryBatchSchema = z.array(telemetryEnvelopeSchema);
 export type RemoteDependencyData = z.infer<typeof remoteDependencyDataSchema>;
 
 export interface TelemetryCollector {
+  readonly caCertificatePath: string;
   close: () => Promise<void>;
   readonly connectionString: string;
   getRemoteDependencies: () => RemoteDependencyData[];
@@ -67,6 +62,13 @@ export interface TelemetryCollector {
 interface CapturedRequest {
   readonly body: string;
   readonly path: string;
+}
+
+interface GeneratedCertificate {
+  readonly caCertificatePath: string;
+  readonly certificate: Buffer;
+  readonly cleanup: () => Promise<void>;
+  readonly privateKey: Buffer;
 }
 
 export const dependencyTestTimeoutMs = 300_000;
@@ -95,16 +97,100 @@ const parseBatch = (body: string) => {
   }
 };
 
+const generateCollectorCertificate =
+  async (): Promise<GeneratedCertificate> => {
+    const temporaryDirectory = await mkdtemp(
+      join(tmpdir(), "azure-tracing-collector-"),
+    );
+    const caCertificatePath = join(
+      temporaryDirectory,
+      "telemetry-collector.pem",
+    );
+    const privateKeyPath = join(
+      temporaryDirectory,
+      "telemetry-collector.key.pem",
+    );
+    const stderrChunks: Buffer[] = [];
+
+    const openssl = spawn(
+      "openssl",
+      [
+        "req",
+        "-x509",
+        "-newkey",
+        "rsa:2048",
+        "-nodes",
+        "-sha256",
+        "-days",
+        "1",
+        "-subj",
+        "/CN=127.0.0.1",
+        "-addext",
+        "subjectAltName=IP:127.0.0.1,DNS:localhost",
+        "-keyout",
+        privateKeyPath,
+        "-out",
+        caCertificatePath,
+      ],
+      { stdio: ["ignore", "ignore", "pipe"] },
+    );
+
+    openssl.stderr.on("data", (chunk) => {
+      stderrChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+
+    const { exitCode, signal } = await new Promise<{
+      exitCode: null | number;
+      signal: NodeJS.Signals | null;
+    }>((resolve, reject) => {
+      openssl.once("error", (error) => {
+        reject(
+          new Error(
+            "Failed to start openssl while generating the telemetry collector certificate.",
+            { cause: error },
+          ),
+        );
+      });
+
+      openssl.once("close", (code, closeSignal) => {
+        resolve({ exitCode: code, signal: closeSignal });
+      });
+    });
+
+    if (exitCode !== 0) {
+      throw new Error(
+        [
+          "openssl failed while generating the telemetry collector certificate.",
+          `Exit code: ${String(exitCode)}`,
+          `Signal: ${String(signal)}`,
+          `STDERR:\n${Buffer.concat(stderrChunks).toString("utf8")}`,
+        ].join("\n\n"),
+      );
+    }
+
+    const [certificate, privateKey] = await Promise.all([
+      readFile(caCertificatePath),
+      readFile(privateKeyPath),
+    ]);
+
+    return {
+      caCertificatePath,
+      certificate,
+      cleanup: () => rm(temporaryDirectory, { force: true, recursive: true }),
+      privateKey,
+    };
+  };
+
 export const startTelemetryCollector =
   async (): Promise<TelemetryCollector> => {
     const requests: CapturedRequest[] = [];
-    const [certificate, privateKey] = await Promise.all([
-      readFile(collectorCertificatePath),
-      readFile(collectorPrivateKeyPath),
-    ]);
+    const generatedCertificate = await generateCollectorCertificate();
 
     const server = createServer(
-      { cert: certificate, key: privateKey },
+      {
+        cert: generatedCertificate.certificate,
+        key: generatedCertificate.privateKey,
+      },
       (request, response) => {
         const chunks: Buffer[] = [];
 
@@ -180,17 +266,37 @@ export const startTelemetryCollector =
     };
 
     return {
-      close: () =>
-        new Promise<void>((resolve, reject) => {
+      caCertificatePath: generatedCertificate.caCertificatePath,
+      close: async () => {
+        const errors: unknown[] = [];
+
+        await new Promise<void>((resolve) => {
           server.close((error) => {
             if (error) {
-              reject(error);
-              return;
+              errors.push(error);
             }
 
             resolve();
           });
-        }),
+        });
+
+        try {
+          await generatedCertificate.cleanup();
+        } catch (error) {
+          errors.push(error);
+        }
+
+        if (errors.length === 1) {
+          throw errors[0];
+        }
+
+        if (errors.length > 1) {
+          throw new AggregateError(
+            errors,
+            "Failed to stop the telemetry collector cleanly.",
+          );
+        }
+      },
       connectionString: [
         "InstrumentationKey=00000000-0000-0000-0000-000000000000",
         `IngestionEndpoint=${collectorOrigin}`,
@@ -209,14 +315,15 @@ const mergeNodeOptions = (existingNodeOptions: string | undefined) =>
 export const runDependencyScenario = async (
   scenario: "cosmos" | "redis" | "storage",
   env: NodeJS.ProcessEnv,
+  collectorCertificatePath: string,
 ) => {
   const child = spawn(process.execPath, [scenarioScriptPath, scenario], {
     cwd: packageRoot,
     env: {
       ...process.env,
       ...env,
+      NODE_EXTRA_CA_CERTS: collectorCertificatePath,
       NODE_OPTIONS: mergeNodeOptions(process.env.NODE_OPTIONS),
-      NODE_TLS_REJECT_UNAUTHORIZED: "0",
     },
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -232,7 +339,22 @@ export const runDependencyScenario = async (
     stdoutChunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   });
 
-  const [exitCode, signal] = await once(child, "exit");
+  const { exitCode, signal } = await new Promise<{
+    exitCode: null | number;
+    signal: NodeJS.Signals | null;
+  }>((resolve, reject) => {
+    child.once("error", (error) => {
+      reject(
+        new Error(`Failed to start the ${scenario} scenario process.`, {
+          cause: error,
+        }),
+      );
+    });
+
+    child.once("close", (code, closeSignal) => {
+      resolve({ exitCode: code, signal: closeSignal });
+    });
+  });
 
   if (exitCode !== 0) {
     throw new Error(

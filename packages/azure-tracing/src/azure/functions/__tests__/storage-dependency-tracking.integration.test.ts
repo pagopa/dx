@@ -40,19 +40,23 @@ test(
     try {
       const blobPort = storageContainer.getMappedPort(10000);
 
-      await runDependencyScenario("storage", {
-        APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
-        APPLICATIONINSIGHTS_CONNECTION_STRING:
-          telemetryCollector.connectionString,
-        APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
-        APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
-        STORAGE_BLOB_NAME: blobName,
-        STORAGE_CONNECTION_STRING: createStorageConnectionString(
-          storageContainer.getHost(),
-          blobPort,
-        ),
-        STORAGE_CONTAINER_NAME: containerName,
-      });
+      await runDependencyScenario(
+        "storage",
+        {
+          APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
+          APPLICATIONINSIGHTS_CONNECTION_STRING:
+            telemetryCollector.connectionString,
+          APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
+          APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
+          STORAGE_BLOB_NAME: blobName,
+          STORAGE_CONNECTION_STRING: createStorageConnectionString(
+            storageContainer.getHost(),
+            blobPort,
+          ),
+          STORAGE_CONTAINER_NAME: containerName,
+        },
+        telemetryCollector.caCertificatePath,
+      );
 
       const dependencies = await telemetryCollector.waitForRemoteDependencies(
         (dependency) =>

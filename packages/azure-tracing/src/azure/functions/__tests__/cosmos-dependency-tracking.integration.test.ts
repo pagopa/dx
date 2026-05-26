@@ -23,7 +23,7 @@ test(
     const itemId = `item-${runId}`;
 
     const cosmosContainer = await new GenericContainer(
-      "mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview",
+      "mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator:vnext-preview@sha256:4496011376a190b4b70bb56596bfcb51e2a1d0b5c071d8b1a1daf8188f5350ab",
     )
       .withEnvironment({
         ENABLE_EXPLORER: "false",
@@ -31,10 +31,7 @@ test(
         LOG_LEVEL: "warn",
         PROTOCOL: "http",
       })
-      .withExposedPorts(
-        { container: 8080, host: 8080 },
-        { container: 8081, host: 8081 },
-      )
+      .withExposedPorts(8080, 8081)
       .withStartupTimeout(240_000)
       .withWaitStrategy(Wait.forHttp("/ready", 8080).forStatusCode(200))
       .start();
@@ -42,18 +39,22 @@ test(
     try {
       const cosmosPort = cosmosContainer.getMappedPort(8081);
 
-      await runDependencyScenario("cosmos", {
-        APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
-        APPLICATIONINSIGHTS_CONNECTION_STRING:
-          telemetryCollector.connectionString,
-        APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
-        APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
-        COSMOS_CONTAINER_ID: containerId,
-        COSMOS_DATABASE_ID: databaseId,
-        COSMOS_ENDPOINT: `http://${cosmosContainer.getHost()}:${cosmosPort}`,
-        COSMOS_ITEM_ID: itemId,
-        COSMOS_KEY: cosmosEmulatorKey,
-      });
+      await runDependencyScenario(
+        "cosmos",
+        {
+          APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
+          APPLICATIONINSIGHTS_CONNECTION_STRING:
+            telemetryCollector.connectionString,
+          APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
+          APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
+          COSMOS_CONTAINER_ID: containerId,
+          COSMOS_DATABASE_ID: databaseId,
+          COSMOS_ENDPOINT: `http://${cosmosContainer.getHost()}:${cosmosPort}`,
+          COSMOS_ITEM_ID: itemId,
+          COSMOS_KEY: cosmosEmulatorKey,
+        },
+        telemetryCollector.caCertificatePath,
+      );
 
       const dependencies = await telemetryCollector.waitForRemoteDependencies(
         (dependency) =>
