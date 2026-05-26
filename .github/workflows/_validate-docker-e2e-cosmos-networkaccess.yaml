@@ -28,7 +28,7 @@ jobs:
 
       - name: Docker Build
         id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@CES-438-inserire-uno-step-di-linting-nella-produzione-delle-immagini-docker
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
