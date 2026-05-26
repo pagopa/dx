@@ -1,0 +1,54 @@
+{
+  "name": "dx-tasks-action",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "description": "GitHub Action that dispatches dx-tasks tasks",
+  "main": "dist/index.js",
+  "sideEffects": false,
+  "keywords": [
+    "github",
+    "action",
+    "dx",
+    "tasks"
+  ],
+  "dependencies": {
+    "@actions/core": "catalog:github-actions",
+    "@pagopa/dx-tasks": "workspace:^",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/esbuild:esbuild",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "bundle": true,
+          "deleteOutputPath": true,
+          "main": "actions/dx-tasks-action/src/index.ts",
+          "format": [
+            "esm"
+          ],
+          "minify": true,
+          "outputFileName": "index.js",
+          "outputPath": "actions/dx-tasks-action/dist",
+          "platform": "node",
+          "skipTypeCheck": true,
+          "target": "node24",
+          "thirdParty": true,
+          "tsConfig": "{projectRoot}/tsconfig.json"
+        }
+      }
+    }
+  }
+}
