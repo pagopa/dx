@@ -2,7 +2,6 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 const sidebars: SidebarsConfig = {
   tutorialSidebar: [
-    // ─── Overview (open) ───
     {
       collapsed: false,
       items: [
@@ -12,28 +11,27 @@ const sidebars: SidebarsConfig = {
         "support",
       ],
       label: "Overview",
-      link: undefined,
       type: "category",
     },
-
-    // ─── GitHub (open, sub-categories closed) ───
     {
       collapsed: false,
       items: [
+        { id: "github/index", label: "Overview", type: "doc" },
         {
           collapsed: true,
           items: [
+            { id: "github/git/index", label: "Overview", type: "doc" },
             "github/git/branch-name",
             "github/git/commit-message",
             "github/git/git-config",
           ],
           label: "Git",
-          link: { id: "github/git/index", type: "doc" },
           type: "category",
         },
         {
           collapsed: true,
           items: [
+            { id: "github/pull-requests/index", label: "Overview", type: "doc" },
             "github/pull-requests/format",
             "github/pull-requests/acceptance-criteria",
             "github/pull-requests/auto-merge",
@@ -46,12 +44,12 @@ const sidebars: SidebarsConfig = {
             },
           ],
           label: "Pull Requests",
-          link: { id: "github/pull-requests/index", type: "doc" },
           type: "category",
         },
         {
           collapsed: true,
           items: [
+            { id: "pipelines/index", label: "Overview", type: "doc" },
             "pipelines/triggers",
             "pipelines/release",
             "pipelines/nx-release",
@@ -59,29 +57,23 @@ const sidebars: SidebarsConfig = {
             "pipelines/opex-dashboard",
           ],
           label: "Workflows",
-          link: { id: "pipelines/index", type: "doc" },
           type: "category",
         },
       ],
       label: "GitHub",
-      link: { id: "github/index", type: "doc" },
       type: "category",
     },
-
-    // ─── Coding with AI (open) ───
     {
       collapsed: false,
       items: [
+        { id: "coding-with-ai/index", label: "Overview", type: "doc" },
         "coding-with-ai/dx-mcp-server",
         "coding-with-ai/plugin-marketplace",
         "coding-with-ai/prompts-catalog",
       ],
       label: "Coding with AI",
-      link: { id: "coding-with-ai/index", type: "doc" },
       type: "category",
     },
-
-    // ─── DX CLI (open) ───
     {
       collapsed: false,
       items: [
@@ -90,138 +82,150 @@ const sidebars: SidebarsConfig = {
         "dx-cli/usage",
       ],
       label: "DX CLI",
-      link: undefined,
       type: "category",
     },
-
-    // ─── TypeScript (open) ───
     {
       collapsed: false,
       items: [
+        { id: "typescript/index", label: "Overview", type: "doc" },
         "typescript/npm-scripts",
         "typescript/eslint-config",
         "typescript/code-review",
       ],
       label: "TypeScript",
-      link: { id: "typescript/index", type: "doc" },
       type: "category",
     },
-
-    // ─── Cloud (open) ───
     {
       collapsed: false,
       items: [
-        // Azure (closed)
         {
           collapsed: true,
           items: [
+            { id: "azure/index", label: "Overview", type: "doc" },
             "azure/azure-naming-convention",
             "azure/using-azure-registry-provider",
             {
               collapsed: true,
               items: [
+                { id: "azure/iam/index", label: "Overview", type: "doc" },
                 "azure/iam/azure-iam",
                 "azure/iam/azure-login",
                 "azure/iam/custom-roles",
                 "azure/iam/iam-cross-subscription",
               ],
               label: "IAM",
-              link: { id: "azure/iam/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                { id: "azure/apim/index", label: "Overview", type: "doc" },
                 "azure/apim/api-access-policies",
                 "azure/apim/debugging",
               ],
               label: "API Management",
-              link: { id: "azure/apim/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                {
+                  id: "azure/app-configuration/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/app-configuration/azure-app-configuration",
                 "azure/app-configuration/appsettings-definition",
                 "azure/app-configuration/appsettings-deploy",
               ],
               label: "App Configuration",
-              link: { id: "azure/app-configuration/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                {
+                  id: "azure/application-deployment/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/application-deployment/release-azure-appsvc",
                 "azure/application-deployment/release-container-app",
                 "azure/application-deployment/appservice-hidden-appsettings",
               ],
               label: "Application Deployment",
-              link: { id: "azure/application-deployment/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                { id: "azure/networking/index", label: "Overview", type: "doc" },
                 "azure/networking/app-gateway-tls-cert",
                 "azure/networking/appservice-plan-dns-resolution",
                 "azure/networking/creating-tls-cert",
                 "azure/networking/peps-cross-subscription",
               ],
               label: "Networking",
-              link: { id: "azure/networking/index", type: "doc" },
-              type: "category",
-            },
-            {
-              collapsed: true,
-              items: ["azure/monitoring/azure-tracing"],
-              label: "Monitoring",
-              link: { id: "azure/monitoring/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                { id: "azure/monitoring/index", label: "Overview", type: "doc" },
+                "azure/monitoring/azure-tracing",
+              ],
+              label: "Monitoring",
+              type: "category",
+            },
+            {
+              collapsed: true,
+              items: [
+                { id: "azure/policies/index", label: "Overview", type: "doc" },
                 "azure/policies/policy-catalog/index",
                 "azure/policies/policy-catalog/specific-tags",
               ],
               label: "Policies",
-              link: { id: "azure/policies/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                {
+                  id: "azure/static-websites/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/static-websites/build-deploy-static-assets",
                 "azure/static-websites/build-deploy-static-web-app",
                 "azure/static-websites/static-assets-deploy",
               ],
               label: "Static Websites",
-              link: { id: "azure/static-websites/index", type: "doc" },
               type: "category",
             },
             {
               collapsed: true,
               items: [
+                {
+                  id: "azure/integrating-services/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/integrating-services/apim-function-app-authentication",
                 "azure/integrating-services/eventgrid-storage-functions",
                 "azure/integrating-services/using-service-bus",
               ],
               label: "Integrating Services",
-              link: { id: "azure/integrating-services/index", type: "doc" },
               type: "category",
             },
             "azure/archive-data",
           ],
           label: "Azure",
-          link: { id: "azure/index", type: "doc" },
           type: "category",
         },
-        // Terraform (closed)
         {
           collapsed: true,
           items: [
+            { id: "terraform/index", label: "Overview", type: "doc" },
             "terraform/infra-folder-structure",
             "terraform/code-style",
             "terraform/pre-commit-terraform",
@@ -233,58 +237,48 @@ const sidebars: SidebarsConfig = {
             "terraform/using-terraform-registry-modules",
           ],
           label: "Terraform",
-          link: { id: "terraform/index", type: "doc" },
           type: "category",
         },
-        // Multi-CSP (closed)
         {
           collapsed: true,
           items: ["multi-csp/index"],
           label: "Multi-CSP",
-          link: undefined,
           type: "category",
         },
       ],
       label: "Cloud",
-      link: undefined,
       type: "category",
     },
-
-    // ─── Containers (closed) ───
     {
       collapsed: true,
       items: [
+        { id: "containers/index", label: "Overview", type: "doc" },
         "dev-containers/index",
         "containers/docker-image-build",
       ],
       label: "Containers",
-      link: { id: "containers/index", type: "doc" },
       type: "category",
     },
-
-    // ─── Contributing (closed) ───
     {
       collapsed: true,
       items: [
+        { id: "contributing/index", label: "Overview", type: "doc" },
         "contributing/contributing-to-dx-provider",
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",
       ],
       label: "Contributing",
-      link: { id: "contributing/index", type: "doc" },
       type: "category",
     },
-
-    // ─── Deprecated Tools (closed) ───
     {
       collapsed: true,
       items: [
+        { id: "legacy/index", label: "Overview", type: "doc" },
         "legacy/legacy-code-review",
         "legacy/legacy-deploy-pipelines-azure",
         "legacy/legacy-publish-sdk",
       ],
       label: "Deprecated Tools",
-      link: { id: "legacy/index", type: "doc" },
       type: "category",
     },
   ],
