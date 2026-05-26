@@ -26,26 +26,7 @@
 
 /* Spacing between top-level categories */
 .theme-doc-sidebar-menu > .menu__list-item + .menu__list-item {
-  margin-top: 12px;
-  padding-top: 12px;
-  position: relative;
-}
-
-.theme-doc-sidebar-menu > .menu__list-item + .menu__list-item::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 16px;
-  right: 16px;
-  height: 1px;
-  background: var(--ifm-color-emphasis-200);
-}
-
-[data-theme="dark"]
-  .theme-doc-sidebar-menu
-  > .menu__list-item
-  + .menu__list-item::before {
-  background: var(--ifm-color-emphasis-300);
+  margin-top: 10px;
 }
 
 /* ─── Links: base styling ─── */
@@ -102,38 +83,52 @@
   font-weight: 600;
 }
 
-/* ─── Caret / chevron: ensure visibility ─── */
+/* ─── Caret / chevron: explicit glyph for visibility ─── */
 .menu__caret {
-  padding: 4px;
+  color: var(--ifm-color-emphasis-700);
+  height: 1.5rem;
+  width: 1.5rem;
+  position: relative;
+  flex: 0 0 auto;
 }
 
-.menu__caret:before {
-  background: var(--ifm-menu-color-background-active);
-  height: 1.1rem;
-  width: 1.1rem;
+[data-theme="dark"] .menu__caret {
+  color: var(--ifm-color-emphasis-200);
 }
 
-.menu__link--sublist-caret:after {
-  background-size: 1.25rem 1.25rem;
-  height: 1.25rem;
-  width: 1.25rem;
-  min-width: 1.25rem;
-  opacity: 1;
+.menu__caret::before,
+.menu__link--sublist-caret::after {
+  content: "";
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  background: none !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  transition: transform 0.15s ease;
 }
 
-[data-theme="dark"] .menu__link--sublist-caret:after {
-  --ifm-menu-link-sublist-icon-filter: invert(100%) sepia(94%) saturate(17%)
-    hue-rotate(223deg) brightness(104%) contrast(98%);
-  filter: var(--ifm-menu-link-sublist-icon-filter);
+.menu__caret[aria-expanded="true"]::before,
+.menu__link--sublist-caret[aria-expanded="true"]::after {
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* ─── Nested items: indentation via left padding ─── */
+.menu__caret[aria-expanded="false"]::before,
+.menu__link--sublist-caret[aria-expanded="false"]::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+/* ─── Nested items: indentation via left rail ─── */
 .menu__list .menu__list {
-  padding-left: 0;
-  margin-left: 8px;
+  padding-left: 12px;
+  margin-left: 12px;
   border-left: 1px solid var(--ifm-color-emphasis-200);
-  margin-top: 4px;
-  padding-top: 2px;
+  margin-top: 2px;
+  padding-top: 0;
   padding-bottom: 2px;
 }
 
