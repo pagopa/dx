@@ -1,63 +1,12 @@
 ---
-id: index
-title: Using the DX CLI
+title: Usage
 sidebar_position: 3
-description: Documentation for @pagopa/dx-cli commands and usage.
+description: Available @pagopa/dx-cli commands and how to use them.
 ---
 
-The `@pagopa/dx-cli` is a command-line tool that helps teams implement PagoPA
-DevEx guidelines consistently and evolve repositories safely.
+# Usage
 
-## Requirements {#requirements}
-
-The following tools must be installed on your machine:
-
-| Tool                                                                                                        | Version                                       |
-| ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                 |
-| [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                        |
-| [GitHub CLI](https://cli.github.com/)                                                                       | latest                                        |
-| [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only) |
-
-Before running any command that interacts with GitHub or a cloud provider,
-ensure you are logged in:
-
-```bash
-gh auth login
-```
-
-```bash
-az login
-```
-
-:::warning[Azure session expiry]
-
-Within PagoPA, `az login` sessions expire every **12 hours**. If a command fails
-with an authentication error, run `az login` again before retrying.
-
-:::
-
-## Installation
-
-You can invoke the CLI directly via `npx` without installing globally:
-
-```bash
-npx @pagopa/dx-cli --help
-```
-
-When installed locally in a monorepo you can also run:
-
-```bash
-pnpm dx --help
-```
-
-> The binary name is `dx`.
-
----
-
-## Usage
-
-### `init` – Initialize Resources
+## `init` – Initialize Resources
 
 Bootstrap a new project following DevEx conventions.
 
@@ -66,7 +15,7 @@ Bootstrap a new project following DevEx conventions.
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
   a devcontainer configuration.
 
-#### Prompt Reference
+### Prompt Reference
 
 The `init` command is interactive. The tables below explain what each prompt
 expects and where to find the required values.
@@ -77,7 +26,7 @@ expects and where to find the required values.
 | **GitHub Organization** | The GitHub organization that will own the repository. Defaults to `pagopa`.                   |
 | **Description**         | A short description of the project (optional).                                                |
 
-#### Example Usage
+### Example Usage
 
 ```text
 npx @pagopa/dx-cli init
@@ -105,17 +54,17 @@ Next Steps:
 After the command completes, you will have a new GitHub repository with an open
 Pull Request to merge the initial project structure.
 
-### `add` - Scaffold New Components
+## `add` - Scaffold New Components
 
 Scaffold new components in your project following DevEx guidelines.
 
-#### Currently Supported Components
+### Currently Supported Components
 
 | Component Type | Description                                |
 | -------------- | ------------------------------------------ |
 | `environment`  | Add a new cloud environment to the project |
 
-#### `environement`
+### `environment`
 
 Add a new cloud environment following DevEx conventions.
 
@@ -144,7 +93,7 @@ command.
 
 :::
 
-##### Prompt Reference
+#### Prompt Reference
 
 The `add environment` command is interactive. The tables below explain what each
 prompt expects and where to find the required values.
@@ -171,7 +120,7 @@ prompt expects and where to find the required values.
 | **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
 | **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
 
-##### Example Usage
+#### Example Usage
 
 ```text
 npx @pagopa/dx-cli add environment
@@ -196,7 +145,7 @@ npx @pagopa/dx-cli add environment
 After the command completes, you will have a new GitHub repository with an open
 Pull Request to merge the initial project structure.
 
-### `doctor` – Repository Validation
+## `doctor` – Repository Validation
 
 Validate your repository against DevEx guidelines. Typical checks include:
 
@@ -221,12 +170,12 @@ Example output:
 ✖ monorepo scripts missing: build, test
 ```
 
-### `codemod` – Repository Migrations
+## `codemod` – Repository Migrations
 
 Codemods are scripted migrations that modify repository files to align with
 evolving platform standards. They aim to be safe, incremental, and repeatable.
 
-#### List Available Codemods
+### List Available Codemods
 
 ```bash
 npx @pagopa/dx-cli codemod list
@@ -235,7 +184,7 @@ npx @pagopa/dx-cli codemod list
 You will get a brief list of migration identifiers. Use one of them with
 `codemod apply`.
 
-##### Current Codemods
+#### Current Codemods
 
 | identifier           | description                                                                                                                             |
 | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -243,7 +192,7 @@ You will get a brief list of migration identifiers. Use one of them with
 | `use-azure-appsvc`   | Migrate `web_app_deploy` and `function_app_deploy` to [`release-azure-appsvc`](../azure/application-deployment/release-azure-appsvc.md) |
 | `update-code-review` | Update [`js_code_review`](../typescript/code-review.md) workflow reference to latest commit with required permissions.                  |
 
-#### Apply a Codemod
+### Apply a Codemod
 
 ```bash
 npx @pagopa/dx-cli codemod apply <id>
@@ -263,7 +212,7 @@ Arguments:
 
 :::
 
-### `savemoney` – Cost Optimization
+## `savemoney` – Cost Optimization
 
 The SaveMoney tool helps identify underutilized and unused cloud resources that
 may be costing your organization money.
@@ -281,12 +230,12 @@ detect:
 All analysis is performed in **read-only mode** - the tool never modifies, tags,
 or deletes resources.
 
-#### Supported Cloud Providers
+### Supported Cloud Providers
 
 - ✅ Azure: Full support for Azure resource analysis with intelligent detection
   algorithms based on Azure Monitor metrics and resource states.
 
-#### Quick Start
+### Quick Start
 
 ```bash
 # Interactive mode (prompts for configuration)
@@ -299,7 +248,7 @@ npx @pagopa/dx-cli savemoney --config config.yaml
 npx @pagopa/dx-cli savemoney --config config.yaml --format json --verbose
 ```
 
-#### Analysis Flow
+### Analysis Flow
 
 The tool follows a systematic approach to analyze resources:
 
@@ -334,16 +283,16 @@ flowchart TB
 
 </details>
 
-#### Configuration
+### Configuration
 
-##### Authentication
+#### Authentication
 
 The tool supports multiple authentication methods:
 
 - **Azure CLI** - `az login` (recommended for local development)
 - **Managed Identity** - Automatic in Azure environments
 
-##### Configuration Options
+#### Configuration Options
 
 | Parameter           | Type       | Req. | CLI Flag               | Description                                                |
 | :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
@@ -359,7 +308,7 @@ The tool supports multiple authentication methods:
 - `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
 - `--verbose`, `-v` - Enable detailed logging
 
-##### Configuration Example
+#### Configuration Example
 
 Create a `config.yaml` file:
 
@@ -392,7 +341,7 @@ identity).
 
 :::
 
-#### Analyzed Azure Resources
+### Analyzed Azure Resources
 
 The tool analyzes the following Azure resource types for potential cost
 optimization:
@@ -417,7 +366,7 @@ All resources are additionally evaluated for:
 - **Location Mismatch** - Resources outside preferred region may have compliance
   or cost implications
 
-#### Tag Filtering
+### Tag Filtering
 
 Use `--tags` to restrict the analysis to resources that match **all** specified
 Azure tags (AND logic):
@@ -430,7 +379,7 @@ Only resources that have every listed tag with the exact expected value will be
 analyzed. This is useful to scope a scan to a specific environment or team
 without editing the config file.
 
-#### Custom Thresholds
+### Custom Thresholds
 
 Analysis thresholds (e.g. minimum CPU%, minimum transactions/day) can be
 overridden by adding a `thresholds` section inside the `azure` block of your
@@ -451,7 +400,7 @@ azure:
       transactionsPerDay: 50
 ```
 
-#### Output Formats
+### Output Formats
 
 Available formats:
 
@@ -482,7 +431,7 @@ Available formats:
 
 </details>
 
-#### Usage Examples
+### Usage Examples
 
 ```bash
 # Interactive mode
@@ -504,7 +453,7 @@ npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod
 npx @pagopa/dx-cli savemoney --config config.yaml --verbose
 ```
 
-#### ✅ Best Practices
+### ✅ Best Practices
 
 - **Run Regularly** - Schedule weekly or monthly analysis to catch cost drift
   early
@@ -517,7 +466,7 @@ npx @pagopa/dx-cli savemoney --config config.yaml --verbose
 - **Combine with Tags** - Tag resources properly to avoid false positives
 - **Document Decisions** - Keep records of why resources are kept or removed
 
-#### ⚠️ Limitations
+### ⚠️ Limitations
 
 - **Read-Only Analysis** - Does not modify, tag, or delete resources
 - **Metrics Availability** - Some resources may have limited historical metrics
