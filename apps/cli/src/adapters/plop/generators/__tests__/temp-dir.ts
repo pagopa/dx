@@ -4,7 +4,7 @@
 import * as fs from "node:fs/promises";
 
 export const shouldKeepTestArtifacts = (env: NodeJS.ProcessEnv): boolean =>
-  env.DX_TEST_KEEP_ARTIFACTS === "1" || env.DX_TEST_KEEP_ARTIFACTS === "true";
+  env.KEEP_ARTIFACTS === "1" || env.KEEP_ARTIFACTS === "true";
 
 export const cleanupTempDir = async (
   tmpDir: string,
