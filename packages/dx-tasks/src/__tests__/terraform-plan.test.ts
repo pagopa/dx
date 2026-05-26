@@ -27,7 +27,7 @@ Terraform will perform the following actions:
         id         = "/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02"
         name       = "plantest-example-rg-02"
       [33m~[0m[0m tags       = {
-          [33m~[0m[0m "PRIVATE_KEY" = "-----BEGIN PRIVATE KEY-----MIIBIjANBgkqhki...-----END PRIVATE KEY-----" [33m->[0m[0m "-----BEGIN PRIVATE KEY-----MIIBIjANBgkki...-----END PRIVATE KEY-----"
+          [33m~[0m[0m "PRIVATE_KEY" = "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-BEFORE-----END PRIVATE KEY-----" [33m->[0m[0m "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-AFTER-----END PRIVATE KEY-----"
         }
         [90m# (2 unchanged attributes hidden)[0m[0m
     }
@@ -47,7 +47,7 @@ Terraform will perform the following actions:
         id         = "/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02"
         name       = "plantest-example-rg-02"
       ~ tags       = {
-          ~ "PRIVATE_KEY" = "-----BEGIN PRIVATE KEY-----MIIBIjANBgkqhki...-----END PRIVATE KEY-----" -> "-----BEGIN PRIVATE KEY-----MIIBINBgkqhki...-----END PRIVATE KEY-----"
+          ~ "PRIVATE_KEY" = "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-BEFORE-----END PRIVATE KEY-----" -> "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-AFTER-----END PRIVATE KEY-----"
         }
         # (2 unchanged attributes hidden)
     }

@@ -1,0 +1,5 @@
+---
+'@pagopa/dx-tasks': minor
+---
+
+Add reusable dx-tasks implementations for workflows and local tooling

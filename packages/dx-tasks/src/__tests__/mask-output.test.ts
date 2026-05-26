@@ -6,7 +6,7 @@ describe("maskOutput", () => {
   it("ports the private key masking case from sanitize-terraform-plan", () => {
     const input = `Test mode enabled.
 --- Executing Plan ---
-PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----MIIBIjANBgkqhki...-----END PRIVATE KEY-----"`;
+PRIVATE_KEY = "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-CONTENT-----END PRIVATE KEY-----"`;
 
     const expected = `Test mode enabled.
 --- Executing Plan ---

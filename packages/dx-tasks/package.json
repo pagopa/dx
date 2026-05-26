@@ -27,7 +27,7 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/dxtasks"
+    "directory": "packages/dx-tasks"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

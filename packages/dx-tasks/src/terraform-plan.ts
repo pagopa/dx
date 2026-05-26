@@ -21,8 +21,11 @@ export interface TerraformPlanPayload {
   verbose?: boolean;
 }
 
-const isRunningInCI = () =>
-  process.env.CI && process.env.CI !== "false" && process.env.CI !== "0";
+const isRunningInCI = (): boolean => {
+  const ci = process.env.CI;
+
+  return Boolean(ci) && ci !== "false" && ci !== "0";
+};
 
 export async function terraformPlan({
   modulePath,
