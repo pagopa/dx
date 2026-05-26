@@ -100,6 +100,7 @@ const snapshotScenarios: {
 describe("terraformPlan", () => {
   beforeEach(() => {
     mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
   });
 

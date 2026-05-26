@@ -13,6 +13,7 @@ import { createDefaultTaskDispatcher } from "../default-dispatcher.ts";
 describe("createDefaultTaskDispatcher", () => {
   beforeEach(() => {
     mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
