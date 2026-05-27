@@ -1,3 +1,14 @@
+## 0.22.2 (2026-05-27)
+
+### 🩹 Fixes
+
+- Use truthy values for the CLI CI environment variable ([#1798](https://github.com/pagopa/dx/pull/1798))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.22.1 (2026-05-25)
 
 ### 🧱 Updated Dependencies
