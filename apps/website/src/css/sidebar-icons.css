@@ -12,7 +12,9 @@
   gap: 0.625rem;
 }
 
-[class*="sidebar-icon-"] > .menu__list-item-collapsible > .menu__link--sublist::before {
+[class*="sidebar-icon-"]
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
   content: "";
   width: 1rem;
   height: 1rem;

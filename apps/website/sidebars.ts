@@ -10,12 +10,7 @@ const sidebars: SidebarsConfig = {
     {
       className: categoryClass("overview"),
       collapsed: false,
-      items: [
-        "index",
-        "monorepository-setup",
-        "tooling-lifecycle",
-        "support",
-      ],
+      items: ["index", "monorepository-setup", "tooling-lifecycle", "support"],
       label: "Overview",
       type: "category",
     },
@@ -40,7 +35,11 @@ const sidebars: SidebarsConfig = {
           className: categoryClass("pull-requests"),
           collapsed: true,
           items: [
-            { id: "github/pull-requests/index", label: "Overview", type: "doc" },
+            {
+              id: "github/pull-requests/index",
+              label: "Overview",
+              type: "doc",
+            },
             "github/pull-requests/format",
             "github/pull-requests/acceptance-criteria",
             "github/pull-requests/auto-merge",
@@ -88,11 +87,7 @@ const sidebars: SidebarsConfig = {
     {
       className: categoryClass("dx-cli"),
       collapsed: false,
-      items: [
-        "dx-cli/requirements",
-        "dx-cli/installation",
-        "dx-cli/usage",
-      ],
+      items: ["dx-cli/requirements", "dx-cli/installation", "dx-cli/usage"],
       label: "DX CLI",
       type: "category",
     },
@@ -174,7 +169,11 @@ const sidebars: SidebarsConfig = {
             {
               collapsed: true,
               items: [
-                { id: "azure/networking/index", label: "Overview", type: "doc" },
+                {
+                  id: "azure/networking/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/networking/app-gateway-tls-cert",
                 "azure/networking/appservice-plan-dns-resolution",
                 "azure/networking/creating-tls-cert",
@@ -186,7 +185,11 @@ const sidebars: SidebarsConfig = {
             {
               collapsed: true,
               items: [
-                { id: "azure/monitoring/index", label: "Overview", type: "doc" },
+                {
+                  id: "azure/monitoring/index",
+                  label: "Overview",
+                  type: "doc",
+                },
                 "azure/monitoring/azure-tracing",
               ],
               label: "Monitoring",
