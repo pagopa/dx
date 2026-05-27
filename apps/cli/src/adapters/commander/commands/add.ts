@@ -159,16 +159,10 @@ export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
       new Command("environment")
         .description("Add a new deployment environment")
         .action(async function () {
-          const { authorizationService, gitHubService } =
-            await requireGitHubAuth();
-          const result = await addEnvironmentAction(
-            authorizationService,
-            gitHubService,
-          );
-          if (result.isErr()) {
-            exitWithError(this)(result.error);
-          } else {
-            displaySummary(result.value);
-          }
+          await requireGitHubAuth()
+            .andThen(({ authorizationService, gitHubService }) =>
+              addEnvironmentAction(authorizationService, gitHubService),
+            )
+            .match(displaySummary, exitWithError(this));
         }),
     );

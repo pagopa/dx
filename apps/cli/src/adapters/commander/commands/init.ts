@@ -288,30 +288,32 @@ export const makeInitCommand = (
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
-      const { gitHubService } = await requireGitHubAuth();
-      await checkInitPreconditions()
-        .andThen(() =>
-          ResultAsync.fromPromise(
-            getPlopInstance(),
-            (cause) => new Error("Failed to initialize plop", { cause }),
-          ),
-        )
-        .andThen((plop) =>
-          ResultAsync.fromPromise(
-            runMonorepoGenerator(plop, gitHubService),
-            handleGeneratorError,
-          ),
-        )
-        .andTee((payload) => {
-          process.chdir(payload.repoName);
-        })
-        .andThen((payload) =>
-          confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
-            (confirmed) =>
-              confirmed
-                ? handleNewGitHubRepository(gitHubService)(payload)
-                : okAsync({ gitHubRepoCreationSkipped: true, payload }),
-          ),
+      await requireGitHubAuth()
+        .andThen((auth) =>
+          checkInitPreconditions()
+            .andThen(() =>
+              ResultAsync.fromPromise(
+                getPlopInstance(),
+                (cause) => new Error("Failed to initialize plop", { cause }),
+              ),
+            )
+            .andThen((plop) =>
+              ResultAsync.fromPromise(
+                runMonorepoGenerator(plop, auth.gitHubService),
+                handleGeneratorError,
+              ),
+            )
+            .andTee((payload) => {
+              process.chdir(payload.repoName);
+            })
+            .andThen((payload) =>
+              confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
+                (confirmed) =>
+                  confirmed
+                    ? handleNewGitHubRepository(auth.gitHubService)(payload)
+                    : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+              ),
+            ),
         )
         .match(displaySummary, exitWithError(this));
     });

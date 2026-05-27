@@ -2,8 +2,8 @@
  * Tests for the Commander spec adapter.
  *
  * Verifies that `extractCliSpec` correctly maps Commander's internal command
- * tree to the `CliSpec` domain type, covering options, arguments, nested
- * subcommands, and hidden command filtering.
+ * tree to the `CliSpec` domain type, covering options, arguments, and nested
+ * subcommands.
  */
 
 import { Argument, Command, Option } from "commander";
@@ -171,7 +171,7 @@ describe("extractCliSpec", () => {
     expect(codemodSpec?.commands[1].arguments[0].name).toBe("id");
   });
 
-  it("filters out hidden commands", () => {
+  it("includes commands registered with { hidden: true }", () => {
     const root = buildRoot();
     const visible = new Command("visible").description("Visible");
     const hidden = new Command("internal").description("Internal");
