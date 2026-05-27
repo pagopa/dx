@@ -59,6 +59,7 @@
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
+    "fast-check": "^4.8.0",
     "memfs": "^4.57.2",
     "plop": "catalog:",
     "prettier": "catalog:",
