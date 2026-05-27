@@ -5,7 +5,7 @@ sidebar_position: 1
 # Building Docker Images
 
 The
-[Docker Image Build](https://github.com/pagopa/dx/blob/main/.github/workflows/docker_image_build.yaml)
+[Docker Image Build](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-docker-image-v1.yaml)
 is a workflow that builds a OCI image and verifies that the Dockerfile is
 functional.
 
@@ -39,7 +39,7 @@ on:
 
 jobs:
   docker_image_build:
-    uses: pagopa/dx/.github/workflows/docker_image_build.yaml@main
+    uses: pagopa/dx/.github/workflows/validate-docker-image-v1.yaml@main
     name: Docker Image Build
     with:
       docker_image_name: "mytool"
@@ -60,7 +60,7 @@ on:
 
 jobs:
   docker_image_build:
-    uses: pagopa/dx/.github/workflows/docker_image_build.yaml@main
+    uses: pagopa/dx/.github/workflows/validate-docker-image-v1.yaml@main
     name: Docker Image Build
     with:
       dockerfile_path: "Dockerfile.custom"
