@@ -4,12 +4,12 @@ on:
       dockerfile_path:
         type: string
         required: false
-        default: './Dockerfile'
+        default: "./Dockerfile"
         description: Dockerfile path
       dockerfile_context:
         type: string
         required: false
-        default: '.'
+        default: "."
         description: Dockerfile build context
       docker_image_name:
         type: string
@@ -36,13 +36,11 @@ on:
         description: Image runtime platform, supports multiple values
 
 jobs:
-
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
 
     steps:
-
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         name: Checkout
 
@@ -59,3 +57,23 @@ jobs:
           push_to_registry: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run Linter
+        id: hadolint
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        with:
+          dockerfile: ${{ inputs.dockerfile_path }}
+          ignore: DL3059
+
+      - name: Post Plan on PR
+        id: comment
+        if: always() && github.event_name == 'pull_request'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body: |
+            #### Hadolint: \`${{ steps.hadolint.outcome }}\`
+            \`\`\`
+            ${process.env.HADOLINT_RESULTS}
+            \`\`\`
+            `;
+          search-pattern: "Dockerfile Linter"
