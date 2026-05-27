@@ -13,7 +13,7 @@ describe("isNonInteractive", () => {
   });
 
   it("returns false when CI is false", () => {
-    expect(isNonInteractive({ CI: false })).toBe(true);
+    expect(isNonInteractive({ CI: false })).toBe(false);
   });
 });
 

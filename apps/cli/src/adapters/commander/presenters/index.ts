@@ -18,10 +18,10 @@ import { TextCommandPresenter } from "./text-command-presenter.js";
 /**
  * Returns true when the CLI should suppress interactive prompts.
  *
- * Triggered by the presence of the CI environment variable (any value),
+ * Checks the parsed CI boolean from CliEnv (coerced by zod's stringbool),
  * following the same convention used by `is-interactive` and `ora`.
  */
-export const isNonInteractive = (env: CliEnv): boolean => env.CI !== undefined;
+export const isNonInteractive = (env: CliEnv): boolean => env.CI;
 
 /**
  * Returns the appropriate CommandPresenter adapter for the requested output mode.
