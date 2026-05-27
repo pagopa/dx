@@ -166,6 +166,7 @@ runs:
           org.opencontainers.image.authors=${{ env.AUTHORS }}
           org.opencontainers.image.url=github.com/${{ env.REPOSITORY }}
           org.opencontainers.image.source=https://github.com/${{ env.IMAGE_NAME }}
+
     - name: ${{ inputs.push_to_registry == 'true' && 'Build and Push Image' || 'Build Image' }}
       uses: docker/build-push-action@bcafcacb16a39f128d818304e6c9c0c18556b85f # v7.1.0
       id: push_registry
@@ -173,13 +174,12 @@ runs:
         DOCKERFILE_CONTEXT: ${{ inputs.dockerfile_context }}
         DOCKERFILE_PATH: ${{ inputs.dockerfile_path }}
         BUILD_ARGS: ${{ inputs.build_args }}
-        BUILD_PLATFORMS: ${{ inputs.push_to_registry != 'true' && 'linux/amd64' || inputs.build_platforms }}
+        BUILD_PLATFORMS: ${{ inputs.build_platforms }}
         SOURCE_DATE_EPOCH: 0 # https://docs.docker.com/build/ci/github-actions/reproducible-builds/
       with:
         context: ${{ env.DOCKERFILE_CONTEXT }}
         file: ${{ env.DOCKERFILE_PATH }}
         push: ${{ inputs.push_to_registry }}
-        load: ${{ inputs.push_to_registry != 'true' }}
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         annotations: ${{ steps.meta.outputs.annotations }}
@@ -189,19 +189,6 @@ runs:
         platforms: ${{ env.BUILD_PLATFORMS }}
         target: ${{ inputs.build_target }}
         provenance: false
-
-    # - name: Scan Image with Trivy
-    #   uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-    #   if: ${{ steps.set-up-registry.outputs.choice == 'ghcr' }}
-    #   env:
-    #     REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
-    #   with:
-    #     image-ref: ${{ steps.push_registry.outputs.imageid }}
-    #     format: table
-    #     exit-code: 1
-    #     vuln-type: os,library
-    #     severity: "CRITICAL,HIGH"
-    #     trivyignores: .trivyignore
 
     # Create an entry in github.com/org/repo/attestations
     # to verify the provenance of the image through
