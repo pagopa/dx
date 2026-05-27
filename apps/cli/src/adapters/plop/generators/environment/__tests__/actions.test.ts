@@ -1,9 +1,17 @@
 import { type ActionConfig } from "node-plop";
 import { describe, expect, test } from "vitest";
+import { z } from "zod";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
 import { Payload } from "../prompts.js";
+
+const terraformBackendActionSchema = z.object({
+  data: z.object({
+    terraformBackendKey: z.string(),
+  }),
+  type: z.literal("addMany"),
+});
 
 export const getPayload = (includeInit = false): Payload => {
   const cloudAccount: CloudAccount = {
@@ -79,4 +87,35 @@ describe("actions", () => {
 
     expect(actionTypes).toEqual(actionsOrder);
   });
+
+  test.each([
+    {
+      expectedKeys: [
+        "dx/mytest/bootstrapper.tfstate",
+        "dx/mytest/core.tfstate",
+      ],
+      payload: getPayload(true),
+    },
+    {
+      expectedKeys: ["dx/mytest/bootstrapper.tfstate"],
+      payload: getPayload(false),
+    },
+  ])(
+    "uses prefix/domain/scope state keys in shared backend actions",
+    ({ expectedKeys, payload }) => {
+      const actions = getActions("/templates/path")(payload);
+
+      const terraformBackendKeys = actions
+        .filter(
+          (
+            action,
+          ): action is ActionConfig & {
+            data: { terraformBackendKey: string };
+          } => terraformBackendActionSchema.safeParse(action).success,
+        )
+        .map((action) => action.data.terraformBackendKey);
+
+      expect(terraformBackendKeys).toEqual(expectedKeys);
+    },
+  );
 });
