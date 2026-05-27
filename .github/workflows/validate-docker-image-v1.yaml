@@ -73,25 +73,25 @@ jobs:
       - name: Format Linter Results
         id: format-results
         if: always() && github.event_name == 'pull_request'
-        shell: bash
         env:
           DOCKERFILE: ${{ inputs.dockerfile_path }}
         run: |
+
           # Check if hadolint found any issues
           if [ ! -s ./hadolint-results.txt ]; then
             # No issues found
-            cat > ./hadolint-comment.md << EOF
+            cat > ./hadolint-comment.md << 'EOF'
           ## 🐳 Dockerfile Linter
 
           ### ✅ No issues found
 
           Your Dockerfile passes all linting checks!
 
-          **Analyzed:** \`${DOCKERFILE}\`
+          **Analyzed:** \`$DOCKERFILE\`
           EOF
           else
             # Issues found - format them nicely
-            cat > ./hadolint-comment.md << EOF
+            cat > ./hadolint-comment.md << 'EOF'
           ## 🐳 Dockerfile Linter
 
           ### ⚠️ Issues detected
@@ -102,12 +102,14 @@ jobs:
           <summary>📋 View details</summary>
 
           ```
-          $(cat ./hadolint-results.txt)
+          EOF
+            cat ./hadolint-results.txt >> ./hadolint-comment.md
+            cat >> ./hadolint-comment.md << 'EOF'
           ```
 
           </details>
 
-          **Analyzed:** `${DOCKERFILE}`
+          **Analyzed:** \`$DOCKERFILE\`
 
           ---
 
@@ -116,7 +118,7 @@ jobs:
           fi
 
           # Replace the dockerfile path placeholder
-          sed -i "s|\${DOCKERFILE}|${DOCKERFILE}|g" ./hadolint-comment.md
+          sed -i "s|\$DOCKERFILE|$DOCKERFILE|g" ./hadolint-comment.md
 
       - name: Post Linter Results on PR
         id: comment
@@ -124,6 +126,6 @@ jobs:
         uses: pagopa/dx/actions/pr-comment@main
         with:
           comment-body-file: ./hadolint-comment.md
-          search-pattern: "🐳 Dockerfile Linter"
+          search-pattern: "Dockerfile Linter"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
