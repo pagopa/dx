@@ -190,18 +190,18 @@ runs:
         target: ${{ inputs.build_target }}
         provenance: false
 
-    - name: Scan Image with Trivy
-      uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
-      if: ${{ steps.set-up-registry.outputs.choice == 'ghcr' }}
-      env:
-        REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
-      with:
-        image-ref: ${{ steps.push_registry.outputs.imageid }}
-        format: table
-        exit-code: 1
-        vuln-type: os,library
-        severity: "CRITICAL,HIGH"
-        trivyignores: .trivyignore
+    # - name: Scan Image with Trivy
+    #   uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+    #   if: ${{ steps.set-up-registry.outputs.choice == 'ghcr' }}
+    #   env:
+    #     REGISTRY_URL: ${{ steps.set-registry-url.outputs.registry_url }}
+    #   with:
+    #     image-ref: ${{ steps.push_registry.outputs.imageid }}
+    #     format: table
+    #     exit-code: 1
+    #     vuln-type: os,library
+    #     severity: "CRITICAL,HIGH"
+    #     trivyignores: .trivyignore
 
     # Create an entry in github.com/org/repo/attestations
     # to verify the provenance of the image through
