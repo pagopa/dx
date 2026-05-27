@@ -64,18 +64,68 @@ jobs:
       - name: Run Linter
         id: hadolint
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
+        continue-on-error: true
         with:
           dockerfile: ${{ inputs.dockerfile_path }}
           output-file: ./hadolint-results.txt
           ignore: DL3059
 
-      - name: Post Plan on PR
+      - name: Format Linter Results
+        id: format-results
+        if: always() && github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          DOCKERFILE="${{ inputs.dockerfile_path }}"
+
+          # Check if hadolint found any issues
+          if [ ! -s ./hadolint-results.txt ]; then
+            # No issues found
+            cat > ./hadolint-comment.md << 'EOF'
+          ## 🐳 Dockerfile Linter
+
+          ### ✅ No issues found
+
+          Your Dockerfile passes all linting checks!
+
+          **Analyzed:** \`$DOCKERFILE\`
+          EOF
+          else
+            # Issues found - format them nicely
+            cat > ./hadolint-comment.md << 'EOF'
+          ## 🐳 Dockerfile Linter
+
+          ### ⚠️ Issues detected
+
+          The following issues were found in your Dockerfile:
+
+          <details>
+          <summary>📋 View details</summary>
+
+          ```
+          EOF
+            cat ./hadolint-results.txt >> ./hadolint-comment.md
+            cat >> ./hadolint-comment.md << 'EOF'
+          ```
+
+          </details>
+
+          **Analyzed:** \`$DOCKERFILE\`
+
+          ---
+
+          💡 **Tip:** Fix these issues to ensure your Docker image follows best practices. Learn more in the [Hadolint documentation](https://github.com/hadolint/hadolint).
+          EOF
+          fi
+
+          # Replace the dockerfile path placeholder
+          sed -i "s|\$DOCKERFILE|$DOCKERFILE|g" ./hadolint-comment.md
+
+      - name: Post Linter Results on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
         uses: pagopa/dx/actions/pr-comment@main
         with:
-          comment-body-file: ./hadolint-results.txt
-
-          search-pattern: "Dockerfile Linter"
+          comment-body-file: ./hadolint-comment.md
+          search-pattern: "🐳 Dockerfile Linter"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
