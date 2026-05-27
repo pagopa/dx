@@ -74,12 +74,23 @@ jobs:
       - name: Format Linter Results
         id: format-results
         if: always() && github.event_name == 'pull_request'
-        env:
-          DOCKERFILE: ${{ inputs.dockerfile_path }}
+        shell: bash
         run: |
+          # Check if hadolint step failed to run
+          if [[ "${{ steps.hadolint.outcome }}" == "failure" ]] && [ ! -f ./hadolint-results.txt ]; then
+            # Linter failed to execute
+            cat > ./hadolint-comment.md << 'EOF'
+          ## 🐳 Dockerfile Linter
 
-          # Check if hadolint found any issues
-          if [ ! -s ./hadolint-results.txt ]; then
+          ### ❌ Linter failed to run
+
+          The Dockerfile linter could not analyze the file. Please check:
+          - The Dockerfile path is correct
+          - The Dockerfile syntax is valid
+          - The hadolint action completed successfully
+
+          EOF
+          elif [ ! -s ./hadolint-results.txt ]; then
             # No issues found
             cat > ./hadolint-comment.md << 'EOF'
           ## 🐳 Dockerfile Linter
