@@ -8,16 +8,12 @@ import { JsonCommandPresenter } from "../json-command-presenter.js";
 import { TextCommandPresenter } from "../text-command-presenter.js";
 
 describe("isNonInteractive", () => {
-  it("returns false when CI is not set", () => {
-    expect(isNonInteractive({ CI: undefined })).toBe(false);
+  it("returns true when CI is true", () => {
+    expect(isNonInteractive({ CI: true })).toBe(true);
   });
 
-  it("returns true when CI is set to any value", () => {
-    expect(isNonInteractive({ CI: "true" })).toBe(true);
-  });
-
-  it("returns true when CI is 'false' (presence is the signal, not the value)", () => {
-    expect(isNonInteractive({ CI: "false" })).toBe(true);
+  it("returns false when CI is false", () => {
+    expect(isNonInteractive({ CI: false })).toBe(true);
   });
 });
 
