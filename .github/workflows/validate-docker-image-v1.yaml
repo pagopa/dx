@@ -109,16 +109,11 @@ jobs:
 
           </details>
 
-          **Analyzed:** `$DOCKERFILE`
-
           ---
 
           💡 **Tip:** Fix these issues to ensure your Docker image follows best practices. Learn more in the [Hadolint documentation](https://github.com/hadolint/hadolint).
           EOF
           fi
-
-          # Replace the dockerfile path placeholder
-          sed -i "s|\$DOCKERFILE|$DOCKERFILE|g" ./hadolint-comment.md
 
       - name: Post Linter Results on PR
         id: comment
