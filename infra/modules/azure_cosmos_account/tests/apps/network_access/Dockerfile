@@ -9,6 +9,7 @@ RUN CGO_ENABLED=0 go build -o app main.go
 
 FROM gcr.io/distroless/base-debian12:nonroot
 
-EXPOSE 8081
+EXPOSE 8080
+USER root
 ENTRYPOINT ["/app"]
 COPY --from=build /src/app /app

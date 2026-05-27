@@ -39,6 +39,9 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -63,6 +66,7 @@ jobs:
         uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
         with:
           dockerfile: ${{ inputs.dockerfile_path }}
+          output-file: ./hadolint-results.txt
           ignore: DL3059
 
       - name: Post Plan on PR
@@ -70,10 +74,8 @@ jobs:
         if: always() && github.event_name == 'pull_request'
         uses: pagopa/dx/actions/pr-comment@main
         with:
-          comment-body: |
-            #### Hadolint: \`${{ steps.hadolint.outcome }}\`
-            \`\`\`
-            ${process.env.HADOLINT_RESULTS}
-            \`\`\`
-            `;
+          comment-body-file: ./hadolint-results.txt
+
           search-pattern: "Dockerfile Linter"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
