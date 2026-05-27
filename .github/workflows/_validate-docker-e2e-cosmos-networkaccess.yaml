@@ -16,26 +16,12 @@ permissions:
 jobs:
   build:
     name: Build Docker Image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      IMAGE_NAME: "pagopa/e2e-cosmos-network-access"
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Docker Build
-        id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@CES-438-inserire-uno-step-di-linting-nella-produzione-delle-immagini-docker
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          dockerfile_path: infra/modules/azure_cosmos_account/tests/apps/network_access/Dockerfile
-          dockerfile_context: infra/modules/azure_cosmos_account/tests/apps/network_access/src
-          docker_image_name: ${{ env.IMAGE_NAME }}
-          docker_image_description: "Web app which exposes a single endpoint to probe Azure Cosmos DB. Used for E2E tests of the Azure Cosmos DB Terraform module."
-          docker_image_authors: "PagoPA"
-          build_platforms: "linux/amd64,linux/arm64"
-          push_to_registry: false
+    uses: pagopa/dx/.github/workflows/docker_image_build.yaml@CES-438-inserire-uno-step-di-linting-nella-produzione-delle-immagini-docker
+    secrets: inherit
+    with:
+      dockerfile_path: infra/modules/azure_cosmos_account/tests/apps/network_access/Dockerfile
+      dockerfile_context: infra/modules/azure_cosmos_account/tests/apps/network_access/src
+      docker_image_name: "pagopa/e2e-cosmos-network-access"
+      image_description: "Web app which exposes a single endpoint to probe Azure Cosmos DB. Used for E2E tests of the Azure Cosmos DB Terraform module."
+      image_authors: "PagoPA"
+      build_platforms: "linux/amd64,linux/arm64"
