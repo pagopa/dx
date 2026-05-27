@@ -1,3 +1,13 @@
+## 0.18.2 (2026-05-27)
+
+### 🩹 Fixes
+
+- Update links to docker validation workflow ([#1800](https://github.com/pagopa/dx/pull/1800))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.18.1 (2026-05-25)
 
 ### 🩹 Fixes
