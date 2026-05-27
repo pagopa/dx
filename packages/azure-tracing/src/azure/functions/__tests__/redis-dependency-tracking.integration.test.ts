@@ -2,64 +2,75 @@
  * Integration suite for Redis dependency tracking through the preload
  * entrypoint.
  */
-import { GenericContainer, Wait } from "testcontainers";
-import { expect, test } from "vitest";
+import {
+  GenericContainer,
+  type StartedTestContainer,
+  Wait,
+} from "testcontainers";
+import { test as baseTest, expect } from "vitest";
 
+import {
+  createContainerFixture,
+  type DependencyTrackingFixtures,
+  telemetryCollectorFixture,
+} from "./dependency-tracking-test-fixtures";
 import {
   createRunId,
   dependencyTestTimeoutMs,
   runDependencyScenario,
-  startTelemetryCollector,
 } from "./dependency-tracking-test-helpers";
+
+const test = baseTest.extend<
+  DependencyTrackingFixtures & {
+    readonly redisContainer: StartedTestContainer;
+  }
+>({
+  redisContainer: createContainerFixture(async () =>
+    new GenericContainer("redis:7.4-alpine")
+      .withExposedPorts(6379)
+      .withWaitStrategy(Wait.forListeningPorts())
+      .start(),
+  ),
+  telemetryCollector: telemetryCollectorFixture,
+});
 
 test(
   "exports Redis dependency telemetry from the preload entrypoint",
-  async () => {
-    const telemetryCollector = await startTelemetryCollector();
+  async ({ redisContainer, telemetryCollector }) => {
     const runId = createRunId();
     const redisKey = `key:${runId}`;
     const redisValue = `value:${runId}`;
+    const redisPort = redisContainer.getMappedPort(6379);
 
-    const redisContainer = await new GenericContainer("redis:7.4-alpine")
-      .withExposedPorts(6379)
-      .withWaitStrategy(Wait.forListeningPorts())
-      .start();
+    await runDependencyScenario(
+      "redis",
+      {
+        APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
+        APPLICATIONINSIGHTS_CONNECTION_STRING:
+          telemetryCollector.connectionString,
+        APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
+        APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
+        REDIS_KEY: redisKey,
+        REDIS_URL: `redis://${redisContainer.getHost()}:${redisPort}`,
+        REDIS_VALUE: redisValue,
+      },
+      telemetryCollector.caCertificatePath,
+    );
 
-    try {
-      const redisPort = redisContainer.getMappedPort(6379);
+    const dependencies = await telemetryCollector.waitForRemoteDependencies(
+      (dependency) =>
+        dependency.type === "redis" &&
+        [dependency.data, dependency.name]
+          .filter((value) => value !== undefined)
+          .some(
+            (value) =>
+              value?.includes(redisKey) === true ||
+              value?.toUpperCase().includes("SET") === true ||
+              value?.toUpperCase().includes("GET") === true,
+          ),
+    );
 
-      await runDependencyScenario(
-        "redis",
-        {
-          APPINSIGHTS_SAMPLING_PERCENTAGE: "100",
-          APPLICATIONINSIGHTS_CONNECTION_STRING:
-            telemetryCollector.connectionString,
-          APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: "false",
-          APPLICATIONINSIGHTS_SDKSTATS_DISABLED: "true",
-          REDIS_KEY: redisKey,
-          REDIS_URL: `redis://${redisContainer.getHost()}:${redisPort}`,
-          REDIS_VALUE: redisValue,
-        },
-        telemetryCollector.caCertificatePath,
-      );
-
-      const dependencies = await telemetryCollector.waitForRemoteDependencies(
-        (dependency) =>
-          dependency.type === "redis" &&
-          [dependency.data, dependency.name]
-            .filter((value) => value !== undefined)
-            .some(
-              (value) =>
-                value?.includes(redisKey) === true ||
-                value?.toUpperCase().includes("SET") === true ||
-                value?.toUpperCase().includes("GET") === true,
-            ),
-      );
-
-      expect(dependencies.length).toBeGreaterThanOrEqual(2);
-    } finally {
-      await Promise.all([redisContainer.stop(), telemetryCollector.close()]);
-    }
+    expect(dependencies.length).toBeGreaterThanOrEqual(2);
   },
   dependencyTestTimeoutMs,
 );
