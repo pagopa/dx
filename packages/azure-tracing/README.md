@@ -148,6 +148,10 @@ The managed identity (or other principal) must have the **Monitoring Metrics Pub
 - `pnpm nx test @pagopa/azure-tracing` runs the default unit test suite.
 - `pnpm nx run @pagopa/azure-tracing:integration` runs the opt-in integration suite.
 
+> [!IMPORTANT]
+> Pre-condition for the integration suite: Docker must be installed and running locally so Testcontainers can start the required services.
+> The suite already uses the committed PEM fixtures in `src/azure/functions/__tests__/fixtures/`, so no extra certificate-generation step is required.
+
 ## Dependency Constraints
 
 ### `import-in-the-middle` version must match `@azure/monitor-opentelemetry`
