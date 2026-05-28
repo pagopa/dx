@@ -6,6 +6,12 @@
  * Colors remain aligned with DX/PagoPA brand.
  */
 
+:root {
+  --doc-sidebar-width: 280px;
+  --dx-doc-sidebar-min-width: 240px;
+  --dx-doc-sidebar-max-width: 420px;
+}
+
 /* ─── Sidebar Container ─── */
 .menu {
   padding: 16px 12px;
@@ -192,11 +198,6 @@
 
 [data-theme="dark"] .theme-doc-sidebar-container {
   border-right-color: var(--ifm-color-emphasis-300);
-}
-
-/* ─── Remove default thick border ─── */
-aside.theme-doc-sidebar-container {
-  --doc-sidebar-width: 280px;
 }
 
 /* ─── Scrollbar styling for sidebar ─── */

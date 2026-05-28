@@ -1,0 +1,103 @@
+/**
+ * Desktop docs sidebar wrapper with resize handle support.
+ */
+
+:global(:root) {
+  --doc-sidebar-width: 280px;
+}
+
+.docSidebarContainer {
+  display: none;
+}
+
+.resizeHandle {
+  display: none;
+}
+
+@media (min-width: 997px) {
+  .docSidebarContainer {
+    display: block;
+    position: relative;
+    width: var(--doc-sidebar-width);
+    margin-top: calc(-1 * var(--ifm-navbar-height));
+    border-right: 1px solid var(--ifm-toc-border-color);
+    will-change: width;
+    transition: width var(--ifm-transition-fast) ease;
+    clip-path: inset(0);
+  }
+
+  .docSidebarContainerHidden {
+    width: var(--doc-sidebar-hidden-width);
+    cursor: pointer;
+  }
+
+  .docSidebarContainerResizing {
+    transition: none;
+  }
+
+  .sidebarViewport {
+    position: sticky;
+    top: 0;
+    height: 100%;
+    max-height: 100vh;
+  }
+
+  .resizeHandle {
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 14px;
+    height: 100%;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 2;
+    outline: none;
+  }
+
+  .resizeHandle::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 6px;
+    width: 1px;
+    background: transparent;
+    transition: background-color 0.15s ease;
+  }
+
+  .resizeHandle::after {
+    content: "";
+    position: absolute;
+    top: calc(50% - 20px);
+    left: 4px;
+    width: 5px;
+    height: 40px;
+    border-left: 1px solid transparent;
+    border-right: 1px solid transparent;
+    opacity: 0;
+    transition:
+      border-color 0.15s ease,
+      opacity 0.15s ease;
+  }
+
+  .docSidebarContainer:hover .resizeHandle::before,
+  .docSidebarContainerResizing .resizeHandle::before,
+  .resizeHandle:hover::before,
+  .resizeHandle:focus-visible::before {
+    background: var(--ifm-color-emphasis-300);
+  }
+
+  .docSidebarContainer:hover .resizeHandle::after,
+  .docSidebarContainerResizing .resizeHandle::after,
+  .resizeHandle:hover::after,
+  .resizeHandle:focus-visible::after {
+    border-color: var(--ifm-color-emphasis-400);
+    opacity: 1;
+  }
+}
+
+:global(body[data-sidebar-resizing="true"]) {
+  cursor: col-resize;
+  user-select: none;
+}
