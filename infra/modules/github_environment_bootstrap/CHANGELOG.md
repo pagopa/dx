@@ -1,3 +1,13 @@
+## 1.3.1 (2026-05-27)
+
+### 🩹 Fixes
+
+- Suppress Trivy warning about public GitHub repositories ([#1794](https://github.com/pagopa/dx/pull/1794))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 1.3.0 (2026-04-27)
 
 ### 🚀 Features

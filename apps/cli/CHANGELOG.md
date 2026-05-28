@@ -1,3 +1,31 @@
+## 0.22.2 (2026-05-27)
+
+### 🩹 Fixes
+
+- Use truthy values for the CLI CI environment variable ([#1798](https://github.com/pagopa/dx/pull/1798))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.22.1 (2026-05-25)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.2.6
+
+## 0.22.0 (2026-05-20)
+
+### 🚀 Features
+
+- Add OutputLogger domain interface and CliEnv Zod schema to decouple output logic from use-cases. Introduce the --output <text|json> global flag on the root dx command as a prerequisite for injecting different output adapters in follow-up work. ([#1773](https://github.com/pagopa/dx/pull/1773))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.21.6 (2026-05-19)
 
 ### 🩹 Fixes

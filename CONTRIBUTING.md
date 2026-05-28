@@ -95,49 +95,6 @@ pnpm add -w nx
 pnpm --filter @pagopa/dx-cli add zod
 ````
 
-# SBOM Management
-
-## What is an SBOM
-
-An SBOM (Software Bill of Materials) is a formal, machine-readable inventory of
-software components and dependencies contained in an application. It provides a
-detailed list of all the libraries, frameworks, and modules that make up the
-software, along with their versions and licenses.
-
-## SBOM Management Script
-
-To generate SBOMs, this project includes a
-[script](https://github.com/pagopa/dx/blob/main/sbom.sh) that automates their
-creation, updates, and validation.
-
-### Requirements
-
-Before using the script, you need to have the following tools installed on your
-system:
-
-- **[Syft](https://github.com/anchore/syft)**: A CLI tool for generating SBOMs
-  from container images and filesystems.
-- **[Grype](https://github.com/anchore/grype)**: A vulnerability scanner for
-  container images and filesystems.
-
-You can find installation instructions on their official GitHub pages.
-
-### Usage
-
-The root `package.json` includes the following scripts to manage SBOMs:
-
-- **To generate all SBOMs**:
-
-  ```sh
-  pnpm sbom-generate
-  ```
-
-- **To validate existing SBOMs**:
-
-  ```sh
-  pnpm sbom-validate
-  ```
-
 ---
 
 Thank you for contributing to DX!

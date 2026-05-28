@@ -10,6 +10,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "int"
+    app_name        = "ghr"
     instance_number = "01"
   }
 
@@ -57,7 +58,7 @@ run "apply_pat_auth_rbac" {
 
     key_vault = {
       name                = run.setup.key_vault_name
-      resource_group_name = run.setup.key_vault_resource_group_name
+      resource_group_name = run.setup.resource_group_name
       use_rbac            = true
     }
   }
@@ -118,7 +119,7 @@ run "apply_github_app_auth" {
 
     key_vault = {
       name                = run.setup.key_vault_name
-      resource_group_name = run.setup.key_vault_resource_group_name
+      resource_group_name = run.setup.resource_group_name
       use_rbac            = true
     }
 

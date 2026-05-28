@@ -10,6 +10,9 @@
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
   "files.watcherExclude": {
     "**/build/**": true,
     "**/dist/**": true,

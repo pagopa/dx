@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-savemoney",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "type": "module",
   "description": "Azure resource analyzer for finding unused or cost-inefficient resources.",
   "repository": {
@@ -46,6 +46,7 @@
     "@azure/identity": "catalog:",
     "@logtape/logtape": "catalog:",
     "js-yaml": "catalog:",
+    "p-limit": "^7.3.0",
     "zod": "catalog:"
   },
   "devDependencies": {

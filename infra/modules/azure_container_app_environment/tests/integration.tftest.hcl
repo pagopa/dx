@@ -39,6 +39,7 @@ run "setup" {
 
   variables {
     environment = var.environment
+    tags        = var.tags
     test_kind   = var.test_kind
   }
 }

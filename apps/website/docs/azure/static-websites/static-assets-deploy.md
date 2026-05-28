@@ -4,6 +4,15 @@ sidebar_position: 4
 
 # Deploying Static Assets
 
+:::info Reusable Workflows
+
+| Workflow                                  | Version | Source                                                                                                                              |
+| ----------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Deploy Static Site to Azure**           | v1      | [`release-azure-staticapp-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-staticapp-v1.yaml)       |
+| **Build and Deploy Static Site to Azure** | v1      | [`release-azure-staticassets-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-staticassets-v1.yaml) |
+
+:::
+
 The
 [Static Assets Deploy action](https://github.com/pagopa/dx/tree/main/actions/static-assets-deploy)
 is a utility that simplifies the deployment of static assets to Azure. It

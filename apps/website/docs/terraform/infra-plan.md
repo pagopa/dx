@@ -4,6 +4,14 @@ sidebar_position: 5
 
 # Reviewing Infrastructure Changes
 
+:::info Reusable Workflow
+
+| Workflow                | Version | Source                                                                                        |
+| ----------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| **Infrastructure Plan** | latest  | [`infra_plan.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_plan.yaml) |
+
+:::
+
 This page describes the GitHub workflow that automates Terraform plan
 operations.
 

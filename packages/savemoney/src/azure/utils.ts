@@ -9,6 +9,19 @@ import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult } from "../types.js";
 
+/** Per-run in-memory cache for Azure Monitor metric responses. */
+export type MetricsCache = Map<string, Promise<null | number>>;
+
+/**
+ * Minimal interface required by `getMetric` — only the `metrics.list` shape.
+ * Using a structural type instead of the full `MonitorClient` keeps tests
+ * strongly typed without unsafe casts and lets non-Azure callers supply a
+ * compatible mock.
+ */
+export type MonitorClientLike = {
+  metrics: Pick<MonitorClient["metrics"], "list">;
+};
+
 type MetricDataPoint = {
   average?: number;
   count?: number;
@@ -104,59 +117,61 @@ export function extractAggregatedValue(
 }
 
 /**
- * Fetches a specific metric for a resource from Azure Monitor.
+ * Module-scoped fallback cache. Used when callers of `getMetric` do not
+ * supply a run-scoped cache. Prefer passing an explicit `MetricsCache`
+ * instance through `AnalyzerContext` so concurrent runs stay isolated.
+ */
+const metricsCache: MetricsCache = new Map();
+
+/**
+ * @internal — exposed for tests only.
+ */
+export function _metricsCacheSize(): number {
+  return metricsCache.size;
+}
+
+/**
+ * Fetches a specific metric for a resource from Azure Monitor, with an
+ * in-memory cache to deduplicate concurrent and repeated lookups within
+ * the same run.
  *
- * @param monitorClient - The Azure Monitor client instance
+ * Concurrent callers for the same `(resourceId, metricName, aggregation,
+ * timespanDays)` tuple share the same underlying request.
+ *
+ * Pass an explicit `cache` (created per run in the orchestrator) to keep
+ * concurrent analysis runs isolated from each other. When omitted, the
+ * module-scoped fallback cache is used — safe for sequential runs.
+ *
+ * @param monitorClient - Azure Monitor client (or compatible mock)
  * @param resourceId - The Azure resource ID
  * @param metricName - The name of the metric to fetch (e.g., "Percentage CPU")
  * @param aggregation - The aggregation type (e.g., "Average", "Total")
  * @param timespanDays - Number of days to look back for metrics
+ * @param cache - Optional run-scoped cache; falls back to the module-scoped one
  * @returns The metric value or null if unavailable
  */
 export async function getMetric(
-  monitorClient: MonitorClient,
+  monitorClient: MonitorClientLike,
   resourceId: string,
   metricName: string,
   aggregation: string,
   timespanDays: number,
+  cache: MetricsCache = metricsCache,
 ): Promise<null | number> {
-  try {
-    const timespan = `P${timespanDays}D`;
-    const result = await monitorClient.metrics.list(resourceId, {
-      aggregation,
-      metricnames: metricName,
-      timespan,
-    });
-
-    if (result.value.length === 0) {
-      return null;
-    }
-
-    const metric = result.value[0];
-
-    if (!metric.timeseries || metric.timeseries.length === 0) {
-      return null;
-    }
-
-    const timeserie = metric.timeseries[0];
-
-    if (!timeserie.data || timeserie.data.length === 0) {
-      return null;
-    }
-
-    const aggregatedValue = aggregateDataPoints(
-      timeserie.data as MetricDataPoint[],
-      aggregation,
-    );
-
-    return aggregatedValue;
-  } catch (error) {
-    const logger = getLogger(["savemoney", "azure", "metrics"]);
-    logger.error(
-      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-    return null;
+  const key = `${resourceId}|${metricName}|${aggregation}|${timespanDays}`;
+  const cached = cache.get(key);
+  if (cached !== undefined) {
+    return cached;
   }
+  const promise = fetchMetric(
+    monitorClient,
+    resourceId,
+    metricName,
+    aggregation,
+    timespanDays,
+  );
+  cache.set(key, promise);
+  return promise;
 }
 
 /**
@@ -177,6 +192,16 @@ export function matchesTags(
   return [...filterTags.entries()].every(
     ([key, value]) => resourceTags[key] === value,
   );
+}
+
+/**
+ * Clears the module-scoped fallback metrics cache.
+ *
+ * Only needed when `getMetric` is called without an explicit `cache`
+ * argument. Prefer passing a run-scoped `MetricsCache` instead.
+ */
+export function resetMetricsCache(): void {
+  metricsCache.clear();
 }
 
 /**
@@ -241,5 +266,51 @@ export function verboseLogResourceStart(
     logger.debug(`🔍 ANALYZING: ${resourceName}`);
     logger.debug(`   Type: ${resourceType}`);
     logger.debug("=".repeat(80));
+  }
+}
+
+async function fetchMetric(
+  monitorClient: MonitorClientLike,
+  resourceId: string,
+  metricName: string,
+  aggregation: string,
+  timespanDays: number,
+): Promise<null | number> {
+  try {
+    const timespan = `P${timespanDays}D`;
+    const result = await monitorClient.metrics.list(resourceId, {
+      aggregation,
+      metricnames: metricName,
+      timespan,
+    });
+
+    if (result.value.length === 0) {
+      return null;
+    }
+
+    const metric = result.value[0];
+
+    if (!metric.timeseries || metric.timeseries.length === 0) {
+      return null;
+    }
+
+    const timeserie = metric.timeseries[0];
+
+    if (!timeserie.data || timeserie.data.length === 0) {
+      return null;
+    }
+
+    const aggregatedValue = aggregateDataPoints(
+      timeserie.data as MetricDataPoint[],
+      aggregation,
+    );
+
+    return aggregatedValue;
+  } catch (error) {
+    const logger = getLogger(["savemoney", "azure", "metrics"]);
+    logger.error(
+      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+    return null;
   }
 }

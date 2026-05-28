@@ -4,6 +4,14 @@ sidebar_position: 10
 
 # Automate versioning and publishing with Changesets
 
+:::info Reusable Workflow
+
+| Workflow    | Version | Source                                                                                        |
+| ----------- | ------- | --------------------------------------------------------------------------------------------- |
+| **Release** | v1      | [`release-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v1.yaml) |
+
+:::
+
 :::info Nx monorepo?
 
 If your [Nx](https://nx.dev) repository uses Nx Release (version plans) for

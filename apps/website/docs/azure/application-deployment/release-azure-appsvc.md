@@ -4,10 +4,16 @@ sidebar_position: 50
 
 # Deploy Azure App Service and Function Apps
 
+:::info Reusable Workflow
+
+| Workflow                      | Version | Source                                                                                                                  |
+| ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Release Azure App Service** | v1      | [`release-azure-appsvc-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-appsvc-v1.yaml) |
+
+:::
+
 To deploy your application to Azure App Service or Function Apps, you can use
-the
-[`release-azure-appsvc`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-azure-appsvc-v1.yaml)
-resusable workflow.
+the `release-azure-appsvc` reusable workflow.
 
 ## Overview
 

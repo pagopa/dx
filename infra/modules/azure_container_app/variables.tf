@@ -135,11 +135,18 @@ variable "authentication" {
 
 variable "secrets" {
   type = list(object({
-    name                = string
-    key_vault_secret_id = string
+    name                   = string
+    key_vault_secret_id    = string
+    scheduled_for_deletion = optional(bool, false)
   }))
   default     = []
-  description = "A list of Key Vault secret references to be used as environment variables in the container app."
+  description = <<-EOT
+  List of Key Vault secret references to define in the Container App.
+  Setting `scheduled_for_deletion` to `true` is useful when a secret is not needed by the NEXT version of the running application.
+  In these cases, first execute the deployment of the new container version, which removes the dependency on that secret.
+  Then, set this property to `true` to not expose the secret to the container, but keeping it available at the Container App level.
+  Then, remove the secret from the IaC configuration to remove it completely from the Container App secrets.
+  EOT
 }
 
 variable "container_app_templates" {

@@ -3,11 +3,17 @@ import type { ActionType, DynamicActionsFunction } from "node-plop";
 import { getLogger } from "@logtape/logtape";
 import path from "node:path";
 
-import { Environment } from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
+import { terraformStateKey } from "../../helpers/terraform-state-key.js";
+import { Payload } from "./prompts.js";
 import { payloadSchema } from "./prompts.js";
 
-const addModule = (env: Environment, templatesPath: string, init = false) => {
+const addModule = (
+  context: Pick<Payload, "env" | "workspace">,
+  templatesPath: string,
+  init = false,
+) => {
+  const { env } = context;
   const cloudAccountsByCsp = Object.groupBy(
     env.cloudAccounts,
     (account) => account.csp,
@@ -16,7 +22,7 @@ const addModule = (env: Environment, templatesPath: string, init = false) => {
     (account) => account.displayName === "PROD-IO",
   );
   const cwd = process.cwd();
-  return (name: string, terraformBackendKey: string) => [
+  return (name: string) => [
     {
       base: templatesPath,
       data: { cloudAccountsByCsp, includesProdIO, init: init || undefined },
@@ -33,6 +39,8 @@ const addModule = (env: Environment, templatesPath: string, init = false) => {
         cloudAccountsByCsp,
         init: init || undefined,
         terraformBackendKey,
+        init,
+        terraformBackendKey: terraformStateKey(context, name),
       },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
@@ -59,24 +67,25 @@ const addWorkflowModule = (templatesPath: string): ActionType => {
 export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
-  return (payload: unknown) => {
+  return (input: unknown) => {
     const logger = getLogger(["gen", "env"]);
 
-    logger.debug("payload {payload}", { payload });
+    logger.debug("environment generator input {input}", { input });
 
-    const { env, github, init } = payloadSchema.parse(payload);
+    const { env, init, workspace } = payloadSchema.parse(input);
 
-    const addEnvironmentModule = addModule(env, templatesPath, !!init);
+    const addEnvironmentModule = addModule(
+      { env, workspace },
+      templatesPath,
+      !!init,
+    );
 
     const actions: ActionType[] = [
       {
         type: "getTerraformBackend",
       },
       addWorkflowModule(templatesPath),
-      ...addEnvironmentModule(
-        "bootstrapper",
-        `${github.repo}.bootstrapper.${env.name}.tfstate`,
-      ),
+      ...addEnvironmentModule("bootstrapper"),
     ];
 
     if (init) {
@@ -90,12 +99,7 @@ export default function getActions(
             : "getTerraformBackend",
         },
       );
-      actions.push(
-        ...addEnvironmentModule(
-          "core",
-          `${env.prefix}.core.${env.name}.tfstate`,
-        ),
-      );
+      actions.push(...addEnvironmentModule("core"));
     }
 
     return actions;

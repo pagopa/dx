@@ -1,3 +1,14 @@
+## 4.0.2 (2026-05-27)
+
+### 🩹 Fixes
+
+- Suppress Trivy warning classified as a false positive ([#1793](https://github.com/pagopa/dx/pull/1793))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot Autofix powered by AI @Copilot
+
 ## 4.0.1 (2026-05-12)
 
 ### 🩹 Fixes

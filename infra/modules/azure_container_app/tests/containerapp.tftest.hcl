@@ -189,6 +189,53 @@ run "container_app_is_correct_plan" {
   }
 }
 
+run "container_app_can_keep_secret_out_of_container_env" {
+  command = plan
+
+  variables {
+    secrets = [
+      {
+        name                = run.setup_tests.key_vault_secret1.name
+        key_vault_secret_id = run.setup_tests.key_vault_secret1.secret_id
+      },
+      {
+        name                   = run.setup_tests.key_vault_secret2.name
+        key_vault_secret_id    = run.setup_tests.key_vault_secret2.secret_id
+        scheduled_for_deletion = true
+      }
+    ]
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.secret) == 2
+    error_message = "All secrets should still be defined in the container app"
+  }
+
+  assert {
+    condition = length([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env if env.secret_name != null
+    ]) == 1
+    error_message = "Only secrets marked for container use should be injected as environment variables"
+  }
+
+  assert {
+    condition = contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.name if env.secret_name != null
+    ], run.setup_tests.key_vault_secret1.name)
+    error_message = "Secrets enabled for container use should still be exposed as environment variables"
+  }
+
+  assert {
+    condition = !contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.name if env.secret_name != null
+    ], run.setup_tests.key_vault_secret2.name)
+    error_message = "Secrets disabled for container use should not be exposed as environment variables"
+  }
+}
+
 run "container_app_correct_container_name" {
   command = plan
 
