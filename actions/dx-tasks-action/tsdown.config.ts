@@ -6,6 +6,7 @@ export default defineConfig({
   },
   dts: false,
   entry: "src/index.ts",
+  minify: true,
   nodeProtocol: true,
   outDir: "dist",
   platform: "node",
