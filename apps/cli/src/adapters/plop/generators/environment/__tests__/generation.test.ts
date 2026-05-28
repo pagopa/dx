@@ -11,9 +11,9 @@ import nodePlop from "node-plop";
  * - Registering stub action types directly on the Plop instance
  * - Mocking formatTerraformCode via vi.mock() to avoid terraform CLI dependency
  */
-import * as fs from "node:fs/promises";
-import * as os from "node:os";
-import * as path from "node:path";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import type { CloudAccountService } from "../../../../../domain/cloud-account.js";

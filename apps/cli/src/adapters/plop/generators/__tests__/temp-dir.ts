@@ -1,7 +1,7 @@
 /**
  * Temp directory helpers for Plop generator integration tests.
  */
-import * as fs from "node:fs/promises";
+import fs from "node:fs/promises";
 
 export const shouldKeepTestArtifacts = (env: NodeJS.ProcessEnv): boolean =>
   env.KEEP_ARTIFACTS === "1" || env.KEEP_ARTIFACTS === "true";

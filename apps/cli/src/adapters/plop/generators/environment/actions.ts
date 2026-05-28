@@ -1,7 +1,7 @@
 import type { ActionType, DynamicActionsFunction } from "node-plop";
 
 import { getLogger } from "@logtape/logtape";
-import * as path from "node:path";
+import path from "node:path";
 
 import { Environment } from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
