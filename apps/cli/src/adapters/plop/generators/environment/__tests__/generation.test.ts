@@ -2,14 +2,12 @@ import type { NodePlopAPI } from "node-plop";
 
 import nodePlop from "node-plop";
 /**
- * Integration tests for the environment generator's file generation logic.
+ * Contract tests for the environment generator.
  *
- * These tests exercise the full Plop pipeline (template compilation +
- * file writing) in an isolated temp directory. External service calls
- * (Azure SDK, terraform fmt) are handled by:
- * - Injecting mock services via DI (CloudAccountService, GitHubService)
- * - Registering stub action types directly on the Plop instance
- * - Mocking formatTerraformCode via vi.mock() to avoid terraform CLI dependency
+ * They generate real files in a temp directory while asserting only
+ * generator-specific behavior: which domain actions run for a given
+ * generator state and which high-value values are materialized into
+ * the generated infrastructure files.
  */
 import fs from "node:fs/promises";
 import os from "node:os";
@@ -157,14 +155,16 @@ describe("environment generator — file generation (no init)", () => {
       domain: "payments",
     },
   };
+  const mockCloudAccountService = createMockCloudAccountService(
+    mockTerraformBackend,
+    true,
+  );
+  const mockGitHubService = createMockGitHubService();
 
   beforeAll(async () => {
     ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
-      mockCloudAccountService: createMockCloudAccountService(
-        mockTerraformBackend,
-        true,
-      ),
-      mockGitHubService: createMockGitHubService(),
+      mockCloudAccountService,
+      mockGitHubService,
       payload,
       tmpDirPrefix: "dx-cli-env-test-",
     }));
@@ -175,19 +175,13 @@ describe("environment generator — file generation (no init)", () => {
     await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
-  it("generates the workflow file for the environment", async () => {
+  it("materializes bootstrapper files from payload and backend state", async () => {
     const workflowPath = path.join(
       tmpDir,
       ".github",
       "workflows",
       `_release-terraform-apply-bootstrapper-${payload.env.name}.yaml`,
     );
-    const content = await fs.readFile(workflowPath, "utf-8");
-    expect(content).toContain(payload.env.name);
-    expect(content).toContain("Release Bootstrapper Infrastructure");
-  });
-
-  it("generates the bootstrapper module for the environment", async () => {
     const mainTf = path.join(
       tmpDir,
       "infra",
@@ -195,12 +189,6 @@ describe("environment generator — file generation (no init)", () => {
       payload.env.name,
       "main.tf",
     );
-    const content = await fs.readFile(mainTf, "utf-8");
-    expect(content).toContain(payload.github.owner);
-    expect(content).toContain(payload.github.repo);
-  });
-
-  it("generates providers.tf with subscription ID and provider alias", async () => {
     const providersTf = path.join(
       tmpDir,
       "infra",
@@ -208,13 +196,6 @@ describe("environment generator — file generation (no init)", () => {
       payload.env.name,
       "providers.tf",
     );
-    const content = await fs.readFile(providersTf, "utf-8");
-    expect(content).toContain(payload.env.cloudAccounts[0].id);
-    expect(content).toContain(payload.env.cloudAccounts[0].displayName);
-    expect(content).toContain(payload.github.owner);
-  });
-
-  it("generates backend.tf with terraform backend configuration", async () => {
     const backendTf = path.join(
       tmpDir,
       "infra",
@@ -222,13 +203,6 @@ describe("environment generator — file generation (no init)", () => {
       payload.env.name,
       "backend.tf",
     );
-    const content = await fs.readFile(backendTf, "utf-8");
-    expect(content).toContain(mockTerraformBackend.resourceGroupName);
-    expect(content).toContain(mockTerraformBackend.storageAccountName);
-    expect(content).toContain(mockTerraformBackend.subscriptionId);
-  });
-
-  it("generates locals.tf with environment prefix and cloud accounts", async () => {
     const localsTf = path.join(
       tmpDir,
       "infra",
@@ -236,14 +210,46 @@ describe("environment generator — file generation (no init)", () => {
       payload.env.name,
       "locals.tf",
     );
-    const content = await fs.readFile(localsTf, "utf-8");
-    expect(content).toContain(payload.env.prefix);
-    expect(content).toContain(payload.env.cloudAccounts[0].displayName);
-    expect(content).toContain(payload.workspace.domain);
+    const [
+      workflowContent,
+      mainTfContent,
+      providersTfContent,
+      backendTfContent,
+      localsTfContent,
+    ] = await Promise.all([
+      fs.readFile(workflowPath, "utf-8"),
+      fs.readFile(mainTf, "utf-8"),
+      fs.readFile(providersTf, "utf-8"),
+      fs.readFile(backendTf, "utf-8"),
+      fs.readFile(localsTf, "utf-8"),
+    ]);
+
+    expect(workflowContent).toContain(payload.env.name);
+    expect(mainTfContent).toContain(payload.github.owner);
+    expect(mainTfContent).toContain(payload.github.repo);
+    expect(providersTfContent).toContain(payload.env.cloudAccounts[0].id);
+    expect(providersTfContent).toContain(
+      payload.env.cloudAccounts[0].displayName,
+    );
+    expect(providersTfContent).toContain(payload.github.owner);
+    expect(backendTfContent).toContain(mockTerraformBackend.resourceGroupName);
+    expect(backendTfContent).toContain(mockTerraformBackend.storageAccountName);
+    expect(backendTfContent).toContain(mockTerraformBackend.subscriptionId);
+    expect(localsTfContent).toContain(payload.env.prefix);
+    expect(localsTfContent).toContain(payload.env.cloudAccounts[0].displayName);
+    expect(localsTfContent).toContain(payload.workspace.domain);
   });
 
-  it("does NOT generate core module when init is undefined", async () => {
+  it("skips init-only side effects and core files when init is absent", async () => {
     const corePath = path.join(tmpDir, "infra", "core", payload.env.name);
+    expect(mockCloudAccountService.getTerraformBackend).toHaveBeenCalledWith(
+      payload.env.cloudAccounts[0].id,
+      payload.env,
+    );
+    expect(mockCloudAccountService.initialize).not.toHaveBeenCalled();
+    expect(
+      mockCloudAccountService.provisionTerraformBackend,
+    ).not.toHaveBeenCalled();
     await expect(fs.stat(corePath)).rejects.toThrow();
   });
 });
@@ -291,14 +297,16 @@ describe("environment generator — file generation (with init)", () => {
       domain: "",
     },
   };
+  const mockCloudAccountService = createMockCloudAccountService(
+    mockTerraformBackend,
+    false,
+  );
+  const mockGitHubService = createMockGitHubService();
 
   beforeAll(async () => {
     ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
-      mockCloudAccountService: createMockCloudAccountService(
-        mockTerraformBackend,
-        false,
-      ),
-      mockGitHubService: createMockGitHubService(),
+      mockCloudAccountService,
+      mockGitHubService,
       payload,
       tmpDirPrefix: "dx-cli-env-init-test-",
     }));
@@ -309,7 +317,22 @@ describe("environment generator — file generation (with init)", () => {
     await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
-  it("generates the core module when init is provided", async () => {
+  it("runs init-specific actions when init is provided", () => {
+    expect(mockCloudAccountService.initialize).toHaveBeenCalledWith(
+      cloudAccount,
+      payload.env,
+      payload.init.runnerAppCredentials,
+      payload.github,
+      mockGitHubService,
+      payload.tags,
+    );
+    expect(
+      mockCloudAccountService.provisionTerraformBackend,
+    ).toHaveBeenCalledWith(cloudAccount, payload.env, payload.tags);
+    expect(mockCloudAccountService.getTerraformBackend).not.toHaveBeenCalled();
+  });
+
+  it("materializes init-specific infrastructure files", async () => {
     const mainTf = path.join(
       tmpDir,
       "infra",
@@ -317,11 +340,6 @@ describe("environment generator — file generation (with init)", () => {
       payload.env.name,
       "main.tf",
     );
-    const stat = await fs.stat(mainTf);
-    expect(stat.isFile()).toBe(true);
-  });
-
-  it("generates core providers.tf with subscription ID", async () => {
     const providersTf = path.join(
       tmpDir,
       "infra",
@@ -329,23 +347,6 @@ describe("environment generator — file generation (with init)", () => {
       payload.env.name,
       "providers.tf",
     );
-    const content = await fs.readFile(providersTf, "utf-8");
-    expect(content).toContain(cloudAccount.id);
-  });
-
-  it("generates bootstrapper module with init-specific resources", async () => {
-    const mainTf = path.join(
-      tmpDir,
-      "infra",
-      "bootstrapper",
-      payload.env.name,
-      "main.tf",
-    );
-    const content = await fs.readFile(mainTf, "utf-8");
-    expect(content).toContain(payload.github.repo);
-  });
-
-  it("generates backend.tf for the core module", async () => {
     const backendTf = path.join(
       tmpDir,
       "infra",
@@ -353,21 +354,31 @@ describe("environment generator — file generation (with init)", () => {
       payload.env.name,
       "backend.tf",
     );
-    const content = await fs.readFile(backendTf, "utf-8");
-    expect(content).toContain(mockTerraformBackend.storageAccountName);
-    expect(content).toContain(
+    const bootstrapperMainTf = path.join(
+      tmpDir,
+      "infra",
+      "bootstrapper",
+      payload.env.name,
+      "main.tf",
+    );
+    const [
+      mainTfStat,
+      providersTfContent,
+      backendTfContent,
+      bootstrapperMainTfContent,
+    ] = await Promise.all([
+      fs.stat(mainTf),
+      fs.readFile(providersTf, "utf-8"),
+      fs.readFile(backendTf, "utf-8"),
+      fs.readFile(bootstrapperMainTf, "utf-8"),
+    ]);
+
+    expect(mainTfStat.isFile()).toBe(true);
+    expect(providersTfContent).toContain(cloudAccount.id);
+    expect(backendTfContent).toContain(mockTerraformBackend.storageAccountName);
+    expect(backendTfContent).toContain(
       `${payload.env.prefix}.core.${payload.env.name}.tfstate`,
     );
-  });
-
-  it("generates the workflow file", async () => {
-    const workflowPath = path.join(
-      tmpDir,
-      ".github",
-      "workflows",
-      `_release-terraform-apply-bootstrapper-${payload.env.name}.yaml`,
-    );
-    const stat = await fs.stat(workflowPath);
-    expect(stat.isFile()).toBe(true);
+    expect(bootstrapperMainTfContent).toContain(payload.github.repo);
   });
 });

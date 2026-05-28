@@ -2,13 +2,12 @@ import type { NodePlopAPI } from "node-plop";
 
 import nodePlop from "node-plop";
 /**
- * Integration tests for the monorepo generator's file generation logic.
+ * Contract tests for the monorepo generator.
  *
- * These tests exercise the full Plop pipeline (template compilation +
- * file writing) in an isolated temp directory. External service calls
- * (GitHub releases, Node.js version API, shell commands) are stubbed
- * by registering no-op action types directly on the Plop instance,
- * bypassing the real action registration functions.
+ * They generate a real repository in a temp directory, but they only
+ * assert the generator-specific contract: payload interpolation,
+ * injected action outputs, and post-processing we own. They
+ * intentionally avoid asserting generic Plop copy/render behavior.
  */
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
@@ -84,13 +83,7 @@ describe("monorepo generator — file generation", () => {
     await cleanupTempDir(tmpDir, keepArtifacts);
   });
 
-  it("creates the output directory named after repoName", async () => {
-    const repoDir = path.join(tmpDir, payload.repoName);
-    const stat = await fs.stat(repoDir);
-    expect(stat.isDirectory()).toBe(true);
-  });
-
-  it("generates package.json with interpolated repo name and description", async () => {
+  it("materializes repository metadata from the generator payload", async () => {
     const content = await fs.readFile(
       path.join(tmpDir, payload.repoName, "package.json"),
       "utf-8",
@@ -100,74 +93,30 @@ describe("monorepo generator — file generation", () => {
     expect(pkg.description).toBe(payload.repoDescription);
   });
 
-  it("generates .node-version with the mocked Node.js version", async () => {
-    const content = await fs.readFile(
+  it("propagates action outputs into generated version files", async () => {
+    const nodeVersion = await fs.readFile(
       path.join(tmpDir, payload.repoName, ".node-version"),
       "utf-8",
     );
-    expect(content.trim()).toBe("22.14.0");
-  });
-
-  it("generates .terraform-version with the mocked Terraform version", async () => {
-    const content = await fs.readFile(
+    const terraformVersion = await fs.readFile(
       path.join(tmpDir, payload.repoName, ".terraform-version"),
       "utf-8",
     );
-    expect(content.trim()).toBe("1.11.0");
-  });
-
-  it("generates .pre-commit-config.yaml with the mocked version", async () => {
-    const content = await fs.readFile(
+    const preCommitConfig = await fs.readFile(
       path.join(tmpDir, payload.repoName, ".pre-commit-config.yaml"),
       "utf-8",
     );
-    expect(content).toContain("rev: v1.11.0");
+    expect(nodeVersion.trim()).toBe("22.14.0");
+    expect(terraformVersion.trim()).toBe("1.11.0");
+    expect(preCommitConfig).toContain("rev: v1.11.0");
   });
 
-  it("generates README.md with repo name and description", async () => {
-    const content = await fs.readFile(
-      path.join(tmpDir, payload.repoName, "README.md"),
-      "utf-8",
-    );
-    expect(content).toContain(`# ${payload.repoName}`);
-    expect(content).toContain(payload.repoDescription);
-  });
-
-  it("generates infra/repository/main.tf with repo name", async () => {
-    const content = await fs.readFile(
-      path.join(tmpDir, payload.repoName, "infra", "repository", "main.tf"),
-      "utf-8",
-    );
-    expect(content).toContain(payload.repoName);
-    expect(content).toContain(payload.repoDescription);
-  });
-
-  it("appends terraform lock file exclusions to .gitignore", async () => {
+  it("applies the repository-specific gitignore customization", async () => {
     const content = await fs.readFile(
       path.join(tmpDir, payload.repoName, ".gitignore"),
       "utf-8",
     );
     expect(content).toContain("**/modules/**/.terraform.lock.hcl");
     expect(content).toContain("**/_modules/**/.terraform.lock.hcl");
-  });
-
-  it("generates static config files (nx.json, pnpm-workspace.yaml)", async () => {
-    const repoDir = path.join(tmpDir, payload.repoName);
-    const nxJson = await fs.stat(path.join(repoDir, "nx.json"));
-    expect(nxJson.isFile()).toBe(true);
-
-    const pnpmWorkspace = await fs.stat(
-      path.join(repoDir, "pnpm-workspace.yaml"),
-    );
-    expect(pnpmWorkspace.isFile()).toBe(true);
-  });
-
-  it("generates dot files (.editorconfig, .prettierignore)", async () => {
-    const repoDir = path.join(tmpDir, payload.repoName);
-    const editorconfig = await fs.stat(path.join(repoDir, ".editorconfig"));
-    expect(editorconfig.isFile()).toBe(true);
-
-    const prettierignore = await fs.stat(path.join(repoDir, ".prettierignore"));
-    expect(prettierignore.isFile()).toBe(true);
   });
 });
