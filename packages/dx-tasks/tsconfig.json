@@ -7,14 +7,8 @@
     "declaration": true,
     "importHelpers": true,
     "rewriteRelativeImportExtensions": true,
-    "types": [
-      "node"
-    ]
+    "types": ["node"]
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "src/**/__tests__/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/**/*.ts"]
 }
