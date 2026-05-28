@@ -74,9 +74,11 @@ jobs:
         id: format-results
         if: always() && github.event_name == 'pull_request'
         shell: bash
+        env:
+          HADOLINT_OUTCOME: ${{ steps.hadolint.outcome }}
         run: |
           # Check if hadolint step failed to run
-          if [[ "${{ steps.hadolint.outcome }}" == "failure" ]] && [ ! -f ./hadolint-results.txt ]; then
+          if [[ "$HADOLINT_OUTCOME" == "failure" ]] && [ ! -f ./hadolint-results.txt ]; then
             # Linter failed to execute
             cat > ./hadolint-comment.md << 'EOF'
           ## 🐳 Dockerfile Linter
