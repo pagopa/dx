@@ -24,6 +24,7 @@ import setProvisionTerraformBackendAction from "../../../actions/provision-terra
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
+import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
@@ -48,6 +49,7 @@ const registerEnvironmentSetup = (
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
+  setTerraformStateKeyHelper(plop);
 
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
@@ -294,7 +296,7 @@ describe("environment generator — file generation (with init)", () => {
       ManagementTeam: "Engineering",
     },
     workspace: {
-      domain: "",
+      domain: "payments",
     },
   };
   const mockCloudAccountService = createMockCloudAccountService(
@@ -321,7 +323,8 @@ describe("environment generator — file generation (with init)", () => {
     expect(mockCloudAccountService.initialize).toHaveBeenCalledWith(
       cloudAccount,
       payload.env,
-      payload.init.runnerAppCredentials,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      payload.init!.runnerAppCredentials,
       payload.github,
       mockGitHubService,
       payload.tags,
@@ -377,7 +380,7 @@ describe("environment generator — file generation (with init)", () => {
     expect(providersTfContent).toContain(cloudAccount.id);
     expect(backendTfContent).toContain(mockTerraformBackend.storageAccountName);
     expect(backendTfContent).toContain(
-      `${payload.env.prefix}.core.${payload.env.name}.tfstate`,
+      `${payload.env.prefix}/${payload.workspace.domain}/core.tfstate`,
     );
     expect(bootstrapperMainTfContent).toContain(payload.github.repo);
   });

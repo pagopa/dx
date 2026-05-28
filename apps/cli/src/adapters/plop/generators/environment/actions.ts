@@ -38,8 +38,6 @@ const addModule = (
       data: {
         cloudAccountsByCsp,
         init: init || undefined,
-        terraformBackendKey,
-        init,
         terraformBackendKey: terraformStateKey(context, name),
       },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
