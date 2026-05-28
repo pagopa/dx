@@ -1,10 +1,10 @@
 ---
-title: Requirements and Installation
+title: Installation
 sidebar_position: 1
 description: Prerequisites and installation options for @pagopa/dx-cli.
 ---
 
-# Requirements and Installation
+# Installation
 
 This page collects the prerequisites and installation options for
 `@pagopa/dx-cli`.

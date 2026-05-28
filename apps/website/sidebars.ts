@@ -85,7 +85,7 @@ const sidebars: SidebarsConfig = {
     {
       className: categoryClass("dx-cli"),
       items: [
-        { id: "dx-cli/requirements", label: "Requirements", type: "doc" },
+        { id: "dx-cli/requirements", label: "Installation", type: "doc" },
         "dx-cli/usage",
       ],
       label: "DX CLI",
