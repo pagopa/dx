@@ -1,6 +1,7 @@
 import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+import { setTimeout } from 'timers/promises';
 import { promisify } from 'util';
 
 var __create = Object.create;
@@ -18146,10 +18147,10 @@ var TagEntrySchema = external_exports.object({
   tag: external_exports.string(),
   version: external_exports.string()
 });
-external_exports.object({
+external_exports.looseObject({
   root: NonEmptyStringSchema.optional(),
   tags: ProjectTagsSchema.optional()
-}).passthrough();
+});
 function createOctokit() {
   const token = process.env.GH_TOKEN;
   if (!token) {
@@ -18323,7 +18324,14 @@ async function run(base) {
   if (newTags.length === 0) {
     console.log("No new tags to push");
   } else {
-    await execFileAsync2("git", ["push", "origin", "--tags"]);
+    for (const [index, { tag }] of newTags.entries()) {
+      await execFileAsync2("git", ["push", "origin", `refs/tags/${tag}`]);
+      console.log(`Pushed tag: ${tag}`);
+      if (index < newTags.length - 1) {
+        console.log("Waiting 10 seconds before pushing the next tag");
+        await setTimeout(1e4);
+      }
+    }
   }
   for (const { path, tag, version: version2 } of allEntries.values()) {
     let notes = `Release ${tag}`;

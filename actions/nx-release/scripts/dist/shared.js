@@ -18146,10 +18146,10 @@ var TagEntrySchema = external_exports.object({
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var ProjectMetadataSchema = external_exports.object({
+var ProjectMetadataSchema = external_exports.looseObject({
   root: NonEmptyStringSchema.optional(),
   tags: ProjectTagsSchema.optional()
-}).passthrough();
+});
 function createOctokit() {
   const token = process.env.GH_TOKEN;
   if (!token) {

@@ -15,12 +15,14 @@ interface PullListItem {
 
 const {
   createReleaseMock,
+  delayMock,
   execFilePromiseMock,
   extractTagEntriesFromPRBodyMock,
   getReleaseByTagMock,
   listPullsMock,
 } = vi.hoisted(() => ({
   createReleaseMock: vi.fn(async () => undefined),
+  delayMock: vi.fn(async () => undefined),
   execFilePromiseMock: vi.fn<
     (file: string, args: readonly string[]) => Promise<ExecFileResult>
   >(async () => ({ stderr: "", stdout: "" })),
@@ -35,6 +37,10 @@ vi.mock("node:child_process", () => ({
   execFile: Object.assign(vi.fn(), {
     [promisify.custom]: execFilePromiseMock,
   }),
+}));
+
+vi.mock("node:timers/promises", () => ({
+  setTimeout: delayMock,
 }));
 
 vi.mock("../shared.js", () => ({
@@ -56,6 +62,7 @@ import { run } from "../sync-tags-releases.js";
 describe("run", () => {
   beforeEach(() => {
     createReleaseMock.mockClear();
+    delayMock.mockClear();
     execFilePromiseMock.mockReset();
     extractTagEntriesFromPRBodyMock.mockReset();
     getReleaseByTagMock.mockReset();
@@ -168,6 +175,7 @@ describe("run", () => {
       "origin",
       "refs/tags/@pagopa/dx-cli@0.22.2",
     ]);
+    expect(delayMock).toHaveBeenCalledWith(10_000);
     expect(execFilePromiseMock).not.toHaveBeenCalledWith(
       "git",
       expect.arrayContaining(["push", "origin", "--tags"]),
