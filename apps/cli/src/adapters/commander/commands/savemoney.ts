@@ -2,6 +2,8 @@ import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
+import { oraPromise } from "ora";
+import { z } from "zod";
 
 import { exitWithError, GlobalOptions } from "../index.js";
 
@@ -58,15 +60,17 @@ export const makeSavemoneyCommand = () =>
           verbose: verbose ?? false,
         };
 
-        // Run analysis with a TTY-only progress spinner so the CLI doesn't
+        // Run analysis showing a progress spinner on stderr so the CLI doesn't
         // look frozen during the (potentially several-minute) Azure round-trips.
-        const stopSpinner = startSpinner("Analyzing Azure resources");
-        let reports;
-        try {
-          reports = await azure.analyzeAzureResources(finalConfig);
-        } finally {
-          stopSpinner();
-        }
+        const reports = await oraPromise(
+          azure.analyzeAzureResources(finalConfig),
+          {
+            failText: "Analysis failed",
+            stream: process.stderr,
+            successText: "Analysis complete",
+            text: "Analyzing Azure resources",
+          },
+        );
         await azure.generateReport(reports, options.format);
       } catch (error) {
         exitWithError(this)(
@@ -77,19 +81,20 @@ export const makeSavemoneyCommand = () =>
       }
     });
 
+const SourceSchema = z.enum(["advisor", "all", "custom"]);
+
 /**
- * Parses the `--source` option, accepting `all`, `advisor`, or `custom`
- * and rejecting any other value with a Commander-friendly error so the
- * CLI prints the offending value and the allowed set.
+ * Parses the `--source` option via a zod enum, accepting `all`, `advisor`,
+ * or `custom` and rejecting any other value with a Commander-friendly error.
  */
 export function parseSourceOption(value: string): string {
-  const allowed = new Set(["advisor", "all", "custom"]);
-  if (!allowed.has(value)) {
+  const result = SourceSchema.safeParse(value);
+  if (!result.success) {
     throw new InvalidArgumentError(
-      `Allowed values are: ${[...allowed].join(", ")}`,
+      `Allowed values are: ${SourceSchema.options.join(", ")}`,
     );
   }
-  return value;
+  return result.data;
 }
 
 /**
@@ -113,37 +118,4 @@ export function parseTagsOption(
     }
   }
   return result;
-}
-
-/**
- * Renders a minimal braille spinner on stderr while a long-running task
- * is in flight. Returns a `stop` function that clears the line and unrefs
- * the timer so the process can exit naturally.
- *
- * The spinner is a no-op when stderr is not a TTY (CI, piped output)
- * to avoid polluting logs with control characters.
- */
-function startSpinner(label: string): () => void {
-  if (!process.stderr.isTTY) {
-    process.stderr.write(`${label}...\n`);
-    return () => undefined;
-  }
-  const frames = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
-  let i = 0;
-  const start = Date.now();
-  const render = () => {
-    const elapsed = Math.floor((Date.now() - start) / 1000);
-    process.stderr.write(
-      `\r${frames[i % frames.length]} ${label}... ${elapsed}s`,
-    );
-    i++;
-  };
-  render();
-  const timer = setInterval(render, 100);
-  timer.unref?.();
-  return () => {
-    clearInterval(timer);
-    // Clear the spinner line so the report output starts cleanly.
-    process.stderr.write("\r\x1b[2K");
-  };
 }

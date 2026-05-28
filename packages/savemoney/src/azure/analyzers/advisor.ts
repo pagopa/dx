@@ -44,12 +44,12 @@ import type {
 /** Minimal client shape used by the analyzer (and injectable in tests). */
 type AdvisorClientLike = {
   recommendations: {
-    list(options?: { filter?: string }): AsyncIterable<RecInfo>;
+    list(options?: { filter?: string }): AsyncIterable<RecommendationInfo>;
   };
 };
 
 /** Minimal shape of a recommendation entry needed by the helpers. */
-type RecInfo = {
+type RecommendationInfo = {
   category?: string;
   extendedProperties?: Record<string, unknown>;
   id?: string;
@@ -138,7 +138,7 @@ export function createAdvisorAnalyzer(clientFactory?: {
 
 function addToSubGroups(
   subGroups: Map<string, SubGroup>,
-  rec: RecInfo,
+  rec: RecommendationInfo,
   savings: undefined | { amount: number; currency: string },
   ctx: SubscriptionContext,
   logger: ReturnType<typeof getLogger>,
@@ -155,7 +155,7 @@ function addToSubGroups(
 }
 
 function buildResourceFinding(
-  rec: RecInfo,
+  rec: RecommendationInfo,
   savings: undefined | { amount: number; currency: string },
   props: Record<string, string> | undefined,
   rawResourceId: string,
@@ -177,7 +177,7 @@ function buildResourceFinding(
 }
 
 function createSubGroup(
-  rec: RecInfo,
+  rec: RecommendationInfo,
   typeKey: string,
   savings: undefined | { amount: number; currency: string },
   ctx: SubscriptionContext,
