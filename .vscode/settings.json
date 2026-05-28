@@ -1,16 +1,13 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "[terraform]": {
-    "editor.defaultFormatter": "hashicorp.terraform"
-  },
-  "[terraform-test]": {
+  "[terraform][terraform-test]": {
     "editor.defaultFormatter": "hashicorp.terraform"
   },
   "[go]": {
     "editor.defaultFormatter": "golang.go"
   },
-  "[json]": {
+  "[json][jsonc]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "files.watcherExclude": {
