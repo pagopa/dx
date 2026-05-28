@@ -46,9 +46,20 @@ const sidebars: SidebarsConfig = {
             "github/pull-requests/changeset",
             "github/pull-requests/version-plan",
             {
-              id: "github/pull-requests/code-review/index",
-              label: "Code Review",
-              type: "doc",
+              items: [
+                {
+                  id: "github/pull-requests/code-review/index",
+                  label: "Responsibilities",
+                  type: "doc",
+                },
+                {
+                  id: "github/pull-requests/code-review/conventional-comments",
+                  label: "Conventional Commits",
+                  type: "doc",
+                },
+              ],
+              label: "Code Reviews",
+              type: "category",
             },
           ],
           label: "Pull Requests",

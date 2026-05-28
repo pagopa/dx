@@ -1,4 +1,8 @@
-# Code Reviews
+---
+title: Responsibilities
+---
+
+# Responsibilities
 
 ## Responsibilities of the Pull Request Author
 
@@ -111,7 +115,7 @@ and reviewers may spot things later that they may not have seen the first time.
 
 - Be as clear as possible to minimize unnecessary review iterations
 - Communicate which ideas you feel strongly about and those you don’t; you may
-  use the [conventional comments](conventional-comments.md)
+  use the [structured feedback guidance](conventional-comments.md)
 - Identify ways to simplify the code while still solving the problem
 - Offer alternative implementations, but assume the author already considered
   them (“What do you think about using a custom validator here?”)
