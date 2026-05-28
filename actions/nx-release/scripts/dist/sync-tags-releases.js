@@ -18146,10 +18146,10 @@ var TagEntrySchema = external_exports.object({
   tag: external_exports.string(),
   version: external_exports.string()
 });
-external_exports.object({
+external_exports.looseObject({
   root: NonEmptyStringSchema.optional(),
   tags: ProjectTagsSchema.optional()
-}).passthrough();
+});
 function createOctokit() {
   const token = process.env.GH_TOKEN;
   if (!token) {
@@ -18323,7 +18323,10 @@ async function run(base) {
   if (newTags.length === 0) {
     console.log("No new tags to push");
   } else {
-    await execFileAsync2("git", ["push", "origin", "--tags"]);
+    for (const { tag } of newTags) {
+      await execFileAsync2("git", ["push", "origin", `refs/tags/${tag}`]);
+      console.log(`Pushed tag: ${tag}`);
+    }
   }
   for (const { path, tag, version: version2 } of allEntries.values()) {
     let notes = `Release ${tag}`;

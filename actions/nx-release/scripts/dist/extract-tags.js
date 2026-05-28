@@ -14518,10 +14518,10 @@ external_exports.object({
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var ProjectMetadataSchema = external_exports.object({
+var ProjectMetadataSchema = external_exports.looseObject({
   root: NonEmptyStringSchema.optional(),
   tags: ProjectTagsSchema.optional()
-}).passthrough();
+});
 async function getNxProjectNames() {
   try {
     const { stdout } = await execFileAsync("npx", [
