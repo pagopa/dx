@@ -1,10 +1,15 @@
 ---
-title: Requirements
+title: Requirements and Installation
 sidebar_position: 1
-description: Prerequisites and tools needed to use @pagopa/dx-cli.
+description: Prerequisites and installation options for @pagopa/dx-cli.
 ---
 
-# Requirements
+# Requirements and Installation
+
+This page collects the prerequisites and installation options for
+`@pagopa/dx-cli`.
+
+## Requirements
 
 The following tools must be installed on your machine:
 
@@ -32,3 +37,19 @@ Within PagoPA, `az login` sessions expire every **12 hours**. If a command fails
 with an authentication error, run `az login` again before retrying.
 
 :::
+
+## Installation
+
+You can invoke the CLI directly via `npx` without installing globally:
+
+```bash
+npx @pagopa/dx-cli --help
+```
+
+When installed locally in a monorepo you can also run:
+
+```bash
+pnpm dx --help
+```
+
+> The binary name is `dx`.

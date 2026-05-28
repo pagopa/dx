@@ -1,5 +1,6 @@
 import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
+// Manual docs sidebar configuration for the DX website information architecture.
 const useExperimentalSidebarIcons = true;
 
 const categoryClass = (iconName: string): string | undefined =>
@@ -9,21 +10,21 @@ const sidebars: SidebarsConfig = {
   tutorialSidebar: [
     {
       className: categoryClass("overview"),
-      collapsed: false,
       items: ["index", "monorepository-setup", "tooling-lifecycle", "support"],
       label: "Overview",
       type: "category",
     },
     {
       className: categoryClass("github"),
-      collapsed: false,
       items: [
-        { id: "github/index", label: "Overview", type: "doc" },
+        {
+          id: "github/index",
+          label: "Collaborating on GitHub",
+          type: "doc",
+        },
         {
           className: categoryClass("git"),
-          collapsed: true,
           items: [
-            { id: "github/git/index", label: "Overview", type: "doc" },
             "github/git/branch-name",
             "github/git/commit-message",
             "github/git/git-config",
@@ -33,11 +34,10 @@ const sidebars: SidebarsConfig = {
         },
         {
           className: categoryClass("pull-requests"),
-          collapsed: true,
           items: [
             {
               id: "github/pull-requests/index",
-              label: "Overview",
+              label: "General Principles",
               type: "doc",
             },
             "github/pull-requests/format",
@@ -56,9 +56,8 @@ const sidebars: SidebarsConfig = {
         },
         {
           className: categoryClass("workflows"),
-          collapsed: true,
           items: [
-            { id: "pipelines/index", label: "Overview", type: "doc" },
+            { id: "pipelines/index", label: "DX Workflows", type: "doc" },
             "pipelines/triggers",
             "pipelines/release",
             "pipelines/nx-release",
@@ -74,9 +73,8 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("coding-with-ai"),
-      collapsed: false,
       items: [
-        { id: "coding-with-ai/index", label: "Overview", type: "doc" },
+        { id: "coding-with-ai/index", label: "AI in DX", type: "doc" },
         "coding-with-ai/dx-mcp-server",
         "coding-with-ai/plugin-marketplace",
         "coding-with-ai/prompts-catalog",
@@ -86,16 +84,17 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("dx-cli"),
-      collapsed: false,
-      items: ["dx-cli/requirements", "dx-cli/installation", "dx-cli/usage"],
+      items: [
+        { id: "dx-cli/requirements", label: "Requirements", type: "doc" },
+        "dx-cli/usage",
+      ],
       label: "DX CLI",
       type: "category",
     },
     {
       className: categoryClass("typescript"),
-      collapsed: false,
       items: [
-        { id: "typescript/index", label: "Overview", type: "doc" },
+        { id: "typescript/index", label: "Typescript in DX", type: "doc" },
         "typescript/npm-scripts",
         "typescript/eslint-config",
         "typescript/code-review",
@@ -105,19 +104,14 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("cloud"),
-      collapsed: false,
       items: [
         {
           className: categoryClass("azure"),
-          collapsed: true,
           items: [
-            { id: "azure/index", label: "Overview", type: "doc" },
             "azure/azure-naming-convention",
             "azure/using-azure-registry-provider",
             {
-              collapsed: true,
               items: [
-                { id: "azure/iam/index", label: "Overview", type: "doc" },
                 "azure/iam/azure-iam",
                 "azure/iam/azure-login",
                 "azure/iam/custom-roles",
@@ -127,21 +121,15 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
-              items: [
-                { id: "azure/apim/index", label: "Overview", type: "doc" },
-                "azure/apim/api-access-policies",
-                "azure/apim/debugging",
-              ],
+              items: ["azure/apim/api-access-policies", "azure/apim/debugging"],
               label: "API Management",
               type: "category",
             },
             {
-              collapsed: true,
               items: [
                 {
                   id: "azure/app-configuration/index",
-                  label: "Overview",
+                  label: "Managing AppSettings and Secrets With Azure",
                   type: "doc",
                 },
                 "azure/app-configuration/azure-app-configuration",
@@ -152,13 +140,7 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
               items: [
-                {
-                  id: "azure/application-deployment/index",
-                  label: "Overview",
-                  type: "doc",
-                },
                 "azure/application-deployment/release-azure-appsvc",
                 "azure/application-deployment/release-container-app",
                 "azure/application-deployment/appservice-hidden-appsettings",
@@ -167,13 +149,7 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
               items: [
-                {
-                  id: "azure/networking/index",
-                  label: "Overview",
-                  type: "doc",
-                },
                 "azure/networking/app-gateway-tls-cert",
                 "azure/networking/appservice-plan-dns-resolution",
                 "azure/networking/creating-tls-cert",
@@ -183,22 +159,17 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
-              items: [
-                {
-                  id: "azure/monitoring/index",
-                  label: "Overview",
-                  type: "doc",
-                },
-                "azure/monitoring/azure-tracing",
-              ],
+              items: ["azure/monitoring/azure-tracing"],
               label: "Monitoring",
               type: "category",
             },
             {
-              collapsed: true,
               items: [
-                { id: "azure/policies/index", label: "Overview", type: "doc" },
+                {
+                  id: "azure/policies/index",
+                  label: "Azure Policies",
+                  type: "doc",
+                },
                 "azure/policies/policy-catalog/index",
                 "azure/policies/policy-catalog/specific-tags",
               ],
@@ -206,13 +177,7 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
               items: [
-                {
-                  id: "azure/static-websites/index",
-                  label: "Overview",
-                  type: "doc",
-                },
                 "azure/static-websites/build-deploy-static-assets",
                 "azure/static-websites/build-deploy-static-web-app",
                 "azure/static-websites/static-assets-deploy",
@@ -221,13 +186,7 @@ const sidebars: SidebarsConfig = {
               type: "category",
             },
             {
-              collapsed: true,
               items: [
-                {
-                  id: "azure/integrating-services/index",
-                  label: "Overview",
-                  type: "doc",
-                },
                 "azure/integrating-services/apim-function-app-authentication",
                 "azure/integrating-services/eventgrid-storage-functions",
                 "azure/integrating-services/using-service-bus",
@@ -242,9 +201,8 @@ const sidebars: SidebarsConfig = {
         },
         {
           className: categoryClass("terraform"),
-          collapsed: true,
           items: [
-            { id: "terraform/index", label: "Overview", type: "doc" },
+            { id: "terraform/index", label: "IaC in DX", type: "doc" },
             "terraform/infra-folder-structure",
             "terraform/code-style",
             "terraform/pre-commit-terraform",
@@ -260,7 +218,6 @@ const sidebars: SidebarsConfig = {
         },
         {
           className: categoryClass("multi-csp"),
-          collapsed: true,
           items: ["multi-csp/index"],
           label: "Multi-CSP",
           type: "category",
@@ -271,9 +228,8 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("containers"),
-      collapsed: true,
       items: [
-        { id: "containers/index", label: "Overview", type: "doc" },
+        { id: "containers/index", label: "Why Containers", type: "doc" },
         "dev-containers/index",
         "containers/docker-image-build",
       ],
@@ -282,9 +238,7 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("contributing"),
-      collapsed: true,
       items: [
-        { id: "contributing/index", label: "Overview", type: "doc" },
         "contributing/contributing-to-dx-provider",
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",
@@ -294,9 +248,8 @@ const sidebars: SidebarsConfig = {
     },
     {
       className: categoryClass("deprecated-tools"),
-      collapsed: true,
       items: [
-        { id: "legacy/index", label: "Overview", type: "doc" },
+        { id: "legacy/index", label: "Migrations", type: "doc" },
         "legacy/legacy-code-review",
         "legacy/legacy-deploy-pipelines-azure",
         "legacy/legacy-publish-sdk",

@@ -1,6 +1,6 @@
 ---
 title: Usage
-sidebar_position: 3
+sidebar_position: 2
 description: Available @pagopa/dx-cli commands and how to use them.
 ---
 
