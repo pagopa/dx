@@ -1,10 +1,9 @@
 {
-  "name": "dx-tasks-action",
+  "name": "run-dx-task",
   "version": "0.0.0",
   "type": "module",
   "private": true,
   "description": "GitHub Action that dispatches dx-tasks tasks",
-  "main": "dist/index.js",
   "sideEffects": false,
   "keywords": [
     "github",

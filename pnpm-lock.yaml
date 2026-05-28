@@ -203,39 +203,6 @@ importers:
 
   actions/docker-build-push: {}
 
-  actions/dx-tasks-action:
-    devDependencies:
-      '@actions/core':
-        specifier: catalog:github-actions
-        version: 3.0.1
-      '@pagopa/dx-tasks':
-        specifier: workspace:^
-        version: link:../../packages/dx-tasks
-      '@pagopa/eslint-config':
-        specifier: workspace:^
-        version: link:../../packages/eslint-config
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.4
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.19.17
-      eslint:
-        specifier: 'catalog:'
-        version: 10.3.0(jiti@2.7.0)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.8.3
-      tsdown:
-        specifier: ^0.22.0
-        version: 0.22.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(tsx@4.21.0)(typescript@5.9.3)
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      zod:
-        specifier: 'catalog:'
-        version: 4.4.2
-
   actions/incremental-rollout:
     devDependencies:
       prettier:
@@ -334,6 +301,39 @@ importers:
         version: 4.0.0(typescript@5.9.3)(vitest@4.1.8)
 
   actions/renew-tls-certificate: {}
+
+  actions/run-dx-task:
+    devDependencies:
+      '@actions/core':
+        specifier: catalog:github-actions
+        version: 3.0.1
+      '@pagopa/dx-tasks':
+        specifier: workspace:^
+        version: link:../../packages/dx-tasks
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
+      '@tsconfig/node24':
+        specifier: 'catalog:'
+        version: 24.0.4
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.19.17
+      eslint:
+        specifier: 'catalog:'
+        version: 10.3.0(jiti@2.7.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.3
+      tsdown:
+        specifier: ^0.22.0
+        version: 0.22.2(oxc-resolver@11.19.1(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0))(tsx@4.21.0)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.2
 
   actions/sanitize-terraform-apply: {}
 
@@ -23880,7 +23880,7 @@ snapshots:
   jest-snapshot@30.3.0:
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/generator': 7.29.1
+      '@babel/generator': 7.29.7
       '@babel/plugin-syntax-jsx': 7.28.6(@babel/core@7.29.0)
       '@babel/plugin-syntax-typescript': 7.28.6(@babel/core@7.29.0)
       '@babel/types': 7.29.7

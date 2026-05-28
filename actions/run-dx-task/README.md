@@ -10,7 +10,7 @@ Dispatches `@pagopa/dx-tasks` tasks from GitHub Actions by passing a task name a
 ## Example
 
 ```yaml
-- uses: pagopa/dx/actions/dx-tasks-action@main
+- uses: pagopa/dx/actions/run-dx-task@main
   with:
     task: terraformPlan
     payload: >-
