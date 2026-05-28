@@ -10,7 +10,6 @@ import { Octokit } from "@octokit/rest";
 import { execFile } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { setTimeout as delay } from "node:timers/promises";
 import { promisify } from "node:util";
 import { z } from "zod";
 
@@ -191,14 +190,9 @@ export async function run(base: string): Promise<void> {
     // GitHub does not create tag push events when more than three tags are
     // pushed in a single operation.
     // https://docs.github.com/en/webhooks/webhook-events-and-payloads#push
-    for (const [index, { tag }] of newTags.entries()) {
+    for (const { tag } of newTags) {
       await execFileAsync("git", ["push", "origin", `refs/tags/${tag}`]);
       console.log(`Pushed tag: ${tag}`);
-
-      if (index < newTags.length - 1) {
-        console.log("Waiting 10 seconds before pushing the next tag");
-        await delay(10_000);
-      }
     }
   }
 

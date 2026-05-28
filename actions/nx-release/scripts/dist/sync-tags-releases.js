@@ -1,7 +1,6 @@
 import { execFile } from 'child_process';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { setTimeout } from 'timers/promises';
 import { promisify } from 'util';
 
 var __create = Object.create;
@@ -18324,13 +18323,9 @@ async function run(base) {
   if (newTags.length === 0) {
     console.log("No new tags to push");
   } else {
-    for (const [index, { tag }] of newTags.entries()) {
+    for (const { tag } of newTags) {
       await execFileAsync2("git", ["push", "origin", `refs/tags/${tag}`]);
       console.log(`Pushed tag: ${tag}`);
-      if (index < newTags.length - 1) {
-        console.log("Waiting 10 seconds before pushing the next tag");
-        await setTimeout(1e4);
-      }
     }
   }
   for (const { path, tag, version: version2 } of allEntries.values()) {
