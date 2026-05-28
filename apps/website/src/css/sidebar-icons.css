@@ -1,0 +1,86 @@
+/**
+ * Experimental sidebar category icons.
+ *
+ * Rollback options:
+ * 1. Set `useExperimentalSidebarIcons = false` in `sidebars.ts`
+ * 2. Remove this import from `custom.css`
+ */
+
+[class*="sidebar-icon-"] > .menu__list-item-collapsible > .menu__link--sublist {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+[class*="sidebar-icon-"]
+  > .menu__list-item-collapsible
+  > .menu__link--sublist::before {
+  content: "";
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  background-color: currentColor;
+  opacity: 0.92;
+  mask: var(--sidebar-category-icon) center / contain no-repeat;
+  -webkit-mask: var(--sidebar-category-icon) center / contain no-repeat;
+}
+
+.sidebar-icon-overview {
+  --sidebar-category-icon: url("/img/sidebar-icons/overview.svg");
+}
+
+.sidebar-icon-github {
+  --sidebar-category-icon: url("/img/sidebar-icons/github.svg");
+}
+
+.sidebar-icon-git {
+  --sidebar-category-icon: url("/img/sidebar-icons/git.svg");
+}
+
+.sidebar-icon-pull-requests {
+  --sidebar-category-icon: url("/img/sidebar-icons/pull-requests.svg");
+}
+
+.sidebar-icon-workflows {
+  --sidebar-category-icon: url("/img/sidebar-icons/workflows.svg");
+}
+
+.sidebar-icon-coding-with-ai {
+  --sidebar-category-icon: url("/img/sidebar-icons/coding-with-ai.svg");
+}
+
+.sidebar-icon-dx-cli {
+  --sidebar-category-icon: url("/img/sidebar-icons/dx-cli.svg");
+}
+
+.sidebar-icon-typescript {
+  --sidebar-category-icon: url("/img/sidebar-icons/typescript.svg");
+}
+
+.sidebar-icon-cloud {
+  --sidebar-category-icon: url("/img/sidebar-icons/cloud.svg");
+}
+
+.sidebar-icon-azure {
+  --sidebar-category-icon: url("/img/sidebar-icons/azure.svg");
+}
+
+.sidebar-icon-terraform {
+  --sidebar-category-icon: url("/img/sidebar-icons/terraform.svg");
+}
+
+.sidebar-icon-multi-csp {
+  --sidebar-category-icon: url("/img/sidebar-icons/multi-csp.svg");
+}
+
+.sidebar-icon-containers {
+  --sidebar-category-icon: url("/img/sidebar-icons/containers.svg");
+}
+
+.sidebar-icon-contributing {
+  --sidebar-category-icon: url("/img/sidebar-icons/contributing.svg");
+}
+
+.sidebar-icon-deprecated-tools {
+  --sidebar-category-icon: url("/img/sidebar-icons/deprecated-tools.svg");
+}
