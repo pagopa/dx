@@ -68,7 +68,7 @@ jobs:
         with:
           dockerfile: ${{ inputs.dockerfile_path }}
           output-file: ./hadolint-results.txt
-          ignore: DL3059
+          ignore: DL3059 # Prefer cache benefits over intermediate layer size reduction
 
       - name: Format Linter Results
         id: format-results
