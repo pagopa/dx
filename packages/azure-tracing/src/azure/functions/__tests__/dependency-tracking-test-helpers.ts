@@ -5,11 +5,9 @@
 import { execFile, type ExecFileOptions } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { once } from "node:events";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { createServer } from "node:https";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { Readable } from "node:stream";
 import { setTimeout as delay } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -23,6 +21,12 @@ const preloadModulePath = fileURLToPath(
 );
 const scenarioScriptPath = fileURLToPath(
   new URL("./fixtures/run-dependency-scenario.ts", import.meta.url),
+);
+const collectorCertificatePath = fileURLToPath(
+  new URL("./fixtures/telemetry-collector-cert.pem", import.meta.url),
+);
+const collectorPrivateKeyPath = fileURLToPath(
+  new URL("./fixtures/telemetry-collector-key.pem", import.meta.url),
 );
 
 const azuriteAccountKey =
@@ -66,10 +70,8 @@ interface CapturedRequest {
   readonly path: string;
 }
 
-interface GeneratedCertificate {
-  readonly caCertificatePath: string;
+interface CollectorCertificate {
   readonly certificate: Buffer;
-  readonly cleanup: () => Promise<void>;
   readonly privateKey: Buffer;
 }
 
@@ -214,85 +216,29 @@ const closeServer = (server: ReturnType<typeof createServer>) =>
     server.close((error) => (error ? reject(error) : resolve()));
   });
 
-const closeCollector = async (
-  server: ReturnType<typeof createServer>,
-  cleanupCertificate: () => Promise<void>,
-) => {
-  const errors = (
-    await Promise.allSettled([closeServer(server), cleanupCertificate()])
-  ).flatMap((result) => (result.status === "rejected" ? [result.reason] : []));
+const loadCollectorCertificate = async (): Promise<CollectorCertificate> => {
+  // Static PEM fixtures keep these tests self-contained and avoid an OpenSSL
+  // runtime dependency on CI or contributor machines.
+  const [certificate, privateKey] = await Promise.all([
+    readFile(collectorCertificatePath),
+    readFile(collectorPrivateKeyPath),
+  ]);
 
-  if (errors.length === 0) {
-    return;
-  }
-
-  throw errors.length === 1
-    ? errors[0]
-    : new AggregateError(
-        errors,
-        "Failed to stop the telemetry collector cleanly.",
-      );
-};
-
-const generateCollectorCertificate =
-  async (): Promise<GeneratedCertificate> => {
-    const temporaryDirectory = await mkdtemp(
-      join(tmpdir(), "azure-tracing-collector-"),
-    );
-    const caCertificatePath = join(
-      temporaryDirectory,
-      "telemetry-collector.pem",
-    );
-    const privateKeyPath = join(
-      temporaryDirectory,
-      "telemetry-collector.key.pem",
-    );
-
-    await runProcess(
-      "openssl",
-      [
-        "req",
-        "-x509",
-        "-newkey",
-        "rsa:2048",
-        "-nodes",
-        "-sha256",
-        "-days",
-        "1",
-        "-subj",
-        "/CN=127.0.0.1",
-        "-addext",
-        "subjectAltName=IP:127.0.0.1,DNS:localhost",
-        "-keyout",
-        privateKeyPath,
-        "-out",
-        caCertificatePath,
-      ],
-      "openssl failed while generating the telemetry collector certificate.",
-    );
-
-    const [certificate, privateKey] = await Promise.all([
-      readFile(caCertificatePath),
-      readFile(privateKeyPath),
-    ]);
-
-    return {
-      caCertificatePath,
-      certificate,
-      cleanup: () => rm(temporaryDirectory, { force: true, recursive: true }),
-      privateKey,
-    };
+  return {
+    certificate,
+    privateKey,
   };
+};
 
 export const startTelemetryCollector =
   async (): Promise<TelemetryCollector> => {
     const requests: CapturedRequest[] = [];
-    const generatedCertificate = await generateCollectorCertificate();
+    const collectorCertificate = await loadCollectorCertificate();
 
     const server = createServer(
       {
-        cert: generatedCertificate.certificate,
-        key: generatedCertificate.privateKey,
+        cert: collectorCertificate.certificate,
+        key: collectorCertificate.privateKey,
       },
       createTelemetryRequestHandler(requests),
     );
@@ -334,8 +280,8 @@ export const startTelemetryCollector =
     };
 
     return {
-      caCertificatePath: generatedCertificate.caCertificatePath,
-      close: () => closeCollector(server, generatedCertificate.cleanup),
+      caCertificatePath: collectorCertificatePath,
+      close: () => closeServer(server),
       connectionString: [
         "InstrumentationKey=00000000-0000-0000-0000-000000000000",
         `IngestionEndpoint=${collectorOrigin}`,
