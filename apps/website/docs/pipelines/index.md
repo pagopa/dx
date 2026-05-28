@@ -2,7 +2,7 @@
 sidebar_position: 7
 ---
 
-# Using DX Pipelines
+# DX Workflows
 
 This section contains documentation about DX reusable workflows (GitHub
 Actions). These workflows are designed to be easily integrated into your own
