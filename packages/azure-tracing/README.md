@@ -195,3 +195,27 @@ npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in
 ```
 
 Set `import-in-the-middle` in `package.json` to the same major range as the result.
+
+## Running Integration Tests Locally
+
+Integration tests use [Testcontainers](https://node.testcontainers.org/) and require a working container runtime.
+
+```bash
+pnpm nx run @pagopa/azure-tracing:integration
+```
+
+> [!NOTE]
+> Inside the devcontainer, tests work out of the box since Docker is available at the standard socket path.
+
+### Rancher Desktop
+
+If you use Rancher Desktop on macOS outside a Linux devcontainer, you need to export two environment variables so that Testcontainers can locate the Docker socket and correctly mount it inside helper containers:
+
+```bash
+export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+`DOCKER_HOST` tells Testcontainers where the socket is on the host. `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` tells it which path to bind-mount inside containers (the path inside the Rancher Desktop VM).
+
+Add these to your shell profile (`~/.zshrc` or `~/.bashrc`) to avoid setting them every time.
