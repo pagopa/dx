@@ -150,6 +150,8 @@ The managed identity (or other principal) must have the **Monitoring Metrics Pub
 
 > [!IMPORTANT]
 > Pre-condition for the integration suite: Docker must be installed and running locally so Testcontainers can start the required services.
+> When the suite runs directly on the host, the fixtures reuse the current `docker context` and propagate its endpoint to `DOCKER_HOST` automatically.
+> For Rancher Desktop and Colima host sockets, the harness also sets `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock`, in line with the official Testcontainers guidance.
 > The suite already uses the committed PEM fixtures in `src/azure/functions/__tests__/fixtures/`, so no extra certificate-generation step is required.
 
 ## Dependency Constraints

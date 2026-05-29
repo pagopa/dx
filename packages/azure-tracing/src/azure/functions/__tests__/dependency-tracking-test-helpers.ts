@@ -53,8 +53,36 @@ const telemetryEnvelopeSchema = z
   .passthrough();
 
 const telemetryBatchSchema = z.array(telemetryEnvelopeSchema);
+const dockerContextInspectSchema = z
+  .array(
+    z
+      .object({
+        Endpoints: z
+          .object({
+            docker: z
+              .object({
+                Host: z.string().min(1),
+              })
+              .optional(),
+          })
+          .passthrough(),
+        Name: z.string().min(1),
+      })
+      .passthrough(),
+  )
+  .min(1);
 
+export interface ContainerRuntimeEnvironmentPreparation {
+  readonly detectedDockerContext: string | undefined;
+  readonly detectedDockerHost: string | undefined;
+  readonly detectionError: string | undefined;
+  readonly effectiveDockerHost: string | undefined;
+  readonly effectiveDockerSocketOverride: string | undefined;
+  readonly effectiveTestcontainersHostOverride: string | undefined;
+  readonly preconfiguredDockerHost: string | undefined;
+}
 export type RemoteDependencyData = z.infer<typeof remoteDependencyDataSchema>;
+
 export interface TelemetryCollector {
   readonly caCertificatePath: string;
   close: () => Promise<void>;
@@ -75,8 +103,23 @@ interface CollectorCertificate {
   readonly privateKey: Buffer;
 }
 
-type Scenario = "cosmos" | "redis" | "storage";
+interface CommandOutput {
+  readonly stderr: string;
+  readonly stdout: string;
+}
 
+type CommandRunner = (
+  command: string,
+  args: readonly string[],
+  options?: ExecFileOptions,
+) => Promise<CommandOutput>;
+
+interface DockerContextConfiguration {
+  readonly contextName: string;
+  readonly dockerHost: string;
+}
+
+type Scenario = "cosmos" | "redis" | "storage";
 type TelemetryEnvelope = z.infer<typeof telemetryEnvelopeSchema>;
 
 export const dependencyTestTimeoutMs = 300_000;
@@ -136,6 +179,263 @@ const runProcess = async (
       { cause: error },
     );
   }
+};
+
+const trimOutput = (value: string | undefined) => value?.trim() || undefined;
+
+const renderDiagnosticValue = (value: string | undefined) =>
+  value && value.length > 0 ? value : "<unset>";
+
+const extractDockerSocketPath = (dockerHost: string) =>
+  dockerHost.startsWith("unix://")
+    ? dockerHost.replace("unix://", "")
+    : undefined;
+
+const isAlternativeDockerDesktopRuntime = (
+  contextName: string | undefined,
+  dockerHost: string | undefined,
+) => {
+  const normalizedContextName = contextName?.toLowerCase();
+
+  return (
+    normalizedContextName === "colima" ||
+    normalizedContextName === "rancher-desktop" ||
+    dockerHost?.includes("/.colima/") === true ||
+    dockerHost?.includes("/.rd/docker.sock") === true
+  );
+};
+
+const getDockerSocketOverride = (
+  contextName: string | undefined,
+  dockerHost: string | undefined,
+) =>
+  isAlternativeDockerDesktopRuntime(contextName, dockerHost)
+    ? "/var/run/docker.sock"
+    : undefined;
+
+const runCommand: CommandRunner = async (
+  command,
+  args,
+  options: ExecFileOptions = {},
+) => {
+  try {
+    const { stderr, stdout } = await execFileAsync(command, [...args], {
+      ...options,
+      encoding: "utf8",
+      maxBuffer: 10 * 1024 * 1024,
+    });
+
+    return {
+      stderr: toOutputString(stderr),
+      stdout: toOutputString(stdout),
+    };
+  } catch (error) {
+    throw new Error(
+      [
+        `Failed to run ${command} ${args.join(" ")}`.trim(),
+        `Exit code: ${getErrorProperty(error, "code") || "unknown"}`,
+        `Signal: ${getErrorProperty(error, "signal") || "none"}`,
+        `STDOUT:\n${getErrorProperty(error, "stdout")}`,
+        `STDERR:\n${getErrorProperty(error, "stderr")}`,
+      ].join("\n\n"),
+      { cause: error },
+    );
+  }
+};
+
+const getDockerContextConfiguration = async (
+  commandRunner: CommandRunner,
+): Promise<DockerContextConfiguration> => {
+  const { stdout: contextStdout } = await commandRunner("docker", [
+    "context",
+    "show",
+  ]);
+  const contextName = trimOutput(contextStdout);
+
+  if (!contextName) {
+    throw new Error("`docker context show` did not return a context name.");
+  }
+
+  const { stdout: inspectStdout } = await commandRunner("docker", [
+    "context",
+    "inspect",
+    contextName,
+  ]);
+
+  let parsedInspectResult: unknown;
+
+  try {
+    parsedInspectResult = JSON.parse(inspectStdout);
+  } catch (error) {
+    throw new Error("`docker context inspect` returned invalid JSON.", {
+      cause: error,
+    });
+  }
+
+  const parsedContext =
+    dockerContextInspectSchema.safeParse(parsedInspectResult);
+
+  if (!parsedContext.success) {
+    throw new Error(
+      `Unexpected \`docker context inspect\` payload: ${parsedContext.error.message}`,
+    );
+  }
+
+  const dockerHost = trimOutput(parsedContext.data[0].Endpoints.docker?.Host);
+
+  if (!dockerHost) {
+    throw new Error(
+      `The current Docker context "${contextName}" does not expose a Docker endpoint.`,
+    );
+  }
+
+  return { contextName, dockerHost };
+};
+
+const getPreparedRuntimeConfiguration = (
+  env: NodeJS.ProcessEnv,
+  preconfiguredDockerHost: string | undefined,
+  detectedDockerContext: string | undefined,
+  detectedDockerHost: string | undefined,
+  detectionError: string | undefined,
+): ContainerRuntimeEnvironmentPreparation => ({
+  detectedDockerContext,
+  detectedDockerHost,
+  detectionError,
+  effectiveDockerHost: trimOutput(env.DOCKER_HOST),
+  effectiveDockerSocketOverride: trimOutput(
+    env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE,
+  ),
+  effectiveTestcontainersHostOverride: trimOutput(
+    env.TESTCONTAINERS_HOST_OVERRIDE,
+  ),
+  preconfiguredDockerHost,
+});
+
+export const prepareContainerRuntimeEnvironment = async (
+  env: NodeJS.ProcessEnv = process.env,
+  commandRunner: CommandRunner = runCommand,
+): Promise<ContainerRuntimeEnvironmentPreparation> => {
+  const preconfiguredDockerHost = trimOutput(env.DOCKER_HOST);
+
+  if (preconfiguredDockerHost) {
+    const socketOverride = getDockerSocketOverride(
+      undefined,
+      preconfiguredDockerHost,
+    );
+
+    if (
+      !trimOutput(env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE) &&
+      socketOverride
+    ) {
+      env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = socketOverride;
+    }
+
+    return getPreparedRuntimeConfiguration(
+      env,
+      preconfiguredDockerHost,
+      undefined,
+      undefined,
+      undefined,
+    );
+  }
+
+  try {
+    const { contextName, dockerHost } =
+      await getDockerContextConfiguration(commandRunner);
+
+    env.DOCKER_HOST = dockerHost;
+
+    const socketOverride = getDockerSocketOverride(contextName, dockerHost);
+
+    if (
+      !trimOutput(env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE) &&
+      socketOverride
+    ) {
+      env.TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE = socketOverride;
+    }
+
+    return getPreparedRuntimeConfiguration(
+      env,
+      preconfiguredDockerHost,
+      contextName,
+      dockerHost,
+      undefined,
+    );
+  } catch (error) {
+    return getPreparedRuntimeConfiguration(
+      env,
+      preconfiguredDockerHost,
+      undefined,
+      undefined,
+      error instanceof Error ? error.message : String(error),
+    );
+  }
+};
+
+export const isMissingContainerRuntimeError = (error: unknown) =>
+  error instanceof Error &&
+  error.message.includes("Could not find a working container runtime strategy");
+
+export const createContainerRuntimeDiagnosticError = (
+  error: unknown,
+  containerRuntimeEnvironment: ContainerRuntimeEnvironmentPreparation,
+) => {
+  const suggestedDockerHost =
+    containerRuntimeEnvironment.detectedDockerHost ??
+    containerRuntimeEnvironment.preconfiguredDockerHost;
+  const suggestedDockerSocketOverride = getDockerSocketOverride(
+    containerRuntimeEnvironment.detectedDockerContext,
+    suggestedDockerHost,
+  );
+  const dockerSocketPath = extractDockerSocketPath(suggestedDockerHost ?? "");
+
+  return new Error(
+    [
+      "Testcontainers could not connect to the host container runtime.",
+      "",
+      `Detected Docker context: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.detectedDockerContext,
+      )}`,
+      `Detected Docker endpoint: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.detectedDockerHost,
+      )}`,
+      `Preconfigured DOCKER_HOST: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.preconfiguredDockerHost,
+      )}`,
+      `Effective DOCKER_HOST: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.effectiveDockerHost,
+      )}`,
+      `Effective TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.effectiveDockerSocketOverride,
+      )}`,
+      `Effective TESTCONTAINERS_HOST_OVERRIDE: ${renderDiagnosticValue(
+        containerRuntimeEnvironment.effectiveTestcontainersHostOverride,
+      )}`,
+      ...(containerRuntimeEnvironment.detectionError
+        ? [
+            "",
+            `Docker context auto-detection error: ${containerRuntimeEnvironment.detectionError}`,
+          ]
+        : []),
+      "",
+      "If you are running the suite directly on the host, inspect the active Docker context and export its endpoint before rerunning:",
+      '  docker context inspect "$(docker context show)"',
+      ...(suggestedDockerHost
+        ? [`  export DOCKER_HOST="${suggestedDockerHost}"`]
+        : []),
+      ...(dockerSocketPath ? [`  ls -l "${dockerSocketPath}"`] : []),
+      ...(suggestedDockerSocketOverride
+        ? [
+            `  export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=${suggestedDockerSocketOverride}`,
+          ]
+        : []),
+      "  pnpm nx run @pagopa/azure-tracing:integration",
+      "",
+      `Original error: ${error instanceof Error ? error.message : String(error)}`,
+    ].join("\n"),
+    { cause: error instanceof Error ? error : undefined },
+  );
 };
 
 const decodeRequestBody = (

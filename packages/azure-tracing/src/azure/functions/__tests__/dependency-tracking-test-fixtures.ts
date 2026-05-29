@@ -5,6 +5,9 @@
 import { type StartedTestContainer } from "testcontainers";
 
 import {
+  createContainerRuntimeDiagnosticError,
+  isMissingContainerRuntimeError,
+  prepareContainerRuntimeEnvironment,
   startTelemetryCollector,
   type TelemetryCollector,
 } from "./dependency-tracking-test-helpers";
@@ -35,7 +38,23 @@ export const createContainerFixture =
   // The empty pattern is required by Vitest.
   // eslint-disable-next-line no-empty-pattern
   async ({}, use: (container: TContainer) => Promise<void>) => {
-    const container = await startContainer();
+    const containerRuntimeEnvironment =
+      await prepareContainerRuntimeEnvironment();
+
+    let container: TContainer;
+
+    try {
+      container = await startContainer();
+    } catch (error) {
+      if (isMissingContainerRuntimeError(error)) {
+        throw createContainerRuntimeDiagnosticError(
+          error,
+          containerRuntimeEnvironment,
+        );
+      }
+
+      throw error;
+    }
 
     try {
       await use(container);
