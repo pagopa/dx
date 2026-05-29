@@ -15,7 +15,10 @@ import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { resolveTemplatesPath } from "../../../templates-path.js";
-import { cleanupTempDir } from "../../__tests__/temp-dir.js";
+import {
+  cleanupTempDir,
+  readGeneratedFiles,
+} from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_MONOREPO_GENERATOR_NAME } from "../index.js";
 
@@ -79,39 +82,29 @@ describe("monorepo generator — file generation", () => {
   });
 
   it("materializes repository metadata from the generator payload", async () => {
-    const content = await fs.readFile(
-      path.join(tmpDir, payload.repoName, "package.json"),
-      "utf-8",
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["package.json"],
     );
-    const pkg = JSON.parse(content);
-    expect(pkg.name).toBe(payload.repoName);
-    expect(pkg.description).toBe(payload.repoDescription);
+
+    expect(generatedFiles).toMatchSnapshot();
   });
 
   it("propagates action outputs into generated version files", async () => {
-    const nodeVersion = await fs.readFile(
-      path.join(tmpDir, payload.repoName, ".node-version"),
-      "utf-8",
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      [".node-version", ".terraform-version", ".pre-commit-config.yaml"],
     );
-    const terraformVersion = await fs.readFile(
-      path.join(tmpDir, payload.repoName, ".terraform-version"),
-      "utf-8",
-    );
-    const preCommitConfig = await fs.readFile(
-      path.join(tmpDir, payload.repoName, ".pre-commit-config.yaml"),
-      "utf-8",
-    );
-    expect(nodeVersion.trim()).toBe("22.14.0");
-    expect(terraformVersion.trim()).toBe("1.11.0");
-    expect(preCommitConfig).toContain("rev: v1.11.0");
+
+    expect(generatedFiles).toMatchSnapshot();
   });
 
   it("applies the repository-specific gitignore customization", async () => {
-    const content = await fs.readFile(
-      path.join(tmpDir, payload.repoName, ".gitignore"),
-      "utf-8",
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      [".gitignore"],
     );
-    expect(content).toContain("**/modules/**/.terraform.lock.hcl");
-    expect(content).toContain("**/_modules/**/.terraform.lock.hcl");
+
+    expect(generatedFiles).toMatchSnapshot();
   });
 });
