@@ -45,8 +45,18 @@ type InitPayload = z.infer<typeof initSchema>;
 
 const tagsSchema = z.record(z.string(), z.string().min(1));
 
+const workspaceDomainSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, "Domain is required")
+  .regex(
+    /^[a-z0-9-]+$/,
+    "Domain may contain only lowercase letters, numbers, and hyphens",
+  );
+
 export const workspaceSchema = z.object({
-  domain: z.string().trim().toLowerCase().default(""),
+  domain: workspaceDomainSchema,
 });
 
 export const payloadSchema = z.object({
@@ -116,9 +126,10 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       },
       {
         filter: (value: string) => value.trim().toLowerCase(),
-        message: "Domain (optional)",
+        message: "Domain",
         name: "workspace.domain",
         type: "input",
+        validate: validatePrompt(workspaceSchema.shape.domain),
       },
       {
         choices: [

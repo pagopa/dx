@@ -10,10 +10,8 @@ import { z } from "zod";
 
 export const cliEnvSchema = z
   .object({
-    // Standard CI marker. Presence (any string value) signals an automated
-    // pipeline where interactive prompts must not block. Follows the same
-    // convention used by `is-interactive` and `ora`.
-    CI: z.string().optional(),
+    // Use a truthy value to enable CI mode.
+    CI: z.stringbool().default(false),
   })
   .loose();
 

@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Publish executor",
+  "description": "",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Terraform module project root",
+      "type": "string"
+    },
+    "description": {
+      "description": "Module description from module.json",
+      "type": "string"
+    },
+    "provider": {
+      "description": "Terraform provider from module.json",
+      "type": "string"
+    },
+    "version": {
+      "description": "Module version from module.json",
+      "type": "string"
+    },
+    "githubOwner": {
+      "description": "Optional GitHub owner override from module.json.github.owner",
+      "type": "string"
+    },
+    "workspaceRoot": {
+      "description": "Workspace root path",
+      "type": "string"
+    }
+  },
+  "required": ["description", "projectRoot", "provider", "version"]
+}

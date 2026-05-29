@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-GIT-0001 Github repository shouldn't be public.
 resource "github_repository" "this" {
   name        = var.repository.name
   description = var.repository.description

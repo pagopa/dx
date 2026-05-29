@@ -46,8 +46,6 @@ dist
 node_modules
 .turbo
 
-sboms/
-
 # vitest
 coverage
 
@@ -68,3 +66,4 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
 tsconfig.tsbuildinfo
+.worktrees

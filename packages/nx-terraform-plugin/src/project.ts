@@ -1,3 +1,7 @@
+/**
+ * Builds inferred Nx Terraform project definitions and targets from config roots.
+ */
+
 import {
   ProjectConfiguration,
   ProjectType,
@@ -5,7 +9,12 @@ import {
 } from "@nx/devkit";
 import path from "node:path";
 
+import { getPackageLogger } from "./logger.ts";
+import { ModulePublishManifest } from "./manifest.ts";
 import { TerraformPluginOptions } from "./options.ts";
+import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
+
+const logger = getPackageLogger(["project"]);
 
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
@@ -40,11 +49,45 @@ const getProjectType = (root: string): ProjectType => {
 const getRootConfigPath = (root: string, configFileName: string) =>
   path.relative(root, configFileName) || configFileName;
 
+const getPublishTarget = (
+  opts: TerraformPluginOptions,
+  root: string,
+  publishManifest: ModulePublishManifest,
+): [string, TargetConfiguration] | undefined => {
+  try {
+    const publishOptions = mergePublishOptions(opts.publish, publishManifest);
+    return [
+      opts.publishTargetName,
+      {
+        cache: false,
+        executor: "@pagopa/nx-terraform-plugin:publish",
+        options: {
+          ...publishOptions,
+          githubOwner: publishOptions.github.owner,
+          projectRoot: "{projectRoot}",
+          workspaceRoot: "{workspaceRoot}",
+        },
+      },
+    ];
+  } catch (error) {
+    if (error instanceof PublishOptionsError) {
+      logger.warn("Invalid publish options", {
+        issues: error.issues,
+        path: path.join(root, "module.json"),
+      });
+      return undefined;
+    }
+
+    throw error;
+  }
+};
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
+  publishManifest: ModulePublishManifest | undefined,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -156,6 +199,13 @@ const getTargets = (
         outputs: ["{projectRoot}/README.md"],
       },
     ]);
+
+    if (publishManifest) {
+      const publishTarget = getPublishTarget(opts, root, publishManifest);
+      if (publishTarget) {
+        targets.push(publishTarget);
+      }
+    }
   }
 
   targets.push(
@@ -218,10 +268,24 @@ export const getProject = (
   opts: TerraformPluginOptions,
   root: string,
   hasRootTflintConfig = false,
+  publishManifest: ModulePublishManifest | undefined = undefined,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
-  const targets = getTargets(opts, root, projectType, hasRootTflintConfig);
-  return {
+  const isPublishableLibrary =
+    projectType === "library" && publishManifest !== undefined;
+  const targets = getTargets(
+    opts,
+    root,
+    projectType,
+    hasRootTflintConfig,
+    publishManifest,
+  );
+  const tags = ["terraform"];
+  if (isPublishableLibrary) {
+    tags.push("terraform:public");
+  }
+
+  const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
       default: ["{projectRoot}/*.{tf,tfvars}"],
@@ -234,8 +298,21 @@ export const getProject = (
     projectType,
     root,
     // We assign the 'terraform' tag to all projects created from Terraform configuration files
-    // So that they can be easily targeted in Nx commands with --projects=tag:terraform
-    tags: ["terraform"],
+    // and add 'terraform:public' for publishable module libraries discovered from module.json.
+    tags,
     targets,
   };
+
+  // Add Nx Release configuration for publishable libraries
+  if (isPublishableLibrary) {
+    config.release = {
+      version: {
+        currentVersionResolver: "disk",
+        manifestRootsToUpdate: ["{projectRoot}"],
+        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+      },
+    };
+  }
+
+  return config;
 };

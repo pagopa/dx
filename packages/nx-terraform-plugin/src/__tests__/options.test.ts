@@ -13,9 +13,53 @@ describe("parseOptions", () => {
       lintTargetName: "tflint",
       outputTargetName: "tf-output",
       planTargetName: "tf-plan",
+      publish: {
+        mode: "github",
+      },
+      publishTargetName: "nx-release-publish",
       testTargetName: "tf-test",
       validateTargetName: "tf-validate",
     });
+  });
+
+  it("accepts publish options without github owner", () => {
+    expect(
+      parseOptions({
+        publish: {
+          mode: "github",
+        },
+      }),
+    ).toMatchObject({
+      publish: {
+        mode: "github",
+      },
+    });
+  });
+
+  it("accepts plugin-level github owner defaults", () => {
+    expect(
+      parseOptions({
+        publish: {
+          github: {
+            owner: "pagopa-dx",
+          },
+          mode: "github",
+        },
+      }).publish.github?.owner,
+    ).toBe("pagopa-dx");
+  });
+
+  it("rejects empty github owner", () => {
+    expect(() =>
+      parseOptions({
+        publish: {
+          github: {
+            owner: "",
+          },
+          mode: "github",
+        },
+      }),
+    ).toThrow("publish.github.owner");
   });
 
   it("rejects duplicate target names", () => {

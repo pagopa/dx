@@ -1,9 +1,18 @@
 import { z } from "zod/v4";
 
+import { pluginPublishOptionsSchema } from "./publish-options.ts";
+
 const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
   message:
     "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
 });
+
+export const publishOptionsSchema = z.object({
+  github: pluginPublishOptionsSchema.shape.github,
+  mode: z.literal("github"),
+});
+
+export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
 const terraformPluginOptionsSchema = z.object({
   applyTargetName: targetNameSchema,
@@ -14,6 +23,8 @@ const terraformPluginOptionsSchema = z.object({
   lintTargetName: targetNameSchema,
   outputTargetName: targetNameSchema,
   planTargetName: targetNameSchema,
+  publish: publishOptionsSchema,
+  publishTargetName: targetNameSchema,
   testTargetName: targetNameSchema,
   validateTargetName: targetNameSchema,
 });
@@ -31,6 +42,10 @@ const defaultOptions: TerraformPluginOptions = {
   lintTargetName: "tflint",
   outputTargetName: "tf-output",
   planTargetName: "tf-plan",
+  publish: {
+    mode: "github",
+  },
+  publishTargetName: "nx-release-publish",
   testTargetName: "tf-test",
   validateTargetName: "tf-validate",
 };
@@ -50,10 +65,28 @@ export const parseOptions = (
       .join("; ");
     throw new Error(`Invalid Terraform plugin options: ${validationErrors}`);
   }
-  const opts = Object.assign({}, defaultOptions, parseResult.data);
+  const opts = {
+    ...defaultOptions,
+    ...parseResult.data,
+    publish: {
+      ...defaultOptions.publish,
+      ...parseResult.data.publish,
+      ...(parseResult.data.publish?.github
+        ? {
+            github: {
+              ...defaultOptions.publish.github,
+              ...parseResult.data.publish.github,
+            },
+          }
+        : {}),
+    },
+  };
   // Check uniqueness of target names
   const seen = new Map<string, string>();
-  for (const [key, value] of Object.entries(opts)) {
+  const targetNames = Object.entries(opts).filter(
+    (entry): entry is [string, string] => entry[0].endsWith("TargetName"),
+  );
+  for (const [key, value] of targetNames) {
     const existing = seen.get(value);
     if (existing) {
       throw new Error(

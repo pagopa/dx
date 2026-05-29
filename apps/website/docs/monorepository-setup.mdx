@@ -94,6 +94,30 @@ account. Otherwise, go to the [next section](#run-@pagopa/dx--cli).
 The `init` command needs a GitHub App to configure the self-hosted GitHub
 runner.
 
+Configure the GitHub App with the following permissions so the self-hosted
+runner can be managed correctly.
+
+#### Required permissions
+
+Repository permissions:
+
+| Permission     | Access         |
+| -------------- | -------------- |
+| Actions        | `Read-only`    |
+| Administration | `Read & write` |
+| Metadata       | `Read-only`    |
+
+Organization permissions:
+
+| Permission          | Access         |
+| ------------------- | -------------- |
+| Actions             | `Read-only`    |
+| Metadata            | `Read-only`    |
+| Self-hosted Runners | `Read & write` |
+
+These permissions only need to be configured once for the GitHub App, by one of
+the app managers.
+
 :::info[One GitHub App per product]
 
 Each product at PagoPA has its own dedicated GitHub App for the self-hosted
@@ -164,7 +188,7 @@ Keep these three values at hand: `@pagopa/dx-cli` will prompt you for them.
 
 Before running the `init` command, ensure you have all the required tools
 installed and the right access in place. See the
-[`dx-cli` requirements](./dx-cli/index.md#requirements) for the full list of
+[`dx-cli` installation page](./dx-cli/requirements.md) for the full list of
 tools, versions, and login instructions.
 
 With prerequisites in place and the GitHub App values ready, run:
@@ -184,8 +208,8 @@ npx @pagopa/dx-cli add environment
 ```
 
 These commands are fully interactive. Refer to the
-[commands documentation](./dx-cli/index.md#usage) for the full list of prompts
-and what each one expects.
+[commands documentation](./dx-cli/usage.md) for the full list of prompts and
+what each one expects.
 
 Commit and push to GitHub the working changes.
 

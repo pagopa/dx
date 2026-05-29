@@ -36,11 +36,16 @@ describe("workspaceSchema — domain transforms", () => {
     expect(result.success && result.data.domain).toBe("api");
   });
 
-  it("defaults domain to empty string when not provided", () => {
+  it("requires domain to be provided", () => {
     const result = workspaceSchema.safeParse({});
 
-    expect(result.success).toBe(true);
-    expect(result.success && result.data.domain).toBe("");
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects domains that would create nested paths", () => {
+    const result = workspaceSchema.safeParse({ domain: "core/platform" });
+
+    expect(result.success).toBe(false);
   });
 });
 
