@@ -26,10 +26,7 @@ import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
-import {
-  cleanupTempDir,
-  shouldKeepTestArtifacts,
-} from "../../__tests__/temp-dir.js";
+import { cleanupTempDir } from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
@@ -94,12 +91,10 @@ const runEnvironmentGenerator = async ({
   payload: Payload;
   tmpDirPrefix: string;
 }): Promise<{
-  keepArtifacts: boolean;
   originalCwd: string;
   tmpDir: string;
 }> => {
   const originalCwd = process.cwd();
-  const keepArtifacts = shouldKeepTestArtifacts(process.env);
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix));
   process.chdir(tmpDir);
 
@@ -123,13 +118,12 @@ const runEnvironmentGenerator = async ({
     throw new Error(`Generator failed:\n${summary}`);
   }
 
-  return { keepArtifacts, originalCwd, tmpDir };
+  return { originalCwd, tmpDir };
 };
 
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
-  let keepArtifacts: boolean;
 
   const payload: Payload = {
     env: {
@@ -164,7 +158,7 @@ describe("environment generator — file generation (no init)", () => {
   const mockGitHubService = createMockGitHubService();
 
   beforeAll(async () => {
-    ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
+    ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
       mockCloudAccountService,
       mockGitHubService,
       payload,
@@ -174,7 +168,7 @@ describe("environment generator — file generation (no init)", () => {
 
   afterAll(async () => {
     process.chdir(originalCwd);
-    await cleanupTempDir(tmpDir, keepArtifacts);
+    await cleanupTempDir(tmpDir);
   });
 
   it("materializes bootstrapper files from payload and backend state", async () => {
@@ -259,7 +253,6 @@ describe("environment generator — file generation (no init)", () => {
 describe("environment generator — file generation (with init)", () => {
   let tmpDir: string;
   let originalCwd: string;
-  let keepArtifacts: boolean;
 
   const cloudAccount = {
     csp: "azure" as const,
@@ -306,7 +299,7 @@ describe("environment generator — file generation (with init)", () => {
   const mockGitHubService = createMockGitHubService();
 
   beforeAll(async () => {
-    ({ keepArtifacts, originalCwd, tmpDir } = await runEnvironmentGenerator({
+    ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
       mockCloudAccountService,
       mockGitHubService,
       payload,
@@ -316,7 +309,7 @@ describe("environment generator — file generation (with init)", () => {
 
   afterAll(async () => {
     process.chdir(originalCwd);
-    await cleanupTempDir(tmpDir, keepArtifacts);
+    await cleanupTempDir(tmpDir);
   });
 
   it("runs init-specific actions when init is provided", () => {
