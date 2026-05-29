@@ -9,35 +9,31 @@ on:
       - "@pagopa/dx-mcpserver@**"
   workflow_dispatch:
 
+env:
+  IMAGE_NAME: dx/mcp-server
+
 jobs:
-  build-and-deploy:
-    name: Build and Deploy MCP on AWS Lambda
+  build:
+    name: Build Docker Image
     runs-on: ubuntu-latest
-    environment: app-prod-cd
-    env:
-      AWS_REGION: eu-central-1
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
-      IMAGE_NAME: dx/mcp-server
     permissions:
-      contents: write
-      packages: read
-      actions: read
+      contents: read
+      packages: write
       id-token: write
       attestations: write
+
+    outputs:
+      image_uri: ${{ steps.build-and-push.outputs.image_uri }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Build and Push to ECR
+      - name: Build and Push to GHCR
         id: build-and-push
         uses: pagopa/dx/actions/docker-build-push@main
         with:
-          registry: ecr
+          registry: ghcr
           dockerfile_path: apps/mcpserver/Dockerfile
           dockerfile_context: "."
           docker_image_description: "DX MCP Server"
@@ -48,9 +44,59 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  deploy:
+    name: Deploy to AWS Lambda
+    runs-on: ubuntu-latest
+    needs: build
+    environment: app-prod-cd
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+
+    env:
+      AWS_REGION: eu-central-1
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
+
+    steps:
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@f2e9fc6c2b355c1890b65e6f6f0e2ac3e6e22f78 # v2.1.2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Copy Image from GHCR to ECR
+        id: copy-image
+        env:
+          SOURCE_IMAGE: ${{ needs.build.outputs.image_uri }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+
+          # Install crane for efficient image copying
+          CRANE_VERSION="0.20.3"
+          curl -sL "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" \
+            | tar -xz crane
+
+          # Copy from GHCR to ECR
+          ECR_IMAGE="${ECR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA::7}"
+          ./crane copy "$SOURCE_IMAGE" "$ECR_IMAGE"
+
+          echo "ecr_image=$ECR_IMAGE" >> "$GITHUB_OUTPUT"
+          echo "::notice::Copied image to ECR: $ECR_IMAGE"
+
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@d496277188b89f0be02d7a2216fc912c0427702a # v1.1.2
         with:
           function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
           package-type: Image
-          image-uri: ${{ steps.build-and-push.outputs.image_uri }}
+          image-uri: ${{ steps.copy-image.outputs.ecr_image }}
