@@ -14,6 +14,7 @@ export default function (
   plop: NodePlopAPI,
   templatesPath: string,
   octokit: Octokit,
+  initialAnswers: Partial<Payload> = {},
 ) {
   setSetupPnpmAction(plop);
   setGetNodeVersionAction(plop);
@@ -21,6 +22,6 @@ export default function (
   plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
     actions: getActions(templatesPath),
     description: "A scaffold for a monorepo repository",
-    prompts: getPrompts(),
+    prompts: getPrompts(initialAnswers),
   });
 }

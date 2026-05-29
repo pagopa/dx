@@ -49,7 +49,11 @@ vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
 }));
 
-import { confirmGitHubRepoCreation, makeInitCommand } from "../init.js";
+import {
+  confirmGitHubRepoCreation,
+  makeInitCommand,
+  parseInitCommandOptions,
+} from "../init.js";
 
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
@@ -93,6 +97,14 @@ const runInitCommand = async (
 describe("confirmGitHubRepoCreation", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("returns the provided publish choice without prompting again", async () => {
+    const result = await confirmGitHubRepoCreation(makePayload(), false);
+
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBe(false);
+    expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
   it("returns true when the user confirms", async () => {
@@ -140,6 +152,32 @@ describe("confirmGitHubRepoCreation", () => {
   });
 });
 
+describe("parseInitCommandOptions", () => {
+  it("returns the provided init flags", () => {
+    expect(
+      parseInitCommandOptions({
+        publishToGitHub: false,
+        repoDescription: "My DX workspace",
+        repoName: "my-dx-workspace",
+        repoOwner: "pagopa",
+      }),
+    ).toEqual({
+      publishToGitHub: false,
+      repoDescription: "My DX workspace",
+      repoName: "my-dx-workspace",
+      repoOwner: "pagopa",
+    });
+  });
+
+  it("rejects blank string flags", () => {
+    expect(() =>
+      parseInitCommandOptions({
+        repoName: "   ",
+      }),
+    ).toThrow("Repository name cannot be empty");
+  });
+});
+
 describe("makeInitCommand", () => {
   const payload = makePayload();
 
@@ -156,6 +194,30 @@ describe("makeInitCommand", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     process.exitCode = undefined;
+  });
+
+  it("registers flags for every init input", () => {
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const command = makeInitCommand(requireGitHubAuth);
+
+    const flags = command.options.flatMap((option) => [
+      option.flags,
+      option.long,
+    ]);
+
+    expect(flags).toEqual(
+      expect.arrayContaining([
+        "--repo-name <repo-name>",
+        "--repo-owner <repo-owner>",
+        "--repo-description <repo-description>",
+        "--publish-to-github",
+        "--no-publish-to-github",
+      ]),
+    );
   });
 
   it("uses the command presenter to report json progress and results", async () => {

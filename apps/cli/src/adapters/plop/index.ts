@@ -23,9 +23,12 @@ import createMonorepoGenerator, {
 } from "../plop/generators/monorepo/index.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
-export const setMonorepoGenerator = (plop: NodePlopAPI) => {
+export const setMonorepoGenerator = (
+  plop: NodePlopAPI,
+  initialAnswers: Partial<MonorepoPayload> = {},
+) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-  createMonorepoGenerator(plop, resolveTemplatesPath("monorepo"), octokit);
+  createMonorepoGenerator(plop, resolveTemplatesPath("monorepo"), octokit, initialAnswers);
 };
 
 const validatePayload = async (
@@ -92,11 +95,21 @@ export const runActions = async (
 export const collectMonorepoPayload = async (
   plop: NodePlopAPI,
   githubService: GitHubService,
+  initialAnswers: Partial<MonorepoPayload> = {},
 ): Promise<{ generator: PlopGenerator; payload: MonorepoPayload }> => {
-  setMonorepoGenerator(plop);
+  setMonorepoGenerator(plop, initialAnswers);
   const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
   const answers = await generator.runPrompts();
-  const payload = monorepoPayloadSchema.parse(answers);
+  const payloadResult = monorepoPayloadSchema.safeParse({
+    ...initialAnswers,
+    ...answers,
+  });
+  if (!payloadResult.success) {
+    throw new Error("Invalid monorepo generator answers", {
+      cause: payloadResult.error,
+    });
+  }
+  const payload = payloadResult.data;
   await validatePayload(payload, githubService);
   return { generator, payload };
 };

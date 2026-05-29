@@ -3,7 +3,7 @@ import { Command } from "commander";
 
 import { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
 import { ListCodemods } from "../../../use-cases/list-codemods.js";
-import { exitWithError } from "../index.js";
+import { exitWithError } from "../command-errors.js";
 
 export type CodemodCommandDependencies = {
   applyCodemodById: ApplyCodemodById;

@@ -5,7 +5,7 @@ import { Command, InvalidArgumentError } from "commander";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
-import { exitWithError, GlobalOptions } from "../index.js";
+import { exitWithError, GlobalOptions } from "../command-errors.js";
 
 export const makeSavemoneyCommand = () =>
   new Command("savemoney")
