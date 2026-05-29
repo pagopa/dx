@@ -26,7 +26,7 @@ const createRepoNamePrompt = () => ({
 
 const createRepoOwnerPrompt = () => ({
   default: DEFAULT_REPO_OWNER,
-  message: "GitHub Organization",
+  message: "GitHub owner",
   name: "repoOwner" as const,
   validate: validatePrompt(payloadSchema.shape.repoOwner),
 });
@@ -47,15 +47,15 @@ type PromptFactory = {
 const promptFactories: PromptFactory[] = [
   {
     create: createRepoNamePrompt,
-    isMissing: ({ repoName }) => typeof repoName === "undefined",
+    isMissing: ({ repoName }) => repoName === undefined,
   },
   {
     create: createRepoOwnerPrompt,
-    isMissing: ({ repoOwner }) => typeof repoOwner === "undefined",
+    isMissing: ({ repoOwner }) => repoOwner === undefined,
   },
   {
     create: createRepoDescriptionPrompt,
-    isMissing: ({ repoDescription }) => typeof repoDescription === "undefined",
+    isMissing: ({ repoDescription }) => repoDescription === undefined,
   },
 ];
 

@@ -1,23 +1,10 @@
 /**
- * Shared Commander error helpers used by individual commands.
- * Keeping them separate avoids pulling the full CLI command graph into
- * command unit tests that only need common error handling behavior.
+ * Shared Commander failure handling used by command actions.
  */
-import { Command } from "commander";
+import type { Command } from "commander";
 
 import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
-
-export type GlobalOptions = {
-  output: "json" | "text";
-  verbose?: boolean;
-};
-
-/**
- * Returns true when the global `--verbose` flag is active on the closest
- * ancestor command that defines it (the root `dx` program in our CLI).
- */
-export const isVerbose = (command: Command): boolean =>
-  command.optsWithGlobals<GlobalOptions>().verbose === true;
+import { isVerbose } from "./global-options.js";
 
 /**
  * Builds a failure handler that ends the command via Commander's

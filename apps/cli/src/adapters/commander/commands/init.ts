@@ -230,49 +230,49 @@ export const checkAddEnvironmentPreconditions = () =>
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
 export const initCommandOptionsSchema = z.object({
-  publishToGitHub: z.boolean().optional(),
-  repoDescription: z.string().optional(),
-  repoName: z
-    .string()
-    .trim()
-    .min(1, "Repository name cannot be empty")
-    .optional(),
-  repoOwner: z
-    .string()
-    .trim()
-    .min(1, "GitHub organization cannot be empty")
-    .optional(),
+  description: z.string().optional(),
+  name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
+  owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
+  publish: z.boolean().optional(),
 });
 
 export type InitCommandOptions = z.infer<typeof initCommandOptionsSchema>;
 
-const formatInitCommandOptionsError = (error: z.ZodError) => {
-  const message = error.issues.map((issue) => issue.message).join("; ");
-  return message.length > 0
-    ? `Invalid init command options: ${message}`
-    : "Invalid init command options";
-};
-
 export const parseInitCommandOptions = (input: unknown): InitCommandOptions => {
   const result = initCommandOptionsSchema.safeParse(input);
   if (!result.success) {
-    throw new Error(formatInitCommandOptionsError(result.error), {
-      cause: result.error,
-    });
+    throw new Error(
+      `Invalid init command options:\n${z.prettifyError(result.error)}`,
+      {
+        cause: result.error,
+      },
+    );
   }
 
   return result.data;
 };
 
 export const getMonorepoInitialAnswers = ({
-  repoDescription,
-  repoName,
-  repoOwner,
-}: InitCommandOptions): Partial<MonorepoPayload> => ({
-  ...(typeof repoDescription === "undefined" ? {} : { repoDescription }),
-  ...(typeof repoName === "undefined" ? {} : { repoName }),
-  ...(typeof repoOwner === "undefined" ? {} : { repoOwner }),
-});
+  description,
+  name,
+  owner,
+}: InitCommandOptions): Partial<MonorepoPayload> => {
+  const initialAnswers: Partial<MonorepoPayload> = {};
+
+  if (description) {
+    initialAnswers.repoDescription = description;
+  }
+
+  if (owner) {
+    initialAnswers.repoOwner = owner;
+  }
+
+  if (name) {
+    initialAnswers.repoName = name;
+  }
+
+  return initialAnswers;
+};
 
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
@@ -478,29 +478,20 @@ export const makeInitCommand = (
   new Command()
     .name("init")
     .description("Initialize a new DX workspace")
-    .addOption(new Option("--repo-name <repo-name>", "Repository name"))
+    .addOption(new Option("--name <name>", "Repository name"))
     .addOption(
       new Option(
-        "--repo-owner <repo-owner>",
+        "--owner <owner>",
         "GitHub organization or user that will own the repository",
       ),
     )
     .addOption(
-      new Option(
-        "--repo-description <repo-description>",
-        "Repository description",
-      ),
+      new Option("--description <description>", "Repository description"),
     )
     .addOption(
       new Option(
-        "--publish-to-github",
+        "--publish",
         "Publish the scaffolded repository to GitHub without prompting",
-      ).default(undefined),
-    )
-    .addOption(
-      new Option(
-        "--no-publish-to-github",
-        "Skip GitHub publishing without prompting",
       ).default(undefined),
     )
     .action(async function (options: unknown) {
@@ -522,7 +513,7 @@ export const makeInitCommand = (
                 gitHubService: auth.gitHubService,
                 initialAnswers: getMonorepoInitialAnswers(initOptions),
                 presenter,
-                publishToGitHub: initOptions.publishToGitHub,
+                publishToGitHub: initOptions.publish,
               }),
             ),
         )
