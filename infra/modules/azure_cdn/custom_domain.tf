@@ -52,7 +52,7 @@ resource "azurerm_role_assignment" "this" {
 
   description          = "Role assignment for Front Door's managed identity to access the customer certificate in Key Vault"
   scope                = local.key_vault_ids[each.key]
-  role_definition_name = "Key Vault Secret User"
+  role_definition_name = "Key Vault Secrets User"
   principal_id         = local.profile_identity_id
 }
 
