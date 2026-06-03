@@ -1,3 +1,13 @@
+## 0.22.3 (2026-06-03)
+
+### 🩹 Fixes
+
+- Implement a new helper function to generate Terraform state keys following the prefix/domain/scope convention. Update relevant tests and schemas to enforce domain requirements and prevent nested paths. Adjust existing code to utilize the new key generation method. ([#1764](https://github.com/pagopa/dx/pull/1764))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.22.2 (2026-05-27)
 
 ### 🩹 Fixes

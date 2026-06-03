@@ -1,3 +1,14 @@
+## 0.3.0 (2026-06-03)
+
+### 🚀 Features
+
+- Add inferred nx-release-publish target for publishable Terraform modules with module.json. ([#1736](https://github.com/pagopa/dx/pull/1736))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Luca Cavallaro
+
 ## 0.2.1 (2026-05-05)
 
 ### 🩹 Fixes
