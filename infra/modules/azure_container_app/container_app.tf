@@ -186,7 +186,7 @@ resource "azurerm_container_app" "this" {
 
               content {
                 name  = header.value.name
-                value = header.value.name
+                value = header.value.value
               }
             }
           }
