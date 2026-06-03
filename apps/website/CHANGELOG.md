@@ -1,3 +1,14 @@
+## 0.19.0 (2026-06-03)
+
+### 🚀 Features
+
+- Redesign the docs sidebar navigation ([#1797](https://github.com/pagopa/dx/pull/1797))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+
 ## 0.18.2 (2026-05-27)
 
 ### 🩹 Fixes
