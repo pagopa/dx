@@ -9,6 +9,11 @@ resource "azurerm_cdn_frontdoor_secret" "certificate" {
       key_vault_certificate_id = each.value.custom_certificate.key_vault_certificate_versionless_id
     }
   }
+
+  depends_on = [
+    azurerm_key_vault_access_policy.this,
+    azurerm_role_assignment.this
+  ]
 }
 
 resource "azurerm_cdn_frontdoor_custom_domain" "this" {
@@ -22,8 +27,7 @@ resource "azurerm_cdn_frontdoor_custom_domain" "this" {
   dynamic "tls" {
     for_each = lookup(local.is_apex, each.value.host_name, false) ? [] : [1]
     content {
-      certificate_type    = "ManagedCertificate"
-      minimum_tls_version = "TLS12"
+      certificate_type = "ManagedCertificate"
     }
   }
 
@@ -33,7 +37,6 @@ resource "azurerm_cdn_frontdoor_custom_domain" "this" {
     content {
       certificate_type        = "CustomerCertificate"
       cdn_frontdoor_secret_id = azurerm_cdn_frontdoor_secret.certificate[each.key].id
-      minimum_tls_version     = "TLS12"
     }
   }
 }
