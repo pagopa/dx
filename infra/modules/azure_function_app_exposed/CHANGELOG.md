@@ -1,3 +1,13 @@
+## 3.0.2 (2026-06-03)
+
+### 🩹 Fixes
+
+- Remove "preview" flag for Node24 in "node_version" variable documentation ([#1811](https://github.com/pagopa/dx/pull/1811))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 3.0.1
 
 ### Patch Changes

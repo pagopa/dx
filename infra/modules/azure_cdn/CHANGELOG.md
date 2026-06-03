@@ -1,3 +1,13 @@
+## 0.6.3 (2026-06-03)
+
+### 🩹 Fixes
+
+- Fix RBAC role spelling ([#1813](https://github.com/pagopa/dx/pull/1813))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.6.2 (2026-05-07)
 
 ### 🩹 Fixes
