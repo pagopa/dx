@@ -87,8 +87,9 @@ jobs:
           curl -sL "https://github.com/google/go-containerregistry/releases/download/v${CRANE_VERSION}/go-containerregistry_Linux_x86_64.tar.gz" \
             | tar -xz crane
 
-          # Copy from GHCR to ECR
-          ECR_IMAGE="${ECR_REGISTRY}/${IMAGE_NAME}:${GITHUB_SHA::7}"
+          # Copy from GHCR to ECR, preserving the semantic tag from the source image
+          SOURCE_TAG="${SOURCE_IMAGE##*:}"
+          ECR_IMAGE="${ECR_REGISTRY}/${IMAGE_NAME}:${SOURCE_TAG}"
           ./crane copy "$SOURCE_IMAGE" "$ECR_IMAGE"
 
           echo "ecr_image=$ECR_IMAGE" >> "$GITHUB_OUTPUT"
