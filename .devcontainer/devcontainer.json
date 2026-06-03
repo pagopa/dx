@@ -5,7 +5,7 @@
     "ghcr.io/pagopa/devcontainer-features/acli:1": {},
     "ghcr.io/devcontainers/features/azure-cli:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {
-      "extensions": ["seachicken/gh-poi"]
+      "extensions": "seachicken/gh-poi"
     },
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "latest",
