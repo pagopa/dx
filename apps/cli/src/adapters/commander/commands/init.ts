@@ -288,15 +288,13 @@ export const makeInitCommand = (
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
-      await requireGitHubAuth()
+      await checkInitPreconditions()
+        .andThen(() => requireGitHubAuth())
         .andThen((auth) =>
-          checkInitPreconditions()
-            .andThen(() =>
-              ResultAsync.fromPromise(
-                getPlopInstance(),
-                (cause) => new Error("Failed to initialize plop", { cause }),
-              ),
-            )
+          ResultAsync.fromPromise(
+            getPlopInstance(),
+            (cause) => new Error("Failed to initialize plop", { cause }),
+          )
             .andThen((plop) =>
               ResultAsync.fromPromise(
                 runMonorepoGenerator(plop, auth.gitHubService),
