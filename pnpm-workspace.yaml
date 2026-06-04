@@ -14,7 +14,7 @@ catalog:
   '@types/js-yaml': ^4.0.9
   '@types/node': ^22.19.17
   '@types/semver': ^7.7.1
-  '@vitest/coverage-v8': ^3.2.4
+  '@vitest/coverage-v8': ^4.1.8
   commander: ^14.0.3
   eslint: ^10.3.0
   execa: ^9.6.1
@@ -27,14 +27,14 @@ catalog:
   tsup: ^8.5.1
   tsx: ^4.21.0
   typescript: ~5.9.3
-  vitest: ^3.2.4
-  vitest-mock-extended: ^3.1.1
+  vitest: ^4.1.8
+  vitest-mock-extended: ^4.0.0
   zod: ^4.4.2
 
 catalogs:
 
   aws:
-    '@aws-sdk/client-s3': ^3.1041.0
+    '@aws-sdk/client-s3': ^3.1057.0
 
   azure:
     '@azure/storage-blob': ^12.31.0
@@ -43,12 +43,12 @@ catalogs:
     '@actions/core': ^3.0.1
     '@actions/github': ^9.1.1
   opentelemetry:
-    '@azure/monitor-opentelemetry': 1.16.0
-    '@azure/monitor-opentelemetry-exporter': ^1.0.0-beta.32
+    '@azure/monitor-opentelemetry': 1.18.1
+    '@azure/monitor-opentelemetry-exporter': ^1.0.0-beta.42
     '@opentelemetry/api': ^1.9.1
-    '@opentelemetry/api-logs': ^0.213.0
-    '@opentelemetry/instrumentation': ^0.213.0
-    '@opentelemetry/instrumentation-undici': ^0.23.0
+    '@opentelemetry/api-logs': ^0.218.0
+    '@opentelemetry/instrumentation': ^0.218.0
+    '@opentelemetry/instrumentation-undici': ^0.28.0
     '@opentelemetry/resources': ^2.7.1
     '@opentelemetry/sdk-metrics': ^2.7.1
     '@opentelemetry/sdk-trace-base': ^2.7.1

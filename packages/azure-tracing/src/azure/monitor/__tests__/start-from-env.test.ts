@@ -11,9 +11,11 @@ vi.mock("@azure/monitor-opentelemetry", () => ({
 
 // Mock @azure/identity so we can assert DefaultAzureCredential is used
 vi.mock("@azure/identity", () => ({
-  DefaultAzureCredential: vi.fn().mockImplementation(() => ({
-    getToken: vi.fn(),
-  })),
+  DefaultAzureCredential: vi.fn(function DefaultAzureCredential() {
+    return {
+      getToken: vi.fn(),
+    };
+  }),
 }));
 
 describe("initFromEnv", () => {
