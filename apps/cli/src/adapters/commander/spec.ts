@@ -16,6 +16,7 @@ import type {
 } from "../../domain/spec.js";
 
 const INTERNAL_FLAGS = new Set(["--help", "--version"]);
+const INTERNAL_ROOT_COMMANDS = new Set(["spec"]);
 
 const mapOption = (opt: Option): OptionSpec => ({
   choices: opt.argChoices ?? [],
@@ -57,7 +58,9 @@ export const extractCliSpec = (
   rootCommand: Command,
   version: string,
 ): CliSpec => ({
-  commands: rootCommand.commands.map(mapCommand),
+  commands: rootCommand.commands
+    .filter((cmd) => !INTERNAL_ROOT_COMMANDS.has(cmd.name()))
+    .map(mapCommand),
   description: rootCommand.description(),
   globalOptions: rootCommand.options
     .filter((opt) => !INTERNAL_FLAGS.has(opt.long ?? ""))
