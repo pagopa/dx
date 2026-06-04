@@ -361,17 +361,17 @@ run "container_app_custom_replicas" {
   }
 }
 
-# Restrict access: external_enabled = false when restrict_access_from_within_environment = true
-run "container_app_restrict_access_from_within_environment" {
+# Restrict access: external_enabled = false when allow_access_from_environment_only = true
+run "container_app_allow_access_from_environment_only" {
   command = plan
 
   variables {
-    restrict_access_from_within_environment = true
+    allow_access_from_environment_only = true
   }
 
   assert {
     condition     = azurerm_container_app.this.ingress[0].external_enabled == false
-    error_message = "External ingress must be disabled when restrict_access_from_within_environment is true"
+    error_message = "External ingress must be disabled when allow_access_from_environment_only is true"
   }
 }
 

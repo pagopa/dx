@@ -246,7 +246,7 @@ run "custom_domain_requires_public_access" {
   command = plan
 
   variables {
-    restrict_access_from_within_environment = true
+    allow_access_from_environment_only = true
     custom_domain = {
       host_name = "api.example.com"
       dns = {

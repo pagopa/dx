@@ -78,7 +78,7 @@ variable "container_port" {
   default     = 8080
 }
 
-variable "restrict_access_from_within_environment" {
+variable "allow_access_from_environment_only" {
   type        = bool
   default     = false
   description = <<-EOT
@@ -100,8 +100,8 @@ variable "custom_domain" {
   description = "Custom domain configuration for the container app. Provide 'certificate_id' to use a pre-uploaded azurerm_container_app_environment_certificate, or 'dns' to auto-provision an Azure-managed certificate (CNAME and TXT records are created automatically). At least one of 'certificate_id' or 'dns' must be specified."
 
   validation {
-    condition     = var.custom_domain == null || var.restrict_access_from_within_environment == false
-    error_message = "restrict_access_from_within_environment must be false when custom_domain is configured."
+    condition     = var.custom_domain == null || var.allow_access_from_environment_only == false
+    error_message = "allow_access_from_environment_only must be false when custom_domain is configured."
   }
 
   validation {
