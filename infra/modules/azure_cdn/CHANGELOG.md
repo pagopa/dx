@@ -1,3 +1,13 @@
+## 0.6.4 (2026-06-04)
+
+### 🩹 Fixes
+
+- Solved an issue about KeyVault role assignment which occurred when moving the CDN's domain from managed to custom certificate. ([#1815](https://github.com/pagopa/dx/pull/1815))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.6.3 (2026-06-03)
 
 ### 🩹 Fixes

@@ -1,3 +1,14 @@
+## 0.22.4 (2026-06-04)
+
+### 🩹 Fixes
+
+- Add text and JSON command presenters ([#1776](https://github.com/pagopa/dx/pull/1776), [#1773](https://github.com/pagopa/dx/issues/1773))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.22.3 (2026-06-03)
 
 ### 🩹 Fixes
