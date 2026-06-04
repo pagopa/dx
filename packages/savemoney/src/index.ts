@@ -22,12 +22,11 @@ export {
 
 // Export common types
 export type { AzureConfig, AzureSource } from "./azure/types.js";
+export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 
 // Export Azure module
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
-
-export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 
 // Phase 0: unified Finding model and analyzer plugin layer
 export {
@@ -38,6 +37,8 @@ export {
   type Money,
   type ResourceReport,
 } from "./finding.js";
+
+export type { PricingConfig } from "./schema.js";
 export * from "./types.js";
 
 import type { AzureConfig } from "./azure/types.js";

@@ -9,6 +9,7 @@ import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult, Thresholds } from "../../types.js";
+import type { PricingService } from "../pricing/pricing-service.js";
 
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
@@ -27,6 +28,8 @@ import {
  * @param computeClient - Azure Compute client for VM details
  * @param timespanDays - Number of days to analyze metrics
  * @param verbose - Whether verbose logging is enabled
+ * @param cache - Run-scoped metrics cache
+ * @param pricing - Optional pricing facade for estimated monthly cost
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeVM(
@@ -37,6 +40,7 @@ export async function analyzeVM(
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
   cache?: MetricsCache,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -76,21 +80,35 @@ export async function analyzeVM(
     );
 
     if (vmStatus?.code === "PowerState/deallocated") {
-      const result = {
-        costRisk,
-        reason: "VM is deallocated. ",
-        suspectedUnused: true,
-      };
+      const result = await enrichWithPricing(
+        {
+          costRisk,
+          reason: "VM is deallocated. ",
+          suspectedUnused: true,
+        },
+        resource,
+        computeClient,
+        resourceGroupName,
+        vmName,
+        pricing,
+      );
       verboseLogAnalysisResult(verbose, result);
       return result;
     }
 
     if (vmStatus?.code === "PowerState/stopped") {
-      const result = {
-        costRisk,
-        reason: "VM is stopped. ",
-        suspectedUnused: true,
-      };
+      const result = await enrichWithPricing(
+        {
+          costRisk,
+          reason: "VM is stopped. ",
+          suspectedUnused: true,
+        },
+        resource,
+        computeClient,
+        resourceGroupName,
+        vmName,
+        pricing,
+      );
       verboseLogAnalysisResult(verbose, result);
       return result;
     }
@@ -127,7 +145,67 @@ export async function analyzeVM(
     reason += `Low network traffic (${(networkIn / 1024 / 1024).toFixed(2)} MB/day avg). `;
   }
 
-  const result = { costRisk, reason, suspectedUnused: reason.length > 0 };
+  const result = await enrichWithPricing(
+    { costRisk, reason, suspectedUnused: reason.length > 0 },
+    resource,
+    computeClient,
+    resourceGroupName,
+    vmName,
+    pricing,
+  );
   verboseLogAnalysisResult(verbose, result);
   return result;
+}
+
+/**
+ * Best-effort enrichment of a VM analysis result with the estimated
+ * monthly cost recoverable by removing/right-sizing the resource.
+ *
+ * No-op when:
+ *  - the result is not flagged as suspected unused
+ *  - no pricing facade was provided
+ *  - the VM SKU or region cannot be determined
+ *  - the Retail Prices lookup returns no matching meter
+ *
+ * Any error along the way is logged at warn level and swallowed so the
+ * main analysis never fails because of a pricing problem.
+ */
+async function enrichWithPricing(
+  result: AnalysisResult,
+  resource: armResources.GenericResource,
+  computeClient: ComputeManagementClient,
+  resourceGroupName: string,
+  vmName: string,
+  pricing?: PricingService,
+): Promise<AnalysisResult> {
+  if (!pricing || !result.suspectedUnused) {
+    return result;
+  }
+  try {
+    const details = await computeClient.virtualMachines.get(
+      resourceGroupName,
+      vmName,
+    );
+    const armSkuName = details.hardwareProfile?.vmSize;
+    const armRegionName = details.location ?? resource.location;
+    if (!armSkuName || !armRegionName) {
+      return result;
+    }
+    const os = details.storageProfile?.osDisk?.osType?.toLowerCase();
+    const estimatedMonthlySavings = await pricing.resolveVm({
+      armRegionName,
+      armSkuName,
+      os: os === "windows" ? "windows" : "linux",
+    });
+    if (!estimatedMonthlySavings) {
+      return result;
+    }
+    return { ...result, estimatedMonthlySavings };
+  } catch (error) {
+    const logger = getLogger(["savemoney", "azure"]);
+    logger.warn(
+      `Failed to enrich VM ${vmName} with pricing: ${error instanceof Error ? error.message : error}`,
+    );
+    return result;
+  }
 }

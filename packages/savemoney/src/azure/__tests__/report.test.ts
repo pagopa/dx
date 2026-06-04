@@ -135,6 +135,50 @@ describe("generateReport — lint format", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0]).toContain("0 issues found");
   });
+
+  describe("monetary annotations", () => {
+    const VM_WITH_COST: AzureDetailedResourceReport = {
+      analysis: {
+        costRisk: "high",
+        estimatedMonthlySavings: { amount: 29.94, currency: "EUR" },
+        reason: "No tags found. VM is deallocated.",
+        suspectedUnused: true,
+      },
+      resource: {
+        id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm-x",
+        name: "vm-x",
+        type: "Microsoft.Compute/virtualMachines",
+      },
+    };
+
+    it("renders the resource monthly cost ONCE as a header annotation, not on each finding", async () => {
+      await generateReport([VM_WITH_COST], "lint");
+      const output = allLogs(logSpy);
+      // header line contains the cost-at-risk label
+      expect(output).toMatch(/cost at risk:.*29[.,]94/);
+      // exactly one occurrence — must NOT appear next to each finding
+      const matches = output.match(/29[.,]94/g) ?? [];
+      // 1× header + 1× summary trailer = 2 occurrences; the per-finding line must not carry it
+      expect(matches.length).toBe(2);
+    });
+
+    it("does not attach the resource cost to the 'No tags found' finding line", async () => {
+      await generateReport([VM_WITH_COST], "lint");
+      const findingLines = logSpy.mock.calls
+        .map((c) => String(c[0]))
+        .filter((l) => l.includes("No tags found"));
+      expect(findingLines).toHaveLength(1);
+      expect(findingLines[0]).not.toMatch(/29[.,]94/);
+    });
+
+    it("uses the 'Estimated monthly cost at risk' label in the summary trailer", async () => {
+      await generateReport([VM_WITH_COST], "lint");
+      const output = allLogs(logSpy);
+      expect(output).toContain("Estimated monthly cost at risk");
+      // The old, misleading "Estimated monthly savings (custom)" label is gone
+      expect(output).not.toMatch(/Estimated monthly savings:\s*€/);
+    });
+  });
 });
 
 describe("generateReport — table format", () => {

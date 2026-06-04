@@ -38,7 +38,19 @@ const RISK_COLOR = {
 } as const;
 
 type Summary = {
+  /**
+   * Per-resource cost (i.e. the monthly bill the resource is currently
+   * generating) summed across resources flagged as suspected unused by
+   * custom analyzers. Represents the UPPER BOUND of what could be saved
+   * by removing the resource, NOT the saving of any individual finding.
+   */
+  costAtRiskByCurrency: Map<string, number>;
   counts: { high: number; low: number; medium: number };
+  /**
+   * Sum of Advisor's per-finding `extendedProperties.savingsAmount`
+   * values. These are authoritative point estimates from Azure ("apply
+   * this recommendation and save €X"), so they aggregate cleanly.
+   */
   savingsByCurrency: Map<string, number>;
   sourceCounts: Record<string, number>;
 };
@@ -111,6 +123,7 @@ export async function generateReport(
  */
 function computeSummary(report: AzureDetailedResourceReport[]): Summary {
   const summary: Summary = {
+    costAtRiskByCurrency: new Map(),
     counts: { high: 0, low: 0, medium: 0 },
     savingsByCurrency: new Map(),
     sourceCounts: {},
@@ -139,6 +152,16 @@ function computeSummary(report: AzureDetailedResourceReport[]): Summary {
         );
       }
     }
+    // Per-resource cost: counted ONCE per resource (not per finding) so
+    // that a resource with N findings doesn't inflate the total by Nx.
+    const costAtRisk = entry.analysis.estimatedMonthlySavings;
+    if (costAtRisk) {
+      summary.costAtRiskByCurrency.set(
+        costAtRisk.currency,
+        (summary.costAtRiskByCurrency.get(costAtRisk.currency) ?? 0) +
+          costAtRisk.amount,
+      );
+    }
   }
   return summary;
 }
@@ -162,48 +185,76 @@ function formatAmount(amount: number, currency: string): string {
 }
 
 /**
- * Renders an estimated monthly savings value as the short "(€ 12.50/mo)"
- * label that ships next to each lint line. Returns an empty string when
- * the analyzer didn't provide an estimate.
+ * Renders an Advisor per-finding monthly saving as the short
+ * "(saving: € 12.50/mo)" label that ships next to each lint line.
+ * Returns an empty string when the finding doesn't carry an estimate.
+ *
+ * Only Advisor populates this today: Microsoft attaches an authoritative
+ * per-recommendation saving to each recommendation, so it aggregates
+ * cleanly. Custom analyzers do NOT propagate the resource's monthly
+ * bill down to each finding — see the per-resource "cost at risk"
+ * header rendered by `generateLintReport` instead.
  */
-function formatSavings(savings: Money | undefined): string {
+function formatPerFindingSavings(savings?: Money): string {
   if (!savings) return "";
-  return `(${formatAmount(savings.amount, savings.currency)}/mo)`;
+  return `(saving: ${formatAmount(savings.amount, savings.currency)}/mo)`;
 }
 
 /**
  * Renders a linter-style report to stdout, grouping findings by resource.
  *
  * When `Finding[]` is attached to a report (Phase 1+), each finding is
- * rendered with its `source` badge (e.g. `[advisor]`) and the estimated
- * monthly savings, when known. For older payloads without `findings` we
- * fall back to splitting `analysis.reason` like before so the format stays
- * backward compatible.
+ * rendered with its `source` badge (e.g. `[advisor]`) and its own
+ * estimated monthly saving (when populated by Advisor). For older
+ * payloads without `findings` we fall back to splitting `analysis.reason`
+ * like before so the format stays backward compatible.
+ *
+ * When a custom analyzer populated `analysis.estimatedMonthlySavings`,
+ * the value is printed ONCE per resource as a header annotation labelled
+ * "cost at risk" — it represents the monthly bill of the resource (an
+ * upper bound on what could be recovered by removing it), NOT the saving
+ * of any individual finding sentence.
  *
  * Example output:
  *
- *   /subscriptions/.../virtualMachines/my-vm
- *     ✖ HIGH    [advisor] Right-size your VM. (€ 12.50/mo)
+ *   /subscriptions/.../virtualMachines/my-vm  (cost at risk: € 29.94/mo)
  *     ✖ HIGH    [custom]  No tags found.
+ *     ✖ HIGH    [custom]  VM is deallocated.
+ *
+ *   /subscriptions/.../virtualMachines/other-vm
+ *     ✖ HIGH    [advisor] Right-size your VM. (saving: € 12.50/mo)
  *
  *   Summary: 3 issues found  (2 high, 0 medium, 1 low)
- *   Estimated monthly savings: € 12.50
+ *   Estimated monthly cost at risk (custom): € 29.94
+ *   Estimated monthly savings (advisor):     € 12.50
  */
 function generateLintReport(report: AzureDetailedResourceReport[]): void {
-  const summary = {
+  const summary: Summary = {
+    costAtRiskByCurrency: new Map(),
     counts: { high: 0, low: 0, medium: 0 },
-    savingsByCurrency: new Map<string, number>(),
-    sourceCounts: {} as Record<string, number>,
+    savingsByCurrency: new Map(),
+    sourceCounts: {},
   };
 
   for (const entry of report) {
     const resourceId =
       entry.resource.id ?? `unknown/${entry.resource.name ?? "unknown"}`;
-    console.log(`${BOLD}${resourceId}${RESET}`);
+    const costAtRisk = entry.analysis.estimatedMonthlySavings;
+    const header = costAtRisk
+      ? `${BOLD}${resourceId}${RESET}  ${GREEN}(cost at risk: ${formatAmount(costAtRisk.amount, costAtRisk.currency)}/mo)${RESET}`
+      : `${BOLD}${resourceId}${RESET}`;
+    console.log(header);
+    if (costAtRisk) {
+      summary.costAtRiskByCurrency.set(
+        costAtRisk.currency,
+        (summary.costAtRiskByCurrency.get(costAtRisk.currency) ?? 0) +
+          costAtRisk.amount,
+      );
+    }
 
     const lines = entry.findings?.length
       ? entry.findings.map((f) => ({
-          extra: formatSavings(f.estimatedMonthlySavings),
+          extra: formatPerFindingSavings(f.estimatedMonthlySavings),
           severity: f.severity,
           source: f.source,
           text: f.reason,
@@ -259,7 +310,8 @@ function generateLintReport(report: AzureDetailedResourceReport[]): void {
  * out of scope for this tool.
  */
 function printSummary(summary: Summary): void {
-  const { counts, savingsByCurrency, sourceCounts } = summary;
+  const { costAtRiskByCurrency, counts, savingsByCurrency, sourceCounts } =
+    summary;
   const total = counts.high + counts.medium + counts.low;
   const summaryLine =
     `${BOLD}Summary:${RESET} ${total} issue${total !== 1 ? "s" : ""} found` +
@@ -276,13 +328,23 @@ function printSummary(summary: Summary): void {
     console.log(`${BOLD}Sources:${RESET} ${sourceBreakdown}`);
   }
 
+  if (costAtRiskByCurrency.size > 0) {
+    const parts = [...costAtRiskByCurrency.entries()].map(
+      ([currency, amount]) =>
+        `${GREEN}${formatAmount(amount, currency)}${RESET}`,
+    );
+    console.log(
+      `${BOLD}Estimated monthly cost at risk (custom):${RESET} ${parts.join(", ")}`,
+    );
+  }
+
   if (savingsByCurrency.size > 0) {
     const parts = [...savingsByCurrency.entries()].map(
       ([currency, amount]) =>
         `${GREEN}${formatAmount(amount, currency)}${RESET}`,
     );
     console.log(
-      `${BOLD}Estimated monthly savings:${RESET} ${parts.join(", ")}`,
+      `${BOLD}Estimated monthly savings (advisor):${RESET} ${parts.join(", ")}`,
     );
   }
 }

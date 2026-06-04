@@ -1,4 +1,8 @@
-import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
+import type {
+  AzureConfig,
+  AzureSource,
+  PricingConfig,
+} from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
@@ -38,6 +42,10 @@ export const makeSavemoneyCommand = () =>
       parseSourceOption,
       "all",
     )
+    .option(
+      "--no-pricing",
+      "Disable Azure Retail Prices enrichment (skips estimated monthly savings)",
+    )
     .action(async function (options) {
       const { verbose } = this.optsWithGlobals<GlobalOptions>();
       try {
@@ -51,6 +59,13 @@ export const makeSavemoneyCommand = () =>
           ...config,
           filterTags,
           preferredLocation: options.location || config.preferredLocation,
+          // Commander turns `--no-pricing` into `options.pricing === false`.
+          // When the flag is not passed, options.pricing is `true`, and we
+          // let the schema-derived defaults in `config.pricing` flow through.
+          pricing: buildPricingConfig(
+            config.pricing,
+            options.pricing !== false,
+          ),
           sources:
             options.source === "all"
               ? (config.sources ?? ["advisor", "custom"])
@@ -82,6 +97,27 @@ export const makeSavemoneyCommand = () =>
     });
 
 const SourceSchema = z.enum(["advisor", "all", "custom"]);
+
+/**
+ * Builds the final `PricingConfig` to pass to the analyzer.
+ *
+ * Honors the loaded YAML config when present, then forces `enabled: false`
+ * if the user passed `--no-pricing`. Falls back to a safe default object
+ * when the loaded config didn't include a pricing section (e.g. when
+ * configuration was sourced from environment variables — the loader is
+ * expected to always populate it, but we keep this as a defensive net).
+ */
+export function buildPricingConfig(
+  loaded: PricingConfig | undefined,
+  enabled: boolean,
+): PricingConfig {
+  const base: PricingConfig = loaded ?? {
+    cacheTtlHours: 24,
+    currency: "EUR",
+    enabled: true,
+  };
+  return enabled ? base : { ...base, enabled: false };
+}
 
 /**
  * Parses the `--source` option via a zod enum, accepting `all`, `advisor`,
