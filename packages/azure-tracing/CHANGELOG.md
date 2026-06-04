@@ -1,3 +1,14 @@
+## 0.5.2 (2026-06-04)
+
+### 🩹 Fixes
+
+- Add integration tests. ([#1796](https://github.com/pagopa/dx/pull/1796))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.5.1 (2026-05-05)
 
 ### 🧱 Updated Dependencies
