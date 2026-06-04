@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
+import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   GitHubService,
   PullRequest,
@@ -280,40 +281,37 @@ export const confirmGitHubRepoCreation = (
       new Error("Failed to read GitHub publish confirmation", { cause }),
   );
 
-type InitCommandDependencies = {
-  gitHubService: GitHubService;
-};
-
-export const makeInitCommand = ({
-  gitHubService,
-}: InitCommandDependencies): Command =>
+export const makeInitCommand = (
+  requireGitHubAuth: GitHubAuthFactory,
+): Command =>
   new Command()
     .name("init")
     .description("Initialize a new DX workspace")
     .action(async function () {
       await checkInitPreconditions()
-        .andThen(() =>
+        .andThen(() => requireGitHubAuth())
+        .andThen((auth) =>
           ResultAsync.fromPromise(
             getPlopInstance(),
             (cause) => new Error("Failed to initialize plop", { cause }),
-          ),
-        )
-        .andThen((plop) =>
-          ResultAsync.fromPromise(
-            runMonorepoGenerator(plop, gitHubService),
-            handleGeneratorError,
-          ),
-        )
-        .andTee((payload) => {
-          process.chdir(payload.repoName);
-        })
-        .andThen((payload) =>
-          confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
-            (confirmed) =>
-              confirmed
-                ? handleNewGitHubRepository(gitHubService)(payload)
-                : okAsync({ gitHubRepoCreationSkipped: true, payload }),
-          ),
+          )
+            .andThen((plop) =>
+              ResultAsync.fromPromise(
+                runMonorepoGenerator(plop, auth.gitHubService),
+                handleGeneratorError,
+              ),
+            )
+            .andTee((payload) => {
+              process.chdir(payload.repoName);
+            })
+            .andThen((payload) =>
+              confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
+                (confirmed) =>
+                  confirmed
+                    ? handleNewGitHubRepository(auth.gitHubService)(payload)
+                    : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+              ),
+            ),
         )
         .match(displaySummary, exitWithError(this));
     });

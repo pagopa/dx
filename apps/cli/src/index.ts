@@ -1,6 +1,6 @@
 import "core-js/actual/set/index.js";
 import { configure, getConsoleSink } from "@logtape/logtape";
-import * as assert from "node:assert/strict";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { Octokit } from "octokit";
 
 import codemodRegistry from "./adapters/codemods/index.js";
@@ -14,11 +14,9 @@ import {
 } from "./adapters/octokit/index.js";
 import { makeAzureAuthorizationService } from "./adapters/pagopa-technology/azure-authorization.js";
 import { getConfig } from "./config.js";
-import { Dependencies } from "./domain/dependencies.js";
 import { getInfo } from "./domain/info.js";
 import { applyCodemodById } from "./use-cases/apply-codemod.js";
 import { listCodemods } from "./use-cases/list-codemods.js";
-import { requestAuthorization } from "./use-cases/request-authorization.js";
 
 /**
  * Returns `true` when `-v` or `--verbose` is present in argv.
@@ -60,30 +58,37 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
 export const runCli = async (version: string) => {
   await configureLogging(detectVerboseFromArgv(process.argv));
 
-  // Creating the adapters
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();
   const validationReporter = makeValidationReporter();
 
-  const auth = await getGitHubPAT();
+  /**
+   * Lazily creates GitHub-authenticated services on first call.
+   * Only commands that actually need GitHub (init, add) will trigger this,
+   * so credential-free commands (spec, doctor, info, …) never require a PAT.
+   */
+  const requireGitHubAuth = () =>
+    ResultAsync.fromPromise(
+      getGitHubPAT(),
+      (cause) => new Error("Failed to read GitHub PAT", { cause }),
+    ).andThen((auth) => {
+      if (!auth) {
+        return errAsync(
+          new Error(
+            "GitHub PAT is required. Please set the GH_TOKEN environment variable or login using GitHub CLI.",
+          ),
+        );
+      }
+      const octokit = new Octokit({ auth });
+      const gitHubService = new OctokitGitHubService(octokit);
+      const authorizationService = makeAzureAuthorizationService(gitHubService);
+      return okAsync({ authorizationService, gitHubService });
+    });
 
-  assert.ok(
-    auth,
-    "GitHub PAT is required. Please set the GH_TOKEN environment variable or login using GitHub CLI.",
-  );
-
-  const octokit = new Octokit({
-    auth,
-  });
-
-  const gitHubService = new OctokitGitHubService(octokit);
-  const authorizationService = makeAzureAuthorizationService(gitHubService);
-
-  const deps: Dependencies = {
-    authorizationService,
-    gitHubService,
+  const deps = {
     packageJsonReader,
     repositoryReader,
+    requireGitHubAuth,
     validationReporter,
   };
 
@@ -92,7 +97,6 @@ export const runCli = async (version: string) => {
   const useCases = {
     applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
     listCodemods: listCodemods(codemodRegistry),
-    requestAuthorization: requestAuthorization(authorizationService),
   };
 
   const program = makeCli(deps, config, useCases, version);
