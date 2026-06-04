@@ -1,0 +1,314 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`environment generator — file generation (no init) > materializes bootstrapper files from payload and backend state 1`] = `
+{
+  ".github/workflows/_release-terraform-apply-bootstrapper-dev.yaml": "name: Release Bootstrapper Infrastructure - dev
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/bootstrapper/**"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  release:
+    uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
+    name: Release Bootstrapper (dev)
+    secrets: inherit
+    with:
+      environment: 'dev'
+",
+  "infra/bootstrapper/dev/backend.tf": "
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "dx-d-itn-tf-rg"
+    storage_account_name = "dxditntfst"
+    container_name       = "terraform-state"
+    key                  = "dx/payments/bootstrapper.tfstate"
+    subscription_id      = "00000000-0000-0000-0000-000000000000"
+    use_azuread_auth     = true
+  }
+}
+",
+  "infra/bootstrapper/dev/locals.tf": "locals {
+  environment = {
+    prefix          = "dx"
+    env_short       = "d"
+    domain          = "payments"
+    instance_number = "01"
+  }
+
+  azure_accounts = {
+    DEV-DX = {
+      location = "italynorth"
+    }
+  }
+
+  tags = {
+    CreatedBy   = "Terraform"
+    Environment = "Dev"
+    BusinessUnit    = "Platform"
+    CostCenter    = "TS000"
+    ManagementTeam    = "Engineering"
+  }
+}
+",
+  "infra/bootstrapper/dev/main.tf": "locals {
+  bootstrapper_tags = merge(local.tags, {
+    Source = "https://github.com/pagopa/my-project/blob/main/infra/bootstrapper/dev"
+  })
+}
+
+module "azure-DEV-DX_core_values" {
+  source  = "pagopa-dx/azure-core-values-exporter/azurerm"
+  version = "~> 0.0"
+
+  providers = {
+    azurerm = azurerm.DEV-DX
+  }
+
+  core_state = {
+    resource_group_name  = "dx-d-itn-tf-rg"
+    storage_account_name = "dxditntfst"
+    subscription_id      = "00000000-0000-0000-0000-000000000000"
+    container_name       = "terraform-state"
+    key                  = "dx/payments/core.tfstate"
+  }
+}
+
+module "azure-DEV-DX_bootstrap" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~> 4.0"
+
+  providers = {
+    azurerm = azurerm.DEV-DX
+  }
+
+  environment = merge(local.environment, local.azure_accounts.DEV-DX)
+
+  entraid_groups = {
+    admins_object_id    = data.azuread_group.admins.object_id
+    devs_object_id      = data.azuread_group.developers.object_id
+    externals_object_id = data.azuread_group.externals.object_id
+  }
+
+  terraform_storage_account = {
+    name                = "dxditntfst"
+    resource_group_name = "dx-d-itn-tf-rg"
+  }
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-project"
+  }
+
+  github_private_runner = {
+    container_app_environment_id       = module.azure-DEV-DX_core_values.github_runner.environment_id
+    labels = [
+      "dev"
+    ]
+    key_vault = {
+      name                = module.azure-DEV-DX_core_values.common_key_vault.name
+      resource_group_name = module.azure-DEV-DX_core_values.common_key_vault.resource_group_name
+      use_rbac            = true
+    }
+    use_github_app = true
+  }
+
+  private_dns_zone_resource_group_id = module.azure-DEV-DX_core_values.network_resource_group_id
+  opex_resource_group_id             = module.azure-DEV-DX_core_values.opex_resource_group_id
+
+  tags = local.bootstrapper_tags
+}
+
+
+
+",
+  "infra/bootstrapper/dev/providers.tf": "terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+  subscription_id     = "sub-dev-123"
+  alias               = "DEV-DX"
+}
+
+provider "github" {
+  owner = "pagopa"
+}
+",
+}
+`;
+
+exports[`environment generator — file generation (with init) > materializes init-specific infrastructure files 1`] = `
+{
+  "infra/bootstrapper/dev/main.tf": "locals {
+  bootstrapper_tags = merge(local.tags, {
+    Source = "https://github.com/pagopa/my-project/blob/main/infra/bootstrapper/dev"
+  })
+}
+
+module "azure-DEV-DX_core_values" {
+  source  = "pagopa-dx/azure-core-values-exporter/azurerm"
+  version = "~> 0.0"
+
+  providers = {
+    azurerm = azurerm.DEV-DX
+  }
+
+  core_state = {
+    resource_group_name  = "dx-d-itn-tf-rg"
+    storage_account_name = "dxditntfst"
+    subscription_id      = "00000000-0000-0000-0000-000000000000"
+    container_name       = "terraform-state"
+    key                  = "dx/payments/core.tfstate"
+  }
+}
+
+module "azure-DEV-DX_bootstrap" {
+  source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
+  version = "~> 4.0"
+
+  providers = {
+    azurerm = azurerm.DEV-DX
+  }
+
+  environment = merge(local.environment, local.azure_accounts.DEV-DX)
+
+  entraid_groups = {
+    admins_object_id    = data.azuread_group.admins.object_id
+    devs_object_id      = data.azuread_group.developers.object_id
+    externals_object_id = data.azuread_group.externals.object_id
+  }
+
+  terraform_storage_account = {
+    name                = "dxditntfst"
+    resource_group_name = "dx-d-itn-tf-rg"
+  }
+
+  repository = {
+    owner = "pagopa"
+    name  = "my-project"
+  }
+
+  github_private_runner = {
+    container_app_environment_id       = module.azure-DEV-DX_core_values.github_runner.environment_id
+    labels = [
+      "dev"
+    ]
+    key_vault = {
+      name                = module.azure-DEV-DX_core_values.common_key_vault.name
+      resource_group_name = module.azure-DEV-DX_core_values.common_key_vault.resource_group_name
+      use_rbac            = true
+    }
+    use_github_app = true
+  }
+
+  private_dns_zone_resource_group_id = module.azure-DEV-DX_core_values.network_resource_group_id
+  opex_resource_group_id             = module.azure-DEV-DX_core_values.opex_resource_group_id
+
+  tags = local.bootstrapper_tags
+}
+
+resource "azurerm_role_assignment" "infra_cd_user_access_admin_common_rg_DEV-DX" {
+  provider = azurerm.DEV-DX
+
+  scope                = module.azure-DEV-DX_core_values.common_resource_group_id
+  role_definition_name = "User Access Administrator"
+  principal_id         = module.azure-DEV-DX_bootstrap.identities.infra.cd.principal_id
+}
+
+resource "azurerm_role_assignment" "infra_cd_kv_secrets_officer_common_DEV-DX" {
+  provider = azurerm.DEV-DX
+
+  scope                = module.azure-DEV-DX_core_values.common_key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = module.azure-DEV-DX_bootstrap.identities.infra.cd.principal_id
+}
+
+resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_DEV-DX" {
+  provider = azurerm.DEV-DX
+
+  scope                = module.azure-DEV-DX_core_values.common_key_vault.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = module.azure-DEV-DX_bootstrap.identities.infra.ci.principal_id
+}
+
+
+",
+  "infra/core/dev/backend.tf": "
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "dx-d-itn-tf-rg"
+    storage_account_name = "dxditntfst"
+    container_name       = "terraform-state"
+    key                  = "dx/payments/core.tfstate"
+    subscription_id      = "00000000-0000-0000-0000-000000000000"
+    use_azuread_auth     = true
+  }
+}
+",
+  "infra/core/dev/main.tf": "module "azure-DEV-DX_core" {
+  source  = "pagopa-dx/azure-core-infra/azurerm"
+  version = "~> 4.0"
+
+  providers = {
+    azurerm = azurerm.DEV-DX
+  }
+
+  environment = merge(local.environment, local.azure_accounts.DEV-DX, {
+    app_name = "core"
+  })
+
+  tags = merge(local.tags, {
+    Source = "https://github.com/pagopa/my-project/blob/main/infra/core/dev"
+  })
+}
+
+
+
+",
+  "infra/core/dev/providers.tf": "terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+    dx = {
+      source  = "pagopa-dx/azure"
+      version = "~> 0"
+    }
+  }
+}
+
+provider "azurerm" {
+  features {}
+  storage_use_azuread = true
+  subscription_id     = "sub-dev-123"
+  alias               = "DEV-DX"
+}
+",
+}
+`;

@@ -13,8 +13,13 @@ output "resource_group_name" {
   description = "The name of the Azure Resource Group where the Container App is deployed."
 }
 
-output "url" {
+output "url_latest_revision" {
   value       = azurerm_container_app.this.latest_revision_fqdn
+  description = "The URL of the latest revision deployed Container App."
+}
+
+output "url" {
+  value       = azurerm_container_app.this.ingress[0].fqdn
   description = "The URL of the Container App."
 }
 

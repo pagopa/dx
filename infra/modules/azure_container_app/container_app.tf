@@ -2,20 +2,18 @@ resource "azurerm_container_app" "this" {
   name                         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app" }))
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
-  revision_mode                = var.revision_mode
+  revision_mode                = local.revision_mode
   workload_profile_name        = "Consumption"
 
   identity {
-    type = "SystemAssigned, UserAssigned"
-    identity_ids = [
-      var.user_assigned_identity_id
-    ]
+    type         = local.container_app_identity_type
+    identity_ids = local.container_app_identity_ids
   }
 
   ingress {
     allow_insecure_connections = false
-    external_enabled           = var.public_access_enabled
-    target_port                = var.target_port
+    external_enabled           = !var.allow_access_from_environment_only
+    target_port                = var.container_port
     traffic_weight {
       percentage      = 100
       latest_revision = true
@@ -26,7 +24,7 @@ resource "azurerm_container_app" "this" {
     for_each = var.acr_registry == null ? [] : [var.acr_registry]
     content {
       server   = registry.value
-      identity = var.user_assigned_identity_id
+      identity = local.container_app_secret_identity
     }
   }
 
@@ -35,7 +33,7 @@ resource "azurerm_container_app" "this" {
     content {
       name                = replace(lower(secret.value.name), "_", "-")
       key_vault_secret_id = secret.value.key_vault_secret_id
-      identity            = var.user_assigned_identity_id
+      identity            = local.container_app_secret_identity
     }
   }
 
@@ -45,7 +43,7 @@ resource "azurerm_container_app" "this" {
     content {
       name                = "entra-id-client-secret"
       key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
-      identity            = var.user_assigned_identity_id
+      identity            = local.container_app_secret_identity
     }
   }
 
@@ -96,7 +94,7 @@ resource "azurerm_container_app" "this" {
     }
 
     dynamic "container" {
-      for_each = var.container_app_templates
+      for_each = var.containers
       content {
         # get the name from the image if not set according to formats: registry.name/org/name:sha-value - nginix:latest
         name   = container.value.name == "" ? split(":", split("/", container.value.image)[length(split("/", container.value.image)) - 1])[0] : container.value.name
@@ -116,7 +114,7 @@ resource "azurerm_container_app" "this" {
         dynamic "env" {
           for_each = [
             for secret in var.secrets : secret
-            if !secret.scheduled_for_deletion
+            if contains(container.value.secret_names, secret.name)
           ]
 
           content {
@@ -129,7 +127,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.liveness_probe == null ? [] : [container.value.liveness_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = liveness_probe.value.transport
             failure_count_threshold = liveness_probe.value.failure_count_threshold
             initial_delay           = liveness_probe.value.initial_delay
@@ -152,7 +150,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.readiness_probe == null ? [] : [container.value.readiness_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = readiness_probe.value.transport
             failure_count_threshold = readiness_probe.value.failure_count_threshold
             interval_seconds        = readiness_probe.value.interval_seconds
@@ -176,7 +174,7 @@ resource "azurerm_container_app" "this" {
           for_each = container.value.startup_probe == null ? [] : [container.value.startup_probe]
 
           content {
-            port                    = var.target_port
+            port                    = var.container_port
             transport               = startup_probe.value.transport
             failure_count_threshold = startup_probe.value.failure_count_threshold
             interval_seconds        = startup_probe.value.interval_seconds
@@ -188,7 +186,7 @@ resource "azurerm_container_app" "this" {
 
               content {
                 name  = header.value.name
-                value = header.value.name
+                value = header.value.value
               }
             }
           }
@@ -198,6 +196,14 @@ resource "azurerm_container_app" "this" {
   }
 
   lifecycle {
+    precondition {
+      condition = length(setsubtract(
+        toset(flatten([for template in var.containers : template.secret_names])),
+        toset([for secret in var.secrets : secret.name])
+      )) == 0
+      error_message = "Each containers[*].secret_names entry must match a secret defined in var.secrets."
+    }
+
     ignore_changes = [
       # The image is not managed by Terraform, but instead updated by CD pipelines
       template[0].container[0].image
