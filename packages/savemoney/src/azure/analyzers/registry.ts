@@ -10,6 +10,7 @@
  * Adding a new analyzer is a single insertion here.
  */
 
+import type { SubscriptionAnalyzer } from "./subscription.js";
 import type { Analyzer } from "./types.js";
 
 import {
@@ -23,6 +24,7 @@ import {
   analyzeStorageAccount,
   analyzeVM,
 } from "../resources/index.js";
+import { createAdvisorAnalyzer } from "./advisor.js";
 
 /**
  * Builds the default set of analyzers in the same order they were
@@ -181,4 +183,14 @@ export function createDefaultAnalyzers(): Analyzer[] {
       supports: (r) => r.type?.toLowerCase() === "microsoft.web/staticsites",
     },
   ];
+}
+
+/**
+ * Builds the default set of subscription-level analyzers.
+ *
+ * Today this is just Azure Advisor; Phase 4 will add a quota / usages
+ * analyzer here. Adding new sources is a single insertion.
+ */
+export function createDefaultSubscriptionAnalyzers(): SubscriptionAnalyzer[] {
+  return [createAdvisorAnalyzer()];
 }

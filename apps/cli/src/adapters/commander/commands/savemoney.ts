@@ -1,7 +1,9 @@
-import type { AzureConfig } from "@pagopa/dx-savemoney";
+import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
-import { Command } from "commander";
+import { Command, InvalidArgumentError } from "commander";
+import { oraPromise } from "ora";
+import { z } from "zod";
 
 import { exitWithError, GlobalOptions } from "../index.js";
 
@@ -28,7 +30,13 @@ export const makeSavemoneyCommand = () =>
     )
     .option(
       "-t, --tags <tags...>",
-      "Filter resources by tags (key=value key2=value2). Only resources matching ALL specified tags are analyzed.",
+      "Filter findings by resource tags (key=value key2=value2). Advisor subscription-level findings remain global.",
+    )
+    .option(
+      "-s, --source <source>",
+      "Restrict findings to a single source: 'advisor', 'custom', or 'all' (default: all)",
+      parseSourceOption,
+      "all",
     )
     .action(async function (options) {
       const { verbose } = this.optsWithGlobals<GlobalOptions>();
@@ -43,12 +51,27 @@ export const makeSavemoneyCommand = () =>
           ...config,
           filterTags,
           preferredLocation: options.location || config.preferredLocation,
+          sources:
+            options.source === "all"
+              ? (config.sources ?? ["advisor", "custom"])
+              : [options.source as AzureSource],
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
           verbose: verbose ?? false,
         };
-        // Run analysis
-        await azure.analyzeAzureResources(finalConfig, options.format);
+
+        // Run analysis showing a progress spinner on stderr so the CLI doesn't
+        // look frozen during the (potentially several-minute) Azure round-trips.
+        const reports = await oraPromise(
+          azure.analyzeAzureResources(finalConfig),
+          {
+            failText: "Analysis failed",
+            stream: process.stderr,
+            successText: "Analysis complete",
+            text: "Analyzing Azure resources",
+          },
+        );
+        await azure.generateReport(reports, options.format);
       } catch (error) {
         exitWithError(this)(
           error instanceof Error
@@ -58,12 +81,28 @@ export const makeSavemoneyCommand = () =>
       }
     });
 
+const SourceSchema = z.enum(["advisor", "all", "custom"]);
+
+/**
+ * Parses the `--source` option via a zod enum, accepting `all`, `advisor`,
+ * or `custom` and rejecting any other value with a Commander-friendly error.
+ */
+export function parseSourceOption(value: string): string {
+  const result = SourceSchema.safeParse(value);
+  if (!result.success) {
+    throw new InvalidArgumentError(
+      `Allowed values are: ${SourceSchema.options.join(", ")}`,
+    );
+  }
+  return result.data;
+}
+
 /**
  * Parses an array of "key=value" strings (from commander variadic option) into a Map<string, string>.
  * Returns an empty Map when the option is not provided or empty.
  * Supports values that contain "=" (only the first "=" is treated as separator).
  */
-function parseTagsOption(
+export function parseTagsOption(
   tagsOption: string[] | undefined,
 ): Map<string, string> {
   const result = new Map<string, string>();

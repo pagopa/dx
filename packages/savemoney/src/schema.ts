@@ -111,6 +111,15 @@ const AzureSectionSchema = z
      */
     concurrency: z.number().int().positive().optional(),
     preferredLocation: z.string().default("italynorth"),
+    /**
+     * Which finding sources to include. Defaults to all known sources.
+     * Authors can narrow the run to e.g. `["advisor"]` to fetch only
+     * Azure Advisor recommendations, or `["custom"]` to skip Advisor.
+     */
+    sources: z
+      .array(z.enum(["advisor", "custom"]))
+      .nonempty()
+      .default(["advisor", "custom"]),
     subscriptionIds: z
       .array(z.string())
       .min(

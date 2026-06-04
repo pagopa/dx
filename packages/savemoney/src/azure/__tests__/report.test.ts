@@ -136,3 +136,30 @@ describe("generateReport — lint format", () => {
     expect(calls[0]).toContain("0 issues found");
   });
 });
+
+describe("generateReport — table format", () => {
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("renders without throwing for an empty report", async () => {
+    await expect(generateReport([], "table")).resolves.toBeUndefined();
+    // Table is always printed; the summary line ("0 issues found") follows.
+    expect(logSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
+    const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    expect(output).toContain("0 issues found");
+  });
+
+  it("includes resource name and reason in the rendered table", async () => {
+    await generateReport([HIGH_ENTRY], "table");
+    const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    expect(output).toContain("vm-high");
+    expect(output).toContain("VM is deallocated");
+  });
+});

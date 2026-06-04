@@ -6,4 +6,5 @@
 
 export * from "./analyzer.js";
 export * from "./config.js";
+export * from "./report.js";
 export * from "./types.js";

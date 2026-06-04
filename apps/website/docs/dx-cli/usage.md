@@ -305,6 +305,8 @@ The tool supports multiple authentication methods:
 - `--config`, `-c` - Path to YAML config file
 - `--format`, `-f` - Output format, possible values: `table` (_default_),
   `json`, `detailed-json`, `lint`
+- `--source`, `-s` - Restrict findings to a specific source: `advisor`,
+  `custom`, or `all` (default: `all`)
 - `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
 - `--verbose`, `-v` - Enable detailed logging
 
@@ -357,14 +359,18 @@ optimization:
 | Storage Accounts    |  🟡  | Storage accounts with minimal activity             |
 | Container Apps      |  🟡  | Not running, zero replicas, low resource usage     |
 | Static Web Apps     |  🟢  | No traffic or very low usage patterns              |
+| Azure Advisor       |  ⚪  | Reserved Instance and Savings Plan opportunities   |
 
-**Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low
+**Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low · ⚪ Varies
 
 All resources are additionally evaluated for:
 
 - **Missing Tags** - Resources without tags may be unmanaged or orphaned
 - **Location Mismatch** - Resources outside preferred region may have compliance
   or cost implications
+- **Azure Advisor** - cost recommendations (Reserved Instances, Savings Plans,
+  right-sizing) fetched directly from Azure Advisor, with estimated monthly
+  savings where available.
 
 ### Tag Filtering
 
@@ -470,8 +476,9 @@ npx @pagopa/dx-cli savemoney --config config.yaml --verbose
 
 - **Read-Only Analysis** - Does not modify, tag, or delete resources
 - **Metrics Availability** - Some resources may have limited historical metrics
-- **Cost Estimates** - Does not calculate actual cost savings (focuses on risk
-  level)
+- **Cost Estimates** - Estimated monthly savings are available for Azure Advisor
+  findings; custom analyzer findings show risk level only (cost estimates for
+  those are planned for a future release)
 - **Context Required** - Some flagged resources may be intentionally idle (e.g.,
   test environments)
 
