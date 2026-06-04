@@ -8,42 +8,41 @@
  * Tests verify the wire format, correct stream usage, and that values
  * flow through correctly.
  */
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { JsonCommandPresenter } from "../json-command-presenter.js";
 
 const captureStdout = () => {
   const written: string[] = [];
-  const spy = vi
-    .spyOn(process.stdout, "write")
-    .mockImplementation((data: unknown) => {
-      written.push(String(data));
-      return true;
-    });
-  return { restore: () => spy.mockRestore(), written };
+  vi.spyOn(process.stdout, "write").mockImplementation((data: unknown) => {
+    written.push(String(data));
+    return true;
+  });
+  return { written };
 };
 
 const captureStderr = () => {
   const written: string[] = [];
-  const spy = vi
-    .spyOn(process.stderr, "write")
-    .mockImplementation((data: unknown) => {
-      written.push(String(data));
-      return true;
-    });
-  return { restore: () => spy.mockRestore(), written };
+  vi.spyOn(process.stderr, "write").mockImplementation((data: unknown) => {
+    written.push(String(data));
+    return true;
+  });
+  return { written };
 };
 
 describe("JsonCommandPresenter", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("trackStep", () => {
     it("executes the task and returns its resolved value", async () => {
-      const stderr = captureStderr();
+      captureStderr();
       const logger = new JsonCommandPresenter();
       const result = await logger.trackStep("check terraform", () =>
         Promise.resolve(42),
       );
       expect(result).toBe(42);
-      stderr.restore();
     });
 
     it("emits start then success events to stderr", async () => {
@@ -61,7 +60,6 @@ describe("JsonCommandPresenter", () => {
         status: "success",
         type: "step",
       });
-      stderr.restore();
     });
 
     it("emits error event to stderr and rethrows on task failure", async () => {
@@ -77,11 +75,10 @@ describe("JsonCommandPresenter", () => {
         status: "error",
         type: "step",
       });
-      stderr.restore();
     });
 
     it("can run multiple sequential steps", async () => {
-      const stderr = captureStderr();
+      captureStderr();
       const logger = new JsonCommandPresenter();
       const order: string[] = [];
       await logger.trackStep("step A", async () => {
@@ -91,7 +88,6 @@ describe("JsonCommandPresenter", () => {
         order.push("B");
       });
       expect(order).toEqual(["A", "B"]);
-      stderr.restore();
     });
   });
 
@@ -104,7 +100,6 @@ describe("JsonCommandPresenter", () => {
         data: { repository: { name: "my-repo" } },
         ok: true,
       });
-      stdout.restore();
     });
   });
 
@@ -117,14 +112,12 @@ describe("JsonCommandPresenter", () => {
         error: "something failed",
         ok: false,
       });
-      stdout.restore();
     });
 
     it("handles non-Error values without throwing", () => {
-      const stdout = captureStdout();
+      captureStdout();
       const logger = new JsonCommandPresenter();
       expect(() => logger.reportError("plain string error")).not.toThrow();
-      stdout.restore();
     });
   });
 });

@@ -5,7 +5,7 @@
  * final output. Tests verify the observable behavior: tasks are executed,
  * values flow through, and errors surface correctly.
  */
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Mock oraPromise so tests don't spin up a real TTY spinner
 vi.mock("ora", () => ({
@@ -15,6 +15,10 @@ vi.mock("ora", () => ({
 import { TextCommandPresenter } from "../text-command-presenter.js";
 
 describe("TextCommandPresenter", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   describe("trackStep", () => {
     it("executes the task and returns its resolved value", async () => {
       const logger = new TextCommandPresenter();
@@ -47,34 +51,27 @@ describe("TextCommandPresenter", () => {
 
   describe("reportResult", () => {
     it("calls console.log without throwing", () => {
-      const spy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+      vi.spyOn(console, "log").mockImplementation(() => undefined);
       const logger = new TextCommandPresenter();
       expect(() =>
         logger.reportResult({ repository: { name: "my-repo" } }),
       ).not.toThrow();
-      spy.mockRestore();
     });
   });
 
   describe("reportError", () => {
     it("calls console.error without throwing", () => {
-      const spy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => undefined);
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
       const logger = new TextCommandPresenter();
       expect(() =>
         logger.reportError(new Error("something failed")),
       ).not.toThrow();
-      spy.mockRestore();
     });
 
     it("handles non-Error values without throwing", () => {
-      const spy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => undefined);
+      vi.spyOn(console, "error").mockImplementation(() => undefined);
       const logger = new TextCommandPresenter();
       expect(() => logger.reportError("plain string error")).not.toThrow();
-      spy.mockRestore();
     });
   });
 });
