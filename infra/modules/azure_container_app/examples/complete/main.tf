@@ -13,16 +13,6 @@ data "azurerm_virtual_network" "common" {
   resource_group_name = local.virtual_network.resource_group_name
 }
 
-data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    domain        = "",
-    name          = "pep",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
-}
-
 data "azurerm_log_analytics_workspace" "common" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     domain        = "",
@@ -36,45 +26,36 @@ data "azurerm_log_analytics_workspace" "common" {
   }))
 }
 
-resource "dx_available_subnet_cidr" "next_cidr" {
-  virtual_network_id = data.azurerm_virtual_network.common.id
-  prefix_length      = 23
-}
-
 module "container_app_environment" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
-  virtual_network = {
-    name                = local.virtual_network.name
-    resource_group_name = local.virtual_network.resource_group_name
+  networking = {
+    virtual_network_id = data.azurerm_virtual_network.common.id
   }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = dx_available_subnet_cidr.next_cidr.cidr_block
 
   tags = local.tags
 }
 
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  use_case = "default"
   size = {
     cpu    = 1
     memory = "2Gi"
   }
 
-  revision_mode = "Single"
-  container_app_templates = [
+  deployment_strategy = "Incremental"
+  containers = [
     {
       image = "nginx:latest"
       name  = "nginx"
@@ -91,8 +72,7 @@ module "container_app" {
   ]
 
   container_app_environment_id = module.container_app_environment.id
-
-  user_assigned_identity_id = module.container_app_environment.user_assigned_identity.id
+  container_port               = 80
 
   autoscaler = {
     replicas = {
@@ -107,6 +87,8 @@ module "container_app" {
       }
     ]
   }
+
+  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
   tags = local.tags
 }

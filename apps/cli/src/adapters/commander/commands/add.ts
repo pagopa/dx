@@ -19,6 +19,7 @@ import {
   AuthorizationService,
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
+import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import { environmentShort } from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
 import { isAzureLocation, locationShort } from "../../azure/locations.js";
@@ -150,12 +151,7 @@ const addEnvironmentAction = (
       ),
     );
 
-export type AddCommandDependencies = {
-  authorizationService: AuthorizationService;
-  gitHubService: GitHubService;
-};
-
-export const makeAddCommand = (deps: AddCommandDependencies): Command =>
+export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
   new Command()
     .name("add")
     .description("Add a new component to your workspace")
@@ -163,14 +159,10 @@ export const makeAddCommand = (deps: AddCommandDependencies): Command =>
       new Command("environment")
         .description("Add a new deployment environment")
         .action(async function () {
-          const result = await addEnvironmentAction(
-            deps.authorizationService,
-            deps.gitHubService,
-          );
-          if (result.isErr()) {
-            exitWithError(this)(result.error);
-          } else {
-            displaySummary(result.value);
-          }
+          await requireGitHubAuth()
+            .andThen(({ authorizationService, gitHubService }) =>
+              addEnvironmentAction(authorizationService, gitHubService),
+            )
+            .match(displaySummary, exitWithError(this));
         }),
     );

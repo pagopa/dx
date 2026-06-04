@@ -1,4 +1,3 @@
-# ------------ GENERAL ------------ #
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
@@ -21,23 +20,20 @@ variable "resource_group_name" {
   type        = string
   description = "The name of the Azure Resource Group where the resources will be deployed."
 }
-# ------------ CONTAINER ENVIRONMENT ------------ #
 
 variable "container_app_environment_id" {
   type        = string
   description = "The ID of the Azure Container App Environment where the container app will be deployed."
 }
 
-# ------------ CONTAINER APP ------------ #
-
 variable "use_case" {
   type        = string
-  description = "Container app use case. Allowed values: 'default'."
+  description = "Container app use case. Allowed values: 'default', 'development'"
   default     = "default"
 
   validation {
-    condition     = contains(["default"], var.use_case)
-    error_message = "Allowed values for \"use_case\" are \"default\"."
+    condition     = contains(["default", "development"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\", \"development\"."
   }
 }
 
@@ -60,27 +56,35 @@ variable "size" {
   }
 }
 
-variable "revision_mode" {
+variable "deployment_strategy" {
   type        = string
-  description = "The revision mode for the container app. Valid values are 'Single' and 'Multiple'."
-  default     = "Multiple"
+  default     = "Incremental"
+  description = <<-EOT
+  The strategy for new deployments.
+  With `Incremental`, the new version the gradually deployed until it reaches the 100% of the traffic.
+  Optionally, you can provide a script to monitor specific APIs during this phase and using automatic rollbacks in case of issues.
+  With `Latest`, the new version immediately replaces the previous one as soon as it becomes responsive and required number of replicas are provisioned, with no gradual deployment.
+  EOT
 
   validation {
-    condition     = contains(["Single", "Multiple"], var.revision_mode)
-    error_message = "Valid values for revision_mode are 'Single' and 'Multiple'."
+    condition     = contains(["Latest", "Incremental"], var.deployment_strategy)
+    error_message = "Valid values for deployment_strategy are \"Latest\" and \"Incremental\"."
   }
 }
 
-variable "target_port" {
+variable "container_port" {
   type        = number
   description = "The port on which the container app will listen for incoming traffic."
   default     = 8080
 }
 
-variable "public_access_enabled" {
+variable "allow_access_from_environment_only" {
   type        = bool
-  default     = true
-  description = "If true (default), the container app is accessible via a public FQDN. If false, the app is only accessible from within the virtual network. Only effective when the parent Container App Environment has public_network_access_enabled set to true."
+  default     = false
+  description = <<-EOT
+    If false (default), the Container App is accessible via public internet or within the VNet, depending on the Container App Environment configuration.
+    If true, the Container App is accessible only from other apps on the same Container App Environment.
+  EOT
 }
 
 variable "custom_domain" {
@@ -96,8 +100,8 @@ variable "custom_domain" {
   description = "Custom domain configuration for the container app. Provide 'certificate_id' to use a pre-uploaded azurerm_container_app_environment_certificate, or 'dns' to auto-provision an Azure-managed certificate (CNAME and TXT records are created automatically). At least one of 'certificate_id' or 'dns' must be specified."
 
   validation {
-    condition     = var.custom_domain == null || var.public_access_enabled == true
-    error_message = "public_access_enabled must be true when custom_domain is configured."
+    condition     = var.custom_domain == null || var.allow_access_from_environment_only == false
+    error_message = "allow_access_from_environment_only must be false when custom_domain is configured."
   }
 
   validation {
@@ -135,25 +139,23 @@ variable "authentication" {
 
 variable "secrets" {
   type = list(object({
-    name                   = string
-    key_vault_secret_id    = string
-    scheduled_for_deletion = optional(bool, false)
+    name                = string
+    key_vault_secret_id = string
   }))
   default     = []
   description = <<-EOT
   List of Key Vault secret references to define in the Container App.
-  Setting `scheduled_for_deletion` to `true` is useful when a secret is not needed by the NEXT version of the running application.
-  In these cases, first execute the deployment of the new container version, which removes the dependency on that secret.
-  Then, set this property to `true` to not expose the secret to the container, but keeping it available at the Container App level.
-  Then, remove the secret from the IaC configuration to remove it completely from the Container App secrets.
+  Secrets are exposed to containers only when explicitly referenced in `containers[*].secret_names`.
+  To remove a secret without downtime, first deploy the application version that no longer needs it, then remove it from every container `secret_names` list, and finally remove it from `secrets`.
   EOT
 }
 
-variable "container_app_templates" {
+variable "containers" {
   type = list(object({
     image        = string
     name         = optional(string, "")
     app_settings = optional(map(string), {})
+    secret_names = optional(list(string), [])
 
     liveness_probe = object({
       failure_count_threshold = optional(number, 3)
@@ -195,17 +197,23 @@ variable "container_app_templates" {
     }), null)
   }))
 
-  description = "List of containers to be deployed in the Container App. Each container can have its own settings, including liveness, readiness and startup probes. The image name is mandatory, while the name is optional. If not provided, the image name will be used as the container name."
+  description = <<-EOT
+  List of containers and related settings to be deployed in the same Container App.
+  The second and subsequent containers in the list will be deployed as sidecars.
+  Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), environment variables (app_settings), secrets to be exposed (secret_names) and liveness, readiness and startup probes.
+  Probes are used by Azure to determine container health status and to automatically restart it if necessary.
+  For more details on probe configuration, refer to https://learn.microsoft.com/en-us/azure/container-apps/containers#probes.
+  EOT
 
   validation {
-    condition     = alltrue([for template in var.container_app_templates : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
+    condition     = alltrue([for template in var.containers : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
     error_message = "Valid values for liveness_probe transport are `HTTP`, `TCP` and `HTTPS`."
   }
 
   # as Terraform does not support lazy evaluation, a ternary operator is necessary to avoid crash on null values
   validation {
     condition = alltrue([
-      for template in var.container_app_templates :
+      for template in var.containers :
       template.readiness_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.readiness_probe.transport)
     ])
     error_message = "Valid values for readiness_probe transport are `HTTP`, `TCP` and `HTTPS`."
@@ -213,7 +221,7 @@ variable "container_app_templates" {
 
   validation {
     condition = alltrue([
-      for template in var.container_app_templates :
+      for template in var.containers :
       template.startup_probe == null ? true : contains(["HTTP", "TCP", "HTTPS"], template.startup_probe.transport)
     ])
     error_message = "Valid values for startup_probe transport are `HTTP`, `TCP` and `HTTPS`."
@@ -222,7 +230,11 @@ variable "container_app_templates" {
 
 variable "user_assigned_identity_id" {
   type        = string
-  description = "Id of the user-assigned managed identity created along with the Container App Environment. This is necessary to give identity roles (e.g. KeyVault access) to the Container App."
+  default     = null
+  description = <<-EOT
+    Id of a user-assigned managed identity.
+    If provided, the Container App will use this identity along with the system-assigned.
+  EOT
 }
 
 variable "acr_registry" {
@@ -275,25 +287,16 @@ variable "autoscaler" {
 
 }
 
-# ------------ MONITORING & COMPLIANCE ------------ #
-variable "diagnostic_settings" {
-  type = object({
-    enabled                    = bool
-    log_analytics_workspace_id = optional(string, null)
-    storage_account_id         = optional(string, null)
-  })
-  description = "Diagnostic settings for Container App logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account."
-  default = {
-    enabled                    = false
-    log_analytics_workspace_id = null
-  }
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    The ID of the Log Analytics workspace to send diagnostics to.
+    Mandatory for use cases other than 'development'.
+  EOT
 
   validation {
-    condition = (
-      !var.diagnostic_settings.enabled ||
-      var.diagnostic_settings.log_analytics_workspace_id != null ||
-      var.diagnostic_settings.storage_account_id != null
-    )
-    error_message = "Either log_analytics_workspace_id or storage_account_id must be provided when diagnostic settings are enabled."
+    condition     = var.use_case == "development" || var.log_analytics_workspace_id != null
+    error_message = "log_analytics_workspace_id must be provided when use_case is not set to 'development'."
   }
 }
