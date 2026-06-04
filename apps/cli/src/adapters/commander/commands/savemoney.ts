@@ -30,7 +30,7 @@ export const makeSavemoneyCommand = () =>
     )
     .option(
       "-t, --tags <tags...>",
-      "Filter resources by tags (key=value key2=value2). Only resources matching ALL specified tags are analyzed.",
+      "Filter findings by resource tags (key=value key2=value2). Advisor subscription-level findings remain global.",
     )
     .option(
       "-s, --source <source>",

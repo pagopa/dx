@@ -117,6 +117,7 @@ export async function analyzeAzureResources(
     // level analyzers (Advisor, future quotas, …) can merge their findings
     // back into the matching resource report.
     const reportsById = new Map<string, AzureDetailedResourceReport>();
+    const taggedResourceIds = new Set<string>();
 
     // Fresh cache per subscription — bounds peak memory to one subscription's
     // worth of metrics and keeps concurrent analyzeAzureResources calls isolated.
@@ -143,7 +144,17 @@ export async function analyzeAzureResources(
         reportsById,
         runCache,
         sid,
+        taggedResourceIds,
         thresholds,
+      });
+    }
+
+    if (!customEnabled && advisorEnabled && hasTagFilter(config.filterTags)) {
+      await collectTaggedResourceIds({
+        config,
+        credential,
+        sid,
+        taggedResourceIds,
       });
     }
 
@@ -155,6 +166,8 @@ export async function analyzeAzureResources(
         reports: allReports,
         reportsById,
         sid,
+        tagFilterActive: hasTagFilter(config.filterTags),
+        taggedResourceIds,
         verbose: config.verbose ?? false,
       });
     }
@@ -249,6 +262,24 @@ export async function analyzeResource(
   return { ...result, reason: result.reason.trim() };
 }
 
+export function shouldIncludeAdvisorFindingForTags(
+  finding: Finding,
+  taggedResourceIds: ReadonlySet<string>,
+  tagFilterActive: boolean,
+): boolean {
+  if (!tagFilterActive) {
+    return true;
+  }
+  if (finding.source !== "advisor") {
+    return true;
+  }
+  if (!isResourceScopedFinding(finding.resourceId)) {
+    // Subscription-level findings are intentionally always global.
+    return true;
+  }
+  return taggedResourceIds.has(normalizeResourceId(finding.resourceId));
+}
+
 /**
  * Derives a legacy `AnalysisResult` summary from a `Finding`, so the
  * existing report formats keep working untouched on Advisor-only
@@ -318,6 +349,36 @@ function buildResourceStub(resourceId: string): armResources.GenericResource {
   return { id: resourceId, name: parts[parts.length - 1], type: undefined };
 }
 
+async function collectTaggedResourceIds(args: {
+  config: AzureConfig;
+  credential: TokenCredential;
+  sid: string;
+  taggedResourceIds: Set<string>;
+}): Promise<void> {
+  const { config, credential, sid, taggedResourceIds } = args;
+  const resourceClient = new armResources.ResourceManagementClient(
+    credential,
+    sid,
+  );
+  for await (const resource of resourceClient.resources.list()) {
+    if (!matchesTags(resource, config.filterTags)) {
+      continue;
+    }
+    const resourceId = normalizeResourceId(resource.id);
+    if (resourceId) {
+      taggedResourceIds.add(resourceId);
+    }
+  }
+}
+
+function hasTagFilter(filterTags: Map<string, string> | undefined): boolean {
+  return Boolean(filterTags && filterTags.size > 0);
+}
+
+function isResourceScopedFinding(resourceId: string): boolean {
+  return /\/providers\//i.test(resourceId);
+}
+
 function isSubscriptionScopedReport(r: AzureDetailedResourceReport): boolean {
   return r.resource.type === "Microsoft.Subscription";
 }
@@ -365,6 +426,10 @@ function mergeFinding(
   reportsById.set(idKey, report);
 }
 
+function normalizeResourceId(resourceId: string | undefined): string {
+  return (resourceId ?? "").trim().toLowerCase();
+}
+
 /**
  * Runs the per-resource analyzer plugins against every resource in the
  * given subscription. Extracted from `analyzeAzureResources` to keep that
@@ -382,6 +447,7 @@ async function runPerResourceAnalysis(args: {
   reportsById: Map<string, AzureDetailedResourceReport>;
   runCache: MetricsCache;
   sid: string;
+  taggedResourceIds: Set<string>;
   thresholds: Thresholds;
 }): Promise<void> {
   const {
@@ -396,6 +462,7 @@ async function runPerResourceAnalysis(args: {
     reportsById,
     runCache,
     sid,
+    taggedResourceIds,
     thresholds,
   } = args;
   const resourceClient = new armResources.ResourceManagementClient(
@@ -409,6 +476,11 @@ async function runPerResourceAnalysis(args: {
   for await (const resource of resourceClient.resources.list()) {
     if (!matchesTags(resource, config.filterTags)) {
       continue;
+    }
+
+    const taggedId = normalizeResourceId(resource.id);
+    if (taggedId) {
+      taggedResourceIds.add(taggedId);
     }
 
     // Backpressure: wait for a slot before enqueuing the next task so that
@@ -480,10 +552,21 @@ async function runSubscriptionAnalyzers(args: {
   reports: AzureDetailedResourceReport[];
   reportsById: Map<string, AzureDetailedResourceReport>;
   sid: string;
+  tagFilterActive: boolean;
+  taggedResourceIds: Set<string>;
   verbose: boolean;
 }): Promise<void> {
-  const { analyzers, credential, logger, reports, reportsById, sid, verbose } =
-    args;
+  const {
+    analyzers,
+    credential,
+    logger,
+    reports,
+    reportsById,
+    sid,
+    tagFilterActive,
+    taggedResourceIds,
+    verbose,
+  } = args;
 
   const allFindings = await Promise.all(
     analyzers.map((a) =>
@@ -498,6 +581,15 @@ async function runSubscriptionAnalyzers(args: {
 
   for (const findings of allFindings) {
     for (const finding of findings) {
+      if (
+        !shouldIncludeAdvisorFindingForTags(
+          finding,
+          taggedResourceIds,
+          tagFilterActive,
+        )
+      ) {
+        continue;
+      }
       mergeFinding(finding, reports, reportsById);
     }
   }

@@ -9,7 +9,11 @@
 import { InvalidArgumentError } from "commander";
 import { describe, expect, it } from "vitest";
 
-import { parseSourceOption, parseTagsOption } from "../savemoney.js";
+import {
+  makeSavemoneyCommand,
+  parseSourceOption,
+  parseTagsOption,
+} from "../savemoney.js";
 
 describe("parseSourceOption", () => {
   it("accepts 'advisor'", () => {
@@ -67,5 +71,18 @@ describe("parseTagsOption", () => {
 
   it("trims whitespace from keys and values", () => {
     expect(parseTagsOption([" env = dev "])).toEqual(new Map([["env", "dev"]]));
+  });
+});
+
+describe("makeSavemoneyCommand", () => {
+  it("documents that --tags does not filter subscription-level Advisor findings", () => {
+    const command = makeSavemoneyCommand();
+    const tagsOption = command.options.find((option) =>
+      option.flags.includes("--tags"),
+    );
+
+    expect(tagsOption?.description).toContain(
+      "Advisor subscription-level findings remain global.",
+    );
   });
 });
