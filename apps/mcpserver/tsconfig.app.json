@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["./src/**/*"],
+  "exclude": [
+    "node_modules",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/mcp-prompts"
+    },
+    {
+      "path": "../../packages/azure-tracing"
+    }
+  ]
+}

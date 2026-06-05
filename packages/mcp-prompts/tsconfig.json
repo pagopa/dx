@@ -9,9 +9,6 @@
   },
   "exclude": [
     "tsup.config.ts",
-    "dist",
-    "**/__tests__/**",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "dist"
   ]
 }

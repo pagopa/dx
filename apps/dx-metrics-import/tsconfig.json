@@ -10,9 +10,6 @@
   "include": ["./src/**/*"],
   "exclude": [
     "dist",
-    "node_modules",
-    "**/__tests__/**",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "node_modules"
   ]
 }

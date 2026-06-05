@@ -9,9 +9,6 @@
     "module": "ESNext"
   },
   "exclude": [
-    "tsup.config.ts",
-    "**/__tests__/**",
-    "**/*.test.ts",
-    "**/*.spec.ts"
+    "tsup.config.ts"
   ]
 }
