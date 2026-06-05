@@ -60,8 +60,6 @@ jobs:
         module: ${{ fromJSON(needs.detect-modules.outputs.modules) }}
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      TF_HTTP_USERNAME: ${{ secrets.STATEGRAPH_USERNAME }}
-      TF_HTTP_PASSWORD: ${{ secrets.STATEGRAPH_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
