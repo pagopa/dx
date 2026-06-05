@@ -1,3 +1,29 @@
+## 0.23.0 (2026-06-04)
+
+### 🚀 Features
+
+- Add dx spec command that outputs the full CLI schema as JSON for agent tooling ([#1783](https://github.com/pagopa/dx/pull/1783))
+
+### 🩹 Fixes
+
+- - Add `--source <advisor|custom|all>` flag to `dx savemoney` (default: `all`). ([#1784](https://github.com/pagopa/dx/pull/1784))
+  - Separate analysis and report generation to match the updated package API.
+  - Add a progress spinner on stderr while analysis runs.
+
+- Add integration tests to DX CLI init and add environment commands. ([#1774](https://github.com/pagopa/dx/pull/1774))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.3.0
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.22.4 (2026-06-04)
 
 ### 🩹 Fixes

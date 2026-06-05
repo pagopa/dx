@@ -1,3 +1,19 @@
+## 0.3.0 (2026-06-04)
+
+### 🚀 Features
+
+- - Add Azure Advisor integration: fetches Cost recommendations and maps them to `Finding` objects with estimated monthly savings. ([#1784](https://github.com/pagopa/dx/pull/1784))
+  - Add `SubscriptionAnalyzer` plugin interface for subscription-scoped analyzers.
+  - `analyzeAzureResources` now returns `AzureDetailedResourceReport[]`; call `generateReport(reports, format)` separately to render output.
+  - Add `azure.sources` config option to filter findings by source: `"advisor"`, `"custom"`, or both (default).
+  - Lint report shows a `[source]` badge and estimated monthly savings per finding.
+  - Switch to `cli-table3` for table output.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Mario Mupo @mamu0
+
 ## 0.2.6 (2026-05-25)
 
 ### 🩹 Fixes
