@@ -3,14 +3,9 @@
   "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
   "pnpm": {
     "overrides": {
-      "express>path-to-regexp": "0.1.13",
       "copy-webpack-plugin>serialize-javascript": "7.0.5",
       "css-minimizer-webpack-plugin>serialize-javascript": "7.0.5",
-      "lodash": "4.18.1",
-      "lodash-es": "4.18.1",
-      "vite": "7.3.5",
-      "rollup": "4.61.0",
-      "@babel/plugin-transform-modules-systemjs": "7.29.7"
+      "lodash-es": "4.18.1"
     }
   },
   "devDependencies": {
