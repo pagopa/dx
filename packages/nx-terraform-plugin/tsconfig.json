@@ -6,18 +6,11 @@
     "importHelpers": true,
     "outDir": "./dist",
     "rootDir": "./src",
-    "lib": [
-      "ES2023",
-      "ES2024.Object",
-      "ESNext.Collection"
-    ],
+    "lib": ["ES2023", "ES2024.Object", "ESNext.Collection"],
     "target": "ES2023",
-    "customConditions": [
-      "@nx/source"
-    ],
+    "customConditions": ["@nx/source"],
     "rewriteRelativeImportExtensions": true
   },
-  "include": [
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["src/**/__tests__/**", "src/**/*.test.ts", "src/**/*.spec.ts"]
 }
