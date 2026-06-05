@@ -67,3 +67,6 @@ vitest.config.*.timestamp*
 
 tsconfig.tsbuildinfo
 .worktrees
+
+# Local mise configuration
+mise.toml
