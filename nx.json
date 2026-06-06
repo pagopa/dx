@@ -130,7 +130,6 @@
         },
         "build": {
           "targetName": "build",
-          "configName": "tsconfig.json",
           "buildDepsName": "build-deps",
           "watchDepsName": "watch-deps"
         }
