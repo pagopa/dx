@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"],
-  "exclude": ["**/__tests__/**", "**/*.test.ts", "**/*.spec.ts"],
+  "include": ["./src/**/*.ts"],
+  "exclude": ["**/__tests__/**"],
   "references": [
     {
       "path": "../../packages/savemoney"

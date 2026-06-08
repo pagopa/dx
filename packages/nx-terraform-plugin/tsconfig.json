@@ -11,5 +11,5 @@
     "customConditions": ["@nx/source"],
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["src/**/*.ts"]
+  "include": ["./src/**/*.ts"]
 }
