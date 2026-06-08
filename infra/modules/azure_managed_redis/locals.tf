@@ -51,6 +51,19 @@ locals {
   private_endpoint_enabled             = local.use_case_features.private_network_enabled
   private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, local.vnet_resource_group_name), null)
 
+  load_alert_uses_cpu_metric = contains([
+    "Balanced_B0",
+    "Balanced_B1",
+    "Balanced_B3",
+    "Balanced_B5",
+  ], local.selected_sku_name)
+
+  load_alert_metric_name = local.load_alert_uses_cpu_metric ? "percentProcessorTime" : "serverLoad"
+
+  load_alert_warn_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is elevated. On smaller SKUs, CPU is a more reliable sustained-load signal than server load." : "Managed Redis average server load is elevated. Sustained load at this level can lead to unplanned failovers."
+
+  load_alert_critical_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is near saturation. On smaller SKUs, CPU is a more reliable sustained-load signal than server load." : "Managed Redis average server load is near saturation. Scale out or shard."
+
   metric_alert_definitions = merge({
     used_memory_percentage = {
       aggregation      = "Maximum"
@@ -75,26 +88,26 @@ locals {
       description      = "Managed Redis used memory percentage is critical. Eviction or OOM failover is imminent."
     }
     server_load = {
-      aggregation      = "Maximum"
+      aggregation      = "Average"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
-      metric_name      = "serverLoad"
+      metric_name      = local.load_alert_metric_name
       operator         = "GreaterThan"
       threshold        = try(var.alerts.thresholds.server_load, 80)
       frequency        = "PT5M"
       window_size      = "PT15M"
       severity         = 2
-      description      = "Managed Redis server load is elevated. Sustained load at this level can lead to unplanned failovers."
+      description      = local.load_alert_warn_description
     }
     server_load_critical = {
-      aggregation      = "Maximum"
+      aggregation      = "Average"
       metric_namespace = "Microsoft.Cache/redisEnterprise"
-      metric_name      = "serverLoad"
+      metric_name      = local.load_alert_metric_name
       operator         = "GreaterThan"
       threshold        = try(var.alerts.thresholds.server_load_critical, 90)
       frequency        = "PT1M"
       window_size      = "PT5M"
       severity         = 1
-      description      = "Managed Redis server load is near saturation. Scale out or shard."
+      description      = local.load_alert_critical_description
     }
     evicted_keys = {
       aggregation      = "Total"
