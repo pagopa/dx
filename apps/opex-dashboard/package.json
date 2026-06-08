@@ -40,7 +40,7 @@
     "@apidevtools/swagger-parser": "^12.1.0",
     "commander": "catalog:",
     "js-yaml": "catalog:",
-    "tmp": "^0.2.5",
+    "tmp": "^0.2.7",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import type { Subscription } from "@azure/arm-resources-subscriptions";
 
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AzureSubscriptionRepository } from "../cloud-account-repository.js";
 
@@ -28,7 +28,13 @@ const createMockSubscriptionClient = (subscriptions: Subscription[]) => {
 };
 
 vi.mock("@azure/arm-resources-subscriptions", () => ({
-  SubscriptionClient: vi.fn(),
+  SubscriptionClient: vi.fn(function SubscriptionClient() {
+    return {
+      subscriptions: {
+        list: async function* () {},
+      },
+    };
+  }),
 }));
 
 vi.mock("@azure/identity", () => ({
@@ -38,11 +44,13 @@ vi.mock("@azure/identity", () => ({
 import { SubscriptionClient } from "@azure/arm-resources-subscriptions";
 import { DefaultAzureCredential } from "@azure/identity";
 
-const MockedSubscriptionClient = SubscriptionClient as unknown as ReturnType<
-  typeof vi.fn
->;
+const mockedSubscriptionClient = vi.mocked(SubscriptionClient);
 
 describe("AzureSubscriptionRepository", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("should return a list of enabled subscriptions", async () => {
     const subscriptions = [
       createMockSubscription({
@@ -54,9 +62,9 @@ describe("AzureSubscriptionRepository", () => {
         subscriptionId: "sub-2",
       }),
     ];
-    MockedSubscriptionClient.mockImplementation(() =>
-      createMockSubscriptionClient(subscriptions),
-    );
+    mockedSubscriptionClient.mockImplementation(function SubscriptionClient() {
+      return createMockSubscriptionClient(subscriptions);
+    });
 
     const repository = new AzureSubscriptionRepository(
       new DefaultAzureCredential(),
@@ -87,9 +95,9 @@ describe("AzureSubscriptionRepository", () => {
         subscriptionId: "disabled-sub",
       }),
     ];
-    MockedSubscriptionClient.mockImplementation(() =>
-      createMockSubscriptionClient(subscriptions),
-    );
+    mockedSubscriptionClient.mockImplementation(function SubscriptionClient() {
+      return createMockSubscriptionClient(subscriptions);
+    });
 
     const repository = new AzureSubscriptionRepository(
       new DefaultAzureCredential(),
@@ -104,9 +112,9 @@ describe("AzureSubscriptionRepository", () => {
   });
 
   it("should return an empty array when no subscriptions exist", async () => {
-    MockedSubscriptionClient.mockImplementation(() =>
-      createMockSubscriptionClient([]),
-    );
+    mockedSubscriptionClient.mockImplementation(function SubscriptionClient() {
+      return createMockSubscriptionClient([]);
+    });
 
     const repository = new AzureSubscriptionRepository(
       new DefaultAzureCredential(),
@@ -123,9 +131,9 @@ describe("AzureSubscriptionRepository", () => {
       createMockSubscription({ state: "PastDue" }),
       createMockSubscription({ state: "Deleted" }),
     ];
-    MockedSubscriptionClient.mockImplementation(() =>
-      createMockSubscriptionClient(subscriptions),
-    );
+    mockedSubscriptionClient.mockImplementation(function SubscriptionClient() {
+      return createMockSubscriptionClient(subscriptions);
+    });
 
     const repository = new AzureSubscriptionRepository(
       new DefaultAzureCredential(),

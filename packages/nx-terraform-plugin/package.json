@@ -55,22 +55,5 @@
     "tslib": "^2.8.1",
     "zod": "catalog:"
   },
-  "nx": {
-    "targets": {
-      "build": {
-        "executor": "@nx/js:tsc",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "options": {
-          "outputPath": "packages/nx-terraform-plugin/dist",
-          "main": "packages/nx-terraform-plugin/src/index.ts",
-          "tsConfig": "packages/nx-terraform-plugin/tsconfig.json",
-          "rootDir": "packages/nx-terraform-plugin/src",
-          "generatePackageJson": false
-        }
-      }
-    }
-  },
   "executors": "./executors.json"
 }
