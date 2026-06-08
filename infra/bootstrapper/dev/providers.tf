@@ -21,8 +21,12 @@ terraform {
     }
   }
 
-  backend "http" {
-    address = "https://stategraph.dev.dx.pagopa.it/api/v1/states/backend/c306cdd3-324f-47c4-8c53-563205682e9f"
+  backend "azurerm" {
+    resource_group_name  = "dx-d-itn-tfstate-rg-01"
+    storage_account_name = "dxditntfstatest01"
+    container_name       = "terraform-state"
+    key                  = "dx.bootstrapper.dev.tfstate"
+    use_azuread_auth     = true
   }
 }
 

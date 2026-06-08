@@ -206,8 +206,6 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TF_HTTP_USERNAME: ${{ secrets.STATEGRAPH_USERNAME }}
-      TF_HTTP_PASSWORD: ${{ secrets.STATEGRAPH_TOKEN }}
 
     steps:
       # The working directory comes from the matrix; available in ${{ steps.directory.outputs.dir }}

@@ -1,3 +1,14 @@
+## 0.19.1 (2026-06-04)
+
+### 🩹 Fixes
+
+- Update dx CLI doc with Azure Advisor in SaveMoney ([#1784](https://github.com/pagopa/dx/pull/1784))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Mario Mupo @mamu0
+
 ## 0.19.0 (2026-06-03)
 
 ### 🚀 Features
