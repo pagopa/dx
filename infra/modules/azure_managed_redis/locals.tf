@@ -51,6 +51,7 @@ locals {
   private_endpoint_enabled             = local.use_case_features.private_network_enabled
   private_dns_zone_resource_group_name = try(coalesce(var.private_dns_zone_resource_group_name, local.vnet_resource_group_name), null)
 
+  # On smaller SKUs, CPU is a more reliable sustained-load signal than server load
   load_alert_uses_cpu_metric = contains([
     "Balanced_B0",
     "Balanced_B1",
@@ -60,9 +61,9 @@ locals {
 
   load_alert_metric_name = local.load_alert_uses_cpu_metric ? "percentProcessorTime" : "serverLoad"
 
-  load_alert_warn_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is elevated. On smaller SKUs, CPU is a more reliable sustained-load signal than server load." : "Managed Redis average server load is elevated. Sustained load at this level can lead to unplanned failovers."
+  load_alert_warn_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is elevated." : "Managed Redis average server load is elevated. Sustained load at this level can lead to unplanned failovers."
 
-  load_alert_critical_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is near saturation. On smaller SKUs, CPU is a more reliable sustained-load signal than server load." : "Managed Redis average server load is near saturation. Scale out or shard."
+  load_alert_critical_description = local.load_alert_uses_cpu_metric ? "Managed Redis average CPU is near saturation." : "Managed Redis average server load is near saturation. Scale out or shard."
 
   metric_alert_definitions = merge({
     used_memory_percentage = {
