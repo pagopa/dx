@@ -1,6 +1,6 @@
 # @pagopa/dx-tasks
 
-Utility task helpers and the built-in task dispatcher for DX packages.
+Reusable task implementations and a small dispatcher for DX orchestration tools.
 
 ## Available tasks
 
@@ -10,7 +10,7 @@ Utility task helpers and the built-in task dispatcher for DX packages.
 
 ## Usage
 
-Every task in the list can be imported and used directly. For example, import `terraformPlan` from the package and call it with the target module path:
+You can import a task directly when you want to call it from code. For example, import `terraformPlan` from the package and call it with the target module path:
 
 ```ts
 import { terraformPlan } from "@pagopa/dx-tasks/terraform-plan";
@@ -25,7 +25,7 @@ await terraformPlan({
 
 ## Dispatcher
 
-The library also exports a dispatcher for registering and running tasks by name.
+The library also exports a dispatcher for registering and running tasks by name from Nx, GitHub Actions, or another orchestrator.
 
 ### Public API
 
@@ -36,7 +36,7 @@ The library also exports a dispatcher for registering and running tasks by name.
 
 ### Example
 
-Here we pick `terraformPlan` as one of the tasks registered in the dispatcher.
+Here we register `terraformPlan` and dispatch it by name.
 
 ```ts
 import {
