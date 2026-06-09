@@ -1,3 +1,14 @@
+## 0.1.2 (2026-06-09)
+
+### 🩹 Fixes
+
+- The module now selects the load metric to observe based on the SKU. Additionally, the aggregation method has been changed from Maximum to Average to prevent short-term spikes from triggering false alerts. ([#1819](https://github.com/pagopa/dx/pull/1819))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.1.1 (2026-05-19)
 
 ### 🩹 Fixes

@@ -1,3 +1,15 @@
+## 0.1.2 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.1.1 (2026-05-19)
 
 ### 🩹 Fixes

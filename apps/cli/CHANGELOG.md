@@ -1,3 +1,20 @@
+## 0.23.1 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Rename tsconfig.app.json to tsconfig.lib.json in order to let NX infer the right build tasks ([#1822](https://github.com/pagopa/dx/pull/1822))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.3.1
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.23.0 (2026-06-04)
 
 ### 🚀 Features

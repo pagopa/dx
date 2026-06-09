@@ -7,7 +7,7 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 ## Features
 
 - **Azure Front Door CDN Profile**: Provisions a Standard Microsoft SKU profile or reuses an existing one.
-- **WAF Protection**: Optional Web Application Firewall policy with Prevention mode for enhanced security.
+- **WAF Protection**: Optional Web Application Firewall policy with Prevention mode for enhanced security. When enabled, a built-in geo rate limit rule throttles traffic originating outside the EU/EEA to mitigate DDoS-driven cost spikes. The per-IP threshold is configurable via `waf_rate_limit_threshold`.
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
@@ -178,6 +178,7 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name where the CDN profile will be created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
 | <a name="input_waf_enabled"></a> [waf\_enabled](#input\_waf\_enabled) | Whether to enable the WAF policy and associate it with the endpoint. | `bool` | `false` | no |
+| <a name="input_waf_rate_limit_threshold"></a> [waf\_rate\_limit\_threshold](#input\_waf\_rate\_limit\_threshold) | Maximum number of requests allowed from a single non-EU/EEA client IP within a 5-minute window before the geo rate limit rule starts blocking.<br/>Only applies when waf\_enabled is true. Tune this value based on the expected legitimate non-EU traffic of the product." | `number` | `10000` | no |
 
 ## Outputs
 
