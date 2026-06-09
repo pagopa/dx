@@ -81,20 +81,37 @@ export const runActions = async (
   }
 };
 
-export const runMonorepoGenerator = async (
+/**
+ * Collect the monorepo payload by running the generator's interactive prompts.
+ *
+ * This phase MUST run outside any spinner: a spinner (e.g. ora) occupies the
+ * TTY and prevents the inquirer prompts from being rendered. Callers should
+ * track only the subsequent {@link runMonorepoActions} phase, which is
+ * non-interactive.
+ */
+export const collectMonorepoPayload = async (
   plop: NodePlopAPI,
   githubService: GitHubService,
-): Promise<MonorepoPayload> => {
+): Promise<{ generator: PlopGenerator; payload: MonorepoPayload }> => {
   setMonorepoGenerator(plop);
   const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = monorepoPayloadSchema.parse(answers);
   await validatePayload(payload, githubService);
-  await oraPromise(runActions(generator, payload), {
-    failText: "Failed to create workspace files.",
-    successText: "Workspace files created successfully!",
-    text: "Creating workspace files...",
-  });
+  return { generator, payload };
+};
+
+/**
+ * Execute the monorepo generator actions for an already-collected payload.
+ *
+ * This phase is non-interactive, so callers are free to wrap it in a spinner
+ * or other progress indicator.
+ */
+export const runMonorepoActions = async (
+  generator: PlopGenerator,
+  payload: MonorepoPayload,
+): Promise<MonorepoPayload> => {
+  await runActions(generator, payload);
   return payload;
 };
 
