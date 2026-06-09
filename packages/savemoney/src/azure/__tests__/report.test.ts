@@ -163,8 +163,8 @@ describe("generateReport — lint format", () => {
     it("does not attach the resource cost to the 'No tags found' finding line", async () => {
       await generateReport([VM_WITH_COST], "lint");
       const findingLines = logSpy.mock.calls
-        .map((c) => String(c[0]))
-        .filter((l) => l.includes("No tags found"));
+        .map((c: unknown[]) => String(c[0]))
+        .filter((l: string) => l.includes("No tags found"));
       expect(findingLines).toHaveLength(1);
       expect(findingLines[0]).not.toMatch(/29[.,]94/);
     });
