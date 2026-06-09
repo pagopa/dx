@@ -9,6 +9,7 @@
  */
 import chalk from "chalk";
 import { Command } from "commander";
+import process from "node:process";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { Dependencies } from "../../../domain/dependencies.js";
@@ -58,5 +59,7 @@ export const makeDoctorCommand = (
 
       reportDoctorResult(presenter, outputMode)(result);
 
+      // Use process.exitCode instead of process.exit() so that the finally
+      // block in runCli() can flush telemetry before the process terminates.
       process.exitCode = result.hasErrors ? 1 : 0;
     });

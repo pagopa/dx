@@ -16,6 +16,10 @@ export default function (plop: NodePlopAPI) {
     const env = Object.fromEntries(
       Object.entries(process.env)
         .filter(([key]) => !key.startsWith("npm_config_"))
+        // Strip Node.js debugger env vars so child processes don't try to
+        // attach to the VS Code debugger and hang/fail.
+        .filter(([key]) => key !== "NODE_OPTIONS")
+        .filter(([key]) => !key.startsWith("VSCODE_INSPECTOR"))
         // Disable corepack download prompt
         .concat([["COREPACK_ENABLE_DOWNLOAD_PROMPT", "0"]]),
     );
