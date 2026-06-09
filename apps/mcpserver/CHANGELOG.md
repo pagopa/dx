@@ -1,3 +1,13 @@
+## 0.2.7 (2026-06-09)
+
+### 🩹 Fixes
+
+- Update base image to node 24 alpine ([#1827](https://github.com/pagopa/dx/pull/1827))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.2.6 (2026-06-09)
 
 ### 🩹 Fixes
