@@ -73,6 +73,20 @@ variable "waf_enabled" {
   default     = false
 }
 
+variable "waf_rate_limit_threshold" {
+  type        = number
+  default     = 10000
+  description = <<-EOT
+  Maximum number of requests allowed from a single non-EU/EEA client IP within a 5-minute window before the geo rate limit rule starts blocking.
+  Only applies when waf_enabled is true. Tune this value based on the expected legitimate non-EU traffic of the product."
+  EOT
+
+  validation {
+    condition     = var.waf_rate_limit_threshold > 0
+    error_message = "waf_rate_limit_threshold must be a positive number."
+  }
+}
+
 variable "custom_domains" {
   type = list(object({
     host_name = string

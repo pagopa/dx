@@ -44,6 +44,18 @@ locals {
   # Check if existing Profile SKU is compatible with WAF
   compatible_sku = var.existing_cdn_frontdoor_profile_id != null ? data.azurerm_cdn_frontdoor_profile.existing[0].sku_name == "Standard_AzureFrontDoor" : true
 
+  # EU/EEA country codes exempted from the geo rate limit rule. Traffic coming
+  # from any other country is rate-limited to mitigate DDoS-driven cost spikes
+  waf_eu_geo_match_values = [
+    "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR",
+    "DE", "GR", "HU", "IE", "IT", "LV", "LT", "LU", "MT", "NL",
+    "PL", "PT", "RO", "SK", "SI", "ES", "SE", "NO", "IS", "LI"
+  ]
+
+  # Azure WAF allows at most 10 match values per match condition, so the country
+  # list is split into chunks of 10, each rendered as a separate match_condition.
+  waf_eu_geo_match_value_chunks = chunklist(local.waf_eu_geo_match_values, 10)
+
   # Construct Key Vault IDs from subscription ID and resource details
   key_vault_ids = {
     for k, v in merge(local.unique_key_vaults_rbac, local.unique_key_vaults_no_rbac) :

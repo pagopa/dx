@@ -1,0 +1,48 @@
+{
+  "name": "@pagopa/dx-tasks",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./default-dispatcher": {
+      "types": "./dist/default-dispatcher.d.ts",
+      "default": "./dist/default-dispatcher.js"
+    },
+    "./dispatcher": {
+      "types": "./dist/dispatcher.d.ts",
+      "default": "./dist/dispatcher.js"
+    },
+    "./terraform-plan": {
+      "types": "./dist/terraform-plan.d.ts",
+      "default": "./dist/terraform-plan.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/dx-tasks"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  }
+}

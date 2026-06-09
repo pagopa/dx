@@ -253,6 +253,78 @@ run "cdn_waf_enabled" {
   }
 }
 
+run "cdn_waf_geo_rate_limit_default" {
+  command = plan
+
+  variables {
+    waf_enabled = true
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).name == "RateLimitNonEU"
+    error_message = "WAF policy must include the geo rate limit custom rule"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).type == "RateLimitRule"
+    error_message = "Geo rate limit rule must be of type RateLimitRule"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).action == "Block"
+    error_message = "Geo rate limit rule must block traffic exceeding the threshold"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).rate_limit_duration_in_minutes == 5
+    error_message = "Geo rate limit window must be 5 minutes"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).rate_limit_threshold == 10000
+    error_message = "Geo rate limit threshold must default to 10000 requests"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).match_condition[0].operator == "GeoMatch"
+    error_message = "Geo rate limit rule must match on client geo location"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).match_condition[0].negation_condition == true
+    error_message = "Geo rate limit rule must target traffic outside the EU/EEA country list"
+  }
+
+  assert {
+    condition     = alltrue([for c in one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).match_condition : length(c.match_values) <= 10])
+    error_message = "Each GeoMatch condition must contain at most 10 match values (Azure WAF limit)"
+  }
+
+  assert {
+    condition     = length(flatten([for c in one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).match_condition : c.match_values])) == 30
+    error_message = "Geo rate limit rule must cover all 30 EU/EEA country codes across its match conditions"
+  }
+
+  assert {
+    condition     = contains(flatten([for c in one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).match_condition : c.match_values]), "IT")
+    error_message = "EU/EEA country list must include Italy"
+  }
+}
+
+run "cdn_waf_geo_rate_limit_custom_threshold" {
+  command = plan
+
+  variables {
+    waf_enabled              = true
+    waf_rate_limit_threshold = 5000
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).rate_limit_threshold == 5000
+    error_message = "Geo rate limit threshold must honor the waf_rate_limit_threshold variable"
+  }
+}
+
 run "cdn_waf_disabled" {
   command = plan
 
