@@ -2,16 +2,14 @@
  * Tests for the Managed Disk Retail Prices resolver.
  */
 
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchLike } from "../client.js";
 import type { PricingResponse } from "../schema.js";
 
 import { DiskCache } from "../cache.js";
 import { PricingClient } from "../client.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
 import { pickTier, resolveDiskMonthlyPrice } from "./disk.js";
 
 function makeFetch(body: PricingResponse): {
@@ -30,7 +28,11 @@ function makeFetch(body: PricingResponse): {
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "disk-resolver-test-"));
+  dir = await makeTestCacheDir("disk-resolver");
+});
+
+afterEach(async () => {
+  await removeTestCacheDir(dir);
 });
 
 describe("pickTier", () => {

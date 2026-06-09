@@ -39,7 +39,7 @@ export type FetchLike = (
 export type PricingClientOptions = {
   /** Override the base URL. Useful for staging or fixtures. */
   baseUrl?: string;
-  /** Disk cache instance. Defaults to a cache rooted in os.tmpdir(). */
+  /** Disk cache instance. Defaults to the user's cache directory. */
   cache?: DiskCache;
   /**
    * Currency to ask the API for. The response items always carry their

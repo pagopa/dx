@@ -14,12 +14,16 @@
  */
 
 import { createHash } from "node:crypto";
-import { mkdir, readFile, stat, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, open, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 /** Defaults documented in the package README. */
-export const DEFAULT_CACHE_DIR = join(tmpdir(), "dx-savemoney", "pricing");
+export const DEFAULT_CACHE_DIR = join(
+  process.env.XDG_CACHE_HOME ?? join(homedir(), ".cache"),
+  "dx-savemoney",
+  "pricing",
+);
 export const DEFAULT_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export type DiskCacheOptions = {
@@ -49,10 +53,15 @@ export class DiskCache {
   async get<T>(key: string): Promise<T | undefined> {
     const path = this.pathFor(key);
     try {
-      const stats = await stat(path);
-      if (Date.now() - stats.mtimeMs > this.ttlMs) return undefined;
-      const raw = await readFile(path, "utf8");
-      return JSON.parse(raw) as T;
+      const file = await open(path, "r");
+      try {
+        const stats = await file.stat();
+        if (Date.now() - stats.mtimeMs > this.ttlMs) return undefined;
+        const raw = await file.readFile("utf8");
+        return JSON.parse(raw) as T;
+      } finally {
+        await file.close();
+      }
     } catch {
       return undefined;
     }
@@ -71,8 +80,11 @@ export class DiskCache {
   async set<T>(key: string, value: T): Promise<void> {
     const path = this.pathFor(key);
     try {
-      await mkdir(this.dir, { recursive: true });
-      await writeFile(path, JSON.stringify(value), "utf8");
+      await mkdir(this.dir, { mode: 0o700, recursive: true });
+      await writeFile(path, JSON.stringify(value), {
+        encoding: "utf8",
+        mode: 0o600,
+      });
     } catch {
       // Best-effort: cache failures must not surface to callers.
     }

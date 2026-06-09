@@ -5,20 +5,19 @@
  * state into the developer's real pricing cache.
  */
 
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { writeFile } from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { DiskCache } from "../cache.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
 
 describe("DiskCache", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), "dx-savemoney-cache-test-"));
+    dir = await makeTestCacheDir("cache");
   });
   afterEach(async () => {
-    await rm(dir, { force: true, recursive: true });
+    await removeTestCacheDir(dir);
   });
 
   it("returns undefined on a miss", async () => {

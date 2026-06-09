@@ -6,15 +6,14 @@
  * used as cache so each test starts from a cold state.
  */
 
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { readFile } from "node:fs/promises";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchLike } from "../client.js";
 
 import { DiskCache } from "../cache.js";
 import { PricingClient } from "../client.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
 
 const FIXTURE_PATH = new URL(
   "./fixtures/vm-b2s-westeurope.json",
@@ -38,10 +37,10 @@ function makeOkFetch(body: unknown): FetchLike {
 describe("PricingClient.query", () => {
   let dir: string;
   beforeEach(async () => {
-    dir = await mkdtemp(join(tmpdir(), "dx-savemoney-client-test-"));
+    dir = await makeTestCacheDir("client");
   });
   afterEach(async () => {
-    await rm(dir, { force: true, recursive: true });
+    await removeTestCacheDir(dir);
   });
 
   it("returns the items from a single page response", async () => {

@@ -3,10 +3,7 @@
  * swallowing. The underlying resolvers are exercised in their own tests.
  */
 
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchLike } from "./client.js";
 import type { PricingResponse } from "./schema.js";
@@ -14,6 +11,7 @@ import type { PricingResponse } from "./schema.js";
 import { DiskCache } from "./cache.js";
 import { PricingClient } from "./client.js";
 import { PricingService } from "./pricing-service.js";
+import { makeTestCacheDir, removeTestCacheDir } from "./test-cache-dir.js";
 
 function makeFetch(body: PricingResponse): {
   fetch: FetchLike;
@@ -31,7 +29,11 @@ function makeFetch(body: PricingResponse): {
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "pricing-service-test-"));
+  dir = await makeTestCacheDir("pricing-service");
+});
+
+afterEach(async () => {
+  await removeTestCacheDir(dir);
 });
 
 describe("PricingService", () => {

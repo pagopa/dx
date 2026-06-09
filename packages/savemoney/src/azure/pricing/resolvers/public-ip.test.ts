@@ -2,16 +2,14 @@
  * Tests for the Public IP Retail Prices resolver.
  */
 
-import { mkdtemp } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FetchLike } from "../client.js";
 import type { PricingResponse } from "../schema.js";
 
 import { DiskCache } from "../cache.js";
 import { PricingClient } from "../client.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
 import { resolvePublicIpMonthlyPrice } from "./public-ip.js";
 import { HOURS_PER_MONTH } from "./vm.js";
 
@@ -27,7 +25,11 @@ function makeFetch(body: PricingResponse): FetchLike {
 let dir: string;
 
 beforeEach(async () => {
-  dir = await mkdtemp(join(tmpdir(), "pip-resolver-test-"));
+  dir = await makeTestCacheDir("public-ip-resolver");
+});
+
+afterEach(async () => {
+  await removeTestCacheDir(dir);
 });
 
 describe("resolvePublicIpMonthlyPrice", () => {
