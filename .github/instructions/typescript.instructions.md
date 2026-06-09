@@ -85,6 +85,8 @@ try {
 - Use asynchronous functions for I/O-bound operations. Never use `writeFileSync` or similar blocking calls.
 - Favor dependency injection over instantiating collaborators with `new` inside methods.
 - Use ES Modules (`import`/`export`) and include `.js`/`.ts` extensions in new code.
+- When importing Node.js built-ins, use namespace/default imports for the module (for example `import fs from "node:fs/promises"` and call `fs.writeFile(...)`) instead of importing individual functions.
+- Prefer JavaScript private class fields (`#field`) over TypeScript `private` class fields in new code.
 
 ## NodeJS
 
