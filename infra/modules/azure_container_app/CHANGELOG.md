@@ -1,3 +1,41 @@
+# 5.0.0 (2026-06-04)
+
+### ⚠️  Breaking Changes
+
+- Refactor the Azure Container App module contract and align deployment, access, and monitoring behavior. ([#1744](https://github.com/pagopa/dx/pull/1744))
+
+  ## Major version upgrade
+
+  - Migrate renamed inputs:
+    - `container_app_templates` -> `containers`
+    - `target_port` -> `container_port`
+    - `revision_mode` -> `deployment_strategy` (`Multiple` -> `Incremental`, `Single` -> `Latest`)
+    - `public_access_enabled` -> `allow_access_from_environment_only` with inverted flag semantics
+    - `diagnostic_settings` -> `log_analytics_workspace_id`
+  - Update secrets usage:
+    - remove `scheduled_for_deletion` from `secrets`
+    - map secrets for each container explicitly through `containers[*].secret_names`
+  - Review defaults and outputs:
+    - `user_assigned_identity_id` is now optional
+    - `use_case = "development"` is now supported with smaller defaults and without mandatory Log Analytics
+    - `url` now exposes the ingress FQDN and `url_latest_revision` is available as a new output
+
+  ## Included changes
+
+  - Pin provider constraints:
+    - `terraform >= 1.14.0`
+    - `azurerm ~> 4.70`
+    - `azapi ~> 2.9`
+    - `dx ~> 0.10`
+    - `time ~> 0.14`
+  - Add the module architecture diagram to the README and align examples to `~> 5.0`
+  - Enhanced the test suite
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 4.2.2 (2026-05-20)
 
 ### 🩹 Fixes

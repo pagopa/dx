@@ -3,11 +3,15 @@
  * GitHub 404 responses while probing for missing releases by tag.
  */
 import { Octokit } from "@octokit/rest";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { releaseExists } from "../sync-tags-releases.js";
 
 describe("releaseExists", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it("does print other errors emitted by Octokit", async () => {
     const owner = "pagopa";
     const repo = "dx";

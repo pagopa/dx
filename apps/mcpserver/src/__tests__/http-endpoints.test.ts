@@ -83,6 +83,7 @@ let server: Server;
 let baseUrl: string;
 
 async function closeTestServer() {
+  if (!server) return;
   return new Promise<void>((resolve) => {
     server.close(() => resolve());
   });
@@ -95,6 +96,7 @@ async function setupTestServer() {
     AWS_REGION: "eu-central-1",
     LOG_LEVEL: "error",
     NODE_ENV: "test",
+    PORT: "0",
   };
 
   const config = loadConfig(testEnv);

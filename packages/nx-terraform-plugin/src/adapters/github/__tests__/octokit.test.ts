@@ -6,19 +6,21 @@ const octokitMocks = vi.hoisted(() => {
   const get = vi.fn();
   const getAuthenticated = vi.fn();
   const getByUsername = vi.fn();
-  const Octokit = vi.fn(() => ({
-    rest: {
-      repos: {
-        createForAuthenticatedUser,
-        createInOrg,
-        get,
+  const Octokit = vi.fn(function Octokit() {
+    return {
+      rest: {
+        repos: {
+          createForAuthenticatedUser,
+          createInOrg,
+          get,
+        },
+        users: {
+          getAuthenticated,
+          getByUsername,
+        },
       },
-      users: {
-        getAuthenticated,
-        getByUsername,
-      },
-    },
-  }));
+    };
+  });
 
   return {
     createForAuthenticatedUser,

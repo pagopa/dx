@@ -261,6 +261,22 @@ These options are available on every subcommand:
 dx --verbose init project
 ```
 
+## 🧪 Development
+
+Run the CLI test suite from the repository root with:
+
+```bash
+pnpm nx test @pagopa/dx-cli
+```
+
+Some integration tests assert generated file contents with Vitest snapshots. When a generator change intentionally updates those files, refresh the snapshots with:
+
+```bash
+pnpm nx test @pagopa/dx-cli -- --update
+```
+
+Review the updated `__snapshots__` files before committing them.
+
 ---
 
 <div align="center">

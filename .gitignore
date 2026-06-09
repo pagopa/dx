@@ -66,4 +66,5 @@ vite.config.*.timestamp*
 vitest.config.*.timestamp*
 
 tsconfig.tsbuildinfo
+tsconfig.*.tsbuildinfo
 .worktrees

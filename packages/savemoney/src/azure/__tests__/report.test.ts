@@ -52,7 +52,7 @@ const LOW_ENTRY = makeEntry(
 // ── helpers ────────────────────────────────────────────────────────────────
 
 function allLogs(spy: ReturnType<typeof vi.spyOn>) {
-  return spy.mock.calls.map((c) => c[0] as string).join("\n");
+  return spy.mock.calls.map((c: string[]) => c[0]).join("\n");
 }
 
 // ── tests ──────────────────────────────────────────────────────────────────
@@ -95,10 +95,8 @@ describe("generateReport — lint format", () => {
   it("splits a multi-sentence reason into separate findings", async () => {
     // Reason has two sentences separated by '. '
     await generateReport([HIGH_ENTRY], "lint");
-    const calls = logSpy.mock.calls.map(
-      (c) => (c[0] as string | undefined) ?? "",
-    );
-    const findingLines = calls.filter((l) => l.startsWith("  "));
+    const calls = logSpy.mock.calls.map((c: string[]) => c[0] ?? "");
+    const findingLines = calls.filter((l: string) => l.startsWith("  "));
     // "VM is deallocated." and "No disk activity detected." → 2 findings
     expect(findingLines.length).toBe(2);
   });
@@ -131,7 +129,7 @@ describe("generateReport — lint format", () => {
 
   it("prints nothing but the summary for an empty report", async () => {
     await generateReport([], "lint");
-    const calls = logSpy.mock.calls.map((c) => c[0] as string);
+    const calls = logSpy.mock.calls.map((c: string[]) => c[0]);
     expect(calls).toHaveLength(1);
     expect(calls[0]).toContain("0 issues found");
   });
@@ -196,13 +194,17 @@ describe("generateReport — table format", () => {
     await expect(generateReport([], "table")).resolves.toBeUndefined();
     // Table is always printed; the summary line ("0 issues found") follows.
     expect(logSpy.mock.calls.length).toBeGreaterThanOrEqual(1);
-    const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    const output = logSpy.mock.calls
+      .map((c: string[]) => String(c[0]))
+      .join("\n");
     expect(output).toContain("0 issues found");
   });
 
   it("includes resource name and reason in the rendered table", async () => {
     await generateReport([HIGH_ENTRY], "table");
-    const output = logSpy.mock.calls.map((c) => String(c[0])).join("\n");
+    const output = logSpy.mock.calls
+      .map((c: string[]) => String(c[0]))
+      .join("\n");
     expect(output).toContain("vm-high");
     expect(output).toContain("VM is deallocated");
   });

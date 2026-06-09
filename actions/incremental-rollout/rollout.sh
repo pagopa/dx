@@ -6,22 +6,22 @@ resource_type=$3  # e.g., "appsvc" or "containerapp"
 
 set -euo pipefail
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329,SC2317
 __revert_traffic() {
   echo "::error::__revert_traffic not implemented for this resource type."
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329,SC2317
 __set_traffic() {
   echo "::error::__set_traffic not implemented for this resource type."
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329,SC2317
 __swap_versions() {
   echo "::error::__swap_versions not implemented for this resource type."
 }
 
-# shellcheck disable=SC2317
+# shellcheck disable=SC2329,SC2317
 __finalize() {
   echo "::error::__finalize not implemented for this resource type."
 }

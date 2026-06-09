@@ -1,0 +1,14 @@
+name: Run DX Task
+description: Dispatches DX task
+
+inputs:
+  task:
+    description: Task name to run.
+    required: true
+  payload:
+    description: JSON payload passed to the selected task.
+    required: true
+
+runs:
+  using: node24
+  main: dist/index.mjs

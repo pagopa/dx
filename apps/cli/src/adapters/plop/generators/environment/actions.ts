@@ -1,7 +1,7 @@
 import type { ActionType, DynamicActionsFunction } from "node-plop";
 
 import { getLogger } from "@logtape/logtape";
-import * as path from "node:path";
+import path from "node:path";
 
 import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { terraformStateKey } from "../../helpers/terraform-state-key.js";
@@ -25,7 +25,7 @@ const addModule = (
   return (name: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp, includesProdIO, init },
+      data: { cloudAccountsByCsp, includesProdIO, init: init || undefined },
       destination: path.join(cwd, "infra"),
       force: true,
       templateFiles: path.join(templatesPath, name),
@@ -37,7 +37,7 @@ const addModule = (
       base: path.join(templatesPath, "shared"),
       data: {
         cloudAccountsByCsp,
-        init,
+        init: init || undefined,
         terraformBackendKey: terraformStateKey(context, name),
       },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
