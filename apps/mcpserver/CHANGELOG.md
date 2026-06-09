@@ -1,3 +1,21 @@
+## 0.2.6 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Rename tsconfig.app.json to tsconfig.lib.json in order to let NX infer the right build tasks ([#1822](https://github.com/pagopa/dx/pull/1822))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.3
+- Updated @pagopa/dx-mcpprompts to 0.2.9
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.2.5 (2026-06-04)
 
 ### 🧱 Updated Dependencies
