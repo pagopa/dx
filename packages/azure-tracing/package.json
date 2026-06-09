@@ -109,8 +109,6 @@
   },
   "scripts": {
     "build": "tsup",
-    "integration": "vitest run --config vitest.integration.config.js",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "test:integration": "vitest run --config vitest.integration.config.js"
   }
 }

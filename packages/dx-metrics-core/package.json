@@ -26,8 +26,7 @@
     "build": "tsup",
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

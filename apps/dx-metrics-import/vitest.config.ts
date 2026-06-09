@@ -9,5 +9,6 @@ export default defineConfig({
     },
     environment: "node",
     globals: true,
+    watch: false,
   },
 });
