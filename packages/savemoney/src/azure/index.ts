@@ -6,5 +6,6 @@
 
 export * from "./analyzer.js";
 export * from "./config.js";
+export * as pricing from "./pricing/index.js";
 export * from "./report.js";
 export * from "./types.js";

@@ -2,10 +2,19 @@
  * Common types shared across all cloud providers
  */
 
+import type { Money } from "./finding.js";
+
 import { ThresholdsSchema } from "./schema.js";
 
 export type AnalysisResult = {
   costRisk: CostRisk;
+  /**
+   * Estimated monthly cost recoverable by acting on the finding. Populated
+   * by Phase 2 pricing-enriched analyzers when a Retail Prices lookup
+   * succeeds; absent otherwise. Forwarded onto the first `Finding`
+   * produced by `findingsFromAnalysisResult`.
+   */
+  estimatedMonthlySavings?: Money;
   reason: string;
   suspectedUnused: boolean;
 };
@@ -41,6 +50,9 @@ export function mergeResults(
 ): AnalysisResult {
   return {
     costRisk: specificResult.costRisk,
+    estimatedMonthlySavings:
+      specificResult.estimatedMonthlySavings ??
+      baseResult.estimatedMonthlySavings,
     reason: baseResult.reason + specificResult.reason,
     suspectedUnused:
       baseResult.suspectedUnused || specificResult.suspectedUnused,

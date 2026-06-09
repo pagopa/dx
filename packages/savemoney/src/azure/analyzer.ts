@@ -54,6 +54,13 @@ import {
   createDefaultSubscriptionAnalyzers,
   type SubscriptionAnalyzer,
 } from "./analyzers/index.js";
+import {
+  DEFAULT_CACHE_DIR,
+  DEFAULT_CACHE_TTL_MS,
+  DiskCache,
+  PricingClient,
+  PricingService,
+} from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
@@ -94,6 +101,10 @@ export async function analyzeAzureResources(
     ? createDefaultSubscriptionAnalyzers()
     : [];
   const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
+
+  // Build a single PricingService for the whole run when enabled, so the
+  // disk cache and in-memory memo are shared across subscriptions.
+  const pricing = buildPricingService(config);
 
   // Normalise concurrency the same way p-limit does to keep maxInFlight
   // consistent. A raw value of 0/NaN would produce maxInFlight = 0/NaN and
@@ -140,6 +151,7 @@ export async function analyzeAzureResources(
         limit,
         logger,
         maxInFlight,
+        pricing,
         reports: allReports,
         reportsById,
         runCache,
@@ -214,6 +226,7 @@ export async function analyzeResource(
   timespanDays: number,
   thresholds: Thresholds,
   verbose = false,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   let result: AnalysisResult = {
     costRisk: "low",
@@ -231,6 +244,7 @@ export async function analyzeResource(
     clients,
     metricsCache,
     preferredLocation,
+    pricing,
     resource,
     thresholds,
     timespanDays,
@@ -293,6 +307,31 @@ function analysisFromFinding(finding: Finding): AnalysisResult {
     reason,
     suspectedUnused: true,
   };
+}
+
+/**
+ * Builds the shared `PricingService` for the run when pricing enrichment
+ * is enabled. Returns `undefined` when the user disabled pricing via
+ * config — analyzers will then skip the enrichment.
+ */
+function buildPricingService(config: AzureConfig): PricingService | undefined {
+  const pricingConfig = config.pricing;
+  // Pricing defaults to enabled — only an explicit `enabled: false`
+  // (or the CLI `--no-pricing` flag, which sets the same field) disables it.
+  if (pricingConfig?.enabled === false) {
+    return undefined;
+  }
+  const cache = new DiskCache({
+    dir: pricingConfig?.cacheDir ?? DEFAULT_CACHE_DIR,
+    ttlMs: pricingConfig?.cacheTtlHours
+      ? pricingConfig.cacheTtlHours * 60 * 60 * 1000
+      : DEFAULT_CACHE_TTL_MS,
+  });
+  const client = new PricingClient({
+    cache,
+    currencyCode: pricingConfig?.currency ?? "EUR",
+  });
+  return new PricingService(client);
 }
 
 /**
@@ -443,6 +482,7 @@ async function runPerResourceAnalysis(args: {
   limit: ReturnType<typeof pLimit>;
   logger: ReturnType<typeof getLogger>;
   maxInFlight: number;
+  pricing?: PricingService;
   reports: AzureDetailedResourceReport[];
   reportsById: Map<string, AzureDetailedResourceReport>;
   runCache: MetricsCache;
@@ -458,6 +498,7 @@ async function runPerResourceAnalysis(args: {
     limit,
     logger,
     maxInFlight,
+    pricing,
     reports,
     reportsById,
     runCache,
@@ -500,6 +541,7 @@ async function runPerResourceAnalysis(args: {
         config.timespanDays,
         thresholds,
         config.verbose || false,
+        pricing,
       );
 
       if (analysis.suspectedUnused) {
