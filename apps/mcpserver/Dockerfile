@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS base
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS base
 # 1. Enable pnpm
 RUN corepack enable
 
@@ -20,7 +20,7 @@ RUN pnpm nx build @pagopa/dx-mcpserver
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
 
 # --- Final Image ---
-FROM public.ecr.aws/docker/library/node@sha256:242549cd46785b480c832479a730f4f2a20865d61ea2e404fdb2a5c3d3b73ecf
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14
 WORKDIR /app
 
 # Copy the AWS Lambda Adapter
