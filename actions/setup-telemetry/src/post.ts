@@ -7,6 +7,10 @@
  */
 
 import {
+  AzureMonitorLogExporter,
+  AzureMonitorTraceExporter,
+} from "@azure/monitor-opentelemetry-exporter";
+import {
   context as otelContext,
   SpanKind,
   SpanStatusCode,
@@ -14,7 +18,14 @@ import {
 } from "@opentelemetry/api";
 import { logs } from "@opentelemetry/api-logs";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+import {
+  LoggerProvider,
+  SimpleLogRecordProcessor,
+} from "@opentelemetry/sdk-logs";
+import {
+  BasicTracerProvider,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
@@ -187,13 +198,27 @@ async function post(): Promise<void> {
     "service.namespace": "dx",
   });
 
-  initAzureMonitor([], {
-    azureMonitorExporterOptions: {
-      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-    },
-    enableLiveMetrics: false,
+  const exporterOptions = {
+    connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+    disableOfflineStorage: true,
+  };
+  const tracerProvider = new BasicTracerProvider({
+    resource,
+    spanProcessors: [
+      new SimpleSpanProcessor(new AzureMonitorTraceExporter(exporterOptions)),
+    ],
+  });
+  const loggerProvider = new LoggerProvider({
+    processors: [
+      new SimpleLogRecordProcessor(
+        new AzureMonitorLogExporter(exporterOptions),
+      ),
+    ],
     resource,
   });
+
+  trace.setGlobalTracerProvider(tracerProvider);
+  logs.setGlobalLoggerProvider(loggerProvider);
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
@@ -236,19 +261,10 @@ async function post(): Promise<void> {
 
   span.end();
 
-  // Flush all telemetry to Application Insights before process exit
-  const FLUSH_TIMEOUT_MS = 10_000;
+  // Simple processors export on end/emit; shutdown waits for pending HTTP sends.
   try {
-    const tracerProvider = trace.getTracerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    const loggerProvider = logs.getLoggerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    await Promise.all([
-      tracerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-      loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-    ]);
+    await tracerProvider.shutdown();
+    await loggerProvider.shutdown();
   } catch (flushErr) {
     console.warn(
       "Telemetry flush error (some data may be lost):",
