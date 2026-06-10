@@ -15,11 +15,6 @@ const SESSION_DIR = ".otel-session";
 const DEFAULT_CONNECTION_STRING =
   "InstrumentationKey=9c95698f-d74e-4046-a555-ea5f632c307e;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=c6f1af09-fbb3-4770-bf6d-cdaf821d2699";
 
-interface ResolvedConnectionString {
-  connectionString: string;
-  source: "default" | "input";
-}
-
 // Validate required environment variables
 const envSchema = z.object({
   GITHUB_ENV: z.string().min(1),
@@ -58,53 +53,6 @@ async function exportEnv(
   await fs.appendFile(GITHUB_ENV, envVars);
 }
 
-function getConnectionStringMetadata(connectionString: string): {
-  applicationId?: string;
-  ingestionEndpoint?: string;
-} {
-  return connectionString.split(";").reduce(
-    (metadata, part) => {
-      const [key, ...valueParts] = part.split("=");
-      const value = valueParts.join("=");
-
-      if (key === "ApplicationId") {
-        return { ...metadata, applicationId: value };
-      }
-
-      if (key === "IngestionEndpoint") {
-        return { ...metadata, ingestionEndpoint: value };
-      }
-
-      return metadata;
-    },
-    {} as { applicationId?: string; ingestionEndpoint?: string },
-  );
-}
-
-function logTelemetryTarget({
-  connectionString,
-  source,
-}: ResolvedConnectionString): void {
-  const { applicationId, ingestionEndpoint } =
-    getConnectionStringMetadata(connectionString);
-
-  console.log(
-    `Telemetry target resolved from ${source}: applicationId=${applicationId || "unknown"} ingestionEndpoint=${ingestionEndpoint || "unknown"}`,
-  );
-}
-
-function resolveConnectionString(
-  value: string | undefined,
-): ResolvedConnectionString {
-  const connectionString = value?.trim();
-
-  if (connectionString) {
-    return { connectionString, source: "input" };
-  }
-
-  return { connectionString: DEFAULT_CONNECTION_STRING, source: "default" };
-}
-
 async function run(): Promise<void> {
   try {
     const envResult = envSchema.safeParse(process.env);
@@ -119,9 +67,6 @@ async function run(): Promise<void> {
 
     const { correlationId, eventsFile, start } = await startSession(
       envResult.data.GITHUB_WORKSPACE,
-    );
-    logTelemetryTarget(
-      resolveConnectionString(process.env.INPUT_CONNECTION_STRING),
     );
     await exportEnv(eventsFile, start, correlationId);
     console.log(
