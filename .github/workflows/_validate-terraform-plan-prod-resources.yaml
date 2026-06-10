@@ -26,3 +26,4 @@ jobs:
       override_github_environment: infra-prod
       use_labels: true
       use_private_agent: true
+      connection_string: "InstrumentationKey=e0ff8094-78fa-45e5-a21d-e62b453dc5d1;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=ce469d55-2ff7-4dfd-a249-cc787291e672"
