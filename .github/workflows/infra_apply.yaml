@@ -166,8 +166,7 @@ jobs:
     needs: [get-terraform-version, tf-modules-check, detect-projects]
     if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     environment:
-      ${{ inputs.override_github_environment == '' && inputs.environment
-      || inputs.override_github_environment}}-ci
+      ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
       contents: read
@@ -292,8 +291,7 @@ jobs:
     needs: [get-terraform-version, tf_plan, detect-projects]
     if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     environment:
-      ${{ inputs.override_github_environment == '' && inputs.environment
-      || inputs.override_github_environment}}-cd
+      ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
       contents: read
@@ -315,6 +313,9 @@ jobs:
           set -euo pipefail
           SLUG=$(echo "$WORKING_DIR" | tr '/' '-')
           echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@feat-add-application-insight-plan #main
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -361,9 +362,27 @@ jobs:
         run: |
           terraform init -input=false
 
+      - name: Start Terraform Apply telemetry span
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-apply
+          span_phase: start
+
       - name: Terraform Apply
         uses: pagopa/dx/actions/sanitize-terraform-apply@main
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
+
+      - name: End Terraform Apply telemetry span
+        if: always()
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-apply
+          span_phase: end
+
+      - name: Set Telemetry Failure Result
+        if: failure()
+        run: |
+          echo "PIPELINE_RESULT=failure" >> "$GITHUB_ENV"
