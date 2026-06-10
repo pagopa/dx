@@ -28,7 +28,12 @@ export const setMonorepoGenerator = (
   initialAnswers: Partial<MonorepoPayload> = {},
 ) => {
   const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-  createMonorepoGenerator(plop, resolveTemplatesPath("monorepo"), octokit, initialAnswers);
+  createMonorepoGenerator(
+    plop,
+    resolveTemplatesPath("monorepo"),
+    octokit,
+    initialAnswers,
+  );
 };
 
 const validatePayload = async (

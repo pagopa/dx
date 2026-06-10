@@ -9,7 +9,7 @@ import { oraPromise } from "ora";
 import { z } from "zod/v4";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
-import type { GlobalOptions } from "../command-errors.js";
+import type { GlobalOptions } from "../global-options.js";
 
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
@@ -300,6 +300,7 @@ const createRemoteRepositoryWithPresenter =
       asError("Failed to create GitHub repository."),
     ).map(() => new Repository(repoName, repoOwner));
   };
+const initializeGitRepositoryWithPresenter =
   (presenter: CommandPresenter) => (repository: Repository) => {
     const branchName = "features/scaffold-workspace";
     const git$ = $({
@@ -436,14 +437,13 @@ const runInitAction = ({
       confirmGitHubRepoCreation(payload, publishToGitHub).andThen<
         SummaryInput,
         Error
-      >(
-        (confirmed) =>
-          confirmed
-            ? handleNewGitHubRepositoryWithPresenter({
-                gitHubService,
-                presenter,
-              })(payload)
-            : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+      >((confirmed) =>
+        confirmed
+          ? handleNewGitHubRepositoryWithPresenter({
+              gitHubService,
+              presenter,
+            })(payload)
+          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
       ),
     );
 
