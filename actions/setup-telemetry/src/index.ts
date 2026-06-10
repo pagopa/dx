@@ -12,12 +12,17 @@ import path from "node:path";
 import { z } from "zod";
 
 const SESSION_DIR = ".otel-session";
+const DEFAULT_CONNECTION_STRING =
+  "InstrumentationKey=9c95698f-d74e-4046-a555-ea5f632c307e;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=c6f1af09-fbb3-4770-bf6d-cdaf821d2699";
 
 // Validate required environment variables
 const envSchema = z.object({
   GITHUB_ENV: z.string().min(1),
   GITHUB_WORKSPACE: z.string().min(1),
-  INPUT_CONNECTION_STRING: z.string().min(1),
+  INPUT_CONNECTION_STRING: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim() || DEFAULT_CONNECTION_STRING),
 });
 
 async function exportEnv(

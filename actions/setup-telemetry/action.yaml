@@ -5,7 +5,6 @@ inputs:
   connection_string:
     description: "Azure Application Insights connection string"
     required: false
-    default: "InstrumentationKey=9c95698f-d74e-4046-a555-ea5f632c307e;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/;LiveEndpoint=https://italynorth.livediagnostics.monitor.azure.com/;ApplicationId=c6f1af09-fbb3-4770-bf6d-cdaf821d2699" # dx-d-itn-common-appi-01
 
 runs:
   using: "node24"
