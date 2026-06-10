@@ -317,7 +317,7 @@ jobs:
           echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@feat-add-application-insight-plan #main
+        uses: pagopa/dx/actions/setup-telemetry@main
         with:
           connection_string: ${{ inputs.connection_string }}
 
