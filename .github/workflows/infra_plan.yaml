@@ -38,6 +38,10 @@ on:
         type: string
         required: false
         default: ""
+      connection_string:
+        description: Azure Application Insights connection string for telemetry
+        type: string
+        required: false
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -236,6 +240,8 @@ jobs:
 
       - name: Setup Telemetry Session
         uses: pagopa/dx/actions/setup-telemetry@feat-add-application-insight-plan #main
+        with:
+          connection_string: ${{ inputs.connection_string }}
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main

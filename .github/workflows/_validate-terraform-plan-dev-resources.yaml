@@ -17,7 +17,7 @@ on:
 
 jobs:
   code_review:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@feat-add-application-insight-plan #main
+    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
     name: Terraform Plan
     secrets: inherit
     with:

@@ -38,6 +38,10 @@ on:
         type: string
         required: false
         default: ""
+      connection_string:
+        description: Azure Application Insights connection string for telemetry
+        type: string
+        required: false
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -165,8 +169,7 @@ jobs:
       'ubuntu-latest' }}
     needs: [get-terraform-version, tf-modules-check, detect-projects]
     if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
-    environment:
-      ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     permissions:
       id-token: write
       contents: read
@@ -290,8 +293,7 @@ jobs:
       'ubuntu-latest' }}
     needs: [get-terraform-version, tf_plan, detect-projects]
     if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
-    environment:
-      ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
     permissions:
       id-token: write
       contents: read
