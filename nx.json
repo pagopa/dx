@@ -129,6 +129,10 @@
           "watchDepsName": "watch-deps"
         }
       }
+    },
+    {
+      "plugin": "@pagopa/nx-terraform-plugin",
+      "include": ["infra/resources/**", "infra/repository"]
     }
   ],
   "analytics": false

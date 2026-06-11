@@ -239,10 +239,20 @@ const getTargets = (
         opts.planTargetName,
         {
           cache: false,
-          command: `terraform plan`,
+          configurations: {
+            ci: {
+              refresh: true,
+              report: true,
+              verbose: false,
+            },
+          },
           dependsOn: [opts.initTargetName],
+          executor: "@pagopa/nx-terraform-plugin:plan",
           options: {
-            cwd,
+            projectRoot: "{projectRoot}",
+            refresh: true,
+            report: false,
+            verbose: true,
           },
         },
       ],

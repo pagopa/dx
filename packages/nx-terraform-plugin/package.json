@@ -49,6 +49,7 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "^22.7.1",
+    "@pagopa/dx-tasks": "workspace:^",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",

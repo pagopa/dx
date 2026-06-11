@@ -4,6 +4,11 @@
       "implementation": "./src/executors/publish/publish",
       "schema": "./src/executors/publish/schema.json",
       "description": "publish executor"
+    },
+    "plan": {
+      "implementation": "./src/executors/plan/plan",
+      "schema": "./src/executors/plan/schema.json",
+      "description": "plan executor"
     }
   }
 }
