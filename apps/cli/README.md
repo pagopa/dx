@@ -75,14 +75,20 @@ Verify the repository setup according to the DevEx guidelines.
 
 ```bash
 dx doctor
+dx doctor --path apps/cli
+dx doctor -p apps/cli
 ```
 
 This command will:
 
 - Check if you're in a valid Git repository
 - Validate that required monorepo scripts are present in package.json
-- Check that the `turbo.json` file exists
-- Verify that the installed `turbo` version meets the minimum requirements
+- Verify that `.pre-commit-config.yaml` is present
+- Check that `nx.json` exists and that the installed Nx version meets the minimum requirements
+- Verify that pnpm workspaces are configured
+
+Use `-p, --path` to inspect a repository other than the current working
+directory.
 
 **Example output:**
 

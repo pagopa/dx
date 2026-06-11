@@ -7,15 +7,28 @@ import { checkNxConfig, checkPreCommitConfig } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
 import { checkWorkspaces } from "./workspace.js";
 
+export type DoctorOptions = {
+  repositoryPath?: string;
+};
+
+type DoctorCheckDefinition = {
+  run: () => ResultAsync<ValidationCheckResult, Error>;
+};
+
 type DoctorResult = {
   checks: ValidationCheck[];
   hasErrors: boolean;
 };
 
-export const runDoctor = async (dependencies: Dependencies, config: Config) => {
+export const runDoctor = async (
+  dependencies: Dependencies,
+  config: Config,
+  options: DoctorOptions = {},
+) => {
   // Get repository root - doctor command requires being in a repository
-  const repoRootResult =
-    await dependencies.repositoryReader.findRepositoryRoot();
+  const repoRootResult = await dependencies.repositoryReader.findRepositoryRoot(
+    options.repositoryPath,
+  );
 
   if (repoRootResult.isErr()) {
     return {
@@ -33,25 +46,40 @@ export const runDoctor = async (dependencies: Dependencies, config: Config) => {
 
   const repositoryRoot = repoRootResult.value;
 
-  const doctorChecks = [
-    ResultAsync.fromPromise(
-      checkPreCommitConfig(dependencies, repositoryRoot),
-      () => new Error("Error checking pre-commit configuration"),
-    ),
-    ResultAsync.fromPromise(
-      checkNxConfig(dependencies, repositoryRoot, config),
-      () => new Error("Error checking Nx configuration"),
-    ),
-    ResultAsync.fromPromise(
-      checkMonorepoScripts(dependencies, repositoryRoot),
-      () => new Error("Error checking monorepo scripts"),
-    ),
-    ResultAsync.fromPromise(
-      checkWorkspaces(dependencies, repositoryRoot),
-      () => new Error("Error checking workspaces"),
-    ),
+  const doctorCheckDefinitions: DoctorCheckDefinition[] = [
+    {
+      run: () =>
+        ResultAsync.fromPromise(
+          checkPreCommitConfig(dependencies, repositoryRoot),
+          () => new Error("Error checking pre-commit configuration"),
+        ),
+    },
+    {
+      run: () =>
+        ResultAsync.fromPromise(
+          checkNxConfig(dependencies, repositoryRoot, config),
+          () => new Error("Error checking Nx configuration"),
+        ),
+    },
+    {
+      run: () =>
+        ResultAsync.fromPromise(
+          checkMonorepoScripts(dependencies, repositoryRoot),
+          () => new Error("Error checking monorepo scripts"),
+        ),
+    },
+    {
+      run: () =>
+        ResultAsync.fromPromise(
+          checkWorkspaces(dependencies, repositoryRoot),
+          () => new Error("Error checking workspaces"),
+        ),
+    },
   ];
-  return ResultAsync.combine(doctorChecks).match(
+
+  return ResultAsync.combine(
+    doctorCheckDefinitions.map(({ run }) => run()),
+  ).match(
     toDoctorResult,
     (): DoctorResult => ({
       checks: [],
