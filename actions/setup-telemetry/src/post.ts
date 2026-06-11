@@ -63,13 +63,13 @@ const postEnvSchema = z.object({
 const spanStartLineSchema = z.object({
   span: z.string(),
   startSpan: z.string(),
-  type: z.literal("spanStart").optional().default("spanStart"),
+  type: z.literal("spanStart"),
 });
 
 const spanEndLineSchema = z.object({
   endSpan: z.string(),
   span: z.string(),
-  type: z.literal("spanEnd").optional().default("spanEnd"),
+  type: z.literal("spanEnd"),
 });
 
 const eventLineSchema = z.object({
@@ -77,7 +77,7 @@ const eventLineSchema = z.object({
   body: z.string().optional().default(""),
   exception: z.boolean().default(false),
   name: z.string(),
-  type: z.literal("event").optional().default("event"),
+  type: z.literal("event"),
 });
 
 // Union of all telemetry line types
@@ -147,29 +147,40 @@ function isSpanStartLine(line: TelemetryLine): line is SpanStartLine {
 
 // Parse and validate a single NDJSON line
 function parseTelemetryLine(rawLine: string): null | TelemetryLine {
+  let parsed: unknown;
+
   try {
-    const parsed = JSON.parse(rawLine);
-
-    // Infer type based on fields for backward compatibility
-    if (parsed.span && parsed.startSpan) {
-      parsed.type = "spanStart";
-    } else if (parsed.span && parsed.endSpan) {
-      parsed.type = "spanEnd";
-    } else {
-      parsed.type = "event";
-    }
-
-    const result = telemetryLineSchema.safeParse(parsed);
-    if (!result.success) {
-      console.warn("Invalid telemetry line format");
-      debug("Validation error:", z.prettifyError(result.error));
-      return null;
-    }
-    return result.data;
+    parsed = JSON.parse(rawLine);
   } catch {
     console.warn("Skipping malformed JSON telemetry line");
     return null;
   }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    console.warn("Invalid telemetry line format");
+    return null;
+  }
+
+  const telemetryLine = { ...parsed } as Record<string, unknown>;
+
+  // Infer type based on fields for backward compatibility with older producers.
+  if (!telemetryLine.type) {
+    if (telemetryLine.span && telemetryLine.startSpan) {
+      telemetryLine.type = "spanStart";
+    } else if (telemetryLine.span && telemetryLine.endSpan) {
+      telemetryLine.type = "spanEnd";
+    } else {
+      telemetryLine.type = "event";
+    }
+  }
+
+  const result = telemetryLineSchema.safeParse(telemetryLine);
+  if (!result.success) {
+    console.warn("Invalid telemetry line format");
+    debug("Validation error:", z.prettifyError(result.error));
+    return null;
+  }
+  return result.data;
 }
 
 async function post(): Promise<void> {
