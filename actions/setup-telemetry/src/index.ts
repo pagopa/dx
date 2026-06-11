@@ -18,6 +18,7 @@ const envSchema = z.object({
   GITHUB_ENV: z.string().min(1),
   GITHUB_WORKSPACE: z.string().min(1),
   INPUT_CONNECTION_STRING: z.string().min(1),
+  OTEL_EVENT_FILE: z.string().optional(),
 });
 
 async function exportEnv(
@@ -58,6 +59,12 @@ async function run(): Promise<void> {
         z.prettifyError(envResult.error),
       );
       throw new Error("Environment validation failed");
+    }
+
+    if (envResult.data.OTEL_EVENT_FILE) {
+      throw new Error(
+        "Telemetry session is already initialized for this job. setup-telemetry must be called only once.",
+      );
     }
 
     const { correlationId, eventsFile, start } = await startSession(
