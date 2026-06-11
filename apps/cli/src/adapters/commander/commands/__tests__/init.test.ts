@@ -186,8 +186,10 @@ describe("getMonorepoInitialAnswers", () => {
         description: "My DX workspace",
         name: "my-dx-workspace",
         owner: "pagopa",
+        publish: true,
       }),
     ).toEqual({
+      publishToGitHub: true,
       repoDescription: "My DX workspace",
       repoName: "my-dx-workspace",
       repoOwner: "pagopa",

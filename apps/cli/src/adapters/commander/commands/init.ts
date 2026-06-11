@@ -46,8 +46,11 @@ const isGitHubRepoCreationSkipped = (
 
 type InitActionContext = {
   gitHubService: GitHubService;
-  initialAnswers?: Partial<MonorepoPayload>;
+  initialAnswers?: InitInitialAnswers;
   presenter: CommandPresenter;
+};
+
+type InitInitialAnswers = Partial<MonorepoPayload> & {
   publishToGitHub?: boolean;
 };
 
@@ -256,8 +259,9 @@ export const getMonorepoInitialAnswers = ({
   description,
   name,
   owner,
-}: InitCommandOptions): Partial<MonorepoPayload> => {
-  const initialAnswers: Partial<MonorepoPayload> = {};
+  publish,
+}: InitCommandOptions): InitInitialAnswers => {
+  const initialAnswers: InitInitialAnswers = {};
 
   if (description) {
     initialAnswers.repoDescription = description;
@@ -269,6 +273,10 @@ export const getMonorepoInitialAnswers = ({
 
   if (name) {
     initialAnswers.repoName = name;
+  }
+
+  if (typeof publish === "boolean") {
+    initialAnswers.publishToGitHub = publish;
   }
 
   return initialAnswers;
@@ -406,9 +414,10 @@ const runInitAction = ({
   gitHubService,
   initialAnswers = {},
   presenter,
-  publishToGitHub,
-}: InitActionContext): ResultAsync<SummaryInput, Error> =>
-  trackStep(
+}: InitActionContext): ResultAsync<SummaryInput, Error> => {
+  const { publishToGitHub, ...monorepoInitialAnswers } = initialAnswers;
+
+  return trackStep(
     presenter,
     "Initializing workspace generator...",
     getPlopInstance,
@@ -418,7 +427,7 @@ const runInitAction = ({
       // The prompt phase must run outside trackStep: in text mode trackStep
       // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        collectMonorepoPayload(plop, gitHubService, initialAnswers),
+        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers),
         handleGeneratorError,
       ),
     )
@@ -446,6 +455,7 @@ const runInitAction = ({
           : okAsync({ gitHubRepoCreationSkipped: true, payload }),
       ),
     );
+};
 
 const reportSummary =
   (presenter: CommandPresenter, outputMode: "json" | "text") =>
@@ -513,7 +523,6 @@ export const makeInitCommand = (
                 gitHubService: auth.gitHubService,
                 initialAnswers: getMonorepoInitialAnswers(initOptions),
                 presenter,
-                publishToGitHub: initOptions.publish,
               }),
             ),
         )
