@@ -12,11 +12,7 @@ describe("getPrompts", () => {
       repoName: "my-dx-workspace",
     });
 
-    expect(prompts).toHaveLength(2);
-    expect(prompts).not.toEqual(
-      expect.arrayContaining([expect.objectContaining({ name: "repoName" })]),
-    );
-    expect(prompts).toEqual(
+    expect(prompts).toStrictEqual(
       expect.arrayContaining([
         expect.objectContaining({ name: "repoOwner" }),
         expect.objectContaining({ name: "repoDescription" }),
@@ -31,17 +27,17 @@ describe("getPrompts", () => {
         repoName: "my-dx-workspace",
         repoOwner: "pagopa",
       }),
-    ).toHaveLength(0);
+    ).toStrictEqual([]);
   });
 
-  it("keeps the existing repo owner default when the owner is still prompted", () => {
-    const prompts = getPrompts({
-      repoName: "my-dx-workspace",
-    });
+  it("ask all prompts", () => {
+    const prompts = getPrompts();
 
-    expect(prompts).toEqual(
+    expect(prompts).toStrictEqual(
       expect.arrayContaining([
-        expect.objectContaining({ default: "pagopa", name: "repoOwner" }),
+        expect.objectContaining({ name: "repoName" }),
+        expect.objectContaining({ name: "repoOwner" }),
+        expect.objectContaining({ name: "repoDescription" }),
       ]),
     );
   });

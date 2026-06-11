@@ -18,52 +18,34 @@ export const payloadSchema = z.object({
 
 export type Payload = z.infer<typeof payloadSchema>;
 
-const createRepoNamePrompt = () => ({
-  message: "Name",
-  name: "repoName" as const,
-  validate: validatePrompt(payloadSchema.shape.repoName),
-});
-
-const createRepoOwnerPrompt = () => ({
-  default: DEFAULT_REPO_OWNER,
-  message: "GitHub owner",
-  name: "repoOwner" as const,
-  validate: validatePrompt(payloadSchema.shape.repoOwner),
-});
-
-const createRepoDescriptionPrompt = () => ({
-  message: "Description",
-  name: "repoDescription" as const,
-});
-
-type PromptFactory = {
-  create: () =>
-    | ReturnType<typeof createRepoDescriptionPrompt>
-    | ReturnType<typeof createRepoNamePrompt>
-    | ReturnType<typeof createRepoOwnerPrompt>;
-  isMissing: (answers: Partial<Payload>) => boolean;
+type MonorepoPrompt = {
+  default?: string;
+  message: string;
+  name: keyof Payload;
+  validate?: ReturnType<typeof validatePrompt>;
 };
 
-const promptFactories: PromptFactory[] = [
+const prompts: MonorepoPrompt[] = [
   {
-    create: createRepoNamePrompt,
-    isMissing: ({ repoName }) => repoName === undefined,
+    message: "Name",
+    name: "repoName",
+    validate: validatePrompt(payloadSchema.shape.repoName),
   },
   {
-    create: createRepoOwnerPrompt,
-    isMissing: ({ repoOwner }) => repoOwner === undefined,
+    default: DEFAULT_REPO_OWNER,
+    message: "GitHub owner",
+    name: "repoOwner",
+    validate: validatePrompt(payloadSchema.shape.repoOwner),
   },
   {
-    create: createRepoDescriptionPrompt,
-    isMissing: ({ repoDescription }) => repoDescription === undefined,
+    message: "Description",
+    name: "repoDescription",
   },
 ];
 
 export const getPrompts = (
   answers: Partial<Payload> = {},
 ): PlopGeneratorConfig["prompts"] =>
-  promptFactories
-    .filter(({ isMissing }) => isMissing(answers))
-    .map(({ create }) => create());
+  prompts.filter(({ name }) => answers[name] === undefined);
 
 export default getPrompts;
