@@ -93,16 +93,14 @@ async function startSession(workspace: string): Promise<{
     );
   }
 
-  // Initialize empty events file
+  // Initialize an empty events file for this session.
   try {
     await fs.writeFile(eventsFile, "", { flag: "w" });
   } catch (err) {
-    // File already exists or other error - only throw on non-EEXIST errors
-    if (err instanceof Error && "code" in err && err.code !== "EEXIST") {
-      throw new Error(`Failed to initialize events file: ${err.message}`, {
-        cause: err,
-      });
-    }
+    throw new Error(
+      `Failed to initialize events file: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
   }
 
   const correlationId = randomUUID();

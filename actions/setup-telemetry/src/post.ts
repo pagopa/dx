@@ -263,8 +263,7 @@ async function post(): Promise<void> {
 
   // Simple processors export on end/emit; shutdown waits for pending HTTP sends.
   try {
-    await tracerProvider.shutdown();
-    await loggerProvider.shutdown();
+    await Promise.all([tracerProvider.shutdown(), loggerProvider.shutdown()]);
   } catch (flushErr) {
     console.warn(
       "Telemetry flush error (some data may be lost):",
