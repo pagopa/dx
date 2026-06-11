@@ -314,7 +314,7 @@ jobs:
           echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@feat-add-application-insight-plan #main
+        uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -362,7 +362,7 @@ jobs:
           terraform init -input=false
 
       - name: Start Terraform Apply telemetry span
-        uses: pagopa/dx/actions/log-telemetry-event@feat-add-application-insight-plan #main
+        uses: pagopa/dx/actions/log-telemetry-event@main
         with:
           name: terraform-apply
           span_phase: start
@@ -376,7 +376,7 @@ jobs:
 
       - name: End Terraform Apply telemetry span
         if: always()
-        uses: pagopa/dx/actions/log-telemetry-event@feat-add-application-insight-plan #main
+        uses: pagopa/dx/actions/log-telemetry-event@main
         with:
           name: terraform-apply
           span_phase: end
