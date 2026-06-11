@@ -1,14 +1,36 @@
-import { getLogger } from "@logtape/logtape";
 import { Command } from "commander";
+import { ResultAsync } from "neverthrow";
 
-import { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
-import { ListCodemods } from "../../../use-cases/list-codemods.js";
+import type { CommandPresenter } from "../../../domain/command-presenter.js";
+import type { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
+import type { ListCodemods } from "../../../use-cases/list-codemods.js";
+import type { GlobalOptions } from "../index.js";
+
 import { exitWithError } from "../command-errors.js";
+import { createCommandPresenter } from "../presenters/index.js";
 
 export type CodemodCommandDependencies = {
   applyCodemodById: ApplyCodemodById;
   listCodemods: ListCodemods;
 };
+
+const reportCommandError =
+  (
+    command: Command,
+    presenter: CommandPresenter,
+    outputMode: "json" | "text",
+  ) =>
+  (error: Error) => {
+    if (outputMode === "json") {
+      presenter.reportError(error);
+      process.exitCode = 1;
+    } else {
+      exitWithError(command)(error);
+    }
+  };
+
+const toError = (error: unknown): Error =>
+  error instanceof Error ? error : new Error(String(error));
 
 export const makeCodemodCommand = ({
   applyCodemodById,
@@ -20,11 +42,12 @@ export const makeCodemodCommand = ({
       new Command("list")
         .description("List available migration scripts")
         .action(async function () {
+          const { output } = this.optsWithGlobals<GlobalOptions>();
+          const presenter = createCommandPresenter(output);
+
           await listCodemods()
-            .andTee((codemods) =>
-              console.table(codemods, ["id", "description"]),
-            )
-            .orTee(exitWithError(this));
+            .andTee((codemods) => presenter.reportResult(codemods))
+            .orTee(reportCommandError(this, presenter, output));
         }),
     )
     .addCommand(
@@ -32,11 +55,22 @@ export const makeCodemodCommand = ({
         .argument("<id>", "The id of the codemod to apply")
         .description("Apply migration scripts to the repository")
         .action(async function (id) {
-          const logger = getLogger(["dx-cli", "codemod"]);
-          await applyCodemodById(id)
-            .andTee(() => {
-              logger.info("Codemod applied ✅");
-            })
-            .orTee(exitWithError(this));
+          const { output } = this.optsWithGlobals<GlobalOptions>();
+          const presenter = createCommandPresenter(output);
+
+          await ResultAsync.fromPromise(
+            presenter.trackStep(`Applying codemod ${id}...`, () =>
+              applyCodemodById(id).match(
+                () => undefined,
+                (error) => {
+                  throw error;
+                },
+              ),
+            ),
+            toError,
+          )
+            .map(() => ({ id }))
+            .andTee((result) => presenter.reportResult(result))
+            .orTee(reportCommandError(this, presenter, output));
         }),
     );
