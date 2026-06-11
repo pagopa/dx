@@ -9,6 +9,5 @@
     "rewriteRelativeImportExtensions": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/__tests__/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

@@ -8,47 +8,67 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 | --- | --- |
 | `terraformPlan` | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it. |
 
-## Usage
-
-You can import a task directly when you want to call it from code. For example, import `terraformPlan` from the package and call it with the target module path:
-
-```ts
-import { terraformPlan } from "@pagopa/dx-tasks/terraform-plan";
-
-await terraformPlan({
-  modulePath: "./infra/modules/example",
-  out: "plan.tfplan",
-  refresh: true,
-  verbose: false,
-});
-```
-
 ## Dispatcher
 
-The library also exports a dispatcher for registering and running tasks by name from Nx, GitHub Actions, or another orchestrator.
+Tasks are meant to run through a dispatcher. The dispatcher is responsible for decoding payloads, wiring the shared reporter context, and selecting the right task definition.
 
 ### Public API
 
 - `createTaskDispatcher()` creates an empty dispatcher.
 - `registerTask(task)` registers a task definition.
 - `dispatchTask(name, payload)` decodes the payload and runs the matching task.
+- `@pagopa/dx-tasks/tasks` exports the built-in task definitions, such as `terraformPlanTask`.
 - `createDefaultTaskDispatcher()` creates a dispatcher with the built-in `terraformPlan` task already registered.
 
-### Example
+### Default dispatcher example
 
-Here we register `terraformPlan` and dispatch it by name.
+Here we create one shared reporter, inject it when creating the default dispatcher, and dispatch `terraformPlan` with reporting enabled.
 
 ```ts
 import {
   createDefaultTaskDispatcher,
-  terraformPlanTask,
+  Reporter,
 } from "@pagopa/dx-tasks";
 
-const dispatcher = createDefaultTaskDispatcher();
+const reporter = new Reporter(process.cwd());
+const dispatcher = createDefaultTaskDispatcher({ reporter });
 
-await dispatcher.dispatchTask(terraformPlanTask.name, {
+await dispatcher.dispatchTask("terraformPlan", {
   modulePath: "./infra/modules/example",
+  out: "plan.tfplan",
+  refresh: true,
+  report: true,
+  verbose: false,
 });
 ```
 
-For payload details, runtime behavior, and any other task-specific notes, see the source code in `src/`.
+This prints the masked Terraform output to stdout and writes the JSON report under:
+
+```text
+.dx-tasks/terraform-plan/Li9pbmZyYS9tb2R1bGVzL2V4YW1wbGU.json
+```
+
+The `terraform-plan` namespace is registered once on the shared reporter, so other tasks can safely reuse the same `Reporter` instance without overwriting each other's reports.
+
+### Custom dispatcher example
+
+If you want to control which built-in tasks are available, register them explicitly from `@pagopa/dx-tasks/tasks`.
+
+```ts
+import { createTaskDispatcher, Reporter } from "@pagopa/dx-tasks";
+import { terraformPlanTask } from "@pagopa/dx-tasks/tasks";
+
+const reporter = new Reporter(process.cwd());
+const dispatcher = createTaskDispatcher({
+  context: { reporter },
+});
+
+dispatcher.registerTask(terraformPlanTask);
+
+await dispatcher.dispatchTask(terraformPlanTask.name, {
+  modulePath: "./infra/modules/example",
+  report: true,
+});
+```
+
+For payload details and task-specific behavior, see the task definitions and implementations in `src/`.

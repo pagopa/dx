@@ -3,5 +3,6 @@
 export * from "./default-dispatcher.ts";
 export * from "./dispatcher.ts";
 export * from "./mask-output.ts";
+export * from "./reporter.ts";
 export * from "./run-command.ts";
-export * from "./terraform-plan.ts";
+export * from "./tasks.ts";

@@ -4,7 +4,6 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -18,9 +17,13 @@
       "types": "./dist/dispatcher.d.ts",
       "default": "./dist/dispatcher.js"
     },
-    "./terraform-plan": {
-      "types": "./dist/terraform-plan.d.ts",
-      "default": "./dist/terraform-plan.js"
+    "./reporter": {
+      "types": "./dist/reporter.d.ts",
+      "default": "./dist/reporter.js"
+    },
+    "./tasks": {
+      "types": "./dist/tasks.d.ts",
+      "default": "./dist/tasks.js"
     }
   },
   "repository": {

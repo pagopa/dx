@@ -1,11 +1,13 @@
 /** This module registers dx-tasks tasks and dispatches them from decoded inputs. */
 
+import type { Reporter } from "./reporter.ts";
+
 export interface TaskDefinition<TPayload> {
   name: string;
   payloadSchema: {
     parse: (input: unknown) => TPayload;
   };
-  run: (payload: TPayload) => Promise<void> | void;
+  run: (payload: TPayload, context: TaskRunContext) => Promise<void> | void;
 }
 
 export interface TaskDispatcher {
@@ -13,11 +15,21 @@ export interface TaskDispatcher {
   registerTask: <TPayload>(task: TaskDefinition<TPayload>) => void;
 }
 
+export interface TaskDispatcherOptions {
+  context?: TaskRunContext;
+}
+
+export interface TaskRunContext {
+  reporter?: Reporter;
+}
+
 interface RegisteredTask {
   dispatch: (payload: unknown) => Promise<void>;
 }
 
-export const createTaskDispatcher = (): TaskDispatcher => {
+export const createTaskDispatcher = ({
+  context = {},
+}: TaskDispatcherOptions = {}): TaskDispatcher => {
   const tasks = new Map<string, RegisteredTask>();
 
   const registerTask = <TPayload>(task: TaskDefinition<TPayload>) => {
@@ -28,7 +40,7 @@ export const createTaskDispatcher = (): TaskDispatcher => {
     tasks.set(task.name, {
       dispatch: async (payload) => {
         const decodedPayload = task.payloadSchema.parse(payload);
-        await task.run(decodedPayload);
+        await task.run(decodedPayload, context);
       },
     });
   };

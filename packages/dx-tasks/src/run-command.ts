@@ -1,6 +1,6 @@
 /** This module wraps child-process execution for dx-tasks Terraform commands. */
 
-import { spawn } from "node:child_process";
+import childProcess from "node:child_process";
 
 export interface ProcessResult {
   exitCode: null | number;
@@ -15,7 +15,7 @@ export const runCommand = async (
   env: Record<string, string>,
 ): Promise<ProcessResult> => {
   const { promise, reject, resolve } = Promise.withResolvers<ProcessResult>();
-  const child = spawn(command, args, {
+  const child = childProcess.spawn(command, args, {
     cwd,
     env: { ...process.env, ...env },
     stdio: ["inherit", "pipe", "inherit"],

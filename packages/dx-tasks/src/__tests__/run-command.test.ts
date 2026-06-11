@@ -1,4 +1,4 @@
-import { EventEmitter } from "node:events";
+import events from "node:events";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockSpawn } = vi.hoisted(() => ({
@@ -6,12 +6,15 @@ const { mockSpawn } = vi.hoisted(() => ({
 }));
 
 vi.mock("node:child_process", () => ({
+  default: {
+    spawn: mockSpawn,
+  },
   spawn: mockSpawn,
 }));
 
 import { runCommand } from "../run-command.js";
 
-class MockStdout extends EventEmitter {
+class MockStdout extends events.EventEmitter {
   public encoding?: string;
 
   setEncoding(encoding: string) {
@@ -20,7 +23,7 @@ class MockStdout extends EventEmitter {
   }
 }
 
-class MockChildProcess extends EventEmitter {
+class MockChildProcess extends events.EventEmitter {
   stdout = new MockStdout();
 }
 

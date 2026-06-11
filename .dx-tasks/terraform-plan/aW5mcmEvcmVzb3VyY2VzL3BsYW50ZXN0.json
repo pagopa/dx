@@ -1,0 +1,4 @@
+{
+  "modulePath": "infra/resources/plantest",
+  "planOutput": "Terraform will perform the following actions:\n\n  # azurerm_resource_group.plantest will be created\n  + resource \"azurerm_resource_group\" \"plantest\" {\n      + id       = (known after apply)\n      + location = \"westeurope\"\n      + name     = \"plantest-rg\"\n    }\n\nPlan: 1 to add, 0 to change, 0 to destroy.\n"
+}

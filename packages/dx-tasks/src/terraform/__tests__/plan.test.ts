@@ -1,16 +1,21 @@
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TerraformPlanPayload } from "../terraform-plan.ts";
+import type { TerraformPlanPayload } from "../plan.ts";
+
+import { Reporter } from "../../reporter.ts";
 
 const { mockRunCommand } = vi.hoisted(() => ({
   mockRunCommand: vi.fn(),
 }));
 
-vi.mock("../run-command.ts", () => ({
+vi.mock("../../run-command.ts", () => ({
   runCommand: mockRunCommand,
 }));
 
-import { terraformPlan } from "../terraform-plan.ts";
+import { terraformPlan, terraformPlanReportSchema } from "../plan.ts";
 
 const plans = {
   changes: `[0m[1mazurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02][0m
@@ -97,14 +102,71 @@ const snapshotScenarios: {
   },
 ];
 
+const reportSnapshotScenarios: {
+  name: string;
+  payload: TerraformPlanPayload;
+  stdout: string;
+}[] = [
+  {
+    name: "summarized report output",
+    payload: { modulePath: "/tmp/module", report: true },
+    stdout: plans.changes,
+  },
+  {
+    name: "summarized report output (-no-color)",
+    payload: { modulePath: "/tmp/module", report: true },
+    stdout: plans.changesNoColor,
+  },
+  {
+    name: "no changes report output",
+    payload: { modulePath: "/tmp/module", report: true },
+    stdout: plans.noChanges,
+  },
+  {
+    name: "no changes report output (-no-color)",
+    payload: { modulePath: "/tmp/module", report: true },
+    stdout: plans.noChangesNoColor,
+  },
+  {
+    name: "verbose report output",
+    payload: {
+      modulePath: "/tmp/module",
+      refresh: true,
+      report: true,
+      verbose: true,
+    },
+    stdout: plans.changes,
+  },
+];
+
+const getTerraformPlanReportPath = (
+  baseDirectoryPath: string,
+  modulePath: string,
+): string =>
+  path.join(
+    baseDirectoryPath,
+    ".dx-tasks",
+    "terraform-plan",
+    `${Buffer.from(modulePath).toString("base64url")}.json`,
+  );
+
 describe("terraformPlan", () => {
+  let tempDirectoryPath = "";
+
   beforeEach(() => {
     mockRunCommand.mockReset();
     vi.stubEnv("CI", "false");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
-  afterEach(() => {
+  beforeEach(async () => {
+    tempDirectoryPath = await fs.mkdtemp(
+      path.join(os.tmpdir(), "dx-tasks-terraform-plan-"),
+    );
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
     vi.restoreAllMocks();
     vi.unstubAllEnvs();
   });
@@ -168,8 +230,33 @@ describe("terraformPlan", () => {
     );
   });
 
+  it.each(reportSnapshotScenarios)(
+    "matches the report snapshot for $name",
+    async ({ payload, stdout }) => {
+      const reporter = new Reporter(tempDirectoryPath);
+
+      mockRunCommand.mockResolvedValue({
+        exitCode: 0,
+        signal: null,
+        stdout,
+      });
+
+      await terraformPlan(payload, {
+        reporter,
+      });
+
+      await expect(
+        fs.readFile(
+          getTerraformPlanReportPath(tempDirectoryPath, payload.modulePath),
+          "utf8",
+        ),
+      ).resolves.toMatchSnapshot();
+      expect(console.log).toHaveBeenCalledExactlyOnceWith(expect.any(String));
+    },
+  );
+
   it.each(snapshotScenarios)(
-    "matches the snapshot for $name",
+    "matches the console snapshot for $name",
     async ({ payload, stdout }) => {
       mockRunCommand.mockResolvedValue({
         exitCode: 0,
@@ -185,4 +272,39 @@ describe("terraformPlan", () => {
       ).toMatchSnapshot();
     },
   );
+
+  it("writes the report with the expected JSON shape when enabled", async () => {
+    const reporter = new Reporter(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stdout: plans.changes,
+    });
+
+    await terraformPlan(
+      {
+        modulePath: "/tmp/module",
+        report: true,
+      },
+      {
+        reporter,
+      },
+    );
+
+    const reportContent = await fs.readFile(
+      getTerraformPlanReportPath(tempDirectoryPath, "/tmp/module"),
+      "utf8",
+    );
+    const report = terraformPlanReportSchema.parse(JSON.parse(reportContent));
+
+    expect(report).toMatchObject({
+      modulePath: "/tmp/module",
+      planOutput: expect.stringContaining(
+        "Terraform will perform the following actions:",
+      ),
+    });
+    expect(Object.keys(report)).toStrictEqual(["modulePath", "planOutput"]);
+    expect(reportContent).toBe(JSON.stringify(report, null, 2));
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(expect.any(String));
+  });
 });
