@@ -49,7 +49,12 @@ vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
 }));
 
-import { confirmGitHubRepoCreation, makeInitCommand } from "../init.js";
+import {
+  confirmGitHubRepoCreation,
+  getMonorepoInitialAnswers,
+  makeInitCommand,
+  parseInitCommandOptions,
+} from "../init.js";
 
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
@@ -93,6 +98,14 @@ const runInitCommand = async (
 describe("confirmGitHubRepoCreation", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("returns the provided publish choice without prompting again", async () => {
+    const result = await confirmGitHubRepoCreation(makePayload(), false);
+
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBe(false);
+    expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
   it("returns true when the user confirms", async () => {
@@ -140,6 +153,50 @@ describe("confirmGitHubRepoCreation", () => {
   });
 });
 
+describe("parseInitCommandOptions", () => {
+  it("returns the provided init flags", () => {
+    expect(
+      parseInitCommandOptions({
+        description: "My DX workspace",
+        name: "my-dx-workspace",
+        owner: "pagopa",
+        publish: true,
+      }),
+    ).toEqual({
+      description: "My DX workspace",
+      name: "my-dx-workspace",
+      owner: "pagopa",
+      publish: true,
+    });
+  });
+
+  it("formats blank string validation errors with zod context", () => {
+    expect(() =>
+      parseInitCommandOptions({
+        name: "   ",
+      }),
+    ).toThrow(/name/);
+  });
+});
+
+describe("getMonorepoInitialAnswers", () => {
+  it("maps init CLI options to the monorepo payload keys", () => {
+    expect(
+      getMonorepoInitialAnswers({
+        description: "My DX workspace",
+        name: "my-dx-workspace",
+        owner: "pagopa",
+        publish: true,
+      }),
+    ).toEqual({
+      publishToGitHub: true,
+      repoDescription: "My DX workspace",
+      repoName: "my-dx-workspace",
+      repoOwner: "pagopa",
+    });
+  });
+});
+
 describe("makeInitCommand", () => {
   const payload = makePayload();
 
@@ -156,6 +213,29 @@ describe("makeInitCommand", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     process.exitCode = undefined;
+  });
+
+  it("registers flags for every init input", () => {
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const command = makeInitCommand(requireGitHubAuth);
+
+    const flags = command.options.flatMap((option) => [
+      option.flags,
+      option.long,
+    ]);
+
+    expect(flags).toEqual(
+      expect.arrayContaining([
+        "--name <name>",
+        "--owner <owner>",
+        "--description <description>",
+        "--publish",
+      ]),
+    );
   });
 
   it("uses the command presenter to report json progress and results", async () => {

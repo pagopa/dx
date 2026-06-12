@@ -1,15 +1,15 @@
 import { getLogger } from "@logtape/logtape";
 import chalk from "chalk";
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { $, ExecaError } from "execa";
 import inquirer from "inquirer";
-import { okAsync, ResultAsync } from "neverthrow";
+import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import * as path from "node:path";
 import { oraPromise } from "ora";
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
-import type { GlobalOptions } from "../index.js";
+import type { GlobalOptions } from "../global-options.js";
 
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
@@ -24,7 +24,7 @@ import {
   getPlopInstance,
   runMonorepoActions,
 } from "../../plop/index.js";
-import { exitWithError } from "../index.js";
+import { exitWithError } from "../command-errors.js";
 import { createCommandPresenter } from "../presenters/index.js";
 
 type GitHubRepoCreationSkippedResult = {
@@ -46,7 +46,12 @@ const isGitHubRepoCreationSkipped = (
 
 type InitActionContext = {
   gitHubService: GitHubService;
+  initialAnswers?: InitInitialAnswers;
   presenter: CommandPresenter;
+};
+
+type InitInitialAnswers = Partial<MonorepoPayload> & {
+  publishToGitHub?: boolean;
 };
 
 type LocalWorkspace = {
@@ -225,6 +230,58 @@ export const checkAddEnvironmentPreconditions = () =>
     .andThen(() => checkAzLogin())
     .andThen(() => checkCorepackIsInstalled());
 
+const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
+
+export const initCommandOptionsSchema = z.object({
+  description: z.string().optional(),
+  name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
+  owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
+  publish: z.boolean().optional(),
+});
+
+export type InitCommandOptions = z.infer<typeof initCommandOptionsSchema>;
+
+export const parseInitCommandOptions = (input: unknown): InitCommandOptions => {
+  const result = initCommandOptionsSchema.safeParse(input);
+  if (!result.success) {
+    throw new Error(
+      `Invalid init command options:\n${z.prettifyError(result.error)}`,
+      {
+        cause: result.error,
+      },
+    );
+  }
+
+  return result.data;
+};
+
+export const getMonorepoInitialAnswers = ({
+  description,
+  name,
+  owner,
+  publish,
+}: InitCommandOptions): InitInitialAnswers => {
+  const initialAnswers: InitInitialAnswers = {};
+
+  if (description) {
+    initialAnswers.repoDescription = description;
+  }
+
+  if (owner) {
+    initialAnswers.repoOwner = owner;
+  }
+
+  if (name) {
+    initialAnswers.repoName = name;
+  }
+
+  if (typeof publish === "boolean") {
+    initialAnswers.publishToGitHub = publish;
+  }
+
+  return initialAnswers;
+};
+
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
   ({
@@ -251,7 +308,6 @@ const createRemoteRepositoryWithPresenter =
       asError("Failed to create GitHub repository."),
     ).map(() => new Repository(repoName, repoOwner));
   };
-
 const initializeGitRepositoryWithPresenter =
   (presenter: CommandPresenter) => (repository: Repository) => {
     const branchName = "features/scaffold-workspace";
@@ -322,27 +378,55 @@ const handleGeneratorError = (err: unknown) => {
   return new Error("Failed to run the generator", { cause: err });
 };
 
+/**
+ * Resolves whether the scaffolded repository should be published to GitHub.
+ *
+ * When the caller already knows the answer (e.g. the user passed `--publish`
+ * on the command line), that value is used as-is and no prompt is shown. When
+ * the preference is left undefined (flag omitted), the user is asked
+ * interactively.
+ */
 export const confirmGitHubRepoCreation = (
   payload: MonorepoPayload,
+  publishPreference?: boolean,
 ): ResultAsync<boolean, Error> =>
-  ResultAsync.fromPromise(
-    inquirer
-      .prompt({
-        default: true,
-        message: `The project is created on ${chalk.green(payload.repoName)}. Would you like to publish it to GitHub at ${chalk.green(`${payload.repoOwner}/${payload.repoName}`)} now?`,
-        name: "confirm",
-        type: "confirm",
-      })
-      .then(({ confirm }: { confirm: boolean }) => confirm),
-    (cause) =>
-      new Error("Failed to read GitHub publish confirmation", { cause }),
-  );
+  // A preference provided up-front (via `--publish`) skips the interactive prompt.
+  publishPreference !== undefined
+    ? okAsync(publishPreference)
+    : ResultAsync.fromPromise(
+        inquirer.prompt({
+          default: DEFAULT_GITHUB_PUBLISH_CONFIRMATION,
+          message: `The project is created on ${chalk.green(payload.repoName)}. Would you like to publish it to GitHub at ${chalk.green(`${payload.repoOwner}/${payload.repoName}`)} now?`,
+          name: "confirm",
+          type: "confirm",
+        }),
+        (cause) =>
+          new Error("Failed to read GitHub publish confirmation", { cause }),
+      ).andThen((answer) => {
+        const parsedAnswer = z
+          .object({
+            confirm: z.boolean(),
+          })
+          .safeParse(answer);
+        if (!parsedAnswer.success) {
+          return errAsync(
+            new Error("Invalid GitHub publish confirmation", {
+              cause: parsedAnswer.error,
+            }),
+          );
+        }
+
+        return okAsync(parsedAnswer.data.confirm);
+      });
 
 const runInitAction = ({
   gitHubService,
+  initialAnswers = {},
   presenter,
-}: InitActionContext): ResultAsync<SummaryInput, Error> =>
-  trackStep(
+}: InitActionContext): ResultAsync<SummaryInput, Error> => {
+  const { publishToGitHub, ...monorepoInitialAnswers } = initialAnswers;
+
+  return trackStep(
     presenter,
     "Initializing workspace generator...",
     getPlopInstance,
@@ -352,7 +436,7 @@ const runInitAction = ({
       // The prompt phase must run outside trackStep: in text mode trackStep
       // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        collectMonorepoPayload(plop, gitHubService),
+        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers),
         handleGeneratorError,
       ),
     )
@@ -368,16 +452,19 @@ const runInitAction = ({
       process.chdir(payload.repoName);
     })
     .andThen((payload) =>
-      confirmGitHubRepoCreation(payload).andThen<SummaryInput, Error>(
-        (confirmed) =>
-          confirmed
-            ? handleNewGitHubRepositoryWithPresenter({
-                gitHubService,
-                presenter,
-              })(payload)
-            : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+      confirmGitHubRepoCreation(payload, publishToGitHub).andThen<
+        SummaryInput,
+        Error
+      >((confirmed) =>
+        confirmed
+          ? handleNewGitHubRepositoryWithPresenter({
+              gitHubService,
+              presenter,
+            })(payload)
+          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
       ),
     );
+};
 
 const reportSummary =
   (presenter: CommandPresenter, outputMode: "json" | "text") =>
@@ -410,14 +497,43 @@ export const makeInitCommand = (
   new Command()
     .name("init")
     .description("Initialize a new DX workspace")
-    .action(async function () {
+    .addOption(new Option("--name <name>", "Repository name"))
+    .addOption(
+      new Option(
+        "--owner <owner>",
+        "GitHub organization or user that will own the repository",
+      ),
+    )
+    .addOption(
+      new Option("--description <description>", "Repository description"),
+    )
+    .addOption(
+      new Option(
+        "--publish",
+        "Publish the scaffolded repository to GitHub without prompting",
+      ).default(undefined),
+    )
+    .action(async function (options: unknown) {
       const { output } = this.optsWithGlobals<GlobalOptions>();
       const presenter = createCommandPresenter(output);
 
-      await runInitPreconditions(presenter)
-        .andThen(() => requireGitHubAuth())
-        .andThen((auth) =>
-          runInitAction({ gitHubService: auth.gitHubService, presenter }),
+      await ResultAsync.fromPromise(
+        Promise.resolve().then(() => parseInitCommandOptions(options)),
+        (cause) =>
+          cause instanceof Error
+            ? cause
+            : new Error("Failed to parse init command options", { cause }),
+      )
+        .andThen((initOptions) =>
+          runInitPreconditions(presenter)
+            .andThen(() => requireGitHubAuth())
+            .andThen((auth) =>
+              runInitAction({
+                gitHubService: auth.gitHubService,
+                initialAnswers: getMonorepoInitialAnswers(initOptions),
+                presenter,
+              }),
+            ),
         )
         .match(
           reportSummary(presenter, output),
