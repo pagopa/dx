@@ -13,9 +13,7 @@
     "build": "esbuild src/import.ts --bundle --platform=node --format=esm --external:pg --outfile=dist/import.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "import": "tsx src/import.ts",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "import": "tsx src/import.ts"
   },
   "dependencies": {
     "@octokit/auth-app": "^8.2.0",

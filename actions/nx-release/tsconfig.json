@@ -4,7 +4,7 @@
     "outDir": "./scripts/dist",
     "rootDir": "./scripts",
     "sourceMap": false,
-    "declaration": false,
+    "declaration": true,
     "moduleResolution": "bundler",
     "module": "ESNext",
     "types": ["node"]

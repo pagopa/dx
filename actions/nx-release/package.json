@@ -7,12 +7,10 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
     "lint": "eslint --fix scripts",
     "lint:check": "eslint scripts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
     "test:coverage": "vitest run --coverage"
   },
   "keywords": [
