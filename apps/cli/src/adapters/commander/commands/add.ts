@@ -27,7 +27,7 @@ import {
   getPlopInstance,
   runDeploymentEnvironmentGenerator,
 } from "../../plop/index.js";
-import { exitWithError } from "../index.js";
+import { exitWithError } from "../command-errors.js";
 import { checkAddEnvironmentPreconditions } from "./init.js";
 
 /**

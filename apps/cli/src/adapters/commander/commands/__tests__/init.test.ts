@@ -2,14 +2,59 @@
  * Tests for confirmGitHubRepoCreation in the init command.
  */
 
+import { Command } from "commander";
 import inquirer from "inquirer";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { okAsync } from "neverthrow";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mockDeep } from "vitest-mock-extended";
 
+import type { AuthorizationService } from "../../../../domain/authorization.js";
+import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
+import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
-import { confirmGitHubRepoCreation } from "../init.js";
+const mocks = vi.hoisted(() => {
+  const presenter = {
+    reportError: vi.fn(),
+    reportResult: vi.fn(),
+    trackStep: vi.fn(async (_name: string, task: () => Promise<unknown>) =>
+      task(),
+    ),
+  };
+
+  return {
+    collectMonorepoPayload: vi.fn(),
+    createCommandPresenter: vi.fn(() => presenter),
+    getPlopInstance: vi.fn(),
+    presenter,
+    runMonorepoActions: vi.fn(),
+    tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
+      void args;
+      return { stdout: '{"user":{"name":"test@example.com"}}' };
+    }),
+  };
+});
 
 vi.mock("inquirer");
+vi.mock("ora", () => ({
+  oraPromise: <T>(promise: Promise<T>) => promise,
+}));
+vi.mock("../../../plop/index.js", () => ({
+  collectMonorepoPayload: mocks.collectMonorepoPayload,
+  getPlopInstance: mocks.getPlopInstance,
+  runMonorepoActions: mocks.runMonorepoActions,
+}));
+vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../presenters/index.js", () => ({
+  createCommandPresenter: mocks.createCommandPresenter,
+}));
+
+import {
+  confirmGitHubRepoCreation,
+  getMonorepoInitialAnswers,
+  makeInitCommand,
+  parseInitCommandOptions,
+} from "../init.js";
 
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
@@ -20,9 +65,47 @@ const makePayload = (
   ...overrides,
 });
 
+const silentOutput = {
+  writeErr: () => {
+    /* silence stderr in tests */
+  },
+  writeOut: () => {
+    /* silence stdout in tests */
+  },
+};
+
+const runInitCommand = async (
+  output: "json" | "text" = "json",
+  gitHubService: GitHubService = mockDeep<GitHubService>(),
+) => {
+  const requireGitHubAuth: GitHubAuthFactory = () =>
+    okAsync({
+      authorizationService: mockDeep<AuthorizationService>(),
+      gitHubService,
+    });
+  const initCommand = makeInitCommand(requireGitHubAuth);
+  initCommand.exitOverride().configureOutput(silentOutput);
+
+  const program = new Command();
+  program
+    .exitOverride()
+    .option("--output <mode>", "Output mode", output)
+    .addCommand(initCommand);
+
+  await program.parseAsync(["node", "dx", "--output", output, "init"]);
+};
+
 describe("confirmGitHubRepoCreation", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+  });
+
+  it("returns the provided publish choice without prompting again", async () => {
+    const result = await confirmGitHubRepoCreation(makePayload(), false);
+
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBe(false);
+    expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
   it("returns true when the user confirms", async () => {
@@ -67,5 +150,136 @@ describe("confirmGitHubRepoCreation", () => {
     const err = result._unsafeUnwrapErr();
     expect(err).toBeInstanceOf(Error);
     expect(err.cause).toBe(cause);
+  });
+});
+
+describe("parseInitCommandOptions", () => {
+  it("returns the provided init flags", () => {
+    expect(
+      parseInitCommandOptions({
+        description: "My DX workspace",
+        name: "my-dx-workspace",
+        owner: "pagopa",
+        publish: true,
+      }),
+    ).toEqual({
+      description: "My DX workspace",
+      name: "my-dx-workspace",
+      owner: "pagopa",
+      publish: true,
+    });
+  });
+
+  it("formats blank string validation errors with zod context", () => {
+    expect(() =>
+      parseInitCommandOptions({
+        name: "   ",
+      }),
+    ).toThrow(/name/);
+  });
+});
+
+describe("getMonorepoInitialAnswers", () => {
+  it("maps init CLI options to the monorepo payload keys", () => {
+    expect(
+      getMonorepoInitialAnswers({
+        description: "My DX workspace",
+        name: "my-dx-workspace",
+        owner: "pagopa",
+        publish: true,
+      }),
+    ).toEqual({
+      publishToGitHub: true,
+      repoDescription: "My DX workspace",
+      repoName: "my-dx-workspace",
+      repoOwner: "pagopa",
+    });
+  });
+});
+
+describe("makeInitCommand", () => {
+  const payload = makePayload();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(inquirer.prompt).mockResolvedValue({ confirm: false });
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectMonorepoPayload.mockResolvedValue({ generator: {}, payload });
+    mocks.runMonorepoActions.mockResolvedValue(payload);
+    vi.spyOn(process, "chdir").mockImplementation(() => undefined);
+    process.exitCode = undefined;
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    process.exitCode = undefined;
+  });
+
+  it("registers flags for every init input", () => {
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const command = makeInitCommand(requireGitHubAuth);
+
+    const flags = command.options.flatMap((option) => [
+      option.flags,
+      option.long,
+    ]);
+
+    expect(flags).toEqual(
+      expect.arrayContaining([
+        "--name <name>",
+        "--owner <owner>",
+        "--description <description>",
+        "--publish",
+      ]),
+    );
+  });
+
+  it("uses the command presenter to report json progress and results", async () => {
+    await runInitCommand("json");
+
+    expect(mocks.createCommandPresenter).toHaveBeenCalledWith("json");
+    expect(mocks.presenter.trackStep).toHaveBeenCalledWith(
+      "Checking Terraform installation...",
+      expect.any(Function),
+    );
+    expect(mocks.presenter.trackStep).toHaveBeenCalledWith(
+      "Checking Corepack installation...",
+      expect.any(Function),
+    );
+    expect(mocks.presenter.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        gitHubRepoCreationSkipped: true,
+        payload,
+      }),
+    );
+  });
+
+  it("uses the command presenter to report json errors", async () => {
+    const error = new Error("generator failed");
+    mocks.runMonorepoActions.mockRejectedValue(error);
+
+    await runInitCommand("json");
+
+    expect(mocks.presenter.reportError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: "Failed to run the generator",
+      }),
+    );
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("uses Commander error handling for text errors", async () => {
+    const error = new Error("generator failed");
+    mocks.runMonorepoActions.mockRejectedValue(error);
+
+    await expect(runInitCommand("text")).rejects.toMatchObject({
+      code: "commander.error",
+      exitCode: 1,
+    });
+    expect(mocks.presenter.reportError).not.toHaveBeenCalled();
   });
 });

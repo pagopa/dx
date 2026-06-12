@@ -99,6 +99,15 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
+  it("does not add pnpm 11 build approval settings to the generated pnpm workspace", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["pnpm-workspace.yaml"],
+    );
+
+    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
+  });
+
   it("applies the repository-specific gitignore customization", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),

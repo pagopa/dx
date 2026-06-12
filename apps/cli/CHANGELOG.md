@@ -1,3 +1,19 @@
+## 0.23.2 (2026-06-10)
+
+### 🩹 Fixes
+
+- Fix init prompts not showing in text output mode ([#1799](https://github.com/pagopa/dx/pull/1799), [#1776](https://github.com/pagopa/dx/issues/1776))
+
+  The interactive prompts were wrapped in a spinner that occupied the
+  terminal, hiding them from the user. Prompt collection now runs outside
+  the spinner so it stays interactive, while file scaffolding keeps its
+  progress indicator.
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.23.1 (2026-06-09)
 
 ### 🩹 Fixes

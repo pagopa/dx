@@ -9,5 +9,5 @@
     "module": "ESNext",
     "types": ["node"]
   },
-  "exclude": ["tsup.config.ts"]
+  "include": ["./src/**/*.ts"]
 }

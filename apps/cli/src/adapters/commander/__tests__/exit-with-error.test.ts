@@ -1,7 +1,8 @@
 import { Command } from "commander";
 import { describe, expect, it } from "vitest";
 
-import { exitWithError, isVerbose } from "../index.js";
+import { exitWithError } from "../command-errors.js";
+import { isVerbose } from "../global-options.js";
 
 /**
  * Builds a parent command that exposes the global `--verbose` flag so that
