@@ -6,7 +6,7 @@
       "type": "node",
       "request": "launch",
       "program": "${workspaceFolder}/apps/cli/bin/index.js",
-      "args": ["init"],
+      "args": ["--version"],
       "cwd": "${workspaceFolder}",
       "sourceMaps": true,
       "outFiles": ["${workspaceFolder}/apps/cli/dist/**/*.js"],
