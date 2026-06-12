@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "dx CLI",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/apps/cli/bin/index.js",
+      "args": ["--version"],
+      "cwd": "${workspaceFolder}",
+      "sourceMaps": true,
+      "outFiles": ["${workspaceFolder}/apps/cli/dist/**/*.js"],
+      "preLaunchTask": "build: dx-cli",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": false,
+      "skipFiles": ["<node_internals>/**"],
+      "env": {}
+    }
+  ]
+}
