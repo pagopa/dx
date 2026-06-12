@@ -1,36 +1,17 @@
 import { Command } from "commander";
 import { ResultAsync } from "neverthrow";
 
-import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
 import type { ListCodemods } from "../../../use-cases/list-codemods.js";
-import type { GlobalOptions } from "../index.js";
 
-import { exitWithError } from "../command-errors.js";
+import { reportCommandError, toError } from "../command-errors.js";
+import { GlobalOptions } from "../global-options.js";
 import { createCommandPresenter } from "../presenters/index.js";
 
 export type CodemodCommandDependencies = {
   applyCodemodById: ApplyCodemodById;
   listCodemods: ListCodemods;
 };
-
-const reportCommandError =
-  (
-    command: Command,
-    presenter: CommandPresenter,
-    outputMode: "json" | "text",
-  ) =>
-  (error: Error) => {
-    if (outputMode === "json") {
-      presenter.reportError(error);
-      process.exitCode = 1;
-    } else {
-      exitWithError(command)(error);
-    }
-  };
-
-const toError = (error: unknown): Error =>
-  error instanceof Error ? error : new Error(String(error));
 
 export const makeCodemodCommand = ({
   applyCodemodById,
