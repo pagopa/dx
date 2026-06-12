@@ -10,7 +10,7 @@
             })));
           }
         }
-
+        
         if (${P}.value === undefined) {
           if (${Z} in input) {
             newResult[${Z}] = undefined;
@@ -18,7 +18,7 @@
         } else {
           newResult[${Z}] = ${P}.value;
         }
-
+        
       `):ku?$.write(`
         if (${P}.issues.length) {
           payload.issues = payload.issues.concat(${P}.issues.map(iss => ({
@@ -26,7 +26,7 @@
             path: iss.path ? [${Z}, ...iss.path] : [${Z}]
           })));
         }
-
+        
         if (${P}.value === undefined) {
           if (${Z} in input) {
             newResult[${Z}] = undefined;
@@ -34,7 +34,7 @@
         } else {
           newResult[${Z}] = ${P}.value;
         }
-
+        
       `):$.write(`
         const ${P}_present = ${Z} in input;
         if (${P}.issues.length) {
