@@ -13,6 +13,8 @@ import { getLogger } from "@logtape/logtape";
 import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { lookup } from "node:dns/promises";
+import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod/v4";
 
 import {
@@ -69,6 +71,12 @@ const bootstrapIdentityRoleDefinitionIds = [
   builtInRoleDefinitionIds.contributor,
   builtInRoleDefinitionIds.storageBlobDataContributor,
 ] as const;
+
+const keyVaultDnsErrorSchema = z.object({
+  code: z.enum(["EAI_AGAIN", "ENOTFOUND"]),
+});
+const keyVaultDnsReadyMaxAttempts = 30;
+const keyVaultDnsReadyRetryDelayMs = 10_000;
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
@@ -823,6 +831,11 @@ export class AzureCloudAccountService implements CloudAccountService {
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);
 
+    await this.#waitForKeyVaultDnsResolution({
+      cloudAccountId,
+      keyVaultName,
+    });
+
     const secretClient = new SecretClient(
       `https://${keyVaultName}.vault.azure.net/`,
       this.#credential,
@@ -844,5 +857,39 @@ export class AzureCloudAccountService implements CloudAccountService {
       "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
       { keyVaultName, subscriptionId: cloudAccountId },
     );
+  }
+
+  async #waitForKeyVaultDnsResolution({
+    cloudAccountId,
+    keyVaultName,
+  }: {
+    cloudAccountId: string;
+    keyVaultName: string;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+    const hostname = `${keyVaultName}.vault.azure.net`;
+
+    for (let attempt = 1; attempt <= keyVaultDnsReadyMaxAttempts; attempt++) {
+      try {
+        await lookup(hostname);
+        return;
+      } catch (cause) {
+        if (
+          !keyVaultDnsErrorSchema.safeParse(cause).success ||
+          attempt === keyVaultDnsReadyMaxAttempts
+        ) {
+          throw new Error(
+            `Key vault endpoint '${hostname}' is not resolvable`,
+            { cause },
+          );
+        }
+
+        logger.debug(
+          "Waiting for key vault endpoint {hostname} to become resolvable in subscription {subscriptionId}",
+          { hostname, subscriptionId: cloudAccountId },
+        );
+        await sleep(keyVaultDnsReadyRetryDelayMs);
+      }
+    }
   }
 }

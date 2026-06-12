@@ -43,6 +43,12 @@ const {
   }),
   mockSetSecret: vi.fn().mockResolvedValue({}),
 }));
+const { mockLookup } = vi.hoisted(() => ({
+  mockLookup: vi.fn().mockResolvedValue([{ address: "127.0.0.1", family: 4 }]),
+}));
+const { mockSleep } = vi.hoisted(() => ({
+  mockSleep: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock("@azure/arm-authorization", () => ({
   AuthorizationManagementClient: class {
@@ -111,6 +117,12 @@ vi.mock("@azure/keyvault-secrets", () => ({
     setSecret = mockSetSecret;
   },
 }));
+vi.mock("node:dns/promises", () => ({
+  lookup: mockLookup,
+}));
+vi.mock("node:timers/promises", () => ({
+  setTimeout: mockSleep,
+}));
 
 const test = baseTest.extend<{ cloudAccountService: AzureCloudAccountService }>(
   {
@@ -147,6 +159,9 @@ beforeEach(() => {
   mockRoleAssignmentsCreate.mockClear();
   mockRoleAssignmentsListForScope.mockReset();
   mockSetSecret.mockClear();
+  mockLookup.mockReset();
+  mockLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
+  mockSleep.mockClear();
 });
 
 describe("getTerraformBackend", () => {
@@ -307,6 +322,7 @@ describe("isInitialized", () => {
   });
 });
 
+// eslint-disable-next-line max-lines-per-function
 describe("initialize", () => {
   test("assigns bootstrap roles and creates bootstrap environment secrets", async ({
     cloudAccountService,
@@ -487,5 +503,55 @@ describe("initialize", () => {
         subject: "repo:pagopa/dx-playground:environment:bootstrapper-dev-cd",
       },
     );
+  });
+
+  test("waits for the key vault endpoint to become resolvable", async ({
+    cloudAccountService,
+  }) => {
+    mockLookup
+      .mockRejectedValueOnce(
+        Object.assign(new Error("not found"), {
+          code: "ENOTFOUND",
+        }),
+      )
+      .mockResolvedValueOnce([{ address: "127.0.0.1", family: 4 }]);
+
+    await cloudAccountService.initialize(
+      {
+        csp: "azure",
+        defaultLocation: "italynorth",
+        displayName: "Test subscription",
+        id: "sub-1",
+      },
+      {
+        name: "dev",
+        prefix: "dx",
+      },
+      {
+        clientId: "app-client-id",
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key\n",
+      },
+      {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      {
+        createBranch: vi.fn(),
+        createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+        createPullRequest: vi.fn(),
+        getFileContent: vi.fn(),
+        getRepository: vi.fn(),
+        updateFile: vi.fn(),
+      },
+    );
+
+    expect(mockLookup).toHaveBeenCalledWith(
+      "dx-d-itn-common-kv-01.vault.azure.net",
+    );
+    expect(mockLookup).toHaveBeenCalledTimes(2);
+    expect(mockSleep).toHaveBeenCalledWith(10_000);
+    expect(mockSetSecret).toHaveBeenCalledWith();
   });
 });
