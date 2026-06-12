@@ -27,13 +27,15 @@ export const exitWithError =
   };
 
 /**
- * Casts an unknown thrown value to an Error instance.
+ * Casts an unknown thrown value to an Error instance with a descriptive
+ * message, preserving the original value as the cause.
  *
- * Use as the error-mapper argument for `ResultAsync.fromPromise` when no
- * specific wrapping message is needed.
+ * Use as the error-mapper argument for `ResultAsync.fromPromise`.
  */
-export const toError = (error: unknown): Error =>
-  error instanceof Error ? error : new Error(String(error));
+export const asError =
+  (message: string) =>
+  (cause: unknown): Error =>
+    new Error(message, { cause });
 
 /**
  * Builds an error handler for command actions that selects the appropriate

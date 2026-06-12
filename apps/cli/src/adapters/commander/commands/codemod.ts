@@ -4,7 +4,7 @@ import { ResultAsync } from "neverthrow";
 import type { ApplyCodemodById } from "../../../use-cases/apply-codemod.js";
 import type { ListCodemods } from "../../../use-cases/list-codemods.js";
 
-import { reportCommandError, toError } from "../command-errors.js";
+import { asError, reportCommandError } from "../command-errors.js";
 import { GlobalOptions } from "../global-options.js";
 import { createCommandPresenter } from "../presenters/index.js";
 
@@ -28,7 +28,7 @@ export const makeCodemodCommand = ({
 
           await listCodemods()
             .andTee((codemods) => presenter.reportResult(codemods))
-            .orTee(reportCommandError(this, presenter, output));
+            .orTee(reportCommandError(this, presenter));
         }),
     )
     .addCommand(
@@ -48,10 +48,10 @@ export const makeCodemodCommand = ({
                 },
               ),
             ),
-            toError,
+            asError(`Failed to apply codemod ${id}`),
           )
             .map(() => ({ id }))
             .andTee((result) => presenter.reportResult(result))
-            .orTee(reportCommandError(this, presenter, output));
+            .orTee(reportCommandError(this, presenter));
         }),
     );

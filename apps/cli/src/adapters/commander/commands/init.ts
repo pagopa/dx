@@ -24,7 +24,7 @@ import {
   getPlopInstance,
   runMonorepoActions,
 } from "../../plop/index.js";
-import { reportCommandError } from "../command-errors.js";
+import { asError, reportCommandError } from "../command-errors.js";
 import { createCommandPresenter } from "../presenters/index.js";
 
 type GitHubRepoCreationSkippedResult = {
@@ -78,11 +78,6 @@ const withSpinner = <T>(
     }),
     (cause) => new Error(failText, { cause }),
   );
-
-const asError =
-  (message: string) =>
-  (cause: unknown): Error =>
-    new Error(message, { cause });
 
 const trackStep = <T, E>(
   presenter: CommandPresenter,
@@ -522,6 +517,6 @@ export const makeInitCommand = (
         )
         .match(
           reportSummary(presenter, output),
-          reportCommandError(this, presenter, output),
+          reportCommandError(this, presenter),
         );
     });
