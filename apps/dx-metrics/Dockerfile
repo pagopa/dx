@@ -8,7 +8,8 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
 COPY apps/dx-metrics/package.json ./apps/dx-metrics/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 
-RUN corepack enable pnpm && pnpm install --frozen-lockfile --filter dx-metrics...
+RUN corepack enable && corepack install && \
+    pnpm install --frozen-lockfile --filter dx-metrics...
 
 COPY apps/dx-metrics ./apps/dx-metrics
 COPY packages/dx-metrics-core ./packages/dx-metrics-core
@@ -16,7 +17,7 @@ COPY packages/dx-metrics-core ./packages/dx-metrics-core
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm nx build dx-metrics && \
+RUN pnpm --filter dx-metrics build && \
     cp -R /app/apps/dx-metrics/.next/standalone/. /app/
 
 RUN addgroup --system --gid 1001 nodejs

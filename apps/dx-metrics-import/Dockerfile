@@ -8,14 +8,15 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
 COPY apps/dx-metrics-import/package.json ./apps/dx-metrics-import/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 
-RUN corepack enable pnpm && pnpm install --frozen-lockfile --filter dx-metrics-import...
+RUN corepack enable && corepack install && \
+    pnpm install --frozen-lockfile --filter dx-metrics-import...
 
 COPY apps/dx-metrics-import ./apps/dx-metrics-import
 COPY packages/dx-metrics-core ./packages/dx-metrics-core
 
 ENV NODE_ENV=production
 
-RUN pnpm nx build dx-metrics-import
+RUN pnpm --filter dx-metrics-import build
 
 WORKDIR /app/apps/dx-metrics-import
 
