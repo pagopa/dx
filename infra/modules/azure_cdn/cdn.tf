@@ -90,6 +90,32 @@ resource "azurerm_cdn_frontdoor_firewall_policy" "this" {
   sku_name            = "Standard_AzureFrontDoor"
   enabled             = true
   mode                = "Prevention"
+  # Geo rate limit rule: throttle traffic originating outside the EU/EEA to
+  # mitigate DDoS-driven cost spikes (Technology guideline "Azure - Protezione
+  # DDoS e Geofiltering"). Requests from non-EU/EEA client IPs are blocked once
+  # they exceed waf_rate_limit_threshold within a 5-minute window.
+  custom_rule {
+    name     = "RateLimitNonEU"
+    enabled  = true
+    priority = 100
+    type     = "RateLimitRule"
+    action   = "Block"
+
+    rate_limit_duration_in_minutes = 5
+    rate_limit_threshold           = var.waf_rate_limit_threshold
+
+    # Azure WAF allows at most 10 match values per match condition, so the
+    # EU/EEA country list is spread across multiple GeoMatch conditions.
+    dynamic "match_condition" {
+      for_each = local.waf_eu_geo_match_value_chunks
+      content {
+        match_variable     = "SocketAddr"
+        operator           = "GeoMatch"
+        negation_condition = true
+        match_values       = match_condition.value
+      }
+    }
+  }
 
   tags = local.tags
 }

@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.19.1",
+  "version": "0.19.2",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -12,7 +12,6 @@
     "serve": "docusaurus serve",
     "write-translations": "docusaurus write-translations",
     "write-heading-ids": "docusaurus write-heading-ids",
-    "typecheck": "tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

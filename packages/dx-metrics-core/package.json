@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-metrics-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "private": true,
   "description": "Shared configuration and database contracts for DX Metrics apps.",
@@ -26,8 +26,7 @@
     "build": "tsup",
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",

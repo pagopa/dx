@@ -233,6 +233,16 @@ run "apply_cdn_with_waf" {
     condition     = length(azurerm_cdn_frontdoor_security_policy.this) == 1
     error_message = "Security policy must be created"
   }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).name == "RateLimitNonEU"
+    error_message = "WAF policy must include the geo rate limit custom rule"
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).type == "RateLimitRule"
+    error_message = "Geo rate limit rule must be of type RateLimitRule"
+  }
 }
 
 run "apply_cdn_with_multiple_origins" {

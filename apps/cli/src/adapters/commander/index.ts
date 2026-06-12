@@ -49,7 +49,7 @@ export const makeCli = (
     .addOption(
       new Option(
         "--output <mode>",
-        "Output mode: 'text' (human-readable, default) or 'json' (structured JSON envelope on stdout, NDJSON progress events on stderr)",
+        "Output mode: text (default, human-readable) or json (structured events to stdout for agents)",
       )
         .choices(["text", "json"])
         .default("text"),

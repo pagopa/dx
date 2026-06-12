@@ -1,3 +1,16 @@
+## 0.2.8 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Rename tsconfig.app.json to tsconfig.lib.json in order to let NX infer the right build tasks ([#1822](https://github.com/pagopa/dx/pull/1822))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.2.7 (2026-05-05)
 
 ### 🧱 Updated Dependencies

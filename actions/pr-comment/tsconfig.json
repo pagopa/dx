@@ -8,5 +8,6 @@
     "moduleResolution": "bundler",
     "module": "ESNext"
   },
-  "exclude": ["tsup.config.ts"]
+  "include": ["./src/**/*.ts"],
+  "exclude": ["**/*.test.ts"]
 }

@@ -311,3 +311,43 @@ run "valid_existing_profile_id" {
     error_message = "Data source must be created for valid existing profile ID"
   }
 }
+
+run "invalid_waf_rate_limit_threshold_zero" {
+  command = plan
+
+  variables {
+    waf_enabled              = true
+    waf_rate_limit_threshold = 0
+  }
+
+  expect_failures = [
+    var.waf_rate_limit_threshold,
+  ]
+}
+
+run "invalid_waf_rate_limit_threshold_negative" {
+  command = plan
+
+  variables {
+    waf_enabled              = true
+    waf_rate_limit_threshold = -100
+  }
+
+  expect_failures = [
+    var.waf_rate_limit_threshold,
+  ]
+}
+
+run "valid_waf_rate_limit_threshold" {
+  command = plan
+
+  variables {
+    waf_enabled              = true
+    waf_rate_limit_threshold = 1
+  }
+
+  assert {
+    condition     = one(azurerm_cdn_frontdoor_firewall_policy.this[0].custom_rule).rate_limit_threshold == 1
+    error_message = "WAF policy must accept a positive waf_rate_limit_threshold value"
+  }
+}

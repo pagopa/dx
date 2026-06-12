@@ -1,3 +1,36 @@
+## 0.23.2 (2026-06-10)
+
+### 🩹 Fixes
+
+- Fix init prompts not showing in text output mode ([#1799](https://github.com/pagopa/dx/pull/1799), [#1776](https://github.com/pagopa/dx/issues/1776))
+
+  The interactive prompts were wrapped in a spinner that occupied the
+  terminal, hiding them from the user. Prompt collection now runs outside
+  the spinner so it stays interactive, while file scaffolding keeps its
+  progress indicator.
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.23.1 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+- Rename tsconfig.app.json to tsconfig.lib.json in order to let NX infer the right build tasks ([#1822](https://github.com/pagopa/dx/pull/1822))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.3.1
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.23.0 (2026-06-04)
 
 ### 🚀 Features

@@ -5,7 +5,7 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/opex-dashboard"
   },
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "Generate operational dashboards from OpenAPI specifications",
   "main": "dist/index.js",
   "bin": {
@@ -25,8 +25,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build": "tsup && tsx scripts/generate-json-schema.ts",
-    "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit"
+    "dev": "tsup --watch"
   },
   "keywords": [
     "dashboard",
