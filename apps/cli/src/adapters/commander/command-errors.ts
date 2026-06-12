@@ -7,7 +7,6 @@ import type { CommandPresenter } from "../../domain/command-presenter.js";
 
 import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
 import { isVerbose } from "./global-options.js";
-import { JsonCommandPresenter } from "./presenters/json-command-presenter.js";
 
 /**
  * Builds a failure handler that ends the command via Commander's
@@ -47,9 +46,13 @@ export const asError =
  *   human-readable message and exits immediately.
  */
 export const reportCommandError =
-  (command: Command, presenter: CommandPresenter) =>
+  (
+    command: Command,
+    presenter: CommandPresenter,
+    outputMode: "json" | "text",
+  ) =>
   (error: Error): void => {
-    if (presenter instanceof JsonCommandPresenter) {
+    if (outputMode === "json") {
       presenter.reportError(error);
       process.exitCode = 1;
     } else {

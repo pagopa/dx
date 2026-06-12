@@ -28,7 +28,7 @@ export const makeCodemodCommand = ({
 
           await listCodemods()
             .andTee((codemods) => presenter.reportResult(codemods))
-            .orTee(reportCommandError(this, presenter));
+            .orTee(reportCommandError(this, presenter, output));
         }),
     )
     .addCommand(
@@ -52,6 +52,6 @@ export const makeCodemodCommand = ({
           )
             .map(() => ({ id }))
             .andTee((result) => presenter.reportResult(result))
-            .orTee(reportCommandError(this, presenter));
+            .orTee(reportCommandError(this, presenter, output));
         }),
     );

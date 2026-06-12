@@ -517,6 +517,6 @@ export const makeInitCommand = (
         )
         .match(
           reportSummary(presenter, output),
-          reportCommandError(this, presenter),
+          reportCommandError(this, presenter, output),
         );
     });
