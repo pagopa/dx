@@ -1,9 +1,9 @@
 import { Command } from "commander";
 
 import type { Dependencies } from "../../../domain/dependencies.js";
-import type { GlobalOptions } from "../index.js";
 
 import { getInfo } from "../../../domain/info.js";
+import { GlobalOptions } from "../global-options.js";
 import { createCommandPresenter } from "../presenters/index.js";
 
 export const makeInfoCommand = (dependencies: Dependencies): Command =>
