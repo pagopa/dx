@@ -552,6 +552,6 @@ describe("initialize", () => {
     );
     expect(mockLookup).toHaveBeenCalledTimes(2);
     expect(mockSleep).toHaveBeenCalledWith(10_000);
-    expect(mockSetSecret).toHaveBeenCalledWith();
+    expect(mockSetSecret).toHaveBeenCalledTimes(3);
   });
 });
