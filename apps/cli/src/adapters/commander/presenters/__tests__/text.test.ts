@@ -57,6 +57,16 @@ describe("TextCommandPresenter", () => {
         logger.reportResult({ repository: { name: "my-repo" } }),
       ).not.toThrow();
     });
+
+    it("calls console.table for array data", () => {
+      const table = vi
+        .spyOn(console, "table")
+        .mockImplementation(() => undefined);
+      const logger = new TextCommandPresenter();
+      const data = [{ description: "Use pnpm", id: "use-pnpm" }];
+      logger.reportResult(data);
+      expect(table).toHaveBeenCalledWith(data);
+    });
   });
 
   describe("reportError", () => {

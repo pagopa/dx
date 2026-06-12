@@ -27,6 +27,9 @@ export const makeCodemodCommand = ({
           const presenter = createCommandPresenter(output);
 
           await listCodemods()
+            .map((codemods) =>
+              codemods.map(({ description, id }) => ({ description, id })),
+            )
             .andTee((codemods) => presenter.reportResult(codemods))
             .orTee(reportCommandError(this, presenter, output));
         }),

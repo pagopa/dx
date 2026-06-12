@@ -18,7 +18,11 @@ export class TextCommandPresenter implements CommandPresenter {
   }
 
   reportResult<T>(data: T): void {
-    console.log(data);
+    if (Array.isArray(data)) {
+      console.table(data);
+    } else {
+      console.log(data);
+    }
   }
 
   async trackStep<T>(name: string, task: () => Promise<T>): Promise<T> {
