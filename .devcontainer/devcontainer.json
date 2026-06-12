@@ -1,47 +1,13 @@
 {
   "image": "mcr.microsoft.com/devcontainers/base:debian@sha256:aa263c6fdd7c1bc990eead3922224fe8afbf5d85eaf3b6b9260786ab94d74933",
   "features": {
-    "ghcr.io/devcontainers-extra/features/pre-commit:2": {},
-    "ghcr.io/pagopa/devcontainer-features/acli:1": {},
-    "ghcr.io/devcontainers/features/azure-cli:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {
-      "extensions": "seachicken/gh-poi"
-    },
-    "ghcr.io/devcontainers/features/terraform:1.4.3": {
-      "version": "latest",
-      "tflint": "latest",
-      "installTFsec": true,
-      "installTerraformDocs": true
-    },
-    "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
-    "ghcr.io/devcontainers/features/node:2": {
-      "version": "24",
-      "installYarnUsingApt": false,
-      "pnpmVersion": "none",
-      "nvmInstallPath": "/opt/nvm"
-    },
-    "ghcr.io/devcontainers/features/go:1.3.4": {
-      "golangciLintVersion": "2.11.4"
-    },
+    "ghcr.io/devcontainers-extra/features/mise:1": {},
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1.10.0": {
       "moby": false
     },
-    "ghcr.io/devcontainers-extra/features/act:1": {},
-    "ghcr.io/pagopa/devcontainer-features/shellcheck:1": {},
-    "ghcr.io/devcontainers-extra/features/nx-npm:1": {},
-    "ghcr.io/devcontainers/features/aws-cli:1": {},
-    "ghcr.io/devcontainers/features/copilot-cli:1.1.3": {},
     "ghcr.io/devcontainers-extra/features/apt-get-packages:1": {
-      "packages": "ripgrep,xdg-utils"
+      "packages": "xdg-utils"
     }
-  },
-  "postStartCommand": {
-    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
-  },
-  "containerEnv": {
-    "COREPACK_ENABLE_DOWNLOAD_PROMPT": "0",
-    "NX_DAEMON": "true",
-    "EDITOR": "code --reuse-window --wait"
   },
   "customizations": {
     "vscode": {
@@ -58,6 +24,7 @@
         "unifiedjs.vscode-mdx",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
+        "hverlin.mise-vscode",
         "vitest.explorer",
         "redhat.vscode-yaml",
         "dbaeumer.vscode-eslint",

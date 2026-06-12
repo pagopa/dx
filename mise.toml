@@ -1,0 +1,37 @@
+[tools]
+acli = "latest"
+act = "latest"
+aws-cli = { version = "latest", symlink_bins = "true" }
+azure-cli = { version = "latest", uvx_args = "--prerelease=allow" }
+copilot = "latest"
+github-cli = "latest"
+go = "1.26.4"
+jq = "latest"
+node = "24.14.1"
+"npm:nx" = "22.7.5"
+pre-commit = "4.6.0"
+qdns = "latest"
+ripgrep = "latest"
+shellcheck = "0.11.0"
+terraform = "1.15.2"
+terraform-docs = "0.24.0"
+tflint = "0.63.1"
+tfsec = "1.28.14"
+trivy = "0.71.0"
+uv = "latest"
+
+[env]
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+NX_DAEMON=true
+EDITOR="code --reuse-window --wait"
+
+[tasks.setup-git]
+run = """
+#!/usr/bin/env bash
+gh extension install seachicken/gh-poi
+git config --global --add safe.directory "$PWD"
+"""
+
+[settings]
+minimum_release_age = "7d"
+minimum_release_age_excludes = ["copilot"]
