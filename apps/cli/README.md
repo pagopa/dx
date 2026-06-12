@@ -21,6 +21,7 @@ The DX CLI is a command-line tool designed to help developers manage and validat
 - **Repository Validation**: Verify repository setup against DevEx guidelines with the `doctor` command
 - **Code Migrations**: Apply automated migration scripts (codemods) to update code and configurations
 - **Project Initialization**: Bootstrap new monorepo projects with standardized structure
+- **Command Specification**: Export a machine-readable schema of the CLI command surface
 - **Cost Optimization**: Analyze Azure subscriptions to identify unused or underutilized resources
 - **Project Information**: Display comprehensive information about your project setup and tools
 - **Developer Experience Optimization**: Ensure consistent development practices across projects
@@ -112,30 +113,31 @@ This command helps you:
 
 #### `init`
 
-Bootstrap a new monorepo project with standardized structure and remote repository provisioning.
+Bootstrap a new monorepo project with standardized structure and optional remote repository provisioning.
 
 ```bash
-dx init project
+dx init
 ```
 
 This command will:
 
-- Check that required tools (e.g., Terraform CLI) are installed
-- Interactively prompt for project metadata (cloud provider, region, environments, cost center, etc.)
+- Check that required tools (Terraform CLI and Corepack) are installed
+- Interactively prompt for repository name, GitHub organization, and description
 - **Check that the target GitHub repository does not already exist before proceeding**
 - Generate a monorepo structure following PagoPA DevEx guidelines
-- Create a remote GitHub repository using Terraform
-- Push the initial codebase to the newly created repository
+- Ask whether the scaffolded workspace should be published to GitHub immediately
+- If confirmed, create the remote GitHub repository using Terraform and push the initial codebase
 
 If the specified GitHub repository already exists, the command will fail early with a clear error message, preventing accidental overwrites.
 
 **Example usage:**
 
 ```bash
-$ dx init project
-? What is the repository name? my-monorepo
-? What is the GitHub repository owner? pagopa
-? What is the repository description? My new PagoPA monorepo
+$ dx init
+? Name my-monorepo
+? GitHub Organization pagopa
+? Description My new PagoPA monorepo
+? The project is created on my-monorepo. Would you like to publish it to GitHub at pagopa/my-monorepo now? Yes
 ...
 
 ✔ Terraform CLI is installed!
@@ -145,13 +147,37 @@ $ dx init project
 
 Workspace created successfully!
 - Name: my-monorepo
-- Cloud Service Provider: azure
-- CSP location: italynorth
 - GitHub Repository: https://github.com/pagopa/my-monorepo
 ```
 
 > [!NOTE]
 > The command will fail early if required tools are missing.
+> If you choose not to publish immediately, the CLI prints the manual Terraform and git steps required to finish the setup later.
+
+#### `spec`
+
+Print the full CLI specification as JSON.
+
+```bash
+dx spec
+```
+
+This command is useful when you want to:
+
+- Discover commands, arguments, and options programmatically
+- Build automation or agentic workflows without scraping `--help` output
+- Inspect the current CLI surface in a stable JSON format
+
+**Example output:**
+
+```json
+{
+  "name": "dx",
+  "specVersion": "1",
+  "version": "0.23.2",
+  "commands": []
+}
+```
 
 #### `info`
 
