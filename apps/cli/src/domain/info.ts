@@ -1,4 +1,3 @@
-import { getLogger } from "@logtape/logtape";
 import { join } from "node:path";
 
 import { Dependencies } from "./dependencies.js";
@@ -99,8 +98,3 @@ export const getInfo =
       turbo: await detectTurboVersion(dependencies, repositoryRoot),
     };
   };
-
-export const printInfo = (result: InfoResult): void => {
-  const logger = getLogger("json");
-  logger.info(JSON.stringify(result));
-};
