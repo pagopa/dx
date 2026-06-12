@@ -36,13 +36,13 @@ const BootstrapIdentityId = z
 
 /**
  * Branded type for resource prefix (e.g., "dx", "io").
- * Validates that the prefix contains only lowercase letters to prevent injection.
+ * Validates that the prefix matches the environment naming rules.
  */
 const ResourcePrefix = z
   .string()
   .min(1)
-  .regex(/^[a-z]+$/, {
-    message: "Resource prefix may contain only lowercase letters",
+  .regex(/^[a-z0-9]+$/, {
+    message: "Resource prefix may contain only lowercase letters and numbers",
   })
   .brand<"ResourcePrefix">();
 
