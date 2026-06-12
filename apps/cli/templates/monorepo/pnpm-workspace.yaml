@@ -8,3 +8,6 @@ cleanupUnusedCatalogs: true
 
 onlyBuiltDependencies:
   - nx
+
+allowBuilds:
+  nx: true
