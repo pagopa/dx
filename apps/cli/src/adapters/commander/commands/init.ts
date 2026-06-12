@@ -378,12 +378,21 @@ const handleGeneratorError = (err: unknown) => {
   return new Error("Failed to run the generator", { cause: err });
 };
 
+/**
+ * Resolves whether the scaffolded repository should be published to GitHub.
+ *
+ * When the caller already knows the answer (e.g. the user passed `--publish`
+ * on the command line), that value is used as-is and no prompt is shown. When
+ * the preference is left undefined (flag omitted), the user is asked
+ * interactively.
+ */
 export const confirmGitHubRepoCreation = (
   payload: MonorepoPayload,
-  confirmed?: boolean,
+  publishPreference?: boolean,
 ): ResultAsync<boolean, Error> =>
-  typeof confirmed === "boolean"
-    ? okAsync(confirmed)
+  // A preference provided up-front (via `--publish`) skips the interactive prompt.
+  publishPreference !== undefined
+    ? okAsync(publishPreference)
     : ResultAsync.fromPromise(
         inquirer.prompt({
           default: DEFAULT_GITHUB_PUBLISH_CONFIRMATION,
