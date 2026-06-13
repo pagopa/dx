@@ -7,7 +7,7 @@ copilot = "latest"
 github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
 go = "1.26"
 jq = "1.8"
-node = "24.14"
+node = { version = "24.14", postinstall = "corepack enable" }
 "npm:nx" = "22.7"
 pre-commit = "4.6"
 qdns = "latest"
