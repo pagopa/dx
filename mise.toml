@@ -1,37 +1,29 @@
 [tools]
 acli = "latest"
 act = "latest"
-aws-cli = { version = "latest", symlink_bins = "true" }
-azure-cli = { version = "latest", uvx_args = "--prerelease=allow" }
+aws-cli = { version = "2.35", symlink_bins = "true" }
+azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
 copilot = "latest"
-github-cli = "latest"
-go = "1.26.4"
-jq = "latest"
-node = "24.14.1"
-"npm:nx" = "22.7.5"
-pre-commit = "4.6.0"
+github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
+go = "1.26"
+jq = "1.8"
+node = "24.14"
+"npm:nx" = "22.7"
+pre-commit = "4.6"
 qdns = "latest"
 ripgrep = "latest"
-shellcheck = "0.11.0"
-terraform = "1.15.2"
-terraform-docs = "0.24.0"
-tflint = "0.63.1"
-tfsec = "1.28.14"
-trivy = "0.71.0"
+shellcheck = "0.11"
+terraform = "1.15"
+terraform-docs = "0.24"
+tflint = "0.63"
+tfsec = "1.28"
+trivy = "0.71"
 uv = "latest"
 
 [env]
 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 NX_DAEMON=true
-EDITOR="code --reuse-window --wait"
-
-[tasks.setup-git]
-run = """
-#!/usr/bin/env bash
-gh extension install seachicken/gh-poi
-git config --global --add safe.directory "$PWD"
-"""
 
 [settings]
 minimum_release_age = "7d"
-minimum_release_age_excludes = ["copilot"]
+minimum_release_age_excludes = ["copilot", "github-cli"]

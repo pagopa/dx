@@ -9,6 +9,12 @@
       "packages": "xdg-utils"
     }
   },
+  "postStartCommand": {
+    "set-workspace-as-safe-dir": "git config --global --add safe.directory ${containerWorkspaceFolder}"
+  },
+  "containerEnv": {
+    "EDITOR": "code --reuse-window --wait"
+  },
   "customizations": {
     "vscode": {
       "extensions": [
@@ -24,7 +30,6 @@
         "unifiedjs.vscode-mdx",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
-        "hverlin.mise-vscode",
         "vitest.explorer",
         "redhat.vscode-yaml",
         "dbaeumer.vscode-eslint",
