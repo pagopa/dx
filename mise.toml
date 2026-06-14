@@ -6,6 +6,7 @@ azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
 copilot = "latest"
 github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
 go = "1.26"
+golangci-lint = "2.12.2"
 jq = "1.8"
 node = { version = "24.14", postinstall = "corepack enable" }
 "npm:nx" = "22.7"
