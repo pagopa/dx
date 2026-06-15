@@ -3,6 +3,8 @@
  */
 import type { Command } from "commander";
 
+import type { CommandPresenter } from "../../domain/command-presenter.js";
+
 import { formatErrorDetailed, toErrorMessage } from "./error-reporting.js";
 import { isVerbose } from "./global-options.js";
 
@@ -21,4 +23,39 @@ export const exitWithError =
       ? formatErrorDetailed(error)
       : toErrorMessage(error);
     command.error(message);
+  };
+
+/**
+ * Casts an unknown thrown value to an Error instance with a descriptive
+ * message, preserving the original value as the cause.
+ *
+ * Use as the error-mapper argument for `ResultAsync.fromPromise`.
+ */
+export const asError =
+  (message: string) =>
+  (cause: unknown): Error =>
+    new Error(message, { cause });
+
+/**
+ * Builds an error handler for command actions that selects the appropriate
+ * reporting strategy based on the requested output mode.
+ *
+ * - In JSON mode the error is written to the presenter and the process exit
+ *   code is set to 1 (so the caller can return cleanly without throwing).
+ * - In text mode Commander's `command.error()` is used, which prints a
+ *   human-readable message and exits immediately.
+ */
+export const reportCommandError =
+  (
+    command: Command,
+    presenter: CommandPresenter,
+    outputMode: "json" | "text",
+  ) =>
+  (error: Error): void => {
+    if (outputMode === "json") {
+      presenter.reportError(error);
+      process.exitCode = 1;
+    } else {
+      exitWithError(command)(error);
+    }
   };
