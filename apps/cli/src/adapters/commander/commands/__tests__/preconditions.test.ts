@@ -1,20 +1,28 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { CommandPresenter } from "../../../../domain/command-presenter.js";
+
 const mocks = vi.hoisted(() => ({
-  oraPromise: vi.fn((promise: Promise<unknown>) => promise),
   tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
     void args;
     return { stdout: '{"user":{"name":"test@example.com"}}' };
   }),
 }));
 
-vi.mock("ora", () => ({ oraPromise: mocks.oraPromise }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 
 import {
-  checkAddEnvironmentPreconditions,
-  checkInitPreconditions,
+  runAddEnvironmentPreconditions,
+  runInitPreconditions,
 } from "../init.js";
+
+// A pass-through presenter runs each tracked step without rendering output, so
+// the tests focus on the underlying CLI command sequence.
+const presenter: CommandPresenter = {
+  reportError: () => undefined,
+  reportResult: () => undefined,
+  trackStep: <T>(_name: string, task: () => Promise<T>): Promise<T> => task(),
+};
 
 const calledCommands = () =>
   mocks.tf$.mock.calls.map(([strings, ...values]) =>
@@ -29,15 +37,15 @@ describe("init preconditions", () => {
     vi.clearAllMocks();
   });
 
-  it("checkInitPreconditions does not require Azure login", async () => {
-    const result = await checkInitPreconditions();
+  it("runInitPreconditions does not require Azure login", async () => {
+    const result = await runInitPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
     expect(calledCommands()).toEqual(["terraform -version", "corepack -v"]);
   });
 
-  it("checkAddEnvironmentPreconditions requires Azure login", async () => {
-    const result = await checkAddEnvironmentPreconditions();
+  it("runAddEnvironmentPreconditions requires Azure login", async () => {
+    const result = await runAddEnvironmentPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
     expect(calledCommands()).toEqual([
