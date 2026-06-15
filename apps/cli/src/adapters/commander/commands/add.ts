@@ -1,19 +1,22 @@
 import { getLogger } from "@logtape/logtape";
 import chalk from "chalk";
 /**
- * Add command - Scaffold new components into existing workspaces
+ * Add command - Scaffold new components into existing workspaces.
  *
- * This module implements the `dx add` command which allows developers to scaffold
- * new components into their existing workspace following DevEx guidelines.
- *
- * Currently supported components:
- * - environment: Add a new deployment environment to the project
+ * This module implements the `dx add` command and keeps the CLI-specific flag
+ * parsing/validation close to the Commander adapter. It turns supported flags
+ * into prefilled answers for the plop generator so the command can run with a
+ * mix of non-interactive inputs and guided prompts.
  */
-import { Command } from "commander";
+import { Command, Option } from "commander";
 import { okAsync, ResultAsync } from "neverthrow";
+import { z } from "zod/v4";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
-import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
+import type {
+  InitialAnswers as DeploymentEnvironmentInitialAnswers,
+  Payload as EnvironmentPayload,
+} from "../../plop/generators/environment/index.js";
 import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
 
@@ -23,9 +26,17 @@ import {
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
-import { environmentShort } from "../../../domain/environment.js";
+import {
+  environmentSchema,
+  environmentShort,
+} from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
-import { isAzureLocation, locationShort } from "../../azure/locations.js";
+import {
+  type AzureLocation,
+  isAzureLocation,
+  locationShort,
+} from "../../azure/locations.js";
+import { workspaceSchema } from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
   getPlopInstance,
@@ -37,6 +48,176 @@ import {
   resolveOutputMode,
 } from "../presenters/index.js";
 import { runAddEnvironmentPreconditions } from "./init.js";
+
+const appendOptionValue = (
+  value: string,
+  previous: string[] = [],
+): string[] => [...previous, value];
+
+const locationOptionSchema = z
+  .string()
+  .trim()
+  .transform((value, ctx) => {
+    const [rawAccountId, ...rawLocationParts] = value.split("=");
+    const accountId = rawAccountId?.trim();
+    const location = rawLocationParts.join("=").trim();
+
+    if (!accountId || rawLocationParts.length === 0 || location.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Location must use the format <subscription-id=region>.",
+      });
+      return z.NEVER;
+    }
+
+    if (!isAzureLocation(location)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Unsupported Azure location "${location}".`,
+      });
+      return z.NEVER;
+    }
+
+    return { accountId, location };
+  });
+
+const addEnvironmentCommandOptionsSchema = z
+  .object({
+    account: z
+      .array(z.string().trim().min(1, "Cloud account id cannot be empty"))
+      .optional(),
+    businessUnit: z
+      .string()
+      .trim()
+      .min(1, "Business unit cannot be empty")
+      .optional(),
+    domain: workspaceSchema.shape.domain.optional(),
+    location: z.array(locationOptionSchema).optional(),
+    managementTeam: z
+      .string()
+      .trim()
+      .min(1, "Management team cannot be empty")
+      .optional(),
+    name: environmentSchema.shape.name.optional(),
+    prefix: environmentSchema.shape.prefix.optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.location && !value.account?.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Location mappings require at least one --account flag.",
+        path: ["location"],
+      });
+      return;
+    }
+
+    if (value.account && value.location) {
+      const selectedAccounts = new Set(value.account);
+      for (const mapping of value.location) {
+        if (!selectedAccounts.has(mapping.accountId)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Location mapping references unknown account "${mapping.accountId}".`,
+            path: ["location"],
+          });
+        }
+      }
+    }
+  });
+
+export type AddEnvironmentCommandOptions = z.infer<
+  typeof addEnvironmentCommandOptionsSchema
+>;
+
+export const parseAddEnvironmentCommandOptions = (
+  input: unknown,
+): AddEnvironmentCommandOptions => {
+  const result = addEnvironmentCommandOptionsSchema.safeParse(input);
+  if (!result.success) {
+    throw new Error(
+      `Invalid add environment command options:\n${z.prettifyError(result.error)}`,
+      {
+        cause: result.error,
+      },
+    );
+  }
+
+  return result.data;
+};
+
+export const getEnvironmentInitialAnswers = (
+  options: AddEnvironmentCommandOptions,
+): DeploymentEnvironmentInitialAnswers => {
+  const initialAnswers: DeploymentEnvironmentInitialAnswers = {};
+
+  if (
+    options.account?.length ||
+    options.location?.length ||
+    options.name ||
+    options.prefix
+  ) {
+    initialAnswers.env = {};
+  }
+
+  if (options.name) {
+    initialAnswers.env = {
+      ...initialAnswers.env,
+      name: options.name,
+    };
+  }
+
+  if (options.prefix) {
+    initialAnswers.env = {
+      ...initialAnswers.env,
+      prefix: options.prefix,
+    };
+  }
+
+  if (options.account?.length) {
+    initialAnswers.env = {
+      ...initialAnswers.env,
+      cloudAccountIds: Array.from(new Set(options.account)),
+    };
+  }
+
+  if (options.location?.length) {
+    initialAnswers.env = {
+      ...initialAnswers.env,
+      locations: Object.fromEntries(
+        options.location.map(({ accountId, location }) => [
+          accountId,
+          location as AzureLocation,
+        ]),
+      ),
+    };
+  }
+
+  if (options.businessUnit || options.managementTeam) {
+    initialAnswers.tags = {};
+  }
+
+  if (options.businessUnit) {
+    initialAnswers.tags = {
+      ...initialAnswers.tags,
+      BusinessUnit: options.businessUnit,
+    };
+  }
+
+  if (options.managementTeam) {
+    initialAnswers.tags = {
+      ...initialAnswers.tags,
+      ManagementTeam: options.managementTeam,
+    };
+  }
+
+  if (options.domain) {
+    initialAnswers.workspace = {
+      domain: options.domain,
+    };
+  }
+
+  return initialAnswers;
+};
 
 /**
  * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
@@ -159,6 +340,7 @@ const addEnvironmentAction = (
   authorizationService: AuthorizationService,
   gitHubService: GitHubService,
   presenter: CommandPresenter,
+  initialAnswers: DeploymentEnvironmentInitialAnswers = {},
 ): ResultAsync<AddResult, Error> =>
   runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
@@ -173,7 +355,12 @@ const addEnvironmentAction = (
       // The prompt phase must run outside trackStep: in text mode trackStep
       // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        collectDeploymentEnvironmentPayload(plop, gitHubService),
+        collectDeploymentEnvironmentPayload(
+          plop,
+          gitHubService,
+          undefined,
+          initialAnswers,
+        ),
         asError("Failed to run the deployment environment generator"),
       ),
     )
@@ -204,17 +391,61 @@ export const makeAddCommand = (
     .addCommand(
       new Command("environment")
         .description("Add a new deployment environment")
-        .action(async function () {
+        .addOption(
+          new Option("--name <name>", "Environment name").choices([
+            "dev",
+            "uat",
+            "prod",
+          ]),
+        )
+        .addOption(
+          new Option(
+            "--account <subscription-id>",
+            "Cloud account subscription id",
+          ).argParser(appendOptionValue),
+        )
+        .addOption(
+          new Option(
+            "--location <subscription-id=region>",
+            "Default Azure location for a selected account",
+          ).argParser(appendOptionValue),
+        )
+        .addOption(new Option("--prefix <prefix>", "Environment prefix"))
+        .addOption(new Option("--domain <domain>", "Workspace domain"))
+        .addOption(
+          new Option("--business-unit <business-unit>", "Business unit tag"),
+        )
+        .addOption(
+          new Option(
+            "--management-team <management-team>",
+            "Management team tag",
+          ),
+        )
+        .action(async function (options: unknown) {
           const { output } = this.optsWithGlobals<GlobalOptions>();
           const outputMode = resolveOutputMode(env, output);
           const presenter = createCommandPresenter(outputMode);
 
-          await requireGitHubAuth()
-            .andThen(({ authorizationService, gitHubService }) =>
-              addEnvironmentAction(
-                authorizationService,
-                gitHubService,
-                presenter,
+          await ResultAsync.fromPromise(
+            Promise.resolve().then(() =>
+              parseAddEnvironmentCommandOptions(options),
+            ),
+            (cause) =>
+              cause instanceof Error
+                ? cause
+                : new Error("Failed to parse add environment command options", {
+                    cause,
+                  }),
+          )
+            .andThen((addEnvironmentOptions) =>
+              requireGitHubAuth().andThen(
+                ({ authorizationService, gitHubService }) =>
+                  addEnvironmentAction(
+                    authorizationService,
+                    gitHubService,
+                    presenter,
+                    getEnvironmentInitialAnswers(addEnvironmentOptions),
+                  ),
               ),
             )
             .match(
