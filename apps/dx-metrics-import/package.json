@@ -30,7 +30,7 @@
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "esbuild": "^0.27.7",
+    "esbuild": "^0.28.0",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsx": "catalog:",
