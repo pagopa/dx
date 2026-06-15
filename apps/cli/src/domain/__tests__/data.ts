@@ -11,7 +11,6 @@ import {
   Script,
 } from "../package-json.js";
 import { RepositoryReader } from "../repository.js";
-import { ValidationReporter } from "../validation.js";
 
 export const makeMockPackageJson = (
   overrides: Partial<PackageJson> = {},
@@ -33,12 +32,10 @@ export const makeMockDependencies = (): {
   packageJsonReader: MockProxy<PackageJsonReader>;
   repositoryReader: MockProxy<RepositoryReader>;
   requireGitHubAuth: GitHubAuthFactory;
-  validationReporter: MockProxy<ValidationReporter>;
 } => ({
   packageJsonReader: mock<PackageJsonReader>(),
   repositoryReader: mock<RepositoryReader>(),
   requireGitHubAuth: mock<GitHubAuthFactory>(),
-  validationReporter: mock<ValidationReporter>(),
 });
 
 export const makeMockConfig = (): Config => ({

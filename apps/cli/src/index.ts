@@ -5,7 +5,6 @@ import { Octokit } from "octokit";
 
 import codemodRegistry from "./adapters/codemods/index.js";
 import { makeCli } from "./adapters/commander/index.js";
-import { makeValidationReporter } from "./adapters/logtape/validation-reporter.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
 import {
@@ -60,7 +59,6 @@ export const runCli = async (version: string) => {
 
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();
-  const validationReporter = makeValidationReporter();
 
   /**
    * Lazily creates GitHub-authenticated services on first call.
@@ -89,7 +87,6 @@ export const runCli = async (version: string) => {
     packageJsonReader,
     repositoryReader,
     requireGitHubAuth,
-    validationReporter,
   };
 
   const config = getConfig();

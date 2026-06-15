@@ -7,7 +7,7 @@ import { checkNxConfig, checkPreCommitConfig } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
 import { checkWorkspaces } from "./workspace.js";
 
-type DoctorResult = {
+export type DoctorResult = {
   checks: ValidationCheck[];
   hasErrors: boolean;
 };
@@ -53,8 +53,14 @@ export const runDoctor = async (dependencies: Dependencies, config: Config) => {
   ];
   return ResultAsync.combine(doctorChecks).match(
     toDoctorResult,
-    (): DoctorResult => ({
-      checks: [],
+    (error): DoctorResult => ({
+      checks: [
+        {
+          checkName: "Repository Checks",
+          errorMessage: `Could not complete the repository checks: ${error.message}`,
+          isValid: false,
+        },
+      ],
       hasErrors: true,
     }),
   );
@@ -81,8 +87,3 @@ const toDoctorResult = (
     hasErrors,
   };
 };
-
-export const printDoctorResult = (
-  { validationReporter }: Dependencies,
-  result: DoctorResult,
-) => result.checks.map(validationReporter.reportCheckResult);

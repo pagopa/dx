@@ -4,13 +4,11 @@ import { AuthorizationService } from "./authorization.js";
 import { GitHubService } from "./github.js";
 import { PackageJsonReader } from "./package-json.js";
 import { RepositoryReader } from "./repository.js";
-import { ValidationReporter } from "./validation.js";
 
 export type Dependencies = {
   packageJsonReader: PackageJsonReader;
   repositoryReader: RepositoryReader;
   requireGitHubAuth: GitHubAuthFactory;
-  validationReporter: ValidationReporter;
 };
 
 /** Services that require a GitHub PAT to be instantiated. */
