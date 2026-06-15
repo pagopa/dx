@@ -7,6 +7,10 @@
  */
 
 import {
+  AzureMonitorLogExporter,
+  AzureMonitorTraceExporter,
+} from "@azure/monitor-opentelemetry-exporter";
+import {
   context as otelContext,
   SpanKind,
   SpanStatusCode,
@@ -14,7 +18,14 @@ import {
 } from "@opentelemetry/api";
 import { logs } from "@opentelemetry/api-logs";
 import { resourceFromAttributes } from "@opentelemetry/resources";
-import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+import {
+  LoggerProvider,
+  SimpleLogRecordProcessor,
+} from "@opentelemetry/sdk-logs";
+import {
+  BasicTracerProvider,
+  SimpleSpanProcessor,
+} from "@opentelemetry/sdk-trace-base";
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
@@ -52,13 +63,13 @@ const postEnvSchema = z.object({
 const spanStartLineSchema = z.object({
   span: z.string(),
   startSpan: z.string(),
-  type: z.literal("spanStart").optional().default("spanStart"),
+  type: z.literal("spanStart"),
 });
 
 const spanEndLineSchema = z.object({
   endSpan: z.string(),
   span: z.string(),
-  type: z.literal("spanEnd").optional().default("spanEnd"),
+  type: z.literal("spanEnd"),
 });
 
 const eventLineSchema = z.object({
@@ -66,7 +77,7 @@ const eventLineSchema = z.object({
   body: z.string().optional().default(""),
   exception: z.boolean().default(false),
   name: z.string(),
-  type: z.literal("event").optional().default("event"),
+  type: z.literal("event"),
 });
 
 // Union of all telemetry line types
@@ -136,29 +147,40 @@ function isSpanStartLine(line: TelemetryLine): line is SpanStartLine {
 
 // Parse and validate a single NDJSON line
 function parseTelemetryLine(rawLine: string): null | TelemetryLine {
+  let parsed: unknown;
+
   try {
-    const parsed = JSON.parse(rawLine);
-
-    // Infer type based on fields for backward compatibility
-    if (parsed.span && parsed.startSpan) {
-      parsed.type = "spanStart";
-    } else if (parsed.span && parsed.endSpan) {
-      parsed.type = "spanEnd";
-    } else {
-      parsed.type = "event";
-    }
-
-    const result = telemetryLineSchema.safeParse(parsed);
-    if (!result.success) {
-      console.warn("Invalid telemetry line format");
-      debug("Validation error:", z.prettifyError(result.error));
-      return null;
-    }
-    return result.data;
+    parsed = JSON.parse(rawLine);
   } catch {
     console.warn("Skipping malformed JSON telemetry line");
     return null;
   }
+
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    console.warn("Invalid telemetry line format");
+    return null;
+  }
+
+  const telemetryLine = { ...parsed } as Record<string, unknown>;
+
+  // Infer type based on fields for backward compatibility with older producers.
+  if (!telemetryLine.type) {
+    if (telemetryLine.span && telemetryLine.startSpan) {
+      telemetryLine.type = "spanStart";
+    } else if (telemetryLine.span && telemetryLine.endSpan) {
+      telemetryLine.type = "spanEnd";
+    } else {
+      telemetryLine.type = "event";
+    }
+  }
+
+  const result = telemetryLineSchema.safeParse(telemetryLine);
+  if (!result.success) {
+    console.warn("Invalid telemetry line format");
+    debug("Validation error:", z.prettifyError(result.error));
+    return null;
+  }
+  return result.data;
 }
 
 async function post(): Promise<void> {
@@ -187,13 +209,27 @@ async function post(): Promise<void> {
     "service.namespace": "dx",
   });
 
-  initAzureMonitor([], {
-    azureMonitorExporterOptions: {
-      connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-    },
-    enableLiveMetrics: false,
+  const exporterOptions = {
+    connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+    disableOfflineStorage: true,
+  };
+  const tracerProvider = new BasicTracerProvider({
+    resource,
+    spanProcessors: [
+      new SimpleSpanProcessor(new AzureMonitorTraceExporter(exporterOptions)),
+    ],
+  });
+  const loggerProvider = new LoggerProvider({
+    processors: [
+      new SimpleLogRecordProcessor(
+        new AzureMonitorLogExporter(exporterOptions),
+      ),
+    ],
     resource,
   });
+
+  trace.setGlobalTracerProvider(tracerProvider);
+  logs.setGlobalLoggerProvider(loggerProvider);
 
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
@@ -236,19 +272,9 @@ async function post(): Promise<void> {
 
   span.end();
 
-  // Flush all telemetry to Application Insights before process exit
-  const FLUSH_TIMEOUT_MS = 10_000;
+  // Simple processors export on end/emit; shutdown waits for pending HTTP sends.
   try {
-    const tracerProvider = trace.getTracerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    const loggerProvider = logs.getLoggerProvider() as {
-      forceFlush?: (options?: { timeoutMillis?: number }) => Promise<void>;
-    };
-    await Promise.all([
-      tracerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-      loggerProvider.forceFlush?.({ timeoutMillis: FLUSH_TIMEOUT_MS }),
-    ]);
+    await Promise.all([tracerProvider.shutdown(), loggerProvider.shutdown()]);
   } catch (flushErr) {
     console.warn(
       "Telemetry flush error (some data may be lost):",

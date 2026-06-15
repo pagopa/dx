@@ -112,9 +112,9 @@ catalogs:
     '@opentelemetry/resources':
       specifier: ^2.7.1
       version: 2.7.1
-    '@opentelemetry/sdk-metrics':
-      specifier: ^2.7.1
-      version: 2.7.1
+    '@opentelemetry/sdk-logs':
+      specifier: ^0.218.0
+      version: 0.218.0
     '@opentelemetry/sdk-trace-base':
       specifier: ^2.7.1
       version: 2.7.1
@@ -341,6 +341,9 @@ importers:
 
   actions/setup-telemetry:
     dependencies:
+      '@azure/monitor-opentelemetry-exporter':
+        specifier: catalog:opentelemetry
+        version: 1.0.0-beta.42
       '@opentelemetry/api':
         specifier: catalog:opentelemetry
         version: 1.9.1
@@ -350,15 +353,12 @@ importers:
       '@opentelemetry/resources':
         specifier: catalog:opentelemetry
         version: 2.7.1(@opentelemetry/api@1.9.1)
-      '@opentelemetry/sdk-metrics':
+      '@opentelemetry/sdk-logs':
         specifier: catalog:opentelemetry
-        version: 2.7.1(@opentelemetry/api@1.9.1)
+        version: 0.218.0(@opentelemetry/api@1.9.1)
       '@opentelemetry/sdk-trace-base':
         specifier: catalog:opentelemetry
         version: 2.7.1(@opentelemetry/api@1.9.1)
-      '@pagopa/azure-tracing':
-        specifier: workspace:^
-        version: link:../../packages/azure-tracing
       zod:
         specifier: 'catalog:'
         version: 4.4.2
@@ -20916,7 +20916,7 @@ snapshots:
 
   babel-plugin-macros@3.1.0:
     dependencies:
-      '@babel/runtime': 7.29.2
+      '@babel/runtime': 7.29.7
       cosmiconfig: 7.1.0
       resolve: 1.22.12
 
