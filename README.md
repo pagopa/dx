@@ -32,6 +32,13 @@ DevEx initiative consists in a set of tools, patterns, and best practices aimed 
 
 To start using DX tooling, conventions and best practices, refer to the [getting started](https://dx.pagopa.it/docs/) on the DX website.
 
+This repository uses [mise](https://mise.jdx.dev/) to manage the local development tooling declared in [`mise.toml`](./mise.toml). Install `mise` by following the [official documentation](https://mise.jdx.dev/installing-mise.html), then bootstrap the tools from the repository root with:
+
+```bash
+mise install
+pnpm install
+```
+
 <div align="right">
 
 [&nwarr; Back to top](#readme-top)
