@@ -228,4 +228,78 @@ describe("prompts", () => {
       consoleLogSpy.mockRestore();
     }
   });
+
+  it("does not block initialization when the permission preflight is negative", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "UAT-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(false),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "uat",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      })
+      .mockResolvedValueOnce({
+        init: true,
+      })
+      .mockResolvedValueOnce({
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      });
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository: {
+          list: vi.fn().mockResolvedValue([cloudAccount]),
+        },
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+      })(inquirer);
+
+      expect(result.init?.runnerAppCredentials).toBeDefined();
+      expect(
+        cloudAccountService.hasUserPermissionToInitialize,
+      ).not.toHaveBeenCalled();
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
+  });
 });
