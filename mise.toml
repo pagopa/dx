@@ -1,0 +1,30 @@
+[tools]
+acli = "latest"
+act = "latest"
+aws-cli = { version = "2.35", symlink_bins = "true" }
+azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
+copilot = "latest"
+github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
+go = "1.26"
+golangci-lint = "2.12.2"
+jq = "1.8"
+node = { version = "24.14", postinstall = "corepack enable" }
+"npm:nx" = "22.7"
+pre-commit = "4.6"
+qdns = "latest"
+ripgrep = "latest"
+shellcheck = "0.11"
+terraform = "1.15"
+terraform-docs = "0.24"
+tflint = "0.63"
+tfsec = "1.28"
+trivy = "0.71"
+uv = "latest"
+
+[env]
+COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+NX_DAEMON=true
+
+[settings]
+minimum_release_age = "7d"
+minimum_release_age_excludes = ["copilot", "github-cli"]
