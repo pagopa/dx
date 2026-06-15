@@ -14,7 +14,6 @@ import type {
 } from "../../../../domain/dependencies.js";
 import type { PackageJsonReader } from "../../../../domain/package-json.js";
 import type { RepositoryReader } from "../../../../domain/repository.js";
-import type { ValidationReporter } from "../../../../domain/validation.js";
 
 import { packageJsonSchema } from "../../../../domain/package-json.js";
 import { makeInfoCommand } from "../info.js";
@@ -45,15 +44,10 @@ const makeDependencies = (): Dependencies => {
   const requireGitHubAuth: GitHubAuthFactory = () =>
     errAsync(new Error("not used by the info command"));
 
-  const validationReporter: ValidationReporter = {
-    reportCheckResult: vi.fn(),
-  };
-
   return {
     packageJsonReader,
     repositoryReader,
     requireGitHubAuth,
-    validationReporter,
   };
 };
 
