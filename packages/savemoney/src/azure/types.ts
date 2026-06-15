@@ -5,6 +5,7 @@
 import type * as armResources from "@azure/arm-resources";
 
 import type { Finding } from "../finding.js";
+import type { PricingConfig } from "../schema.js";
 import type {
   AnalysisResult,
   BaseConfig,
@@ -27,6 +28,12 @@ export type AzureConfig = BaseConfig & {
    * If omitted, all resources are analyzed.
    */
   filterTags?: Map<string, string>;
+  /**
+   * Pricing enrichment settings. Always populated by `loadConfig`
+   * (schema-level defaults are applied when the YAML omits the section).
+   * Programmatic callers may pass `undefined` to fall back to defaults.
+   */
+  pricing?: PricingConfig;
   /**
    * Which finding sources to include in the run.
    * - `"custom"`  → enables the per-resource analyzer plugins

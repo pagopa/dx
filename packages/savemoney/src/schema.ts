@@ -101,6 +101,30 @@ export const ThresholdsSchema = z
   })
   .strict();
 
+// ── pricing section ─────────────────────────────────────────────────────────
+
+export const PricingSectionSchema = z
+  .object({
+    /**
+     * Absolute path to the on-disk pricing cache directory. Defaults to a
+     * temp-dir subfolder when omitted.
+     */
+    cacheDir: z.string().optional(),
+    /**
+     * Cache TTL in hours. Defaults to 24 (prices are republished daily).
+     */
+    cacheTtlHours: z.number().positive().default(24),
+    /**
+     * ISO 4217 currency code returned by the Retail Prices API. Defaults to EUR.
+     */
+    currency: z.string().min(3).max(3).default("EUR"),
+    /**
+     * Whether to enrich findings with estimated monthly cost. Defaults to true.
+     */
+    enabled: z.boolean().default(true),
+  })
+  .strict();
+
 // ── top-level config schema ──────────────────────────────────────────────────
 
 const AzureSectionSchema = z
@@ -111,6 +135,13 @@ const AzureSectionSchema = z
      */
     concurrency: z.number().int().positive().optional(),
     preferredLocation: z.string().default("italynorth"),
+    /**
+     * Pricing enrichment settings. Defaults applied when the section is
+     * omitted (pricing enabled, EUR, 24h TTL, temp-dir cache).
+     */
+    pricing: PricingSectionSchema.optional().transform((v) =>
+      PricingSectionSchema.parse(v ?? {}),
+    ),
     /**
      * Which finding sources to include. Defaults to all known sources.
      * Authors can narrow the run to e.g. `["advisor"]` to fetch only
@@ -143,6 +174,9 @@ export const ConfigSchema = z.object({ azure: AzureSectionSchema }).strict();
 
 /** Fully-resolved configuration (all defaults applied). */
 export type Config = z.infer<typeof ConfigSchema>;
+
+/** Fully-resolved pricing section (all defaults applied). */
+export type PricingConfig = z.infer<typeof PricingSectionSchema>;
 
 /** Fully-resolved thresholds (all defaults applied). */
 export type Thresholds = z.infer<typeof ThresholdsSchema>;

@@ -128,6 +128,13 @@ export function findingsFromAnalysisResult(args: {
   if (sentences.length === 0) {
     return [];
   }
+  // We intentionally do NOT propagate any monetary estimate down to the
+  // individual findings: a per-resource cost (e.g. €29.94/mo for a VM)
+  // attached to a sentence like "No tags found" would falsely suggest
+  // "add the missing tags to save €29.94". The resource-level cost is
+  // carried instead by `AnalysisResult.estimatedMonthlySavings` and
+  // surfaced by the report layer as a per-resource header — see
+  // `azure/report.ts`.
   return sentences.map((sentence) => ({
     category: "cost" as const,
     code: code ?? "custom.unknown",

@@ -57,8 +57,8 @@ export function createDefaultAnalyzers(): Analyzer[] {
       supports: (r) => r.type?.toLowerCase() === "microsoft.app/containerapps",
     },
     {
-      analyze: ({ clients, resource, verbose }) =>
-        analyzeDisk(resource, clients.compute, verbose),
+      analyze: ({ clients, pricing, resource, verbose }) =>
+        analyzeDisk(resource, clients.compute, verbose, pricing),
       id: "azure.disk",
       supports: (r) => r.type?.toLowerCase() === "microsoft.compute/disks",
     },
@@ -66,6 +66,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
       analyze: ({
         clients,
         metricsCache,
+        pricing,
         resource,
         thresholds,
         timespanDays,
@@ -79,6 +80,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
           thresholds,
           verbose,
           metricsCache,
+          pricing,
         ),
       id: "azure.vm",
       supports: (r) =>
@@ -102,6 +104,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
       analyze: ({
         clients,
         metricsCache,
+        pricing,
         resource,
         thresholds,
         timespanDays,
@@ -115,6 +118,7 @@ export function createDefaultAnalyzers(): Analyzer[] {
           thresholds,
           verbose,
           metricsCache,
+          pricing,
         ),
       id: "azure.public-ip",
       supports: (r) =>

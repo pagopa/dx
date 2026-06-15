@@ -10,7 +10,12 @@ import { z } from "zod";
 
 import type { AzureConfig } from "./types.js";
 
-import { ConfigSchema } from "../schema.js";
+import { ConfigSchema, PricingSectionSchema } from "../schema.js";
+
+/** Schema-derived defaults for the pricing section. Shared by both the
+ * env-var and the prompt branches of `loadAzureConfig` so callers can
+ * always rely on `config.pricing` being defined. */
+const DEFAULT_PRICING_CONFIG = PricingSectionSchema.parse({});
 
 /**
  * Loads Azure configuration from a YAML file, environment variables, or interactive prompts.
@@ -44,6 +49,7 @@ export async function loadAzureConfig(
       return {
         concurrency: parsed.azure.concurrency,
         preferredLocation: parsed.azure.preferredLocation,
+        pricing: parsed.azure.pricing,
         sources: parsed.azure.sources,
         subscriptionIds: parsed.azure.subscriptionIds,
         thresholds: parsed.azure.thresholds,
@@ -73,6 +79,7 @@ export async function loadAzureConfig(
 
   return {
     preferredLocation: "italynorth",
+    pricing: DEFAULT_PRICING_CONFIG,
     subscriptionIds,
     timespanDays: 30,
   };
