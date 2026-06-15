@@ -39,6 +39,7 @@ on:
         required: false
         default: ""
 
+
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -161,9 +162,7 @@ jobs:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [gate, get-terraform-version, detect-projects]
-    if:
-      ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix
-      != '[]' }}
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit
     strategy:
       fail-fast: false
@@ -178,9 +177,7 @@ jobs:
   tf_plan:
     name: "Terraform Plan"
     needs: [gate, get-terraform-version, tf-modules-check, detect-projects]
-    if:
-      ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix
-      != '[]' }}
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     strategy:
       fail-fast: false
       matrix:
@@ -192,9 +189,7 @@ jobs:
       (inputs.override_labels != '' && inputs.override_labels ||
       inputs.environment) || inputs.use_private_agent && 'self-hosted' ||
       'ubuntu-latest' }}
-    environment:
-      ${{ inputs.override_github_environment == '' && inputs.environment
-      || inputs.override_github_environment}}-ci
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
     concurrency:
       group: ${{ github.workflow }}-${{ inputs.environment }}-${{ matrix.dir }}-ci
       cancel-in-progress: false
@@ -239,6 +234,9 @@ jobs:
 
             printf '%s\n' "$line" >> "$GITHUB_ENV"
           done <<< "$ENV_VARS"
+
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -292,6 +290,12 @@ jobs:
             echo "$(date)" > ./.pr_plan_marker
           fi
 
+      - name: Start Terraform Plan telemetry span
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-plan
+          span_phase: start
+
       - name: Terraform Plan
         id: plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
@@ -299,6 +303,13 @@ jobs:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
+
+      - name: End Terraform Plan telemetry span
+        if: always()
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-plan
+          span_phase: end
 
       - name: Check Plan length
         id: check-length
@@ -358,6 +369,11 @@ jobs:
         with:
           comment-body-file: ${{ env.COMMENT_BODY_FILE }}
           search-pattern: "Terraform Plan (${{ steps.directory.outputs.dir }})"
+
+      - name: Set Telemetry Failure Result
+        if: failure()
+        run: |
+          echo "PIPELINE_RESULT=failure" >> "$GITHUB_ENV"
 
       # Fail the workflow if the Terraform plan failed
       - name: Check Terraform Plan Result

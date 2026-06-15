@@ -8,6 +8,7 @@
 
 import { randomUUID } from "node:crypto";
 import * as fs from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 
 const SESSION_DIR = ".otel-session";
@@ -15,7 +16,9 @@ const SESSION_DIR = ".otel-session";
 // Validate required environment variables
 const envSchema = z.object({
   GITHUB_ENV: z.string().min(1),
+  GITHUB_WORKSPACE: z.string().min(1),
   INPUT_CONNECTION_STRING: z.string().min(1),
+  OTEL_EVENT_FILE: z.string().optional(),
 });
 
 async function exportEnv(
@@ -48,7 +51,25 @@ async function exportEnv(
 
 async function run(): Promise<void> {
   try {
-    const { correlationId, eventsFile, start } = await startSession();
+    const envResult = envSchema.safeParse(process.env);
+
+    if (!envResult.success) {
+      console.error(
+        "Missing required environment variables:",
+        z.prettifyError(envResult.error),
+      );
+      throw new Error("Environment validation failed");
+    }
+
+    if (envResult.data.OTEL_EVENT_FILE) {
+      throw new Error(
+        "Telemetry session is already initialized for this job. setup-telemetry must be called only once.",
+      );
+    }
+
+    const { correlationId, eventsFile, start } = await startSession(
+      envResult.data.GITHUB_WORKSPACE,
+    );
     await exportEnv(eventsFile, start, correlationId);
     console.log(
       `Telemetry session started. Events file: ${eventsFile} correlationId=${correlationId}`,
@@ -60,16 +81,18 @@ async function run(): Promise<void> {
   }
 }
 
-async function startSession(): Promise<{
+async function startSession(workspace: string): Promise<{
   correlationId: string;
   eventsFile: string;
   start: number;
 }> {
   const start = Date.now();
+  const sessionDir = path.join(workspace, SESSION_DIR);
+  const eventsFile = path.join(sessionDir, "events.ndjson");
 
   // Create session directory with error handling
   try {
-    await fs.mkdir(SESSION_DIR, { recursive: true });
+    await fs.mkdir(sessionDir, { recursive: true });
   } catch (err) {
     throw new Error(
       `Failed to create session directory: ${err instanceof Error ? err.message : String(err)}`,
@@ -77,18 +100,14 @@ async function startSession(): Promise<{
     );
   }
 
-  const eventsFile = `${SESSION_DIR}/events.ndjson`;
-
-  // Initialize empty events file
+  // Initialize an empty events file for this session.
   try {
-    await fs.writeFile(eventsFile, "", { flag: "wx" });
+    await fs.writeFile(eventsFile, "", { flag: "w" });
   } catch (err) {
-    // File already exists or other error - only throw on non-EEXIST errors
-    if (err instanceof Error && "code" in err && err.code !== "EEXIST") {
-      throw new Error(`Failed to initialize events file: ${err.message}`, {
-        cause: err,
-      });
-    }
+    throw new Error(
+      `Failed to initialize events file: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
   }
 
   const correlationId = randomUUID();
