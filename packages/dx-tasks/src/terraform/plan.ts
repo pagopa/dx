@@ -4,10 +4,12 @@ import util from "node:util";
 import * as z from "zod/mini";
 
 import type { TaskRunContext } from "../dispatcher.ts";
+import type { ReportNamespace } from "../report-store.ts";
 
-import { Reporter, type ReporterNamespace } from "../reporter.ts";
 import { runCommand } from "../run-command.ts";
 import { maskOutput } from "./mask-output.ts";
+
+export const TERRAFORM_PLAN_NAMESPACE = "terraform-plan";
 
 const terraformPlanPayloadShape = {
   modulePath: z.string().check(z.minLength(1)),
@@ -39,27 +41,19 @@ export interface TerraformPlanReport {
   planOutput: string;
 }
 
-const terraformPlanReporters = new WeakMap<
-  Reporter,
-  ReporterNamespace<typeof terraformPlanReportSchema>
->();
+export const terraformPlanReportNamespace: ReportNamespace<
+  typeof terraformPlanReportSchema
+> = {
+  name: TERRAFORM_PLAN_NAMESPACE,
+  renderers: {
+    markdown: ({ modulePath, planOutput }) =>
+      `### Module \`${modulePath}\`
 
-const getTerraformPlanReporter = (
-  reporter: Reporter,
-): ReporterNamespace<typeof terraformPlanReportSchema> => {
-  const registeredReporter = terraformPlanReporters.get(reporter);
-
-  if (registeredReporter) {
-    return registeredReporter;
-  }
-
-  const namespaceReporter = reporter.registerNamespace(
-    "terraform-plan",
-    terraformPlanReportSchema,
-  );
-  terraformPlanReporters.set(reporter, namespaceReporter);
-
-  return namespaceReporter;
+\`\`\`hcl
+${planOutput}
+\`\`\``,
+  },
+  schema: terraformPlanReportSchema,
 };
 
 const isRunningInCI = (): boolean => {
@@ -131,8 +125,9 @@ export async function terraformPlan(
   const maskedOutput = maskOutput(result.stdout);
   const planOutput = getPlanOutput(maskedOutput, verbose);
 
-  if (report && context.reporter) {
-    await getTerraformPlanReporter(context.reporter).write(
+  if (report && context.reports) {
+    await context.reports.write(
+      TERRAFORM_PLAN_NAMESPACE,
       Buffer.from(modulePath).toString("base64url"),
       {
         modulePath,

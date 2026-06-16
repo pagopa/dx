@@ -17,6 +17,14 @@
       "types": "./dist/dispatcher.d.ts",
       "default": "./dist/dispatcher.js"
     },
+    "./render": {
+      "types": "./dist/render.d.ts",
+      "default": "./dist/render.js"
+    },
+    "./render-report": {
+      "types": "./dist/render-report.d.ts",
+      "default": "./dist/render-report.js"
+    },
     "./reporter": {
       "types": "./dist/reporter.d.ts",
       "default": "./dist/reporter.js"

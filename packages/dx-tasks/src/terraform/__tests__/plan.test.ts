@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { TerraformPlanPayload } from "../plan.ts";
 
-import { Reporter } from "../../reporter.ts";
+import { ReportStore } from "../../report-store.ts";
 
 const { mockRunCommand } = vi.hoisted(() => ({
   mockRunCommand: vi.fn(),
@@ -15,7 +15,14 @@ vi.mock("../../run-command.ts", () => ({
   runCommand: mockRunCommand,
 }));
 
-import { terraformPlan, terraformPlanReportSchema } from "../plan.ts";
+import {
+  terraformPlan,
+  terraformPlanReportNamespace,
+  terraformPlanReportSchema,
+} from "../plan.ts";
+
+const createReports = (baseDirectoryPath: string) =>
+  new ReportStore(baseDirectoryPath).register(terraformPlanReportNamespace);
 
 const plans = {
   changes: `[0m[1mazurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02][0m
@@ -233,7 +240,7 @@ describe("terraformPlan", () => {
   it.each(reportSnapshotScenarios)(
     "matches the report snapshot for $name",
     async ({ payload, stdout }) => {
-      const reporter = new Reporter(tempDirectoryPath);
+      const reports = createReports(tempDirectoryPath);
 
       mockRunCommand.mockResolvedValue({
         exitCode: 0,
@@ -242,7 +249,7 @@ describe("terraformPlan", () => {
       });
 
       await terraformPlan(payload, {
-        reporter,
+        reports,
       });
 
       await expect(
@@ -274,7 +281,7 @@ describe("terraformPlan", () => {
   );
 
   it("writes the report with the expected JSON shape when enabled", async () => {
-    const reporter = new Reporter(tempDirectoryPath);
+    const reports = createReports(tempDirectoryPath);
     mockRunCommand.mockResolvedValue({
       exitCode: 0,
       signal: null,
@@ -287,7 +294,7 @@ describe("terraformPlan", () => {
         report: true,
       },
       {
-        reporter,
+        reports,
       },
     );
 
@@ -306,5 +313,25 @@ describe("terraformPlan", () => {
     expect(Object.keys(report)).toStrictEqual(["modulePath", "planOutput"]);
     expect(reportContent).toBe(JSON.stringify(report, null, 2));
     expect(console.log).toHaveBeenCalledExactlyOnceWith(expect.any(String));
+  });
+});
+
+describe("terraformPlanReportNamespace", () => {
+  it("declares the terraform-plan namespace with a markdown renderer", () => {
+    expect(terraformPlanReportNamespace.name).toBe("terraform-plan");
+    expect(terraformPlanReportNamespace.renderers?.markdown).toBeTypeOf(
+      "function",
+    );
+  });
+
+  it("renders the module path and plan output as a fenced hcl block", () => {
+    const markdown = terraformPlanReportNamespace.renderers?.markdown?.({
+      modulePath: "./infra/modules/example",
+      planOutput: "No changes.",
+    });
+
+    expect(markdown).toBe(
+      "### Module `./infra/modules/example`\n\n```hcl\nNo changes.\n```",
+    );
   });
 });

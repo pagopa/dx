@@ -3,6 +3,8 @@
 export * from "./default-dispatcher.ts";
 export * from "./dispatcher.ts";
 export * from "./mask-output.ts";
-export * from "./reporter.ts";
+export * from "./render-report.ts";
+export * from "./report-store.ts";
 export * from "./run-command.ts";
 export * from "./tasks.ts";
+export { terraformPlanReportNamespace } from "./terraform/plan.ts";

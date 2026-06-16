@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createTaskDispatcher } from "../dispatcher.ts";
-import { Reporter } from "../reporter.ts";
+import { ReportStore } from "../report-store.ts";
 
 describe("createTaskDispatcher", () => {
   afterEach(() => {
@@ -9,7 +9,7 @@ describe("createTaskDispatcher", () => {
   });
 
   it("dispatches a registered task after decoding its payload", async () => {
-    const reporter = new Reporter(process.cwd());
+    const reports = new ReportStore(process.cwd());
     const parse = vi.fn((input: unknown) => ({
       modulePath:
         typeof input === "object" &&
@@ -26,7 +26,7 @@ describe("createTaskDispatcher", () => {
     }));
     const run = vi.fn().mockResolvedValue(undefined);
     const dispatcher = createTaskDispatcher({
-      context: { reporter },
+      context: { reports },
     });
 
     dispatcher.registerTask({
@@ -50,7 +50,7 @@ describe("createTaskDispatcher", () => {
         verbose: true,
       },
       {
-        reporter,
+        reports,
       },
     );
   });

@@ -3,6 +3,11 @@
 import type { TaskDefinition } from "./dispatcher.ts";
 
 import {
+  renderReport,
+  type RenderReportPayload,
+  payloadSchema as renderReportPayloadSchema,
+} from "./render-report.ts";
+import {
   terraformPlan,
   type TerraformPlanPayload,
   payloadSchema as terraformPlanPayloadSchema,
@@ -12,4 +17,10 @@ export const terraformPlanTask: TaskDefinition<TerraformPlanPayload> = {
   name: "terraformPlan",
   payloadSchema: terraformPlanPayloadSchema,
   run: terraformPlan,
+};
+
+export const renderReportTask: TaskDefinition<RenderReportPayload> = {
+  name: "renderReport",
+  payloadSchema: renderReportPayloadSchema,
+  run: renderReport,
 };

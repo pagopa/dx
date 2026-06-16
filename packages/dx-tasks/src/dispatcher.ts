@@ -1,6 +1,6 @@
 /** This module registers dx-tasks tasks and dispatches them from decoded inputs. */
 
-import type { Reporter } from "./reporter.ts";
+import type { ReportStore } from "./report-store.ts";
 
 export interface TaskDefinition<TPayload> {
   name: string;
@@ -20,7 +20,7 @@ export interface TaskDispatcherOptions {
 }
 
 export interface TaskRunContext {
-  reporter?: Reporter;
+  reports?: ReportStore;
 }
 
 interface RegisteredTask {
