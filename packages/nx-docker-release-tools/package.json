@@ -24,11 +24,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
