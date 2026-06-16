@@ -16,7 +16,11 @@ COPY packages/dx-metrics-core ./packages/dx-metrics-core
 
 ENV NODE_ENV=production
 
-RUN pnpm --filter dx-metrics-import build
+WORKDIR /app/apps/dx-metrics-import
+
+RUN npm run build
+
+WORKDIR /app
 
 WORKDIR /app/apps/dx-metrics-import
 

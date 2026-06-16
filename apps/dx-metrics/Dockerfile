@@ -17,8 +17,12 @@ COPY packages/dx-metrics-core ./packages/dx-metrics-core
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN pnpm --filter dx-metrics build && \
+WORKDIR /app/apps/dx-metrics
+
+RUN npm run build && \
     cp -R /app/apps/dx-metrics/.next/standalone/. /app/
+
+WORKDIR /app
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
