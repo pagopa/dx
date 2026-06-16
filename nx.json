@@ -13,11 +13,6 @@
         "command": "npx --yes --package=file:./packages/nx-docker-release-tools dx-docker-release-publish-with-latest --project-root {projectRoot}"
       }
     },
-    "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "cache": true
-    },
     "format:check": {
       "cache": true
     },
