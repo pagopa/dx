@@ -2,8 +2,16 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "self-hosted-runner",
   "targets": {
+    "nx-release-publish": {
+      "executor": "nx:run-commands"
+    },
     "docker:build": {
       "options": {
+        "cwd": "containers/self-hosted-runner",
+        "args": [
+          "--tag containers-self-hosted-runner",
+          "-f Dockerfile"
+        ],
         "platform": "linux/amd64"
       }
     }

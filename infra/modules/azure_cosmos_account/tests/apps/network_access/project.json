@@ -5,9 +5,13 @@
   "description": "Simple application for Terraform E2E tests, which exposes a single HTTP endpoint to test connectivity to Cosmos DB",
   "private": true,
   "targets": {
+    "nx-release-publish": {
+      "executor": "nx:run-commands"
+    },
     "docker:build": {
+      "command": "docker build -f ../Dockerfile {args} .",
       "options": {
-        "platform": "linux/amd64,linux/arm64"
+        "cwd": "infra/modules/azure_cosmos_account/tests/apps/network_access/src"
       }
     },
     "docker:run": {

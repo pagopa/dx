@@ -5,9 +5,13 @@
   "description": "Simple application for Terraform E2E tests, which exposes endpoints to test connectivity and integration with App Configuration",
   "private": true,
   "targets": {
+    "nx-release-publish": {
+      "executor": "nx:run-commands"
+    },
     "docker:build": {
+      "command": "docker build -f ../Dockerfile {args} .",
       "options": {
-        "platform": "linux/amd64,linux/arm64"
+        "cwd": "infra/modules/azure_app_configuration/tests/apps/all_scenarios/src"
       }
     },
     "docker:run": {

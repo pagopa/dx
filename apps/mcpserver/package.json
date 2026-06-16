@@ -45,5 +45,17 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "version": "node ./scripts/generate-server-manifest.js"
+  },
+  "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "executor": "nx:run-commands"
+      }
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-mcpserver"
+      }
+    }
   }
 }

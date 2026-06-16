@@ -35,5 +35,24 @@
     "tailwindcss": "^4.2.4",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "nx": {
+    "targets": {
+      "docker:build": {
+        "options": {
+          "env": {
+            "DOCKER_BUILD_PLATFORMS": "linux/arm64"
+          }
+        }
+      },
+      "nx-release-publish": {
+        "executor": "nx:run-commands"
+      }
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-metrics"
+      }
+    }
   }
 }

@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS base
+FROM --platform=$BUILDPLATFORM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS base
 # 1. Enable pnpm
 RUN corepack enable
 
@@ -15,7 +15,7 @@ COPY ./packages ./packages
 # 5. Install ALL dependencies for mcpserver and its workspace dependencies
 RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
-RUN pnpm nx build @pagopa/dx-mcpserver
+RUN NX_DAEMON=false pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
 
