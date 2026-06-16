@@ -29,16 +29,13 @@ const VersionImageReferenceSchema = z
       const lastColonIndex = value.lastIndexOf(":");
 
       return (
-        lastColonIndex > lastSlashIndex &&
-        lastColonIndex !== value.length - 1
+        lastColonIndex > lastSlashIndex && lastColonIndex !== value.length - 1
       );
     },
     {
       message: "Image reference must include an explicit tag.",
     },
   );
-
-export type StdIoMode = "ignore" | "inherit";
 
 export type CommandRunner = (
   command: string,
@@ -53,6 +50,33 @@ export interface PublishWithLatestOptions {
   readTextFile?: (filePath: string) => string;
   runCommand?: CommandRunner;
   workspaceRoot?: string;
+}
+
+export type StdIoMode = "ignore" | "inherit";
+
+export function getLatestImageReference(imageReference: string): string {
+  const normalizedReference = imageReference.trim();
+  const lastSlashIndex = normalizedReference.lastIndexOf("/");
+  const lastColonIndex = normalizedReference.lastIndexOf(":");
+
+  const hasValidTagSeparator =
+    lastColonIndex > lastSlashIndex &&
+    lastColonIndex !== normalizedReference.length - 1;
+
+  if (!hasValidTagSeparator) {
+    throw new Error(
+      `Image reference '${normalizedReference}' does not include an explicit tag.`,
+    );
+  }
+
+  return `${normalizedReference.slice(0, lastColonIndex)}:latest`;
+}
+
+export function getVersionFilePath(
+  workspaceRoot: string,
+  projectRoot: string,
+): string {
+  return resolve(workspaceRoot, "tmp", projectRoot, ".docker-version");
 }
 
 export function parseCliArgs(argv: string[]): { projectRoot: string } {
@@ -81,31 +105,6 @@ export function parseCliArgs(argv: string[]): { projectRoot: string } {
   }
 
   return parsedArgs.data;
-}
-
-export function getLatestImageReference(imageReference: string): string {
-  const normalizedReference = imageReference.trim();
-  const lastSlashIndex = normalizedReference.lastIndexOf("/");
-  const lastColonIndex = normalizedReference.lastIndexOf(":");
-
-  const hasValidTagSeparator =
-    lastColonIndex > lastSlashIndex &&
-    lastColonIndex !== normalizedReference.length - 1;
-
-  if (!hasValidTagSeparator) {
-    throw new Error(
-      `Image reference '${normalizedReference}' does not include an explicit tag.`,
-    );
-  }
-
-  return `${normalizedReference.slice(0, lastColonIndex)}:latest`;
-}
-
-export function getVersionFilePath(
-  workspaceRoot: string,
-  projectRoot: string,
-): string {
-  return resolve(workspaceRoot, "tmp", projectRoot, ".docker-version");
 }
 
 export function publishWithLatest(
@@ -185,25 +184,6 @@ export function publishWithLatest(
   );
 }
 
-function assertCommandSuccess(exitCode: number, commandLabel: string): void {
-  if (exitCode !== 0) {
-    throw new Error(`Command failed: ${commandLabel} (exit code ${exitCode})`);
-  }
-}
-
-function defaultRunCommand(
-  command: string,
-  args: string[],
-  stdio: StdIoMode,
-): number {
-  const result = spawnSync(command, args, {
-    stdio,
-    windowsHide: true,
-  });
-
-  return result.status ?? 1;
-}
-
 export function runCli(argv: string[]): number {
   try {
     const { projectRoot } = parseCliArgs(argv.slice(2));
@@ -226,6 +206,28 @@ export function runCli(argv: string[]): number {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+function assertCommandSuccess(exitCode: number, commandLabel: string): void {
+  if (exitCode !== 0) {
+    throw new Error(`Command failed: ${commandLabel} (exit code ${exitCode})`);
+  }
+}
+
+function defaultRunCommand(
+  command: string,
+  args: string[],
+  stdio: StdIoMode,
+): number {
+  const result = spawnSync(command, args, {
+    stdio,
+    windowsHide: true,
+  });
+
+  return result.status ?? 1;
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   process.exit(runCli(process.argv));
 }

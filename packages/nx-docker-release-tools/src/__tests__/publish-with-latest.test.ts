@@ -20,10 +20,9 @@ describe("parseCliArgs", () => {
   });
 
   it("throws when project root is missing", () => {
-    expect(() => parseCliArgs([]))
-      .toThrowErrorMatchingInlineSnapshot(
-        "[Error: Usage: dx-docker-release-publish-with-latest --project-root <project-root>]",
-      );
+    expect(() => parseCliArgs([])).toThrowErrorMatchingInlineSnapshot(
+      "[Error: Usage: dx-docker-release-publish-with-latest --project-root <project-root>]",
+    );
   });
 });
 
