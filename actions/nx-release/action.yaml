@@ -194,6 +194,47 @@ runs:
 
         echo "published=true" >> "$GITHUB_OUTPUT"
 
+    - name: Publish Docker latest tags
+      if: steps.publish.outputs.published == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        if ! command -v docker >/dev/null 2>&1; then
+          echo "docker CLI not available, skipping latest Docker tag publish"
+          exit 0
+        fi
+
+        if [[ ! -d tmp ]]; then
+          echo "No tmp directory found, skipping latest Docker tag publish"
+          exit 0
+        fi
+
+        mapfile -t docker_version_files < <(find tmp -type f -name .docker-version | sort)
+        if [[ "${#docker_version_files[@]}" -eq 0 ]]; then
+          echo "No .docker-version files found, skipping latest Docker tag publish"
+          exit 0
+        fi
+
+        for version_file in "${docker_version_files[@]}"; do
+          image_ref="$(tr -d '[:space:]' < "$version_file")"
+          if [[ -z "$image_ref" ]]; then
+            echo "Skipping empty docker image reference in $version_file"
+            continue
+          fi
+
+          image_repo="${image_ref%:*}"
+          if [[ "$image_repo" == "$image_ref" ]]; then
+            echo "Skipping invalid docker image reference (missing tag): $image_ref"
+            continue
+          fi
+
+          latest_ref="${image_repo}:latest"
+          echo "Tagging and pushing latest: $latest_ref"
+          docker tag "$image_ref" "$latest_ref"
+          docker push "$latest_ref"
+        done
+
     - name: Sync Git Tags and GitHub Releases
       if: steps.publish.outputs.published == 'true'
       id: tags

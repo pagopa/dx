@@ -1,0 +1,49 @@
+{
+  "name": "@pagopa/nx-docker-release-tools",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Node CLI helpers for Docker publish steps in Nx release flows.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/nx-docker-release-tools"
+  },
+  "keywords": [
+    "nx",
+    "docker",
+    "release",
+    "npx",
+    "cli"
+  ],
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "dx-docker-release-publish-with-latest": "./dist/publish-with-latest.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint --fix src",
+    "lint:check": "eslint src",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,231 @@
+/**
+ * Docker publish utility for Nx release flows.
+ *
+ * The CLI reads Nx generated `.docker-version` metadata, pushes the versioned
+ * image, tags the same image as `latest`, and pushes that tag as well.
+ */
+
+import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { z } from "zod";
+
+const CliArgsSchema = z.object({
+  projectRoot: z.string().trim().min(1),
+});
+
+const DryRunEnvSchema = z.object({
+  NX_DRY_RUN: z.enum(["true", "false"]).optional(),
+});
+
+const VersionImageReferenceSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(
+    (value) => {
+      const lastSlashIndex = value.lastIndexOf("/");
+      const lastColonIndex = value.lastIndexOf(":");
+
+      return (
+        lastColonIndex > lastSlashIndex &&
+        lastColonIndex !== value.length - 1
+      );
+    },
+    {
+      message: "Image reference must include an explicit tag.",
+    },
+  );
+
+export type StdIoMode = "ignore" | "inherit";
+
+export type CommandRunner = (
+  command: string,
+  args: string[],
+  stdio: StdIoMode,
+) => number;
+
+export interface PublishWithLatestOptions {
+  dryRun?: boolean;
+  exists?: (filePath: string) => boolean;
+  log?: (message: string) => void;
+  readTextFile?: (filePath: string) => string;
+  runCommand?: CommandRunner;
+  workspaceRoot?: string;
+}
+
+export function parseCliArgs(argv: string[]): { projectRoot: string } {
+  let projectRoot: string | undefined;
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index];
+
+    if (argument === "--project-root" || argument === "--projectRoot") {
+      projectRoot = argv[index + 1];
+      index += 1;
+      continue;
+    }
+
+    if (!projectRoot && !argument.startsWith("-")) {
+      projectRoot = argument;
+    }
+  }
+
+  const parsedArgs = CliArgsSchema.safeParse({ projectRoot });
+  if (!parsedArgs.success) {
+    throw new Error(
+      "Usage: dx-docker-release-publish-with-latest --project-root <project-root>",
+      { cause: parsedArgs.error },
+    );
+  }
+
+  return parsedArgs.data;
+}
+
+export function getLatestImageReference(imageReference: string): string {
+  const normalizedReference = imageReference.trim();
+  const lastSlashIndex = normalizedReference.lastIndexOf("/");
+  const lastColonIndex = normalizedReference.lastIndexOf(":");
+
+  const hasValidTagSeparator =
+    lastColonIndex > lastSlashIndex &&
+    lastColonIndex !== normalizedReference.length - 1;
+
+  if (!hasValidTagSeparator) {
+    throw new Error(
+      `Image reference '${normalizedReference}' does not include an explicit tag.`,
+    );
+  }
+
+  return `${normalizedReference.slice(0, lastColonIndex)}:latest`;
+}
+
+export function getVersionFilePath(
+  workspaceRoot: string,
+  projectRoot: string,
+): string {
+  return resolve(workspaceRoot, "tmp", projectRoot, ".docker-version");
+}
+
+export function publishWithLatest(
+  projectRoot: string,
+  options: PublishWithLatestOptions = {},
+): void {
+  const workspaceRoot = options.workspaceRoot ?? process.cwd();
+  const isDryRun = options.dryRun ?? false;
+  const fileExists = options.exists ?? existsSync;
+  const readTextFile =
+    options.readTextFile ??
+    ((filePath: string): string => readFileSync(filePath, "utf8"));
+  const runCommand = options.runCommand ?? defaultRunCommand;
+  const log = options.log ?? console.log;
+
+  const versionFilePath = getVersionFilePath(workspaceRoot, projectRoot);
+
+  if (!fileExists(versionFilePath)) {
+    throw new Error(
+      `Could not find ${versionFilePath}. Did you run 'nx release version'?`,
+    );
+  }
+
+  const parsedVersionImageReference = VersionImageReferenceSchema.safeParse(
+    readTextFile(versionFilePath),
+  );
+
+  if (!parsedVersionImageReference.success) {
+    throw new Error(`The file ${versionFilePath} is empty or invalid.`, {
+      cause: parsedVersionImageReference.error,
+    });
+  }
+
+  const versionImageReference = parsedVersionImageReference.data;
+
+  const latestImageReference = getLatestImageReference(versionImageReference);
+
+  if (isDryRun) {
+    log(
+      `Dry run enabled: would push '${versionImageReference}' and '${latestImageReference}'`,
+    );
+    return;
+  }
+
+  const inspectExitCode = runCommand(
+    "docker",
+    ["image", "inspect", versionImageReference],
+    "ignore",
+  );
+
+  if (inspectExitCode !== 0) {
+    throw new Error(
+      `Could not find local Docker image '${versionImageReference}'. Did you run 'nx release version'?`,
+    );
+  }
+
+  log(`Pushing version image: ${versionImageReference}`);
+  assertCommandSuccess(
+    runCommand("docker", ["push", versionImageReference], "inherit"),
+    `docker push ${versionImageReference}`,
+  );
+
+  log(`Tagging latest image: ${latestImageReference}`);
+  assertCommandSuccess(
+    runCommand(
+      "docker",
+      ["tag", versionImageReference, latestImageReference],
+      "inherit",
+    ),
+    `docker tag ${versionImageReference} ${latestImageReference}`,
+  );
+
+  log(`Pushing latest image: ${latestImageReference}`);
+  assertCommandSuccess(
+    runCommand("docker", ["push", latestImageReference], "inherit"),
+    `docker push ${latestImageReference}`,
+  );
+}
+
+function assertCommandSuccess(exitCode: number, commandLabel: string): void {
+  if (exitCode !== 0) {
+    throw new Error(`Command failed: ${commandLabel} (exit code ${exitCode})`);
+  }
+}
+
+function defaultRunCommand(
+  command: string,
+  args: string[],
+  stdio: StdIoMode,
+): number {
+  const result = spawnSync(command, args, {
+    stdio,
+    windowsHide: true,
+  });
+
+  return result.status ?? 1;
+}
+
+export function runCli(argv: string[]): number {
+  try {
+    const { projectRoot } = parseCliArgs(argv.slice(2));
+
+    const parsedDryRunEnv = DryRunEnvSchema.safeParse(process.env);
+    if (!parsedDryRunEnv.success) {
+      throw new Error("Invalid NX_DRY_RUN environment value.", {
+        cause: parsedDryRunEnv.error,
+      });
+    }
+
+    publishWithLatest(projectRoot, {
+      dryRun: parsedDryRunEnv.data.NX_DRY_RUN === "true",
+    });
+
+    return 0;
+  } catch (error) {
+    console.error(error);
+    return 1;
+  }
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  process.exit(runCli(process.argv));
+}
