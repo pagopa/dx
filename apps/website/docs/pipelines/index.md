@@ -23,6 +23,8 @@ application deployment, and infrastructure automation.
 
 - **[Release with Nx](./nx-release.md)** - Automate versioning and publishing
   for Nx monorepos (recommended)
+- **[Release Docker images with Nx](./nx-release-docker.md)** - Configure and
+  troubleshoot Docker image releases in Nx repositories
 - **[Release with Changesets](./release.md)** - Automate versioning and
   publishing with Changesets (legacy)
 

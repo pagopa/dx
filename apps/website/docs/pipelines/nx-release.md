@@ -17,6 +17,14 @@ A reusable GitHub workflow that automates package versioning and publishing for
 [Nx](https://nx.dev) monorepos using
 [Nx Release](https://nx.dev/features/manage-releases) with version plans.
 
+:::tip Publishing Docker images too?
+
+If your Nx repository also publishes Docker images, see
+[Release Docker images with Nx](./nx-release-docker.md) for setup and
+troubleshooting guidance.
+
+:::
+
 ## Features
 
 - ⚠️ Can show a pull request warning when changes need a version plan but none
@@ -290,6 +298,7 @@ Trigger `workflow_dispatch` manually. The action scans all past merged
 
 ## Related Documentation
 
+- [Release Docker images with Nx](./nx-release-docker.md)
 - [Nx Release Documentation](https://nx.dev/features/manage-releases)
 - [Nx Release Plan](https://nx.dev/docs/guides/nx-release/file-based-versioning-version-plans)
 - [Nx Commands](https://nx.dev/docs/reference/nx-commands)
