@@ -16,8 +16,9 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as EnvironmentPayload } from "../../../plop/generators/environment/index.js";
 
 const mocks = vi.hoisted(() => ({
+  collectDeploymentEnvironmentPayload: vi.fn(),
   getPlopInstance: vi.fn(),
-  runDeploymentEnvironmentGenerator: vi.fn(),
+  runDeploymentEnvironmentActions: vi.fn(),
   tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
     void args;
     return { stdout: '{"user":{"name":"test@example.com"}}' };
@@ -28,8 +29,10 @@ vi.mock("ora", () => ({
   oraPromise: <T>(promise: Promise<T>) => promise,
 }));
 vi.mock("../../../plop/index.js", () => ({
+  collectDeploymentEnvironmentPayload:
+    mocks.collectDeploymentEnvironmentPayload,
   getPlopInstance: mocks.getPlopInstance,
-  runDeploymentEnvironmentGenerator: mocks.runDeploymentEnvironmentGenerator,
+  runDeploymentEnvironmentActions: mocks.runDeploymentEnvironmentActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 
@@ -88,7 +91,11 @@ describe("makeAddCommand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.getPlopInstance.mockResolvedValue({});
-    mocks.runDeploymentEnvironmentGenerator.mockResolvedValue(payload);
+    mocks.collectDeploymentEnvironmentPayload.mockResolvedValue({
+      generator: {},
+      payload,
+    });
+    mocks.runDeploymentEnvironmentActions.mockResolvedValue(payload);
     vi.spyOn(console, "log").mockImplementation(() => undefined);
   });
 
@@ -151,7 +158,7 @@ describe("makeAddCommand", () => {
       "Engineering",
     ]);
 
-    expect(mocks.runDeploymentEnvironmentGenerator).toHaveBeenCalledWith(
+    expect(mocks.collectDeploymentEnvironmentPayload).toHaveBeenCalledWith(
       expect.anything(),
       expect.anything(),
       undefined,
@@ -173,6 +180,10 @@ describe("makeAddCommand", () => {
           domain: "payments",
         },
       },
+    );
+    expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
+      expect.anything(),
+      payload,
     );
   });
 
