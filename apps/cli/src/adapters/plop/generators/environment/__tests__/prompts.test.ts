@@ -235,6 +235,75 @@ describe("prompts with prefilled answers", () => {
 });
 
 describe("prompts", () => {
+  it("does not prompt again when only a single-account backend must be initialized", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountRepository: CloudAccountRepository = {
+      list: vi.fn().mockResolvedValue([cloudAccount]),
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      })
+      .mockResolvedValueOnce({
+        init: true,
+      })
+      .mockResolvedValueOnce({});
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+      })(inquirer);
+
+      expect(promptSpy).toHaveBeenCalledTimes(3);
+      expect(result.init?.terraformBackend).toEqual({
+        cloudAccount,
+      });
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
+  });
+
   it("prompts for the GitHub runner app client ID when initialization is required", async () => {
     const cloudAccount: CloudAccount = {
       csp: "azure",

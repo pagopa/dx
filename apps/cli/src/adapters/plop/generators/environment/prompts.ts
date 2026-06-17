@@ -456,7 +456,8 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       );
     }
 
-    const initInput = await promptModule.prompt(questions);
+    const initInput =
+      questions.length === 0 ? {} : await promptModule.prompt(questions);
 
     if (initInput.runnerAppCredentials) {
       runnerAppCredentials = initInput.runnerAppCredentials;
