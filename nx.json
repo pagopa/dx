@@ -111,12 +111,6 @@
           "args": [
             "--file {projectRoot}/Dockerfile",
             "--platform ${DOCKER_BUILD_PLATFORMS:-linux/arm64,linux/amd64}",
-            "--label org.opencontainers.image.title={projectName}",
-            "--label org.opencontainers.image.description=\"$(desc=$(jq -r '.description // .name // empty' {projectRoot}/package.json 2>/dev/null); desc=${desc:-$(jq -r '.description // .name // empty' {projectRoot}/project.json 2>/dev/null)}; printf '%s' \"$desc\")\"",
-            "--label org.opencontainers.image.source=$(repo=${GITHUB_REPOSITORY:-}; repo=${repo:-$(git config --get remote.origin.url 2>/dev/null || git remote get-url origin 2>/dev/null || true)}; repo=${repo:-$(jq -r 'if (.repository|type)==\"string\" then .repository elif (.repository|type)==\"object\" then .repository.url else empty end // empty' package.json 2>/dev/null)}; repo=$(printf '%s' \"$repo\" | sed -E 's#^git\\+##; s#\\.git$##; s#^https://github.com/##; s#^git@github.com:##; s#^ssh://git@github.com/##; s#^git://github.com/##'); printf '%s' \"https://github.com/$repo/blob/main/{projectRoot}\")",
-            "--label org.opencontainers.image.url=$(repo=${GITHUB_REPOSITORY:-}; repo=${repo:-$(git config --get remote.origin.url 2>/dev/null || git remote get-url origin 2>/dev/null || true)}; repo=${repo:-$(jq -r 'if (.repository|type)==\"string\" then .repository elif (.repository|type)==\"object\" then .repository.url else empty end // empty' package.json 2>/dev/null)}; repo=$(printf '%s' \"$repo\" | sed -E 's#^git\\+##; s#\\.git$##; s#^https://github.com/##; s#^git@github.com:##; s#^ssh://git@github.com/##; s#^git://github.com/##'); printf '%s' \"https://github.com/$repo\")",
-            "--label org.opencontainers.image.revision={commitSha}",
-            "--label org.opencontainers.image.created={currentDate}",
             "--provenance=false"
           ],
           "env": {

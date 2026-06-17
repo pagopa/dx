@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: "app-prod-cd"
+      docker-registry:
+        description: "Container registry used for Docker publish login"
+        required: false
+        type: string
+        default: "ghcr.io"
     secrets:
       app-client-id:
         description: "GitHub App Client ID for authentication"
@@ -80,7 +85,7 @@ jobs:
       - name: Container registry Login
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
         with:
-          registry: ghcr.io
+          registry: ${{ inputs.docker-registry }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
 

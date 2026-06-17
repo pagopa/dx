@@ -42,6 +42,7 @@ __azurite_*
 **/_modules/**/.terraform.lock.hcl
 
 dist
+tmp
 .env
 node_modules
 .turbo

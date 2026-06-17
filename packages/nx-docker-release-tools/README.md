@@ -11,6 +11,9 @@ This package is used only when a Docker project needs to publish both:
 
 If your release process does not require `latest`, this package is not needed.
 
+In short: this package is the publish-time bridge between Nx Docker release
+metadata and the final registry push commands.
+
 ## How it integrates with Nx release
 
 1. `nx release version` (with `@nx/docker`) generates metadata at
@@ -54,4 +57,7 @@ Supported args:
 
 Environment behavior:
 
-- `NX_DRY_RUN=true` prints intended commands and exits without pushing.
+- `NX_DRY_RUN=true` prints intended push/tag commands and exits without pushing.
+
+`NX_DRY_RUN` name is inherited from Nx release execution conventions used by
+the surrounding release flow.
