@@ -12,7 +12,9 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { okAsync, ResultAsync } from "neverthrow";
 
+import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
+import type { GlobalOptions } from "../global-options.js";
 
 import {
   AuthorizationResult,
@@ -24,11 +26,13 @@ import { environmentShort } from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
 import { isAzureLocation, locationShort } from "../../azure/locations.js";
 import {
+  collectDeploymentEnvironmentPayload,
   getPlopInstance,
-  runDeploymentEnvironmentGenerator,
+  runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
-import { exitWithError } from "../command-errors.js";
-import { checkAddEnvironmentPreconditions } from "./init.js";
+import { asError, reportCommandError } from "../command-errors.js";
+import { createCommandPresenter } from "../presenters/index.js";
+import { runAddEnvironmentPreconditions } from "./init.js";
 
 /**
  * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
@@ -123,24 +127,56 @@ const displaySummary = (result: AddResult) => {
   );
 };
 
+/**
+ * Routes the successful outcome through the presenter: JSON mode emits the
+ * structured envelope while text mode renders the human-readable summary.
+ */
+const reportSummary =
+  (presenter: CommandPresenter, outputMode: "json" | "text") =>
+  (result: AddResult): void => {
+    if (outputMode === "json") {
+      presenter.reportResult(result);
+    } else {
+      displaySummary(result);
+    }
+  };
+
+const trackStep = <T, E>(
+  presenter: CommandPresenter,
+  name: string,
+  task: () => Promise<T>,
+  mapError: (cause: unknown) => E,
+): ResultAsync<T, E> =>
+  ResultAsync.fromPromise(presenter.trackStep(name, task), mapError);
+
 const addEnvironmentAction = (
   authorizationService: AuthorizationService,
   gitHubService: GitHubService,
+  presenter: CommandPresenter,
 ): ResultAsync<AddResult, Error> =>
-  checkAddEnvironmentPreconditions()
+  runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
-      ResultAsync.fromPromise(
-        getPlopInstance(),
-        (cause) => new Error("Failed to initialize plop", { cause }),
+      trackStep(
+        presenter,
+        "Initializing environment generator...",
+        getPlopInstance,
+        asError("Failed to initialize plop"),
       ),
     )
     .andThen((plop) =>
+      // The prompt phase must run outside trackStep: in text mode trackStep
+      // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        runDeploymentEnvironmentGenerator(plop, gitHubService),
-        (cause) =>
-          new Error("Failed to run the deployment environment generator", {
-            cause,
-          }),
+        collectDeploymentEnvironmentPayload(plop, gitHubService),
+        asError("Failed to run the deployment environment generator"),
+      ),
+    )
+    .andThen(({ generator, payload }) =>
+      trackStep(
+        presenter,
+        "Creating environment...",
+        () => runDeploymentEnvironmentActions(generator, payload),
+        asError("Failed to create the deployment environment"),
       ),
     )
     .andThen((payload) =>
@@ -159,10 +195,20 @@ export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
       new Command("environment")
         .description("Add a new deployment environment")
         .action(async function () {
+          const { output } = this.optsWithGlobals<GlobalOptions>();
+          const presenter = createCommandPresenter(output);
+
           await requireGitHubAuth()
             .andThen(({ authorizationService, gitHubService }) =>
-              addEnvironmentAction(authorizationService, gitHubService),
+              addEnvironmentAction(
+                authorizationService,
+                gitHubService,
+                presenter,
+              ),
             )
-            .match(displaySummary, exitWithError(this));
+            .match(
+              reportSummary(presenter, output),
+              reportCommandError(this, presenter, output),
+            );
         }),
     );
