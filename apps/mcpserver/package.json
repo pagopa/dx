@@ -49,7 +49,10 @@
   "nx": {
     "targets": {
       "nx-release-publish": {
-        "executor": "nx:run-commands"
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm --filter @pagopa/nx-docker-release-tools exec dx-docker-release-publish-with-latest --project-root {projectRoot}"
+        }
       }
     },
     "release": {
