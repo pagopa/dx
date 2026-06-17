@@ -25,7 +25,7 @@ The DX MCP Server provides AI assistants with access to:
    [DX technical documentation](https://dx.pagopa.it/docs) using natural
    language
 2. **REST Knowledge Endpoints**: Access the same knowledge base through `/ask`
-  and `/search` for direct HTTP integrations
+   and `/search` for direct HTTP integrations
 
 ## Getting Started
 
