@@ -7,6 +7,11 @@ const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
     "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
 });
 
+const environmentNameSchema = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, {
+  message:
+    "Environment names must start with a lowercase letter or number and contain only lowercase letters, numbers, underscores, or dashes",
+});
+
 export const publishOptionsSchema = z.object({
   github: pluginPublishOptionsSchema.shape.github,
   mode: z.literal("github"),
@@ -15,6 +20,7 @@ export const publishOptionsSchema = z.object({
 export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
 const terraformPluginOptionsSchema = z.object({
+  additionalEnvironments: z.array(environmentNameSchema),
   applyTargetName: targetNameSchema,
   consoleTargetName: targetNameSchema,
   docsTargetName: targetNameSchema,
@@ -34,6 +40,7 @@ export type TerraformPluginOptions = z.infer<
 >;
 
 const defaultOptions: TerraformPluginOptions = {
+  additionalEnvironments: [],
   applyTargetName: "tf-apply",
   consoleTargetName: "tf-console",
   docsTargetName: "terraform-docs",
