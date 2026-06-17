@@ -5,7 +5,7 @@ import { $, ExecaError } from "execa";
 import inquirer from "inquirer";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import * as path from "node:path";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { GlobalOptions } from "../global-options.js";
@@ -271,15 +271,53 @@ const createRemoteRepositoryWithPresenter =
       asError("Failed to create GitHub repository."),
     ).map(() => new Repository(repoName, repoOwner));
   };
+/**
+ * Exit code returned by `git remote add` when a remote with the requested name
+ * already exists. `git remote` documents this dedicated status code, so we can
+ * turn it into actionable guidance instead of a generic failure message.
+ *
+ * See https://git-scm.com/docs/git-remote#_exit_status
+ */
+const GIT_REMOTE_ALREADY_EXISTS_EXIT_CODE = 3;
+
+/**
+ * Translates a failure of the git remote setup step into an actionable error.
+ *
+ * When `git remote add origin` exits with code 3 the remote already exists,
+ * which is a recoverable situation: the message tells the user how to fix it.
+ * The original ExecaError is preserved as `cause` so `--verbose` still surfaces
+ * the exit code and git's own stderr.
+ */
+export const mapGitRemoteAddError = (cause: unknown): Error => {
+  if (
+    cause instanceof ExecaError &&
+    cause.exitCode === GIT_REMOTE_ALREADY_EXISTS_EXIT_CODE
+  ) {
+    return new Error(
+      "A git remote named 'origin' already exists. Remove it with `git remote remove origin` and run the command again, or start from a clean directory.",
+      { cause },
+    );
+  }
+  return new Error(
+    "Failed to set up the local git repository and its 'origin' remote.",
+    { cause },
+  );
+};
+
 const initializeGitRepositoryWithPresenter =
   (presenter: CommandPresenter) => (repository: Repository) => {
     const branchName = "features/scaffold-workspace";
     const git$ = $({
       shell: true,
     });
-    const pushToOrigin = async () => {
+    // `git remote add` is tracked separately from the push so its documented
+    // exit codes (e.g. 3 = remote already exists) surface a specific, actionable
+    // message instead of being misreported as a push failure.
+    const configureRemote = async () => {
       await git$`git init`;
       await git$`git remote add origin ${repository.origin}`;
+    };
+    const pushToOrigin = async () => {
       await git$`git fetch origin main`;
       await git$`git checkout -b ${branchName}`;
       // Terraform creates `main` with an initial README commit.
@@ -292,10 +330,19 @@ const initializeGitRepositoryWithPresenter =
     };
     return trackStep(
       presenter,
-      "Pushing code to GitHub...",
-      pushToOrigin,
-      asError("Failed to push code to GitHub."),
-    ).map(() => ({ branchName, repository }));
+      "Configuring the git remote...",
+      configureRemote,
+      mapGitRemoteAddError,
+    )
+      .andThen(() =>
+        trackStep(
+          presenter,
+          "Pushing code to GitHub...",
+          pushToOrigin,
+          asError("Failed to push code to GitHub."),
+        ),
+      )
+      .map(() => ({ branchName, repository }));
   };
 
 const createPullRequestWithPresenter =

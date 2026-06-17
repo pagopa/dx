@@ -3,6 +3,7 @@
  */
 
 import { Command } from "commander";
+import { ExecaError } from "execa";
 import inquirer from "inquirer";
 import { okAsync } from "neverthrow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -53,6 +54,7 @@ import {
   confirmGitHubRepoCreation,
   getMonorepoInitialAnswers,
   makeInitCommand,
+  mapGitRemoteAddError,
   parseInitCommandOptions,
 } from "../init.js";
 
@@ -194,6 +196,46 @@ describe("getMonorepoInitialAnswers", () => {
       repoName: "my-dx-workspace",
       repoOwner: "pagopa",
     });
+  });
+});
+
+describe("mapGitRemoteAddError", () => {
+  const makeExecaError = (exitCode: number): ExecaError => {
+    const error = new ExecaError();
+    error.exitCode = exitCode;
+    return error;
+  };
+
+  it("explains how to recover when the 'origin' remote already exists (exit code 3)", () => {
+    const cause = makeExecaError(3);
+
+    const error = mapGitRemoteAddError(cause);
+
+    expect(error.message).toContain("already exists");
+    expect(error.message).toContain("git remote remove origin");
+    expect(error.cause).toBe(cause);
+  });
+
+  it("falls back to the remote-setup message for other git exit codes", () => {
+    const cause = makeExecaError(1);
+
+    const error = mapGitRemoteAddError(cause);
+
+    expect(error.message).toBe(
+      "Failed to set up the local git repository and its 'origin' remote.",
+    );
+    expect(error.cause).toBe(cause);
+  });
+
+  it("falls back to the remote-setup message for non-Execa errors", () => {
+    const cause = new Error("spawn git ENOENT");
+
+    const error = mapGitRemoteAddError(cause);
+
+    expect(error.message).toBe(
+      "Failed to set up the local git repository and its 'origin' remote.",
+    );
+    expect(error.cause).toBe(cause);
   });
 });
 
