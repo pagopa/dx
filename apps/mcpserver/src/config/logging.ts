@@ -1,7 +1,7 @@
 /**
  * LogTape logging configuration for the MCP server.
  *
- * Configures logging for both the mcpserver and mcp-prompts packages.
+ * Configures logging for the mcpserver package.
  * The console sink works perfectly in all environments:
  * - AWS Lambda: stdout → CloudWatch
  * - Local: stdout → console
@@ -37,11 +37,6 @@ export async function configureLogging(logLevelEnv: LogLevelEnv) {
     loggers: [
       {
         category: ["mcpserver"],
-        lowestLevel: logLevelEnv,
-        sinks: ["console"],
-      },
-      {
-        category: ["mcp-prompts"],
         lowestLevel: logLevelEnv,
         sinks: ["console"],
       },

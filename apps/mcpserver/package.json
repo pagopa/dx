@@ -26,7 +26,6 @@
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "^22.0.1",
     "@pagopa/azure-tracing": "workspace:^",
-    "@pagopa/dx-mcpprompts": "workspace:^",
     "axios": "^1.16.0",
     "zod": "catalog:"
   },

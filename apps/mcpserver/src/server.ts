@@ -1,5 +1,3 @@
-import type { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
-
 import { getLogger } from "@logtape/logtape";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import crypto from "node:crypto";
@@ -19,10 +17,7 @@ import {
   setCorsHeaders,
 } from "./utils/http.js";
 
-export async function startHttpServer(
-  config: AppConfig,
-  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>,
-): Promise<http.Server> {
+export async function startHttpServer(config: AppConfig): Promise<http.Server> {
   const logger = getLogger(["mcpserver"]);
   const awsLogger = getLogger(["mcpserver", "aws-config"]);
   const kbRuntimeClient = createBedrockRuntimeClient(
@@ -98,7 +93,6 @@ export async function startHttpServer(
           // Create new server and transport for this request
           // This ensures complete isolation between concurrent requests
           const server = createServer({
-            enabledPrompts,
             requestId,
             toolDefinitions,
           });

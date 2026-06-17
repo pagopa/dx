@@ -1,24 +1,20 @@
 import { getLogger } from "@logtape/logtape";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import { z } from "zod";
 
 import type { ToolEntry } from "../tools/registry.js";
-import type { GetPromptResultType, ToolCallResult } from "../types.js";
+import type { ToolCallResult } from "../types.js";
 
 import packageJson from "../../package.json" with { type: "json" };
-import { withPromptLogging } from "../decorators/prompt-usage-monitoring.js";
 import { withToolLogging } from "../decorators/tool-usage-monitoring.js";
 import { sessionStorage } from "../session.js";
 
 export type CreateServerParams = {
-  enabledPrompts: Awaited<ReturnType<typeof getEnabledPrompts>>;
   requestId?: string;
   toolDefinitions: ToolEntry[];
 };
 
 export function createServer({
-  enabledPrompts,
   requestId,
   toolDefinitions,
 }: CreateServerParams): McpServer {
@@ -78,52 +74,9 @@ export function createServer({
     );
   });
 
-  // Register prompts using the modern registerPrompt pattern
-  enabledPrompts.forEach((catalogEntry) => {
-    const decoratedPrompt = withPromptLogging(
-      catalogEntry.prompt,
-      catalogEntry.id,
-      requestId,
-    );
-
-    // Build Zod schema from prompt arguments
-    const argsSchemaShape: Record<
-      string,
-      z.ZodOptional<z.ZodString> | z.ZodString
-    > = {};
-    for (const arg of catalogEntry.prompt.arguments) {
-      const fieldSchema = z.string().describe(arg.description);
-      argsSchemaShape[arg.name] = arg.required
-        ? fieldSchema
-        : fieldSchema.optional();
-    }
-
-    mcpServer.registerPrompt(
-      catalogEntry.prompt.name,
-      {
-        argsSchema: argsSchemaShape,
-        description: catalogEntry.prompt.description,
-      },
-      async (args: Record<string, unknown>): Promise<GetPromptResultType> => {
-        const content = await decoratedPrompt.load(args || {});
-        return {
-          messages: [
-            {
-              content: {
-                text: content,
-                type: "text",
-              },
-              role: "user",
-            },
-          ],
-        };
-      },
-    );
+  logger.debug(`Server initialized with ${toolDefinitions.length} tools`, {
+    requestId,
   });
-
-  logger.debug(
-    `Server initialized with ${toolDefinitions.length} tools and ${enabledPrompts.length} prompts`,
-  );
 
   return mcpServer;
 }

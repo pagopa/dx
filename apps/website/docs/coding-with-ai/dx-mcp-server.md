@@ -24,10 +24,8 @@ The DX MCP Server provides AI assistants with access to:
 1. **PagoPA DX Documentation**: Query the complete
    [DX technical documentation](https://dx.pagopa.it/docs) using natural
    language
-2. **GitHub Code Search**: Search for real-world code examples across PagoPA's
-   GitHub repositories
-3. **Smart Prompts**: Pre-configured prompts designed for common tasks like
-   Terraform configuration, code review, and infrastructure analysis
+2. **REST Knowledge Endpoints**: Access the same knowledge base through `/ask`
+  and `/search` for direct HTTP integrations
 
 ## Getting Started
 
@@ -103,16 +101,8 @@ Use `Tab` to navigate between fields and `Ctrl+S` to save.
 
 ### Tools
 
-- **QueryPagoPADXDocumentation**: Query the DX documentation using natural
-  language
-- **SearchGitHubCode**: Find code examples across PagoPA repositories
-
-### Prompts
-
-The server provides a collection of intelligent prompts for common development
-tasks. These prompts give guidelines to the agent on PagoPA's conventions and
-best practices. Explore them in the
-[DX prompts catalog](/docs/coding-with-ai/prompts-catalog).
+- **pagopa_query_documentation**: Query the DX documentation knowledge base
+  using natural language
 
 ## Learn More
 
