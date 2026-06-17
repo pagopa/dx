@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "description": "Simple application for Terraform E2E tests, which exposes a single HTTP endpoint to test connectivity to Cosmos DB",
   "private": true,
+  "release": {
+    "docker": {
+      "repositoryName": "pagopa/e2e-cosmos-network-access"
+    }
+  },
   "targets": {
     "nx-release-publish": {
       "executor": "nx:run-commands",

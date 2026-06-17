@@ -35,6 +35,11 @@ on:
         required: false
         default: linux/amd64
         description: Image runtime platform, supports multiple comma-separated values
+      docker_registry:
+        type: string
+        required: false
+        default: ghcr
+        description: Container registry used by docker-build-push (ghcr or ecr)
       container_app:
         type: string
         required: true
@@ -59,6 +64,8 @@ jobs:
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
+    outputs:
+      registry_uri: ${{ steps.docker_build.outputs.registry_uri }}
     permissions:
       contents: read
       id-token: write
@@ -75,6 +82,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          registry: ${{ inputs.docker_registry }}
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
           docker_image_name: ${{ env.IMAGE_NAME }}
@@ -99,6 +107,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       CONTAINER_APP_NAME: ${{ inputs.container_app }}
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+      REGISTRY_URI: ${{ needs.build.outputs.registry_uri }}
 
     steps:
       - name: Checkout
@@ -169,7 +178,7 @@ jobs:
 
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
-            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
+            --image "$REGISTRY_URI/$IMAGE_NAME:sha-$SHORT_SHA" \
             --from-revision "$CURRENT_REVISION" \
             --revision-suffix "$SUFFIX" \
             --query "properties.latestRevisionName" \

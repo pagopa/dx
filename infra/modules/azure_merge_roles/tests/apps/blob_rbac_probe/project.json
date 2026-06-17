@@ -4,6 +4,11 @@
   "version": "0.1.0",
   "description": "Simple application for Terraform E2E tests, exposing a single HTTP endpoint to verify merged Blob RBAC permissions with managed identity",
   "private": true,
+  "release": {
+    "docker": {
+      "repositoryName": "pagopa/e2e-azure-merge-roles-blob-rbac"
+    }
+  },
   "targets": {
     "nx-release-publish": {
       "executor": "nx:run-commands",
