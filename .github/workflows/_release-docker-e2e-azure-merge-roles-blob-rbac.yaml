@@ -6,6 +6,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger image publication on project release tags as well.
+    tags:
+      - "azure_merge_roles_tests_blob_rbac_probe@*"
     paths:
       - "infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/**"
 

@@ -6,6 +6,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger image publication on project release tags as well.
+    tags:
+      - "app_configuration_tests_all_scenarios@*"
     paths:
       - "infra/modules/azure_app_configuration/tests/apps/all_scenarios/**"
 

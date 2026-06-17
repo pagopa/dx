@@ -6,6 +6,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger image publication on project release tags as well.
+    tags:
+      - "cosmos_db_tests_network_access@*"
     paths:
       - "infra/modules/azure_cosmos_account/tests/apps/network_access/**"
 

@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger production deploys on project release tags as well.
+    tags:
+      - "dx-metrics@*"
     paths:
       - "apps/dx-metrics/package.json"
       - "packages/dx-metrics-core/**"
