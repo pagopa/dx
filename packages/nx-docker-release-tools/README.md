@@ -20,6 +20,10 @@ metadata and the final registry push commands.
 	 `tmp/<projectRoot>/.docker-version`.
 2. That file stores the full image reference to publish (for example,
 	 `ghcr.io/pagopa/my-service:1.2.3`).
+   The registry is resolved with this precedence:
+
+	 - project-level `nx.release.docker.registryUrl` (in `package.json` or `project.json`)
+	 - workspace default `release.docker.registryUrl` in `nx.json` (currently `ghcr.io`)
 3. A Docker project's `nx-release-publish` target runs this CLI to:
 	 - push the versioned image
 	 - tag the same image as `latest`
@@ -29,6 +33,14 @@ Example project configuration (`package.json` or `project.json`):
 
 ```json
 {
+	"nx": {
+		"release": {
+			"docker": {
+				"repositoryName": "pagopa/my-service",
+				"registryUrl": "123456789012.dkr.ecr.eu-south-1.amazonaws.com"
+			}
+		}
+	},
 	"targets": {
 		"nx-release-publish": {
 			"executor": "nx:run-commands",
@@ -39,6 +51,9 @@ Example project configuration (`package.json` or `project.json`):
 	}
 }
 ```
+
+If no project-level `registryUrl` is configured, Nx uses the default value from
+`nx.json`.
 
 ## CLI
 
