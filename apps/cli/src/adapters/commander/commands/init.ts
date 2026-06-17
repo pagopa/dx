@@ -5,7 +5,6 @@ import { $, ExecaError } from "execa";
 import inquirer from "inquirer";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import * as path from "node:path";
-import { oraPromise } from "ora";
 import { z } from "zod/v4";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
@@ -63,21 +62,6 @@ type RepositoryPullRequest = {
   pr?: PullRequest;
   repository: Repository;
 };
-
-const withSpinner = <T>(
-  text: string,
-  successText: ((value: T) => string) | string,
-  failText: string,
-  task: () => Promise<T>,
-): ResultAsync<T, Error> =>
-  ResultAsync.fromPromise(
-    oraPromise(task(), {
-      failText,
-      successText,
-      text,
-    }),
-    (cause) => new Error(failText, { cause }),
-  );
 
 const trackStep = <T, E>(
   presenter: CommandPresenter,
@@ -151,14 +135,6 @@ const displaySummary = (input: SummaryInput) => {
 
 const checkTerraformCli = () => tf$`terraform -version`;
 
-const checkTerraformCliIsInstalled = () =>
-  withSpinner(
-    "Checking Terraform installation...",
-    "Terraform is installed!",
-    "Please install terraform CLI before running this command. If you use tfenv, run: tfenv install latest && tfenv use latest",
-    checkTerraformCli,
-  );
-
 const trackTerraformCliIsInstalled = (presenter: CommandPresenter) =>
   trackStep(
     presenter,
@@ -170,14 +146,6 @@ const trackTerraformCliIsInstalled = (presenter: CommandPresenter) =>
   );
 
 const checkCorepack = () => tf$`corepack -v`;
-
-const checkCorepackIsInstalled = () =>
-  withSpinner(
-    "Checking Corepack installation...",
-    "Corepack is installed!",
-    "Please install Corepack before running this command.",
-    checkCorepack,
-  );
 
 const trackCorepackIsInstalled = (presenter: CommandPresenter) =>
   trackStep(
@@ -203,27 +171,27 @@ const ensureAzLogin = async (): Promise<string> => {
   return user.name;
 };
 
-const checkAzLogin = () =>
-  withSpinner(
-    "Check Azure login status...",
-    (userName) => `You are logged in to Azure (${userName})`,
-    "Please log in to Azure CLI using `az login` before running this command.",
+const trackAzLogin = (presenter: CommandPresenter) =>
+  trackStep(
+    presenter,
+    "Checking Azure login status...",
     ensureAzLogin,
+    asError(
+      "Please log in to Azure CLI using `az login` before running this command.",
+    ),
   );
 
-const runInitPreconditions = (presenter: CommandPresenter) =>
+// TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
+export const runInitPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter).andThen(() =>
     trackCorepackIsInstalled(presenter),
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
-export const checkInitPreconditions = () =>
-  checkTerraformCliIsInstalled().andThen(() => checkCorepackIsInstalled());
-
-export const checkAddEnvironmentPreconditions = () =>
-  checkTerraformCliIsInstalled()
-    .andThen(() => checkAzLogin())
-    .andThen(() => checkCorepackIsInstalled());
+export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
+  trackTerraformCliIsInstalled(presenter)
+    .andThen(() => trackAzLogin(presenter))
+    .andThen(() => trackCorepackIsInstalled(presenter));
 
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
