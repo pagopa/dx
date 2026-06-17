@@ -1,12 +1,13 @@
 ---
-sidebar_position: 12
+sidebar_position: 2
 ---
 
 # Release Docker images with Nx
 
 This page complements
-[Automate versioning and publishing with Nx](./nx-release.md) and focuses on
-repositories that release Docker images with Nx in the PagoPA organization.
+[Automate versioning and publishing with Nx](../pipelines/nx-release.md) and
+focuses on repositories that release Docker images with Nx in the PagoPA
+organization.
 
 ## When to use this guide
 
@@ -18,7 +19,7 @@ Use this guide if your repository:
 
 ## Prerequisites
 
-- A working Nx release setup (see [Nx Release](./nx-release.md))
+- A working Nx release setup (see [Nx Release](../pipelines/nx-release.md))
 - Docker projects discoverable by Nx (for example via `@nx/docker` plugin)
 - A registry target (for example `ghcr.io`)
 
@@ -173,5 +174,5 @@ Fix:
 
 ## Related documentation
 
-- [Automate versioning and publishing with Nx](./nx-release.md)
+- [Automate versioning and publishing with Nx](../pipelines/nx-release.md)
 - [Version plan guide](../github/pull-requests/version-plan.md)
