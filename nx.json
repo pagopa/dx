@@ -8,11 +8,6 @@
       "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
       "cache": true
     },
-    "nx-release-publish": {
-      "options": {
-        "command": "npx --yes --package=file:./packages/nx-docker-release-tools dx-docker-release-publish-with-latest --project-root {projectRoot}"
-      }
-    },
     "format:check": {
       "cache": true
     },

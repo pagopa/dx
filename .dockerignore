@@ -4,12 +4,6 @@
 
 # node
 node_modules
-**/node_modules
-.next
-**/.next
-coverage
-**/coverage
-tmp
 .env
 dist
 .pnpm-store
