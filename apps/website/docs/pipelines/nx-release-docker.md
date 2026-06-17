@@ -56,18 +56,34 @@ Add Docker configuration under `release`:
 Using `{versionActionsVersion}` aligns Docker image tags with the version
 calculated by Nx version actions, keeping package and image releases coherent.
 
-## Project-level Docker repository name
+## Project-level Docker release configuration
 
-Define `release.docker.repositoryName` for each Docker project.
+Define Docker release metadata for each Docker project:
+
+- `release.docker.repositoryName` (required)
+- `release.docker.registryUrl` (optional override)
+
+If `release.docker.registryUrl` is not set at project level, Nx uses
+`release.docker.registryUrl` from workspace `nx.json` (default `ghcr.io` in DX
+setup).
 
 If your project uses `package.json`:
 
 ```json
 {
   "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm --filter @pagopa/nx-docker-release-tools exec dx-docker-release-publish-with-latest --project-root {projectRoot}"
+        }
+      }
+    },
     "release": {
       "docker": {
-        "repositoryName": "pagopa/my-service"
+        "repositoryName": "pagopa/my-service",
+        "registryUrl": "ghcr.io"
       }
     }
   }
@@ -78,9 +94,18 @@ If your project uses `project.json`:
 
 ```json
 {
+  "targets": {
+    "nx-release-publish": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "pnpm --filter @pagopa/nx-docker-release-tools exec dx-docker-release-publish-with-latest --project-root {projectRoot}"
+      }
+    }
+  },
   "release": {
     "docker": {
-      "repositoryName": "pagopa/my-service"
+      "repositoryName": "pagopa/my-service",
+      "registryUrl": "ghcr.io"
     }
   }
 }
