@@ -5,7 +5,6 @@ import { getLogger } from "@logtape/logtape";
 import { Answers } from "inquirer";
 import nodePlop from "node-plop";
 import { Octokit } from "octokit";
-import { oraPromise } from "ora";
 
 import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
@@ -134,27 +133,43 @@ export const runMonorepoActions = async (
 };
 
 /**
- * Run the deployment environment generator
+ * Collect the deployment environment payload by running the generator's
+ * interactive prompts.
+ *
+ * Like {@link collectMonorepoPayload}, this phase MUST run outside any spinner:
+ * a spinner (e.g. ora) occupies the TTY and prevents the inquirer prompts from
+ * being rendered. Callers should track only the subsequent
+ * {@link runDeploymentEnvironmentActions} phase, which is non-interactive.
  *
  * @param plop - The plop instance
  * @param github - Optional GitHub repository info. When provided (by init command),
  *                 uses the explicitly passed repository. When omitted (by add command),
  *                 the generator infers it from the local git context.
  */
-export const runDeploymentEnvironmentGenerator = async (
+export const collectDeploymentEnvironmentPayload = async (
   plop: NodePlopAPI,
   gitHubService: GitHubService,
   github?: GitHubRepo,
-): Promise<EnvironmentPayload> => {
+): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
   setDeploymentEnvironmentGenerator(plop, gitHubService, github);
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
-  await oraPromise(runActions(generator, payload), {
-    failText: "Failed to create deployment environment",
-    successText: "Environment created successfully!",
-    text: "Creating environment...",
-  });
+  return { generator, payload };
+};
+
+/**
+ * Execute the deployment environment generator actions for an already-collected
+ * payload.
+ *
+ * This phase is non-interactive, so callers are free to wrap it in a spinner or
+ * other progress indicator.
+ */
+export const runDeploymentEnvironmentActions = async (
+  generator: PlopGenerator,
+  payload: EnvironmentPayload,
+): Promise<EnvironmentPayload> => {
+  await runActions(generator, payload);
   return payload;
 };
 
