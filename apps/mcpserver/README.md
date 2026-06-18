@@ -11,10 +11,7 @@ The server currently exposes the following capabilities:
 ### MCP Protocol
 
 - **Tools**:
-  - `QueryPagoPADXDocumentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the [DX documentation](https://dx.pagopa.it/).
-  - `SearchGitHubCode`: Searches for code snippets in specified GitHub organization (defaults to pagopa), allowing users to find real-world examples of code usage.
-- **Prompts**:
-  - `GenerateTerraformConfiguration`: Guides the generation of Terraform configurations following PagoPA DX best practices.
+  - `pagopa_query_documentation`: Queries Amazon Bedrock Knowledge Bases to retrieve relevant content from the [DX documentation](https://dx.pagopa.it/).
 
 ### REST API Endpoints
 

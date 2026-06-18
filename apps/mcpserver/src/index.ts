@@ -5,7 +5,6 @@
  * at import time. All runtime setup flows from the main entrypoint.
  */
 
-import { getEnabledPrompts } from "@pagopa/dx-mcpprompts";
 import * as http from "node:http";
 
 import { loadConfig } from "./config.js";
@@ -21,9 +20,7 @@ export async function main(
   await configureLogging(config.logLevel);
   configureAzureMonitoring(config.monitoring);
 
-  const enabledPrompts = await getEnabledPrompts();
-
-  const httpServer = await startHttpServer(config, enabledPrompts);
+  const httpServer = await startHttpServer(config);
   return httpServer;
 }
 

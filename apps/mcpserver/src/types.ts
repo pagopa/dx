@@ -1,63 +1,9 @@
 /**
  * Type definitions for the MCP server
  */
-import type { CatalogEntry as PromptCatalogEntry } from "@pagopa/dx-mcpprompts";
 import type { z } from "zod";
 
 import type { Session } from "./session.js";
-
-/**
- * Catalog entry for a prompt from the prompts package.
- * Re-exported from @pagopa/dx-mcpprompts to stay in sync with the source type.
- */
-export type CatalogEntry = PromptCatalogEntry;
-
-/**
- * Decorated prompt with load function
- */
-export type DecoratedPrompt = {
-  load: (args: Record<string, unknown>) => Promise<string>;
-};
-
-/**
- * MCP Get Prompt Result
- */
-export type GetPromptResultType = {
-  messages: PromptMessage[];
-};
-
-/**
- * Argument definition for a prompt
- */
-export type PromptArgument = {
-  description: string;
-  name: string;
-  required: boolean;
-};
-
-/**
- * Entry in the prompt registry combining catalog metadata and decorated prompt
- */
-export type PromptEntry = {
-  catalogEntry: CatalogEntry;
-  prompt: DecoratedPrompt;
-};
-
-/**
- * MCP Prompt Message
- */
-export type PromptMessage = {
-  content: PromptMessageContent;
-  role: "assistant" | "user";
-};
-
-/**
- * MCP Prompt Message Content
- */
-export type PromptMessageContent = {
-  text: string;
-  type: "text";
-};
 
 /**
  * MCP Tool Call Result

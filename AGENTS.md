@@ -11,7 +11,7 @@ Guidelines and architectural context for DevEx initiative development.
 ## Repository Map
 
 - `apps/` - Applications: [cli](apps/cli/), [mcpserver](apps/mcpserver/), [website](apps/website/).
-- `packages/` - Libraries: [eslint-config](packages/eslint-config/), [azure-tracing](packages/azure-tracing/), [mcp-prompts](packages/mcp-prompts/).
+- `packages/` - Libraries: [eslint-config](packages/eslint-config/), [azure-tracing](packages/azure-tracing/), [dx-metrics-core](packages/dx-metrics-core/), [dx-tasks](packages/dx-tasks/), [monorepo-generator](packages/monorepo-generator/), [nx-terraform-plugin](packages/nx-terraform-plugin/), [pnpm-plugin-pagopa](packages/pnpm-plugin-pagopa/), [savemoney](packages/savemoney/).
 - `infra/modules/` - Opinionated, reusable Terraform modules for AWS and Azure.
 - `infra/resources/` - Environment-specific infrastructure organized by `<env>/`.
 - `providers/` - Custom Terraform providers in Go (`azure/`, `aws/`).

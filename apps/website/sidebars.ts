@@ -88,7 +88,6 @@ const sidebars: SidebarsConfig = {
         { id: "coding-with-ai/index", label: "AI in DX", type: "doc" },
         "coding-with-ai/dx-mcp-server",
         "coding-with-ai/plugin-marketplace",
-        "coding-with-ai/prompts-catalog",
       ],
       label: "Coding with AI",
       type: "category",

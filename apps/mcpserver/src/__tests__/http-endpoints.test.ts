@@ -4,11 +4,6 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { loadConfig } from "../config.js";
 
-// Mock the prompts package to avoid Vite resolution issues in CI
-vi.mock("@pagopa/dx-mcpprompts", () => ({
-  getEnabledPrompts: vi.fn().mockResolvedValue([]),
-}));
-
 // Helper to create mock Bedrock responses
 function createMockBedrockResponse(command: { constructor: { name: string } }) {
   if (command.constructor.name === "RetrieveAndGenerateCommand") {
@@ -102,8 +97,7 @@ async function setupTestServer() {
   const config = loadConfig(testEnv);
   const { startHttpServer } = await import("../index.js");
 
-  // Use empty prompts array since we mocked the module
-  server = await startHttpServer(config, []);
+  server = await startHttpServer(config);
 
   const address = server.address();
   const port = typeof address === "object" ? address?.port : 8080;
