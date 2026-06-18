@@ -1,8 +1,10 @@
 /**
  * Wraps Nx Docker target inference with DX-specific build context, Dockerfile, and label defaults.
  */
-import type { DockerPluginOptions as NxDockerPluginOptions } from "@nx/docker";
-import { createNodesV2 as baseCreateNodesV2 } from "@nx/docker";
+import {
+  createNodesV2 as baseCreateNodesV2,
+  type DockerPluginOptions as NxDockerPluginOptions,
+} from "@nx/docker";
 import path from "node:path";
 
 import { getDockerBuildContext, getDockerfileArgument } from "./discovery.ts";
@@ -10,11 +12,7 @@ import {
   getAutomaticDockerLabelArgs,
   getDefaultDockerImageAuthors,
 } from "./metadata.ts";
-import {
-  type DockerTargetOptions,
-  type DockerPluginOptions,
-  parseOptions,
-} from "./options.ts";
+import { type DockerPluginOptions, parseOptions } from "./options.ts";
 
 type CreateNodesTuple = readonly [
   string,
@@ -23,7 +21,10 @@ type CreateNodesTuple = readonly [
       string,
       {
         root?: string;
-        targets?: Record<string, { executor?: string; options?: Record<string, unknown> }>;
+        targets?: Record<
+          string,
+          { executor?: string; options?: Record<string, unknown> }
+        >;
       }
     >;
   },
@@ -56,12 +57,14 @@ const normalizeEnv = (value: unknown): Record<string, string> => {
   }
 
   return Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
   );
 };
 
 const normalizeTargetForNx = (
-  target: string | DockerTargetOptions | undefined,
+  target: NxDockerPluginOptions["buildTarget"],
   defaultName: string,
 ): NxDockerPluginOptions["buildTarget"] => {
   if (typeof target === "string" || target === undefined) {
@@ -92,8 +95,15 @@ const patchBuildTarget = (
   buildTarget: { options?: Record<string, unknown> },
   authors: string,
 ) => {
-  const buildContext = getDockerBuildContext(workspaceRoot, projectRoot, dockerfilePath);
-  const dockerfileArgument = getDockerfileArgument(buildContext, dockerfilePath);
+  const buildContext = getDockerBuildContext(
+    workspaceRoot,
+    projectRoot,
+    dockerfilePath,
+  );
+  const dockerfileArgument = getDockerfileArgument(
+    buildContext,
+    dockerfilePath,
+  );
   const existingOptions = buildTarget.options ?? {};
   const existingEnv = normalizeEnv(existingOptions.env);
   // The wrapper owns context, Dockerfile path, and OCI labels, but preserves any unrelated user args.
@@ -111,12 +121,12 @@ const patchBuildTarget = (
     ...buildTarget,
     options: {
       ...existingOptions,
+      args: [...baseArgs, `--file ${dockerfileArgument}`, ...labelArgs],
       cwd: buildContext,
       env: {
         ...existingEnv,
         DOCKER_BUILDKIT: existingEnv.DOCKER_BUILDKIT ?? "1",
       },
-      args: [...baseArgs, `--file ${dockerfileArgument}`, ...labelArgs],
     },
   };
 };
@@ -141,7 +151,7 @@ const patchProjects = (
       const buildTargetName =
         typeof options.buildTarget === "string"
           ? options.buildTarget
-          : options.buildTarget?.name ?? "docker:build";
+          : (options.buildTarget?.name ?? "docker:build");
       const targets = { ...(projectConfig.targets ?? {}) };
 
       if (targets[buildTargetName]) {
@@ -182,7 +192,7 @@ export const createNodesV2 = [
   async (
     configFilePaths: string[],
     rawOptions: DockerPluginOptions | undefined,
-    context: Parameters<typeof baseCreateNodesV2[1]>[2],
+    context: Parameters<(typeof baseCreateNodesV2)[1]>[2],
   ) => {
     const options = parseOptions(rawOptions);
     const baseOptions: NxDockerPluginOptions = {
@@ -196,10 +206,13 @@ export const createNodesV2 = [
       context,
     )) as CreateNodesTuple[];
 
-    return results.map(([configFilePath, result]) => [
-      configFilePath,
-      patchProjects(result, configFilePath, options, context.workspaceRoot),
-    ] as const);
+    return results.map(
+      ([configFilePath, result]) =>
+        [
+          configFilePath,
+          patchProjects(result, configFilePath, options, context.workspaceRoot),
+        ] as const,
+    );
   },
 ] as const;
 

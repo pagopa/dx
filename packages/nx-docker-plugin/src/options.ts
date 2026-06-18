@@ -3,22 +3,13 @@
  */
 import type { DockerPluginOptions as NxDockerPluginOptions } from "@nx/docker";
 
-export type DockerTargetOptions = Exclude<
-  NxDockerPluginOptions["buildTarget"],
-  string | undefined
->;
-
 export type DockerPluginOptions = NxDockerPluginOptions & {
   dockerImageAuthors?: string;
 };
 
-export type ResolvedDockerPluginOptions = {
-  buildTarget?: NxDockerPluginOptions["buildTarget"];
-  dockerImageAuthors?: string;
-  runTarget?: NxDockerPluginOptions["runTarget"];
-};
-
-const cloneTargetOptions = <T>(targetOptions: T): T => {
+const cloneTargetOptions = <
+  T extends DockerPluginOptions["buildTarget"] | DockerPluginOptions["runTarget"],
+>(targetOptions: T): T => {
   // Nx can freeze nested target options, so clone before the wrapper patches args and cwd.
   if (typeof targetOptions === "string" || targetOptions === undefined) {
     return targetOptions;
@@ -29,8 +20,8 @@ const cloneTargetOptions = <T>(targetOptions: T): T => {
 
 export const parseOptions = (
   options: DockerPluginOptions | undefined,
-): ResolvedDockerPluginOptions => {
-  const parsedOptions: ResolvedDockerPluginOptions = {
+): DockerPluginOptions => {
+  const parsedOptions: DockerPluginOptions = {
     ...options,
   };
 
