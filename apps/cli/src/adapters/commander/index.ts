@@ -1,5 +1,7 @@
 import { Command, Option } from "commander";
 
+import type { CliEnv } from "./env.js";
+
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
 import { makeAddCommand } from "./commands/add.js";
@@ -12,9 +14,7 @@ import { makeInfoCommand } from "./commands/info.js";
 import { makeInitCommand } from "./commands/init.js";
 import { makeSavemoneyCommand } from "./commands/savemoney.js";
 import { makeSpecCommand } from "./commands/spec.js";
-import { CliEnv } from "./env.js";
 import { extractCliSpec } from "./spec.js";
-
 export type CliDependencies = CodemodCommandDependencies;
 
 export const makeCli = (

@@ -1,15 +1,13 @@
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
 /**
- * Output logger factory.
+ * Output presenter selection.
  *
- * isNonInteractive determines whether the CLI should suppress interactive
- * prompts (e.g. when running in a CI pipeline). This is independent of the
- * output format: a user can request JSON output while still answering prompts,
- * and a CI system can set CI=true with text output.
- *
- * createCommandPresenter selects the appropriate CommandPresenter adapter based
- * solely on the requested output mode, while resolveOutputMode applies the
- * precedence rules that decide that mode.
+ * isNonInteractive reports whether the CLI is running in a non-interactive
+ * (CI) environment. resolveOutputMode applies the precedence rules: a CI
+ * environment forces JSON so agents and pipelines get structured output,
+ * otherwise the `--output` flag decides, defaulting to text.
+ * createCommandPresenter then maps the resolved mode to the matching
+ * CommandPresenter adapter.
  */
 import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
