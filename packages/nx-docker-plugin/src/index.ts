@@ -87,6 +87,21 @@ const removeExistingLabelArgs = (args: string[]) =>
       arg !== "--provenance=false",
   );
 
+const dockerReleasePublishTargetName = "docker-release-publish";
+
+const dockerReleasePublishExecutors = new Set([
+  "@nx/docker:release-publish",
+  "@pagopa/nx-docker-plugin:release-publish",
+]);
+
+const shouldReplaceReleasePublishTarget = (
+  target:
+    | undefined
+    | {
+        executor?: string;
+      },
+) => !target?.executor || dockerReleasePublishExecutors.has(target.executor);
+
 const patchBuildTarget = (
   workspaceRoot: string,
   projectRoot: string,
@@ -165,11 +180,18 @@ const patchProjects = (
         );
       }
 
-      // Nx infers the target name, but publishing must go through the custom executor.
-      targets["nx-release-publish"] = {
-        ...(targets["nx-release-publish"] ?? {}),
+      targets[dockerReleasePublishTargetName] = {
+        ...(targets[dockerReleasePublishTargetName] ?? {}),
         executor: "@pagopa/nx-docker-plugin:release-publish",
       };
+
+      // Keep non-Docker publish targets intact so projects can still publish other artifacts.
+      if (shouldReplaceReleasePublishTarget(targets["nx-release-publish"])) {
+        targets["nx-release-publish"] = {
+          ...(targets["nx-release-publish"] ?? {}),
+          executor: "@pagopa/nx-docker-plugin:release-publish",
+        };
+      }
 
       return [
         projectKey,
