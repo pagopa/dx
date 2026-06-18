@@ -10,6 +10,7 @@ const childProcessMocks = vi.hoisted(() => ({
 const fsMocks = vi.hoisted(() => ({
   existsSync: vi.fn(() => true),
   readFileSync: vi.fn(() => "ghcr.io/pagopa/example:1.2.3"),
+  rmSync: vi.fn(),
 }));
 
 vi.mock("node:child_process", () => ({
@@ -22,6 +23,7 @@ vi.mock("node:fs", async () => {
     ...actual,
     existsSync: fsMocks.existsSync,
     readFileSync: fsMocks.readFileSync,
+    rmSync: fsMocks.rmSync,
   };
 });
 
@@ -49,6 +51,7 @@ describe("release-publish executor", () => {
     childProcessMocks.execSync.mockClear();
     fsMocks.existsSync.mockClear();
     fsMocks.readFileSync.mockClear();
+    fsMocks.rmSync.mockClear();
     fsMocks.existsSync.mockImplementation(() => true);
     fsMocks.readFileSync.mockImplementation(() => "ghcr.io/pagopa/example:1.2.3");
     childProcessMocks.execSync.mockImplementation(() => "");
@@ -74,6 +77,13 @@ describe("release-publish executor", () => {
       "docker push ghcr.io/pagopa/example:latest",
       expect.any(Object),
     );
+    expect(fsMocks.rmSync).toHaveBeenCalledWith(
+      "/workspace/tmp/apps/sample",
+      {
+        force: true,
+        recursive: true,
+      },
+    );
   });
 
   it("does not execute Docker commands in dry run mode", async () => {
@@ -82,6 +92,7 @@ describe("release-publish executor", () => {
     await releasePublishExecutor({ quiet: true }, createContext());
 
     expect(childProcessMocks.execSync).not.toHaveBeenCalled();
+    expect(fsMocks.rmSync).not.toHaveBeenCalled();
   });
 
   it("supports dry-run through executor options without NX_DRY_RUN", async () => {
@@ -143,6 +154,7 @@ describe("release-publish executor", () => {
     await expect(releasePublishExecutor({ quiet: true }, createContext())).rejects.toThrow(
       "Could not find local Docker image 'ghcr.io/pagopa/example:1.2.3'. Did you run 'nx release version'?",
     );
+    expect(fsMocks.rmSync).not.toHaveBeenCalled();
   });
 
   it("throws when executor options are invalid", async () => {

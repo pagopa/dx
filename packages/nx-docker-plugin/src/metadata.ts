@@ -23,6 +23,8 @@ interface ProjectJsonLike {
   repository?: RepositoryFieldObject | string;
 }
 
+const githubRepositoryUrlPattern = /^https:\/\/github\.com\/([^/]+)\/[^/]+$/i;
+
 const projectJsonLikeSchema: z.ZodType<ProjectJsonLike> = z.object({
   description: z.string().optional(),
   name: z.string().optional(),
@@ -42,6 +44,7 @@ const readJsonIfExists = (
   filePath: string,
   schema: z.ZodType<ProjectJsonLike>,
 ): ProjectJsonLike | null => {
+  // Missing project metadata is normal in mixed workspaces, but malformed files should still fail fast.
   if (!existsSync(filePath)) {
     return null;
   }
@@ -57,6 +60,7 @@ const readJsonIfExists = (
 };
 
 const normalizeRepositoryUrl = (url: string | undefined): string | null => {
+  // OCI labels are easier to consume when every Git transport is normalized to HTTPS.
   if (!url) {
     return null;
   }
@@ -72,6 +76,16 @@ const normalizeRepositoryUrl = (url: string | undefined): string | null => {
     .replace(/^git@github\.com:/, "https://github.com/")
     .replace(/^ssh:\/\/git@github\.com\//, "https://github.com/")
     .replace(/^git:\/\/github\.com\//, "https://github.com/");
+};
+
+const getGitHubOwner = (repositoryUrl: string | null): string | null => {
+  if (!repositoryUrl) {
+    return null;
+  }
+
+  const repositoryUrlMatch = repositoryUrl.match(githubRepositoryUrlPattern);
+
+  return repositoryUrlMatch?.[1] ?? null;
 };
 
 const getRepositoryFieldUrl = (
@@ -110,6 +124,9 @@ const getHeadCommitSha = (workspaceRoot: string): string | null => {
   }
 };
 
+export const getDefaultDockerImageAuthors = (workspaceRoot: string) =>
+  getGitHubOwner(getGitRemoteUrl(workspaceRoot)) ?? "PagoPA";
+
 const quoteLabelValue = (value: string): string =>
   JSON.stringify(value.replaceAll("\n", " "));
 
@@ -126,6 +143,7 @@ export const getProjectDescriptor = (
   const name = packageJson?.name ?? projectJson?.name ?? fallbackProjectName;
   const description =
     packageJson?.description ?? projectJson?.description ?? fallbackProjectName;
+  // Prefer project-local metadata, then fall back to the workspace remote for bare projects.
   const repositoryUrl =
     normalizeRepositoryUrl(getRepositoryFieldUrl(packageJson?.repository)) ??
     normalizeRepositoryUrl(getRepositoryFieldUrl(projectJson?.repository)) ??
@@ -163,6 +181,7 @@ export const getAutomaticDockerLabelArgs = (
     );
   }
 
+  // Provenance is not an OCI label, but the wrapper manages it together with the auto-generated metadata.
   labels.push("--provenance=false");
 
   return labels;

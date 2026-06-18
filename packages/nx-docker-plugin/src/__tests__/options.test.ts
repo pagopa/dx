@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { parseOptions } from "../options.ts";
 
 describe("parseOptions", () => {
-  it("defaults dockerImageAuthors and preserves upstream plugin options", () => {
+  it("preserves upstream plugin options and wrapper extensions", () => {
     expect(
       parseOptions({
         buildTarget: "container:build",
@@ -20,10 +20,8 @@ describe("parseOptions", () => {
     });
   });
 
-  it("uses PagoPA as the default author when nothing is configured", () => {
-    expect(parseOptions(undefined)).toEqual({
-      dockerImageAuthors: "PagoPA",
-    });
+  it("keeps plugin options empty when nothing is configured", () => {
+    expect(parseOptions(undefined)).toEqual({});
   });
 
   it("deep-clones nested target options so frozen Nx config objects stay mutable downstream", () => {

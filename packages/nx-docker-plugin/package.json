@@ -1,8 +1,14 @@
 {
   "name": "@pagopa/nx-docker-plugin",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
+  "description": "Nx plugin that extends Docker target inference with automatic build context selection, OCI labels, and Docker release publishing.",
+  "keywords": [
+    "nx",
+    "docker",
+    "monorepo",
+    "release"
+  ],
   "files": [
     "dist",
     "executors.json"
@@ -24,6 +30,10 @@
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/nx-docker-plugin"
+  },
+  "homepage": "https://github.com/pagopa/dx/tree/main/packages/nx-docker-plugin#readme",
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "node ./scripts/build.mjs"

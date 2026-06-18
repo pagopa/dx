@@ -9,6 +9,7 @@ const dockerMocks = vi.hoisted(() => ({
     '--label org.opencontainers.image.title="demo"',
     "--provenance=false",
   ]),
+  getDefaultDockerImageAuthors: vi.fn(() => "acme"),
   getDockerBuildContext: vi.fn(() => "."),
   getDockerfileArgument: vi.fn(() => "apps/api/Dockerfile"),
 }));
@@ -19,6 +20,7 @@ vi.mock("@nx/docker", () => ({
 
 vi.mock("../metadata.ts", () => ({
   getAutomaticDockerLabelArgs: dockerMocks.getAutomaticDockerLabelArgs,
+  getDefaultDockerImageAuthors: dockerMocks.getDefaultDockerImageAuthors,
 }));
 
 vi.mock("../discovery.ts", () => ({
@@ -32,6 +34,7 @@ describe("createNodesV2 wrapper branches", () => {
   beforeEach(() => {
     dockerMocks.baseCreateNodes.mockReset();
     dockerMocks.getAutomaticDockerLabelArgs.mockClear();
+    dockerMocks.getDefaultDockerImageAuthors.mockClear();
     dockerMocks.getDockerBuildContext.mockClear();
     dockerMocks.getDockerfileArgument.mockClear();
   });
@@ -75,6 +78,9 @@ describe("createNodesV2 wrapper branches", () => {
                       "--provenance=false",
                       "--platform linux/amd64",
                     ],
+                    env: {
+                      CUSTOM_FLAG: "on",
+                    },
                   },
                 },
               },
@@ -107,7 +113,17 @@ describe("createNodesV2 wrapper branches", () => {
           "--provenance=false",
         ],
         cwd: ".",
+        env: {
+          CUSTOM_FLAG: "on",
+          DOCKER_BUILDKIT: "1",
+        },
       });
+    expect(dockerMocks.getAutomaticDockerLabelArgs).toHaveBeenCalledWith(
+      "/workspace",
+      "apps/api",
+      "apps-api",
+      "Platform Team",
+    );
     expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["nx-release-publish"])
       .toEqual({
         executor: "@pagopa/nx-docker-plugin:release-publish",
@@ -152,6 +168,112 @@ describe("createNodesV2 wrapper branches", () => {
           "--provenance=false",
         ],
         cwd: ".",
+        env: {
+          DOCKER_BUILDKIT: "1",
+        },
+      });
+  });
+
+  it("preserves an explicit DOCKER_BUILDKIT value from the upstream target", async () => {
+    dockerMocks.baseCreateNodes.mockResolvedValue([
+      [
+        "apps/api/Dockerfile",
+        {
+          projects: {
+            "apps/api": {
+              root: "apps/api",
+              targets: {
+                "docker:build": {
+                  options: {
+                    env: {
+                      DOCKER_BUILDKIT: "0",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    ]);
+
+    const result = await createNodesV2[1](
+      ["apps/api/Dockerfile"],
+      undefined,
+      {
+        nxJsonConfiguration: {},
+        workspaceRoot: "/workspace",
+      },
+    );
+
+    expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["docker:build"]?.options)
+      .toEqual({
+        args: [
+          "--file apps/api/Dockerfile",
+          '--label org.opencontainers.image.title="demo"',
+          "--provenance=false",
+        ],
+        cwd: ".",
+        env: {
+          DOCKER_BUILDKIT: "0",
+        },
+      });
+  });
+
+  it("normalizes runTarget before delegating upstream and leaves the inferred run target untouched", async () => {
+    dockerMocks.baseCreateNodes.mockResolvedValue([
+      [
+        "apps/api/Dockerfile",
+        {
+          projects: {
+            "apps/api": {
+              root: "apps/api",
+              targets: {
+                "container:run": {
+                  options: {
+                    command: "docker run {args} apps-api",
+                    cwd: "apps/api",
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    ]);
+
+    const context = {
+      nxJsonConfiguration: {},
+      workspaceRoot: "/workspace",
+    };
+
+    const result = await createNodesV2[1](
+      ["apps/api/Dockerfile"],
+      {
+        runTarget: {
+          args: ["--rm"],
+        },
+      },
+      context,
+    );
+
+    expect(dockerMocks.baseCreateNodes).toHaveBeenCalledWith(
+      ["apps/api/Dockerfile"],
+      {
+        buildTarget: undefined,
+        runTarget: {
+          args: ["--rm"],
+          name: "docker:run",
+        },
+      },
+      context,
+    );
+    expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["container:run"])
+      .toEqual({
+        options: {
+          command: "docker run {args} apps-api",
+          cwd: "apps/api",
+        },
       });
   });
 
@@ -219,7 +341,7 @@ describe("createNodesV2 wrapper branches", () => {
       "/workspace",
       ".",
       "workspace",
-      "PagoPA",
+      "acme",
     );
   });
 });
