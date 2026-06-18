@@ -78,7 +78,8 @@ The plugin applies these defaults even when they are not declared in `nx.json`:
 
 - `DOCKER_BUILDKIT=1` is injected into the inferred Docker build target unless the target already defines `DOCKER_BUILDKIT`.
 - OCI labels are generated automatically from project metadata and workspace Git metadata.
-- `nx-release-publish` is routed to the package executor.
+- `docker-release-publish` is added as a dedicated Docker publish target.
+- `nx-release-publish` is routed to the package executor only when the project does not already own that target for a different publish flow.
 - target option objects without an explicit `name` are normalized to `docker:build` or `docker:run` before they are passed to `@nx/docker`
 
 ### `docker:run` Behavior
@@ -102,7 +103,8 @@ For each inferred Docker project it:
 3. rewrites `--file` so the Dockerfile path is relative to that build context
 4. removes previously defined OCI image labels managed by the plugin
 5. appends a fresh set of automatically generated OCI labels
-6. routes `nx-release-publish` to the package executor `@pagopa/nx-docker-plugin:release-publish`
+6. adds `docker-release-publish` backed by `@pagopa/nx-docker-plugin:release-publish`
+7. routes `nx-release-publish` to the same executor only when that target is not already owned by another publisher
 
 The plugin preserves unrelated build arguments already defined on the inferred target.
 
@@ -139,9 +141,10 @@ The label values are resolved from project metadata in this order:
 
 - `package.json` inside the project root
 - `project.json` inside the project root
-- workspace Git metadata when repository information is not declared locally
+- workspace Git metadata discovered from the `origin` remote when repository information is not declared locally
 
 The `source` label always points to the project directory inside the repository.
+The `repository` field is therefore optional when the workspace Git remote already identifies the source repository.
 
 ## Publish Flow
 
@@ -150,6 +153,8 @@ The package provides one executor:
 - `@pagopa/nx-docker-plugin:release-publish`
 
 This executor is normally reached through the inferred `nx-release-publish` target.
+
+If a project already owns `nx-release-publish` for another artifact type, the plugin still exposes `docker-release-publish` so a workspace-specific composite target can orchestrate both flows.
 
 Its behavior is:
 

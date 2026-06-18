@@ -128,6 +128,10 @@ describe("createNodesV2 wrapper branches", () => {
       .toEqual({
         executor: "@pagopa/nx-docker-plugin:release-publish",
       });
+    expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["docker-release-publish"])
+      .toEqual({
+        executor: "@pagopa/nx-docker-plugin:release-publish",
+      });
   });
 
   it("drops non-array upstream args before injecting the normalized Docker arguments", async () => {
@@ -309,6 +313,69 @@ describe("createNodesV2 wrapper branches", () => {
       .toEqual({
         executor: "@pagopa/nx-docker-plugin:release-publish",
       });
+    expect(result[0]?.[1].projects?.["libs/api-image"]?.targets?.["docker-release-publish"])
+      .toEqual({
+        executor: "@pagopa/nx-docker-plugin:release-publish",
+      });
+  });
+
+  it("preserves an existing non-Docker nx-release-publish target", async () => {
+    dockerMocks.baseCreateNodes.mockResolvedValue([
+      [
+        "apps/mcpserver/Dockerfile",
+        {
+          projects: {
+            "apps/mcpserver": {
+              root: "apps/mcpserver",
+              targets: {
+                "docker:build": {},
+                "nx-release-publish": {
+                  executor: "@nx/js:release-publish",
+                  options: {
+                    access: "public",
+                  },
+                },
+              },
+            },
+          },
+        },
+      ],
+    ]);
+
+    const result = await createNodesV2[1](
+      ["apps/mcpserver/Dockerfile"],
+      undefined,
+      {
+        nxJsonConfiguration: {},
+        workspaceRoot: "/workspace",
+      },
+    );
+
+    expect(result[0]?.[1].projects?.["apps/mcpserver"]?.targets?.["nx-release-publish"])
+      .toEqual({
+        executor: "@nx/js:release-publish",
+        options: {
+          access: "public",
+        },
+      });
+    expect(result[0]?.[1].projects?.["apps/mcpserver"]?.targets?.["docker-release-publish"])
+      .toEqual({
+        executor: "@pagopa/nx-docker-plugin:release-publish",
+      });
+    expect(result[0]?.[1].projects?.["apps/mcpserver"]?.targets?.["docker:build"])
+      .toEqual({
+        options: {
+          args: [
+            "--file apps/api/Dockerfile",
+            '--label org.opencontainers.image.title="demo"',
+            "--provenance=false",
+          ],
+          cwd: ".",
+          env: {
+            DOCKER_BUILDKIT: "1",
+          },
+        },
+      });
   });
 
   it("supports Dockerfiles owned by the workspace root", async () => {
@@ -328,7 +395,7 @@ describe("createNodesV2 wrapper branches", () => {
       ],
     ]);
 
-    await createNodesV2[1](
+    const result = await createNodesV2[1](
       ["Dockerfile"],
       undefined,
       {
@@ -343,5 +410,9 @@ describe("createNodesV2 wrapper branches", () => {
       "workspace",
       "acme",
     );
+    expect(result[0]?.[1].projects?.["."]?.targets?.["docker-release-publish"])
+      .toEqual({
+        executor: "@pagopa/nx-docker-plugin:release-publish",
+      });
   });
 });
