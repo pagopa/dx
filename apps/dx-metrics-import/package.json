@@ -9,6 +9,12 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/dx-metrics-import"
   },
+  "release": {
+    "docker": {
+      "registryUrl": "ghcr.io",
+      "repositoryName": "pagopa/dx-metrics-import"
+    }
+  },
   "scripts": {
     "build": "esbuild src/import.ts --bundle --platform=node --format=esm --external:pg --outfile=dist/import.mjs",
     "format": "prettier --write .",

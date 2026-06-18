@@ -1,6 +1,13 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "description": "DX GitHub self-hosted runner image.",
   "name": "self-hosted-runner",
+  "release": {
+    "docker": {
+      "registryUrl": "ghcr.io",
+      "repositoryName": "pagopa/dx-github-self-hosted-runner"
+    }
+  },
   "targets": {
     "docker:build": {
       "options": {

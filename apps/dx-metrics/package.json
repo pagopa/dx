@@ -3,6 +3,13 @@
   "version": "0.5.9",
   "private": true,
   "type": "module",
+  "description": "DX Metrics is a monitoring and analytics service for the PagoPA Developer Experience team.",
+  "release": {
+    "docker": {
+      "registryUrl": "ghcr.io",
+      "repositoryName": "pagopa/dx-metrics"
+    }
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",

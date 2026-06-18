@@ -68,6 +68,7 @@
       "apps/*",
       "packages/*",
       "actions/*",
+      "containers/*",
       "infra/modules/*",
       "providers/*",
       "infra/scripts"
@@ -97,10 +98,12 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/docker",
-      "exclude": ["apps/*/Dockerfile"],
+      "plugin": "@pagopa/nx-docker-plugin",
       "options": {
-        "buildTarget": "docker:build",
+        "buildTarget": {
+          "name": "docker:build",
+          "args": ["--platform linux/amd64"]
+        },
         "runTarget": "docker:run"
       }
     },
