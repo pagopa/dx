@@ -27,7 +27,41 @@ import { listCodemods } from "./use-cases/list-codemods.js";
 const detectVerboseFromArgv = (argv: readonly string[]): boolean =>
   argv.includes("-v") || argv.includes("--verbose");
 
-const configureLogging = async (verbose: boolean): Promise<void> => {
+const savemoneyMachineReadableFormats = new Set([
+  "detailed-json",
+  "finops-json",
+  "json",
+  "lint",
+]);
+
+const detectSavemoneyMachineReadableFromArgv = (
+  argv: readonly string[],
+): boolean => {
+  const commandIndex = argv.indexOf("savemoney");
+  if (commandIndex === -1) {
+    return false;
+  }
+
+  for (let index = commandIndex + 1; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--format" || arg === "-f") {
+      return savemoneyMachineReadableFormats.has(argv[index + 1] ?? "");
+    }
+    if (arg?.startsWith("--format=")) {
+      return savemoneyMachineReadableFormats.has(arg.slice("--format=".length));
+    }
+    if (arg?.startsWith("-f") && arg.length > 2) {
+      return savemoneyMachineReadableFormats.has(arg.slice(2));
+    }
+  }
+
+  return false;
+};
+
+const configureLogging = async (
+  verbose: boolean,
+  savemoneyMachineReadable: boolean,
+): Promise<void> => {
   const level = verbose ? "debug" : "info";
   await configure({
     loggers: [
@@ -36,8 +70,12 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
       // provisioned Azure resources; surfacing them is the main value of
       // `--verbose` when running `dx init` / `dx add environment`.
       { category: ["gen"], lowestLevel: level, sinks: ["console"] },
-      // `savemoney` already emits structured debug output by default.
-      { category: ["savemoney"], lowestLevel: "debug", sinks: ["console"] },
+      // Keep stdout valid for machine-readable savemoney formats.
+      {
+        category: ["savemoney"],
+        lowestLevel: savemoneyMachineReadable ? "fatal" : "debug",
+        sinks: ["console"],
+      },
       { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
       {
         category: ["logtape", "meta"],
@@ -55,7 +93,10 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
 };
 
 export const runCli = async (version: string) => {
-  await configureLogging(detectVerboseFromArgv(process.argv));
+  await configureLogging(
+    detectVerboseFromArgv(process.argv),
+    detectSavemoneyMachineReadableFromArgv(process.argv),
+  );
 
   const repositoryReader = makeRepositoryReader();
   const packageJsonReader = makePackageJsonReader();

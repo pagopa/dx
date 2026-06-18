@@ -19,6 +19,14 @@ export {
   type AzureClients,
   createDefaultAnalyzers,
 } from "./azure/analyzers/index.js";
+export {
+  type AzqrAdvisorRecommendation,
+  type AzqrImpactedResource,
+  type AzqrInventoryResource,
+  type AzqrReport,
+  type FinOpsOpportunity,
+  type FinOpsReport,
+} from "./azure/azqr-finops.js";
 
 // Export common types
 export type { AzureConfig, AzureSource } from "./azure/types.js";

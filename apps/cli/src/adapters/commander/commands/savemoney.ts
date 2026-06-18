@@ -1,7 +1,12 @@
-import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
+import type {
+  AzqrReport,
+  AzureConfig,
+  AzureSource,
+} from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
+import { readFile } from "fs/promises";
 import { oraPromise } from "ora";
 import { z } from "zod";
 
@@ -15,8 +20,12 @@ export const makeSavemoneyCommand = () =>
     )
     .option("-c, --config <path>", "Path to YAML configuration file")
     .option(
+      "--azqr-report <path>",
+      "Path to an AZQR JSON report to enrich the PoC FinOps output",
+    )
+    .option(
       "-f, --format <format>",
-      "Report format: json, table, detailed-json, or lint (default: table)",
+      "Report format: json, table, detailed-json, lint, or finops-json (default: table)",
       "table",
     )
     .option(
@@ -72,6 +81,18 @@ export const makeSavemoneyCommand = () =>
             text: "Analyzing Azure resources",
           },
         );
+        if (options.format === "finops-json") {
+          const azqrReport = options.azqrReport
+            ? await loadAzqrReport(options.azqrReport)
+            : undefined;
+          const finopsReport = azure.generateFinOpsReport({
+            azqrReport,
+            savemoneyReports: reports,
+          });
+          console.log(JSON.stringify(finopsReport, null, 2));
+          return;
+        }
+
         await azure.generateReport(reports, options.format);
       } catch (error) {
         exitWithError(this)(
@@ -81,6 +102,12 @@ export const makeSavemoneyCommand = () =>
         );
       }
     });
+
+async function loadAzqrReport(path: string): Promise<AzqrReport> {
+  const raw = await readFile(path, "utf8");
+  const parsed: unknown = JSON.parse(raw);
+  return azure.parseAzqrReport(parsed);
+}
 
 const SourceSchema = z.enum(["advisor", "all", "custom"]);
 
