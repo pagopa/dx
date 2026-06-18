@@ -187,6 +187,7 @@ const getNestedCandidateContexts = (workspaceRoot: string, projectRoot: string) 
 };
 
 const getSourceBasePath = (sourcePath: string) => {
+  // Wildcard COPY sources can only be validated up to their fixed path prefix.
   if (!wildcardPattern.test(sourcePath)) {
     return sourcePath;
   }
@@ -242,6 +243,7 @@ const selectBuildContext = (
     return normalizePath(projectRoot);
   }
 
+  // Prefer the deepest valid directory so Docker sends the smallest context possible.
   const candidateContexts = Array.from(
     new Set([
       ...getNestedCandidateContexts(workspaceRoot, projectRoot),

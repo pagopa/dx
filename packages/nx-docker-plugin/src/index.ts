@@ -6,8 +6,12 @@ import { createNodesV2 as baseCreateNodesV2 } from "@nx/docker";
 import path from "node:path";
 
 import { getDockerBuildContext, getDockerfileArgument } from "./discovery.ts";
-import { getAutomaticDockerLabelArgs } from "./metadata.ts";
 import {
+  getAutomaticDockerLabelArgs,
+  getDefaultDockerImageAuthors,
+} from "./metadata.ts";
+import {
+  type DockerTargetOptions,
   type DockerPluginOptions,
   parseOptions,
 } from "./options.ts";
@@ -26,6 +30,7 @@ type CreateNodesTuple = readonly [
 ];
 
 const getProjectNameFromPath = (projectRoot: string, workspaceRoot: string) => {
+  // Nx only gives us a config file path here, so derive a stable fallback name for labels.
   const root = projectRoot === "." ? workspaceRoot : projectRoot;
   const normalizedProjectRoot = root
     .replace(/^[\\/]/, "")
@@ -43,6 +48,30 @@ const normalizeArgs = (value: unknown): string[] => {
   }
 
   return value.filter((item): item is string => typeof item === "string");
+};
+
+const normalizeEnv = (value: unknown): Record<string, string> => {
+  if (!value || typeof value !== "object") {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"),
+  );
+};
+
+const normalizeTargetForNx = (
+  target: string | DockerTargetOptions | undefined,
+  defaultName: string,
+): NxDockerPluginOptions["buildTarget"] => {
+  if (typeof target === "string" || target === undefined) {
+    return target;
+  }
+
+  return {
+    ...target,
+    name: target.name ?? defaultName,
+  };
 };
 
 const removeExistingFileArgs = (args: string[]) =>
@@ -66,6 +95,8 @@ const patchBuildTarget = (
   const buildContext = getDockerBuildContext(workspaceRoot, projectRoot, dockerfilePath);
   const dockerfileArgument = getDockerfileArgument(buildContext, dockerfilePath);
   const existingOptions = buildTarget.options ?? {};
+  const existingEnv = normalizeEnv(existingOptions.env);
+  // The wrapper owns context, Dockerfile path, and OCI labels, but preserves any unrelated user args.
   const baseArgs = removeExistingLabelArgs(
     removeExistingFileArgs(normalizeArgs(existingOptions.args)),
   );
@@ -81,6 +112,10 @@ const patchBuildTarget = (
     options: {
       ...existingOptions,
       cwd: buildContext,
+      env: {
+        ...existingEnv,
+        DOCKER_BUILDKIT: existingEnv.DOCKER_BUILDKIT ?? "1",
+      },
       args: [...baseArgs, `--file ${dockerfileArgument}`, ...labelArgs],
     },
   };
@@ -95,6 +130,9 @@ const patchProjects = (
   if (!result.projects) {
     return result;
   }
+
+  const dockerImageAuthors =
+    options.dockerImageAuthors ?? getDefaultDockerImageAuthors(workspaceRoot);
 
   const patchedProjects = Object.fromEntries(
     Object.entries(result.projects).map(([projectKey, projectConfig]) => {
@@ -113,10 +151,11 @@ const patchProjects = (
           projectName,
           configFilePath,
           targets[buildTargetName],
-          options.dockerImageAuthors,
+          dockerImageAuthors,
         );
       }
 
+      // Nx infers the target name, but publishing must go through the custom executor.
       targets["nx-release-publish"] = {
         ...(targets["nx-release-publish"] ?? {}),
         executor: "@pagopa/nx-docker-plugin:release-publish",
@@ -147,8 +186,8 @@ export const createNodesV2 = [
   ) => {
     const options = parseOptions(rawOptions);
     const baseOptions: NxDockerPluginOptions = {
-      buildTarget: options.buildTarget,
-      runTarget: options.runTarget,
+      buildTarget: normalizeTargetForNx(options.buildTarget, "docker:build"),
+      runTarget: normalizeTargetForNx(options.runTarget, "docker:run"),
     };
 
     const results = (await baseCreateNodesV2[1](
@@ -164,6 +203,7 @@ export const createNodesV2 = [
   },
 ] as const;
 
+// Nx mutates the loaded plugin object to attach its runtime name, so expose a plain object.
 export default {
   createNodesV2,
 };

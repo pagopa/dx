@@ -26,6 +26,7 @@ vi.mock("node:child_process", () => ({
 
 import {
   getAutomaticDockerLabelArgs,
+  getDefaultDockerImageAuthors,
   getProjectDescriptor,
 } from "../metadata.ts";
 
@@ -276,5 +277,31 @@ describe("getAutomaticDockerLabelArgs", () => {
     expect(
       getAutomaticDockerLabelArgs(workspaceRoot, projectRoot, "worker", "ACME Team"),
     ).not.toContainEqual(expect.stringContaining("org.opencontainers.image.revision"));
+  });
+});
+
+describe("getDefaultDockerImageAuthors", () => {
+  beforeEach(() => {
+    childProcessMocks.execSync.mockClear();
+  });
+
+  it("derives the default author from the GitHub owner of the workspace remote", () => {
+    childProcessMocks.execSync.mockImplementation((command: string) => {
+      if (command === "git config --get remote.origin.url") {
+        return "git@github.com:acme/platform.git\n";
+      }
+
+      throw new Error(`Unexpected command: ${command}`);
+    });
+
+    expect(getDefaultDockerImageAuthors("/workspace")).toBe("acme");
+  });
+
+  it("falls back to PagoPA when the workspace remote is unavailable", () => {
+    childProcessMocks.execSync.mockImplementation(() => {
+      throw new Error("git unavailable");
+    });
+
+    expect(getDefaultDockerImageAuthors("/workspace")).toBe("PagoPA");
   });
 });

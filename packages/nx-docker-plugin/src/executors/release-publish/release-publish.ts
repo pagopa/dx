@@ -2,7 +2,7 @@
  * Publishes the Docker image tagged during versioning and mirrors it to the rolling latest tag.
  */
 import { execSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 
 import {
@@ -24,6 +24,7 @@ export interface DockerPublishExecutorContext {
   root: string;
 }
 
+// Docker stores local images without the docker.io prefix, so normalize before local inspection.
 const normalizeImageReference = (imageReference: string) =>
   imageReference.startsWith("docker.io/")
     ? imageReference.slice("docker.io/".length)
@@ -42,10 +43,14 @@ const getLatestImageReference = (imageReference: string) => {
   return `${imageReference.slice(0, lastColonIndex)}:latest`;
 };
 
+const getDockerVersionDirectoryPath = (workspaceRoot: string, projectRoot: string) =>
+  path.join(workspaceRoot, "tmp", projectRoot);
+
 const getDockerVersionFilePath = (workspaceRoot: string, projectRoot: string) =>
-  path.join(workspaceRoot, "tmp", projectRoot, ".docker-version");
+  path.join(getDockerVersionDirectoryPath(workspaceRoot, projectRoot), ".docker-version");
 
 const readImageReference = (workspaceRoot: string, projectRoot: string) => {
+  // The versioning step persists the final tag so publish can reuse the exact same image reference.
   const dockerVersionFilePath = getDockerVersionFilePath(workspaceRoot, projectRoot);
 
   if (!existsSync(dockerVersionFilePath)) {
@@ -86,6 +91,7 @@ const runDockerCommand = (command: string, quiet: boolean) => {
 };
 
 const runPublish = (imageReference: string, quiet: boolean) => {
+  // Push the immutable versioned tag first, then mirror that exact local image to latest.
   const latestImageReference = getLatestImageReference(imageReference);
 
   console.info(`Pushing Docker image ${imageReference}`);
@@ -96,6 +102,13 @@ const runPublish = (imageReference: string, quiet: boolean) => {
 
   console.info(`Pushing Docker image ${latestImageReference}`);
   runDockerCommand(`docker push ${latestImageReference}`, quiet);
+};
+
+const cleanupDockerVersionDirectory = (workspaceRoot: string, projectRoot: string) => {
+  rmSync(getDockerVersionDirectoryPath(workspaceRoot, projectRoot), {
+    force: true,
+    recursive: true,
+  });
 };
 
 export const releasePublishExecutor = async (
@@ -121,7 +134,9 @@ export const releasePublishExecutor = async (
     throw new Error("Could not resolve the current project for Docker publish.");
   }
 
-  const imageReference = readImageReference(context.root, projectNode.data.root);
+  const projectRoot = projectNode.data.root;
+  const imageReference = readImageReference(context.root, projectRoot);
+  // nx release forwards dry-run through NX_DRY_RUN, but the executor also supports direct invocation.
   const dryRun = process.env.NX_DRY_RUN === "true" || options.dryRun === true;
   const quiet = options.quiet ?? false;
   const latestImageReference = getLatestImageReference(imageReference);
@@ -135,6 +150,7 @@ export const releasePublishExecutor = async (
 
   assertLocalImageExists(imageReference);
   runPublish(imageReference, quiet);
+  cleanupDockerVersionDirectory(context.root, projectRoot);
 
   return { success: true };
 };
