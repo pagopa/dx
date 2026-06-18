@@ -14,6 +14,7 @@ import { okAsync, ResultAsync } from "neverthrow";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { Payload as EnvironmentPayload } from "../../plop/generators/environment/index.js";
+import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
 
 import {
@@ -31,7 +32,10 @@ import {
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
 import { asError, reportCommandError } from "../command-errors.js";
-import { createCommandPresenter } from "../presenters/index.js";
+import {
+  createCommandPresenter,
+  resolveOutputMode,
+} from "../presenters/index.js";
 import { runAddEnvironmentPreconditions } from "./init.js";
 
 /**
@@ -187,7 +191,10 @@ const addEnvironmentAction = (
       ),
     );
 
-export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
+export const makeAddCommand = (
+  requireGitHubAuth: GitHubAuthFactory,
+  env: CliEnv,
+): Command =>
   new Command()
     .name("add")
     .description("Add a new component to your workspace")
@@ -196,7 +203,8 @@ export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
         .description("Add a new deployment environment")
         .action(async function () {
           const { output } = this.optsWithGlobals<GlobalOptions>();
-          const presenter = createCommandPresenter(output);
+          const outputMode = resolveOutputMode(env, output);
+          const presenter = createCommandPresenter(outputMode);
 
           await requireGitHubAuth()
             .andThen(({ authorizationService, gitHubService }) =>
@@ -207,8 +215,8 @@ export const makeAddCommand = (requireGitHubAuth: GitHubAuthFactory): Command =>
               ),
             )
             .match(
-              reportSummary(presenter, output),
-              reportCommandError(this, presenter, output),
+              reportSummary(presenter, outputMode),
+              reportCommandError(this, presenter, outputMode),
             );
         }),
     );

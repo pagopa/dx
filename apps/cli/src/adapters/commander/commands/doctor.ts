@@ -14,11 +14,15 @@ import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { Dependencies } from "../../../domain/dependencies.js";
 import type { DoctorResult } from "../../../domain/doctor.js";
 import type { ValidationCheck } from "../../../domain/validation.js";
+import type { CliEnv } from "../env.js";
+import type { GlobalOptions } from "../global-options.js";
 
 import { Config } from "../../../config.js";
 import { runDoctor } from "../../../domain/doctor.js";
-import { GlobalOptions } from "../global-options.js";
-import { createCommandPresenter } from "../presenters/index.js";
+import {
+  createCommandPresenter,
+  resolveOutputMode,
+} from "../presenters/index.js";
 
 const formatCheck = (check: ValidationCheck): string =>
   check.isValid
@@ -38,6 +42,7 @@ const reportDoctorResult =
 export const makeDoctorCommand = (
   dependencies: Dependencies,
   config: Config,
+  env: CliEnv,
 ): Command =>
   new Command()
     .name("doctor")
@@ -46,11 +51,12 @@ export const makeDoctorCommand = (
     )
     .action(async function () {
       const { output } = this.optsWithGlobals<GlobalOptions>();
-      const presenter = createCommandPresenter(output);
+      const outputMode = resolveOutputMode(env, output);
+      const presenter = createCommandPresenter(outputMode);
 
       const result = await runDoctor(dependencies, config);
 
-      reportDoctorResult(presenter, output)(result);
+      reportDoctorResult(presenter, outputMode)(result);
 
       process.exitCode = result.hasErrors ? 1 : 0;
     });

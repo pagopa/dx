@@ -12,6 +12,7 @@ const makeProgram = (argv: string[]): Command => {
     mock<Dependencies>(),
     mock<Config>(),
     mock<CliDependencies>(),
+    { CI: false },
     "0.0.0",
   );
   program.exitOverride().configureOutput({

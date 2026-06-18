@@ -96,7 +96,7 @@ describe("add environment command json output", () => {
 
     const program = new Command()
       .option("--output <mode>", "Output mode", "json")
-      .addCommand(makeAddCommand(requireGitHubAuth));
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: false }));
 
     await program.parseAsync([
       "node",

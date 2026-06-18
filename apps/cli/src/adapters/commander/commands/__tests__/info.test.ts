@@ -52,7 +52,7 @@ const makeDependencies = (): Dependencies => {
 };
 
 const runInfoCommand = async (output: "json" | "text") => {
-  const command = makeInfoCommand(makeDependencies());
+  const command = makeInfoCommand(makeDependencies(), { CI: false });
   const program = new Command()
     .exitOverride()
     .option("--output <mode>", "Output mode", output)

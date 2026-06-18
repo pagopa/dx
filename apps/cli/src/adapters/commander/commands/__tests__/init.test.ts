@@ -10,17 +10,22 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDeep } from "vitest-mock-extended";
 
 import type { AuthorizationService } from "../../../../domain/authorization.js";
+import type { CommandPresenter } from "../../../../domain/command-presenter.js";
 import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
 import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => {
-  const presenter = {
-    reportError: vi.fn(),
-    reportResult: vi.fn(),
-    trackStep: vi.fn(async (_name: string, task: () => Promise<unknown>) =>
-      task(),
-    ),
+  const reportError = vi.fn();
+  const reportResult = vi.fn();
+  const trackStepMock = vi.fn();
+  const presenter: CommandPresenter = {
+    reportError,
+    reportResult,
+    trackStep: async <T>(name: string, task: () => Promise<T>) => {
+      trackStepMock(name, task);
+      return task();
+    },
   };
 
   return {
@@ -28,11 +33,17 @@ const mocks = vi.hoisted(() => {
     createCommandPresenter: vi.fn(() => presenter),
     getPlopInstance: vi.fn(),
     presenter,
+    reportError,
+    reportResult,
+    resolveOutputMode: vi.fn(
+      (_env: unknown, output: "json" | "text" | undefined) => output ?? "text",
+    ),
     runMonorepoActions: vi.fn(),
     tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
       void args;
       return { stdout: '{"user":{"name":"test@example.com"}}' };
     }),
+    trackStepMock,
   };
 });
 
@@ -48,6 +59,7 @@ vi.mock("../../../plop/index.js", () => ({
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
+  resolveOutputMode: mocks.resolveOutputMode,
 }));
 
 import {
@@ -85,7 +97,7 @@ const runInitCommand = async (
       authorizationService: mockDeep<AuthorizationService>(),
       gitHubService,
     });
-  const initCommand = makeInitCommand(requireGitHubAuth);
+  const initCommand = makeInitCommand(requireGitHubAuth, { CI: false });
   initCommand.exitOverride().configureOutput(silentOutput);
 
   const program = new Command();
@@ -263,7 +275,7 @@ describe("makeInitCommand", () => {
         authorizationService: mockDeep<AuthorizationService>(),
         gitHubService: mockDeep<GitHubService>(),
       });
-    const command = makeInitCommand(requireGitHubAuth);
+    const command = makeInitCommand(requireGitHubAuth, { CI: false });
 
     const flags = command.options.flatMap((option) => [
       option.flags,
@@ -283,16 +295,15 @@ describe("makeInitCommand", () => {
   it("uses the command presenter to report json progress and results", async () => {
     await runInitCommand("json");
 
-    expect(mocks.createCommandPresenter).toHaveBeenCalledWith("json");
-    expect(mocks.presenter.trackStep).toHaveBeenCalledWith(
+    expect(mocks.trackStepMock).toHaveBeenCalledWith(
       "Checking Terraform installation...",
       expect.any(Function),
     );
-    expect(mocks.presenter.trackStep).toHaveBeenCalledWith(
+    expect(mocks.trackStepMock).toHaveBeenCalledWith(
       "Checking Corepack installation...",
       expect.any(Function),
     );
-    expect(mocks.presenter.reportResult).toHaveBeenCalledWith(
+    expect(mocks.reportResult).toHaveBeenCalledWith(
       expect.objectContaining({
         gitHubRepoCreationSkipped: true,
         payload,
@@ -306,7 +317,7 @@ describe("makeInitCommand", () => {
 
     await runInitCommand("json");
 
-    expect(mocks.presenter.reportError).toHaveBeenCalledWith(
+    expect(mocks.reportError).toHaveBeenCalledWith(
       expect.objectContaining({
         message: "Failed to run the generator",
       }),
@@ -322,6 +333,6 @@ describe("makeInitCommand", () => {
       code: "commander.error",
       exitCode: 1,
     });
-    expect(mocks.presenter.reportError).not.toHaveBeenCalled();
+    expect(mocks.reportError).not.toHaveBeenCalled();
   });
 });

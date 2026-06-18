@@ -7,10 +7,12 @@ import type { CommandPresenter } from "../../../domain/command-presenter.js";
  * output format: a user can request JSON output while still answering prompts,
  * and a CI system can set CI=true with text output.
  *
- * createCommandPresenter selects the appropriate CommandPresenter adapter based solely
- * on the requested output format.
+ * createCommandPresenter selects the appropriate CommandPresenter adapter based
+ * solely on the requested output mode, while resolveOutputMode applies the
+ * precedence rules that decide that mode.
  */
 import type { CliEnv } from "../env.js";
+import type { GlobalOptions } from "../global-options.js";
 
 import { JsonCommandPresenter } from "./json-command-presenter.js";
 import { TextCommandPresenter } from "./text-command-presenter.js";
@@ -22,6 +24,24 @@ import { TextCommandPresenter } from "./text-command-presenter.js";
  * following the same convention used by `is-interactive` and `ora`.
  */
 export const isNonInteractive = (env: CliEnv): boolean => env.CI;
+
+/**
+ * Resolves the effective output mode for a command invocation.
+ *
+ * - In a non-interactive environment (CI), output is always "json" so agents
+ *   and pipelines get structured output regardless of the `--output` flag.
+ * - Otherwise the `--output` flag decides.
+ * - When nothing is provided, the mode defaults to "text".
+ */
+export const resolveOutputMode = (
+  env: CliEnv,
+  output: GlobalOptions["output"] | undefined,
+): "json" | "text" => {
+  if (isNonInteractive(env)) {
+    return "json";
+  }
+  return output === "json" ? "json" : "text";
+};
 
 /**
  * Returns the appropriate CommandPresenter adapter for the requested output mode.
