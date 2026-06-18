@@ -1,3 +1,15 @@
+## 0.5.9 (2026-06-18)
+
+### 🩹 Fixes
+
+- Stabilize the DX Metrics Docker build by pinning the repository package manager and avoiding Nx workspace resolution inside the image build. ([#1841](https://github.com/pagopa/dx/pull/1841))
+- Keep the DX Metrics Docker builds on each package's existing build script so the image build does not re-enter pnpm workspace resolution inside a reduced Docker workspace. ([#1852](https://github.com/pagopa/dx/pull/1852))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.5.8 (2026-06-09)
 
 ### 🩹 Fixes

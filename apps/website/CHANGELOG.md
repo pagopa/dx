@@ -1,3 +1,13 @@
+## 0.19.3 (2026-06-18)
+
+### 🩹 Fixes
+
+- Remove the feature of exposing prompts via the DX MCP server in favor of [plugins](https://dx.pagopa.it/docs/coding-with-ai/plugin-marketplace) ([#1863](https://github.com/pagopa/dx/pull/1863))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.19.2 (2026-06-09)
 
 ### 🩹 Fixes

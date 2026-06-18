@@ -1,3 +1,13 @@
+## 0.1.13 (2026-06-18)
+
+### 🩹 Fixes
+
+- Fix telemetry export by using Azure Monitor exporters directly and flushing them during the action post step. Add telemetry spans to Terraform plan and apply workflows. ([#1833](https://github.com/pagopa/dx/pull/1833))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.1.12 (2026-06-09)
 
 ### 🧱 Updated Dependencies

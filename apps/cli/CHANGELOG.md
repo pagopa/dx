@@ -1,3 +1,21 @@
+## 0.23.3 (2026-06-18)
+
+### 🩹 Fixes
+
+- Wire info command output through the command presenter. ([#1836](https://github.com/pagopa/dx/pull/1836))
+- Wire codemod commands through the command presenter. ([#1837](https://github.com/pagopa/dx/pull/1837))
+- Keep dx init on pnpm 10 during bootstrap ([#1839](https://github.com/pagopa/dx/pull/1839))
+- Document dx init and spec usage ([#1840](https://github.com/pagopa/dx/pull/1840))
+- Route the doctor command output through the command presenter, unifying text and JSON output. Text mode now prints a clean per-check summary (without log timestamps) and JSON mode emits the structured result; the exit code still reflects failed checks. ([#1850](https://github.com/pagopa/dx/pull/1850))
+- Route the `add environment` command output through the command presenter, unifying text and JSON output. Preconditions and scaffolding now emit progress as step events (NDJSON on stderr in JSON mode), and the final result is reported as a structured envelope in JSON mode while keeping the human-readable summary in text mode. ([#1853](https://github.com/pagopa/dx/pull/1853))
+- Surface a clear, actionable error when `git remote add origin` fails during `dx init` (for example when the `origin` remote already exists), instead of misreporting it as a push failure. The underlying git exit code and stderr remain available with --verbose. ([#1859](https://github.com/pagopa/dx/pull/1859))
+- Add init command flags for non-interactive scaffolding ([#1809](https://github.com/pagopa/dx/pull/1809))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.23.2 (2026-06-10)
 
 ### 🩹 Fixes
