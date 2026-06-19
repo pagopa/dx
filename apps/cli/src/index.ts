@@ -4,6 +4,7 @@ import { errAsync, okAsync, ResultAsync } from "neverthrow";
 import { Octokit } from "octokit";
 
 import codemodRegistry from "./adapters/codemods/index.js";
+import { cliEnvSchema } from "./adapters/commander/env.js";
 import { makeCli } from "./adapters/commander/index.js";
 import { makePackageJsonReader } from "./adapters/node/package-json.js";
 import { makeRepositoryReader } from "./adapters/node/repository.js";
@@ -90,13 +91,14 @@ export const runCli = async (version: string) => {
   };
 
   const config = getConfig();
+  const env = cliEnvSchema.parse(process.env);
 
   const useCases = {
     applyCodemodById: applyCodemodById(codemodRegistry, getInfo(deps)),
     listCodemods: listCodemods(codemodRegistry),
   };
 
-  const program = makeCli(deps, config, useCases, version);
+  const program = makeCli(deps, config, useCases, env, version);
 
   program.parse();
 };

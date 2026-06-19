@@ -53,7 +53,7 @@ describe("makeInitCommand", () => {
       }),
     );
     const requireGitHubAuth: GitHubAuthFactory = requireGitHubAuthSpy;
-    const root = makeRoot(makeInitCommand(requireGitHubAuth));
+    const root = makeRoot(makeInitCommand(requireGitHubAuth, { CI: false }));
 
     await expect(
       root.parseAsync(["init"], { from: "user" }),

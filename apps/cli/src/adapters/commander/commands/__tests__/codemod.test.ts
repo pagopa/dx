@@ -37,11 +37,14 @@ const runCodemodCommand = async (
   args: string[],
   overrides: CodemodCommandOverrides = {},
 ) => {
-  const command = makeCodemodCommand({
-    applyCodemodById:
-      overrides.applyCodemodById ?? makeSuccessfulApplyCodemodById(),
-    listCodemods: overrides.listCodemods ?? vi.fn(() => okAsync(codemods)),
-  });
+  const command = makeCodemodCommand(
+    {
+      applyCodemodById:
+        overrides.applyCodemodById ?? makeSuccessfulApplyCodemodById(),
+      listCodemods: overrides.listCodemods ?? vi.fn(() => okAsync(codemods)),
+    },
+    { CI: false },
+  );
   const program = new Command()
     .exitOverride()
     .option("--output <mode>", "Output mode", "text")

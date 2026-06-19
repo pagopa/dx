@@ -1,5 +1,7 @@
 import { Command, Option } from "commander";
 
+import type { CliEnv } from "./env.js";
+
 import { Config } from "../../config.js";
 import { Dependencies } from "../../domain/dependencies.js";
 import { makeAddCommand } from "./commands/add.js";
@@ -13,13 +15,13 @@ import { makeInitCommand } from "./commands/init.js";
 import { makeSavemoneyCommand } from "./commands/savemoney.js";
 import { makeSpecCommand } from "./commands/spec.js";
 import { extractCliSpec } from "./spec.js";
-
 export type CliDependencies = CodemodCommandDependencies;
 
 export const makeCli = (
   deps: Dependencies,
   config: Config,
   cliDeps: CliDependencies,
+  env: CliEnv,
   version: string,
 ) => {
   const program = new Command();
@@ -42,12 +44,12 @@ export const makeCli = (
         .default("text"),
     );
 
-  program.addCommand(makeDoctorCommand(deps, config));
-  program.addCommand(makeCodemodCommand(cliDeps));
-  program.addCommand(makeInitCommand(deps.requireGitHubAuth));
+  program.addCommand(makeDoctorCommand(deps, config, env));
+  program.addCommand(makeCodemodCommand(cliDeps, env));
+  program.addCommand(makeInitCommand(deps.requireGitHubAuth, env));
   program.addCommand(makeSavemoneyCommand());
-  program.addCommand(makeInfoCommand(deps));
-  program.addCommand(makeAddCommand(deps.requireGitHubAuth));
+  program.addCommand(makeInfoCommand(deps, env));
+  program.addCommand(makeAddCommand(deps.requireGitHubAuth, env));
 
   // spec is registered last so the closure captures the complete command tree.
   program.addCommand(makeSpecCommand(() => extractCliSpec(program, version)));

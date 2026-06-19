@@ -62,7 +62,9 @@ const captureStdout = (): string[] => {
 };
 
 const runDoctorCommand = async (output: "json" | "text") => {
-  const command = makeDoctorCommand(makeDependencies(), getConfig());
+  const command = makeDoctorCommand(makeDependencies(), getConfig(), {
+    CI: false,
+  });
   const program = new Command()
     .exitOverride()
     .option("--output <mode>", "Output mode", output)

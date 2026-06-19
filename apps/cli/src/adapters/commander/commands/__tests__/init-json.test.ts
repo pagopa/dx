@@ -93,7 +93,7 @@ describe("init command json output", () => {
       });
     const program = new Command()
       .option("--output <mode>", "Output mode", "json")
-      .addCommand(makeInitCommand(requireGitHubAuth));
+      .addCommand(makeInitCommand(requireGitHubAuth, { CI: false }));
     await program.parseAsync(["node", "dx", "--output", "json", "init"]);
 
     expect(parseNdjson(stderr.written)).toEqual([

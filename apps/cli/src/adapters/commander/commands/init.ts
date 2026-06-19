@@ -8,6 +8,7 @@ import * as path from "node:path";
 import { z } from "zod";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
+import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
 
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
@@ -24,7 +25,10 @@ import {
   runMonorepoActions,
 } from "../../plop/index.js";
 import { asError, reportCommandError } from "../command-errors.js";
-import { createCommandPresenter } from "../presenters/index.js";
+import {
+  createCommandPresenter,
+  resolveOutputMode,
+} from "../presenters/index.js";
 
 type GitHubRepoCreationSkippedResult = {
   gitHubRepoCreationSkipped: true;
@@ -488,6 +492,7 @@ const reportSummary =
 
 export const makeInitCommand = (
   requireGitHubAuth: GitHubAuthFactory,
+  env: CliEnv,
 ): Command =>
   new Command()
     .name("init")
@@ -510,7 +515,8 @@ export const makeInitCommand = (
     )
     .action(async function (options: unknown) {
       const { output } = this.optsWithGlobals<GlobalOptions>();
-      const presenter = createCommandPresenter(output);
+      const outputMode = resolveOutputMode(env, output);
+      const presenter = createCommandPresenter(outputMode);
 
       await ResultAsync.fromPromise(
         Promise.resolve().then(() => parseInitCommandOptions(options)),
@@ -531,7 +537,7 @@ export const makeInitCommand = (
             ),
         )
         .match(
-          reportSummary(presenter, output),
-          reportCommandError(this, presenter, output),
+          reportSummary(presenter, outputMode),
+          reportCommandError(this, presenter, outputMode),
         );
     });
