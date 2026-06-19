@@ -66,15 +66,36 @@ resource "azurerm_app_service" "this" {
 }
 ```
 
-When you need to write a secret, prefer the write-only `value_wo` argument so
-the value is kept out of state:
+When you need to write a secret, prefer the ephemeral resources and write-only
+`value_wo` argument so the value is kept out of state:
 
 ```hcl
+# Key Vault
 resource "azurerm_key_vault_secret" "this" {
-  name            = "my-secret"
-  key_vault_id    = azurerm_key_vault.this.id
-  value_wo        = var.secret_value
+  name             = "my-secret"
+  key_vault_id     = azurerm_key_vault.this.id
+  value_wo         = var.secret_value
   value_wo_version = 1
+}
+
+# PostgreSQL server
+ephemeral "random_password" "db" {
+  length  = 32
+  special = true
+}
+
+resource "azurerm_postgresql_flexible_server" "this" {
+  # ...
+  administrator_login    = "pgadmin"
+  administrator_password = ephemeral.random_password.db.result
+}
+
+resource "azurerm_key_vault_secret" "db_password" {
+  name             = "postgres-admin-password"
+  key_vault_id     = azurerm_key_vault.this.id
+  content_type     = "text/plain"
+  value_wo         = ephemeral.random_password.db.result
+  value_wo_version = 1 # increment this on every rotation
 }
 ```
 
