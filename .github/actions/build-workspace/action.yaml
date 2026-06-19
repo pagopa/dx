@@ -38,7 +38,8 @@ runs:
         if [ "$BUILD_TOOL" == "turbo" ]; then
           WORKSPACE_PATH=$(npx --yes turbo ls --output=json | jq -sr --arg NAME "$WORKSPACE_NAME" '.[].packages.items[] | select(.name == $NAME).path')
         else
-          WORKSPACE_PATH=$(pnpm -F "$WORKSPACE_NAME" list --json | jq -r .[].path)
+          PNPM_PACKAGE_PATH=$(pnpm -F "$WORKSPACE_NAME" list --json | jq -r .[].path)
+          WORKSPACE_PATH=${PNPM_PACKAGE_PATH#$GITHUB_WORKSPACE/}
         fi
         echo "workspace-path=$WORKSPACE_PATH" >> $GITHUB_OUTPUT
       env:
