@@ -10,6 +10,7 @@ import chalk from "chalk";
  */
 import { Command, Option } from "commander";
 import { okAsync, ResultAsync } from "neverthrow";
+import { readFile } from "node:fs/promises";
 import { z } from "zod/v4";
 
 import type { CommandPresenter } from "../../../domain/command-presenter.js";
@@ -91,7 +92,13 @@ const addEnvironmentCommandOptionsSchema = z
       .trim()
       .min(1, "Business unit cannot be empty")
       .optional(),
+    clientId: z.string().trim().min(1, "Client id cannot be empty").optional(),
     domain: workspaceSchema.shape.domain.optional(),
+    installationId: z
+      .string()
+      .trim()
+      .min(1, "Installation id cannot be empty")
+      .optional(),
     location: z.array(locationOptionSchema).optional(),
     managementTeam: z
       .string()
@@ -100,6 +107,17 @@ const addEnvironmentCommandOptionsSchema = z
       .optional(),
     name: environmentSchema.shape.name.optional(),
     prefix: environmentSchema.shape.prefix.optional(),
+    privateKeyPath: z
+      .string()
+      .trim()
+      .min(1, "Private key path cannot be empty")
+      .optional(),
+    runnerAppId: z
+      .string()
+      .trim()
+      .min(1, "Runner app id cannot be empty")
+      .optional(),
+    yes: z.boolean().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.location && !value.account?.length) {
@@ -145,7 +163,7 @@ export const parseAddEnvironmentCommandOptions = (
   return result.data;
 };
 
-export const getEnvironmentInitialAnswers = (
+const buildBaseEnvironmentInitialAnswers = (
   options: AddEnvironmentCommandOptions,
 ): DeploymentEnvironmentInitialAnswers => {
   const initialAnswers: DeploymentEnvironmentInitialAnswers = {};
@@ -213,6 +231,54 @@ export const getEnvironmentInitialAnswers = (
   if (options.domain) {
     initialAnswers.workspace = {
       domain: options.domain,
+    };
+  }
+
+  return initialAnswers;
+};
+
+export const getEnvironmentInitialAnswers = async (
+  options: AddEnvironmentCommandOptions,
+): Promise<DeploymentEnvironmentInitialAnswers> => {
+  const initialAnswers = buildBaseEnvironmentInitialAnswers(options);
+  const privateKey =
+    options.privateKeyPath === undefined
+      ? undefined
+      : await readFile(options.privateKeyPath, "utf8").catch((cause) => {
+          throw new Error(
+            `Failed to read private key file at "${options.privateKeyPath}".`,
+            { cause },
+          );
+        });
+
+  const runnerAppCredentials =
+    options.runnerAppId === undefined &&
+    options.clientId === undefined &&
+    options.installationId === undefined &&
+    privateKey === undefined
+      ? undefined
+      : {
+          clientId: options.clientId,
+          id: options.runnerAppId,
+          installationId: options.installationId,
+          key: privateKey,
+        };
+
+  if (options.yes || runnerAppCredentials) {
+    initialAnswers.init = {};
+  }
+
+  if (options.yes) {
+    initialAnswers.init = {
+      ...initialAnswers.init,
+      confirm: true,
+    };
+  }
+
+  if (runnerAppCredentials) {
+    initialAnswers.init = {
+      ...initialAnswers.init,
+      runnerAppCredentials,
     };
   }
 
@@ -421,6 +487,30 @@ export const makeAddCommand = (
             "Management team tag",
           ),
         )
+        .addOption(
+          new Option(
+            "-y, --yes",
+            "Confirm environment initialization without prompting",
+          ),
+        )
+        .addOption(
+          new Option("--runner-app-id <runner-app-id>", "GitHub Runner App ID"),
+        )
+        .addOption(
+          new Option("--client-id <client-id>", "GitHub Runner App Client ID"),
+        )
+        .addOption(
+          new Option(
+            "--installation-id <installation-id>",
+            "GitHub Runner App Installation ID",
+          ),
+        )
+        .addOption(
+          new Option(
+            "--private-key-path <private-key-path>",
+            "Path to a local GitHub Runner App private key file",
+          ),
+        )
         .action(async function (options: unknown) {
           const { output } = this.optsWithGlobals<GlobalOptions>();
           const outputMode = resolveOutputMode(env, output);
@@ -438,14 +528,27 @@ export const makeAddCommand = (
                   }),
           )
             .andThen((addEnvironmentOptions) =>
-              requireGitHubAuth().andThen(
-                ({ authorizationService, gitHubService }) =>
-                  addEnvironmentAction(
-                    authorizationService,
-                    gitHubService,
-                    presenter,
-                    getEnvironmentInitialAnswers(addEnvironmentOptions),
-                  ),
+              ResultAsync.fromPromise(
+                getEnvironmentInitialAnswers(addEnvironmentOptions),
+                (cause) =>
+                  cause instanceof Error
+                    ? cause
+                    : new Error(
+                        "Failed to load add environment initial answers",
+                        {
+                          cause,
+                        },
+                      ),
+              ).andThen((initialAnswers) =>
+                requireGitHubAuth().andThen(
+                  ({ authorizationService, gitHubService }) =>
+                    addEnvironmentAction(
+                      authorizationService,
+                      gitHubService,
+                      presenter,
+                      initialAnswers,
+                    ),
+                ),
               ),
             )
             .match(

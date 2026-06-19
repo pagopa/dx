@@ -27,7 +27,10 @@ import {
   GitHubRepo,
   githubRepoSchema,
 } from "../../../../domain/github-repo.js";
-import { githubAppCredentialsSchema } from "../../../../domain/github.js";
+import {
+  type GitHubAppCredentials,
+  githubAppCredentialsSchema,
+} from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
@@ -78,6 +81,12 @@ export const initialAnswersSchema = z.object({
         .optional(),
       name: environmentSchema.shape.name.optional(),
       prefix: environmentSchema.shape.prefix.optional(),
+    })
+    .optional(),
+  init: z
+    .object({
+      confirm: z.boolean().optional(),
+      runnerAppCredentials: githubAppCredentialsSchema.partial().optional(),
     })
     .optional(),
   tags: z
@@ -279,6 +288,78 @@ const parseInitialAnswers = (
   return result.data;
 };
 
+const getRunnerAppCredentialQuestions = (
+  initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
+): DistinctQuestion[] => {
+  const questions: DistinctQuestion[] = [];
+
+  if (initialRunnerAppCredentials.id === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App ID",
+      name: "runnerAppCredentials.id",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.clientId === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Client ID",
+      name: "runnerAppCredentials.clientId",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.installationId === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Installation ID",
+      name: "runnerAppCredentials.installationId",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.key === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Private Key",
+      name: "runnerAppCredentials.key",
+      type: "editor",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  return questions;
+};
+
+const mergeRunnerAppCredentials = (
+  initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
+  promptedRunnerAppCredentials: Partial<GitHubAppCredentials> | undefined,
+): InitPayload["runnerAppCredentials"] => {
+  const runnerAppCredentials = {
+    clientId:
+      initialRunnerAppCredentials.clientId ??
+      promptedRunnerAppCredentials?.clientId,
+    id: initialRunnerAppCredentials.id ?? promptedRunnerAppCredentials?.id,
+    installationId:
+      initialRunnerAppCredentials.installationId ??
+      promptedRunnerAppCredentials?.installationId,
+    key: initialRunnerAppCredentials.key ?? promptedRunnerAppCredentials?.key,
+  };
+
+  if (
+    Object.values(runnerAppCredentials).every((value) => value === undefined)
+  ) {
+    return undefined;
+  }
+
+  return githubAppCredentialsSchema.parse(runnerAppCredentials);
+};
+
 const collectBaseAnswers = async (
   promptModule: typeof inquirer,
   availableCloudAccounts: CloudAccount[],
@@ -377,14 +458,16 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     console.log(formatInitializationDetails(initStatus));
 
-    const initConfirm = await promptModule.prompt({
-      default: true,
-      message: `The environment "${payload.env.name}" is not initialized. Proceed with the setup above?`,
-      name: "init",
-      type: "confirm",
-    });
+    if (initialAnswers.init?.confirm !== true) {
+      const initConfirm = await promptModule.prompt({
+        default: true,
+        message: `The environment "${payload.env.name}" is not initialized. Proceed with the setup above?`,
+        name: "init",
+        type: "confirm",
+      });
 
-    assert.ok(initConfirm.init, "Can't proceed without initialization");
+      assert.ok(initConfirm.init, "Can't proceed without initialization");
+    }
 
     assert.ok(
       await hasUserPermissionToInitialize(
@@ -421,51 +504,26 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
     );
 
-    let runnerAppCredentials: InitPayload["runnerAppCredentials"];
+    const initialRunnerAppCredentials =
+      initialAnswers.init?.runnerAppCredentials ?? {};
 
     if (cloudAccountsNotInitialized) {
       questions.push(
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App ID",
-          name: "runnerAppCredentials.id",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Client ID",
-          name: "runnerAppCredentials.clientId",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Installation ID",
-          name: "runnerAppCredentials.installationId",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Private Key",
-          name: "runnerAppCredentials.key",
-          type: "editor",
-          validate: (value) => value.length > 0,
-        },
+        ...getRunnerAppCredentialQuestions(initialRunnerAppCredentials),
       );
     }
 
     const initInput =
       questions.length === 0 ? {} : await promptModule.prompt(questions);
 
-    if (initInput.runnerAppCredentials) {
-      runnerAppCredentials = initInput.runnerAppCredentials;
-    }
-
     if (initInput.terraformBackend) {
       terraformBackend = initInput.terraformBackend;
     }
+
+    const runnerAppCredentials = mergeRunnerAppCredentials(
+      initialRunnerAppCredentials,
+      initInput.runnerAppCredentials,
+    );
 
     payload.init = payloadSchema.shape.init.parse({
       cloudAccountsToInitialize: getCloudAccountToInitialize(initStatus),

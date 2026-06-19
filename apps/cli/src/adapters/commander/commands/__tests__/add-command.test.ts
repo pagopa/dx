@@ -7,6 +7,9 @@
 
 import { Command } from "commander";
 import { okAsync } from "neverthrow";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import * as path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mock } from "vitest-mock-extended";
 
@@ -119,6 +122,7 @@ describe("makeAddCommand", () => {
 
     expect(flags).toEqual(
       expect.arrayContaining([
+        "-y, --yes",
         "--name <name>",
         "--account <subscription-id>",
         "--location <subscription-id=region>",
@@ -126,6 +130,10 @@ describe("makeAddCommand", () => {
         "--domain <domain>",
         "--business-unit <business-unit>",
         "--management-team <management-team>",
+        "--runner-app-id <runner-app-id>",
+        "--client-id <client-id>",
+        "--installation-id <installation-id>",
+        "--private-key-path <private-key-path>",
       ]),
     );
   });
@@ -185,6 +193,51 @@ describe("makeAddCommand", () => {
       expect.anything(),
       payload,
     );
+  });
+
+  it("passes provided initialization flags to the deployment environment generator as prefilled answers", async () => {
+    const program = makeProgram();
+    const tempDir = await mkdtemp(path.join(tmpdir(), "dx-cli-add-command-"));
+    const privateKeyPath = path.join(tempDir, "runner-app.pem");
+
+    await writeFile(privateKeyPath, "private-key-from-file\n");
+
+    try {
+      await program.parseAsync([
+        "node",
+        "dx",
+        "add",
+        "environment",
+        "--yes",
+        "--runner-app-id",
+        "app-id",
+        "--client-id",
+        "app-client-id",
+        "--installation-id",
+        "installation-id",
+        "--private-key-path",
+        privateKeyPath,
+      ]);
+
+      expect(mocks.collectDeploymentEnvironmentPayload).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        undefined,
+        {
+          init: {
+            confirm: true,
+            runnerAppCredentials: {
+              clientId: "app-client-id",
+              id: "app-id",
+              installationId: "installation-id",
+              key: "private-key-from-file\n",
+            },
+          },
+        },
+      );
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
   });
 
   it("rejects malformed location mappings with a validation error", async () => {
