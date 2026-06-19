@@ -2,6 +2,8 @@
 # title: Terraform must not read Key Vault secrets via data source
 # description: |
 #   Reading Key Vault secrets through `data.azurerm_key_vault_secret` exposes plaintext secret values during Terraform evaluation.
+# related_resources:
+#   - https://dx.pagopa.it/docs/terraform/custom-checks/avd-dx-0001
 # custom:
 #   id: DX-TF-0001
 #   avd_id: AVD-DX-0001
