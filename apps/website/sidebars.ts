@@ -221,7 +221,7 @@ const sidebars: SidebarsConfig = {
             "terraform/drift-detection",
             "terraform/static-analysis",
             {
-              className: categoryClass("terraform"),
+              className: categoryClass("trivy"),
               items: [
                 {
                   id: "terraform/custom-checks/index",

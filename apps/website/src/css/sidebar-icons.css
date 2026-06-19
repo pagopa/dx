@@ -69,6 +69,10 @@
   --sidebar-category-icon: url("/img/sidebar-icons/terraform.svg");
 }
 
+.sidebar-icon-trivy {
+  --sidebar-category-icon: url("/img/sidebar-icons/trivy.svg");
+}
+
 .sidebar-icon-multi-csp {
   --sidebar-category-icon: url("/img/sidebar-icons/multi-csp.svg");
 }
