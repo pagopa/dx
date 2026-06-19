@@ -1,17 +1,15 @@
 ---
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # Terraform must not read Key Vault secrets via data source
 
-| Field        | Value                                                                                                                                                                 |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **ID**       | `DX-TF-0001`                                                                                                                                                          |
-| **AVD ID**   | `AVD-DX-0001`                                                                                                                                                         |
-| **Severity** | `HIGH`                                                                                                                                                                |
-| **Source**   | DX                                                                                                                                                                    |
-| **Provider** | Terraform                                                                                                                                                             |
-| **Check**    | [`forbid_azurerm_key_vault_secret_data_source.rego`](https://github.com/pagopa/dx/blob/main/.trivy/checks/terraform/forbid_azurerm_key_vault_secret_data_source.rego) |
+| Field        | Value         |
+| ------------ | ------------- |
+| **ID**       | `DX-TF-0001`  |
+| **AVD ID**   | `AVD-DX-0001` |
+| **Severity** | `HIGH`        |
+| **Source**   | DX            |
 
 ## Ensure Key Vault secret values are not read through Terraform data sources
 
@@ -28,15 +26,12 @@ must never be materialized into them.
 Plaintext secret values become accessible to anyone who can read the Terraform
 plan or state, widening the blast radius of a credential leak.
 
-## Recommended Actions
-
-Follow the appropriate remediation steps below to resolve the issue.
-
-### Terraform
+### Recommended Actions
 
 Do not read secret values with `data.azurerm_key_vault_secret`. Instead, use
 runtime secret references or the write-only secret pattern (`value_wo`) so that
-the value never enters the Terraform plan or state.
+the value never enters the Terraform plan or state. Follow the appropriate
+remediation steps below to resolve the issue.
 
 #### Problematic Code
 

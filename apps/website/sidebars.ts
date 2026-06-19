@@ -223,12 +223,7 @@ const sidebars: SidebarsConfig = {
             {
               className: categoryClass("trivy"),
               items: [
-                {
-                  id: "terraform/custom-checks/index",
-                  label: "Overview",
-                  type: "doc",
-                },
-                "terraform/custom-checks/avd-dx-0001",
+                { id: "terraform/custom-checks/avd-dx-0001", type: "doc" },
               ],
               label: "Custom Trivy Checks",
               type: "category",

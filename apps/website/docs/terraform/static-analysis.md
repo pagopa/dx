@@ -42,13 +42,6 @@ integration.
 If changes in Terraform modules are detected, the workflow provides detailed
 instructions on how to update the module lock files.
 
-## Custom Trivy Checks
-
-In addition to the pre-commit hooks, the workflow runs a set of
-[custom Trivy checks](./custom-checks/index.md) that enforce DX-specific
-security and best-practice rules on Terraform code. Findings are reported in the
-workflow run summary and link back to the documentation of each check.
-
 ## Usage
 
 To use the Static Analysis workflow, reference it as a reusable workflow in your
