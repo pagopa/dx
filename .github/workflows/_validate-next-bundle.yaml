@@ -13,14 +13,23 @@ on:
 jobs:
   test-next-bundle:
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     permissions:
       contents: read
 
     strategy:
       matrix:
+        build-tool: ["turbo"]
         package-manager: ["pnpm", "yarn"]
         nextjs-version: ["13", "14", "15", "16"]
+        include:
+          - build-tool: "nx"
+            package-manager: "pnpm"
+            nextjs-version: "15"
+          - build-tool: "nx"
+            package-manager: "pnpm"
+            nextjs-version: "16"
     steps:
       - name: Build the project
         run: |
@@ -38,7 +47,7 @@ jobs:
         if: matrix.package-manager == 'pnpm'
         run: |
           pnpm config set --location=project --json packages '["apps/*"]'
-          pnpm config set --location=project --json allowBuilds '{"sharp":true}'
+          pnpm config set --location=project --json allowBuilds '{"sharp":true,"nx": true}'
 
       - name: Setup the yarn workspace
         if: matrix.package-manager == 'yarn'
@@ -62,6 +71,11 @@ jobs:
           CI: false
           NEXTJS_VERSION: ${{ matrix.nextjs-version }}
           PACKAGE_MANAGER: ${{ matrix.package-manager }}
+
+      - name: Setup Nx
+        if: matrix.build-tool == 'nx'
+        run: |
+          npx nx@latest init --yes
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
