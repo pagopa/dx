@@ -38,6 +38,7 @@ jobs:
         if: matrix.package-manager == 'pnpm'
         run: |
           pnpm config set --location=project --json packages '["apps/*"]'
+          pnpm config set --location=project --json allowBuilds '{"sharp":true}'
 
       - name: Setup the yarn workspace
         if: matrix.package-manager == 'yarn'
@@ -54,6 +55,7 @@ jobs:
             --agents-md
 
           rm apps/my-app/next.config.*
+          rm -f apps/my-app/pnpm-workspace.yaml
           echo "module.exports = { output: 'standalone' };" > apps/my-app/next.config.js
           "$PACKAGE_MANAGER" install
         env:
