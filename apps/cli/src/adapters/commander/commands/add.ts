@@ -246,6 +246,54 @@ export const getEnvironmentInitialAnswers = async (
   };
 };
 
+export const getEnvironmentInitialAnswers = async (
+  options: AddEnvironmentCommandOptions,
+): Promise<DeploymentEnvironmentInitialAnswers> => {
+  const initialAnswers = buildBaseEnvironmentInitialAnswers(options);
+  const privateKey =
+    options.privateKeyPath === undefined
+      ? undefined
+      : await readFile(options.privateKeyPath, "utf8").catch((cause) => {
+          throw new Error(
+            `Failed to read private key file at "${options.privateKeyPath}".`,
+            { cause },
+          );
+        });
+
+  const runnerAppCredentials =
+    options.runnerAppId === undefined &&
+    options.clientId === undefined &&
+    options.installationId === undefined &&
+    privateKey === undefined
+      ? undefined
+      : {
+          clientId: options.clientId,
+          id: options.runnerAppId,
+          installationId: options.installationId,
+          key: privateKey,
+        };
+
+  if (options.yes || runnerAppCredentials) {
+    initialAnswers.init = {};
+  }
+
+  if (options.yes) {
+    initialAnswers.init = {
+      ...initialAnswers.init,
+      confirm: true,
+    };
+  }
+
+  if (runnerAppCredentials) {
+    initialAnswers.init = {
+      ...initialAnswers.init,
+      runnerAppCredentials,
+    };
+  }
+
+  return initialAnswers;
+};
+
 /**
  * Authorize a Cloud Account (Azure Subscription, AWS Account, ...), creating a Pull Request for each account that requires authorization.
  */
