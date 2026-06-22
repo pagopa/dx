@@ -131,6 +131,7 @@ No modules.
 | [github_repository_autolink_reference.jira_board](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_autolink_reference) | resource |
 | [github_repository_environment.app_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.app_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.automation_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.bootstrapper_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
@@ -138,6 +139,8 @@ No modules.
 | [github_repository_environment.opex_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment_deployment_policy.app_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.app_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
+| [github_repository_environment_deployment_policy.automation_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
+| [github_repository_environment_deployment_policy.automation_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.bootstrapper_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.bootstrapper_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.infra_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |

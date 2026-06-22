@@ -17,6 +17,17 @@ resource "github_repository_environment" "infra_cd" {
   }
 }
 
+resource "github_repository_environment" "automation_cd" {
+  for_each    = toset(var.repository.environments)
+  environment = "automation-${each.value}-cd"
+  repository  = github_repository.this.name
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
 resource "github_repository_environment" "app_cd" {
   for_each    = toset(var.repository.environments)
   environment = "app-${each.value}-cd"
@@ -82,6 +93,14 @@ resource "github_repository_environment_deployment_policy" "infra_cd_branch" {
   branch_pattern = each.value.branch
 }
 
+resource "github_repository_environment_deployment_policy" "automation_cd_branch" {
+  for_each = { for k, v in setproduct(var.repository.environments, var.repository.infra_cd_policy_branches) : "${v[0]}-${v[1]}" => { env = v[0], branch = v[1] } }
+
+  repository     = github_repository.this.name
+  environment    = github_repository_environment.automation_cd[each.value.env].environment
+  branch_pattern = each.value.branch
+}
+
 resource "github_repository_environment_deployment_policy" "app_cd_branch" {
   for_each = { for k, v in setproduct(var.repository.environments, var.repository.app_cd_policy_branches) : "${v[0]}-${v[1]}" => { env = v[0], branch = v[1] } }
 
@@ -111,6 +130,14 @@ resource "github_repository_environment_deployment_policy" "infra_cd_tag" {
 
   repository  = github_repository.this.name
   environment = github_repository_environment.infra_cd[each.value.env].environment
+  tag_pattern = each.value.tag
+}
+
+resource "github_repository_environment_deployment_policy" "automation_cd_tag" {
+  for_each = { for k, v in setproduct(var.repository.environments, var.repository.infra_cd_policy_tags) : "${v[0]}-${v[1]}" => { env = v[0], tag = v[1] } }
+
+  repository  = github_repository.this.name
+  environment = github_repository_environment.automation_cd[each.value.env].environment
   tag_pattern = each.value.tag
 }
 
