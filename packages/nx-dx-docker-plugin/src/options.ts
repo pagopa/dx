@@ -3,7 +3,26 @@
  */
 import type { DockerPluginOptions as NxDockerPluginOptions } from "@nx/docker";
 
-export type DockerPluginOptions = NxDockerPluginOptions & {
+export interface DockerBuildMetadataOptions {
+  labels?: string[];
+  tags?: string[];
+}
+
+type NxBuildTargetOptions = Exclude<
+  NonNullable<NxDockerPluginOptions["buildTarget"]>,
+  string
+>;
+
+export interface DxDockerTargetOptions extends NxBuildTargetOptions {
+  metadata?: DockerBuildMetadataOptions;
+  configurations?: Record<
+    string,
+    Omit<DxDockerTargetOptions, "configurations" | "name">
+  >;
+}
+
+export type DockerPluginOptions = Omit<NxDockerPluginOptions, "buildTarget"> & {
+  buildTarget?: string | DxDockerTargetOptions;
   dockerImageAuthors?: string;
 };
 

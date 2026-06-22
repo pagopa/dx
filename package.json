@@ -8,7 +8,7 @@
     "@nx/js": "22.7.5",
     "@nx/plugin": "22.7.5",
     "@nx/vitest": "22.7.5",
-    "@pagopa/nx-docker-plugin": "workspace:^",
+    "@pagopa/nx-dx-docker-plugin": "workspace:^",
     "@pagopa/nx-terraform-plugin": "workspace:^",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.33",

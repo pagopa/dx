@@ -1,9 +1,0 @@
-{
-  "executors": {
-    "release-publish": {
-      "implementation": "./dist/executors/release-publish/release-publish.js",
-      "schema": "./dist/executors/release-publish/schema.json",
-      "description": "Publish Docker release images and rolling latest tag"
-    }
-  }
-}

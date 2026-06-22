@@ -6,13 +6,27 @@ import { existsSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 
 import {
+  buildMetadataTagArguments,
+  getRuntimeContext,
+} from "../build/build.ts";
+import {
   type ReleasePublishExecutorOptions,
   releasePublishSchema,
 } from "./schema.ts";
 
+interface DockerBuildTargetLike {
+  executor?: string;
+  options?: {
+    metadata?: {
+      tags?: unknown;
+    };
+  };
+}
+
 interface ProjectGraphNodeLike {
   data: {
     root: string;
+    targets?: Record<string, DockerBuildTargetLike>;
   };
 }
 
@@ -30,6 +44,8 @@ const normalizeImageReference = (imageReference: string) =>
     ? imageReference.slice("docker.io/".length)
     : imageReference;
 
+const dockerBuildExecutor = "@pagopa/nx-dx-docker-plugin:build";
+
 const getLatestImageReference = (imageReference: string) => {
   const lastSlashIndex = imageReference.lastIndexOf("/");
   const lastColonIndex = imageReference.lastIndexOf(":");
@@ -41,6 +57,52 @@ const getLatestImageReference = (imageReference: string) => {
   }
 
   return `${imageReference.slice(0, lastColonIndex)}:latest`;
+};
+
+const getExplicitImageTag = (imageReference: string) => {
+  const lastSlashIndex = imageReference.lastIndexOf("/");
+  const lastColonIndex = imageReference.lastIndexOf(":");
+
+  return lastColonIndex > lastSlashIndex
+    ? imageReference.slice(lastColonIndex + 1)
+    : undefined;
+};
+
+const getBuildMetadataTags = (projectNode: ProjectGraphNodeLike) => {
+  const buildTarget = Object.values(projectNode.data.targets ?? {}).find(
+    (target) => target.executor === dockerBuildExecutor,
+  );
+  const tags = buildTarget?.options?.metadata?.tags;
+
+  return Array.isArray(tags)
+    ? tags.filter((tag): tag is string => typeof tag === "string")
+    : undefined;
+};
+
+const getImageReferencesToPublish = (
+  workspaceRoot: string,
+  projectName: string,
+  projectNode: ProjectGraphNodeLike,
+  imageReference: string,
+) => {
+  const metadataTags = getBuildMetadataTags(projectNode);
+
+  if (!metadataTags || metadataTags.length === 0) {
+    return [imageReference, getLatestImageReference(imageReference)];
+  }
+
+  const runtimeContext = getRuntimeContext(
+    workspaceRoot,
+    projectName,
+    getExplicitImageTag(imageReference),
+  );
+  const additionalImageReferences = buildMetadataTagArguments(
+    [`--tag ${imageReference}`],
+    { tags: metadataTags },
+    runtimeContext,
+  ).map((tagArgument) => tagArgument.replace(/^--tag\s+/u, ""));
+
+  return [imageReference, ...additionalImageReferences];
 };
 
 const getDockerVersionDirectoryPath = (workspaceRoot: string, projectRoot: string) =>
@@ -90,18 +152,22 @@ const runDockerCommand = (command: string, quiet: boolean) => {
   });
 };
 
-const runPublish = (imageReference: string, quiet: boolean) => {
-  // Push the immutable versioned tag first, then mirror that exact local image to latest.
-  const latestImageReference = getLatestImageReference(imageReference);
-
+const runPublish = (
+  imageReference: string,
+  imageReferencesToPublish: string[],
+  quiet: boolean,
+) => {
+  // Push the immutable versioned tag first, then derive and push any additional refs from the same local image.
   console.info(`Pushing Docker image ${imageReference}`);
   runDockerCommand(`docker push ${imageReference}`, quiet);
 
-  console.info(`Tagging Docker image ${latestImageReference}`);
-  runDockerCommand(`docker tag ${imageReference} ${latestImageReference}`, quiet);
+  for (const additionalImageReference of imageReferencesToPublish.slice(1)) {
+    console.info(`Tagging Docker image ${additionalImageReference}`);
+    runDockerCommand(`docker tag ${imageReference} ${additionalImageReference}`, quiet);
 
-  console.info(`Pushing Docker image ${latestImageReference}`);
-  runDockerCommand(`docker push ${latestImageReference}`, quiet);
+    console.info(`Pushing Docker image ${additionalImageReference}`);
+    runDockerCommand(`docker push ${additionalImageReference}`, quiet);
+  }
 };
 
 const cleanupDockerVersionDirectory = (workspaceRoot: string, projectRoot: string) => {
@@ -136,20 +202,25 @@ export const releasePublishExecutor = async (
 
   const projectRoot = projectNode.data.root;
   const imageReference = readImageReference(context.root, projectRoot);
+  const imageReferencesToPublish = getImageReferencesToPublish(
+    context.root,
+    projectName,
+    projectNode,
+    imageReference,
+  );
   // nx release forwards dry-run through NX_DRY_RUN, but the executor also supports direct invocation.
   const dryRun = process.env.NX_DRY_RUN === "true" || options.dryRun === true;
   const quiet = options.quiet ?? false;
-  const latestImageReference = getLatestImageReference(imageReference);
 
   if (dryRun) {
     console.info(
-      `Dry run enabled: would push '${imageReference}' and '${latestImageReference}'.`,
+      `Dry run enabled: would push ${imageReferencesToPublish.map((ref) => `'${ref}'`).join(", ")}.`,
     );
     return { success: true };
   }
 
   assertLocalImageExists(imageReference);
-  runPublish(imageReference, quiet);
+  runPublish(imageReference, imageReferencesToPublish, quiet);
   cleanupDockerVersionDirectory(context.root, projectRoot);
 
   return { success: true };

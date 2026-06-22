@@ -10,7 +10,7 @@ import { createNodesV2 } from "../index.ts";
 
 const createWorkspaceRoot = async () => {
   const workspaceRoot = await fs.mkdtemp(
-    path.join(os.tmpdir(), "nx-docker-plugin-"),
+    path.join(os.tmpdir(), "nx-dx-docker-plugin-"),
   );
 
   onTestFinished(async () => {
@@ -37,7 +37,11 @@ describe("createNodesV2", () => {
       }),
       "utf8",
     );
-    await fs.writeFile(path.join(workspaceRoot, "pnpm-lock.yaml"), "lockfileVersion: '9.0'\n", "utf8");
+    await fs.writeFile(
+      path.join(workspaceRoot, "pnpm-lock.yaml"),
+      "lockfileVersion: '9.0'\n",
+      "utf8",
+    );
     await fs.writeFile(path.join(workspaceRoot, "nx.json"), "{}\n", "utf8");
     await fs.writeFile(
       path.join(workspaceRoot, projectRoot, "Dockerfile"),
@@ -66,7 +70,9 @@ describe("createNodesV2", () => {
       },
     );
 
-    const buildTarget = result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
+    const buildTarget =
+      result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
+    expect(buildTarget?.executor).toBe("@pagopa/nx-dx-docker-plugin:build");
     expect(buildTarget?.options?.cwd).toBe(".");
     expect(buildTarget?.options?.args).toEqual(
       expect.arrayContaining([
@@ -75,8 +81,9 @@ describe("createNodesV2", () => {
       ]),
     );
     expect(
-      result[0]?.[1].projects?.[projectRoot]?.targets?.["nx-release-publish"]?.executor,
-    ).toBe("@pagopa/nx-docker-plugin:release-publish");
+      result[0]?.[1].projects?.[projectRoot]?.targets?.["nx-release-publish"]
+        ?.executor,
+    ).toBe("@pagopa/nx-dx-docker-plugin:release-publish");
   });
 
   it("uses the deepest child directory that satisfies local COPY sources", async () => {
@@ -88,11 +95,7 @@ describe("createNodesV2", () => {
     });
     await fs.writeFile(
       path.join(workspaceRoot, projectRoot, "Dockerfile"),
-      [
-        "FROM golang:1.22-alpine",
-        "COPY package.json .",
-        "COPY . .",
-      ].join("\n"),
+      ["FROM golang:1.22-alpine", "COPY package.json .", "COPY . ."].join("\n"),
       "utf8",
     );
     await fs.writeFile(
@@ -120,8 +123,12 @@ describe("createNodesV2", () => {
       },
     );
 
-    const buildTarget = result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
-    expect(buildTarget?.options?.cwd).toBe(`${projectRoot.replaceAll(path.sep, "/")}/app`);
+    const buildTarget =
+      result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
+    expect(buildTarget?.executor).toBe("@pagopa/nx-dx-docker-plugin:build");
+    expect(buildTarget?.options?.cwd).toBe(
+      `${projectRoot.replaceAll(path.sep, "/")}/app`,
+    );
     expect(buildTarget?.options?.args).toEqual(
       expect.arrayContaining(["--file ../Dockerfile"]),
     );

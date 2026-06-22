@@ -140,9 +140,10 @@ export const getProjectDescriptor = (
   const packageJson = readJsonIfExists(packageJsonPath, projectJsonLikeSchema);
   const projectJson = readJsonIfExists(projectJsonPath, projectJsonLikeSchema);
 
-  const name = packageJson?.name ?? projectJson?.name ?? fallbackProjectName;
+  // Match Nx project identity first so inferred Docker metadata follows project.json overrides.
+  const name = projectJson?.name ?? packageJson?.name ?? fallbackProjectName;
   const description =
-    packageJson?.description ?? projectJson?.description ?? fallbackProjectName;
+    projectJson?.description ?? packageJson?.description ?? fallbackProjectName;
   // Prefer project-local metadata, then fall back to the workspace remote for bare projects.
   const repositoryUrl =
     normalizeRepositoryUrl(getRepositoryFieldUrl(packageJson?.repository)) ??

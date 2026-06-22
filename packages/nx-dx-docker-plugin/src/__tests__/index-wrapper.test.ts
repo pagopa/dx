@@ -71,6 +71,7 @@ describe("createNodesV2 wrapper branches", () => {
               root: "apps/api",
               targets: {
                 "container:build": {
+                  command: "docker build .",
                   options: {
                     args: [
                       "--file old/Dockerfile",
@@ -94,6 +95,10 @@ describe("createNodesV2 wrapper branches", () => {
       ["apps/api/Dockerfile"],
       {
         buildTarget: {
+          metadata: {
+            labels: ["com.acme.tier=backend"],
+            tags: ["type=sha"],
+          },
           name: "container:build",
         },
         dockerImageAuthors: "Platform Team",
@@ -117,7 +122,17 @@ describe("createNodesV2 wrapper branches", () => {
           CUSTOM_FLAG: "on",
           DOCKER_BUILDKIT: "1",
         },
+        metadata: {
+          labels: ["com.acme.tier=backend"],
+          tags: ["type=sha"],
+        },
       });
+    expect(
+      result[0]?.[1].projects?.["apps/api"]?.targets?.["container:build"]?.executor,
+    ).toBe("@pagopa/nx-dx-docker-plugin:build");
+    expect(
+      result[0]?.[1].projects?.["apps/api"]?.targets?.["container:build"],
+    ).not.toHaveProperty("command");
     expect(dockerMocks.getAutomaticDockerLabelArgs).toHaveBeenCalledWith(
       "/workspace",
       "apps/api",
@@ -126,11 +141,11 @@ describe("createNodesV2 wrapper branches", () => {
     );
     expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["nx-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
     expect(result[0]?.[1].projects?.["apps/api"]?.targets?.["docker-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
   });
 
@@ -176,6 +191,9 @@ describe("createNodesV2 wrapper branches", () => {
           DOCKER_BUILDKIT: "1",
         },
       });
+    expect(
+      result[0]?.[1].projects?.["apps/api"]?.targets?.["docker:build"]?.executor,
+    ).toBe("@pagopa/nx-dx-docker-plugin:build");
   });
 
   it("preserves an explicit DOCKER_BUILDKIT value from the upstream target", async () => {
@@ -311,11 +329,11 @@ describe("createNodesV2 wrapper branches", () => {
     expect(dockerMocks.getDockerBuildContext).not.toHaveBeenCalled();
     expect(result[0]?.[1].projects?.["libs/api-image"]?.targets?.["nx-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
     expect(result[0]?.[1].projects?.["libs/api-image"]?.targets?.["docker-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
   });
 
@@ -360,10 +378,11 @@ describe("createNodesV2 wrapper branches", () => {
       });
     expect(result[0]?.[1].projects?.["apps/mcpserver"]?.targets?.["docker-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
     expect(result[0]?.[1].projects?.["apps/mcpserver"]?.targets?.["docker:build"])
       .toEqual({
+        executor: "@pagopa/nx-dx-docker-plugin:build",
         options: {
           args: [
             "--file apps/api/Dockerfile",
@@ -412,7 +431,7 @@ describe("createNodesV2 wrapper branches", () => {
     );
     expect(result[0]?.[1].projects?.["."]?.targets?.["docker-release-publish"])
       .toEqual({
-        executor: "@pagopa/nx-docker-plugin:release-publish",
+        executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       });
   });
 });

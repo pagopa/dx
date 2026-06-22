@@ -58,7 +58,7 @@ describe("getProjectDescriptor", () => {
     });
   });
 
-  it("prefers package.json metadata and normalizes repository URLs", async () => {
+  it("prefers project.json identity metadata and normalizes repository URLs", async () => {
     const workspaceRoot = await createWorkspaceRoot();
     const projectRoot = path.join("apps", "portal");
 
@@ -84,8 +84,8 @@ describe("getProjectDescriptor", () => {
     );
 
     expect(getProjectDescriptor(workspaceRoot, projectRoot, "fallback-name")).toEqual({
-      description: "Portal\napplication",
-      name: "@acme/portal",
+      description: "Fallback description",
+      name: "portal-project",
       repositoryUrl: "https://github.com/acme/portal",
       sourceUrl: "https://github.com/acme/portal/blob/main/apps/portal",
     });

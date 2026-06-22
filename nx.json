@@ -64,6 +64,11 @@
   },
   "release": {
     "versionPlans": true,
+    "docker": {
+      "versionSchemes": {
+        "version": "{versionActionsVersion}"
+      }
+    },
     "projects": [
       "apps/*",
       "packages/*",
@@ -98,11 +103,22 @@
   },
   "plugins": [
     {
-      "plugin": "@pagopa/nx-docker-plugin",
+      "plugin": "@pagopa/nx-dx-docker-plugin",
       "options": {
         "buildTarget": {
           "name": "docker:build",
-          "args": ["--platform linux/amd64"]
+          "args": ["--platform linux/amd64"],
+          "metadata": {
+            "tags": [
+              "type=raw,value=latest,enable={{is_default_branch}}",
+              "type=semver,pattern={{version}}",
+              "type=semver,pattern={{major}}.{{minor}}",
+              "type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}",
+              "type=ref,event=branch",
+              "type=sha",
+              "${{ env.TAG_NAME }}"
+            ]
+          }
         },
         "runTarget": "docker:run"
       }
