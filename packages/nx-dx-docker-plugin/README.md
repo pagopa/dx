@@ -7,8 +7,8 @@ It keeps the standard Docker target inference provided by Nx, then enriches the 
 - automatic Docker build context selection
 - automatic `--file` resolution relative to the selected build context
 - automatic OCI image labels
-- runtime expansion for additional metadata tags and labels
-- a custom `nx-release-publish` executor that publishes both the versioned image tag and `latest`
+- passthrough metadata tags and labels attached to the inferred Docker build target
+- a dedicated `docker-release-publish` executor that publishes both the versioned image tag and `latest`
 
 ## Requirements
 
@@ -78,7 +78,7 @@ Plugin options in `nx.json` are all optional.
 The plugin accepts these optional parameters:
 
 - `buildTarget`: same contract supported by `@nx/docker`. Use it to customize the inferred Docker build target name or pass supported upstream target options.
-- `buildTarget.metadata.tags`: optional runtime tag specs. Supports raw tags and common `docker/metadata-action` styles such as `type=raw`, `type=semver`, `type=ref`, and `type=sha`.
+- `buildTarget.metadata.tags`: optional tag descriptors preserved on the inferred Docker build target for downstream tooling or workspace-specific release flows.
 - `buildTarget.metadata.labels`: optional additional labels expressed as `key=value` entries. They are appended after the automatic OCI labels, so repeated keys can override the defaults.
 - `runTarget`: same contract supported by `@nx/docker`, used for the inferred Docker run target.
 - `dockerImageAuthors`: value used for the `org.opencontainers.image.authors` OCI label. When omitted, the plugin tries to use the GitHub organization or owner extracted from the workspace `origin` remote. If that information is unavailable, it falls back to `PagoPA`.
@@ -91,9 +91,9 @@ The plugin applies these defaults even when they are not declared in `nx.json`:
 
 - `DOCKER_BUILDKIT=1` is injected into the inferred Docker build target unless the target already defines `DOCKER_BUILDKIT`.
 - OCI labels are generated automatically from project metadata and workspace Git metadata.
-- additional metadata tags and labels are expanded at build runtime by the package executor.
+- optional metadata tags and labels are attached to the inferred Docker build target.
 - `docker-release-publish` is added as a dedicated Docker publish target.
-- `nx-release-publish` is routed to the package executor only when the project does not already own that target for a different publish flow.
+- Docker-only projects get an `nx-release-publish` shell target so they can participate in Nx release flows.
 - target option objects without an explicit `name` are normalized to `docker:build` or `docker:run` before they are passed to `@nx/docker`
 
 ### `docker:run` Behavior
@@ -104,7 +104,7 @@ The plugin does not rewrite the inferred Docker run target.
 - the optional `runTarget` plugin option keeps the same public contract as `@nx/docker`; this package only fills the default target name before delegating
 - once the target is inferred, the plugin leaves its command and options untouched
 
-This means the package owns Docker build normalization, metadata expansion, and publish behavior, while `docker:run` keeps the standard Nx Docker semantics.
+This means the package owns Docker build normalization, metadata propagation, and publish behavior, while `docker:run` keeps the standard Nx Docker semantics.
 
 ## How Target Inference Works
 
@@ -115,14 +115,41 @@ For each inferred Docker project it:
 1. keeps the target names produced by `@nx/docker`
 2. rewrites the Docker build target so that `cwd` is the selected build context
 3. rewrites `--file` so the Dockerfile path is relative to that build context
-4. swaps the inferred command target for `@pagopa/nx-dx-docker-plugin:build`
+4. keeps the upstream build target executor and command produced by `@nx/docker`
 5. removes previously defined OCI image labels managed by the plugin
 6. appends a fresh set of automatically generated OCI labels
-7. forwards optional `buildTarget.metadata` settings to the build executor
+7. forwards optional `buildTarget.metadata` settings to the inferred build target options
 8. adds `docker-release-publish` backed by `@pagopa/nx-dx-docker-plugin:release-publish`
-9. routes `nx-release-publish` to the same executor only when that target is not already owned by another publisher
+9. ensures Docker-only projects still expose `nx-release-publish` as an executable shell target
 
 The plugin preserves unrelated build arguments already defined on the inferred target.
+
+## Workspace Release Composition
+
+The plugin intentionally keeps Docker publishing separate from other artifact publishers.
+
+- `docker-release-publish` is always added for Docker projects.
+- Docker-only projects get `nx-release-publish` as a lightweight `nx:noop` shell target.
+- package-based projects keep Nx core's implicit `nx-release-publish` target.
+
+If a workspace wants package publishing and Docker publishing to run together behind `nx-release-publish`, the reliable integration point is `targetDefaults` in `nx.json`:
+
+```json
+{
+  "targetDefaults": {
+    "nx-release-publish": {
+      "dependsOn": [
+        {
+          "target": "docker-release-publish",
+          "params": "forward"
+        }
+      ]
+    }
+  }
+}
+```
+
+Nx core merges that default into the implicit `nx-release-publish` target it creates for non-private `package.json` projects, which keeps per-project `project.json` files minimal.
 
 ## Build Context Resolution
 
@@ -162,24 +189,13 @@ The label values are resolved from project metadata in this order:
 The `source` label always points to the project directory inside the repository.
 The `repository` field is therefore optional when the workspace Git remote already identifies the source repository.
 
-## Runtime Metadata Tags And Labels
+## Metadata Tags And Labels
 
-`buildTarget.metadata.tags` is evaluated at build runtime and reused by publish when configured.
+`buildTarget.metadata.tags` and `buildTarget.metadata.labels` are preserved on the inferred Docker build target.
 
-Supported tag styles:
+The plugin does not interpret or expand those values at build time. Their purpose is to make the enriched target shape visible in `nx show project` output and available to downstream tooling or workspace-specific release orchestration.
 
-- raw tags such as `latest`, `{{versionTag}}`, or `${{ env.TAG_NAME }}`
-- `type=raw,value=latest,enable={{is_default_branch}}`
-- `type=semver,pattern={{version}}`
-- `type=semver,pattern={{major}}.{{minor}}`
-- `type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}`
-- `type=ref,event=branch`
-- `type=ref,event=tag`
-- `type=sha`
-
-The executor derives Git context from the current environment or local Git state. When a tag ref is available, it also understands tag names such as `@draft/release@v1.2.3` and extracts `v1.2.3` for semver expansion.
-
-`buildTarget.metadata.labels` appends additional `--label key=value` arguments after the automatic OCI labels.
+`buildTarget.metadata.labels` is appended after the automatic OCI labels in the inferred target options.
 
 ## Publish Flow
 
@@ -187,23 +203,23 @@ The package provides one executor:
 
 - `@pagopa/nx-dx-docker-plugin:release-publish`
 
-This executor is normally reached through the inferred `nx-release-publish` target.
+This executor is normally reached through the inferred `docker-release-publish` target.
 
-If a project already owns `nx-release-publish` for another artifact type, the plugin still exposes `docker-release-publish` so a workspace-specific composite target can orchestrate both flows.
+Workspaces can also compose it into `nx-release-publish` centrally through `targetDefaults` when package publishing and Docker publishing should happen together.
 
 Its behavior is:
 
 1. resolve the current project from the Nx execution context
 2. read `tmp/<projectRoot>/.docker-version`
 3. treat the file content as the already versioned Docker image reference
-4. if `buildTarget.metadata.tags` is configured, re-evaluate those rules to derive the full set of image refs to publish; otherwise fall back to the legacy `version + latest` behavior
-5. in dry-run mode, print the tags that would be published and stop
+4. derive the corresponding `latest` image reference
+5. in dry-run mode, print the two tags that would be published and stop
 6. otherwise verify that the versioned image exists locally
 7. push the versioned image tag
-8. tag the same local image with each additional derived ref and push it
+8. tag the same local image as `latest` and push it
 9. remove `tmp/<projectRoot>` after a successful publish
 
-Because the executor reuses the image reference stored in `.docker-version`, publish works against the exact tag produced during the versioning phase and can fan out into any additional refs resolved from `metadata.tags`.
+Because the executor reuses the image reference stored in `.docker-version`, publish works against the exact tag produced during the versioning phase and only adds the rolling `latest` alias.
 
 ### Executor Options
 
@@ -239,10 +255,10 @@ The plugin uses `name`, `description`, and repository metadata for label generat
 
 ## Package Development
 
-Build the package with:
+Build the package from the workspace root with:
 
 ```bash
-pnpm build
+pnpm nx build @pagopa/nx-dx-docker-plugin
 ```
 
-The build generates the distributable files under `dist` and copies the executor schema used at runtime.
+The build generates the compiled files under `dist`.

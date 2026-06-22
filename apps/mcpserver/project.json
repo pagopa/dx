@@ -8,30 +8,8 @@
   "targets": {
     "docker:build": {
       "options": {
-        "args": [
-          "--platform linux/arm64"
-        ]
+        "platform": "linux/arm64"
       }
-    },
-    "npm-release-publish": {
-      "executor": "@nx/js:release-publish",
-      "dependsOn": [
-        "^nx-release-publish"
-      ],
-      "options": {}
-    },
-    "nx-release-publish": {
-      "executor": "nx:noop",
-      "dependsOn": [
-        {
-          "target": "npm-release-publish",
-          "params": "forward"
-        },
-        {
-          "target": "docker-release-publish",
-          "params": "forward"
-        }
-      ]
     }
   }
 }

@@ -72,7 +72,6 @@ describe("createNodesV2", () => {
 
     const buildTarget =
       result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
-    expect(buildTarget?.executor).toBe("@pagopa/nx-dx-docker-plugin:build");
     expect(buildTarget?.options?.cwd).toBe(".");
     expect(buildTarget?.options?.args).toEqual(
       expect.arrayContaining([
@@ -83,7 +82,7 @@ describe("createNodesV2", () => {
     expect(
       result[0]?.[1].projects?.[projectRoot]?.targets?.["nx-release-publish"]
         ?.executor,
-    ).toBe("@pagopa/nx-dx-docker-plugin:release-publish");
+    ).toBe("nx:noop");
   });
 
   it("uses the deepest child directory that satisfies local COPY sources", async () => {
@@ -125,12 +124,74 @@ describe("createNodesV2", () => {
 
     const buildTarget =
       result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
-    expect(buildTarget?.executor).toBe("@pagopa/nx-dx-docker-plugin:build");
     expect(buildTarget?.options?.cwd).toBe(
       `${projectRoot.replaceAll(path.sep, "/")}/app`,
     );
     expect(buildTarget?.options?.args).toEqual(
       expect.arrayContaining(["--file ../Dockerfile"]),
+    );
+  });
+
+  it("honors a project-level platform override without losing wrapper build args", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const projectRoot = path.join("apps", "mcpserver");
+
+    await fs.mkdir(path.join(workspaceRoot, projectRoot), { recursive: true });
+    await fs.writeFile(
+      path.join(workspaceRoot, projectRoot, "Dockerfile"),
+      ["FROM node:22-alpine", "COPY package.json ."].join("\n"),
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspaceRoot, projectRoot, "project.json"),
+      JSON.stringify({
+        release: {
+          docker: {
+            repositoryName: "dx/mcp-server",
+          },
+        },
+        targets: {
+          "docker:build": {
+            options: {
+              platform: "linux/arm64",
+            },
+          },
+        },
+      }),
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workspaceRoot, projectRoot, "package.json"),
+      JSON.stringify({
+        description: "MCP server",
+        name: "@acme/mcpserver",
+      }),
+      "utf8",
+    );
+
+    const result = await createNodesV2[1](
+      [path.join(projectRoot, "Dockerfile")],
+      {
+        buildTarget: {
+          args: ["--platform linux/amd64"],
+        },
+      },
+      {
+        nxJsonConfiguration: {},
+        workspaceRoot,
+      },
+    );
+
+    const buildTarget =
+      result[0]?.[1].projects?.[projectRoot]?.targets?.["docker:build"];
+    expect(buildTarget?.options?.args).toEqual(
+      expect.arrayContaining([
+        "--tag dx/mcp-server",
+        "--file Dockerfile",
+      ]),
+    );
+    expect(buildTarget?.options?.args).not.toEqual(
+      expect.arrayContaining(["--platform linux/amd64"]),
     );
   });
 });

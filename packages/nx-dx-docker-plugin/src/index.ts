@@ -83,6 +83,8 @@ const normalizeMetadata = (
 const stripMetadataFromBuildTarget = (
   target: DockerPluginOptions["buildTarget"],
 ): NxDockerPluginOptions["buildTarget"] => {
+  // metadata is a wrapper-only extension; strip it before delegating so upstream Nx Docker
+  // still receives the option shape it knows how to infer from.
   if (typeof target === "string" || target === undefined) {
     return target;
   }
@@ -151,6 +153,9 @@ const removeExistingFileArgs = (args: string[]) =>
 const removeExistingTagArgs = (args: string[]) =>
   args.filter((arg) => !arg.startsWith("--tag ") && !arg.startsWith("-t "));
 
+const removeExistingPlatformArgs = (args: string[]) =>
+  args.filter((arg) => !arg.startsWith("--platform "));
+
 const removeExistingLabelArgs = (args: string[]) =>
   args.filter(
     (arg) =>
@@ -159,29 +164,53 @@ const removeExistingLabelArgs = (args: string[]) =>
   );
 
 const dockerReleasePublishTargetName = "docker-release-publish";
-const dockerBuildExecutor = "@pagopa/nx-dx-docker-plugin:build";
+const nxReleasePublishTargetName = "nx-release-publish";
 
 const dockerReleasePublishExecutors = new Set([
   "@nx/docker:release-publish",
   "@pagopa/nx-dx-docker-plugin:release-publish",
 ]);
 
-const shouldReplaceReleasePublishTarget = (
-  target:
-    | undefined
-    | {
-        executor?: string;
-      },
-) => !target?.executor || dockerReleasePublishExecutors.has(target.executor);
+type TargetDependency = string | { target: string; params?: string };
+
+type InferredTarget = {
+  configurations?: Record<string, unknown>;
+  dependsOn?: TargetDependency[];
+  executor?: string;
+  options?: Record<string, unknown>;
+  parallelism?: boolean;
+  [key: string]: unknown;
+};
+
+const isDockerReleasePublishExecutor = (executor: string | undefined) =>
+  executor ? dockerReleasePublishExecutors.has(executor) : false;
+
+const patchNxReleasePublishTarget = (nxReleasePublishTarget: InferredTarget | undefined) => {
+  if (!nxReleasePublishTarget) {
+    return {
+      executor: "nx:noop",
+    };
+  }
+
+  if (isDockerReleasePublishExecutor(nxReleasePublishTarget.executor)) {
+    return {
+      ...nxReleasePublishTarget,
+      executor: "nx:noop",
+    };
+  }
+
+  return nxReleasePublishTarget.executor
+    ? nxReleasePublishTarget
+    : {
+        ...nxReleasePublishTarget,
+        executor: "nx:noop",
+      };
+};
 
 type InferredTargetOptions = {
   args?: unknown;
   env?: unknown;
   metadata?: unknown;
-};
-
-type InferredTargetConfiguration = {
-  options?: InferredTargetOptions;
 };
 
 type InferredBuildTarget = {
@@ -210,6 +239,8 @@ const readDockerReleaseCoordinates = (
   projectRoot: string,
 ): DockerReleaseCoordinates | null => {
   const normalizedProjectRoot = projectRoot === "." ? "" : projectRoot;
+  // Projects can declare Docker release coordinates in either project.json or package.json.
+  // Read both so inferred build tags stay aligned with the publish configuration.
   const candidateFiles = [
     path.join(workspaceRoot, normalizedProjectRoot, "project.json"),
     path.join(workspaceRoot, normalizedProjectRoot, "package.json"),
@@ -270,10 +301,57 @@ const resolveBaseImageReference = (
     : `${registryUrl}/${repositoryName}`;
 };
 
+const readProjectBuildPlatform = (
+  workspaceRoot: string,
+  projectRoot: string,
+  buildTargetName: string,
+) => {
+  const normalizedProjectRoot = projectRoot === "." ? "" : projectRoot;
+  const projectJson = readJsonFileIfExists(
+    path.join(workspaceRoot, normalizedProjectRoot, "project.json"),
+  );
+  const packageJson = readJsonFileIfExists(
+    path.join(workspaceRoot, normalizedProjectRoot, "package.json"),
+  );
+  const platformCandidates = [
+    projectJson?.targets,
+    packageJson?.nx && typeof packageJson.nx === "object"
+      ? (packageJson.nx as { targets?: unknown }).targets
+      : undefined,
+  ];
+
+  for (const targets of platformCandidates) {
+    if (!targets || typeof targets !== "object") {
+      continue;
+    }
+
+    const target = (targets as Record<string, unknown>)[buildTargetName];
+
+    if (!target || typeof target !== "object") {
+      continue;
+    }
+
+    const options = (target as { options?: unknown }).options;
+
+    if (!options || typeof options !== "object") {
+      continue;
+    }
+
+    const platform = (options as { platform?: unknown }).platform;
+
+    if (typeof platform === "string" && platform.trim().length > 0) {
+      return platform.trim();
+    }
+  }
+
+  return undefined;
+};
+
 const patchBuildTargetOptions = (
   workspaceRoot: string,
   projectRoot: string,
   projectName: string,
+  buildTargetName: string,
   dockerfilePath: string,
   targetOptions: InferredTargetOptions | undefined,
   authors: string,
@@ -291,6 +369,13 @@ const patchBuildTargetOptions = (
   const existingOptions = targetOptions ?? {};
   const existingEnv = normalizeEnv(existingOptions.env);
   const existingArgs = normalizeArgs(existingOptions.args);
+  const projectBuildPlatform = readProjectBuildPlatform(
+    workspaceRoot,
+    projectRoot,
+    buildTargetName,
+  );
+  // @nx/docker may infer a path-based fallback tag; when release.docker coordinates exist,
+  // replace that fallback so build, version, and publish all refer to the same repository.
   const existingTagArgument = existingArgs.find(
     (arg) => arg.startsWith("--tag ") || arg.startsWith("-t "),
   );
@@ -301,8 +386,13 @@ const patchBuildTargetOptions = (
   const baseImageReference = fallbackImageReference
     ? resolveBaseImageReference(workspaceRoot, projectRoot, fallbackImageReference)
     : null;
+  const argsBeforeLabelAndFileRewrite = projectBuildPlatform
+    ? removeExistingPlatformArgs(existingArgs)
+    : existingArgs;
   const baseArgs = removeExistingLabelArgs(
-    removeExistingFileArgs(removeExistingTagArgs(existingArgs)),
+    removeExistingFileArgs(
+      removeExistingTagArgs(argsBeforeLabelAndFileRewrite),
+    ),
   );
   const labelArgs = getAutomaticDockerLabelArgs(
     workspaceRoot,
@@ -332,13 +422,13 @@ const patchBuildTarget = (
   workspaceRoot: string,
   projectRoot: string,
   projectName: string,
+  buildTargetName: string,
   dockerfilePath: string,
   buildTarget: InferredBuildTarget,
   authors: string,
   metadata: DockerBuildMetadataOptions | undefined,
   configurationMetadata: Record<string, DockerBuildMetadataOptions | undefined>,
 ) => {
-  const { command: _command, ...restTarget } = buildTarget;
   const configurations = buildTarget.configurations
     ? Object.fromEntries(
         Object.entries(buildTarget.configurations).map(
@@ -348,6 +438,7 @@ const patchBuildTarget = (
               workspaceRoot,
               projectRoot,
               projectName,
+              buildTargetName,
               dockerfilePath,
               configurationOptions,
               authors,
@@ -359,12 +450,12 @@ const patchBuildTarget = (
     : undefined;
 
   return {
-    ...restTarget,
-    executor: dockerBuildExecutor,
+    ...buildTarget,
     options: patchBuildTargetOptions(
       workspaceRoot,
       projectRoot,
       projectName,
+      buildTargetName,
       dockerfilePath,
       buildTarget.options,
       authors,
@@ -386,6 +477,7 @@ const patchProjects = (
 
   const dockerImageAuthors =
     options.dockerImageAuthors ?? getDefaultDockerImageAuthors(workspaceRoot);
+  // Capture wrapper-only metadata before stripping it from the target options passed upstream.
   const baseBuildTargetMetadata = getBuildTargetMetadata(options.buildTarget);
   const buildTargetConfigurationMetadata =
     typeof options.buildTarget === "string" || options.buildTarget === undefined
@@ -414,6 +506,7 @@ const patchProjects = (
           workspaceRoot,
           projectRoot,
           projectName,
+          buildTargetName,
           configFilePath,
           targets[buildTargetName] as InferredBuildTarget,
           dockerImageAuthors,
@@ -422,18 +515,18 @@ const patchProjects = (
         );
       }
 
+      // Always expose a Docker-only publish target so mixed-artifact projects can compose it
+      // even when nx-release-publish is already owned by a different publisher.
       targets[dockerReleasePublishTargetName] = {
         ...(targets[dockerReleasePublishTargetName] ?? {}),
         executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       };
 
-      // Keep non-Docker publish targets intact so projects can still publish other artifacts.
-      if (shouldReplaceReleasePublishTarget(targets["nx-release-publish"])) {
-        targets["nx-release-publish"] = {
-          ...(targets["nx-release-publish"] ?? {}),
-          executor: "@pagopa/nx-dx-docker-plugin:release-publish",
-        };
-      }
+      // Ensure Docker-only projects still expose nx-release-publish.
+      // Package-based projects get their final nx-release-publish target from Nx core.
+      targets[nxReleasePublishTargetName] = patchNxReleasePublishTarget(
+        targets[nxReleasePublishTargetName] as InferredTarget | undefined,
+      );
 
       return [
         projectKey,

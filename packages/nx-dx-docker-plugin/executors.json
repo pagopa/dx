@@ -1,10 +1,5 @@
 {
   "executors": {
-    "build": {
-      "implementation": "./src/executors/build/build",
-      "schema": "./src/executors/build/schema.json",
-      "description": "Build Docker images with DX metadata expansion"
-    },
     "release-publish": {
       "implementation": "./src/executors/release-publish/release-publish",
       "schema": "./src/executors/release-publish/schema.json",
