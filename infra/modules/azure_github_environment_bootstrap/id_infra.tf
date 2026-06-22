@@ -29,3 +29,11 @@ resource "azurerm_federated_identity_credential" "github_infra_cd" {
   parent_id = azurerm_user_assigned_identity.infra_cd.id
   subject   = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.infra_environment_name, "cd")}"
 }
+
+resource "azurerm_federated_identity_credential" "github_automation_cd" {
+  name      = format(local.ids.federated_identity_name, "automation", "cd")
+  audience  = local.ids.audience
+  issuer    = local.ids.issuer
+  parent_id = azurerm_user_assigned_identity.infra_cd.id
+  subject   = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.automation_environment_name, "cd")}"
+}
