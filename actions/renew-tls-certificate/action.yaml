@@ -36,6 +36,11 @@ inputs:
   lets_encrypt_registration_json:
     description: "Let's Encrypt account registration info in JSON format"
     required: true
+  lets_encrypt_directory_url:
+    # Production callers keep the default; the e2e workflow overrides it with Let's Encrypt staging.
+    description: "ACME directory URL used to request the certificate"
+    required: false
+    default: "https://acme-v02.api.letsencrypt.org/directory"
 
 outputs:
   renew_certificate:
@@ -156,12 +161,14 @@ runs:
         AZURE_DNS_ZONE: ${{ inputs.dns_zone }}
         AZURE_IDENTITY_TYPE: "MANAGED_IDENTITY"
         ACTION_PATH: ${{ github.action_path }}
+        LETS_ENCRYPT_DIRECTORY_URL: ${{ inputs.lets_encrypt_directory_url }}
       run: |
         python3 "$ACTION_PATH/le_renew_ssl_certificate_acme_tiny.py" \
           --private-key private_key.json \
           --regr registration.json \
           --csr csr.der \
-          --out certificate_chain.pem
+          --out certificate_chain.pem \
+          --directory-url "$LETS_ENCRYPT_DIRECTORY_URL"
 
     - name: Convert certificate to PFX
       if: steps.should_renew.outputs.renew_certificate == 'true'

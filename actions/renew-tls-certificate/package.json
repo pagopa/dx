@@ -14,6 +14,28 @@
     "azure",
     "key-vault"
   ],
-  "scripts": {},
+  "scripts": {
+    "test": "bash test.sh",
+    "test:e2e": "bash test-e2e.sh"
+  },
+  "nx": {
+    "targets": {
+      "test:e2e": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": [],
+        "inputs": [
+          "{projectRoot}/action.yaml",
+          "{projectRoot}/le_*.py",
+          "{projectRoot}/le_renew_ssl_certificate_python_requirements.txt",
+          "{projectRoot}/test-e2e.sh"
+        ],
+        "options": {
+          "command": "pnpm run test:e2e",
+          "cwd": "actions/renew-tls-certificate"
+        }
+      }
+    }
+  },
   "devDependencies": {}
 }

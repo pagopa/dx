@@ -1,0 +1,59 @@
+name: Renew TLS certificate end-to-end test
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "actions/renew-tls-certificate/**"
+      - ".github/workflows/_validate-renew-tls-certificate-e2e.yaml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+
+jobs:
+  renew-tls-certificate-e2e-test:
+    name: Run renew TLS certificate E2E test
+    runs-on: ubuntu-latest
+    environment: automation-dev-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_CLIENT_ID: ${{ secrets.INTEGRATION_ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
+      DNS_ZONE: dev.dx.pagopa.it
+      DNS_ZONE_RESOURCE_GROUP: dx-d-itn-network-rg-01
+      KEY_VAULT_NAME: dx-d-itn-common-kv-01
+      CSR_COMMON_NAME: renew-tls-test.dev.dx.pagopa.it
+      ACME_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Cloud Provider Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Node Setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Cache Nx
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+        with:
+          path: .nx
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-nx-cache-
+
+      - name: Run renew TLS certificate E2E test
+        timeout-minutes: 20
+        run: pnpm nx run renew-tls-certificate:test:e2e
