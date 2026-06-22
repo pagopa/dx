@@ -36,12 +36,25 @@ trap cleanup EXIT
     --rsa-key-size 2048 \
     --quiet
 
-  openssl req -inform DER -in csr.der -noout -subject \
-    | grep "CN=test.dx.pagopa.it" >/dev/null
-  openssl req -inform DER -in csr.der -noout -text \
-    | grep "DNS:test.dx.pagopa.it" >/dev/null
-  openssl req -inform DER -in csr.der -noout -text \
-    | grep "Public-Key: (2048 bit)" >/dev/null
+  "$VENV_DIR/bin/python" - <<'PY'
+from cryptography import x509
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import ExtensionOID, NameOID
+
+with open("csr.der", "rb") as csr_file:
+    csr = x509.load_der_x509_csr(csr_file.read())
+
+common_name = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+subject_alternative_names = csr.extensions.get_extension_for_oid(
+    ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+).value.get_values_for_type(x509.DNSName)
+public_key = csr.public_key()
+
+assert common_name == "test.dx.pagopa.it"
+assert subject_alternative_names == ["test.dx.pagopa.it"]
+assert isinstance(public_key, rsa.RSAPublicKey)
+assert public_key.key_size == 2048
+PY
 )
 
 PYTHONPATH="$ACTION_DIR" "$VENV_DIR/bin/python" - <<'PY'
