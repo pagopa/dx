@@ -35,9 +35,6 @@ jobs:
     name: Create or Renew Certificate
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}-cd
-    env:
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
     steps:
       - name: Renew TLS Certificate
         uses: pagopa/dx/actions/renew-tls-certificate@main
@@ -54,7 +51,7 @@ jobs:
           lets_encrypt_registration_json: ${{ secrets.LETS_ENCRYPT_REGISTRATION_JSON }}
 
       - name: Notify Slack on failure
-        if: failure() && github.event_name == 'schedule' && env.SLACK_WEBHOOK_URL != ''
+        if: failure() && github.event_name == 'schedule' && secrets.SLACK_WEBHOOK_URL != ''
         uses: pagopa/dx/.github/actions/slack-notification@main
         with:
           id: "TLS Certificate Renewal"
