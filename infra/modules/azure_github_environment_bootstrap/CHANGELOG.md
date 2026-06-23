@@ -1,3 +1,13 @@
+## 4.1.0 (2026-06-23)
+
+### 🚀 Features
+
+- Add support to automation-cd GitHub environment ([#1872](https://github.com/pagopa/dx/pull/1872))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.0.2 (2026-05-27)
 
 ### 🩹 Fixes
