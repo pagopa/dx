@@ -41,7 +41,7 @@ The action uses the following detection order:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v4
+  - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
   - name: Detect package manager
     id: detect-pm
@@ -62,7 +62,7 @@ steps:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v4
+  - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
   - name: Detect package manager
     id: detect-pm
