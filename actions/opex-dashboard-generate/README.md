@@ -45,7 +45,7 @@ This action is typically used within the [opex-dashboard-deploy workflow](https:
 
 - name: Upload artifacts
   if: steps.generate-action.outputs.has_changes == 'true'
-  uses: actions/upload-artifact@v4
+  uses: 043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
   with:
     name: generated-terraform
     path: ${{ steps.generate-action.outputs.artifacts_path }}
