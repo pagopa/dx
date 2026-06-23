@@ -15,15 +15,50 @@ VENV_DIR="$WORK_DIR/venv"
 : "${CSR_COMMON_NAME:?CSR_COMMON_NAME is required}"
 : "${ACME_DIRECTORY_URL:?ACME_DIRECTORY_URL is required}"
 
+CERTIFICATE_RUN_SUFFIX="${GITHUB_RUN_ID:-local-$(date +%s)}"
+if [ -n "${GITHUB_RUN_ATTEMPT:-}" ]; then
+  CERTIFICATE_RUN_SUFFIX="$CERTIFICATE_RUN_SUFFIX-$GITHUB_RUN_ATTEMPT"
+fi
+CERTIFICATE_NAME="${CSR_COMMON_NAME//./-}-$CERTIFICATE_RUN_SUFFIX"
+DNS_CHALLENGE_RECORD_NAME="_acme-challenge.${CSR_COMMON_NAME%."$DNS_ZONE"}"
+
+certificate_exists() {
+  az keyvault certificate show \
+    --vault-name "$KEY_VAULT_NAME" \
+    --name "$CERTIFICATE_NAME" >/dev/null 2>&1
+}
+
+delete_test_certificate() {
+  if certificate_exists; then
+    az keyvault certificate delete \
+      --vault-name "$KEY_VAULT_NAME" \
+      --name "$CERTIFICATE_NAME" >/dev/null
+  fi
+}
+
 cleanup() {
+  exit_code=$?
+  cleanup_status=0
+  set +e
+
   # The renewal script removes this on success; this covers interrupted or failed runs.
   az network dns record-set txt delete \
     --resource-group "$DNS_ZONE_RESOURCE_GROUP" \
     --zone-name "$DNS_ZONE" \
-    --name "_acme-challenge.${CSR_COMMON_NAME%.$DNS_ZONE}" \
+    --name "$DNS_CHALLENGE_RECORD_NAME" \
     --yes \
     2>/dev/null || true
+
+  if ! delete_test_certificate; then
+    cleanup_status=1
+  fi
+
   rm -rf "$WORK_DIR"
+
+  if [ "$exit_code" -eq 0 ] && [ "$cleanup_status" -ne 0 ]; then
+    exit "$cleanup_status"
+  fi
+  exit "$exit_code"
 }
 
 trap cleanup EXIT
@@ -72,7 +107,7 @@ export AZURE_SUBSCRIPTION_ID="$ARM_SUBSCRIPTION_ID"
 
   az keyvault certificate import \
     --vault-name "$KEY_VAULT_NAME" \
-    --name "${CSR_COMMON_NAME//./-}" \
+    --name "$CERTIFICATE_NAME" \
     --disabled false \
     --file certificate_chain.pfx \
     --password "" >/dev/null
@@ -80,7 +115,7 @@ export AZURE_SUBSCRIPTION_ID="$ARM_SUBSCRIPTION_ID"
 
 subject="$(az keyvault certificate show \
   --vault-name "$KEY_VAULT_NAME" \
-  --name "${CSR_COMMON_NAME//./-}" \
+  --name "$CERTIFICATE_NAME" \
   --query "policy.x509CertificateProperties.subject" \
   --output tsv)"
 
@@ -89,4 +124,5 @@ if [ "$subject" != "CN=$CSR_COMMON_NAME" ]; then
   exit 1
 fi
 
+echo "Imported test certificate '$CERTIFICATE_NAME' with subject '$subject'"
 echo "renew-tls-certificate e2e test passed"
