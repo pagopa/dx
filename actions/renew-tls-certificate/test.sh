@@ -4,9 +4,29 @@
 set -euo pipefail
 
 ACTION_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
 WORK_DIR="$(mktemp -d)"
 VENV_DIR="$WORK_DIR/venv"
+
+resolve_python_bin() {
+  if [ -n "${PYTHON_BIN:-}" ]; then
+    printf '%s\n' "$PYTHON_BIN"
+    return 0
+  fi
+
+  for candidate in python3.12 python3.11 python3.10 python3; do
+    if command -v "$candidate" >/dev/null 2>&1; then
+      if "$candidate" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 10) else 1)'; then
+        printf '%s\n' "$candidate"
+        return 0
+      fi
+    fi
+  done
+
+  echo "A Python interpreter >= 3.10 is required. Set PYTHON_BIN to a supported interpreter." >&2
+  return 1
+}
+
+PYTHON_BIN="$(resolve_python_bin)"
 
 # Keep this test deterministic: it never calls Azure DNS, Key Vault, or ACME.
 cleanup() {

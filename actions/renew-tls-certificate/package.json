@@ -15,23 +15,30 @@
     "key-vault"
   ],
   "scripts": {
-    "test:integration": "bash test.sh",
+    "shellcheck": "shellcheck *.sh",
+    "test": "bash test.sh",
     "test:e2e": "bash test-e2e.sh"
   },
   "nx": {
     "targets": {
+      "shellcheck": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm run shellcheck",
+          "cwd": "actions/renew-tls-certificate"
+        }
+      },
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "pnpm run test",
+          "cwd": "actions/renew-tls-certificate"
+        }
+      },
       "test:e2e": {
         "executor": "nx:run-commands",
         "cache": false,
         "dependsOn": [],
-        "inputs": [
-          "{projectRoot}/action.yaml",
-          "{projectRoot}/le_*.py",
-          "{projectRoot}/test_smoke_imports.py",
-          "{projectRoot}/test_validate_csr.py",
-          "{projectRoot}/le_renew_ssl_certificate_python_requirements.txt",
-          "{projectRoot}/test-e2e.sh"
-        ],
         "options": {
           "command": "pnpm run test:e2e",
           "cwd": "actions/renew-tls-certificate"
