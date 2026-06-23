@@ -123,7 +123,7 @@ jobs:
           fetch-tags: "true"
           token: ${{ steps.app-token.outputs.token }}
 
-      - uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: "20"
 
