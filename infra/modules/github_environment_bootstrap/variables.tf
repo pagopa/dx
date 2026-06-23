@@ -30,8 +30,8 @@ variable "repository" {
     - `default_branch_name`: the main integration branch (default: "main").
     - `reviewers_teams`: teams required to review and approve PRs.
     - `pull_request_bypassers`: users/teams allowed to merge without approval.
-    - `infra/opex/app/bootstrapper_cd_policy_branches`: branches that trigger CD deployments.
-    - `infra/opex/app/bootstrapper_cd_policy_tags`: tags that trigger CD deployments.
+    - `*_cd_policy_branches`: enabled branches for continuous deployments.
+    - `*_cd_policy_tags`: enabled tags for continuous deployments.
     - `jira_boards_ids`: linked Jira board identifiers.
     - `pages_enabled`, `has_issues`, `has_projects`, `has_downloads`, `homepage_url`: GitHub repository feature toggles.
     - `environments`: list of deployment environments (e.g., dev, prod).
