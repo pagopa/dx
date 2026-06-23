@@ -15,6 +15,18 @@ For more information on setting up and managing infrastructure in a monoreposito
 - Integrates with Jira by adding autolink references for specified boards.
 - Allows customization of repository topics and descriptions.
 
+### Supported GitHub Environments
+
+This module creates the following GitHub environments:
+
+- `infra-ci`: For continuous integration of infrastructure code.
+- `infra-cd`: For continuous deployment of infrastructure code (requires manual approval).
+- `automation-cd`: For continuous deployment of automated tasks.
+- `opex-ci`: For continuous integration of operational expenditure code.
+- `opex-cd`: For continuous deployment of operational expenditure code (requires manual approval).
+- `app-ci`: For continuous integration of application code.
+- `app-cd`: For continuous deployment of application code (requires manual approval).
+
 ### Usage Example
 
 ```hcl
@@ -131,6 +143,7 @@ No modules.
 | [github_repository_autolink_reference.jira_board](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_autolink_reference) | resource |
 | [github_repository_environment.app_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.app_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.automation_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.bootstrapper_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
@@ -138,6 +151,8 @@ No modules.
 | [github_repository_environment.opex_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment_deployment_policy.app_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.app_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
+| [github_repository_environment_deployment_policy.automation_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
+| [github_repository_environment_deployment_policy.automation_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.bootstrapper_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.bootstrapper_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.infra_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
