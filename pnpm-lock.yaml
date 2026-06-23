@@ -1133,9 +1133,6 @@ importers:
 
   packages/eslint-config:
     dependencies:
-      '@eslint/js':
-        specifier: ^10.0.1
-        version: 10.0.1(eslint@10.3.0(jiti@2.7.0))
       '@vitest/eslint-plugin':
         specifier: ^1.6.13
         version: 1.6.13(@typescript-eslint/eslint-plugin@8.59.1(@typescript-eslint/parser@8.59.1(eslint@10.3.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.3.0(jiti@2.7.0))(typescript@5.9.3))(eslint@10.3.0(jiti@2.7.0))(typescript@5.9.3)(vitest@4.1.8)
@@ -1155,6 +1152,9 @@ importers:
         specifier: ^8.59.1
         version: 8.59.1(eslint@10.3.0(jiti@2.7.0))(typescript@5.9.3)
     devDependencies:
+      '@eslint/js':
+        specifier: ^10.0.1
+        version: 10.0.1(eslint@10.3.0(jiti@2.7.0))
       eslint:
         specifier: 'catalog:'
         version: 10.3.0(jiti@2.7.0)
