@@ -25,6 +25,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_automation_cd_common_key_vault_certificates"></a> [automation\_cd\_common\_key\_vault\_certificates](#module\_automation\_cd\_common\_key\_vault\_certificates) | pagopa-dx/azure-role-assignments/azurerm | ~> 2.1 |
 | <a name="module_aws_core_values"></a> [aws\_core\_values](#module\_aws\_core\_values) | pagopa-dx/aws-core-values-exporter/aws | ~> 0.0 |
 | <a name="module_azure_core_values"></a> [azure\_core\_values](#module\_azure\_core\_values) | pagopa-dx/azure-core-values-exporter/azurerm | ~> 0.0 |
 | <a name="module_mcp_server"></a> [mcp\_server](#module\_mcp\_server) | ../_modules/mcp_server | n/a |
@@ -44,6 +45,7 @@
 | [azurerm_subnet.runner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subnet.subnets](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_user_assigned_identity.automation_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 | [azurerm_user_assigned_identity.infra_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/user_assigned_identity) | data source |
 | [azurerm_virtual_network.common](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
