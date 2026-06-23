@@ -23,7 +23,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Docker Build and Push
         id: docker_build
@@ -34,7 +34,8 @@ jobs:
           dockerfile_path: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/Dockerfile
           dockerfile_context: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe
           docker_image_name: ${{ env.IMAGE_NAME }}
-          docker_image_description: "Web app which exposes data-plane and control-plane
+          docker_image_description:
+            "Web app which exposes data-plane and control-plane
             endpoints to probe Azure Storage RBAC. Used for E2E tests of the
             Azure Merge Roles Terraform module."
           docker_image_authors: "PagoPA"
