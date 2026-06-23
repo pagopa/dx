@@ -75,6 +75,7 @@ export const authorizeCloudAccounts =
           envShort,
           prefix,
           repoName: envPayload.github.repo,
+          repoOwner: envPayload.github.owner,
           subscriptionName: account.displayName,
         });
 

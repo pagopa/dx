@@ -211,7 +211,6 @@ const ensureIdentity = (
   };
 };
 
-const REPO_OWNER = "pagopa";
 const REPO_NAME = "eng-azure-authorization";
 const BASE_BRANCH = "main";
 
@@ -227,8 +226,10 @@ export const makeAzureAuthorizationService = (
       envShort,
       prefix,
       repoName,
+      repoOwner,
       subscriptionName,
     } = input;
+    const authorizationRepoOwner = repoOwner;
     const filePath = `src/azure-subscriptions/subscriptions/${subscriptionName}/terraform.tfvars.json`;
     const branchName = `feats/add-${repoName}-${subscriptionName}-bootstrap-identity`;
 
@@ -236,14 +237,14 @@ export const makeAzureAuthorizationService = (
       // Step 1: Read file from main to determine if changes are needed
       ResultAsync.fromPromise(
         gitHubService.getFileContent({
-          owner: REPO_OWNER,
+          owner: authorizationRepoOwner,
           path: filePath,
           ref: BASE_BRANCH,
           repo: REPO_NAME,
         }),
         () =>
           new AuthorizationError(
-            `Unable to get ${filePath} in ${REPO_OWNER}/${REPO_NAME}`,
+            `Unable to get ${filePath} in ${authorizationRepoOwner}/${REPO_NAME}`,
           ),
       )
         .orTee((error) => {
@@ -298,12 +299,12 @@ export const makeAzureAuthorizationService = (
               gitHubService.createBranch({
                 branchName,
                 fromRef: BASE_BRANCH,
-                owner: REPO_OWNER,
+                owner: authorizationRepoOwner,
                 repo: REPO_NAME,
               }),
               () =>
                 new AuthorizationError(
-                  `Unable to create branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                  `Unable to create branch ${branchName} in ${authorizationRepoOwner}/${REPO_NAME}`,
                 ),
             )
               .orTee((error) => {
@@ -316,14 +317,14 @@ export const makeAzureAuthorizationService = (
                     branch: branchName,
                     content: JSON.stringify(updatedJson, null, 2),
                     message,
-                    owner: REPO_OWNER,
+                    owner: authorizationRepoOwner,
                     path: filePath,
                     repo: REPO_NAME,
                     sha,
                   }),
                   () =>
                     new AuthorizationError(
-                      `Unable to update ${filePath} on branch ${branchName} in ${REPO_OWNER}/${REPO_NAME}`,
+                      `Unable to update ${filePath} on branch ${branchName} in ${authorizationRepoOwner}/${REPO_NAME}`,
                     ),
                 ),
               )
@@ -337,13 +338,13 @@ export const makeAzureAuthorizationService = (
                     base: BASE_BRANCH,
                     body,
                     head: branchName,
-                    owner: REPO_OWNER,
+                    owner: authorizationRepoOwner,
                     repo: REPO_NAME,
                     title,
                   }),
                   () =>
                     new AuthorizationError(
-                      `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${REPO_OWNER}/${REPO_NAME}`,
+                      `Unable to create pull request from ${branchName} to ${BASE_BRANCH} in ${authorizationRepoOwner}/${REPO_NAME}`,
                     ),
                 ),
               )
