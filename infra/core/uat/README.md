@@ -22,7 +22,7 @@
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_aws"></a> [aws](#module\_aws) | pagopa-dx/aws-core-infra/aws | ~> 0.0 |
-| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 4.1 |
+| <a name="module_azure"></a> [azure](#module\_azure) | pagopa-dx/azure-core-infra/azurerm | ~> 4.2 |
 
 ## Resources
 
