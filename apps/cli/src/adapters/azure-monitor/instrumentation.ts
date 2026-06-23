@@ -35,12 +35,14 @@ register("import-in-the-middle/hook.mjs", import.meta.url, registerOptions);
 
 // Set service name before useAzureMonitor() initialises the Resource so
 // that Azure Monitor picks it up as the cloud_RoleName.
-process.env["OTEL_SERVICE_NAME"] = "dx-cli";
-process.env["ATTR_SERVICE_NAMESPACE"] = "dx";
+process.env["OTEL_SERVICE_NAME"] = "cli";
+process.env["OTEL_RESOURCE_ATTRIBUTES"] = [
+  process.env["OTEL_RESOURCE_ATTRIBUTES"],
+  "service.namespace=dx",
+]
+  .filter(Boolean)
+  .join(",");
 
-// Append OS resource attributes to any pre-existing OTEL_RESOURCE_ATTRIBUTES
-// value (e.g. set by the environment). OTel picks these up automatically when
-// it builds the Resource inside useAzureMonitor().
 // os.platform() returns "win32" on Windows; the OTel os.type enum uses "windows".
 const osPlatform = os.platform();
 const osType = osPlatform === "win32" ? "windows" : osPlatform;
