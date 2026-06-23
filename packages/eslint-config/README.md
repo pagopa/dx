@@ -45,3 +45,31 @@ It supports both **ESLint 9** and **ESLint 10**.
      }
    }
    ```
+
+## Test-runner support
+
+The default entry point ships rules for [Vitest](https://vitest.dev/). A separate
+`@pagopa/eslint-config/jest` subpath provides the equivalent rules for
+[Jest](https://jestjs.io/), which is the default test runner for React Native apps.
+
+### Jest (React Native)
+
+Install `eslint-plugin-jest` alongside the regular peer dependencies:
+
+```shell
+pnpm add -D eslint-plugin-jest
+```
+
+Then import the `/jest` subpath:
+
+```js
+import pagopa from "@pagopa/eslint-config/jest";
+
+export default [...pagopa];
+```
+
+> [!NOTE]
+> React Native apps should compose this configuration with
+> [`@react-native/eslint-config`](https://www.npmjs.com/package/@react-native/eslint-config),
+> which contributes the React, React Hooks and React Native rule sets that this package
+> intentionally leaves out.
