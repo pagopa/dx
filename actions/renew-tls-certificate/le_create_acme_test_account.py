@@ -11,7 +11,7 @@ import cryptography.hazmat.primitives.serialization
 import cryptography.hazmat.primitives.asymmetric.padding
 import jwcrypto.jwk
 
-DEFAULT_DIRECTORY_URL = "https://acme-v02.api.letsencrypt.org/directory"
+DEFAULT_DIRECTORY_URL = "https://acme-staging-v02.api.letsencrypt.org/directory"
 
 
 def _b64(data):
