@@ -15,7 +15,7 @@
     "key-vault"
   ],
   "scripts": {
-    "test": "bash test.sh",
+    "test:integration": "bash test.sh",
     "test:e2e": "bash test-e2e.sh"
   },
   "nx": {
