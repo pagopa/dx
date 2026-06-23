@@ -29,9 +29,7 @@ jobs:
       ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
       DNS_ZONE: dev.dx.pagopa.it
       DNS_ZONE_RESOURCE_GROUP: dx-d-itn-network-rg-01
-      KEY_VAULT_LOCATION: italynorth
-      KEY_VAULT_NAME: dxtlse2e${{ github.run_id }}${{ github.run_attempt }}
-      KEY_VAULT_RESOURCE_GROUP: dx-d-itn-common-rg-01
+      KEY_VAULT_NAME: dx-d-itn-common-kv-01
       CSR_COMMON_NAME: renew-tls-test.dev.dx.pagopa.it
       ACME_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
 
@@ -41,28 +39,6 @@ jobs:
 
       - name: Cloud Provider Login
         uses: pagopa/dx/actions/csp-login@main
-
-      - name: Create temporary Key Vault
-        run: |
-          set -euo pipefail
-
-          # Keep the e2e isolated from the shared Key Vault RBAC and clean it up after the run.
-          az keyvault create \
-            --name "$KEY_VAULT_NAME" \
-            --resource-group "$KEY_VAULT_RESOURCE_GROUP" \
-            --location "$KEY_VAULT_LOCATION" \
-            --enable-rbac-authorization false \
-            --enable-purge-protection false \
-            --retention-days 7 \
-            --tags CreatedBy=GitHubActions Purpose=renew-tls-certificate-e2e >/dev/null
-
-          az keyvault set-policy \
-            --name "$KEY_VAULT_NAME" \
-            --resource-group "$KEY_VAULT_RESOURCE_GROUP" \
-            --spn "$ARM_CLIENT_ID" \
-            --certificate-permissions get list import delete purge \
-            --key-permissions get create import delete purge \
-            --secret-permissions get set delete purge >/dev/null
 
       - name: Node Setup
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -81,31 +57,3 @@ jobs:
       - name: Run renew TLS certificate E2E test
         timeout-minutes: 20
         run: pnpm nx run renew-tls-certificate:test:e2e
-
-      - name: Cleanup temporary Key Vault
-        if: always()
-        run: |
-          set -euo pipefail
-
-          az keyvault delete \
-            --name "$KEY_VAULT_NAME" \
-            --resource-group "$KEY_VAULT_RESOURCE_GROUP" \
-            --no-wait \
-            2>/dev/null || exit 0
-
-          # The vault first enters soft-delete; wait until Azure exposes it there, then purge it.
-          for _ in {1..30}; do
-            if az keyvault show-deleted \
-              --name "$KEY_VAULT_NAME" \
-              --location "$KEY_VAULT_LOCATION" >/dev/null 2>&1; then
-              az keyvault purge \
-                --name "$KEY_VAULT_NAME" \
-                --location "$KEY_VAULT_LOCATION"
-              exit 0
-            fi
-
-            sleep 10
-          done
-
-          echo "Timed out waiting for deleted Key Vault '$KEY_VAULT_NAME' to become purgeable" >&2
-          exit 1

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Real DEV-DEVEX end-to-end test for DNS-01 renewal and Key Vault import.
 
 set -euo pipefail
 
@@ -34,7 +35,7 @@ trap cleanup EXIT
   --requirement "$ACTION_DIR/le_renew_ssl_certificate_python_requirements.txt" \
   --quiet
 
-"$VENV_DIR/bin/python" "$ACTION_DIR/le_create_acme_account.py" \
+"$VENV_DIR/bin/python" "$ACTION_DIR/le_create_acme_test_account.py" \
   --directory-url "$ACME_DIRECTORY_URL" \
   --private-key-out "$WORK_DIR/private_key.json" \
   --registration-out "$WORK_DIR/registration.json"

@@ -27,6 +27,7 @@
         "inputs": [
           "{projectRoot}/action.yaml",
           "{projectRoot}/le_*.py",
+          "{projectRoot}/test_validate_csr.py",
           "{projectRoot}/le_renew_ssl_certificate_python_requirements.txt",
           "{projectRoot}/test-e2e.sh"
         ],
