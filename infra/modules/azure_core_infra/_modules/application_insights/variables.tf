@@ -34,6 +34,11 @@ variable "daily_data_cap_in_gb" {
   description = "The daily data cap in GB for Application Insights"
 }
 
+variable "mask_ip_address" {
+  type        = bool
+  description = "Whether to mask IP addresses in Application Insights telemetry data"
+}
+
 variable "tags" {
   type        = map(any)
   description = "A mapping of tags to assign to the resource"

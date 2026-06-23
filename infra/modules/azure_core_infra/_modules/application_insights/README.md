@@ -24,6 +24,7 @@ No modules.
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | The ID of the Key Vault where Application Insights secrets will be stored | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | The location in which the Log Analytics will be created | `string` | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics Workspace to link with Application Insights | `string` | n/a | yes |
+| <a name="input_mask_ip_address"></a> [mask\_ip\_address](#input\_mask\_ip\_address) | Whether to mask IP addresses in Application Insights telemetry data | `bool` | n/a | yes |
 | <a name="input_naming_config"></a> [naming\_config](#input\_naming\_config) | Map with naming values for resource names | <pre>object({<br/>    prefix          = string,<br/>    environment     = string,<br/>    location        = string,<br/>    instance_number = optional(number, 1),<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group in which the Log Analytics will be created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A mapping of tags to assign to the resource | `map(any)` | n/a | yes |

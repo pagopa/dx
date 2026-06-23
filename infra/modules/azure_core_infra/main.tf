@@ -207,6 +207,7 @@ module "application_insights" {
   location            = var.environment.location
 
   log_analytics_workspace_id = module.common_log_analytics.id
+  mask_ip_address            = var.ai_mask_ip_address
   key_vault_id               = module.key_vault.id
 
   tags = local.tags

@@ -72,6 +72,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_ai_mask_ip_address"></a> [ai\_mask\_ip\_address](#input\_ai\_mask\_ip\_address) | Whether to mask IP addresses in Application Insights telemetry data | `bool` | `false` | no |
 | <a name="input_cross_cloud_dns_enabled"></a> [cross\_cloud\_dns\_enabled](#input\_cross\_cloud\_dns\_enabled) | Enable cross-cloud DNS resolution with AWS. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_nat_enabled"></a> [nat\_enabled](#input\_nat\_enabled) | A boolean flag to enable or disable the creation of a NAT gateway. | `bool` | `false` | no |
