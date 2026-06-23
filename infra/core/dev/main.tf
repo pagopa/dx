@@ -1,13 +1,12 @@
 module "azure" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 4.2"
+  version = "~> 4.1"
 
   environment = local.azure_environment
 
-  nat_enabled        = false
-  vpn_enabled        = true
-  test_enabled       = true
-  ai_mask_ip_address = true
+  nat_enabled  = false
+  vpn_enabled  = true
+  test_enabled = true
 
   virtual_network_cidr = local.azure.vnet_cidr
 
