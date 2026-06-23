@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger image publication on project release tags as well.
+    tags:
+      - "dx-metrics-import@*"
     paths:
       - "apps/dx-metrics-import/package.json"
       - "packages/dx-metrics-core/**"
@@ -26,6 +30,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
+      - name: Resolve Docker image name from Nx config
+        id: image_name
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_name=$(jq -r '.nx.release.docker.repositoryName // empty' apps/dx-metrics-import/package.json)
+          if [[ -z "$image_name" ]]; then
+            echo "::error::Missing nx.release.docker.repositoryName in apps/dx-metrics-import/package.json"
+            exit 1
+          fi
+
+          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+
       - name: Docker Build and Push
         uses: pagopa/dx/actions/docker-build-push@main
         env:
@@ -33,7 +51,7 @@ jobs:
         with:
           dockerfile_path: ./apps/dx-metrics-import/Dockerfile
           dockerfile_context: .
-          docker_image_name: pagopa/dx-metrics-import
+          docker_image_name: ${{ steps.image_name.outputs.image_name }}
           docker_image_description: "Scheduled import job for the DX Metrics portal. Fetches GitHub engineering metrics and writes them to PostgreSQL."
           docker_image_authors: PagoPA
           build_platforms: linux/amd64

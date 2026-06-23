@@ -6,6 +6,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger image publication on project release tags as well.
+    tags:
+      - "azure_merge_roles_tests_blob_rbac_probe@*"
     paths:
       - "infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/**"
 
@@ -18,12 +22,23 @@ jobs:
       id-token: write
       attestations: write
       packages: write
-    env:
-      IMAGE_NAME: "pagopa/e2e-azure-merge-roles-blob-rbac"
-
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Resolve Docker image name from Nx config
+        id: image_name
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_name=$(jq -r '.release.docker.repositoryName // empty' infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/project.json)
+          if [[ -z "$image_name" ]]; then
+            echo "::error::Missing release.docker.repositoryName in infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/project.json"
+            exit 1
+          fi
+
+          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
 
       - name: Docker Build and Push
         id: docker_build
@@ -33,7 +48,7 @@ jobs:
         with:
           dockerfile_path: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe/Dockerfile
           dockerfile_context: infra/modules/azure_merge_roles/tests/apps/blob_rbac_probe
-          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_name: ${{ steps.image_name.outputs.image_name }}
           docker_image_description: "Web app which exposes data-plane and control-plane
             endpoints to probe Azure Storage RBAC. Used for E2E tests of the
             Azure Merge Roles Terraform module."

@@ -5,6 +5,10 @@ on:
   push:
     branches:
       - main
+    # Path filters are not evaluated for tag pushes.
+    # Trigger production deploys on project release tags as well.
+    tags:
+      - "dx-metrics@*"
     paths:
       - "apps/dx-metrics/package.json"
       - "packages/dx-metrics-core/**"
@@ -16,8 +20,32 @@ permissions:
   attestations: write
 
 jobs:
+  resolve-image-name:
+    name: Resolve Docker Image Name
+    runs-on: ubuntu-latest
+    outputs:
+      image_name: ${{ steps.image_name.outputs.image_name }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Resolve Docker image name from Nx config
+        id: image_name
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          image_name=$(jq -r '.nx.release.docker.repositoryName // empty' apps/dx-metrics/package.json)
+          if [[ -z "$image_name" ]]; then
+            echo "::error::Missing nx.release.docker.repositoryName in apps/dx-metrics/package.json"
+            exit 1
+          fi
+
+          echo "image_name=$image_name" >> "$GITHUB_OUTPUT"
+
   deploy:
     name: Deploy DX Metrics as Container App
+    needs: resolve-image-name
     concurrency:
       group: ${{ github.workflow }}-cd
       # Override this configuration to prevent cancelling a running deploy.
@@ -27,7 +55,7 @@ jobs:
     with:
       dockerfile_path: ./apps/dx-metrics/Dockerfile
       dockerfile_context: .
-      docker_image_name: pagopa/dx-metrics
+      docker_image_name: ${{ needs.resolve-image-name.outputs.image_name }}
       docker_image_description: "DX Metrics is a monitoring and analytics service for the PagoPA Developer Experience (DX) team, providing insights into development experience."
       container_app: dx-p-itn-metrics-portal-ca-01
       resource_group_name: dx-p-itn-common-rg-01

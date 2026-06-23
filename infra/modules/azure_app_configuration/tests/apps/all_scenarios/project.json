@@ -4,10 +4,22 @@
   "version": "0.0.0",
   "description": "Simple application for Terraform E2E tests, which exposes endpoints to test connectivity and integration with App Configuration",
   "private": true,
+  "release": {
+    "docker": {
+      "repositoryName": "pagopa/e2e-appconfiguration-all-scenarios"
+    }
+  },
   "targets": {
-    "docker:build": {
+    "nx-release-publish": {
+      "executor": "nx:run-commands",
       "options": {
-        "platform": "linux/amd64,linux/arm64"
+        "command": "pnpm --filter @pagopa/nx-docker-release-tools exec dx-docker-release-publish-with-latest --project-root {projectRoot}"
+      }
+    },
+    "docker:build": {
+      "command": "docker build -f ../Dockerfile {args} .",
+      "options": {
+        "cwd": "infra/modules/azure_app_configuration/tests/apps/all_scenarios/src"
       }
     },
     "docker:run": {
