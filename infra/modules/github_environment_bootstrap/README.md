@@ -15,6 +15,18 @@ For more information on setting up and managing infrastructure in a monoreposito
 - Integrates with Jira by adding autolink references for specified boards.
 - Allows customization of repository topics and descriptions.
 
+### Supported GitHub Environments
+
+This module creates the following GitHub environments:
+
+- `infra-ci`: For continuous integration of infrastructure code.
+- `infra-cd`: For continuous deployment of infrastructure code (requires manual approval).
+- `automation-cd`: For continuous deployment of automated tasks.
+- `opex-ci`: For continuous integration of operational expenditure code.
+- `opex-cd`: For continuous deployment of operational expenditure code (requires manual approval).
+- `app-ci`: For continuous integration of application code.
+- `app-cd`: For continuous deployment of application code (requires manual approval).
+
 ### Usage Example
 
 ```hcl
