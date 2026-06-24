@@ -67,6 +67,7 @@ export const requestAuthorizationInputSchema = z.object({
   envShort: EnvShort,
   prefix: ResourcePrefix,
   repoName: z.string().min(1),
+  repoOwner: z.string().min(1),
   subscriptionName: SubscriptionName,
 });
 
