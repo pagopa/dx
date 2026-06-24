@@ -78,12 +78,8 @@ jobs:
             --registration-out "$registration_json"
 
           {
-            echo "private_key_json<<EOF"
-            cat "$private_key_json"
-            echo "EOF"
-            echo "registration_json<<EOF"
-            cat "$registration_json"
-            echo "EOF"
+            printf 'private_key_json=%s\n' "$(cat "$private_key_json")"
+            printf 'registration_json=%s\n' "$(cat "$registration_json")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Run renew TLS certificate action
