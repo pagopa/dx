@@ -40,12 +40,14 @@ catalog:
   commander: ^14.0.3
   eslint: ^10.3.0
   execa: ^9.6.1
+  handlebars: ^4.7.9
   js-yaml: ^4.1.1
   neverthrow: ^8.2.0
   octokit: ^5.0.5
   plop: ^4.0.5
   prettier: 3.8.3
   semver: ^7.7.4
+  tsdown: ^0.22.0
   tsup: ^8.5.1
   tsx: ^4.21.0
   typescript: ~5.9.3

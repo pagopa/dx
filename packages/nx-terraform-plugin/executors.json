@@ -1,12 +1,12 @@
 {
   "executors": {
     "publish": {
-      "implementation": "./src/executors/publish/publish",
+      "implementation": "./dist/executors/publish/publish.js",
       "schema": "./src/executors/publish/schema.json",
       "description": "publish executor"
     },
     "plan": {
-      "implementation": "./src/executors/plan/plan",
+      "implementation": "./dist/executors/plan/plan.js",
       "schema": "./src/executors/plan/schema.json",
       "description": "plan executor"
     }
