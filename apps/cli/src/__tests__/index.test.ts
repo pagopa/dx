@@ -52,12 +52,12 @@ vi.mock("@logtape/otel", () => ({
   getOpenTelemetrySink: () => () => undefined,
 }));
 vi.mock("@opentelemetry/api", () => ({
-  SpanKind: { SERVER: 1 },
-  SpanStatusCode: { ERROR: 2 },
   context: {
     active: () => ({}),
     with: (_ctx: unknown, fn: () => unknown) => fn(),
   },
+  SpanKind: { SERVER: 1 },
+  SpanStatusCode: { ERROR: 2 },
   trace: {
     getActiveSpan: () => mocks.span,
     getTracer: () => ({ startSpan: () => mocks.span }),
@@ -88,9 +88,9 @@ vi.mock("../adapters/node/repository.js", () => ({
   makeRepositoryReader: mocks.makeRepositoryReader,
 }));
 vi.mock("../adapters/octokit/index.js", () => ({
-  OctokitGitHubService: vi.fn(),
   getGitHubPAT: mocks.getGitHubPAT,
   isPagopaOrgMember: mocks.isPagopaOrgMember,
+  OctokitGitHubService: vi.fn(),
 }));
 vi.mock("../adapters/pagopa-technology/azure-authorization.js", () => ({
   makeAzureAuthorizationService: vi.fn(),
