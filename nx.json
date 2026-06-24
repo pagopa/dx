@@ -132,7 +132,7 @@
     },
     {
       "plugin": "@pagopa/nx-terraform-plugin",
-      "include": ["infra/resources/**", "infra/repository"]
+      "include": ["infra/**"]
     }
   ],
   "analytics": false
