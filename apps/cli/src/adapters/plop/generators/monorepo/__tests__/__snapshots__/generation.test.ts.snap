@@ -346,14 +346,6 @@ exports[`monorepo generator — file generation > propagates action outputs into
         args:
           - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
       - id: terraform_fmt
-      - id: terraform_docs
-        name: terraform_docs on resources
-        args:
-          - --hook-config=--create-file-if-not-exist=true
-        exclude: |
-          (?x)^(
-            src\\/(?:.*\\/)?(?:_?modules)\\/.*
-          )$
       - id: terraform_validate
         exclude: '(\\/_?modules\\/.*)'
         args:
