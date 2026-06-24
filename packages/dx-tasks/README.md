@@ -178,9 +178,10 @@ and errors are rendered as GitHub Markdown notices before the summary line:
 ### Terraform Plans
 
 #### Module: `./infra/modules/example` - ✅ Success
+
 > [!WARNING]
 > Warning: Deprecated attribute
-> 
+>
 > The attribute "foo" is deprecated.
 
 Plan: 0 to add, 1 to change, 0 to destroy.

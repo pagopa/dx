@@ -6,7 +6,7 @@
     "importHelpers": true,
     "rootDir": "./src",
     "rewriteRelativeImportExtensions": true,
-    "types": ["node"],
+    "types": ["node"]
   },
-  "include": ["./src/**/*.ts"],
+  "include": ["./src/**/*.ts"]
 }
