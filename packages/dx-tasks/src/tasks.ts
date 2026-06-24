@@ -3,10 +3,21 @@
 import type { TaskDefinition } from "./dispatcher.ts";
 
 import {
+  prComment,
+  type PrCommentPayload,
+  payloadSchema as prCommentPayloadSchema,
+  type PrCommentResult,
+} from "./github/pr-comment.ts";
+import {
   renderReport,
   type RenderReportPayload,
   payloadSchema as renderReportPayloadSchema,
 } from "./render-report.ts";
+import {
+  reportPrComment,
+  type ReportPrCommentPayload,
+  payloadSchema as reportPrCommentPayloadSchema,
+} from "./report-pr-comment.ts";
 import {
   terraformPlan,
   type TerraformPlanPayload,
@@ -24,3 +35,19 @@ export const renderReportTask: TaskDefinition<RenderReportPayload> = {
   payloadSchema: renderReportPayloadSchema,
   run: renderReport,
 };
+
+export const reportPrCommentTask: TaskDefinition<
+  ReportPrCommentPayload,
+  PrCommentResult | undefined
+> = {
+  name: "reportPrComment",
+  payloadSchema: reportPrCommentPayloadSchema,
+  run: reportPrComment,
+};
+
+export const prCommentTask: TaskDefinition<PrCommentPayload, PrCommentResult> =
+  {
+    name: "prComment",
+    payloadSchema: prCommentPayloadSchema,
+    run: prComment,
+  };

@@ -17,7 +17,7 @@ export interface ReportNamespace<
 }
 
 export type ReportRenderFn<TSchema extends z.ZodMiniType> = (
-  report: z.output<TSchema>,
+  reports: readonly z.output<TSchema>[],
 ) => string;
 
 const readReports = async (
@@ -84,17 +84,22 @@ export class ReportStore {
     const sections: string[] = [];
 
     for (const namespace of this.namespaces.values()) {
-      const renderReport = namespace.renderers?.[format];
+      const renderReports = namespace.renderers?.[format];
 
-      if (!renderReport) {
+      if (!renderReports) {
         continue;
       }
 
       const directoryPath = path.join(this.rootDirectoryPath, namespace.name);
+      const reports = (await readReports(directoryPath)).map((report) =>
+        namespace.schema.parse(report),
+      );
 
-      for (const report of await readReports(directoryPath)) {
-        sections.push(renderReport(namespace.schema.parse(report)));
+      if (reports.length === 0) {
+        continue;
       }
+
+      sections.push(renderReports(reports));
     }
 
     return sections.join("\n\n");

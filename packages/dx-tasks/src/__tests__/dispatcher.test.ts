@@ -55,6 +55,25 @@ describe("createTaskDispatcher", () => {
     );
   });
 
+  it("returns the registered task result", async () => {
+    const dispatcher = createTaskDispatcher();
+
+    dispatcher.registerTask({
+      name: "customTask",
+      payloadSchema: {
+        parse: (input: unknown) => input,
+      },
+      run: () => ({ commentId: 456, commentUrl: "https://example.com" }),
+    });
+
+    await expect(
+      dispatcher.dispatchTask("customTask", {}),
+    ).resolves.toStrictEqual({
+      commentId: 456,
+      commentUrl: "https://example.com",
+    });
+  });
+
   it("throws when dispatching an unknown task", async () => {
     const dispatcher = createTaskDispatcher();
 

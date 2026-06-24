@@ -1,5 +1,5 @@
 import events from "node:events";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { mockSpawn } = vi.hoisted(() => ({
   mockSpawn: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock("node:child_process", () => ({
 
 import { runCommand } from "../run-command.js";
 
-class MockStdout extends events.EventEmitter {
+class MockOutputStream extends events.EventEmitter {
   public encoding?: string;
 
   setEncoding(encoding: string) {
@@ -24,15 +24,21 @@ class MockStdout extends events.EventEmitter {
 }
 
 class MockChildProcess extends events.EventEmitter {
-  stdout = new MockStdout();
+  stderr = new MockOutputStream();
+  stdout = new MockOutputStream();
 }
 
 describe("runCommand", () => {
   beforeEach(() => {
     mockSpawn.mockReset();
+    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   });
 
-  it("spawns the command with merged env and resolves captured stdout", async () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("spawns the command with merged env and resolves captured output", async () => {
     const child = new MockChildProcess();
     mockSpawn.mockReturnValue(child);
 
@@ -45,19 +51,23 @@ describe("runCommand", () => {
       env: expect.objectContaining({
         TF_IN_AUTOMATION: "true",
       }),
-      stdio: ["inherit", "pipe", "inherit"],
+      stdio: ["inherit", "pipe", "pipe"],
     });
+    expect(child.stderr.encoding).toBe("utf8");
     expect(child.stdout.encoding).toBe("utf8");
 
     child.stdout.emit("data", "first ");
     child.stdout.emit("data", "second");
+    child.stderr.emit("data", "diagnostic");
     child.emit("close", 0, null);
 
     await expect(resultPromise).resolves.toEqual({
       exitCode: 0,
       signal: null,
+      stderr: "diagnostic",
       stdout: "first second",
     });
+    expect(process.stderr.write).toHaveBeenCalledExactlyOnceWith("diagnostic");
   });
 
   it("resolves the terminating signal when the process closes from a signal", async () => {
@@ -71,8 +81,22 @@ describe("runCommand", () => {
     await expect(resultPromise).resolves.toEqual({
       exitCode: null,
       signal: "SIGTERM",
+      stderr: "",
       stdout: "",
     });
+  });
+
+  it("rejects when the process closes without an exit code or signal", async () => {
+    const child = new MockChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const resultPromise = runCommand("terraform", ["plan"], "/tmp/module", {});
+
+    child.emit("close", null, null);
+
+    await expect(resultPromise).rejects.toThrow(
+      "terraform closed without an exit code or signal",
+    );
   });
 
   it("rejects when spawning the process fails", async () => {

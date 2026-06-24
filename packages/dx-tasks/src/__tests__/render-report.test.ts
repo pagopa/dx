@@ -13,7 +13,7 @@ describe("renderReport task", () => {
 
   const seedTerraformPlanReport = async (
     objectName: string,
-    content: { modulePath: string; planOutput: string },
+    content: { modulePath: string; notices: []; planOutput: string },
   ): Promise<void> => {
     const namespaceDirectoryPath = path.join(
       tempDirectoryPath,
@@ -46,6 +46,7 @@ describe("renderReport task", () => {
   it("prints the markdown rendered from persisted terraform-plan reports", async () => {
     await seedTerraformPlanReport("a", {
       modulePath: "./infra/modules/example",
+      notices: [],
       planOutput: "No changes.",
     });
     const dispatcher = createDefaultTaskDispatcher();
@@ -53,7 +54,7 @@ describe("renderReport task", () => {
     await dispatcher.dispatchTask("renderReport", {});
 
     expect(console.log).toHaveBeenCalledExactlyOnceWith(
-      "### Module `./infra/modules/example`\n\n```hcl\nNo changes.\n```",
+      "### Terraform Plan: `./infra/modules/example` - ✅ Success\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>",
     );
   });
 

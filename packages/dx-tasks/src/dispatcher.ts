@@ -2,17 +2,25 @@
 
 import type { ReportStore } from "./report-store.ts";
 
-export interface TaskDefinition<TPayload> {
+export interface TaskDefinition<TPayload, TResult = void> {
   name: string;
   payloadSchema: {
     parse: (input: unknown) => TPayload;
   };
-  run: (payload: TPayload, context: TaskRunContext) => Promise<void> | void;
+  run: (
+    payload: TPayload,
+    context: TaskRunContext,
+  ) => Promise<TResult> | TResult;
 }
 
 export interface TaskDispatcher {
-  dispatchTask: (name: string, payload: unknown) => Promise<void>;
-  registerTask: <TPayload>(task: TaskDefinition<TPayload>) => void;
+  dispatchTask: <TResult = void>(
+    name: string,
+    payload: unknown,
+  ) => Promise<TResult>;
+  registerTask: <TPayload, TResult = void>(
+    task: TaskDefinition<TPayload, TResult>,
+  ) => void;
 }
 
 export interface TaskDispatcherOptions {
@@ -24,7 +32,7 @@ export interface TaskRunContext {
 }
 
 interface RegisteredTask {
-  dispatch: (payload: unknown) => Promise<void>;
+  dispatch: (payload: unknown) => Promise<unknown>;
 }
 
 export const createTaskDispatcher = ({
@@ -32,7 +40,9 @@ export const createTaskDispatcher = ({
 }: TaskDispatcherOptions = {}): TaskDispatcher => {
   const tasks = new Map<string, RegisteredTask>();
 
-  const registerTask = <TPayload>(task: TaskDefinition<TPayload>) => {
+  const registerTask = <TPayload, TResult = void>(
+    task: TaskDefinition<TPayload, TResult>,
+  ) => {
     if (tasks.has(task.name)) {
       throw new Error(`Task "${task.name}" is already registered`);
     }
@@ -40,19 +50,22 @@ export const createTaskDispatcher = ({
     tasks.set(task.name, {
       dispatch: async (payload) => {
         const decodedPayload = task.payloadSchema.parse(payload);
-        await task.run(decodedPayload, context);
+        return task.run(decodedPayload, context);
       },
     });
   };
 
-  const dispatchTask = async (name: string, payload: unknown) => {
+  const dispatchTask = async <TResult = void>(
+    name: string,
+    payload: unknown,
+  ) => {
     const task = tasks.get(name);
 
     if (!task) {
       throw new Error(`Unknown task "${name}"`);
     }
 
-    await task.dispatch(payload);
+    return (await task.dispatch(payload)) as TResult;
   };
 
   return {

@@ -5,34 +5,7 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./default-dispatcher": {
-      "types": "./dist/default-dispatcher.d.ts",
-      "default": "./dist/default-dispatcher.js"
-    },
-    "./dispatcher": {
-      "types": "./dist/dispatcher.d.ts",
-      "default": "./dist/dispatcher.js"
-    },
-    "./render": {
-      "types": "./dist/render.d.ts",
-      "default": "./dist/render.js"
-    },
-    "./render-report": {
-      "types": "./dist/render-report.d.ts",
-      "default": "./dist/render-report.js"
-    },
-    "./reporter": {
-      "types": "./dist/reporter.d.ts",
-      "default": "./dist/reporter.js"
-    },
-    "./tasks": {
-      "types": "./dist/tasks.d.ts",
-      "default": "./dist/tasks.js"
-    }
+    "./default-dispatcher": "./src/default-dispatcher.ts"
   },
   "repository": {
     "type": "git",
@@ -52,7 +25,9 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "handlebars": "catalog:",
+    "octokit": "catalog:",
     "zod": "catalog:"
   }
 }

@@ -2,7 +2,12 @@
 
 import { createTaskDispatcher, type TaskDispatcher } from "./dispatcher.ts";
 import { ReportStore } from "./report-store.ts";
-import { renderReportTask, terraformPlanTask } from "./tasks.ts";
+import {
+  prCommentTask,
+  renderReportTask,
+  reportPrCommentTask,
+  terraformPlanTask,
+} from "./tasks.ts";
 import { terraformPlanReportNamespace } from "./terraform/plan.ts";
 
 export interface DefaultTaskDispatcherOptions {
@@ -18,6 +23,8 @@ export const createDefaultTaskDispatcher = ({
   const dispatcher = createTaskDispatcher({ context: { reports } });
   dispatcher.registerTask(terraformPlanTask);
   dispatcher.registerTask(renderReportTask);
+  dispatcher.registerTask(reportPrCommentTask);
+  dispatcher.registerTask(prCommentTask);
 
   return dispatcher;
 };

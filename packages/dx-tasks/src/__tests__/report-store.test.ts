@@ -14,24 +14,6 @@ const terraformPlanSchema = z.object({
 describe("ReportStore", () => {
   let tempDirectoryPath = "";
 
-  const seedReport = async (
-    namespace: string,
-    objectName: string,
-    content: unknown,
-  ): Promise<void> => {
-    const namespaceDirectoryPath = path.join(
-      tempDirectoryPath,
-      ".dx-tasks",
-      namespace,
-    );
-    await fs.mkdir(namespaceDirectoryPath, { recursive: true });
-    await fs.writeFile(
-      path.join(namespaceDirectoryPath, `${objectName}.json`),
-      JSON.stringify(content),
-      "utf8",
-    );
-  };
-
   const createStore = () =>
     new ReportStore(tempDirectoryPath).register({
       name: "terraform-plan",
@@ -135,6 +117,38 @@ describe("ReportStore", () => {
       );
     });
   });
+});
+
+describe("ReportStore.render", () => {
+  let tempDirectoryPath = "";
+
+  const seedReport = async (
+    namespace: string,
+    objectName: string,
+    content: unknown,
+  ): Promise<void> => {
+    const namespaceDirectoryPath = path.join(
+      tempDirectoryPath,
+      ".dx-tasks",
+      namespace,
+    );
+    await fs.mkdir(namespaceDirectoryPath, { recursive: true });
+    await fs.writeFile(
+      path.join(namespaceDirectoryPath, `${objectName}.json`),
+      JSON.stringify(content),
+      "utf8",
+    );
+  };
+
+  beforeEach(async () => {
+    tempDirectoryPath = await fs.mkdtemp(
+      path.join(os.tmpdir(), "dx-tasks-report-store-"),
+    );
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
+  });
 
   describe("render", () => {
     it("renders registered namespaces and merges objects in deterministic order", async () => {
@@ -142,7 +156,10 @@ describe("ReportStore", () => {
       await seedReport("demo", "a", { value: "first" });
       const store = new ReportStore(tempDirectoryPath).register({
         name: "demo",
-        renderers: { markdown: ({ value }) => `# ${value}` },
+        renderers: {
+          markdown: (reports) =>
+            reports.map(({ value }) => `# ${value}`).join("\n\n"),
+        },
         schema: z.object({ value: z.string() }),
       });
 
@@ -151,13 +168,30 @@ describe("ReportStore", () => {
       );
     });
 
+    it("lets the renderer control the namespace output", async () => {
+      await seedReport("demo", "b", { value: "second" });
+      await seedReport("demo", "a", { value: "first" });
+      const store = new ReportStore(tempDirectoryPath).register({
+        name: "demo",
+        renderers: {
+          markdown: (reports) =>
+            reports.map(({ value }) => `# ${value}`).join("\n"),
+        },
+        schema: z.object({ value: z.string() }),
+      });
+
+      await expect(store.render("markdown")).resolves.toBe("# first\n# second");
+    });
+
     it("skips namespaces that have no renderer registered for the format", async () => {
       await seedReport("demo", "a", { value: "kept" });
       await seedReport("unrendered", "a", { value: "ignored" });
       const store = new ReportStore(tempDirectoryPath)
         .register({
           name: "demo",
-          renderers: { markdown: ({ value }) => `# ${value}` },
+          renderers: {
+            markdown: ([report]) => (report ? `# ${report.value}` : ""),
+          },
           schema: z.object({ value: z.string() }),
         })
         .register({
@@ -179,7 +213,9 @@ describe("ReportStore", () => {
     it("returns an empty string when the reports directory is missing", async () => {
       const store = new ReportStore(tempDirectoryPath).register({
         name: "demo",
-        renderers: { markdown: ({ value }) => `# ${value}` },
+        renderers: {
+          markdown: ([report]) => (report ? `# ${report.value}` : ""),
+        },
         schema: z.object({ value: z.string() }),
       });
 
@@ -190,7 +226,9 @@ describe("ReportStore", () => {
       await seedReport("demo", "a", { value: 1 });
       const store = new ReportStore(tempDirectoryPath).register({
         name: "demo",
-        renderers: { markdown: ({ value }) => `# ${value}` },
+        renderers: {
+          markdown: ([report]) => (report ? `# ${report.value}` : ""),
+        },
         schema: z.object({ value: z.string() }),
       });
 

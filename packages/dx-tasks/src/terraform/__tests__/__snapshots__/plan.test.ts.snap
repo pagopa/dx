@@ -62,34 +62,47 @@ Terraform will perform the following actions:
 exports[`terraformPlan > matches the report snapshot for 'no changes report output (-no-color)' 1`] = `
 "{
   "modulePath": "/tmp/module",
-  "planOutput": "No changes. Your infrastructure matches the configuration."
+  "notices": [],
+  "planOutput": "No changes. Your infrastructure matches the configuration.",
+  "success": true
 }"
 `;
 
 exports[`terraformPlan > matches the report snapshot for 'no changes report output' 1`] = `
 "{
   "modulePath": "/tmp/module",
-  "planOutput": "No changes. Your infrastructure matches the configuration."
+  "notices": [],
+  "planOutput": "No changes. Your infrastructure matches the configuration.",
+  "success": true
 }"
 `;
 
 exports[`terraformPlan > matches the report snapshot for 'summarized report output (-no-color)' 1`] = `
 "{
   "modulePath": "/tmp/module",
-  "planOutput": "Terraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy."
+  "notices": [],
+  "planOutput": "Terraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy.",
+  "success": true,
+  "summaryLine": "Plan: 0 to add, 1 to change, 0 to destroy."
 }"
 `;
 
 exports[`terraformPlan > matches the report snapshot for 'summarized report output' 1`] = `
 "{
   "modulePath": "/tmp/module",
-  "planOutput": "Terraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy."
+  "notices": [],
+  "planOutput": "Terraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy.",
+  "success": true,
+  "summaryLine": "Plan: 0 to add, 1 to change, 0 to destroy."
 }"
 `;
 
 exports[`terraformPlan > matches the report snapshot for 'verbose report output' 1`] = `
 "{
   "modulePath": "/tmp/module",
-  "planOutput": "azurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02]\\nazurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01]\\n\\nTerraform used the selected providers to generate the following execution\\nplan. Resource actions are indicated with the following symbols:\\n  ~ update in-place\\n\\nTerraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy."
+  "notices": [],
+  "planOutput": "azurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02]\\nazurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01]\\n\\nTerraform used the selected providers to generate the following execution\\nplan. Resource actions are indicated with the following symbols:\\n  ~ update in-place\\n\\nTerraform will perform the following actions:\\n\\n  # azurerm_resource_group.example2 will be updated in-place\\n  ~ resource \\"azurerm_resource_group\\" \\"example2\\" {\\n        id         = \\"/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02\\"\\n        name       = \\"plantest-example-rg-02\\"\\n      ~ tags       = {\\n          ~ \\"PRIVATE_KEY\\" = \\"[REDACTED]\\" -> \\"[REDACTED]\\"\\n        }\\n        # (2 unchanged attributes hidden)\\n    }\\n\\nPlan: 0 to add, 1 to change, 0 to destroy.",
+  "success": true,
+  "summaryLine": "Plan: 0 to add, 1 to change, 0 to destroy."
 }"
 `;

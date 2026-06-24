@@ -65,6 +65,9 @@ Terraform will perform the following actions:
     }
 
 Plan: 0 to add, 1 to change, 0 to destroy.`,
+  error: `Error: invalid Terraform configuration
+
+The module contains invalid configuration.`,
   noChanges: `[0m[1mazurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02][0m
 [0m[1mazurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01][0m
 
@@ -79,6 +82,11 @@ No changes. Your infrastructure matches the configuration.
 
 Terraform has compared your real infrastructure against your configuration
 and found no differences, so no changes are needed.`,
+  warning: `Warning: Deprecated attribute
+
+The attribute "foo" is deprecated.
+
+Use "bar" instead.`,
 };
 
 const snapshotScenarios: {
@@ -157,6 +165,22 @@ const getTerraformPlanReportPath = (
     `${Buffer.from(modulePath).toString("base64url")}.json`,
   );
 
+const createTestDirectory = async (): Promise<string> =>
+  fs.mkdtemp(path.join(os.tmpdir(), "dx-tasks-terraform-plan-"));
+
+const readTerraformPlanReport = async (
+  baseDirectoryPath: string,
+  modulePath: string,
+) =>
+  terraformPlanReportSchema.parse(
+    JSON.parse(
+      await fs.readFile(
+        getTerraformPlanReportPath(baseDirectoryPath, modulePath),
+        "utf8",
+      ),
+    ),
+  );
+
 describe("terraformPlan", () => {
   let tempDirectoryPath = "";
 
@@ -167,9 +191,7 @@ describe("terraformPlan", () => {
   });
 
   beforeEach(async () => {
-    tempDirectoryPath = await fs.mkdtemp(
-      path.join(os.tmpdir(), "dx-tasks-terraform-plan-"),
-    );
+    tempDirectoryPath = await createTestDirectory();
   });
 
   afterEach(async () => {
@@ -182,6 +204,7 @@ describe("terraformPlan", () => {
     mockRunCommand.mockResolvedValue({
       exitCode: 0,
       signal: null,
+      stderr: "",
       stdout: "No changes.",
     });
 
@@ -203,6 +226,7 @@ describe("terraformPlan", () => {
     mockRunCommand.mockResolvedValue({
       exitCode: 0,
       signal: null,
+      stderr: "",
       stdout: "No changes.",
     });
 
@@ -229,11 +253,12 @@ describe("terraformPlan", () => {
     mockRunCommand.mockResolvedValue({
       exitCode: null,
       signal: "SIGTERM",
+      stderr: "",
       stdout: "",
     });
 
     await expect(terraformPlan({ modulePath: "/tmp/module" })).rejects.toThrow(
-      "terraform plan terminated by signal SIGTERM",
+      "Terraform plan terminated by signal SIGTERM",
     );
   });
 
@@ -245,6 +270,7 @@ describe("terraformPlan", () => {
       mockRunCommand.mockResolvedValue({
         exitCode: 0,
         signal: null,
+        stderr: "",
         stdout,
       });
 
@@ -268,6 +294,7 @@ describe("terraformPlan", () => {
       mockRunCommand.mockResolvedValue({
         exitCode: 0,
         signal: null,
+        stderr: "",
         stdout,
       });
 
@@ -285,6 +312,7 @@ describe("terraformPlan", () => {
     mockRunCommand.mockResolvedValue({
       exitCode: 0,
       signal: null,
+      stderr: "",
       stdout: plans.changes,
     });
 
@@ -306,13 +334,243 @@ describe("terraformPlan", () => {
 
     expect(report).toMatchObject({
       modulePath: "/tmp/module",
+      notices: [],
       planOutput: expect.stringContaining(
         "Terraform will perform the following actions:",
       ),
+      success: true,
+      summaryLine: "Plan: 0 to add, 1 to change, 0 to destroy.",
     });
-    expect(Object.keys(report)).toStrictEqual(["modulePath", "planOutput"]);
+    expect(Object.keys(report)).toStrictEqual([
+      "modulePath",
+      "notices",
+      "planOutput",
+      "success",
+      "summaryLine",
+    ]);
     expect(reportContent).toBe(JSON.stringify(report, null, 2));
     expect(console.log).toHaveBeenCalledExactlyOnceWith(expect.any(String));
+  });
+});
+
+describe("terraformPlan notice reports", () => {
+  let tempDirectoryPath = "";
+
+  beforeEach(() => {
+    mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  beforeEach(async () => {
+    tempDirectoryPath = await createTestDirectory();
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("writes warning notices from terraform output when report is enabled", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: plans.warning,
+      stdout: plans.noChangesNoColor,
+    });
+
+    await terraformPlan(
+      {
+        modulePath: "/tmp/module",
+        report: true,
+      },
+      {
+        reports,
+      },
+    );
+
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+
+    expect(report).toMatchObject({
+      modulePath: "/tmp/module",
+      notices: [
+        {
+          message: plans.warning,
+          severity: "warning",
+        },
+      ],
+      planOutput: "No changes. Your infrastructure matches the configuration.",
+      success: true,
+    });
+  });
+});
+
+describe("terraformPlan failure reports", () => {
+  let tempDirectoryPath = "";
+
+  beforeEach(() => {
+    mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  beforeEach(async () => {
+    tempDirectoryPath = await createTestDirectory();
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("writes a failure report before rejecting when terraform exits non-zero", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 1,
+      signal: null,
+      stderr: "Error: invalid Terraform configuration",
+      stdout: plans.changesNoColor,
+    });
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("Terraform plan exited with code 1");
+
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+    const expectedPlanOutput = `${plans.changesNoColor
+      .slice(plans.changesNoColor.indexOf("Terraform will perform"))
+      .replaceAll(
+        "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-BEFORE-----END PRIVATE KEY-----",
+        "[REDACTED]",
+      )
+      .replaceAll(
+        "-----BEGIN PRIVATE KEY-----FAKE-PRIVATE-KEY-AFTER-----END PRIVATE KEY-----",
+        "[REDACTED]",
+      )}\nError: invalid Terraform configuration`;
+
+    expect(report).toStrictEqual({
+      modulePath: "/tmp/module",
+      notices: [
+        {
+          message: "Error: invalid Terraform configuration",
+          severity: "error",
+        },
+      ],
+      planOutput: expectedPlanOutput,
+      success: false,
+      summaryLine: "Plan: 0 to add, 1 to change, 0 to destroy.",
+    });
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(expectedPlanOutput);
+  });
+
+  it("writes multiple notices before rejecting when terraform exits non-zero", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 1,
+      signal: null,
+      stderr: `${plans.warning}\n\n${plans.error}`,
+      stdout: plans.noChangesNoColor,
+    });
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("Terraform plan exited with code 1");
+
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+
+    expect(report.notices).toStrictEqual([
+      {
+        message: plans.warning,
+        severity: "warning",
+      },
+      {
+        message: plans.error,
+        severity: "error",
+      },
+    ]);
+  });
+
+  it("does not write a failure report when terraform exits by signal", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: null,
+      signal: "SIGTERM",
+      stderr: "",
+      stdout: "Partial Terraform output",
+    });
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("Terraform plan terminated by signal SIGTERM");
+
+    await expect(
+      fs.readFile(
+        getTerraformPlanReportPath(tempDirectoryPath, "/tmp/module"),
+        "utf8",
+      ),
+    ).rejects.toThrow();
+    expect(console.log).not.toHaveBeenCalled();
+  });
+
+  it("does not write a failure report when terraform cannot start", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockRejectedValue(new Error("spawn terraform ENOENT"));
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("spawn terraform ENOENT");
+
+    await expect(
+      fs.readFile(
+        getTerraformPlanReportPath(tempDirectoryPath, "/tmp/module"),
+        "utf8",
+      ),
+    ).rejects.toThrow();
+    expect(console.log).not.toHaveBeenCalled();
   });
 });
 
@@ -324,14 +582,97 @@ describe("terraformPlanReportNamespace", () => {
     );
   });
 
-  it("renders the module path and plan output as a fenced hcl block", () => {
-    const markdown = terraformPlanReportNamespace.renderers?.markdown?.({
+  it("parses report files as successful reports by default", () => {
+    expect(
+      terraformPlanReportSchema.parse({
+        modulePath: "./infra/modules/example",
+        notices: [],
+        planOutput: "No changes.",
+      }),
+    ).toStrictEqual({
       modulePath: "./infra/modules/example",
+      notices: [],
       planOutput: "No changes.",
+      success: true,
     });
+  });
+
+  it("renders reports with the status in each module title", () => {
+    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+      {
+        modulePath: "./infra/modules/success",
+        notices: [],
+        planOutput: "No changes.",
+        success: true,
+        summaryLine: "Plan: 0 to add, 1 to change, 0 to destroy.",
+      },
+      {
+        modulePath: "./infra/modules/failure",
+        notices: [],
+        planOutput: "Error.",
+        success: false,
+        summaryLine: "Plan: 0 to add, 0 to change, 1 to destroy.",
+      },
+    ]);
 
     expect(markdown).toBe(
-      "### Module `./infra/modules/example`\n\n```hcl\nNo changes.\n```",
+      "### Terraform Plan: `./infra/modules/success` - ✅ Success\nPlan: 0 to add, 1 to change, 0 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>\n### Terraform Plan: `./infra/modules/failure` - ❌ Failed\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nError.\n```\n\n</details>",
+    );
+  });
+
+  it("renders notices before the summary line", () => {
+    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+      {
+        modulePath: "./infra/modules/notices",
+        notices: [
+          {
+            message: plans.warning,
+            severity: "warning",
+          },
+          {
+            message: plans.error,
+            severity: "error",
+          },
+        ],
+        planOutput: "No changes.",
+        success: false,
+        summaryLine: "Plan: 0 to add, 0 to change, 1 to destroy.",
+      },
+    ]);
+
+    expect(markdown).toBe(
+      '### Terraform Plan: `./infra/modules/notices` - ❌ Failed\n> [!WARNING]\n> Warning: Deprecated attribute\n> \n> The attribute "foo" is deprecated.\n> \n> Use "bar" instead.\n\n> [!CAUTION]\n> Error: invalid Terraform configuration\n> \n> The module contains invalid configuration.\n\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>',
+    );
+  });
+
+  it("renders every plan output line inside the details block", () => {
+    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+      {
+        modulePath: "./infra/modules/success",
+        notices: [],
+        planOutput:
+          "Terraform will perform the following actions:\n\n+ resource",
+        success: true,
+      },
+    ]);
+
+    expect(markdown).toContain(
+      "```hcl\nTerraform will perform the following actions:\n\n+ resource\n```",
+    );
+  });
+
+  it("renders successful reports without a summary line", () => {
+    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+      {
+        modulePath: "./infra/modules/success",
+        notices: [],
+        planOutput: "No changes.",
+        success: true,
+      },
+    ]);
+
+    expect(markdown).toBe(
+      "### Terraform Plan: `./infra/modules/success` - ✅ Success\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>",
     );
   });
 });
