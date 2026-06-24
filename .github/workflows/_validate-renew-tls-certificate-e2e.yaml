@@ -19,6 +19,7 @@ env:
 jobs:
   renew-tls-certificate-e2e-test:
     name: Run renew TLS certificate E2E test
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     environment: automation-dev-cd
     permissions:
@@ -30,15 +31,12 @@ jobs:
       DNS_ZONE: dev.dx.pagopa.it
       DNS_ZONE_RESOURCE_GROUP: dx-d-itn-network-rg-01
       KEY_VAULT_NAME: dx-d-itn-common-kv-01
-      CSR_COMMON_NAME: renew-tls-test.dev.dx.pagopa.it
-      ACME_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
+      CSR_COMMON_NAME: renew-tls-test-${{ github.run_id }}-${{ github.run_attempt }}.dev.dx.pagopa.it
+      LETS_ENCRYPT_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Cloud Provider Login
-        uses: pagopa/dx/actions/csp-login@main
 
       - name: Node Setup
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -54,6 +52,92 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
-      - name: Run renew TLS certificate E2E test
-        timeout-minutes: 20
-        run: pnpm nx run renew-tls-certificate:test:e2e
+      - name: Run renew TLS certificate integration test
+        run: pnpm nx run renew-tls-certificate:test:integration
+
+      - name: Create staging ACME account
+        id: acme-account
+        run: |
+          set -euo pipefail
+
+          venv="$RUNNER_TEMP/renew-tls-acme-account"
+          private_key_json="$RUNNER_TEMP/private_key.json"
+          registration_json="$RUNNER_TEMP/registration.json"
+
+          python3 -m venv "$venv"
+          "$venv/bin/python" -m pip install --upgrade pip --quiet
+          "$venv/bin/pip" install \
+            --require-hashes \
+            --requirement actions/renew-tls-certificate/le_renew_ssl_certificate_python_requirements.txt \
+            --quiet
+
+          "$venv/bin/python" actions/renew-tls-certificate/le_create_acme_test_account.py \
+            --directory-url "$LETS_ENCRYPT_DIRECTORY_URL" \
+            --private-key-out "$private_key_json" \
+            --registration-out "$registration_json"
+
+          {
+            echo "private_key_json<<EOF"
+            cat "$private_key_json"
+            echo "EOF"
+            echo "registration_json<<EOF"
+            cat "$registration_json"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run renew TLS certificate action
+        id: renew-certificate
+        uses: ./actions/renew-tls-certificate
+        env:
+          LETS_ENCRYPT_DIRECTORY_URL: ${{ env.LETS_ENCRYPT_DIRECTORY_URL }}
+        with:
+          force_renewal: "true"
+          key_vault_name: ${{ env.KEY_VAULT_NAME }}
+          csr_common_name: ${{ env.CSR_COMMON_NAME }}
+          dns_zone: ${{ env.DNS_ZONE }}
+          dns_zone_resource_group: ${{ env.DNS_ZONE_RESOURCE_GROUP }}
+          arm_client_id: ${{ env.ARM_CLIENT_ID }}
+          arm_subscription_id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          arm_tenant_id: ${{ env.ARM_TENANT_ID }}
+          lets_encrypt_private_key_json: ${{ steps.acme-account.outputs.private_key_json }}
+          lets_encrypt_registration_json: ${{ steps.acme-account.outputs.registration_json }}
+
+      - name: Verify imported certificate
+        run: |
+          set -euo pipefail
+
+          cert_name="${CSR_COMMON_NAME//./-}"
+          subject="$(az keyvault certificate show \
+            --vault-name "$KEY_VAULT_NAME" \
+            --name "$cert_name" \
+            --query "policy.x509CertificateProperties.subject" \
+            --output tsv)"
+
+          if [ "$subject" != "CN=$CSR_COMMON_NAME" ]; then
+            echo "Unexpected certificate subject: $subject"
+            exit 1
+          fi
+
+          echo "Imported test certificate '$cert_name' with subject '$subject'"
+
+      - name: Cleanup test certificate
+        if: always()
+        run: |
+          set -euo pipefail
+
+          dns_challenge_record="_acme-challenge.${CSR_COMMON_NAME%."$DNS_ZONE"}"
+          az network dns record-set txt delete \
+            --resource-group "$DNS_ZONE_RESOURCE_GROUP" \
+            --zone-name "$DNS_ZONE" \
+            --name "$dns_challenge_record" \
+            --yes \
+            2>/dev/null || true
+
+          cert_name="${CSR_COMMON_NAME//./-}"
+          if az keyvault certificate show \
+            --vault-name "$KEY_VAULT_NAME" \
+            --name "$cert_name" >/dev/null 2>&1; then
+            az keyvault certificate delete \
+              --vault-name "$KEY_VAULT_NAME" \
+              --name "$cert_name" >/dev/null
+          fi

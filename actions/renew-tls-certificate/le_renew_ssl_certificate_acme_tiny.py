@@ -19,7 +19,13 @@ import cryptography
 import jwcrypto.jwk
 
 DEFAULT_DIRECTORY_URL = "https://acme-v02.api.letsencrypt.org/directory"
+DIRECTORY_URL_ENV_VAR = "LETS_ENCRYPT_DIRECTORY_URL"
 DEFAULT_DNS_TTL_SEC = 30
+
+
+def get_default_directory_url():
+    return os.getenv(DIRECTORY_URL_ENV_VAR, DEFAULT_DIRECTORY_URL)
+
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.addHandler(logging.StreamHandler())
@@ -400,8 +406,11 @@ def main(argv=None):
     )
     parser.add_argument(
         "--directory-url",
-        default=DEFAULT_DIRECTORY_URL,
-        help="Certificate authority directory url, default is Let's Encrypt",
+        default=get_default_directory_url(),
+        help=(
+            "Certificate authority directory url, default is Let's Encrypt. "
+            f"Can be overridden with {DIRECTORY_URL_ENV_VAR}."
+        ),
     )
     parser.add_argument(
         "--out",
