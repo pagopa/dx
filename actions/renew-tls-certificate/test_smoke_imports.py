@@ -15,19 +15,27 @@ def main():
     assert cryptography.__version__ == "48.0.1"
     assert jwt.__version__ == "2.13.0"
     assert le_create_acme_test_account.DEFAULT_DIRECTORY_URL.startswith("https://")
-    assert (
-        le_renew_ssl_certificate_acme_tiny.get_default_directory_url()
-        == le_renew_ssl_certificate_acme_tiny.DEFAULT_DIRECTORY_URL
-    )
 
-    staging_directory_url = "https://acme-staging-v02.api.letsencrypt.org/directory"
-    os.environ[
-        le_renew_ssl_certificate_acme_tiny.DIRECTORY_URL_ENV_VAR
-    ] = staging_directory_url
-    assert (
-        le_renew_ssl_certificate_acme_tiny.get_default_directory_url()
-        == staging_directory_url
-    )
+    directory_url_env_var = le_renew_ssl_certificate_acme_tiny.DIRECTORY_URL_ENV_VAR
+    previous_directory_url = os.environ.pop(directory_url_env_var, None)
+    try:
+        assert (
+            le_renew_ssl_certificate_acme_tiny.get_default_directory_url()
+            == le_renew_ssl_certificate_acme_tiny.DEFAULT_DIRECTORY_URL
+        )
+
+        staging_directory_url = "https://acme-staging-v02.api.letsencrypt.org/directory"
+        os.environ[directory_url_env_var] = staging_directory_url
+        assert (
+            le_renew_ssl_certificate_acme_tiny.get_default_directory_url()
+            == staging_directory_url
+        )
+    finally:
+        if previous_directory_url is None:
+            os.environ.pop(directory_url_env_var, None)
+        else:
+            os.environ[directory_url_env_var] = previous_directory_url
+
     assert le_renew_ssl_certificate_generate_csr.__name__ == "le_renew_ssl_certificate_generate_csr"
 
 

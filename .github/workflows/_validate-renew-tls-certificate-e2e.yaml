@@ -32,7 +32,6 @@ jobs:
       DNS_ZONE_RESOURCE_GROUP: dx-d-itn-network-rg-01
       KEY_VAULT_NAME: dx-d-itn-common-kv-01
       CSR_COMMON_NAME: renew-tls-test-${{ github.run_id }}-${{ github.run_attempt }}.dev.dx.pagopa.it
-      LETS_ENCRYPT_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
 
     steps:
       - name: Checkout repository
@@ -57,6 +56,8 @@ jobs:
 
       - name: Create staging ACME account
         id: acme-account
+        env:
+          LETS_ENCRYPT_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
         run: |
           set -euo pipefail
 
@@ -89,7 +90,7 @@ jobs:
         id: renew-certificate
         uses: ./actions/renew-tls-certificate
         env:
-          LETS_ENCRYPT_DIRECTORY_URL: ${{ env.LETS_ENCRYPT_DIRECTORY_URL }}
+          LETS_ENCRYPT_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
         with:
           force_renewal: "true"
           key_vault_name: ${{ env.KEY_VAULT_NAME }}
