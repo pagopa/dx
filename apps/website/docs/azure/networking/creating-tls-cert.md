@@ -10,8 +10,8 @@ challenge over Azure DNS.
 
 See the full workflow reference — including prerequisites, inputs, and setup
 instructions — in the
-**[Generate TLS Certificate](../../pipelines/release-certificate.md)** workflow
-documentation.
+**[Generate Azure TLS Certificate](../../pipelines/release-azure-certificate.md)**
+workflow documentation.
 
 :::
 

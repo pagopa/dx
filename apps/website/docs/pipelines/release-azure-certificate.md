@@ -2,13 +2,13 @@
 sidebar_position: 7
 ---
 
-# Generate TLS Certificate
+# Generate Azure TLS Certificate
 
 :::info Reusable Workflow
 
-| Workflow                     | Version | Source                                                                                                                |
-| ---------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Generate TLS Certificate** | v1      | [`release-certificate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-certificate-v1.yaml) |
+| Workflow                           | Version | Source                                                                                                                |
+| ---------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Generate Azure TLS Certificate** | v1      | [`release-certificate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-certificate-v1.yaml) |
 
 :::
 
@@ -76,7 +76,7 @@ permissions:
 jobs:
   renew:
     name: "myapp.example.com"
-    uses: pagopa/dx/.github/workflows/release-certificate-v1.yaml@main
+    uses: pagopa/dx/.github/workflows/release-azure-certificate-v1.yaml@main
     secrets: inherit
     with:
       key_vault_name: "my-keyvault"
