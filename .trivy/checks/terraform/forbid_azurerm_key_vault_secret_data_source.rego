@@ -7,6 +7,7 @@
 #   avd_id: AVD-DX-0001
 #   severity: HIGH
 #   short_code: no-keyvault-secret-data-source
+#   url: https://dx.pagopa.it/docs/terraform/custom-checks/avd-dx-0001
 #   recommended_actions: Use runtime secret references or write-only secret patterns (e.g. value_wo) instead of reading secret values with Terraform data sources.
 #   input:
 #     selector:

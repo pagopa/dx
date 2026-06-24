@@ -220,6 +220,14 @@ const sidebars: SidebarsConfig = {
             "terraform/infra-apply",
             "terraform/drift-detection",
             "terraform/static-analysis",
+            {
+              className: categoryClass("trivy"),
+              items: [
+                { id: "terraform/custom-checks/avd-dx-0001", type: "doc" },
+              ],
+              label: "Custom Trivy Checks",
+              type: "category",
+            },
             "terraform/required-tags",
             "terraform/using-terraform-registry-modules",
           ],

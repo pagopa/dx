@@ -7,7 +7,7 @@ resource "azurerm_application_insights" "appi" {
   }))
   location             = var.location
   resource_group_name  = var.resource_group_name
-  disable_ip_masking   = true
+  disable_ip_masking   = !var.mask_ip_address
   application_type     = "other"
   daily_data_cap_in_gb = var.daily_data_cap_in_gb
 

@@ -1,3 +1,24 @@
+## 0.23.5 (2026-06-23)
+
+### 🩹 Fixes
+
+- Upgrade actions/checkout reference in documentation ([#1882](https://github.com/pagopa/dx/pull/1882))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.23.4 (2026-06-23)
+
+### 🩹 Fixes
+
+- Resolve the CLI output presenter from the CI environment and the `--output` flag instead of constructing it in every command. In a non-interactive (CI) environment the CLI now emits JSON automatically; otherwise the `--output` flag decides, defaulting to text. ([#1865](https://github.com/pagopa/dx/pull/1865))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.23.3 (2026-06-18)
 
 ### 🩹 Fixes

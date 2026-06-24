@@ -26,7 +26,8 @@ on:
         default: PagoPA
         description: Authors names to use as image label
       build_args:
-        description: List of build arguments to use for Dockerfile build, given in
+        description:
+          List of build arguments to use for Dockerfile build, given in
           env=value format.
         type: string
         required: false
@@ -66,7 +67,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         name: Checkout
 
       - name: Docker Build and Push
@@ -102,7 +103,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Get Short SHA of Latest Commit
         id: get_commit_sha
@@ -263,7 +264,8 @@ jobs:
             --revision "$CURRENT_REVISION_NAME"
 
       - name: Deactivate New Revision
-        if: ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
+        if:
+          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
           }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}

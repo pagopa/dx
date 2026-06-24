@@ -50,9 +50,10 @@ locals {
     }))
 
     # e.g. infra-${local.env_name}-cd
-    infra_environment_name = "infra-${local.env_name}-%s"
-    app_environment_name   = "app-${local.env_name}-%s"
-    opex_environment_name  = "opex-${local.env_name}-%s"
+    infra_environment_name      = "infra-${local.env_name}-%s"
+    automation_environment_name = "automation-${local.env_name}-%s"
+    app_environment_name        = "app-${local.env_name}-%s"
+    opex_environment_name       = "opex-${local.env_name}-%s"
 
     issuer   = "https://token.actions.githubusercontent.com"
     audience = ["api://AzureADTokenExchange"]
@@ -103,6 +104,13 @@ locals {
   }
 
   infra_cd = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+    }
+  }
+
+  automation_cd = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_cd.client_id
       "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id

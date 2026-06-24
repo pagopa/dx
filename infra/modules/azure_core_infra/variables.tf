@@ -63,3 +63,9 @@ variable "cross_cloud_dns_enabled" {
   description = "Enable cross-cloud DNS resolution with AWS."
   default     = false
 }
+
+variable "ai_mask_ip_address" {
+  type        = bool
+  default     = false
+  description = "Whether to mask IP addresses in Application Insights telemetry data"
+}

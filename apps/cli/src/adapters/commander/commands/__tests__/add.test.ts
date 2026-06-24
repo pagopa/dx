@@ -36,7 +36,7 @@ const makeEnvPayload = (
   ...overrides,
 });
 
-describe("authorizeCloudAccounts", () => {
+describe("authorizeCloudAccounts edge cases", () => {
   it("returns empty array when init is undefined (env already initialized)", async () => {
     const authService = mock<AuthorizationService>();
     const envPayload = makeEnvPayload({ init: undefined });
@@ -98,6 +98,36 @@ describe("authorizeCloudAccounts", () => {
     );
   });
 
+  it("forwards the current repository owner to the authorization request", async () => {
+    const authService = mock<AuthorizationService>();
+    authService.requestAuthorization.mockReturnValue(
+      okAsync(new AuthorizationResult("https://example.com/pr/owner-aware")),
+    );
+
+    const account = {
+      csp: "azure" as const,
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const envPayload = makeEnvPayload({
+      github: { owner: "pagopa-dx", repo: "test-repo" },
+      init: { cloudAccountsToInitialize: [account] },
+    });
+
+    const result = await authorizeCloudAccounts(authService)(envPayload);
+
+    expect(result.isOk()).toBe(true);
+    expect(authService.requestAuthorization).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repoOwner: "pagopa-dx",
+      }),
+    );
+  });
+});
+
+describe("authorizeCloudAccounts", () => {
   it("computes correct identity for westeurope location", async () => {
     const authService = mock<AuthorizationService>();
     authService.requestAuthorization.mockReturnValue(

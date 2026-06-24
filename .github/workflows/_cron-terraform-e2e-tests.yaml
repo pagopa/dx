@@ -45,7 +45,7 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Cloud Provider Login
         uses: pagopa/dx/actions/csp-login@main
@@ -72,7 +72,7 @@ jobs:
         run: pnpm install
 
       - name: Cache Nx
-        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .nx
           key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
@@ -97,7 +97,8 @@ jobs:
         with:
           id: "Terraform E2E Tests"
           title: "*Terraform E2E Tests failed*"
-          text: "One or more end-to-end tests failed in the weekly run. Please check the
+          text:
+            "One or more end-to-end tests failed in the weekly run. Please check the
             <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
             github.run_id }}|workflow run> for details."
           slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
