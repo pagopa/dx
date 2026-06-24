@@ -179,7 +179,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/actions/run-dx-tasks@feats/tfplan-in-validate
+        uses: pagopa/dx/actions/run-dx-tasks@feats/tfplan-in-validate
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
