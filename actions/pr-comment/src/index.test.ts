@@ -47,6 +47,9 @@ interface OctokitInstance {
       listComments: (
         params: unknown,
       ) => Promise<OctokitResponse<GitHubComment[]>>;
+      updateComment: (
+        params: unknown,
+      ) => Promise<OctokitResponse<GitHubComment>>;
     };
   };
 }
@@ -283,7 +286,7 @@ describe("PR Comment Manager Action", () => {
       });
     });
 
-    it("should delete existing comments with matching search pattern", async () => {
+    it("should update the first comment with matching search pattern", async () => {
       // Arrange
       const mockComments: GitHubComment[] = [
         {
@@ -304,20 +307,21 @@ describe("PR Comment Manager Action", () => {
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
-      mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { html_url: "https://github.com/test/comment/456", id: 456 },
+      mockOctokit.rest.issues.updateComment.mockResolvedValue({
+        data: { html_url: "https://github.com/test/comment/1", id: 1 },
       });
 
       // Act
       await run();
 
       // Assert
-      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledTimes(2);
-      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledWith({
+      expect(mockOctokit.rest.issues.updateComment).toHaveBeenCalledWith({
+        body: "New test comment",
         comment_id: 1,
         owner: "test-owner",
         repo: "test-repo",
       });
+      expect(mockOctokit.rest.issues.createComment).not.toHaveBeenCalled();
       expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledWith({
         comment_id: 3,
         owner: "test-owner",
@@ -325,7 +329,7 @@ describe("PR Comment Manager Action", () => {
       });
     });
 
-    it("should create a new comment after deletion", async () => {
+    it("should create a new comment when no existing comment matches", async () => {
       // Arrange
       mockOctokit.paginate.mockResolvedValue([]);
       mockOctokit.rest.issues.createComment.mockResolvedValue({
@@ -336,6 +340,8 @@ describe("PR Comment Manager Action", () => {
       await run();
 
       // Assert
+      expect(mockOctokit.rest.issues.updateComment).not.toHaveBeenCalled();
+      expect(mockOctokit.rest.issues.deleteComment).not.toHaveBeenCalled();
       expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
         body: "New test comment",
         issue_number: 123,
@@ -346,6 +352,32 @@ describe("PR Comment Manager Action", () => {
       expect(mockCore.setOutput).toHaveBeenCalledWith(
         "comment-url",
         "https://github.com/test/comment/456",
+      );
+    });
+
+    it("should set outputs when updating an existing comment", async () => {
+      // Arrange
+      const mockComments: GitHubComment[] = [
+        {
+          body: "<!-- test-marker --> Old comment",
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        },
+      ];
+
+      mockOctokit.paginate.mockResolvedValue(mockComments);
+      mockOctokit.rest.issues.updateComment.mockResolvedValue({
+        data: { html_url: "https://github.com/test/comment/1", id: 1 },
+      });
+
+      // Act
+      await run();
+
+      // Assert
+      expect(mockCore.setOutput).toHaveBeenCalledWith("comment-id", "1");
+      expect(mockCore.setOutput).toHaveBeenCalledWith(
+        "comment-url",
+        "https://github.com/test/comment/1",
       );
     });
 
@@ -365,7 +397,7 @@ describe("PR Comment Manager Action", () => {
       );
     });
 
-    it("should handle comment deletion errors gracefully", async () => {
+    it("should handle comment update errors", async () => {
       // Arrange
       const mockComments: GitHubComment[] = [
         {
@@ -376,27 +408,51 @@ describe("PR Comment Manager Action", () => {
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
+      mockOctokit.rest.issues.updateComment.mockRejectedValue(
+        new Error("API rate limit exceeded"),
+      );
+
+      // Act
+      await run();
+
+      // Assert
+      expect(mockCore.setFailed).toHaveBeenCalledWith(
+        "Action failed: Failed to update comment: API rate limit exceeded",
+      );
+      expect(mockOctokit.rest.issues.createComment).not.toHaveBeenCalled();
+    });
+
+    it("should handle duplicate comment deletion errors gracefully", async () => {
+      // Arrange
+      const mockComments: GitHubComment[] = [
+        {
+          body: "<!-- test-marker --> Old comment",
+          html_url: "https://github.com/test/comment/1",
+          id: 1,
+        },
+        {
+          body: "<!-- test-marker --> Duplicate comment",
+          html_url: "https://github.com/test/comment/2",
+          id: 2,
+        },
+      ];
+
+      mockOctokit.paginate.mockResolvedValue(mockComments);
+      mockOctokit.rest.issues.updateComment.mockResolvedValue({
+        data: { html_url: "https://github.com/test/comment/1", id: 1 },
+      });
       mockOctokit.rest.issues.deleteComment.mockRejectedValue(
         new Error("Comment not found"),
       );
-      mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { html_url: "https://github.com/test/comment/456", id: 456 },
-      });
 
       // Act
       await run();
 
       // Assert
       expect(mockCore.warning).toHaveBeenCalledWith(
-        "Failed to delete existing comments: Comment not found",
+        "Failed to delete duplicate comments: Comment not found",
       );
-      // Should still create the new comment
-      expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith({
-        body: "New test comment",
-        issue_number: 123,
-        owner: "test-owner",
-        repo: "test-repo",
-      });
+      expect(mockOctokit.rest.issues.createComment).not.toHaveBeenCalled();
     });
 
     it("should handle case-insensitive search pattern matching", async () => {
@@ -429,15 +485,26 @@ describe("PR Comment Manager Action", () => {
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
-      mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { html_url: "https://github.com/test/comment/456", id: 456 },
+      mockOctokit.rest.issues.updateComment.mockResolvedValue({
+        data: { html_url: "https://github.com/test/comment/1", id: 1 },
       });
 
       // Act
       await run();
 
       // Assert
-      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledTimes(2);
+      expect(mockOctokit.rest.issues.updateComment).toHaveBeenCalledWith({
+        body: "New test comment",
+        comment_id: 1,
+        owner: "test-owner",
+        repo: "test-repo",
+      });
+      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledTimes(1);
+      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledWith({
+        comment_id: 2,
+        owner: "test-owner",
+        repo: "test-repo",
+      });
     });
   });
 
@@ -539,16 +606,16 @@ describe("PR Comment Manager Action", () => {
       ];
 
       mockOctokit.paginate.mockResolvedValue(mockComments);
-      mockOctokit.rest.issues.createComment.mockResolvedValue({
-        data: { html_url: "https://github.com/test/comment/456", id: 456 },
+      mockOctokit.rest.issues.updateComment.mockResolvedValue({
+        data: { html_url: "https://github.com/test/comment/2", id: 2 },
       });
 
       // Act
       await run();
 
       // Assert
-      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledTimes(1);
-      expect(mockOctokit.rest.issues.deleteComment).toHaveBeenCalledWith({
+      expect(mockOctokit.rest.issues.updateComment).toHaveBeenCalledWith({
+        body: "New comment",
         comment_id: 2,
         owner: "test-owner",
         repo: "test-repo",

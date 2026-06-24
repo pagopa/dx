@@ -62,16 +62,50 @@ async function createComment(
 }
 
 /**
- * Deletes existing comments that match the search pattern
+ * Deletes duplicate comments that match the search pattern after the kept comment.
+ * @param octokit - GitHub API client
+ * @param context - GitHub context information
+ * @param duplicateComments - Matching comments to delete
+ */
+async function deleteDuplicateComments(
+  octokit: ReturnType<typeof getOctokit>,
+  context: GitHubContext,
+  duplicateComments: { id: number }[],
+): Promise<void> {
+  if (duplicateComments.length === 0) {
+    return;
+  }
+
+  try {
+    info(`Deleting ${duplicateComments.length} duplicate matching comments`);
+
+    for (const comment of duplicateComments) {
+      await octokit.rest.issues.deleteComment({
+        comment_id: comment.id,
+        owner: context.owner,
+        repo: context.repo,
+      });
+      info(`Deleted duplicate comment with ID: ${comment.id}`);
+    }
+  } catch (error) {
+    warning(
+      `Failed to delete duplicate comments: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+/**
+ * Finds existing comments that match the search pattern
  * @param octokit - GitHub API client
  * @param context - GitHub context information
  * @param searchPattern - Pattern to search for in existing comments
+ * @returns Comments matching the search pattern
  */
-async function deleteMatchingComments(
+async function findMatchingComments(
   octokit: ReturnType<typeof getOctokit>,
   context: GitHubContext,
   searchPattern: string,
-): Promise<void> {
+) {
   try {
     info(`Searching for existing comments with pattern: "${searchPattern}"`);
 
@@ -90,19 +124,13 @@ async function deleteMatchingComments(
       (comment.body ?? "").toLowerCase().includes(normalizedPattern),
     );
 
-    info(`Found ${matchingComments.length} matching comments to delete`);
+    info(`Found ${matchingComments.length} matching comments`);
 
-    for (const comment of matchingComments) {
-      await octokit.rest.issues.deleteComment({
-        comment_id: comment.id,
-        owner: context.owner,
-        repo: context.repo,
-      });
-      info(`Deleted comment with ID: ${comment.id}`);
-    }
+    return matchingComments;
   } catch (error) {
-    warning(
-      `Failed to delete existing comments: ${error instanceof Error ? error.message : String(error)}`,
+    throw new Error(
+      `Failed to find existing comments: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
     );
   }
 }
@@ -206,19 +234,80 @@ async function run(): Promise<void> {
     const commentBody = resolveCommentBody(inputs);
     info("Successfully resolved comment body content");
 
-    // Delete existing comments if search pattern is provided
-    if (inputs.searchPattern) {
-      await deleteMatchingComments(octokit, context, inputs.searchPattern);
-    }
-
-    // Create new comment
-    await createComment(octokit, context, commentBody);
+    await upsertComment(octokit, context, commentBody, inputs.searchPattern);
 
     info("PR Comment Manager Action completed successfully");
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     setFailed(`Action failed: ${errorMessage}`);
   }
+}
+
+/**
+ * Updates an existing comment on the pull request
+ * @param octokit - GitHub API client
+ * @param context - GitHub context information
+ * @param commentId - The ID of the comment to update
+ * @param body - The updated comment body content
+ */
+async function updateComment(
+  octokit: ReturnType<typeof getOctokit>,
+  context: GitHubContext,
+  commentId: number,
+  body: string,
+): Promise<void> {
+  try {
+    const { data: comment } = await octokit.rest.issues.updateComment({
+      body,
+      comment_id: commentId,
+      owner: context.owner,
+      repo: context.repo,
+    });
+
+    info(`Successfully updated comment with ID: ${comment.id}`);
+    setOutput("comment-id", comment.id.toString());
+    setOutput("comment-url", comment.html_url);
+  } catch (error) {
+    throw new Error(
+      `Failed to update comment: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+}
+
+/**
+ * Creates a new PR comment or updates the first matching existing comment.
+ * @param octokit - GitHub API client
+ * @param context - GitHub context information
+ * @param body - The comment body content
+ * @param searchPattern - Optional pattern for finding an existing comment
+ */
+async function upsertComment(
+  octokit: ReturnType<typeof getOctokit>,
+  context: GitHubContext,
+  body: string,
+  searchPattern?: string,
+): Promise<void> {
+  if (!searchPattern) {
+    await createComment(octokit, context, body);
+    return;
+  }
+
+  const matchingComments = await findMatchingComments(
+    octokit,
+    context,
+    searchPattern,
+  );
+
+  const [commentToUpdate, ...duplicateComments] = matchingComments;
+
+  if (!commentToUpdate) {
+    await createComment(octokit, context, body);
+    return;
+  }
+
+  await updateComment(octokit, context, commentToUpdate.id, body);
+  await deleteDuplicateComments(octokit, context, duplicateComments);
 }
 
 /**

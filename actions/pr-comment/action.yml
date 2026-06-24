@@ -10,7 +10,7 @@ inputs:
     description: "Path to a file containing the comment content (supports markdown). Either this or comment-body must be provided"
     required: false
   search-pattern:
-    description: "Text pattern to identify existing comments to delete. If not provided, a new comment will always be created"
+    description: "Text pattern to identify an existing comment to update. If not provided, a new comment will always be created"
     required: false
   github-token:
     description: "GitHub token for API access. Defaults to GITHUB_TOKEN environment variable"
@@ -19,9 +19,9 @@ inputs:
 
 outputs:
   comment-id:
-    description: "The ID of the created comment"
+    description: "The ID of the created or updated comment"
   comment-url:
-    description: "The URL of the created comment"
+    description: "The URL of the created or updated comment"
 
 runs:
   using: "node24"

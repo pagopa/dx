@@ -1,11 +1,11 @@
 # PR Comment Manager Action
 
-A TypeScript-based GitHub Action that creates or updates comments on Pull Requests. It provides a simple way to post comments and optionally update existing ones based on a search pattern.
+A TypeScript-based GitHub Action that creates or updates comments on Pull Requests. It provides a simple way to post comments and optionally update existing ones in place based on a search pattern.
 
 ## Features
 
 - ✅ Create new comments on PRs
-- 🔄 Optionally update existing comments using search patterns
+- 🔄 Optionally update existing comments in place using search patterns
 - 📝 Full markdown support in comments
 - 📁 Support for both direct content and file-based content
 - 🎯 TypeScript implementation for better maintainability
@@ -68,17 +68,17 @@ A TypeScript-based GitHub Action that creates or updates comments on Pull Reques
 | ------------------- | ----------------------------------------------------------------------------------------------------------------- | -------- | --------------------- |
 | `comment-body`      | Content of the comment (supports markdown). Either this or `comment-body-file` must be provided                   | No       | -                     |
 | `comment-body-file` | Path to a file containing the comment content (supports markdown). Either this or `comment-body` must be provided | No       | -                     |
-| `search-pattern`    | Text pattern to identify existing comments to replace                                                             | No       | -                     |
+| `search-pattern`    | Text pattern to identify an existing comment to update                                                            | No       | -                     |
 | `github-token`      | GitHub token for API access                                                                                       | No       | `${{ github.token }}` |
 
 > **Note**: You must provide either `comment-body` or `comment-body-file`. If both are provided, `comment-body` takes precedence.
 
 ## Outputs
 
-| Output        | Description                    |
-| ------------- | ------------------------------ |
-| `comment-id`  | The ID of the created comment  |
-| `comment-url` | The URL of the created comment |
+| Output        | Description                               |
+| ------------- | ----------------------------------------- |
+| `comment-id`  | The ID of the created or updated comment  |
+| `comment-url` | The URL of the created or updated comment |
 
 ## Example Use Cases
 
@@ -170,6 +170,7 @@ This TypeScript version replaces the previous YAML-based implementation with the
 - ✅ Type safety with TypeScript
 - ✅ Action outputs for comment ID and URL
 - ✅ More robust pattern matching
+- ✅ Existing comments are updated in place instead of being deleted and recreated
 - ✅ Better documentation and maintainability
 
 ## Maintainers
