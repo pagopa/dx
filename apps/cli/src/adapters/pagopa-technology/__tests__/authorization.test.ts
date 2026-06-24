@@ -38,6 +38,7 @@ const makeSampleInput = (): RequestAuthorizationInput =>
     envShort: "d",
     prefix: "test",
     repoName: "test-repo",
+    repoOwner: "pagopa",
     subscriptionName: "test-subscription",
   });
 
@@ -108,6 +109,59 @@ describe("PagoPA AuthorizationService", () => {
         body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa",
+        repo: "eng-azure-authorization",
+        title: "Add bootstrap identity and AD groups for test-subscription",
+      });
+    });
+
+    it("should target the authorization repository under the selected owner", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = requestAuthorizationInputSchema.parse({
+        bootstrapIdentityId: "test-bootstrap-identity-id",
+        envShort: "d",
+        prefix: "test",
+        repoName: "test-repo",
+        repoOwner: "pagopa-dx",
+        subscriptionName: "test-subscription",
+      });
+      const originalContent = JSON.stringify(
+        { directory_readers: { service_principals_name: [] } },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "owner-aware-sha-123",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa-dx/eng-azure-authorization/pull/42",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(gitHubService.getFileContent).toHaveBeenCalledWith({
+        owner: "pagopa-dx",
+        path: FILE_PATH,
+        ref: "main",
+        repo: "eng-azure-authorization",
+      });
+      expect(gitHubService.createBranch).toHaveBeenCalledWith({
+        branchName: "feats/add-test-repo-test-subscription-bootstrap-identity",
+        fromRef: "main",
+        owner: "pagopa-dx",
+        repo: "eng-azure-authorization",
+      });
+      expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
+        base: "main",
+        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
+        head: "feats/add-test-repo-test-subscription-bootstrap-identity",
+        owner: "pagopa-dx",
         repo: "eng-azure-authorization",
         title: "Add bootstrap identity and AD groups for test-subscription",
       });

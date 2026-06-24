@@ -1,6 +1,6 @@
 {
   "name": "provider-aws",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "description": "Terraform provider for DX on AWS, to enhance developer experience",
   "nx": {

@@ -21,6 +21,7 @@ const makeSampleInput = (): RequestAuthorizationInput =>
     envShort: "d",
     prefix: "test",
     repoName: "test-repo",
+    repoOwner: "pagopa",
     subscriptionName: "test-subscription",
   });
 

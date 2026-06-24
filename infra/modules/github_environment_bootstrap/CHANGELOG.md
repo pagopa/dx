@@ -1,3 +1,17 @@
+## 1.4.0 (2026-06-23)
+
+### 🚀 Features
+
+- Add automation-cd GitHub environment ([#1873](https://github.com/pagopa/dx/pull/1873))
+
+### 🩹 Fixes
+
+- Improve variable documentation ([#1891](https://github.com/pagopa/dx/pull/1891))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 1.3.1 (2026-05-27)
 
 ### 🩹 Fixes

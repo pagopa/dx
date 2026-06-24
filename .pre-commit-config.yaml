@@ -27,16 +27,6 @@ repos:
           - --args=--hide providers
           - --args=--lockfile=false
         files: ^infra/(?:.*/)?_?modules/.*
-      - id: terraform_docs
-        name: terraform_docs on resources
-        args:
-          - --hook-config=--create-file-if-not-exist=true
-        exclude: |
-          (?x)^(
-            infra/modules/.*?|
-            infra\/(?:.*\/)_?modules\/.*|
-            providers\/.*
-            )$
       - id: terraform_tflint
         args:
           - --args=--disable-rule terraform_required_version
