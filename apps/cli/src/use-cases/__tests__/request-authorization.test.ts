@@ -32,6 +32,7 @@ describe("requestAuthorization", () => {
       envShort: "d",
       prefix: "dxt0",
       repoName: "test-repo",
+      repoOwner: "pagopa",
       subscriptionName: "DEV-DEVEX",
     });
 
