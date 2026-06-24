@@ -47,6 +47,31 @@ describe("syncRepositoryTerraformEnvironments", () => {
     expect(result).toContain('    environments           = ["uat", "prod"]');
   });
 
+  it("preserves prod when an existing explicit list does not include it", () => {
+    const content = repositoryConfig.replace(
+      "    reviewers_teams        = []\n",
+      '    reviewers_teams        = []\n    environments           = ["dev"]\n',
+    );
+
+    const result = syncRepositoryTerraformEnvironments(content, "dev");
+
+    expect(result).toContain('    environments           = ["dev", "prod"]');
+  });
+
+  it("finds a repository block at the beginning of the file", () => {
+    const content = [
+      "repository = {",
+      '  name                   = "my-project"',
+      "  reviewers_teams        = []",
+      "}",
+      "",
+    ].join("\n");
+
+    const result = syncRepositoryTerraformEnvironments(content, "uat");
+
+    expect(result).toContain('  environments           = ["uat", "prod"]');
+  });
+
   it("is idempotent when the selected environment already exists", () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []\n",

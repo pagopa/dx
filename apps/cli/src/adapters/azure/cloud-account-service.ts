@@ -863,12 +863,14 @@ export class AzureCloudAccountService implements CloudAccountService {
     cloudAccountId,
     keyVaultName,
   }: {
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     keyVaultName: string;
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);
     const hostname = `${keyVaultName}.vault.azure.net`;
 
+    // Azure can report the vault as created before its public DNS name is ready.
+    // Wait here so writing runner app secrets does not fail with ENOTFOUND.
     for (let attempt = 1; attempt <= keyVaultDnsReadyMaxAttempts; attempt++) {
       try {
         await lookup(hostname);

@@ -36,7 +36,7 @@ const BootstrapIdentityId = z
 
 /**
  * Branded type for resource prefix (e.g., "dx", "io").
- * Validates that the prefix matches the environment naming rules.
+ * Validates only the character set accepted by the authorization workflow.
  */
 const ResourcePrefix = z
   .string()

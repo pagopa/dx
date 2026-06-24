@@ -1,9 +1,11 @@
 /**
- * Synchronizes GitHub repository environments required by deployment scaffolding.
+ * Updates infra/repository/main.tf and applies it so GitHub.com repository
+ * environments exist before deployment scaffolding continues.
  *
- * The repository Terraform module remains the source of truth: after adding the
- * selected environment to its inputs, this action applies it so GitHub receives
- * the same policies and reviewers configured by Terraform.
+ * The repository Terraform module remains the source of truth for GitHub
+ * environments, including protection rules and reviewers. This action only
+ * changes the module's `repository.environments` input, then runs Terraform from
+ * infra/repository to create or update the environments on GitHub.
  */
 import { type NodePlopAPI } from "node-plop";
 import fs from "node:fs/promises";
@@ -32,11 +34,24 @@ const environmentList = (environments: Set<string>): string =>
     .map((environment) => `"${environment}"`)
     .join(", ")}]`;
 
+/**
+ * Returns the inner body of the `repository = { ... }` object.
+ *
+ * Example input:
+ * repository = {
+ *   name = "repo"
+ * }
+ *
+ * Example output:
+ *   name = "repo"
+ */
 const findRepositoryBlock = (
   content: string,
 ): { block: string; end: number; start: number } => {
   const match =
-    /\n(?<indent>[^\S\r\n]*)repository[^\S\r\n]*=[^\S\r\n]*\{\n/.exec(content);
+    /(?:^|\n)(?<indent>[^\S\r\n]*)repository[^\S\r\n]*=[^\S\r\n]*\{\n/.exec(
+      content,
+    );
   if (!match) {
     throw new Error(
       "Cannot find the repository configuration in infra/repository/main.tf",
@@ -88,6 +103,8 @@ export const syncRepositoryTerraformEnvironments = (
       return content;
     }
 
+    // Without an explicit list, the Terraform module manages prod by default.
+    // Adding a non-prod environment must also keep prod explicit.
     const environments = new Set<string>([environmentName, "prod"]);
     const propertyIndent = repositoryPropertyIndent(repositoryBlock.block);
     const separator = repositoryBlock.block.endsWith("\n") ? "" : "\n";
@@ -100,11 +117,14 @@ export const syncRepositoryTerraformEnvironments = (
       .map((match) => match[1])
       .filter((environment) => environment.length > 0),
   );
-  if (existingEnvironments.has(environmentName)) {
+  const hasSelectedEnvironment = existingEnvironments.has(environmentName);
+  const hasProdEnvironment = existingEnvironments.has("prod");
+  if (hasSelectedEnvironment && hasProdEnvironment) {
     return content;
   }
 
   existingEnvironments.add(environmentName);
+  existingEnvironments.add("prod");
   const indent = environmentsMatch.groups?.indent ?? "    ";
   const updatedLine = `${indent}environments           = ${environmentList(existingEnvironments)}`;
   const updatedBlock = repositoryBlock.block.replace(
@@ -141,6 +161,6 @@ export default function (plop: NodePlopAPI): void {
   plop.setActionType("syncRepositoryEnvironments", async (data) => {
     const payload = payloadSchema.parse(data);
     await syncRepositoryEnvironments(payload);
-    return "Repository environments synchronized";
+    return "GitHub repository environments updated from Terraform";
   });
 }
