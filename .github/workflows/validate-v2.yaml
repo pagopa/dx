@@ -64,13 +64,14 @@ jobs:
     permissions:
       contents: read
     steps:
+      # GitHub environments named `infra-<env>-ci` define which runners can
+      # execute Terraform plans; derive the matrix from that source of truth.
       - name: Detect Infra CI GitHub Environments
         id: detect
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
-            // GitHub environments named `infra-<env>-ci` define which runners can
-            // execute Terraform plans; derive the matrix from that source of truth.
             const environments = await github.paginate(
               github.rest.repos.getAllEnvironments,
               {
@@ -78,10 +79,9 @@ jobs:
                 repo: context.repo.repo,
                 per_page: 100,
               },
-              (response) => response.data.environments
+              (response) => response.data
             );
-            // The downstream job expects raw environment names, for example `prod`
-            // from `infra-prod-ci`, with duplicates removed in GitHub API order.
+            console.log(environments);
             const matrix = Array.from(
               new Set(
                 environments
@@ -94,8 +94,8 @@ jobs:
   terraform-plan:
     name: Terraform Plan (${{ matrix.env }})
     needs: detect-environments
-    if: ${{ needs.detect-environments.outputs.matrix != '[]' }}
-    runs-on: ["self-hosted", "linux", "amd64", "${{ matrix.env }}"]
+    if: ${{ needs.detect-environments.outputs.environments != '[]' }}
+    runs-on: ["self-hosted", "${{ matrix.env }}"]
     environment: infra-${{ matrix.env }}-ci
     strategy:
       fail-fast: false
@@ -105,18 +105,17 @@ jobs:
       actions: read
       contents: read
       pull-requests: write
+      id-token: write
     env:
-      ARM_STORAGE_USE_AZUREAD: true
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_USE_OIDC: true
       ARM_USE_AZUREAD: true
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      ARM_STORAGE_USE_AZUREAD: true
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      TF_IN_AUTOMATION: true
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -158,7 +157,7 @@ jobs:
       - gate
       - detect-environments
       - terraform-plan
-    if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.detect-environments.outputs.matrix != '[]' }}
+    if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.detect-environments.outputs.environments != '[]' }}
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -179,7 +178,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-tasks@feats/tfplan-in-validate
+        uses: pagopa/dx/actions/run-dx-task@feats/tfplan-in-validate
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
