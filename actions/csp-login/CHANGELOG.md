@@ -1,3 +1,13 @@
+## 0.1.2 (2026-06-23)
+
+### 🩹 Fixes
+
+- Upgrade actions/checkout reference in documentation ([#1882](https://github.com/pagopa/dx/pull/1882))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.1.1 (2026-05-19)
 
 ### 🩹 Fixes
