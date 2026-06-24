@@ -81,7 +81,7 @@ const makeProgram = () => {
       gitHubService: mock<GitHubService>(),
     });
 
-  const addCommand = makeAddCommand(requireGitHubAuth);
+  const addCommand = makeAddCommand(requireGitHubAuth, { CI: false });
   addCommand.exitOverride().configureOutput(silentOutput);
 
   return new Command()
@@ -112,7 +112,9 @@ describe("makeAddCommand", () => {
         authorizationService: mock<AuthorizationService>(),
         gitHubService: mock<GitHubService>(),
       });
-    const environmentCommand = makeAddCommand(requireGitHubAuth).commands[0];
+    const environmentCommand = makeAddCommand(requireGitHubAuth, {
+      CI: false,
+    }).commands[0];
 
     const flags =
       environmentCommand?.options.flatMap((option) => [
