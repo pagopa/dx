@@ -28,19 +28,41 @@ runs:
         role-to-assume: ${{ env.ROLE_ARN }}
         aws-region: ${{ env.AWS_REGION && env.AWS_REGION || 'eu-south-1' }}
 
+    - name: GitHub Login
+      if: env.GH_APP_CLIENT_ID && env.GH_APP_KEY && env.GH_APP_INSTALLATION_ID
+      id: github-app-token
+      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      with:
+        client-id: ${{ env.GH_APP_CLIENT_ID }}
+        private-key: ${{ env.GH_APP_KEY }}
+
+    - name: Verify GitHub App installation
+      if: env.GH_APP_CLIENT_ID && env.GH_APP_KEY && env.GH_APP_INSTALLATION_ID
+      shell: bash
+      env:
+        ACTUAL_INSTALLATION_ID: ${{ steps.github-app-token.outputs.installation-id }}
+        EXPECTED_INSTALLATION_ID: ${{ env.GH_APP_INSTALLATION_ID }}
+      run: |
+        set -euo pipefail
+        if [ "$ACTUAL_INSTALLATION_ID" != "$EXPECTED_INSTALLATION_ID" ]; then
+          echo "::error::Resolved GitHub App installation ID does not match GH_APP_INSTALLATION_ID."
+          exit 1
+        fi
+
     - name: Export Logged CSP
       shell: bash
       run: |
-        csp_list=""
+        csp_list=()
         if [ -n "$ROLE_ARN" ]; then
-          csp_list="aws"
+          csp_list+=("aws")
         fi
         if [ -n "$ARM_CLIENT_ID" ] && [ -n "$ARM_TENANT_ID" ] && [ -n "$ARM_SUBSCRIPTION_ID" ]; then
-          if [ -n "$csp_list" ]; then
-            csp_list="$csp_list,azure"
-          else
-            csp_list="azure"
-          fi
+          csp_list+=("azure")
+        fi
+        if [ -n "$GH_APP_CLIENT_ID" ] && [ -n "$GH_APP_KEY" ] && [ -n "$GH_APP_INSTALLATION_ID" ]; then
+          csp_list+=("github")
         fi
 
-        echo "CSP_LIST=$csp_list" >> "$GITHUB_ENV"
+        csp_list_joined=$(IFS=,; echo "${csp_list[*]}")
+        echo "CSP_LIST=$csp_list_joined" >> "$GITHUB_ENV"
+        echo "GITHUB_TOKEN=${{ steps.github-app-token.outputs.token }}" >> "$GITHUB_ENV"
