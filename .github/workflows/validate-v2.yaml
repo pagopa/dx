@@ -64,8 +64,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      # GitHub environments named `infra-<env>-ci` define which runners can
-      # execute Terraform plans; derive the matrix from that source of truth.
+      # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-ci`
+      # define which runners can execute Terraform plans; derive the matrix
+      # from that source of truth.
       - name: Detect Infra CI GitHub Environments
         id: detect
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -81,11 +82,10 @@ jobs:
               },
               (response) => response.data
             );
-            console.log(environments);
             const matrix = Array.from(
               new Set(
                 environments
-                  .map(({ name }) => /^infra-(.+)-ci$/.exec(name)?.[1])
+                  .map(({ name }) => /^(?:infra|bootstrapper)-(.+)-ci$/.exec(name)?.at(1))
                   .filter(Boolean)
               )
             );
@@ -96,15 +96,20 @@ jobs:
     needs: detect-environments
     if: ${{ needs.detect-environments.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.env }}"]
-    environment: infra-${{ matrix.env }}-ci
+    environment: ${{ matrix.layer }}-${{ matrix.env }}-ci
     strategy:
       fail-fast: false
       matrix:
+        layer: ["infra", "bootstrapper"]
         env: ${{ fromJSON(needs.detect-environments.outputs.environments) }}
+        exclude:
+          - layer: infra
+            env: uat
+          - layer: bootstrapper
+            env: uat
     permissions:
       actions: read
       contents: read
-      pull-requests: write
       id-token: write
     env:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -115,7 +120,6 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -124,7 +128,7 @@ jobs:
           filter: tree:0
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@feats/tfplan-in-validate
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -133,7 +137,7 @@ jobs:
         uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Install dependencies
-        run: pnpm --filter . install
+        run: pnpm --filter . ci
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
