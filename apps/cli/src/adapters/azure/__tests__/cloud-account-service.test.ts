@@ -1,3 +1,5 @@
+import type { Mock } from "vitest";
+
 import { DefaultAzureCredential } from "@azure/identity";
 import { test as baseTest, beforeEach, describe, expect, vi } from "vitest";
 
@@ -148,6 +150,60 @@ beforeEach(() => {
   mockRoleAssignmentsListForScope.mockReset();
   mockSetSecret.mockClear();
 });
+
+const expectBootstrapperFederatedCredentials = (repo: string) => {
+  [
+    { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
+    { identityName: "dx-d-itn-bootstrap-ci-id-01", stage: "ci" },
+  ].forEach(({ identityName, stage }) => {
+    const environmentName = `bootstrapper-dev-${stage}`;
+
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      identityName,
+      `${repo}-${environmentName}`,
+      {
+        audiences: ["api://AzureADTokenExchange"],
+        issuer: "https://token.actions.githubusercontent.com",
+        subject: `repo:pagopa/${repo}:environment:${environmentName}`,
+      },
+    );
+  });
+};
+
+const expectBootstrapperEnvironmentSecrets = (
+  createOrUpdateEnvironmentSecret: Mock,
+  {
+    cdClientId = "client-1",
+    ciClientId = "client-1",
+  }: { cdClientId?: string; ciClientId?: string } = {},
+) => {
+  const expectedSecrets = [
+    ["bootstrapper-dev-cd", "ARM_CLIENT_ID", cdClientId],
+    ["bootstrapper-dev-cd", "ARM_TENANT_ID", "tenant-1"],
+    ["bootstrapper-dev-cd", "ARM_SUBSCRIPTION_ID", "sub-1"],
+    ["bootstrapper-dev-cd", "GH_APP_ID", "app-id"],
+    ["bootstrapper-dev-cd", "GH_APP_CLIENT_ID", "app-client-id"],
+    ["bootstrapper-dev-cd", "GH_APP_INSTALLATION_ID", "installation-id"],
+    ["bootstrapper-dev-cd", "GH_APP_KEY", "private-key"],
+    ["bootstrapper-dev-ci", "ARM_CLIENT_ID", ciClientId],
+    ["bootstrapper-dev-ci", "ARM_TENANT_ID", "tenant-1"],
+    ["bootstrapper-dev-ci", "ARM_SUBSCRIPTION_ID", "sub-1"],
+  ];
+
+  expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledTimes(
+    expectedSecrets.length,
+  );
+  expectedSecrets.forEach(([environmentName, secretName, secretValue]) => {
+    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
+      environmentName,
+      owner: "pagopa",
+      repo: "dx",
+      secretName,
+      secretValue,
+    });
+  });
+};
 
 describe("getTerraformBackend", () => {
   test("returns undefined when no matching storage account is found", async ({
@@ -314,6 +370,15 @@ describe("initialize", () => {
     const createOrUpdateEnvironmentSecret = vi
       .fn()
       .mockResolvedValue(undefined);
+    mockCreateIdentity
+      .mockResolvedValueOnce({
+        clientId: "cd-client-1",
+        principalId: "cd-principal-1",
+      })
+      .mockResolvedValueOnce({
+        clientId: "ci-client-1",
+        principalId: "ci-principal-1",
+      });
 
     await cloudAccountService.initialize(
       {
@@ -346,12 +411,22 @@ describe("initialize", () => {
       },
     );
 
-    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(3);
+    expect(mockCreateIdentity).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      "dx-d-itn-bootstrap-id-01",
+      expect.any(Object),
+    );
+    expect(mockCreateIdentity).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      "dx-d-itn-bootstrap-ci-id-01",
+      expect.any(Object),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(5);
     expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
       "/subscriptions/sub-1",
       expect.any(String),
       expect.objectContaining({
-        principalId: "principal-1",
+        principalId: "cd-principal-1",
         principalType: "ServicePrincipal",
         roleDefinitionId:
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/f58310d9-a9f6-439a-9e8d-f62e7b41a168",
@@ -361,7 +436,7 @@ describe("initialize", () => {
       "/subscriptions/sub-1",
       expect.any(String),
       expect.objectContaining({
-        principalId: "principal-1",
+        principalId: "cd-principal-1",
         principalType: "ServicePrincipal",
         roleDefinitionId:
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c",
@@ -371,71 +446,36 @@ describe("initialize", () => {
       "/subscriptions/sub-1",
       expect.any(String),
       expect.objectContaining({
-        principalId: "principal-1",
+        principalId: "cd-principal-1",
         principalType: "ServicePrincipal",
         roleDefinitionId:
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
       }),
     );
-    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
-      "dx-d-itn-common-rg-01",
-      "dx-d-itn-bootstrap-id-01",
-      "dx-bootstrapper-dev-cd",
-      {
-        audiences: ["api://AzureADTokenExchange"],
-        issuer: "https://token.actions.githubusercontent.com",
-        subject: "repo:pagopa/dx:environment:bootstrapper-dev-cd",
-      },
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "ci-principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7",
+      }),
     );
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledTimes(7);
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "ARM_CLIENT_ID",
-      secretValue: "client-1",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "ARM_TENANT_ID",
-      secretValue: "tenant-1",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "ARM_SUBSCRIPTION_ID",
-      secretValue: "sub-1",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "GH_APP_ID",
-      secretValue: "app-id",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "GH_APP_CLIENT_ID",
-      secretValue: "app-client-id",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "GH_APP_INSTALLATION_ID",
-      secretValue: "installation-id",
-    });
-    expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
-      environmentName: "bootstrapper-dev-cd",
-      owner: "pagopa",
-      repo: "dx",
-      secretName: "GH_APP_KEY",
-      secretValue: "private-key",
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "ci-principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      }),
+    );
+    expectBootstrapperFederatedCredentials("dx");
+    expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
+      cdClientId: "cd-client-1",
+      ciClientId: "ci-client-1",
     });
   });
 
@@ -477,15 +517,7 @@ describe("initialize", () => {
       },
     );
 
-    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
-      "dx-d-itn-common-rg-01",
-      "dx-d-itn-bootstrap-id-01",
-      "dx-playground-bootstrapper-dev-cd",
-      {
-        audiences: ["api://AzureADTokenExchange"],
-        issuer: "https://token.actions.githubusercontent.com",
-        subject: "repo:pagopa/dx-playground:environment:bootstrapper-dev-cd",
-      },
-    );
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledTimes(2);
+    expectBootstrapperFederatedCredentials("dx-playground");
   });
 });

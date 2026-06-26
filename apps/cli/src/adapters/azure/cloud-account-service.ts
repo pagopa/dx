@@ -59,6 +59,7 @@ const builtInRoleDefinitionIds = {
   contributor: "b24988ac-6180-42a0-ab88-20f7382dd24c",
   keyVaultSecretsOfficer: "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
   owner: "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+  reader: "acdd72a7-3385-48ef-bd42-f606fba81ae7",
   roleBasedAccessControlAdministrator: "f58310d9-a9f6-439a-9e8d-f62e7b41a168",
   storageBlobDataContributor: "ba92f5b4-2d11-453d-a403-e96b0029c9fe",
 } as const;
@@ -69,6 +70,23 @@ const bootstrapIdentityRoleDefinitionIds = [
   builtInRoleDefinitionIds.contributor,
   builtInRoleDefinitionIds.storageBlobDataContributor,
 ] as const;
+
+const bootstrapCiIdentityRoleDefinitionIds = [
+  // Plan needs read access for refresh and blob access for Terraform backend locks/state.
+  builtInRoleDefinitionIds.reader,
+  builtInRoleDefinitionIds.storageBlobDataContributor,
+] as const;
+
+type BootstrapperIdentity = {
+  clientId: string;
+  name: string;
+  principalId: string;
+};
+
+type BootstrapperIdentityParameters = {
+  location: string;
+  tags: Record<string, string>;
+};
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
@@ -263,30 +281,27 @@ export class AzureCloudAccountService implements CloudAccountService {
 
     try {
       const identityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
+      const ciIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
 
       const msiClient = new ManagedServiceIdentityClient(
         this.#credential,
         cloudAccount.id,
       );
 
-      const identity = await msiClient.userAssignedIdentities.createOrUpdate(
-        resourceGroupName,
+      const cdIdentity = await this.#createBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
         identityName,
+        msiClient,
         parameters,
-      );
-
-      assert.ok(
-        identity.principalId,
-        "Managed identity principal ID is undefined",
-      );
-      const identityPrincipalId = identity.principalId;
-      assert.ok(identity.clientId, "Managed identity client ID is undefined");
-      const identityClientId = identity.clientId;
-
-      logger.debug(
-        "Created identity {identityName} in subscription {subscriptionId}",
-        { identityName, subscriptionId: cloudAccount.id },
-      );
+        resourceGroupName,
+      });
+      const ciIdentity = await this.#createBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
+        identityName: ciIdentityName,
+        msiClient,
+        parameters,
+        resourceGroupName,
+      });
 
       const authorizationManagementClient = new AuthorizationManagementClient(
         this.#credential,
@@ -300,67 +315,34 @@ export class AzureCloudAccountService implements CloudAccountService {
       const tenantId = subscription.tenantId;
       const subscriptionScope = `/subscriptions/${cloudAccount.id}`;
 
-      // Grant the bootstrap identity the Azure permissions it needs to operate autonomously in the bootstrap workflow.
-      await Promise.all(
-        bootstrapIdentityRoleDefinitionIds.map((roleDefinitionId) =>
-          authorizationManagementClient.roleAssignments.create(
-            subscriptionScope,
-            this.#createRoleAssignmentName(
-              subscriptionScope,
-              identityPrincipalId,
-              roleDefinitionId,
-            ),
-            {
-              principalId: identityPrincipalId,
-              principalType: "ServicePrincipal",
-              roleDefinitionId: this.#createRoleDefinitionResourceId(
-                cloudAccount.id,
-                roleDefinitionId,
-              ),
-            },
-          ),
-        ),
-      );
+      await Promise.all([
+        this.#assignBootstrapperRoles({
+          authorizationManagementClient,
+          cloudAccountId: cloudAccount.id,
+          identity: cdIdentity,
+          roleDefinitionIds: bootstrapIdentityRoleDefinitionIds,
+          scope: subscriptionScope,
+        }),
+        this.#assignBootstrapperRoles({
+          authorizationManagementClient,
+          cloudAccountId: cloudAccount.id,
+          identity: ciIdentity,
+          roleDefinitionIds: bootstrapCiIdentityRoleDefinitionIds,
+          scope: subscriptionScope,
+        }),
+      ]);
 
-      logger.debug(
-        "Assigned bootstrap roles to identity {identityName} in subscription {subscriptionId}",
-        { identityName, subscriptionId: cloudAccount.id },
-      );
-
-      const githubEnvironmentName = `bootstrapper-${name}-cd`;
-      const federatedCredentialName = this.#createFederatedCredentialName({
-        github,
-        githubEnvironmentName,
-      });
-
-      // Include a repository-derived suffix so different repositories can share
-      // the same bootstrap identity without overwriting each other's OIDC trust.
-      await msiClient.federatedIdentityCredentials.createOrUpdate(
-        resourceGroupName,
-        identityName,
-        federatedCredentialName,
-        {
-          audiences: ["api://AzureADTokenExchange"],
-          issuer: "https://token.actions.githubusercontent.com",
-          subject: `repo:${github.owner}/${github.repo}:environment:${githubEnvironmentName}`,
-        },
-      );
-
-      logger.debug(
-        "Configured federated identity credential {credentialName} for identity {identityName} in subscription {subscriptionId}",
-        {
-          credentialName: federatedCredentialName,
-          identityName,
-          subscriptionId: cloudAccount.id,
-        },
-      );
-
-      await this.#storeBootstrapperEnvironmentSecrets({
+      await this.#configureBootstrapperGitHubEnvironments({
+        cdIdentityClientId: cdIdentity.clientId,
+        cdIdentityName: cdIdentity.name,
+        ciIdentityClientId: ciIdentity.clientId,
+        ciIdentityName: ciIdentity.name,
         cloudAccountId: cloudAccount.id,
         github,
-        githubEnvironmentName,
         gitHubService,
-        identityClientId,
+        msiClient,
+        name,
+        resourceGroupName,
         runnerAppCredentials,
         tenantId,
       });
@@ -390,12 +372,7 @@ export class AzureCloudAccountService implements CloudAccountService {
         "Deleted resource group {resourceGroupName} in subscription {subscriptionId} due to initialization failure",
         { resourceGroupName, subscriptionId: cloudAccount.id },
       );
-      if (cause instanceof Error) {
-        logger.error(cause.message);
-      }
-      throw new Error(`Error during the initialization of the cloud account`, {
-        cause,
-      });
+      throw new Error("Failed to initialize cloud account", { cause });
     }
   }
 
@@ -563,6 +540,171 @@ export class AzureCloudAccountService implements CloudAccountService {
       }),
     );
     return results.every(Boolean);
+  }
+
+  async #assignBootstrapperRoles({
+    authorizationManagementClient,
+    cloudAccountId,
+    identity,
+    roleDefinitionIds,
+    scope,
+  }: {
+    authorizationManagementClient: AuthorizationManagementClient;
+    cloudAccountId: string;
+    identity: BootstrapperIdentity;
+    roleDefinitionIds: readonly string[];
+    scope: string;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+
+    await Promise.all(
+      roleDefinitionIds.map((roleDefinitionId) =>
+        authorizationManagementClient.roleAssignments.create(
+          scope,
+          this.#createRoleAssignmentName(
+            scope,
+            identity.principalId,
+            roleDefinitionId,
+          ),
+          {
+            principalId: identity.principalId,
+            principalType: "ServicePrincipal",
+            roleDefinitionId: this.#createRoleDefinitionResourceId(
+              cloudAccountId,
+              roleDefinitionId,
+            ),
+          },
+        ),
+      ),
+    );
+
+    logger.debug(
+      "Assigned bootstrap roles to identity {identityName} in subscription {subscriptionId}",
+      { identityName: identity.name, subscriptionId: cloudAccountId },
+    );
+  }
+
+  async #configureBootstrapperGitHubEnvironments({
+    cdIdentityClientId,
+    cdIdentityName,
+    ciIdentityClientId,
+    ciIdentityName,
+    cloudAccountId,
+    github,
+    gitHubService,
+    msiClient,
+    name,
+    resourceGroupName,
+    runnerAppCredentials,
+    tenantId,
+  }: {
+    cdIdentityClientId: string;
+    cdIdentityName: string;
+    ciIdentityClientId: string;
+    ciIdentityName: string;
+    cloudAccountId: string;
+    github: GitHubRepo;
+    gitHubService: GitHubService;
+    msiClient: ManagedServiceIdentityClient;
+    name: EnvironmentId["name"];
+    resourceGroupName: string;
+    runnerAppCredentials: GitHubAppCredentials;
+    tenantId: string;
+  }): Promise<void> {
+    const logger = getLogger(["gen", "env"]);
+    const cdEnvironmentName = `bootstrapper-${name}-cd`;
+    const ciEnvironmentName = `bootstrapper-${name}-ci`;
+    const environmentIdentities = [
+      {
+        environmentName: cdEnvironmentName,
+        identityClientId: cdIdentityClientId,
+        identityName: cdIdentityName,
+        runnerAppCredentials,
+      },
+      {
+        environmentName: ciEnvironmentName,
+        identityClientId: ciIdentityClientId,
+        identityName: ciIdentityName,
+      },
+    ];
+
+    // Include a repository-derived suffix so different repositories can share
+    // the same bootstrap identity without overwriting each other's OIDC trust.
+    await Promise.all(
+      environmentIdentities.map(({ environmentName, identityName }) =>
+        msiClient.federatedIdentityCredentials.createOrUpdate(
+          resourceGroupName,
+          identityName,
+          this.#createFederatedCredentialName({
+            github,
+            githubEnvironmentName: environmentName,
+          }),
+          {
+            audiences: ["api://AzureADTokenExchange"],
+            issuer: "https://token.actions.githubusercontent.com",
+            subject: `repo:${github.owner}/${github.repo}:environment:${environmentName}`,
+          },
+        ),
+      ),
+    );
+
+    logger.debug(
+      "Configured bootstrapper federated identity credentials in subscription {subscriptionId}",
+      { subscriptionId: cloudAccountId },
+    );
+
+    await Promise.all(
+      environmentIdentities.map(
+        ({ environmentName, identityClientId, runnerAppCredentials }) =>
+          this.#storeBootstrapperEnvironmentSecrets({
+            cloudAccountId,
+            github,
+            githubEnvironmentName: environmentName,
+            gitHubService,
+            identityClientId,
+            runnerAppCredentials,
+            tenantId,
+          }),
+      ),
+    );
+  }
+
+  async #createBootstrapperIdentity({
+    cloudAccountId,
+    identityName,
+    msiClient,
+    parameters,
+    resourceGroupName,
+  }: {
+    cloudAccountId: string;
+    identityName: string;
+    msiClient: ManagedServiceIdentityClient;
+    parameters: BootstrapperIdentityParameters;
+    resourceGroupName: string;
+  }): Promise<BootstrapperIdentity> {
+    const logger = getLogger(["gen", "env"]);
+    const identity = await msiClient.userAssignedIdentities.createOrUpdate(
+      resourceGroupName,
+      identityName,
+      parameters,
+    );
+
+    assert.ok(
+      identity.principalId,
+      "Managed identity principal ID is undefined",
+    );
+    assert.ok(identity.clientId, "Managed identity client ID is undefined");
+
+    logger.debug(
+      "Created identity {identityName} in subscription {subscriptionId}",
+      { identityName, subscriptionId: cloudAccountId },
+    );
+
+    return {
+      clientId: identity.clientId,
+      name: identityName,
+      principalId: identity.principalId,
+    };
   }
 
   async #createCommonKeyVault({
@@ -749,62 +891,45 @@ export class AzureCloudAccountService implements CloudAccountService {
     githubEnvironmentName: string;
     gitHubService: GitHubService;
     identityClientId: string;
-    runnerAppCredentials: GitHubAppCredentials;
+    runnerAppCredentials?: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);
 
-    await Promise.all([
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "ARM_CLIENT_ID",
-        secretValue: identityClientId,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "ARM_TENANT_ID",
-        secretValue: tenantId,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "ARM_SUBSCRIPTION_ID",
-        secretValue: cloudAccountId,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "GH_APP_ID",
-        secretValue: runnerAppCredentials.id,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "GH_APP_CLIENT_ID",
-        secretValue: runnerAppCredentials.clientId,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "GH_APP_INSTALLATION_ID",
-        secretValue: runnerAppCredentials.installationId,
-      }),
-      gitHubService.createOrUpdateEnvironmentSecret({
-        environmentName: githubEnvironmentName,
-        owner: github.owner,
-        repo: github.repo,
-        secretName: "GH_APP_KEY",
-        secretValue: runnerAppCredentials.key.trimEnd(),
-      }),
-    ]);
+    const commonSecrets = [
+      { secretName: "ARM_CLIENT_ID", secretValue: identityClientId },
+      { secretName: "ARM_TENANT_ID", secretValue: tenantId },
+      { secretName: "ARM_SUBSCRIPTION_ID", secretValue: cloudAccountId },
+    ];
+    const releaseSecrets = runnerAppCredentials
+      ? [
+          { secretName: "GH_APP_ID", secretValue: runnerAppCredentials.id },
+          {
+            secretName: "GH_APP_CLIENT_ID",
+            secretValue: runnerAppCredentials.clientId,
+          },
+          {
+            secretName: "GH_APP_INSTALLATION_ID",
+            secretValue: runnerAppCredentials.installationId,
+          },
+          {
+            secretName: "GH_APP_KEY",
+            secretValue: runnerAppCredentials.key.trimEnd(),
+          },
+        ]
+      : [];
+
+    await Promise.all(
+      [...commonSecrets, ...releaseSecrets].map(({ secretName, secretValue }) =>
+        gitHubService.createOrUpdateEnvironmentSecret({
+          environmentName: githubEnvironmentName,
+          owner: github.owner,
+          repo: github.repo,
+          secretName,
+          secretValue,
+        }),
+      ),
+    );
 
     logger.debug("Set GitHub environment secrets for {environmentName}", {
       environmentName: githubEnvironmentName,
