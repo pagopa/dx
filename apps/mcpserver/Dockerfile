@@ -15,11 +15,8 @@ COPY . .
 #    the project from sources entirely inside the container.
 RUN pnpm install --filter @pagopa/dx-mcpserver...
 
-# 5. Run the normal Nx build inside Docker.
-RUN pnpm nx build @pagopa/dx-mcpserver
-
-# 6. Materialize a production-only payload through an Nx task so the same
-#    packaging step can be exercised outside Docker as well.
+# 5. Materialize the production-only payload through the Nx task pipeline.
+#    The package target depends on build, so Docker only needs a single Nx call.
 RUN pnpm nx package @pagopa/dx-mcpserver
 
 # --- Final Image ---

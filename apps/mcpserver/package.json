@@ -18,6 +18,17 @@
   "bin": {
     "dx": "./dist/cli.js"
   },
+  "nx": {
+    "targets": {
+      "package": {
+        "dependsOn": ["build"],
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "rm -rf apps/mcpserver/deploy && pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod apps/mcpserver/deploy"
+        }
+      }
+    }
+  },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1057.0",
     "@aws-sdk/client-s3": "catalog:aws",
@@ -41,7 +52,6 @@
   },
   "scripts": {
     "start": "tsx src/cli.ts",
-    "package": "pnpm --dir ../.. --filter @pagopa/dx-mcpserver deploy --legacy --prod apps/mcpserver/deploy",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "version": "node ./scripts/generate-server-manifest.js"
