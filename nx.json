@@ -98,9 +98,22 @@
   "plugins": [
     {
       "plugin": "@nx/docker",
-      "exclude": ["apps/*/Dockerfile"],
+      "exclude": [
+        "apps/dx-metrics/Dockerfile",
+        "apps/dx-metrics-import/Dockerfile"
+      ],
       "options": {
-        "buildTarget": "docker:build",
+        "buildTarget": {
+          "name": "docker:build",
+          "cwd": ".",
+          "args": [
+            "--file {projectRoot}/Dockerfile",
+            "--platform linux/arm64"
+          ],
+          "env": {
+            "DOCKER_BUILDKIT": "1"
+          }
+        },
         "runTarget": "docker:run"
       }
     },
