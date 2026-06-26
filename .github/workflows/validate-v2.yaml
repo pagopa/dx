@@ -32,6 +32,7 @@ jobs:
   static-review:
     name: Static Review
     runs-on: ubuntu-24.04
+    needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     permissions:
       actions: read
