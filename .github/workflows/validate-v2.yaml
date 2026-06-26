@@ -75,7 +75,7 @@ jobs:
         run: pnpm validate
 
   get-environments:
-    name: Detect Terraform Plan Environments
+    name: Get GitHub Environments for Infrastructure
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     runs-on: ubuntu-24.04
@@ -86,7 +86,7 @@ jobs:
     steps:
       # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-cd`
       # define which credentials and runner labels are used for Terraform plans.
-      - name: Detect Terraform Plan GitHub Environments
+      - name: Get GitHub Environments
         id: detect
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
@@ -115,7 +115,7 @@ jobs:
             core.setOutput("environments", JSON.stringify(matrix));
 
   infra-review:
-    name: Infra Review (${{ matrix.target.github-environment }})
+    name: Infrastructure Review (${{ matrix.target.github-environment }})
     needs: get-environments
     if: ${{ needs.get-environments.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
