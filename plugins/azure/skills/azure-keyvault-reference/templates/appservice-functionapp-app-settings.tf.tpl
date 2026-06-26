@@ -9,16 +9,24 @@ variable "key_vault_name" {
 variable "app_settings" {
   type = list(object({
     name                  = string
-    value                 = optional(string, "")
+    value                 = optional(string)
     key_vault_secret_name = optional(string)
   }))
   description = "Application settings. Set key_vault_secret_name for secret-backed values."
+
+  validation {
+    condition = alltrue([
+      for s in var.app_settings :
+      (try(trimspace(s.key_vault_secret_name), "") != "") || (try(s.value, null) != null)
+    ])
+    error_message = "Each app_settings entry must set either value or key_vault_secret_name."
+  }
 }
 
 locals {
   app_settings = {
     for setting in var.app_settings :
-    setting.name => setting.key_vault_secret_name != null ? "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=${setting.key_vault_secret_name})" : setting.value
+    setting.name => try(trimspace(setting.key_vault_secret_name), "") != "" ? "@Microsoft.KeyVault(VaultName=${var.key_vault_name};SecretName=${setting.key_vault_secret_name})" : coalesce(setting.value, "")
   }
 }
 

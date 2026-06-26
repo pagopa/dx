@@ -19,19 +19,3 @@ module "<APP_NAME>_key_vault_reader" {
     }
   ]
 }
-
-# Raw fallback when the DX role-assignment module is unavailable:
-resource "azurerm_role_assignment" "<APP_NAME>_key_vault_reader" {
-  scope                = <KEY_VAULT_ID>
-  role_definition_name = "Key Vault Secrets User"
-  principal_id         = <APP_PRINCIPAL_ID>
-  description          = "Allow <APP_NAME> to resolve Key Vault secret references"
-}
-
-# Legacy Key Vault access-policy fallback when the vault does not use Azure RBAC:
-resource "azurerm_key_vault_access_policy" "<APP_NAME>_secret_reader" {
-  key_vault_id       = <KEY_VAULT_ID>
-  tenant_id          = <TENANT_ID>
-  object_id          = <APP_PRINCIPAL_ID>
-  secret_permissions = ["Get", "List"]
-}

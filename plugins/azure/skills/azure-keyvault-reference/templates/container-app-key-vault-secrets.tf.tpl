@@ -28,37 +28,3 @@ module "container_app" {
 
   depends_on = [module.container_app_key_vault_reader]
 }
-
-# Raw azurerm_container_app equivalent when no DX module fits:
-resource "azurerm_container_app" "example" {
-  name                         = "<CONTAINER_APP_NAME>"
-  container_app_environment_id = <CONTAINER_APP_ENVIRONMENT_ID>
-  resource_group_name          = <RESOURCE_GROUP_NAME>
-  revision_mode                = "Single"
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  secret {
-    name                = "database-password"
-    key_vault_secret_id = azurerm_key_vault_secret.database_password.versionless_id
-    identity            = "System"
-  }
-
-  template {
-    container {
-      name   = "app"
-      image  = var.image
-      cpu    = 0.5
-      memory = "1Gi"
-
-      env {
-        name        = "DATABASE_PASSWORD"
-        secret_name = "database-password"
-      }
-    }
-  }
-
-  depends_on = [azurerm_role_assignment.container_app_key_vault_reader]
-}
