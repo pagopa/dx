@@ -21,7 +21,9 @@
   "nx": {
     "targets": {
       "package": {
-        "dependsOn": ["build"],
+        "dependsOn": [
+          "build"
+        ],
         "executor": "nx:run-commands",
         "options": {
           "command": "rm -rf apps/mcpserver/deploy && pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod apps/mcpserver/deploy"
