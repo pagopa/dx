@@ -250,7 +250,6 @@ const runCommand = async (command, args, cwd, env) => {
 	child.stderr?.setEncoding("utf8");
 	child.stderr?.on("data", (chunk) => {
 		stderr += chunk;
-		process.stderr.write(chunk);
 	});
 	child.stdout?.setEncoding("utf8");
 	child.stdout?.on("data", (chunk) => {
@@ -369,6 +368,7 @@ const terraformPlanMarkdownTemplate = Handlebars.compile(`{{#each reports}}
 
 {{/each}}
 `);
+const noPlanOutputMessage = "No plan output available.";
 const renderTerraformPlanReports = (reports) => {
 	return terraformPlanMarkdownTemplate({ reports: reports.map((report) => ({
 		...report,
@@ -384,9 +384,9 @@ const isRunningInCI = () => {
 	const ci = process.env.CI;
 	return Boolean(ci) && ci !== "false" && ci !== "0";
 };
-const getPlanOutput = (maskedOutput, verbose) => {
-	if (verbose) return maskedOutput.trim().length > 0 ? maskedOutput : "No plan output available.";
-	return maskedOutput.match(/(?:^.*Terraform will perform the following actions:[\s\S]*|^.*No changes\..*)/m)?.[0] ?? "No plan output available.";
+const getPlanOutput = (maskedOutput, verbose, failed) => {
+	if (verbose) return maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage;
+	return maskedOutput.match(/(?:^.*Terraform will perform the following actions:[\s\S]*|^.*Terraform planned the following actions, but then encountered a problem:[\s\S]*|^.*No changes\..*)/m)?.[0] ?? (failed && maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage);
 };
 const getPlanSummaryLine = (maskedOutput) => util.stripVTControlCharacters(maskedOutput).match(/^Plan:\s+.+$/m)?.[0];
 const noticeStartPattern = /^(?:│\s*)?(Warning|Error):/;
@@ -395,7 +395,7 @@ const getNoticeSeverity = (line) => {
 	if (severity === "Warning") return "warning";
 	if (severity === "Error") return "error";
 };
-const isPlanSectionStart = (line) => /^(?:Terraform used the selected providers|Terraform will perform the following actions:|No changes\.|Plan:\s+)/.test(line);
+const isPlanSectionStart = (line) => /^(?:Terraform used the selected providers|Terraform will perform the following actions:|Terraform planned the following actions, but then encountered a problem:|No changes\.|Plan:\s+)/.test(line);
 const normalizeNoticeLine = (line) => line.replace(/^│ ?/, "");
 const getPlanNotices = (maskedOutput) => {
 	const lines = util.stripVTControlCharacters(maskedOutput).split(/\r?\n/);
@@ -432,13 +432,13 @@ const renderNoticeMarkdown = ({ message, severity }) => {
 const getFailureMessage = (result) => {
 	if (result.signal) return `Terraform plan terminated by signal ${result.signal}`;
 	if (result.exitCode !== 0) return `Terraform plan exited with code ${result.exitCode}`;
-	return "No plan output available.";
+	return noPlanOutputMessage;
 };
 const executeTerraformPlan = async (modulePath, env, verbose, report, context) => {
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
 	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
-	const planOutput = getPlanOutput(maskedOutput, verbose);
+	const planOutput = getPlanOutput(maskedOutput, verbose, result.exitCode !== 0);
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
 	console.log(planOutput);

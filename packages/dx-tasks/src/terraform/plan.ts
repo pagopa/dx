@@ -90,6 +90,8 @@ const terraformPlanMarkdownTemplate =
 {{/each}}
 `);
 
+const noPlanOutputMessage = "No plan output available.";
+
 const renderTerraformPlanReports = (
   reports: readonly TerraformPlanReport[],
 ): string => {
@@ -119,18 +121,19 @@ const isRunningInCI = (): boolean => {
   return Boolean(ci) && ci !== "false" && ci !== "0";
 };
 
+const getMaskedOutputOrFallback = (maskedOutput: string): string =>
+  maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage;
+
 const getPlanOutput = (maskedOutput: string, verbose: boolean): string => {
   if (verbose) {
-    return maskedOutput.trim().length > 0
-      ? maskedOutput
-      : "No plan output available.";
+    return getMaskedOutputOrFallback(maskedOutput);
   }
 
   const match = maskedOutput.match(
-    /(?:^.*Terraform will perform the following actions:[\s\S]*|^.*No changes\..*)/m,
+    /(?:^.*Terraform will perform the following actions:[\s\S]*|^.*Terraform planned the following actions, but then encountered a problem:[\s\S]*|^.*No changes\..*)/m,
   );
 
-  return match?.[0] ?? "No plan output available.";
+  return match?.[0] ?? getMaskedOutputOrFallback(maskedOutput);
 };
 
 const getPlanSummaryLine = (maskedOutput: string): string | undefined =>
@@ -154,7 +157,7 @@ const getNoticeSeverity = (
 };
 
 const isPlanSectionStart = (line: string): boolean =>
-  /^(?:Terraform used the selected providers|Terraform will perform the following actions:|No changes\.|Plan:\s+)/.test(
+  /^(?:Terraform used the selected providers|Terraform will perform the following actions:|Terraform planned the following actions, but then encountered a problem:|No changes\.|Plan:\s+)/.test(
     line,
   );
 
@@ -227,7 +230,7 @@ const getFailureMessage = (result: ProcessResult): string => {
   if (result.exitCode !== 0) {
     return `Terraform plan exited with code ${result.exitCode}`;
   }
-  return "No plan output available.";
+  return noPlanOutputMessage;
 };
 
 const executeTerraformPlan = async (

@@ -31,7 +31,6 @@ class MockChildProcess extends events.EventEmitter {
 describe("runCommand", () => {
   beforeEach(() => {
     mockSpawn.mockReset();
-    vi.spyOn(process.stderr, "write").mockImplementation(() => true);
   });
 
   afterEach(() => {
@@ -67,7 +66,6 @@ describe("runCommand", () => {
       stderr: "diagnostic",
       stdout: "first second",
     });
-    expect(process.stderr.write).toHaveBeenCalledExactlyOnceWith("diagnostic");
   });
 
   it("resolves the terminating signal when the process closes from a signal", async () => {

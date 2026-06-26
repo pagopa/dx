@@ -68,6 +68,21 @@ Plan: 0 to add, 1 to change, 0 to destroy.`,
   error: `Error: invalid Terraform configuration
 
 The module contains invalid configuration.`,
+  failedActionsNoColor: `azurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01]
+
+Terraform planned the following actions, but then encountered a problem:
+
+  # azurerm_key_vault_secret.example will be created
+  + resource "azurerm_key_vault_secret" "example" {
+      + client_secret = "super-secret-value"
+      + name          = "example"
+    }`,
+  failureDiagnostics: `Error: Unsupported argument
+
+  on ../_modules/azure/secrets.tf line 5, in resource "github_actions_secret" "codecov_token":
+   5:   client_secret = "super-secret-value"
+
+An argument named "client_secret" is not expected here.`,
   noChanges: `[0m[1mazurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02][0m
 [0m[1mazurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01][0m
 
@@ -306,6 +321,21 @@ describe("terraformPlan", () => {
       ).toMatchSnapshot();
     },
   );
+
+  it("prints masked output when no plan section is available", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: 'Terraform diagnostic\nclient_secret = "super-secret-value"',
+    });
+
+    await terraformPlan({ modulePath: "/tmp/module" });
+
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(
+      'Terraform diagnostic\nclient_secret = "[REDACTED]"',
+    );
+  });
 
   it("writes the report with the expected JSON shape when enabled", async () => {
     const reports = createReports(tempDirectoryPath);
@@ -574,6 +604,118 @@ describe("terraformPlan failure reports", () => {
   });
 });
 
+describe("terraformPlan failed action reports", () => {
+  let tempDirectoryPath = "";
+
+  beforeEach(() => {
+    mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  beforeEach(async () => {
+    tempDirectoryPath = await createTestDirectory();
+  });
+
+  afterEach(async () => {
+    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("prints the failed plan section before rejecting when terraform exits non-zero", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 1,
+      signal: null,
+      stderr: plans.error,
+      stdout: plans.failedActionsNoColor,
+    });
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("Terraform plan exited with code 1");
+
+    const expectedPlanOutput = `${plans.failedActionsNoColor
+      .slice(
+        plans.failedActionsNoColor.indexOf("Terraform planned the following"),
+      )
+      .replace(
+        'client_secret = "super-secret-value"',
+        'client_secret = "[REDACTED]"',
+      )}\n${plans.error}`;
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+
+    expect(report).toStrictEqual({
+      modulePath: "/tmp/module",
+      notices: [
+        {
+          message: plans.error,
+          severity: "error",
+        },
+      ],
+      planOutput: expectedPlanOutput,
+      success: false,
+    });
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(expectedPlanOutput);
+  });
+
+  it("prints masked diagnostics before rejecting when no plan section is available", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 1,
+      signal: null,
+      stderr: plans.failureDiagnostics,
+      stdout: "",
+    });
+
+    await expect(
+      terraformPlan(
+        {
+          modulePath: "/tmp/module",
+          report: true,
+        },
+        {
+          reports,
+        },
+      ),
+    ).rejects.toThrow("Terraform plan exited with code 1");
+
+    const expectedPlanOutput = plans.failureDiagnostics.replace(
+      'client_secret = "super-secret-value"',
+      'client_secret = "[REDACTED]"',
+    );
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+
+    expect(report).toStrictEqual({
+      modulePath: "/tmp/module",
+      notices: [
+        {
+          message: expectedPlanOutput,
+          severity: "error",
+        },
+      ],
+      planOutput: expectedPlanOutput,
+      success: false,
+    });
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(expectedPlanOutput);
+  });
+});
+
 describe("terraformPlanReportNamespace", () => {
   it("declares the terraform-plan namespace with a markdown renderer", () => {
     expect(terraformPlanReportNamespace.name).toBe("terraform-plan");
@@ -616,7 +758,7 @@ describe("terraformPlanReportNamespace", () => {
     ]);
 
     expect(markdown).toBe(
-      "### Terraform Plan: `./infra/modules/success` - ✅ Success\nPlan: 0 to add, 1 to change, 0 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>\n### Terraform Plan: `./infra/modules/failure` - ❌ Failed\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nError.\n```\n\n</details>",
+      "### Terraform Plan: `./infra/modules/success` - ✅ Success\nPlan: 0 to add, 1 to change, 0 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>\n\n### Terraform Plan: `./infra/modules/failure` - ❌ Failed\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nError.\n```\n\n</details>",
     );
   });
 

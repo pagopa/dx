@@ -36,7 +36,6 @@ export const runCommand = async (
   child.stderr?.setEncoding("utf8");
   child.stderr?.on("data", (chunk: string) => {
     stderr += chunk;
-    process.stderr.write(chunk);
   });
   child.stdout?.setEncoding("utf8");
   child.stdout?.on("data", (chunk: string) => {
