@@ -22,10 +22,6 @@ const runExecutor: PromiseExecutor<PlanExecutorInput> = async (options) => {
 
   const { out, projectRoot, refresh, report, verbose } = parseResult.data;
 
-  logger.info("Running terraform plan for {modulePath}...", {
-    modulePath: projectRoot,
-  });
-
   const dispatcher = createDefaultTaskDispatcher();
 
   await dispatcher.dispatchTask("terraformPlan", {

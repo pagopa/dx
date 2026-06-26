@@ -384,9 +384,10 @@ const isRunningInCI = () => {
 	const ci = process.env.CI;
 	return Boolean(ci) && ci !== "false" && ci !== "0";
 };
-const getPlanOutput = (maskedOutput, verbose, failed) => {
-	if (verbose) return maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage;
-	return maskedOutput.match(/(?:^.*Terraform will perform the following actions:[\s\S]*|^.*Terraform planned the following actions, but then encountered a problem:[\s\S]*|^.*No changes\..*)/m)?.[0] ?? (failed && maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage);
+const getMaskedOutputOrFallback = (maskedOutput) => maskedOutput.trim().length > 0 ? maskedOutput : noPlanOutputMessage;
+const getPlanOutput = (maskedOutput, verbose) => {
+	if (verbose) return getMaskedOutputOrFallback(maskedOutput);
+	return maskedOutput.match(/(?:^.*Terraform will perform the following actions:[\s\S]*|^.*Terraform planned the following actions, but then encountered a problem:[\s\S]*|^.*No changes\..*)/m)?.[0] ?? getMaskedOutputOrFallback(maskedOutput);
 };
 const getPlanSummaryLine = (maskedOutput) => util.stripVTControlCharacters(maskedOutput).match(/^Plan:\s+.+$/m)?.[0];
 const noticeStartPattern = /^(?:│\s*)?(Warning|Error):/;
@@ -438,7 +439,7 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, context) =
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
 	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
-	const planOutput = getPlanOutput(maskedOutput, verbose, result.exitCode !== 0);
+	const planOutput = getPlanOutput(maskedOutput, verbose);
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
 	console.log(planOutput);
@@ -530,7 +531,6 @@ const runExecutor = async (options) => {
 		return { success: false };
 	}
 	const { out, projectRoot, refresh, report, verbose } = parseResult.data;
-	logger.info("Running terraform plan for {modulePath}...", { modulePath: projectRoot });
 	await createDefaultTaskDispatcher().dispatchTask("terraformPlan", {
 		modulePath: projectRoot,
 		out,
