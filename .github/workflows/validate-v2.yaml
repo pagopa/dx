@@ -1,14 +1,8 @@
 name: Validate
 
 on:
-  workflow_call:
-    secrets:
-      app-client-id:
-        description: "GitHub App Client ID for authentication"
-        required: true
-      app-private-key:
-        description: "GitHub App private key for authentication"
-        required: true
+  pull_request:
+    types: [opened, synchronize]
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
