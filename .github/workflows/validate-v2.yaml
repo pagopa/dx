@@ -5,6 +5,9 @@ on:
     types: [opened, synchronize]
   workflow_dispatch:
 
+env:
+  REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
+
 jobs:
   gate:
     name: Fork PR Gate
@@ -142,15 +145,54 @@ jobs:
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      - name: Generate Cache Key
+        if: github.event_name == 'pull_request'
+        id: cache-key
+        env:
+          GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Get current epoch time rounded to chosen window
+          ENVIRONMENT_SLUG=$(echo "$GITHUB_ENVIRONMENT" | tr '/' '-')
+          TIME_WINDOW=$(( $(date +%s) / $REFRESH_STATE_EVERY_SECONDS ))
+          echo "cache-key=tfplan-pr${PR_NUMBER}-${ENVIRONMENT_SLUG}-${TIME_WINDOW}s" >> "$GITHUB_OUTPUT"
+
+      # Restore PR TFPlan Cache (miss = first run or >10 minutes, hit = within 10 minutes)
+      - name: Check for Cache
+        if: github.event_name == 'pull_request'
+        id: tfplan-pr-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .tfplan-pr-cache/${{ matrix.target.github-environment }}/.pr_plan_marker
+          key: ${{ steps.cache-key.outputs.cache-key }}
+
+      - name: Set Terraform Refresh Flag
+        id: set-refresh-flag
+        env:
+          CACHE_HIT: ${{ steps.tfplan-pr-cache.outputs.cache-hit }}
+          MARKER_FILE: .tfplan-pr-cache/${{ matrix.target.github-environment }}/.pr_plan_marker
+        run: |
+          if [ "$CACHE_HIT" == "true" ]; then
+            echo "refresh=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::State will NOT be refreshed"
+          else
+            echo "refresh=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::State will be refreshed"
+
+            mkdir -p "$(dirname "$MARKER_FILE")"
+            echo "$(date)" > "$MARKER_FILE"
+          fi
+
       - name: Run Terraform plan on affected environment projects
         env:
           ENV_NAME: ${{ matrix.target.env-name }}
           GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
+          REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
           if [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            pnpm nx affected -t tf-plan -c ci --exclude="*,!bootstrapper-${ENV_NAME}"
+            pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
           else
-            pnpm nx affected -t tf-plan -c ci --exclude="!tag:env:${ENV_NAME},bootstrapper-*"
+            pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*"
           fi
 
       - name: Upload Terraform plan report
