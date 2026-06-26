@@ -11,7 +11,7 @@ env:
 jobs:
   gate:
     name: Fork PR Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
@@ -31,7 +31,7 @@ jobs:
 
   validate:
     name: Code Review
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ needs.gate.outputs.run == 'true' }}
     permissions:
       actions: read
@@ -77,7 +77,7 @@ jobs:
     name: Detect Terraform Plan Environments
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       environments: ${{ steps.detect.outputs.environments }}
     permissions:
@@ -228,7 +228,7 @@ jobs:
       - detect-environments
       - terraform
     if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.detect-environments.outputs.environments != '[]' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
