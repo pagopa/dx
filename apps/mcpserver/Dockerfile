@@ -12,6 +12,8 @@ COPY dist ./dist
 WORKDIR /app/dist
 
 # Install from the pruned payload rather than from the monorepo root.
+# Nx pruning already happened before the Docker build; pnpm store prune only
+# removes the temporary pnpm cache so it is not shipped in the final image.
 # The explicit cleanup keeps the final image close to the runtime-only payload
 # instead of shipping the temporary pnpm store and pruning metadata.
 RUN pnpm install --prod --no-frozen-lockfile && \
