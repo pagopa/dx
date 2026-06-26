@@ -91,3 +91,5 @@ onlyBuiltDependencies:
   - protobufjs
 
 packageImportMethod: clone-or-copy
+
+trustLockfile: true
