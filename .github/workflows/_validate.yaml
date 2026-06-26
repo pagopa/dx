@@ -12,6 +12,7 @@ jobs:
       contents: read
       actions: read
       pull-requests: write
+      id-token: write
     uses: ./.github/workflows/validate-v2.yaml
     secrets:
       app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
