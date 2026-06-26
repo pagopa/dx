@@ -148,7 +148,7 @@ describe("add environment command json output", () => {
       { name: "Creating environment...", status: "success", type: "step" },
     ]);
     expect(parseNdjson(stdout.written)).toEqual([
-      { data: { authorizationPrs: [] }, ok: true },
+      { data: { authorizationPrs: [], payload }, ok: true },
     ]);
   });
 });
