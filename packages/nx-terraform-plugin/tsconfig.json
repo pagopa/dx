@@ -5,8 +5,10 @@
     "declaration": true,
     "importHelpers": true,
     "rootDir": "./src",
+    "outDir": "./dist",
     "rewriteRelativeImportExtensions": true,
-    "types": ["node"]
+    "types": ["node"],
+    "emitDeclarationOnly": true,
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
 }
