@@ -84,6 +84,7 @@ jobs:
             const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-cd)$/;
             const matrix = environments
               .filter(({ name }) => planEnvironmentPattern.test(name))
+              .filter(({ name }) => !name.includes("uat"))
               .map(({ name }) => {
                 const [, envName] = name.split("-");
                 return {
@@ -116,6 +117,9 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
     steps:
       - name: Check out repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
