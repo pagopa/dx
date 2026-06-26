@@ -266,11 +266,8 @@ jobs:
 
   report:
     name: Report
-    needs:
-      - gate
-      - get-environments
-      - infra-review
-    if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.get-environments.outputs.environments != '[]' }}
+    needs: infra-review
+    if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
