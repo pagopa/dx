@@ -29,8 +29,8 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-  validate:
-    name: Code Review
+  static-review:
+    name: Static Review
     runs-on: ubuntu-24.04
     if: ${{ needs.gate.outputs.run == 'true' }}
     permissions:
@@ -73,7 +73,7 @@ jobs:
       - name: Run code quality checks on affected projects
         run: pnpm validate
 
-  detect-environments:
+  get-environments:
     name: Detect Terraform Plan Environments
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
@@ -113,16 +113,16 @@ jobs:
               });
             core.setOutput("environments", JSON.stringify(matrix));
 
-  terraform:
-    name: Terraform (${{ matrix.target.github-environment }})
-    needs: detect-environments
-    if: ${{ needs.detect-environments.outputs.environments != '[]' }}
+  infra-review:
+    name: Infra Review (${{ matrix.target.github-environment }})
+    needs: get-environments
+    if: ${{ needs.get-environments.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment: ${{ matrix.target.github-environment }}
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.detect-environments.outputs.environments) }}
+        target: ${{ fromJSON(needs.get-environments.outputs.environments) }}
     permissions:
       actions: read
       contents: read
@@ -225,9 +225,9 @@ jobs:
     name: Report
     needs:
       - gate
-      - detect-environments
-      - terraform
-    if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.detect-environments.outputs.environments != '[]' }}
+      - get-environments
+      - infra-review
+    if: ${{ always() && github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.get-environments.outputs.environments != '[]' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
