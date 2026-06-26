@@ -66,6 +66,20 @@ npm run build
 node ./apps/cli/bin/index.js --help
 ```
 
+## 🔐 Authentication
+
+The CLI requires GitHub authentication for every command **except** `--version`
+and `--help`. Authenticate using one of the following (checked in this order):
+
+1. The `GH_TOKEN` environment variable
+2. The `GITHUB_TOKEN` environment variable
+3. The [GitHub CLI](https://cli.github.com/) — run `gh auth login`
+
+If no credential is found, the CLI exits with an error asking you to log in.
+
+> Telemetry is emitted only for members of the `pagopa` GitHub organization;
+> all other users can use the CLI normally with telemetry disabled.
+
 ## 🛠️ Usage
 
 ### Available Commands
