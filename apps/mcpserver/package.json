@@ -41,6 +41,7 @@
   },
   "scripts": {
     "start": "tsx src/cli.ts",
+    "package": "pnpm --dir ../.. --filter @pagopa/dx-mcpserver deploy --legacy --prod apps/mcpserver/deploy",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "version": "node ./scripts/generate-server-manifest.js"
