@@ -5,8 +5,8 @@ import { z } from "zod";
 import type { ToolEntry } from "../tools/registry.js";
 import type { ToolCallResult } from "../types.js";
 
-import { SERVER_VERSION } from "../server-version.js";
 import { withToolLogging } from "../decorators/tool-usage-monitoring.js";
+import { SERVER_VERSION } from "../server-version.js";
 import { sessionStorage } from "../session.js";
 
 export type CreateServerParams = {

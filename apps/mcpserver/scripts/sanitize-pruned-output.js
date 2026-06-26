@@ -170,7 +170,7 @@ const readJsonFile = (filePath) => JSON.parse(readFileSync(filePath, "utf8"));
 const writePrunedWorkspaceConfig = () => {
   const workspaceConfigContents = readFileSync(workspaceConfigPath, "utf8");
   const prunedWorkspaceConfigContents = workspaceConfigContents.replace(
-    /^packages:\n(?:  - .*\n)+/m,
+    /^packages:\n(?: {2}- .*\n)+/m,
     ["packages:", "  - workspace_modules/**", ""].join("\n"),
   );
 
