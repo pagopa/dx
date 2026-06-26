@@ -1,3 +1,17 @@
+## 0.19.5 (2026-06-25)
+
+### 🩹 Fixes
+
+- Remove "terraform_docs on resources" from pre-commit-config ([#1893](https://github.com/pagopa/dx/pull/1893))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.1.0
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.19.4 (2026-06-23)
 
 ### 🩹 Fixes
