@@ -2,6 +2,9 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "@pagopa/dx-mcpserver",
   "targets": {
+    "docker:build": {
+      "dependsOn": ["prune"]
+    },
     "prune-lockfile": {
       "dependsOn": ["build"],
       "cache": true,
@@ -39,6 +42,7 @@
       "executor": "nx:run-commands",
       "outputs": [
         "{projectRoot}/dist/package.json",
+        "{projectRoot}/dist/pnpm-workspace.yaml",
         "{projectRoot}/dist/workspace_modules/**/package.json"
       ],
       "options": {

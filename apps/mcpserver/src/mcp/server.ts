@@ -5,7 +5,7 @@ import { z } from "zod";
 import type { ToolEntry } from "../tools/registry.js";
 import type { ToolCallResult } from "../types.js";
 
-import packageJson from "../../package.json" with { type: "json" };
+import { SERVER_VERSION } from "../server-version.js";
 import { withToolLogging } from "../decorators/tool-usage-monitoring.js";
 import { sessionStorage } from "../session.js";
 
@@ -21,7 +21,7 @@ export function createServer({
   const logger = getLogger(["mcpserver"]);
   const mcpServer = new McpServer({
     name: "pagopa-dx-mcp-server",
-    version: packageJson.version,
+    version: SERVER_VERSION,
   });
 
   /**

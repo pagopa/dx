@@ -7,22 +7,17 @@ RUN corepack enable
 
 WORKDIR /app
 
-COPY dist ./dist
+COPY dist .
 
-WORKDIR /app/dist
-
-# Install from the pruned payload rather than from the monorepo root.
+# Align with the Nx guide layout: the pruned package.json, lockfile, compiled
+# output, and workspace_modules all live directly under /app.
 # Nx pruning already happened before the Docker build; pnpm store prune only
 # removes the temporary pnpm cache so it is not shipped in the final image.
-# The explicit cleanup keeps the final image close to the runtime-only payload
-# instead of shipping the temporary pnpm store and pruning metadata.
 RUN pnpm install --prod --frozen-lockfile && \
 	pnpm store prune && \
-	rm -rf /root/.local/share/pnpm/store workspace_modules pnpm-lock.yaml pnpm-workspace.yaml
-
-WORKDIR /app
+	rm -rf /root/.local/share/pnpm/store pnpm-lock.yaml pnpm-workspace.yaml
 
 COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1@sha256:46d6625e68cbbdd2efab4a20245977664513f13ffef47915b000d431adcea0b4 /lambda-adapter /opt/extensions/lambda-adapter
 
 EXPOSE 8080
-CMD ["node", "dist/cli.js"]
+CMD ["node", "cli.js"]

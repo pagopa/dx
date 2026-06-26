@@ -4,6 +4,8 @@
  * Nx gives us a pruned lockfile and copies workspace modules, but this repo
  * still relies on pnpm workspace-only features such as devDependencies,
  * catalog: specifiers and workspace:^ references in copied package manifests.
+ * This is a temporary workaround for the current Nx gap around pnpm catalog
+ * support in pruned outputs and should be removed once the upstream fix lands.
  * This script rewrites both the generated manifests and the pruned lockfile so
  * Docker can run pnpm install in isolation, without access to the original
  * monorepo root.
@@ -164,6 +166,19 @@ const writeJsonFile = (filePath, value) => {
 };
 
 const readJsonFile = (filePath) => JSON.parse(readFileSync(filePath, "utf8"));
+
+const writePrunedWorkspaceConfig = () => {
+  const workspaceConfigContents = readFileSync(workspaceConfigPath, "utf8");
+  const prunedWorkspaceConfigContents = workspaceConfigContents.replace(
+    /^packages:\n(?:  - .*\n)+/m,
+    ["packages:", "  - workspace_modules/**", ""].join("\n"),
+  );
+
+  writeFileSync(
+    path.join(distRootPath, "pnpm-workspace.yaml"),
+    prunedWorkspaceConfigContents,
+  );
+};
 
 const sanitizePackageJsonFile = (workspaceConfig, packageJsonPath) => {
   const packageJson = readJsonFile(packageJsonPath);
@@ -471,6 +486,7 @@ const main = () => {
   }
 
   sanitizeLockfile(rootPackageJsonPath, workspacePackageJsonPaths);
+  writePrunedWorkspaceConfig();
 };
 
 main();
