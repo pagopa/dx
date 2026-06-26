@@ -214,6 +214,34 @@ export const getGitHubPAT = async (): Promise<string | undefined> => {
   return undefined;
 };
 
+/** GitHub organization whose members are allowed to emit CLI telemetry. */
+const PAGOPA_ORG = "pagopa";
+
+/**
+ * Returns true when the authenticated user is an active member of the PagoPA
+ * GitHub organization.
+ *
+ * Fails closed: any error (network failure, missing `read:org` scope, 403/404)
+ * resolves to `false` so telemetry stays disabled when membership cannot be
+ * confirmed.
+ *
+ * @param octokit injectable client, primarily for testing; defaults to a client
+ * authenticated with the supplied token.
+ */
+export const isPagopaOrgMember = async (
+  token: string,
+  octokit: Octokit = new Octokit({ auth: token }),
+): Promise<boolean> => {
+  try {
+    const { data } = await octokit.rest.orgs.getMembershipForAuthenticatedUser({
+      org: PAGOPA_ORG,
+    });
+    return data.state === "active";
+  } catch {
+    return false;
+  }
+};
+
 export const fetchLatestTag = ({ client, owner, repo }: GitHubReleaseParam) =>
   ResultAsync.fromPromise(
     // Get repository tags
