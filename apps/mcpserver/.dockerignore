@@ -1,0 +1,5 @@
+# Keep the Docker context limited to the pruned payload produced by Nx.
+*
+!Dockerfile
+!dist/
+!dist/**
