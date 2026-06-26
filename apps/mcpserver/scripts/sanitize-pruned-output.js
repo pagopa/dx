@@ -4,8 +4,9 @@
  * Nx gives us a pruned lockfile and copies workspace modules, but this repo
  * still relies on pnpm workspace-only features such as devDependencies,
  * catalog: specifiers and workspace:^ references in copied package manifests.
- * This script rewrites the generated payload so Docker can run pnpm install in
- * isolation, without access to the original monorepo root.
+ * This script rewrites both the generated manifests and the pruned lockfile so
+ * Docker can run pnpm install in isolation, without access to the original
+ * monorepo root.
  */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
@@ -69,7 +70,7 @@ const parseWorkspaceConfig = () => {
       continue;
     }
 
-    const namedCatalogMatch = /^ {2}([^:#]+):\s*$/.exec(line);
+    const namedCatalogMatch = /^ {2}(\S[^:#]*):\s*$/.exec(line);
 
     if (namedCatalogMatch) {
       activeCatalogName = stripWrappingQuotes(namedCatalogMatch[1].trim());
@@ -162,8 +163,10 @@ const writeJsonFile = (filePath, value) => {
   writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 };
 
+const readJsonFile = (filePath) => JSON.parse(readFileSync(filePath, "utf8"));
+
 const sanitizePackageJsonFile = (workspaceConfig, packageJsonPath) => {
-  const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+  const packageJson = readJsonFile(packageJsonPath);
 
   // The pruned payload is installed with --prod, so keeping devDependencies only
   // introduces workspace-only references that cannot be resolved in Docker.
@@ -183,6 +186,247 @@ const sanitizePackageJsonFile = (workspaceConfig, packageJsonPath) => {
   );
 
   writeJsonFile(packageJsonPath, packageJson);
+};
+
+const parseLockfileImporters = (lockfileContents) => {
+  const [beforePackages, packagesContents] =
+    lockfileContents.split("\npackages:\n");
+
+  if (!beforePackages || packagesContents === undefined) {
+    throw new Error("Expected a pnpm lockfile with an importers section.");
+  }
+
+  const beforePackagesLines = beforePackages.split("\n");
+  const importersIndex = beforePackagesLines.indexOf("importers:");
+
+  if (importersIndex === -1) {
+    throw new Error("Expected an importers section in the pruned lockfile.");
+  }
+
+  const headerLines = beforePackagesLines.slice(0, importersIndex + 1);
+  const importerLines = beforePackagesLines.slice(importersIndex + 1);
+  const importers = {};
+  const importerOrder = [];
+  let currentImporterPath = null;
+  let currentSectionName = null;
+  let currentPackageName = null;
+
+  for (const line of importerLines) {
+    if (!line.trim()) {
+      continue;
+    }
+
+    const importerMatch = /^ {2}(\S.*):\s*$/.exec(line);
+
+    if (importerMatch) {
+      currentImporterPath = stripWrappingQuotes(importerMatch[1].trim());
+      importers[currentImporterPath] = {};
+      importerOrder.push(currentImporterPath);
+      currentSectionName = null;
+      currentPackageName = null;
+      continue;
+    }
+
+    if (!currentImporterPath) {
+      continue;
+    }
+
+    const sectionMatch =
+      /^ {4}(dependencies|optionalDependencies|peerDependencies|devDependencies):\s*$/.exec(
+        line,
+      );
+
+    if (sectionMatch) {
+      currentSectionName = sectionMatch[1];
+      importers[currentImporterPath][currentSectionName] = {};
+      currentPackageName = null;
+      continue;
+    }
+
+    if (!currentSectionName) {
+      continue;
+    }
+
+    const packageMatch = /^ {6}(\S.*):\s*$/.exec(line);
+
+    if (packageMatch) {
+      currentPackageName = stripWrappingQuotes(packageMatch[1].trim());
+      importers[currentImporterPath][currentSectionName][currentPackageName] =
+        {};
+      continue;
+    }
+
+    if (!currentPackageName) {
+      continue;
+    }
+
+    const specifierMatch = /^ {8}specifier:\s+(.+)\s*$/.exec(line);
+
+    if (specifierMatch) {
+      importers[currentImporterPath][currentSectionName][
+        currentPackageName
+      ].specifier = stripWrappingQuotes(specifierMatch[1].trim());
+      continue;
+    }
+
+    const versionMatch = /^ {8}version:\s+(.+)\s*$/.exec(line);
+
+    if (versionMatch) {
+      importers[currentImporterPath][currentSectionName][
+        currentPackageName
+      ].version = stripWrappingQuotes(versionMatch[1].trim());
+    }
+  }
+
+  return {
+    headerText: headerLines.join("\n"),
+    importerOrder,
+    importers,
+    packagesText: `packages:\n${packagesContents}`,
+  };
+};
+
+const formatLockfileKey = (value) => {
+  if (/^[A-Za-z0-9._-]+$/.test(value)) {
+    return value;
+  }
+
+  return `'${value.replace(/'/g, "''")}'`;
+};
+
+const toLockfileImporterPath = (packageJsonPath) => {
+  const importerDirectoryPath = path.dirname(packageJsonPath);
+  const relativePath = path.relative(distRootPath, importerDirectoryPath);
+
+  if (!relativePath) {
+    return ".";
+  }
+
+  return relativePath.split(path.sep).join("/");
+};
+
+const getLockfilePackageEntry = (
+  importers,
+  importerPath,
+  sectionName,
+  packageName,
+) => {
+  const importerSections = importers[importerPath];
+
+  if (!importerSections || typeof importerSections !== "object") {
+    throw new Error(`Missing lockfile importer ${importerPath}.`);
+  }
+
+  const sectionEntry = importerSections[sectionName]?.[packageName];
+
+  if (sectionEntry) {
+    return sectionEntry;
+  }
+
+  for (const dependencyGroup of Object.values(importerSections)) {
+    if (dependencyGroup && typeof dependencyGroup === "object") {
+      const dependencyEntry = dependencyGroup[packageName];
+
+      if (dependencyEntry) {
+        return dependencyEntry;
+      }
+    }
+  }
+
+  throw new Error(
+    `Missing lockfile entry for ${importerPath}:${sectionName}:${packageName}.`,
+  );
+};
+
+const serializeLockfileSections = (importers, importerPath, packageJson) => {
+  const lines = [];
+
+  for (const sectionName of [
+    "dependencies",
+    "optionalDependencies",
+    "peerDependencies",
+    "devDependencies",
+  ]) {
+    const dependencies = packageJson[sectionName];
+
+    if (!dependencies || typeof dependencies !== "object") {
+      continue;
+    }
+
+    const entries = Object.entries(dependencies);
+
+    if (entries.length === 0) {
+      continue;
+    }
+
+    lines.push(`    ${sectionName}:`);
+
+    for (const [packageName, specifier] of entries) {
+      const lockfileEntry = getLockfilePackageEntry(
+        importers,
+        importerPath,
+        sectionName,
+        packageName,
+      );
+
+      lines.push(`      ${formatLockfileKey(packageName)}:`);
+      lines.push(`        specifier: ${specifier}`);
+      lines.push(`        version: ${lockfileEntry.version}`);
+    }
+  }
+
+  return lines;
+};
+
+const sanitizeLockfile = (rootPackageJsonPath, workspacePackageJsonPaths) => {
+  const lockfilePath = path.join(distRootPath, "pnpm-lock.yaml");
+  const lockfileContents = readFileSync(lockfilePath, "utf8");
+  const { headerText, importerOrder, importers, packagesText } =
+    parseLockfileImporters(lockfileContents);
+  const packageJsonByImporterPath = new Map(
+    [rootPackageJsonPath, ...workspacePackageJsonPaths].map(
+      (packageJsonPath) => [
+        toLockfileImporterPath(packageJsonPath),
+        readJsonFile(packageJsonPath),
+      ],
+    ),
+  );
+  const importerLines = [];
+
+  for (const importerPath of importerOrder) {
+    const packageJson = packageJsonByImporterPath.get(importerPath);
+
+    importerLines.push(`  ${formatLockfileKey(importerPath)}:`);
+
+    if (!packageJson) {
+      const importerSections = importers[importerPath];
+
+      for (const [sectionName, dependencies] of Object.entries(
+        importerSections,
+      )) {
+        importerLines.push(`    ${sectionName}:`);
+
+        for (const [packageName, dependencyEntry] of Object.entries(
+          dependencies,
+        )) {
+          importerLines.push(`      ${formatLockfileKey(packageName)}:`);
+          importerLines.push(`        specifier: ${dependencyEntry.specifier}`);
+          importerLines.push(`        version: ${dependencyEntry.version}`);
+        }
+      }
+
+      continue;
+    }
+
+    importerLines.push(
+      ...serializeLockfileSections(importers, importerPath, packageJson),
+    );
+  }
+
+  writeFileSync(
+    lockfilePath,
+    `${headerText}\n${importerLines.join("\n")}\n\n${packagesText}\n`,
+  );
 };
 
 const collectWorkspacePackageJsonPaths = (directoryPath) => {
@@ -225,6 +469,8 @@ const main = () => {
   for (const workspacePackageJsonPath of workspacePackageJsonPaths) {
     sanitizePackageJsonFile(workspaceConfig, workspacePackageJsonPath);
   }
+
+  sanitizeLockfile(rootPackageJsonPath, workspacePackageJsonPaths);
 };
 
 main();

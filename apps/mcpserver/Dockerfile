@@ -16,7 +16,7 @@ WORKDIR /app/dist
 # removes the temporary pnpm cache so it is not shipped in the final image.
 # The explicit cleanup keeps the final image close to the runtime-only payload
 # instead of shipping the temporary pnpm store and pruning metadata.
-RUN pnpm install --prod --no-frozen-lockfile && \
+RUN pnpm install --prod --frozen-lockfile && \
 	pnpm store prune && \
 	rm -rf /root/.local/share/pnpm/store workspace_modules pnpm-lock.yaml pnpm-workspace.yaml
 
