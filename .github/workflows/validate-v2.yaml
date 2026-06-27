@@ -1,8 +1,7 @@
 name: Validate
 
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_call:
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
