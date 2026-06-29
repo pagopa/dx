@@ -265,31 +265,6 @@ export const getMonorepoInitialAnswers = ({
 
 type TerraformRepositoryCreationStep = "apply" | "init";
 
-const SENSITIVE_TERRAFORM_OUTPUT_PATTERNS = [
-  /(\b(?:access[_-]?token|api[_-]?key|client[_-]?secret|password|private[_-]?key|secret|token)\b\s*[:=]\s*)(["'])([^"'\n]*)(\2)/gi,
-  /(\b(?:access[_-]?token|api[_-]?key|client[_-]?secret|password|private[_-]?key|secret|token)\b\s*[:=]\s*)([^\s\n]+)/gi,
-  /\b(Bearer\s+)[A-Za-z0-9._-]+/gi,
-  /\bgh[pousr]_[A-Za-z0-9_]+\b/g,
-] as const;
-
-const sanitizeTerraformErrorOutput = (output: string): string =>
-  SENSITIVE_TERRAFORM_OUTPUT_PATTERNS.reduce(
-    (sanitized, pattern) =>
-      sanitized.replace(pattern, (match, prefix, quote) => {
-        if (match.startsWith("gh")) {
-          return "[REDACTED]";
-        }
-        if (typeof prefix !== "string") {
-          return "[REDACTED]";
-        }
-        if (typeof quote === "string" && quote.length > 0) {
-          return `${prefix}${quote}[REDACTED]${quote}`;
-        }
-        return `${prefix}[REDACTED]`;
-      }),
-    output,
-  );
-
 const formatTerraformRepositoryCreationFailureDetails = (
   cause: unknown,
 ): string => {
@@ -303,7 +278,7 @@ const formatTerraformRepositoryCreationFailureDetails = (
       (detail): detail is string =>
         typeof detail === "string" && detail.trim().length > 0,
     )
-    .map((detail) => sanitizeTerraformErrorOutput(detail.trim()))
+    .map((detail) => detail.trim())
     .join("\n");
 };
 

@@ -90,8 +90,7 @@ describe("makeInitCommand", () => {
     const terraformError = new ExecaError();
     terraformError.shortMessage =
       "Command failed with exit code 1: terraform init";
-    terraformError.stderr =
-      'Error: failed to load backend\naccess_token = "ghp_secret"';
+    terraformError.stderr = "Error: failed to load backend";
     const payload = makePayload();
     getPlopInstance.mockResolvedValue({});
     collectMonorepoPayload.mockResolvedValue({ generator: {}, payload });
@@ -133,6 +132,5 @@ describe("makeInitCommand", () => {
     );
     expect(message).toContain("Error: failed to load backend");
     expect(message).not.toContain("Failed to create GitHub repository.");
-    expect(message).not.toContain("ghp_secret");
   });
 });

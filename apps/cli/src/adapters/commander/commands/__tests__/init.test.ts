@@ -360,8 +360,7 @@ describe("makeInitCommand", () => {
     const terraformError = makeExecaError({
       shortMessage:
         "Command failed with exit code 1: terraform apply -auto-approve",
-      stderr:
-        'Error: repository already exists\npassword = "super-secret-token"',
+      stderr: "Error: repository already exists",
     });
     const repoTerraform = vi.fn((strings: TemplateStringsArray) =>
       strings.join("").includes("apply")
@@ -387,8 +386,6 @@ describe("makeInitCommand", () => {
       "Command failed with exit code 1: terraform apply -auto-approve",
     );
     expect(message).toContain("Error: repository already exists");
-    expect(message).toContain('password = "[REDACTED]"');
     expect(message).not.toContain("Failed to create GitHub repository.");
-    expect(message).not.toContain("super-secret-token");
   });
 });
