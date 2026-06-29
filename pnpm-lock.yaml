@@ -47,9 +47,6 @@ catalogs:
     execa:
       specifier: ^9.6.1
       version: 9.6.1
-    handlebars:
-      specifier: ^4.7.9
-      version: 4.7.9
     js-yaml:
       specifier: ^4.1.1
       version: 4.2.0
@@ -1148,9 +1145,6 @@ importers:
 
   packages/dx-tasks:
     dependencies:
-      handlebars:
-        specifier: 'catalog:'
-        version: 4.7.9
       octokit:
         specifier: 'catalog:'
         version: 5.0.5
@@ -1225,9 +1219,6 @@ importers:
       execa:
         specifier: 'catalog:'
         version: 9.6.1
-      handlebars:
-        specifier: 'catalog:'
-        version: 4.7.9
       octokit:
         specifier: 'catalog:'
         version: 5.0.5

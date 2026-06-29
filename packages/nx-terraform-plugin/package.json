@@ -50,7 +50,6 @@
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "^22.7.1",
     "execa": "catalog:",
-    "handlebars": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
     "tslib": "^2.8.1",

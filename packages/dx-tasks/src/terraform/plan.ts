@@ -1,6 +1,5 @@
 /** This module runs Terraform plans for dx-tasks without external process helpers. */
 
-import Handlebars from "handlebars";
 import util from "node:util";
 import * as z from "zod/mini";
 
@@ -59,50 +58,41 @@ export interface TerraformPlanReport {
   summaryLine?: string;
 }
 
-interface TerraformPlanReportTemplateContext {
-  reports: readonly TerraformPlanReportTemplateItem[];
-}
-
-interface TerraformPlanReportTemplateItem extends TerraformPlanReport {
-  renderedNotices: readonly string[];
-}
-
-const terraformPlanMarkdownTemplate =
-  Handlebars.compile<TerraformPlanReportTemplateContext>(`{{#each reports}}
-### Terraform Plan: \`{{modulePath}}\` - {{#if success}}✅ Success{{else}}❌ Failed{{/if}}
-{{#each renderedNotices}}
-{{{this}}}
-
-{{/each}}
-{{#if summaryLine}}
-{{summaryLine}}
-{{/if}}
-
-<details>
-<summary>Show full plan</summary>
-
-\`\`\`hcl
-{{{planOutput}}}
-\`\`\`
-
-</details>
-
-{{/each}}
-`);
-
 const noPlanOutputMessage = "No plan output available.";
 
 const renderTerraformPlanReports = (
   reports: readonly TerraformPlanReport[],
-): string => {
-  const context: TerraformPlanReportTemplateContext = {
-    reports: reports.map((report) => ({
-      ...report,
-      renderedNotices: report.notices.map(renderNoticeMarkdown),
-    })),
-  };
+): string => reports.map(renderTerraformPlanReport).join("\n\n").trim();
 
-  return terraformPlanMarkdownTemplate(context).trim();
+const renderTerraformPlanReport = ({
+  modulePath,
+  notices,
+  planOutput,
+  success,
+  summaryLine,
+}: TerraformPlanReport): string => {
+  const status = success ? "✅ Success" : "❌ Failed";
+  const heading = `### Terraform Plan: \`${modulePath}\` - ${status}`;
+  const renderedNotices = notices.map(renderNoticeMarkdown);
+  const details = `<details>
+<summary>Show full plan</summary>
+
+\`\`\`hcl
+${planOutput}
+\`\`\`
+
+</details>`;
+
+  if (renderedNotices.length > 0) {
+    const noticeSection = renderedNotices.join("\n\n");
+    const summarySection = summaryLine ? `\n\n${summaryLine}` : "";
+
+    return `${heading}\n${noticeSection}${summarySection}\n\n${details}`;
+  }
+
+  const summarySection = summaryLine ? `\n${summaryLine}` : "";
+
+  return `${heading}${summarySection}\n\n${details}`;
 };
 
 export const terraformPlanReportNamespace: ReportNamespace<

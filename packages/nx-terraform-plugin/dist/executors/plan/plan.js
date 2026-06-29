@@ -3,7 +3,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as z$1 from "zod/mini";
 import { Octokit } from "octokit";
-import Handlebars from "handlebars";
 import util from "node:util";
 import childProcess from "node:child_process";
 import { z } from "zod/v4";
@@ -347,33 +346,21 @@ const terraformPlanReportShape = {
 	summaryLine: z$1.optional(z$1.string().check(z$1.minLength(1)))
 };
 const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
-const terraformPlanMarkdownTemplate = Handlebars.compile(`{{#each reports}}
-### Terraform Plan: \`{{modulePath}}\` - {{#if success}}✅ Success{{else}}❌ Failed{{/if}}
-{{#each renderedNotices}}
-{{{this}}}
-
-{{/each}}
-{{#if summaryLine}}
-{{summaryLine}}
-{{/if}}
-
-<details>
+const noPlanOutputMessage = "No plan output available.";
+const renderTerraformPlanReports = (reports) => reports.map(renderTerraformPlanReport).join("\n\n").trim();
+const renderTerraformPlanReport = ({ modulePath, notices, planOutput, success, summaryLine }) => {
+	const heading = `### Terraform Plan: \`${modulePath}\` - ${success ? "✅ Success" : "❌ Failed"}`;
+	const renderedNotices = notices.map(renderNoticeMarkdown);
+	const details = `<details>
 <summary>Show full plan</summary>
 
 \`\`\`hcl
-{{{planOutput}}}
+${planOutput}
 \`\`\`
 
-</details>
-
-{{/each}}
-`);
-const noPlanOutputMessage = "No plan output available.";
-const renderTerraformPlanReports = (reports) => {
-	return terraformPlanMarkdownTemplate({ reports: reports.map((report) => ({
-		...report,
-		renderedNotices: report.notices.map(renderNoticeMarkdown)
-	})) }).trim();
+</details>`;
+	if (renderedNotices.length > 0) return `${heading}\n${renderedNotices.join("\n\n")}${summaryLine ? `\n\n${summaryLine}` : ""}\n\n${details}`;
+	return `${heading}${summaryLine ? `\n${summaryLine}` : ""}\n\n${details}`;
 };
 const terraformPlanReportNamespace = {
 	name: TERRAFORM_PLAN_NAMESPACE,
