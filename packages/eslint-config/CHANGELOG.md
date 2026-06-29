@@ -1,3 +1,14 @@
+## 6.1.0 (2026-06-25)
+
+### 🚀 Features
+
+- Support ESLint 9 alongside ESLint 10 ([#1883](https://github.com/pagopa/dx/pull/1883))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 6.0.4 (2026-05-05)
 
 ### 🩹 Fixes

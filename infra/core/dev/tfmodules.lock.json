@@ -6,10 +6,10 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-infra/aws/0.0.5"
   },
   "azure": {
-    "hash": "a11ca74d3a02d9ceda237dc3a639937964558e768248cd8b6f5fced87dadde2b",
-    "version": "4.2.1",
+    "hash": "db29c1286dc319239efaafe8f775b6f12ba02c65686ff269d836385a055681ca",
+    "version": "4.3.0",
     "name": "azure_core_infra",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/4.2.1"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-infra/azurerm/4.3.0"
   },
   "azure.custom_roles.dx_app_cd_resource_group_deploy": {
     "hash": "32687e53abb8bcb58f39687703a09dd210da24595996f017fa238c43c3145cb9",

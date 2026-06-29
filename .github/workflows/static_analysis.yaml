@@ -339,34 +339,6 @@ jobs:
             add_to_summary ""
           fi
 
-          # Trivy custom policies output
-          if [ -f "/tmp/trivy-output.json" ] && jq -e '[.Results[]? | .Misconfigurations[]?] | length > 0' /tmp/trivy-output.json > /dev/null 2>&1; then
-            add_markdown \
-              '> [!WARNING]' \
-              '> ### ⚠️ Trivy detected forbidden Terraform patterns' \
-              '>' \
-              '> The following findings must be resolved before this check becomes enforced.' \
-              ''
-
-            TRIVY_TABLE=$(jq -r '
-              ["| Severity | ID | File | Line | Title |",
-               "|----------|----|------|------|-------|"] +
-              [.Results[] |
-                .Target as $target |
-                .Misconfigurations[]? |
-                (if (.PrimaryURL // "") != "" then
-                  "[" + .AVDID + "](" + .PrimaryURL + ")"
-                else
-                  .AVDID
-                end) as $id_cell |
-                "| " + .Severity + " | " + $id_cell + " | `" + $target + "` | L" + (.CauseMetadata.StartLine | tostring) + " | " + .Title + " |"
-              ] | .[]' /tmp/trivy-output.json)
-
-            echo "$TRIVY_TABLE" >> "$GITHUB_STEP_SUMMARY"
-            echo "$TRIVY_TABLE" >> "$SUMMARY_FILE"
-            add_to_summary ''
-          fi
-
           # Pre-commit output
           if [ -f "/tmp/pre-commit-output.log" ]; then
             # Show output log
@@ -392,6 +364,58 @@ jobs:
           # Set the summary file path as output
           echo "summary_file=$SUMMARY_FILE" >> "$GITHUB_OUTPUT"
           echo "decouple_string=Run ${CHECK_INFO} on ${EXECUTION_SCOPE}" >> "$GITHUB_OUTPUT"
+
+      - name: Summarize Trivy results
+        if: always()
+        id: trivy_summary
+        shell: bash
+        run: |
+          TRIVY_SUMMARY_FILE="/tmp/trivy-summary.md"
+          TRIVY_SEARCH_PATTERN="<!-- pagopa-dx-static-analysis-trivy-report -->"
+          HAS_FINDINGS=false
+
+          if [ -f "/tmp/trivy-output.json" ] && jq -e '[.Results[]? | .Misconfigurations[]?] | length > 0' /tmp/trivy-output.json > /dev/null 2>&1; then
+            HAS_FINDINGS=true
+
+            TRIVY_TABLE=$(jq -r '
+              ["| Severity | ID | File | Line | Title |",
+               "|----------|----|------|------|-------|"] +
+              [.Results[] |
+                .Target as $target |
+                .Misconfigurations[]? |
+                (if (.PrimaryURL // "") != "" then
+                  "[" + .AVDID + "](" + .PrimaryURL + ")"
+                else
+                  .AVDID
+                end) as $id_cell |
+                "| " + .Severity + " | " + $id_cell + " | `" + $target + "` | L" + (.CauseMetadata.StartLine | tostring) + " | " + .Title + " |"
+              ] | .[]' /tmp/trivy-output.json)
+
+            {
+              echo "$TRIVY_SEARCH_PATTERN"
+              echo ""
+              echo "> [!WARNING]"
+              echo "> ### ⚠️ Trivy detected forbidden Terraform patterns"
+              echo ">"
+              echo "> The following findings must be resolved before this check becomes enforced."
+              echo ""
+              echo "$TRIVY_TABLE"
+              echo ""
+            } > "$TRIVY_SUMMARY_FILE"
+
+            cat "$TRIVY_SUMMARY_FILE" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+          echo "has_findings=$HAS_FINDINGS" >> "$GITHUB_OUTPUT"
+          echo "summary_file=$TRIVY_SUMMARY_FILE" >> "$GITHUB_OUTPUT"
+          echo "search_pattern=$TRIVY_SEARCH_PATTERN" >> "$GITHUB_OUTPUT"
+
+      - name: Post Trivy Summary on PR
+        if: always() && github.event_name == 'pull_request' && steps.trivy_summary.outputs.has_findings == 'true'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ steps.trivy_summary.outputs.summary_file }}
+          search-pattern: ${{ steps.trivy_summary.outputs.search_pattern }}
 
       - name: Post Summary on PR
         if: always() && github.event_name == 'pull_request'

@@ -1,3 +1,13 @@
+## 4.4.0 (2026-06-25)
+
+### 🚀 Features
+
+- Allow to enable IP masking in Application Insights ([#1880](https://github.com/pagopa/dx/pull/1880))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.3.0 (2026-06-23)
 
 ### 🚀 Features
