@@ -20,7 +20,7 @@ const createTaskDispatcher = ({ context = {} } = {}) => {
 	const dispatchTask = async (name, payload) => {
 		const task = tasks.get(name);
 		if (!task) throw new Error(`Unknown task "${name}"`);
-		return await task.dispatch(payload);
+		return task.dispatch(payload);
 	};
 	return {
 		dispatchTask,

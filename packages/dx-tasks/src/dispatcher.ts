@@ -14,10 +14,7 @@ export interface TaskDefinition<TPayload, TResult = void> {
 }
 
 export interface TaskDispatcher {
-  dispatchTask: <TResult = void>(
-    name: string,
-    payload: unknown,
-  ) => Promise<TResult>;
+  dispatchTask: (name: string, payload: unknown) => Promise<unknown>;
   registerTask: <TPayload, TResult = void>(
     task: TaskDefinition<TPayload, TResult>,
   ) => void;
@@ -55,17 +52,17 @@ export const createTaskDispatcher = ({
     });
   };
 
-  const dispatchTask = async <TResult = void>(
+  const dispatchTask = async (
     name: string,
     payload: unknown,
-  ) => {
+  ): Promise<unknown> => {
     const task = tasks.get(name);
 
     if (!task) {
       throw new Error(`Unknown task "${name}"`);
     }
 
-    return (await task.dispatch(payload)) as TResult;
+    return task.dispatch(payload);
   };
 
   return {
