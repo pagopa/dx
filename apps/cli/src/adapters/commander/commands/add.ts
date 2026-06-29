@@ -166,75 +166,32 @@ export const parseAddEnvironmentCommandOptions = (
 const buildBaseEnvironmentInitialAnswers = (
   options: AddEnvironmentCommandOptions,
 ): DeploymentEnvironmentInitialAnswers => {
-  const initialAnswers: DeploymentEnvironmentInitialAnswers = {};
-
-  if (
-    options.account?.length ||
-    options.location?.length ||
-    options.name ||
-    options.prefix
-  ) {
-    initialAnswers.env = {};
-  }
-
-  if (options.name) {
-    initialAnswers.env = {
-      ...initialAnswers.env,
-      name: options.name,
-    };
-  }
-
-  if (options.prefix) {
-    initialAnswers.env = {
-      ...initialAnswers.env,
-      prefix: options.prefix,
-    };
-  }
-
-  if (options.account?.length) {
-    initialAnswers.env = {
-      ...initialAnswers.env,
+  const env = {
+    ...(options.name && { name: options.name }),
+    ...(options.prefix && { prefix: options.prefix }),
+    ...(options.account?.length && {
       cloudAccountIds: Array.from(new Set(options.account)),
-    };
-  }
-
-  if (options.location?.length) {
-    initialAnswers.env = {
-      ...initialAnswers.env,
+    }),
+    ...(options.location?.length && {
       locations: Object.fromEntries(
         options.location.map(({ accountId, location }) => [
           accountId,
           location as AzureLocation,
         ]),
       ),
-    };
-  }
+    }),
+  };
 
-  if (options.businessUnit || options.managementTeam) {
-    initialAnswers.tags = {};
-  }
+  const tags = {
+    ...(options.businessUnit && { BusinessUnit: options.businessUnit }),
+    ...(options.managementTeam && { ManagementTeam: options.managementTeam }),
+  };
 
-  if (options.businessUnit) {
-    initialAnswers.tags = {
-      ...initialAnswers.tags,
-      BusinessUnit: options.businessUnit,
-    };
-  }
-
-  if (options.managementTeam) {
-    initialAnswers.tags = {
-      ...initialAnswers.tags,
-      ManagementTeam: options.managementTeam,
-    };
-  }
-
-  if (options.domain) {
-    initialAnswers.workspace = {
-      domain: options.domain,
-    };
-  }
-
-  return initialAnswers;
+  return {
+    ...(Object.keys(env).length > 0 && { env }),
+    ...(Object.keys(tags).length > 0 && { tags }),
+    ...(options.domain && { workspace: { domain: options.domain } }),
+  };
 };
 
 export const getEnvironmentInitialAnswers = async (
@@ -264,25 +221,15 @@ export const getEnvironmentInitialAnswers = async (
           key: privateKey,
         };
 
-  if (options.yes || runnerAppCredentials) {
-    initialAnswers.init = {};
-  }
-
-  if (options.yes) {
-    initialAnswers.init = {
-      ...initialAnswers.init,
-      confirm: true,
-    };
-  }
-
-  if (runnerAppCredentials) {
-    initialAnswers.init = {
-      ...initialAnswers.init,
-      runnerAppCredentials,
-    };
-  }
-
-  return initialAnswers;
+  return {
+    ...initialAnswers,
+    ...((options.yes || runnerAppCredentials) && {
+      init: {
+        ...(options.yes && { confirm: true }),
+        ...(runnerAppCredentials && { runnerAppCredentials }),
+      },
+    }),
+  };
 };
 
 /**

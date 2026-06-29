@@ -72,6 +72,11 @@ export const payloadSchema = z.object({
 
 export type Payload = z.infer<typeof payloadSchema>;
 
+/**
+ * Prefilled answers supplied up-front by the caller (e.g. CLI flags), used to
+ * skip the matching prompts. Identifies cloud accounts by id and locations by
+ * account id, since the full domain objects aren't available before resolving.
+ */
 export const initialAnswersSchema = z.object({
   env: z
     .object({
@@ -104,6 +109,12 @@ export const initialAnswersSchema = z.object({
 
 export type InitialAnswers = z.infer<typeof initialAnswersSchema>;
 
+/**
+ * Answers gathered from the interactive base prompts. Mirrors {@link initialAnswersSchema}
+ * but holds the values produced by the prompt session: cloud accounts are full
+ * domain objects (resolved from inquirer choices) rather than ids. Only questions
+ * not already prefilled are asked, so every field is optional here too.
+ */
 const basePromptAnswersSchema = z.object({
   env: z
     .object({
