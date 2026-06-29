@@ -14,6 +14,7 @@ import {
   EnvironmentInitStatus,
   environmentSchema,
   getInitializationStatus,
+  hasUserPermissionToInitialize,
 } from "../../../../domain/environment.js";
 import * as azure from "../../../azure/locations.js";
 
@@ -201,6 +202,14 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
     });
 
     assert.ok(initConfirm.init, "Can't proceed without initialization");
+
+    assert.ok(
+      await hasUserPermissionToInitialize(
+        deps.cloudAccountService,
+        payload.env,
+      ),
+      "You don't have permission to initialize this environment. Ask your Engineering Leader to initialize it for you.",
+    );
 
     const missingRemoteBackend = initStatus.issues.some(
       (issue) => issue.type === "MISSING_REMOTE_BACKEND",

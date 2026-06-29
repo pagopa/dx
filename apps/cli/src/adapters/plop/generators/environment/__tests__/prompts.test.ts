@@ -229,7 +229,7 @@ describe("prompts", () => {
     }
   });
 
-  it("does not block initialization when the permission preflight is negative", async () => {
+  it("blocks initialization when the permission preflight is negative", async () => {
     const cloudAccount: CloudAccount = {
       csp: "azure",
       defaultLocation: "italynorth",
@@ -271,32 +271,26 @@ describe("prompts", () => {
       })
       .mockResolvedValueOnce({
         init: true,
-      })
-      .mockResolvedValueOnce({
-        runnerAppCredentials: {
-          clientId: "app-client-id",
-          id: "app-id",
-          installationId: "installation-id",
-          key: "private-key",
-        },
       });
 
     try {
-      const result = await prompts({
-        cloudAccountRepository: {
-          list: vi.fn().mockResolvedValue([cloudAccount]),
-        },
-        cloudAccountService,
-        github: {
-          owner: "pagopa",
-          repo: "dx",
-        },
-      })(inquirer);
-
-      expect(result.init?.runnerAppCredentials).toBeDefined();
+      await expect(
+        prompts({
+          cloudAccountRepository: {
+            list: vi.fn().mockResolvedValue([cloudAccount]),
+          },
+          cloudAccountService,
+          github: {
+            owner: "pagopa",
+            repo: "dx",
+          },
+        })(inquirer),
+      ).rejects.toThrow(
+        "You don't have permission to initialize this environment",
+      );
       expect(
         cloudAccountService.hasUserPermissionToInitialize,
-      ).not.toHaveBeenCalled();
+      ).toHaveBeenCalledWith(cloudAccount.id);
     } finally {
       promptSpy.mockRestore();
       consoleLogSpy.mockRestore();
