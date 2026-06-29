@@ -75,9 +75,19 @@ describe("getGithubRepo", () => {
     });
     const result = getGithubRepo();
 
-    await expect(result).rejects.toThrow(
-      "Failed to read git remote origin URL",
-    );
+    await expect(result).rejects.toThrow("fatal: not in a git directory");
+    await expect(result).rejects.toHaveProperty("cause", gitFailure);
+  });
+
+  it("should surface the real cause when exit 1 also reports an error", async () => {
+    const gitFailure = mockGitRemoteOriginUrl({
+      exitCode: 1,
+      stderr: "error: cannot read config file",
+      stdout: "",
+    });
+    const result = getGithubRepo();
+
+    await expect(result).rejects.toThrow("error: cannot read config file");
     await expect(result).rejects.toHaveProperty("cause", gitFailure);
   });
 

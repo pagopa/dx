@@ -39,9 +39,11 @@ const mocks = vi.hoisted(() => {
       (_env: unknown, output: "json" | "text" | undefined) => output ?? "text",
     ),
     runMonorepoActions: vi.fn(),
-    tf$: vi.fn(async (...args: unknown[]) => {
+    tf$: vi.fn((...args: unknown[]): unknown => {
       void args;
-      return { stdout: '{"user":{"name":"test@example.com"}}' };
+      return Promise.resolve({
+        stdout: '{"user":{"name":"test@example.com"}}',
+      });
     }),
     trackStepMock,
   };
@@ -367,11 +369,10 @@ describe("makeInitCommand", () => {
         ? Promise.reject(terraformError)
         : Promise.resolve({ stdout: "" }),
     );
-    mocks.tf$.mockImplementation(
-      (...args: unknown[]) =>
-        (Array.isArray(args[0])
-          ? Promise.resolve({ stdout: '{"user":{"name":"test@example.com"}}' })
-          : repoTerraform) as unknown as Promise<{ stdout: string }>,
+    mocks.tf$.mockImplementation((...args: unknown[]) =>
+      Array.isArray(args[0])
+        ? Promise.resolve({ stdout: '{"user":{"name":"test@example.com"}}' })
+        : repoTerraform,
     );
 
     await runInitCommand("json");
