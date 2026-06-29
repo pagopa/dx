@@ -25,6 +25,7 @@ import {
   runMonorepoActions,
 } from "../../plop/index.js";
 import { asError, reportCommandError } from "../command-errors.js";
+import { toErrorMessage } from "../error-reporting.js";
 import {
   createCommandPresenter,
   resolveOutputMode,
@@ -165,24 +166,37 @@ const azureAccountSchema = z.object({
   }),
 });
 
+const AZ_LOGIN_REQUIRED_MESSAGE =
+  "Please log in to Azure CLI using `az login` before running this command.";
+
+const mapAzAccessError = (cause: unknown): Error =>
+  new Error(toErrorMessage(cause), { cause });
+
 const ensureAzLogin = async (): Promise<string> => {
-  const { stdout } = await tf$`az account show`;
+  const { stdout } = await tf$`az account show`.catch((cause: unknown) => {
+    throw asError(AZ_LOGIN_REQUIRED_MESSAGE)(cause);
+  });
   // `az account show` reads the cached CLI context, but `az group list`
   // fails when the current session token has expired.
-  await tf$`az group list`;
+  await tf$`az group list`.catch((cause: unknown) => {
+    throw mapAzAccessError(cause);
+  });
   const parsed = JSON.parse(stdout);
   const { user } = azureAccountSchema.parse(parsed);
   return user.name;
 };
+
+const mapAzLoginCheckError = (cause: unknown): Error =>
+  cause instanceof Error
+    ? cause
+    : new Error("Failed to check Azure CLI login status.", { cause });
 
 const trackAzLogin = (presenter: CommandPresenter) =>
   trackStep(
     presenter,
     "Checking Azure login status...",
     ensureAzLogin,
-    asError(
-      "Please log in to Azure CLI using `az login` before running this command.",
-    ),
+    mapAzLoginCheckError,
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
@@ -249,6 +263,64 @@ export const getMonorepoInitialAnswers = ({
   return initialAnswers;
 };
 
+type TerraformRepositoryCreationStep = "apply" | "init";
+
+const SENSITIVE_TERRAFORM_OUTPUT_PATTERNS = [
+  /(\b(?:access[_-]?token|api[_-]?key|client[_-]?secret|password|private[_-]?key|secret|token)\b\s*[:=]\s*)(["'])([^"'\n]*)(\2)/gi,
+  /(\b(?:access[_-]?token|api[_-]?key|client[_-]?secret|password|private[_-]?key|secret|token)\b\s*[:=]\s*)([^\s\n]+)/gi,
+  /\b(Bearer\s+)[A-Za-z0-9._-]+/gi,
+  /\bgh[pousr]_[A-Za-z0-9_]+\b/g,
+] as const;
+
+const sanitizeTerraformErrorOutput = (output: string): string =>
+  SENSITIVE_TERRAFORM_OUTPUT_PATTERNS.reduce(
+    (sanitized, pattern) =>
+      sanitized.replace(pattern, (match, prefix, quote) => {
+        if (match.startsWith("gh")) {
+          return "[REDACTED]";
+        }
+        if (typeof prefix !== "string") {
+          return "[REDACTED]";
+        }
+        if (typeof quote === "string" && quote.length > 0) {
+          return `${prefix}${quote}[REDACTED]${quote}`;
+        }
+        return `${prefix}[REDACTED]`;
+      }),
+    output,
+  );
+
+const formatTerraformRepositoryCreationFailureDetails = (
+  cause: unknown,
+): string => {
+  const details =
+    cause instanceof ExecaError
+      ? [cause.shortMessage, cause.stderr]
+      : [toErrorMessage(cause)];
+
+  return details
+    .filter(
+      (detail): detail is string =>
+        typeof detail === "string" && detail.trim().length > 0,
+    )
+    .map((detail) => sanitizeTerraformErrorOutput(detail.trim()))
+    .join("\n");
+};
+
+const mapTerraformRepositoryCreationError =
+  (step: TerraformRepositoryCreationStep) =>
+  (cause: unknown): Error => {
+    const details = formatTerraformRepositoryCreationFailureDetails(cause);
+    const message = [
+      `Terraform ${step} failed while creating the GitHub repository.`,
+      details,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return new Error(message, { cause });
+  };
+
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
   ({
@@ -257,22 +329,33 @@ const createRemoteRepositoryWithPresenter =
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
     const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-    const applyTerraform = async () => {
+    const runTerraformStep = async (
+      step: TerraformRepositoryCreationStep,
+      task: () => Promise<unknown>,
+    ) => {
       try {
-        await repo$`terraform init`;
-        await repo$`terraform apply -auto-approve`;
-      } catch (error) {
-        if (error instanceof ExecaError) {
-          logger.error(error.shortMessage);
-        }
+        await task();
+      } catch (cause) {
+        const error = mapTerraformRepositoryCreationError(step)(cause);
+        logger.error(error.message);
         throw error;
       }
+    };
+    const applyTerraform = async () => {
+      await runTerraformStep("init", () => repo$`terraform init`);
+      await runTerraformStep(
+        "apply",
+        () => repo$`terraform apply -auto-approve`,
+      );
     };
     return trackStep(
       presenter,
       "Creating GitHub repository...",
       applyTerraform,
-      asError("Failed to create GitHub repository."),
+      (cause) =>
+        cause instanceof Error
+          ? cause
+          : asError("Failed to create GitHub repository.")(cause),
     ).map(() => new Repository(repoName, repoOwner));
   };
 /**
