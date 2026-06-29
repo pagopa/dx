@@ -368,10 +368,11 @@ describe("makeInitCommand", () => {
         ? Promise.reject(terraformError)
         : Promise.resolve({ stdout: "" }),
     );
-    mocks.tf$.mockImplementation((...args: unknown[]) =>
-      (Array.isArray(args[0])
-        ? Promise.resolve({ stdout: '{"user":{"name":"test@example.com"}}' })
-        : repoTerraform) as unknown as Promise<{ stdout: string }>,
+    mocks.tf$.mockImplementation(
+      (...args: unknown[]) =>
+        (Array.isArray(args[0])
+          ? Promise.resolve({ stdout: '{"user":{"name":"test@example.com"}}' })
+          : repoTerraform) as unknown as Promise<{ stdout: string }>,
     );
 
     await runInitCommand("json");
