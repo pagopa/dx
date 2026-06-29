@@ -19,7 +19,7 @@ provider "aws" {
   region = "eu-south-1"
 }
 
-# Create a VPC first
+# trivy:ignore:AVD-AWS-0178 Flow Logs are omitted to keep this provider example focused on CIDR allocation.
 resource "aws_vpc" "example" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
@@ -41,7 +41,7 @@ resource "aws_subnet" "example" {
   vpc_id                  = aws_vpc.example.id
   cidr_block              = dx_available_subnet_cidr.example.cidr_block
   availability_zone       = "eu-west-1a"
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = false
 
   tags = {
     Name = "example-subnet"
