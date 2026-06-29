@@ -51,6 +51,15 @@ data "azurerm_resource_group" "dx" {
   name = provider::azuredx::resource_name(merge(local.environment, { resource_type = "resource_group", name = "devex" }))
 }
 
+data "azurerm_resource_group" "ai" {
+  name = provider::azuredx::resource_name(merge(local.environment,
+    {
+      domain        = ""
+      app_name      = "ai"
+      resource_type = "resource_group",
+  }))
+}
+
 data "azurerm_user_assigned_identity" "infra_cd" {
   name                = provider::azuredx::resource_name(merge(local.environment, { resource_type = "managed_identity", domain = "devex", name = "infra-github-cd" }))
   resource_group_name = data.azurerm_resource_group.dx.name

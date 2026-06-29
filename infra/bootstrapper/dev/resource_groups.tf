@@ -25,3 +25,15 @@ resource "azurerm_resource_group" "e2e" {
 
   tags = local.tags
 }
+
+resource "azurerm_resource_group" "ai" {
+  name = provider::dx::resource_name(merge(local.azure_environment,
+    {
+      domain        = ""
+      app_name      = "ai"
+      resource_type = "resource_group",
+  }))
+  location = local.azure_environment.location
+
+  tags = local.tags
+}

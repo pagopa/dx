@@ -96,3 +96,30 @@ resource "azurerm_role_assignment" "integration_test_tfstate_data_contributor" {
   principal_id         = azurerm_user_assigned_identity.integration_tests[0].principal_id
   description          = "Allow integration tests identity to write to tfstate Storage Account"
 }
+
+resource "azurerm_role_assignment" "ad_admins_foundry" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Foundry Owner"
+  principal_id         = data.azuread_group.admins.object_id
+  description          = "Allow Admins to manage, build and develop on Foundry accounts and projects in subscription"
+}
+
+resource "azurerm_role_assignment" "infra_ci" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Foundry User"
+  principal_id         = module.bootstrap.identities.infra.ci.principal_id
+  description          = "Allow Infra CI to read Foundry accounts and projects in subscription"
+}
+
+resource "azurerm_role_assignment" "infra_cd" {
+  count = var.environment.env_short == "d" ? 1 : 0
+
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Foundry Account Owner"
+  principal_id         = module.bootstrap.identities.infra.cd.principal_id
+  description          = "Allow Infra CD to manage Foundry accounts and projects in subscription"
+}

@@ -1,8 +1,8 @@
 locals {
   azure_environment = {
-    prefix          = "dx"
-    location        = "italynorth"
-    location_short  = "itn"
+    prefix   = "dx"
+    location = "italynorth"
+    # location_short  = "itn"
     env_short       = "d"
     domain          = "devex"
     app_name        = "core"
