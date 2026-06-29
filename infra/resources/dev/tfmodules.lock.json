@@ -10,5 +10,11 @@
     "version": "0.1.2",
     "name": "aws_core_values_exporter",
     "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
+  },
+  "automation_cd_common_key_vault_certificates": {
+    "hash": "4b05c2a48659f272b3c88c4ce846de09870a45e996fbabd1036e36f412112040",
+    "version": "2.1.0",
+    "name": "azure_role_assignments",
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/2.1.0"
   }
 }

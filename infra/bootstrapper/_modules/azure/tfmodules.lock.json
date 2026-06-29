@@ -1,9 +1,9 @@
 {
   "bootstrap": {
-    "hash": "4b513a22e42b327d1fc36b396d980f38f35e8a2e86da408c25942e24844d502f",
-    "version": "4.0.1",
+    "hash": "09bb811ffdc5653b4187b1ef3524b2b54ab62b35513b3eca305768f9239bc456",
+    "version": "4.1.0",
     "name": "azure_github_environment_bootstrap",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/4.0.1"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/4.1.0"
   },
   "bootstrap.github_runner": {
     "hash": "38a201fffe67a0529700255961c00bfb42f11a41f0095eea6d466fe4ba7e05e9",
