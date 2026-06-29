@@ -1,7 +1,6 @@
 ---
 name: dx-cli-companion
 description: 'Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, or create an environment with `add environment`. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint.'
-license: Complete terms in LICENSE.txt
 ---
 
 # DX CLI Companion
@@ -16,39 +15,17 @@ Use this skill when the user wants guided execution of the DX CLI, especially fo
 - Add a deployment environment with `add environment`.
 - Turn an interactive DX CLI flow into a non-interactive command sequence.
 
-## CLI Source Selection
-
-- **Default:** run the published npm package from the registry:
-
-  ```bash
-  CI=1 npx @pagopa/dx-cli <command>
-  ```
-
-- **Only when explicitly requested by the user:** run the local compiled JS entrypoint:
-
-  ```bash
-  CI=1 node apps/cli/bin/index.js <command>
-  ```
-
-Do not choose the local JS entrypoint on your own. Default to `@pagopa/dx-cli`.
-
 ## Default Workflow
 
-1. Start by running the CLI spec with the selected launcher.
-
-   Published package:
+1. Start by running the CLI spec with the correct launcher. Use the published npm package by default:
 
    ```bash
-   CI=1 npx @pagopa/dx-cli spec
+   CI=1 npx -y @pagopa/dx-cli spec
    ```
 
-   Local JS entrypoint, only if explicitly requested:
+   If the user explicitly asks for the local compiled JS entrypoint, replace that command with `CI=1 node apps/cli/bin/index.js spec`.
 
-   ```bash
-   CI=1 node apps/cli/bin/index.js spec
-   ```
-
-2. Read the `init` or `add environment` section from the spec before building the command.
+2. Read the `init` or `add environment` section from the current spec output and treat it as the source of truth for flags, prompts, and accepted choices.
 
 3. Ask the user upfront for every missing value needed to finish the command without interactive discovery.
 
@@ -68,27 +45,11 @@ Do not choose the local JS entrypoint on your own. Default to `@pagopa/dx-cli`.
 - Run `add environment` from inside the generated repository so the CLI can detect the target GitHub repository from the current working tree.
 - If the user explicitly wants the local JS entrypoint, run it from the DX repository root or use an absolute path to `apps/cli/bin/index.js`.
 
-## Inputs to Gather Before `init`
+## Preparing `init`
 
-Collect these values before running `init`:
-
-| Input | Required for non-interactive run | Notes |
-| --- | --- | --- |
-| GitHub owner | Yes | Maps to `--owner`. |
-| Repository name | Yes | Maps to `--name`. |
-| Description choice | Yes | Ask whether the description is non-empty or intentionally blank. |
-| Publish choice | Yes | Ask whether the repository should be published immediately. |
-
-### `init` Parameter Preview
-
-Before running the command, show the user the exact values that will be used:
-
-| Parameter | Value to show |
-| --- | --- |
-| Owner | `<owner>` |
-| Repository name | `<repo-name>` |
-| Description | `<description>` or `empty` |
-| Publish now | `yes` or `no` |
+- Use the current `spec` output as the source of truth for the `init` command contract.
+- Collect every missing value before running the command. In practice, expect to ask for the GitHub owner, repository name, description choice, and publish choice.
+- Before execution, show a short preview with the exact resolved values for owner, repository name, description, and whether the repository will be published immediately.
 
 ### `init` Command Templates
 
@@ -97,7 +58,7 @@ Use `--publish` when the user wants immediate GitHub publication. That avoids th
 Non-empty description, publish now:
 
 ```bash
-CI=1 npx @pagopa/dx-cli init \
+CI=1 npx -y @pagopa/dx-cli init \
   --owner <owner> \
   --name <repo-name> \
   --description "<description>" \
@@ -107,7 +68,7 @@ CI=1 npx @pagopa/dx-cli init \
 Intentionally empty description, publish now:
 
 ```bash
-printf '\n' | CI=1 npx @pagopa/dx-cli init \
+printf '\n' | CI=1 npx -y @pagopa/dx-cli init \
   --owner <owner> \
   --name <repo-name> \
   --publish
@@ -116,7 +77,7 @@ printf '\n' | CI=1 npx @pagopa/dx-cli init \
 Non-empty description, do not publish:
 
 ```bash
-printf 'n\n' | CI=1 npx @pagopa/dx-cli init \
+printf 'n\n' | CI=1 npx -y @pagopa/dx-cli init \
   --owner <owner> \
   --name <repo-name> \
   --description "<description>"
@@ -125,7 +86,7 @@ printf 'n\n' | CI=1 npx @pagopa/dx-cli init \
 Intentionally empty description, do not publish:
 
 ```bash
-printf '\nn\n' | CI=1 npx @pagopa/dx-cli init \
+printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
   --owner <owner> \
   --name <repo-name>
 ```
@@ -135,23 +96,13 @@ printf '\nn\n' | CI=1 npx @pagopa/dx-cli init \
 - Run `spec` first even if the command shape seems obvious.
 - `--description ""` does not suppress the description prompt; treat an empty description as a deliberate blank-line answer on stdin.
 - There is no `--no-publish` flag. If the user does not want publication, answer the publish prompt explicitly on stdin instead of guessing.
-- If the user explicitly wants the local JS entrypoint, replace `npx @pagopa/dx-cli` with `node apps/cli/bin/index.js`.
+- If the user explicitly wants the local JS entrypoint, replace `npx -y @pagopa/dx-cli` with `node apps/cli/bin/index.js`.
 
-## Inputs to Gather Before `add environment`
+## Preparing `add environment`
 
-Collect these values before running `add environment`:
-
-| Input | Required for non-interactive run | Notes |
-| --- | --- | --- |
-| Environment name | Yes | `dev`, `uat`, or `prod`; maps to `--name`. |
-| Subscription/account IDs | Yes | Repeat `--account` for multiple subscriptions. If the user did not provide one, try to read the current default subscription from Azure CLI and ask the user to confirm it. |
-| Location for each subscription | Yes | Use `--location <subscription-id>=<region>` once per subscription. |
-| Prefix | Yes | Maps to `--prefix`. |
-| Domain | Yes | Maps to `--domain`. |
-| Business unit | Yes | Pass `--business-unit` to avoid the prompt. |
-| Management team | Yes | Pass `--management-team` to avoid the prompt. |
-| Auto-confirm initialization | Usually yes | Use `-y` for non-interactive runs unless the user explicitly wants the confirmation prompt. |
-| Runner App credentials | Conditional | Ask upfront when the user expects a fully non-interactive initialization path for a not-yet-initialized environment. |
+- Use the current `spec` output as the source of truth for the `add environment` command contract.
+- Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and runner app credentials when environment initialization still needs them.
+- Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus runner app values when they are in scope.
 
 ### Missing Subscription ID Flow
 
@@ -169,32 +120,13 @@ If the user did not provide a subscription ID:
 
 This is the only allowed proactive Azure CLI lookup in this skill. Do not expand it into general prerequisite checks.
 
-### `add environment` Parameter Preview
-
-Before running the command, show the user the exact values that will be used:
-
-| Parameter | Value to show |
-| --- | --- |
-| Environment name | `<dev|uat|prod>` |
-| Subscription ID(s) | `<subscription-id>` |
-| Location mapping(s) | `<subscription-id>=<region>` |
-| Prefix | `<prefix>` |
-| Domain | `<domain>` |
-| Business unit | `<business-unit>` |
-| Management team | `<management-team>` |
-| Auto-confirm | `yes` or `no` |
-| Runner App ID | `<runner-app-id>` or `not provided` |
-| Runner App Client ID | `<client-id>` or `not provided` |
-| Runner App Installation ID | `<installation-id>` or `not provided` |
-| Runner App private key path | `<private-key-path>` or `not provided` |
-
 ### `add environment` Command Template
 
 Run this command from inside the generated repository:
 
 ```bash
 cd /path/to/generated-repo
-CI=1 npx @pagopa/dx-cli add environment \
+CI=1 npx -y @pagopa/dx-cli add environment \
   --account <subscription-id> \
   --name <dev|uat|prod> \
   --prefix <prefix> \
@@ -222,7 +154,7 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - Repeat `--account` and `--location` for multi-subscription environments.
 - If a subscription was inferred from Azure CLI, show both its ID and name to the user and ask for confirmation before using it.
 - The current CLI spec does not expose a separate cost center flag. If the user provides a cost center requirement, surface that mismatch and ask how it should be mapped instead of inventing an unsupported flag.
-- If the user explicitly wants the local JS entrypoint, replace `npx @pagopa/dx-cli` with `node /absolute/path/to/apps/cli/bin/index.js`.
+- If the user explicitly wants the local JS entrypoint, replace `npx -y @pagopa/dx-cli` with `node /absolute/path/to/apps/cli/bin/index.js`.
 
 ## Troubleshooting
 
@@ -239,6 +171,7 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - Default to the published npm package `@pagopa/dx-cli`.
 - Only use the local compiled JS entrypoint when the user explicitly asks for it.
 - Always run `spec` first with the chosen launcher.
+- Always treat the current `spec` output as the source of truth for flags, prompts, and accepted choices.
 - Always gather missing command inputs before the mutating command.
 - Always show the final parameter set before running the command.
 - Always execute the CLI directly; do not front-load separate prerequisite probes.
