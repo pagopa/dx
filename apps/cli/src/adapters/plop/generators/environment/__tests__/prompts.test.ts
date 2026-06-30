@@ -234,6 +234,7 @@ describe("prompts with prefilled answers", () => {
   });
 });
 
+// eslint-disable-next-line max-lines-per-function
 describe("prompts", () => {
   it("does not prompt again when only a single-account backend must be initialized", async () => {
     const cloudAccount: CloudAccount = {
