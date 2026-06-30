@@ -82,6 +82,9 @@ export default function getActions(
       {
         type: "getTerraformBackend",
       },
+      {
+        type: "syncRepositoryEnvironments",
+      },
       addWorkflowModule(templatesPath),
       ...addEnvironmentModule("bootstrapper"),
     ];

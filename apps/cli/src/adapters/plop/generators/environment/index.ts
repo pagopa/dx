@@ -9,6 +9,7 @@ import { type GitHubService } from "../../../../domain/github.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
+import setSyncRepositoryEnvironmentsAction from "../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
@@ -35,6 +36,7 @@ export default function (
   setGetTerraformBackend(plop, cloudAccountService);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);
+  setSyncRepositoryEnvironmentsAction(plop);
 
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
     actions: getActions(templatesPath),

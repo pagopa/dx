@@ -228,4 +228,72 @@ describe("prompts", () => {
       consoleLogSpy.mockRestore();
     }
   });
+
+  it("blocks initialization when the permission preflight is negative", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "UAT-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(false),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "uat",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      })
+      .mockResolvedValueOnce({
+        init: true,
+      });
+
+    try {
+      await expect(
+        prompts({
+          cloudAccountRepository: {
+            list: vi.fn().mockResolvedValue([cloudAccount]),
+          },
+          cloudAccountService,
+          github: {
+            owner: "pagopa",
+            repo: "dx",
+          },
+        })(inquirer),
+      ).rejects.toThrow(
+        "You don't have permission to initialize this environment",
+      );
+      expect(
+        cloudAccountService.hasUserPermissionToInitialize,
+      ).toHaveBeenCalledWith(cloudAccount.id);
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
+  });
 });
