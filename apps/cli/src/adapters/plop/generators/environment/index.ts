@@ -15,10 +15,14 @@ import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../helpers/terraform-state-key.js";
 import getActions from "./actions.js";
-import getPrompts, { Payload, payloadSchema } from "./prompts.js";
+import getPrompts, {
+  InitialAnswers,
+  Payload,
+  payloadSchema,
+} from "./prompts.js";
 
 export const PLOP_ENVIRONMENT_GENERATOR_NAME = "DX_DeploymentEnvironment";
-export { Payload, payloadSchema };
+export { type InitialAnswers, Payload, payloadSchema };
 
 export default function (
   plop: NodePlopAPI,
@@ -27,6 +31,7 @@ export default function (
   cloudAccountService: CloudAccountService,
   gitHubService: GitHubService,
   github?: GitHubRepo,
+  initialAnswers: InitialAnswers = {},
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
@@ -45,6 +50,7 @@ export default function (
       cloudAccountRepository,
       cloudAccountService,
       github,
+      initialAnswers,
     }),
   });
 }
