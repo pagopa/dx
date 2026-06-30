@@ -29,6 +29,7 @@
 - [ ] Secrets use Key Vault references (`@Microsoft.KeyVault(...)`)
 - [ ] No sensitive values hardcoded in Terraform code
 - [ ] For any sensitive value or secret managed through Azure Key Vault, the **`azure-keyvault-secret` skill** has been followed
+- [ ] For App Service, Function App, or Container Apps secret references, the **`azure-keyvault-reference` skill** has been followed or its baseline rules were applied
 
 ## Technology Radar
 
@@ -43,4 +44,4 @@
 - [ ] `terraform init` (or `terraform init -backend=false`) completed successfully
 - [ ] `terraform validate` passes with no errors
 - [ ] `terraform plan` reviewed (if backend and credentials are available)
-- [ ] Run `pre-commit run -a` on staged files
+- [ ] Run the smallest existing validation that covers the changed files, such as `pre-commit run --files <changed .tf files>`; use `pre-commit run -a` only when broad validation is intentional
