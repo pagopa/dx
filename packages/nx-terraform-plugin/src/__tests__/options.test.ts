@@ -5,6 +5,7 @@ import { parseOptions } from "../options.ts";
 describe("parseOptions", () => {
   it("returns default target names when options are undefined", () => {
     expect(parseOptions(undefined)).toEqual({
+      additionalEnvironments: [],
       applyTargetName: "tf-apply",
       consoleTargetName: "tf-console",
       docsTargetName: "terraform-docs",
@@ -47,6 +48,22 @@ describe("parseOptions", () => {
         },
       }).publish.github?.owner,
     ).toBe("pagopa-dx");
+  });
+
+  it("accepts additional environment names", () => {
+    expect(
+      parseOptions({
+        additionalEnvironments: ["sandbox", "qa_env"],
+      }).additionalEnvironments,
+    ).toEqual(["sandbox", "qa_env"]);
+  });
+
+  it("rejects invalid additional environment names", () => {
+    expect(() =>
+      parseOptions({
+        additionalEnvironments: ["QA"],
+      }),
+    ).toThrow("additionalEnvironments.0");
   });
 
   it("rejects empty github owner", () => {

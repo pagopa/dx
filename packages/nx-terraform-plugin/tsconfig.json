@@ -4,12 +4,11 @@
     "isolatedModules": true,
     "declaration": true,
     "importHelpers": true,
-    "outDir": "./dist",
     "rootDir": "./src",
-    "lib": ["ES2023", "ES2024.Object", "ESNext.Collection"],
-    "target": "ES2023",
-    "customConditions": ["@nx/source"],
-    "rewriteRelativeImportExtensions": true
+    "outDir": "./dist",
+    "rewriteRelativeImportExtensions": true,
+    "types": ["node"],
+    "emitDeclarationOnly": true,
   },
-  "include": ["./src/**/*.ts"]
+  "include": ["./src/**/*.ts"],
 }

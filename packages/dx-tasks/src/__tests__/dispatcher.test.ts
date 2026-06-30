@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createTaskDispatcher } from "../dispatcher.ts";
+import { ReportStore } from "../report-store.ts";
 
 describe("createTaskDispatcher", () => {
   afterEach(() => {
@@ -8,6 +9,7 @@ describe("createTaskDispatcher", () => {
   });
 
   it("dispatches a registered task after decoding its payload", async () => {
+    const reports = new ReportStore(process.cwd());
     const parse = vi.fn((input: unknown) => ({
       modulePath:
         typeof input === "object" &&
@@ -23,7 +25,9 @@ describe("createTaskDispatcher", () => {
         input.verbose === true,
     }));
     const run = vi.fn().mockResolvedValue(undefined);
-    const dispatcher = createTaskDispatcher();
+    const dispatcher = createTaskDispatcher({
+      context: { reports },
+    });
 
     dispatcher.registerTask({
       name: "customTask",
@@ -40,9 +44,33 @@ describe("createTaskDispatcher", () => {
       modulePath: "/tmp/module",
       verbose: true,
     });
-    expect(run).toHaveBeenCalledWith({
-      modulePath: "/tmp/module",
-      verbose: true,
+    expect(run).toHaveBeenCalledWith(
+      {
+        modulePath: "/tmp/module",
+        verbose: true,
+      },
+      {
+        reports,
+      },
+    );
+  });
+
+  it("returns the registered task result", async () => {
+    const dispatcher = createTaskDispatcher();
+
+    dispatcher.registerTask({
+      name: "customTask",
+      payloadSchema: {
+        parse: (input: unknown) => input,
+      },
+      run: () => ({ commentId: 456, commentUrl: "https://example.com" }),
+    });
+
+    await expect(
+      dispatcher.dispatchTask("customTask", {}),
+    ).resolves.toStrictEqual({
+      commentId: 456,
+      commentUrl: "https://example.com",
     });
   });
 

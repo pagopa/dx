@@ -20,6 +20,7 @@ afterEach(() => {
 
 const defaultOptions = parseOptions(undefined);
 const customOptions = parseOptions({
+  additionalEnvironments: [],
   applyTargetName: "terraform-apply",
   consoleTargetName: "terraform-console",
   docsTargetName: "terraform-docs",
@@ -209,6 +210,7 @@ describe("getProject applications", () => {
       expect(project.projectType).toBe("application");
       expect(project.root).toBe(root);
       expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.tags).toEqual(["terraform", "env:prod"]);
       expect(Object.keys(targets)).toEqual([
         "tf-init",
         "tf-fmt",
@@ -288,6 +290,46 @@ describe("getProject applications", () => {
       expect(targets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
       expect(targets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
     });
+
+    it("adds the resource environment tag to flat resource applications", () => {
+      const root = path.join("infra", "resources", "dev");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.tags).toEqual(["terraform", "env:dev"]);
+    });
+
+    it("adds the environment tag to nested resource applications", () => {
+      const root = path.join("infra", "resources", "prod", "foo");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.tags).toEqual(["terraform", "env:prod"]);
+    });
+
+    it("adds the environment tag from non-resources application paths", () => {
+      const root = path.join("infra", "core", "uat");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.tags).toEqual(["terraform", "env:uat"]);
+    });
+
+    it("adds configured additional environment tags to applications", () => {
+      const root = path.join("infra", "core", "sandbox", "network");
+      const project = getProject(
+        parseOptions({
+          additionalEnvironments: ["sandbox"],
+        }),
+        root,
+      );
+
+      expect(project.tags).toEqual(["terraform", "env:sandbox"]);
+    });
+
+    it("defaults the environment tag to prod when no environment is found", () => {
+      const root = path.join("infra", "core", "network");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.tags).toEqual(["terraform", "env:prod"]);
+    });
   });
 });
 
@@ -302,6 +344,7 @@ describe("getProject libraries", () => {
       expect(project.projectType).toBe("library");
       expect(project.root).toBe(root);
       expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.tags).toEqual(["terraform"]);
       expect(Object.keys(targets)).toEqual([
         "tf-init",
         "tf-fmt",
@@ -318,8 +361,17 @@ describe("getProject libraries", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.projectType).toBe("library");
+      expect(project.tags).toEqual(["terraform"]);
       expect(getTargetsOrThrow(project)["tf-plan"]).toBeUndefined();
       expect(getTargetsOrThrow(project)["tf-apply"]).toBeUndefined();
+    });
+
+    it("does not add environment tags to libraries", () => {
+      const root = path.join("infra", "prod", "modules", "network_stack");
+      const project = getProject(defaultOptions, root);
+
+      expect(project.projectType).toBe("library");
+      expect(project.tags).toEqual(["terraform"]);
     });
 
     it("adds tflint to libraries when the root tflint config exists", () => {

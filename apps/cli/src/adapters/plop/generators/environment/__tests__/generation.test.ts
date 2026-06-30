@@ -21,6 +21,7 @@ import type { TerraformBackend } from "../../../../../domain/remote-backend.js";
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
+import setSyncRepositoryEnvironmentsAction from "../../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
@@ -36,6 +37,12 @@ import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 vi.mock("../../../../terraform/fmt.js", () => ({
   formatTerraformCode: vi.fn((content: string) => content),
 }));
+vi.mock("../../../../execa/terraform.js", () => {
+  const terraformCommand = vi.fn(async () => undefined);
+  const tf$ = vi.fn(() => terraformCommand);
+
+  return { tf$ };
+});
 
 /**
  * Register helpers and stub action types for the environment generator.
@@ -54,6 +61,7 @@ const registerEnvironmentSetup = (
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
   setInitCloudAccountsAction(plop, mockCloudAccountService, mockGitHubService);
+  setSyncRepositoryEnvironmentsAction(plop);
 };
 
 const mockTerraformBackend: TerraformBackend = {
@@ -100,6 +108,26 @@ const runEnvironmentGenerator = async ({
   const originalCwd = process.cwd();
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix));
   process.chdir(tmpDir);
+  await fs.mkdir(path.join(tmpDir, "infra", "repository"), {
+    recursive: true,
+  });
+  await fs.writeFile(
+    path.join(tmpDir, "infra", "repository", "main.tf"),
+    [
+      'module "github_repository" {',
+      '  source  = "pagopa-dx/github-environment-bootstrap/github"',
+      '  version = "~> 1.0"',
+      "",
+      "  repository = {",
+      '    name                   = "my-project"',
+      '    description            = "My project"',
+      "    topics                 = []",
+      "    reviewers_teams        = []",
+      "  }",
+      "}",
+      "",
+    ].join("\n"),
+  );
 
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
@@ -177,6 +205,7 @@ describe("environment generator — file generation (no init)", () => {
   it("materializes bootstrapper files from payload and backend state", async () => {
     const generatedFiles = await readGeneratedFiles(tmpDir, [
       `.github/workflows/_release-terraform-apply-bootstrapper-${payload.env.name}.yaml`,
+      "infra/repository/main.tf",
       `infra/bootstrapper/${payload.env.name}/main.tf`,
       `infra/bootstrapper/${payload.env.name}/providers.tf`,
       `infra/bootstrapper/${payload.env.name}/backend.tf`,

@@ -68,3 +68,5 @@ vitest.config.*.timestamp*
 tsconfig.tsbuildinfo
 tsconfig.*.tsbuildinfo
 .worktrees
+
+.dx-tasks
