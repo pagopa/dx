@@ -183,7 +183,7 @@ jobs:
           filter: tree:0
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@feats/tfplan-in-validate
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -281,7 +281,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-task@feats/tfplan-in-validate
+        uses: pagopa/dx/actions/run-dx-task@main
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
