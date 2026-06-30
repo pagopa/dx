@@ -46,6 +46,24 @@ const getProjectType = (root: string): ProjectType => {
     : "application";
 };
 
+const defaultEnvironments = ["prod", "uat", "dev"];
+
+const getEnvironmentTag = (
+  root: string,
+  additionalEnvironments: readonly string[],
+): string => {
+  const rootSegments = root.split(path.sep);
+  const supportedEnvironments = new Set([
+    ...defaultEnvironments,
+    ...additionalEnvironments,
+  ]);
+  const environment = rootSegments.find((segment) =>
+    supportedEnvironments.has(segment),
+  );
+
+  return `env:${environment ?? "prod"}`;
+};
+
 const getRootConfigPath = (root: string, configFileName: string) =>
   path.relative(root, configFileName) || configFileName;
 
@@ -239,10 +257,20 @@ const getTargets = (
         opts.planTargetName,
         {
           cache: false,
-          command: `terraform plan`,
+          configurations: {
+            ci: {
+              refresh: true,
+              report: true,
+              verbose: false,
+            },
+          },
           dependsOn: [opts.initTargetName],
+          executor: "@pagopa/nx-terraform-plugin:plan",
           options: {
-            cwd,
+            projectRoot: "{projectRoot}",
+            refresh: true,
+            report: false,
+            verbose: true,
           },
         },
       ],
@@ -280,7 +308,11 @@ export const getProject = (
     hasRootTflintConfig,
     publishManifest,
   );
-  const tags = ["terraform"];
+  const environmentTag =
+    projectType === "application"
+      ? getEnvironmentTag(root, opts.additionalEnvironments)
+      : undefined;
+  const tags = ["terraform", ...(environmentTag ? [environmentTag] : [])];
   if (isPublishableLibrary) {
     tags.push("terraform:public");
   }
@@ -297,8 +329,9 @@ export const getProject = (
     },
     projectType,
     root,
-    // We assign the 'terraform' tag to all projects created from Terraform configuration files
-    // and add 'terraform:public' for publishable module libraries discovered from module.json.
+    // We assign the 'terraform' tag to all Terraform projects, add the
+    // environment tag for applications, and add 'terraform:public'
+    // for publishable module libraries discovered from module.json.
     tags,
     targets,
   };

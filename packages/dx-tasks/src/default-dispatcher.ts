@@ -1,25 +1,30 @@
 /** This module wires the default dx-tasks registry with built-in task definitions. */
 
+import { createTaskDispatcher, type TaskDispatcher } from "./dispatcher.ts";
+import { ReportStore } from "./report-store.ts";
 import {
-  createTaskDispatcher,
-  type TaskDefinition,
-  type TaskDispatcher,
-} from "./dispatcher.ts";
-import {
-  terraformPlan,
-  type TerraformPlanPayload,
-  payloadSchema as terraformPlanPayloadSchema,
-} from "./terraform-plan.ts";
+  prCommentTask,
+  renderReportTask,
+  reportPrCommentTask,
+  terraformPlanTask,
+} from "./tasks.ts";
+import { terraformPlanReportNamespace } from "./terraform/plan.ts";
 
-export const terraformPlanTask: TaskDefinition<TerraformPlanPayload> = {
-  name: "terraformPlan",
-  payloadSchema: terraformPlanPayloadSchema,
-  run: terraformPlan,
-};
+export interface DefaultTaskDispatcherOptions {
+  reports?: ReportStore;
+}
 
-export const createDefaultTaskDispatcher = (): TaskDispatcher => {
-  const dispatcher = createTaskDispatcher();
+const createDefaultReportStore = (): ReportStore =>
+  new ReportStore(process.cwd()).register(terraformPlanReportNamespace);
+
+export const createDefaultTaskDispatcher = ({
+  reports = createDefaultReportStore(),
+}: DefaultTaskDispatcherOptions = {}): TaskDispatcher => {
+  const dispatcher = createTaskDispatcher({ context: { reports } });
   dispatcher.registerTask(terraformPlanTask);
+  dispatcher.registerTask(renderReportTask);
+  dispatcher.registerTask(reportPrCommentTask);
+  dispatcher.registerTask(prCommentTask);
 
   return dispatcher;
 };

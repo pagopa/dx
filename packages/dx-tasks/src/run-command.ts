@@ -1,10 +1,19 @@
 /** This module wraps child-process execution for dx-tasks Terraform commands. */
 
-import { spawn } from "node:child_process";
+import childProcess from "node:child_process";
 
-export interface ProcessResult {
-  exitCode: null | number;
-  signal: NodeJS.Signals | null;
+export type ProcessResult =
+  | (ProcessOutput & {
+      exitCode: null;
+      signal: NodeJS.Signals;
+    })
+  | (ProcessOutput & {
+      exitCode: number;
+      signal: null;
+    });
+
+interface ProcessOutput {
+  stderr: string;
   stdout: string;
 }
 
@@ -15,14 +24,19 @@ export const runCommand = async (
   env: Record<string, string>,
 ): Promise<ProcessResult> => {
   const { promise, reject, resolve } = Promise.withResolvers<ProcessResult>();
-  const child = spawn(command, args, {
+  const child = childProcess.spawn(command, args, {
     cwd,
     env: { ...process.env, ...env },
-    stdio: ["inherit", "pipe", "inherit"],
+    stdio: ["inherit", "pipe", "pipe"],
   });
 
+  let stderr = "";
   let stdout = "";
 
+  child.stderr?.setEncoding("utf8");
+  child.stderr?.on("data", (chunk: string) => {
+    stderr += chunk;
+  });
   child.stdout?.setEncoding("utf8");
   child.stdout?.on("data", (chunk: string) => {
     stdout += chunk;
@@ -30,7 +44,17 @@ export const runCommand = async (
 
   child.on("error", reject);
   child.on("close", (exitCode, signal) => {
-    resolve({ exitCode, signal, stdout });
+    if (signal) {
+      resolve({ exitCode: null, signal, stderr, stdout });
+      return;
+    }
+
+    if (exitCode !== null) {
+      resolve({ exitCode, signal: null, stderr, stdout });
+      return;
+    }
+
+    reject(new Error(`${command} closed without an exit code or signal`));
   });
 
   return promise;

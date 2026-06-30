@@ -46,6 +46,7 @@ catalog:
   plop: ^4.0.5
   prettier: 3.8.3
   semver: ^7.7.4
+  tsdown: ^0.22.0
   tsup: ^8.5.1
   tsx: ^4.21.0
   typescript: ~5.9.3
