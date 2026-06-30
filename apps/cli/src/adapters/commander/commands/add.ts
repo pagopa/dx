@@ -208,6 +208,20 @@ export const getEnvironmentInitialAnswers = async (
           );
         });
 
+  // Fail fast on an empty (or whitespace-only) key file: the file contents are
+  // never trimmed, so an empty value would otherwise skip the recovery prompt
+  // and surface as an opaque schema error (or a silently invalid key) later.
+  if (privateKey !== undefined && privateKey.trim().length === 0) {
+    throw new Error(
+      `Private key file at "${options.privateKeyPath}" is empty.`,
+    );
+  }
+
+  // Prefill runner-app credentials only when at least one credential flag was
+  // provided. Unspecified fields stay `undefined` on purpose so the generator
+  // prompts for the missing pieces and validates the complete set later. With
+  // no credential flag at all, leave this `undefined` to keep initialization
+  // fully interactive.
   const runnerAppCredentials =
     options.runnerAppId === undefined &&
     options.clientId === undefined &&

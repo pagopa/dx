@@ -39,7 +39,11 @@ vi.mock("../../../plop/index.js", () => ({
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 
-import { makeAddCommand, parseAddEnvironmentCommandOptions } from "../add.js";
+import {
+  getEnvironmentInitialAnswers,
+  makeAddCommand,
+  parseAddEnvironmentCommandOptions,
+} from "../add.js";
 
 const payload: EnvironmentPayload = {
   env: {
@@ -237,6 +241,23 @@ describe("makeAddCommand", () => {
           },
         },
       );
+    } finally {
+      await rm(tempDir, { force: true, recursive: true });
+    }
+  });
+
+  it("rejects an empty private key file", async () => {
+    const tempDir = await mkdtemp(path.join(tmpdir(), "dx-cli-add-command-"));
+    const privateKeyPath = path.join(tempDir, "runner-app.pem");
+
+    await writeFile(privateKeyPath, "   \n");
+
+    try {
+      await expect(
+        getEnvironmentInitialAnswers(
+          parseAddEnvironmentCommandOptions({ privateKeyPath }),
+        ),
+      ).rejects.toThrow(/Private key file at .* is empty\./);
     } finally {
       await rm(tempDir, { force: true, recursive: true });
     }
