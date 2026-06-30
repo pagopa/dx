@@ -8,7 +8,8 @@
 
 set -u
 
-DX_KB_PATH="${DX_KB_PATH:-$HOME/.dx}"
+DEFAULT_DX_KB_HOME="${HOME:-${TMPDIR:-/tmp}}"
+DX_KB_PATH="${DX_KB_PATH:-$DEFAULT_DX_KB_HOME/.dx}"
 DX_REPO_URL="${DX_REPO_URL:-https://github.com/pagopa/dx.git}"
 QUIET="${QUIET:-0}"
 
@@ -19,7 +20,8 @@ Usage: ensure-dx-kb.sh [--quiet] [--help]
 Ensures the PagoPA DX knowledge base is available at DX_KB_PATH.
 
 Environment:
-  DX_KB_PATH   Target path for the local knowledge base. Default: $HOME/.dx
+  DX_KB_PATH   Target path for the local knowledge base. Default: $HOME/.dx,
+               or $TMPDIR/.dx when HOME is unset.
   DX_REPO_URL  Repository URL to clone when no local checkout is available.
                Default: https://github.com/pagopa/dx.git
 EOF
@@ -64,7 +66,17 @@ is_dx_repo() {
   [ -d "$repo_path/.git" ] || return 1
 
   remote=$(git -C "$repo_path" remote get-url origin 2>/dev/null || printf '')
-  printf '%s' "$remote" | grep -q 'pagopa/dx'
+  remote="${remote%/}"
+  remote="${remote%.git}"
+
+  case "$remote" in
+    https://github.com/pagopa/dx|git@github.com:pagopa/dx|ssh://git@github.com/pagopa/dx)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
 }
 
 read_session_cwd() {

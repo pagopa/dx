@@ -22,7 +22,7 @@ Use this skill to produce complete, validated Terraform changes that follow Pago
 4. Use `azure-keyvault-secret` before creating `azurerm_key_vault_secret` resources. If it is unavailable, do not generate secret resources that would require values in Terraform state; ask the user to install/enable the skill or confirm secrets are managed outside Terraform.
 5. Use `azure-keyvault-reference` when app settings, environment variables, or Container App secrets reference Key Vault. If unavailable, still enforce the baseline rules in this skill: no secret literals, versionless references by default, and least-privilege secret-reader access for runtime identities.
 
-Local KB paths to inspect:
+Local KB paths to inspect, relative to the selected knowledge-base root (`DX_KB_PATH` or the current `pagopa/dx` checkout):
 
 - `apps/website/docs/terraform/` - DX Terraform best practices, folder structure, code style, module usage, validation, and deployment docs.
 - `apps/website/docs/azure/` - Azure-specific DX guidance.
