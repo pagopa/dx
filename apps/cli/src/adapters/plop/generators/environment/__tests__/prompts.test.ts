@@ -11,6 +11,7 @@ import type { EnvironmentInitStatus } from "../../../../../domain/environment.js
 
 import prompts, {
   formatInitializationDetails,
+  type InitialAnswers,
   workspaceSchema,
 } from "../prompts.js";
 
@@ -127,7 +128,183 @@ describe("formatInitializationDetails", () => {
   });
 });
 
+describe("prompts with prefilled answers", () => {
+  it("uses prefilled base answers without prompting again", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountRepository: CloudAccountRepository = {
+      list: vi.fn().mockResolvedValue([cloudAccount]),
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue({
+        resourceGroupName: "rg-test",
+        storageAccountName: "sttest",
+        subscriptionId: cloudAccount.id,
+        type: "azurerm",
+      }),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const locations = {
+      "sub-123": "italynorth",
+    } satisfies Record<string, "italynorth" | "westeurope">;
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      });
+
+    try {
+      const initialAnswers = {
+        env: {
+          cloudAccountIds: [cloudAccount.id],
+          locations,
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      } satisfies InitialAnswers;
+
+      const deps = {
+        cloudAccountRepository,
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+        initialAnswers,
+      };
+
+      const result = await prompts(deps)(inquirer);
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "dev",
+          prefix: "dx",
+        },
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      });
+    } finally {
+      promptSpy.mockRestore();
+    }
+  });
+});
+
+// eslint-disable-next-line max-lines-per-function
 describe("prompts", () => {
+  it("does not prompt again when only a single-account backend must be initialized", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountRepository: CloudAccountRepository = {
+      list: vi.fn().mockResolvedValue([cloudAccount]),
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        env: {
+          cloudAccounts: [cloudAccount],
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      })
+      .mockResolvedValueOnce({
+        [cloudAccount.id]: "italynorth",
+      })
+      .mockResolvedValueOnce({
+        init: true,
+      })
+      .mockResolvedValueOnce({});
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+      })(inquirer);
+
+      expect(promptSpy).toHaveBeenCalledTimes(3);
+      expect(result.init?.terraformBackend).toEqual({
+        cloudAccount,
+      });
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
+  });
+
   it("prompts for the GitHub runner app client ID when initialization is required", async () => {
     const cloudAccount: CloudAccount = {
       csp: "azure",
@@ -291,6 +468,105 @@ describe("prompts", () => {
       expect(
         cloudAccountService.hasUserPermissionToInitialize,
       ).toHaveBeenCalledWith(cloudAccount.id);
+    } finally {
+      promptSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    }
+  });
+});
+
+describe("prompts with prefilled initialization answers", () => {
+  it("skips initialization prompts when confirmation and runner credentials are prefilled", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+
+    const cloudAccountRepository: CloudAccountRepository = {
+      list: vi.fn().mockResolvedValue([cloudAccount]),
+    };
+
+    const cloudAccountService: CloudAccountService = {
+      getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(false),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleLogSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    promptSpy
+      .mockResolvedValueOnce({
+        init: true,
+      })
+      .mockResolvedValueOnce({
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      });
+
+    try {
+      const locations = {
+        [cloudAccount.id]: "italynorth",
+      } satisfies Record<string, "italynorth" | "westeurope">;
+
+      const initialAnswers = {
+        env: {
+          cloudAccountIds: [cloudAccount.id],
+          locations,
+          name: "dev",
+          prefix: "dx",
+        },
+        init: {
+          confirm: true,
+          runnerAppCredentials: {
+            clientId: "app-client-id",
+            id: "app-id",
+            installationId: "installation-id",
+            key: "private-key",
+          },
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          ManagementTeam: "Engineering",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      } satisfies InitialAnswers;
+
+      const result = await prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+        initialAnswers,
+      })(inquirer);
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(result.init).toEqual({
+        cloudAccountsToInitialize: [cloudAccount],
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+        terraformBackend: {
+          cloudAccount,
+        },
+      });
     } finally {
       promptSpy.mockRestore();
       consoleLogSpy.mockRestore();

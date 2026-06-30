@@ -11,6 +11,7 @@ import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
 import createDeploymentEnvironmentGenerator, {
+  InitialAnswers as DeploymentEnvironmentInitialAnswers,
   Payload as EnvironmentPayload,
   payloadSchema as environmentPayloadSchema,
   PLOP_ENVIRONMENT_GENERATOR_NAME,
@@ -150,8 +151,14 @@ export const collectDeploymentEnvironmentPayload = async (
   plop: NodePlopAPI,
   gitHubService: GitHubService,
   github?: GitHubRepo,
+  initialAnswers: DeploymentEnvironmentInitialAnswers = {},
 ): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
-  setDeploymentEnvironmentGenerator(plop, gitHubService, github);
+  setDeploymentEnvironmentGenerator(
+    plop,
+    gitHubService,
+    github,
+    initialAnswers,
+  );
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
@@ -185,6 +192,7 @@ export const setDeploymentEnvironmentGenerator = (
   plop: NodePlopAPI,
   gitHubService: GitHubService,
   github?: GitHubRepo,
+  initialAnswers: DeploymentEnvironmentInitialAnswers = {},
 ) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
@@ -197,5 +205,6 @@ export const setDeploymentEnvironmentGenerator = (
     cloudAccountService,
     gitHubService,
     github,
+    initialAnswers,
   );
 };
