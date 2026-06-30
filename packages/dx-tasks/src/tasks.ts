@@ -23,11 +23,25 @@ import {
   type TerraformPlanPayload,
   payloadSchema as terraformPlanPayloadSchema,
 } from "./terraform/plan.ts";
+import {
+  terraformRbacPreflight,
+  type TerraformRbacPreflightPayload,
+  payloadSchema as terraformRbacPreflightPayloadSchema,
+} from "./terraform/rbac-preflight.ts";
 
 export const terraformPlanTask: TaskDefinition<TerraformPlanPayload> = {
   name: "terraformPlan",
   payloadSchema: terraformPlanPayloadSchema,
   run: terraformPlan,
+};
+
+export const terraformRbacPreflightTask: TaskDefinition<
+  TerraformRbacPreflightPayload,
+  Awaited<ReturnType<typeof terraformRbacPreflight>>
+> = {
+  name: "terraformRbacPreflight",
+  payloadSchema: terraformRbacPreflightPayloadSchema,
+  run: terraformRbacPreflight,
 };
 
 export const renderReportTask: TaskDefinition<RenderReportPayload> = {
