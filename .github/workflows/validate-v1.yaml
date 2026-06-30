@@ -2,13 +2,6 @@ name: Validate
 
 on:
   workflow_call:
-    secrets:
-      app-client-id:
-        description: "GitHub App Client ID for authentication"
-        required: true
-      app-private-key:
-        description: "GitHub App private key for authentication"
-        required: true
 
 jobs:
   warn-missing-version-plans:
@@ -24,8 +17,8 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
         with:
-          client-id: ${{ secrets.app-client-id }}
-          private-key: ${{ secrets.app-private-key }}
+          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
           permission-pull-requests: write
 
       - name: Check out repository

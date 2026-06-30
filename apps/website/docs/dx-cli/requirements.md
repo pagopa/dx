@@ -31,6 +31,19 @@ gh auth login
 az login
 ```
 
+:::info[GitHub authentication is mandatory]
+
+Every command **except** `--version` and `--help` requires GitHub
+authentication. The CLI resolves credentials in this order: the `GH_TOKEN`
+environment variable, the `GITHUB_TOKEN` environment variable, then the GitHub
+CLI (`gh auth login`). If none is available, the command exits with an error
+asking you to log in.
+
+Telemetry is collected only for members of the `pagopa` GitHub organization;
+everyone else can use the CLI normally with telemetry disabled.
+
+:::
+
 :::warning[Azure session expiry]
 
 Within PagoPA, `az login` sessions expire every **12 hours**. If a command fails

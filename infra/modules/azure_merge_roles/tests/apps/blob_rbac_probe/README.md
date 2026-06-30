@@ -1,4 +1,4 @@
-# blob_rbac_probe
+# Blob RBAC Probe
 
 This application exposes HTTP endpoints on port `8080` to validate both Blob data-plane permissions and Storage control-plane permissions with `DefaultAzureCredential`.
 

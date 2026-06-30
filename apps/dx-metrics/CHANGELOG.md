@@ -1,3 +1,9 @@
+## 0.5.10 (2026-06-25)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.3
+
 ## 0.5.9 (2026-06-18)
 
 ### 🩹 Fixes

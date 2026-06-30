@@ -11,7 +11,7 @@ import {
   RepositoryNotFoundError,
 } from "../../../domain/github.js";
 import { fetchLatestRelease, fetchLatestTag } from "../index.js";
-import { OctokitGitHubService } from "../index.js";
+import { isPagopaOrgMember, OctokitGitHubService } from "../index.js";
 
 const makeEnv = () => {
   const mockOctokit = mockDeep<Octokit>();
@@ -510,5 +510,95 @@ describe("octokit adapter", () => {
         { owner, repo },
       );
     });
+  });
+});
+
+describe("isPagopaOrgMember", () => {
+  const token = "test-token";
+  const client = mockDeep<Octokit>();
+
+  beforeEach(() => {
+    mockReset(client);
+  });
+
+  it("returns true when the membership state is active", async () => {
+    client.rest.orgs.getMembershipForAuthenticatedUser.mockResolvedValue({
+      data: { state: "active" },
+      headers: {},
+      status: 200,
+      url: "",
+    } as never);
+
+    const result = await isPagopaOrgMember(token, client);
+
+    expect(result).toBe(true);
+    expect(
+      client.rest.orgs.getMembershipForAuthenticatedUser,
+    ).toHaveBeenCalledWith({ org: "pagopa" });
+  });
+
+  it("returns false when the membership state is pending", async () => {
+    client.rest.orgs.getMembershipForAuthenticatedUser.mockResolvedValue({
+      data: { state: "pending" },
+      headers: {},
+      status: 200,
+      url: "",
+    } as never);
+
+    const result = await isPagopaOrgMember(token, client);
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false when the user is not a member (404)", async () => {
+    const error = new RequestError("Not Found", 404, {
+      request: {
+        headers: {},
+        method: "GET",
+        url: "https://api.github.com/user/memberships/orgs/pagopa",
+      },
+      response: {
+        data: { message: "Not Found" },
+        headers: {},
+        status: 404,
+        url: "https://api.github.com/user/memberships/orgs/pagopa",
+      },
+    });
+    client.rest.orgs.getMembershipForAuthenticatedUser.mockRejectedValue(error);
+
+    const result = await isPagopaOrgMember(token, client);
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false when access is forbidden (403)", async () => {
+    const error = new RequestError("Forbidden", 403, {
+      request: {
+        headers: {},
+        method: "GET",
+        url: "https://api.github.com/user/memberships/orgs/pagopa",
+      },
+      response: {
+        data: { message: "Forbidden" },
+        headers: {},
+        status: 403,
+        url: "https://api.github.com/user/memberships/orgs/pagopa",
+      },
+    });
+    client.rest.orgs.getMembershipForAuthenticatedUser.mockRejectedValue(error);
+
+    const result = await isPagopaOrgMember(token, client);
+
+    expect(result).toBe(false);
+  });
+
+  it("returns false on a network error", async () => {
+    client.rest.orgs.getMembershipForAuthenticatedUser.mockRejectedValue(
+      new Error("network down"),
+    );
+
+    const result = await isPagopaOrgMember(token, client);
+
+    expect(result).toBe(false);
   });
 });

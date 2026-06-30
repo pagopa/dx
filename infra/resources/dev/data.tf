@@ -56,6 +56,11 @@ data "azurerm_user_assigned_identity" "infra_cd" {
   resource_group_name = data.azurerm_resource_group.dx.name
 }
 
+data "azurerm_user_assigned_identity" "automation_cd" {
+  name                = provider::azuredx::resource_name(merge(local.environment, { resource_type = "managed_identity", domain = "devex", name = "integration" }))
+  resource_group_name = data.azurerm_resource_group.dx.name
+}
+
 data "aws_caller_identity" "current" {}
 
 data "azurerm_application_insights" "this" {

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Plan executor",
+  "description": "Runs terraform plan for a Terraform project through @pagopa/dx-tasks",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Terraform project root used as the module path",
+      "type": "string"
+    },
+    "out": {
+      "description": "Optional path passed to terraform plan -out",
+      "type": "string"
+    },
+    "refresh": {
+      "description": "Whether to refresh state before planning",
+      "type": "boolean",
+      "default": true
+    },
+    "report": {
+      "description": "Whether to write a dx-tasks JSON report of the plan output",
+      "type": "boolean",
+      "default": false
+    },
+    "verbose": {
+      "description": "Whether to print the full terraform plan output",
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": ["projectRoot"]
+}

@@ -65,18 +65,6 @@ committed. In the context of Terraform, they:
            - --args=--lockfile=false
          files: ^infra/(?:.*/)?_?modules/.*
 
-       # Auto-generate README.md for root modules (resources)
-       - id: terraform_docs
-         name: terraform_docs on resources
-         args:
-           - --hook-config=--create-file-if-not-exist=true
-         exclude: |
-           (?x)^(
-             infra/modules/.*?|
-             infra\/(?:.*\/)_?modules\/.*|
-             providers\/.*
-             )$
-
        # Lint Terraform code for best practices
        - id: terraform_tflint
          args:

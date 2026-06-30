@@ -110,6 +110,7 @@ export const authorizeCloudAccounts =
 
 type AddResult = {
   authorizationPrs: AuthorizationResult[];
+  payload: EnvironmentPayload;
 };
 
 const displaySummary = (result: AddResult) => {
@@ -188,6 +189,7 @@ const addEnvironmentAction = (
       authorizeCloudAccounts(authorizationService)(payload).map(
         (authorizationPrs) => ({
           authorizationPrs,
+          payload,
         }),
       ),
     );

@@ -1,3 +1,24 @@
+## 0.24.0 (2026-06-25)
+
+### 🚀 Features
+
+- Remove "terraform_docs on resources" from pre-commit-config ([#1893](https://github.com/pagopa/dx/pull/1893))
+
+### 🩹 Fixes
+
+- Make Azure authorization follow the selected GitHub owner ([#1877](https://github.com/pagopa/dx/pull/1877))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.1.0
+- Updated @pagopa/dx-savemoney to 0.3.2
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.23.5 (2026-06-23)
 
 ### 🩹 Fixes
