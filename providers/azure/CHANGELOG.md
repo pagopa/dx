@@ -1,3 +1,15 @@
+## 0.12.2 (2026-06-30)
+
+### 🩹 Fixes
+
+- Update Terraform provider and test dependencies ([#1906](https://github.com/pagopa/dx/pull/1906))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.12.1 (2026-06-23)
 
 ### 🩹 Fixes

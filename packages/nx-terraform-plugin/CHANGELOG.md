@@ -1,3 +1,21 @@
+## 0.4.0 (2026-06-30)
+
+### 🚀 Features
+
+- - Introduced the new `plan` executor, that now calls `terraformPlan` from `@pagopa/dx-tasks` ([#1897](https://github.com/pagopa/dx/pull/1897))
+  - Changed `build` script from plain `tsc` to `tsdown`, in order to inline `@pagopa/dx-tasks`
+  - Now each discovered application project, includes a `env:<env>` tag to enable project filtering based on `env`
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.0
+
+### ❤️ Thank You
+
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.3.2 (2026-06-25)
 
 ### 🧱 Updated Dependencies
