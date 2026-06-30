@@ -51,6 +51,8 @@ runs:
 
     - name: Export Logged CSP
       shell: bash
+      env:
+        GH_APP_TOKEN: ${{ steps.github-app-token.outputs.token }}
       run: |
         csp_list=()
         if [ -n "$ROLE_ARN" ]; then
@@ -65,4 +67,4 @@ runs:
 
         csp_list_joined=$(IFS=,; echo "${csp_list[*]}")
         echo "CSP_LIST=$csp_list_joined" >> "$GITHUB_ENV"
-        echo "GITHUB_TOKEN=${{ steps.github-app-token.outputs.token }}" >> "$GITHUB_ENV"
+        echo "GITHUB_TOKEN=$GH_APP_TOKEN" >> "$GITHUB_ENV"
