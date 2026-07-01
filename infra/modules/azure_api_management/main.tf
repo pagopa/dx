@@ -40,7 +40,7 @@ resource "azurerm_api_management" "this" {
   dynamic "virtual_network_configuration" {
     for_each = local.virtual_network_configuration_enabled ? ["dummy"] : []
     content {
-      subnet_id = var.subnet_id
+      subnet_id = local.subnet_id
     }
   }
 
