@@ -48,21 +48,6 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = "dx-d-itn-network-rg-01"
 }
 
-resource "dx_available_subnet_cidr" "cidr" {
-  virtual_network_id = data.azurerm_virtual_network.vnet.id
-  prefix_length      = 24
-}
-
-resource "azurerm_subnet" "subnet" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
-    resource_type = "apim_subnet"
-  }))
-  virtual_network_name = data.azurerm_virtual_network.vnet.name
-  resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
-  address_prefixes     = [dx_available_subnet_cidr.cidr.cidr_block]
-}
-
 resource "azurerm_public_ip" "pip" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "apim-test",
@@ -91,10 +76,6 @@ data "azurerm_resource_group" "rg" {
     name          = "test",
     resource_type = "resource_group"
   }))
-}
-
-output "subnet_id" {
-  value = azurerm_subnet.subnet.id
 }
 
 output "pip_id" {
