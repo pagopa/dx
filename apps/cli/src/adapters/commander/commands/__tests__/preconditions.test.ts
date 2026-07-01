@@ -101,4 +101,42 @@ describe("init preconditions", () => {
       "az group list",
     ]);
   });
+
+  it("returns an explicit error when Azure account JSON is invalid", async () => {
+    mocks.tf$
+      .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "{not-json" })
+      .mockResolvedValueOnce({ stdout: "[]" });
+
+    const result = await runAddEnvironmentPreconditions(presenter);
+
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.message).toBe("Azure CLI returned invalid account JSON.");
+    expect(calledCommands()).toEqual([
+      "terraform -version",
+      "az account show",
+      "az group list",
+    ]);
+  });
+
+  it("returns an explicit error when Azure account payload is unexpected", async () => {
+    mocks.tf$
+      .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: '{"subscription":"dev"}' })
+      .mockResolvedValueOnce({ stdout: "[]" });
+
+    const result = await runAddEnvironmentPreconditions(presenter);
+
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.message).toBe(
+      "Azure CLI returned an unexpected account payload.",
+    );
+    expect(calledCommands()).toEqual([
+      "terraform -version",
+      "az account show",
+      "az group list",
+    ]);
+  });
 });

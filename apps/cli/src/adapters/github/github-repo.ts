@@ -8,10 +8,12 @@ export const getGithubRepo = async (): Promise<GitHubRepo | undefined> => {
   const result = await readGitRemoteOriginUrl();
   const repoUrl = result.stdout.trim();
   const stderr = (result.stderr ?? "").trim();
+  const isMissingOriginRemote =
+    result.exitCode === 1 && repoUrl === "" && stderr === "";
 
   // `git config --get` exits 1 with no output when the key is unset: there is
   // simply no origin remote, which is a valid "not in a repo we manage" state.
-  if (result.exitCode === 1 && repoUrl === "" && stderr === "") {
+  if (isMissingOriginRemote) {
     return undefined;
   }
 

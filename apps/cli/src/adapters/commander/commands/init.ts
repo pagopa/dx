@@ -172,6 +172,25 @@ const AZ_LOGIN_REQUIRED_MESSAGE =
 const mapAzAccessError = (cause: unknown): Error =>
   new Error(toErrorMessage(cause), { cause });
 
+const parseAzureAccountOutput = (stdout: string): string => {
+  let parsedOutput: unknown;
+
+  try {
+    parsedOutput = JSON.parse(stdout);
+  } catch (cause) {
+    throw new Error("Azure CLI returned invalid account JSON.", { cause });
+  }
+
+  const result = azureAccountSchema.safeParse(parsedOutput);
+  if (!result.success) {
+    throw new Error("Azure CLI returned an unexpected account payload.", {
+      cause: result.error,
+    });
+  }
+
+  return result.data.user.name;
+};
+
 const ensureAzLogin = async (): Promise<string> => {
   const { stdout } = await tf$`az account show`.catch((cause: unknown) => {
     throw asError(AZ_LOGIN_REQUIRED_MESSAGE)(cause);
@@ -181,9 +200,8 @@ const ensureAzLogin = async (): Promise<string> => {
   await tf$`az group list`.catch((cause: unknown) => {
     throw mapAzAccessError(cause);
   });
-  const parsed = JSON.parse(stdout);
-  const { user } = azureAccountSchema.parse(parsed);
-  return user.name;
+
+  return parseAzureAccountOutput(stdout);
 };
 
 const mapAzLoginCheckError = (cause: unknown): Error =>
@@ -304,23 +322,31 @@ const createRemoteRepositoryWithPresenter =
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
     const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-    const runTerraformStep = async (
+    const runTerraformRepositoryCreationStep = async (
       step: TerraformRepositoryCreationStep,
-      task: () => Promise<unknown>,
+      executeStep: () => Promise<unknown>,
     ) => {
       try {
-        await task();
+        await executeStep();
       } catch (cause) {
         const error = mapTerraformRepositoryCreationError(step)(cause);
         logger.error(error.message);
         throw error;
       }
     };
+
     const applyTerraform = async () => {
-      await runTerraformStep("init", () => repo$`terraform init`);
-      await runTerraformStep(
+      const initializeRepositoryTerraform = () => repo$`terraform init`;
+      const applyRepositoryTerraform = () =>
+        repo$`terraform apply -auto-approve`;
+
+      await runTerraformRepositoryCreationStep(
+        "init",
+        initializeRepositoryTerraform,
+      );
+      await runTerraformRepositoryCreationStep(
         "apply",
-        () => repo$`terraform apply -auto-approve`,
+        applyRepositoryTerraform,
       );
     };
     return trackStep(
