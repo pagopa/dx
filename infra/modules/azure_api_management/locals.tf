@@ -87,10 +87,8 @@ locals {
     instance_number = local.vnet_instance_number,
   }))
 
-  subnet_id = coalesce(
-    var.subnet_id,
-    provider::azurerm::normalise_resource_id("${data.azurerm_virtual_network.this.id}/subnets/${local.apim_subnet_name}")
-  )
+  has_existing_subnet = var.subnet_id != null
+  subnet_id           = local.has_existing_subnet ? var.subnet_id : azurerm_subnet.apim[0].id
 
   subnet_pep_id = local.use_case_features.private_endpoint ? coalesce(
     var.subnet_pep_id,
