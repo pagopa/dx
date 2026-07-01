@@ -127,14 +127,14 @@ Provides guidance to keep technology choices aligned with PagoPA DX standards.
 
 ### `tests@pagopa-dx`
 
-Adds backend testing workflows for Node.js and TypeScript services with
-realistic runtime boundaries.
+Adds backend testing workflows for Node.js and TypeScript services at real
+runtime boundaries.
 
 **Skills**
 
 | Name                     | Description                                                                                                                                                                                                                                                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `generate-backend-tests` | Builds or extends backend tests for Node.js/TypeScript services using real runtimes, Testcontainers dependencies, optional `.env.test` cloud services, and integration and/or record-replay workflows. Useful for freeze-before-refactor coverage, cassette record/verify flows, Azure Functions harnesses, and replacing mock-heavy tests. |
+| `generate-backend-tests` | Builds or extends backend tests for Node.js/TypeScript services using real runtimes, Testcontainers dependencies, optional `.env.test` cloud services, and integration and/or record-replay workflows. Useful for freeze-before-refactor coverage, cassette record/verify flows, Azure Functions harnesses, replacing mock-heavy tests, and deciding between integration and record-replay approaches. |
 
 ---
 
