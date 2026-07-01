@@ -18,7 +18,7 @@ const runExecutor: PromiseExecutor<ReleaseApplyExecutorInput> = async (
   if (!parseResult.success) {
     logger.warn("Invalid release-apply options", {
       issues: parseResult.error.issues,
-      path: options.projectRoot ?? "release-apply options",
+      path: options?.projectRoot ?? "release-apply options",
     });
     return {
       success: false,
