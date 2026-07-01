@@ -132,8 +132,8 @@ runtime boundaries.
 
 **Skills**
 
-| Name                     | Description                                                                                                                                                                                                                                                                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `generate-backend-tests` | Builds or extends backend tests for Node.js/TypeScript services using real runtimes, Testcontainers dependencies, optional `.env.test` cloud services, and integration and/or record-replay workflows. Useful for freeze-before-refactor coverage, cassette record/verify flows, Azure Functions harnesses, replacing mock-heavy tests, and deciding between integration and record-replay approaches. |
 
 ---
