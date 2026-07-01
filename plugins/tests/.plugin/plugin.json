@@ -7,6 +7,5 @@
   },
   "repository": "https://github.com/pagopa/dx",
   "keywords": ["tests", "automation"],
-  "skills": ["./skills"],
-  "hooks": "./hooks/hooks.json"
+  "skills": ["./skills"]
 }
