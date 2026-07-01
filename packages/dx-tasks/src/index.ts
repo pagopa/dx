@@ -18,3 +18,8 @@ export * from "./report-store.ts";
 export * from "./run-command.ts";
 export * from "./tasks.ts";
 export { terraformPlanReportNamespace } from "./terraform/plan.ts";
+export {
+  terraformRbacPreflight,
+  type TerraformRbacPreflightPayload,
+  type TerraformRbacPreflightResult,
+} from "./terraform/rbac-preflight.ts";

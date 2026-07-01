@@ -7,6 +7,7 @@ import {
   renderReportTask,
   reportPrCommentTask,
   terraformPlanTask,
+  terraformRbacPreflightTask,
 } from "./tasks.ts";
 import { terraformPlanReportNamespace } from "./terraform/plan.ts";
 
@@ -22,6 +23,7 @@ export const createDefaultTaskDispatcher = ({
 }: DefaultTaskDispatcherOptions = {}): TaskDispatcher => {
   const dispatcher = createTaskDispatcher({ context: { reports } });
   dispatcher.registerTask(terraformPlanTask);
+  dispatcher.registerTask(terraformRbacPreflightTask);
   dispatcher.registerTask(renderReportTask);
   dispatcher.registerTask(reportPrCommentTask);
   dispatcher.registerTask(prCommentTask);

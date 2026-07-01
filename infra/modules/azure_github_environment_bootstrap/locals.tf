@@ -84,8 +84,9 @@ locals {
 
   infra_ci = {
     secrets = {
-      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
-      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+      "ARM_CLIENT_ID"         = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID"   = data.azurerm_subscription.current.subscription_id
+      "INFRA_CD_PRINCIPAL_ID" = azurerm_user_assigned_identity.infra_cd.principal_id
     }
   }
 
