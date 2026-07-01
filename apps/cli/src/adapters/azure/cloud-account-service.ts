@@ -81,9 +81,13 @@ const bootstrapCiIdentityRoleDefinitionIds = [
 
 type BootstrapperIdentity = {
   clientId: string;
-  name: string;
+  name: BootstrapperIdentityName;
   principalId: string;
 };
+
+type BootstrapperIdentityName =
+  | `${string}-${string}-${string}-bootstrap-ci-id-${string}`
+  | `${string}-${string}-${string}-bootstrap-id-${string}`;
 
 type BootstrapperIdentityParameters = {
   location: string;
@@ -288,28 +292,30 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     try {
-      const identityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
-      const ciIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
+      const identityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
+      const ciIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
 
       const msiClient = new ManagedServiceIdentityClient(
         this.#credential,
         cloudAccount.id,
       );
 
-      const cdIdentity = await this.#createBootstrapperIdentity({
-        cloudAccountId: cloudAccount.id,
-        identityName,
-        msiClient,
-        parameters,
-        resourceGroupName,
-      });
-      const ciIdentity = await this.#createBootstrapperIdentity({
-        cloudAccountId: cloudAccount.id,
-        identityName: ciIdentityName,
-        msiClient,
-        parameters,
-        resourceGroupName,
-      });
+      const [cdIdentity, ciIdentity] = await Promise.all([
+        this.#createBootstrapperIdentity({
+          cloudAccountId: cloudAccount.id,
+          identityName,
+          msiClient,
+          parameters,
+          resourceGroupName,
+        }),
+        this.#createBootstrapperIdentity({
+          cloudAccountId: cloudAccount.id,
+          identityName: ciIdentityName,
+          msiClient,
+          parameters,
+          resourceGroupName,
+        }),
+      ]);
 
       const authorizationManagementClient = new AuthorizationManagementClient(
         this.#credential,
@@ -685,7 +691,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     resourceGroupName,
   }: {
     cloudAccountId: string;
-    identityName: string;
+    identityName: BootstrapperIdentityName;
     msiClient: ManagedServiceIdentityClient;
     parameters: BootstrapperIdentityParameters;
     resourceGroupName: string;
