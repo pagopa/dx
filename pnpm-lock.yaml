@@ -1145,6 +1145,15 @@ importers:
 
   packages/dx-tasks:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: catalog:aws
+        version: 3.1057.0
+      '@azure/identity':
+        specifier: 'catalog:'
+        version: 4.13.1
+      '@azure/storage-blob':
+        specifier: catalog:azure
+        version: 12.31.0
       octokit:
         specifier: 'catalog:'
         version: 5.0.5

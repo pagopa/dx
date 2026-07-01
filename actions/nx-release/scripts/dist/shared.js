@@ -18367,6 +18367,13 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
+async function isEnvironmentProject(projectName) {
+  const metadata = await getNxProjectMetadata(projectName);
+  if (!metadata) return false;
+  const tags = metadata.tags;
+  if (!tags) return false;
+  return tags.some((tag) => /^env:/.test(tag));
+}
 async function isPublicProject(projectName) {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
@@ -18443,4 +18450,4 @@ content-type/dist/index.js:
   (* v8 ignore else -- @preserve *)
 */
 
-export { createOctokit, extractTagEntriesFromPRBody, getNxProjectNames, getNxProjectRoot, getRepoInfo, isPublicProject, matchProjectName, parseTagEntries };
+export { createOctokit, extractTagEntriesFromPRBody, getNxProjectNames, getNxProjectRoot, getRepoInfo, isEnvironmentProject, isPublicProject, matchProjectName, parseTagEntries };

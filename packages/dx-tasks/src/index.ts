@@ -17,4 +17,5 @@ export {
 export * from "./report-store.ts";
 export * from "./run-command.ts";
 export * from "./tasks.ts";
+export { terraformApplyReportNamespace } from "./terraform/apply.ts";
 export { terraformPlanReportNamespace } from "./terraform/plan.ts";

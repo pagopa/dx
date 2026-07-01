@@ -72,6 +72,7 @@
       "packages/*",
       "actions/*",
       "infra/modules/*",
+      "infra/resources/*",
       "providers/*",
       "infra/scripts"
     ],

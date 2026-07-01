@@ -9,6 +9,16 @@
       "implementation": "./dist/executors/plan/plan.js",
       "schema": "./src/executors/plan/schema.json",
       "description": "plan executor"
+    },
+    "plan-upload": {
+      "implementation": "./dist/executors/plan-upload/plan-upload.js",
+      "schema": "./src/executors/plan-upload/schema.json",
+      "description": "plan-upload executor"
+    },
+    "release-apply": {
+      "implementation": "./dist/executors/release-apply/release-apply.js",
+      "schema": "./src/executors/release-apply/schema.json",
+      "description": "release-apply executor"
     }
   }
 }

@@ -14,15 +14,18 @@ const createMockReleaseGroup = (): any => ({
   },
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const createMockProjectGraphNode = (root: string): any => ({
+const createMockProjectGraphNode = (
+  root: string,
+  projectType: "application" | "library" = "library",
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any => ({
   data: {
     name: "test-project",
-    projectType: "library",
+    projectType,
     root,
   },
   name: "test-project",
-  type: "lib",
+  type: projectType === "application" ? "app" : "lib",
 });
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,7 +37,7 @@ const createMockFinalConfigForProject = (): any => ({
 // eslint-disable-next-line max-lines-per-function
 describe("TerraformVersionActions", () => {
   describe("validManifestFilenames", () => {
-    it("defines module.json as the valid manifest filename", () => {
+    it("declares both module.json and environment.json as valid manifest filenames", () => {
       const releaseGroup = createMockReleaseGroup();
       const projectGraphNode = createMockProjectGraphNode("infra/modules/test");
       const finalConfigForProject = createMockFinalConfigForProject();
@@ -45,7 +48,10 @@ describe("TerraformVersionActions", () => {
         finalConfigForProject,
       );
 
-      expect(versionActions.validManifestFilenames).toEqual(["module.json"]);
+      expect(versionActions.validManifestFilenames).toEqual([
+        "module.json",
+        "environment.json",
+      ]);
     });
   });
 
@@ -114,6 +120,61 @@ describe("TerraformVersionActions", () => {
 
       const releaseGroup = createMockReleaseGroup();
       const projectGraphNode = createMockProjectGraphNode(root);
+      const finalConfigForProject = createMockFinalConfigForProject();
+
+      const versionActions = new TerraformVersionActions(
+        releaseGroup,
+        projectGraphNode,
+        finalConfigForProject,
+      );
+
+      const result =
+        await versionActions.readCurrentVersionFromSourceManifest(tree);
+
+      expect(result).toBeNull();
+    });
+
+    it("reads version from environment.json for application projects", async () => {
+      const tree = createTree();
+      const root = "infra/resources/dev";
+      tree.write(
+        `${root}/environment.json`,
+        JSON.stringify({
+          version: "0.3.1",
+        }),
+      );
+
+      const releaseGroup = createMockReleaseGroup();
+      const projectGraphNode = createMockProjectGraphNode(root, "application");
+      const finalConfigForProject = createMockFinalConfigForProject();
+
+      const versionActions = new TerraformVersionActions(
+        releaseGroup,
+        projectGraphNode,
+        finalConfigForProject,
+      );
+
+      const result =
+        await versionActions.readCurrentVersionFromSourceManifest(tree);
+
+      expect(result).toEqual({
+        currentVersion: "0.3.1",
+        manifestPath: `${root}/environment.json`,
+      });
+    });
+
+    it("does not read module.json for application projects", async () => {
+      const tree = createTree();
+      const root = "infra/resources/dev";
+      tree.write(
+        `${root}/module.json`,
+        JSON.stringify({
+          version: "9.9.9",
+        }),
+      );
+
+      const releaseGroup = createMockReleaseGroup();
+      const projectGraphNode = createMockProjectGraphNode(root, "application");
       const finalConfigForProject = createMockFinalConfigForProject();
 
       const versionActions = new TerraformVersionActions(
@@ -211,6 +272,39 @@ describe("TerraformVersionActions", () => {
       expect(updatedManifest.provider).toBe("aws");
       expect(updatedManifest.description).toBe("Test module");
       expect(Object.keys(updatedManifest)).toHaveLength(3);
+    });
+
+    it("updates version in environment.json for application projects", async () => {
+      const tree = createTree();
+      const root = "infra/resources/dev";
+      tree.write(
+        `${root}/environment.json`,
+        JSON.stringify({ version: "0.1.0" }, null, 2),
+      );
+
+      const releaseGroup = createMockReleaseGroup();
+      const projectGraphNode = createMockProjectGraphNode(root, "application");
+      const finalConfigForProject = createMockFinalConfigForProject();
+
+      const versionActions = new TerraformVersionActions(
+        releaseGroup,
+        projectGraphNode,
+        finalConfigForProject,
+      );
+
+      const logMessages = await versionActions.updateProjectVersion(
+        tree,
+        "0.2.0",
+      );
+
+      const updatedContent = tree.read(`${root}/environment.json`, "utf-8");
+      if (!updatedContent) {
+        throw new Error("Failed to read updated manifest");
+      }
+      const updatedManifest = JSON.parse(updatedContent);
+
+      expect(updatedManifest.version).toBe("0.2.0");
+      expect(logMessages[0]).toContain("environment.json");
     });
 
     it("throws descriptive error when module.json contains invalid JSON", async () => {

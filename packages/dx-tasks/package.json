@@ -28,5 +28,10 @@
   "peerDependencies": {
     "octokit": "catalog:",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "catalog:aws",
+    "@azure/identity": "catalog:",
+    "@azure/storage-blob": "catalog:azure"
   }
 }
