@@ -47,6 +47,9 @@ application deployment, and infrastructure automation.
   and deploy Azure Dashboards from OpenAPI specs
 - **[Azure Login](../azure/iam/azure-login.md)** - Secure authentication to
   Azure
+- **[Generate Azure TLS Certificate](./release-azure-certificate.md)** - Create
+  and automatically renew Azure TLS certificates via Let's Encrypt and Azure Key
+  Vault
 
 ### 🛠️ Build & Package
 

@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 10,
+  "namedInputs": {
+    "default": ["{projectRoot}/src/**/*.ts"]
+  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
@@ -129,6 +132,10 @@
           "watchDepsName": "watch-deps"
         }
       }
+    },
+    {
+      "plugin": "@pagopa/nx-terraform-plugin",
+      "include": ["infra/**"]
     }
   ],
   "analytics": false

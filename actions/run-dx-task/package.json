@@ -1,6 +1,6 @@
 {
   "name": "run-dx-task",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "private": true,
   "description": "GitHub Action that dispatches dx-tasks tasks",
@@ -15,15 +15,32 @@
     "build": "tsdown"
   },
   "devDependencies": {
+    "@actions/core": "catalog:github-actions",
+    "@pagopa/dx-tasks": "workspace:^",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:",
-    "tsdown": "^0.22.0",
-    "@actions/core": "catalog:github-actions",
-    "@pagopa/dx-tasks": "workspace:^",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@nx/devkit": "^22.7.5",
+    "nx": "22.7.5"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "inputs": [
+          "default",
+          "^default"
+        ],
+        "outputs": [
+          "{projectRoot}/dist/**"
+        ]
+      }
+    }
   }
 }

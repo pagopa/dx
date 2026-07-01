@@ -1,27 +1,11 @@
 {
   "name": "@pagopa/dx-tasks",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "sideEffects": false,
   "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    },
-    "./default-dispatcher": {
-      "types": "./dist/default-dispatcher.d.ts",
-      "default": "./dist/default-dispatcher.js"
-    },
-    "./dispatcher": {
-      "types": "./dist/dispatcher.d.ts",
-      "default": "./dist/dispatcher.js"
-    },
-    "./terraform-plan": {
-      "types": "./dist/terraform-plan.d.ts",
-      "default": "./dist/terraform-plan.js"
-    }
+    "./default-dispatcher": "./src/default-dispatcher.ts"
   },
   "repository": {
     "type": "git",
@@ -41,7 +25,8 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "dependencies": {
+  "peerDependencies": {
+    "octokit": "catalog:",
     "zod": "catalog:"
   }
 }

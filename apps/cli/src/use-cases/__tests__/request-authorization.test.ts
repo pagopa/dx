@@ -26,6 +26,19 @@ const makeSampleInput = (): RequestAuthorizationInput =>
   });
 
 describe("requestAuthorization", () => {
+  it("accepts resource prefixes containing numbers", () => {
+    const result = requestAuthorizationInputSchema.safeParse({
+      bootstrapIdentityId: "dxt0-d-itn-bootstrap-id-01",
+      envShort: "d",
+      prefix: "dxt0",
+      repoName: "test-repo",
+      repoOwner: "pagopa",
+      subscriptionName: "DEV-DEVEX",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("should return the authorization result on success", async () => {
     const authorizationService = mock<AuthorizationService>();
     const input = makeSampleInput();

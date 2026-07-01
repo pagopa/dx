@@ -27,7 +27,10 @@ import {
   GitHubRepo,
   githubRepoSchema,
 } from "../../../../domain/github-repo.js";
-import { githubAppCredentialsSchema } from "../../../../domain/github.js";
+import {
+  type GitHubAppCredentials,
+  githubAppCredentialsSchema,
+} from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
@@ -69,116 +72,388 @@ export const payloadSchema = z.object({
 
 export type Payload = z.infer<typeof payloadSchema>;
 
+/**
+ * Prefilled answers supplied up-front by the caller (e.g. CLI flags), used to
+ * skip the matching prompts. Identifies cloud accounts by id and locations by
+ * account id, since the full domain objects aren't available before resolving.
+ */
+export const initialAnswersSchema = z.object({
+  env: z
+    .object({
+      cloudAccountIds: z.array(z.string().trim().min(1)).optional(),
+      locations: z
+        .record(z.string().min(1), z.enum(azure.locations))
+        .optional(),
+      name: environmentSchema.shape.name.optional(),
+      prefix: environmentSchema.shape.prefix.optional(),
+    })
+    .optional(),
+  init: z
+    .object({
+      confirm: z.boolean().optional(),
+      runnerAppCredentials: githubAppCredentialsSchema.partial().optional(),
+    })
+    .optional(),
+  tags: z
+    .object({
+      BusinessUnit: z.string().trim().min(1).optional(),
+      ManagementTeam: z.string().trim().min(1).optional(),
+    })
+    .optional(),
+  workspace: z
+    .object({
+      domain: workspaceSchema.shape.domain.optional(),
+    })
+    .optional(),
+});
+
+export type InitialAnswers = z.infer<typeof initialAnswersSchema>;
+
+/**
+ * Answers gathered from the interactive base prompts. Mirrors {@link initialAnswersSchema}
+ * but holds the values produced by the prompt session: cloud accounts are full
+ * domain objects (resolved from inquirer choices) rather than ids. Only questions
+ * not already prefilled are asked, so every field is optional here too.
+ */
+const basePromptAnswersSchema = z.object({
+  env: z
+    .object({
+      cloudAccounts: z.array(cloudAccountSchema).optional(),
+      name: environmentSchema.shape.name.optional(),
+      prefix: environmentSchema.shape.prefix.optional(),
+    })
+    .optional(),
+  tags: z
+    .object({
+      BusinessUnit: z.string().trim().min(1).optional(),
+      ManagementTeam: z.string().trim().min(1).optional(),
+    })
+    .optional(),
+  workspace: z
+    .object({
+      domain: workspaceSchema.shape.domain.optional(),
+    })
+    .optional(),
+});
+
 export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
   github?: GitHubRepo;
+  initialAnswers?: InitialAnswers;
 };
 
-/* eslint-disable max-lines-per-function */
+type BasePromptAnswers = z.infer<typeof basePromptAnswersSchema>;
+
+const DEFAULT_COST_CENTER = "TS000";
+
+const resolveCloudAccounts = (
+  availableCloudAccounts: CloudAccount[],
+  initialAnswers: InitialAnswers,
+): CloudAccount[] | undefined => {
+  const cloudAccountIds = initialAnswers.env?.cloudAccountIds;
+  if (cloudAccountIds === undefined) {
+    return undefined;
+  }
+
+  return cloudAccountIds.map((cloudAccountId) => {
+    const cloudAccount = availableCloudAccounts.find(
+      (account) => account.id === cloudAccountId,
+    );
+    assert.ok(cloudAccount, `Cloud account "${cloudAccountId}" was not found.`);
+    return { ...cloudAccount };
+  });
+};
+
+const getBaseQuestions = (
+  availableCloudAccounts: CloudAccount[],
+  initialAnswers: InitialAnswers,
+  selectedCloudAccounts: CloudAccount[] | undefined,
+): DistinctQuestion[] => {
+  const questions: DistinctQuestion[] = [];
+
+  if (initialAnswers.env?.name === undefined) {
+    questions.push({
+      choices: [
+        { name: "PROD", value: "prod" },
+        { name: "UAT", value: "uat" },
+        { name: "DEV", value: "dev" },
+      ],
+      default: "prod",
+      message: "Environment name",
+      name: "env.name",
+      type: "list",
+    });
+  }
+
+  if (selectedCloudAccounts === undefined) {
+    questions.push({
+      choices: getCloudAccountChoices(availableCloudAccounts),
+      loop: false,
+      message: "Account(s)",
+      name: "env.cloudAccounts",
+      type: "checkbox",
+      validate: (value) =>
+        Array.isArray(value) && value.length > 0
+          ? true
+          : "Please select a cloud account.",
+    });
+  }
+
+  if (initialAnswers.env?.prefix === undefined) {
+    questions.push({
+      filter: (value: string) => value.trim().toLowerCase(),
+      message: "Prefix (2-4 characters)",
+      name: "env.prefix",
+      type: "input",
+      validate: validatePrompt(environmentSchema.shape.prefix),
+    });
+  }
+
+  if (initialAnswers.workspace?.domain === undefined) {
+    questions.push({
+      filter: (value: string) => value.trim().toLowerCase(),
+      message: "Domain",
+      name: "workspace.domain",
+      type: "input",
+      validate: validatePrompt(workspaceSchema.shape.domain),
+    });
+  }
+
+  if (initialAnswers.tags?.BusinessUnit === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "Business unit",
+      name: "tags.BusinessUnit",
+      validate: (value) =>
+        value.length > 0 ? true : "Business Unit cannot be empty.",
+    });
+  }
+
+  if (initialAnswers.tags?.ManagementTeam === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "Management team",
+      name: "tags.ManagementTeam",
+      validate: (value) =>
+        value.length > 0 ? true : "Management Team cannot be empty.",
+    });
+  }
+
+  return questions;
+};
+
+const getSelectedCloudAccounts = (
+  answers: BasePromptAnswers,
+  initialCloudAccounts: CloudAccount[] | undefined,
+): CloudAccount[] => {
+  const promptedCloudAccounts = answers.env?.cloudAccounts;
+  const selectedCloudAccounts = initialCloudAccounts ?? promptedCloudAccounts;
+
+  assert.ok(
+    Array.isArray(selectedCloudAccounts) && selectedCloudAccounts.length > 0,
+    "Please select a cloud account.",
+  );
+
+  return selectedCloudAccounts.map((cloudAccount) => ({ ...cloudAccount }));
+};
+
+const applyLocations = async (
+  promptModule: typeof inquirer,
+  selectedCloudAccounts: CloudAccount[],
+  initialAnswers: InitialAnswers,
+) => {
+  const predefinedLocations = initialAnswers.env?.locations ?? {};
+  const locationQuestions = selectedCloudAccounts
+    .filter((account) => predefinedLocations[account.id] === undefined)
+    .map((account) => ({
+      choices: getCloudLocationChoices(azure.cloudRegions),
+      default: azure.defaultLocation,
+      message: `Default location for ${account.displayName}`,
+      name: account.id,
+      type: "list",
+    }));
+
+  const promptedLocations =
+    locationQuestions.length === 0
+      ? {}
+      : await promptModule.prompt(locationQuestions);
+
+  selectedCloudAccounts.forEach((account) => {
+    const location =
+      predefinedLocations[account.id] ?? promptedLocations[account.id];
+    if (location !== undefined) {
+      account.defaultLocation = location;
+    }
+  });
+};
+
+const parseInitialAnswers = (
+  input: InitialAnswers | undefined,
+): InitialAnswers => {
+  const result = initialAnswersSchema.safeParse(input ?? {});
+  assert.ok(
+    result.success,
+    "Invalid initial answers for the environment generator.",
+  );
+  return result.data;
+};
+
+const getRunnerAppCredentialQuestions = (
+  initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
+): DistinctQuestion[] => {
+  const questions: DistinctQuestion[] = [];
+
+  if (initialRunnerAppCredentials.id === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App ID",
+      name: "runnerAppCredentials.id",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.clientId === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Client ID",
+      name: "runnerAppCredentials.clientId",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.installationId === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Installation ID",
+      name: "runnerAppCredentials.installationId",
+      type: "input",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  if (initialRunnerAppCredentials.key === undefined) {
+    questions.push({
+      filter: (value) => value.trim(),
+      message: "GitHub Runner App Private Key",
+      name: "runnerAppCredentials.key",
+      type: "editor",
+      validate: (value) => value.length > 0,
+    });
+  }
+
+  return questions;
+};
+
+const mergeRunnerAppCredentials = (
+  initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
+  promptedRunnerAppCredentials: Partial<GitHubAppCredentials> | undefined,
+): InitPayload["runnerAppCredentials"] => {
+  const runnerAppCredentials = {
+    clientId:
+      initialRunnerAppCredentials.clientId ??
+      promptedRunnerAppCredentials?.clientId,
+    id: initialRunnerAppCredentials.id ?? promptedRunnerAppCredentials?.id,
+    installationId:
+      initialRunnerAppCredentials.installationId ??
+      promptedRunnerAppCredentials?.installationId,
+    key: initialRunnerAppCredentials.key ?? promptedRunnerAppCredentials?.key,
+  };
+
+  if (
+    Object.values(runnerAppCredentials).every((value) => value === undefined)
+  ) {
+    return undefined;
+  }
+
+  return githubAppCredentialsSchema.parse(runnerAppCredentials);
+};
+
+const collectBaseAnswers = async (
+  promptModule: typeof inquirer,
+  availableCloudAccounts: CloudAccount[],
+  initialAnswers: InitialAnswers,
+): Promise<{
+  answers: BasePromptAnswers;
+  initialCloudAccounts: CloudAccount[] | undefined;
+}> => {
+  const initialCloudAccounts = resolveCloudAccounts(
+    availableCloudAccounts,
+    initialAnswers,
+  );
+  const baseQuestions = getBaseQuestions(
+    availableCloudAccounts,
+    initialAnswers,
+    initialCloudAccounts,
+  );
+  const promptAnswersResult = basePromptAnswersSchema.safeParse(
+    baseQuestions.length === 0 ? {} : await promptModule.prompt(baseQuestions),
+  );
+  assert.ok(promptAnswersResult.success, "Invalid environment prompt answers.");
+
+  return {
+    answers: promptAnswersResult.data,
+    initialCloudAccounts,
+  };
+};
+
+const buildPayload = ({
+  answers,
+  github,
+  initialAnswers,
+  selectedCloudAccounts,
+}: {
+  answers: BasePromptAnswers;
+  github: GitHubRepo;
+  initialAnswers: InitialAnswers;
+  selectedCloudAccounts: CloudAccount[];
+}): Payload =>
+  payloadSchema.parse({
+    env: {
+      cloudAccounts: selectedCloudAccounts,
+      name: initialAnswers.env?.name ?? answers.env?.name,
+      prefix: initialAnswers.env?.prefix ?? answers.env?.prefix,
+    },
+    github,
+    tags: {
+      BusinessUnit:
+        initialAnswers.tags?.BusinessUnit ?? answers.tags?.BusinessUnit,
+      CostCenter: DEFAULT_COST_CENTER,
+      ManagementTeam:
+        initialAnswers.tags?.ManagementTeam ?? answers.tags?.ManagementTeam,
+    },
+    workspace: {
+      domain: initialAnswers.workspace?.domain ?? answers.workspace?.domain,
+    },
+  });
+
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
-  (deps) => async (inquirer) => {
+  (deps) => async (promptModule) => {
     const logger = getLogger(["gen", "env"]);
     const github = deps.github ?? (await getGithubRepo());
     assert.ok(github, "This generator only works inside a GitHub repository.");
+    const initialAnswers = parseInitialAnswers(deps.initialAnswers);
     logger.debug("github repo {github}", { github });
-    const answers = await inquirer.prompt([
-      {
-        choices: [
-          { name: "PROD", value: "prod" },
-          { name: "UAT", value: "uat" },
-          { name: "DEV", value: "dev" },
-        ],
-        default: "prod",
-        message: "Environment name",
-        name: "env.name",
-        type: "list",
-      },
-      {
-        choices: [{ name: "Microsoft Azure", value: "azure" }],
-        default: ["azure"],
-        message: "Cloud provider(s)",
-        name: "csp",
-        type: "checkbox",
-        validate: (value) =>
-          Array.isArray(value) && value.length > 0
-            ? true
-            : "Please select at least one cloud provider.",
-      },
-      {
-        choices: async () =>
-          getCloudAccountChoices(await deps.cloudAccountRepository.list()),
-        loop: false,
-        message: "Account(s)",
-        name: "env.cloudAccounts",
-        type: "checkbox",
-        validate: (value) =>
-          Array.isArray(value) && value.length > 0
-            ? true
-            : "Please select a cloud account.",
-      },
-      {
-        filter: (value: string) => value.trim().toLowerCase(),
-        message: "Prefix (2-4 characters)",
-        name: "env.prefix",
-        type: "input",
-        validate: validatePrompt(environmentSchema.shape.prefix),
-      },
-      {
-        filter: (value: string) => value.trim().toLowerCase(),
-        message: "Domain",
-        name: "workspace.domain",
-        type: "input",
-        validate: validatePrompt(workspaceSchema.shape.domain),
-      },
-      {
-        choices: [
-          {
-            name: "TECNOLOGIA E SERVIZI",
-            value: "TS000",
-          },
-        ],
-        default: "TS000 - Tecnologia e Servizi",
-        message: "Cost center",
-        name: "tags.CostCenter",
-        type: "list",
-        validate: (value) =>
-          Array.isArray(value) && value.length > 0
-            ? true
-            : "Please select a Cost Center.",
-      },
-      {
-        filter: (value) => value.trim(),
-        message: "Business unit",
-        name: "tags.BusinessUnit",
-        validate: (value) =>
-          value.length > 0 ? true : "Business Unit cannot be empty.",
-      },
-      {
-        filter: (value) => value.trim(),
-        message: "Management team",
-        name: "tags.ManagementTeam",
-        validate: (value) =>
-          value.length > 0 ? true : "Management Team cannot be empty.",
-      },
-    ]);
-
-    const payload = payloadSchema.parse({ ...answers, github });
-
-    const locations = await inquirer.prompt(
-      payload.env.cloudAccounts.map((account) => ({
-        choices: getCloudLocationChoices(azure.cloudRegions),
-        default: azure.defaultLocation,
-        message: `Default location for ${account.displayName}`,
-        name: account.id,
-        type: "list",
-      })),
+    const availableCloudAccounts = await deps.cloudAccountRepository.list();
+    const { answers, initialCloudAccounts } = await collectBaseAnswers(
+      promptModule,
+      availableCloudAccounts,
+      initialAnswers,
     );
-    payload.env.cloudAccounts.forEach((account) => {
-      const location = locations[account.id];
-      if (location) {
-        account.defaultLocation = location;
-      }
+    const selectedCloudAccounts = getSelectedCloudAccounts(
+      answers,
+      initialCloudAccounts,
+    );
+
+    await applyLocations(promptModule, selectedCloudAccounts, initialAnswers);
+
+    const payload = buildPayload({
+      answers,
+      github,
+      initialAnswers,
+      selectedCloudAccounts,
     });
 
     const initStatus = await getInitializationStatus(
@@ -194,14 +469,16 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     console.log(formatInitializationDetails(initStatus));
 
-    const initConfirm = await inquirer.prompt({
-      default: true,
-      message: `The environment "${payload.env.name}" is not initialized. Proceed with the setup above?`,
-      name: "init",
-      type: "confirm",
-    });
+    if (initialAnswers.init?.confirm !== true) {
+      const initConfirm = await promptModule.prompt({
+        default: true,
+        message: `The environment "${payload.env.name}" is not initialized. Proceed with the setup above?`,
+        name: "init",
+        type: "confirm",
+      });
 
-    assert.ok(initConfirm.init, "Can't proceed without initialization");
+      assert.ok(initConfirm.init, "Can't proceed without initialization");
+    }
 
     assert.ok(
       await hasUserPermissionToInitialize(
@@ -238,50 +515,26 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
     );
 
-    let runnerAppCredentials: InitPayload["runnerAppCredentials"];
+    const initialRunnerAppCredentials =
+      initialAnswers.init?.runnerAppCredentials ?? {};
 
     if (cloudAccountsNotInitialized) {
       questions.push(
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App ID",
-          name: "runnerAppCredentials.id",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Client ID",
-          name: "runnerAppCredentials.clientId",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Installation ID",
-          name: "runnerAppCredentials.installationId",
-          type: "input",
-          validate: (value) => value.length > 0,
-        },
-        {
-          filter: (value) => value.trim(),
-          message: "GitHub Runner App Private Key",
-          name: "runnerAppCredentials.key",
-          type: "editor",
-          validate: (value) => value.length > 0,
-        },
+        ...getRunnerAppCredentialQuestions(initialRunnerAppCredentials),
       );
     }
 
-    const initInput = await inquirer.prompt(questions);
-
-    if (initInput.runnerAppCredentials) {
-      runnerAppCredentials = initInput.runnerAppCredentials;
-    }
+    const initInput =
+      questions.length === 0 ? {} : await promptModule.prompt(questions);
 
     if (initInput.terraformBackend) {
       terraformBackend = initInput.terraformBackend;
     }
+
+    const runnerAppCredentials = mergeRunnerAppCredentials(
+      initialRunnerAppCredentials,
+      initInput.runnerAppCredentials,
+    );
 
     payload.init = payloadSchema.shape.init.parse({
       cloudAccountsToInitialize: getCloudAccountToInitialize(initStatus),
