@@ -42,3 +42,11 @@ output "logger_id" {
   description = "The ID of the Application Insights logger associated with the Azure API Management instance (null if Application Insights is disabled)."
   value       = var.application_insights.enabled ? azurerm_api_management_logger.this[0].id : null
 }
+
+output "subnet" {
+  description = "The APIM subnet managed by this module. Returns id and name; name is null when an existing subnet was provided via the deprecated subnet_id variable."
+  value = {
+    id   = local.subnet_id
+    name = local.has_existing_subnet ? null : azurerm_subnet.apim[0].name
+  }
+}
