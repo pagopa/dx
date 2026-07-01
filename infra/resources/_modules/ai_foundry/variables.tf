@@ -15,15 +15,21 @@ variable "resource_group_name" {
   description = "The name of the resource group in which to create the AI Foundry account."
 }
 
+variable "virtual_network" {
+  type = object({
+    id                  = string
+    name                = string
+    resource_group_name = string
+  })
+  description = "The common virtual network from which the private Foundry endpoint is reachable."
+}
+
+variable "private_endpoint_subnet_id" {
+  type        = string
+  description = "The subnet ID where the Foundry private endpoint is created."
+}
+
 variable "tags" {
   type        = map(string)
   description = "A map of tags to assign to the resources."
-}
-
-variable "ai_user_principal_ids" {
-  type        = list(string)
-  default     = []
-  description = <<-EOT
-  Object IDs of identities (e.g. the AI gateway managed identity) granted the Cognitive Services OpenAI User role on the account.
-  EOT
 }

@@ -7,38 +7,17 @@ locals {
 
   account_name = "${var.environment.prefix}-${var.environment.environment}-${local.location_short}-aif-${var.environment.instance_number}"
   project_name = "${var.environment.prefix}-${var.environment.environment}-${local.location_short}-terraformci-proj-${var.environment.instance_number}"
-}
 
-# trivy:ignore:AZU-0012 No network rules defined and default action allows access.
-# trivy:ignore:AZU-0057 Storage account does not have logging enabled for any service.
-# trivy:ignore:AZU-0058 Storage account does not use geo-redundant replication.
-# trivy:ignore:AZU-0061 Storage account does not have infrastructure encryption enabled.
-resource "azurerm_storage_account" "foundry" {
-  name = provider::azuredx::resource_name(merge(var.environment,
-    {
-      domain        = var.environment.domain
-      app_name      = var.environment.app_name
-      resource_type = "storage_account",
+  private_endpoint_name = provider::azuredx::resource_name(merge(var.environment, {
+    app_name      = "foundry"
+    resource_type = "private_endpoint"
   }))
-  resource_group_name = var.resource_group_name
-  location            = var.environment.location
 
-  account_tier                    = "Standard"
-  account_replication_type        = "LRS"
-  allow_nested_items_to_be_public = false
-  default_to_oauth_authentication = true
-  shared_access_key_enabled       = false
-
-  identity {
-    type = "SystemAssigned"
+  private_dns_zones = {
+    cognitive_services = "privatelink.cognitiveservices.azure.com"
+    openai             = "privatelink.openai.azure.com"
+    services_ai        = "privatelink.services.ai.azure.com"
   }
-
-  network_rules {
-    default_action = "Allow" # TODO: change
-    bypass         = ["AzureServices", "Logging", "Metrics"]
-  }
-
-  tags = var.tags
 }
 
 resource "azurerm_cognitive_account" "this" {
@@ -57,24 +36,53 @@ resource "azurerm_cognitive_account" "this" {
   custom_subdomain_name      = local.account_name
 
   local_auth_enabled            = false
-  public_network_access_enabled = true
+  public_network_access_enabled = false
 
-  # network_acls {
-  #   default_action = "Deny"
-  #   bypass         = ["AzureServices"]
-  # }
+  network_acls {
+    default_action = "Deny"
+    bypass         = "AzureServices"
+  }
 
-  # network_injection {
+  tags = var.tags
+}
 
-  # }
+resource "azurerm_private_dns_zone" "foundry" {
+  for_each = local.private_dns_zones
 
-  # outbound_network_access_restricted {
+  name                = each.value
+  resource_group_name = var.virtual_network.resource_group_name
 
-  # }
+  tags = var.tags
+}
 
-  storage {
-    storage_account_id = azurerm_storage_account.foundry.id
-    # identity_client_id = azurerm_storage_account.foundry.identity[0].principal_id
+resource "azurerm_private_dns_zone_virtual_network_link" "foundry" {
+  for_each = azurerm_private_dns_zone.foundry
+
+  name                  = var.virtual_network.name
+  resource_group_name   = var.virtual_network.resource_group_name
+  private_dns_zone_name = each.value.name
+  virtual_network_id    = var.virtual_network.id
+  registration_enabled  = false
+
+  tags = var.tags
+}
+
+resource "azurerm_private_endpoint" "foundry" {
+  name                = local.private_endpoint_name
+  location            = var.environment.location
+  resource_group_name = var.resource_group_name
+  subnet_id           = var.private_endpoint_subnet_id
+
+  private_service_connection {
+    name                           = local.private_endpoint_name
+    private_connection_resource_id = azurerm_cognitive_account.this.id
+    is_manual_connection           = false
+    subresource_names              = ["account"]
+  }
+
+  private_dns_zone_group {
+    name                 = "private-dns-zone-group"
+    private_dns_zone_ids = values(azurerm_private_dns_zone.foundry)[*].id
   }
 
   tags = var.tags
@@ -107,22 +115,6 @@ resource "azurerm_cognitive_deployment" "this" {
 
   sku {
     name     = "GlobalStandard"
-    capacity = 10
+    capacity = 100
   }
-}
-
-# Grant the AI gateway managed identity inference access on the account.
-resource "azurerm_role_assignment" "openai_user" {
-  for_each = toset(var.ai_user_principal_ids)
-
-  scope                = azurerm_cognitive_account.this.id
-  role_definition_name = "Cognitive Services OpenAI User" # TODO: change
-  principal_id         = each.value
-}
-
-resource "azurerm_role_assignment" "foundry_storage_blob_contributor" {
-  scope                = azurerm_storage_account.foundry.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = azurerm_cognitive_account.this.identity[0].principal_id
-  description          = "Allow Foundry to access the Storage Account for model storage and inference"
 }
