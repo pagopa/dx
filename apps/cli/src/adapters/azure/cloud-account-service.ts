@@ -24,6 +24,7 @@ import {
 import {
   type EnvironmentId,
   environmentShort,
+  EnvironmentShortValue,
 } from "../../domain/environment.js";
 import { type GitHubRepo } from "../../domain/github-repo.js";
 import {
@@ -34,7 +35,12 @@ import {
   type TerraformBackend,
   terraformBackendSchema,
 } from "../../domain/remote-backend.js";
-import { isAzureLocation, locations, locationShort } from "./locations.js";
+import {
+  isAzureLocation,
+  locations,
+  locationShort,
+  LocationShortValue,
+} from "./locations.js";
 
 // We are only interested in these properties for now;
 // the actual result structure contains the full cloud resource object
@@ -86,8 +92,8 @@ type BootstrapperIdentity = {
 };
 
 type BootstrapperIdentityName =
-  | `${string}-${string}-${string}-bootstrap-ci-id-${string}`
-  | `${string}-${string}-${string}-bootstrap-id-${string}`;
+  | `${string}-${EnvironmentShortValue}-${LocationShortValue}-bootstrap-ci-id-${string}`
+  | `${string}-${EnvironmentShortValue}-${LocationShortValue}-bootstrap-id-${string}`;
 
 type BootstrapperIdentityParameters = {
   location: string;
