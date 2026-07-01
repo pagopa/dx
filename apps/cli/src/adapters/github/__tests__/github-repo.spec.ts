@@ -1,14 +1,42 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("execa", () => ({
+const execaMocks = vi.hoisted(() => ({
   $: vi.fn(),
 }));
 
-import { $ } from "execa";
+vi.mock("execa", () => ({
+  $: execaMocks.$,
+}));
 
 import { getGithubRepo } from "../github-repo.js";
 
-const mock$ = $ as unknown as ReturnType<typeof vi.fn>;
+type GitConfigResult = {
+  exitCode: number;
+  stderr: string;
+  stdout: string;
+};
+
+const mockGitRemoteOriginUrl = (result: GitConfigResult) => {
+  const command$ = vi.fn().mockResolvedValue(result);
+
+  execaMocks.$.mockImplementation(
+    (firstArg: TemplateStringsArray | { reject: boolean }) => {
+      if (!("raw" in firstArg)) {
+        return command$;
+      }
+
+      if (result.exitCode === 0) {
+        return Promise.resolve(result);
+      }
+
+      return Promise.reject(
+        new Error(`Command failed with exit code ${result.exitCode}`),
+      );
+    },
+  );
+
+  return result;
+};
 
 describe("getGithubRepo", () => {
   beforeEach(() => {
@@ -16,15 +44,59 @@ describe("getGithubRepo", () => {
   });
 
   it("should return undefined if no remote URL is set", async () => {
-    mock$.mockResolvedValue({ stdout: "" });
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
+      stdout: "",
+    });
 
     const result = await getGithubRepo();
 
     expect(result).toBeUndefined();
   });
 
+  it("should return undefined if git reports that remote origin is missing", async () => {
+    mockGitRemoteOriginUrl({
+      exitCode: 1,
+      stderr: "",
+      stdout: "",
+    });
+
+    const result = await getGithubRepo();
+
+    expect(result).toBeUndefined();
+  });
+
+  it("should throw an error with cause if reading the remote fails", async () => {
+    const gitFailure = mockGitRemoteOriginUrl({
+      exitCode: 128,
+      stderr: "fatal: not in a git directory",
+      stdout: "",
+    });
+    const result = getGithubRepo();
+
+    await expect(result).rejects.toThrow("fatal: not in a git directory");
+    await expect(result).rejects.toHaveProperty("cause", gitFailure);
+  });
+
+  it("should surface the real cause when exit 1 also reports an error", async () => {
+    const gitFailure = mockGitRemoteOriginUrl({
+      exitCode: 1,
+      stderr: "error: cannot read config file",
+      stdout: "",
+    });
+    const result = getGithubRepo();
+
+    await expect(result).rejects.toThrow("error: cannot read config file");
+    await expect(result).rejects.toHaveProperty("cause", gitFailure);
+  });
+
   it("should parse GitHub repository URL and return owner and repo", async () => {
-    mock$.mockResolvedValue({ stdout: "https://github.com/pagopa/dx" });
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
+      stdout: "https://github.com/pagopa/dx",
+    });
 
     const result = await getGithubRepo();
 
@@ -35,7 +107,11 @@ describe("getGithubRepo", () => {
   });
 
   it("should handle repository URLs with .git suffix", async () => {
-    mock$.mockResolvedValue({ stdout: "https://github.com/pagopa/dx.git" });
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
+      stdout: "https://github.com/pagopa/dx.git",
+    });
 
     const result = await getGithubRepo();
 
@@ -46,7 +122,11 @@ describe("getGithubRepo", () => {
   });
 
   it("should throw an error for non-GitHub repositories", async () => {
-    mock$.mockResolvedValue({ stdout: "https://gitlab.com/owner/repo" });
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
+      stdout: "https://gitlab.com/owner/repo",
+    });
 
     await expect(getGithubRepo()).rejects.toThrow(
       "Only GitHub repositories are supported",
@@ -54,7 +134,9 @@ describe("getGithubRepo", () => {
   });
 
   it("should handle repository names with hyphens", async () => {
-    mock$.mockResolvedValue({
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
       stdout: "https://github.com/my-org/my-repo-name",
     });
 
@@ -67,7 +149,9 @@ describe("getGithubRepo", () => {
   });
 
   it("should handle repository names with underscores", async () => {
-    mock$.mockResolvedValue({
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
       stdout: "https://github.com/my_org/my_repo_name",
     });
 
@@ -80,7 +164,9 @@ describe("getGithubRepo", () => {
   });
 
   it("should handle ssh repository URLs", async () => {
-    mock$.mockResolvedValue({
+    mockGitRemoteOriginUrl({
+      exitCode: 0,
+      stderr: "",
       stdout: "git@github.com:my-org/my-repo-name.git",
     });
 

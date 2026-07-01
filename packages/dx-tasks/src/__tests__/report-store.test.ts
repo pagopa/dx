@@ -183,6 +183,22 @@ describe("ReportStore.render", () => {
       await expect(store.render("markdown")).resolves.toBe("# first\n# second");
     });
 
+    it("passes the render context to namespace renderers", async () => {
+      await seedReport("demo", "a", { value: "first" });
+      const store = new ReportStore(tempDirectoryPath).register({
+        name: "demo",
+        renderers: {
+          markdown: ([report], { sourceUrl } = {}) =>
+            report && sourceUrl ? `${report.value}: ${sourceUrl}` : "",
+        },
+        schema: z.object({ value: z.string() }),
+      });
+
+      await expect(
+        store.render("markdown", { sourceUrl: "https://example.com/run" }),
+      ).resolves.toBe("first: https://example.com/run");
+    });
+
     it("skips namespaces that have no renderer registered for the format", async () => {
       await seedReport("demo", "a", { value: "kept" });
       await seedReport("unrendered", "a", { value: "ignored" });

@@ -24,6 +24,23 @@ import {
 const createReports = (baseDirectoryPath: string) =>
   new ReportStore(baseDirectoryPath).register(terraformPlanReportNamespace);
 
+type TerraformPlanMarkdownRenderer = NonNullable<
+  NonNullable<typeof terraformPlanReportNamespace.renderers>["markdown"]
+>;
+
+const renderTerraformPlanMarkdown = (
+  reports: Parameters<TerraformPlanMarkdownRenderer>[0],
+  context: Parameters<TerraformPlanMarkdownRenderer>[1] = {},
+): string => {
+  const renderer = terraformPlanReportNamespace.renderers?.markdown;
+
+  if (!renderer) {
+    throw new Error("Terraform plan Markdown renderer is not registered");
+  }
+
+  return renderer(reports, context);
+};
+
 const plans = {
   changes: `[0m[1mazurerm_resource_group.example2: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-02][0m
 [0m[1mazurerm_resource_group.example: Refreshing state... [id=/subscriptions/35e6e3b2-4388-470e-a1b9-ad3bc34326d1/resourceGroups/plantest-example-rg-01][0m
@@ -740,7 +757,7 @@ describe("terraformPlanReportNamespace", () => {
   });
 
   it("renders reports with the status in each module title", () => {
-    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+    const markdown = renderTerraformPlanMarkdown([
       {
         modulePath: "./infra/modules/success",
         notices: [],
@@ -758,12 +775,12 @@ describe("terraformPlanReportNamespace", () => {
     ]);
 
     expect(markdown).toBe(
-      "### Terraform Plan: `./infra/modules/success` - ✅ Success\nPlan: 0 to add, 1 to change, 0 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>\n\n### Terraform Plan: `./infra/modules/failure` - ❌ Failed\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nError.\n```\n\n</details>",
+      "### Terraform Plan: `./infra/modules/success` - ✅ Success\nPlan: 0 to add, 1 to change, 0 to destroy.\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.\n\n### Terraform Plan: `./infra/modules/failure` - ❌ Failed\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.",
     );
   });
 
   it("renders notices before the summary line", () => {
-    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+    const markdown = renderTerraformPlanMarkdown([
       {
         modulePath: "./infra/modules/notices",
         notices: [
@@ -783,28 +800,79 @@ describe("terraformPlanReportNamespace", () => {
     ]);
 
     expect(markdown).toBe(
-      '### Terraform Plan: `./infra/modules/notices` - ❌ Failed\n> [!WARNING]\n> Warning: Deprecated attribute\n> \n> The attribute "foo" is deprecated.\n> \n> Use "bar" instead.\n\n> [!CAUTION]\n> Error: invalid Terraform configuration\n> \n> The module contains invalid configuration.\n\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>',
+      '### Terraform Plan: `./infra/modules/notices` - ❌ Failed\n> [!WARNING]\n> Warning: Deprecated attribute\n> \n> The attribute "foo" is deprecated.\n> \n> Use "bar" instead.\n\n> [!CAUTION]\n> Error: invalid Terraform configuration\n> \n> The module contains invalid configuration.\n\nPlan: 0 to add, 0 to change, 1 to destroy.\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.',
     );
   });
 
-  it("renders every plan output line inside the details block", () => {
-    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+  it("omits plan output from rendered comments", () => {
+    const planOutput =
+      "Terraform will perform the following actions:\n\n+ resource";
+    const markdown = renderTerraformPlanMarkdown([
       {
         modulePath: "./infra/modules/success",
         notices: [],
-        planOutput:
-          "Terraform will perform the following actions:\n\n+ resource",
+        planOutput,
         success: true,
       },
     ]);
 
-    expect(markdown).toContain(
-      "```hcl\nTerraform will perform the following actions:\n\n+ resource\n```",
+    expect(markdown).not.toContain("```hcl");
+    expect(markdown).not.toContain(planOutput);
+  });
+
+  it("links to the workflow run when omitting plan output", () => {
+    const longPlanOutput = "x".repeat(25_000);
+    const markdown = renderTerraformPlanMarkdown(
+      [
+        {
+          modulePath: "./infra/modules/large",
+          notices: [],
+          planOutput: longPlanOutput,
+          success: true,
+          summaryLine: "Plan: 1 to add, 0 to change, 0 to destroy.",
+        },
+      ],
+      { sourceUrl: "https://github.com/pagopa/dx/actions/runs/123456" },
     );
+
+    expect(markdown).toContain(
+      "Full plan output is not included in this comment.",
+    );
+    expect(markdown).toContain(
+      "[workflow run](https://github.com/pagopa/dx/actions/runs/123456)",
+    );
+    expect(markdown).not.toContain("```hcl");
+    expect(markdown).not.toContain(longPlanOutput);
+  });
+
+  it("omits every plan output when rendering many reports", () => {
+    const repeatedPlanOutput = "x".repeat(12_000);
+    const reports: Parameters<TerraformPlanMarkdownRenderer>[0] = Array.from(
+      { length: 5 },
+      (_, index) => ({
+        modulePath: `./infra/modules/module-${index + 1}`,
+        notices: [],
+        planOutput: repeatedPlanOutput,
+        success: true,
+        summaryLine: "Plan: 1 to add, 0 to change, 0 to destroy.",
+      }),
+    );
+    const markdown = renderTerraformPlanMarkdown(reports);
+    const fullPlanBlockCount = markdown.match(/```hcl/g)?.length ?? 0;
+
+    expect(markdown.length).toBeLessThan(65_536);
+    expect(markdown).toContain(
+      "Full plan output is not included in this comment.",
+    );
+    expect(markdown).toContain(
+      "See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.",
+    );
+    expect(fullPlanBlockCount).toBe(0);
+    expect(markdown).not.toContain(repeatedPlanOutput);
   });
 
   it("renders successful reports without a summary line", () => {
-    const markdown = terraformPlanReportNamespace.renderers?.markdown?.([
+    const markdown = renderTerraformPlanMarkdown([
       {
         modulePath: "./infra/modules/success",
         notices: [],
@@ -814,7 +882,7 @@ describe("terraformPlanReportNamespace", () => {
     ]);
 
     expect(markdown).toBe(
-      "### Terraform Plan: `./infra/modules/success` - ✅ Success\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>",
+      "### Terraform Plan: `./infra/modules/success` - ✅ Success\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.",
     );
   });
 });

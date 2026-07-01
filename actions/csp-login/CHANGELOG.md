@@ -1,3 +1,15 @@
+## 0.2.0 (2026-06-30)
+
+### 🚀 Features
+
+- Add support for GitHub Login, when `GH_APP_CLIENT_ID`, `GH_APP_KEY` and `GH_APP_INSTALLATION_ID` are found. ([#1897](https://github.com/pagopa/dx/pull/1897))
+
+### ❤️ Thank You
+
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.1.2 (2026-06-23)
 
 ### 🩹 Fixes

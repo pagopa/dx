@@ -39,9 +39,11 @@ const mocks = vi.hoisted(() => {
       (_env: unknown, output: "json" | "text" | undefined) => output ?? "text",
     ),
     runMonorepoActions: vi.fn(),
-    tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
+    tf$: vi.fn((...args: unknown[]): unknown => {
       void args;
-      return { stdout: '{"user":{"name":"test@example.com"}}' };
+      return Promise.resolve({
+        stdout: '{"user":{"name":"test@example.com"}}',
+      });
     }),
     trackStepMock,
   };
@@ -108,6 +110,25 @@ const runInitCommand = async (
 
   await program.parseAsync(["node", "dx", "--output", output, "init"]);
 };
+
+const makeExecaError = ({
+  exitCode = 1,
+  shortMessage,
+  stderr = "",
+}: {
+  exitCode?: number;
+  shortMessage: string;
+  stderr?: string;
+}): ExecaError => {
+  const error = new ExecaError();
+  error.exitCode = exitCode;
+  error.shortMessage = shortMessage;
+  error.stderr = stderr;
+  return error;
+};
+
+const getErrorMessage = (value: unknown): string =>
+  value instanceof Error ? value.message : "";
 
 describe("confirmGitHubRepoCreation", () => {
   afterEach(() => {
@@ -212,14 +233,11 @@ describe("getMonorepoInitialAnswers", () => {
 });
 
 describe("mapGitRemoteAddError", () => {
-  const makeExecaError = (exitCode: number): ExecaError => {
-    const error = new ExecaError();
-    error.exitCode = exitCode;
-    return error;
-  };
-
   it("explains how to recover when the 'origin' remote already exists (exit code 3)", () => {
-    const cause = makeExecaError(3);
+    const cause = makeExecaError({
+      exitCode: 3,
+      shortMessage: "Command failed: git remote add origin",
+    });
 
     const error = mapGitRemoteAddError(cause);
 
@@ -229,7 +247,10 @@ describe("mapGitRemoteAddError", () => {
   });
 
   it("falls back to the remote-setup message for other git exit codes", () => {
-    const cause = makeExecaError(1);
+    const cause = makeExecaError({
+      exitCode: 1,
+      shortMessage: "Command failed: git remote add origin",
+    });
 
     const error = mapGitRemoteAddError(cause);
 
@@ -334,5 +355,38 @@ describe("makeInitCommand", () => {
       exitCode: 1,
     });
     expect(mocks.reportError).not.toHaveBeenCalled();
+  });
+
+  it("reports the terraform apply failure details when GitHub repository creation fails", async () => {
+    vi.mocked(inquirer.prompt).mockResolvedValue({ confirm: true });
+    const terraformError = makeExecaError({
+      shortMessage:
+        "Command failed with exit code 1: terraform apply -auto-approve",
+      stderr: "Error: repository already exists",
+    });
+    const repoTerraform = vi.fn((strings: TemplateStringsArray) =>
+      strings.join("").includes("apply")
+        ? Promise.reject(terraformError)
+        : Promise.resolve({ stdout: "" }),
+    );
+    mocks.tf$.mockImplementation((...args: unknown[]) =>
+      Array.isArray(args[0])
+        ? Promise.resolve({ stdout: '{"user":{"name":"test@example.com"}}' })
+        : repoTerraform,
+    );
+
+    await runInitCommand("json");
+
+    const reportedError = mocks.reportError.mock.lastCall?.[0];
+    expect(reportedError).toMatchObject({ cause: terraformError });
+    const message = getErrorMessage(reportedError);
+    expect(message).toContain(
+      "Terraform apply failed while creating the GitHub repository.",
+    );
+    expect(message).toContain(
+      "Command failed with exit code 1: terraform apply -auto-approve",
+    );
+    expect(message).toContain("Error: repository already exists");
+    expect(message).not.toContain("Failed to create GitHub repository.");
   });
 });
