@@ -53,8 +53,6 @@ run "apim_is_correct_plan" {
       verbosity           = "error"
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
   }
 
   # Checks some assertions
@@ -120,8 +118,6 @@ run "plan_with_invalid_parameters" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id                     = run.setup_tests.subnet_id
-    virtual_network_type_internal = true
 
     # Provide valid autoscale values (multiples of 2 for high_load zone redundancy)
     autoscale = {
@@ -186,8 +182,6 @@ run "apim_test_zones_public_ip" {
       verbosity           = "error"
     }
 
-    subnet_id                     = run.setup_tests.subnet_id
-    virtual_network_type_internal = true
 
     # Provide valid autoscale values (multiples of the number of zones, which is 2 in this test, for high_load zone redundancy)
     autoscale = {
@@ -252,8 +246,6 @@ run "autoscale_validation_default_out_of_range" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
       minimum_instances             = 2
@@ -300,8 +292,6 @@ run "autoscale_validation_minimum_zero" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
       minimum_instances             = 0
@@ -348,8 +338,6 @@ run "autoscale_validation_scale_out_zero" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
       minimum_instances             = 2
@@ -396,8 +384,6 @@ run "autoscale_validation_scale_in_zero" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     autoscale = {
       minimum_instances             = 2
@@ -433,20 +419,18 @@ run "autoscale_validation_zone_redundancy_odd_minimum" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 3
@@ -482,20 +466,18 @@ run "autoscale_validation_zone_redundancy_odd_maximum" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 2
@@ -531,20 +513,18 @@ run "autoscale_validation_zone_redundancy_odd_default" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 2
@@ -580,20 +560,18 @@ run "autoscale_validation_zone_redundancy_odd_scale_out" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 2
@@ -629,20 +607,18 @@ run "autoscale_validation_zone_redundancy_odd_scale_in" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 2
@@ -678,20 +654,18 @@ run "autoscale_validation_zone_redundancy_valid" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 2
@@ -744,8 +718,6 @@ run "custom_domains_single_proxy" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     hostname_configuration = {
       proxy = [
@@ -804,8 +776,6 @@ run "custom_domains_multiple_proxy" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     hostname_configuration = {
       proxy = [
@@ -854,8 +824,6 @@ run "custom_domains_all_types" {
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id     = run.setup_tests.subnet_id
-    subnet_pep_id = run.setup_tests.pep_id
 
     hostname_configuration = {
       proxy = [
@@ -937,20 +905,18 @@ run "autoscale_defaults_high_load_multiple_of_two" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
   }
 
   assert {
@@ -993,20 +959,18 @@ run "autoscale_config_high_load_not_multiple_of_two" {
       instance_number = "01"
     }
 
-    tags                          = run.setup_tests.tags
-    resource_group_name           = run.setup_tests.resource_group_name
-    use_case                      = "high_load"
-    publisher_email               = "example@pagopa.it"
-    publisher_name                = "Example Publisher"
-    public_ip_address_id          = run.setup_tests.pip_id
-    virtual_network_type_internal = true
+    tags                 = run.setup_tests.tags
+    resource_group_name  = run.setup_tests.resource_group_name
+    use_case             = "high_load"
+    publisher_email      = "example@pagopa.it"
+    publisher_name       = "Example Publisher"
+    public_ip_address_id = run.setup_tests.pip_id
 
     virtual_network = {
       name                = run.setup_tests.vnet.name
       resource_group_name = run.setup_tests.vnet.resource_group_name
     }
 
-    subnet_id = run.setup_tests.subnet_id
 
     autoscale = {
       minimum_instances             = 3

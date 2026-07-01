@@ -124,7 +124,7 @@ resource "azurerm_network_security_group" "nsg_apim" {
 }
 
 resource "azurerm_subnet_network_security_group_association" "snet_nsg" {
-  subnet_id                 = var.subnet_id
+  subnet_id                 = local.subnet_id
   network_security_group_id = azurerm_network_security_group.nsg_apim.id
 }
 
@@ -136,7 +136,7 @@ resource "azurerm_private_endpoint" "apim_pep" {
   name                = local.apim.pep_name
   location            = var.environment.location
   resource_group_name = var.resource_group_name
-  subnet_id           = var.subnet_pep_id
+  subnet_id           = local.subnet_pep_id
 
   private_service_connection {
     name                           = local.apim.pep_name
