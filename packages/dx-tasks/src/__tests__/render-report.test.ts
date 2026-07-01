@@ -54,7 +54,7 @@ describe("renderReport task", () => {
     await dispatcher.dispatchTask("renderReport", {});
 
     expect(console.log).toHaveBeenCalledExactlyOnceWith(
-      "### Terraform Plan: `./infra/modules/example` - ✅ Success\n\n<details>\n<summary>Show full plan</summary>\n\n```hcl\nNo changes.\n```\n\n</details>",
+      "### Terraform Plan: `./infra/modules/example` - ✅ Success\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.",
     );
   });
 

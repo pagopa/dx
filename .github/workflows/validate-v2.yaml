@@ -293,5 +293,6 @@ jobs:
               "owner": "${{ github.event.repository.owner.login }}",
               "repo": "${{ github.event.repository.name }}",
               "searchPattern": "Code Review Report",
+              "sourceUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "title": "Code Review Report"
             }
