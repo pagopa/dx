@@ -1,3 +1,13 @@
+## 0.20.0 (2026-06-30)
+
+### 🚀 Features
+
+- Add GitHub login as a requirement to use the cli ([#1838](https://github.com/pagopa/dx/pull/1838))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.19.5 (2026-06-25)
 
 ### 🩹 Fixes
