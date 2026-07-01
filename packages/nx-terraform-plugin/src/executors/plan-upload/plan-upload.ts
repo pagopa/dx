@@ -18,7 +18,7 @@ const runExecutor: PromiseExecutor<PlanUploadExecutorInput> = async (
   if (!parseResult.success) {
     logger.warn("Invalid plan-upload options", {
       issues: parseResult.error.issues,
-      path: options.projectRoot ?? "plan-upload options",
+      path: options?.projectRoot ?? "plan-upload options",
     });
     return {
       success: false,
