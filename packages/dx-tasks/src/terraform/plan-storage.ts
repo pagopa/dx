@@ -471,7 +471,14 @@ export const downloadPlanBundle = async ({
   try {
     await downloadFromBackend(backend, planPath, archivePath);
     await fs.mkdir(absoluteWorkingDirectory, { recursive: true });
-    execFileSync("tar", ["xzf", archivePath, "-C", absoluteWorkingDirectory]);
+    execFileSync("tar", [
+      "xzf",
+      archivePath,
+      "-C",
+      absoluteWorkingDirectory,
+      "--no-same-owner",
+      "--no-same-permissions",
+    ]);
   } finally {
     await fs.rm(temporaryDirectory, { force: true, recursive: true });
   }
