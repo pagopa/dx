@@ -67,6 +67,39 @@ locals {
     privatelink_azure_api_net = var.private_dns_zone_ids != null && var.private_dns_zone_ids.privatelink_azure_api_net != null ? var.private_dns_zone_ids.privatelink_azure_api_net : (local.use_case_features.private_endpoint ? data.azurerm_private_dns_zone.apim[0].id : null)
   }
 
+  # Extract the VNet instance number from the last dash-separated segment of the VNet name.
+  # Falls back to the environment instance number if parsing fails.
+  vnet_instance_number = try(
+    tonumber(split("-", var.virtual_network.name)[length(split("-", var.virtual_network.name)) - 1]),
+    tonumber(var.environment.instance_number)
+  )
+
+  # Auto-compute the APIM subnet name following the standard naming convention.
+  # domain is explicitly cleared so the subnet name is not domain-scoped (subnets are shared infrastructure).
+  apim_subnet_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = "",
+    name          = local.apim_name,
+    resource_type = "apim_subnet",
+  }))
+
+  # Auto-compute the private endpoint subnet name following the standard naming convention.
+  pep_subnet_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain          = "",
+    name            = "pep",
+    resource_type   = "subnet",
+    instance_number = local.vnet_instance_number,
+  }))
+
+  subnet_id = coalesce(
+    var.subnet_id,
+    provider::azurerm::normalise_resource_id("${data.azurerm_virtual_network.this.id}/subnets/${local.apim_subnet_name}")
+  )
+
+  subnet_pep_id = local.use_case_features.private_endpoint ? coalesce(
+    var.subnet_pep_id,
+    provider::azurerm::normalise_resource_id("${data.azurerm_virtual_network.this.id}/subnets/${local.pep_subnet_name}")
+  ) : null
+
   # Calculate zone multiplier for autoscale defaults
   zone_multiplier = local.use_case_features.zones != null ? length(local.use_case_features.zones) : 1
 

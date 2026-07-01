@@ -111,24 +111,22 @@ variable "virtual_network" {
 variable "subnet_id" {
   type        = string
   default     = null
+  deprecated  = "The subnet ID is now automatically computed from the virtual_network variable using the standard naming convention. Remove this variable."
   description = "The ID of the subnet that will be used for the API Management."
 }
 
 variable "subnet_pep_id" {
   type        = string
-  description = "ID of the subnet hosting private endpoints."
   default     = null
-
-  validation {
-    condition     = local.use_case_features.private_endpoint != true || var.subnet_pep_id != null
-    error_message = "You must provide a subnet_pep_id when use_case use StandardV2 SKU."
-  }
+  deprecated  = "The private endpoint subnet ID is now automatically computed from the virtual_network variable using the standard naming convention. Remove this variable."
+  description = "ID of the subnet hosting private endpoints."
 }
 
 variable "virtual_network_type_internal" {
   type        = bool
-  description = "Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet_id; otherwise, it will be None."
   default     = null
+  deprecated  = "The virtual network type is now determined by the use_case variable. Remove this variable and select the appropriate use_case to control the network topology."
+  description = "Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet_id; otherwise, it will be None."
 }
 
 variable "enable_public_network_access" {
