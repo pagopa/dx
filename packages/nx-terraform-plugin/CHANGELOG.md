@@ -1,3 +1,9 @@
+## 0.4.1 (2026-07-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.1
+
 ## 0.4.0 (2026-06-30)
 
 ### 🚀 Features

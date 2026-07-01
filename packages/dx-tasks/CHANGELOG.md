@@ -1,3 +1,14 @@
+## 0.2.1 (2026-07-01)
+
+### 🩹 Fixes
+
+- Limit Terraform plan output in PR comments to avoid GitHub body size failures. ([#1919](https://github.com/pagopa/dx/pull/1919))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.2.0 (2026-06-30)
 
 ### 🚀 Features
