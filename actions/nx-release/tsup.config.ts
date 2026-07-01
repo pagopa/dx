@@ -5,6 +5,7 @@ export default defineConfig({
   clean: true,
   dts: false,
   entry: [
+    "scripts/extract-infra-projects-to-apply.ts",
     "scripts/extract-projects-to-build.ts",
     "scripts/extract-tags.ts",
     "scripts/manage-version-pr.ts",

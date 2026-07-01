@@ -29,6 +29,7 @@ const terraformPluginOptionsSchema = z.object({
   lintTargetName: targetNameSchema,
   outputTargetName: targetNameSchema,
   planTargetName: targetNameSchema,
+  planUploadTargetName: targetNameSchema,
   publish: publishOptionsSchema,
   publishTargetName: targetNameSchema,
   testTargetName: targetNameSchema,
@@ -49,6 +50,7 @@ const defaultOptions: TerraformPluginOptions = {
   lintTargetName: "tflint",
   outputTargetName: "tf-output",
   planTargetName: "tf-plan",
+  planUploadTargetName: "tf-plan-upload",
   publish: {
     mode: "github",
   },

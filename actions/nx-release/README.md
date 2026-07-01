@@ -72,10 +72,12 @@ This action automates the Nx release flow in three phases:
 
 ## Outputs
 
-| Output                | Description                                    |
-| --------------------- | ---------------------------------------------- |
-| `pull-request-number` | PR number created/updated for Version Packages |
-| `pull-request-url`    | PR URL created/updated for Version Packages    |
+| Output                | Description                                                                                                                                                                                                                       |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pull-request-number` | PR number created/updated for Version Packages                                                                                                                                                                                    |
+| `pull-request-url`    | PR URL created/updated for Version Packages                                                                                                                                                                                       |
+| `release-mode`        | Resolved release mode for this run: `skip`, `create-pr`, `publish`, or `publish-all`                                                                                                                                              |
+| `published-pr-number` | PR number of the merged Version Packages PR whose projects were published in this run. Only set when `release-mode` is `publish` (empty for `publish-all`, which republishes all public projects rather than a single merged PR). |
 
 ## Prerequisites
 

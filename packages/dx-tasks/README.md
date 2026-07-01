@@ -7,6 +7,8 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 | Task              | Description                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `terraformPlan`   | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                      |
+| `terraformPlanUpload` | Runs `terraformPlan` with a fixed output path, then uploads the resulting plan bundle (plan file, lock file, and module cache) to the same cloud storage backend used for the Terraform state, so it can be applied later by `terraformApply`. |
+| `terraformApply`  | Downloads the plan bundle uploaded by `terraformPlanUpload` (recomputing its deterministic storage path from the Terraform backend state and the current CI run), applies it non-interactively, and deletes the remote bundle only after a **successful** apply.        |
 | `renderReport`    | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers. |
 | `prComment`       | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                       |
 | `reportPrComment` | Renders persisted reports and posts the rendered Markdown as a GitHub pull request comment.                                                        |
@@ -84,6 +86,53 @@ await dispatcher.dispatchTask(terraformPlanTask.name, {
 ```
 
 For payload details and task-specific behavior, see the task definitions and implementations in `src/`.
+
+## Terraform plan upload and apply
+
+`terraformPlanUpload` and `terraformApply` implement a two-phase, plan-then-apply flow for Terraform
+projects that must be applied non-interactively (e.g. from CI), while still guaranteeing that
+`terraformApply` applies exactly what `terraformPlanUpload` planned:
+
+1. `terraformPlanUpload` runs `terraform plan -out=<fixed path>` (reusing `terraformPlan`), then
+   bundles the plan file together with `.terraform.lock.hcl` and `.terraform/modules/`, and uploads
+   the bundle to the same cloud storage backend already used for the Terraform state (Azure Blob or
+   S3, detected from `.terraform/terraform.tfstate`). The remote path is deterministic, derived from
+   the backend state key and the `GITHUB_RUN_ID` environment variable.
+2. `terraformApply` independently recomputes that same deterministic path (reading the same
+   `.terraform/terraform.tfstate` and the same `GITHUB_RUN_ID`), downloads and extracts the bundle,
+   runs `terraform apply` non-interactively against the exact downloaded plan file, and deletes the
+   remote bundle only after a **successful** apply. On failure, the bundle is deliberately left in
+   place: a re-run of the same workflow run's apply job can retry against the exact reviewed plan,
+   and the bundle remains available for forensic inspection. Bundles left behind by abandoned or
+   failed workflow runs are not cleaned up automatically and rely on the storage backend's own
+   retention/lifecycle policy.
+
+Because the remote path is derived deterministically rather than passed explicitly between steps,
+the two tasks can run in separate CI jobs — even with different cloud credentials — as long as both
+jobs run within the same workflow run (so `GITHUB_RUN_ID` matches) and against the same Terraform
+backend state.
+
+```ts
+import { createDefaultTaskDispatcher } from "@pagopa/dx-tasks";
+
+const dispatcher = createDefaultTaskDispatcher();
+
+// In the "plan" job/step (read-only credentials):
+await dispatcher.dispatchTask("terraformPlanUpload", {
+  modulePath: "./infra/resources/dev",
+  report: true,
+});
+
+// Later, in the "apply" job/step (write credentials, ideally gated behind a
+// manual approval so the plan above can be reviewed first):
+await dispatcher.dispatchTask("terraformApply", {
+  modulePath: "./infra/resources/dev",
+  report: true,
+});
+```
+
+`terraformPlanUpload` and `terraformApply` both require the `GITHUB_RUN_ID` environment variable to
+be set (this is set automatically by GitHub Actions runners).
 
 ## Commenting on pull requests
 
