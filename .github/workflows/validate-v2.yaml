@@ -136,7 +136,7 @@ jobs:
               },
               (response) => response.data
             );
-            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-cd)$/;
+            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-ci)$/;
             const matrix = environments
               .filter(({ name }) => planEnvironmentPattern.test(name))
               .filter(({ name }) => !name.includes("uat"))

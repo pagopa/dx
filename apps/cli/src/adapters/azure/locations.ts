@@ -14,10 +14,13 @@ export function isAzureLocation(location: string): location is AzureLocation {
 // The default location is the first one
 export const defaultLocation = locations[0];
 
-export const locationShort: Record<AzureLocation, string> = {
+export const locationShort = {
   italynorth: "itn",
   westeurope: "weu",
-};
+} as const satisfies Record<AzureLocation, string>;
+
+export type LocationShortValue =
+  (typeof locationShort)[keyof typeof locationShort];
 
 const displayName: Record<AzureLocation, string> = {
   italynorth: "Italy North",
