@@ -15,7 +15,7 @@
     "key-vault"
   ],
   "scripts": {
-    "test:integration": "bash test-smoke.sh"
+    "test": "bash test-smoke.sh"
   },
   "devDependencies": {}
 }
