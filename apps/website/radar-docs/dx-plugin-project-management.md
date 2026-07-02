@@ -9,7 +9,7 @@ for working with JIRA, GitHub, and adhering to organizational conventions.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/project-management/.github/plugin.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/project-management/.plugin/plugin.json)
 - [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/project-management/.mcp.json)
 
 ## Available skills
