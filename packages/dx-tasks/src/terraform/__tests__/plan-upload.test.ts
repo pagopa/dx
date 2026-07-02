@@ -49,8 +49,11 @@ describe("terraformPlanUpload", () => {
   });
 
   it("throws when GITHUB_RUN_ID is not set", async () => {
-    vi.unstubAllEnvs();
+    // Stub with an empty string rather than unstubbing, since GITHUB_RUN_ID
+    // is a real ambient environment variable set by GitHub Actions runners
+    // and unstubbing would restore that value instead of clearing it.
     vi.stubEnv("CI", "false");
+    vi.stubEnv("GITHUB_RUN_ID", "");
 
     await expect(
       terraformPlanUpload({ modulePath: "/tmp/module" }),
