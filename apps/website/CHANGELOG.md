@@ -1,3 +1,23 @@
+## 0.21.0 (2026-07-02)
+
+### 🚀 Features
+
+- Update TLS certificate renewal process ([#1870](https://github.com/pagopa/dx/pull/1870))
+
+### 🩹 Fixes
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.0
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.20.0 (2026-06-30)
 
 ### 🚀 Features
