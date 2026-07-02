@@ -250,6 +250,7 @@ const sidebars: SidebarsConfig = {
         { id: "containers/index", label: "Why Containers", type: "doc" },
         "dev-containers/index",
         "containers/docker-image-build",
+        "containers/nx-release-docker",
       ],
       label: "Containers",
       type: "category",
