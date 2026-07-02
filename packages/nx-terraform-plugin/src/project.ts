@@ -10,7 +10,7 @@ import {
 import path from "node:path";
 
 import { getPackageLogger } from "./logger.ts";
-import { ModulePublishManifest } from "./manifest.ts";
+import { EnvironmentManifest, ModulePublishManifest } from "./manifest.ts";
 import { TerraformPluginOptions } from "./options.ts";
 import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
 
@@ -100,12 +100,59 @@ const getPublishTarget = (
   }
 };
 
+// Deployable environments (identified by an environment.json manifest)
+// additionally get a plan-upload target (generates and persists a plan
+// bundle to the Terraform state storage backend) and a release-publish
+// target (downloads and applies that exact plan bundle). The latter is
+// invoked by `nx release publish` when this project is included in an Nx
+// release, gating the actual apply behind the same version-plan-driven
+// release flow used for the rest of the monorepo.
+const getEnvironmentReleaseTargets = (
+  opts: TerraformPluginOptions,
+): [string, TargetConfiguration][] => [
+  [
+    opts.planUploadTargetName,
+    {
+      cache: false,
+      configurations: {
+        ci: {
+          refresh: true,
+          report: true,
+          verbose: false,
+        },
+      },
+      dependsOn: [opts.initTargetName],
+      executor: "@pagopa/nx-terraform-plugin:plan-upload",
+      options: {
+        projectRoot: "{projectRoot}",
+        refresh: true,
+        report: false,
+        verbose: true,
+      },
+    },
+  ],
+  [
+    opts.publishTargetName,
+    {
+      cache: false,
+      dependsOn: [opts.initTargetName],
+      executor: "@pagopa/nx-terraform-plugin:release-apply",
+      options: {
+        projectRoot: "{projectRoot}",
+        report: false,
+        verbose: true,
+      },
+    },
+  ],
+];
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
   publishManifest: ModulePublishManifest | undefined,
+  environmentManifest: EnvironmentManifest | undefined,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -287,6 +334,10 @@ const getTargets = (
         },
       ],
     );
+
+    if (environmentManifest) {
+      targets.push(...getEnvironmentReleaseTargets(opts));
+    }
   }
 
   return Object.fromEntries(targets);
@@ -297,16 +348,20 @@ export const getProject = (
   root: string,
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
+  environmentManifest: EnvironmentManifest | undefined = undefined,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
   const isPublishableLibrary =
     projectType === "library" && publishManifest !== undefined;
+  const isReleasableEnvironment =
+    projectType === "application" && environmentManifest !== undefined;
   const targets = getTargets(
     opts,
     root,
     projectType,
     hasRootTflintConfig,
     publishManifest,
+    environmentManifest,
   );
   const environmentTag =
     projectType === "application"
@@ -336,8 +391,11 @@ export const getProject = (
     targets,
   };
 
-  // Add Nx Release configuration for publishable libraries
-  if (isPublishableLibrary) {
+  // Add Nx Release configuration for publishable libraries and releasable
+  // (environment.json-backed) deployable environments. Both track their
+  // version on disk via the same TerraformVersionActions, which picks the
+  // right manifest filename based on projectType.
+  if (isPublishableLibrary || isReleasableEnvironment) {
     config.release = {
       version: {
         currentVersionResolver: "disk",

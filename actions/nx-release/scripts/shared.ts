@@ -137,6 +137,22 @@ export async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 }
 
 /**
+ * Checks if an Nx project has an "env:<name>" tag.
+ * Returns false if project metadata cannot be retrieved or tag is not present.
+ */
+export async function isEnvironmentProject(
+  projectName: string,
+): Promise<boolean> {
+  const metadata = await getNxProjectMetadata(projectName);
+  if (!metadata) return false;
+
+  const tags = metadata.tags;
+  if (!tags) return false;
+
+  return tags.some((tag) => /^env:/.test(tag));
+}
+
+/**
  * Checks if an Nx project has the "public" tag.
  * Supports both "public" and "<distribution>:public" formats (e.g. "npm:public", "maven:public").
  * Returns false if project metadata cannot be retrieved or tag is not present.

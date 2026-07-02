@@ -1,15 +1,20 @@
 import { VersionActions } from "nx/release";
 
 //#region src/release/version-actions.ts
+const moduleManifestFilename = "module.json";
+const environmentManifestFilename = "environment.json";
 /**
-* Custom Nx Release VersionActions implementation for Terraform modules.
+* Custom Nx Release VersionActions implementation for Terraform projects.
 *
-* This class manages versioning of publishable Terraform modules by reading
-* and writing the `version` field in module.json files.
+* This class manages versioning of both publishable Terraform modules and
+* deployable Terraform environments by reading and writing the `version`
+* field in a project-type-specific manifest file:
+* - Library modules (publishable Terraform modules): `module.json`
+* - Application projects (deployable environments): `environment.json`
 *
 * Key behaviors:
-* - Reads current version from module.json (disk-based resolution)
-* - Updates version in module.json during release
+* - Reads current version from the manifest file (disk-based resolution)
+* - Updates version in the manifest file during release
 * - Does NOT support registry-based version resolution
 * - Does NOT manage module dependencies (explicit no-op)
 *
@@ -18,7 +23,7 @@ import { VersionActions } from "nx/release";
 * in inferred Terraform project configuration.
 */
 var TerraformVersionActions = class extends VersionActions {
-	validManifestFilenames = ["module.json"];
+	validManifestFilenames = [moduleManifestFilename, environmentManifestFilename];
 	/**
 	* Registry-based version resolution is not supported for Terraform modules.
 	*
@@ -34,10 +39,11 @@ var TerraformVersionActions = class extends VersionActions {
 		return null;
 	}
 	/**
-	* Reads the current version from the module.json manifest file.
+	* Reads the current version from the manifest file (module.json for
+	* libraries, environment.json for applications).
 	*
 	* Returns null if:
-	* - The module.json file does not exist
+	* - The manifest file does not exist
 	* - The file is invalid JSON
 	* - The version field is missing or not a string
 	*
@@ -45,7 +51,7 @@ var TerraformVersionActions = class extends VersionActions {
 	* @returns An object with the current version and manifest path, or null
 	*/
 	async readCurrentVersionFromSourceManifest(tree) {
-		const manifestPath = `${this.projectGraphNode.data.root}/module.json`;
+		const manifestPath = `${this.projectGraphNode.data.root}/${this.getManifestFilename()}`;
 		if (!tree.exists(manifestPath)) return null;
 		try {
 			const content = tree.read(manifestPath, "utf-8");
@@ -89,7 +95,8 @@ var TerraformVersionActions = class extends VersionActions {
 		return [];
 	}
 	/**
-	* Updates the version field in the module.json file.
+	* Updates the version field in the manifest file (module.json for
+	* libraries, environment.json for applications).
 	*
 	* Preserves:
 	* - Field order in the JSON object
@@ -101,7 +108,7 @@ var TerraformVersionActions = class extends VersionActions {
 	* @returns An array with a single log message describing the update
 	*/
 	async updateProjectVersion(tree, newVersion) {
-		const manifestPath = `${this.projectGraphNode.data.root}/module.json`;
+		const manifestPath = `${this.projectGraphNode.data.root}/${this.getManifestFilename()}`;
 		const content = tree.read(manifestPath, "utf-8");
 		if (!content) throw new Error(`Failed to read ${manifestPath}`);
 		let manifest;
@@ -114,6 +121,14 @@ var TerraformVersionActions = class extends VersionActions {
 		manifest.version = newVersion;
 		tree.write(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
 		return [`Updated ${this.projectGraphNode.name} version to ${newVersion} in ${manifestPath}`];
+	}
+	/**
+	* Returns the manifest filename to use for this project, based on its
+	* Nx project type: "environment.json" for applications, "module.json"
+	* for libraries.
+	*/
+	getManifestFilename() {
+		return this.projectGraphNode.data.projectType === "application" ? environmentManifestFilename : moduleManifestFilename;
 	}
 };
 

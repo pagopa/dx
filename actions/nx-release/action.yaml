@@ -19,6 +19,12 @@ outputs:
   pull-request-url:
     description: "PR URL created/updated for Version Packages"
     value: ${{ steps.create-pr.outputs.pull-request-url }}
+  release-mode:
+    description: "Resolved release mode for this run: skip, create-pr, publish, or publish-all"
+    value: ${{ steps.release-mode.outputs.mode }}
+  published-pr-number:
+    description: "PR number of the merged Version Packages PR whose projects were published in this run. Only set when release-mode is 'publish' (empty for 'publish-all', which republishes all public projects rather than a single merged PR)."
+    value: ${{ steps.publish.outputs.pr-number }}
 
 runs:
   using: "composite"
@@ -181,6 +187,8 @@ runs:
             echo "::error::Could not find a merged Version Packages PR on base branch '$BASE_BRANCH'. Push mode requires a merged PR to determine target projects." >&2
             exit 1
           fi
+
+          echo "pr-number=$LATEST_PR_NUMBER" >> "$GITHUB_OUTPUT"
 
           PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
 

@@ -14,6 +14,7 @@ describe("parseOptions", () => {
       lintTargetName: "tflint",
       outputTargetName: "tf-output",
       planTargetName: "tf-plan",
+      planUploadTargetName: "tf-plan-upload",
       publish: {
         mode: "github",
       },
