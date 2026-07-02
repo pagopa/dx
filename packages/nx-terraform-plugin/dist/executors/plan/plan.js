@@ -61,14 +61,14 @@ var ReportStore = class {
 		this.namespaces.set(name, namespace);
 		return this;
 	}
-	async render(format = "markdown") {
+	async render(format = "markdown", context = {}) {
 		const sections = [];
 		for (const namespace of this.namespaces.values()) {
 			const renderReports = namespace.renderers?.[format];
 			if (!renderReports) continue;
 			const reports = (await readReports(path.join(this.rootDirectoryPath, namespace.name))).map((report) => namespace.schema.parse(report));
 			if (reports.length === 0) continue;
-			sections.push(renderReports(reports));
+			sections.push(renderReports(reports, context));
 		}
 		return sections.join("\n\n");
 	}
@@ -208,12 +208,13 @@ const reportPrCommentPayloadShape = {
 	owner: nonEmptyStringSchema,
 	repo: nonEmptyStringSchema,
 	searchPattern: z$1.optional(nonEmptyStringSchema),
+	sourceUrl: z$1.optional(nonEmptyStringSchema),
 	title: z$1.optional(nonEmptyStringSchema)
 };
 const payloadSchema$1 = z$1.object(reportPrCommentPayloadShape);
-async function reportPrComment({ footer, format = "markdown", githubToken, issueNumber, owner, repo, searchPattern, title }, context = {}, createClient) {
+async function reportPrComment({ footer, format = "markdown", githubToken, issueNumber, owner, repo, searchPattern, sourceUrl, title }, context = {}, createClient) {
 	if (!context.reports) throw new Error("reportPrComment requires reports in the task context");
-	const renderedReport = await context.reports.render(format);
+	const renderedReport = await context.reports.render(format, { sourceUrl });
 	if (renderedReport.trim().length === 0) return;
 	return prComment({
 		commentBody: renderedReport,
@@ -347,18 +348,15 @@ const terraformPlanReportShape = {
 };
 const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
 const noPlanOutputMessage = "No plan output available.";
-const renderTerraformPlanReports = (reports) => reports.map(renderTerraformPlanReport).join("\n\n").trim();
-const renderTerraformPlanReport = ({ modulePath, notices, planOutput, success, summaryLine }) => {
+const terraformPlanReportSeparator = "\n\n";
+const renderTerraformPlanReports = (reports, { sourceUrl } = {}) => reports.map((report) => renderTerraformPlanReport(report, { sourceUrl })).join(terraformPlanReportSeparator).trim();
+const renderPlanOutputReference = (sourceUrl) => {
+	return `> [!NOTE]\n> Full plan output is not included in this comment.\n> ${sourceUrl ? `See the [workflow run](${sourceUrl}) logs or downloaded Terraform plan report artifacts for the complete output.` : "See the workflow run logs or downloaded Terraform plan report artifacts for the complete output."}`;
+};
+const renderTerraformPlanReport = ({ modulePath, notices, success, summaryLine }, { sourceUrl }) => {
 	const heading = `### Terraform Plan: \`${modulePath}\` - ${success ? "✅ Success" : "❌ Failed"}`;
 	const renderedNotices = notices.map(renderNoticeMarkdown);
-	const details = `<details>
-<summary>Show full plan</summary>
-
-\`\`\`hcl
-${planOutput}
-\`\`\`
-
-</details>`;
+	const details = renderPlanOutputReference(sourceUrl);
 	if (renderedNotices.length > 0) return `${heading}\n${renderedNotices.join("\n\n")}${summaryLine ? `\n\n${summaryLine}` : ""}\n\n${details}`;
 	return `${heading}${summaryLine ? `\n${summaryLine}` : ""}\n\n${details}`;
 };

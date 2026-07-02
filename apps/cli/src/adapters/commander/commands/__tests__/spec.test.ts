@@ -65,6 +65,7 @@ describe("makeSpecCommand", () => {
 
     await root.parseAsync(["spec"], { from: "user" });
 
+    // eslint-disable-next-line vitest/prefer-called-with -- getSpec takes no arguments; call count is what matters here.
     expect(getSpec).toHaveBeenCalledOnce();
     const written = stdoutSpy.mock.calls.map((c) => c[0]).join("");
     expect(JSON.parse(written)).toEqual(spec);
