@@ -1,3 +1,20 @@
+## 0.25.1 (2026-07-01)
+
+### 🩹 Fixes
+
+- Surface the real failure cause in CLI prechecks instead of generic messages ([#1908](https://github.com/pagopa/dx/pull/1908))
+
+  `dx init` now reports the actual Terraform init/apply error (with secrets redacted) instead of a static "Failed to create GitHub repository"; Azure prechecks distinguish login from subscription/permission failures; `add environment` treats a missing git remote as no repository rather than an opaque error.
+
+- Add Terraform plan for bootstrapper pull requests and use a dedicated least-privilege (Reader, Storage Blob Data Contributor) CI identity. ([#1905](https://github.com/pagopa/dx/pull/1905))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot App @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.25.0 (2026-06-30)
 
 ### 🚀 Features

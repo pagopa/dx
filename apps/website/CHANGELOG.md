@@ -1,3 +1,13 @@
+## 0.21.0 (2026-07-01)
+
+### 🚀 Features
+
+- Update TLS certificate renewal process ([#1870](https://github.com/pagopa/dx/pull/1870))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.20.0 (2026-06-30)
 
 ### 🚀 Features
