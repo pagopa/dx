@@ -1,3 +1,18 @@
+## 0.5.11 (2026-07-02)
+
+### 🩹 Fixes
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.4
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.5.10 (2026-06-25)
 
 ### 🧱 Updated Dependencies

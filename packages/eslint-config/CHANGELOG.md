@@ -1,3 +1,20 @@
+## 6.2.0 (2026-07-02)
+
+### 🚀 Features
+
+- Add @pagopa/eslint-config/jest subpath for Jest / React Native consumers ([#1884](https://github.com/pagopa/dx/pull/1884))
+- Support ESLint 9 alongside ESLint 10 ([#1884](https://github.com/pagopa/dx/pull/1884))
+
+### 🩹 Fixes
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 6.1.0 (2026-06-25)
 
 ### 🚀 Features
