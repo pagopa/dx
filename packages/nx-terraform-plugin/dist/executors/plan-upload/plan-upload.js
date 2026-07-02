@@ -1,4 +1,4 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-C8R9cdV6.js";
+import { t as createDefaultTaskDispatcher } from "../../default-dispatcher--ypkibiq.js";
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
 import { z } from "zod/v4";
 
@@ -19,7 +19,7 @@ const runExecutor = async (options) => {
 	if (!parseResult.success) {
 		logger.warn("Invalid plan-upload options", {
 			issues: parseResult.error.issues,
-			path: options.projectRoot ?? "plan-upload options"
+			path: options?.projectRoot ?? "plan-upload options"
 		});
 		return { success: false };
 	}
