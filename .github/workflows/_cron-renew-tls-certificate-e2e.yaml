@@ -1,15 +1,13 @@
-name: Renew TLS certificate end-to-end test
+name: Renew TLS certificate end-to-end test (weekly)
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "actions/renew-tls-certificate/**"
-      - ".github/workflows/_validate-renew-tls-certificate-e2e.yaml"
+  schedule:
+    - cron: "0 2 * * 0" # Every Sunday at 02:00 UTC
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -19,7 +17,7 @@ env:
 jobs:
   renew-tls-certificate-e2e-test:
     name: Run renew TLS certificate E2E test
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: automation-dev-cd
     permissions:
@@ -51,8 +49,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
-      - name: Run renew TLS certificate integration test
-        run: pnpm nx run renew-tls-certificate:test:integration
+      - name: Run renew TLS certificate smoke test
+        run: pnpm nx run renew-tls-certificate:test
 
       - name: Create staging ACME account
         id: acme-account
@@ -138,3 +136,15 @@ jobs:
               --vault-name "$KEY_VAULT_NAME" \
               --name "$cert_name" >/dev/null
           fi
+
+      - name: Notify Slack on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: pagopa/dx/.github/actions/slack-notification@main
+        with:
+          id: "Renew TLS certificate E2E test"
+          title: "*Renew TLS certificate E2E test failed*"
+          text:
+            "The weekly renew TLS certificate end-to-end test failed. Please check
+            the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+            github.run_id }}|workflow run> for details."
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
