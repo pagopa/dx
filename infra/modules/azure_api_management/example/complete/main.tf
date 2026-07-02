@@ -6,16 +6,9 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
-resource "azurerm_subnet" "example" {
-  name                 = "example-subnet"
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
-  address_prefixes     = ["10.50.250.0/24"]
-}
-
 module "azure_apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 2.2"
+  version = "~> 2.3"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -29,8 +22,6 @@ module "azure_apim" {
     name                = local.virtual_network.name
     resource_group_name = local.virtual_network.resource_group_name
   }
-  subnet_id                     = azurerm_subnet.example.id
-  virtual_network_type_internal = true
 
   hostname_configuration = {
     proxy = [

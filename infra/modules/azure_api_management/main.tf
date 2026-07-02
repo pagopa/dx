@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.9.0"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -38,7 +39,7 @@ resource "azurerm_api_management" "this" {
   dynamic "virtual_network_configuration" {
     for_each = local.virtual_network_configuration_enabled ? ["dummy"] : []
     content {
-      subnet_id = var.subnet_id
+      subnet_id = local.subnet_id
     }
   }
 
