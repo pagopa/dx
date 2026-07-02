@@ -36,6 +36,7 @@ describe("initFromEnv", () => {
 
     initFromEnv();
 
+    // eslint-disable-next-line vitest/prefer-called-with -- call arguments are inspected separately below via mock.calls.
     expect(useAzureMonitor).toHaveBeenCalledOnce();
     const calledOptions = vi.mocked(useAzureMonitor).mock.calls[0]?.[0];
     expect(
@@ -56,7 +57,9 @@ describe("initFromEnv", () => {
 
     initFromEnv();
 
+    // eslint-disable-next-line vitest/prefer-called-with -- called with no meaningful arguments to assert on.
     expect(DefaultAzureCredential).toHaveBeenCalledOnce();
+    // eslint-disable-next-line vitest/prefer-called-with -- call arguments are inspected separately below via mock.calls.
     expect(useAzureMonitor).toHaveBeenCalledOnce();
     const calledOptions = vi.mocked(useAzureMonitor).mock.calls[0]?.[0];
     expect(

@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@logtape/logtape": "catalog:",
-    "@nx/devkit": "^22.7.1",
+    "@nx/devkit": "^22.7.6",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",

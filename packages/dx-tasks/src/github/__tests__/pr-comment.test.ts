@@ -277,6 +277,7 @@ describe("prComment matching-comment deletion", () => {
     expect(client.deleteComment).toHaveBeenCalledTimes(2);
     expect(client.deleteComment).toHaveBeenNthCalledWith(1, "pagopa", "dx", 1);
     expect(client.deleteComment).toHaveBeenNthCalledWith(2, "pagopa", "dx", 3);
+    // eslint-disable-next-line vitest/prefer-called-with -- call count is what matters here; arguments are exercised in other test cases.
     expect(client.createComment).toHaveBeenCalledOnce();
   });
 
@@ -302,6 +303,7 @@ describe("prComment matching-comment deletion", () => {
     expect(console.warn).toHaveBeenCalledExactlyOnceWith(
       "Failed to delete existing comments: Comment not found",
     );
+    // eslint-disable-next-line vitest/prefer-called-with -- call count is what matters here; arguments are exercised in other test cases.
     expect(client.createComment).toHaveBeenCalledOnce();
   });
 });

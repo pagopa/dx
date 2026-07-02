@@ -152,6 +152,7 @@ describe("cleanStaleCheckpoints", () => {
   it("updates running sync_runs to interrupted", async () => {
     const { context, executeMock } = makeContext([]);
     await cleanStaleCheckpoints(context);
+    // eslint-disable-next-line vitest/prefer-called-with -- executeMock is called with a Drizzle SQL query object that cannot be usefully compared; call count is what matters here.
     expect(executeMock).toHaveBeenCalledOnce();
   });
 });
@@ -169,6 +170,7 @@ describe("startCheckpoint", () => {
     const rendered = renderExecutedSql(executeMock);
 
     expect(id).toBe(42);
+    // eslint-disable-next-line vitest/prefer-called-with -- executeMock is called with a Drizzle SQL query object that cannot be usefully compared; call count is what matters here, arguments are checked separately below.
     expect(executeMock).toHaveBeenCalledOnce();
     expect(rendered.params).toEqual([
       "pull-requests:dx",
@@ -193,6 +195,7 @@ describe("completeCheckpoint", () => {
   it("updates the sync_run to done", async () => {
     const { context, executeMock } = makeContext([]);
     await completeCheckpoint(context, 42);
+    // eslint-disable-next-line vitest/prefer-called-with -- executeMock is called with a Drizzle SQL query object that cannot be usefully compared; call count is what matters here.
     expect(executeMock).toHaveBeenCalledOnce();
   });
 });
@@ -201,6 +204,7 @@ describe("failCheckpoint", () => {
   it("updates the sync_run to failed", async () => {
     const { context, executeMock } = makeContext([]);
     await failCheckpoint(context, 42);
+    // eslint-disable-next-line vitest/prefer-called-with -- executeMock is called with a Drizzle SQL query object that cannot be usefully compared; call count is what matters here.
     expect(executeMock).toHaveBeenCalledOnce();
   });
 });

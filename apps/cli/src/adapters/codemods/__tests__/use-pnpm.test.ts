@@ -85,6 +85,7 @@ describe("extractPackageExtensions", () => {
     await expect(extractPackageExtensions()).resolves.toEqual(
       yarnrc.packageExtensions,
     );
+    // eslint-disable-next-line vitest/prefer-called-with -- readFile is always called with the same fixed path; call count is what matters here.
     expect(readFile).toHaveBeenCalledOnce();
   });
   test("returns undefined if packageExtensions is not present", async () => {
@@ -93,6 +94,7 @@ describe("extractPackageExtensions", () => {
     };
     readFile.mockResolvedValueOnce(YAML.stringify(yarnrc));
     await expect(extractPackageExtensions()).resolves.toBeUndefined();
+    // eslint-disable-next-line vitest/prefer-called-with -- readFile is always called with the same fixed path; call count is what matters here.
     expect(readFile).toHaveBeenCalledOnce();
   });
 });
@@ -111,6 +113,7 @@ describe("preparePackageJsonForPnpm", () => {
     readFile.mockResolvedValueOnce(JSON.stringify(packageJson, null, 2));
     const workspaces = await preparePackageJsonForPnpm();
     expect(workspaces).toEqual(["packages/*"]);
+    // eslint-disable-next-line vitest/prefer-called-with -- readFile is always called with the same fixed path; call count is what matters here.
     expect(readFile).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledWith(
       "package.json",
