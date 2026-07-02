@@ -136,3 +136,15 @@ jobs:
               --vault-name "$KEY_VAULT_NAME" \
               --name "$cert_name" >/dev/null
           fi
+
+      - name: Notify Slack on failure
+        if: failure() && github.event_name == 'schedule'
+        uses: pagopa/dx/.github/actions/slack-notification@main
+        with:
+          id: "Renew TLS certificate E2E test"
+          title: "*Renew TLS certificate E2E test failed*"
+          text:
+            "The weekly renew TLS certificate end-to-end test failed. Please check
+            the <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{
+            github.run_id }}|workflow run> for details."
+          slack_webhook_url: ${{ secrets.SLACK_WEBHOOK_URL }}
