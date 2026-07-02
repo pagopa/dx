@@ -1,3 +1,14 @@
+## 0.7.1 (2026-06-30)
+
+### 🩹 Fixes
+
+- Update Go module dependencies used by Terraform module tests. ([#1916](https://github.com/pagopa/dx/pull/1916))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.7.0 (2026-06-09)
 
 ### 🚀 Features

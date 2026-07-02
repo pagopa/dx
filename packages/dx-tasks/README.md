@@ -128,14 +128,17 @@ await dispatcher.dispatchTask("reportPrComment", {
   owner: "pagopa",
   repo: "dx",
   searchPattern: "<!-- dx-report -->",
+  sourceUrl: "https://github.com/pagopa/dx/actions/runs/123456",
   title: "Terraform Plan",
 });
 ```
 
 If `title` is provided, the rendered report is posted after a `##` heading with that title. If
 `footer` is provided, it is posted after the rendered report with a `---` separator. If the rendered
-report is empty, the task skips comment creation and returns `undefined`. If `githubToken` is omitted,
-the task reads `GITHUB_TOKEN` from the environment through the underlying `prComment` implementation.
+report is empty, the task skips comment creation and returns `undefined`. If `sourceUrl` is provided,
+report renderers can use it to link back to the source workflow run or artifact. If `githubToken` is
+omitted, the task reads `GITHUB_TOKEN` from the environment through the underlying `prComment`
+implementation.
 
 ## Rendering reports
 
@@ -159,7 +162,9 @@ await dispatcher.dispatchTask("renderReport", { format: "markdown" });
 
 The default dispatcher pre-registers the built-in `terraform-plan` Markdown renderer, which
 receives all Terraform plan reports and produces one status title per module. Terraform warnings
-and errors are rendered as GitHub Markdown notices before the summary line:
+and errors are rendered as GitHub Markdown notices before the summary line. Full plan outputs are
+never included in the Markdown comment, keeping comments compact even across many plans and linking
+back to `sourceUrl`, when provided, and report artifacts for the complete output.
 
 ````markdown
 ### Terraform Plans
@@ -173,14 +178,9 @@ and errors are rendered as GitHub Markdown notices before the summary line:
 
 Plan: 0 to add, 1 to change, 0 to destroy.
 
-<details>
-<summary>Show full plan</summary>
-
-```hcl
-No changes.
-```
-
-</details>
+> [!NOTE]
+> Full plan output is not included in this comment.
+> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.
 ````
 
 To control which namespaces/formats are renderable, build your own `ReportStore` and register

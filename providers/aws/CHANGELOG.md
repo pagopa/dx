@@ -1,3 +1,14 @@
+## 0.1.6 (2026-06-30)
+
+### 🩹 Fixes
+
+- Fix AWS subnet CIDR example security findings ([#1909](https://github.com/pagopa/dx/pull/1909))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+
 ## 0.1.5 (2026-06-23)
 
 ### 🩹 Fixes

@@ -2,21 +2,164 @@
 
 exports[`environment generator — file generation (no init) > materializes bootstrapper files from payload and backend state 1`] = `
 {
-  ".github/workflows/_release-terraform-apply-bootstrapper-dev.yaml": "name: Release Bootstrapper Infrastructure - dev
+  ".github/workflows/_release-terraform-apply-bootstrapper-dev.yaml": "name: Bootstrapper Infrastructure - dev
 on:
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "infra/bootstrapper/**"
+      - "infra/bootstrapper/dev/**"
+      - ".github/workflows/_release-terraform-apply-bootstrapper-dev.yaml"
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      - ready_for_review
+    paths:
+      - "infra/bootstrapper/dev/**"
+      - ".github/workflows/_release-terraform-apply-bootstrapper-dev.yaml"
 
 permissions:
   contents: read
   id-token: write
+  pull-requests: write
 
 jobs:
+  plan:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    name: Terraform Plan (dev)
+    runs-on: ubuntu-latest
+    environment: bootstrapper-dev-ci
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+    env:
+      ARM_CLIENT_ID: \${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: \${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: \${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      ARM_STORAGE_USE_AZUREAD: true
+      ROLE_ARN: \${{ secrets.ROLE_ARN }}
+      AWS_REGION: \${{ secrets.AWS_REGION }}
+      GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+      TF_IN_AUTOMATION: true
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        name: Checkout
+
+      - name: Get terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: \${{ steps.get-version.outputs.terraform_version }}
+
+      - name: Terraform Init
+        working-directory: infra/bootstrapper/dev
+        run: |
+          terraform init -input=false
+
+      - name: Start Terraform Plan telemetry span
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-plan
+          span_phase: start
+
+      - name: Terraform Plan
+        id: plan
+        uses: pagopa/dx/actions/sanitize-terraform-plan@main
+        with:
+          base-path: infra/bootstrapper/dev
+          sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
+
+      - name: End Terraform Plan telemetry span
+        if: always()
+        uses: pagopa/dx/actions/log-telemetry-event@main
+        with:
+          name: terraform-plan
+          span_phase: end
+
+      - name: Check Plan length
+        id: check-length
+        working-directory: infra/bootstrapper/dev
+        run: |
+          # If the sanitized plan is too long use the summary line, otherwise use the full sanitized plan
+          if [ "$(wc -c < "\${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"}")" -gt 60000 ]; then
+            echo "\${SUMMARY_LINE}" > plan_output.txt
+            echo "COMPLETE_PLAN=false" >> "$GITHUB_OUTPUT"
+          else
+            cat "\${PLAN_FILE_PATH#"$WORKING_DIRECTORY/"}" > plan_output.txt
+            echo "COMPLETE_PLAN=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          SUMMARY_LINE: \${{ steps.plan.outputs.summary_line }}
+          PLAN_FILE_PATH: \${{ steps.plan.outputs.filtered_plan_path }}
+          WORKING_DIRECTORY: infra/bootstrapper/dev
+
+      - name: Set Plan Output
+        id: set-plan-output
+        if: always()
+        working-directory: infra/bootstrapper/dev
+        run: |
+          echo "### 📖 Terraform Plan ($OUTPUT_DIR) - $PLAN_OUTCOME" > message_body.txt
+          echo "<details>" >> message_body.txt
+          echo "<summary>Show Plan</summary>" >> message_body.txt
+          echo "" >> message_body.txt
+
+          if [ "$PLAN_OUTCOME" != 'success' ]; then
+            echo "Terraform plan execution failed. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+          else
+            echo "\\\`\\\`\\\`hcl" >> message_body.txt
+            cat plan_output.txt >> message_body.txt
+            echo "\\\`\\\`\\\`" >> message_body.txt
+
+            if [ "$COMPLETE_PLAN" = 'false' ]; then
+              echo "Full plan output was too long and was omitted. Check the [workflow logs]($WORKFLOW_URL) for full details." >> message_body.txt
+            fi
+          fi
+
+          echo "" >> message_body.txt
+          echo "</details>" >> message_body.txt
+        env:
+          WORKFLOW_URL: \${{ github.server_url }}/\${{ github.repository }}/actions/runs/\${{ github.run_id }}
+          OUTPUT_DIR: infra/bootstrapper/dev
+          PLAN_OUTCOME: \${{ steps.plan.outcome }}
+          COMPLETE_PLAN: \${{ steps.check-length.outputs.COMPLETE_PLAN }}
+
+      - name: Post Plan on PR
+        id: comment
+        if: always()
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: infra/bootstrapper/dev/message_body.txt
+          search-pattern: "Terraform Plan (infra/bootstrapper/dev)"
+
+      - name: Set Telemetry Failure Result
+        if: failure()
+        run: |
+          echo "PIPELINE_RESULT=failure" >> "$GITHUB_ENV"
+
+      - name: Check Terraform Plan Result
+        if: always() && steps.plan.outcome != 'success'
+        run: |
+          exit 1
+
   release:
+    if: github.event_name != 'pull_request'
     uses: pagopa/dx/.github/workflows/release-terraform-bootstrapper-v1.yaml@main
     name: Release Bootstrapper (dev)
     secrets: inherit

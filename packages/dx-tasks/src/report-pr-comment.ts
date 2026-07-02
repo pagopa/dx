@@ -20,6 +20,7 @@ const reportPrCommentPayloadShape = {
   owner: nonEmptyStringSchema,
   repo: nonEmptyStringSchema,
   searchPattern: z.optional(nonEmptyStringSchema),
+  sourceUrl: z.optional(nonEmptyStringSchema),
   title: z.optional(nonEmptyStringSchema),
 };
 
@@ -33,6 +34,7 @@ export interface ReportPrCommentPayload {
   owner: string;
   repo: string;
   searchPattern?: string;
+  sourceUrl?: string;
   title?: string;
 }
 
@@ -45,6 +47,7 @@ export async function reportPrComment(
     owner,
     repo,
     searchPattern,
+    sourceUrl,
     title,
   }: ReportPrCommentPayload,
   context: TaskRunContext = {},
@@ -54,7 +57,7 @@ export async function reportPrComment(
     throw new Error("reportPrComment requires reports in the task context");
   }
 
-  const renderedReport = await context.reports.render(format);
+  const renderedReport = await context.reports.render(format, { sourceUrl });
 
   if (renderedReport.trim().length === 0) {
     return undefined;

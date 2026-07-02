@@ -1,3 +1,21 @@
+## 0.25.0 (2026-06-30)
+
+### 🚀 Features
+
+- For users in PagoPA organization, logs are sent to Application Insights ([#1838](https://github.com/pagopa/dx/pull/1838))
+
+### 🩹 Fixes
+
+- Add flags for dx add environment. ([#1854](https://github.com/pagopa/dx/pull/1854))
+- Ensure `dx add environment` creates missing GitHub environments for non-prod deployments by updating and applying the repository Terraform module before generating the new environment resources. The command now also waits for newly created Key Vault endpoints to become resolvable before writing runner app secrets, avoiding transient initialization failures right after vault creation. ([#1847](https://github.com/pagopa/dx/pull/1847))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.24.0 (2026-06-25)
 
 ### 🚀 Features

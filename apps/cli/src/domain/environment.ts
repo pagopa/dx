@@ -7,11 +7,14 @@ import {
 } from "./cloud-account.js";
 import { TerraformBackend } from "./remote-backend.js";
 
-export const environmentShort: Record<Environment["name"], string> = {
+export const environmentShort = {
   dev: "d",
   prod: "p",
   uat: "u",
-};
+} as const satisfies Record<Environment["name"], string>;
+
+export type EnvironmentShortValue =
+  (typeof environmentShort)[keyof typeof environmentShort];
 
 export const environmentSchema = z.object({
   cloudAccounts: z.array(cloudAccountSchema).min(1),

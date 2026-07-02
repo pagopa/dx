@@ -8,14 +8,13 @@ terraform {
 
   backend "azurerm" {
     resource_group_name  = "dx-d-itn-tfstate-rg-01"
-    storage_account_name = "dxditntfstatest01"
+    storage_account_name = "dxpitntfstatest01"
     container_name       = "terraform-state"
     key                  = "dx.repository.tfstate"
     use_azuread_auth     = true
   }
 }
 
-# GitHub provider configuration
 provider "github" {
   owner = "pagopa"
 }
