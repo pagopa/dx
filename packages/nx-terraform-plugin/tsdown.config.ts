@@ -1,9 +1,6 @@
 import { defineConfig } from "tsdown";
 
 export default defineConfig({
-  deps: {
-    skipNodeModulesBundle: true,
-  },
   dts: false,
   entry: {
     "executors/plan-upload/plan-upload":
