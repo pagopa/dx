@@ -40,8 +40,18 @@ async function writeMCPServerManifest() {
     version,
   };
 
+  const serverVersionModule = [
+    "/**",
+    " * Runtime version constant for the MCP server.",
+    " * Kept in sync with package.json by ./scripts/generate-server-manifest.js.",
+    " */",
+    `export const SERVER_VERSION = ${JSON.stringify(version)};`,
+    "",
+  ].join("\n");
+
   // Write updated server.json
   await writeFile("server.json", JSON.stringify(serverJson, null, 2) + "\n");
+  await writeFile("src/server-version.ts", serverVersionModule);
 
   return version;
 }

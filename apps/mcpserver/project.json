@@ -1,0 +1,63 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "@pagopa/dx-mcpserver",
+  "targets": {
+    "docker:build": {
+      "dependsOn": ["prune"]
+    },
+    "prune-lockfile": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:prune-lockfile",
+      "outputs": [
+        "{projectRoot}/dist/package.json",
+        "{projectRoot}/dist/pnpm-lock.yaml"
+      ],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-workspace-modules": {
+      "dependsOn": ["build"],
+      "cache": true,
+      "executor": "@nx/js:copy-workspace-modules",
+      "outputs": ["{projectRoot}/dist/workspace_modules"],
+      "options": {
+        "buildTarget": "build"
+      }
+    },
+    "copy-pnpm-workspace-config": {
+      "dependsOn": ["prune-lockfile"],
+      "cache": true,
+      "executor": "nx:run-commands",
+      "outputs": ["{projectRoot}/dist/pnpm-workspace.yaml"],
+      "options": {
+        "cwd": "apps/mcpserver",
+        "command": "cp ../../pnpm-workspace.yaml dist/pnpm-workspace.yaml"
+      }
+    },
+    "sanitize-pruned-package-json": {
+      "dependsOn": ["prune-lockfile"],
+      "cache": true,
+      "executor": "nx:run-commands",
+      "outputs": [
+        "{projectRoot}/dist/package.json",
+        "{projectRoot}/dist/pnpm-workspace.yaml",
+        "{projectRoot}/dist/workspace_modules/**/package.json"
+      ],
+      "options": {
+        "cwd": "apps/mcpserver",
+        "command": "node ./scripts/sanitize-pruned-output.js"
+      }
+    },
+    "prune": {
+      "dependsOn": [
+        "prune-lockfile",
+        "copy-workspace-modules",
+        "copy-pnpm-workspace-config",
+        "sanitize-pruned-package-json"
+      ],
+      "executor": "nx:noop"
+    }
+  }
+}
