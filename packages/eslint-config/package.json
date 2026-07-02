@@ -3,6 +3,10 @@
   "type": "module",
   "version": "6.1.0",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./jest": "./jest.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -13,7 +17,9 @@
     "format:check": "prettier --check ."
   },
   "files": [
-    "index.js"
+    "base.js",
+    "index.js",
+    "jest.js"
   ],
   "dependencies": {
     "@vitest/eslint-plugin": "^1.6.20",
@@ -26,11 +32,18 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "catalog:",
+    "eslint-plugin-jest": "^29.0.0",
     "prettier": "catalog:"
   },
   "peerDependencies": {
     "@eslint/js": "^9.0.0 || ^10.0.0",
     "eslint": "^9.0.0 || ^10.0.0",
+    "eslint-plugin-jest": "^29.0.0",
     "prettier": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "eslint-plugin-jest": {
+      "optional": true
+    }
   }
 }
