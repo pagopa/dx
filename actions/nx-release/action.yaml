@@ -169,10 +169,133 @@ runs:
       run: |
         set -euo pipefail
 
+        log_pre_publish_workspace_state() {
+          local projects_selector="${1:-}"
+
+          echo "::group::Release publish preflight diagnostics"
+          echo "Release mode: $RELEASE_MODE"
+          if [[ -n "$projects_selector" ]]; then
+            echo "Target projects: $projects_selector"
+          fi
+          node --version
+          pnpm --version
+          git status --short --untracked-files=all
+          echo "::endgroup::"
+        }
+
+        print_json_array_items_from_stdin() {
+          node -e '
+            const fs = require("fs");
+            const stdout = fs.readFileSync(0, "utf8");
+            const start = stdout.indexOf("[");
+            const end = stdout.lastIndexOf("]");
+            if (start === -1 || end === -1 || end < start) {
+              console.error("Could not parse `nx show projects --json` output:");
+              console.error(stdout);
+              process.exit(1);
+            }
+            const values = JSON.parse(stdout.slice(start, end + 1));
+            if (!Array.isArray(values)) {
+              console.error("Expected an array from `nx show projects --json`.");
+              process.exit(1);
+            }
+            for (const value of values) {
+              console.log(value);
+            }
+          '
+        }
+
+        print_project_root_from_stdin() {
+          node -e '
+            const fs = require("fs");
+            const stdout = fs.readFileSync(0, "utf8");
+            const start = stdout.indexOf("{");
+            const end = stdout.lastIndexOf("}");
+            if (start === -1 || end === -1 || end < start) {
+              console.error("Could not parse `nx show project --json` output:");
+              console.error(stdout);
+              process.exit(1);
+            }
+            const project = JSON.parse(stdout.slice(start, end + 1));
+            if (typeof project.root !== "string" || project.root.length === 0) {
+              console.error("Expected a project root from `nx show project --json`.");
+              process.exit(1);
+            }
+            process.stdout.write(project.root);
+          '
+        }
+
+        log_publish_failure_diagnostics() {
+          local projects_selector="$1"
+          local project_name=""
+          local project_names=""
+          local project_root=""
+
+          echo "::group::Release publish failure diagnostics"
+          git status --short --untracked-files=all || true
+          git diff --stat || true
+
+          if [[ -z "$projects_selector" ]]; then
+            echo "No target projects available for pnpm dry-run diagnostics."
+            echo "::endgroup::"
+            return
+          fi
+
+          if ! project_names=$(
+            npx nx show projects --projects="$projects_selector" --json \
+              | print_json_array_items_from_stdin
+          ); then
+            echo "::warning::Could not resolve target projects for selector '$projects_selector'."
+            echo "::endgroup::"
+            return
+          fi
+
+          if [[ -z "$project_names" ]]; then
+            echo "No target projects resolved for pnpm dry-run diagnostics."
+            echo "::endgroup::"
+            return
+          fi
+
+          while IFS= read -r project_name; do
+            if [[ -z "$project_name" ]]; then
+              continue
+            fi
+
+            if ! project_root=$(
+              npx nx show project "$project_name" --json \
+                | print_project_root_from_stdin
+            ); then
+              echo "::warning::Could not resolve root for project '$project_name'."
+              continue
+            fi
+
+            echo "::group::pnpm publish dry-run for $project_name"
+            echo "Project root: $project_root"
+            if ! pnpm publish "$project_root" --json --dry-run --no-git-checks; then
+              echo "::warning::pnpm publish dry-run failed for project '$project_name'."
+            fi
+            echo "::endgroup::"
+          done <<< "$project_names"
+
+          echo "::endgroup::"
+        }
+
+        run_nx_release_publish() {
+          local diagnostic_projects_selector="$1"
+          shift
+
+          log_pre_publish_workspace_state "$diagnostic_projects_selector"
+
+          if ! npx nx release publish --verbose "$@"; then
+            log_publish_failure_diagnostics "$diagnostic_projects_selector"
+            return 1
+          fi
+        }
+
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: build and publish all public projects (recovery mode)
           npx nx run-many --target=build --projects="tag:*:public"
-          npx nx release publish
+          run_nx_release_publish "tag:*:public"
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -186,7 +309,7 @@ runs:
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
-            npx nx release publish --projects="$PROJECTS_TO_BUILD"
+            run_nx_release_publish "$PROJECTS_TO_BUILD" --projects="$PROJECTS_TO_BUILD"
           else
             echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
           fi
