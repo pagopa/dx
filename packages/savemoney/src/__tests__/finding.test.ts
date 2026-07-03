@@ -145,5 +145,29 @@ describe("findingsFromAnalysisResult", () => {
       });
       expect(result.every((f) => f.category === "cost")).toBe(true);
     });
+
+    it("never attaches estimatedMonthlySavings to custom findings", () => {
+      // Custom analyzers carry the resource's monthly cost on
+      // `AnalysisResult.estimatedMonthlySavings` and the report layer
+      // renders it at the resource level. Propagating it down to a
+      // single finding sentence (e.g. "No tags found") would falsely
+      // suggest that fixing that sentence yields the full saving.
+      const result = findingsFromAnalysisResult({
+        ...BASE_ARGS,
+        reason: "Low CPU. Low network. Idle.",
+      });
+      expect(result).toHaveLength(3);
+      for (const f of result) {
+        expect(f.estimatedMonthlySavings).toBeUndefined();
+      }
+    });
+
+    it("omits estimatedMonthlySavings entirely", () => {
+      const result = findingsFromAnalysisResult({
+        ...BASE_ARGS,
+        reason: "Low CPU.",
+      });
+      expect(result[0].estimatedMonthlySavings).toBeUndefined();
+    });
   });
 });

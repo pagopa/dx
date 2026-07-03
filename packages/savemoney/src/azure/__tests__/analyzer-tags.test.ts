@@ -8,8 +8,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { Finding } from "../../finding.js";
+import type { AzureDetailedResourceReport } from "../types.js";
 
-import { shouldIncludeAdvisorFindingForTags } from "../analyzer.js";
+import {
+  mergeFinding,
+  shouldIncludeAdvisorFindingForTags,
+} from "../analyzer.js";
 
 function mkFinding(resourceId: string, source: Finding["source"]): Finding {
   return {
@@ -70,5 +74,36 @@ describe("shouldIncludeAdvisorFindingForTags", () => {
     expect(
       shouldIncludeAdvisorFindingForTags(finding, taggedResourceIds, true),
     ).toBe(false);
+  });
+});
+
+describe("mergeFinding", () => {
+  it("preserves custom cost at risk when merging an Advisor finding", () => {
+    const resourceId =
+      "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1";
+    const existing: AzureDetailedResourceReport = {
+      analysis: {
+        costRisk: "high",
+        estimatedMonthlySavings: { amount: 29.94, currency: "EUR" },
+        reason: "VM is deallocated.",
+        suspectedUnused: true,
+      },
+      findings: [mkFinding(resourceId, "custom")],
+      resource: {
+        id: resourceId,
+        name: "vm1",
+        type: "Microsoft.Compute/virtualMachines",
+      },
+    };
+    const reports = [existing];
+    const reportsById = new Map([[resourceId.toLowerCase(), existing]]);
+
+    mergeFinding(mkFinding(resourceId, "advisor"), reports, reportsById);
+
+    expect(existing.analysis.estimatedMonthlySavings).toEqual({
+      amount: 29.94,
+      currency: "EUR",
+    });
+    expect(existing.findings).toHaveLength(2);
   });
 });
