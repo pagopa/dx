@@ -45,6 +45,12 @@ Use this skill when the user wants guided execution of the DX CLI, especially fo
 - Run `add environment` from inside the generated repository so the CLI can detect the target GitHub repository from the current working tree.
 - If the user explicitly wants the local JS entrypoint, run it from the DX repository root or use an absolute path to `apps/cli/bin/index.js`.
 
+## Node Runtime Consistency
+
+- Before mutating commands in a generated repository (for example `add environment`), read `.node-version` and run DX CLI with `NODENV_VERSION` set to that exact value.
+- If that pinned version is missing in nodenv, install it (`nodenv install -s <version>`) before retrying the DX CLI command.
+- Avoid relying on implicit `system` Node for DX CLI execution inside generated repositories.
+
 ## Preparing `init`
 
 - Use the current `spec` output as the source of truth for the `init` command contract.
@@ -103,6 +109,7 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 - Use the current `spec` output as the source of truth for the `add environment` command contract.
 - Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and runner app credentials when environment initialization still needs them.
 - Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus runner app values when they are in scope.
+- For a first-time environment setup, ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before the first `add environment` execution unless the user explicitly confirms runner setup is already initialized and those values are not needed.
 
 ### Missing Subscription ID Flow
 
@@ -151,6 +158,7 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - `spec` is the first source of truth for the command name, flags, and choices.
 - In practice, missing `--business-unit` or `--management-team` causes the command to stop for input, so collect them before execution.
 - The spec output lists the Runner App flags as required because they are declared with value placeholders, but the runtime only needs them when the initialization flow reaches GitHub Runner App setup. Ask for them upfront when the goal is a fully non-interactive initialization of an environment that still needs setup.
+- Do not defer Runner App value collection to runtime prompts when performing first-time setup: collect them upfront unless the user explicitly confirms runner setup is already completed for the target environment.
 - Repeat `--account` and `--location` for multi-subscription environments.
 - If a subscription was inferred from Azure CLI, show both its ID and name to the user and ask for confirmation before using it.
 - The current CLI spec does not expose a separate cost center flag. If the user provides a cost center requirement, surface that mismatch and ask how it should be mapped instead of inventing an unsupported flag.
@@ -176,4 +184,6 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - Always show the final parameter set before running the command.
 - Always execute the CLI directly; do not front-load separate prerequisite probes.
 - If the subscription ID is missing, optionally try `az account show --query '{id:id,name:name}' -o json`, confirm both values with the user, and otherwise continue without turning that lookup into a prerequisite gate.
+- For first-time `add environment`, always ask runner-app-id/client-id/installation-id/private-key-path before execution unless the user explicitly confirms runner setup is already completed.
+- In generated repositories, run mutating DX CLI commands with `NODENV_VERSION=$(cat .node-version)` (and install the pinned version if missing) to prevent runtime feature mismatches.
 - Stop on unexpected prompts and convert them into explicit user questions for the next run.
