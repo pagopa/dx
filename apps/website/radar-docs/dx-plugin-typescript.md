@@ -9,7 +9,7 @@ and expert agents for TypeScript and JavaScript development.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/typescript/.github/plugin.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/typescript/.plugin/plugin.json)
 - [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/typescript/.mcp.json)
 
 ## Available agents

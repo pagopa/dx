@@ -9,7 +9,7 @@ infrastructure as code development, best practices, and module management.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/terraform/.github/plugin.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/terraform/.plugin/plugin.json)
 - [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/terraform/.mcp.json)
 
 ## Available skills
