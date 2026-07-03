@@ -35,9 +35,12 @@ export const makeSavemoneyCommand = () =>
     )
     .option(
       "-s, --source <source>",
-      "Restrict findings to a single source: 'advisor', 'custom', or 'all' (default: all)",
+      "Restrict findings to a single source: 'advisor', 'custom', or 'all' (defaults to config file or all)",
       parseSourceOption,
-      "all",
+    )
+    .option(
+      "--no-pricing",
+      "Disable Azure Retail Prices enrichment (skips custom cost-at-risk estimates)",
     )
     .action(async function (options) {
       const { verbose } = this.optsWithGlobals<GlobalOptions>();
@@ -52,10 +55,8 @@ export const makeSavemoneyCommand = () =>
           ...config,
           filterTags,
           preferredLocation: options.location || config.preferredLocation,
-          sources:
-            options.source === "all"
-              ? (config.sources ?? ["advisor", "custom"])
-              : [options.source as AzureSource],
+          ...(options.pricing === false ? { pricing: { enabled: false } } : {}),
+          sources: resolveSourcesOption(options.source, config.sources),
           timespanDays:
             Number.parseInt(options.days, 10) || config.timespanDays,
           verbose: verbose ?? false,
@@ -83,12 +84,13 @@ export const makeSavemoneyCommand = () =>
     });
 
 const SourceSchema = z.enum(["advisor", "all", "custom"]);
+type SourceOption = z.infer<typeof SourceSchema>;
 
 /**
  * Parses the `--source` option via a zod enum, accepting `all`, `advisor`,
  * or `custom` and rejecting any other value with a Commander-friendly error.
  */
-export function parseSourceOption(value: string): string {
+export function parseSourceOption(value: string): SourceOption {
   const result = SourceSchema.safeParse(value);
   if (!result.success) {
     throw new InvalidArgumentError(
@@ -119,4 +121,18 @@ export function parseTagsOption(
     }
   }
   return result;
+}
+
+/**
+ * Resolves the source filter preserving the difference between an omitted
+ * option (respect config/defaults) and an explicit `--source all` override.
+ */
+export function resolveSourcesOption(
+  option: SourceOption | undefined,
+  configSources: AzureSource[] | undefined,
+): AzureSource[] {
+  if (option === undefined) {
+    return configSources ?? ["advisor", "custom"];
+  }
+  return option === "all" ? ["advisor", "custom"] : [option];
 }
