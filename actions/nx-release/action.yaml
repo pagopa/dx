@@ -168,91 +168,10 @@ runs:
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
       run: |
         set -euo pipefail
-
-        log_pre_publish_workspace_state() {
-          echo "::group::Pre-publish workspace state"
-          node --version
-          pnpm --version
-          git status --short --untracked-files=all
-          echo "::endgroup::"
-        }
-
-        list_publish_target_projects() {
-          local projects="${1:-}"
-
-          if [[ -n "$projects" ]]; then
-            printf '%s' "$projects" | tr ',' '\n'
-            return 0
-          fi
-
-          npx nx show projects --projects="tag:*:public" --json \
-            | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).join("\n")'
-        }
-
-        resolve_project_root() {
-          local project="$1"
-
-          npx nx show project "$project" --json \
-            | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).root'
-        }
-
-        log_publish_failure_diagnostics() {
-          local projects="${1:-}"
-          local project_list=""
-
-          echo "::group::Publish failure diagnostics"
-          git status --short --untracked-files=all
-          git diff --stat
-
-          if ! project_list="$(list_publish_target_projects "$projects")"; then
-            echo "::warning::Could not determine target projects for pnpm publish dry-run diagnostics"
-            echo "::endgroup::"
-            return 0
-          fi
-
-          while IFS= read -r project; do
-            [[ -z "$project" ]] && continue
-
-            local project_root
-            if ! project_root="$(resolve_project_root "$project")"; then
-              echo "::warning::Could not resolve project root for ${project}"
-              continue
-            fi
-
-            echo "::group::pnpm publish --dry-run for ${project}"
-            if ! pnpm publish "$project_root" --json --dry-run --no-git-checks; then
-              echo "::warning::pnpm publish dry-run failed for ${project} (${project_root})"
-            fi
-            echo "::endgroup::"
-          done <<< "$project_list"
-
-          echo "::endgroup::"
-        }
-
-        run_nx_release_publish() {
-          local projects="${1:-}"
-
-          if [[ -n "$projects" ]]; then
-            if ! npx nx release publish --projects="$projects" --verbose; then
-              log_publish_failure_diagnostics "$projects"
-              return 1
-            fi
-
-            return 0
-          fi
-
-          if ! npx nx release publish --verbose; then
-            log_publish_failure_diagnostics
-            return 1
-          fi
-        }
-
-        log_pre_publish_workspace_state
-
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: build and publish all public projects (recovery mode)
           npx nx run-many --target=build --projects="tag:*:public"
-          run_nx_release_publish
+          npx nx release publish
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -266,7 +185,7 @@ runs:
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
-            run_nx_release_publish "$PROJECTS_TO_BUILD"
+            npx nx release publish --projects="$PROJECTS_TO_BUILD"
           else
             echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
           fi
