@@ -1,12 +1,14 @@
 terraform {
+  required_version = ">= 1.14.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>4"
+      version = "~> 4.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.7, < 1.0.0"
+      version = "~> 0.12"
     }
   }
 }
