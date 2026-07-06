@@ -13,7 +13,9 @@ import {
   makeSavemoneyCommand,
   parseSourceOption,
   parseTagsOption,
+  resolveNumberOption,
   resolveSourcesOption,
+  resolveStringOption,
 } from "../savemoney.js";
 
 describe("parseSourceOption", () => {
@@ -96,6 +98,30 @@ describe("resolveSourcesOption", () => {
 
   it("uses the explicit single source", () => {
     expect(resolveSourcesOption("advisor", ["custom"])).toEqual(["advisor"]);
+  });
+});
+
+describe("resolveStringOption", () => {
+  it("uses config value when option comes from a Commander default", () => {
+    expect(resolveStringOption("italynorth", "westeurope", "default")).toBe(
+      "westeurope",
+    );
+  });
+
+  it("uses CLI value when the user provided the option", () => {
+    expect(resolveStringOption("italynorth", "westeurope", "cli")).toBe(
+      "italynorth",
+    );
+  });
+});
+
+describe("resolveNumberOption", () => {
+  it("uses config value when option comes from a Commander default", () => {
+    expect(resolveNumberOption("30", 60, "default")).toBe(60);
+  });
+
+  it("uses CLI value when the user provided the option", () => {
+    expect(resolveNumberOption("45", 60, "cli")).toBe(45);
   });
 });
 

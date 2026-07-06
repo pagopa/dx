@@ -54,11 +54,18 @@ export const makeSavemoneyCommand = () =>
         const finalConfig: AzureConfig = {
           ...config,
           filterTags,
-          preferredLocation: options.location || config.preferredLocation,
+          preferredLocation: resolveStringOption(
+            options.location,
+            config.preferredLocation,
+            this.getOptionValueSource("location"),
+          ),
           ...(options.pricing === false ? { pricing: { enabled: false } } : {}),
           sources: resolveSourcesOption(options.source, config.sources),
-          timespanDays:
-            Number.parseInt(options.days, 10) || config.timespanDays,
+          timespanDays: resolveNumberOption(
+            options.days,
+            config.timespanDays,
+            this.getOptionValueSource("days"),
+          ),
           verbose: verbose ?? false,
         };
 
@@ -123,6 +130,18 @@ export function parseTagsOption(
   return result;
 }
 
+export function resolveNumberOption(
+  option: string | undefined,
+  configValue: number,
+  source: string | undefined,
+): number {
+  if (source !== "cli") {
+    return configValue;
+  }
+  const parsed = Number.parseInt(option ?? "", 10);
+  return Number.isNaN(parsed) ? configValue : parsed;
+}
+
 /**
  * Resolves the source filter preserving the difference between an omitted
  * option (respect config/defaults) and an explicit `--source all` override.
@@ -135,4 +154,12 @@ export function resolveSourcesOption(
     return configSources ?? ["advisor", "custom"];
   }
   return option === "all" ? ["advisor", "custom"] : [option];
+}
+
+export function resolveStringOption(
+  option: string | undefined,
+  configValue: string,
+  source: string | undefined,
+): string {
+  return source === "cli" && option ? option : configValue;
 }
