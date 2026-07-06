@@ -84,7 +84,7 @@ describe("mergeFinding", () => {
     const existing: AzureDetailedResourceReport = {
       analysis: {
         costRisk: "high",
-        estimatedMonthlySavings: { amount: 29.94, currency: "EUR" },
+        estimatedMonthlyCostAtRisk: { amount: 29.94, currency: "EUR" },
         reason: "VM is deallocated.",
         suspectedUnused: true,
       },
@@ -100,7 +100,7 @@ describe("mergeFinding", () => {
 
     mergeFinding(mkFinding(resourceId, "advisor"), reports, reportsById);
 
-    expect(existing.analysis.estimatedMonthlySavings).toEqual({
+    expect(existing.analysis.estimatedMonthlyCostAtRisk).toEqual({
       amount: 29.94,
       currency: "EUR",
     });

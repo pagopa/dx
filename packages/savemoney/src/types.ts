@@ -14,7 +14,7 @@ export type AnalysisResult = {
    * renders it once per resource instead of treating it as a per-finding
    * saving.
    */
-  estimatedMonthlySavings?: Money;
+  estimatedMonthlyCostAtRisk?: Money;
   reason: string;
   suspectedUnused: boolean;
 };
@@ -50,9 +50,9 @@ export function mergeResults(
 ): AnalysisResult {
   return {
     costRisk: specificResult.costRisk,
-    estimatedMonthlySavings:
-      specificResult.estimatedMonthlySavings ??
-      baseResult.estimatedMonthlySavings,
+    estimatedMonthlyCostAtRisk:
+      specificResult.estimatedMonthlyCostAtRisk ??
+      baseResult.estimatedMonthlyCostAtRisk,
     reason: baseResult.reason + specificResult.reason,
     suspectedUnused:
       baseResult.suspectedUnused || specificResult.suspectedUnused,

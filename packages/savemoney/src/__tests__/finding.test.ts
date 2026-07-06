@@ -148,7 +148,7 @@ describe("findingsFromAnalysisResult", () => {
 
     it("never attaches estimatedMonthlySavings to custom findings", () => {
       // Custom analyzers carry the resource's monthly cost on
-      // `AnalysisResult.estimatedMonthlySavings` and the report layer
+      // `AnalysisResult.estimatedMonthlyCostAtRisk` and the report layer
       // renders it at the resource level. Propagating it down to a
       // single finding sentence (e.g. "No tags found") would falsely
       // suggest that fixing that sentence yields the full saving.

@@ -3,7 +3,6 @@
  */
 
 import type { ComputeManagementClient } from "@azure/arm-compute";
-import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
@@ -15,10 +14,20 @@ import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   type MetricsCache,
+  type MonitorClientLike,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
 } from "../utils.js";
+
+export type VMComputeClientLike = {
+  virtualMachines: Pick<
+    ComputeManagementClient["virtualMachines"],
+    "get" | "instanceView"
+  >;
+};
+
+type VMPricing = Pick<PricingService, "resolveVm">;
 
 /**
  * Analyzes an Azure Virtual Machine for potential cost optimization.
@@ -34,13 +43,13 @@ import {
  */
 export async function analyzeVM(
   resource: armResources.GenericResource,
-  monitorClient: MonitorClient,
-  computeClient: ComputeManagementClient,
+  monitorClient: MonitorClientLike,
+  computeClient: VMComputeClientLike,
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
   cache?: MetricsCache,
-  pricing?: PricingService,
+  pricing?: VMPricing,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -173,10 +182,10 @@ export async function analyzeVM(
 async function enrichWithPricing(
   result: AnalysisResult,
   resource: armResources.GenericResource,
-  computeClient: ComputeManagementClient,
+  computeClient: VMComputeClientLike,
   resourceGroupName: string,
   vmName: string,
-  pricing?: PricingService,
+  pricing?: VMPricing,
 ): Promise<AnalysisResult> {
   if (!pricing || !result.suspectedUnused) {
     return result;
@@ -192,15 +201,15 @@ async function enrichWithPricing(
       return result;
     }
     const os = details.storageProfile?.osDisk?.osType?.toLowerCase();
-    const estimatedMonthlySavings = await pricing.resolveVm({
+    const estimatedMonthlyCostAtRisk = await pricing.resolveVm({
       armRegionName,
       armSkuName,
       os: os === "windows" ? "windows" : "linux",
     });
-    if (!estimatedMonthlySavings) {
+    if (!estimatedMonthlyCostAtRisk) {
       return result;
     }
-    return { ...result, estimatedMonthlySavings };
+    return { ...result, estimatedMonthlyCostAtRisk };
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
