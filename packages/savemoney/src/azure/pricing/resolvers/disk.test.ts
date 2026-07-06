@@ -17,7 +17,7 @@ function makeFetch(body: PricingResponse): {
   spy: ReturnType<typeof vi.fn>;
 } {
   const spy = vi.fn<FetchLike>().mockResolvedValue({
-    json: async () => body as unknown,
+    json: async () => body,
     ok: true,
     status: 200,
     statusText: "OK",

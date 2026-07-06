@@ -15,7 +15,7 @@ import { HOURS_PER_MONTH } from "./vm.js";
 
 function makeFetch(body: PricingResponse): FetchLike {
   return vi.fn<FetchLike>().mockResolvedValue({
-    json: async () => body as unknown,
+    json: async () => body,
     ok: true,
     status: 200,
     statusText: "OK",

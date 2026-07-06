@@ -18,7 +18,7 @@ function makeFetch(body: PricingResponse): {
   spy: ReturnType<typeof vi.fn>;
 } {
   const spy = vi.fn<FetchLike>().mockResolvedValue({
-    json: async () => body as unknown,
+    json: async () => body,
     ok: true,
     status: 200,
     statusText: "OK",
@@ -142,7 +142,9 @@ describe("PricingService", () => {
     // Same underlying filter, served from DiskCache — one fetch only.
     expect(spy).toHaveBeenCalledTimes(1);
   });
+});
 
+describe("PricingService disk memoization", () => {
   it("memoizes identical disk lookups within the same instance", async () => {
     const body: PricingResponse = {
       Items: [
@@ -183,6 +185,48 @@ describe("PricingService", () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
+  it("memoizes disk lookups with display and ARM region names as the same key", async () => {
+    const body: PricingResponse = {
+      Items: [
+        {
+          armRegionName: "westeurope",
+          currencyCode: "EUR",
+          productName: "Premium SSD Managed Disks",
+          retailPrice: 19.71,
+          skuName: "P10 LRS",
+          type: "Consumption",
+          unitOfMeasure: "1/Month",
+          unitPrice: 19.71,
+        },
+      ],
+      NextPageLink: null,
+    };
+    const { fetch, spy } = makeFetch(body);
+    const client = new PricingClient({
+      cache: new DiskCache({ dir }),
+      fetch,
+    });
+    const service = new PricingService(client);
+
+    const [a, b] = await Promise.all([
+      service.resolveDisk({
+        armRegionName: "West Europe",
+        diskSizeGiB: 128,
+        sku: "Premium_LRS",
+      }),
+      service.resolveDisk({
+        armRegionName: "westeurope",
+        diskSizeGiB: 128,
+        sku: "Premium_LRS",
+      }),
+    ]);
+
+    expect(a).toEqual(b);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("PricingService App Service Plan memoization", () => {
   it("memoizes identical App Service Plan lookups within the same instance", async () => {
     const body: PricingResponse = {
       Items: [
@@ -219,6 +263,49 @@ describe("PricingService", () => {
         os: "linux",
         skuName: "S1",
         workerCount: 1,
+      }),
+    ]);
+
+    expect(a).toEqual(b);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("memoizes App Service Plan lookups by canonical region and worker count", async () => {
+    const body: PricingResponse = {
+      Items: [
+        {
+          armRegionName: "westeurope",
+          currencyCode: "EUR",
+          meterName: "S1 App",
+          productName: "Azure App Service Standard Plan - Linux",
+          retailPrice: 0.08337,
+          skuName: "S1",
+          type: "Consumption",
+          unitOfMeasure: "1 Hour",
+          unitPrice: 0.08337,
+        },
+      ],
+      NextPageLink: null,
+    };
+    const { fetch, spy } = makeFetch(body);
+    const client = new PricingClient({
+      cache: new DiskCache({ dir }),
+      fetch,
+    });
+    const service = new PricingService(client);
+
+    const [a, b] = await Promise.all([
+      service.resolveAppServicePlan({
+        armRegionName: "West Europe",
+        os: "linux",
+        skuName: "S1",
+        workerCount: 1.2,
+      }),
+      service.resolveAppServicePlan({
+        armRegionName: "westeurope",
+        os: "linux",
+        skuName: "S1",
+        workerCount: 2,
       }),
     ]);
 

@@ -24,6 +24,7 @@ import type {
 } from "./resolvers/index.js";
 
 import {
+  normalizeArmRegion,
   resolveAppServicePlanMonthlyPrice,
   resolveDiskMonthlyPrice,
   resolvePublicIpMonthlyPrice,
@@ -45,7 +46,7 @@ export class PricingService {
   async resolveAppServicePlan(
     input: ResolveAppServicePlanInput,
   ): Promise<Money | undefined> {
-    const key = `app-service-plan|${input.armRegionName}|${input.skuName}|${input.os ?? "any"}|${input.workerCount ?? 1}`;
+    const key = `app-service-plan|${normalizeArmRegion(input.armRegionName)}|${input.skuName}|${input.os ?? "any"}|${Math.ceil(input.workerCount ?? 1)}`;
     return this.memoize(key, () =>
       this.safeResolve(() =>
         resolveAppServicePlanMonthlyPrice(this.client, input),
@@ -59,7 +60,7 @@ export class PricingService {
    * error.
    */
   async resolveDisk(input: ResolveDiskInput): Promise<Money | undefined> {
-    const key = `disk|${input.armRegionName}|${input.sku}|${input.diskSizeGiB}`;
+    const key = `disk|${normalizeArmRegion(input.armRegionName)}|${input.sku}|${input.diskSizeGiB}`;
     return this.memoize(key, () =>
       this.safeResolve(() => resolveDiskMonthlyPrice(this.client, input)),
     );
@@ -72,7 +73,7 @@ export class PricingService {
   async resolvePublicIp(
     input: ResolvePublicIpInput,
   ): Promise<Money | undefined> {
-    const key = `public-ip|${input.armRegionName}|${input.sku}|${input.allocation}`;
+    const key = `public-ip|${normalizeArmRegion(input.armRegionName)}|${input.sku}|${input.allocation}`;
     return this.memoize(key, () =>
       this.safeResolve(() => resolvePublicIpMonthlyPrice(this.client, input)),
     );
@@ -83,7 +84,7 @@ export class PricingService {
    * Returns `undefined` on no-match or on error.
    */
   async resolveVm(input: ResolveVmInput): Promise<Money | undefined> {
-    const key = `vm|${input.armRegionName}|${input.armSkuName}|${input.os ?? "linux"}`;
+    const key = `vm|${normalizeArmRegion(input.armRegionName)}|${input.armSkuName}|${input.os ?? "linux"}`;
     return this.memoize(key, () =>
       this.safeResolve(() => resolveVmMonthlyPrice(this.client, input)),
     );
