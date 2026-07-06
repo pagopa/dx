@@ -115,10 +115,15 @@ const runInitCommand = async () => {
 
 describe("makeInitCommand git identity fallback", () => {
   let executedGitCommands: string[];
+  let gitConfigValues: Record<"user.email" | "user.name", string | undefined>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     executedGitCommands = [];
+    gitConfigValues = {
+      "user.email": undefined,
+      "user.name": undefined,
+    };
 
     const payload = makePayload();
     const repositoryTerraform = vi.fn(() =>
@@ -133,11 +138,27 @@ describe("makeInitCommand git identity fallback", () => {
         executedGitCommands.push(command);
 
         if (command === "git config --get user.name") {
-          return Promise.resolve({ exitCode: 1, stderr: "", stdout: "" });
+          return Promise.resolve(
+            gitConfigValues["user.name"] === undefined
+              ? { exitCode: 1, stderr: "", stdout: "" }
+              : {
+                  exitCode: 0,
+                  stderr: "",
+                  stdout: gitConfigValues["user.name"],
+                },
+          );
         }
 
         if (command === "git config --get user.email") {
-          return Promise.resolve({ exitCode: 1, stderr: "", stdout: "" });
+          return Promise.resolve(
+            gitConfigValues["user.email"] === undefined
+              ? { exitCode: 1, stderr: "", stdout: "" }
+              : {
+                  exitCode: 0,
+                  stderr: "",
+                  stdout: gitConfigValues["user.email"],
+                },
+          );
         }
 
         return Promise.resolve({ exitCode: 0, stderr: "", stdout: "" });
@@ -165,6 +186,20 @@ describe("makeInitCommand git identity fallback", () => {
   });
 
   it("uses temporary git -c identity overrides when git user config is missing", async () => {
+    await runInitCommand();
+
+    const commitCommand = executedGitCommands.find((command) =>
+      command.includes('commit --no-gpg-sign -m "Scaffold workspace"'),
+    );
+
+    expect(commitCommand).toContain(
+      'git -c user.name=dx-pagopa-bot -c user.email=dx-pagopa-github-bot@pagopa.it commit --no-gpg-sign -m "Scaffold workspace"',
+    );
+  });
+
+  it("uses the default bot identity for both values when only one git config value is present", async () => {
+    gitConfigValues["user.name"] = "User Name";
+
     await runInitCommand();
 
     const commitCommand = executedGitCommands.find((command) =>

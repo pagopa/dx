@@ -430,18 +430,17 @@ const initializeGitRepositoryWithPresenter =
       const [configuredGitUserName, configuredGitUserEmail] = await Promise.all(
         [readGitConfigValue("user.name"), readGitConfigValue("user.email")],
       );
-
-      if (
+      const hasConfiguredGitIdentity =
         configuredGitUserName !== undefined &&
-        configuredGitUserEmail !== undefined
-      ) {
-        await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
-        return;
-      }
+        configuredGitUserEmail !== undefined;
 
-      // `git -c` applies the fallback identity only to this scaffold commit, so
-      // the generated repository does not persist bot defaults in local config.
-      await git$`git -c user.name=${configuredGitUserName ?? DEFAULT_SCAFFOLD_GIT_USER_NAME} -c user.email=${configuredGitUserEmail ?? DEFAULT_SCAFFOLD_GIT_USER_EMAIL} commit --no-gpg-sign -m "Scaffold workspace"`;
+      if (hasConfiguredGitIdentity) {
+        await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+      } else {
+        // `git -c` applies the fallback identity only to this scaffold commit, so
+        // the generated repository does not persist bot defaults in local config.
+        await git$`git -c user.name=${DEFAULT_SCAFFOLD_GIT_USER_NAME} -c user.email=${DEFAULT_SCAFFOLD_GIT_USER_EMAIL} commit --no-gpg-sign -m "Scaffold workspace"`;
+      }
     };
     // `git remote add` is tracked separately from the push so its documented
     // exit codes (e.g. 3 = remote already exists) surface a specific, actionable
