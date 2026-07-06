@@ -1,3 +1,13 @@
+## 0.25.2 (2026-07-06)
+
+### 🩹 Fixes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.25.1 (2026-07-02)
 
 ### 🩹 Fixes

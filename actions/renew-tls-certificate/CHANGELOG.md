@@ -1,3 +1,13 @@
+## 0.0.4 (2026-07-06)
+
+### 🩹 Fixes
+
+- Run renew TLS certificate smoke tests in PR validation ([#1928](https://github.com/pagopa/dx/pull/1928))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.0.3 (2026-06-30)
 
 ### 🩹 Fixes
