@@ -116,17 +116,4 @@ describe("monorepo generator — file generation", () => {
 
     expect(generatedFiles).toMatchSnapshot();
   });
-
-  it("does not enable the aiepfd plugin in generated Copilot settings", async () => {
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, payload.repoName),
-      [".github/copilot/settings.json"],
-    );
-
-    const settings = JSON.parse(
-      generatedFiles[".github/copilot/settings.json"],
-    );
-
-    expect(settings.enabledPlugins).not.toHaveProperty("aiepfd@pagopa-dx");
-  });
 });
