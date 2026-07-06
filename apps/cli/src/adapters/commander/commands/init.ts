@@ -367,6 +367,8 @@ const createRemoteRepositoryWithPresenter =
  * See https://git-scm.com/docs/git-remote#_exit_status
  */
 const GIT_REMOTE_ALREADY_EXISTS_EXIT_CODE = 3;
+const DEFAULT_SCAFFOLD_GIT_USER_EMAIL = "dx-pagopa-github-bot@pagopa.it";
+const DEFAULT_SCAFFOLD_GIT_USER_NAME = "dx-pagopa-bot";
 
 /**
  * Translates a failure of the git remote setup step into an actionable error.
@@ -398,6 +400,49 @@ const initializeGitRepositoryWithPresenter =
     const git$ = $({
       shell: true,
     });
+    const gitRead$ = $({
+      reject: false,
+      shell: true,
+    });
+    const readGitConfigValue = async (
+      key: "user.email" | "user.name",
+    ): Promise<string | undefined> => {
+      const result = await gitRead$`git config --get ${key}`;
+      const value = result.stdout.trim();
+      const stderr = (result.stderr ?? "").trim();
+      const isMissingValue =
+        result.exitCode === 1 && value === "" && stderr === "";
+
+      if (isMissingValue || value === "") {
+        return undefined;
+      }
+
+      if (result.exitCode !== 0) {
+        throw new Error(
+          stderr === "" ? `Failed to read git config ${key}` : stderr,
+          { cause: result },
+        );
+      }
+
+      return value;
+    };
+    const commitScaffold = async () => {
+      const [configuredGitUserName, configuredGitUserEmail] = await Promise.all(
+        [readGitConfigValue("user.name"), readGitConfigValue("user.email")],
+      );
+
+      if (
+        configuredGitUserName !== undefined &&
+        configuredGitUserEmail !== undefined
+      ) {
+        await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+        return;
+      }
+
+      // `git -c` applies the fallback identity only to this scaffold commit, so
+      // the generated repository does not persist bot defaults in local config.
+      await git$`git -c user.name=${configuredGitUserName ?? DEFAULT_SCAFFOLD_GIT_USER_NAME} -c user.email=${configuredGitUserEmail ?? DEFAULT_SCAFFOLD_GIT_USER_EMAIL} commit --no-gpg-sign -m "Scaffold workspace"`;
+    };
     // `git remote add` is tracked separately from the push so its documented
     // exit codes (e.g. 3 = remote already exists) surface a specific, actionable
     // message instead of being misreported as a push failure.
@@ -413,7 +458,7 @@ const initializeGitRepositoryWithPresenter =
       // while keeping the scaffolded local files in the working tree for a clean PR diff.
       await git$`git reset origin/main`;
       await git$`git add .`;
-      await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+      await commitScaffold();
       await git$`git push -u origin ${branchName}`;
     };
     return trackStep(
