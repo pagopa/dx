@@ -1,6 +1,6 @@
 {
   "name": "aiepfd",
-  "description": "An empty plugin reserved for future AI-enabled product development workflows",
+  "description": "A plugin for AI-enabled product development workflows",
   "version": "0.1.0",
   "author": {
     "name": "PagoPA DX Team"
