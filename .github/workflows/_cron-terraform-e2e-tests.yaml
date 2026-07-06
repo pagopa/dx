@@ -28,7 +28,6 @@ jobs:
     env:
       ARM_CLIENT_ID: ${{ secrets.INTEGRATION_ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
-      GITHUB_TOKEN: ${{ github.token }}
       E2E_GITHUB_RUNNER_PAT: ${{ secrets.E2E_GITHUB_RUNNER_PAT }}
       E2E_GITHUB_APP_ID: ${{ secrets.E2E_GITHUB_APP_ID }}
       E2E_GITHUB_APP_INSTALLATION_ID: ${{ secrets.E2E_GITHUB_APP_INSTALLATION_ID }}
@@ -86,6 +85,7 @@ jobs:
         timeout-minutes: 720 # 12 hours
         env:
           GOFLAGS: "-p=1"
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           pnpm nx run-many \
             --target test:e2e \
