@@ -29,6 +29,7 @@ content:
     }
   },
   "enabledPlugins": {
+    "aiepfd@pagopa-dx": true,
     "terraform@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
@@ -58,6 +59,22 @@ DX repository. By default, clone it into `$HOME/.dx`; if you need to use a
 different location, set `DX_KB_PATH` to point to that clone.
 
 ## Available Plugins
+
+### `aiepfd@pagopa-dx`
+
+Supports AI-enabled product development workflows, from requirement discovery to
+delivery-ready Jira stories.
+
+**Skills**
+
+| Name                        | Description                                                                                                                         |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `write-prd`                 | Drafts PRDs from goals, repository context, and constraints.                                                                        |
+| `write-design-review`       | Produces design reviews grounded in the current architecture, alternatives, and rollout risks.                                      |
+| `write-use-cases`           | Turns feature ideas or PRDs into structured use cases with actors, flows, and acceptance criteria.                                  |
+| `use-cases-to-jira-stories` | Breaks validated use cases into Jira-ready story drafts with scope, dependencies, and independently verifiable acceptance criteria. |
+
+---
 
 ### `terraform@pagopa-dx`
 

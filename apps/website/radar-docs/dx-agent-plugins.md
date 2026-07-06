@@ -18,6 +18,8 @@ project workflows, and infrastructure guidance directly inside the coding flow.
 
 ## Available plugins
 
+- [DX Plugin: AIEPFD](dx-plugin-aiepfd.md) — AI-enabled product development
+  workflows
 - [DX Plugin: Azure](dx-plugin-azure.md) — Azure-specific skills for resource
   management
 - [DX Plugin: Project Management](dx-plugin-project-management.md) — JIRA,
