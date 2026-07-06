@@ -172,14 +172,14 @@ async function enrichWithPricing(
       return result;
     }
 
-    const estimatedMonthlyCostAtRisk = await pricing.resolveAppServicePlan({
+    const estimatedMonthlySavings = await pricing.resolveAppServicePlan({
       armRegionName,
       os: planDetails.reserved === true ? "linux" : "windows",
       skuName,
       workerCount: planDetails.sku?.capacity ?? planDetails.numberOfWorkers,
     });
-    return estimatedMonthlyCostAtRisk
-      ? { ...result, estimatedMonthlyCostAtRisk }
+    return estimatedMonthlySavings
+      ? { ...result, estimatedMonthlySavings }
       : result;
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);

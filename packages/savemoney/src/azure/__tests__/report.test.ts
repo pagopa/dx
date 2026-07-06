@@ -138,7 +138,7 @@ describe("generateReport — lint format", () => {
     const VM_WITH_COST: AzureDetailedResourceReport = {
       analysis: {
         costRisk: "high",
-        estimatedMonthlyCostAtRisk: { amount: 29.94, currency: "EUR" },
+        estimatedMonthlySavings: { amount: 29.94, currency: "EUR" },
         reason: "No tags found. VM is deallocated.",
         suspectedUnused: true,
       },

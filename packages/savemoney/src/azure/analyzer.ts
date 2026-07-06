@@ -293,7 +293,7 @@ export function mergeFinding(
         RISK_ORDER[existing.analysis.costRisk] <= RISK_ORDER[added.costRisk]
           ? existing.analysis.costRisk
           : added.costRisk,
-      estimatedMonthlyCostAtRisk: existing.analysis.estimatedMonthlyCostAtRisk,
+      estimatedMonthlySavings: existing.analysis.estimatedMonthlySavings,
       reason:
         existing.analysis.reason && added.reason
           ? `${existing.analysis.reason.trimEnd()} ${added.reason.trimStart()}`

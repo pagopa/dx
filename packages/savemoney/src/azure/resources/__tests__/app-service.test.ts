@@ -93,7 +93,7 @@ describe("analyzeAppServicePlan", () => {
       pricing,
     );
 
-    expect(result.estimatedMonthlyCostAtRisk).toEqual({
+    expect(result.estimatedMonthlySavings).toEqual({
       amount: 121.72,
       currency: "EUR",
     });
@@ -132,7 +132,7 @@ describe("analyzeAppServicePlan", () => {
     expect(result.reason).toContain(
       "Premium tier with low resource utilization",
     );
-    expect(result.estimatedMonthlyCostAtRisk).toBeUndefined();
+    expect(result.estimatedMonthlySavings).toBeUndefined();
     expect(pricing.resolveAppServicePlan).not.toHaveBeenCalled();
   });
 
@@ -159,7 +159,7 @@ describe("analyzeAppServicePlan", () => {
     );
 
     expect(result.suspectedUnused).toBe(false);
-    expect(result.estimatedMonthlyCostAtRisk).toBeUndefined();
+    expect(result.estimatedMonthlySavings).toBeUndefined();
     expect(pricing.resolveAppServicePlan).not.toHaveBeenCalled();
   });
 });

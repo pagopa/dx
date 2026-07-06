@@ -3,6 +3,7 @@
  */
 
 import type { ComputeManagementClient } from "@azure/arm-compute";
+import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
@@ -14,20 +15,10 @@ import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   type MetricsCache,
-  type MonitorClientLike,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
 } from "../utils.js";
-
-export type VMComputeClientLike = {
-  virtualMachines: Pick<
-    ComputeManagementClient["virtualMachines"],
-    "get" | "instanceView"
-  >;
-};
-
-type VMPricing = Pick<PricingService, "resolveVm">;
 
 /**
  * Analyzes an Azure Virtual Machine for potential cost optimization.
@@ -43,13 +34,13 @@ type VMPricing = Pick<PricingService, "resolveVm">;
  */
 export async function analyzeVM(
   resource: armResources.GenericResource,
-  monitorClient: MonitorClientLike,
-  computeClient: VMComputeClientLike,
+  monitorClient: MonitorClient,
+  computeClient: ComputeManagementClient,
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
   cache?: MetricsCache,
-  pricing?: VMPricing,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -182,10 +173,10 @@ export async function analyzeVM(
 async function enrichWithPricing(
   result: AnalysisResult,
   resource: armResources.GenericResource,
-  computeClient: VMComputeClientLike,
+  computeClient: ComputeManagementClient,
   resourceGroupName: string,
   vmName: string,
-  pricing?: VMPricing,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   if (!pricing || !result.suspectedUnused) {
     return result;
@@ -201,15 +192,15 @@ async function enrichWithPricing(
       return result;
     }
     const os = details.storageProfile?.osDisk?.osType?.toLowerCase();
-    const estimatedMonthlyCostAtRisk = await pricing.resolveVm({
+    const estimatedMonthlySavings = await pricing.resolveVm({
       armRegionName,
       armSkuName,
       os: os === "windows" ? "windows" : "linux",
     });
-    if (!estimatedMonthlyCostAtRisk) {
+    if (!estimatedMonthlySavings) {
       return result;
     }
-    return { ...result, estimatedMonthlyCostAtRisk };
+    return { ...result, estimatedMonthlySavings };
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(

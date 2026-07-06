@@ -132,7 +132,7 @@ export function findingsFromAnalysisResult(args: {
   // individual findings: a per-resource cost (e.g. €29.94/mo for a VM)
   // attached to a sentence like "No tags found" would falsely suggest
   // "add the missing tags to save €29.94". The resource-level cost is
-  // carried instead by `AnalysisResult.estimatedMonthlyCostAtRisk` and
+  // carried instead by `AnalysisResult.estimatedMonthlySavings` and
   // surfaced by the report layer as a per-resource header — see
   // `azure/report.ts`.
   return sentences.map((sentence) => ({

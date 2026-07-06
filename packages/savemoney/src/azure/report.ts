@@ -154,7 +154,7 @@ function computeSummary(report: AzureDetailedResourceReport[]): Summary {
     }
     // Per-resource cost: counted ONCE per resource (not per finding) so
     // that a resource with N findings doesn't inflate the total by Nx.
-    const costAtRisk = entry.analysis.estimatedMonthlyCostAtRisk;
+    const costAtRisk = entry.analysis.estimatedMonthlySavings;
     if (costAtRisk) {
       summary.costAtRiskByCurrency.set(
         costAtRisk.currency,
@@ -209,7 +209,7 @@ function formatPerFindingSavings(savings?: Money): string {
  * payloads without `findings` we fall back to splitting `analysis.reason`
  * like before so the format stays backward compatible.
  *
- * When a custom analyzer populated `analysis.estimatedMonthlyCostAtRisk`,
+ * When a custom analyzer populated `analysis.estimatedMonthlySavings`,
  * the value is printed ONCE per resource as a header annotation labelled
  * "cost at risk" — it represents the monthly bill of the resource (an
  * upper bound on what could be recovered by removing it), NOT the saving
@@ -239,7 +239,7 @@ function generateLintReport(report: AzureDetailedResourceReport[]): void {
   for (const entry of report) {
     const resourceId =
       entry.resource.id ?? `unknown/${entry.resource.name ?? "unknown"}`;
-    const costAtRisk = entry.analysis.estimatedMonthlyCostAtRisk;
+    const costAtRisk = entry.analysis.estimatedMonthlySavings;
     const header = costAtRisk
       ? `${BOLD}${resourceId}${RESET}  ${GREEN}(cost at risk: ${formatAmount(costAtRisk.amount, costAtRisk.currency)}/mo)${RESET}`
       : `${BOLD}${resourceId}${RESET}`;

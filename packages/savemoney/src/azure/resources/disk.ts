@@ -19,12 +19,6 @@ import {
   verboseLogResourceStart,
 } from "../utils.js";
 
-export type DiskComputeClientLike = {
-  disks: Pick<ComputeManagementClient["disks"], "get">;
-};
-
-type DiskPricing = Pick<PricingService, "resolveDisk">;
-
 /**
  * Analyzes an Azure Managed Disk for potential cost optimization.
  *
@@ -36,9 +30,9 @@ type DiskPricing = Pick<PricingService, "resolveDisk">;
  */
 export async function analyzeDisk(
   resource: armResources.GenericResource,
-  computeClient: DiskComputeClientLike,
+  computeClient: ComputeManagementClient,
   verbose = false,
-  pricing?: DiskPricing,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -102,14 +96,14 @@ export async function analyzeDisk(
 
 /**
  * Best-effort: looks up the monthly price for the disk's `(sku, size,
- * region)` triple and attaches it as `estimatedMonthlyCostAtRisk`. Any
+ * region)` triple and attaches it as `estimatedMonthlySavings`. Any
  * failure (unsupported SKU, missing fields, resolver error) leaves the
  * original result unchanged.
  */
 async function enrichWithPricing(
   result: AnalysisResult,
   diskDetails: Disk,
-  pricing: DiskPricing | undefined,
+  pricing: PricingService | undefined,
 ): Promise<AnalysisResult> {
   if (!pricing) return result;
 
@@ -123,7 +117,7 @@ async function enrichWithPricing(
     diskSizeGiB,
     sku,
   });
-  return money ? { ...result, estimatedMonthlyCostAtRisk: money } : result;
+  return money ? { ...result, estimatedMonthlySavings: money } : result;
 }
 
 /**

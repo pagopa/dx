@@ -2,6 +2,7 @@
  * Azure Public IP analysis
  */
 
+import type { MonitorClient } from "@azure/arm-monitor";
 import type { NetworkManagementClient } from "@azure/arm-network";
 
 import * as armResources from "@azure/arm-resources";
@@ -14,17 +15,10 @@ import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   type MetricsCache,
-  type MonitorClientLike,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
 } from "../utils.js";
-
-export type PublicIpNetworkClientLike = {
-  publicIPAddresses: Pick<NetworkManagementClient["publicIPAddresses"], "get">;
-};
-
-type PublicIpPricing = Pick<PricingService, "resolvePublicIp">;
 
 /**
  * Analyzes an Azure Public IP for potential cost optimization.
@@ -38,13 +32,13 @@ type PublicIpPricing = Pick<PricingService, "resolvePublicIp">;
  */
 export async function analyzePublicIp(
   resource: armResources.GenericResource,
-  networkClient: PublicIpNetworkClientLike,
-  monitorClient: MonitorClientLike,
+  networkClient: NetworkManagementClient,
+  monitorClient: MonitorClient,
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
   cache?: MetricsCache,
-  pricing?: PublicIpPricing,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -138,9 +132,9 @@ async function enrichWithPricing(
   result: AnalysisResult,
   resource: armResources.GenericResource,
   publicIpDetails:
-    | Awaited<ReturnType<PublicIpNetworkClientLike["publicIPAddresses"]["get"]>>
+    | Awaited<ReturnType<NetworkManagementClient["publicIPAddresses"]["get"]>>
     | undefined,
-  pricing?: PublicIpPricing,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   if (!pricing || !result.suspectedUnused || !publicIpDetails) {
     return result;
@@ -156,15 +150,15 @@ async function enrichWithPricing(
     ) {
       return result;
     }
-    const estimatedMonthlyCostAtRisk = await pricing.resolvePublicIp({
+    const estimatedMonthlySavings = await pricing.resolvePublicIp({
       allocation,
       armRegionName,
       sku: skuName,
     });
-    if (!estimatedMonthlyCostAtRisk) {
+    if (!estimatedMonthlySavings) {
       return result;
     }
-    return { ...result, estimatedMonthlyCostAtRisk };
+    return { ...result, estimatedMonthlySavings };
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
