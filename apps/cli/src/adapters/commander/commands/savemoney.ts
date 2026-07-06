@@ -50,22 +50,22 @@ export const makeSavemoneyCommand = () =>
 
         // Parse tag filter
         const filterTags = parseTagsOption(options.tags);
+        const cliDays = Number.parseInt(options.days, 10);
 
         const finalConfig: AzureConfig = {
           ...config,
           filterTags,
-          preferredLocation: resolveStringOption(
-            options.location,
-            config.preferredLocation,
-            this.getOptionValueSource("location"),
-          ),
+          preferredLocation:
+            this.getOptionValueSource("location") === "cli"
+              ? options.location
+              : config.preferredLocation,
           ...(options.pricing === false ? { pricing: { enabled: false } } : {}),
           sources: resolveSourcesOption(options.source, config.sources),
-          timespanDays: resolveNumberOption(
-            options.days,
-            config.timespanDays,
-            this.getOptionValueSource("days"),
-          ),
+          timespanDays:
+            this.getOptionValueSource("days") === "cli" &&
+            !Number.isNaN(cliDays)
+              ? cliDays
+              : config.timespanDays,
           verbose: verbose ?? false,
         };
 
@@ -130,18 +130,6 @@ export function parseTagsOption(
   return result;
 }
 
-export function resolveNumberOption(
-  option: string | undefined,
-  configValue: number,
-  source: string | undefined,
-): number {
-  if (source !== "cli") {
-    return configValue;
-  }
-  const parsed = Number.parseInt(option ?? "", 10);
-  return Number.isNaN(parsed) ? configValue : parsed;
-}
-
 /**
  * Resolves the source filter preserving the difference between an omitted
  * option (respect config/defaults) and an explicit `--source all` override.
@@ -154,12 +142,4 @@ export function resolveSourcesOption(
     return configSources ?? ["advisor", "custom"];
   }
   return option === "all" ? ["advisor", "custom"] : [option];
-}
-
-export function resolveStringOption(
-  option: string | undefined,
-  configValue: string,
-  source: string | undefined,
-): string {
-  return source === "cli" && option ? option : configValue;
 }
