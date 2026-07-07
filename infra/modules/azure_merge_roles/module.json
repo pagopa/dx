@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Easily merge multiple RBAC built-in roles into a single custom role to save on the number of the required role assignments",
+  "provider": "azurerm",
+  "version": "1.0.0"
+}

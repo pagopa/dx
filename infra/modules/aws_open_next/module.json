@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Deploy a serverless and scalable OpenNext solution on AWS",
+  "provider": "aws",
+  "version": "1.0.0"
+}
