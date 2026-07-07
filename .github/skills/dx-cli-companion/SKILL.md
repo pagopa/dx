@@ -47,9 +47,8 @@ Use this skill when the user wants guided execution of the DX CLI, especially fo
 
 ## Node Runtime Consistency
 
-- Before mutating commands in a generated repository (for example `add environment`), read `.node-version` and run DX CLI with `NODENV_VERSION` set to that exact value.
-- If that pinned version is missing in nodenv, install it (`nodenv install -s <version>`) before retrying the DX CLI command.
-- Avoid relying on implicit `system` Node for DX CLI execution inside generated repositories.
+- Ensure the Node.js version specified in the .node-version file is installed.
+- Always use this version when running the DX CLI instead of relying on the system default.
 
 ## Preparing `init`
 
