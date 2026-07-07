@@ -210,4 +210,21 @@ describe("makeInitCommand git identity fallback", () => {
       'git -c user.name=dx-pagopa-bot -c user.email=dx-pagopa-github-bot@pagopa.it commit --no-gpg-sign -m "Scaffold workspace"',
     );
   });
+
+  it("uses the configured git identity when both git config values are present", async () => {
+    gitConfigValues["user.name"] = "User Name";
+    gitConfigValues["user.email"] = "user@example.com";
+
+    await runInitCommand();
+
+    const commitCommand = executedGitCommands.find((command) =>
+      command.includes('commit --no-gpg-sign -m "Scaffold workspace"'),
+    );
+
+    expect(commitCommand).toBe(
+      'git commit --no-gpg-sign -m "Scaffold workspace"',
+    );
+    expect(commitCommand).not.toContain("git -c user.name=");
+    expect(commitCommand).not.toContain("git -c user.email=");
+  });
 });
