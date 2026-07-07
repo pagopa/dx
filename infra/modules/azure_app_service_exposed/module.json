@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Creates an Azure App Service configured for external access",
   "provider": "azurerm",
-  "version": "4.0.0"
+  "version": "4.0.1"
 }
