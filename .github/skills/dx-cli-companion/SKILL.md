@@ -110,6 +110,17 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 - Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus runner app values when they are in scope.
 - For a first-time environment setup, ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before the first `add environment` execution unless the user explicitly confirms runner setup is already initialized and those values are not needed.
 
+### GitHub Runner App Value Sources
+
+When the user needs help locating the Runner App values, point them to <https://dx.pagopa.it/docs/monorepository-setup#setting-up-a-github-app> and map each flag to the GitHub UI explicitly:
+
+- `--runner-app-id`: GitHub App settings page -> **About** or **App details** -> **App ID**
+- `--client-id`: same GitHub App settings page -> **About** or **App details** -> **Client ID**
+- `--installation-id`: GitHub App settings page -> **Install App** -> open the installation; the numeric ID is in the URL (`.../installations/<id>`)
+- `--private-key-path`: GitHub App settings page -> **Private keys** -> **Generate a private key**; save the downloaded `.pem` file locally and pass its path, not the pasted file content
+
+Only GitHub App administrators can retrieve these values from the app settings. If the user cannot access them, tell the user to ask the product's GitHub App managers.
+
 ### Missing Subscription ID Flow
 
 If the user did not provide a subscription ID:
