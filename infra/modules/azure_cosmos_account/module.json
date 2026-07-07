@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Provisions an Azure Cosmos DB account with monitoring and network settings",
+  "provider": "azurerm",
+  "version": "1.0.0"
+}

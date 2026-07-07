@@ -135,7 +135,15 @@
     },
     {
       "plugin": "@pagopa/nx-terraform-plugin",
-      "include": ["infra/**"]
+      "include": ["infra/**"],
+      "options": {
+        "publish": {
+          "mode": "github",
+          "github": {
+            "owner": "pagopa-dx"
+          }
+        }
+      }
     }
   ],
   "analytics": false
