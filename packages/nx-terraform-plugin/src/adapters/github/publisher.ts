@@ -83,7 +83,6 @@ export const publishToGithub = async (
         GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
         GIT_COMMITTER_NAME: "PagoPA DX Bot",
       },
-      shell: true,
     });
     const safe$ = $({ reject: false });
 
@@ -113,7 +112,22 @@ export const publishToGithub = async (
       await clearExportWorkingTree(tempExportDir);
       await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
       await $`git add --all`;
-      await $`git commit -m "Release ${input.version}"`;
+
+      // The subrepo's main branch may already match the module's current
+      // contents (e.g. a concurrent legacy sync pushed the same tree first).
+      // In that case there's nothing to commit, but we must still tag and
+      // push so the release completes instead of failing.
+      const commitMessage = `Release ${input.version}`;
+      const commitResult = await safe$`git commit -m ${commitMessage}`;
+      if (commitResult.exitCode !== 0) {
+        const commitOutput = `${commitResult.stdout}${commitResult.stderr}`;
+        if (!commitOutput.includes("nothing to commit")) {
+          throw new Error(
+            `Failed to commit release ${input.version} for ${repoUrl}: ${commitOutput}`,
+          );
+        }
+      }
+
       await $`git tag -f ${input.version}`;
       await $`git push origin main`;
       await $`git push origin refs/tags/${input.version} --force`;

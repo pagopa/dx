@@ -65,7 +65,11 @@ const createGitCommandHarness = ({
     | typeof defaultCommandResult
     | undefined;
 } = {}) => {
-  const commands: { command: string; cwd: string | undefined }[] = [];
+  const commands: {
+    command: string;
+    cwd: string | undefined;
+    values: unknown[];
+  }[] = [];
 
   const git$ = vi.fn(
     (
@@ -81,7 +85,7 @@ const createGitCommandHarness = ({
       const lastCall =
         execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
       const cwd = lastCall?.[0]?.cwd as string | undefined;
-      commands.push({ command, cwd });
+      commands.push({ command, cwd, values });
       const commandResult = onCommand?.(command, cwd);
       if (commandResult !== undefined) {
         return Promise.resolve(commandResult);
@@ -155,7 +159,7 @@ it("publishes by committing on top of remote main without force-pushing history"
     { command: "git fetch origin main", cwd: expectedTempDir },
     { command: "git checkout -B main origin/main", cwd: expectedTempDir },
     { command: "git add --all", cwd: expectedTempDir },
-    { command: 'git commit -m "Release 1.2.3"', cwd: expectedTempDir },
+    { command: "git commit -m Release 1.2.3", cwd: expectedTempDir },
     { command: "git tag -f 1.2.3", cwd: expectedTempDir },
     { command: "git push origin main", cwd: expectedTempDir },
     {
@@ -168,6 +172,14 @@ it("publishes by committing on top of remote main without force-pushing history"
     force: true,
     recursive: true,
   });
+
+  const commitCommand = commands.find((c) =>
+    c.command.startsWith("git commit"),
+  );
+  expect(commitCommand?.values).toEqual(["Release 1.2.3"]);
+  expect(execaMocks.$).toHaveBeenCalledWith(
+    expect.not.objectContaining({ shell: true }),
+  );
 });
 
 it("bootstraps an empty remote repository on first publish", async () => {
@@ -188,7 +200,7 @@ it("bootstraps an empty remote repository on first publish", async () => {
   await publishToGithub(publishInput);
 
   expect(commands.map((c) => c.command)).toContain(
-    'git commit -m "Release 1.2.3"',
+    "git commit -m Release 1.2.3",
   );
   expect(commands.map((c) => c.command)).not.toContain(
     "git push origin main --force",
@@ -258,7 +270,7 @@ it("excludes .git directory when copying module contents", async () => {
   expect(filterFn("/some/path/subdir/.git")).toBe(false);
 });
 
-it("uses shell mode plus explicit commit author and committer environment variables", async () => {
+it("uses explicit commit author and committer environment variables without shell mode", async () => {
   createGitCommandHarness();
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
@@ -278,7 +290,7 @@ it("uses shell mode plus explicit commit author and committer environment variab
     throw new Error("Expected to find a call with env variables");
   }
 
-  expect(commitCall[0].shell).toBe(true);
+  expect(commitCall[0]).not.toHaveProperty("shell");
   expect(commitCall[0].env).toMatchObject({
     GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
     GIT_AUTHOR_NAME: "PagoPA DX Bot",
@@ -435,7 +447,7 @@ it("creates and force-pushes a tag named after version", async () => {
     { command: "git fetch origin main", cwd: expectedTempDir },
     { command: "git checkout -B main origin/main", cwd: expectedTempDir },
     { command: "git add --all", cwd: expectedTempDir },
-    { command: 'git commit -m "Release 1.2.3"', cwd: expectedTempDir },
+    { command: "git commit -m Release 1.2.3", cwd: expectedTempDir },
     { command: "git tag -f 1.2.3", cwd: expectedTempDir },
     { command: "git push origin main", cwd: expectedTempDir },
     {
@@ -443,6 +455,66 @@ it("creates and force-pushes a tag named after version", async () => {
       cwd: expectedTempDir,
     },
   ]);
+});
+
+it("still tags and pushes when there is nothing to commit (content already matches remote)", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git commit -m Release 1.2.3") {
+        return {
+          exitCode: 1,
+          stderr: "",
+          stdout: "On branch main\nnothing to commit, working tree clean",
+        };
+      }
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).resolves.toBe("published");
+
+  expect(commands.map((c) => c.command)).toEqual([
+    "git init -b main",
+    `git remote add origin ${expectedRepoUrl}`,
+    "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+    "git ls-remote --exit-code --heads origin main",
+    "git fetch origin main",
+    "git checkout -B main origin/main",
+    "git add --all",
+    "git commit -m Release 1.2.3",
+    "git tag -f 1.2.3",
+    "git push origin main",
+    "git push origin refs/tags/1.2.3 --force",
+  ]);
+});
+
+it("fails when git commit fails for a reason other than nothing to commit", async () => {
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === "git commit -m Release 1.2.3") {
+        return {
+          exitCode: 1,
+          stderr: "fatal: unable to write commit object",
+          stdout: "",
+        };
+      }
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).rejects.toThrow(
+    /Failed to commit release 1.2.3/,
+  );
 });
 
 it("skips publishing when the remote tag already exists", async () => {
