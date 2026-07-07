@@ -30,6 +30,10 @@ The allowed sizes are:
 
 For a complete example of how to use this module, refer to the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-exposed/tree/main/examples/complete) folder in the module repository.
 
+## Diagram
+
+![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_app_service_exposed/diagram.svg)
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
