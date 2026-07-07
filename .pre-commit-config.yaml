@@ -26,7 +26,8 @@ repos:
           - --hook-config=--create-file-if-not-exist=true
           - --args=--hide providers
           - --args=--lockfile=false
-        files: ^infra/(?:.*/)?_?modules/.*
+        files: ^infra/(?:.*/)?_?modules/[^/]+/[^/]+\.tf$
+        exclude: ^infra/(?:.*/)?_?modules/[^/]+/(examples|tests|example)/.*
       - id: terraform_tflint
         args:
           - --args=--disable-rule terraform_required_version
