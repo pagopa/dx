@@ -1,21 +1,18 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.enabled ? 1 : 0
+  count = local.application_insights_enabled ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
   resource_group_name = var.resource_group_name
   resource_id         = var.application_insights.id
 
-  dynamic "application_insights" {
-    for_each = var.management_logger_application_insight_enabled ? [1] : []
-    content {
-      connection_string = var.application_insights.connection_string
-    }
+  application_insights {
+    connection_string = data.azurerm_application_insights.this[0].connection_string
   }
 }
 
 resource "azurerm_api_management_diagnostic" "applicationinsights" {
-  count = var.application_insights.enabled ? 1 : 0
+  count = local.application_insights_enabled ? 1 : 0
 
   identifier               = "applicationinsights"
   api_management_name      = azurerm_api_management.this.name
@@ -29,35 +26,25 @@ resource "azurerm_api_management_diagnostic" "applicationinsights" {
   sampling_percentage = var.application_insights.sampling_percentage
 }
 
-// Collect diagnostic logs and metrics to a Log Analytics workspace
 resource "azurerm_monitor_diagnostic_setting" "apim" {
-  count = var.monitoring.enabled ? 1 : 0
+  count = local.use_case_features.monitoring ? 1 : 0
 
   name               = "${local.apim.name}-diagnostic"
   target_resource_id = azurerm_api_management.this.id
 
-  log_analytics_workspace_id     = var.monitoring.log_analytics_workspace_id
+  log_analytics_workspace_id     = var.log_analytics_workspace_id
   log_analytics_destination_type = "AzureDiagnostics"
 
-  # Add logs only if enabled
   dynamic "enabled_log" {
-    for_each = var.monitoring.logs.enabled ? (
-      length(var.monitoring.logs.groups) > 0 ? var.monitoring.logs.groups : var.monitoring.logs.categories
-    ) : []
+    for_each = local.apim.log_category_groups
 
     content {
-      category_group = length(var.monitoring.logs.groups) > 0 ? enabled_log.value : null
-      category       = length(var.monitoring.logs.categories) > 0 ? enabled_log.value : null
+      category_group = enabled_log.value
     }
   }
 
-  # Add metrics if enabled (using enabled_metric to replace deprecated metric block)
-  dynamic "enabled_metric" {
-    for_each = var.monitoring.metrics.enabled ? ["AllMetrics"] : []
-
-    content {
-      category = enabled_metric.value
-    }
+  enabled_metric {
+    category = "AllMetrics"
   }
 }
 
@@ -75,7 +62,7 @@ resource "azurerm_monitor_metric_alert" "this" {
   enabled             = true
 
   dynamic "action" {
-    for_each = var.action_group_id != null ? ["dummy"] : []
+    for_each = var.action_group_id != null ? [1] : []
     content {
       action_group_id = var.action_group_id
     }
@@ -99,7 +86,6 @@ resource "azurerm_monitor_metric_alert" "this" {
           values   = dimension.value["values"]
         }
       }
-
     }
   }
 
@@ -124,7 +110,6 @@ resource "azurerm_monitor_metric_alert" "this" {
           values   = dimension.value["values"]
         }
       }
-
     }
   }
 }

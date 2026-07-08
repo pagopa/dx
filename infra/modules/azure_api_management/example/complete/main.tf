@@ -6,15 +6,28 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
+data "azurerm_log_analytics_workspace" "common" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = ""
+    name          = "common"
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
+    domain        = ""
+    name          = "common"
+    resource_type = "resource_group"
+  }))
+}
+
 module "azure_apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 2.3"
+  version = "~> 3.1"
 
-  environment         = local.environment
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "high_load"
+  environment                = local.environment
+  resource_group_name        = azurerm_resource_group.example.name
+  use_case                   = "high_load"
+  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
-  # Change this values
   publisher_email = "example@pagopa.it"
   publisher_name  = "Example Publisher"
 
@@ -24,30 +37,18 @@ module "azure_apim" {
   }
 
   hostname_configuration = {
-    proxy = [
+    proxy = {
+      use_resource_name_as_default = true
+    }
+    management = [
       {
-        default_ssl_binding = false
-        host_name           = "api.example.com"
-        key_vault_id        = null
-      },
-      {
-        default_ssl_binding = true
-        host_name           = "api2.example.com"
-        key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
-      },
-      {
-        default_ssl_binding = false
-        host_name           = "api3.example.com"
-        key_vault_id        = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert2"
-      },
+        host_name                = "management.example.com"
+        key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1/latest"
+      }
     ]
-    developer_portal = null
-    management       = null
-    portal           = null
   }
 
   autoscale = {
-    enabled                       = true
     minimum_instances             = 4
     default_instances             = 4
     maximum_instances             = 8
