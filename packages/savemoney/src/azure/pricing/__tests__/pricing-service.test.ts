@@ -5,13 +5,13 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FetchLike } from "./client.js";
-import type { PricingResponse } from "./schema.js";
+import type { FetchLike } from "../client.js";
+import type { PricingResponse } from "../schema.js";
 
-import { DiskCache } from "./cache.js";
-import { PricingClient } from "./client.js";
-import { PricingService } from "./pricing-service.js";
-import { makeTestCacheDir, removeTestCacheDir } from "./test-cache-dir.js";
+import { DiskCache } from "../cache.js";
+import { PricingClient } from "../client.js";
+import { PricingService } from "../pricing-service.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
 
 function makeFetch(body: PricingResponse): {
   fetch: FetchLike;

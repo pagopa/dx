@@ -192,4 +192,21 @@ describe("PricingClient.query", () => {
 
     await expect(client.query("x")).rejects.toThrow();
   });
+
+  it("throws a descriptive error when the response body is not JSON", async () => {
+    const fetchImpl: FetchLike = vi.fn(async () => ({
+      json: async () => {
+        throw new SyntaxError("Unexpected token");
+      },
+      ok: true,
+      status: 200,
+      statusText: "OK",
+    }));
+    const client = new PricingClient({
+      cache: new DiskCache({ dir }),
+      fetch: fetchImpl,
+    });
+
+    await expect(client.query("x")).rejects.toThrow(/invalid JSON/);
+  });
 });

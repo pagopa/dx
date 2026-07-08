@@ -127,7 +127,11 @@ export class PricingClient {
         `Azure Retail Prices API returned ${res.status} ${res.statusText}`,
       );
     }
-    const body: unknown = await res.json();
+    const body = await res.json().catch((error: unknown) => {
+      throw new Error("Azure Retail Prices API returned invalid JSON", {
+        cause: error,
+      });
+    });
     return PricingResponseSchema.parse(body);
   }
 }

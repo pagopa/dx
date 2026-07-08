@@ -1,5 +1,5 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
-import { join } from "node:path";
+import { isAbsolute, join, relative } from "node:path";
 
 const TEST_CACHE_PARENT = join(
   process.cwd(),
@@ -14,5 +14,13 @@ export async function makeTestCacheDir(prefix: string): Promise<string> {
 }
 
 export async function removeTestCacheDir(dir: string): Promise<void> {
+  const relativePath = relative(TEST_CACHE_PARENT, dir);
+  if (
+    relativePath === "" ||
+    relativePath.startsWith("..") ||
+    isAbsolute(relativePath)
+  ) {
+    throw new Error(`Refusing to remove non-test cache directory: ${dir}`);
+  }
   await rm(dir, { force: true, recursive: true });
 }

@@ -8,17 +8,17 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { FetchLike } from "../client.js";
-import type { PricingResponse } from "../schema.js";
+import type { FetchLike } from "../../client.js";
+import type { PricingResponse } from "../../schema.js";
 
-import { DiskCache } from "../cache.js";
-import { PricingClient } from "../client.js";
-import { makeTestCacheDir, removeTestCacheDir } from "../test-cache-dir.js";
+import { DiskCache } from "../../cache.js";
+import { PricingClient } from "../../client.js";
+import { makeTestCacheDir, removeTestCacheDir } from "../../test-cache-dir.js";
 import {
   HOURS_PER_MONTH,
   normalizeArmRegion,
   resolveVmMonthlyPrice,
-} from "./vm.js";
+} from "../vm.js";
 
 function makeFetch(body: PricingResponse): FetchLike {
   return vi.fn<FetchLike>().mockResolvedValue({

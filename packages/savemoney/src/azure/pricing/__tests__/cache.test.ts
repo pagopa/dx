@@ -58,4 +58,10 @@ describe("DiskCache", () => {
     const cache = new DiskCache({ dir });
     expect(cache.pathFor("a")).not.toBe(cache.pathFor("b"));
   });
+
+  it("refuses to remove directories outside the test cache parent", async () => {
+    await expect(removeTestCacheDir(process.cwd())).rejects.toThrow(
+      /non-test cache directory/,
+    );
+  });
 });

@@ -5,13 +5,19 @@
  * Docs:     https://learn.microsoft.com/rest/api/cost-management/retail-prices/azure-retail-prices
  *
  * The API returns a flat list of `Items` (one per meter) plus an optional
- * `NextPageLink` for pagination. The schemas below model only the fields the
- * resolvers consume — extra fields returned by the API are tolerated
- * silently (we do NOT use `.strict()`) so a future SDK addition does not
- * break parsing.
+ * `NextPageLink` for pagination. Extra fields returned by Azure are tolerated,
+ * but the fields used by pricing logic are validated with narrow shapes.
  */
 
 import { z } from "zod";
+
+const NonEmptyStringSchema = z.string().min(1);
+const PriceTypeSchema = z.enum([
+  "Consumption",
+  "DevTestConsumption",
+  "Reservation",
+]);
+const PriceValueSchema = z.number().finite().nonnegative();
 
 /**
  * A single priced meter returned by the Retail Prices API.
@@ -25,28 +31,28 @@ import { z } from "zod";
  *   want on-demand pricing must filter by `type === "Consumption"`.
  */
 export const PriceItemSchema = z.object({
-  armRegionName: z.string().optional(),
-  armSkuName: z.string().optional(),
-  currencyCode: z.string(),
-  effectiveStartDate: z.string().optional(),
+  armRegionName: NonEmptyStringSchema.optional(),
+  armSkuName: NonEmptyStringSchema.optional(),
+  currencyCode: z.string().length(3),
+  effectiveStartDate: NonEmptyStringSchema.optional(),
   isPrimaryMeterRegion: z.boolean().optional(),
-  location: z.string().optional(),
-  meterId: z.string().optional(),
-  meterName: z.string().optional(),
-  productId: z.string().optional(),
-  productName: z.string().optional(),
-  reservationTerm: z.string().optional(),
-  retailPrice: z.number(),
-  serviceFamily: z.string().optional(),
-  serviceId: z.string().optional(),
-  serviceName: z.string().optional(),
-  skuId: z.string().optional(),
-  skuName: z.string().optional(),
-  tierMinimumUnits: z.number().optional(),
+  location: NonEmptyStringSchema.optional(),
+  meterId: NonEmptyStringSchema.optional(),
+  meterName: NonEmptyStringSchema.optional(),
+  productId: NonEmptyStringSchema.optional(),
+  productName: NonEmptyStringSchema.optional(),
+  reservationTerm: NonEmptyStringSchema.optional(),
+  retailPrice: PriceValueSchema,
+  serviceFamily: NonEmptyStringSchema.optional(),
+  serviceId: NonEmptyStringSchema.optional(),
+  serviceName: NonEmptyStringSchema.optional(),
+  skuId: NonEmptyStringSchema.optional(),
+  skuName: NonEmptyStringSchema.optional(),
+  tierMinimumUnits: PriceValueSchema.optional(),
   /** "Consumption" | "Reservation" | "DevTestConsumption". */
-  type: z.string(),
-  unitOfMeasure: z.string(),
-  unitPrice: z.number(),
+  type: PriceTypeSchema,
+  unitOfMeasure: NonEmptyStringSchema,
+  unitPrice: PriceValueSchema,
 });
 export type PriceItem = z.infer<typeof PriceItemSchema>;
 
@@ -55,9 +61,9 @@ export type PriceItem = z.infer<typeof PriceItemSchema>;
  * current page, not the grand total.
  */
 export const PricingResponseSchema = z.object({
-  BillingCurrency: z.string().optional(),
-  Count: z.number().optional(),
+  BillingCurrency: z.string().length(3).optional(),
+  Count: z.number().int().nonnegative().optional(),
   Items: z.array(PriceItemSchema),
-  NextPageLink: z.string().nullable().optional(),
+  NextPageLink: z.string().url().nullable().optional(),
 });
 export type PricingResponse = z.infer<typeof PricingResponseSchema>;
