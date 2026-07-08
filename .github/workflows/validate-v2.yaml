@@ -97,7 +97,7 @@ jobs:
       - name: Cache Nx
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
-          path: .nx/cache
+          path: .nx
           key: ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
@@ -107,8 +107,6 @@ jobs:
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       - name: Run code quality checks on affected projects
-        env:
-          NX_REJECT_UNKNOWN_LOCAL_CACHE: 0
         run: pnpm validate
 
   get-environments:
