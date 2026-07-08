@@ -28,16 +28,17 @@ possible.
 
 ## Consumption
 
-This package is consumed today via **local filesystem symlinks** from
-`selfcare-monorepo-poc/packages/nx-dx-docker-plugin/src` and `.../dist` to
-this package's `src/` and `dist/` directories (both repos are expected to
-be checked out as sibling directories on the same machine). This only
-works for local development; it does **not** work in CI, since each repo's
-CI checks out only itself, and `dist/` must be built (`pnpm build`) before
-it's usable — it is not committed. Until this package is published as a
-versioned npm package (with its own build/test/changeset/release),
-consumers running in CI must vendor a build of this package rather than
-relying on the symlinks.
+This package is consumed as a normal pnpm workspace dependency
+(`"@pagopa/nx-dx-docker-plugin": "workspace:^"`), registered in a
+consumer's `nx.json` `plugins` array.
+
+`dist/*.js` is committed to the repository (see `.gitignore`, which
+un-ignores `dist/` and only ignores `dist/**/*.d.ts`). This is required
+because Nx loads plugins from `nx.json` to compute the project graph
+before any build target can run, so the plugin can't rely on `nx build`
+to produce its own `dist/` first — the built output must already be
+present on disk. Run `pnpm build` in this package after changing `src/`
+and commit the resulting `dist/*.js` changes together with the source.
 
 ## Options
 
