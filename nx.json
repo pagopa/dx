@@ -112,8 +112,6 @@
         "buildTargetName": "docker:build",
         "defaultBranch": "main",
         "imageAuthors": "PagoPA",
-        "imageNamePrefix": "pagopa/dx",
-        "imageUrl": "https://github.com/pagopa/dx",
         "jsBuildTargetName": "build",
         "packageTargetName": "package",
         "pushTargetName": "docker:push",
