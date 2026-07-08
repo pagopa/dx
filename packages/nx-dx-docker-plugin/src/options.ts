@@ -13,11 +13,14 @@
 // This plugin is installed across multiple, unrelated repositories, so
 // `imageAuthors`/`imageNamePrefix`/`imageUrl` identify *which repository*
 // built an image (they end up in OCI labels and in the image name itself).
-// There's no safe repo-agnostic default for them: a default would silently
-// stamp one consumer's identity (e.g. "pagopa/dx-slc") onto every other
-// consumer's images. They're required — every `nx.json` registration must
-// set them explicitly. The remaining options are Nx/registry conventions
-// that are the same across repos, so they keep sensible defaults.
+// `imageNamePrefix`/`imageUrl` are auto-detected from the workspace's git
+// `origin` remote (when it's a github.com remote) so most consumers don't
+// need to set them at all; override them explicitly for a custom image
+// name prefix or a non-GitHub remote. `imageAuthors` has no reliable source
+// (it's a human-readable legal/org name, not derivable from git) and is
+// always required. The remaining options are Nx/registry conventions that
+// are the same across repos, so they keep sensible defaults.
+import { execFileSync } from "node:child_process";
 import { z } from "zod/v4";
 
 const nonEmptyString = z.string().min(1);
@@ -56,14 +59,44 @@ const defaultOptions: Pick<DockerPluginOptions, DefaultableOption> = {
 const partialSchema = dockerPluginOptionsSchema.partial({
   buildTargetName: true,
   defaultBranch: true,
+  imageNamePrefix: true,
+  imageUrl: true,
   jsBuildTargetName: true,
   packageTargetName: true,
   pushTargetName: true,
   registry: true,
 });
 
+const githubRemotePattern =
+  /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([^/]+)\/(.+?)(?:\.git)?$/;
+
+// Best-effort: derives imageNamePrefix/imageUrl from the workspace's git
+// `origin` remote. Returns `undefined` when there's no git repo, no
+// `origin` remote, or the remote isn't hosted on github.com — callers must
+// fall back to requiring the options explicitly in that case.
+const deriveFromGitOrigin = (
+  workspaceRoot: string,
+): Pick<DockerPluginOptions, "imageNamePrefix" | "imageUrl"> | undefined => {
+  try {
+    const remoteUrl = execFileSync("git", ["remote", "get-url", "origin"], {
+      cwd: workspaceRoot,
+      encoding: "utf8",
+    }).trim();
+    const match = githubRemotePattern.exec(remoteUrl);
+    if (!match) return undefined;
+    const [, owner, repo] = match;
+    return {
+      imageNamePrefix: `${owner}/${repo}`.toLowerCase(),
+      imageUrl: `https://github.com/${owner}/${repo}`,
+    };
+  } catch {
+    return undefined;
+  }
+};
+
 export const parseDockerReleasePluginOptions = (
   options: unknown,
+  workspaceRoot: string,
 ): DockerPluginOptions => {
   const input = typeof options === "object" && options !== null ? options : {};
   const parseResult = partialSchema.safeParse(input);
@@ -78,5 +111,28 @@ export const parseDockerReleasePluginOptions = (
       `Invalid @pagopa/nx-dx-docker-plugin options: ${validationErrors}`,
     );
   }
-  return { ...defaultOptions, ...parseResult.data };
+
+  const parsed = parseResult.data;
+  const gitOrigin =
+    parsed.imageNamePrefix === undefined || parsed.imageUrl === undefined
+      ? deriveFromGitOrigin(workspaceRoot)
+      : undefined;
+  const imageNamePrefix = parsed.imageNamePrefix ?? gitOrigin?.imageNamePrefix;
+  const imageUrl = parsed.imageUrl ?? gitOrigin?.imageUrl;
+
+  if (imageNamePrefix === undefined || imageUrl === undefined) {
+    throw new Error(
+      "Invalid @pagopa/nx-dx-docker-plugin options: imageNamePrefix/imageUrl " +
+        "were not set and could not be auto-detected from the git 'origin' " +
+        "remote (missing git repo, missing origin, or a non-github.com " +
+        "remote) — set them explicitly in this plugin's nx.json options.",
+    );
+  }
+
+  return {
+    ...defaultOptions,
+    ...parsed,
+    imageNamePrefix,
+    imageUrl,
+  };
 };

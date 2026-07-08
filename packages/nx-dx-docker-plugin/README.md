@@ -46,11 +46,20 @@ See `src/options.ts` (zod-validated) for the full list of options.
 
 `imageAuthors`, `imageNamePrefix` and `imageUrl` identify *which
 repository* built an image (they end up in OCI labels and in the image
-name itself) and have no default — this plugin is installed across
-multiple, unrelated repositories, and defaulting them would silently
-stamp one consumer's identity onto every other consumer's images. Every
-`nx.json` registration must set them explicitly, or plugin loading fails
-with a validation error.
+name itself), so this plugin is deliberately conservative about them —
+it's installed across multiple, unrelated repositories, and a wrong
+value would silently stamp one consumer's identity onto another's
+images:
+
+- `imageNamePrefix`/`imageUrl` are auto-detected from the workspace's
+  git `origin` remote when it's a `github.com` remote (e.g.
+  `pagopa/dx` and `https://github.com/pagopa/dx`), so most consumers
+  don't need to set them. Override `imageNamePrefix` for a custom image
+  name, or set both explicitly if the remote isn't on GitHub or can't be
+  detected — plugin loading fails with a clear validation error rather
+  than falling back to a wrong value.
+- `imageAuthors` has no reliable source (it's a human-readable
+  legal/org name, not derivable from git) and is always required.
 
 `buildTargetName`, `defaultBranch`, `jsBuildTargetName`,
 `packageTargetName`, `pushTargetName` and `registry` are Nx/registry
