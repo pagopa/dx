@@ -5,8 +5,9 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.111.0, < 5.0 |
-| <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
+| <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6 |
 
 ## Modules
 
@@ -16,9 +17,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_public_ip.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
+| [random_integer.instance_base](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) | resource |
+| [azurerm_log_analytics_workspace.logs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/log_analytics_workspace) | data source |
 | [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
-| [azurerm_subnet.pep](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
@@ -26,13 +27,15 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | n/a | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to setup resources. | `map(any)` | `{}` | no |
+| <a name="input_test_kind"></a> [test\_kind](#input\_test\_kind) | The test kind used in generated test tags. | `string` | `"integration"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_pep_id"></a> [pep\_id](#output\_pep\_id) | n/a |
-| <a name="output_pip_id"></a> [pip\_id](#output\_pip\_id) | n/a |
+| <a name="output_instance_numbers"></a> [instance\_numbers](#output\_instance\_numbers) | n/a |
+| <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_tags"></a> [tags](#output\_tags) | n/a |
 | <a name="output_vnet"></a> [vnet](#output\_vnet) | n/a |
