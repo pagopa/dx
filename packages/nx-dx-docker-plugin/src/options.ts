@@ -10,10 +10,14 @@
 // registry authentication (`docker login`/OIDC) and artifact attestation —
 // both require CI secrets/tokens that an Nx plugin has no business handling.
 //
-// NOTE: the defaults below are tuned for this plugin's original consumer
-// (selfcare-monorepo-poc) and may change; other consumers should pass
-// explicit values for every option in their own `nx.json` plugin
-// registration instead of relying on these defaults.
+// This plugin is installed across multiple, unrelated repositories, so
+// `imageAuthors`/`imageNamePrefix`/`imageUrl` identify *which repository*
+// built an image (they end up in OCI labels and in the image name itself).
+// There's no safe repo-agnostic default for them: a default would silently
+// stamp one consumer's identity (e.g. "pagopa/dx-slc") onto every other
+// consumer's images. They're required — every `nx.json` registration must
+// set them explicitly. The remaining options are Nx/registry conventions
+// that are the same across repos, so they keep sensible defaults.
 import { z } from "zod/v4";
 
 const nonEmptyString = z.string().min(1);
@@ -32,23 +36,37 @@ const dockerPluginOptionsSchema = z.object({
 
 export type DockerPluginOptions = z.infer<typeof dockerPluginOptionsSchema>;
 
-const defaultOptions: DockerPluginOptions = {
+type DefaultableOption =
+  | "buildTargetName"
+  | "defaultBranch"
+  | "jsBuildTargetName"
+  | "packageTargetName"
+  | "pushTargetName"
+  | "registry";
+
+const defaultOptions: Pick<DockerPluginOptions, DefaultableOption> = {
   buildTargetName: "docker:build",
   defaultBranch: "main",
-  imageAuthors: "PagoPA S.p.A.",
-  imageNamePrefix: "pagopa/dx-slc",
-  imageUrl: "https://github.com/pagopa/selfcare-monorepo-poc",
   jsBuildTargetName: "build",
   packageTargetName: "package",
   pushTargetName: "docker:push",
   registry: "ghcr.io",
 };
 
+const partialSchema = dockerPluginOptionsSchema.partial({
+  buildTargetName: true,
+  defaultBranch: true,
+  jsBuildTargetName: true,
+  packageTargetName: true,
+  pushTargetName: true,
+  registry: true,
+});
+
 export const parseDockerReleasePluginOptions = (
   options: unknown,
 ): DockerPluginOptions => {
   const input = typeof options === "object" && options !== null ? options : {};
-  const parseResult = dockerPluginOptionsSchema.partial().safeParse(input);
+  const parseResult = partialSchema.safeParse(input);
   if (!parseResult.success) {
     const validationErrors = parseResult.error.issues
       .map((issue) => {

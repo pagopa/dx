@@ -42,13 +42,22 @@ and commit the resulting `dist/*.js` changes together with the source.
 
 ## Options
 
-See `src/options.ts` (zod-validated) for the full list of overridable
-options (`buildTargetName`, `defaultBranch`, `imageAuthors`,
-`imageNamePrefix`, `imageUrl`, `jsBuildTargetName`, `packageTargetName`,
-`pushTargetName`, `registry`). Consumers should pass explicit values for
-all of these in their own `nx.json` plugin registration rather than relying
-on this package's bundled defaults, which are tuned for the original
-consumer and may change.
+See `src/options.ts` (zod-validated) for the full list of options.
+
+`imageAuthors`, `imageNamePrefix` and `imageUrl` identify *which
+repository* built an image (they end up in OCI labels and in the image
+name itself) and have no default — this plugin is installed across
+multiple, unrelated repositories, and defaulting them would silently
+stamp one consumer's identity onto every other consumer's images. Every
+`nx.json` registration must set them explicitly, or plugin loading fails
+with a validation error.
+
+`buildTargetName`, `defaultBranch`, `jsBuildTargetName`,
+`packageTargetName`, `pushTargetName` and `registry` are Nx/registry
+conventions that are the same across repos, so they default to
+`docker:build`, `main`, `build`, `package`, `docker:push` and `ghcr.io`
+respectively — override them only if your repo deviates from those
+conventions.
 
 ## Tag strategy
 

@@ -52,17 +52,22 @@ const dockerPluginOptionsSchema = zod_v4.z.object({
 const defaultOptions = {
 	buildTargetName: "docker:build",
 	defaultBranch: "main",
-	imageAuthors: "PagoPA S.p.A.",
-	imageNamePrefix: "pagopa/dx-slc",
-	imageUrl: "https://github.com/pagopa/selfcare-monorepo-poc",
 	jsBuildTargetName: "build",
 	packageTargetName: "package",
 	pushTargetName: "docker:push",
 	registry: "ghcr.io"
 };
+const partialSchema = dockerPluginOptionsSchema.partial({
+	buildTargetName: true,
+	defaultBranch: true,
+	jsBuildTargetName: true,
+	packageTargetName: true,
+	pushTargetName: true,
+	registry: true
+});
 const parseDockerReleasePluginOptions = (options) => {
 	const input = typeof options === "object" && options !== null ? options : {};
-	const parseResult = dockerPluginOptionsSchema.partial().safeParse(input);
+	const parseResult = partialSchema.safeParse(input);
 	if (!parseResult.success) {
 		const validationErrors = parseResult.error.issues.map((issue) => {
 			return `${issue.path.length > 0 ? issue.path.join(".") : "options"}: ${issue.message}`;
