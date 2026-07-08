@@ -48,20 +48,6 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = "dx-d-itn-network-rg-01"
 }
 
-resource "azurerm_public_ip" "pip" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "apim-test",
-    resource_type = "public_ip"
-  }))
-  resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
-  location            = var.environment.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  zones               = ["1", "2"]
-
-  tags = local.tags
-}
-
 data "azurerm_subnet" "pep" {
   name = provider::dx::resource_name(merge(local.naming_config, {
     name          = "pep",
@@ -78,12 +64,17 @@ data "azurerm_resource_group" "rg" {
   }))
 }
 
-output "pip_id" {
-  value = azurerm_public_ip.pip.id
-}
-
 output "pep_id" {
   value = data.azurerm_subnet.pep.id
+}
+
+
+data "azurerm_log_analytics_workspace" "logs" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "test"
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 output "resource_group_name" {
@@ -95,6 +86,10 @@ output "vnet" {
     name                = data.azurerm_virtual_network.vnet.name
     resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
+}
+
+output "log_analytics_workspace_id" {
+  value = data.azurerm_log_analytics_workspace.logs.id
 }
 
 output "tags" {
