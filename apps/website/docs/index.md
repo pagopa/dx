@@ -59,8 +59,7 @@ Cloud Service Providers (CSPs), and align with a variety of programming
 languages.
 
 These tools adhere to the principles and boundaries outlined in our
-[Technology Radar](/radar) that
-teams are expected to follow.
+[Technology Radar](/radar) that teams are expected to follow.
 
 Technology Radar recommendations are thoughtfully designed to foster
 consistency, efficiency, and alignment across projects, ensuring a streamlined
