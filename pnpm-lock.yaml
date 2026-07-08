@@ -171,6 +171,9 @@ importers:
       '@nx/vitest':
         specifier: 22.7.5
         version: 22.7.5(28405a0e90139c141f059cbd7a063446)
+      '@pagopa/nx-dx-docker-plugin':
+        specifier: workspace:^
+        version: link:packages/nx-dx-docker-plugin
       '@pagopa/nx-terraform-plugin':
         specifier: workspace:^
         version: link:packages/nx-terraform-plugin

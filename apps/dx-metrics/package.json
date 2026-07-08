@@ -3,6 +3,11 @@
   "version": "0.5.11",
   "private": true,
   "type": "module",
+  "nx": {
+    "docker": {
+      "repositoryName": "pagopa/dx-metrics"
+    }
+  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",

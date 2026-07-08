@@ -101,10 +101,23 @@
   "plugins": [
     {
       "plugin": "@nx/docker",
-      "exclude": ["apps/*/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "options": {
+        "buildTargetName": "docker:build",
+        "defaultBranch": "main",
+        "imageAuthors": "PagoPA",
+        "imageNamePrefix": "pagopa/dx",
+        "imageUrl": "https://github.com/pagopa/dx",
+        "jsBuildTargetName": "build",
+        "packageTargetName": "package",
+        "pushTargetName": "docker:push",
+        "registry": "ghcr.io"
       }
     },
     {

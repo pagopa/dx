@@ -2,6 +2,11 @@
   "name": "@pagopa/dx-mcpserver",
   "version": "0.2.10",
   "type": "module",
+  "nx": {
+    "docker": {
+      "repositoryName": "dx/mcp-server"
+    }
+  },
   "description": "An MCP server that supports developers using DX tools.",
   "repository": {
     "type": "git",
