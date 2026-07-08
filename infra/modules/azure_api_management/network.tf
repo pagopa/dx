@@ -1,8 +1,18 @@
-# Define the A Records for APIM
+resource "azurerm_public_ip" "apim" {
+  count = local.use_case_features.public_ip ? 1 : 0
+
+  name                = local.apim.public_ip_name
+  resource_group_name = var.resource_group_name
+  location            = var.environment.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  domain_name_label   = "${var.environment.prefix}-${local.apim.name}"
+  zones               = local.use_case_features.public_ip_zones
+
+  tags = local.tags
+}
 
 resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
-  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.azure_api_net != null ? 0 : 1
-
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
@@ -13,8 +23,6 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
 }
 
 resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
-  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.management_azure_api_net != null ? 0 : 1
-
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.management_azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
@@ -25,8 +33,6 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
 }
 
 resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
-  count = var.private_dns_zone_ids != null && var.private_dns_zone_ids.scm_azure_api_net != null ? 0 : 1
-
   name                = azurerm_api_management.this.name
   zone_name           = provider::azurerm::parse_resource_id(local.private_dns_zone_ids.scm_azure_api_net).resource_name
   resource_group_name = local.private_dns_zone_resource_group_name
@@ -36,7 +42,6 @@ resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   tags = local.tags
 }
 
-# Define security group
 resource "azurerm_network_security_group" "nsg_apim" {
   name                = provider::dx::resource_name(merge(local.naming_config, { name = local.apim_name, resource_type = "apim_network_security_group" }))
   resource_group_name = data.azurerm_virtual_network.this.resource_group_name
@@ -127,8 +132,6 @@ resource "azurerm_subnet_network_security_group_association" "snet_nsg" {
   subnet_id                 = local.subnet_id
   network_security_group_id = azurerm_network_security_group.nsg_apim.id
 }
-
-# For StandardV2
 
 resource "azurerm_private_endpoint" "apim_pep" {
   count = local.use_case_features.private_endpoint ? 1 : 0
