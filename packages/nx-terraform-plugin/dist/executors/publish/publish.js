@@ -86,7 +86,8 @@ const publishToGithub = async (input) => {
 		});
 		const safe$ = $$1({ reject: false });
 		await $$1`git init -b main`;
-		await $$1`git remote add origin ${repoUrl}`;
+		const token = getGitHubToken();
+		if ((await safe$`git remote add origin ${token === void 0 ? repoUrl : `https://x-access-token:${token}@github.com/${input.githubOwner}/${repo}.git`}`).exitCode !== 0) throw new Error(`Failed to add git remote origin for ${repoUrl}`);
 		const remoteTag = await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
 		if (remoteTag.exitCode === 0) publishResult = "skipped";
 		else if (remoteTag.exitCode !== 2) throw new Error(`Failed to resolve remote tag ${input.version} for ${repoUrl}`);

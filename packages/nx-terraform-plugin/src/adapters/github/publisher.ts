@@ -5,7 +5,7 @@ import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
-import { ensureGitHubRepository } from "./octokit.ts";
+import { ensureGitHubRepository, getGitHubToken } from "./octokit.ts";
 
 export interface PublishToGithubInput {
   description: string;
@@ -88,7 +88,23 @@ export const publishToGithub = async (
     const safe$ = $({ reject: false });
 
     await $`git init -b main`;
-    await $`git remote add origin ${repoUrl}`;
+
+    // Reads/writes to the subrepo need credentials. Anonymous HTTPS can read a
+    // public repo, but `git push` requires auth or git prompts for a username
+    // (fatal in CI). Embed the GitHub App installation token as the
+    // `x-access-token` user in the remote URL when available. Keep `repoUrl`
+    // (token-free) for logs and error messages so the token never leaks, and
+    // use `safe$` for the remote add so a failure can't echo the token URL.
+    const token = getGitHubToken();
+    const authenticatedRepoUrl =
+      token === undefined
+        ? repoUrl
+        : `https://x-access-token:${token}@github.com/${input.githubOwner}/${repo}.git`;
+    const remoteAdd =
+      await safe$`git remote add origin ${authenticatedRepoUrl}`;
+    if (remoteAdd.exitCode !== 0) {
+      throw new Error(`Failed to add git remote origin for ${repoUrl}`);
+    }
 
     const remoteTag =
       await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
@@ -118,6 +134,10 @@ export const publishToGithub = async (
       // contents (e.g. a concurrent legacy sync pushed the same tree first).
       // In that case there's nothing to commit, but we must still tag and
       // push so the release completes instead of failing.
+      //
+      // `shell: true` makes execa join argv into a single string that the
+      // shell re-parses, so an interpolated value must be quoted here or it
+      // gets word-split on whitespace (e.g. "Release 1.2.3" -> two args).
       const commitResult =
         await safe$`git commit -m "Release ${input.version}"`;
       if (commitResult.exitCode !== 0) {
