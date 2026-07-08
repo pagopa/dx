@@ -1,3 +1,14 @@
+## 0.21.1 (2026-07-08)
+
+### 🩹 Fixes
+
+- Fix the "Technology Radar" link on the docs homepage, which pointed to the external `pagopa.github.io/technology-radar` site instead of the internal `/radar` page. ([#1955](https://github.com/pagopa/dx/pull/1955))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 0.21.0 (2026-07-02)
 
 ### 🚀 Features
