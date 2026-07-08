@@ -135,11 +135,11 @@ export function parseTagsOption(
  * option (respect config/defaults) and an explicit `--source all` override.
  */
 export function resolveSourcesOption(
-  configSources: AzureSource[],
+  configSources: [AzureSource, ...AzureSource[]],
   option?: SourceOption,
-): AzureSource[] {
+): [AzureSource, ...AzureSource[]] {
   if (option === undefined) {
-    return configSources.length > 0 ? configSources : ["advisor", "custom"];
+    return configSources;
   }
   return option === "all" ? ["advisor", "custom"] : [option];
 }
