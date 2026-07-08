@@ -17,7 +17,7 @@ It supports both **ESLint 9** and **ESLint 10**.
    pnpm add -D -E prettier
    ```
 
-   For ESLint 9 (e.g. React Native apps):
+   For ESLint 9:
 
    ```shell
    pnpm add -D eslint@^9 @eslint/js@^9 @pagopa/eslint-config
@@ -32,7 +32,7 @@ It supports both **ESLint 9** and **ESLint 10**.
    ```js
    import pagopa from "@pagopa/eslint-config";
 
-   export default [...pagopa];
+   export default pagopa;
    ```
 
 3. Add `lint` and `lint:check` scripts in your `package.json`
@@ -45,3 +45,25 @@ It supports both **ESLint 9** and **ESLint 10**.
      }
    }
    ```
+
+## Test-runner support
+
+The default entry point ships rules for [Vitest](https://vitest.dev/). A separate
+`@pagopa/eslint-config/jest` subpath provides the equivalent rules for
+[Jest](https://jestjs.io/), which is the default test runner for React Native apps.
+
+### Jest
+
+Install `eslint-plugin-jest` alongside the regular peer dependencies:
+
+```shell
+pnpm add -D eslint-plugin-jest
+```
+
+Then import the `/jest` subpath:
+
+```js
+import pagopa from "@pagopa/eslint-config/jest";
+
+export default pagopa;
+```

@@ -104,6 +104,9 @@ export function useDashboardData<T>(
   useEffect(() => {
     const controller = new AbortController();
 
+    // Fetching data on mount is expected to update state asynchronously;
+    // the state updates happen after the awaited fetch, not synchronously.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchData(controller.signal);
 
     return () => {

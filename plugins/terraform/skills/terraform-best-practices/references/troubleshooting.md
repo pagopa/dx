@@ -1,5 +1,39 @@
 # Terraform Troubleshooting
 
+## DX Knowledge Base Issues
+
+### Local KB Missing
+
+**Warning**: `Terraform skills may ask you to clone pagopa/dx manually or set DX_KB_PATH.`
+
+**Solution**:
+
+```bash
+git clone https://github.com/pagopa/dx.git ~/.dx
+```
+
+Or point the skill to an existing checkout:
+
+```bash
+export DX_KB_PATH=/path/to/pagopa/dx
+```
+
+### Existing `~/.dx` Is Not a Git Checkout
+
+**Warning**: `~/.dx exists but is not a git checkout.`
+
+**Solution**:
+
+Move the existing path or set `DX_KB_PATH` to a valid `pagopa/dx` checkout:
+
+```bash
+export DX_KB_PATH=/path/to/pagopa/dx
+```
+
+### Offline or Network Failure
+
+If the local KB already exists, continue using the existing checkout. If it does not exist, clone `pagopa/dx` when network access is available or set `DX_KB_PATH` to a local checkout.
+
 ## Pre-commit Issues
 
 ### Missing sha256sum

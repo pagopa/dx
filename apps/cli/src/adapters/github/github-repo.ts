@@ -5,8 +5,24 @@ import { githubRepoSchema } from "../../domain/github-repo.js";
 import { GitHubRepo } from "../../domain/github-repo.js";
 
 export const getGithubRepo = async (): Promise<GitHubRepo | undefined> => {
-  const result = await $`git config --get remote.origin.url`;
+  const result = await readGitRemoteOriginUrl();
   const repoUrl = result.stdout.trim();
+  const stderr = (result.stderr ?? "").trim();
+  const isMissingOriginRemote =
+    result.exitCode === 1 && repoUrl === "" && stderr === "";
+
+  // `git config --get` exits 1 with no output when the key is unset: there is
+  // simply no origin remote, which is a valid "not in a repo we manage" state.
+  if (isMissingOriginRemote) {
+    return undefined;
+  }
+
+  if (result.exitCode !== 0) {
+    throw new Error(
+      stderr === "" ? "Failed to read git remote origin URL" : stderr,
+      { cause: result },
+    );
+  }
 
   if (repoUrl === "") {
     return undefined;
@@ -38,4 +54,12 @@ export const getGithubRepo = async (): Promise<GitHubRepo | undefined> => {
     owner,
     repo,
   });
+};
+
+const readGitRemoteOriginUrl = async () => {
+  try {
+    return await $({ reject: false })`git config --get remote.origin.url`;
+  } catch (error) {
+    throw new Error("Failed to read git remote origin URL", { cause: error });
+  }
 };

@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Configures autoscaling rules for Azure App Service Plans",
+  "provider": "azurerm",
+  "version": "3.0.0"
+}

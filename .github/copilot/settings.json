@@ -8,6 +8,7 @@
     }
   },
   "enabledPlugins": {
+    "aiepfd@pagopa-dx": true,
     "azure@pagopa-dx": true,
     "terraform@pagopa-dx": true,
     "project-management@pagopa-dx": true,

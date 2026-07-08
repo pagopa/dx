@@ -1,3 +1,66 @@
+## 0.25.3 (2026-07-07)
+
+### 🩹 Fixes
+
+- Fallback to a temporary git identity when dx init scaffolds a repository without git user.name or user.email configured. ([#1944](https://github.com/pagopa/dx/pull/1944))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.25.2 (2026-07-06)
+
+### 🩹 Fixes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.25.1 (2026-07-02)
+
+### 🩹 Fixes
+
+- Add Terraform plan for bootstrapper pull requests and use a dedicated least-privilege (Reader, Storage Blob Data Contributor) CI identity. ([#1905](https://github.com/pagopa/dx/pull/1905))
+- Surface the real failure cause in CLI prechecks instead of generic messages ([#1908](https://github.com/pagopa/dx/pull/1908))
+
+  `dx init` now reports the actual Terraform init/apply error (with secrets redacted) instead of a static "Failed to create GitHub repository"; Azure prechecks distinguish login from subscription/permission failures; `add environment` treats a missing git remote as no repository rather than an opaque error.
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.0
+- Updated @pagopa/dx-savemoney to 0.3.3
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
+## 0.25.0 (2026-06-30)
+
+### 🚀 Features
+
+- For users in PagoPA organization, logs are sent to Application Insights ([#1838](https://github.com/pagopa/dx/pull/1838))
+
+### 🩹 Fixes
+
+- Add flags for dx add environment. ([#1854](https://github.com/pagopa/dx/pull/1854))
+- Ensure `dx add environment` creates missing GitHub environments for non-prod deployments by updating and applying the repository Terraform module before generating the new environment resources. The command now also waits for newly created Key Vault endpoints to become resolvable before writing runner app secrets, avoiding transient initialization failures right after vault creation. ([#1847](https://github.com/pagopa/dx/pull/1847))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.24.0 (2026-06-25)
 
 ### 🚀 Features

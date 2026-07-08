@@ -1,3 +1,24 @@
+# 1.0.0 (2026-07-06)
+
+### ⚠️  Breaking Changes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.4.3 (2026-06-30)
+
+### 🩹 Fixes
+
+- Update Go module dependencies used by Terraform module tests. ([#1916](https://github.com/pagopa/dx/pull/1916))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.4.2 (2026-05-07)
 
 ### 🩹 Fixes

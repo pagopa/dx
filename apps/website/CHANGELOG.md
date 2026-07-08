@@ -1,3 +1,44 @@
+## 0.21.1 (2026-07-08)
+
+### 🩹 Fixes
+
+- Fix the "Technology Radar" link on the docs homepage, which pointed to the external `pagopa.github.io/technology-radar` site instead of the internal `/radar` page. ([#1955](https://github.com/pagopa/dx/pull/1955))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 0.21.0 (2026-07-02)
+
+### 🚀 Features
+
+- Update TLS certificate renewal process ([#1870](https://github.com/pagopa/dx/pull/1870))
+
+### 🩹 Fixes
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.0
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.20.0 (2026-06-30)
+
+### 🚀 Features
+
+- Add GitHub login as a requirement to use the cli ([#1838](https://github.com/pagopa/dx/pull/1838))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.19.5 (2026-06-25)
 
 ### 🩹 Fixes

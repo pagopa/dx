@@ -4,7 +4,7 @@ import util from "node:util";
 import * as z from "zod/mini";
 
 import type { TaskRunContext } from "../dispatcher.ts";
-import type { ReportNamespace } from "../report-store.ts";
+import type { ReportNamespace, ReportRenderContext } from "../report-store.ts";
 import type { ProcessResult } from "../run-command.ts";
 
 import { runCommand } from "../run-command.ts";
@@ -59,29 +59,33 @@ export interface TerraformPlanReport {
 }
 
 const noPlanOutputMessage = "No plan output available.";
+const terraformPlanReportSeparator = "\n\n";
 
 const renderTerraformPlanReports = (
   reports: readonly TerraformPlanReport[],
-): string => reports.map(renderTerraformPlanReport).join("\n\n").trim();
+  { sourceUrl }: ReportRenderContext = {},
+): string =>
+  reports
+    .map((report) => renderTerraformPlanReport(report, { sourceUrl }))
+    .join(terraformPlanReportSeparator)
+    .trim();
 
-const renderTerraformPlanReport = ({
-  modulePath,
-  notices,
-  planOutput,
-  success,
-  summaryLine,
-}: TerraformPlanReport): string => {
+const renderPlanOutputReference = (sourceUrl?: string): string => {
+  const reference = sourceUrl
+    ? `See the [workflow run](${sourceUrl}) logs or downloaded Terraform plan report artifacts for the complete output.`
+    : "See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.";
+
+  return `> [!NOTE]\n> Full plan output is not included in this comment.\n> ${reference}`;
+};
+
+const renderTerraformPlanReport = (
+  { modulePath, notices, success, summaryLine }: TerraformPlanReport,
+  { sourceUrl }: { sourceUrl?: string },
+): string => {
   const status = success ? "✅ Success" : "❌ Failed";
   const heading = `### Terraform Plan: \`${modulePath}\` - ${status}`;
   const renderedNotices = notices.map(renderNoticeMarkdown);
-  const details = `<details>
-<summary>Show full plan</summary>
-
-\`\`\`hcl
-${planOutput}
-\`\`\`
-
-</details>`;
+  const details = renderPlanOutputReference(sourceUrl);
 
   if (renderedNotices.length > 0) {
     const noticeSection = renderedNotices.join("\n\n");

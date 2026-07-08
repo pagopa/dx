@@ -1,3 +1,19 @@
+## 0.1.6 (2026-07-02)
+
+### 🩹 Fixes
+
+- Upgrade JavaScript dependencies (minor and patch updates) ([#1917](https://github.com/pagopa/dx/pull/1917))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.4
+- Updated @pagopa/eslint-config to 6.2.0
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.1.5 (2026-06-25)
 
 ### 🧱 Updated Dependencies

@@ -72,7 +72,7 @@ const defaultEnvironments = [
 ];
 const getEnvironmentTag = (root, additionalEnvironments) => {
 	const rootSegments = root.split(path.sep);
-	const supportedEnvironments = new Set([...defaultEnvironments, ...additionalEnvironments]);
+	const supportedEnvironments = /* @__PURE__ */ new Set([...defaultEnvironments, ...additionalEnvironments]);
 	return `env:${rootSegments.find((segment) => supportedEnvironments.has(segment)) ?? "prod"}`;
 };
 const getRootConfigPath = (root, configFileName) => path.relative(root, configFileName) || configFileName;

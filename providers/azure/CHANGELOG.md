@@ -1,3 +1,26 @@
+## 0.12.3 (2026-07-06)
+
+### 🩹 Fixes
+
+- Bump golang.org/x/net and related transitive Go dependencies to v0.55.0 ([#1929](https://github.com/pagopa/dx/pull/1929), [#1927](https://github.com/pagopa/dx/issues/1927))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.12.2 (2026-06-30)
+
+### 🩹 Fixes
+
+- Update Terraform provider and test dependencies ([#1906](https://github.com/pagopa/dx/pull/1906))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.12.1 (2026-06-23)
 
 ### 🩹 Fixes

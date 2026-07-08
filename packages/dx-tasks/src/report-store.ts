@@ -16,8 +16,13 @@ export interface ReportNamespace<
   schema: TSchema;
 }
 
+export interface ReportRenderContext {
+  sourceUrl?: string;
+}
+
 export type ReportRenderFn<TSchema extends z.ZodMiniType> = (
   reports: readonly z.output<TSchema>[],
+  context?: ReportRenderContext,
 ) => string;
 
 const readReports = async (
@@ -80,7 +85,10 @@ export class ReportStore {
     return this;
   }
 
-  async render(format: ReportFormat = "markdown"): Promise<string> {
+  async render(
+    format: ReportFormat = "markdown",
+    context: ReportRenderContext = {},
+  ): Promise<string> {
     const sections: string[] = [];
 
     for (const namespace of this.namespaces.values()) {
@@ -99,7 +107,7 @@ export class ReportStore {
         continue;
       }
 
-      sections.push(renderReports(reports));
+      sections.push(renderReports(reports, context));
     }
 
     return sections.join("\n\n");

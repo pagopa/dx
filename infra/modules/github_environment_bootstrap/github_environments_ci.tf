@@ -30,3 +30,14 @@ resource "github_repository_environment" "opex_ci" {
     custom_branch_policies = true
   }
 }
+
+resource "github_repository_environment" "bootstrapper_ci" {
+  for_each    = toset(var.repository.environments)
+  environment = "bootstrapper-${each.value}-ci"
+  repository  = github_repository.this.name
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}

@@ -1,3 +1,25 @@
+# 2.0.0 (2026-07-06)
+
+### ⚠️  Breaking Changes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 1.4.1 (2026-07-02)
+
+### 🩹 Fixes
+
+- Add bootstrap CI environment ([#1905](https://github.com/pagopa/dx/pull/1905))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 1.4.0 (2026-06-23)
 
 ### 🚀 Features

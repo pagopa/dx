@@ -136,7 +136,7 @@ jobs:
               },
               (response) => response.data
             );
-            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-cd)$/;
+            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-ci)$/;
             const matrix = environments
               .filter(({ name }) => planEnvironmentPattern.test(name))
               .filter(({ name }) => !name.includes("uat"))
@@ -241,10 +241,12 @@ jobs:
           GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          if [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
+          if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
+            pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME},!repository"
+          elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
             pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
           else
-            pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*"
+            pnpm nx affected -t tf-plan -c ci --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*,repository"
           fi
 
       - name: Upload Terraform plan report
@@ -293,5 +295,6 @@ jobs:
               "owner": "${{ github.event.repository.owner.login }}",
               "repo": "${{ github.event.repository.name }}",
               "searchPattern": "Code Review Report",
+              "sourceUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "title": "Code Review Report"
             }

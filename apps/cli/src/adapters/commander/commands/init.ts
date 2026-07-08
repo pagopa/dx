@@ -25,6 +25,7 @@ import {
   runMonorepoActions,
 } from "../../plop/index.js";
 import { asError, reportCommandError } from "../command-errors.js";
+import { toErrorMessage } from "../error-reporting.js";
 import {
   createCommandPresenter,
   resolveOutputMode,
@@ -165,24 +166,55 @@ const azureAccountSchema = z.object({
   }),
 });
 
+const AZ_LOGIN_REQUIRED_MESSAGE =
+  "Please log in to Azure CLI using `az login` before running this command.";
+
+const mapAzAccessError = (cause: unknown): Error =>
+  new Error(toErrorMessage(cause), { cause });
+
+const parseAzureAccountOutput = (stdout: string): string => {
+  let parsedOutput: unknown;
+
+  try {
+    parsedOutput = JSON.parse(stdout);
+  } catch (cause) {
+    throw new Error("Azure CLI returned invalid account JSON.", { cause });
+  }
+
+  const result = azureAccountSchema.safeParse(parsedOutput);
+  if (!result.success) {
+    throw new Error("Azure CLI returned an unexpected account payload.", {
+      cause: result.error,
+    });
+  }
+
+  return result.data.user.name;
+};
+
 const ensureAzLogin = async (): Promise<string> => {
-  const { stdout } = await tf$`az account show`;
+  const { stdout } = await tf$`az account show`.catch((cause: unknown) => {
+    throw asError(AZ_LOGIN_REQUIRED_MESSAGE)(cause);
+  });
   // `az account show` reads the cached CLI context, but `az group list`
   // fails when the current session token has expired.
-  await tf$`az group list`;
-  const parsed = JSON.parse(stdout);
-  const { user } = azureAccountSchema.parse(parsed);
-  return user.name;
+  await tf$`az group list`.catch((cause: unknown) => {
+    throw mapAzAccessError(cause);
+  });
+
+  return parseAzureAccountOutput(stdout);
 };
+
+const mapAzLoginCheckError = (cause: unknown): Error =>
+  cause instanceof Error
+    ? cause
+    : new Error("Failed to check Azure CLI login status.", { cause });
 
 const trackAzLogin = (presenter: CommandPresenter) =>
   trackStep(
     presenter,
     "Checking Azure login status...",
     ensureAzLogin,
-    asError(
-      "Please log in to Azure CLI using `az login` before running this command.",
-    ),
+    mapAzLoginCheckError,
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
@@ -249,6 +281,39 @@ export const getMonorepoInitialAnswers = ({
   return initialAnswers;
 };
 
+type TerraformRepositoryCreationStep = "apply" | "init";
+
+const formatTerraformRepositoryCreationFailureDetails = (
+  cause: unknown,
+): string => {
+  const details =
+    cause instanceof ExecaError
+      ? [cause.shortMessage, cause.stderr]
+      : [toErrorMessage(cause)];
+
+  return details
+    .filter(
+      (detail): detail is string =>
+        typeof detail === "string" && detail.trim().length > 0,
+    )
+    .map((detail) => detail.trim())
+    .join("\n");
+};
+
+const mapTerraformRepositoryCreationError =
+  (step: TerraformRepositoryCreationStep) =>
+  (cause: unknown): Error => {
+    const details = formatTerraformRepositoryCreationFailureDetails(cause);
+    const message = [
+      `Terraform ${step} failed while creating the GitHub repository.`,
+      details,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    return new Error(message, { cause });
+  };
+
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
   ({
@@ -257,22 +322,41 @@ const createRemoteRepositoryWithPresenter =
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
     const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-    const applyTerraform = async () => {
+    const runTerraformRepositoryCreationStep = async (
+      step: TerraformRepositoryCreationStep,
+      executeStep: () => Promise<unknown>,
+    ) => {
       try {
-        await repo$`terraform init`;
-        await repo$`terraform apply -auto-approve`;
-      } catch (error) {
-        if (error instanceof ExecaError) {
-          logger.error(error.shortMessage);
-        }
+        await executeStep();
+      } catch (cause) {
+        const error = mapTerraformRepositoryCreationError(step)(cause);
+        logger.error(error.message);
         throw error;
       }
+    };
+
+    const applyTerraform = async () => {
+      const initializeRepositoryTerraform = () => repo$`terraform init`;
+      const applyRepositoryTerraform = () =>
+        repo$`terraform apply -auto-approve`;
+
+      await runTerraformRepositoryCreationStep(
+        "init",
+        initializeRepositoryTerraform,
+      );
+      await runTerraformRepositoryCreationStep(
+        "apply",
+        applyRepositoryTerraform,
+      );
     };
     return trackStep(
       presenter,
       "Creating GitHub repository...",
       applyTerraform,
-      asError("Failed to create GitHub repository."),
+      (cause) =>
+        cause instanceof Error
+          ? cause
+          : asError("Failed to create GitHub repository.")(cause),
     ).map(() => new Repository(repoName, repoOwner));
   };
 /**
@@ -283,6 +367,8 @@ const createRemoteRepositoryWithPresenter =
  * See https://git-scm.com/docs/git-remote#_exit_status
  */
 const GIT_REMOTE_ALREADY_EXISTS_EXIT_CODE = 3;
+const DEFAULT_SCAFFOLD_GIT_USER_EMAIL = "dx-pagopa-github-bot@pagopa.it";
+const DEFAULT_SCAFFOLD_GIT_USER_NAME = "dx-pagopa-bot";
 
 /**
  * Translates a failure of the git remote setup step into an actionable error.
@@ -314,6 +400,48 @@ const initializeGitRepositoryWithPresenter =
     const git$ = $({
       shell: true,
     });
+    const gitRead$ = $({
+      reject: false,
+      shell: true,
+    });
+    const readGitConfigValue = async (
+      key: "user.email" | "user.name",
+    ): Promise<string | undefined> => {
+      const result = await gitRead$`git config --get ${key}`;
+      const value = result.stdout.trim();
+      const stderr = (result.stderr ?? "").trim();
+      const isMissingValue =
+        result.exitCode === 1 && value === "" && stderr === "";
+
+      if (isMissingValue || value === "") {
+        return undefined;
+      }
+
+      if (result.exitCode !== 0) {
+        throw new Error(
+          stderr === "" ? `Failed to read git config ${key}` : stderr,
+          { cause: result },
+        );
+      }
+
+      return value;
+    };
+    const commitScaffold = async () => {
+      const [configuredGitUserName, configuredGitUserEmail] = await Promise.all(
+        [readGitConfigValue("user.name"), readGitConfigValue("user.email")],
+      );
+      const hasConfiguredGitIdentity =
+        configuredGitUserName !== undefined &&
+        configuredGitUserEmail !== undefined;
+
+      if (hasConfiguredGitIdentity) {
+        await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+      } else {
+        // `git -c` applies the fallback identity only to this scaffold commit, so
+        // the generated repository does not persist bot defaults in local config.
+        await git$`git -c user.name=${DEFAULT_SCAFFOLD_GIT_USER_NAME} -c user.email=${DEFAULT_SCAFFOLD_GIT_USER_EMAIL} commit --no-gpg-sign -m "Scaffold workspace"`;
+      }
+    };
     // `git remote add` is tracked separately from the push so its documented
     // exit codes (e.g. 3 = remote already exists) surface a specific, actionable
     // message instead of being misreported as a push failure.
@@ -329,7 +457,7 @@ const initializeGitRepositoryWithPresenter =
       // while keeping the scaffolded local files in the working tree for a clean PR diff.
       await git$`git reset origin/main`;
       await git$`git add .`;
-      await git$`git commit --no-gpg-sign -m "Scaffold workspace"`;
+      await commitScaffold();
       await git$`git push -u origin ${branchName}`;
     };
     return trackStep(

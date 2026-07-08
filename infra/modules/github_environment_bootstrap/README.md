@@ -26,6 +26,8 @@ This module creates the following GitHub environments:
 - `opex-cd`: For continuous deployment of operational expenditure code (requires manual approval).
 - `app-ci`: For continuous integration of application code.
 - `app-cd`: For continuous deployment of application code (requires manual approval).
+- `bootstrapper-ci`: For continuous integration of bootstrapper code.
+- `bootstrapper-cd`: For continuous deployment of bootstrapper code (requires manual approval).
 
 ### Usage Example
 
@@ -95,6 +97,8 @@ optional properties of the `repository` variable:
 - `infra_cd_policy_tags`
 - `opex_cd_policy_tags`
 - `app_cd_policy_tags`
+- `bootstrapper_cd_policy_branches`
+- `bootstrapper_cd_policy_tags`
 
 The default branch name can be changed via the `default_branch_name` property.
 
@@ -125,7 +129,8 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.12 |
 
 ## Modules
 
@@ -145,6 +150,7 @@ No modules.
 | [github_repository_environment.app_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.automation_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.bootstrapper_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
+| [github_repository_environment.bootstrapper_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.infra_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [github_repository_environment.opex_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
