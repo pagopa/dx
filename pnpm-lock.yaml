@@ -1211,6 +1211,40 @@ importers:
         specifier: 'catalog:'
         version: 3.8.3
 
+  packages/nx-dx-docker-plugin:
+    dependencies:
+      '@nx/devkit':
+        specifier: ^22.7.6
+        version: 22.7.6(nx@22.7.5(@swc-node/register@1.11.1(@swc/core@1.15.43(@swc/helpers@0.5.21))(@swc/types@0.1.27)(typescript@5.9.3))(@swc/core@1.15.43(@swc/helpers@0.5.21)))
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.4.3
+    devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@tsconfig/node24':
+        specifier: 'catalog:'
+        version: 24.0.4
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.0
+      eslint:
+        specifier: 'catalog:'
+        version: 10.6.0(jiti@2.7.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.3
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.3(oxc-resolver@11.21.3)(tsx@4.22.4)(typescript@5.9.3)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+
   packages/nx-terraform-plugin:
     dependencies:
       '@logtape/logtape':

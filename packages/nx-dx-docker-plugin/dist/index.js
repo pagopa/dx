@@ -1,0 +1,167 @@
+Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+const require_docker_image = require('./docker-image-Flyks4lV.js');
+let _nx_devkit = require("@nx/devkit");
+let node_fs = require("node:fs");
+let node_path = require("node:path");
+let zod_v4 = require("zod/v4");
+
+//#region src/docker-build-target.ts
+const RUN_DOCKER_SCRIPT = "packages/nx-dx-docker-plugin/dist/run-docker.js";
+const quoteArg = (value) => /\s/.test(value) ? `"${value}"` : value;
+const buildRunDockerCommand = (mode, projectRoot, projectDisplayName, imageName, options) => {
+	return `node ${RUN_DOCKER_SCRIPT} ${[
+		`--mode=${mode}`,
+		`--project-root=${projectRoot}`,
+		`--project-display-name=${quoteArg(projectDisplayName)}`,
+		`--image-name=${imageName}`,
+		`--default-branch=${options.defaultBranch}`,
+		`--image-authors=${quoteArg(options.imageAuthors)}`,
+		`--image-url=${options.imageUrl}`
+	].join(" ")}`;
+};
+const buildDockerBuildTarget = (projectRoot, projectDisplayName, imageName, options) => ({
+	command: buildRunDockerCommand("build", projectRoot, projectDisplayName, imageName, options),
+	metadata: {
+		description: "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
+		technologies: ["docker"]
+	}
+});
+const buildDockerPushTarget = (projectRoot, projectDisplayName, imageName, options, buildTargetName) => ({
+	command: buildRunDockerCommand("push", projectRoot, projectDisplayName, imageName, options),
+	dependsOn: [buildTargetName],
+	metadata: {
+		description: "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
+		technologies: ["docker"]
+	}
+});
+
+//#endregion
+//#region src/options.ts
+const nonEmptyString = zod_v4.z.string().min(1);
+const dockerPluginOptionsSchema = zod_v4.z.object({
+	buildTargetName: nonEmptyString,
+	defaultBranch: nonEmptyString,
+	imageAuthors: nonEmptyString,
+	imageNamePrefix: nonEmptyString,
+	imageUrl: nonEmptyString,
+	jsBuildTargetName: nonEmptyString,
+	packageTargetName: nonEmptyString,
+	pushTargetName: nonEmptyString,
+	registry: nonEmptyString
+});
+const defaultOptions = {
+	buildTargetName: "docker:build",
+	defaultBranch: "main",
+	imageAuthors: "PagoPA S.p.A.",
+	imageNamePrefix: "pagopa/dx-slc",
+	imageUrl: "https://github.com/pagopa/selfcare-monorepo-poc",
+	jsBuildTargetName: "build",
+	packageTargetName: "package",
+	pushTargetName: "docker:push",
+	registry: "ghcr.io"
+};
+const parseDockerReleasePluginOptions = (options) => {
+	const input = typeof options === "object" && options !== null ? options : {};
+	const parseResult = dockerPluginOptionsSchema.partial().safeParse(input);
+	if (!parseResult.success) {
+		const validationErrors = parseResult.error.issues.map((issue) => {
+			return `${issue.path.length > 0 ? issue.path.join(".") : "options"}: ${issue.message}`;
+		}).join("; ");
+		throw new Error(`Invalid @pagopa/nx-dx-docker-plugin options: ${validationErrors}`);
+	}
+	return {
+		...defaultOptions,
+		...parseResult.data
+	};
+};
+
+//#endregion
+//#region src/package-target.ts
+const buildPackageTarget = (projectRoot, projectName, jsBuildTargetName) => ({
+	command: `rm -rf ${projectRoot}/deploy && pnpm --filter ${projectName} deploy --legacy --prod ${projectRoot}/deploy`,
+	dependsOn: [jsBuildTargetName],
+	metadata: {
+		description: "Materialize the production-only payload consumed by this project's Dockerfile (RFC-DX-076)",
+		technologies: ["docker"]
+	}
+});
+
+//#endregion
+//#region src/index.ts
+const dockerfileGlob = "**/Dockerfile";
+/**
+* A project is eligible for the generated `package` target only if it
+* already produces a JS/TS build output through Nx. This repo's convention
+* for that is either an explicit target in `project.json`, or an inferred
+* `build` target via `@nx/js/typescript` (signaled by a `tsconfig.lib.json`).
+*/
+const hasJsBuildTarget = (workspaceRoot, projectRoot, jsBuildTargetName) => {
+	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+	if ((0, node_fs.existsSync)(projectJsonPath)) {
+		if ((0, _nx_devkit.readJsonFile)(projectJsonPath).targets?.[jsBuildTargetName]) return true;
+	}
+	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
+	const tsconfigLibPath = (0, node_path.join)(workspaceRoot, projectRoot, "tsconfig.lib.json");
+	return (0, node_fs.existsSync)(packageJsonPath) && (0, node_fs.existsSync)(tsconfigLibPath);
+};
+const getProjectName = (workspaceRoot, projectRoot) => {
+	const packageJson = (0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, projectRoot, "package.json"));
+	if (!packageJson.name) throw new Error(`Unable to resolve a package name for project at ${projectRoot}; a package.json with a "name" field is required to build the "package" target.`);
+	return packageJson.name;
+};
+/**
+* Detects the *official* Nx Docker release flow's per-project override
+* (`nx.release.docker.repositoryName` in package.json). Projects using it
+* get their `nx-release-publish` target overridden to also push the
+* dynamic alias tags (see publish-docker-release.ts), since
+* `@nx/docker:release-publish` on its own only ever pushes a single
+* version-only tag.
+*/
+const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
+	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
+	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.release?.docker?.repositoryName ?? null;
+};
+/**
+* Distinct from `getDockerRepositoryNameOverride` above: this only affects
+* the `imageName` this plugin computes for its own `docker:build`/
+* `docker:push` targets, never the `nx-release-publish` executor.
+*/
+const getBuildImageRepositoryNameOverride = (workspaceRoot, projectRoot) => {
+	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
+	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.docker?.repositoryName ?? null;
+};
+const createDockerReleaseNodes = (projectRoot, options, context) => {
+	const targets = {};
+	if (hasJsBuildTarget(context.workspaceRoot, projectRoot, options.jsBuildTargetName)) {
+		const projectName = getProjectName(context.workspaceRoot, projectRoot);
+		targets[options.packageTargetName] = buildPackageTarget(projectRoot, projectName, options.jsBuildTargetName);
+	}
+	const projectDisplayName = require_docker_image.getProjectDisplayName(context.workspaceRoot, projectRoot);
+	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectRoot, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
+	targets[options.buildTargetName] = buildDockerBuildTarget(projectRoot, projectDisplayName, imageName, options);
+	targets[options.pushTargetName] = buildDockerPushTarget(projectRoot, projectDisplayName, imageName, options, options.buildTargetName);
+	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
+		executor: "nx:run-commands",
+		metadata: {
+			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
+			technologies: ["docker"]
+		},
+		options: { command: `node packages/nx-dx-docker-plugin/dist/publish-docker-release.js --project-root=${projectRoot} --project-name=${projectDisplayName}` }
+	};
+	return { projects: { [projectRoot]: {
+		root: projectRoot,
+		targets
+	} } };
+};
+const createNodesV2 = [dockerfileGlob, async (configFilePaths, options, context) => {
+	const parsedOptions = parseDockerReleasePluginOptions(options);
+	return (0, _nx_devkit.createNodesFromFiles)((configFilePath, _options, nodeContext) => createDockerReleaseNodes((0, node_path.dirname)(configFilePath), parsedOptions, nodeContext), configFilePaths, options, context);
+}];
+
+//#endregion
+exports.createDockerReleaseNodes = createDockerReleaseNodes;
+exports.createNodesV2 = createNodesV2;
+exports.getProjectName = getProjectName;
+exports.hasJsBuildTarget = hasJsBuildTarget;
