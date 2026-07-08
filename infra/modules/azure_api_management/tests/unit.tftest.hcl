@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "u"
+    env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -9,17 +9,25 @@ variables {
   }
 
   tags = {
-    Owner = "DevEx"
+    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CreatedBy      = "Terraform"
+    Environment    = "Dev"
+    BusinessUnit   = "DevEx"
+    Source         = "https://github.com/pagopa/dx/infra/modules/azure_api_management/tests"
+    ManagementTeam = "Developer Experience"
+    Test           = "true"
+    TestName       = "Azure API Management unit tests"
   }
 
-  resource_group_name = "rg-test"
-  publisher_email     = "example@pagopa.it"
-  publisher_name      = "Example Publisher"
-  subnet_id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-apim"
-  subnet_pep_id       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
+  resource_group_name        = "rg-test"
+  use_case                   = "cost_optimized"
+  publisher_email            = "example@pagopa.it"
+  publisher_name             = "Example Publisher"
+  log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.OperationalInsights/workspaces/law-test"
+
   virtual_network = {
-    name                = "vnet-test"
-    resource_group_name = "rg-test"
+    name                = "dx-d-itn-common-vnet-01"
+    resource_group_name = "dx-d-itn-network-rg-01"
   }
 }
 
@@ -29,395 +37,282 @@ mock_provider "dx" {}
 override_data {
   target = data.azurerm_virtual_network.this
   values = {
-    id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test"
-    name                = "vnet-test"
-    resource_group_name = "rg-test"
+    id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01"
+    name                = "dx-d-itn-common-vnet-01"
+    resource_group_name = "dx-d-itn-network-rg-01"
   }
 }
 
 override_data {
   target = data.azurerm_private_dns_zone.azure_api_net
   values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/azure-api.net"
+    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/azure-api.net"
+    name = "azure-api.net"
   }
 }
 
 override_data {
   target = data.azurerm_private_dns_zone.management_azure_api_net
   values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/management.azure-api.net"
+    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/management.azure-api.net"
+    name = "management.azure-api.net"
   }
 }
 
 override_data {
   target = data.azurerm_private_dns_zone.scm_azure_api_net
   values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
+    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
+    name = "scm.azure-api.net"
   }
 }
 
 override_data {
   target = data.azurerm_private_dns_zone.apim
   values = {
-    id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.azure-api.net"
+    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.azure-api.net"
+    name = "privatelink.azure-api.net"
+  }
+}
+
+override_data {
+  target = data.azurerm_application_insights.this
+  values = {
+    id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.Insights/components/appi-test"
+    name              = "appi-test"
+    connection_string = "InstrumentationKey=00000000-0000-0000-0000-000000000000;IngestionEndpoint=https://italynorth-0.in.applicationinsights.azure.com/"
+  }
+}
+
+override_resource {
+  target          = dx_available_subnet_cidr.apim
+  override_during = plan
+
+  values = {
+    id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01/24/10.50.100.0_24"
+    virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01"
+    prefix_length      = 24
+    cidr_block         = "10.50.100.0/24"
+  }
+}
+
+override_resource {
+  target          = azurerm_subnet.apim
+  override_during = plan
+
+  values = {
+    id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01/subnets/dx-d-itn-test-apim-snet-01"
+    name                 = "dx-d-itn-test-apim-snet-01"
+    address_prefixes     = ["10.50.100.0/24"]
+    virtual_network_name = "dx-d-itn-common-vnet-01"
+    resource_group_name  = "dx-d-itn-network-rg-01"
+  }
+}
+
+override_resource {
+  target          = azurerm_public_ip.apim
+  override_during = plan
+
+  values = {
+    id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/dx-d-itn-test-pip-01"
+    name              = "dx-d-itn-test-pip-01"
+    allocation_method = "Static"
+    sku               = "Standard"
+    zones             = ["1", "2"]
   }
 }
 
 run "azure_api_management_cost_optimized_defaults" {
   command = plan
 
-  variables {
-    application_insights = {
-      enabled             = true
-      connection_string   = "InstrumentationKey=00000000-0000-0000-0000-000000000000"
-      id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/components/appi-test"
-      sampling_percentage = 50
-      verbosity           = "error"
-    }
-    action_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
-  }
-
   assert {
     condition     = azurerm_api_management.this.sku_name == "StandardV2_1"
-    error_message = "Cost-optimized APIM must use the StandardV2 SKU."
-  }
-
-  assert {
-    condition     = length(azurerm_api_management_logger.this) == 1
-    error_message = "Application Insights must create an APIM logger."
-  }
-
-  assert {
-    condition     = azurerm_api_management.this.zones == null
-    error_message = "Cost-optimized APIM must not configure availability zones."
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 0
-    error_message = "Monitoring must be disabled by default."
-  }
-
-  assert {
-    condition     = azurerm_api_management.this.public_ip_address_id == null && azurerm_api_management.this.public_network_access_enabled
-    error_message = "Cost-optimized APIM must use public network access without a public IP."
+    error_message = "cost_optimized must use StandardV2_1."
   }
 
   assert {
     condition     = azurerm_api_management.this.virtual_network_type == "External"
-    error_message = "Cost-optimized APIM must use an external virtual network."
+    error_message = "cost_optimized must use External virtual networking."
   }
 
   assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 7
-    error_message = "StandardV2 APIM must create the supported request, duration, CPU, and memory alerts by default."
+    condition     = azurerm_api_management.this.public_network_access_enabled == false
+    error_message = "cost_optimized must disable public network access."
   }
 
   assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].metric_name == "Requests" &&
-      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
-      contains(azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].values, "2xx")
-    )
-    error_message = "Successful request alerts must use the supported Requests metric and response-code dimensions."
+    condition     = length(azurerm_public_ip.apim) == 0
+    error_message = "cost_optimized must not create a public IP."
   }
 
   assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
-      length(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values) == 1 &&
-      contains(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values, "5xx")
-    )
-    error_message = "Failed request alerts must exclude unauthorized response codes."
+    condition     = length(azurerm_private_endpoint.apim_pep) == 1
+    error_message = "cost_optimized must create a private endpoint."
   }
 
   assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].name == "GatewayResponseCode" &&
-      length(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values) == 2 &&
-      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "401") &&
-      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "403") &&
-      !contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "429")
-    )
-    error_message = "Unauthorized request alerts must include only 401 and 403 response codes."
+    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 1
+    error_message = "cost_optimized must enable diagnostic settings."
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["cpu_percent_gateway"].criteria[0].metric_name == "CpuPercent_Gateway"
-    error_message = "StandardV2 APIM must use CpuPercent_Gateway instead of the unsupported Capacity metric."
-  }
-
-  assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000 &&
-      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 9500 &&
-      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 100 &&
-      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 50 &&
-      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500
-    )
-    error_message = "StandardV2 default alerts must use the documented ticket baseline thresholds."
-  }
-
-  assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["total_requests"].enabled &&
-      one(azurerm_monitor_metric_alert.this["total_requests"].action).action_group_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
-    )
-    error_message = "Default alerts must remain enabled and route to the configured Action Group."
+    condition     = length(azurerm_management_lock.this) == 1
+    error_message = "cost_optimized must enable the management lock."
   }
 }
 
-run "azure_api_management_high_load_networking_and_autoscale" {
+run "azure_api_management_subnet_created_from_dx_cidr" {
+  command = plan
+
+  assert {
+    condition     = dx_available_subnet_cidr.apim.prefix_length == 24
+    error_message = "APIM must request an available /24 subnet CIDR."
+  }
+
+  assert {
+    condition     = length(azurerm_subnet.apim.address_prefixes) == 1 && contains(azurerm_subnet.apim.address_prefixes, "10.50.100.0/24")
+    error_message = "APIM subnet must use the DX provider CIDR block."
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_configuration[0].subnet_id == azurerm_subnet.apim.id
+    error_message = "APIM must use the module-managed subnet."
+  }
+}
+
+run "azure_api_management_high_load_public_ip_and_autoscale" {
   command = plan
 
   variables {
-    use_case                      = "high_load"
-    public_ip_address_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
-    virtual_network_type_internal = true
-    autoscale = {
-      minimum_instances = 2
-      default_instances = 4
-      maximum_instances = 8
-      scale_out_value   = "2"
-      scale_in_value    = "2"
-    }
+    use_case = "high_load"
   }
 
   assert {
     condition     = azurerm_api_management.this.sku_name == "Premium_2"
-    error_message = "High-load APIM must use the Premium SKU."
-  }
-
-  assert {
-    condition     = length(azurerm_api_management.this.zones) == 2 && contains(azurerm_api_management.this.zones, "1") && contains(azurerm_api_management.this.zones, "2")
-    error_message = "High-load APIM must use zones 1 and 2."
-  }
-
-  assert {
-    condition     = azurerm_api_management.this.public_ip_address_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
-    error_message = "Internal high-load APIM must use the configured public IP."
+    error_message = "high_load must use Premium_2."
   }
 
   assert {
     condition     = azurerm_api_management.this.virtual_network_type == "Internal"
-    error_message = "High-load APIM must use an internal virtual network."
+    error_message = "high_load must use Internal virtual networking."
   }
 
   assert {
-    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 4
-    error_message = "High-load APIM must retain the configured autoscale default capacity."
+    condition     = length(azurerm_public_ip.apim) == 1
+    error_message = "high_load must create a module-managed public IP."
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_ip_address_id == azurerm_public_ip.apim[0].id
+    error_message = "high_load must attach the module-managed public IP."
+  }
+
+  assert {
+    condition     = azurerm_public_ip.apim[0].allocation_method == "Static" && azurerm_public_ip.apim[0].sku == "Standard"
+    error_message = "APIM public IP must be static and Standard SKU."
+  }
+
+  assert {
+    condition     = length(azurerm_public_ip.apim[0].zones) == 2 && contains(azurerm_public_ip.apim[0].zones, "1") && contains(azurerm_public_ip.apim[0].zones, "2")
+    error_message = "APIM public IP zones must follow the high_load use case."
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].maximum == 10
+    error_message = "high_load autoscale defaults must be zone-aware."
   }
 }
 
-run "azure_api_management_high_load_autoscale_defaults" {
+run "azure_api_management_development_defaults" {
   command = plan
 
   variables {
-    use_case                      = "high_load"
-    public_ip_address_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
-    virtual_network_type_internal = true
+    use_case                   = "development"
+    log_analytics_workspace_id = null
   }
 
   assert {
-    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].minimum == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].maximum == 10
-    error_message = "High-load autoscale defaults must be multiplied by the two availability zones."
+    condition     = azurerm_api_management.this.sku_name == "Developer_1"
+    error_message = "development must use Developer_1."
   }
 
   assert {
-    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].rule[0].scale_action[0].value == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].rule[1].scale_action[0].value == 2
-    error_message = "High-load autoscale rule values must be multiples of the two availability zones."
+    condition     = azurerm_api_management.this.public_network_access_enabled == true
+    error_message = "development must keep public network access enabled."
   }
 
   assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 6
-    error_message = "Premium APIM must create the supported request, duration, and capacity alerts by default."
+    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 0
+    error_message = "development must not enable diagnostic settings by default."
   }
 
   assert {
-    condition     = azurerm_monitor_metric_alert.this["capacity"].criteria[0].metric_name == "Capacity"
-    error_message = "Premium APIM must use the Capacity metric."
+    condition     = length(azurerm_management_lock.this) == 0
+    error_message = "development must not enable the management lock."
   }
 
   assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 20000 &&
-      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 19000 &&
-      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 200 &&
-      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 100 &&
-      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500 &&
-      azurerm_monitor_metric_alert.this["capacity"].criteria[0].threshold == 80
-    )
-    error_message = "Premium default alerts must use the documented two-unit operational thresholds."
+    condition     = length(azurerm_public_ip.apim) == 0
+    error_message = "development must not create a public IP."
   }
 }
 
-run "azure_api_management_overrides_selected_default_alert_thresholds" {
-  command = plan
-
-  variables {
-    metric_alert_thresholds = {
-      failed_requests       = 500
-      unauthorized_requests = 250
-      response_time         = 1000
-    }
-  }
-
-  assert {
-    condition = (
-      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 500 &&
-      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 250 &&
-      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
-      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
-    )
-    error_message = "Threshold overrides must update only the selected built-in alert thresholds."
-  }
-}
-
-run "azure_api_management_disables_selected_default_alerts" {
-  command = plan
-
-  variables {
-    metric_alert_thresholds = {
-      failed_requests     = null
-      cpu_percent_gateway = null
-      response_time       = 1000
-    }
-  }
-
-  assert {
-    condition = (
-      length(azurerm_monitor_metric_alert.this) == 5 &&
-      !contains(keys(azurerm_monitor_metric_alert.this), "failed_requests") &&
-      !contains(keys(azurerm_monitor_metric_alert.this), "cpu_percent_gateway") &&
-      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
-      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
-    )
-    error_message = "Null thresholds must disable only the selected alerts while numeric thresholds override other alerts."
-  }
-}
-
-run "azure_api_management_accepts_null_thresholds_for_other_sku_alerts" {
-  command = plan
-
-  variables {
-    use_case                      = "high_load"
-    public_ip_address_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
-    virtual_network_type_internal = true
-    metric_alert_thresholds = {
-      total_requests         = null
-      successful_requests    = null
-      failed_requests        = null
-      unauthorized_requests  = null
-      response_time          = null
-      cpu_percent_gateway    = null
-      memory_percent_gateway = null
-      capacity               = null
-    }
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 0
-    error_message = "Null overrides for built-in alerts must be accepted even when an alert is not available for the selected SKU."
-  }
-}
-
-run "azure_api_management_explicitly_disables_default_alerts" {
-  command = plan
-
-  variables {
-    metric_alerts = {}
-  }
-
-  assert {
-    condition     = length(azurerm_monitor_metric_alert.this) == 0
-    error_message = "An explicit empty metric_alerts map must disable default alerts."
-  }
-}
-
-run "azure_api_management_development_has_no_default_alerts" {
-  command = plan
-
-  variables {
-    use_case = "development"
-  }
-
-  assert {
-    condition     = azurerm_api_management.this.sku_name == "Developer_1" && length(azurerm_monitor_metric_alert.this) == 0
-    error_message = "Developer APIM must not create metric alerts by default."
-  }
-}
-
-run "azure_api_management_development_honors_explicit_alerts" {
-  command = plan
-
-  variables {
-    use_case = "development"
-    metric_alerts = {
-      custom_requests = {
-        description      = "Custom development request alert."
-        frequency        = "PT5M"
-        window_size      = "PT5M"
-        severity         = 2
-        auto_mitigate    = false
-        dynamic_criteria = []
-        criteria = [{
-          aggregation            = "Total"
-          dimension              = []
-          metric_name            = "Requests"
-          metric_namespace       = "Microsoft.ApiManagement/service"
-          operator               = "GreaterThan"
-          skip_metric_validation = false
-          threshold              = 10
-        }]
-      }
-    }
-  }
-
-  assert {
-    condition = (
-      azurerm_api_management.this.sku_name == "Developer_1" &&
-      length(azurerm_monitor_metric_alert.this) == 1 &&
-      azurerm_monitor_metric_alert.this["custom_requests"].criteria[0].metric_name == "Requests"
-    )
-    error_message = "Explicit metric alerts must be honored for the development use case."
-  }
-}
-
-run "azure_api_management_custom_domain_types" {
+run "azure_api_management_hostname_certificate_normalization" {
   command = plan
 
   variables {
     hostname_configuration = {
-      proxy = [{
-        host_name           = "api.example.com"
-        key_vault_id        = "https://kv-test.vault.azure.net/secrets/cert-proxy"
-        default_ssl_binding = true
-      }]
-      management = [{
-        host_name    = "management.example.com"
-        key_vault_id = "https://kv-test.vault.azure.net/secrets/cert-management"
-      }]
-      portal = [{
-        host_name    = "portal.example.com"
-        key_vault_id = "https://kv-test.vault.azure.net/secrets/cert-portal"
-      }]
-      developer_portal = [{
-        host_name    = "developer.example.com"
-        key_vault_id = "https://kv-test.vault.azure.net/secrets/cert-developer"
-      }]
-      scm = [{
-        host_name    = "scm.example.com"
-        key_vault_id = "https://kv-test.vault.azure.net/secrets/cert-scm"
-      }]
+      proxy = {
+        use_resource_name_as_default = true
+      }
+      management = [
+        {
+          host_name                = "management.example.com"
+          key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1/1234567890"
+        }
+      ]
     }
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.hostname_configuration[0].proxy) == 1 && azurerm_api_management.this.hostname_configuration[0].proxy[0].host_name == "api.example.com" && azurerm_api_management.this.hostname_configuration[0].proxy[0].default_ssl_binding
-    error_message = "The proxy hostname configuration must be preserved."
+    condition     = azurerm_api_management.this.hostname_configuration[0].proxy[0].host_name == "${azurerm_api_management.this.name}.azure-api.net"
+    error_message = "Proxy hostname must be managed from the APIM resource name."
   }
 
   assert {
-    condition     = length(azurerm_api_management.this.hostname_configuration[0].management) == 1 && length(azurerm_api_management.this.hostname_configuration[0].portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].developer_portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].scm) == 1
-    error_message = "All supported APIM custom-domain endpoint types must be configured."
+    condition     = azurerm_api_management.this.hostname_configuration[0].proxy[0].default_ssl_binding == true
+    error_message = "use_resource_name_as_default must drive proxy default SSL binding."
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.hostname_configuration[0].management[0].key_vault_certificate_id == "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
+    error_message = "Versioned Key Vault certificate IDs must be normalized internally."
+  }
+}
+
+run "azure_api_management_application_insights_by_id" {
+  command = plan
+
+  variables {
+    application_insights = {
+      id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.Insights/components/appi-test"
+      sampling_percentage = 50
+      verbosity           = "information"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_api_management_logger.this) == 1
+    error_message = "Application Insights logger must be created when application_insights.id is set."
+  }
+
+  assert {
+    condition     = azurerm_api_management_logger.this[0].application_insights[0].connection_string == data.azurerm_application_insights.this[0].connection_string
+    error_message = "Application Insights connection string must be resolved from the resource ID."
+  }
+
+  assert {
+    condition     = azurerm_api_management_diagnostic.applicationinsights[0].sampling_percentage == 50 && azurerm_api_management_diagnostic.applicationinsights[0].verbosity == "information"
+    error_message = "Application Insights diagnostic settings must use the configured sampling and verbosity."
   }
 }
