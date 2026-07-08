@@ -36,6 +36,8 @@ Produce one PRD using [`templates/prd.md`](./templates/prd.md). Write it to the
 path requested by the user, or to `prd.md` in the current working directory when
 no path is given. Never overwrite the bundled template.
 
+- Write the document in **English** unless the user explicitly requests another
+  language for the visible content.
 - Include the visible `Metadata` section from the template and set
   `metadata.status` to `draft` when creating or updating the PRD.
 - Preserve every stable ID exactly as written. IDs are always English and are
