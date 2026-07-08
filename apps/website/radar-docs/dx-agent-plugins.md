@@ -26,5 +26,7 @@ project workflows, and infrastructure guidance directly inside the coding flow.
   organizational standards
 - [DX Plugin: Terraform](dx-plugin-terraform.md) — Infrastructure as code
   development and best practices
+- [DX Plugin: Tests](dx-plugin-tests.md) — Backend integration and record-replay
+  test harnesses for Node.js/TypeScript services
 - [DX Plugin: TypeScript](dx-plugin-typescript.md) — TypeScript MCP servers and
   expert agents
