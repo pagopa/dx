@@ -92,14 +92,20 @@ export const publishToGithub = async (
     // Reads/writes to the subrepo need credentials. Anonymous HTTPS can read a
     // public repo, but `git push` requires auth or git prompts for a username
     // (fatal in CI). Embed the GitHub App installation token as the
-    // `x-access-token` user in the remote URL when available. Keep `repoUrl`
-    // (token-free) for logs and error messages so the token never leaks, and
-    // use `safe$` for the remote add so a failure can't echo the token URL.
+    // `x-access-token` user in the remote URL when available. Derive from
+    // `repoUrl` (rather than rebuilding the host/path by hand) so the two
+    // can't drift, and so the `URL` API percent-encodes the credentials.
+    // Keep `repoUrl` itself (token-free) for logs and error messages so the
+    // token never leaks, and use `safe$` for the remote add so a failure
+    // can't echo the token URL.
     const token = getGitHubToken();
-    const authenticatedRepoUrl =
-      token === undefined
-        ? repoUrl
-        : `https://x-access-token:${token}@github.com/${input.githubOwner}/${repo}.git`;
+    let authenticatedRepoUrl = repoUrl;
+    if (token !== undefined) {
+      const url = new URL(repoUrl);
+      url.username = "x-access-token";
+      url.password = token;
+      authenticatedRepoUrl = url.toString();
+    }
     const remoteAdd =
       await safe$`git remote add origin ${authenticatedRepoUrl}`;
     if (remoteAdd.exitCode !== 0) {
