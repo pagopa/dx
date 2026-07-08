@@ -46,7 +46,7 @@ export const makeSavemoneyCommand = () =>
       const { verbose } = this.optsWithGlobals<GlobalOptions>();
       try {
         // Load configuration from YAML (includes subscriptionIds, location, timespanDays, thresholds)
-        const config: AzureConfig = await loadConfig(options.config);
+        const config = await loadConfig(options.config);
 
         // Parse tag filter
         const filterTags = parseTagsOption(options.tags);
@@ -60,7 +60,7 @@ export const makeSavemoneyCommand = () =>
               ? options.location
               : config.preferredLocation,
           ...(options.pricing === false ? { pricing: { enabled: false } } : {}),
-          sources: resolveSourcesOption(options.source, config.sources),
+          sources: resolveSourcesOption(config.sources, options.source),
           timespanDays:
             this.getOptionValueSource("days") === "cli" &&
             !Number.isNaN(cliDays)
@@ -135,11 +135,11 @@ export function parseTagsOption(
  * option (respect config/defaults) and an explicit `--source all` override.
  */
 export function resolveSourcesOption(
-  option: SourceOption | undefined,
-  configSources: AzureSource[] | undefined,
+  configSources: AzureSource[],
+  option?: SourceOption,
 ): AzureSource[] {
   if (option === undefined) {
-    return configSources ?? ["advisor", "custom"];
+    return configSources.length > 0 ? configSources : ["advisor", "custom"];
   }
   return option === "all" ? ["advisor", "custom"] : [option];
 }

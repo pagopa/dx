@@ -40,7 +40,7 @@ export type AzureConfig = BaseConfig & {
    *
    * Defaults to `["advisor", "custom"]` when omitted (i.e. all sources).
    */
-  sources?: AzureSource[];
+  sources: AzureSource[];
   subscriptionIds: string[];
   /**
    * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
