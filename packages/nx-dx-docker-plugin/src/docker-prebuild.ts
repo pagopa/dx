@@ -16,16 +16,36 @@
 // unrelated affected projects to rebuild):
 //   NX_RELEASE_DOCKER_PROJECTS=dockerapp3 \
 //     pnpm exec nx release version --projects=dockerapp3 --dry-run
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
+import { z } from "zod/v4";
+
+// `NX_RELEASE_DOCKER_PROJECTS` is an unsanitized environment variable that
+// ends up as an `nx run-many -p` argument. Restrict it to the characters Nx
+// project names/patterns actually use, so a malformed or hostile value fails
+// loudly instead of reaching a child process command line.
+const projectsFilterSchema = z
+  .string()
+  .min(1)
+  .regex(
+    /^[A-Za-z0-9@][A-Za-z0-9@/_.,\s*-]*$/,
+    "must be a comma/space-separated list of project names or patterns",
+  );
 
 const main = (): void => {
-  const projectsFilter = process.env.NX_RELEASE_DOCKER_PROJECTS;
-  const command = projectsFilter
-    ? `pnpm nx run-many -t docker:build -p ${projectsFilter}`
-    : `pnpm nx affected -t docker:build`;
+  const rawProjectsFilter = process.env.NX_RELEASE_DOCKER_PROJECTS;
+  const args = rawProjectsFilter
+    ? [
+        "nx",
+        "run-many",
+        "-t",
+        "docker:build",
+        "-p",
+        projectsFilterSchema.parse(rawProjectsFilter),
+      ]
+    : ["nx", "affected", "-t", "docker:build"];
 
-  console.log(`[@pagopa/nx-dx-docker-plugin] Running: ${command}`);
-  execSync(command, { stdio: "inherit" });
+  console.log(`[@pagopa/nx-dx-docker-plugin] Running: pnpm ${args.join(" ")}`);
+  execFileSync("pnpm", args, { stdio: "inherit" });
 };
 
 main();

@@ -7,9 +7,10 @@
 // when it is the highest version released so far for that project (see
 // `isHighestReleasedVersion`).
 import { readJsonFile } from "@nx/devkit";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { z } from "zod/v4";
 
 interface ProjectPackageJson {
   readonly name?: string;
@@ -65,6 +66,21 @@ export const getImageName = (
 
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 
+/**
+ * `projectName` ultimately comes from an unsanitized CLI argument
+ * (`--project-display-name`, forwarded from `package.json`'s `name` field or
+ * a project-root-derived slug). Validate it against the shape Nx/npm project
+ * names actually take before using it to build a `git tag` pattern, so a
+ * malformed or hostile value fails loudly instead of reaching the shell.
+ */
+const projectNameSchema = z
+  .string()
+  .min(1)
+  .regex(
+    /^[A-Za-z0-9@][A-Za-z0-9@/_.-]*$/,
+    "must be a valid project/package name",
+  );
+
 const slugifyRef = (ref: string): string =>
   ref.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
 
@@ -112,11 +128,12 @@ export const isHighestReleasedVersion = (
   currentVersion: string,
 ): boolean => {
   const currentParsed = parseSemver(currentVersion);
-  const prefix = `${projectName}@`;
+  const parsedProjectName = projectNameSchema.parse(projectName);
+  const prefix = `${parsedProjectName}@`;
 
   let existingTags: readonly string[];
   try {
-    existingTags = execSync(`git tag -l "${prefix}*"`, {
+    existingTags = execFileSync("git", ["tag", "-l", `${prefix}*`], {
       encoding: "utf8",
       stdio: ["ignore", "pipe", "ignore"],
     })

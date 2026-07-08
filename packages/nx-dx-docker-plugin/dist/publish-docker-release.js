@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const require_docker_image = require('./docker-image-Flyks4lV.js');
+const require_docker_image = require('./docker-image-BUMKa_QH.js');
 const require_cli_args = require('./cli-args-DhJNQUdl.js');
 let node_child_process = require("node:child_process");
 let node_fs = require("node:fs");
@@ -39,12 +39,16 @@ const main = () => {
 		for (const tag of aliasTags) console.log(`Docker Image ${imageBase}:${tag} was not tagged/pushed as --dry-run is enabled.`);
 		return;
 	}
-	(0, node_child_process.execSync)(`docker push ${fullImageRef}`, { stdio: "inherit" });
+	(0, node_child_process.execFileSync)("docker", ["push", fullImageRef], { stdio: "inherit" });
 	console.log(`Successfully pushed ${fullImageRef}`);
 	for (const tag of aliasTags) {
 		const aliasRef = `${imageBase}:${tag}`;
-		(0, node_child_process.execSync)(`docker tag ${fullImageRef} ${aliasRef}`, { stdio: "inherit" });
-		(0, node_child_process.execSync)(`docker push ${aliasRef}`, { stdio: "inherit" });
+		(0, node_child_process.execFileSync)("docker", [
+			"tag",
+			fullImageRef,
+			aliasRef
+		], { stdio: "inherit" });
+		(0, node_child_process.execFileSync)("docker", ["push", aliasRef], { stdio: "inherit" });
 		console.log(`Successfully pushed ${aliasRef}`);
 	}
 };

@@ -1,4 +1,5 @@
 let node_child_process = require("node:child_process");
+let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
@@ -35,6 +36,14 @@ const getProjectDisplayName = (workspaceRoot, projectRoot) => {
 */
 const getImageName = (registry, imageNamePrefix, projectRoot, repositoryNameOverride) => `${registry}/${repositoryNameOverride ?? `${imageNamePrefix}/${getProjectSlug(projectRoot)}`}`;
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+/**
+* `projectName` ultimately comes from an unsanitized CLI argument
+* (`--project-display-name`, forwarded from `package.json`'s `name` field or
+* a project-root-derived slug). Validate it against the shape Nx/npm project
+* names actually take before using it to build a `git tag` pattern, so a
+* malformed or hostile value fails loudly instead of reaching the shell.
+*/
+const projectNameSchema = zod_v4.z.string().min(1).regex(/^[A-Za-z0-9@][A-Za-z0-9@/_.-]*$/, "must be a valid project/package name");
 const slugifyRef = (ref) => ref.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
 /** @param version A string already matched by `SEMVER_RE`. */
 const parseSemver = (version) => {
@@ -73,10 +82,14 @@ const compareSemver = (a, b) => {
 */
 const isHighestReleasedVersion = (projectName, currentVersion) => {
 	const currentParsed = parseSemver(currentVersion);
-	const prefix = `${projectName}@`;
+	const prefix = `${projectNameSchema.parse(projectName)}@`;
 	let existingTags;
 	try {
-		existingTags = (0, node_child_process.execSync)(`git tag -l "${prefix}*"`, {
+		existingTags = (0, node_child_process.execFileSync)("git", [
+			"tag",
+			"-l",
+			`${prefix}*`
+		], {
 			encoding: "utf8",
 			stdio: [
 				"ignore",

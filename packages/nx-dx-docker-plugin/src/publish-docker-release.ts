@@ -21,7 +21,7 @@
 // `latest` when this is the highest released version) — reusing the exact
 // same logic `docker:push` already uses for CI tag-push events, so both
 // paths agree on what "latest" means.
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -88,13 +88,15 @@ const main = (): void => {
     return;
   }
 
-  execSync(`docker push ${fullImageRef}`, { stdio: "inherit" });
+  execFileSync("docker", ["push", fullImageRef], { stdio: "inherit" });
   console.log(`Successfully pushed ${fullImageRef}`);
 
   for (const tag of aliasTags) {
     const aliasRef = `${imageBase}:${tag}`;
-    execSync(`docker tag ${fullImageRef} ${aliasRef}`, { stdio: "inherit" });
-    execSync(`docker push ${aliasRef}`, { stdio: "inherit" });
+    execFileSync("docker", ["tag", fullImageRef, aliasRef], {
+      stdio: "inherit",
+    });
+    execFileSync("docker", ["push", aliasRef], { stdio: "inherit" });
     console.log(`Successfully pushed ${aliasRef}`);
   }
 };

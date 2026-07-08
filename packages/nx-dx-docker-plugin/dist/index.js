@@ -1,9 +1,10 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-Flyks4lV.js');
+const require_docker_image = require('./docker-image-BUMKa_QH.js');
+let node_child_process = require("node:child_process");
+let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
-let zod_v4 = require("zod/v4");
 
 //#region src/docker-build-target.ts
 const RUN_DOCKER_SCRIPT = "packages/nx-dx-docker-plugin/dist/run-docker.js";
@@ -52,26 +53,62 @@ const dockerPluginOptionsSchema = zod_v4.z.object({
 const defaultOptions = {
 	buildTargetName: "docker:build",
 	defaultBranch: "main",
-	imageAuthors: "PagoPA S.p.A.",
-	imageNamePrefix: "pagopa/dx-slc",
-	imageUrl: "https://github.com/pagopa/selfcare-monorepo-poc",
 	jsBuildTargetName: "build",
 	packageTargetName: "package",
 	pushTargetName: "docker:push",
 	registry: "ghcr.io"
 };
-const parseDockerReleasePluginOptions = (options) => {
+const partialSchema = dockerPluginOptionsSchema.partial({
+	buildTargetName: true,
+	defaultBranch: true,
+	imageNamePrefix: true,
+	imageUrl: true,
+	jsBuildTargetName: true,
+	packageTargetName: true,
+	pushTargetName: true,
+	registry: true
+});
+const githubRemotePattern = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([^/]+)\/(.+?)(?:\.git)?$/;
+const deriveFromGitOrigin = (workspaceRoot) => {
+	try {
+		const remoteUrl = (0, node_child_process.execFileSync)("git", [
+			"remote",
+			"get-url",
+			"origin"
+		], {
+			cwd: workspaceRoot,
+			encoding: "utf8"
+		}).trim();
+		const match = githubRemotePattern.exec(remoteUrl);
+		if (!match) return void 0;
+		const [, owner, repo] = match;
+		return {
+			imageNamePrefix: `${owner}/${repo}`.toLowerCase(),
+			imageUrl: `https://github.com/${owner}/${repo}`
+		};
+	} catch {
+		return;
+	}
+};
+const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 	const input = typeof options === "object" && options !== null ? options : {};
-	const parseResult = dockerPluginOptionsSchema.partial().safeParse(input);
+	const parseResult = partialSchema.safeParse(input);
 	if (!parseResult.success) {
 		const validationErrors = parseResult.error.issues.map((issue) => {
 			return `${issue.path.length > 0 ? issue.path.join(".") : "options"}: ${issue.message}`;
 		}).join("; ");
 		throw new Error(`Invalid @pagopa/nx-dx-docker-plugin options: ${validationErrors}`);
 	}
+	const parsed = parseResult.data;
+	const gitOrigin = parsed.imageNamePrefix === void 0 || parsed.imageUrl === void 0 ? deriveFromGitOrigin(workspaceRoot) : void 0;
+	const imageNamePrefix = parsed.imageNamePrefix ?? gitOrigin?.imageNamePrefix;
+	const imageUrl = parsed.imageUrl ?? gitOrigin?.imageUrl;
+	if (imageNamePrefix === void 0 || imageUrl === void 0) throw new Error("Invalid @pagopa/nx-dx-docker-plugin options: imageNamePrefix/imageUrl were not set and could not be auto-detected from the git 'origin' remote (missing git repo, missing origin, or a non-github.com remote) — set them explicitly in this plugin's nx.json options.");
 	return {
 		...defaultOptions,
-		...parseResult.data
+		...parsed,
+		imageNamePrefix,
+		imageUrl
 	};
 };
 
@@ -156,7 +193,7 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 	} } };
 };
 const createNodesV2 = [dockerfileGlob, async (configFilePaths, options, context) => {
-	const parsedOptions = parseDockerReleasePluginOptions(options);
+	const parsedOptions = parseDockerReleasePluginOptions(options, context.workspaceRoot);
 	return (0, _nx_devkit.createNodesFromFiles)((configFilePath, _options, nodeContext) => createDockerReleaseNodes((0, node_path.dirname)(configFilePath), parsedOptions, nodeContext), configFilePaths, options, context);
 }];
 

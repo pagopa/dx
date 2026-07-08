@@ -28,26 +28,45 @@ possible.
 
 ## Consumption
 
-This package is consumed today via **local filesystem symlinks** from
-`selfcare-monorepo-poc/packages/nx-dx-docker-plugin/src` and `.../dist` to
-this package's `src/` and `dist/` directories (both repos are expected to
-be checked out as sibling directories on the same machine). This only
-works for local development; it does **not** work in CI, since each repo's
-CI checks out only itself, and `dist/` must be built (`pnpm build`) before
-it's usable — it is not committed. Until this package is published as a
-versioned npm package (with its own build/test/changeset/release),
-consumers running in CI must vendor a build of this package rather than
-relying on the symlinks.
+This package is consumed as a normal pnpm workspace dependency
+(`"@pagopa/nx-dx-docker-plugin": "workspace:^"`), registered in a
+consumer's `nx.json` `plugins` array.
+
+`dist/*.js` is committed to the repository (see `.gitignore`, which
+un-ignores `dist/` and only ignores `dist/**/*.d.ts`). This is required
+because Nx loads plugins from `nx.json` to compute the project graph
+before any build target can run, so the plugin can't rely on `nx build`
+to produce its own `dist/` first — the built output must already be
+present on disk. Run `pnpm build` in this package after changing `src/`
+and commit the resulting `dist/*.js` changes together with the source.
 
 ## Options
 
-See `src/options.ts` (zod-validated) for the full list of overridable
-options (`buildTargetName`, `defaultBranch`, `imageAuthors`,
-`imageNamePrefix`, `imageUrl`, `jsBuildTargetName`, `packageTargetName`,
-`pushTargetName`, `registry`). Consumers should pass explicit values for
-all of these in their own `nx.json` plugin registration rather than relying
-on this package's bundled defaults, which are tuned for the original
-consumer and may change.
+See `src/options.ts` (zod-validated) for the full list of options.
+
+`imageAuthors`, `imageNamePrefix` and `imageUrl` identify *which
+repository* built an image (they end up in OCI labels and in the image
+name itself), so this plugin is deliberately conservative about them —
+it's installed across multiple, unrelated repositories, and a wrong
+value would silently stamp one consumer's identity onto another's
+images:
+
+- `imageNamePrefix`/`imageUrl` are auto-detected from the workspace's
+  git `origin` remote when it's a `github.com` remote (e.g.
+  `pagopa/dx` and `https://github.com/pagopa/dx`), so most consumers
+  don't need to set them. Override `imageNamePrefix` for a custom image
+  name, or set both explicitly if the remote isn't on GitHub or can't be
+  detected — plugin loading fails with a clear validation error rather
+  than falling back to a wrong value.
+- `imageAuthors` has no reliable source (it's a human-readable
+  legal/org name, not derivable from git) and is always required.
+
+`buildTargetName`, `defaultBranch`, `jsBuildTargetName`,
+`packageTargetName`, `pushTargetName` and `registry` are Nx/registry
+conventions that are the same across repos, so they default to
+`docker:build`, `main`, `build`, `package`, `docker:push` and `ghcr.io`
+respectively — override them only if your repo deviates from those
+conventions.
 
 ## Tag strategy
 

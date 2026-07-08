@@ -208,7 +208,10 @@ export const createDockerReleaseNodes = (
 export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
   dockerfileGlob,
   async (configFilePaths, options, context) => {
-    const parsedOptions = parseDockerReleasePluginOptions(options);
+    const parsedOptions = parseDockerReleasePluginOptions(
+      options,
+      context.workspaceRoot,
+    );
     return createNodesFromFiles(
       (configFilePath, _options, nodeContext) =>
         createDockerReleaseNodes(
