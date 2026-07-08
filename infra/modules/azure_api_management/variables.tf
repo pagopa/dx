@@ -1,7 +1,3 @@
-#---------#
-# General #
-#---------#
-
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
@@ -96,10 +92,6 @@ variable "autoscale" {
   }
 }
 
-#------------#
-# Networking #
-#------------#
-
 variable "virtual_network" {
   type = object({
     name                = string
@@ -158,10 +150,6 @@ variable "private_dns_zone_ids" {
   description = "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\". Use this to reference DNS zones in different subscriptions."
 }
 
-#---------------------------#
-# Policies & Configurations #
-#---------------------------#
-
 variable "publisher_name" {
   type        = string
   description = "The name of the publisher or company."
@@ -211,10 +199,6 @@ variable "hostname_configuration" {
   default     = {}
   description = "Custom domain configurations organized by type. Each type (proxy, management, portal, developer_portal, scm) contains a list of domain configurations."
 }
-
-#---------------#
-# Administrator #
-#---------------#
 
 variable "key_vault_id" {
   type        = string
