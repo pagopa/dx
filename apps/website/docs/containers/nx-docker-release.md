@@ -133,32 +133,14 @@ git tags instead of a registry query.
 
 `@pagopa/nx-dx-docker-plugin` is `"private": true` — it isn't published to
 an npm registry. Repositories in this monorepo (`dx`) consume it as a
-normal pnpm workspace dependency (`"workspace:^"`). An **external**
-repository can install a specific released version directly from this
-repo's git tag, using pnpm's [subdirectory + commit-ish
+normal pnpm workspace dependency (`"workspace:^"`). An external repository
+can install a specific released version straight from this repo's git tag,
+using pnpm's [git subdirectory
 syntax](https://pnpm.io/package-sources#install-from-a-subdirectory-of-a-git-repository):
 
 ```bash
 pnpm add "pagopa/dx#@pagopa/nx-dx-docker-plugin@0.1.0&path:/packages/nx-dx-docker-plugin"
 ```
-
-- `pagopa/dx` is the GitHub `owner/repo` shorthand (defaults to the
-  `github:` provider).
-- `@pagopa/nx-dx-docker-plugin@0.1.0` is the release tag created by Nx
-  Release for this package (pattern `{projectName}@{version}`, same
-  convention as every other package in this repo, e.g.
-  `@pagopa/opex-dashboard@0.2.10`) — replace it with the tag of the
-  version you want.
-- `path:/packages/nx-dx-docker-plugin` tells pnpm to use only that
-  subdirectory of the monorepo as the installed package, instead of the
-  whole `dx` repository.
-
-Since `dist/*.js` is committed to the repository (see the package's
-`README.md`), the tagged subdirectory already contains a ready-to-use
-build — no compilation happens during install. If your package manager
-still attempts to run this package's own `build` script (it depends on
-`devDependencies` that only resolve inside this monorepo and will fail
-outside it), install with `--ignore-scripts`.
 
 After installing, register the plugin in your own `nx.json` exactly as
 shown in [nx.json configuration](#nxjson-configuration) above.
