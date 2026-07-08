@@ -1,9 +1,9 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-Flyks4lV.js');
+const require_docker_image = require('./docker-image-BUMKa_QH.js');
+let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
-let zod_v4 = require("zod/v4");
 
 //#region src/docker-build-target.ts
 const RUN_DOCKER_SCRIPT = "packages/nx-dx-docker-plugin/dist/run-docker.js";

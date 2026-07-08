@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-const require_docker_image = require('./docker-image-Flyks4lV.js');
+const require_docker_image = require('./docker-image-BUMKa_QH.js');
 const require_cli_args = require('./cli-args-DhJNQUdl.js');
 let node_child_process = require("node:child_process");
 
