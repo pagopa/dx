@@ -81,7 +81,8 @@ const publishToGithub = async (input) => {
 				GIT_AUTHOR_NAME: "PagoPA DX Bot",
 				GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
 				GIT_COMMITTER_NAME: "PagoPA DX Bot"
-			}
+			},
+			shell: true
 		});
 		const safe$ = $$1({ reject: false });
 		await $$1`git init -b main`;
@@ -99,7 +100,7 @@ const publishToGithub = async (input) => {
 			await clearExportWorkingTree(tempExportDir);
 			await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
 			await $$1`git add --all`;
-			const commitResult = await safe$`git commit -m ${`Release ${input.version}`}`;
+			const commitResult = await safe$`git commit -m "Release ${input.version}"`;
 			if (commitResult.exitCode !== 0) {
 				const commitOutput = `${commitResult.stdout}${commitResult.stderr}`;
 				if (!commitOutput.includes("nothing to commit")) throw new Error(`Failed to commit release ${input.version} for ${repoUrl}: ${commitOutput}`);
