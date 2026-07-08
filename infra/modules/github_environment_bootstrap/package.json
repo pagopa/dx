@@ -3,5 +3,10 @@
   "version": "2.0.0",
   "private": true,
   "provider": "github",
-  "description": "Create and configure a new GitHub repository"
+  "description": "Create and configure a new GitHub repository",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
 }

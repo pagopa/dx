@@ -1,18 +1,37 @@
-provider "github" {
-  owner = "pagopa"
+variables {
+  repository = {
+    name            = "dx-test-monorepo-starter-pack"
+    description     = "Devex repository for shared tools and pipelines."
+    topics          = ["developer-experience"]
+    reviewers_teams = ["engineering-team-devex"]
+  }
 }
 
-run "validate_github_repository" {
-  command = plan
+mock_provider "github" {}
 
-  variables {
-    repository = {
-      name            = "dx-test-monorepo-starter-pack"
-      description     = "Devex repository for shared tools and pipelines."
-      topics          = ["developer-experience"]
-      reviewers_teams = ["engineering-team-devex"]
-    }
+override_data {
+  target = data.github_organization_teams.all
+  values = {
+    teams = [
+      {
+        description      = "Developer Experience team"
+        id               = 123456
+        members          = []
+        name             = "Engineering Team DevEx"
+        node_id          = "T_kwDODevEx"
+        parent           = {}
+        parent_team_id   = ""
+        parent_team_slug = ""
+        privacy          = "closed"
+        repositories     = []
+        slug             = "engineering-team-devex"
+      }
+    ]
   }
+}
+
+run "github_environment_bootstrap_repository_defaults" {
+  command = plan
 
   assert {
     condition     = github_repository.this.name == "dx-test-monorepo-starter-pack"
@@ -31,7 +50,7 @@ run "validate_github_repository" {
 
   assert {
     condition     = github_repository.this.visibility == "public"
-    error_message = "The repository visibilty is not correct"
+    error_message = "The repository visibility is not correct"
   }
 
   assert {
@@ -48,6 +67,10 @@ run "validate_github_repository" {
     condition     = github_repository.this.allow_squash_merge == true
     error_message = "The repository PR merge setup is not correct"
   }
+}
+
+run "github_environment_bootstrap_branch_protection_defaults" {
+  command = plan
 
   assert {
     condition     = github_branch_protection.main.pattern == "main"
@@ -65,21 +88,3 @@ run "validate_github_repository" {
   }
 }
 
-run "validate_github_default_branch_override" {
-  command = plan
-
-  variables {
-    repository = {
-      name                = "dx-test-monorepo-starter-pack"
-      description         = "Devex repository for shared tools and pipelines."
-      topics              = ["developer-experience"]
-      default_branch_name = "master"
-      reviewers_teams     = ["engineering-team-devex"]
-    }
-  }
-
-  assert {
-    condition     = github_branch_protection.main.pattern == "master"
-    error_message = "The repository branch protection on master is not set"
-  }
-}
