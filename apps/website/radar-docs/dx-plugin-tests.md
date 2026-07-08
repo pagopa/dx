@@ -1,7 +1,19 @@
 ---
 title: "DX Plugin: Tests"
 ring: adopt
-tags: [ai, copilot, dx, plugin, tests, integration, record-replay, vitest, testcontainers, tool]
+tags:
+  [
+    ai,
+    copilot,
+    dx,
+    plugin,
+    tests,
+    integration,
+    record-replay,
+    vitest,
+    testcontainers,
+    tool,
+  ]
 ---
 
 DX Plugin for Tests extends Copilot with backend testing skills for Node.js and
