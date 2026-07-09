@@ -2,7 +2,8 @@
 
 import { Octokit } from "octokit";
 
-const getGitHubToken = () => process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+export const getGitHubToken = (): string | undefined =>
+  process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
 
 const getAuthenticatedUserLogin = async (
   octokit: Octokit,
