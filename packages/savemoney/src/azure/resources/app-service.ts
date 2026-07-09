@@ -3,21 +3,28 @@
  */
 
 import type { WebSiteManagementClient } from "@azure/arm-appservice";
-import type { MonitorClient } from "@azure/arm-monitor";
 
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
 import type { AnalysisResult, Thresholds } from "../../types.js";
+import type { PricingService } from "../pricing/pricing-service.js";
 
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
   getMetric,
   type MetricsCache,
+  type MonitorClientLike,
   verboseLog,
   verboseLogAnalysisResult,
   verboseLogResourceStart,
 } from "../utils.js";
+
+export type AppServicePlanClientLike = {
+  appServicePlans: Pick<WebSiteManagementClient["appServicePlans"], "get">;
+};
+
+type AppServicePlanPricing = Pick<PricingService, "resolveAppServicePlan">;
 
 /**
  * Analyzes an Azure App Service Plan for potential cost optimization.
@@ -30,12 +37,13 @@ import {
  */
 export async function analyzeAppServicePlan(
   resource: armResources.GenericResource,
-  webSiteClient: WebSiteManagementClient,
-  monitorClient: MonitorClient,
+  webSiteClient: AppServicePlanClientLike,
+  monitorClient: MonitorClientLike,
   timespanDays: number,
   thresholds: Thresholds = DEFAULT_THRESHOLDS,
   verbose = false,
   cache?: MetricsCache,
+  pricing?: AppServicePlanPricing,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -69,8 +77,10 @@ export async function analyzeAppServicePlan(
 
     verboseLog(verbose, "App Service Plan API details:", planDetails);
 
+    const hasNoApps = planDetails.numberOfSites === 0;
+
     // Check if the plan has no apps
-    if (!planDetails.numberOfSites || planDetails.numberOfSites === 0) {
+    if (hasNoApps) {
       reason += "App Service Plan has no apps deployed. ";
     }
 
@@ -115,6 +125,17 @@ export async function analyzeAppServicePlan(
     ) {
       reason += "Premium tier with low resource utilization. ";
     }
+
+    const suspectedUnused = reason.length > 0;
+    const result = await enrichWithPricing(
+      { costRisk, reason: reason.trim(), suspectedUnused },
+      planDetails,
+      resource,
+      hasNoApps,
+      pricing,
+    );
+    verboseLogAnalysisResult(verbose, result);
+    return result;
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
@@ -127,4 +148,44 @@ export async function analyzeAppServicePlan(
   const result = { costRisk, reason: reason.trim(), suspectedUnused };
   verboseLogAnalysisResult(verbose, result);
   return result;
+}
+
+async function enrichWithPricing(
+  result: AnalysisResult,
+  planDetails: Awaited<
+    ReturnType<AppServicePlanClientLike["appServicePlans"]["get"]>
+  >,
+  resource: armResources.GenericResource,
+  hasNoApps: boolean,
+  pricing?: AppServicePlanPricing,
+): Promise<AnalysisResult> {
+  // Underutilized plans need right-sizing analysis, not a full removable
+  // cost-at-risk.
+  if (!pricing || !result.suspectedUnused || !hasNoApps) {
+    return result;
+  }
+
+  try {
+    const skuName = planDetails.sku?.name;
+    const armRegionName = planDetails.location ?? resource.location;
+    if (!skuName || !armRegionName) {
+      return result;
+    }
+
+    const estimatedMonthlySavings = await pricing.resolveAppServicePlan({
+      armRegionName,
+      os: planDetails.reserved === true ? "linux" : "windows",
+      skuName,
+      workerCount: planDetails.sku?.capacity ?? planDetails.numberOfWorkers,
+    });
+    return estimatedMonthlySavings
+      ? { ...result, estimatedMonthlySavings }
+      : result;
+  } catch (error) {
+    const logger = getLogger(["savemoney", "azure"]);
+    logger.warn(
+      `Failed to enrich App Service Plan ${resource.name ?? "unknown"} with pricing: ${error instanceof Error ? error.message : error}`,
+    );
+    return result;
+  }
 }

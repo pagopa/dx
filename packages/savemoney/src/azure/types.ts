@@ -28,6 +28,12 @@ export type AzureConfig = BaseConfig & {
    */
   filterTags?: Map<string, string>;
   /**
+   * Runtime-only pricing enrichment switch. This is intentionally not exposed
+   * in YAML config: the Retail Prices lookup uses internal defaults unless the
+   * CLI disables it for offline/debug runs.
+   */
+  pricing?: PricingConfig;
+  /**
    * Which finding sources to include in the run.
    * - `"custom"`  → enables the per-resource analyzer plugins
    * - `"advisor"` → enables the Azure Advisor subscription-level analyzer
@@ -83,3 +89,11 @@ export type AzureResourceReport = {
  * filter for Azure runs and would silently produce an empty report.
  */
 export type AzureSource = "advisor" | "custom";
+
+export type PricingConfig = {
+  /**
+   * Runtime switch used by the CLI `--no-pricing` flag. Pricing otherwise
+   * stays enabled with internal defaults for currency and cache settings.
+   */
+  enabled?: boolean;
+};

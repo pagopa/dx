@@ -2,13 +2,17 @@
  * Azure Managed Disk analysis
  */
 
-import type { ComputeManagementClient } from "@azure/arm-compute";
+import type { ComputeManagementClient, Disk } from "@azure/arm-compute";
 
 import * as armResources from "@azure/arm-resources";
 import { getLogger } from "@logtape/logtape";
 
+import type { Money } from "../../finding.js";
 import type { AnalysisResult } from "../../types.js";
+import type { PricingService } from "../pricing/pricing-service.js";
+import type { DiskSku } from "../pricing/resolvers/index.js";
 
+import { DiskSkuSchema } from "../pricing/resolvers/index.js";
 import {
   verboseLog,
   verboseLogAnalysisResult,
@@ -21,12 +25,14 @@ import {
  * @param resource - The Azure resource object
  * @param computeClient - Azure Compute client for disk details
  * @param verbose - Whether verbose logging is enabled
+ * @param pricing - Optional pricing service for monetary enrichment
  * @returns Analysis result with cost risk and reason
  */
 export async function analyzeDisk(
   resource: armResources.GenericResource,
   computeClient: ComputeManagementClient,
   verbose = false,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   verboseLogResourceStart(
     verbose,
@@ -64,13 +70,14 @@ export async function analyzeDisk(
       diskDetails.diskState?.toLowerCase() === "unattached" ||
       !diskDetails.managedBy
     ) {
-      const result = {
+      const result: AnalysisResult = {
         costRisk,
         reason: "Disk is unattached. ",
         suspectedUnused: true,
       };
-      verboseLogAnalysisResult(verbose, result);
-      return result;
+      const enriched = await enrichWithPricing(result, diskDetails, pricing);
+      verboseLogAnalysisResult(verbose, enriched);
+      return enriched;
     }
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
@@ -85,4 +92,39 @@ export async function analyzeDisk(
   const result = { costRisk, reason: "", suspectedUnused: false };
   verboseLogAnalysisResult(verbose, result);
   return result;
+}
+
+/**
+ * Best-effort: looks up the monthly price for the disk's `(sku, size,
+ * region)` triple and attaches it as `estimatedMonthlySavings`. Any
+ * failure (unsupported SKU, missing fields, resolver error) leaves the
+ * original result unchanged.
+ */
+async function enrichWithPricing(
+  result: AnalysisResult,
+  diskDetails: Disk,
+  pricing: PricingService | undefined,
+): Promise<AnalysisResult> {
+  if (!pricing) return result;
+
+  const sku = toSupportedSku(diskDetails.sku?.name);
+  const diskSizeGiB = diskDetails.diskSizeGB;
+  const armRegionName = diskDetails.location;
+  if (!sku || !diskSizeGiB || !armRegionName) return result;
+
+  const money: Money | undefined = await pricing.resolveDisk({
+    armRegionName,
+    diskSizeGiB,
+    sku,
+  });
+  return money ? { ...result, estimatedMonthlySavings: money } : result;
+}
+
+/**
+ * Narrows the SDK's `sku.name` string to the resolver-supported subset
+ * (excludes `UltraSSD_LRS` and any future tiers we don't price yet).
+ */
+function toSupportedSku(name: string | undefined): DiskSku | undefined {
+  const parsed = DiskSkuSchema.safeParse(name);
+  return parsed.success ? parsed.data : undefined;
 }

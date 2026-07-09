@@ -13,6 +13,7 @@ import {
   makeSavemoneyCommand,
   parseSourceOption,
   parseTagsOption,
+  resolveSourcesOption,
 } from "../savemoney.js";
 
 describe("parseSourceOption", () => {
@@ -74,6 +75,30 @@ describe("parseTagsOption", () => {
   });
 });
 
+describe("resolveSourcesOption", () => {
+  it("uses config sources when --source is omitted", () => {
+    expect(resolveSourcesOption(undefined, ["custom"])).toEqual(["custom"]);
+  });
+
+  it("uses both sources when --source is omitted and config has no sources", () => {
+    expect(resolveSourcesOption(undefined, undefined)).toEqual([
+      "advisor",
+      "custom",
+    ]);
+  });
+
+  it("lets explicit --source all override a narrowed config", () => {
+    expect(resolveSourcesOption("all", ["custom"])).toEqual([
+      "advisor",
+      "custom",
+    ]);
+  });
+
+  it("uses the explicit single source", () => {
+    expect(resolveSourcesOption("advisor", ["custom"])).toEqual(["advisor"]);
+  });
+});
+
 describe("makeSavemoneyCommand", () => {
   it("documents that --tags does not filter subscription-level Advisor findings", () => {
     const command = makeSavemoneyCommand();
@@ -84,5 +109,16 @@ describe("makeSavemoneyCommand", () => {
     expect(tagsOption?.description).toContain(
       "Advisor subscription-level findings remain global.",
     );
+  });
+
+  it("keeps --no-pricing as the only pricing override", () => {
+    const command = makeSavemoneyCommand();
+    const pricingOptions = command.options.filter((option) =>
+      option.flags.includes("pricing"),
+    );
+
+    expect(pricingOptions.map((option) => option.flags)).toEqual([
+      "--no-pricing",
+    ]);
   });
 });
