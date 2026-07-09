@@ -1,0 +1,65 @@
+name: Terraform Permission Check
+description: >
+  Checks a sanitized Terraform plan against the apply identity permissions by
+  asking the DX Microsoft Foundry gateway for a markdown verdict.
+
+inputs:
+  filtered-plan-path:
+    description: Path to the sanitized Terraform plan produced by sanitize-terraform-plan.
+    required: true
+  gateway-url:
+    description: Full HTTPS URL of the private APIM route, for example https://<gateway>/ai/v1/responses.
+    required: true
+  model-deployment-name:
+    description: Foundry model deployment name to use in the Responses API request.
+    required: true
+  working-directory:
+    description: Terraform working directory used only for labels and default output placement.
+    required: false
+    default: "."
+  cd-identity-name:
+    description: Optional Infra CD managed identity name when the caller already resolved it.
+    required: false
+    default: ""
+  azure-subscription-id:
+    description: Optional Azure subscription ID used to query live RBAC facts through Azure MCP. Defaults to ARM_SUBSCRIPTION_ID.
+    required: false
+    default: ""
+  azure-mcp-enabled:
+    description: Whether to start the official Azure MCP server for read-only RBAC context collection.
+    required: false
+    default: "true"
+  azure-mcp-command:
+    description: Executable used to start the official Azure MCP server.
+    required: false
+    default: "npx"
+  azure-mcp-args:
+    description: Arguments used to start the official Azure MCP server. Must include --read-only.
+    required: false
+    default: "-y @azure/mcp@latest server start --read-only"
+  azure-mcp-timeout-ms:
+    description: Per-operation timeout for Azure MCP discovery and calls.
+    required: false
+    default: "15000"
+  gateway-token-scope:
+    description: OAuth scope used by AzureCliCredential when calling the APIM gateway.
+    required: false
+    default: "https://ai.azure.com/.default"
+  skill-path:
+    description: Optional path to the DX terraform-permission-check skill. Defaults to the bundled plugin copy in this repository.
+    required: false
+    default: ""
+  output-file:
+    description: Path where the markdown report is written. Relative paths are resolved from working-directory.
+    required: false
+    default: "terraform-permission-check.md"
+
+outputs:
+  markdown-report:
+    description: The permission-check markdown report returned by the gateway.
+  markdown-report-file:
+    description: Path to the generated markdown report file.
+
+runs:
+  using: node24
+  main: dist/index.cjs

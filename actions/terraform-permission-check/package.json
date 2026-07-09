@@ -1,0 +1,31 @@
+{
+  "name": "@pagopa-dx/terraform-permission-check",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "GitHub Action to check Terraform plan permissions with Microsoft Foundry",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "tsup",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@actions/core": "catalog:github-actions",
+    "@azure/identity": "catalog:",
+    "@modelcontextprotocol/sdk": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

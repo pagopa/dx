@@ -38,6 +38,31 @@ on:
         type: string
         required: false
         default: ""
+      terraform_permission_check_enabled:
+        description: Run the non-blocking Terraform CD permission check on pull request plans.
+        type: boolean
+        required: false
+        default: false
+      terraform_permission_check_gateway_url:
+        description: Private APIM Responses API URL used by the Terraform CD permission check.
+        type: string
+        required: false
+        default: ""
+      terraform_permission_check_model_deployment_name:
+        description: Foundry model deployment name used by the Terraform CD permission check.
+        type: string
+        required: false
+        default: ""
+      terraform_permission_check_cd_identity_name:
+        description: Optional Infra CD identity name to pass to the Terraform CD permission check.
+        type: string
+        required: false
+        default: ""
+      terraform_permission_check_azure_mcp_enabled:
+        description: Allow the Terraform CD permission check to collect read-only Azure MCP context.
+        type: boolean
+        required: false
+        default: true
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -357,6 +382,46 @@ jobs:
 
           echo "" >> message_body.txt
           echo "</details>" >> message_body.txt
+
+      - name: Checkout DX Terraform Permission Check action
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          steps.plan.outcome == 'success' &&
+          inputs.terraform_permission_check_enabled &&
+          inputs.terraform_permission_check_gateway_url != '' &&
+          inputs.terraform_permission_check_model_deployment_name != ''
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: pagopa/dx
+          ref: ${{ github.workflow_sha }}
+          path: .dx-actions
+
+      - name: Terraform Permission Check
+        id: permission-check
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          steps.plan.outcome == 'success' &&
+          inputs.terraform_permission_check_enabled &&
+          inputs.terraform_permission_check_gateway_url != '' &&
+          inputs.terraform_permission_check_model_deployment_name != ''
+        uses: ./.dx-actions/actions/terraform-permission-check
+        continue-on-error: true
+        with:
+          filtered-plan-path: ${{ steps.plan.outputs.filtered_plan_path }}
+          gateway-url: ${{ inputs.terraform_permission_check_gateway_url }}
+          model-deployment-name: ${{ inputs.terraform_permission_check_model_deployment_name }}
+          working-directory: ${{ steps.directory.outputs.dir }}
+          cd-identity-name: ${{ inputs.terraform_permission_check_cd_identity_name }}
+          azure-mcp-enabled: ${{ inputs.terraform_permission_check_azure_mcp_enabled }}
+
+      - name: Post Terraform Permission Check on PR
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          steps.permission-check.outputs.markdown-report-file != ''
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ steps.permission-check.outputs.markdown-report-file }}
+          search-pattern: "Terraform Permission Check (${{ steps.directory.outputs.dir }})"
 
       # Post the plan output in the PR
       - name: Post Plan on PR
