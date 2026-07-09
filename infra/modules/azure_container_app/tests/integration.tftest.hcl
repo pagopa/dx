@@ -14,7 +14,7 @@ variables {
     env_short       = "d"
     location        = "italynorth"
     domain          = "int"
-    app_name        = "ca"
+    app_name        = "def"
     instance_number = "01"
   }
 
@@ -101,7 +101,7 @@ run "apply_development" {
   command = apply
 
   variables {
-    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.development, app_name = "cadev" })
+    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.development, app_name = "dev" })
     tags                         = var.tags
     use_case                     = "development"
     resource_group_name          = run.setup.resource_group_name
@@ -139,7 +139,7 @@ run "apply_with_http_scaler" {
   command = apply
 
   variables {
-    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.autoscaler, app_name = "cahttp" })
+    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.autoscaler, app_name = "http" })
     tags                         = var.tags
     resource_group_name          = run.setup.resource_group_name
     container_app_environment_id = run.setup.container_app_environment_id

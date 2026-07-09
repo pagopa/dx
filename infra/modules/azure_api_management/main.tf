@@ -45,9 +45,12 @@ resource "azurerm_api_management" "this" {
   }
 
   dynamic "sign_up" {
+    # cost_optimized SKU does not support sign up feature
     for_each = var.use_case != "cost_optimized" ? ["dummy"] : []
     content {
-      enabled = false
+      enabled = local.use_case_features.developer_portal_username_password_enabled
+
+      # dev only
       terms_of_service {
         enabled          = false
         consent_required = false

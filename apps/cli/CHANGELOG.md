@@ -1,3 +1,14 @@
+## 0.25.3 (2026-07-07)
+
+### 🩹 Fixes
+
+- Fallback to a temporary git identity when dx init scaffolds a repository without git user.name or user.email configured. ([#1944](https://github.com/pagopa/dx/pull/1944))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.25.2 (2026-07-06)
 
 ### 🩹 Fixes

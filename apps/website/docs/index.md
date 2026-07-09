@@ -59,8 +59,7 @@ Cloud Service Providers (CSPs), and align with a variety of programming
 languages.
 
 These tools adhere to the principles and boundaries outlined in our
-[Technology Radar](https://pagopa.github.io/technology-radar/index.html) that
-teams are expected to follow.
+[Technology Radar](/radar) that teams are expected to follow.
 
 Technology Radar recommendations are thoughtfully designed to foster
 consistency, efficiency, and alignment across projects, ensuring a streamlined
@@ -104,7 +103,7 @@ If you're building APIs, web applications, or services:
 ## What We Provide
 
 **🛤️ Golden Paths** - Opinionated, proven approaches aligned with our
-[Technology Radar](https://pagopa.github.io/technology-radar/)
+[Technology Radar](/radar)
 
 **🔧 Ready-to-Use Tools** - Terraform modules, GitHub Actions, and development
 environments that just work

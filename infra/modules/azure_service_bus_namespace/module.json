@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Creates an Azure Service Bus Namepsace with network, authentication and scaling built-in capabilities",
+  "provider": "azurerm",
+  "version": "1.0.0"
+}

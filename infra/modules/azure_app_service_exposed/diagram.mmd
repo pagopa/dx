@@ -1,0 +1,14 @@
+flowchart TD
+    subgraph Compute["Compute Layer"]
+        asp["App Service Plan"]
+        asp@{ icon: "azure:app-service-plans"}
+
+        app["App Service"]
+        app@{ icon: "azure:app-services"}
+
+        slot["Staging Slot"]
+        slot@{ icon: "azure:app-services"}
+    end
+
+    asp --> app
+    app -.-> slot
