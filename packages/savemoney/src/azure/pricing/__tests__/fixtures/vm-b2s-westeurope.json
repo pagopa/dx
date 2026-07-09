@@ -1,0 +1,51 @@
+{
+  "BillingCurrency": "EUR",
+  "Count": 2,
+  "Items": [
+    {
+      "currencyCode": "EUR",
+      "tierMinimumUnits": 0,
+      "retailPrice": 0.057,
+      "unitPrice": 0.057,
+      "armRegionName": "westeurope",
+      "location": "EU West",
+      "effectiveStartDate": "2024-01-01T00:00:00Z",
+      "meterId": "00000000-0000-0000-0000-000000000001",
+      "meterName": "B2s",
+      "productId": "DZH318Z0BPVW",
+      "skuId": "DZH318Z0BPVW/0001",
+      "productName": "Virtual Machines BS Series",
+      "skuName": "B2s",
+      "serviceName": "Virtual Machines",
+      "serviceId": "DZH318Z0BPVW",
+      "serviceFamily": "Compute",
+      "unitOfMeasure": "1 Hour",
+      "type": "Consumption",
+      "isPrimaryMeterRegion": true,
+      "armSkuName": "Standard_B2s"
+    },
+    {
+      "currencyCode": "EUR",
+      "tierMinimumUnits": 0,
+      "retailPrice": 0.0285,
+      "unitPrice": 0.0285,
+      "armRegionName": "westeurope",
+      "location": "EU West",
+      "effectiveStartDate": "2024-01-01T00:00:00Z",
+      "meterId": "00000000-0000-0000-0000-000000000002",
+      "meterName": "B2s Low Priority",
+      "productId": "DZH318Z0BPVW",
+      "skuId": "DZH318Z0BPVW/0002",
+      "productName": "Virtual Machines BS Series",
+      "skuName": "B2s Spot",
+      "serviceName": "Virtual Machines",
+      "serviceId": "DZH318Z0BPVW",
+      "serviceFamily": "Compute",
+      "unitOfMeasure": "1 Hour",
+      "type": "Consumption",
+      "isPrimaryMeterRegion": true,
+      "armSkuName": "Standard_B2s"
+    }
+  ],
+  "NextPageLink": null
+}
