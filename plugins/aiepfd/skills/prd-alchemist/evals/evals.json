@@ -1,0 +1,49 @@
+{
+  "skill_name": "prd-alchemist",
+  "evals": [
+    {
+      "id": 0,
+      "name": "messy-discovery-notes",
+      "prompt": "I just got out of a discovery call for a 'saved payment methods' feature and my notes are a total mess. Can you turn this into a first PRD draft? Here's everything I jotted down:\n\n- users hate re-typing their card every single time, esp on mobile\n- Marco from payments said tokenization is already there via the PSP so storing a token should be doable\n- \"why cant it just remember like amazon does\" - actual quote from a user interview\n- need to support at least visa/mastercard, amex maybe later\n- Giulia (design) wants a max of 5 saved cards shown, more than that gets ugly\n- security team: NEVER store the full PAN, only the token + last 4 digits\n- open q: do we let them set a default card?\n- launch target-ish end of Q3 but not confirmed\n- oh and we should probably let them delete a saved card too obviously",
+      "expected_output": "A coherent PRD draft with Status: draft, sections for context/problem, objectives, audience, scope signals, and an explicit open-questions/gaps section (e.g. default card, Amex timing, launch date). Rewrites the notes into prose rather than pasting them. Does not invent metrics or decisions.",
+      "assertions": [
+        "Output carries a Status metadata field set to 'draft'",
+        "Contains an explicit section listing open questions or gaps",
+        "Flags the 'default card' decision as an open question rather than deciding it",
+        "Preserves the security constraint: never store the full PAN, only token + last 4 digits",
+        "Rewrites the notes into coherent prose/sections rather than pasting the raw bullets verbatim",
+        "Does not invent success metrics, KPIs, or numbers that were not in the input"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "scattered-support-signal",
+      "prompt": "We keep getting support tickets about people not finding their transaction history in our banking app. I don't have anything structured yet, just some scraps:\n\nFrom a Slack thread with support lead: \"3rd time this week someone asks where their old payments went. They scroll and give up. One guy thought money disappeared.\"\n\nBullet points my manager dropped in a DM:\n- current list only shows last 30 days\n- no search, no filter by date or amount\n- people want to find a specific payment for expense reports\n\nMy own note: maybe export to CSV? not sure if in scope.\n\nCan you make sense of this and start a PRD for me?",
+      "expected_output": "A draft PRD (Status: draft) that synthesizes the support signal into a problem statement, likely objectives (findability of past transactions), audience (app users needing past payments, e.g. for expenses), and flags open questions like CSV export scope and success metrics. Should not fabricate specifics not present in the input.",
+      "assertions": [
+        "Output carries a Status metadata field set to 'draft'",
+        "States a problem centered on users being unable to find past/older transactions",
+        "Flags CSV export as an open/undecided scope question",
+        "Contains an explicit open-questions/gaps section (e.g. success metrics undefined)",
+        "Does not fabricate specific metrics, ticket volumes, or decisions absent from the input"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "gaps-and-contradictions",
+      "prompt": "Here are my raw notes for a possible 'team workspaces' feature. Please draft a PRD from them:\n\n- Sales says enterprise customers are asking for shared workspaces so teams can collaborate\n- PM lead in meeting: this should be a small MVP, just shared folders, ship fast\n- Head of product in a different meeting: this is our big bet for next year, needs roles, permissions, audit logs, the works\n- no numbers yet on how many customers actually asked\n- unclear if this is free or a paid add-on\n- engineering hasn't been consulted at all\n\nJust write up what we know so far.",
+      "expected_output": "A draft PRD (Status: draft) that captures the workspaces concept but EXPLICITLY surfaces the contradiction between the small-MVP framing and the large-strategic-bet framing, and flags gaps: no demand numbers, pricing undecided, engineering not consulted. Must NOT resolve the scope contradiction by guessing or invent demand figures.",
+      "assertions": [
+        "Output carries a Status metadata field set to 'draft'",
+        "Explicitly surfaces the contradiction between the small-MVP framing and the large strategic-bet framing",
+        "Flags that there are no demand numbers on how many customers asked",
+        "Flags pricing (free vs paid add-on) as undecided",
+        "Flags that engineering has not been consulted",
+        "Does NOT resolve the scope contradiction by picking one side or inventing demand figures"
+      ],
+      "files": []
+    }
+  ]
+}
