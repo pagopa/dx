@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Deploys GitHub self-hosted runners using Azure Container Apps jobs for scalable CI/CD workflows",
+  "provider": "azurerm",
+  "version": "2.0.0"
+}

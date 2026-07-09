@@ -100,7 +100,11 @@ const publishToGithub = async (input) => {
 			await clearExportWorkingTree(tempExportDir);
 			await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
 			await $$1`git add --all`;
-			await $$1`git commit -m "Release ${input.version}"`;
+			const commitResult = await safe$`git commit -m "Release ${input.version}"`;
+			if (commitResult.exitCode !== 0) {
+				const commitOutput = `${commitResult.stdout}${commitResult.stderr}`;
+				if (!commitOutput.includes("nothing to commit")) throw new Error(`Failed to commit release ${input.version} for ${repoUrl}: ${commitOutput}`);
+			}
 			await $$1`git tag -f ${input.version}`;
 			await $$1`git push origin main`;
 			await $$1`git push origin refs/tags/${input.version} --force`;

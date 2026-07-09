@@ -1,3 +1,13 @@
+## 3.1.0 (2026-07-07)
+
+### 🚀 Features
+
+- Enable user sign up in development use case ([#1948](https://github.com/pagopa/dx/pull/1948))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 3.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes

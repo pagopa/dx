@@ -1,5 +1,5 @@
 resource "azurerm_container_app" "this" {
-  name                         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app" }))
+  name                         = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app" }))
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
   revision_mode                = local.revision_mode

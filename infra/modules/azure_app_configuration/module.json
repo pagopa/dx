@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Privisions App Configuration instance with private connection and IAM access mode",
+  "provider": "azurerm",
+  "version": "1.0.0"
+}
