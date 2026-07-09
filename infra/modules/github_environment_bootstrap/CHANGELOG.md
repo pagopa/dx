@@ -1,3 +1,13 @@
+## 2.0.1 (2026-07-09)
+
+### 🩹 Fixes
+
+- Split legacy Terraform bootstrap tests into mocked unit and contract suites ([#1961](https://github.com/pagopa/dx/pull/1961))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 2.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes
