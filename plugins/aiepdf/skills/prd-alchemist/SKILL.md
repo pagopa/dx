@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Write and update a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, meeting summaries, strategy input, or a rough product document into a Confluence-compatible PRD covering needs, actors, JTBD, goals, metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. Preserve stable English IDs, manage explicit draft-to-review readiness, and offer optional Confluence publication only after writing.
+description: Write and update a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager provides raw or structured discovery notes, meeting summaries, strategy input, or simply wants to write a PRD, product spec, or requirements document. Analyze and synthesize material or interview the user when material is thin, ask targeted questions instead of inventing, cover needs, actors, JTBD, goals, metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness, and preserve stable English IDs with explicit draft-to-review readiness.
 ---
 
 # PRD Alchemist
@@ -16,6 +16,16 @@ plans.
 Product managers use the PRD to align sponsors, engineers, designers,
 Legal/Compliance, Support/Operations, and other stakeholders before downstream
 solution design and delivery planning.
+
+## About PRDs
+
+A Product Requirements Document (PRD) is a shared artifact that aligns the people
+working on a product initiative — typically **product managers, engineers, and
+designers** — on what is being built and why, _before development begins_. It is
+a communication and decision tool, not just a spec: it frames the problem, the
+intended users, the goals, and the boundaries of the work so the team shares one
+understanding. Keep this audience and purpose in mind when drafting, so the
+output reads as a coherent shared reference rather than a raw dump of notes.
 
 ## When to Use This Skill
 
