@@ -289,7 +289,7 @@ it("uses shell mode plus explicit commit author and committer environment variab
   });
 });
 
-it("embeds the GitHub token in the remote URL when available", async () => {
+it("configures git credentials and keeps the remote URL token-free when a token is available", async () => {
   const { commands } = createGitCommandHarness();
   githubMocks.getGitHubToken.mockReturnValue("secret-token");
 
@@ -301,12 +301,13 @@ it("embeds the GitHub token in the remote URL when available", async () => {
 
   await publishToGithub(publishInput);
 
-  expect(commands.map((c) => c.command)).toContain(
-    `git remote add origin https://x-access-token:secret-token@github.com/pagopa-dx/${expectedRepo}.git`,
-  );
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
+  expect(commandStrings.join("\n")).not.toContain("secret-token");
 });
 
-it("uses a token-free remote URL when no token is available", async () => {
+it("skips git credential setup when no token is available", async () => {
   const { commands } = createGitCommandHarness();
   githubMocks.getGitHubToken.mockReturnValue(undefined);
 
@@ -318,9 +319,9 @@ it("uses a token-free remote URL when no token is available", async () => {
 
   await publishToGithub(publishInput);
 
-  expect(commands.map((c) => c.command)).toContain(
-    `git remote add origin ${expectedRepoUrl}`,
-  );
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).not.toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
 });
 
 it("cleans up temporary directory after successful publish", async () => {

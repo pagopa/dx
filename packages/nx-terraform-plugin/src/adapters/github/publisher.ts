@@ -89,25 +89,18 @@ export const publishToGithub = async (
 
     await $`git init -b main`;
 
-    // Reads/writes to the subrepo need credentials. Anonymous HTTPS can read a
-    // public repo, but `git push` requires auth or git prompts for a username
-    // (fatal in CI). Embed the GitHub App installation token as the
-    // `x-access-token` user in the remote URL when available. Derive from
-    // `repoUrl` (rather than rebuilding the host/path by hand) so the two
-    // can't drift, and so the `URL` API percent-encodes the credentials.
-    // Keep `repoUrl` itself (token-free) for logs and error messages so the
-    // token never leaks, and use `safe$` for the remote add so a failure
-    // can't echo the token URL.
-    const token = getGitHubToken();
-    let authenticatedRepoUrl = repoUrl;
-    if (token !== undefined) {
-      const url = new URL(repoUrl);
-      url.username = "x-access-token";
-      url.password = token;
-      authenticatedRepoUrl = url.toString();
+    // Subrepo git operations (ls-remote, fetch, push) run over HTTPS and need
+    // credentials. Anonymous HTTPS can read a public repo, but `git push`
+    // requires auth or git prompts for a username (fatal in CI). `gh auth
+    // setup-git` installs a git credential helper that reads GH_TOKEN /
+    // GITHUB_TOKEN and serves credentials for github.com HTTPS remotes, so the
+    // token never lands in the remote URL, `.git/config`, or `git remote -v`
+    // output, and every later git operation is covered without per-call wiring.
+    if (getGitHubToken() !== undefined) {
+      await $`gh auth setup-git`;
     }
-    const remoteAdd =
-      await safe$`git remote add origin ${authenticatedRepoUrl}`;
+
+    const remoteAdd = await safe$`git remote add origin ${repoUrl}`;
     if (remoteAdd.exitCode !== 0) {
       throw new Error(`Failed to add git remote origin for ${repoUrl}`);
     }
