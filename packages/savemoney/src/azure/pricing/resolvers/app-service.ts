@@ -57,16 +57,22 @@ export async function resolveAppServicePlanMonthlyPrice(
 
 function matchesOs(item: PriceItem, os: AppServicePlanOs | undefined): boolean {
   if (!os) return true;
+  // Retail meters encode the OS variant in the product name, not in a
+  // dedicated field.
   const product = item.productName?.toLowerCase() ?? "";
   const isLinuxItem = product.includes("linux");
   return os === "linux" ? isLinuxItem : !isLinuxItem;
 }
 
 function normalizeSkuName(value: string | undefined): string {
+  // ARM uses compact SKU names (`P1v3`), while Retail Prices sometimes
+  // inserts spaces (`P1 v3`).
   return value?.toLowerCase().replace(/\s+/g, "") ?? "";
 }
 
 function normalizeWorkerCount(workerCount: number | undefined): number {
+  // App Service Plan billing is per whole worker instance; invalid or missing
+  // values fall back to the minimum billable instance.
   if (!workerCount || workerCount < 1) return 1;
   return Math.ceil(workerCount);
 }
