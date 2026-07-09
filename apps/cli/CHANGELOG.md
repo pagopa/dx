@@ -1,3 +1,36 @@
+## 0.26.0 (2026-07-09)
+
+### 🚀 Features
+
+- Add SKILL to generate integration tests. ([#1920](https://github.com/pagopa/dx/pull/1920))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.25.3 (2026-07-07)
+
+### 🩹 Fixes
+
+- Fallback to a temporary git identity when dx init scaffolds a repository without git user.name or user.email configured. ([#1944](https://github.com/pagopa/dx/pull/1944))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.25.2 (2026-07-06)
+
+### 🩹 Fixes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.25.1 (2026-07-02)
 
 ### 🩹 Fixes

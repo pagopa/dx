@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph Network["Network Layer"]
+        vnet["Virtual Network"]
+        vnet@{ icon: "azure:virtual-networks"}
+
+        subnet["Subnet"]
+
+        pep["Private Endpoint"]
+        pep@{ icon: "azure:private-endpoints"}
+
+        dns["Private DNS Zone"]
+        dns@{ icon: "azure:dns-zones"}
+    end
+
+    subgraph Compute["Compute Layer"]
+        asp["App Service Plan"]
+        asp@{ icon: "azure:app-service-plans"}
+
+        app["App Service"]
+        app@{ icon: "azure:app-services"}
+
+        slot["Staging Slot"]
+        slot@{ icon: "azure:app-services"}
+    end
+
+    subgraph Monitoring["Monitoring"]
+        diag["Diagnostic Settings"]
+        diag@{ icon: "azure:log-analytics-workspaces"}
+    end
+
+    Network --> Compute
+    Compute -.-> Network
+    Compute --> Monitoring

@@ -24,28 +24,31 @@ locals {
 
   use_cases = {
     development = {
-      sku                  = "Developer_1"
-      virtual_network_type = "Internal"
-      autoscale            = false
-      alerts               = false
-      private_endpoint     = false
-      zones                = null
+      sku                                        = "Developer_1"
+      virtual_network_type                       = "Internal"
+      autoscale                                  = false
+      alerts                                     = false
+      private_endpoint                           = false
+      zones                                      = null
+      developer_portal_username_password_enabled = true
     }
     cost_optimized = {
-      sku                  = "StandardV2_1"
-      virtual_network_type = "External"
-      autoscale            = false
-      alerts               = true
-      private_endpoint     = true
-      zones                = null
+      sku                                        = "StandardV2_1"
+      virtual_network_type                       = "External"
+      autoscale                                  = false
+      alerts                                     = true
+      private_endpoint                           = true
+      zones                                      = null
+      developer_portal_username_password_enabled = false
     }
     high_load = {
-      sku                  = "Premium_2"
-      virtual_network_type = "Internal"
-      autoscale            = true
-      alerts               = true
-      private_endpoint     = false
-      zones                = ["1", "2"]
+      sku                                        = "Premium_2"
+      virtual_network_type                       = "Internal"
+      autoscale                                  = true
+      alerts                                     = true
+      private_endpoint                           = false
+      zones                                      = ["1", "2"]
+      developer_portal_username_password_enabled = false
     }
   }
 

@@ -110,9 +110,10 @@ Before using this module, ensure you have:
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.0 |
-| <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.0 |
+| <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.12 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
 ## Modules

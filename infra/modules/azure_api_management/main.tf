@@ -1,12 +1,14 @@
 terraform {
+  required_version = ">= 1.14.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 4.1.0, < 5.0"
+      version = "~> 4.1"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.8.3, < 1.0.0"
+      version = "~> 0.12"
     }
   }
 }
@@ -43,9 +45,12 @@ resource "azurerm_api_management" "this" {
   }
 
   dynamic "sign_up" {
+    # cost_optimized SKU does not support sign up feature
     for_each = var.use_case != "cost_optimized" ? ["dummy"] : []
     content {
-      enabled = false
+      enabled = local.use_case_features.developer_portal_username_password_enabled
+
+      # dev only
       terms_of_service {
         enabled          = false
         consent_required = false

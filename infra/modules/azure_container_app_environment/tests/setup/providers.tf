@@ -6,7 +6,7 @@ terraform {
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.10"
+      version = "~> 0.12"
     }
   }
 }

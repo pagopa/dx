@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns",
+  "provider": "azurerm",
+  "version": "1.0.0"
+}

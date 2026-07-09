@@ -1,3 +1,26 @@
+## 0.1.8 (2026-07-09)
+
+### 🩹 Fixes
+
+- Update Go module dependencies for the AWS Terraform provider tooling. ([#1967](https://github.com/pagopa/dx/pull/1967))
+- Upgrade `golang.org/x/crypto` version ([#1969](https://github.com/pagopa/dx/pull/1969))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.1.7 (2026-07-06)
+
+### 🩹 Fixes
+
+- Bump golang.org/x/net and related transitive Go dependencies to v0.55.0 ([#1929](https://github.com/pagopa/dx/pull/1929), [#1927](https://github.com/pagopa/dx/issues/1927))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.1.6 (2026-06-30)
 
 ### 🩹 Fixes

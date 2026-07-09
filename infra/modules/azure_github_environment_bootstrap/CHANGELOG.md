@@ -1,3 +1,23 @@
+## 5.0.1 (2026-07-09)
+
+### 🩹 Fixes
+
+- Split legacy Terraform bootstrap tests into mocked unit and contract suites ([#1961](https://github.com/pagopa/dx/pull/1961))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 5.0.0 (2026-07-06)
+
+### ⚠️  Breaking Changes
+
+- Set Terraform minimum version to 1.14.0 ([#1940](https://github.com/pagopa/dx/pull/1940))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.1.0 (2026-06-23)
 
 ### 🚀 Features

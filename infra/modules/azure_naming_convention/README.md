@@ -39,7 +39,9 @@ This configuration will generate a resource name like `dx-d-itn-web-app-example-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
 
 ## Modules
 
