@@ -95,6 +95,10 @@ pnpm nx run my-project:docker:build
 pnpm nx run my-project:docker:push
 ```
 
+When running inside a GitHub Actions job, `docker:build`, `docker:push` and
+`nx-release-publish` also report pushed image tags — or build/push
+failures — to the job summary (`GITHUB_STEP_SUMMARY`).
+
 ## Image name and per-project overrides
 
 By default the image name is
