@@ -1,7 +1,12 @@
 {
   "name": "@pagopa/nx-dx-docker-plugin",
   "version": "0.1.0",
-  "private": true,
+  "description": "Nx plugin generating Docker build/push/package targets, feature-matching docker/metadata-action.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/nx-dx-docker-plugin"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -10,6 +15,11 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
+  },
+  "files": ["dist"],
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
   },
   "scripts": {
     "build": "tsdown"
