@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Turn unstructured product input into a first PRD draft. Use when a product manager provides raw, scattered, or heterogeneous material (chat logs, meeting notes, documents, quick ideas) and wants it analyzed and synthesized into a coherent draft Product Requirement Document that captures what has been understood. The skill reads all the input, gives it meaning, groups related information, flags gaps and open questions, and produces a draft with status "draft". It does not publish, review, or advance the document beyond the draft stage.
+description: Turn unstructured product input into a first Product Requirements Document (PRD) draft. Use when a product manager provides raw, scattered, or heterogeneous material (chat logs, meeting notes, documents, quick ideas) and wants it analyzed and synthesized into a coherent draft PRD, product spec, or requirements document that captures what has been understood. The skill reads all the input, gives it meaning, groups related information, flags gaps and open questions, and produces a draft with status "draft". It does not publish, review, or advance the document beyond the draft stage.
 ---
 
 # PRD Alchemist
@@ -10,6 +10,16 @@ Transform a pile of unstructured product input into a coherent first PRD draft.
 The user provides raw, scattered material about a product initiative. This skill
 reads all of it, makes sense of it, and writes a **draft** PRD that captures what
 has been understood so far — including what is still unclear.
+
+## About PRDs
+
+A Product Requirements Document (PRD) is a shared artifact that aligns the people
+working on a product initiative — typically **product managers, engineers, and
+designers** — on what is being built and why, _before development begins_. It is
+a communication and decision tool, not just a spec: it frames the problem, the
+intended users, the goals, and the boundaries of the work so the team shares one
+understanding. Keep this audience and purpose in mind when drafting, so the
+output reads as a coherent shared reference rather than a raw dump of notes.
 
 ## When to Use This Skill
 
