@@ -131,15 +131,8 @@ git tags instead of a registry query.
 
 ## Installing in another repository
 
-`@pagopa/nx-dx-docker-plugin` is `"private": true` — it isn't published to
-an npm registry. Repositories in this monorepo (`dx`) consume it as a
-normal pnpm workspace dependency (`"workspace:^"`). An external repository
-can install a specific released version straight from this repo's git tag,
-using pnpm's [git subdirectory
-syntax](https://pnpm.io/package-sources#install-from-a-subdirectory-of-a-git-repository):
-
 ```bash
-pnpm add "pagopa/dx#@pagopa/nx-dx-docker-plugin@0.1.0&path:/packages/nx-dx-docker-plugin"
+pnpm add -D @pagopa/nx-dx-docker-plugin
 ```
 
 After installing, register the plugin in your own `nx.json` exactly as
