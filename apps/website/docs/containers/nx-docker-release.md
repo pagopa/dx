@@ -72,10 +72,11 @@ only option every consumer must set — there's no reliable way to derive it.
 resolves to `pagopa/dx` / `https://github.com/pagopa/dx`); set them
 explicitly only for a custom image name prefix or a non-GitHub remote.
 `buildTargetName`, `pushTargetName`, `packageTargetName`,
-`jsBuildTargetName`, `defaultBranch` and `registry` default to
-`docker:build`, `docker:push`, `package`, `build`, `main` and `ghcr.io`
-respectively — override them only if your repo deviates from those
-conventions. See the package's `README.md` for the full option reference.
+`jsBuildTargetName`, `defaultBranch`, `platform` and `registry` default to
+`docker:build`, `docker:push`, `package`, `build`, `main`,
+`linux/amd64,linux/arm64` and `ghcr.io` respectively — override them only if
+your repo deviates from those conventions. See the package's `README.md`
+for the full option reference.
 
 ## Generated targets
 
@@ -101,10 +102,12 @@ failures — to the job summary (`GITHUB_STEP_SUMMARY`).
 
 ## Image name and per-project overrides
 
-By default the image name is
-`{registry}/{imageNamePrefix}/{project-slug}`. To keep a legacy or
-otherwise different image name, set `nx.docker.repositoryName` in the
-project's `package.json`:
+By default the image name is `{registry}/{imageNamePrefix}/{image-slug}`,
+where `image-slug` is the project's `package.json` `name` (stripped of any
+npm scope, e.g. `@pagopa/mcpserver` becomes `mcpserver`), or a path-derived
+slug for projects without a `package.json`. To keep a legacy or otherwise
+different image name, set `nx.docker.repositoryName` in the project's
+`package.json`:
 
 ```json
 {
@@ -132,6 +135,34 @@ tags (major is skipped for `0.x` releases), plus `latest` when the pushed
 version is the highest released so far for the project — mirroring
 `docker/metadata-action`'s default `flavor: latest=auto`, but using local
 git tags instead of a registry query.
+
+## Scoping the release-version Docker build to selected projects
+
+`nx release version` runs `docker:build` for every affected project through
+Nx's own `preVersionCommand` hook, but doesn't forward whatever
+`--projects`/`--groups` filter was passed to `nx release version` — so by
+default a release build always falls back to `nx affected`. To scope it to
+specific projects instead (e.g. when testing a single project's release
+locally), wire the plugin's `docker-prebuild` script into your `nx.json`:
+
+```jsonc
+{
+  "release": {
+    "docker": {
+      "preVersionCommand": "node ./node_modules/@pagopa/nx-dx-docker-plugin/dist/docker-prebuild.js"
+    }
+  }
+}
+```
+
+Then export `NX_RELEASE_DOCKER_PROJECTS` (a comma/space-separated list of
+project names or patterns) alongside `--projects` when invoking the
+release:
+
+```bash
+NX_RELEASE_DOCKER_PROJECTS=my-project \
+  pnpm exec nx release version --projects=my-project --dry-run
+```
 
 ## Installing in another repository
 
