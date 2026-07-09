@@ -103,6 +103,18 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
 | **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
 
+#### Pricing Coverage
+
+SaveMoney keeps two monetary signals separate:
+
+- **Retail Prices API** estimates the monthly list-price cost at risk for custom findings on resources with predictable pricing.
+- **Azure Advisor** reports Microsoft-provided savings for Cost recommendations when available.
+
+| Resources                                                                     | Pricing source    | Notes                                                                                          |
+| :---------------------------------------------------------------------------- | :---------------- | :--------------------------------------------------------------------------------------------- |
+| Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API | Reported as `Estimated monthly cost at risk (custom)`.                                         |
+| Azure Advisor Cost recommendations                                            | Azure Advisor     | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
+
 #### Generic Checks
 
 All resources are also checked for:
