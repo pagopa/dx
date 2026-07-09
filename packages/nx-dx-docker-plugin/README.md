@@ -36,3 +36,9 @@ rationale behind which ones are required, auto-detected, or defaulted.
 
 See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
 (mirrors `docker/metadata-action`'s default `flavor: latest=auto`).
+
+## CI job summary
+
+In a GitHub Actions job (`GITHUB_STEP_SUMMARY` set), `docker:build`,
+`docker:push` and `nx-release-publish` report pushed image tags and
+build/push failures to the job summary — see `src/github-summary.ts`.

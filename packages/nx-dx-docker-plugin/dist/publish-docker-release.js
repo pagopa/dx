@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const require_docker_image = require('./docker-image-BUMKa_QH.js');
-const require_cli_args = require('./cli-args-DhJNQUdl.js');
+const require_github_summary = require('./github-summary-tzT8H1pT.js');
 let node_child_process = require("node:child_process");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
@@ -19,7 +19,7 @@ const splitImageReference = (fullImageRef) => {
 	};
 };
 const main = () => {
-	const args = require_cli_args.parseArgs(process.argv.slice(2));
+	const args = require_github_summary.parseArgs(process.argv.slice(2));
 	const projectRoot = args["project-root"];
 	const projectName = args["project-name"];
 	if (!projectRoot || !projectName) {
@@ -39,18 +39,24 @@ const main = () => {
 		for (const tag of aliasTags) console.log(`Docker Image ${imageBase}:${tag} was not tagged/pushed as --dry-run is enabled.`);
 		return;
 	}
-	(0, node_child_process.execFileSync)("docker", ["push", fullImageRef], { stdio: "inherit" });
-	console.log(`Successfully pushed ${fullImageRef}`);
-	for (const tag of aliasTags) {
-		const aliasRef = `${imageBase}:${tag}`;
-		(0, node_child_process.execFileSync)("docker", [
-			"tag",
-			fullImageRef,
-			aliasRef
-		], { stdio: "inherit" });
-		(0, node_child_process.execFileSync)("docker", ["push", aliasRef], { stdio: "inherit" });
-		console.log(`Successfully pushed ${aliasRef}`);
+	try {
+		(0, node_child_process.execFileSync)("docker", ["push", fullImageRef], { stdio: "inherit" });
+		console.log(`Successfully pushed ${fullImageRef}`);
+		for (const tag of aliasTags) {
+			const aliasRef = `${imageBase}:${tag}`;
+			(0, node_child_process.execFileSync)("docker", [
+				"tag",
+				fullImageRef,
+				aliasRef
+			], { stdio: "inherit" });
+			(0, node_child_process.execFileSync)("docker", ["push", aliasRef], { stdio: "inherit" });
+			console.log(`Successfully pushed ${aliasRef}`);
+		}
+	} catch (err) {
+		require_github_summary.summarizeDockerFailure(projectName, "push", 1);
+		throw err;
 	}
+	require_github_summary.summarizeDockerPush(projectName, imageBase, [version, ...aliasTags]);
 };
 main();
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 const require_docker_image = require('./docker-image-BUMKa_QH.js');
-const require_cli_args = require('./cli-args-DhJNQUdl.js');
+const require_github_summary = require('./github-summary-tzT8H1pT.js');
 let node_child_process = require("node:child_process");
 
 //#region src/run-docker.ts
@@ -19,8 +19,12 @@ const getCommitSha = () => {
 	}
 };
 const main = () => {
-	const args = require_cli_args.parseArgs(process.argv.slice(2));
+	const args = require_github_summary.parseArgs(process.argv.slice(2));
 	const mode = args.mode;
+	if (mode !== "build" && mode !== "push") {
+		console.error(`[@pagopa/nx-dx-docker-plugin] Invalid --mode: ${mode} (expected "build" or "push").`);
+		process.exit(1);
+	}
 	const projectRoot = args["project-root"];
 	const projectDisplayName = args["project-display-name"];
 	const imageName = args["image-name"];
@@ -57,15 +61,17 @@ const main = () => {
 		dockerArgs.push("--push");
 		for (const [key, value] of Object.entries(labels)) dockerArgs.push("--annotation", `index,manifest:org.opencontainers.image.${key}=${value}`);
 	}
-	const result = (0, node_child_process.spawnSync)("docker", dockerArgs, {
+	const exitCode = (0, node_child_process.spawnSync)("docker", dockerArgs, {
 		env: {
 			...process.env,
 			DOCKER_BUILDKIT: "1",
 			SOURCE_DATE_EPOCH: "0"
 		},
 		stdio: "inherit"
-	});
-	process.exit(result.status ?? 1);
+	}).status ?? 1;
+	if (exitCode !== 0) require_github_summary.summarizeDockerFailure(projectDisplayName, mode, exitCode);
+	else if (mode === "push") require_github_summary.summarizeDockerPush(projectDisplayName, imageName, publishTags);
+	process.exit(exitCode);
 };
 main();
 

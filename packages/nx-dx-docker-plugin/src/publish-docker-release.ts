@@ -27,6 +27,10 @@ import { join } from "node:path";
 
 import { parseArgs } from "./cli-args.ts";
 import { computeReleaseTags } from "./docker-image.ts";
+import {
+  summarizeDockerFailure,
+  summarizeDockerPush,
+} from "./github-summary.ts";
 
 /** Mirrors @nx/docker's own dry-run check (see version-utils.js). */
 const isDryRun = (): boolean => {
@@ -88,17 +92,24 @@ const main = (): void => {
     return;
   }
 
-  execFileSync("docker", ["push", fullImageRef], { stdio: "inherit" });
-  console.log(`Successfully pushed ${fullImageRef}`);
+  try {
+    execFileSync("docker", ["push", fullImageRef], { stdio: "inherit" });
+    console.log(`Successfully pushed ${fullImageRef}`);
 
-  for (const tag of aliasTags) {
-    const aliasRef = `${imageBase}:${tag}`;
-    execFileSync("docker", ["tag", fullImageRef, aliasRef], {
-      stdio: "inherit",
-    });
-    execFileSync("docker", ["push", aliasRef], { stdio: "inherit" });
-    console.log(`Successfully pushed ${aliasRef}`);
+    for (const tag of aliasTags) {
+      const aliasRef = `${imageBase}:${tag}`;
+      execFileSync("docker", ["tag", fullImageRef, aliasRef], {
+        stdio: "inherit",
+      });
+      execFileSync("docker", ["push", aliasRef], { stdio: "inherit" });
+      console.log(`Successfully pushed ${aliasRef}`);
+    }
+  } catch (err) {
+    summarizeDockerFailure(projectName, "push", 1);
+    throw err;
   }
+
+  summarizeDockerPush(projectName, imageBase, [version, ...aliasTags]);
 };
 
 main();

@@ -11,6 +11,10 @@ import { execFileSync, spawnSync } from "node:child_process";
 
 import { parseArgs } from "./cli-args.ts";
 import { computeImageTags, getProjectSlug } from "./docker-image.ts";
+import {
+  summarizeDockerFailure,
+  summarizeDockerPush,
+} from "./github-summary.ts";
 
 const getCommitSha = (): string => {
   try {
@@ -26,6 +30,12 @@ const getCommitSha = (): string => {
 const main = (): void => {
   const args = parseArgs(process.argv.slice(2));
   const mode = args.mode;
+  if (mode !== "build" && mode !== "push") {
+    console.error(
+      `[@pagopa/nx-dx-docker-plugin] Invalid --mode: ${mode} (expected "build" or "push").`,
+    );
+    process.exit(1);
+  }
   const projectRoot = args["project-root"];
   const projectDisplayName = args["project-display-name"];
   const imageName = args["image-name"];
@@ -107,7 +117,14 @@ const main = (): void => {
     stdio: "inherit",
   });
 
-  process.exit(result.status ?? 1);
+  const exitCode = result.status ?? 1;
+  if (exitCode !== 0) {
+    summarizeDockerFailure(projectDisplayName, mode, exitCode);
+  } else if (mode === "push") {
+    summarizeDockerPush(projectDisplayName, imageName, publishTags);
+  }
+
+  process.exit(exitCode);
 };
 
 main();
