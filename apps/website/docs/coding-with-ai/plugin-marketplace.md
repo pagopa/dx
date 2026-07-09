@@ -33,6 +33,7 @@ content:
     "azure@pagopa-dx": true,
     "project-management@pagopa-dx": true,
     "standards@pagopa-dx": true,
+    "tests@pagopa-dx": true,
     "typescript@pagopa-dx": true
   }
 }
@@ -121,6 +122,19 @@ Provides guidance to keep technology choices aligned with PagoPA DX standards.
 | Name               | Description                                                                                                                                                                                                                                                 |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `technology-radar` | Aligns chosen technologies with the PagoPA DX Technology Radar. Checks the radar status of cloud services, languages, frameworks, and other technologies before recommending them in code or documentation, and warns on deprecated or discouraged options. |
+
+---
+
+### `tests@pagopa-dx`
+
+Adds backend testing workflows for Node.js and TypeScript services at real
+runtime boundaries.
+
+**Skills**
+
+| Name                     | Description                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `generate-backend-tests` | Builds or extends backend tests for Node.js/TypeScript services using real runtimes, Testcontainers dependencies, optional `.env.test` cloud services, and integration and/or record-replay workflows. Useful for freeze-before-refactor coverage, cassette record/verify flows, Azure Functions harnesses, replacing mock-heavy tests, and deciding between integration and record-replay approaches. |
 
 ---
 
