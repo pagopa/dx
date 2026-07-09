@@ -103,20 +103,17 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
 | **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
 
-#### Pricing Coverage Tracker
+#### Pricing Coverage
 
 SaveMoney keeps two monetary signals separate:
 
 - **Retail Prices API** estimates the monthly list-price cost at risk for custom findings on resources with predictable pricing.
-- **🚧 Cost Management** should be used for complex, usage-based services where the real historical spend is more reliable than a synthetic list-price estimate. (Coming Soon)
+- **Azure Advisor** reports Microsoft-provided savings for Cost recommendations when available.
 
-| Status                              | Resources                                                                                                    | Pricing source      | Notes                                                                                                        |
-| :---------------------------------- | :----------------------------------------------------------------------------------------------------------- | :------------------ | :----------------------------------------------------------------------------------------------------------- |
-| **Covered by Retail Prices**        | Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans                                | Retail Prices API   | Linear SKU/region pricing; reported as `Estimated monthly cost at risk (custom)`.                            |
-| **Retail candidate to evaluate**    | Private Endpoints                                                                                            | Retail Prices API   | Only useful if SaveMoney keeps an orphan/disconnected signal that other tooling does not already cover well. |
-| **🚧 Use Cost Management instead**  | Storage Accounts, Container Apps, Cosmos DB, PostgreSQL Flexible Server, AKS, Log Analytics, gateways/LB/CDN | Cost Management API | Usage-based or multi-dimensional pricing; use real historical spend before ranking cleanup actions.          |
-| **No direct monetary estimate yet** | Network Interfaces, Static Web Apps, governance-only checks such as tags and preferred-location mismatches   | N/A                 | Keep as context/governance signals unless a concrete cost model is introduced.                               |
-| **Advisor savings**                 | Azure Advisor Cost recommendations                                                                           | Azure Advisor       | Microsoft-provided savings; reported separately as `Estimated monthly savings (advisor)`.                    |
+| Resources                                                                     | Pricing source    | Notes                                                                                          |
+| :---------------------------------------------------------------------------- | :---------------- | :--------------------------------------------------------------------------------------------- |
+| Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API | Reported as `Estimated monthly cost at risk (custom)`.                                         |
+| Azure Advisor Cost recommendations                                            | Azure Advisor     | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
 
 #### Generic Checks
 
