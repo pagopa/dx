@@ -1,3 +1,19 @@
+## 0.26.1 (2026-07-09)
+
+### 🩹 Fixes
+
+- - Add `--no-pricing` flag to the `savemoney` command so users can skip custom cost-at-risk pricing lookups when they need a faster offline run or want to avoid external Retail Prices API calls. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.4.0
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Mario Mupo @mamu0
+
 ## 0.26.0 (2026-07-09)
 
 ### 🚀 Features

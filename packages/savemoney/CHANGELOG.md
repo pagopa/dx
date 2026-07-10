@@ -1,3 +1,25 @@
+## 0.4.0 (2026-07-09)
+
+### 🚀 Features
+
+- - Add monthly cost estimation for custom findings: VM, Managed Disk, Public IP, and empty App Service Plan resources now show their estimated monthly cost when flagged as suspected unused. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+  - Pricing data is fetched from the Azure Retail Prices API (no authentication required) and cached locally for 24 hours.
+  - Lint report shows the resource cost once per resource header `(cost at risk: € X.XX/mo)`, not next to each individual finding.
+  - Summary trailer now shows two separate totals: `Estimated monthly cost at risk (custom)` and `Estimated monthly savings (advisor)`.
+  - Add `--no-pricing` CLI flag to disable custom cost-at-risk pricing lookups.
+
+
+### 🩹 Fixes
+
+- Separate custom cost-at-risk estimates from Advisor savings and wire pricing enrichment into Azure analyzers. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+- Introduce the internal Azure Retail Prices pricing module used by SaveMoney to estimate monthly cost-at-risk for custom findings, helping users prioritize unused resources with an approximate list-price impact. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Mario Mupo @mamu0
+
 ## 0.3.3 (2026-07-02)
 
 ### 🧱 Updated Dependencies
