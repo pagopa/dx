@@ -1,3 +1,15 @@
+## 0.22.0 (2026-07-09)
+
+### 🚀 Features
+
+- Add SKILL to generate integration tests. ([#1920](https://github.com/pagopa/dx/pull/1920))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.21.1 (2026-07-08)
 
 ### 🩹 Fixes

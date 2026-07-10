@@ -1,3 +1,14 @@
+## 0.4.2 (2026-07-09)
+
+### 🩹 Fixes
+
+- Fix `nx-release-publish` executor failing with "nothing to commit" when a module's subrepo main branch already matches the current content (e.g. concurrent legacy subtree sync), and fix a broken `git commit -m` argument quoting bug that split the release message into two arguments. ([#1953](https://github.com/pagopa/dx/pull/1953))
+- Authenticate git push to subrepo ([#1960](https://github.com/pagopa/dx/pull/1960))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.4.1 (2026-07-02)
 
 ### 🩹 Fixes

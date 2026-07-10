@@ -20,6 +20,7 @@ import type { NetworkManagementClient } from "@azure/arm-network";
 import type * as armResources from "@azure/arm-resources";
 
 import type { AnalysisResult, Thresholds } from "../../types.js";
+import type { PricingService } from "../pricing/pricing-service.js";
 import type { MetricsCache } from "../utils.js";
 
 /**
@@ -46,6 +47,11 @@ export type AnalyzerContext = {
    */
   metricsCache: MetricsCache;
   preferredLocation: string;
+  /**
+   * Optional pricing facade used to enrich findings with an estimated
+   * monthly cost. Absent when pricing is disabled via config / CLI.
+   */
+  pricing?: PricingService;
   resource: armResources.GenericResource;
   thresholds: Thresholds;
   timespanDays: number;

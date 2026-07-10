@@ -32,9 +32,9 @@ export type Finding = {
    */
   code: string;
   /**
-   * Estimated monthly cost that could be recovered by acting on this
-   * finding. Populated by Advisor and (in later phases) by the Retail
-   * Prices integration. Absent when the analyzer cannot estimate it.
+   * Estimated monthly saving for this specific finding. Populated by Advisor
+   * recommendations; custom Retail Prices estimates stay at resource level
+   * because they represent cost at risk, not a per-finding saving.
    */
   estimatedMonthlySavings?: Money;
   /**
@@ -128,6 +128,13 @@ export function findingsFromAnalysisResult(args: {
   if (sentences.length === 0) {
     return [];
   }
+  // We intentionally do NOT propagate any monetary estimate down to the
+  // individual findings: a per-resource cost (e.g. €29.94/mo for a VM)
+  // attached to a sentence like "No tags found" would falsely suggest
+  // "add the missing tags to save €29.94". The resource-level cost is
+  // carried instead by `AnalysisResult.estimatedMonthlySavings` and
+  // surfaced by the report layer as a per-resource header — see
+  // `azure/report.ts`.
   return sentences.map((sentence) => ({
     category: "cost" as const,
     code: code ?? "custom.unknown",

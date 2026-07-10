@@ -97,7 +97,10 @@ jobs:
       - name: Cache Nx
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
-          path: .nx/cache
+          path: |
+            .nx/cache
+            .nx/workspace-data
+            !.nx/workspace-data/d
           key: ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
