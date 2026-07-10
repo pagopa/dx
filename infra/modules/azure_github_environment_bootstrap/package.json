@@ -3,5 +3,10 @@
   "version": "5.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Sets up monorepo's settings and required Azure permissions and roles"
+  "description": "Sets up monorepo's settings and required Azure permissions and roles",
+  "scripts": {
+    "tf-init": "terraform init",
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
 }

@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Deploys an Azure Function App with storage, networking and RBAC configuration",
+  "provider": "azurerm",
+  "version": "6.0.0"
+}

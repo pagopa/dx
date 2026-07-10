@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const githubMocks = vi.hoisted(() => ({
   ensureGitHubRepository: vi.fn(),
+  getGitHubToken: vi.fn(),
 }));
 
 const execaMocks = vi.hoisted(() => ({
@@ -21,6 +22,7 @@ const osMocks = vi.hoisted(() => ({
 
 vi.mock("../octokit.ts", () => ({
   ensureGitHubRepository: githubMocks.ensureGitHubRepository,
+  getGitHubToken: githubMocks.getGitHubToken,
 }));
 
 vi.mock("execa", () => ({
@@ -287,6 +289,41 @@ it("uses shell mode plus explicit commit author and committer environment variab
   });
 });
 
+it("configures git credentials and keeps the remote URL token-free when a token is available", async () => {
+  const { commands } = createGitCommandHarness();
+  githubMocks.getGitHubToken.mockReturnValue("secret-token");
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
+  expect(commandStrings.join("\n")).not.toContain("secret-token");
+});
+
+it("skips git credential setup when no token is available", async () => {
+  const { commands } = createGitCommandHarness();
+  githubMocks.getGitHubToken.mockReturnValue(undefined);
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).not.toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
+});
+
 it("cleans up temporary directory after successful publish", async () => {
   createGitCommandHarness();
 
@@ -443,6 +480,66 @@ it("creates and force-pushes a tag named after version", async () => {
       cwd: expectedTempDir,
     },
   ]);
+});
+
+it("still tags and pushes when there is nothing to commit (content already matches remote)", async () => {
+  const { commands } = createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === 'git commit -m "Release 1.2.3"') {
+        return {
+          exitCode: 1,
+          stderr: "",
+          stdout: "On branch main\nnothing to commit, working tree clean",
+        };
+      }
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).resolves.toBe("published");
+
+  expect(commands.map((c) => c.command)).toEqual([
+    "git init -b main",
+    `git remote add origin ${expectedRepoUrl}`,
+    "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
+    "git ls-remote --exit-code --heads origin main",
+    "git fetch origin main",
+    "git checkout -B main origin/main",
+    "git add --all",
+    'git commit -m "Release 1.2.3"',
+    "git tag -f 1.2.3",
+    "git push origin main",
+    "git push origin refs/tags/1.2.3 --force",
+  ]);
+});
+
+it("fails when git commit fails for a reason other than nothing to commit", async () => {
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command === 'git commit -m "Release 1.2.3"') {
+        return {
+          exitCode: 1,
+          stderr: "fatal: unable to write commit object",
+          stdout: "",
+        };
+      }
+    },
+  });
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await expect(publishToGithub(publishInput)).rejects.toThrow(
+    /Failed to commit release 1.2.3/,
+  );
 });
 
 it("skips publishing when the remote tag already exists", async () => {

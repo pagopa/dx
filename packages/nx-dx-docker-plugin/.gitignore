@@ -1,2 +1,6 @@
+# dist/*.js is committed: Nx loads plugins from nx.json to compute the
+# project graph before any build target can run, so the built output must
+# already be on disk. Run `pnpm build` after changing src/ and commit the
+# resulting dist/*.js changes together with the source.
 !dist/
 dist/**/*.d.ts

@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Deploy a site-to-site vpn to enable network reachability between an AWS VPC and an Azure VNet",
+  "provider": "aws",
+  "version": "1.0.0"
+}

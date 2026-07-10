@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Release publish executor",
+  "description": "Pushes this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action), for projects using the official Nx Docker release flow (nx.release.docker.repositoryName)",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Project root containing the Dockerfile",
+      "type": "string"
+    },
+    "projectName": {
+      "description": "Project name used to match this project's release git tags and compute alias tags",
+      "type": "string"
+    }
+  },
+  "required": ["projectRoot", "projectName"]
+}

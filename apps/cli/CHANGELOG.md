@@ -1,3 +1,42 @@
+## 0.26.1 (2026-07-09)
+
+### 🩹 Fixes
+
+- - Add `--no-pricing` flag to the `savemoney` command so users can skip custom cost-at-risk pricing lookups when they need a faster offline run or want to avoid external Retail Prices API calls. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.4.0
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Mario Mupo @mamu0
+
+## 0.26.0 (2026-07-09)
+
+### 🚀 Features
+
+- Add SKILL to generate integration tests. ([#1920](https://github.com/pagopa/dx/pull/1920))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.25.3 (2026-07-07)
+
+### 🩹 Fixes
+
+- Fallback to a temporary git identity when dx init scaffolds a repository without git user.name or user.email configured. ([#1944](https://github.com/pagopa/dx/pull/1944))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.25.2 (2026-07-06)
 
 ### 🩹 Fixes

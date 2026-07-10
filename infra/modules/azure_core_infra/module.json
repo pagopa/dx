@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Sets up the core Azure infrastructure including VNet, DNS zones, and Key Vault. Useful to bootstrap production or development environments.",
+  "provider": "azurerm",
+  "version": "5.0.0"
+}

@@ -16,6 +16,6 @@ module "github_repository" {
     homepage_url           = "https://dx.pagopa.it"
     pull_request_bypassers = ["/dx-pagopa-bot"]
     environments           = ["dev", "prod"]
-    jira_boards_ids        = ["CES"]
+    jira_boards_ids        = ["CES", "AEPDF"]
   }
 }

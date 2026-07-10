@@ -1,39 +1,28 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-BUMKa_QH.js');
+const require_docker_image = require('./docker-image-D-GedRN7.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
 
-//#region src/docker-build-target.ts
-const RUN_DOCKER_SCRIPT = "packages/nx-dx-docker-plugin/dist/run-docker.js";
-const quoteArg = (value) => /\s/.test(value) ? `"${value}"` : value;
-const buildRunDockerCommand = (mode, projectRoot, projectDisplayName, imageName, options) => {
-	return `node ${RUN_DOCKER_SCRIPT} ${[
-		`--mode=${mode}`,
-		`--project-root=${projectRoot}`,
-		`--project-display-name=${quoteArg(projectDisplayName)}`,
-		`--image-name=${imageName}`,
-		`--default-branch=${options.defaultBranch}`,
-		`--image-authors=${quoteArg(options.imageAuthors)}`,
-		`--image-url=${options.imageUrl}`
-	].join(" ")}`;
-};
-const buildDockerBuildTarget = (projectRoot, projectDisplayName, imageName, options) => ({
-	command: buildRunDockerCommand("build", projectRoot, projectDisplayName, imageName, options),
+//#region src/docker-targets.ts
+const buildDockerBuildTarget = (options) => ({
+	executor: "@pagopa/nx-dx-docker-plugin:build",
 	metadata: {
 		description: "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
 		technologies: ["docker"]
-	}
+	},
+	options
 });
-const buildDockerPushTarget = (projectRoot, projectDisplayName, imageName, options, buildTargetName) => ({
-	command: buildRunDockerCommand("push", projectRoot, projectDisplayName, imageName, options),
+const buildDockerPushTarget = (options, buildTargetName) => ({
 	dependsOn: [buildTargetName],
+	executor: "@pagopa/nx-dx-docker-plugin:push",
 	metadata: {
 		description: "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
 		technologies: ["docker"]
-	}
+	},
+	options
 });
 
 //#endregion
@@ -47,6 +36,7 @@ const dockerPluginOptionsSchema = zod_v4.z.object({
 	imageUrl: nonEmptyString,
 	jsBuildTargetName: nonEmptyString,
 	packageTargetName: nonEmptyString,
+	platform: nonEmptyString,
 	pushTargetName: nonEmptyString,
 	registry: nonEmptyString
 });
@@ -55,6 +45,7 @@ const defaultOptions = {
 	defaultBranch: "main",
 	jsBuildTargetName: "build",
 	packageTargetName: "package",
+	platform: "linux/amd64,linux/arm64",
 	pushTargetName: "docker:push",
 	registry: "ghcr.io"
 };
@@ -65,6 +56,7 @@ const partialSchema = dockerPluginOptionsSchema.partial({
 	imageUrl: true,
 	jsBuildTargetName: true,
 	packageTargetName: true,
+	platform: true,
 	pushTargetName: true,
 	registry: true
 });
@@ -150,7 +142,7 @@ const getProjectName = (workspaceRoot, projectRoot) => {
 * Detects the *official* Nx Docker release flow's per-project override
 * (`nx.release.docker.repositoryName` in package.json). Projects using it
 * get their `nx-release-publish` target overridden to also push the
-* dynamic alias tags (see publish-docker-release.ts), since
+* dynamic alias tags (see executors/release-publish), since
 * `@nx/docker:release-publish` on its own only ever pushes a single
 * version-only tag.
 */
@@ -176,16 +168,28 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		targets[options.packageTargetName] = buildPackageTarget(projectRoot, projectName, options.jsBuildTargetName);
 	}
 	const projectDisplayName = require_docker_image.getProjectDisplayName(context.workspaceRoot, projectRoot);
-	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectRoot, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
-	targets[options.buildTargetName] = buildDockerBuildTarget(projectRoot, projectDisplayName, imageName, options);
-	targets[options.pushTargetName] = buildDockerPushTarget(projectRoot, projectDisplayName, imageName, options, options.buildTargetName);
+	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectDisplayName, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
+	const dockerRunOptions = {
+		defaultBranch: options.defaultBranch,
+		imageAuthors: options.imageAuthors,
+		imageName,
+		imageUrl: options.imageUrl,
+		platform: options.platform,
+		projectDisplayName,
+		projectRoot
+	};
+	targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
+	targets[options.pushTargetName] = buildDockerPushTarget(dockerRunOptions, options.buildTargetName);
 	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
-		executor: "nx:run-commands",
+		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
 			technologies: ["docker"]
 		},
-		options: { command: `node packages/nx-dx-docker-plugin/dist/publish-docker-release.js --project-root=${projectRoot} --project-name=${projectDisplayName}` }
+		options: {
+			projectName: projectDisplayName,
+			projectRoot
+		}
 	};
 	return { projects: { [projectRoot]: {
 		root: projectRoot,

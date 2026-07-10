@@ -1,13 +1,4 @@
 locals {
-  naming_config = {
-    prefix          = var.environment.prefix
-    environment     = var.environment.env_short
-    location        = var.environment.location
-    domain          = var.environment.domain
-    name            = var.environment.app_name
-    instance_number = tonumber(var.environment.instance_number)
-  }
-
   existing_resources = {
     prefix          = var.environment.prefix
     environment     = var.environment.env_short
@@ -30,7 +21,7 @@ data "azurerm_log_analytics_workspace" "logs" {
 }
 
 resource "azurerm_resource_group" "sut" {
-  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
   location = var.environment.location
 
   tags = var.tags
@@ -48,7 +39,7 @@ resource "random_integer" "instance_base" {
 }
 
 resource "azurerm_container_app_environment" "sut" {
-  name                       = provider::dx::resource_name(merge(local.naming_config, { resource_type = "container_app_environment" }))
+  name                       = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_environment" }))
   resource_group_name        = azurerm_resource_group.sut.name
   location                   = var.environment.location
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.logs.id

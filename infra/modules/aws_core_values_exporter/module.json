@@ -1,0 +1,6 @@
+{
+  "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
+  "description": "Allow to output the main core values of configurations deployed via aws-core-infra module",
+  "provider": "aws",
+  "version": "1.0.0"
+}

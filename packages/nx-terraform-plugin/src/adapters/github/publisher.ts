@@ -5,7 +5,7 @@ import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
-import { ensureGitHubRepository } from "./octokit.ts";
+import { ensureGitHubRepository, getGitHubToken } from "./octokit.ts";
 
 export interface PublishToGithubInput {
   description: string;
@@ -88,7 +88,22 @@ export const publishToGithub = async (
     const safe$ = $({ reject: false });
 
     await $`git init -b main`;
-    await $`git remote add origin ${repoUrl}`;
+
+    // Subrepo git operations (ls-remote, fetch, push) run over HTTPS and need
+    // credentials. Anonymous HTTPS can read a public repo, but `git push`
+    // requires auth or git prompts for a username (fatal in CI). `gh auth
+    // setup-git` installs a git credential helper that reads GH_TOKEN /
+    // GITHUB_TOKEN and serves credentials for github.com HTTPS remotes, so the
+    // token never lands in the remote URL, `.git/config`, or `git remote -v`
+    // output, and every later git operation is covered without per-call wiring.
+    if (getGitHubToken() !== undefined) {
+      await $`gh auth setup-git`;
+    }
+
+    const remoteAdd = await safe$`git remote add origin ${repoUrl}`;
+    if (remoteAdd.exitCode !== 0) {
+      throw new Error(`Failed to add git remote origin for ${repoUrl}`);
+    }
 
     const remoteTag =
       await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
@@ -113,7 +128,26 @@ export const publishToGithub = async (
       await clearExportWorkingTree(tempExportDir);
       await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
       await $`git add --all`;
-      await $`git commit -m "Release ${input.version}"`;
+
+      // The subrepo's main branch may already match the module's current
+      // contents (e.g. a concurrent legacy sync pushed the same tree first).
+      // In that case there's nothing to commit, but we must still tag and
+      // push so the release completes instead of failing.
+      //
+      // `shell: true` makes execa join argv into a single string that the
+      // shell re-parses, so an interpolated value must be quoted here or it
+      // gets word-split on whitespace (e.g. "Release 1.2.3" -> two args).
+      const commitResult =
+        await safe$`git commit -m "Release ${input.version}"`;
+      if (commitResult.exitCode !== 0) {
+        const commitOutput = `${commitResult.stdout}${commitResult.stderr}`;
+        if (!commitOutput.includes("nothing to commit")) {
+          throw new Error(
+            `Failed to commit release ${input.version} for ${repoUrl}: ${commitOutput}`,
+          );
+        }
+      }
+
       await $`git tag -f ${input.version}`;
       await $`git push origin main`;
       await $`git push origin refs/tags/${input.version} --force`;
