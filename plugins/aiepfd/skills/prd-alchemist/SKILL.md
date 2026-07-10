@@ -12,6 +12,13 @@ reads all of it, makes sense of it, and writes a PRD that captures what
 has been understood so far — including what is still unclear. The finished PRD
 carries a metadata status of `draft` so a later stage can advance it.
 
+## Shared glossary
+
+Before proceeding, read the shared plugin glossary at
+[`../../references/glossary.md`](../../references/glossary.md). Terms such as
+PRD, material-first, interview-first, linked artifact, open question, gap,
+metadata frontmatter, and stable ID use the definitions from that glossary.
+
 ## About PRDs
 
 A Product Requirements Document (PRD) is a shared artifact that aligns the people
