@@ -28,13 +28,31 @@ const getProjectDisplayName = (workspaceRoot, projectRoot) => {
 * `repositoryNameOverride` lets a project pin the exact `<namespace>/<name>`
 * path used by `docker:build`/`docker:push` (e.g. to match a pre-existing
 * image name from before this plugin existed), instead of the default
-* `<imageNamePrefix>/<project-slug>` convention. Deliberately a *different*
+* `<imageNamePrefix>/<image-slug>` convention. Deliberately a *different*
 * package.json field than Nx's own `nx.release.docker.repositoryName` (see
 * `getDockerRepositoryNameOverride` in index.ts): that one also swaps the
 * `nx-release-publish` executor, which would be wrong for projects (like
 * npm packages) whose `nx-release-publish` must stay `@nx/js:release-publish`.
 */
-const getImageName = (registry, imageNamePrefix, projectRoot, repositoryNameOverride) => `${registry}/${repositoryNameOverride ?? `${imageNamePrefix}/${getProjectSlug(projectRoot)}`}`;
+const getImageName = (registry, imageNamePrefix, projectDisplayName, repositoryNameOverride) => `${registry}/${repositoryNameOverride ?? `${imageNamePrefix}/${getImageSlug(projectDisplayName)}`}`;
+/**
+* The per-project path segment of the pushed image name: the project's
+* display name (package.json's "name", stripped of any npm scope) rather
+* than the full nested project path — Nx already enforces unique project
+* names workspace-wide, so no path nesting is needed to avoid collisions
+* within a repo, and `imageNamePrefix` already isolates images *across*
+* repos. When there's no package.json name to draw from,
+* `projectDisplayName` already falls back to the path-based slug (see
+* `getProjectDisplayName`), so this still degrades gracefully for
+* non-JS Docker projects.
+*
+* Deliberately independent of `getProjectSlug`, which stays purely
+* path-based because it also has to match `@nx/docker`'s own local image
+* ref for its generated `docker:run` target (see `getProjectNameFromPath`
+* in `@nx/docker`'s plugin) — changing that would break `docker run`
+* against the image this plugin builds.
+*/
+const getImageSlug = (projectDisplayName) => slugifyRef(projectDisplayName.replace(/^@[^/]+\//, ""));
 const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 /**
 * `projectName` ultimately comes from an unsanitized CLI argument
@@ -113,7 +131,7 @@ const isHighestReleasedVersion = (projectName, currentVersion) => {
 * be ambiguous/unstable), and `latest` when this is the highest version
 * released so far for the project (see `isHighestReleasedVersion`). Returns
 * an empty array when `version` isn't a valid semver string. Shared by
-* `computeImageTags` (CI tag-push events) and `publish-docker-release.ts`
+* `computeImageTags` (CI tag-push events) and the `release-publish` executor
 * (wraps `@nx/docker`'s own `nx-release-publish` executor, which only ever
 * pushes a single version-only tag).
 */

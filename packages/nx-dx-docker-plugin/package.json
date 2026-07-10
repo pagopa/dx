@@ -16,7 +16,7 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": ["dist", "executors.json", "src/executors/**/schema.json"],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
@@ -24,14 +24,17 @@
   "scripts": {
     "build": "tsdown"
   },
+  "executors": "./executors.json",
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "engines": {
     "node": ">=22.0.0"

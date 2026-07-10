@@ -1,20 +1,35 @@
-#!/usr/bin/env node
-// Executed at task-RUN time — deliberately never at Nx project-graph
-// construction time. Nx's project graph (and any target `args` baked in by
-// a plugin's `createNodesV2`) is cached keyed off file hashes, not off
-// `GITHUB_*` env vars, so computing tags/labels/timestamps in the plugin
-// itself would freeze a possibly-stale set into that cache. Running this
-// script fresh on every invocation instead matches how
-// `docker/metadata-action` recomputes tags as a discrete CI step on every
-// run (see dx/actions/docker-build-push).
+// Shared implementation for the `docker:build`/`docker:push` Nx executors
+// (see executors/docker-build, executors/docker-push — both are thin
+// wrappers around `runDockerCommand` below). Executed at task-RUN time —
+// deliberately never at Nx project-graph construction time: the project
+// graph (and any target `options` a plugin's `createNodesV2` bakes in) is
+// cached keyed off file hashes, not `GITHUB_*` env vars, so computing
+// tags/labels/timestamps in the plugin itself would freeze a possibly-stale
+// set into that cache. Running this fresh on every executor invocation
+// instead matches how `docker/metadata-action` recomputes tags as a
+// discrete CI step on every run (see dx/actions/docker-build-push).
 import { execFileSync, spawnSync } from "node:child_process";
+import { z } from "zod/v4";
 
-import { parseArgs } from "./cli-args.ts";
 import { computeImageTags, getProjectSlug } from "./docker-image.ts";
 import {
   summarizeDockerFailure,
   summarizeDockerPush,
 } from "./github-summary.ts";
+
+const nonEmptyString = z.string().min(1);
+
+export const dockerRunOptionsSchema = z.object({
+  defaultBranch: nonEmptyString,
+  imageAuthors: nonEmptyString,
+  imageName: nonEmptyString,
+  imageUrl: nonEmptyString,
+  platform: nonEmptyString.default("linux/amd64,linux/arm64"),
+  projectDisplayName: nonEmptyString,
+  projectRoot: nonEmptyString,
+});
+
+export type DockerRunOptions = z.infer<typeof dockerRunOptionsSchema>;
 
 const getCommitSha = (): string => {
   try {
@@ -27,21 +42,34 @@ const getCommitSha = (): string => {
   }
 };
 
-const main = (): void => {
-  const args = parseArgs(process.argv.slice(2));
-  const mode = args.mode;
-  if (mode !== "build" && mode !== "push") {
-    console.error(
-      `[@pagopa/nx-dx-docker-plugin] Invalid --mode: ${mode} (expected "build" or "push").`,
-    );
-    process.exit(1);
-  }
-  const projectRoot = args["project-root"];
-  const projectDisplayName = args["project-display-name"];
-  const imageName = args["image-name"];
-  const defaultBranch = args["default-branch"];
-  const imageAuthors = args["image-authors"];
-  const imageUrl = args["image-url"];
+/**
+ * Runs `docker build`/`docker buildx build --push` with full OCI labels and
+ * a multi-tag strategy (RFC-DX-076 feature parity with
+ * `docker/metadata-action`). Shared by the `docker:build` and `docker:push`
+ * executors, which differ only in whether they add the local untagged
+ * alias tag (`build`) or `--push`/annotations (`push`).
+ *
+ * `workspaceRoot` (the executor's `context.root`, not `process.cwd()`) is
+ * used as the docker build's `cwd`, so the build context (`.`) is always
+ * the monorepo root and `--file {projectRoot}/Dockerfile` always resolves
+ * correctly — per RFC-DX-076's Option 4 (Docker context at the monorepo
+ * root, full build inside Docker), regardless of the directory an
+ * operator happens to invoke `nx` from.
+ */
+export const runDockerCommand = (
+  mode: "build" | "push",
+  options: DockerRunOptions,
+  workspaceRoot: string,
+): { readonly success: boolean } => {
+  const {
+    defaultBranch,
+    imageAuthors,
+    imageName,
+    imageUrl,
+    platform,
+    projectDisplayName,
+    projectRoot,
+  } = options;
 
   const tags = computeImageTags(projectDisplayName, defaultBranch);
 
@@ -49,7 +77,7 @@ const main = (): void => {
     console.log(
       `[@pagopa/nx-dx-docker-plugin] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`,
     );
-    process.exit(0);
+    return { success: true };
   }
 
   const publishTags = tags.length > 0 ? tags : ["dev"];
@@ -68,7 +96,7 @@ const main = (): void => {
     "--file",
     `${projectRoot}/Dockerfile`,
     "--platform",
-    "linux/amd64,linux/arm64",
+    platform,
   ];
 
   if (mode === "build") {
@@ -109,6 +137,7 @@ const main = (): void => {
   }
 
   const result = spawnSync("docker", dockerArgs, {
+    cwd: workspaceRoot,
     env: {
       ...process.env,
       DOCKER_BUILDKIT: "1",
@@ -120,11 +149,11 @@ const main = (): void => {
   const exitCode = result.status ?? 1;
   if (exitCode !== 0) {
     summarizeDockerFailure(projectDisplayName, mode, exitCode);
-  } else if (mode === "push") {
-    summarizeDockerPush(projectDisplayName, imageName, publishTags);
+    return { success: false };
   }
 
-  process.exit(exitCode);
+  if (mode === "push") {
+    summarizeDockerPush(projectDisplayName, imageName, publishTags);
+  }
+  return { success: true };
 };
-
-main();

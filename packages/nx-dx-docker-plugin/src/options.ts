@@ -33,6 +33,7 @@ const dockerPluginOptionsSchema = z.object({
   imageUrl: nonEmptyString,
   jsBuildTargetName: nonEmptyString,
   packageTargetName: nonEmptyString,
+  platform: nonEmptyString,
   pushTargetName: nonEmptyString,
   registry: nonEmptyString,
 });
@@ -44,6 +45,7 @@ type DefaultableOption =
   | "defaultBranch"
   | "jsBuildTargetName"
   | "packageTargetName"
+  | "platform"
   | "pushTargetName"
   | "registry";
 
@@ -52,6 +54,7 @@ const defaultOptions: Pick<DockerPluginOptions, DefaultableOption> = {
   defaultBranch: "main",
   jsBuildTargetName: "build",
   packageTargetName: "package",
+  platform: "linux/amd64,linux/arm64",
   pushTargetName: "docker:push",
   registry: "ghcr.io",
 };
@@ -63,6 +66,7 @@ const partialSchema = dockerPluginOptionsSchema.partial({
   imageUrl: true,
   jsBuildTargetName: true,
   packageTargetName: true,
+  platform: true,
   pushTargetName: true,
   registry: true,
 });

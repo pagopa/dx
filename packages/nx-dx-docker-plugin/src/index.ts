@@ -8,7 +8,7 @@
 // - the `docker:build`/`docker:push` targets for *every* project with a
 //   Dockerfile, to reach feature parity with `docker/metadata-action`
 //   (full OCI labels, multi-tag strategy, provenance/reproducibility flags —
-//   see docker-build-target.ts for the rationale on why this plugin owns the
+//   see docker-targets.ts for the rationale on why this plugin owns the
 //   whole target instead of layering on top of `@nx/docker`'s own).
 import {
   type CreateNodesContextV2,
@@ -20,11 +20,11 @@ import {
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
+import { getImageName, getProjectDisplayName } from "./docker-image.ts";
 import {
   buildDockerBuildTarget,
   buildDockerPushTarget,
-} from "./docker-build-target.ts";
-import { getImageName, getProjectDisplayName } from "./docker-image.ts";
+} from "./docker-targets.ts";
 import {
   type DockerPluginOptions,
   parseDockerReleasePluginOptions,
@@ -93,7 +93,7 @@ export const getProjectName = (
  * Detects the *official* Nx Docker release flow's per-project override
  * (`nx.release.docker.repositoryName` in package.json). Projects using it
  * get their `nx-release-publish` target overridden to also push the
- * dynamic alias tags (see publish-docker-release.ts), since
+ * dynamic alias tags (see executors/release-publish), since
  * `@nx/docker:release-publish` on its own only ever pushes a single
  * version-only tag.
  */
@@ -155,27 +155,29 @@ export const createDockerReleaseNodes = (
   const imageName = getImageName(
     options.registry,
     options.imageNamePrefix,
-    projectRoot,
+    projectDisplayName,
     getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ??
       undefined,
   );
 
-  targets[options.buildTargetName] = buildDockerBuildTarget(
-    projectRoot,
-    projectDisplayName,
+  const dockerRunOptions = {
+    defaultBranch: options.defaultBranch,
+    imageAuthors: options.imageAuthors,
     imageName,
-    options,
-  );
+    imageUrl: options.imageUrl,
+    platform: options.platform,
+    projectDisplayName,
+    projectRoot,
+  };
 
-  // Always exposed: tags are resolved at task-run time (see run-docker.ts),
+  targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
+
+  // Always exposed: tags are resolved at task-run time (see docker-run.ts),
   // not here at graph-construction time, so we can't know yet whether
-  // there'll be anything CI-computed to publish. run-docker.ts no-ops
+  // there'll be anything CI-computed to publish. docker-run.ts no-ops
   // cleanly when it isn't running in CI.
   targets[options.pushTargetName] = buildDockerPushTarget(
-    projectRoot,
-    projectDisplayName,
-    imageName,
-    options,
+    dockerRunOptions,
     options.buildTargetName,
   );
 
@@ -183,14 +185,15 @@ export const createDockerReleaseNodes = (
     getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null
   ) {
     targets["nx-release-publish"] = {
-      executor: "nx:run-commands",
+      executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       metadata: {
         description:
           "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
         technologies: ["docker"],
       },
       options: {
-        command: `node packages/nx-dx-docker-plugin/dist/publish-docker-release.js --project-root=${projectRoot} --project-name=${projectDisplayName}`,
+        projectName: projectDisplayName,
+        projectRoot,
       },
     };
   }

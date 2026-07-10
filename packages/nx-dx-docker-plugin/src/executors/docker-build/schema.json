@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Docker build executor",
+  "description": "Builds this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Project root containing the Dockerfile",
+      "type": "string"
+    },
+    "projectDisplayName": {
+      "description": "Human-readable project name used for OCI labels and to match this project's release git tags",
+      "type": "string"
+    },
+    "imageName": {
+      "description": "Full <registry>/<namespace>/<repo> image reference, without a tag",
+      "type": "string"
+    },
+    "defaultBranch": {
+      "description": "Branch that gets the 'latest' tag",
+      "type": "string"
+    },
+    "imageAuthors": {
+      "description": "OCI 'authors' label value",
+      "type": "string"
+    },
+    "imageUrl": {
+      "description": "OCI 'source'/'url' label value",
+      "type": "string"
+    },
+    "platform": {
+      "description": "Comma-separated `docker buildx --platform` value",
+      "type": "string",
+      "default": "linux/amd64,linux/arm64"
+    }
+  },
+  "required": [
+    "projectRoot",
+    "projectDisplayName",
+    "imageName",
+    "defaultBranch",
+    "imageAuthors",
+    "imageUrl"
+  ]
+}

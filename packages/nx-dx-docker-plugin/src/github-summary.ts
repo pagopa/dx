@@ -6,8 +6,8 @@
 // this is a silent no-op for local `nx run` invocations.
 import { appendFileSync } from "node:fs";
 
-const appendSummary = (markdown: string): void => {
-  const summaryFile = process.env.GITHUB_STEP_SUMMARY;
+const appendSummary = (markdown: string, env: NodeJS.ProcessEnv): void => {
+  const summaryFile = env.GITHUB_STEP_SUMMARY;
   if (!summaryFile) {
     return;
   }
@@ -26,17 +26,23 @@ export const summarizeDockerPush = (
   projectDisplayName: string,
   imageName: string,
   tags: readonly string[],
+  env: NodeJS.ProcessEnv = process.env,
 ): void => {
   const tagList = tags.map((tag) => `- \`${imageName}:${tag}\``).join("\n");
-  appendSummary(`### 🐳 ${projectDisplayName} — image pushed\n\n${tagList}`);
+  appendSummary(
+    `### 🐳 ${projectDisplayName} — image pushed\n\n${tagList}`,
+    env,
+  );
 };
 
 export const summarizeDockerFailure = (
   projectDisplayName: string,
   action: "build" | "push",
   exitCode: number,
+  env: NodeJS.ProcessEnv = process.env,
 ): void => {
   appendSummary(
     `### ❌ ${projectDisplayName} — docker ${action} failed (exit code ${exitCode})`,
+    env,
   );
 };

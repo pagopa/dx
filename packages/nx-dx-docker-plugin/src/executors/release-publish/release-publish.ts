@@ -1,5 +1,7 @@
-#!/usr/bin/env node
-// Wraps @nx/docker's own `nx-release-publish` behavior: the official
+// Nx executor wired as `nx-release-publish` for projects using the
+// *official* Nx Docker release flow (`nx.release.docker.repositoryName` in
+// package.json) — see index.ts's `getDockerRepositoryNameOverride`. Wraps
+// @nx/docker's own `nx-release-publish` behavior: the official
 // `@nx/docker:release-publish` executor only ever pushes a single,
 // version-only tag (it reads `tmp/<projectRoot>/.docker-version`, a file
 // written by `nx release version` via `docker tag <local-alias>
@@ -14,23 +16,28 @@
 // logic: `nx release publish` never runs `docker:push`, it runs
 // `nx-release-publish` directly.
 //
-// This script reads that same `.docker-version` file (so it stays in sync
-// with whatever version `nx release version` just decided) and, in
+// This executor reads that same `.docker-version` file (so it stays in
+// sync with whatever version `nx release version` just decided) and, in
 // addition to pushing that primary version tag itself, also computes and
 // pushes the alias tags via `computeReleaseTags` (major, major.minor, and
 // `latest` when this is the highest released version) — reusing the exact
 // same logic `docker:push` already uses for CI tag-push events, so both
 // paths agree on what "latest" means.
+import type { ExecutorContext, PromiseExecutor } from "@nx/devkit";
+
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { parseArgs } from "./cli-args.ts";
-import { computeReleaseTags } from "./docker-image.ts";
+import { computeReleaseTags } from "../../docker-image.ts";
 import {
   summarizeDockerFailure,
   summarizeDockerPush,
-} from "./github-summary.ts";
+} from "../../github-summary.ts";
+import {
+  type ReleasePublishExecutorInput,
+  releasePublishExecutorSchema,
+} from "./schema.ts";
 
 /** Mirrors @nx/docker's own dry-run check (see version-utils.js). */
 const isDryRun = (): boolean => {
@@ -48,21 +55,23 @@ const splitImageReference = (
   };
 };
 
-const main = (): void => {
-  const args = parseArgs(process.argv.slice(2));
-  const projectRoot = args["project-root"];
-  const projectName = args["project-name"];
-  if (!projectRoot || !projectName) {
-    console.error(
-      "[@pagopa/nx-dx-docker-plugin] --project-root and --project-name are required.",
+const runExecutor: PromiseExecutor<ReleasePublishExecutorInput> = async (
+  options,
+  context: ExecutorContext,
+) => {
+  const parseResult = releasePublishExecutorSchema.safeParse(options);
+  if (!parseResult.success) {
+    console.warn(
+      "[@pagopa/nx-dx-docker-plugin] Invalid nx-release-publish options:",
+      parseResult.error.issues,
     );
-    process.exit(1);
+    return { success: false };
   }
+  const { projectName, projectRoot } = parseResult.data;
 
-  // Matches @nx/docker's own `getDockerVersionPath(workspaceRoot, projectRoot)`;
-  // `nx:run-commands` executors run with cwd = workspace root by default.
+  // Matches @nx/docker's own `getDockerVersionPath(workspaceRoot, projectRoot)`.
   const versionFilePath = join(
-    process.cwd(),
+    context.root,
     "tmp",
     projectRoot,
     ".docker-version",
@@ -71,7 +80,7 @@ const main = (): void => {
     console.error(
       `[@pagopa/nx-dx-docker-plugin] Could not find ${versionFilePath}. Did you run 'nx release version'?`,
     );
-    process.exit(1);
+    return { success: false };
   }
 
   const fullImageRef = readFileSync(versionFilePath, "utf8").trim();
@@ -89,7 +98,7 @@ const main = (): void => {
         `Docker Image ${imageBase}:${tag} was not tagged/pushed as --dry-run is enabled.`,
       );
     }
-    return;
+    return { success: true };
   }
 
   try {
@@ -106,10 +115,12 @@ const main = (): void => {
     }
   } catch (err) {
     summarizeDockerFailure(projectName, "push", 1);
-    throw err;
+    console.error("[@pagopa/nx-dx-docker-plugin] Docker push failed:", err);
+    return { success: false };
   }
 
   summarizeDockerPush(projectName, imageBase, [version, ...aliasTags]);
+  return { success: true };
 };
 
-main();
+export default runExecutor;

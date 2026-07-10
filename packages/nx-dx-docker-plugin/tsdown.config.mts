@@ -16,9 +16,13 @@ export default defineConfig({
   dts: false,
   entry: {
     "docker-prebuild": "src/docker-prebuild.ts",
+    "executors/docker-build/docker-build":
+      "src/executors/docker-build/docker-build.ts",
+    "executors/docker-push/docker-push":
+      "src/executors/docker-push/docker-push.ts",
+    "executors/release-publish/release-publish":
+      "src/executors/release-publish/release-publish.ts",
     index: "src/index.ts",
-    "publish-docker-release": "src/publish-docker-release.ts",
-    "run-docker": "src/run-docker.ts",
   },
   fixedExtension: false,
   format: "cjs",
