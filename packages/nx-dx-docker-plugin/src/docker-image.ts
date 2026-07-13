@@ -1,7 +1,7 @@
 // Image naming and tag-strategy helpers. Reaches feature parity with
 // `docker/metadata-action`: `latest` on the default branch, semver tags
 // derived from a project-scoped release tag (`{projectName}@{version}`,
-// skipping the major-only alias for 0.x pre-releases), a branch-ref tag, and
+// skipping the major-only alias for 0.x releases), a branch-ref tag, and
 // a short-sha tag. Also mirrors `docker/metadata-action`'s default
 // `flavor: latest=auto` behavior: `latest` also follows a semver release tag
 // when it is the highest version released so far for that project (see
@@ -111,6 +111,16 @@ interface ParsedSemver {
   readonly prerelease: string | undefined;
 }
 
+const compareNumericIdentifiers = (a: string, b: string): number => {
+  const normalizedA = a.replace(/^0+(?=\d)/, "");
+  const normalizedB = b.replace(/^0+(?=\d)/, "");
+  if (normalizedA.length !== normalizedB.length) {
+    return normalizedA.length - normalizedB.length;
+  }
+  if (normalizedA === normalizedB) return 0;
+  return normalizedA < normalizedB ? -1 : 1;
+};
+
 /** @param version A string already matched by `SEMVER_RE`. */
 const parseSemver = (version: string): ParsedSemver => {
   const [core, prerelease] = version.split(/-(.+)/);
@@ -131,7 +141,29 @@ const compareSemver = (a: ParsedSemver, b: ParsedSemver): number => {
   if (a.prerelease === b.prerelease) return 0;
   if (!a.prerelease) return 1;
   if (!b.prerelease) return -1;
-  return a.prerelease < b.prerelease ? -1 : 1;
+
+  const aIdentifiers = a.prerelease.split(".");
+  const bIdentifiers = b.prerelease.split(".");
+  const identifierCount = Math.max(aIdentifiers.length, bIdentifiers.length);
+
+  for (let index = 0; index < identifierCount; index += 1) {
+    const aIdentifier = aIdentifiers[index];
+    const bIdentifier = bIdentifiers[index];
+    if (aIdentifier === undefined) return -1;
+    if (bIdentifier === undefined) return 1;
+    if (aIdentifier === bIdentifier) continue;
+
+    const aIsNumeric = /^\d+$/.test(aIdentifier);
+    const bIsNumeric = /^\d+$/.test(bIdentifier);
+    if (aIsNumeric && bIsNumeric) {
+      return compareNumericIdentifiers(aIdentifier, bIdentifier);
+    }
+    if (aIsNumeric) return -1;
+    if (bIsNumeric) return 1;
+    return aIdentifier < bIdentifier ? -1 : 1;
+  }
+
+  return 0;
 };
 
 /**
@@ -179,7 +211,7 @@ export const isHighestReleasedVersion = (
 
 /**
  * Computes the alias tags for a single semver release version: the version
- * itself, `major.minor`, `major` (skipped for 0.x pre-releases, which would
+ * itself, `major.minor`, `major` (skipped for all 0.x releases, which would
  * be ambiguous/unstable), and `latest` when this is the highest version
  * released so far for the project (see `isHighestReleasedVersion`). Returns
  * an empty array when `version` isn't a valid semver string. Shared by

@@ -63,6 +63,13 @@ const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
 */
 const projectNameSchema = zod_v4.z.string().min(1).regex(/^[A-Za-z0-9@][A-Za-z0-9@/_.-]*$/, "must be a valid project/package name");
 const slugifyRef = (ref) => ref.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
+const compareNumericIdentifiers = (a, b) => {
+	const normalizedA = a.replace(/^0+(?=\d)/, "");
+	const normalizedB = b.replace(/^0+(?=\d)/, "");
+	if (normalizedA.length !== normalizedB.length) return normalizedA.length - normalizedB.length;
+	if (normalizedA === normalizedB) return 0;
+	return normalizedA < normalizedB ? -1 : 1;
+};
 /** @param version A string already matched by `SEMVER_RE`. */
 const parseSemver = (version) => {
 	const [core, prerelease] = version.split(/-(.+)/);
@@ -87,7 +94,23 @@ const compareSemver = (a, b) => {
 	if (a.prerelease === b.prerelease) return 0;
 	if (!a.prerelease) return 1;
 	if (!b.prerelease) return -1;
-	return a.prerelease < b.prerelease ? -1 : 1;
+	const aIdentifiers = a.prerelease.split(".");
+	const bIdentifiers = b.prerelease.split(".");
+	const identifierCount = Math.max(aIdentifiers.length, bIdentifiers.length);
+	for (let index = 0; index < identifierCount; index += 1) {
+		const aIdentifier = aIdentifiers[index];
+		const bIdentifier = bIdentifiers[index];
+		if (aIdentifier === void 0) return -1;
+		if (bIdentifier === void 0) return 1;
+		if (aIdentifier === bIdentifier) continue;
+		const aIsNumeric = /^\d+$/.test(aIdentifier);
+		const bIsNumeric = /^\d+$/.test(bIdentifier);
+		if (aIsNumeric && bIsNumeric) return compareNumericIdentifiers(aIdentifier, bIdentifier);
+		if (aIsNumeric) return -1;
+		if (bIsNumeric) return 1;
+		return aIdentifier < bIdentifier ? -1 : 1;
+	}
+	return 0;
 };
 /**
 * Mirrors `docker/metadata-action`'s default `flavor: latest=auto`: `latest`
@@ -127,7 +150,7 @@ const isHighestReleasedVersion = (projectName, currentVersion) => {
 };
 /**
 * Computes the alias tags for a single semver release version: the version
-* itself, `major.minor`, `major` (skipped for 0.x pre-releases, which would
+* itself, `major.minor`, `major` (skipped for all 0.x releases, which would
 * be ambiguous/unstable), and `latest` when this is the highest version
 * released so far for the project (see `isHighestReleasedVersion`). Returns
 * an empty array when `version` isn't a valid semver string. Shared by

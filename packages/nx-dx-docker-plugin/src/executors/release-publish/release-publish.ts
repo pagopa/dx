@@ -55,6 +55,18 @@ const splitImageReference = (
   };
 };
 
+const getExitCode = (error: unknown): number => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "status" in error &&
+    typeof error.status === "number"
+  ) {
+    return error.status;
+  }
+  return 1;
+};
+
 const runExecutor: PromiseExecutor<ReleasePublishExecutorInput> = async (
   options,
   context: ExecutorContext,
@@ -114,7 +126,7 @@ const runExecutor: PromiseExecutor<ReleasePublishExecutorInput> = async (
       console.log(`Successfully pushed ${aliasRef}`);
     }
   } catch (err) {
-    summarizeDockerFailure(projectName, "push", 1);
+    summarizeDockerFailure(projectName, "push", getExitCode(err));
     console.error("[@pagopa/nx-dx-docker-plugin] Docker push failed:", err);
     return { success: false };
   }

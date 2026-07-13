@@ -130,6 +130,18 @@ describe("isHighestReleasedVersion", () => {
 
     expect(isHighestReleasedVersion("my-app", "1.0.0")).toBe(true);
   });
+
+  it("compares numeric prerelease identifiers using SemVer precedence", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.0.0-rc.10\n");
+
+    expect(isHighestReleasedVersion("my-app", "1.0.0-rc.2")).toBe(false);
+  });
+
+  it("gives numeric prerelease identifiers lower precedence than non-numeric ones", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.0.0-beta.alpha\n");
+
+    expect(isHighestReleasedVersion("my-app", "1.0.0-beta.1")).toBe(false);
+  });
 });
 
 describe("computeReleaseTags", () => {

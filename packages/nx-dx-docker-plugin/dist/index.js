@@ -1,5 +1,5 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-D-GedRN7.js');
+const require_docker_image = require('./docker-image-CW19BeJe.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");

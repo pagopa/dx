@@ -1,4 +1,4 @@
-const require_docker_image = require('../../docker-image-D-GedRN7.js');
+const require_docker_image = require('../../docker-image-CW19BeJe.js');
 const require_github_summary = require('../../github-summary-cLWwWKVU.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
@@ -24,6 +24,10 @@ const splitImageReference = (fullImageRef) => {
 		imageBase: fullImageRef.slice(0, separatorIndex),
 		version: fullImageRef.slice(separatorIndex + 1)
 	};
+};
+const getExitCode = (error) => {
+	if (typeof error === "object" && error !== null && "status" in error && typeof error.status === "number") return error.status;
+	return 1;
 };
 const runExecutor = async (options, context) => {
 	const parseResult = releasePublishExecutorSchema.safeParse(options);
@@ -59,7 +63,7 @@ const runExecutor = async (options, context) => {
 			console.log(`Successfully pushed ${aliasRef}`);
 		}
 	} catch (err) {
-		require_github_summary.summarizeDockerFailure(projectName, "push", 1);
+		require_github_summary.summarizeDockerFailure(projectName, "push", getExitCode(err));
 		console.error("[@pagopa/nx-dx-docker-plugin] Docker push failed:", err);
 		return { success: false };
 	}
