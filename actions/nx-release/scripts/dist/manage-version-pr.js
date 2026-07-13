@@ -33,133 +33,98 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
   mod
 ));
 
-// ../../node_modules/.pnpm/content-type@2.0.0/node_modules/content-type/dist/index.js
-var require_dist = __commonJS({
-  "../../node_modules/.pnpm/content-type@2.0.0/node_modules/content-type/dist/index.js"(exports) {
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.format = format;
-    exports.parse = parse5;
-    var TEXT_REGEXP = /^[\u0009\u0020-\u007e\u0080-\u00ff]*$/;
-    var TOKEN_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-    var QUOTE_REGEXP = /[\\"]/g;
-    var TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
-    var NullObject = /* @__PURE__ */ (() => {
-      const C = function() {
-      };
-      C.prototype = /* @__PURE__ */ Object.create(null);
-      return C;
-    })();
-    function format(obj) {
-      const { type, parameters } = obj;
-      if (!type || !TYPE_REGEXP.test(type)) {
-        throw new TypeError(`Invalid type: ${type}`);
+// ../../node_modules/.pnpm/fast-content-type-parse@3.0.0/node_modules/fast-content-type-parse/index.js
+var require_fast_content_type_parse = __commonJS({
+  "../../node_modules/.pnpm/fast-content-type-parse@3.0.0/node_modules/fast-content-type-parse/index.js"(exports, module) {
+    var NullObject = function NullObject2() {
+    };
+    NullObject.prototype = /* @__PURE__ */ Object.create(null);
+    var paramRE = /; *([!#$%&'*+.^\w`|~-]+)=("(?:[\v\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\v\u0020-\u00ff])*"|[!#$%&'*+.^\w`|~-]+) */gu;
+    var quotedPairRE = /\\([\v\u0020-\u00ff])/gu;
+    var mediaTypeRE = /^[!#$%&'*+.^\w|~-]+\/[!#$%&'*+.^\w|~-]+$/u;
+    var defaultContentType = { type: "", parameters: new NullObject() };
+    Object.freeze(defaultContentType.parameters);
+    Object.freeze(defaultContentType);
+    function parse4(header) {
+      if (typeof header !== "string") {
+        throw new TypeError("argument header is required and must be a string");
       }
-      let result = type;
-      if (parameters) {
-        for (const param of Object.keys(parameters)) {
-          if (!TOKEN_REGEXP.test(param)) {
-            throw new TypeError(`Invalid parameter name: ${param}`);
-          }
-          result += `; ${param}=${qstring(parameters[param])}`;
+      let index = header.indexOf(";");
+      const type = index !== -1 ? header.slice(0, index).trim() : header.trim();
+      if (mediaTypeRE.test(type) === false) {
+        throw new TypeError("invalid media type");
+      }
+      const result = {
+        type: type.toLowerCase(),
+        parameters: new NullObject()
+      };
+      if (index === -1) {
+        return result;
+      }
+      let key;
+      let match;
+      let value;
+      paramRE.lastIndex = index;
+      while (match = paramRE.exec(header)) {
+        if (match.index !== index) {
+          throw new TypeError("invalid parameter format");
         }
+        index += match[0].length;
+        key = match[1].toLowerCase();
+        value = match[2];
+        if (value[0] === '"') {
+          value = value.slice(1, value.length - 1);
+          quotedPairRE.test(value) && (value = value.replace(quotedPairRE, "$1"));
+        }
+        result.parameters[key] = value;
+      }
+      if (index !== header.length) {
+        throw new TypeError("invalid parameter format");
       }
       return result;
     }
-    function parse5(header, options) {
-      const len = header.length;
-      let index = skipOWS(header, 0, len);
-      const valueStart = index;
-      index = skipValue(header, index, len);
-      const valueEnd = trailingOWS(header, valueStart, index);
-      const type = header.slice(valueStart, valueEnd).toLowerCase();
-      const parameters = options?.parameters === false ? new NullObject() : parseParameters(header, index, len);
-      return { type, parameters };
-    }
-    var SP = 32;
-    var HTAB = 9;
-    var SEMI = 59;
-    var EQ = 61;
-    var DQUOTE = 34;
-    var BSLASH = 92;
-    function parseParameters(header, index, len) {
-      const parameters = new NullObject();
-      parameter: while (index < len) {
-        index = skipOWS(header, index + 1, len);
-        const keyStart = index;
-        while (index < len) {
-          const code = header.charCodeAt(index);
-          if (code === SEMI)
-            continue parameter;
-          if (code === EQ) {
-            const keyEnd = trailingOWS(header, keyStart, index);
-            const key = header.slice(keyStart, keyEnd).toLowerCase();
-            index = skipOWS(header, index + 1, len);
-            if (index < len && header.charCodeAt(index) === DQUOTE) {
-              index++;
-              let value = "";
-              while (index < len) {
-                const code2 = header.charCodeAt(index++);
-                if (code2 === DQUOTE) {
-                  index = skipValue(header, index, len);
-                  if (parameters[key] === void 0)
-                    parameters[key] = value;
-                  break;
-                }
-                if (code2 === BSLASH && index < len) {
-                  value += header[index++];
-                  continue;
-                }
-                value += String.fromCharCode(code2);
-              }
-              continue parameter;
-            }
-            const valueStart = index;
-            index = skipValue(header, index, len);
-            if (parameters[key] === void 0) {
-              const valueEnd = trailingOWS(header, valueStart, index);
-              parameters[key] = header.slice(valueStart, valueEnd);
-            }
-            continue parameter;
-          }
-          index++;
+    function safeParse4(header) {
+      if (typeof header !== "string") {
+        return defaultContentType;
+      }
+      let index = header.indexOf(";");
+      const type = index !== -1 ? header.slice(0, index).trim() : header.trim();
+      if (mediaTypeRE.test(type) === false) {
+        return defaultContentType;
+      }
+      const result = {
+        type: type.toLowerCase(),
+        parameters: new NullObject()
+      };
+      if (index === -1) {
+        return result;
+      }
+      let key;
+      let match;
+      let value;
+      paramRE.lastIndex = index;
+      while (match = paramRE.exec(header)) {
+        if (match.index !== index) {
+          return defaultContentType;
         }
+        index += match[0].length;
+        key = match[1].toLowerCase();
+        value = match[2];
+        if (value[0] === '"') {
+          value = value.slice(1, value.length - 1);
+          quotedPairRE.test(value) && (value = value.replace(quotedPairRE, "$1"));
+        }
+        result.parameters[key] = value;
       }
-      return parameters;
-    }
-    function skipValue(str, index, len) {
-      while (index < len) {
-        const char = str.charCodeAt(index);
-        if (char === SEMI)
-          break;
-        index++;
+      if (index !== header.length) {
+        return defaultContentType;
       }
-      return index;
+      return result;
     }
-    function skipOWS(header, index, len) {
-      while (index < len) {
-        const char = header.charCodeAt(index);
-        if (char !== SP && char !== HTAB)
-          break;
-        index++;
-      }
-      return index;
-    }
-    function trailingOWS(header, start, end) {
-      while (end > start) {
-        const char = header.charCodeAt(end - 1);
-        if (char !== SP && char !== HTAB)
-          break;
-        end--;
-      }
-      return end;
-    }
-    function qstring(str) {
-      if (TOKEN_REGEXP.test(str))
-        return str;
-      if (TEXT_REGEXP.test(str))
-        return `"${str.replace(QUOTE_REGEXP, "\\$&")}"`;
-      throw new TypeError(`Invalid parameter value: ${str}`);
-    }
+    module.exports.default = { parse: parse4, safeParse: safeParse4 };
+    module.exports.parse = parse4;
+    module.exports.safeParse = safeParse4;
+    module.exports.defaultContentType = defaultContentType;
   }
 });
 
@@ -14778,7 +14743,7 @@ function Collection() {
 }
 var before_after_hook_default = { Collection };
 
-// ../../node_modules/.pnpm/@octokit+endpoint@11.0.3/node_modules/@octokit/endpoint/dist-bundle/index.js
+// ../../node_modules/.pnpm/@octokit+endpoint@11.0.2/node_modules/@octokit/endpoint/dist-bundle/index.js
 var VERSION = "0.0.0-development";
 var userAgent = `octokit-endpoint.js/${VERSION} ${getUserAgent()}`;
 var DEFAULTS = {
@@ -14913,7 +14878,7 @@ function isKeyOperator(operator) {
 function getValues(context, operator, key, modifier) {
   var value = context[key], result = [];
   if (isDefined(value) && value !== "") {
-    if (typeof value === "string" || typeof value === "number" || typeof value === "bigint" || typeof value === "boolean") {
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
       value = value.toString();
       if (modifier && modifier !== "*") {
         value = value.substring(0, parseInt(modifier, 10));
@@ -15091,107 +15056,8 @@ function withDefaults(oldDefaults, newDefaults) {
 }
 var endpoint = withDefaults(null, DEFAULTS);
 
-// ../../node_modules/.pnpm/@octokit+request@10.0.10/node_modules/@octokit/request/dist-bundle/index.js
-var import_content_type = __toESM(require_dist());
-
-// ../../node_modules/.pnpm/json-with-bigint@3.5.8/node_modules/json-with-bigint/json-with-bigint.js
-var intRegex = /^-?\d+$/;
-var noiseValue = /^-?\d+n+$/;
-var originalStringify = JSON.stringify;
-var originalParse = JSON.parse;
-var customFormat = /^-?\d+n$/;
-var bigIntsStringify = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
-var noiseStringify = /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
-var JSONStringify = (value, replacer, space) => {
-  if ("rawJSON" in JSON) {
-    return originalStringify(
-      value,
-      (key, value2) => {
-        if (typeof value2 === "bigint") return JSON.rawJSON(value2.toString());
-        if (Array.isArray(replacer) && replacer.includes(key)) return value2;
-        return value2;
-      },
-      space
-    );
-  }
-  if (!value) return originalStringify(value, replacer, space);
-  const convertedToCustomJSON = originalStringify(
-    value,
-    (key, value2) => {
-      const isNoise = typeof value2 === "string" && noiseValue.test(value2);
-      if (isNoise) return value2.toString() + "n";
-      if (typeof value2 === "bigint") return value2.toString() + "n";
-      if (Array.isArray(replacer) && replacer.includes(key)) return value2;
-      return value2;
-    },
-    space
-  );
-  const processedJSON = convertedToCustomJSON.replace(
-    bigIntsStringify,
-    "$1$2$3"
-  );
-  const denoisedJSON = processedJSON.replace(noiseStringify, "$1$2$3");
-  return denoisedJSON;
-};
-var featureCache = /* @__PURE__ */ new Map();
-var isContextSourceSupported = () => {
-  const parseFingerprint = JSON.parse.toString();
-  if (featureCache.has(parseFingerprint)) {
-    return featureCache.get(parseFingerprint);
-  }
-  try {
-    const result = JSON.parse(
-      "1",
-      (_, __, context) => !!context?.source && context.source === "1"
-    );
-    featureCache.set(parseFingerprint, result);
-    return result;
-  } catch {
-    featureCache.set(parseFingerprint, false);
-    return false;
-  }
-};
-var convertMarkedBigIntsReviver = (key, value, context, userReviver) => {
-  const isCustomFormatBigInt = typeof value === "string" && customFormat.test(value);
-  if (isCustomFormatBigInt) return BigInt(value.slice(0, -1));
-  const isNoiseValue = typeof value === "string" && noiseValue.test(value);
-  if (isNoiseValue) return value.slice(0, -1);
-  return value;
-};
-var JSONParseV2 = (text, reviver) => {
-  return JSON.parse(text, (key, value, context) => {
-    const isBigNumber = typeof value === "number" && (value > Number.MAX_SAFE_INTEGER || value < Number.MIN_SAFE_INTEGER);
-    const isInt = context && intRegex.test(context.source);
-    const isBigInt = isBigNumber && isInt;
-    if (isBigInt) return BigInt(context.source);
-    return value;
-  });
-};
-var MAX_INT = Number.MAX_SAFE_INTEGER.toString();
-var MAX_DIGITS = MAX_INT.length;
-var stringsOrLargeNumbers = /"(?:\\.|[^"])*"|-?(0|[1-9][0-9]*)(\.[0-9]+)?([eE][+-]?[0-9]+)?/g;
-var noiseValueWithQuotes = /^"-?\d+n+"$/;
-var JSONParse = (text, reviver) => {
-  if (!text) return originalParse(text, reviver);
-  if (isContextSourceSupported()) return JSONParseV2(text);
-  const serializedData = text.replace(
-    stringsOrLargeNumbers,
-    (text2, digits, fractional, exponential) => {
-      const isString = text2[0] === '"';
-      const isNoise = isString && noiseValueWithQuotes.test(text2);
-      if (isNoise) return text2.substring(0, text2.length - 1) + 'n"';
-      const isFractionalOrExponential = fractional || exponential;
-      const isLessThanMaxSafeInt = digits && (digits.length < MAX_DIGITS || digits.length === MAX_DIGITS && digits <= MAX_INT);
-      if (isString || isFractionalOrExponential || isLessThanMaxSafeInt)
-        return text2;
-      return '"' + text2 + 'n"';
-    }
-  );
-  return originalParse(
-    serializedData,
-    (key, value, context) => convertMarkedBigIntsReviver(key, value)
-  );
-};
+// ../../node_modules/.pnpm/@octokit+request@10.0.7/node_modules/@octokit/request/dist-bundle/index.js
+var import_fast_content_type_parse = __toESM(require_fast_content_type_parse());
 
 // ../../node_modules/.pnpm/@octokit+request-error@7.1.0/node_modules/@octokit/request-error/dist-src/index.js
 var RequestError = class extends Error {
@@ -15232,8 +15098,8 @@ var RequestError = class extends Error {
   }
 };
 
-// ../../node_modules/.pnpm/@octokit+request@10.0.10/node_modules/@octokit/request/dist-bundle/index.js
-var VERSION2 = "10.0.10";
+// ../../node_modules/.pnpm/@octokit+request@10.0.7/node_modules/@octokit/request/dist-bundle/index.js
+var VERSION2 = "10.0.7";
 var defaults_default = {
   headers: {
     "user-agent": `octokit-request.js/${VERSION2} ${getUserAgent()}`
@@ -15257,7 +15123,7 @@ async function fetchWrapper(requestOptions) {
   }
   const log = requestOptions.request?.log || console;
   const parseSuccessResponseBody = requestOptions.request?.parseSuccessResponseBody !== false;
-  const body = isPlainObject3(requestOptions.body) || Array.isArray(requestOptions.body) ? JSONStringify(requestOptions.body) : requestOptions.body;
+  const body = isPlainObject3(requestOptions.body) || Array.isArray(requestOptions.body) ? JSON.stringify(requestOptions.body) : requestOptions.body;
   const requestHeaders = Object.fromEntries(
     Object.entries(requestOptions.headers).map(([name, value]) => [
       name,
@@ -15351,12 +15217,12 @@ async function getResponseData(response) {
   if (!contentType) {
     return response.text().catch(noop);
   }
-  const mimetype = (0, import_content_type.parse)(contentType);
+  const mimetype = (0, import_fast_content_type_parse.safeParse)(contentType);
   if (isJSONResponse(mimetype)) {
     let text = "";
     try {
       text = await response.text();
-      return JSONParse(text);
+      return JSON.parse(text);
     } catch (err) {
       return text;
     }
@@ -18466,13 +18332,6 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
 }
 /*! Bundled license information:
-
-content-type/dist/index.js:
-  (*!
-   * content-type
-   * Copyright(c) 2015 Douglas Christopher Wilson
-   * MIT Licensed
-   *)
 
 @octokit/request-error/dist-src/index.js:
   (* v8 ignore else -- @preserve -- Bug with vitest coverage where it sees an else branch that doesn't exist *)

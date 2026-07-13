@@ -1,4 +1,4 @@
-import { t as __commonJSMin } from "./chunk-CiiB0FCw.js";
+import { t as __commonJSMin } from "./rolldown-runtime-BHkdefai.js";
 
 //#region ../../node_modules/.pnpm/bowser@2.14.1/node_modules/bowser/es5.js
 var require_es5 = /* @__PURE__ */ __commonJSMin(((exports, module) => {
