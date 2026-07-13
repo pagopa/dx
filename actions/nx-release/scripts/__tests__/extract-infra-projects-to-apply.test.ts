@@ -8,13 +8,21 @@ interface PullRequestData {
 
 const {
   extractTagEntriesFromPRBodyMock,
+  fsReadFileMock,
   getNxProjectNamesMock,
+  getNxProjectRootMock,
   isEnvironmentProjectMock,
   matchProjectNameMock,
   pullsGetMock,
 } = vi.hoisted(() => ({
   extractTagEntriesFromPRBodyMock: vi.fn<(prBody: string) => TagEntry[]>(),
+  fsReadFileMock: vi.fn<(path: string, encoding: string) => Promise<string>>(
+    async () => "",
+  ),
   getNxProjectNamesMock: vi.fn<() => Promise<string[]>>(async () => []),
+  getNxProjectRootMock: vi.fn<(projectName: string) => Promise<null | string>>(
+    async () => null,
+  ),
   isEnvironmentProjectMock: vi.fn<(projectName: string) => Promise<boolean>>(
     async () => false,
   ),
@@ -30,6 +38,12 @@ const {
   >(async () => ({ data: { body: null } })),
 }));
 
+vi.mock("node:fs/promises", () => ({
+  default: {
+    readFile: fsReadFileMock,
+  },
+}));
+
 vi.mock("../shared.js", async () => {
   const actual =
     await vi.importActual<typeof import("../shared.js")>("../shared.js");
@@ -43,6 +57,7 @@ vi.mock("../shared.js", async () => {
     }),
     extractTagEntriesFromPRBody: extractTagEntriesFromPRBodyMock,
     getNxProjectNames: getNxProjectNamesMock,
+    getNxProjectRoot: getNxProjectRootMock,
     getRepoInfo: async () => ({ owner: "pagopa", repo: "dx" }),
     isEnvironmentProject: isEnvironmentProjectMock,
     matchProjectName: matchProjectNameMock,
@@ -51,13 +66,13 @@ vi.mock("../shared.js", async () => {
 
 import { run } from "../extract-infra-projects-to-apply.js";
 
-describe("run", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.unstubAllEnvs();
-    vi.stubEnv("PR_NUMBER", "123");
-  });
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.unstubAllEnvs();
+  vi.stubEnv("PR_NUMBER", "123");
+});
 
+describe("run output", () => {
   it("outputs only matched environment projects", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
@@ -86,6 +101,12 @@ describe("run", () => {
     isEnvironmentProjectMock.mockImplementation(
       async (projectName) => projectName === "infra-resources-dev",
     );
+    getNxProjectRootMock.mockResolvedValue("infra/resources/dev");
+    fsReadFileMock.mockResolvedValue(
+      JSON.stringify({
+        version: "1.0.0",
+      }),
+    );
 
     const stdoutWriteSpy = vi
       .spyOn(process.stdout, "write")
@@ -101,7 +122,13 @@ describe("run", () => {
       pull_number: 123,
       repo: "dx",
     });
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("infra-resources-dev");
+    expect(stdoutWriteSpy).toHaveBeenCalledWith(
+      '[{"project":"infra-resources-dev","applyEnvironment":"infra-dev-cd","planEnvironment":"infra-dev-ci","runnerLabel":"dev"}]',
+    );
+    expect(fsReadFileMock).toHaveBeenCalledWith(
+      "infra/resources/dev/environment.json",
+      "utf8",
+    );
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "✓ infra-resources-dev is an environment project",
     );
@@ -126,7 +153,7 @@ describe("run", () => {
 
     await run();
 
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("");
+    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "::warning::PR body is empty, no environment projects to apply",
     );
@@ -149,7 +176,7 @@ describe("run", () => {
 
     await run();
 
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("");
+    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "::warning::No nx-release-tags metadata found in PR body, no environment projects to apply",
     );
@@ -176,12 +203,14 @@ describe("run", () => {
 
     await run();
 
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("");
+    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "::warning::No projects extracted from tags",
     );
   });
+});
 
+describe("run validation", () => {
   it("writes an empty string when matched projects are not environment projects", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
@@ -204,7 +233,7 @@ describe("run", () => {
 
     await run();
 
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("");
+    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
       "::warning::No environment projects found to apply",
     );
@@ -215,6 +244,34 @@ describe("run", () => {
 
     await expect(run()).rejects.toThrow(
       "PR_NUMBER environment variable is required",
+    );
+  });
+
+  it("throws when deployment metadata is invalid", async () => {
+    pullsGetMock.mockResolvedValue({
+      data: {
+        body: "<!-- nx-release-tags: [] -->",
+      },
+    });
+    extractTagEntriesFromPRBodyMock.mockReturnValue([
+      { path: null, tag: "infra-resources-dev@1.0.0", version: "1.0.0" },
+    ]);
+    getNxProjectNamesMock.mockResolvedValue(["infra-resources-dev"]);
+    matchProjectNameMock.mockReturnValue("infra-resources-dev");
+    isEnvironmentProjectMock.mockResolvedValue(true);
+    getNxProjectRootMock.mockResolvedValue("infra/resources/dev");
+    fsReadFileMock.mockResolvedValue(
+      JSON.stringify({
+        deployment: {
+          applyEnvironment: "",
+          planEnvironment: "infra-dev-ci",
+          runnerLabel: "dev",
+        },
+      }),
+    );
+
+    await expect(run()).rejects.toThrow(
+      'Invalid deployment metadata in "infra/resources/dev/environment.json"',
     );
   });
 });

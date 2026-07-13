@@ -25,6 +25,9 @@ outputs:
   published-pr-number:
     description: "PR number of the merged Version Packages PR whose projects were published in this run. Only set when release-mode is 'publish' (empty for 'publish-all', which republishes all public projects rather than a single merged PR)."
     value: ${{ steps.publish.outputs.pr-number }}
+  released-environment-matrix:
+    description: "JSON matrix of released Terraform environment projects and their GitHub deployment metadata. Set to [] when no environment project was released."
+    value: ${{ steps.publish.outputs.environment-matrix || '[]' }}
 
 runs:
   using: "composite"
@@ -178,7 +181,8 @@ runs:
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: build and publish all public projects (recovery mode)
           npx nx run-many --target=build --projects="tag:*:public"
-          npx nx release publish
+          npx nx release publish --projects="tag:*:public"
+          echo "environment-matrix=[]" >> "$GITHUB_OUTPUT"
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -191,6 +195,8 @@ runs:
           echo "pr-number=$LATEST_PR_NUMBER" >> "$GITHUB_OUTPUT"
 
           PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
+          ENVIRONMENT_MATRIX=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-infra-projects-to-apply.js")
+          echo "environment-matrix=$ENVIRONMENT_MATRIX" >> "$GITHUB_OUTPUT"
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"

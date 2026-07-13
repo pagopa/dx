@@ -52,7 +52,7 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts projects to publish from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
+1. Extracts projects to publish and released Terraform environment metadata from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
 2. Runs `npx nx release publish` with provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
@@ -72,12 +72,13 @@ This action automates the Nx release flow in three phases:
 
 ## Outputs
 
-| Output                | Description                                                                                                                                                                                                                       |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pull-request-number` | PR number created/updated for Version Packages                                                                                                                                                                                    |
-| `pull-request-url`    | PR URL created/updated for Version Packages                                                                                                                                                                                       |
-| `release-mode`        | Resolved release mode for this run: `skip`, `create-pr`, `publish`, or `publish-all`                                                                                                                                              |
-| `published-pr-number` | PR number of the merged Version Packages PR whose projects were published in this run. Only set when `release-mode` is `publish` (empty for `publish-all`, which republishes all public projects rather than a single merged PR). |
+| Output                        | Description                                                                                                                                                                                                                       |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pull-request-number`         | PR number created/updated for Version Packages                                                                                                                                                                                    |
+| `pull-request-url`            | PR URL created/updated for Version Packages                                                                                                                                                                                       |
+| `release-mode`                | Resolved release mode for this run: `skip`, `create-pr`, `publish`, or `publish-all`                                                                                                                                              |
+| `published-pr-number`         | PR number of the merged Version Packages PR whose projects were published in this run. Only set when `release-mode` is `publish` (empty for `publish-all`, which republishes all public projects rather than a single merged PR). |
+| `released-environment-matrix` | JSON matrix of released Terraform environments, including the Nx project and resolved plan/apply environment and runner metadata. Values default from the project directory and can be overridden in `environment.json`.          |
 
 ## Prerequisites
 
@@ -172,10 +173,11 @@ Used automatically on `pull_request` workflows. The action:
 `.nx/version-plans/**` changed in the push and the directory contains zero files. The action:
 
 1. Finds the latest merged `Version Packages` PR and extracts the list of released projects
-2. Builds and publishes only those projects (falls back to all public if no PR is found)
-3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
+2. Builds and publishes only public projects from that release
+3. Outputs deployment metadata for released Terraform environment projects so callers can run their protected plan/apply jobs
+4. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
-4. Ensures a GitHub Release exists for every release tag found in PR metadata,
+5. Ensures a GitHub Release exists for every release tag found in PR metadata,
    including tags that were already present from an earlier partial run;
    pre-release builds (versions containing `-`) are marked as pre-releases
 
@@ -184,9 +186,10 @@ Used automatically on `pull_request` workflows. The action:
 Triggered manually. The action:
 
 1. Builds and publishes **all** public projects (`tag:*:public`)
-2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
+2. Does not invoke Terraform environment publish targets; infrastructure recovery remains approval-gated
+3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
-3. Creates any missing GitHub Releases with extracted changelog notes
+4. Creates any missing GitHub Releases with extracted changelog notes
 
 ## Compatibility
 
