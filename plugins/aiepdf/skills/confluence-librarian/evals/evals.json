@@ -21,8 +21,7 @@
       "expectations": [
         "Preserves stable IDs and machine-facing status values exactly.",
         "Preserves headings, tables, links, and conditional N/A reasons.",
-        "Translates human-facing prose without translating code, URLs, or operation names.",
-        "Omits a leading H1 when it exactly matches the Confluence page title, while preserving other headings."
+        "Translates human-facing prose without translating code, URLs, or operation names."
       ],
       "files": []
     },
