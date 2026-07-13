@@ -3,45 +3,46 @@
   "evals": [
     {
       "id": 0,
-      "name": "messy-discovery-notes",
-      "prompt": "I just got out of a discovery call for a 'saved payment methods' feature and my notes are a total mess. Can you turn this into a first PRD draft? Here's everything I jotted down:\n\n- users hate re-typing their card every single time, esp on mobile\n- Marco from payments said tokenization is already there via the PSP so storing a token should be doable\n- \"why cant it just remember like amazon does\" - actual quote from a user interview\n- need to support at least visa/mastercard, amex maybe later\n- Giulia (design) wants a max of 5 saved cards shown, more than that gets ugly\n- security team: NEVER store the full PAN, only the token + last 4 digits\n- open q: do we let them set a default card?\n- launch target-ish end of Q3 but not confirmed\n- oh and we should probably let them delete a saved card too obviously",
-      "expected_output": "A coherent PRD draft with Status: draft, sections for context/problem, objectives, audience, scope signals, and an explicit open-questions/gaps section (e.g. default card, Amex timing, launch date). Rewrites the notes into prose rather than pasting them. Does not invent metrics or decisions.",
-      "assertions": [
-        "Output carries a Status metadata field set to 'draft'",
-        "Contains an explicit section listing open questions or gaps",
-        "Flags the 'default card' decision as an open question rather than deciding it",
-        "Preserves the security constraint: never store the full PAN, only token + last 4 digits",
-        "Rewrites the notes into coherent prose/sections rather than pasting the raw bullets verbatim",
-        "Does not invent success metrics, KPIs, or numbers that were not in the input"
+      "name": "complete-saved-payment-prd",
+      "prompt": "Write a structured PRD for a consumer payments app from this complete gathered material. Initiative: saved payment methods. Sponsor: Payments Director. Priority: high. Collection started 2026-06-10; release deadline is 2026-10-01 and observation closes 2026-11-15. Budget comes from the 2026 Payments roadmap. Jira initiative PAY-420 is in discovery. Users repeatedly entering card details on mobile abandon or slow down payments. The target audience is returning users paying by card. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks of release. User goal: reduce median repeat-payment completion time from 74 seconds to 45 seconds. Data comes from the payments funnel dashboard and is reviewed weekly. Must: save Visa and Mastercard tokens, select a saved card, delete a saved card. Should: set a default card. Won't: Amex in this release. Never store PAN; store PSP token and last four digits only. Maximum five visible cards. Customer care needs a troubleshooting guide for expired or declined saved cards. Engineering confirmed PSP tokenization exists. Design prototype: https://figma.example/saved-cards. Related technical RFC: RFC-88. A separate Design Review or SRS is not applicable because RFC-88 is the agreed technical artifact. The LRR and rollout plan do not exist yet and will be linked by 2026-09-01; Product owns this non-blocking follow-up. PM is responsible; Payments, Design, Security, Customer Care and Engineering are consulted as relevant. The standard committee and Engineering responsibilities apply. Main risk: users may believe the company stores full card data; mitigation is clear copy owned by Product and Security. Current process requires card entry on every payment. Experience intent: returning users select a masked saved card during checkout; the Figma prototype is the source of truth. High-level technical direction: reuse existing PSP tokenization; implementation detail remains in RFC-88. Technical dependency: PSP token availability and token lifecycle events. Release plan: internal validation in September, production deadline 2026-10-01, weekly monitoring until 2026-11-15. The decision to exclude Amex was confirmed on 2026-06-20 by the Payments Director. Project chart is not applicable because PAY-420 is the project reference. The schedule is the release plan above. Current status report: discovery complete and structured writing ready. There are no open blocking decisions. Use the canonical PRD structure and write it to prd.md.",
+      "expected_output": "A complete English PRD following the full stable-ID hierarchy, with status draft, concrete measurement, fixed artifact categories, outcome-oriented prose, and no unresolved blocking items. After writing, the agent asks whether to create a Confluence page.",
+      "expectations": [
+        "The PRD includes every canonical top-level section: Source inputs, Metadata, Related artifacts, Why, What, How, and Project management & monitoring",
+        "The PRD preserves stable English IDs including metadata.status, why.measurement, what.use-cases, how.technical-solutions, and project.decisions-research",
+        "metadata.status is draft",
+        "The measurement plan preserves the supplied baselines and targets without inventing metrics",
+        "The related-artifacts table keeps every fixed artifact category, including empty or future artifacts",
+        "The non-blocking LRR and rollout follow-up is recorded in project.decisions-research",
+        "The output asks whether the user wants a Confluence page only after the PRD is written"
       ],
       "files": []
     },
     {
       "id": 1,
-      "name": "scattered-support-signal",
-      "prompt": "We keep getting support tickets about people not finding their transaction history in our banking app. I don't have anything structured yet, just some scraps:\n\nFrom a Slack thread with support lead: \"3rd time this week someone asks where their old payments went. They scroll and give up. One guy thought money disappeared.\"\n\nBullet points my manager dropped in a DM:\n- current list only shows last 30 days\n- no search, no filter by date or amount\n- people want to find a specific payment for expense reports\n\nMy own note: maybe export to CSV? not sure if in scope.\n\nCan you make sense of this and start a PRD for me?",
-      "expected_output": "A draft PRD (Status: draft) that synthesizes the support signal into a problem statement, likely objectives (findability of past transactions), audience (app users needing past payments, e.g. for expenses), and flags open questions like CSV export scope and success metrics. Should not fabricate specifics not present in the input.",
-      "assertions": [
-        "Output carries a Status metadata field set to 'draft'",
-        "States a problem centered on users being unable to find past/older transactions",
-        "Flags CSV export as an open/undecided scope question",
-        "Contains an explicit open-questions/gaps section (e.g. success metrics undefined)",
-        "Does not fabricate specific metrics, ticket volumes, or decisions absent from the input"
+      "name": "blocking-gaps-stop-writing",
+      "prompt": "I have a rough idea for team workspaces in a B2B SaaS platform. Sales says enterprise customers want collaboration. The PM lead wants a tiny shared-folders MVP, while the Head of Product wants roles, permissions, and audit logs as next year's strategic bet. We have no demand numbers, no measurement plan, no pricing decision, no sponsor, and Engineering has not been consulted. Please write the PRD.",
+      "expected_output": "The agent does not write a PRD yet. It identifies the contradictory scope and missing mandatory information as blockers and asks targeted clarification questions without inventing answers or offering Confluence publication.",
+      "expectations": [
+        "The agent does not create a prd.md file while blocking gaps remain",
+        "The agent explicitly identifies the small-MVP versus strategic-bet contradiction",
+        "The agent asks for concrete goals or measurement rather than inventing KPIs",
+        "The agent asks about missing sponsor, scope, and engineering input",
+        "The agent does not offer or create a Confluence page before the PRD is complete"
       ],
       "files": []
     },
     {
       "id": 2,
-      "name": "gaps-and-contradictions",
-      "prompt": "Here are my raw notes for a possible 'team workspaces' feature. Please draft a PRD from them:\n\n- Sales says enterprise customers are asking for shared workspaces so teams can collaborate\n- PM lead in meeting: this should be a small MVP, just shared folders, ship fast\n- Head of product in a different meeting: this is our big bet for next year, needs roles, permissions, audit logs, the works\n- no numbers yet on how many customers actually asked\n- unclear if this is free or a paid add-on\n- engineering hasn't been consulted at all\n\nJust write up what we know so far.",
-      "expected_output": "A draft PRD (Status: draft) that captures the workspaces concept but EXPLICITLY surfaces the contradiction between the small-MVP framing and the large-strategic-bet framing, and flags gaps: no demand numbers, pricing undecided, engineering not consulted. Must NOT resolve the scope contradiction by guessing or invent demand figures.",
-      "assertions": [
-        "Output carries a Status metadata field set to 'draft'",
-        "Explicitly surfaces the contradiction between the small-MVP framing and the large strategic-bet framing",
-        "Flags that there are no demand numbers on how many customers asked",
-        "Flags pricing (free vs paid add-on) as undecided",
-        "Flags that engineering has not been consulted",
-        "Does NOT resolve the scope contradiction by picking one side or inventing demand figures"
+      "name": "outcome-oriented-full-hierarchy",
+      "prompt": "Write a PRD for transaction-history search in a consumer finance app from these complete notes. Sponsor: Customer Experience Director; priority: medium; Jira HIST-902 is planned. Collection started 2026-05-02, release deadline is 2026-09-30, observation ends 2026-10-31, funded by the 2026 Customer Experience budget. Users cannot find payments older than 30 days and need specific transactions for expense reports. Audience: active users who need historical payment records. Business goal: reduce transaction-history support contacts from 180 per month to 90 per month by 2026-10-31. User goal: increase successful searches for transactions older than 30 days from 42% to 80%; measured in the product analytics dashboard weekly. Must: search by merchant text and filter by date. Should: filter by amount. Could: export CSV. Won't: edit transaction data. Current process is scrolling a 30-day list. Customer Care must receive search troubleshooting guidance and monitor failed-search reasons. Figma: https://figma.example/history-search. Technical RFC: https://confluence.example/RFC-101. Budget link: https://drive.example/hist-902-budget. No Design Review or SRS is applicable beyond RFC-101. LRR and rollout links will be added by Product by 2026-09-01 as a non-blocking follow-up. Experience intent: search-first history with filters. Technical direction: use the existing indexed read model and keep details in RFC-101. Dependency: historical transactions must be available to the index. Release plan: beta 2026-09-10, rollout 2026-09-30, monitoring through 2026-10-31. PM is responsible; Customer Care, Design, Data, Privacy, and Engineering are consulted; standard committee responsibilities apply. Risk: incomplete indexing could hide valid transactions; Engineering owns index coverage monitoring. Decision confirmed 2026-05-20: CSV is Could, not launch scope. Project chart is HIST-902, schedule is the release plan, status is ready for structured writing, and no blocking decisions remain. The solution team also pasted endpoint schemas, SQL indexes, database tables, retry algorithms, and deployment steps; exclude those details and link RFC-101 instead. Write the machine-first PRD in English. When finished, ask whether I want it on Confluence; do not assume a publication language.",
+      "expected_output": "A full English PRD that preserves the canonical hierarchy and stable IDs, summarizes only high-level technical direction and links the technical RFC, excludes detailed API/database design, then asks whether to create a Confluence page without assuming its language.",
+      "expectations": [
+        "The PRD is written in English and keeps stable IDs in English",
+        "The complete Why, What, How, and Project management hierarchy is present",
+        "Detailed API and database implementation content is not duplicated in the PRD",
+        "The How section contains only high-level direction, constraints, dependencies, or links",
+        "The agent asks whether to create a Confluence page after writing",
+        "The agent does not choose a Confluence publication language without asking"
       ],
       "files": []
     }
