@@ -33,15 +33,15 @@ path requested by the user, or to `prd.md` in the current working directory when
 no path is given. Never overwrite the bundled template.
 
 - Write the machine-first document in **English**.
-- Set `metadata.status` to `draft`.
+- Set `metadata.status` to `draft` when creating or updating the PRD.
 - Preserve every stable ID exactly as written. IDs are always English and are
   never translated, including in a translated Confluence page.
 - Include every template section and fixed artifact category. Use an explicit
   `Not applicable` with a reason when the user confirms a field does not apply;
   never silently remove it.
 - Keep concrete facts traceable to source inputs.
-- Do not advance the status, submit the PRD for evaluation, or create backlog
-  items.
+- Do not advance the status without the explicit confirmation described below,
+  submit the PRD for evaluation, or create backlog items.
 
 ## Workflow
 
@@ -66,10 +66,15 @@ no path is given. Never overwrite the bundled template.
    remains present, all mandatory fields contain a value or an approved `Not
 applicable`, fixed artifact rows remain intact, no blocking decision is open,
    and no authoring guidance or placeholders remain.
-6. **Offer Confluence publication.** Only after the PRD file is complete, ask:
+6. **Handle explicit completion.** If the user explicitly says that the PRD is
+   complete, good enough, or ready for review, run the same validation. When no
+   blocker remains, change only `metadata.status` from `draft` to `review`.
+   Never infer this transition from document quality or completeness.
+7. **Offer Confluence publication.** After writing a new PRD, ask:
    **"Do you want me to create a Confluence page for this PRD?"** Do not publish
-   without an affirmative answer.
-7. **Ask the publication language.** If the user says yes, ask which language
+   without an affirmative answer. When handling a status-only completion
+   request, do not offer publication unless the user separately asks for it.
+8. **Ask the publication language.** If the user says yes, ask which language
    the Confluence page should use. Then follow
    [`references/confluence-publication.md`](./references/confluence-publication.md).
 
@@ -80,6 +85,10 @@ applicable`, fixed artifact rows remain intact, no blocking decision is open,
 - **Block when required.** A required field without a confirmed value or
   approved `Not applicable` prevents writing. Show the blocking questions
   clearly and resume after the user answers.
+- **Change status only on explicit confirmation.** Keep `metadata.status` as
+  `draft` unless the user explicitly confirms that the PRD is complete, good
+  enough, or ready for review. If blockers remain, keep `draft` and ask about
+  them instead.
 - **Separate non-blockers.** Keep confirmed non-blocking follow-ups visible in
   the most relevant section; do not hide them in prose.
 - **Preserve competing positions.** When sources disagree, state the

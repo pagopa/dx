@@ -19,8 +19,9 @@ metadata:
   confirmed content. Do not write the PRD while a blocking item remains open.
   Keep every stable section comment, every frontmatter key, and every ID table
   entry exactly as written. Use "Not applicable — <reason confirmed by user>"
-  instead of deleting a field. Set metadata.status to draft. Never translate
-  stable IDs.
+  instead of deleting a field. Start with metadata.status set to draft. Change
+  it to review only after the user explicitly confirms that the PRD is complete.
+  Never translate stable IDs.
 -->
 
 <!-- id: input -->

@@ -45,6 +45,18 @@
         "The agent does not choose a Confluence publication language without asking"
       ],
       "files": []
+    },
+    {
+      "id": 3,
+      "name": "explicit-completion-moves-to-review",
+      "prompt": "The PRD already exists at prd.md with complete confirmed content and metadata.status set to draft. I have reviewed it and consider it good enough and complete. Update the PRD status accordingly. Do not change any other content and do not publish it.",
+      "expected_output": "The agent changes only metadata.status in the YAML frontmatter from draft to review and does not publish the PRD.",
+      "expectations": [
+        "metadata.status changes from draft to review",
+        "The agent does not change other PRD content",
+        "The agent does not publish or offer to publish the PRD"
+      ],
+      "files": []
     }
   ]
 }
