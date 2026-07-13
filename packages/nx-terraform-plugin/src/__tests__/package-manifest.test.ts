@@ -15,15 +15,33 @@ const readPackageManifest = async (
   );
 
 describe("package manifest", () => {
-  it("depends on dx-tasks without duplicating its runtime provider dependencies", async () => {
+  it("declares external runtime dependencies for bundled dx-tasks code", async () => {
     const manifest = await readPackageManifest(
       new URL("../../package.json", import.meta.url),
     );
+    const dxTasksManifest = await readPackageManifest(
+      new URL("../../../dx-tasks/package.json", import.meta.url),
+    );
 
-    expect(manifest.dependencies["@pagopa/dx-tasks"]).toBe("workspace:^");
-    expect(manifest.devDependencies["@pagopa/dx-tasks"]).toBeUndefined();
-    expect(manifest.dependencies["@aws-sdk/client-s3"]).toBeUndefined();
-    expect(manifest.dependencies["@azure/identity"]).toBeUndefined();
-    expect(manifest.dependencies["@azure/storage-blob"]).toBeUndefined();
+    expect(manifest.devDependencies["@pagopa/dx-tasks"]).toBe("workspace:^");
+    expect(manifest.dependencies["@pagopa/dx-tasks"]).toBeUndefined();
+
+    for (const dependencyName of [
+      "@aws-sdk/client-s3",
+      "@azure/identity",
+      "@azure/storage-blob",
+      "octokit",
+      "zod",
+    ]) {
+      expect(manifest.dependencies[dependencyName]).toBe(
+        dxTasksManifest.dependencies[dependencyName],
+      );
+    }
+  });
+
+  it("keeps third-party node_modules out of the plugin bundle", async () => {
+    await expect(
+      fs.readFile(new URL("../../tsdown.config.ts", import.meta.url), "utf8"),
+    ).resolves.toContain("skipNodeModulesBundle: true");
   });
 });

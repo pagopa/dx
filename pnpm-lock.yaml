@@ -1211,15 +1211,21 @@ importers:
 
   packages/nx-terraform-plugin:
     dependencies:
+      '@aws-sdk/client-s3':
+        specifier: catalog:aws
+        version: 3.1084.0
+      '@azure/identity':
+        specifier: 'catalog:'
+        version: 4.13.1
+      '@azure/storage-blob':
+        specifier: catalog:azure
+        version: 12.33.0
       '@logtape/logtape':
         specifier: 'catalog:'
         version: 1.3.11
       '@nx/devkit':
         specifier: ^22.7.6
         version: 22.7.6(nx@22.7.5(@swc-node/register@1.11.1(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@swc/core@1.15.43(@swc/helpers@0.5.21))(@swc/types@0.1.27)(typescript@5.9.3))(@swc/core@1.15.43(@swc/helpers@0.5.21)))
-      '@pagopa/dx-tasks':
-        specifier: workspace:^
-        version: link:../dx-tasks
       execa:
         specifier: 'catalog:'
         version: 9.6.1
@@ -1239,6 +1245,9 @@ importers:
         specifier: 'catalog:'
         version: 4.4.3
     devDependencies:
+      '@pagopa/dx-tasks':
+        specifier: workspace:^
+        version: link:../dx-tasks
       '@pagopa/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
@@ -21952,7 +21961,7 @@ snapshots:
       postcss-modules-scope: 3.2.1(postcss@8.5.15)
       postcss-modules-values: 4.0.0(postcss@8.5.15)
       postcss-value-parser: 4.2.0
-      semver: 7.8.2
+      semver: 7.8.5
     optionalDependencies:
       webpack: 5.106.2(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.28.1)
 
@@ -26669,7 +26678,7 @@ snapshots:
       cosmiconfig: 8.3.6(typescript@5.9.3)
       jiti: 1.21.7
       postcss: 8.5.15
-      semver: 7.8.2
+      semver: 7.8.5
       webpack: 5.106.2(@swc/core@1.15.43(@swc/helpers@0.5.21))(esbuild@0.28.1)
     transitivePeerDependencies:
       - typescript
