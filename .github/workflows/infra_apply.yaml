@@ -109,13 +109,7 @@ jobs:
           # The two layouts are mutually exclusive:
           # - flat:          a .tf exists directly in $DIR → $DIR is the single project root
           # - multi-project: no .tf directly in $DIR → each first-level subdir is a project root
-          IS_FLAT=$(printf '%s\n' "$CHANGED" | while IFS= read -r file; do
-            rel="${file#"${DIR}/"}"
-            case "$rel" in
-              */*) ;;                    # file in a subdir: not a flat indicator
-              *.tf) echo 1; break ;;    # .tf directly in $DIR: flat project
-            esac
-          done)
+          IS_FLAT=$(find "$DIR" -maxdepth 1 -type f -name '*.tf' -print -quit 2>/dev/null || true)
 
           if [ -n "$IS_FLAT" ]; then
             MATRIX=$(jq -cn --arg d "$DIR" '[$d]')
@@ -124,7 +118,9 @@ jobs:
               | while IFS= read -r file; do
                   [ -z "$file" ] && continue
                   rel="${file#"${DIR}/"}"
-                  case "$rel" in */*)  echo "${DIR}/${rel%%/*}" ;; esac
+                  if [[ "$rel" == */* ]]; then
+                    echo "${DIR}/${rel%%/*}"
+                  fi
                 done \
               | sort -u \
               | jq -R . | jq -sc .)
