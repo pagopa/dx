@@ -3,58 +3,79 @@
   "evals": [
     {
       "id": 0,
-      "name": "complete-saved-payment-prd",
-      "prompt": "Write a structured PRD for a consumer payments app from this complete gathered material. Initiative: saved payment methods. Sponsor: Payments Director. Priority: high. Collection started 2026-06-10; release deadline is 2026-10-01 and observation closes 2026-11-15. Budget comes from the 2026 Payments roadmap. Jira initiative PAY-420 is in discovery. Users repeatedly entering card details on mobile abandon or slow down payments. The target audience is returning users paying by card. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks of release. User goal: reduce median repeat-payment completion time from 74 seconds to 45 seconds. Data comes from the payments funnel dashboard and is reviewed weekly. Must: save Visa and Mastercard tokens, select a saved card, delete a saved card. Should: set a default card. Won't: Amex in this release. Never store PAN; store PSP token and last four digits only. Maximum five visible cards. Customer care needs a troubleshooting guide for expired or declined saved cards. Engineering confirmed PSP tokenization exists. Design prototype: https://figma.example/saved-cards. Related technical RFC: RFC-88. A separate Design Review or SRS is not applicable because RFC-88 is the agreed technical artifact. The LRR and rollout plan do not exist yet and will be linked by 2026-09-01; Product owns this non-blocking follow-up. PM is responsible; Payments, Design, Security, Customer Care and Engineering are consulted as relevant. The standard committee and Engineering responsibilities apply. Main risk: users may believe the company stores full card data; mitigation is clear copy owned by Product and Security. Current process requires card entry on every payment. Experience intent: returning users select a masked saved card during checkout; the Figma prototype is the source of truth. High-level technical direction: reuse existing PSP tokenization; implementation detail remains in RFC-88. Technical dependency: PSP token availability and token lifecycle events. Release plan: internal validation in September, production deadline 2026-10-01, weekly monitoring until 2026-11-15. The decision to exclude Amex was confirmed on 2026-06-20 by the Payments Director. Project chart is not applicable because PAY-420 is the project reference. The schedule is the release plan above. Current status report: discovery complete and structured writing ready. There are no open blocking decisions. Use the canonical PRD structure and write it to prd.md.",
-      "expected_output": "A complete English PRD following the stable-ID hierarchy, with status draft, concrete measurement, outcome-oriented prose, and no unresolved blocking items. After writing, the agent asks whether to create a Confluence page.",
+      "name": "complete-confluence-compatible-prd",
+      "prompt": "Write a PRD for a saved-payment experience from these complete notes. Sponsor: Payments Director. Product owner: Payments PM. Priority: high. Budget: 2026 Payments roadmap. Target release: 2026-10-01. Users repeatedly entering card details on mobile abandon or slow down payments. Actors: returning card-paying users and Customer Care. User JTBD: when returning to pay, users want to select a masked saved card so they can complete payment faster. Expected outcome: faster completed repeat payments. Success metric: median completion time falls from 74 seconds to 45 seconds. Quality guardrail: no full card number is stored. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks. Outcome KPI source: payments funnel dashboard reviewed weekly. Strategic dependency: PSP token lifecycle events. Constraint: maximum five visible cards. Preliminary Engineering opinion: tokenization is available. Preliminary Legal/Compliance opinion: requested. Design discovery: https://figma.example/saved-cards. Support needs: troubleshooting guidance for expired or declined cards. Open non-blocking assumption: Amex is excluded from this release. Write the machine-first PRD in English.",
+      "expected_output": "A Confluence-compatible PRD with visible Metadata, Need definition, Actors, Objectives with a complete JTBD catalog, Success metrics with outcome KPIs and quality guardrails, strategic dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. It starts with status draft.",
       "expectations": [
-        "The PRD includes Source inputs, Metadata, Related artifacts, Why, and How",
-        "The PRD preserves stable English IDs including metadata.status, why.jobs-to-be-done, why.measurement, and how.technical-solutions",
-        "The PRD does not include What, use cases, or a Project management & monitoring section",
-        "The YAML frontmatter contains metadata.status set to draft and all other canonical metadata keys",
-        "The measurement plan preserves the supplied baselines and targets without inventing metrics",
-        "The related-artifacts table includes the design and budget categories, including empty or future artifacts",
-        "The output asks whether the user wants a Confluence page only after the PRD is written"
+        "The PRD has a visible Metadata section with stable IDs for status, sponsor, owner, budget, Legal/Compliance, Engineering, target release, and priority",
+        "The JTBD row includes persona, canonical job statement, expected outcome, success metric, quality guardrail, priority, and notes",
+        "Outcome KPIs and quality guardrails are separate sections",
+        "Stable English IDs are present for each canonical section and table row",
+        "The PRD does not include a use-case catalog, RACI, backlog, or detailed implementation specification",
+        "metadata.status is draft"
       ],
       "files": []
     },
     {
       "id": 1,
-      "name": "blocking-gaps-stop-writing",
-      "prompt": "I have a rough idea for team workspaces in a B2B SaaS platform. Sales says enterprise customers want collaboration. The PM lead wants a tiny shared-folders MVP, while the Head of Product wants roles, permissions, and audit logs as next year's strategic bet. We have no demand numbers, no measurement plan, no pricing decision, no sponsor, and Engineering has not been consulted. Please write the PRD.",
-      "expected_output": "The agent does not write a PRD yet. It identifies the contradictory scope and missing mandatory information as blockers and asks targeted clarification questions without inventing answers or offering Confluence publication.",
+      "name": "incomplete-material-remains-draft",
+      "prompt": "Create a PRD for a shared workspace idea. Sales reports that enterprise customers want collaboration, but there is no confirmed sponsor, owner, target user segment, measurable goal, or decision about whether the scope is shared folders only or also roles and audit logs. Engineering and Legal have not been consulted. Do not invent answers. Produce the PRD in draft state and make the uncertainties visible.",
+      "expected_output": "The agent produces a structured draft without inventing missing information, records the unresolved scope and ownership questions, and keeps status draft.",
       "expectations": [
-        "The agent does not create a prd.md file while blocking gaps remain",
-        "The agent explicitly identifies the small-MVP versus strategic-bet contradiction",
-        "The agent asks for concrete goals or measurement rather than inventing KPIs",
-        "The agent asks about missing sponsor, scope, and engineering input",
-        "The agent does not offer or create a Confluence page before the PRD is complete"
+        "The PRD is created in draft state despite incomplete information",
+        "Missing sponsor, owner, audience, goals, and preliminary consultations are visible as open questions or justified not-applicable values",
+        "The conflicting scope proposals are preserved as an unresolved question",
+        "The agent does not invent metrics, ownership, actors, or feasibility conclusions"
       ],
       "files": []
     },
     {
       "id": 2,
-      "name": "outcome-oriented-full-hierarchy",
-      "prompt": "Write a PRD for transaction-history search in a consumer finance app from these complete notes. Sponsor: Customer Experience Director; priority: medium; Jira HIST-902 is planned. Collection started 2026-05-02, release deadline is 2026-09-30, observation ends 2026-10-31, funded by the 2026 Customer Experience budget. Users cannot find payments older than 30 days and need specific transactions for expense reports. Audience: active users who need historical payment records. Business goal: reduce transaction-history support contacts from 180 per month to 90 per month by 2026-10-31. User goal: increase successful searches for transactions older than 30 days from 42% to 80%; measured in the product analytics dashboard weekly. Must: search by merchant text and filter by date. Should: filter by amount. Could: export CSV. Won't: edit transaction data. Current process is scrolling a 30-day list. Customer Care must receive search troubleshooting guidance and monitor failed-search reasons. Figma: https://figma.example/history-search. Technical RFC: https://confluence.example/RFC-101. Budget link: https://drive.example/hist-902-budget. No Design Review or SRS is applicable beyond RFC-101. LRR and rollout links will be added by Product by 2026-09-01 as a non-blocking follow-up. Experience intent: search-first history with filters. Technical direction: use the existing indexed read model and keep details in RFC-101. Dependency: historical transactions must be available to the index. Release plan: beta 2026-09-10, rollout 2026-09-30, monitoring through 2026-10-31. PM is responsible; Customer Care, Design, Data, Privacy, and Engineering are consulted; standard committee responsibilities apply. Risk: incomplete indexing could hide valid transactions; Engineering owns index coverage monitoring. Decision confirmed 2026-05-20: CSV is Could, not launch scope. Project chart is HIST-902, schedule is the release plan, status is ready for structured writing, and no blocking decisions remain. The solution team also pasted endpoint schemas, SQL indexes, database tables, retry algorithms, and deployment steps; exclude those details and link RFC-101 instead. Write the machine-first PRD in English. When finished, ask whether I want it on Confluence; do not assume a publication language.",
-      "expected_output": "A full English PRD that preserves the canonical hierarchy and stable IDs, summarizes only high-level technical direction and links the technical RFC, excludes detailed API/database design, then asks whether to create a Confluence page without assuming its language.",
+      "name": "review-ready-status-transition",
+      "prompt": "The existing PRD has a visible Metadata section with status draft. Its context, sponsor, Product owner, and problem statement are clear enough to share with stakeholders. It still has two non-blocking open questions about a future design decision. I have reviewed it and say it is good enough and ready for review. Change the status only. Do not publish it or modify any other content.",
+      "expected_output": "The agent changes only metadata.status from draft to review. Non-blocking open questions remain unchanged and no publication is offered.",
       "expectations": [
-        "The PRD is written in English and keeps stable IDs in English",
-        "The complete Why and How hierarchy is present",
-        "Detailed API and database implementation content is not duplicated in the PRD",
-        "The How section contains only high-level direction, constraints, dependencies, or links",
-        "The agent asks whether to create a Confluence page after writing",
-        "The agent does not choose a Confluence publication language without asking"
+        "metadata.status changes from draft to review",
+        "Non-blocking open questions do not prevent the transition",
+        "No other PRD content is changed",
+        "The agent does not publish or offer publication"
       ],
       "files": []
     },
     {
       "id": 3,
-      "name": "explicit-completion-moves-to-review",
-      "prompt": "The PRD already exists at prd.md with complete confirmed content and metadata.status set to draft. I have reviewed it and consider it good enough and complete. Update the PRD status accordingly. Do not change any other content and do not publish it.",
-      "expected_output": "The agent changes only metadata.status in the YAML frontmatter from draft to review and does not publish the PRD.",
+      "name": "review-blocked-missing-entry-criteria",
+      "prompt": "The existing PRD is marked draft. It contains an idea and some technical notes, but no confirmed sponsor, Product owner, or clear problem statement. I say it is ready for review. Do not change the status yet; identify the missing review-entry information and ask targeted questions.",
+      "expected_output": "The agent keeps status draft, explains that review readiness is not established, and asks for the missing sponsor, owner, and problem definition without inventing them.",
       "expectations": [
-        "metadata.status changes from draft to review",
-        "The agent does not change other PRD content",
-        "The agent does not publish or offer to publish the PRD"
+        "metadata.status remains draft",
+        "The agent identifies missing context, sponsor, owner, or problem clarity as the reason",
+        "The agent asks targeted clarification questions",
+        "The agent does not infer values from technical notes"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "downstream-detail-boundary",
+      "prompt": "Write a PRD from these notes. Include the need, actors, JTBD, goals, metrics, and risks, but keep the following out of the PRD: endpoint schemas, database tables, retry algorithms, detailed use cases, acceptance criteria, deployment steps, and backlog tickets. Mention only the high-level constraint that an existing indexed read model must be available.",
+      "expected_output": "The PRD contains product outcomes and high-level constraints while excluding detailed implementation, use-case, acceptance, deployment, and backlog content.",
+      "expectations": [
+        "The PRD contains no detailed endpoint, database, retry, deployment, acceptance-criteria, use-case, or backlog content",
+        "The high-level indexed-read-model dependency is retained",
+        "The PRD remains organized according to the Confluence-compatible hierarchy"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "publication-handoff",
+      "prompt": "The PRD has just been written and validated. Ask me whether I want to create a Confluence page. Do not choose a publication language until I answer yes.",
+      "expected_output": "The agent asks for explicit confirmation to create a Confluence page and does not ask for or assume a language before confirmation.",
+      "expectations": [
+        "The agent asks whether to create a Confluence page",
+        "The agent does not publish without explicit confirmation",
+        "The agent does not choose or ask for a publication language before confirmation"
       ],
       "files": []
     }
