@@ -2,6 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const githubMocks = vi.hoisted(() => ({
   ensureGitHubRepository: vi.fn(),
+  getGitHubToken: vi.fn(),
 }));
 
 const execaMocks = vi.hoisted(() => ({
@@ -21,6 +22,7 @@ const osMocks = vi.hoisted(() => ({
 
 vi.mock("../octokit.ts", () => ({
   ensureGitHubRepository: githubMocks.ensureGitHubRepository,
+  getGitHubToken: githubMocks.getGitHubToken,
 }));
 
 vi.mock("execa", () => ({
@@ -65,11 +67,7 @@ const createGitCommandHarness = ({
     | typeof defaultCommandResult
     | undefined;
 } = {}) => {
-  const commands: {
-    command: string;
-    cwd: string | undefined;
-    values: unknown[];
-  }[] = [];
+  const commands: { command: string; cwd: string | undefined }[] = [];
 
   const git$ = vi.fn(
     (
@@ -85,7 +83,7 @@ const createGitCommandHarness = ({
       const lastCall =
         execaMocks.$.mock.calls[execaMocks.$.mock.calls.length - 1];
       const cwd = lastCall?.[0]?.cwd as string | undefined;
-      commands.push({ command, cwd, values });
+      commands.push({ command, cwd });
       const commandResult = onCommand?.(command, cwd);
       if (commandResult !== undefined) {
         return Promise.resolve(commandResult);
@@ -289,6 +287,41 @@ it("uses shell mode plus explicit commit author and committer environment variab
     GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
     GIT_COMMITTER_NAME: "PagoPA DX Bot",
   });
+});
+
+it("configures git credentials and keeps the remote URL token-free when a token is available", async () => {
+  const { commands } = createGitCommandHarness();
+  githubMocks.getGitHubToken.mockReturnValue("secret-token");
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
+  expect(commandStrings.join("\n")).not.toContain("secret-token");
+});
+
+it("skips git credential setup when no token is available", async () => {
+  const { commands } = createGitCommandHarness();
+  githubMocks.getGitHubToken.mockReturnValue(undefined);
+
+  githubMocks.ensureGitHubRepository.mockResolvedValue({
+    created: false,
+    owner: "pagopa-dx",
+    repo: expectedRepo,
+  });
+
+  await publishToGithub(publishInput);
+
+  const commandStrings = commands.map((c) => c.command);
+  expect(commandStrings).not.toContain("gh auth setup-git");
+  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
 });
 
 it("cleans up temporary directory after successful publish", async () => {

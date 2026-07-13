@@ -54,6 +54,7 @@ import {
   createDefaultSubscriptionAnalyzers,
   type SubscriptionAnalyzer,
 } from "./analyzers/index.js";
+import { PricingClient, PricingService } from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
@@ -94,6 +95,10 @@ export async function analyzeAzureResources(
     ? createDefaultSubscriptionAnalyzers()
     : [];
   const thresholds: Thresholds = config.thresholds ?? DEFAULT_THRESHOLDS;
+
+  // Build a single PricingService for the whole run when enabled, so the
+  // disk cache and in-memory memo are shared across subscriptions.
+  const pricing = buildPricingService(config);
 
   // Normalise concurrency the same way p-limit does to keep maxInFlight
   // consistent. A raw value of 0/NaN would produce maxInFlight = 0/NaN and
@@ -140,6 +145,7 @@ export async function analyzeAzureResources(
         limit,
         logger,
         maxInFlight,
+        pricing,
         reports: allReports,
         reportsById,
         runCache,
@@ -214,6 +220,7 @@ export async function analyzeResource(
   timespanDays: number,
   thresholds: Thresholds,
   verbose = false,
+  pricing?: PricingService,
 ): Promise<AnalysisResult> {
   let result: AnalysisResult = {
     costRisk: "low",
@@ -231,6 +238,7 @@ export async function analyzeResource(
     clients,
     metricsCache,
     preferredLocation,
+    pricing,
     resource,
     thresholds,
     timespanDays,
@@ -260,6 +268,50 @@ export async function analyzeResource(
   }
 
   return { ...result, reason: result.reason.trim() };
+}
+
+/**
+ * Inserts a `Finding` into the right report entry, creating a stub
+ * resource entry on the fly when the finding refers to a resource that
+ * the per-resource pass did not analyze.
+ */
+export function mergeFinding(
+  finding: Finding,
+  reports: AzureDetailedResourceReport[],
+  reportsById: Map<string, AzureDetailedResourceReport>,
+): void {
+  const idKey = finding.resourceId.toLowerCase();
+  const existing = reportsById.get(idKey);
+  if (existing) {
+    existing.findings = [...(existing.findings ?? []), finding];
+    const added = analysisFromFinding(finding);
+    // Use max costRisk (not last-wins) and join reasons with a space so we
+    // don't produce "Sentence one.Sentence two." when the existing reason is
+    // already trimmed (i.e. has no trailing separator space).
+    existing.analysis = {
+      costRisk:
+        RISK_ORDER[existing.analysis.costRisk] <= RISK_ORDER[added.costRisk]
+          ? existing.analysis.costRisk
+          : added.costRisk,
+      estimatedMonthlySavings: existing.analysis.estimatedMonthlySavings,
+      reason:
+        existing.analysis.reason && added.reason
+          ? `${existing.analysis.reason.trimEnd()} ${added.reason.trimStart()}`
+          : existing.analysis.reason || added.reason,
+      suspectedUnused:
+        existing.analysis.suspectedUnused || added.suspectedUnused,
+    };
+    return;
+  }
+
+  const stub = buildResourceStub(finding.resourceId);
+  const report: AzureDetailedResourceReport = {
+    analysis: analysisFromFinding(finding),
+    findings: [finding],
+    resource: stub,
+  };
+  reports.push(report);
+  reportsById.set(idKey, report);
 }
 
 export function shouldIncludeAdvisorFindingForTags(
@@ -293,6 +345,18 @@ function analysisFromFinding(finding: Finding): AnalysisResult {
     reason,
     suspectedUnused: true,
   };
+}
+
+/**
+ * Builds the shared `PricingService` for the run when pricing enrichment
+ * is enabled. Returns `undefined` when the CLI disables pricing via
+ * `--no-pricing`; otherwise the client/cache use internal defaults.
+ */
+function buildPricingService(config: AzureConfig): PricingService | undefined {
+  if (config.pricing?.enabled === false) {
+    return undefined;
+  }
+  return new PricingService(new PricingClient());
 }
 
 /**
@@ -383,49 +447,6 @@ function isSubscriptionScopedReport(r: AzureDetailedResourceReport): boolean {
   return r.resource.type === "Microsoft.Subscription";
 }
 
-/**
- * Inserts a `Finding` into the right report entry, creating a stub
- * resource entry on the fly when the finding refers to a resource that
- * the per-resource pass did not analyze.
- */
-function mergeFinding(
-  finding: Finding,
-  reports: AzureDetailedResourceReport[],
-  reportsById: Map<string, AzureDetailedResourceReport>,
-): void {
-  const idKey = finding.resourceId.toLowerCase();
-  const existing = reportsById.get(idKey);
-  if (existing) {
-    existing.findings = [...(existing.findings ?? []), finding];
-    const added = analysisFromFinding(finding);
-    // Use max costRisk (not last-wins) and join reasons with a space so we
-    // don't produce "Sentence one.Sentence two." when the existing reason is
-    // already trimmed (i.e. has no trailing separator space).
-    existing.analysis = {
-      costRisk:
-        RISK_ORDER[existing.analysis.costRisk] <= RISK_ORDER[added.costRisk]
-          ? existing.analysis.costRisk
-          : added.costRisk,
-      reason:
-        existing.analysis.reason && added.reason
-          ? `${existing.analysis.reason.trimEnd()} ${added.reason.trimStart()}`
-          : existing.analysis.reason || added.reason,
-      suspectedUnused:
-        existing.analysis.suspectedUnused || added.suspectedUnused,
-    };
-    return;
-  }
-
-  const stub = buildResourceStub(finding.resourceId);
-  const report: AzureDetailedResourceReport = {
-    analysis: analysisFromFinding(finding),
-    findings: [finding],
-    resource: stub,
-  };
-  reports.push(report);
-  reportsById.set(idKey, report);
-}
-
 function normalizeResourceId(resourceId: string | undefined): string {
   return (resourceId ?? "").trim().toLowerCase();
 }
@@ -443,6 +464,7 @@ async function runPerResourceAnalysis(args: {
   limit: ReturnType<typeof pLimit>;
   logger: ReturnType<typeof getLogger>;
   maxInFlight: number;
+  pricing?: PricingService;
   reports: AzureDetailedResourceReport[];
   reportsById: Map<string, AzureDetailedResourceReport>;
   runCache: MetricsCache;
@@ -458,6 +480,7 @@ async function runPerResourceAnalysis(args: {
     limit,
     logger,
     maxInFlight,
+    pricing,
     reports,
     reportsById,
     runCache,
@@ -500,6 +523,7 @@ async function runPerResourceAnalysis(args: {
         config.timespanDays,
         thresholds,
         config.verbose || false,
+        pricing,
       );
 
       if (analysis.suspectedUnused) {

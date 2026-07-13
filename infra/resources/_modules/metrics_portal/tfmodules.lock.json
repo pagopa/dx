@@ -12,9 +12,9 @@
     "source": "https://registry.terraform.io/modules/pagopa-dx/azure-postgres-server/azurerm/3.0.0"
   },
   "container_app": {
-    "hash": "cccc8bc3cc1d6b19f686bf49d76695c6e68e7a5d2df05cd2e6eb864559ba60ff",
-    "version": "4.2.0",
+    "hash": "7fa0ed8a12529a8f857503f26ff5d8d77cbb72d7cbe6f3dbc3b64dc206108bf0",
+    "version": "4.2.2",
     "name": "azure_container_app",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/4.2.0"
+    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/4.2.2"
   }
 }

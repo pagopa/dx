@@ -1,3 +1,15 @@
+## 0.12.4 (2026-07-09)
+
+### 🩹 Fixes
+
+- Update Go module dependencies for the Azure Terraform provider tooling. ([#1967](https://github.com/pagopa/dx/pull/1967))
+- Upgrade `golang.org/x/crypto` version ([#1969](https://github.com/pagopa/dx/pull/1969))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 0.12.3 (2026-07-06)
 
 ### 🩹 Fixes

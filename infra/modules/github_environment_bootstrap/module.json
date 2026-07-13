@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Create and configure a new GitHub repository",
   "provider": "github",
-  "version": "2.0.0"
+  "version": "2.0.1"
 }

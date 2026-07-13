@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { describe, expect, it } from "vitest";
 
 import { loadConfig } from "../../index.js";
+import { ConfigSchema } from "../../schema.js";
 import { DEFAULT_THRESHOLDS } from "../../types.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -93,5 +94,16 @@ describe("loadConfig", () => {
     expect(result.thresholds).toHaveProperty("storage");
     expect(result.thresholds).toHaveProperty("publicIp");
     expect(result.thresholds).toHaveProperty("staticSite");
+  });
+
+  it("does not expose pricing settings in YAML config", () => {
+    const result = ConfigSchema.safeParse({
+      azure: {
+        pricing: { enabled: false },
+        subscriptionIds: ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
+      },
+    });
+
+    expect(result.success).toBe(false);
   });
 });

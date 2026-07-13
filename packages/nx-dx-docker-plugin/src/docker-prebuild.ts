@@ -1,0 +1,51 @@
+#!/usr/bin/env node
+// Used as (part of) `nx.json`'s `release.docker.preVersionCommand`. Nx's own
+// `runPreVersionCommand` (see nx/src/command-line/release/version.js) only
+// ever injects `NX_DRY_RUN` into this command's env — it never forwards the
+// `--projects`/`--groups` filter that was passed to `nx release version`, so
+// there's no built-in way to scope this build to "whatever was selected".
+//
+// This script closes that gap via a convention: if `NX_RELEASE_DOCKER_PROJECTS`
+// is set (a comma/space-separated list of project names or patterns, meant to
+// be exported alongside `--projects` when invoking `nx release version`), only
+// those projects are built. Otherwise it falls back to `nx affected`, which is
+// still the right default for CI (where version plans - not an explicit
+// `--projects` flag - decide which projects actually get released).
+//
+// Example (local testing of a single project's release, without waiting on
+// unrelated affected projects to rebuild):
+//   NX_RELEASE_DOCKER_PROJECTS=dockerapp3 \
+//     pnpm exec nx release version --projects=dockerapp3 --dry-run
+import { execFileSync } from "node:child_process";
+import { z } from "zod/v4";
+
+// `NX_RELEASE_DOCKER_PROJECTS` is an unsanitized environment variable that
+// ends up as an `nx run-many -p` argument. Restrict it to the characters Nx
+// project names/patterns actually use, so a malformed or hostile value fails
+// loudly instead of reaching a child process command line.
+const projectsFilterSchema = z
+  .string()
+  .min(1)
+  .regex(
+    /^[A-Za-z0-9@][A-Za-z0-9@/_.,\s*-]*$/,
+    "must be a comma/space-separated list of project names or patterns",
+  );
+
+const main = (): void => {
+  const rawProjectsFilter = process.env.NX_RELEASE_DOCKER_PROJECTS;
+  const args = rawProjectsFilter
+    ? [
+        "nx",
+        "run-many",
+        "-t",
+        "docker:build",
+        "-p",
+        projectsFilterSchema.parse(rawProjectsFilter),
+      ]
+    : ["nx", "affected", "-t", "docker:build"];
+
+  console.log(`[@pagopa/nx-dx-docker-plugin] Running: pnpm ${args.join(" ")}`);
+  execFileSync("pnpm", args, { stdio: "inherit" });
+};
+
+main();
