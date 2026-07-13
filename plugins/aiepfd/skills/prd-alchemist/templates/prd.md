@@ -131,41 +131,6 @@ risks. Keep detailed test acceptance criteria in downstream specifications.
 | -------------------- | ------------------ | ---------- | ------------------------ |
 | `why.risks.item-001` | _<risk>_           | _<impact>_ | _<mitigation and owner>_ |
 
-<!-- id: what -->
-
-## What
-
-<!-- id: what.as-is -->
-
-### Current process
-
-_<How the current process or product works today, including observed pain
-points.>_
-
-<!-- id: what.scope -->
-
-### Scope
-
-<!-- id: what.scope.in -->
-
-#### In scope
-
-- _<confirmed in-scope item>_
-
-<!-- id: what.scope.out -->
-
-#### Out of scope
-
-- _<confirmed out-of-scope item>_
-
-<!-- id: what.support-needs -->
-
-### Customer care needs
-
-_<Customer-care stakeholders, likely contact reasons, and experience points
-that require support preparation or monitoring. Do not write the downstream
-operational support specification here.>_
-
 <!-- id: how -->
 
 ## How

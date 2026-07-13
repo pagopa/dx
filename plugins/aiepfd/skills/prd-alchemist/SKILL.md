@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why, What, and How hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
+description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why and How hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
 ---
 
 # PRD Alchemist
@@ -49,8 +49,8 @@ no path is given. Never overwrite the bundled template.
    existing product documents, linked artifacts, and confirmed decisions. Ask
    for referenced material that has not been provided.
 2. **Map evidence to the template.** Organize the input under source inputs,
-   metadata, related artifacts, Why, What, and How. Distinguish confirmed facts
-   from proposals and unresolved questions.
+   metadata, related artifacts, Why, and How. Distinguish confirmed facts from
+   proposals and unresolved questions.
 3. **Run the clarification gate.** Check every required field and section.
    Missing information, contradictions, vague goals, placeholder metrics, and
    unresolved scope choices are blockers unless the user explicitly confirms
