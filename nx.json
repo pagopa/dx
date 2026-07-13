@@ -77,6 +77,12 @@
     ],
     "projectsRelationship": "independent",
     "version": {},
+    "docker": {
+      "registryUrl": "ghcr.io",
+      "versionSchemes": {
+        "production": "{versionActionsVersion}"
+      }
+    },
     "changelog": {
       "projectChangelogs": {
         "createRelease": false,
@@ -112,6 +118,8 @@
         "buildTargetName": "docker:build",
         "defaultBranch": "main",
         "imageAuthors": "PagoPA",
+        "imageNamePrefix": "pagopa/dx",
+        "imageUrl": "https://github.com/pagopa/dx",
         "jsBuildTargetName": "build",
         "packageTargetName": "package",
         "pushTargetName": "docker:push",

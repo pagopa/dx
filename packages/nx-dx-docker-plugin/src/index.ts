@@ -41,6 +41,8 @@ interface ProjectPackageJson {
   readonly name?: string;
   readonly nx?: {
     readonly docker?: {
+      readonly contextPath?: string;
+      readonly dockerfilePath?: string;
       readonly repositoryName?: string;
     };
     readonly release?: {
@@ -110,9 +112,10 @@ const getDockerRepositoryNameOverride = (
 };
 
 /**
- * Distinct from `getDockerRepositoryNameOverride` above: this only affects
- * the `imageName` this plugin computes for its own `docker:build`/
- * `docker:push` targets, never the `nx-release-publish` executor.
+ * An optional `nx.docker.repositoryName` customizes only this plugin's
+ * `docker:build`/`docker:push` image name. Otherwise, reuse Nx Release's
+ * `nx.release.docker.repositoryName`, keeping one repository setting for
+ * projects that use both build and release flows.
  */
 const getBuildImageRepositoryNameOverride = (
   workspaceRoot: string,
@@ -123,7 +126,32 @@ const getBuildImageRepositoryNameOverride = (
     return null;
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
-  return packageJson.nx?.docker?.repositoryName ?? null;
+  return (
+    packageJson.nx?.docker?.repositoryName ??
+    packageJson.nx?.release?.docker?.repositoryName ??
+    null
+  );
+};
+
+/**
+ * Resolves the project-level Docker build layout. Both values are relative
+ * to the workspace root because executors always run Docker from
+ * `context.root`; this keeps Docker COPY paths deterministic in monorepos.
+ */
+const getBuildLayoutOverrides = (
+  workspaceRoot: string,
+  projectRoot: string,
+): { readonly contextPath: string; readonly dockerfilePath: string } => {
+  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    return { contextPath: ".", dockerfilePath: `${projectRoot}/Dockerfile` };
+  }
+  const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
+  return {
+    contextPath: packageJson.nx?.docker?.contextPath ?? ".",
+    dockerfilePath:
+      packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+  };
 };
 
 export const createDockerReleaseNodes = (
@@ -161,6 +189,7 @@ export const createDockerReleaseNodes = (
   );
 
   const dockerRunOptions = {
+    ...getBuildLayoutOverrides(context.workspaceRoot, projectRoot),
     defaultBranch: options.defaultBranch,
     imageAuthors: options.imageAuthors,
     imageName,

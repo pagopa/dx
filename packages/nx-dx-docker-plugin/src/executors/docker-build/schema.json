@@ -5,8 +5,17 @@
   "description": "Builds this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
   "type": "object",
   "properties": {
+    "contextPath": {
+      "description": "Workspace-relative Docker build context",
+      "type": "string",
+      "default": "."
+    },
     "projectRoot": {
       "description": "Project root containing the Dockerfile",
+      "type": "string"
+    },
+    "dockerfilePath": {
+      "description": "Workspace-relative Dockerfile path",
       "type": "string"
     },
     "projectDisplayName": {
@@ -37,6 +46,7 @@
   },
   "required": [
     "projectRoot",
+    "dockerfilePath",
     "projectDisplayName",
     "imageName",
     "defaultBranch",

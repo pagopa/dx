@@ -6,7 +6,9 @@ let zod_v4 = require("zod/v4");
 //#region src/docker-run.ts
 const nonEmptyString = zod_v4.z.string().min(1);
 const dockerRunOptionsSchema = zod_v4.z.object({
+	contextPath: nonEmptyString.default("."),
 	defaultBranch: nonEmptyString,
+	dockerfilePath: nonEmptyString,
 	imageAuthors: nonEmptyString,
 	imageName: nonEmptyString,
 	imageUrl: nonEmptyString,
@@ -36,14 +38,14 @@ const getCommitSha = () => {
 * alias tag (`build`) or `--push`/annotations (`push`).
 *
 * `workspaceRoot` (the executor's `context.root`, not `process.cwd()`) is
-* used as the docker build's `cwd`, so the build context (`.`) is always
-* the monorepo root and `--file {projectRoot}/Dockerfile` always resolves
-* correctly — per RFC-DX-076's Option 4 (Docker context at the monorepo
-* root, full build inside Docker), regardless of the directory an
-* operator happens to invoke `nx` from.
+* used as the docker build's `cwd`, so the workspace-relative `contextPath`
+* and `dockerfilePath` always resolve correctly, regardless of the directory
+* an operator happens to invoke `nx` from. Generated targets default to a
+* monorepo-root context (`.`) and `{projectRoot}/Dockerfile`, per
+* RFC-DX-076's Option 4; projects can override either path independently.
 */
 const runDockerCommand = (mode, options, workspaceRoot) => {
-	const { defaultBranch, imageAuthors, imageName, imageUrl, platform, projectDisplayName, projectRoot } = options;
+	const { contextPath, defaultBranch, dockerfilePath, imageAuthors, imageName, imageUrl, platform, projectDisplayName, projectRoot } = options;
 	const tags = require_docker_image.computeImageTags(projectDisplayName, defaultBranch);
 	if (mode === "push" && tags.length === 0) {
 		console.log(`[@pagopa/nx-dx-docker-plugin] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`);
@@ -60,9 +62,9 @@ const runDockerCommand = (mode, options, workspaceRoot) => {
 	};
 	const dockerArgs = [
 		"build",
-		".",
+		contextPath,
 		"--file",
-		`${projectRoot}/Dockerfile`,
+		dockerfilePath,
 		"--platform",
 		platform
 	];

@@ -36,6 +36,7 @@ const baseContext: ExecutorContext = {
 
 const validOptions = {
   defaultBranch: "main",
+  dockerfilePath: "apps/my-app/Dockerfile",
   imageAuthors: "PagoPA",
   imageName: "ghcr.io/pagopa/dx/my-app",
   imageUrl: "https://github.com/pagopa/dx",
@@ -58,6 +59,7 @@ describe("docker-build executor", () => {
       "build",
       {
         ...validOptions,
+        contextPath: ".",
         platform: "linux/amd64,linux/arm64",
       },
       baseContext.root,

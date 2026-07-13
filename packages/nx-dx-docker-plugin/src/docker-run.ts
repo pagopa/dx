@@ -20,7 +20,9 @@ import {
 const nonEmptyString = z.string().min(1);
 
 export const dockerRunOptionsSchema = z.object({
+  contextPath: nonEmptyString.default("."),
   defaultBranch: nonEmptyString,
+  dockerfilePath: nonEmptyString,
   imageAuthors: nonEmptyString,
   imageName: nonEmptyString,
   imageUrl: nonEmptyString,
@@ -50,11 +52,11 @@ const getCommitSha = (): string => {
  * alias tag (`build`) or `--push`/annotations (`push`).
  *
  * `workspaceRoot` (the executor's `context.root`, not `process.cwd()`) is
- * used as the docker build's `cwd`, so the build context (`.`) is always
- * the monorepo root and `--file {projectRoot}/Dockerfile` always resolves
- * correctly — per RFC-DX-076's Option 4 (Docker context at the monorepo
- * root, full build inside Docker), regardless of the directory an
- * operator happens to invoke `nx` from.
+ * used as the docker build's `cwd`, so the workspace-relative `contextPath`
+ * and `dockerfilePath` always resolve correctly, regardless of the directory
+ * an operator happens to invoke `nx` from. Generated targets default to a
+ * monorepo-root context (`.`) and `{projectRoot}/Dockerfile`, per
+ * RFC-DX-076's Option 4; projects can override either path independently.
  */
 export const runDockerCommand = (
   mode: "build" | "push",
@@ -62,7 +64,9 @@ export const runDockerCommand = (
   workspaceRoot: string,
 ): { readonly success: boolean } => {
   const {
+    contextPath,
     defaultBranch,
+    dockerfilePath,
     imageAuthors,
     imageName,
     imageUrl,
@@ -92,9 +96,9 @@ export const runDockerCommand = (
 
   const dockerArgs = [
     "build",
-    ".",
+    contextPath,
     "--file",
-    `${projectRoot}/Dockerfile`,
+    dockerfilePath,
     "--platform",
     platform,
   ];

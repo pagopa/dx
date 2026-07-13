@@ -35,7 +35,9 @@ import type { DockerRunOptions } from "../docker-run.ts";
 import { runDockerCommand } from "../docker-run.ts";
 
 const baseOptions: DockerRunOptions = {
+  contextPath: ".",
   defaultBranch: "main",
+  dockerfilePath: "apps/my-app/Dockerfile",
   imageAuthors: "PagoPA",
   imageName: "ghcr.io/pagopa/dx/my-app",
   imageUrl: "https://github.com/pagopa/dx",
@@ -73,6 +75,9 @@ describe("runDockerCommand", () => {
     expect(spawnOptions).toMatchObject({ cwd: "/workspace" });
     expect(args).toEqual(
       expect.arrayContaining([
+        ".",
+        "--file",
+        "apps/my-app/Dockerfile",
         "--tag",
         "apps-my-app",
         "--tag",
@@ -81,6 +86,33 @@ describe("runDockerCommand", () => {
     );
     expect(args).not.toContain("--push");
     expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
+  });
+
+  it("uses context and Dockerfile paths configured for a project", () => {
+    dockerImageMocks.computeImageTags.mockReturnValue([]);
+    dockerImageMocks.getProjectSlug.mockReturnValue("apps-my-app");
+    childProcessMocks.execFileSync.mockReturnValue("abc1234\n");
+    childProcessMocks.spawnSync.mockReturnValue({ status: 0 });
+
+    runDockerCommand(
+      "build",
+      {
+        ...baseOptions,
+        contextPath: "apps/my-app",
+        dockerfilePath: "apps/my-app/docker/Dockerfile.release",
+      },
+      "/workspace",
+    );
+
+    const [, args, spawnOptions] = childProcessMocks.spawnSync.mock.calls[0];
+    expect(args).toEqual(
+      expect.arrayContaining([
+        "apps/my-app",
+        "--file",
+        "apps/my-app/docker/Dockerfile.release",
+      ]),
+    );
+    expect(spawnOptions).toMatchObject({ cwd: "/workspace" });
   });
 
   it("pushes every computed tag with index+manifest annotations", () => {

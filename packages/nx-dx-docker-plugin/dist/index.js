@@ -152,14 +152,33 @@ const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.release?.docker?.repositoryName ?? null;
 };
 /**
-* Distinct from `getDockerRepositoryNameOverride` above: this only affects
-* the `imageName` this plugin computes for its own `docker:build`/
-* `docker:push` targets, never the `nx-release-publish` executor.
+* An optional `nx.docker.repositoryName` customizes only this plugin's
+* `docker:build`/`docker:push` image name. Otherwise, reuse Nx Release's
+* `nx.release.docker.repositoryName`, keeping one repository setting for
+* projects that use both build and release flows.
 */
 const getBuildImageRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
 	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
-	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.docker?.repositoryName ?? null;
+	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? null;
+};
+/**
+* Resolves the project-level Docker build layout. Both values are relative
+* to the workspace root because executors always run Docker from
+* `context.root`; this keeps Docker COPY paths deterministic in monorepos.
+*/
+const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return {
+		contextPath: ".",
+		dockerfilePath: `${projectRoot}/Dockerfile`
+	};
+	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	return {
+		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
+		dockerfilePath: packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`
+	};
 };
 const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const targets = {};
@@ -170,6 +189,7 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const projectDisplayName = require_docker_image.getProjectDisplayName(context.workspaceRoot, projectRoot);
 	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectDisplayName, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
 	const dockerRunOptions = {
+		...getBuildLayoutOverrides(context.workspaceRoot, projectRoot),
 		defaultBranch: options.defaultBranch,
 		imageAuthors: options.imageAuthors,
 		imageName,

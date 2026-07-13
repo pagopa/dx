@@ -71,6 +71,25 @@ describe("parseDockerReleasePluginOptions", () => {
     expect(result.imageUrl).toBe("https://example.com");
   });
 
+  it("uses explicit repository metadata when no git origin is available", () => {
+    childProcessMocks.execFileSync.mockImplementation(() => {
+      throw new Error("not a git repository");
+    });
+
+    const result = parseDockerReleasePluginOptions(
+      {
+        imageAuthors: "PagoPA",
+        imageNamePrefix: "pagopa/dx",
+        imageUrl: "https://github.com/pagopa/dx",
+      },
+      "/workspace",
+    );
+
+    expect(result.imageNamePrefix).toBe("pagopa/dx");
+    expect(result.imageUrl).toBe("https://github.com/pagopa/dx");
+    expect(childProcessMocks.execFileSync).not.toHaveBeenCalled();
+  });
+
   it("allows overriding the platform default", () => {
     childProcessMocks.execFileSync.mockReturnValue(
       "git@github.com:pagopa/dx.git\n",

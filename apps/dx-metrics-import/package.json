@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "nx": {
-    "docker": {
-      "repositoryName": "pagopa/dx-metrics-import"
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-metrics-import"
+      }
     }
   },
   "description": "DX Metrics importer that synchronizes GitHub engineering data into PostgreSQL.",

@@ -5,8 +5,17 @@
   "description": "Builds and pushes this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
   "type": "object",
   "properties": {
+    "contextPath": {
+      "description": "Workspace-relative Docker build context",
+      "type": "string",
+      "default": "."
+    },
     "projectRoot": {
       "description": "Project root containing the Dockerfile",
+      "type": "string"
+    },
+    "dockerfilePath": {
+      "description": "Workspace-relative Dockerfile path",
       "type": "string"
     },
     "projectDisplayName": {
@@ -37,6 +46,7 @@
   },
   "required": [
     "projectRoot",
+    "dockerfilePath",
     "projectDisplayName",
     "imageName",
     "defaultBranch",

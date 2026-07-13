@@ -3,8 +3,19 @@
   "version": "0.2.10",
   "type": "module",
   "nx": {
-    "docker": {
-      "repositoryName": "dx/mcp-server"
+    "release": {
+      "docker": {
+        "repositoryName": "dx/mcp-server"
+      }
+    },
+    "targets": {
+      "nx-release-publish": {
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish",
+        "options": {
+          "projectName": "@pagopa/dx-mcpserver",
+          "projectRoot": "apps/mcpserver"
+        }
+      }
     }
   },
   "description": "An MCP server that supports developers using DX tools.",

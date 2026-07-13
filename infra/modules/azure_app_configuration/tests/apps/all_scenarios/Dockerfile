@@ -2,9 +2,10 @@
 FROM public.ecr.aws/docker/library/golang:1.26-alpine3.23 AS build
 
 WORKDIR /src
-COPY go.mod .
+COPY src/go.mod .
+COPY src/go.sum .
 RUN go mod download
-COPY . .
+COPY src/. .
 RUN CGO_ENABLED=0 go build -o app main.go
 
 # trivy:ignore:AVD-DS-0002

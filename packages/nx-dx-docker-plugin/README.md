@@ -44,6 +44,44 @@ rationale behind which ones are required, auto-detected, or defaulted.
   to `docker:build`, `main`, `build`, `package`,
   `linux/amd64,linux/arm64`, `docker:push` and `ghcr.io`.
 
+## Per-project Docker build layout
+
+Generated targets run Docker from the workspace root. By default they use
+the workspace root (`.`) as build context and `{projectRoot}/Dockerfile` as
+the Dockerfile. Override either value in a project's `package.json` when a
+Dockerfile needs a narrower context or lives outside the project root:
+
+```jsonc
+{
+  "nx": {
+    "docker": {
+      "contextPath": "apps/my-app",
+      "dockerfilePath": "apps/my-app/docker/Dockerfile.release",
+      "repositoryName": "my-app"
+    }
+  }
+}
+```
+
+Both paths are workspace-relative. The same options can be supplied for a
+single invocation, for example `nx run my-app:docker:build --contextPath=apps/my-app`.
+
+Projects without a `package.json` can configure the generated target directly
+in `project.json` instead:
+
+```jsonc
+{
+  "targets": {
+    "docker:build": {
+      "options": {
+        "contextPath": "infra/modules/example/tests/apps/probe",
+        "dockerfilePath": "infra/modules/example/tests/apps/probe/Dockerfile"
+      }
+    }
+  }
+}
+```
+
 ## Tag strategy
 
 See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
