@@ -23,17 +23,16 @@
 
 ## Metadata
 
-| ID                      | Value                                             |
-| ----------------------- | ------------------------------------------------- |
-| `metadata.status`       | draft                                             |
-| `metadata.deadline`     | _<one or more deadlines>_                         |
-| `metadata.start`        | _<input-collection start date, YYYY-MM-DD>_       |
-| `metadata.end`          | _<observation closing date, YYYY-MM-DD>_          |
-| `metadata.budget`       | _<budget source or confirmed not applicable>_     |
-| `metadata.priority`     | _<business priority>_                             |
-| `metadata.sponsor`      | _<initiative sponsor>_                            |
-| `metadata.jira`         | _<primary Jira initiative or governing epic key>_ |
-| `metadata.last-updated` | _<YYYY-MM-DD>_                                    |
+| ID                      | Value                                         |
+| ----------------------- | --------------------------------------------- |
+| `metadata.status`       | draft                                         |
+| `metadata.deadline`     | _<one or more deadlines>_                     |
+| `metadata.start`        | _<input-collection start date, YYYY-MM-DD>_   |
+| `metadata.end`          | _<observation closing date, YYYY-MM-DD>_      |
+| `metadata.budget`       | _<budget source or confirmed not applicable>_ |
+| `metadata.priority`     | _<business priority>_                         |
+| `metadata.sponsor`      | _<initiative sponsor>_                        |
+| `metadata.last-updated` | _<YYYY-MM-DD>_                                |
 
 <!-- id: artifacts -->
 
@@ -43,14 +42,10 @@ Keep every category. Leave the link empty only when the artifact does not exist
 yet; use the notes column to explain whether it is expected later or confirmed
 not applicable.
 
-| ID                            | Category                               | Link                                                  | Notes                       |
-| ----------------------------- | -------------------------------------- | ----------------------------------------------------- | --------------------------- |
-| `artifacts.jira`              | Jira                                   | _<link to initiative board or primary Jira artifact>_ | _<status or applicability>_ |
-| `artifacts.design`            | Design / prototypes                    | _<link>_                                              | _<status or applicability>_ |
-| `artifacts.budget-costs`      | Budget and costs                       | _<link>_                                              | _<status or applicability>_ |
-| `artifacts.related-rfc`       | PRD-related RFCs                       | _<link>_                                              | _<status or applicability>_ |
-| `artifacts.design-review-srs` | Design Review / linked SRS             | _<link>_                                              | _<status or applicability>_ |
-| `artifacts.lrr-rollout`       | Launch Readiness Review / Rollout Plan | _<link>_                                              | _<status or applicability>_ |
+| ID                       | Category            | Link     | Notes                       |
+| ------------------------ | ------------------- | -------- | --------------------------- |
+| `artifacts.design`       | Design / prototypes | _<link>_ | _<status or applicability>_ |
+| `artifacts.budget-costs` | Budget and costs    | _<link>_ | _<status or applicability>_ |
 
 <!-- id: why -->
 
@@ -68,6 +63,17 @@ assuming a solution.>_
 ### Target audience
 
 _<The intended users or customers, including relevant segments and needs.>_
+
+<!-- id: why.jobs-to-be-done -->
+
+### Jobs to be done
+
+Describe the job from the user's perspective: when the user is in a
+particular situation, they want to make progress toward an expected outcome.
+
+| ID                             | Job statement                             | Evidence   |
+| ------------------------------ | ----------------------------------------- | ---------- |
+| `why.jobs-to-be-done.item-001` | _<When ..., I want to ..., so I can ...>_ | _<source>_ |
 
 <!-- id: why.goals -->
 
@@ -136,17 +142,6 @@ risks. Keep detailed test acceptance criteria in downstream specifications.
 _<How the current process or product works today, including observed pain
 points.>_
 
-<!-- id: what.use-cases -->
-
-### Use cases
-
-Prioritize every use case with MoSCoW. `Won't` means explicitly excluded from
-this initiative, not permanently rejected.
-
-| ID                        | Priority                          | Actor     | Use case     | Expected outcome |
-| ------------------------- | --------------------------------- | --------- | ------------ | ---------------- |
-| `what.use-cases.item-001` | _<Must / Should / Could / Won't>_ | _<actor>_ | _<use case>_ | _<outcome>_      |
-
 <!-- id: what.scope -->
 
 ### Scope
@@ -171,19 +166,6 @@ _<Customer-care stakeholders, likely contact reasons, and experience points
 that require support preparation or monitoring. Do not write the downstream
 operational support specification here.>_
 
-<!-- id: what.linked-epics -->
-
-### Linked user stories and epics
-
-Provide read-only references and current status for the individual delivery
-epics or user-story groups. The primary governing Jira reference remains in
-`metadata.jira`; the initiative board or artifact link remains in
-`artifacts.jira`. Do not generate backlog items.
-
-| ID                           | Jira reference  | Status     | Notes     |
-| ---------------------------- | --------------- | ---------- | --------- |
-| `what.linked-epics.item-001` | _<link or key>_ | _<status>_ | _<notes>_ |
-
 <!-- id: how -->
 
 ## How
@@ -201,8 +183,8 @@ _<Customer journey, experience intent, and links to Figma or prototypes.>_
 
 ### Technical solution references
 
-_<High-level solution direction and links to relevant RFCs, design reviews, or
-SRS documents. Do not duplicate their technical detail.>_
+_<High-level solution direction and links to relevant technical artifacts. Do
+not duplicate their technical detail.>_
 
 <!-- id: how.technical-dependencies -->
 
@@ -215,38 +197,5 @@ dependencies that affect feasibility or sequencing.>_
 
 ### Release plan
 
-_<High-level release timeline and links to the Launch Readiness Review and
-Rollout Plan when available.>_
-
-<!-- id: project -->
-
-## Project management & monitoring
-
-<!-- id: project.decision-change-log -->
-
-### Decision and change log
-
-| ID                     | Date     | Decision or change     | Rationale     | Owner     |
-| ---------------------- | -------- | ---------------------- | ------------- | --------- |
-| `project.log.item-001` | _<date>_ | _<decision or change>_ | _<rationale>_ | _<owner>_ |
-
-<!-- id: project.pmo -->
-
-### Project chart, schedule, and status
-
-| ID                     | Item             | Reference or status        |
-| ---------------------- | ---------------- | -------------------------- |
-| `project.pmo.chart`    | Project chart    | _<link or status>_         |
-| `project.pmo.schedule` | Schedule outline | _<link or summary>_        |
-| `project.pmo.report`   | Status report    | _<link or current status>_ |
-
-<!-- id: project.decisions-research -->
-
-### Decisions and research
-
-No blocking item may remain open when this PRD is written. Keep confirmed
-non-blocking follow-ups visible.
-
-| ID                           | Type                        | Item                     | Owner     | Due date | Status / resolution                       |
-| ---------------------------- | --------------------------- | ------------------------ | --------- | -------- | ----------------------------------------- |
-| `project.decisions.item-001` | _<Blocking / Non-blocking>_ | _<decision or research>_ | _<owner>_ | _<date>_ | _<resolved decision or open non-blocker>_ |
+_<High-level release timeline. Keep operational rollout details in downstream
+release artifacts.>_

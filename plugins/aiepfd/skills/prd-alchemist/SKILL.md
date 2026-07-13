@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why, What, How, and Project management hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
+description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why, What, and How hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
 ---
 
 # PRD Alchemist
@@ -49,9 +49,8 @@ no path is given. Never overwrite the bundled template.
    existing product documents, linked artifacts, and confirmed decisions. Ask
    for referenced material that has not been provided.
 2. **Map evidence to the template.** Organize the input under source inputs,
-   metadata, related artifacts, Why, What, How, and Project management &
-   monitoring. Distinguish confirmed facts from proposals and unresolved
-   questions.
+   metadata, related artifacts, Why, What, and How. Distinguish confirmed facts
+   from proposals and unresolved questions.
 3. **Run the clarification gate.** Check every required field and section.
    Missing information, contradictions, vague goals, placeholder metrics, and
    unresolved scope choices are blockers unless the user explicitly confirms
@@ -81,8 +80,8 @@ no path is given. Never overwrite the bundled template.
 - **Block when required.** A required field without a confirmed value or
   approved `Not applicable` prevents writing. Show the blocking questions
   clearly and resume after the user answers.
-- **Separate non-blockers.** Record confirmed non-blocking research or decisions
-  in `project.decisions-research`; do not hide them in prose.
+- **Separate non-blockers.** Keep confirmed non-blocking follow-ups visible in
+  the most relevant section; do not hide them in prose.
 - **Preserve competing positions.** When sources disagree, state the
   contradiction in the clarification question and ask the decision owner to
   resolve it.
@@ -107,5 +106,5 @@ reuse an existing ID for a different meaning.
 - Do not perform completeness review for committee submission as a separate
   approval gate.
 - Do not publish or change lifecycle state without explicit user confirmation.
-- Do not duplicate detailed SRS, RFC, design review, QA, rollout, or backlog
-  content inside the PRD; link those artifacts instead.
+- Do not duplicate detailed technical, QA, rollout, or backlog content inside the
+  PRD; keep those details in their downstream artifacts instead.
