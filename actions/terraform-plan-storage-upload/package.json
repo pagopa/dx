@@ -12,9 +12,7 @@
   },
   "dependencies": {
     "@actions/core": "catalog:github-actions",
-    "@aws-sdk/client-s3": "catalog:aws",
-    "@azure/identity": "catalog:",
-    "@azure/storage-blob": "catalog:azure",
+    "@pagopa/dx-tasks": "workspace:*",
     "zod": "catalog:"
   },
   "devDependencies": {
