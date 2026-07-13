@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why and How hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
+description: Write and update a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, meeting summaries, strategy input, or a rough product document into a Confluence-compatible PRD covering needs, actors, JTBD, goals, metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. Preserve stable English IDs, manage explicit draft-to-review readiness, and offer optional Confluence publication only after writing.
 ---
 
 # PRD Alchemist
@@ -8,17 +8,17 @@ description: Write a structured Product Requirements Document (PRD) from gathere
 Turn gathered product material into a structured, outcome-oriented Product
 Requirements Document (PRD).
 
-The PRD explains **what** is needed and **why** it matters. It may link to
-high-level solution artifacts, but it does not replace downstream technical
-specifications, acceptance criteria, QA checklists, or implementation plans.
+The PRD explains the need, intended outcomes, constraints, and early feasibility
+signals. It is outcome-oriented and does not replace downstream use cases,
+technical specifications, acceptance criteria, QA checklists, or implementation
+plans.
 
 ## When to Use This Skill
 
-Use this skill for the structured-writing phase, after or during product
-discovery, when the user wants to:
+Use this skill when the user wants to:
 
-- turn a rough collection of product material into a complete PRD;
-- rewrite an existing PRD using the canonical hierarchy;
+- turn gathered product material into a structured PRD;
+- rewrite or update an existing PRD using the canonical hierarchy;
 - fill gaps in a product document through a guided interview;
 - prepare a PRD that can later be published to Confluence.
 
@@ -32,44 +32,48 @@ Produce one PRD using [`templates/prd.md`](./templates/prd.md). Write it to the
 path requested by the user, or to `prd.md` in the current working directory when
 no path is given. Never overwrite the bundled template.
 
-- Write the machine-first document in **English**.
-- Set `metadata.status` to `draft` when creating or updating the PRD.
+- Write the document in **English** unless the user explicitly requests another
+  language for the visible content.
+- Include the visible `Metadata` section from the template and set
+  `metadata.status` to `draft` when creating or updating the PRD.
 - Preserve every stable ID exactly as written. IDs are always English and are
   never translated, including in a translated Confluence page.
-- Include every template section and fixed artifact category. Use an explicit
-  `Not applicable` with a reason when the user confirms a field does not apply;
-  never silently remove it.
+- Include every template section. For conditional sections, use
+  `Not applicable — <confirmed reason>` when the user confirms they do not
+  apply; never silently remove a section.
 - Keep concrete facts traceable to source inputs.
-- Do not advance the status without the explicit confirmation described below,
-  submit the PRD for evaluation, or create backlog items.
+- Do not advance the status without the explicit confirmation described below or
+  create downstream use cases, backlog items, or implementation specifications.
 
 ## Workflow
 
 1. **Collect the writing inputs.** Read the gathered material, strategic input,
    existing product documents, linked artifacts, and confirmed decisions. Ask
    for referenced material that has not been provided.
-2. **Map evidence to the template.** Organize the input under source inputs,
-   metadata, related artifacts, Why, and How. Distinguish confirmed facts from
-   proposals and unresolved questions.
-3. **Run the clarification gate.** Check every required field and section.
-   Missing information, contradictions, vague goals, placeholder metrics, and
-   unresolved scope choices are blockers unless the user explicitly confirms
-   they are non-blocking or not applicable. Ask a few targeted questions at a
-   time, starting with the gaps that most affect the document. **Do not write
-   the PRD while blocking items remain open.**
-4. **Write the PRD.** Rewrite the confirmed material into clear product
-   language using the template. Measurement must contain concrete objectives
-   and measurable key results or product KPIs, not generic placeholders. Keep
-   technical content at the level of constraints, dependencies, and links to
-   downstream artifacts.
-5. **Validate and clean up.** Confirm that every stable ID and frontmatter key
-   remains present, all mandatory fields contain a value or an approved
-   `Not applicable`, fixed artifact rows remain intact, no blocking decision is open,
-   and no authoring guidance or placeholders remain.
-6. **Handle explicit completion.** If the user explicitly says that the PRD is
-   complete, good enough, or ready for review, run the same validation. When no
-   blocker remains, change only `metadata.status` from `draft` to `review`.
-   Never infer this transition from document quality or completeness.
+2. **Map evidence to the template.** Organize the input under Metadata, Need
+   definition, Actors, Objectives, Success metrics, Strategic dependencies,
+   Context and constraints, Initial feasibility red flags, Design discovery,
+   Open questions, and Support readiness. Distinguish confirmed facts,
+   proposals, assumptions, and unresolved questions.
+3. **Clarify selectively.** Ask targeted questions for contradictions, missing
+   ownership, unclear problem statements, unsupported metrics, or decisions that
+   affect scope, priority, outcomes, or feasibility. Do not block creation of a
+   `draft` solely because a conditional field is unknown; record the unknown as
+   an open question or justified `Not applicable` value.
+4. **Write or update the PRD.** Rewrite confirmed material into clear,
+   outcome-oriented language. Every JTBD row must include persona, canonical job
+   statement, expected outcome, success metric, quality guardrail, priority, and
+   notes. Keep detailed use cases and implementation content out of the PRD.
+5. **Validate the document.** Confirm that every stable section and field ID is
+   present, status is valid, confirmed values are traceable, conditional sections
+   are populated or explicitly marked not applicable, and authoring guidance is
+   removed.
+6. **Handle explicit review readiness.** If the user says the PRD is complete,
+   good enough, or ready for review, verify that context, sponsor, owner, and
+   problem are clear enough to request stakeholder feedback. Non-blocking open
+   questions may remain. If the criterion is met, change only
+   `metadata.status` from `draft` to `review`; otherwise keep `draft` and ask
+   targeted questions. Never infer this transition.
 7. **Offer Confluence publication.** After writing a new PRD, ask:
    **"Do you want me to create a Confluence page for this PRD?"** Do not publish
    without an affirmative answer. When handling a status-only completion
@@ -82,15 +86,16 @@ no path is given. Never overwrite the bundled template.
 
 - **Ask, never infer.** Do not turn a suggestion into a decision, create
   metrics, choose scope, assign ownership, or resolve contradictions yourself.
-- **Block when required.** A required field without a confirmed value or
-  approved `Not applicable` prevents writing. Show the blocking questions
-  clearly and resume after the user answers.
+- **Drafts may be incomplete.** Missing information belongs in open questions,
+  assumptions, or a justified `Not applicable` value. Do not invent a value to
+  make the document look complete.
 - **Change status only on explicit confirmation.** Keep `metadata.status` as
   `draft` unless the user explicitly confirms that the PRD is complete, good
   enough, or ready for review. If blockers remain, keep `draft` and ask about
   them instead.
-- **Separate non-blockers.** Keep confirmed non-blocking follow-ups visible in
-  the most relevant section; do not hide them in prose.
+- **Keep review blockers distinct.** Only missing context, sponsor, owner, or a
+  sufficiently clear problem blocks `draft → review`; other open questions can
+  remain visible in the PRD.
 - **Preserve competing positions.** When sources disagree, state the
   contradiction in the clarification question and ask the decision owner to
   resolve it.
@@ -100,22 +105,22 @@ no path is given. Never overwrite the bundled template.
 The document is prose-first for people and structurally reliable for agents:
 
 - HTML comments before headings are stable section IDs.
-- YAML frontmatter keys are stable metadata IDs, such as `metadata.status` and
-  `metadata.deadline`.
-- The `ID` column in tables contains stable field or row IDs.
+- The `ID` column in tables contains stable field or row IDs, including metadata
+  fields such as `metadata.status`.
 - IDs never change between revisions, even if visible headings are translated
   or reworded.
-- Use YAML only for document metadata; keep the PRD body human-readable Markdown.
+- Keep metadata visible in the Markdown section; do not move it to YAML
+  frontmatter or another hidden representation.
 
 Treat IDs as a contract. Add a new ID only for a genuinely new field; never
 reuse an existing ID for a different meaning.
 
 ## Boundaries
 
-- Do not perform gathering-only aggregation when blocking writing inputs are
-  missing; ask for them.
-- Do not perform completeness review for committee submission as a separate
-  approval gate.
+- Do not perform gathering-only aggregation when the user asks for a structured
+  PRD.
+- Do not manage statuses beyond `draft` and `review`.
 - Do not publish or change lifecycle state without explicit user confirmation.
-- Do not duplicate detailed technical, QA, rollout, or backlog content inside the
-  PRD; keep those details in their downstream artifacts instead.
+- Do not include detailed use cases, technical specifications, QA, rollout,
+  backlog, or implementation content inside the PRD; keep those details in
+  downstream artifacts instead.
