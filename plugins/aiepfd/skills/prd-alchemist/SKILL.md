@@ -78,9 +78,10 @@ no path is given. Never overwrite the bundled template.
    **"Do you want me to create a Confluence page for this PRD?"** Do not publish
    without an affirmative answer. When handling a status-only completion
    request, do not offer publication unless the user separately asks for it.
-8. **Ask the publication language.** If the user says yes, ask which language
-   the Confluence page should use. Then follow
-   [`references/confluence-publication.md`](./references/confluence-publication.md).
+8. **Hand off publication.** If the user confirms, invoke or hand off to the
+   `confluence-librarian` skill with the PRD path, title, and any known
+   destination details. The librarian owns publication mechanics, translation,
+   stable-ID preservation, destination confirmation, and the final page URL.
 
 ## Clarification Rules
 
