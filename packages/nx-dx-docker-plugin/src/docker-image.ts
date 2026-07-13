@@ -10,6 +10,7 @@ import { readJsonFile } from "@nx/devkit";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { compare, parse } from "semver";
 import { z } from "zod/v4";
 
 interface ProjectPackageJson {
@@ -84,8 +85,6 @@ export const getImageName = (
 const getImageSlug = (projectDisplayName: string): string =>
   slugifyRef(projectDisplayName.replace(/^@[^/]+\//, ""));
 
-const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
-
 /**
  * `projectName` ultimately comes from an unsanitized CLI argument
  * (`--project-display-name`, forwarded from `package.json`'s `name` field or
@@ -104,66 +103,15 @@ const projectNameSchema = z
 const slugifyRef = (ref: string): string =>
   ref.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
 
-interface ParsedSemver {
-  readonly major: number;
-  readonly minor: number;
-  readonly patch: number;
-  readonly prerelease: string | undefined;
-}
-
-const compareNumericIdentifiers = (a: string, b: string): number => {
-  const normalizedA = a.replace(/^0+(?=\d)/, "");
-  const normalizedB = b.replace(/^0+(?=\d)/, "");
-  if (normalizedA.length !== normalizedB.length) {
-    return normalizedA.length - normalizedB.length;
-  }
-  if (normalizedA === normalizedB) return 0;
-  return normalizedA < normalizedB ? -1 : 1;
-};
-
-/** @param version A string already matched by `SEMVER_RE`. */
-const parseSemver = (version: string): ParsedSemver => {
-  const [core, prerelease] = version.split(/-(.+)/);
-  const [major, minor, patch] = core.split(".").map(Number);
-  return { major, minor, patch, prerelease };
-};
-
 /**
- * Standard semver precedence: compares major, then minor, then patch, then
- * treats a release as higher than any pre-release of the same
- * major.minor.patch (e.g. `1.0.0` > `1.0.0-rc.1`).
- * @returns positive if `a` > `b`, negative if `a` < `b`, 0 if equal.
+ * Parses strict SemVer strings that can also be used as Docker tags. Build
+ * metadata is valid SemVer but contains `+`, which Docker tags do not allow.
  */
-const compareSemver = (a: ParsedSemver, b: ParsedSemver): number => {
-  if (a.major !== b.major) return a.major - b.major;
-  if (a.minor !== b.minor) return a.minor - b.minor;
-  if (a.patch !== b.patch) return a.patch - b.patch;
-  if (a.prerelease === b.prerelease) return 0;
-  if (!a.prerelease) return 1;
-  if (!b.prerelease) return -1;
-
-  const aIdentifiers = a.prerelease.split(".");
-  const bIdentifiers = b.prerelease.split(".");
-  const identifierCount = Math.max(aIdentifiers.length, bIdentifiers.length);
-
-  for (let index = 0; index < identifierCount; index += 1) {
-    const aIdentifier = aIdentifiers[index];
-    const bIdentifier = bIdentifiers[index];
-    if (aIdentifier === undefined) return -1;
-    if (bIdentifier === undefined) return 1;
-    if (aIdentifier === bIdentifier) continue;
-
-    const aIsNumeric = /^\d+$/.test(aIdentifier);
-    const bIsNumeric = /^\d+$/.test(bIdentifier);
-    if (aIsNumeric && bIsNumeric) {
-      return compareNumericIdentifiers(aIdentifier, bIdentifier);
-    }
-    if (aIsNumeric) return -1;
-    if (bIsNumeric) return 1;
-    return aIdentifier < bIdentifier ? -1 : 1;
-  }
-
-  return 0;
+const parseDockerSemver = (version: string) => {
+  const parsed = parse(version);
+  return parsed?.version === version && parsed.build.length === 0
+    ? parsed
+    : null;
 };
 
 /**
@@ -179,7 +127,10 @@ export const isHighestReleasedVersion = (
   projectName: string,
   currentVersion: string,
 ): boolean => {
-  const currentParsed = parseSemver(currentVersion);
+  const currentParsed = parseDockerSemver(currentVersion);
+  if (!currentParsed) {
+    return false;
+  }
   const parsedProjectName = projectNameSchema.parse(projectName);
   const prefix = `${parsedProjectName}@`;
 
@@ -202,10 +153,8 @@ export const isHighestReleasedVersion = (
     if (!tag.startsWith(prefix) || otherVersion === currentVersion) {
       return true;
     }
-    const otherParsed = SEMVER_RE.test(otherVersion)
-      ? parseSemver(otherVersion)
-      : null;
-    return !otherParsed || compareSemver(otherParsed, currentParsed) <= 0;
+    const otherParsed = parseDockerSemver(otherVersion);
+    return !otherParsed || compare(otherParsed, currentParsed) <= 0;
   });
 };
 
@@ -223,14 +172,15 @@ export const computeReleaseTags = (
   projectName: string,
   version: string,
 ): readonly string[] => {
-  if (!SEMVER_RE.test(version)) {
+  const parsedVersion = parseDockerSemver(version);
+  if (!parsedVersion) {
     return [];
   }
   const tags = [version];
-  const [major, minor] = version.split(".");
+  const { major, minor } = parsedVersion;
   tags.push(`${major}.${minor}`);
-  if (major !== "0") {
-    tags.push(major);
+  if (major !== 0) {
+    tags.push(String(major));
   }
   if (isHighestReleasedVersion(projectName, version)) {
     tags.push("latest");

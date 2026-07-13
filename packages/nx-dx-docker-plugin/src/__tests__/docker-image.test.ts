@@ -149,6 +149,15 @@ describe("computeReleaseTags", () => {
     expect(computeReleaseTags("my-app", "not-a-version")).toEqual([]);
   });
 
+  it("rejects SemVer build metadata because it is not a valid Docker tag", () => {
+    expect(computeReleaseTags("my-app", "1.2.3+build.1")).toEqual([]);
+  });
+
+  it("rejects non-strict SemVer strings", () => {
+    expect(computeReleaseTags("my-app", "v1.2.3")).toEqual([]);
+    expect(computeReleaseTags("my-app", "01.2.3")).toEqual([]);
+  });
+
   it("includes version, major.minor, major, and latest for a stable highest release", () => {
     childProcessMocks.execFileSync.mockReturnValue("");
 
