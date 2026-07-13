@@ -8,13 +8,15 @@ import {
 } from "@aws-sdk/client-s3";
 import { AzureCliCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { promisify } from "node:util";
 import * as z from "zod/mini";
 
 const nonEmptyStringSchema = z.string().check(z.minLength(1));
+const execFileAsync = promisify(execFile);
 
 const azurermBackendSchema = z.object({
   config: z.object({
@@ -237,7 +239,7 @@ const createBundle = async (
   const archivePath = path.join(temporaryDirectory, "bundle.tar.gz");
 
   try {
-    execFileSync("tar", [
+    await execFileAsync("tar", [
       "czf",
       archivePath,
       "-C",
@@ -471,7 +473,7 @@ export const downloadPlanBundle = async ({
   try {
     await downloadFromBackend(backend, planPath, archivePath);
     await fs.mkdir(absoluteWorkingDirectory, { recursive: true });
-    execFileSync("tar", [
+    await execFileAsync("tar", [
       "xzf",
       archivePath,
       "-C",

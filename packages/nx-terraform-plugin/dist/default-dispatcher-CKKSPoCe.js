@@ -2,8 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as z from "zod/mini";
 import { Octokit } from "octokit";
-import util from "node:util";
-import childProcess, { execFileSync } from "node:child_process";
+import util, { promisify } from "node:util";
+import childProcess, { execFile } from "node:child_process";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { AzureCliCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
@@ -336,6 +336,7 @@ const PLAN_FILE_NAME = "tfplan.binary";
 //#region ../dx-tasks/src/terraform/plan-storage.ts
 /** This module stores Terraform plan bundles in the configured Terraform state backend. */
 const nonEmptyStringSchema = z.string().check(z.minLength(1));
+const execFileAsync = promisify(execFile);
 const azurermBackendSchema = z.object({
 	config: z.object({
 		container_name: nonEmptyStringSchema,
@@ -431,7 +432,7 @@ const createBundle = async (workingDirectory, planFile) => {
 	const temporaryDirectory = await fs.mkdtemp(path.join(os.tmpdir(), "dx-tasks-plan-storage-"));
 	const archivePath = path.join(temporaryDirectory, "bundle.tar.gz");
 	try {
-		execFileSync("tar", [
+		await execFileAsync("tar", [
 			"czf",
 			archivePath,
 			"-C",
@@ -543,7 +544,7 @@ const downloadPlanBundle = async ({ backend, planPath, workingDirectory }) => {
 	try {
 		await downloadFromBackend(backend, planPath, archivePath);
 		await fs.mkdir(absoluteWorkingDirectory, { recursive: true });
-		execFileSync("tar", [
+		await execFileAsync("tar", [
 			"xzf",
 			archivePath,
 			"-C",
