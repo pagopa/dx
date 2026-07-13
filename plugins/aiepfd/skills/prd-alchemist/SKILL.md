@@ -62,10 +62,10 @@ no path is given. Never overwrite the bundled template.
    and measurable key results or product KPIs, not generic placeholders. Keep
    technical content at the level of constraints, dependencies, and links to
    downstream artifacts.
-5. **Validate and clean up.** Confirm that every stable ID remains present, all
-   mandatory fields contain a value or an approved `Not applicable`, fixed
-   artifact rows remain intact, no blocking decision is open, and no authoring
-   guidance or placeholders remain.
+5. **Validate and clean up.** Confirm that every stable ID and frontmatter key
+   remains present, all mandatory fields contain a value or an approved `Not
+applicable`, fixed artifact rows remain intact, no blocking decision is open,
+   and no authoring guidance or placeholders remain.
 6. **Offer Confluence publication.** Only after the PRD file is complete, ask:
    **"Do you want me to create a Confluence page for this PRD?"** Do not publish
    without an affirmative answer.
@@ -91,10 +91,12 @@ no path is given. Never overwrite the bundled template.
 The document is prose-first for people and structurally reliable for agents:
 
 - HTML comments before headings are stable section IDs.
+- YAML frontmatter keys are stable metadata IDs, such as `metadata.status` and
+  `metadata.deadline`.
 - The `ID` column in tables contains stable field or row IDs.
 - IDs never change between revisions, even if visible headings are translated
   or reworded.
-- Do not replace the document with JSON or YAML.
+- Use YAML only for document metadata; keep the PRD body human-readable Markdown.
 
 Treat IDs as a contract. Add a new ID only for a genuinely new field; never
 reuse an existing ID for a different meaning.

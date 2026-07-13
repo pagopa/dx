@@ -1,3 +1,15 @@
+---
+metadata:
+  status: draft
+  deadline: "<one or more deadlines>"
+  start: "<input-collection start date, YYYY-MM-DD>"
+  end: "<observation closing date, YYYY-MM-DD>"
+  budget: "<budget source or confirmed not applicable>"
+  priority: "<business priority>"
+  sponsor: "<initiative sponsor>"
+  last-updated: "<YYYY-MM-DD>"
+---
+
 # PRD — _<initiative title>_
 
 <!--
@@ -5,9 +17,10 @@
 
   Write the machine-first PRD in English. Replace every placeholder with
   confirmed content. Do not write the PRD while a blocking item remains open.
-  Keep every stable section comment and every ID table entry exactly as written.
-  Use "Not applicable — <reason confirmed by user>" instead of deleting a field.
-  Set metadata.status to draft. Never translate stable IDs.
+  Keep every stable section comment, every frontmatter key, and every ID table
+  entry exactly as written. Use "Not applicable — <reason confirmed by user>"
+  instead of deleting a field. Set metadata.status to draft. Never translate
+  stable IDs.
 -->
 
 <!-- id: input -->
@@ -18,21 +31,6 @@
 | ---------------------- | ------------------- | --------------------- |
 | `input.strategic`      | _<link or source>_  | _<strategic input>_   |
 | `input.raw-collection` | _<link or source>_  | _<gathered material>_ |
-
-<!-- id: metadata -->
-
-## Metadata
-
-| ID                      | Value                                         |
-| ----------------------- | --------------------------------------------- |
-| `metadata.status`       | draft                                         |
-| `metadata.deadline`     | _<one or more deadlines>_                     |
-| `metadata.start`        | _<input-collection start date, YYYY-MM-DD>_   |
-| `metadata.end`          | _<observation closing date, YYYY-MM-DD>_      |
-| `metadata.budget`       | _<budget source or confirmed not applicable>_ |
-| `metadata.priority`     | _<business priority>_                         |
-| `metadata.sponsor`      | _<initiative sponsor>_                        |
-| `metadata.last-updated` | _<YYYY-MM-DD>_                                |
 
 <!-- id: artifacts -->
 

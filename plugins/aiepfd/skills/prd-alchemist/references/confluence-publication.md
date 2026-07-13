@@ -9,9 +9,10 @@ asks to publish it.
    inferred safely.
 3. Keep every stable ID in English and unchanged.
 4. Translate only human-facing headings, prose, labels, and table values into
-   the chosen language.
-5. Preserve the complete section hierarchy and all fixed metadata and artifact
-   rows.
+   the chosen language; preserve frontmatter keys and non-human-facing metadata
+   values.
+5. Preserve the complete section hierarchy, all frontmatter metadata keys, and
+   all fixed artifact rows.
 6. Show or describe the page title, target location, and language before
    creation when the publication tool requires an irreversible action.
 7. Create the page with the available authenticated Confluence integration.

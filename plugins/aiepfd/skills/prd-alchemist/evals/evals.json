@@ -10,7 +10,7 @@
         "The PRD includes Source inputs, Metadata, Related artifacts, Why, and How",
         "The PRD preserves stable English IDs including metadata.status, why.jobs-to-be-done, why.measurement, and how.technical-solutions",
         "The PRD does not include What, use cases, or a Project management & monitoring section",
-        "metadata.status is draft",
+        "The YAML frontmatter contains metadata.status set to draft and all other canonical metadata keys",
         "The measurement plan preserves the supplied baselines and targets without inventing metrics",
         "The related-artifacts table includes the design and budget categories, including empty or future artifacts",
         "The output asks whether the user wants a Confluence page only after the PRD is written"
