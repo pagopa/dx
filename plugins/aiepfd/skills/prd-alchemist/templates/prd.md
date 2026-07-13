@@ -1,117 +1,165 @@
 ---
-id: <stable-document-slug>
-title: <initiative title>
-status: draft
-owner: <primary author or product manager>
-contributors: []
-stakeholders: []
-created: <YYYY-MM-DD>
-last_updated: <YYYY-MM-DD>
-revision: 1
-target_release: <timeline or target window, if known>
-tags: []
+metadata:
+  status: draft
+  deadline: "<one or more deadlines>"
+  start: "<input-collection start date, YYYY-MM-DD>"
+  end: "<observation closing date, YYYY-MM-DD>"
+  budget: "<budget source or confirmed not applicable>"
+  priority: "<business priority>"
+  sponsor: "<initiative sponsor>"
+  last-updated: "<YYYY-MM-DD>"
 ---
 
 # PRD — _<initiative title>_
 
 <!--
   AUTHORING GUIDANCE — DELETE THIS ENTIRE COMMENT BLOCK IN THE FINISHED DOCUMENT.
-  This document is produced from unstructured input. It captures what has been
-  understood so far, not a finished document.
-  - Text in _italics_ is guidance: replace it with real content.
-  - Fill each metadata field in the frontmatter above when the value is known;
-    if it is not, leave it blank and record the gap under "Open questions & gaps".
-  - Set status to draft so a later stage can advance the document.
-  - Do not invent content. If something is unknown, record it under
-    "Open questions & gaps".
-  - PRESERVE the frontmatter keys and the "id" anchor comments before each
-    heading exactly as written. They are the stable identifiers that let tools
-    read and update specific fields without parsing prose. Never rename or
-    remove them.
+
+  Write the machine-first PRD in English. Replace every placeholder with
+  confirmed content. Do not write the PRD while a blocking item remains open.
+  Keep every stable section comment, every frontmatter key, and every ID table
+  entry exactly as written. Use "Not applicable — <reason confirmed by user>"
+  instead of deleting a field. Start with metadata.status set to draft. Change
+  it to review only after the user explicitly confirms that the PRD is complete.
+  Never translate stable IDs.
 -->
 
-<!-- id: summary -->
+<!-- id: input -->
 
-## Summary
+## Source inputs
 
-_A few sentences synthesizing what this initiative is about, based on the input._
+| ID                     | Source or reference | What it contributed   |
+| ---------------------- | ------------------- | --------------------- |
+| `input.strategic`      | _<link or source>_  | _<strategic input>_   |
+| `input.raw-collection` | _<link or source>_  | _<gathered material>_ |
 
-<!-- id: context -->
+<!-- id: artifacts -->
 
-## Context & problem
+## Related artifacts
 
-_The situation and the underlying need or problem understood from the material._
+Keep every category. Leave the link empty only when the artifact does not exist
+yet; use the notes column to explain whether it is expected later or confirmed
+not applicable.
 
-<!-- id: objectives -->
+| ID                       | Category            | Link     | Notes                       |
+| ------------------------ | ------------------- | -------- | --------------------------- |
+| `artifacts.design`       | Design / prototypes | _<link>_ | _<status or applicability>_ |
+| `artifacts.budget-costs` | Budget and costs    | _<link>_ | _<status or applicability>_ |
 
-## Objectives
+<!-- id: why -->
 
-_The outcomes or goals the initiative seems to pursue._
+## Why
 
-<!-- id: audience -->
+<!-- id: why.need -->
 
-## Audience
+### Need definition
 
-_Who this is for, as far as the input reveals._
+_<The user or business problem to solve, supported by evidence and without
+assuming a solution.>_
 
-<!-- id: scope -->
+<!-- id: why.target-audience -->
 
-## Scope signals
+### Target audience
 
-<!-- id: scope.in -->
+_<The intended users or customers, including relevant segments and needs.>_
 
-### In scope (signals)
+<!-- id: why.jobs-to-be-done -->
 
-_What appears to be in scope, based on the input._
+### Jobs to be done
 
-<!-- id: scope.out -->
+Describe the job from the user's perspective: when the user is in a
+particular situation, they want to make progress toward an expected outcome.
 
-### Out of scope or later (signals)
+| ID                             | Job statement                             | Evidence   |
+| ------------------------------ | ----------------------------------------- | ---------- |
+| `why.jobs-to-be-done.item-001` | _<When ..., I want to ..., so I can ...>_ | _<source>_ |
 
-_What appears to be out of scope or deferred, based on the input._
+<!-- id: why.goals -->
 
-<!-- id: open_questions -->
+### Business and user goals
 
-## Open questions & gaps
+| ID                   | Type     | Goal                            | Evidence   |
+| -------------------- | -------- | ------------------------------- | ---------- |
+| `why.goals.business` | Business | _<measurable business outcome>_ | _<source>_ |
+| `why.goals.user`     | User     | _<measurable user outcome>_     | _<source>_ |
 
-_What was unclear, missing, or contradictory in the input. Split into what the
-clarifying conversation settled and what still needs a decision. Do not resolve
-anything by guessing — only record answers the user actually gave._
+<!-- id: why.measurement -->
 
-<!-- id: open_questions.resolved -->
+### Measurement plan
 
-### Resolved during session
+Use concrete objectives and measurable key results or product KPIs. Do not use
+generic placeholders such as "metrics to be defined".
 
-_Points that were unclear at first and were confirmed while gathering, with the
-answer given. Omit this list if nothing needed clarifying._
+| ID                         | Objective / KPI | Baseline          | Target           | Measurement source           | Review date |
+| -------------------------- | --------------- | ----------------- | ---------------- | ---------------------------- | ----------- |
+| `why.measurement.item-001` | _<metric>_      | _<current value>_ | _<target value>_ | _<dashboard or data source>_ | _<date>_    |
 
-- _<question> → <answer confirmed by the user>_
+<!-- id: why.strategic-dependencies -->
 
-<!-- id: open_questions.open -->
+### Strategic dependencies
 
-### Still open
+_<External and internal stakeholders, policy or business constraints, and
+dependencies that affect the initiative.>_
 
-_Points that remain undecided and need a follow-up. A metadata field left blank
-because it could not be confirmed belongs here._
+<!-- id: why.strategic-dependencies.raci -->
 
-- _<open question>_
+#### Responsibility matrix
 
-<!-- id: linked_artifacts -->
+The rows below contain the standard lifecycle assignments. Confirm that the
+standard applies to this initiative, or replace it with user-confirmed
+assignments. Use `R`, `A`, `C`, and `I`; leave a cell empty only when the user
+confirms no role is assigned.
 
-## Linked artifacts
+| ID                             | Phase / activity                  | PM  | Domain stakeholders | Committee | Engineering |
+| ------------------------------ | --------------------------------- | --- | ------------------- | --------- | ----------- |
+| `why.raci.collection-writing`  | Collection and structured writing | R   | C                   |           |             |
+| `why.raci.feedback`            | Feedback collection               | R   | C                   |           | I           |
+| `why.raci.completeness-review` | Completeness review               | R   |                     |           |             |
+| `why.raci.submit-evaluation`   | Submit and Go/No-Go evaluation    | R   | I                   | A         | I           |
+| `why.raci.execution`           | Execution / delivery              | C   | I                   | I         | R           |
+| `why.raci.monitoring-closure`  | Monitoring / closure              | R   | C                   | I         | C           |
 
-_Related documents and artifacts this PRD connects to (designs, research,
-tickets or epics, related PRDs, data). Add one row per artifact; leave the table
-empty if none are known yet._
+<!-- id: why.strategic-dependencies.risks -->
 
-| Type                                                        | Reference              | Notes                             |
-| ----------------------------------------------------------- | ---------------------- | --------------------------------- |
-| _<design / research / ticket / related-prd / data / other>_ | _<link or identifier>_ | _<what it is and why it matters>_ |
+#### Risks and quality constraints
 
-<!-- id: sources -->
+Include product, business, compliance, service-quality, and customer-impact
+risks. Keep detailed test acceptance criteria in downstream specifications.
 
-## Source material
+| ID                   | Risk or constraint | Impact     | Mitigation / owner       |
+| -------------------- | ------------------ | ---------- | ------------------------ |
+| `why.risks.item-001` | _<risk>_           | _<impact>_ | _<mitigation and owner>_ |
 
-_List (with links where available) of the raw inputs this PRD was built from._
+<!-- id: how -->
 
-- _<source>_
+## How
+
+Keep this section at product-solution level. Link technical specifications
+rather than copying implementation details into the PRD.
+
+<!-- id: how.experience -->
+
+### Experience
+
+_<Customer journey, experience intent, and links to Figma or prototypes.>_
+
+<!-- id: how.technical-solutions -->
+
+### Technical solution references
+
+_<High-level solution direction and links to relevant technical artifacts. Do
+not duplicate their technical detail.>_
+
+<!-- id: how.technical-dependencies -->
+
+### Technical dependencies
+
+_<Downstream systems, platform constraints, prerequisites, and technical
+dependencies that affect feasibility or sequencing.>_
+
+<!-- id: how.release-plan -->
+
+### Release plan
+
+_<High-level release timeline. Keep operational rollout details in downstream
+release artifacts.>_

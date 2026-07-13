@@ -1,134 +1,121 @@
 ---
 name: prd-alchemist
-description: Turn product input into a first Product Requirements Document (PRD). Use when a product manager provides raw, scattered, or heterogeneous material (chat logs, meeting notes, documents, quick ideas) OR simply says they want to write a PRD, product spec, or requirements document and wants help building one. The skill works two ways: it analyzes and synthesizes material the user already has, and it interviews the user with targeted questions when material is thin or missing. It gives the input meaning, groups related information, asks clarifying questions whenever anything is unclear (never inventing), flags what stays open, and sets the metadata status to "draft" so a later stage can advance it. It does not publish, review, or advance the document beyond this initial gathering stage.
+description: Write a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, a rough PRD, meeting summaries, strategy input, or a collection-phase output into a complete product requirements document. Map the input to the canonical Why and How hierarchy; ask targeted questions until mandatory gaps and contradictions are resolved; preserve stable English machine-readable IDs; keep status "draft"; and offer optional Confluence publication only after the PRD is written.
 ---
 
 # PRD Alchemist
 
-Transform a pile of unstructured product input into a coherent first PRD.
+Turn gathered product material into a structured, outcome-oriented Product
+Requirements Document (PRD).
 
-The user provides raw, scattered material about a product initiative. This skill
-reads all of it, makes sense of it, and writes a PRD that captures what
-has been understood so far — including what is still unclear. The finished PRD
-carries a metadata status of `draft` so a later stage can advance it.
-
-## About PRDs
-
-A Product Requirements Document (PRD) is a shared artifact that aligns the people
-working on a product initiative — typically **product managers, engineers, and
-designers** — on what is being built and why, _before development begins_. It is
-a communication and decision tool, not just a spec: it frames the problem, the
-intended users, the goals, and the boundaries of the work so the team shares one
-understanding. Keep this audience and purpose in mind when writing the PRD, so the
-output reads as a coherent shared reference rather than a raw dump of notes.
+The PRD explains **what** is needed and **why** it matters. It may link to
+high-level solution artifacts, but it does not replace downstream technical
+specifications, acceptance criteria, QA checklists, or implementation plans.
 
 ## When to Use This Skill
 
-This skill supports two entry points; both lead to the same PRD.
+Use this skill for the structured-writing phase, after or during product
+discovery, when the user wants to:
 
-- **Material-first.** The user pastes or points to **unstructured material** (chat
-  logs, meeting notes, documents, bullet points, half-formed ideas) about a
-  product need and wants it **analyzed and synthesized** into a first PRD, or to
-  "make sense of" scattered product notes.
-- **Interview-first.** The user has little or no written material and simply says
-  something like **"I want to write a PRD"**. Here the skill leads with targeted
-  questions to build the PRD collaboratively.
+- turn a rough collection of product material into a complete PRD;
+- rewrite an existing PRD using the canonical hierarchy;
+- fill gaps in a product document through a guided interview;
+- prepare a PRD that can later be published to Confluence.
 
-In both cases, whenever something is unclear, missing, or contradictory, the
-skill **asks the user** rather than guessing.
+The preferred input is the output of a gathering phase plus any strategic
+documents, notes, links, or decisions available. If the user starts with less,
+ask for the missing information rather than inventing it.
 
-## What This Skill Produces
+## Output Contract
 
-A single **PRD** that:
+Produce one PRD using [`templates/prd.md`](./templates/prd.md). Write it to the
+path requested by the user, or to `prd.md` in the current working directory when
+no path is given. Never overwrite the bundled template.
 
-- captures everything meaningful found in the input, organized into coherent
-  sections;
-- gives scattered notes a shared meaning instead of copying them verbatim;
-- explicitly lists gaps, ambiguities, and open questions found along the way;
-- records the available metadata and any linked artifacts;
-- carries stable, machine-readable identifiers on every field and section (see
-  [Metadata and stable IDs](#metadata-and-stable-ids)), with `status: draft`.
-
-The skill stops once the PRD is written. It does not publish, validate, review, or move the
-document to any later stage.
+- Write the machine-first document in **English**.
+- Set `metadata.status` to `draft` when creating or updating the PRD.
+- Preserve every stable ID exactly as written. IDs are always English and are
+  never translated, including in a translated Confluence page.
+- Include every template section and fixed artifact category. Use an explicit
+  `Not applicable` with a reason when the user confirms a field does not apply;
+  never silently remove it.
+- Keep concrete facts traceable to source inputs.
+- Do not advance the status without the explicit confirmation described below,
+  submit the PRD for evaluation, or create backlog items.
 
 ## Workflow
 
-1. **Gather all input.** Start from whatever the user brings.
-   - _Material-first:_ collect every piece of material provided, and ask for
-     anything they mention but have not shared yet. Do not discard input as
-     "irrelevant" at this stage — completeness matters more than polish.
-   - _Interview-first:_ if there is little or no material, don't wait for it. Open
-     the conversation by asking what the product idea is, then move into the
-     clarifying loop below to build the picture from the user's answers.
-2. **Clarify — ask, never invent.** Before writing, identify the pieces the PRD
-   genuinely needs (at minimum: the problem/need, the primary audience, and the
-   key objective) and, whenever any of them is missing, unclear, or contradictory,
-   **you MUST ask the user targeted questions** instead of guessing. Ask a few at
-   a time, keep them concrete, and prioritise the gaps that would most change the
-   PRD. Continue until you have a workable baseline, or the user explicitly says
-   they want a PRD from what is available. This loop is what distinguishes the
-   two entry modes only by how much asking is needed — the rule "never fabricate,
-   always ask" is the same for both.
-3. **Analyze.** Read across all the material and answers and identify the recurring
-   themes: the underlying need or problem, the intended outcomes, who it is for,
-   any scope signals, and any constraints. Note contradictions between sources.
-4. **Synthesize the PRD.** Using
-   [`templates/prd.md`](./templates/prd.md), write a coherent PRD
-   that expresses the understanding, grouping related information under the right
-   sections. Rewrite rough notes into clear prose rather than pasting them. Fill
-   the metadata frontmatter and the "Linked artifacts" table with whatever the
-   input and answers reveal; leave a field blank when its value is still unknown.
-5. **Record what was resolved and what stays open.** Under "Open questions & gaps",
-   keep two lists: what the clarifying loop **resolved during the session** (so the
-   reader sees what was confirmed and by whom) and what is **still open** and needs
-   a decision. A blank metadata field that you could not resolve belongs in "still
-   open". Never fabricate a fact or decision to empty either list.
-6. **Clean up the document.** The template contains authoring guidance — an HTML
-   comment block and _italic_ placeholders — that helps you write but is not part
-   of the document. Remove the guidance comment block and replace every
-   placeholder with real content (or an explicit gap). **Keep** the YAML
-   frontmatter keys and every `<!-- id: ... -->` anchor exactly as written — those
-   are the stable identifiers, not guidance. The finished PRD should read as a
-   clean artifact, not a filled-in form.
-7. **Set status and stop.** Set the metadata field **status: draft** so a later
-   stage can advance it. Do not go further.
+1. **Collect the writing inputs.** Read the gathered material, strategic input,
+   existing product documents, linked artifacts, and confirmed decisions. Ask
+   for referenced material that has not been provided.
+2. **Map evidence to the template.** Organize the input under source inputs,
+   metadata, related artifacts, Why, and How. Distinguish confirmed facts from
+   proposals and unresolved questions.
+3. **Run the clarification gate.** Check every required field and section.
+   Missing information, contradictions, vague goals, placeholder metrics, and
+   unresolved scope choices are blockers unless the user explicitly confirms
+   they are non-blocking or not applicable. Ask a few targeted questions at a
+   time, starting with the gaps that most affect the document. **Do not write
+   the PRD while blocking items remain open.**
+4. **Write the PRD.** Rewrite the confirmed material into clear product
+   language using the template. Measurement must contain concrete objectives
+   and measurable key results or product KPIs, not generic placeholders. Keep
+   technical content at the level of constraints, dependencies, and links to
+   downstream artifacts.
+5. **Validate and clean up.** Confirm that every stable ID and frontmatter key
+   remains present, all mandatory fields contain a value or an approved
+   `Not applicable`, fixed artifact rows remain intact, no blocking decision is open,
+   and no authoring guidance or placeholders remain.
+6. **Handle explicit completion.** If the user explicitly says that the PRD is
+   complete, good enough, or ready for review, run the same validation. When no
+   blocker remains, change only `metadata.status` from `draft` to `review`.
+   Never infer this transition from document quality or completeness.
+7. **Offer Confluence publication.** After writing a new PRD, ask:
+   **"Do you want me to create a Confluence page for this PRD?"** Do not publish
+   without an affirmative answer. When handling a status-only completion
+   request, do not offer publication unless the user separately asks for it.
+8. **Ask the publication language.** If the user says yes, ask which language
+   the Confluence page should use. Then follow
+   [`references/confluence-publication.md`](./references/confluence-publication.md).
 
-## Guardrails
+## Clarification Rules
 
-- **Ask, don't invent.** If something is missing, unclear, or contradictory, ask
-  the user a targeted question. Only when they decline to answer or say to proceed
-  do you record it as an open question — never fill the hole with a guess.
-- **Preserve traceability.** Reference the source material the PRD was built
-  from, so the reader can check the origin of each part.
-- **Stay in the gathering stage.** Publishing, reviewing, and advancing the document are out of
-  scope for this skill.
+- **Ask, never infer.** Do not turn a suggestion into a decision, create
+  metrics, choose scope, assign ownership, or resolve contradictions yourself.
+- **Block when required.** A required field without a confirmed value or
+  approved `Not applicable` prevents writing. Show the blocking questions
+  clearly and resume after the user answers.
+- **Change status only on explicit confirmation.** Keep `metadata.status` as
+  `draft` unless the user explicitly confirms that the PRD is complete, good
+  enough, or ready for review. If blockers remain, keep `draft` and ask about
+  them instead.
+- **Separate non-blockers.** Keep confirmed non-blocking follow-ups visible in
+  the most relevant section; do not hide them in prose.
+- **Preserve competing positions.** When sources disagree, state the
+  contradiction in the clarification question and ask the decision owner to
+  resolve it.
 
-## Metadata and stable IDs
+## Stable IDs and Human Readability
 
-The PRD is **machine-first but human-readable**: automated agents should be
-able to read and update specific fields without heuristically parsing free text.
-Two mechanisms make that possible, and both must be preserved across every
-revision:
+The document is prose-first for people and structurally reliable for agents:
 
-- **Metadata frontmatter.** The YAML block at the top of the template carries the
-  document metadata. Each key (`id`, `title`, `status`, `owner`, `contributors`,
-  `stakeholders`, `created`, `last_updated`, `revision`, `target_release`,
-  `tags`) is a **stable field ID**. Fill in every value the input reveals; leave a
-  key blank when unknown rather than deleting it. Never rename a key.
-- **Section anchors.** Every section is preceded by a `<!-- id: ... -->` anchor
-  (for example `<!-- id: summary -->`, `<!-- id: scope.in -->`). The anchor is the
-  section's **stable ID** and does not change even if the visible heading text is
-  reworded. Never rename or remove an anchor; add new ones with fresh IDs if you
-  introduce new sections.
+- HTML comments before headings are stable section IDs.
+- YAML frontmatter keys are stable metadata IDs, such as `metadata.status` and
+  `metadata.deadline`.
+- The `ID` column in tables contains stable field or row IDs.
+- IDs never change between revisions, even if visible headings are translated
+  or reworded.
+- Use YAML only for document metadata; keep the PRD body human-readable Markdown.
 
-Keeping IDs stable is the minimum requirement for extraction agents to locate a
-field reliably across revisions. Treat the frontmatter keys and the anchors as a
-contract, not decoration.
+Treat IDs as a contract. Add a new ID only for a genuinely new field; never
+reuse an existing ID for a different meaning.
 
-## Template
+## Boundaries
 
-Use [`templates/prd.md`](./templates/prd.md) as the starting scaffold
-for the PRD. Replace the italic placeholders with real content and delete the
-authoring guidance comment; keep the frontmatter keys, the `<!-- id: ... -->`
-section anchors, and the `status: draft` metadata.
+- Do not perform gathering-only aggregation when blocking writing inputs are
+  missing; ask for them.
+- Do not perform completeness review for committee submission as a separate
+  approval gate.
+- Do not publish or change lifecycle state without explicit user confirmation.
+- Do not duplicate detailed technical, QA, rollout, or backlog content inside the
+  PRD; keep those details in their downstream artifacts instead.
