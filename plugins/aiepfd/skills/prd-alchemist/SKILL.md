@@ -63,8 +63,8 @@ no path is given. Never overwrite the bundled template.
    technical content at the level of constraints, dependencies, and links to
    downstream artifacts.
 5. **Validate and clean up.** Confirm that every stable ID and frontmatter key
-   remains present, all mandatory fields contain a value or an approved `Not
-applicable`, fixed artifact rows remain intact, no blocking decision is open,
+   remains present, all mandatory fields contain a value or an approved
+   `Not applicable`, fixed artifact rows remain intact, no blocking decision is open,
    and no authoring guidance or placeholders remain.
 6. **Handle explicit completion.** If the user explicitly says that the PRD is
    complete, good enough, or ready for review, run the same validation. When no
