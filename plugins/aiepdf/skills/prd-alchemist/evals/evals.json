@@ -71,11 +71,12 @@
       "id": 5,
       "name": "publication-handoff",
       "prompt": "The PRD has just been written and validated. Ask me whether I want to create a Confluence page. Do not choose a publication language until I answer yes.",
-      "expected_output": "The agent asks for explicit confirmation to create a Confluence page and does not ask for or assume a language before confirmation.",
+      "expected_output": "The agent asks for explicit confirmation to create a Confluence page and hands publication to confluence-librarian without asking for or assuming a language before confirmation.",
       "expectations": [
         "The agent asks whether to create a Confluence page",
         "The agent does not publish without explicit confirmation",
-        "The agent does not choose or ask for a publication language before confirmation"
+        "The agent does not choose or ask for a publication language before confirmation",
+        "The agent delegates confirmed publication to confluence-librarian"
       ],
       "files": []
     }
