@@ -3,8 +3,8 @@
 TypeScript Nx plugin that generates `docker:build`/`docker:push` targets for
 every project with a `Dockerfile`, regardless of its language or framework,
 reaching feature parity with `docker/metadata-action`: full OCI
-labels/annotations, a
-multi-tag strategy (branch ref, short sha, semver + `latest`), and
+labels/annotations, a multi-tag strategy (branch ref, short sha, semver +
+`latest`), and
 provenance/reproducibility flags.
 
 `docker:build`/`docker:push` are backed by this plugin's own
@@ -61,8 +61,7 @@ Dockerfile needs a narrower context or lives outside the project root:
   "nx": {
     "docker": {
       "contextPath": "apps/my-app",
-      "dockerfilePath": "apps/my-app/docker/Dockerfile.release",
-      "repositoryName": "my-app"
+      "dockerfilePath": "apps/my-app/docker/Dockerfile.release"
     }
   }
 }
@@ -87,6 +86,43 @@ in `project.json` instead:
 }
 ```
 
+## Image repository
+
+For projects released through Nx Docker, configure the image repository once
+using Nx's standard `nx.release.docker.repositoryName` setting:
+
+```jsonc
+{
+  "nx": {
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/my-app"
+      }
+    }
+  }
+}
+```
+
+The plugin reuses this value for build, push, and release publishing. Use
+`nx.docker.repositoryName` only as an exceptional build-only override when the
+build image must differ from the released image.
+
+If another Nx plugin also infers `nx-release-publish` for the same project (for
+example `@nx/js` for a publishable npm package), select the Docker publisher
+explicitly. The DX plugin still supplies project-specific options:
+
+```jsonc
+{
+  "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+      }
+    }
+  }
+}
+```
+
 ## Tag strategy
 
 See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
@@ -97,6 +133,62 @@ See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
 In a GitHub Actions job (`GITHUB_STEP_SUMMARY` set), `docker:build`,
 `docker:push` and `nx-release-publish` report pushed image tags and
 build/push failures to the job summary — see `src/github-summary.ts`.
+
+## FAQ
+
+### Why does the plugin own `docker:build` and `docker:push`?
+
+DX repositories need complete OCI metadata, reproducibility flags,
+multi-platform builds, and the same branch/SHA/semver aliases produced by
+`docker/metadata-action`. Extending the targets inferred by `@nx/docker` is
+fragile because Nx replaces colliding target options instead of deeply merging
+them. Dedicated targets provide one predictable source of truth.
+
+### Why is `@nx/docker` still registered?
+
+It remains the official source of the `docker:run` convenience target and Nx
+Docker version flow. The DX plugin only replaces behavior where DX conventions
+require additional metadata or tags.
+
+### Why are tags and OCI metadata computed at task runtime?
+
+Nx caches inferred project targets using file inputs, not CI environment
+variables. Computing tags, timestamps, or GitHub metadata while creating the
+project graph could therefore reuse stale values. Executors recompute them for
+every build or push.
+
+### Why is there a custom `nx-release-publish` executor?
+
+The standard Nx Docker publisher pushes only the primary version tag and does
+not invoke `docker:push`. For projects using
+`nx.release.docker.repositoryName`, the DX executor reuses the version selected
+by Nx and also publishes major, minor, and `latest` aliases. When another plugin
+infers the same target, only the executor must be selected explicitly;
+`projectName` and `projectRoot` remain inferred.
+
+### Why is there no application build or `package` target?
+
+The plugin detects Docker projects, not application frameworks. Compilation and
+packaging belong in each Dockerfile, keeping the generated targets independent
+from Node.js, pnpm, or any other language toolchain.
+
+### Why does the build context default to the workspace root?
+
+Monorepo Dockerfiles often copy root configuration or shared packages. A root
+context supports that convention without language-specific assumptions;
+projects that need a narrower context can override `contextPath`.
+
+### Why is the package built as CommonJS?
+
+Some supported Nx versions mutate the loaded plugin namespace. Native ES module
+namespaces are immutable, while a CommonJS export remains compatible with those
+loaders.
+
+### Why is `dist` committed?
+
+Nx loads plugins from `nx.json` while creating the project graph, before any
+build target can run. Committing the built entry points makes the plugin
+loadable in a fresh checkout.
 
 ## Scoping the release-version Docker build to selected projects
 

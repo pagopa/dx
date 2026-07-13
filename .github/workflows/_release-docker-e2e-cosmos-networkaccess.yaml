@@ -33,7 +33,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           dockerfile_path: infra/modules/azure_cosmos_account/tests/apps/network_access/Dockerfile
-          dockerfile_context: infra/modules/azure_cosmos_account/tests/apps/network_access/src
+          dockerfile_context: infra/modules/azure_cosmos_account/tests/apps/network_access
           docker_image_name: ${{ env.IMAGE_NAME }}
           docker_image_description: "Web app which exposes a single endpoint to probe Azure Cosmos DB. Used for E2E tests of the Azure Cosmos DB Terraform module."
           docker_image_authors: "PagoPA"

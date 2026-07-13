@@ -10,11 +10,7 @@
     },
     "targets": {
       "nx-release-publish": {
-        "executor": "@pagopa/nx-dx-docker-plugin:release-publish",
-        "options": {
-          "projectName": "@pagopa/dx-mcpserver",
-          "projectRoot": "apps/mcpserver"
-        }
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
       }
     }
   },
