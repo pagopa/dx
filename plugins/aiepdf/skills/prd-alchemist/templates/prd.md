@@ -1,168 +1,165 @@
-# PRD - _<initiative title>_
+---
+metadata:
+  status: draft
+  deadline: "<one or more deadlines>"
+  start: "<input-collection start date, YYYY-MM-DD>"
+  end: "<observation closing date, YYYY-MM-DD>"
+  budget: "<budget source or confirmed not applicable>"
+  priority: "<business priority>"
+  sponsor: "<initiative sponsor>"
+  last-updated: "<YYYY-MM-DD>"
+---
+
+# PRD — _<initiative title>_
 
 <!--
   AUTHORING GUIDANCE — DELETE THIS ENTIRE COMMENT BLOCK IN THE FINISHED DOCUMENT.
 
-  Replace placeholders only with confirmed information. A draft may be
-  incomplete: record missing information as an open question, assumption, or
-  justified Not applicable value.
-  Give every narrative sentence an explicit subject that identifies the actor,
-  owner, user group, team, stakeholder, or system. If the source does not name
-  the subject, record a targeted open question instead of inventing one.
-  Preserve every stable section comment and every ID exactly as written.
-  Status starts as draft. Change it to review only after explicit user
-  confirmation and validation of the review-entry criteria.
+  Write the machine-first PRD in English. Replace every placeholder with
+  confirmed content. Do not write the PRD while a blocking item remains open.
+  Keep every stable section comment, every frontmatter key, and every ID table
+  entry exactly as written. Use "Not applicable — <reason confirmed by user>"
+  instead of deleting a field. Start with metadata.status set to draft. Change
+  it to review only after the user explicitly confirms that the PRD is complete.
+  Never translate stable IDs.
 -->
 
-<!-- id: metadata -->
+<!-- id: input -->
 
-## Metadata
+## Source inputs
 
-| ID                          | Value                                                     |
-| --------------------------- | --------------------------------------------------------- |
-| `metadata.status`           | draft                                                     |
-| `metadata.sponsor`          | _<name or function>_                                      |
-| `metadata.owner`            | _<Product owner>_                                         |
-| `metadata.budget`           | _<budget source or Not applicable - reason>_              |
-| `metadata.legal-compliance` | _<N/A / Requested / Received / Formal review required>_   |
-| `metadata.engineering`      | _<N/A / Requested / Received / Formal analysis required>_ |
-| `metadata.target-release`   | _<date, quarter, or Not applicable - reason>_             |
-| `metadata.priority`         | _<High / Medium / Low / Not applicable - reason>_         |
+| ID                     | Source or reference | What it contributed   |
+| ---------------------- | ------------------- | --------------------- |
+| `input.strategic`      | _<link or source>_  | _<strategic input>_   |
+| `input.raw-collection` | _<link or source>_  | _<gathered material>_ |
 
-<!-- id: need -->
+<!-- id: artifacts -->
 
-## Need definition
+## Related artifacts
 
-_<Name the affected users or business actors and describe their context and need
-without assuming a solution.>_
+Keep every category. Leave the link empty only when the artifact does not exist
+yet; use the notes column to explain whether it is expected later or confirmed
+not applicable.
 
-<!-- id: actors -->
+| ID                       | Category            | Link     | Notes                       |
+| ------------------------ | ------------------- | -------- | --------------------------- |
+| `artifacts.design`       | Design / prototypes | _<link>_ | _<status or applicability>_ |
+| `artifacts.budget-costs` | Budget and costs    | _<link>_ | _<status or applicability>_ |
 
-## Actors
+<!-- id: why -->
 
-| ID                | Persona or actor | Definition of behavior and needs |
-| ----------------- | ---------------- | -------------------------------- |
-| `actors.item-001` | _<persona>_      | _<confirmed description>_        |
+## Why
 
-<!-- id: objectives -->
+<!-- id: why.need -->
 
-## Objectives
+### Need definition
 
-<!-- id: objectives.user-goals -->
+_<The user or business problem to solve, supported by evidence and without
+assuming a solution.>_
 
-### User goals
+<!-- id: why.target-audience -->
 
-For user-facing initiatives, express each goal as a JTBD:
-“When [situation], I want [objective], so I can [expected outcome].”
+### Target audience
 
-| ID                         | Persona     | Job statement                          | Expected outcome | Success metric | Quality guardrail | Priority                  | Notes     |
-| -------------------------- | ----------- | -------------------------------------- | ---------------- | -------------- | ----------------- | ------------------------- | --------- |
-| `objectives.jtbd.item-001` | _<persona>_ | _<When ..., I want ..., so I can ...>_ | _<outcome>_      | _<metric>_     | _<guardrail>_     | _<Must / Should / Could>_ | _<notes>_ |
+_<The intended users or customers, including relevant segments and needs.>_
 
-<!-- id: objectives.business-goals -->
+<!-- id: why.jobs-to-be-done -->
 
-### Business goals
+### Jobs to be done
 
-_<Include when the initiative has a confirmed business outcome.>_
+Describe the job from the user's perspective: when the user is in a
+particular situation, they want to make progress toward an expected outcome.
 
-| ID                             | Business objective | Success metric | Priority     | Notes     |
-| ------------------------------ | ------------------ | -------------- | ------------ | --------- |
-| `objectives.business.item-001` | _<objective>_      | _<metric>_     | _<priority>_ | _<notes>_ |
+| ID                             | Job statement                             | Evidence   |
+| ------------------------------ | ----------------------------------------- | ---------- |
+| `why.jobs-to-be-done.item-001` | _<When ..., I want to ..., so I can ...>_ | _<source>_ |
 
-<!-- id: metrics -->
+<!-- id: why.goals -->
 
-## Success metrics
+### Business and user goals
 
-<!-- id: metrics.outcome-kpis -->
+| ID                   | Type     | Goal                            | Evidence   |
+| -------------------- | -------- | ------------------------------- | ---------- |
+| `why.goals.business` | Business | _<measurable business outcome>_ | _<source>_ |
+| `why.goals.user`     | User     | _<measurable user outcome>_     | _<source>_ |
 
-### Outcome KPIs
+<!-- id: why.measurement -->
 
-_<KPIs that measure the product or business outcome and cannot be reduced to a
-single JTBD.>_
+### Measurement plan
 
-| ID                     | KPI     | Baseline     | Target     | Source          | Review date |
-| ---------------------- | ------- | ------------ | ---------- | --------------- | ----------- |
-| `metrics.kpi.item-001` | _<KPI>_ | _<baseline>_ | _<target>_ | _<data source>_ | _<date>_    |
+Use concrete objectives and measurable key results or product KPIs. Do not use
+generic placeholders such as "metrics to be defined".
 
-<!-- id: metrics.quality-guardrails -->
+| ID                         | Objective / KPI | Baseline          | Target           | Measurement source           | Review date |
+| -------------------------- | --------------- | ----------------- | ---------------- | ---------------------------- | ----------- |
+| `why.measurement.item-001` | _<metric>_      | _<current value>_ | _<target value>_ | _<dashboard or data source>_ | _<date>_    |
 
-### Quality guardrails
+<!-- id: why.strategic-dependencies -->
 
-_<Reliability, compliance, accessibility, support, or service-quality limits
-that must not regress while pursuing the outcome.>_
+### Strategic dependencies
 
-| ID                           | Guardrail     | Threshold     | Measurement source | Owner     |
-| ---------------------------- | ------------- | ------------- | ------------------ | --------- |
-| `metrics.guardrail.item-001` | _<guardrail>_ | _<threshold>_ | _<source>_         | _<owner>_ |
+_<External and internal stakeholders, policy or business constraints, and
+dependencies that affect the initiative.>_
 
-<!-- id: strategic-dependencies -->
+<!-- id: why.strategic-dependencies.raci -->
 
-## Strategic dependencies
+#### Responsibility matrix
 
-_<Internal and external stakeholders, services, policies, or initiatives that
-affect the opportunity, scope, priority, or feasibility.>_
+The rows below contain the standard lifecycle assignments. Confirm that the
+standard applies to this initiative, or replace it with user-confirmed
+assignments. Use `R`, `A`, `C`, and `I`; leave a cell empty only when the user
+confirms no role is assigned.
 
-| ID                      | Dependency or stakeholder | Impact     | Owner     | Status     |
-| ----------------------- | ------------------------- | ---------- | --------- | ---------- |
-| `dependencies.item-001` | _<dependency>_            | _<impact>_ | _<owner>_ | _<status>_ |
+| ID                             | Phase / activity                  | PM  | Domain stakeholders | Committee | Engineering |
+| ------------------------------ | --------------------------------- | --- | ------------------- | --------- | ----------- |
+| `why.raci.collection-writing`  | Collection and structured writing | R   | C                   |           |             |
+| `why.raci.feedback`            | Feedback collection               | R   | C                   |           | I           |
+| `why.raci.completeness-review` | Completeness review               | R   |                     |           |             |
+| `why.raci.submit-evaluation`   | Submit and Go/No-Go evaluation    | R   | I                   | A         | I           |
+| `why.raci.execution`           | Execution / delivery              | C   | I                   | I         | R           |
+| `why.raci.monitoring-closure`  | Monitoring / closure              | R   | C                   | I         | C           |
 
-<!-- id: context-constraints -->
+<!-- id: why.strategic-dependencies.risks -->
 
-## Context and constraints
+#### Risks and quality constraints
 
-_<Include when relevant: market context, competitors, legal or regulatory
-constraints, technical constraints, or other boundaries.>_
+Include product, business, compliance, service-quality, and customer-impact
+risks. Keep detailed test acceptance criteria in downstream specifications.
 
-| ID                     | Area     | Context or constraint | Impact     | Notes     |
-| ---------------------- | -------- | --------------------- | ---------- | --------- |
-| `constraints.item-001` | _<area>_ | _<constraint>_        | _<impact>_ | _<notes>_ |
+| ID                   | Risk or constraint | Impact     | Mitigation / owner       |
+| -------------------- | ------------------ | ---------- | ------------------------ |
+| `why.risks.item-001` | _<risk>_           | _<impact>_ | _<mitigation and owner>_ |
 
-<!-- id: feasibility-red-flags -->
+<!-- id: how -->
 
-## Initial feasibility red flags
+## How
 
-_<Record preliminary risks that may require formal analysis. Do not present
-preliminary opinions as formal feasibility approval.>_
+Keep this section at product-solution level. Link technical specifications
+rather than copying implementation details into the PRD.
 
-| ID                   | Area                                                     | Red flag or risk | Impact     | Owner     | Action required |
-| -------------------- | -------------------------------------------------------- | ---------------- | ---------- | --------- | --------------- |
-| `red-flags.item-001` | _<Legal / Privacy / Security / Technology / Operations>_ | _<risk>_         | _<impact>_ | _<owner>_ | _<next action>_ |
+<!-- id: how.experience -->
 
-<!-- id: design-discovery -->
+### Experience
 
-## Design discovery and Service Blueprint
+_<Customer journey, experience intent, and links to Figma or prototypes.>_
 
-_<Include when applicable, or write Not applicable with a confirmed reason.
-Link or summarize the discovery design: frontstage touchpoints, backstage
-processes, pain points, opportunities, and open UX assumptions.>_
+<!-- id: how.technical-solutions -->
 
-| ID                          | Discovery item | Reference or description | Status     |
-| --------------------------- | -------------- | ------------------------ | ---------- |
-| `design-discovery.item-001` | _<item>_       | _<link or description>_  | _<status>_ |
+### Technical solution references
 
-<!-- id: open-questions -->
+_<High-level solution direction and links to relevant technical artifacts. Do
+not duplicate their technical detail.>_
 
-## Open questions, assumptions, and hypotheses
+<!-- id: how.technical-dependencies -->
 
-_<Track only items that can affect scope, priority, outcome, or feasibility.
-Detailed edge cases and implementation questions belong in downstream
-specifications.>_
+### Technical dependencies
 
-| ID                        | Question, assumption, or hypothesis | Blocking for review? | Owner     | Expected decision date | Resolution or link    |
-| ------------------------- | ----------------------------------- | -------------------- | --------- | ---------------------- | --------------------- |
-| `open-questions.item-001` | _<item>_                            | _<Yes / No>_         | _<owner>_ | _<date>_               | _<TBD or resolution>_ |
+_<Downstream systems, platform constraints, prerequisites, and technical
+dependencies that affect feasibility or sequencing.>_
 
-<!-- id: support-readiness -->
+<!-- id: how.release-plan -->
 
-## Support readiness
+### Release plan
 
-_<Include when applicable. Capture whether support or operations involvement,
-knowledge-base material, runbooks, FAQs, or support tooling are needed. Keep
-detailed operational procedures outside the PRD.>_
-
-| ID                                 | Readiness question                            | Answer                           | Notes     |
-| ---------------------------------- | --------------------------------------------- | -------------------------------- | --------- |
-| `support-readiness.involvement`    | _<Is Support/Ops involvement needed?>_        | _<Yes / No / To assess>_         | _<notes>_ |
-| `support-readiness.knowledge-base` | _<Are KB, FAQ, or runbook materials needed?>_ | _<Yes / No / N/A>_               | _<notes>_ |
-| `support-readiness.user-errors`    | _<Are relevant user errors expected?>_        | _<Yes / No / To assess>_         | _<notes>_ |
-| `support-readiness.tools`          | _<Are support APIs or tools needed?>_         | _<Yes / No / manual-only / N/A>_ | _<notes>_ |
+_<High-level release timeline. Keep operational rollout details in downstream
+release artifacts.>_
