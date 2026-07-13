@@ -5,7 +5,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "./default-dispatcher": "./src/default-dispatcher.ts"
+    "./default-dispatcher": "./src/default-dispatcher.ts",
+    "./terraform-plan-storage": "./src/terraform/plan-storage.ts"
   },
   "repository": {
     "type": "git",
