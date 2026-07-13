@@ -84,68 +84,28 @@ jobs:
           github-token: ${{ steps.generate-token.outputs.token }}
     outputs:
       published-pr-number: ${{ steps.nx-release.outputs.published-pr-number }}
+      released-environment-matrix: ${{ steps.nx-release.outputs.released-environment-matrix }}
       release-mode: ${{ steps.nx-release.outputs.release-mode }}
 
-  # The jobs below apply Terraform changes for deployable environments
-  # (infra/resources/*) that were included in the merged "Version Packages"
-  # PR, using the same version-plan-driven flow as npm/module releases. They
-  # are additive to the "release" job above and do not change its behavior.
-  get-infra-projects:
-    name: Get Infra Projects To Apply
+  validate-infra-environments:
+    name: Validate Infra Deployment Environments
     needs: release
-    # Only run when the "release" job actually published the projects from a
-    # merged "Version Packages" PR in THIS run. Excludes "create-pr" (a
-    # version plan was just added, nothing was published yet), "skip", and
-    # "publish-all" (workflow_dispatch recovery mode across all public
-    # projects: too ambiguous to safely infer which infra changes to apply).
-    # Also requires "release" to have actually succeeded, so a failed run
-    # never triggers infra apply from a stale, previously-published PR.
-    if: ${{ needs.release.result == 'success' && needs.release.outputs.release-mode == 'publish' && needs.release.outputs.published-pr-number != '' }}
+    if: ${{ needs.release.result == 'success' && needs.release.outputs.release-mode == 'publish' && needs.release.outputs.released-environment-matrix != '[]' }}
     runs-on: ubuntu-24.04
     outputs:
-      projects: ${{ steps.extract.outputs.projects }}
-    permissions:
-      contents: read
-      pull-requests: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
-
-      - name: Extract infra projects to apply
-        id: extract
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ needs.release.outputs.published-pr-number }}
-        run: |
-          set -euo pipefail
-          PROJECTS=$(node actions/nx-release/scripts/dist/extract-infra-projects-to-apply.js)
-          echo "projects=$PROJECTS" >> "$GITHUB_OUTPUT"
-
-  get-environments-infra:
-    name: Get GitHub Environments for Infra Apply
-    needs: get-infra-projects
-    if: ${{ needs.get-infra-projects.outputs.projects != '' }}
-    runs-on: ubuntu-24.04
-    outputs:
-      environments: ${{ steps.detect.outputs.environments }}
+      matrix: ${{ steps.validate.outputs.matrix }}
     permissions:
       contents: read
     steps:
-      # GitHub environments named `infra-<env>-cd` hold the write credentials
-      # (and the `required_reviewers` approval gate) used to apply Terraform
-      # changes for a given environment.
-      - name: Get GitHub Environments
-        id: detect
+      - name: Validate GitHub environments and protection rules
+        id: validate
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          RELEASED_ENVIRONMENT_MATRIX: ${{ needs.release.outputs.released-environment-matrix }}
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
+            const matrix = JSON.parse(process.env.RELEASED_ENVIRONMENT_MATRIX);
             const environments = await github.paginate(
               github.rest.repos.getAllEnvironments,
               {
@@ -155,40 +115,60 @@ jobs:
               },
               (response) => response.data
             );
-            const applyEnvironmentPattern = /^infra-.+-cd$/;
-            const matrix = environments
-              .filter(({ name }) => applyEnvironmentPattern.test(name))
-              .filter(({ name }) => !name.includes("uat"))
-              .map(({ name }) => {
-                const [, envName] = name.split("-");
-                return {
-                  "github-environment": name,
-                  "env-name": envName,
-                };
-              });
-            core.setOutput("environments", JSON.stringify(matrix));
+            const environmentsByName = new Map(
+              environments.map((environment) => [environment.name, environment])
+            );
+
+            for (const target of matrix) {
+              if (!environmentsByName.has(target.planEnvironment)) {
+                core.setFailed(
+                  `Plan environment "${target.planEnvironment}" for "${target.project}" does not exist`
+                );
+                return;
+              }
+
+              const applyEnvironment = environmentsByName.get(
+                target.applyEnvironment
+              );
+              if (!applyEnvironment) {
+                core.setFailed(
+                  `Apply environment "${target.applyEnvironment}" for "${target.project}" does not exist`
+                );
+                return;
+              }
+
+              const hasRequiredReviewers =
+                applyEnvironment.protection_rules?.some(
+                  ({ type }) => type === "required_reviewers"
+                ) ?? false;
+              if (!hasRequiredReviewers) {
+                core.setFailed(
+                  `Apply environment "${target.applyEnvironment}" for "${target.project}" has no required reviewers`
+                );
+                return;
+              }
+            }
+
+            core.setOutput("matrix", JSON.stringify(matrix));
 
   infra-plan:
-    name: Infra Plan (${{ matrix.target.github-environment }})
-    needs: [get-infra-projects, get-environments-infra]
-    if: ${{ needs.get-environments-infra.outputs.environments != '[]' }}
-    runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
+    name: Infra Plan (${{ matrix.target.planEnvironment }})
+    needs: [release, validate-infra-environments]
+    if: ${{ needs.validate-infra-environments.result == 'success' }}
+    runs-on: ["self-hosted", "${{ matrix.target.runnerLabel }}"]
     # Every "infra-<env>-cd" environment has a paired "infra-<env>-ci"
     # environment with read-only credentials, used here since planning does
     # not require write access and must not trigger the apply approval gate.
-    environment: infra-${{ matrix.target.env-name }}-ci
-    # Shared with infra-apply below, keyed per environment (not per directory,
-    # unlike the legacy infra_apply.yaml matrix): overlapping workflow runs
-    # for the SAME environment queue sequentially instead of running a
-    # concurrent plan/apply against the same Terraform state and plan bundle
-    # storage path. Different environments still run in parallel.
+    environment: ${{ matrix.target.planEnvironment }}
+    # Shared with infra-apply below and keyed per environment. This prevents
+    # concurrent plan/apply operations against the same Terraform state.
     concurrency:
-      group: infra-terraform-${{ matrix.target.github-environment }}
+      group: infra-terraform-${{ matrix.target.applyEnvironment }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.get-environments-infra.outputs.environments) }}
+        target: ${{ fromJSON(needs.validate-infra-environments.outputs.matrix) }}
     permissions:
       actions: read
       contents: read
@@ -221,43 +201,27 @@ jobs:
       - name: Install dependencies
         run: pnpm --filter . ci
 
-      # Assumes the infra/resources/<env> Nx project is named "resources-<env>"
-      # (see getProjectNameFromRoot in nx-terraform-plugin), matching this
-      # environment. Skips silently if that project was not part of this
-      # release.
       - name: Run Terraform plan-upload for this environment
-        env:
-          ENV_NAME: ${{ matrix.target.env-name }}
-          PROJECTS: ${{ needs.get-infra-projects.outputs.projects }}
-        run: |
-          set -euo pipefail
-          PROJECT="resources-${ENV_NAME}"
-          if echo ",${PROJECTS}," | grep -q ",${PROJECT},"; then
-            pnpm nx run "${PROJECT}:tf-plan-upload" -c ci
-          else
-            echo "::notice::${PROJECT} is not part of this release, skipping plan"
-          fi
+        run: pnpm nx run "${{ matrix.target.project }}:tf-plan-upload" -c ci
 
   infra-apply:
-    name: Infra Apply (${{ matrix.target.github-environment }})
-    needs: [get-infra-projects, get-environments-infra, infra-plan]
-    if: ${{ needs.get-environments-infra.outputs.environments != '[]' }}
-    runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
+    name: Infra Apply (${{ matrix.target.applyEnvironment }})
+    needs: [release, validate-infra-environments, infra-plan]
+    if: ${{ needs.infra-plan.result == 'success' }}
+    runs-on: ["self-hosted", "${{ matrix.target.runnerLabel }}"]
     # This environment has the `required_reviewers` protection rule
     # configured on GitHub: the job pauses here until a human approves,
     # after reviewing the plan produced by the infra-plan job above.
-    environment: ${{ matrix.target.github-environment }}
-    # Same group as infra-plan above, so a pending approval on this
-    # environment (which can take an arbitrary amount of time) also blocks a
-    # later workflow run's plan/apply for the same environment from starting
-    # concurrently, rather than racing against the same Terraform state.
+    environment: ${{ matrix.target.applyEnvironment }}
+    # Same group as infra-plan above, so a pending approval also prevents a
+    # later plan/apply from racing against the same Terraform state.
     concurrency:
-      group: infra-terraform-${{ matrix.target.github-environment }}
+      group: infra-terraform-${{ matrix.target.applyEnvironment }}
       cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.get-environments-infra.outputs.environments) }}
+        target: ${{ fromJSON(needs.validate-infra-environments.outputs.matrix) }}
     permissions:
       actions: read
       contents: read
@@ -291,14 +255,4 @@ jobs:
         run: pnpm --filter . ci
 
       - name: Run Terraform release-publish (apply) for this environment
-        env:
-          ENV_NAME: ${{ matrix.target.env-name }}
-          PROJECTS: ${{ needs.get-infra-projects.outputs.projects }}
-        run: |
-          set -euo pipefail
-          PROJECT="resources-${ENV_NAME}"
-          if echo ",${PROJECTS}," | grep -q ",${PROJECT},"; then
-            npx nx release publish --projects="${PROJECT}"
-          else
-            echo "::notice::${PROJECT} is not part of this release, skipping apply"
-          fi
+        run: npx nx release publish --projects="${{ matrix.target.project }}"
