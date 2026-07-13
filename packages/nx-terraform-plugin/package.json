@@ -31,6 +31,7 @@
     "generate": "node src/generate-module-schema.ts"
   },
   "devDependencies": {
+    "@pagopa/dx-tasks": "workspace:^",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
@@ -46,9 +47,11 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:aws",
+    "@azure/identity": "catalog:",
+    "@azure/storage-blob": "catalog:azure",
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "^22.7.6",
-    "@pagopa/dx-tasks": "workspace:^",
     "execa": "catalog:",
     "nx": "^22.7.1",
     "octokit": "catalog:",
