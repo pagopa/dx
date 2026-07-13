@@ -43,6 +43,13 @@ export const parseModulePublishManifest = (
 // environments (e.g. infra/resources/dev). Unlike module.json, this manifest
 // only tracks a release version — there is no registry/publish metadata.
 export const environmentManifestSchema = z.object({
+  deployment: z
+    .object({
+      applyEnvironment: z.string().min(1),
+      planEnvironment: z.string().min(1),
+      runnerLabel: z.string().min(1),
+    })
+    .optional(),
   version: z.string().min(1),
 });
 

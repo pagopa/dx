@@ -27,7 +27,14 @@ const parseModulePublishManifest = (input) => {
 	}
 	return parseResult.data;
 };
-const environmentManifestSchema = z.object({ version: z.string().min(1) });
+const environmentManifestSchema = z.object({
+	deployment: z.object({
+		applyEnvironment: z.string().min(1),
+		planEnvironment: z.string().min(1),
+		runnerLabel: z.string().min(1)
+	}).optional(),
+	version: z.string().min(1)
+});
 var EnvironmentManifestError = class extends Error {
 	issues;
 	reasons;

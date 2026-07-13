@@ -21,15 +21,14 @@ describe("readEnvironmentManifest", () => {
       path.join(os.tmpdir(), "terraform-environment-"),
     );
     createdDirs.push(root);
+    const manifest = { version: "0.1.0" };
     await fs.writeFile(
       path.join(root, "environment.json"),
-      JSON.stringify({ version: "0.1.0" }),
+      JSON.stringify(manifest),
       "utf-8",
     );
 
-    await expect(readEnvironmentManifest(root)).resolves.toEqual({
-      version: "0.1.0",
-    });
+    await expect(readEnvironmentManifest(root)).resolves.toEqual(manifest);
   });
 
   it("returns undefined when environment.json does not exist", async () => {
