@@ -1,29 +1,29 @@
 ---
 name: confluence-librarian
-description: Publish and update prepared product, design, requirements, architecture, and operational documents in Confluence without losing structure or traceability. Use whenever a user asks to publish, create, update, translate, or synchronize a Markdown or document artifact to Confluence, especially after another skill has generated a PRD, DR/SRS, RFC, runbook, or similar source document. Require explicit confirmation before irreversible publication and preserve stable IDs, links, statuses, and justified gaps.
+description: Publish and update prepared pages and document artifacts in Confluence without losing structure or traceability. Use whenever a user asks to publish, create, update, translate, or synchronize Markdown, HTML, or another readable document to Confluence, whether it is a PRD, DR/SRS, RFC, runbook, meeting note, guide, decision, or any other page. Require explicit confirmation before irreversible publication and preserve headings, tables, links, statuses, IDs, and intentional gaps.
 ---
 
 # Confluence Librarian
 
-Move a prepared document into Confluence while preserving its meaning,
+Move a prepared page or document into Confluence while preserving its meaning,
 structure, traceability, and lifecycle state. This skill owns publication
-mechanics; the calling skill owns the source document's domain content.
+mechanics; the calling skill or user owns the source content and domain rules.
 
 ## When to use this skill
 
 Use this skill when:
 
-- a user asks to publish or update a prepared Markdown document in Confluence;
-- another skill has completed a PRD, DR/SRS, RFC, runbook, or similar artifact
-  and the user confirms publication;
+- a user asks to publish or update a prepared page or document in Confluence;
+- another skill has completed any artifact, such as a PRD, DR/SRS, RFC, runbook,
+  meeting note, guide, decision record, or operational page, and the user
+  confirms publication;
 - a user asks to translate or synchronize an existing document into a
   Confluence page;
 - a Confluence page must be updated without losing stable IDs, links, open
   questions, or status values.
 
-Do not invent missing product, design, architecture, compliance, or delivery
-decisions. Do not rewrite the source document's domain content merely to make
-publication easier.
+Do not invent missing domain decisions. Do not rewrite the source content's
+meaning merely to make publication easier.
 
 ## Input contract
 
@@ -31,7 +31,7 @@ Accept the following from the calling skill or user:
 
 | Input            | Required    | Description                                                      |
 | ---------------- | ----------- | ---------------------------------------------------------------- |
-| Source document  | Yes         | Path or content of the prepared Markdown/document artifact       |
+| Source document  | Yes         | Path or content of the prepared page/document artifact           |
 | Operation        | Yes         | Create a new page or update an existing page                     |
 | Title            | Yes         | Page title, inferred only when unambiguous                       |
 | Language         | Yes         | Visible page language; preserve machine-facing IDs               |

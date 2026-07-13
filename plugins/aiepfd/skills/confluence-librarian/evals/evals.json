@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "publication-confirmation",
-      "prompt": "I have a completed PRD in prd.md. Publish it to Confluence.",
+      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page.",
       "expected_output": "The agent asks for explicit confirmation or confirms the already explicit publication request, then asks only for missing destination details before showing the final operation.",
       "expectations": [
         "Does not publish before resolving the destination and operation.",
@@ -16,7 +16,7 @@
     {
       "id": 1,
       "name": "stable-id-preservation",
-      "prompt": "Create a Confluence page from this Markdown DR/SRS. Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.",
+      "prompt": "Create a Confluence page from this Markdown architecture guide. Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.",
       "expected_output": "The page content is translated only where requested while machine-facing identifiers and document structure remain unchanged.",
       "expectations": [
         "Preserves stable IDs and machine-facing status values exactly.",
