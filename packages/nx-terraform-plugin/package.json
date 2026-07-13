@@ -31,7 +31,6 @@
     "generate": "node src/generate-module-schema.ts"
   },
   "devDependencies": {
-    "@pagopa/dx-tasks": "workspace:^",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
@@ -49,6 +48,7 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "^22.7.6",
+    "@pagopa/dx-tasks": "workspace:^",
     "execa": "catalog:",
     "nx": "^22.7.1",
     "octokit": "catalog:",

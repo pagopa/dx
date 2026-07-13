@@ -16,6 +16,7 @@ overrides:
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-grpc": ^0.218.0
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-http": ^0.218.0
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-proto": ^0.218.0
+  "node-plop>@types/inquirer": 9.0.10
 
 allowBuilds:
   "@swc/core": true
