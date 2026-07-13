@@ -1,5 +1,5 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-CKKSPoCe.js";
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
+import { createDefaultTaskDispatcher } from "@pagopa/dx-tasks/default-dispatcher";
 import { z } from "zod/v4";
 
 //#region src/executors/release-apply/schema.ts

@@ -1,8 +1,8 @@
 import { n as getPackageLogger, t as configureLogger } from "./logger-DZ1KFLzv.js";
 import { i as publishSchema, n as mergePublishOptions, r as pluginPublishOptionsSchema, t as PublishOptionsError } from "./publish-options-DI4KrjU0.js";
+import { z } from "zod/v4";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod/v4";
 import { DependencyType, createNodesFromFiles } from "@nx/devkit";
 
 //#region src/manifest.ts

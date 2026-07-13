@@ -26,13 +26,11 @@
   "engines": {
     "node": ">=22.0.0"
   },
-  "peerDependencies": {
-    "octokit": "catalog:",
-    "zod": "catalog:"
-  },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:aws",
     "@azure/identity": "catalog:",
-    "@azure/storage-blob": "catalog:azure"
+    "@azure/storage-blob": "catalog:azure",
+    "octokit": "catalog:",
+    "zod": "catalog:"
   }
 }

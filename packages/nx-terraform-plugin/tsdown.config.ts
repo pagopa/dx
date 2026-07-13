@@ -2,6 +2,7 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig({
   deps: {
+    neverBundle: [/^@pagopa\/dx-tasks(?:\/.*)?$/, /packages\/dx-tasks\/src\//],
     skipNodeModulesBundle: true,
   },
   dts: false,
