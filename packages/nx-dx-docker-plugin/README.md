@@ -1,8 +1,9 @@
 # @pagopa/nx-dx-docker-plugin
 
-TypeScript Nx plugin that generates `docker:build`/`docker:push` (and
-`package`) targets for every project with a `Dockerfile`, reaching feature
-parity with `docker/metadata-action`: full OCI labels/annotations, a
+TypeScript Nx plugin that generates `docker:build`/`docker:push` targets for
+every project with a `Dockerfile`, regardless of its language or framework,
+reaching feature parity with `docker/metadata-action`: full OCI
+labels/annotations, a
 multi-tag strategy (branch ref, short sha, semver + `latest`), and
 provenance/reproducibility flags.
 
@@ -28,21 +29,25 @@ version-only tag — see `src/executors/release-publish`.
 pnpm add -D @pagopa/nx-dx-docker-plugin
 ```
 
-Then register it in your `nx.json` `plugins` array (see [Options](#options)
-below).
+Then register it in your `nx.json` `plugins` array without options:
 
-## Options
+```jsonc
+{
+  "plugin": "@pagopa/nx-dx-docker-plugin"
+}
+```
 
-See `src/options.ts` (zod-validated) for the full list of options and the
-rationale behind which ones are required, auto-detected, or defaulted.
+## Conventions and optional metadata
 
-- `imageAuthors` is always required.
-- `imageNamePrefix`/`imageUrl` are auto-detected from the workspace's git
-  `origin` remote when possible, otherwise required.
-- `buildTargetName`, `defaultBranch`, `jsBuildTargetName`,
-  `packageTargetName`, `platform`, `pushTargetName` and `registry` default
-  to `docker:build`, `main`, `build`, `package`,
-  `linux/amd64,linux/arm64`, `docker:push` and `ghcr.io`.
+The plugin requires no workspace-level inputs. It infers repository metadata
+from the Git origin or root package name, reads registry/default branch from
+`nx.json`, and applies DX conventions for target names and multi-architecture
+builds. This keeps standard consumer configuration empty and makes the same
+rules apply across repositories.
+
+Only descriptive metadata supports optional overrides: `imageAuthors`
+(defaults to `PagoPA`), `imageNamePrefix`, and `imageUrl`. Use them only when
+inference or PagoPA conventions do not represent the repository correctly.
 
 ## Per-project Docker build layout
 

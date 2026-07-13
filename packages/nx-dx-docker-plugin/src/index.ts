@@ -2,10 +2,7 @@
 // official base plugin for the `docker:run` convenience target and the
 // `nx-release-publish` executor, while this plugin owns:
 //
-// - a `package` target (dependsOn the JS/TS build target) for any project
-//   that has both a Dockerfile and a JS/TS build target, so individual
-//   projects no longer need to hand-declare it;
-// - the `docker:build`/`docker:push` targets for *every* project with a
+// - the `docker:build`/`docker:push` targets for every project with a
 //   Dockerfile, to reach feature parity with `docker/metadata-action`
 //   (full OCI labels, multi-tag strategy, provenance/reproducibility flags —
 //   see docker-targets.ts for the rationale on why this plugin owns the
@@ -29,13 +26,8 @@ import {
   type DockerPluginOptions,
   parseDockerReleasePluginOptions,
 } from "./options.ts";
-import { buildPackageTarget } from "./package-target.ts";
 
 const dockerfileGlob = "**/Dockerfile";
-
-interface ProjectJson {
-  readonly targets?: Record<string, unknown>;
-}
 
 interface ProjectPackageJson {
   readonly name?: string;
@@ -52,44 +44,6 @@ interface ProjectPackageJson {
     };
   };
 }
-
-/**
- * A project is eligible for the generated `package` target only if it
- * already produces a JS/TS build output through Nx. This repo's convention
- * for that is either an explicit target in `project.json`, or an inferred
- * `build` target via `@nx/js/typescript` (signaled by a `tsconfig.lib.json`).
- */
-export const hasJsBuildTarget = (
-  workspaceRoot: string,
-  projectRoot: string,
-  jsBuildTargetName: string,
-): boolean => {
-  const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
-  if (existsSync(projectJsonPath)) {
-    const projectJson = readJsonFile<ProjectJson>(projectJsonPath);
-    if (projectJson.targets?.[jsBuildTargetName]) {
-      return true;
-    }
-  }
-
-  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
-  const tsconfigLibPath = join(workspaceRoot, projectRoot, "tsconfig.lib.json");
-  return existsSync(packageJsonPath) && existsSync(tsconfigLibPath);
-};
-
-export const getProjectName = (
-  workspaceRoot: string,
-  projectRoot: string,
-): string => {
-  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
-  const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
-  if (!packageJson.name) {
-    throw new Error(
-      `Unable to resolve a package name for project at ${projectRoot}; a package.json with a "name" field is required to build the "package" target.`,
-    );
-  }
-  return packageJson.name;
-};
 
 /**
  * Detects the *official* Nx Docker release flow's per-project override
@@ -160,21 +114,6 @@ export const createDockerReleaseNodes = (
   context: CreateNodesContextV2,
 ) => {
   const targets: Record<string, TargetConfiguration> = {};
-
-  if (
-    hasJsBuildTarget(
-      context.workspaceRoot,
-      projectRoot,
-      options.jsBuildTargetName,
-    )
-  ) {
-    const projectName = getProjectName(context.workspaceRoot, projectRoot);
-    targets[options.packageTargetName] = buildPackageTarget(
-      projectRoot,
-      projectName,
-      options.jsBuildTargetName,
-    );
-  }
 
   const projectDisplayName = getProjectDisplayName(
     context.workspaceRoot,

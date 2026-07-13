@@ -4,132 +4,128 @@ const childProcessMocks = vi.hoisted(() => ({
   execFileSync: vi.fn(),
 }));
 
+const devkitMocks = vi.hoisted(() => ({
+  readJsonFile: vi.fn(),
+}));
+
 vi.mock("node:child_process", () => ({
   execFileSync: childProcessMocks.execFileSync,
 }));
 
+vi.mock("@nx/devkit", () => ({
+  readJsonFile: devkitMocks.readJsonFile,
+}));
+
 import { parseDockerReleasePluginOptions } from "../options.ts";
+
+const configureWorkspaceFiles = (
+  nxJson: unknown = {},
+  packageJson: unknown = { name: "@pagopa/dx" },
+): void => {
+  devkitMocks.readJsonFile.mockImplementation((path: string) =>
+    path.endsWith("nx.json") ? nxJson : packageJson,
+  );
+};
 
 describe("parseDockerReleasePluginOptions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    configureWorkspaceFiles();
   });
 
-  it("applies defaults and derives imageNamePrefix/imageUrl from a github.com origin", () => {
+  it("requires no options and derives repository metadata from Git", () => {
     childProcessMocks.execFileSync.mockReturnValue(
       "git@github.com:pagopa/dx.git\n",
     );
 
-    const result = parseDockerReleasePluginOptions(
-      { imageAuthors: "PagoPA" },
-      "/workspace",
-    );
-
-    expect(result).toEqual({
+    expect(parseDockerReleasePluginOptions(undefined, "/workspace")).toEqual({
       buildTargetName: "docker:build",
       defaultBranch: "main",
       imageAuthors: "PagoPA",
       imageNamePrefix: "pagopa/dx",
       imageUrl: "https://github.com/pagopa/dx",
-      jsBuildTargetName: "build",
-      packageTargetName: "package",
       platform: "linux/amd64,linux/arm64",
       pushTargetName: "docker:push",
       registry: "ghcr.io",
     });
   });
 
-  it("supports https origins", () => {
+  it("reads default branch and registry from nx.json", () => {
+    configureWorkspaceFiles({
+      defaultBase: "trunk",
+      release: { docker: { registryUrl: "registry.example.com" } },
+    });
     childProcessMocks.execFileSync.mockReturnValue(
       "https://github.com/pagopa/dx.git\n",
     );
 
-    const result = parseDockerReleasePluginOptions(
-      { imageAuthors: "PagoPA" },
-      "/workspace",
-    );
+    const result = parseDockerReleasePluginOptions({}, "/workspace");
+
+    expect(result.defaultBranch).toBe("trunk");
+    expect(result.registry).toBe("registry.example.com");
+  });
+
+  it("falls back to a scoped root package name without Git metadata", () => {
+    childProcessMocks.execFileSync.mockImplementation(() => {
+      throw new Error("not a git repository");
+    });
+
+    const result = parseDockerReleasePluginOptions(undefined, "/workspace");
 
     expect(result.imageNamePrefix).toBe("pagopa/dx");
     expect(result.imageUrl).toBe("https://github.com/pagopa/dx");
   });
 
-  it("prefers explicit options over git-origin auto-detection", () => {
-    childProcessMocks.execFileSync.mockReturnValue(
-      "git@github.com:pagopa/dx.git\n",
-    );
+  it("uses the PagoPA organization convention for unscoped workspaces", () => {
+    configureWorkspaceFiles({}, { name: "selfcare-monorepo" });
+    childProcessMocks.execFileSync.mockImplementation(() => {
+      throw new Error("not a git repository");
+    });
 
-    const result = parseDockerReleasePluginOptions(
-      {
-        imageAuthors: "PagoPA",
-        imageNamePrefix: "custom/prefix",
-        imageUrl: "https://example.com",
-      },
-      "/workspace",
-    );
+    const result = parseDockerReleasePluginOptions(undefined, "/workspace");
 
-    expect(result.imageNamePrefix).toBe("custom/prefix");
-    expect(result.imageUrl).toBe("https://example.com");
+    expect(result.imageNamePrefix).toBe("pagopa/selfcare-monorepo");
+    expect(result.imageUrl).toBe("https://github.com/pagopa/selfcare-monorepo");
   });
 
-  it("uses explicit repository metadata when no git origin is available", () => {
+  it("supports optional descriptive metadata overrides", () => {
     childProcessMocks.execFileSync.mockImplementation(() => {
       throw new Error("not a git repository");
     });
 
     const result = parseDockerReleasePluginOptions(
       {
-        imageAuthors: "PagoPA",
-        imageNamePrefix: "pagopa/dx",
-        imageUrl: "https://github.com/pagopa/dx",
+        imageAuthors: "Custom Team",
+        imageNamePrefix: "custom/project",
+        imageUrl: "https://example.com/project",
       },
       "/workspace",
     );
 
-    expect(result.imageNamePrefix).toBe("pagopa/dx");
-    expect(result.imageUrl).toBe("https://github.com/pagopa/dx");
+    expect(result.imageAuthors).toBe("Custom Team");
+    expect(result.imageNamePrefix).toBe("custom/project");
+    expect(result.imageUrl).toBe("https://example.com/project");
     expect(childProcessMocks.execFileSync).not.toHaveBeenCalled();
   });
 
-  it("allows overriding the platform default", () => {
+  it("rejects structural plugin options to keep configuration convention-based", () => {
     childProcessMocks.execFileSync.mockReturnValue(
       "git@github.com:pagopa/dx.git\n",
     );
 
-    const result = parseDockerReleasePluginOptions(
-      { imageAuthors: "PagoPA", platform: "linux/amd64" },
-      "/workspace",
-    );
-
-    expect(result.platform).toBe("linux/amd64");
+    expect(() =>
+      parseDockerReleasePluginOptions({ registry: "custom" }, "/workspace"),
+    ).toThrow(/only imageAuthors, imageNamePrefix, and imageUrl/);
   });
 
-  it("throws when imageAuthors is missing", () => {
-    childProcessMocks.execFileSync.mockReturnValue(
-      "git@github.com:pagopa/dx.git\n",
-    );
-
-    expect(() => parseDockerReleasePluginOptions({}, "/workspace")).toThrow(
-      /Invalid @pagopa\/nx-dx-docker-plugin options/,
-    );
-  });
-
-  it("throws when imageNamePrefix/imageUrl are missing and cannot be auto-detected", () => {
+  it("fails clearly when repository metadata cannot be inferred", () => {
+    configureWorkspaceFiles({}, {});
     childProcessMocks.execFileSync.mockImplementation(() => {
       throw new Error("not a git repository");
     });
 
     expect(() =>
-      parseDockerReleasePluginOptions({ imageAuthors: "PagoPA" }, "/workspace"),
-    ).toThrow(/could not be auto-detected/);
-  });
-
-  it("throws when the origin is not hosted on github.com", () => {
-    childProcessMocks.execFileSync.mockReturnValue(
-      "git@gitlab.com:pagopa/dx.git\n",
-    );
-
-    expect(() =>
-      parseDockerReleasePluginOptions({ imageAuthors: "PagoPA" }, "/workspace"),
-    ).toThrow(/could not be auto-detected/);
+      parseDockerReleasePluginOptions(undefined, "/workspace"),
+    ).toThrow(/root package.json must have a name/);
   });
 });

@@ -27,40 +27,21 @@ const buildDockerPushTarget = (options, buildTargetName) => ({
 
 //#endregion
 //#region src/options.ts
-const nonEmptyString = zod_v4.z.string().min(1);
-const dockerPluginOptionsSchema = zod_v4.z.object({
-	buildTargetName: nonEmptyString,
-	defaultBranch: nonEmptyString,
-	imageAuthors: nonEmptyString,
-	imageNamePrefix: nonEmptyString,
-	imageUrl: nonEmptyString,
-	jsBuildTargetName: nonEmptyString,
-	packageTargetName: nonEmptyString,
-	platform: nonEmptyString,
-	pushTargetName: nonEmptyString,
-	registry: nonEmptyString
+const workspacePackageSchema = zod_v4.z.object({ name: zod_v4.z.string().min(1) });
+const nxConfigurationSchema = zod_v4.z.object({
+	defaultBase: zod_v4.z.string().min(1).optional(),
+	release: zod_v4.z.object({ docker: zod_v4.z.object({ registryUrl: zod_v4.z.string().min(1).optional() }).optional() }).optional()
 });
-const defaultOptions = {
-	buildTargetName: "docker:build",
-	defaultBranch: "main",
-	jsBuildTargetName: "build",
-	packageTargetName: "package",
-	platform: "linux/amd64,linux/arm64",
-	pushTargetName: "docker:push",
-	registry: "ghcr.io"
-};
-const partialSchema = dockerPluginOptionsSchema.partial({
-	buildTargetName: true,
-	defaultBranch: true,
-	imageNamePrefix: true,
-	imageUrl: true,
-	jsBuildTargetName: true,
-	packageTargetName: true,
-	platform: true,
-	pushTargetName: true,
-	registry: true
-});
+const pluginOptionsSchema = zod_v4.z.object({
+	imageAuthors: zod_v4.z.string().min(1).optional(),
+	imageNamePrefix: zod_v4.z.string().min(1).optional(),
+	imageUrl: zod_v4.z.string().url().optional()
+}).strict();
 const githubRemotePattern = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([^/]+)\/(.+?)(?:\.git)?$/;
+const toRepositoryMetadata = (owner, repository) => ({
+	imageNamePrefix: `${owner}/${repository}`.toLowerCase(),
+	imageUrl: `https://github.com/${owner}/${repository}`
+});
 const deriveFromGitOrigin = (workspaceRoot) => {
 	try {
 		const remoteUrl = (0, node_child_process.execFileSync)("git", [
@@ -72,72 +53,46 @@ const deriveFromGitOrigin = (workspaceRoot) => {
 			encoding: "utf8"
 		}).trim();
 		const match = githubRemotePattern.exec(remoteUrl);
-		if (!match) return void 0;
-		const [, owner, repo] = match;
-		return {
-			imageNamePrefix: `${owner}/${repo}`.toLowerCase(),
-			imageUrl: `https://github.com/${owner}/${repo}`
-		};
+		return match ? toRepositoryMetadata(match[1], match[2]) : void 0;
 	} catch {
 		return;
 	}
 };
+const deriveFromWorkspacePackage = (workspaceRoot) => {
+	const parseResult = workspacePackageSchema.safeParse((0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, "package.json")));
+	if (!parseResult.success) throw new Error("Unable to infer Docker repository metadata: root package.json must have a name.");
+	const [scope, scopedName] = parseResult.data.name.split("/");
+	return toRepositoryMetadata(scopedName ? scope.replace(/^@/, "") : "pagopa", scopedName ?? scope);
+};
 const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
-	const input = typeof options === "object" && options !== null ? options : {};
-	const parseResult = partialSchema.safeParse(input);
-	if (!parseResult.success) {
-		const validationErrors = parseResult.error.issues.map((issue) => {
-			return `${issue.path.length > 0 ? issue.path.join(".") : "options"}: ${issue.message}`;
-		}).join("; ");
-		throw new Error(`Invalid @pagopa/nx-dx-docker-plugin options: ${validationErrors}`);
-	}
-	const parsed = parseResult.data;
-	const gitOrigin = parsed.imageNamePrefix === void 0 || parsed.imageUrl === void 0 ? deriveFromGitOrigin(workspaceRoot) : void 0;
-	const imageNamePrefix = parsed.imageNamePrefix ?? gitOrigin?.imageNamePrefix;
-	const imageUrl = parsed.imageUrl ?? gitOrigin?.imageUrl;
-	if (imageNamePrefix === void 0 || imageUrl === void 0) throw new Error("Invalid @pagopa/nx-dx-docker-plugin options: imageNamePrefix/imageUrl were not set and could not be auto-detected from the git 'origin' remote (missing git repo, missing origin, or a non-github.com remote) — set them explicitly in this plugin's nx.json options.");
+	const optionsResult = pluginOptionsSchema.safeParse(options ?? {});
+	if (!optionsResult.success) throw new Error("Invalid @pagopa/nx-dx-docker-plugin options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.");
+	const nxResult = nxConfigurationSchema.safeParse((0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, "nx.json")));
+	if (!nxResult.success) throw new Error("Unable to infer Docker conventions from nx.json.");
+	const repository = optionsResult.data.imageNamePrefix && optionsResult.data.imageUrl ? {
+		imageNamePrefix: optionsResult.data.imageNamePrefix,
+		imageUrl: optionsResult.data.imageUrl
+	} : (() => {
+		const inferred = deriveFromGitOrigin(workspaceRoot) ?? deriveFromWorkspacePackage(workspaceRoot);
+		return {
+			imageNamePrefix: optionsResult.data.imageNamePrefix ?? inferred.imageNamePrefix,
+			imageUrl: optionsResult.data.imageUrl ?? inferred.imageUrl
+		};
+	})();
 	return {
-		...defaultOptions,
-		...parsed,
-		imageNamePrefix,
-		imageUrl
+		buildTargetName: "docker:build",
+		defaultBranch: nxResult.data.defaultBase ?? "main",
+		imageAuthors: optionsResult.data.imageAuthors ?? "PagoPA",
+		...repository,
+		platform: "linux/amd64,linux/arm64",
+		pushTargetName: "docker:push",
+		registry: nxResult.data.release?.docker?.registryUrl ?? "ghcr.io"
 	};
 };
 
 //#endregion
-//#region src/package-target.ts
-const buildPackageTarget = (projectRoot, projectName, jsBuildTargetName) => ({
-	command: `rm -rf ${projectRoot}/deploy && pnpm --filter ${projectName} deploy --legacy --prod ${projectRoot}/deploy`,
-	dependsOn: [jsBuildTargetName],
-	metadata: {
-		description: "Materialize the production-only payload consumed by this project's Dockerfile (RFC-DX-076)",
-		technologies: ["docker"]
-	}
-});
-
-//#endregion
 //#region src/index.ts
 const dockerfileGlob = "**/Dockerfile";
-/**
-* A project is eligible for the generated `package` target only if it
-* already produces a JS/TS build output through Nx. This repo's convention
-* for that is either an explicit target in `project.json`, or an inferred
-* `build` target via `@nx/js/typescript` (signaled by a `tsconfig.lib.json`).
-*/
-const hasJsBuildTarget = (workspaceRoot, projectRoot, jsBuildTargetName) => {
-	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
-	if ((0, node_fs.existsSync)(projectJsonPath)) {
-		if ((0, _nx_devkit.readJsonFile)(projectJsonPath).targets?.[jsBuildTargetName]) return true;
-	}
-	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	const tsconfigLibPath = (0, node_path.join)(workspaceRoot, projectRoot, "tsconfig.lib.json");
-	return (0, node_fs.existsSync)(packageJsonPath) && (0, node_fs.existsSync)(tsconfigLibPath);
-};
-const getProjectName = (workspaceRoot, projectRoot) => {
-	const packageJson = (0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, projectRoot, "package.json"));
-	if (!packageJson.name) throw new Error(`Unable to resolve a package name for project at ${projectRoot}; a package.json with a "name" field is required to build the "package" target.`);
-	return packageJson.name;
-};
 /**
 * Detects the *official* Nx Docker release flow's per-project override
 * (`nx.release.docker.repositoryName` in package.json). Projects using it
@@ -182,10 +137,6 @@ const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
 };
 const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const targets = {};
-	if (hasJsBuildTarget(context.workspaceRoot, projectRoot, options.jsBuildTargetName)) {
-		const projectName = getProjectName(context.workspaceRoot, projectRoot);
-		targets[options.packageTargetName] = buildPackageTarget(projectRoot, projectName, options.jsBuildTargetName);
-	}
 	const projectDisplayName = require_docker_image.getProjectDisplayName(context.workspaceRoot, projectRoot);
 	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectDisplayName, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
 	const dockerRunOptions = {
@@ -224,5 +175,3 @@ const createNodesV2 = [dockerfileGlob, async (configFilePaths, options, context)
 //#endregion
 exports.createDockerReleaseNodes = createDockerReleaseNodes;
 exports.createNodesV2 = createNodesV2;
-exports.getProjectName = getProjectName;
-exports.hasJsBuildTarget = hasJsBuildTarget;
