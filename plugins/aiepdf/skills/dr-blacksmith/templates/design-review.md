@@ -94,28 +94,28 @@ availability zones or regions where relevant._
 
 ## Non-functional requirements and compliance
 
-| ID                  | Area                                    | Requirement / target              | Verification evidence   | Owner     | Status     |
-| ------------------- | --------------------------------------- | --------------------------------- | ----------------------- | --------- | ---------- |
-| `nfr.performance`   | Performance                             | _<target or TBD>_                 | _<test / metric>_       | _<owner>_ | _<status>_ |
-| `nfr.availability`  | Availability / SLO                      | _<target or TBD>_                 | _<monitoring / report>_ | _<owner>_ | _<status>_ |
-| `nfr.scalability`   | Scalability                             | _<target or N/A — reason>_        | _<evidence>_            | _<owner>_ | _<status>_ |
-| `nfr.security`      | Security                                | _<requirement>_                   | _<review / control>_    | _<owner>_ | _<status>_ |
-| `nfr.privacy`       | Legal / privacy                         | _<requirement or N/A — reason>_   | _<DPIA / review>_       | _<owner>_ | _<status>_ |
-| `nfr.continuity`    | Business continuity / disaster recovery | _<RPO/RTO or N/A — reason>_       | _<exercise / plan>_     | _<owner>_ | _<status>_ |
-| `nfr.monitoring`    | Monitoring / observability              | _<logs, metrics, traces, alerts>_ | _<dashboard / runbook>_ | _<owner>_ | _<status>_ |
-| `nfr.accessibility` | Accessibility / UX                      | _<requirement or N/A — reason>_   | _<audit / test>_        | _<owner>_ | _<status>_ |
+| ID                  | Area                       | Requirement / target              | Verification evidence   | Owner     | Status     |
+| ------------------- | -------------------------- | --------------------------------- | ----------------------- | --------- | ---------- |
+| `nfr.performance`   | Performance                | _<target or TBD>_                 | _<test / metric>_       | _<owner>_ | _<status>_ |
+| `nfr.availability`  | Availability / SLO         | _<target or TBD>_                 | _<monitoring / report>_ | _<owner>_ | _<status>_ |
+| `nfr.scalability`   | Scalability                | _<target or N/A — reason>_        | _<evidence>_            | _<owner>_ | _<status>_ |
+| `nfr.security`      | Security                   | _<requirement>_                   | _<review / control>_    | _<owner>_ | _<status>_ |
+| `nfr.privacy`       | Legal / privacy            | _<requirement or N/A — reason>_   | _<DPIA / review>_       | _<owner>_ | _<status>_ |
+| `nfr.continuity`    | Business continuity / DR   | _<RPO/RTO or N/A — reason>_       | _<exercise / plan>_     | _<owner>_ | _<status>_ |
+| `nfr.monitoring`    | Monitoring / observability | _<logs, metrics, traces, alerts>_ | _<dashboard / runbook>_ | _<owner>_ | _<status>_ |
+| `nfr.accessibility` | Accessibility / UX         | _<requirement or N/A — reason>_   | _<audit / test>_        | _<owner>_ | _<status>_ |
 
 <!-- id: use-case-index -->
 
 ## Dynamic component view and Use Case index
 
 The individual Use Case documents are maintained by the dedicated Use Case
-skill. Keep this section as the DR/SRS catalog only. Each entry must have a
-stable `UC-XX` ID and an explicit status or gap.
+skill. Keep this section as the parent catalog only. Each entry must have a
+stable `UC-XX` ID and a link or an explicit gap.
 
-| ID      | Title     | Linked JTBD                 | Priority          | Status / gap                    |
-| ------- | --------- | --------------------------- | ----------------- | ------------------------------- |
-| `UC-01` | _<title>_ | _<JTBD-XX or N/A — reason>_ | _<Must / Should>_ | _<candidate / ready / missing>_ |
+| ID      | Title     | Linked JTBD                 | Priority          | Child document  | Status / gap                          |
+| ------- | --------- | --------------------------- | ----------------- | --------------- | ------------------------------------- |
+| `UC-01` | _<title>_ | _<JTBD-XX or N/A — reason>_ | _<Must / Should>_ | _<link or TBD>_ | _<candidate / ready / missing child>_ |
 
 <!-- id: data-contracts -->
 
@@ -166,7 +166,7 @@ acceptance checks remain in the child Use Cases._
 | ----------------------- | -------------------------------------------------------------------------------------------- | ------------------ |
 | `ready.prd`             | Linked PRD has owner, outcome, JTBD, KPI, and guardrails                                     | _<evidence / gap>_ |
 | `ready.solution`        | Always-required solution and NFR sections are complete                                       | _<evidence / gap>_ |
-| `ready.use-cases`       | Use Case catalog has stable IDs, priorities, linked JTBDs, and status                        | _<evidence / gap>_ |
+| `ready.use-cases`       | Use Case catalog has stable IDs, priorities, linked JTBDs, and child links                   | _<evidence / gap>_ |
 | `ready.contracts`       | Relevant API/event/data contracts are linked or justified N/A                                | _<evidence / gap>_ |
 | `ready.reviews`         | Privacy, security, accessibility, tracking, and support readiness are addressed or justified | _<evidence / gap>_ |
 | `ready.rfc-propagation` | Accepted RFC decisions are propagated into this DR/SRS                                       | _<evidence / gap>_ |
@@ -177,7 +177,7 @@ acceptance checks remain in the child Use Cases._
 
 _Optional material such as UX/UI details, analytics taxonomy, operational
 runbooks, cost analysis, or diagrams. Appendices support but do not replace the
-DR/SRS or Use Case documents._
+parent DR/SRS or Use Case child documents._
 
 `appendices` — _<links or N/A — confirmed reason>_
 

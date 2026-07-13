@@ -1,15 +1,13 @@
 ---
 name: dr-blacksmith
-description: Create and update a structured Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, delegate detailed Use Cases to the dedicated Use Case skill, and hand confirmed Confluence publication to the confluence-librarian skill.
+description: Create and update a structured parent Design Review / Software Requirements Specification (DR/SRS) from PRDs, discovery, architecture, compliance, contracts, and delivery inputs. Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, maintain a Use Case index without generating child Use Cases, and offer optional Confluence publication only after writing.
 ---
 
 # DR Blacksmith
 
-Create the Design Review / Software Requirements Specification (DR/SRS) that
-turns product intent and design evidence into an operational, traceable solution
-document. Product, Engineering, Design, control functions, and delivery
-stakeholders use it to review feasibility, align system behavior and contracts,
-and guide implementation.
+Forge the parent Design Review / Software Requirements Specification (DR/SRS)
+that turns product intent and design evidence into an operational,
+traceable solution document.
 
 ## When to use this skill
 
@@ -20,12 +18,12 @@ Use this skill to:
 - update the current solution design after a material decision, accepted RFC,
   new dependency, contract, risk, or Use Case;
 - prepare a Design Review document for stakeholder review or readiness;
-- keep a DR/SRS aligned with linked PRD, RFC, ADR, API, event, data, security,
-  privacy, and operational artifacts.
+- keep a parent DR/SRS aligned with linked PRD, RFC, ADR, API, event, data,
+  security, privacy, and operational artifacts.
 
 Do not use it to generate individual Use Case child documents. A separate skill
-owns the `UC-XX` content. This skill creates and maintains only the DR/SRS Use
-Case catalog.
+owns the `UC-XX` content. This skill creates and maintains only the parent
+document's Use Case catalog and links.
 
 ## Output contract
 
@@ -47,12 +45,15 @@ is given. Never overwrite the bundled template.
 - Distinguish confirmed facts, proposed design, assumptions, unresolved
   questions, and decisions.
 - Keep detailed flows, edge cases, acceptance checks, and test notes in the
-  Use Case documents. Do not recreate them in the DR/SRS.
+  linked Use Case child documents. Do not recreate them in the parent.
 
 ## Workflow
 
-1. **Collect source material.** Read the linked PRD and any other source provided
-   by user or linked in the PRD.
+1. **Collect source material.** Read the linked PRD and any available Service
+   Blueprint, Figma/design discovery, architecture diagrams, RFCs, ADRs,
+   OpenAPI/AsyncAPI specifications, Data Contracts, glossary, security and
+   privacy reviews, operational material, Jira board, and readiness evidence.
+   Ask for referenced material that is unavailable.
 2. **Establish the source of truth.** Treat the current DR/SRS as the
    operational description of confirmed behavior. An RFC is a discussion and
    decision record, not an operational instruction. Apply an accepted RFC only
@@ -70,21 +71,19 @@ is given. Never overwrite the bundled template.
    `Open questions, assumptions, and decisions`. Never convert a proposal into
    a confirmed decision without evidence or user confirmation.
 6. **Maintain the Use Case index.** Add stable `UC-XX` entries with title,
-   linked JTBD, priority, and status. Flag missing or stale Use Case documents
-   for the Use Case skill; do not write their bodies.
-7. **Validate the document.** Apply
-   [`references/validation-checklist.md`](./references/validation-checklist.md).
+   linked JTBD, priority, status, and child-page link when known. Flag missing
+   or stale child documents for the Use Case skill; do not write their bodies.
+7. **Validate the document.** Check that all stable sections are present,
+   required fields are populated or explicitly unresolved, conditional
+   sections have justified `N/A` values, links and IDs are consistent, and
+   the document does not contain child Use Case implementation details.
 8. **Handle review readiness explicitly.** Change `metadata.status` only when
    the user explicitly requests review readiness and the document has enough
    context, owner, scope, solution, and evidence to be meaningfully reviewed.
-   Otherwise keep `draft` and identify the blockers. Apply the validation
-   checklist before changing status.
-9. **Offer publication.** After writing and validating the local file, ask
-   whether the user wants a Confluence page. Once the user confirms, hand the
-   prepared document and its domain constraints to the `confluence-librarian`
-   skill. Apply the validation checklist before handoff. Do not publish directly
-   or duplicate its destination-resolution, translation, confirmation, or
-   Confluence API workflow.
+   Otherwise keep `draft` and identify the blockers.
+9. **Offer publication.** After writing the local file, ask whether the user
+   wants a Confluence page. Publish only after an affirmative answer, following
+   [`references/confluence-publication.md`](./references/confluence-publication.md).
 
 ## Clarification rules
 
@@ -97,15 +96,23 @@ is given. Never overwrite the bundled template.
 - Treat `accepted` RFCs as historical until their decision is visible in the
   DR/SRS. An RFC that has not been propagated must not guide implementation.
 - Link existing contracts and reviews instead of copying their full contents.
-- Keep the DR/SRS concise enough to govern the system; delegate
+- Keep the parent document concise enough to govern the system; delegate
   behavior-level detail to the Use Case skill.
 
-## References
+## Required parent sections
+
+The template follows the DR-01 source model:
+
+- Header and references
+- Expected initiative outcome
+- Solution design
+- Non-functional requirements and compliance
+- Dynamic component / Use Case index
+- Data and technical contracts when applicable
+- Execution plan, validation, rollout/rollback, and readiness
+- Specialist appendices when useful
+- Open questions, assumptions, decisions, and change propagation
 
 Read [`references/dr-srs-model.md`](./references/dr-srs-model.md) when
 updating an existing document, handling RFC propagation, or determining
 Definition of Ready.
-
-Apply
-[`references/validation-checklist.md`](./references/validation-checklist.md)
-before changing review status or handing the document off for publication.
