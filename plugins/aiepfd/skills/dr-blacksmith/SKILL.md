@@ -1,6 +1,6 @@
 ---
 name: dr-blacksmith
-description: Create and update a structured parent Design Review / Software Requirements Specification (DR/SRS) from PRDs, discovery, architecture, compliance, contracts, and delivery inputs. Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, maintain a Use Case index without generating child Use Cases, and offer optional Confluence publication only after writing.
+description: Create and update a structured parent Design Review / Software Requirements Specification (DR/SRS) from PRDs, discovery, architecture, compliance, contracts, and delivery inputs. Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, maintain a Use Case index without generating child Use Cases, and hand confirmed Confluence publication to the confluence-librarian skill.
 ---
 
 # DR Blacksmith
@@ -81,9 +81,11 @@ is given. Never overwrite the bundled template.
    the user explicitly requests review readiness and the document has enough
    context, owner, scope, solution, and evidence to be meaningfully reviewed.
    Otherwise keep `draft` and identify the blockers.
-9. **Offer publication.** After writing the local file, ask whether the user
-   wants a Confluence page. Publish only after an affirmative answer, following
-   [`references/confluence-publication.md`](./references/confluence-publication.md).
+9. **Offer publication.** After writing and validating the local file, ask
+   whether the user wants a Confluence page. Once the user confirms, hand the
+   prepared document and its domain constraints to the `confluence-librarian`
+   skill. Do not publish directly or duplicate its destination-resolution,
+   translation, confirmation, or Confluence API workflow.
 
 ## Clarification rules
 
