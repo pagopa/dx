@@ -129,6 +129,25 @@ run "app_service_override_size" {
     condition     = azurerm_service_plan.this[0].sku_name == "P2v3"
     error_message = "The App Service Plan is incorrect, have to be P2v3"
   }
+
+  assert {
+    condition     = azurerm_service_plan.this[0].zone_balancing_enabled == true
+    error_message = "The App Service Plan should have zone balancing enabled for P2v3"
+  }
+}
+
+run "app_service_override_size_and_disable_zone_balancing" {
+  command = plan
+
+  variables {
+    use_case = "default"
+    size     = "P0v3"
+  }
+
+  assert {
+    condition     = azurerm_service_plan.this[0].zone_balancing_enabled == false
+    error_message = "The App Service Plan should not have zone balancing enabled for P0v3"
+  }
 }
 
 run "app_service_override_size_fail" {
