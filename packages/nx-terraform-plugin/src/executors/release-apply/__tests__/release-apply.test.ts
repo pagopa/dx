@@ -64,6 +64,7 @@ describe("Release Apply Executor", () => {
     const options: ReleaseApplyExecutorSchema = {
       projectRoot: "infra/resources/prod",
       report: true,
+      sensitiveKeys: ["hidden-link"],
       verbose: false,
     };
 
@@ -79,6 +80,7 @@ describe("Release Apply Executor", () => {
       {
         modulePath: "infra/resources/prod",
         report: true,
+        sensitiveKeys: ["hidden-link"],
         verbose: false,
       },
     );
@@ -100,6 +102,7 @@ describe("Release Apply Executor", () => {
       {
         modulePath: "infra/resources/prod",
         report: false,
+        sensitiveKeys: [],
         verbose: false,
       },
     );

@@ -52,7 +52,7 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts projects to publish and released Terraform environment metadata from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
+1. Extracts projects to publish and released Terraform environment metadata from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`); invalid or incomplete release metadata fails the publish instead of silently skipping infrastructure
 2. Runs `npx nx release publish` with provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
@@ -79,6 +79,11 @@ This action automates the Nx release flow in three phases:
 | `release-mode`                | Resolved release mode for this run: `skip`, `create-pr`, `publish`, or `publish-all`                                                                                                                                              |
 | `published-pr-number`         | PR number of the merged Version Packages PR whose projects were published in this run. Only set when `release-mode` is `publish` (empty for `publish-all`, which republishes all public projects rather than a single merged PR). |
 | `released-environment-matrix` | JSON matrix of released Terraform environments, including the Nx project and resolved plan/apply environment and runner metadata. Values default from the project directory and can be overridden in `environment.json`.          |
+
+`release-v2.yaml` consumes `released-environment-matrix` by dispatching one
+independent Terraform deployment workflow run per environment. Package
+publishing therefore does not remain blocked while infrastructure waits for
+approval.
 
 ## Prerequisites
 
@@ -174,7 +179,7 @@ Used automatically on `pull_request` workflows. The action:
 
 1. Finds the latest merged `Version Packages` PR and extracts the list of released projects
 2. Builds and publishes only public projects from that release
-3. Outputs deployment metadata for released Terraform environment projects so callers can run their protected plan/apply jobs
+3. Outputs deployment metadata for released Terraform environment projects so callers can dispatch independent protected plan/apply workflow runs
 4. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 5. Ensures a GitHub Release exists for every release tag found in PR metadata,

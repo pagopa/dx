@@ -11,7 +11,6 @@ const {
   fsReadFileMock,
   getNxProjectNamesMock,
   getNxProjectRootMock,
-  isEnvironmentProjectMock,
   matchProjectNameMock,
   pullsGetMock,
 } = vi.hoisted(() => ({
@@ -22,9 +21,6 @@ const {
   getNxProjectNamesMock: vi.fn<() => Promise<string[]>>(async () => []),
   getNxProjectRootMock: vi.fn<(projectName: string) => Promise<null | string>>(
     async () => null,
-  ),
-  isEnvironmentProjectMock: vi.fn<(projectName: string) => Promise<boolean>>(
-    async () => false,
   ),
   matchProjectNameMock: vi.fn<
     (tag: string, projectNames: string[]) => null | string
@@ -59,7 +55,6 @@ vi.mock("../shared.js", async () => {
     getNxProjectNames: getNxProjectNamesMock,
     getNxProjectRoot: getNxProjectRootMock,
     getRepoInfo: async () => ({ owner: "pagopa", repo: "dx" }),
-    isEnvironmentProject: isEnvironmentProjectMock,
     matchProjectName: matchProjectNameMock,
   };
 });
@@ -70,6 +65,8 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.unstubAllEnvs();
   vi.stubEnv("PR_NUMBER", "123");
+  fsReadFileMock.mockReset();
+  fsReadFileMock.mockResolvedValue("");
 });
 
 describe("run output", () => {
@@ -98,15 +95,20 @@ describe("run output", () => {
 
       return null;
     });
-    isEnvironmentProjectMock.mockImplementation(
-      async (projectName) => projectName === "infra-resources-dev",
+    getNxProjectRootMock.mockImplementation(async (projectName) =>
+      projectName === "infra-resources-dev"
+        ? "infra/resources/dev"
+        : "infra/modules/storage",
     );
-    getNxProjectRootMock.mockResolvedValue("infra/resources/dev");
-    fsReadFileMock.mockResolvedValue(
-      JSON.stringify({
-        version: "1.0.0",
-      }),
-    );
+    fsReadFileMock.mockImplementation(async (manifestPath) => {
+      if (manifestPath === "infra/resources/dev/environment.json") {
+        return JSON.stringify({
+          version: "1.0.0",
+        });
+      }
+
+      throw Object.assign(new Error("not found"), { code: "ENOENT" });
+    });
 
     const stdoutWriteSpy = vi
       .spyOn(process.stdout, "write")
@@ -137,29 +139,19 @@ describe("run output", () => {
     );
   });
 
-  it("writes an empty string when the PR body is empty", async () => {
+  it("fails when the PR body is empty", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
         body: null,
       },
     });
 
-    const stdoutWriteSpy = vi
-      .spyOn(process.stdout, "write")
-      .mockImplementation(() => true);
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-
-    await run();
-
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "::warning::PR body is empty, no environment projects to apply",
+    await expect(run()).rejects.toThrow(
+      "has an empty body; cannot determine released environments",
     );
   });
 
-  it("writes an empty string when no tag metadata is found", async () => {
+  it("fails when no tag metadata is found", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
         body: "no metadata here",
@@ -167,22 +159,12 @@ describe("run output", () => {
     });
     extractTagEntriesFromPRBodyMock.mockReturnValue([]);
 
-    const stdoutWriteSpy = vi
-      .spyOn(process.stdout, "write")
-      .mockImplementation(() => true);
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
-
-    await run();
-
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "::warning::No nx-release-tags metadata found in PR body, no environment projects to apply",
+    await expect(run()).rejects.toThrow(
+      "has no valid nx-release-tags metadata",
     );
   });
 
-  it("writes an empty string when no tags match Nx projects", async () => {
+  it("fails when a released tag does not match an Nx project", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
         body: "<!-- nx-release-tags: [] -->",
@@ -194,18 +176,24 @@ describe("run output", () => {
     getNxProjectNamesMock.mockResolvedValue(["infra-resources-dev"]);
     matchProjectNameMock.mockReturnValue(null);
 
-    const stdoutWriteSpy = vi
-      .spyOn(process.stdout, "write")
-      .mockImplementation(() => true);
-    const consoleErrorSpy = vi
-      .spyOn(console, "error")
-      .mockImplementation(() => undefined);
+    await expect(run()).rejects.toThrow(
+      "Could not match released tags to Nx projects: unknown-project@1.0.0",
+    );
+  });
 
-    await run();
+  it("fails when Nx returns no projects", async () => {
+    pullsGetMock.mockResolvedValue({
+      data: {
+        body: "<!-- nx-release-tags: [] -->",
+      },
+    });
+    extractTagEntriesFromPRBodyMock.mockReturnValue([
+      { path: null, tag: "infra-resources-dev@1.0.0", version: "1.0.0" },
+    ]);
+    getNxProjectNamesMock.mockResolvedValue([]);
 
-    expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "::warning::No projects extracted from tags",
+    await expect(run()).rejects.toThrow(
+      "Nx returned no projects while resolving released environments",
     );
   });
 });
@@ -222,7 +210,10 @@ describe("run validation", () => {
     ]);
     getNxProjectNamesMock.mockResolvedValue(["infra-modules-storage"]);
     matchProjectNameMock.mockReturnValue("infra-modules-storage");
-    isEnvironmentProjectMock.mockResolvedValue(false);
+    getNxProjectRootMock.mockResolvedValue("infra/modules/storage");
+    fsReadFileMock.mockRejectedValue(
+      Object.assign(new Error("not found"), { code: "ENOENT" }),
+    );
 
     const stdoutWriteSpy = vi
       .spyOn(process.stdout, "write")
@@ -235,7 +226,7 @@ describe("run validation", () => {
 
     expect(stdoutWriteSpy).toHaveBeenCalledWith("[]");
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      "::warning::No environment projects found to apply",
+      "No released environment projects found to apply",
     );
   });
 
@@ -258,7 +249,6 @@ describe("run validation", () => {
     ]);
     getNxProjectNamesMock.mockResolvedValue(["infra-resources-dev"]);
     matchProjectNameMock.mockReturnValue("infra-resources-dev");
-    isEnvironmentProjectMock.mockResolvedValue(true);
     getNxProjectRootMock.mockResolvedValue("infra/resources/dev");
     fsReadFileMock.mockResolvedValue(
       JSON.stringify({

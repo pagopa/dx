@@ -20,7 +20,8 @@ const runExecutor: PromiseExecutor<PlanExecutorInput> = async (options) => {
     };
   }
 
-  const { out, projectRoot, refresh, report, verbose } = parseResult.data;
+  const { out, projectRoot, refresh, report, sensitiveKeys, verbose } =
+    parseResult.data;
 
   const dispatcher = createDefaultTaskDispatcher();
 
@@ -29,6 +30,7 @@ const runExecutor: PromiseExecutor<PlanExecutorInput> = async (options) => {
     out,
     refresh,
     report,
+    sensitiveKeys,
     verbose,
   });
 

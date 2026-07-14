@@ -4,14 +4,14 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 
 ## Available tasks
 
-| Task              | Description                                                                                                                                        |
-| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `terraformPlan`   | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                      |
-| `terraformPlanUpload` | Runs `terraformPlan` with a fixed output path, then uploads the resulting plan bundle (plan file, lock file, and module cache) to the same cloud storage backend used for the Terraform state, so it can be applied later by `terraformApply`. |
-| `terraformApply`  | Downloads the plan bundle uploaded by `terraformPlanUpload` (recomputing its deterministic storage path from the Terraform backend state and the current CI run), applies it non-interactively, and deletes the remote bundle only after a **successful** apply.        |
-| `renderReport`    | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers. |
-| `prComment`       | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                       |
-| `reportPrComment` | Renders persisted reports and posts the rendered Markdown as a GitHub pull request comment.                                                        |
+| Task                  | Description                                                                                                                                                                                                                                                      |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terraformPlan`       | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                                                                                                                                    |
+| `terraformPlanUpload` | Runs `terraformPlan` with a fixed output path, then uploads the resulting plan bundle (plan file, lock file, and module cache) to the same cloud storage backend used for the Terraform state, so it can be applied later by `terraformApply`.                   |
+| `terraformApply`      | Downloads the plan bundle uploaded by `terraformPlanUpload` (recomputing its deterministic storage path from the Terraform backend state and the current CI run), applies it non-interactively, and deletes the remote bundle only after a **successful** apply. |
+| `renderReport`        | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers.                                                                                                               |
+| `prComment`           | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                                                                                                                                     |
+| `reportPrComment`     | Renders persisted reports and posts the rendered Markdown as a GitHub pull request comment.                                                                                                                                                                      |
 
 ## Dispatcher
 
@@ -46,6 +46,7 @@ await dispatcher.dispatchTask("terraformPlan", {
   out: "plan.tfplan",
   refresh: true,
   report: true,
+  sensitiveKeys: ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"],
   verbose: false,
 });
 ```
@@ -121,6 +122,7 @@ const dispatcher = createDefaultTaskDispatcher();
 await dispatcher.dispatchTask("terraformPlanUpload", {
   modulePath: "./infra/resources/dev",
   report: true,
+  sensitiveKeys: ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"],
 });
 
 // Later, in the "apply" job/step (write credentials, ideally gated behind a
@@ -128,11 +130,14 @@ await dispatcher.dispatchTask("terraformPlanUpload", {
 await dispatcher.dispatchTask("terraformApply", {
   modulePath: "./infra/resources/dev",
   report: true,
+  sensitiveKeys: ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"],
 });
 ```
 
 `terraformPlanUpload` and `terraformApply` both require the `GITHUB_RUN_ID` environment variable to
 be set (this is set automatically by GitHub Actions runners).
+The optional `sensitiveKeys` payload field lists additional Terraform output
+keys whose values must be redacted before logs or reports are written.
 
 ## Commenting on pull requests
 
@@ -215,7 +220,7 @@ and errors are rendered as GitHub Markdown notices before the summary line. Full
 never included in the Markdown comment, keeping comments compact even across many plans and linking
 back to `sourceUrl`, when provided, and report artifacts for the complete output.
 
-````markdown
+```markdown
 ### Terraform Plans
 
 #### Module: `./infra/modules/example` - ✅ Success
@@ -230,7 +235,7 @@ Plan: 0 to add, 1 to change, 0 to destroy.
 > [!NOTE]
 > Full plan output is not included in this comment.
 > See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.
-````
+```
 
 To control which namespaces/formats are renderable, build your own `ReportStore` and register
 namespaces with `renderers` explicitly:

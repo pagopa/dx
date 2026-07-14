@@ -370,6 +370,7 @@ describe("getProject applications", () => {
           projectRoot: "{projectRoot}",
           refresh: true,
           report: false,
+          sensitiveKeys: [],
           verbose: true,
         },
       });
@@ -380,6 +381,7 @@ describe("getProject applications", () => {
         options: {
           projectRoot: "{projectRoot}",
           report: false,
+          sensitiveKeys: [],
           verbose: true,
         },
       });

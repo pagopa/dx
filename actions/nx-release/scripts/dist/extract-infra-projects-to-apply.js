@@ -18233,13 +18233,6 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-async function isEnvironmentProject(projectName) {
-  const metadata = await getNxProjectMetadata(projectName);
-  if (!metadata) return false;
-  const tags = metadata.tags;
-  if (!tags) return false;
-  return tags.some((tag) => /^env:/.test(tag));
-}
 function matchProjectName(tag, projectNames) {
   const candidates = projectNames.filter((name) => {
     if (!tag.startsWith(name)) return false;
@@ -18300,6 +18293,7 @@ var environmentManifestSchema = external_exports.object({
   }).optional()
 });
 var emptyMatrix = "[]";
+var isFileNotFoundError = (error51) => typeof error51 === "object" && error51 !== null && "code" in error51 && error51.code === "ENOENT";
 var inferDeploymentMetadata = (projectRoot) => {
   const environmentName = path.basename(projectRoot);
   if (!environmentName || environmentName === ".") {
@@ -18313,14 +18307,23 @@ var inferDeploymentMetadata = (projectRoot) => {
     runnerLabel: environmentName
   };
 };
-var readEnvironmentTarget = async (project) => {
-  const projectRoot = await getNxProjectRoot(project);
-  if (!projectRoot) {
-    throw new Error(`Could not resolve the root for Nx project "${project}"`);
-  }
+var readEnvironmentTarget = async (project, projectRoot) => {
   const manifestPath = path.join(projectRoot, "environment.json");
-  const rawManifest = await fs.readFile(manifestPath, "utf8");
-  const parsedManifest = JSON.parse(rawManifest);
+  let rawManifest;
+  try {
+    rawManifest = await fs.readFile(manifestPath, "utf8");
+  } catch (cause) {
+    if (isFileNotFoundError(cause)) {
+      return void 0;
+    }
+    throw new Error(`Failed to read "${manifestPath}"`, { cause });
+  }
+  let parsedManifest;
+  try {
+    parsedManifest = JSON.parse(rawManifest);
+  } catch (cause) {
+    throw new Error(`Failed to parse "${manifestPath}" as JSON`, { cause });
+  }
   const parseResult = environmentManifestSchema.safeParse(parsedManifest);
   if (!parseResult.success) {
     throw new Error(
@@ -18346,57 +18349,61 @@ async function run() {
     repo
   });
   if (!pr.body) {
-    console.error(
-      "::warning::PR body is empty, no environment projects to apply"
+    throw new Error(
+      `Version Packages PR #${prNumber} has an empty body; cannot determine released environments`
     );
-    process.stdout.write(emptyMatrix);
-    return;
   }
   const tagEntries = extractTagEntriesFromPRBody(pr.body);
   if (tagEntries.length === 0) {
-    console.error(
-      "::warning::No nx-release-tags metadata found in PR body, no environment projects to apply"
+    throw new Error(
+      `Version Packages PR #${prNumber} has no valid nx-release-tags metadata`
     );
-    process.stdout.write(emptyMatrix);
-    return;
   }
   const projectNames = await getNxProjectNames();
   if (projectNames.length === 0) {
-    console.error("::warning::No Nx projects found in workspace");
-    process.stdout.write(emptyMatrix);
-    return;
+    throw new Error(
+      "Nx returned no projects while resolving released environments"
+    );
   }
   const matchedProjects = /* @__PURE__ */ new Set();
+  const unmatchedTags = [];
   for (const entry of tagEntries) {
     const projectName = matchProjectName(entry.tag, projectNames);
     if (projectName) {
       matchedProjects.add(projectName);
     } else {
-      console.error(
-        `::warning::Could not match tag ${entry.tag} to any Nx project`
-      );
+      unmatchedTags.push(entry.tag);
     }
   }
-  if (matchedProjects.size === 0) {
-    console.error("::warning::No projects extracted from tags");
-    process.stdout.write(emptyMatrix);
-    return;
+  if (unmatchedTags.length > 0) {
+    throw new Error(
+      `Could not match released tags to Nx projects: ${unmatchedTags.join(", ")}`
+    );
   }
   console.error(
     `Filtering environment projects from ${matchedProjects.size} matched projects`
   );
   const environmentTargets = [];
   for (const projectName of matchedProjects) {
-    const isEnvironment = await isEnvironmentProject(projectName);
-    if (isEnvironment) {
-      environmentTargets.push(await readEnvironmentTarget(projectName));
+    const projectRoot = await getNxProjectRoot(projectName);
+    if (!projectRoot) {
+      throw new Error(
+        `Could not resolve the root for Nx project "${projectName}"`
+      );
+    }
+    const environmentTarget = await readEnvironmentTarget(
+      projectName,
+      projectRoot
+    );
+    if (environmentTarget) {
+      environmentTargets.push(environmentTarget);
       console.error(`\u2713 ${projectName} is an environment project`);
     } else {
       console.error(`\u2717 ${projectName} is not an environment project, skipping`);
     }
   }
   if (environmentTargets.length === 0) {
-    console.error("::warning::No environment projects found to apply");
+    console.error("No released environment projects found to apply");
     process.stdout.write(emptyMatrix);
     return;
   }

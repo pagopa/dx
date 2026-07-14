@@ -163,6 +163,7 @@ const getEnvironmentReleaseTargets = (opts) => [[opts.planUploadTargetName, {
 		projectRoot: "{projectRoot}",
 		refresh: true,
 		report: false,
+		sensitiveKeys: opts.sensitiveOutputKeys,
 		verbose: true
 	}
 }], [opts.publishTargetName, {
@@ -172,6 +173,7 @@ const getEnvironmentReleaseTargets = (opts) => [[opts.planUploadTargetName, {
 	options: {
 		projectRoot: "{projectRoot}",
 		report: false,
+		sensitiveKeys: opts.sensitiveOutputKeys,
 		verbose: true
 	}
 }]];
@@ -282,6 +284,7 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 				projectRoot: "{projectRoot}",
 				refresh: true,
 				report: false,
+				sensitiveKeys: opts.sensitiveOutputKeys,
 				verbose: true
 			}
 		}], [opts.applyTargetName, {
@@ -379,6 +382,7 @@ const terraformPluginOptionsSchema = z.object({
 	planUploadTargetName: targetNameSchema,
 	publish: publishOptionsSchema,
 	publishTargetName: targetNameSchema,
+	sensitiveOutputKeys: z.array(z.string().min(1)),
 	testTargetName: targetNameSchema,
 	validateTargetName: targetNameSchema
 });
@@ -395,6 +399,7 @@ const defaultOptions = {
 	planUploadTargetName: "tf-plan-upload",
 	publish: { mode: "github" },
 	publishTargetName: "nx-release-publish",
+	sensitiveOutputKeys: [],
 	testTargetName: "tf-test",
 	validateTargetName: "tf-validate"
 };

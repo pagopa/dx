@@ -25,7 +25,8 @@ const runExecutor: PromiseExecutor<PlanUploadExecutorInput> = async (
     };
   }
 
-  const { projectRoot, refresh, report, verbose } = parseResult.data;
+  const { projectRoot, refresh, report, sensitiveKeys, verbose } =
+    parseResult.data;
 
   const dispatcher = createDefaultTaskDispatcher();
 
@@ -33,6 +34,7 @@ const runExecutor: PromiseExecutor<PlanUploadExecutorInput> = async (
     modulePath: projectRoot,
     refresh,
     report,
+    sensitiveKeys,
     verbose,
   });
 

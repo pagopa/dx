@@ -12,6 +12,7 @@ const terraformPlanUploadPayloadShape = {
   modulePath: z.string().check(z.minLength(1)),
   refresh: z._default(z.boolean(), true),
   report: z._default(z.boolean(), false),
+  sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
   verbose: z._default(z.boolean(), false),
 };
 
@@ -21,6 +22,7 @@ export interface TerraformPlanUploadPayload {
   modulePath: string;
   refresh?: boolean;
   report?: boolean;
+  sensitiveKeys?: readonly string[];
   verbose?: boolean;
 }
 
@@ -41,12 +43,20 @@ export async function terraformPlanUpload(
     modulePath,
     refresh = true,
     report = false,
+    sensitiveKeys = [],
     verbose = false,
   }: TerraformPlanUploadPayload,
   context: TaskRunContext = {},
 ) {
   await terraformPlan(
-    { modulePath, out: PLAN_FILE_NAME, refresh, report, verbose },
+    {
+      modulePath,
+      out: PLAN_FILE_NAME,
+      refresh,
+      report,
+      sensitiveKeys,
+      verbose,
+    },
     context,
   );
 

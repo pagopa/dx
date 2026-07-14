@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: "app-prod-cd"
+      terraform-deployment-workflow:
+        description: "Workflow file in the caller repository that deploys one released Terraform environment"
+        required: false
+        type: string
+        default: "release-terraform-environment-v1.yaml"
     secrets:
       app-client-id:
         description: "GitHub App Client ID for authentication"
@@ -87,172 +92,42 @@ jobs:
       released-environment-matrix: ${{ steps.nx-release.outputs.released-environment-matrix }}
       release-mode: ${{ steps.nx-release.outputs.release-mode }}
 
-  validate-infra-environments:
-    name: Validate Infra Deployment Environments
+  dispatch-infra-releases:
+    name: Dispatch Infra Release (${{ matrix.target.project }})
     needs: release
     if: ${{ needs.release.result == 'success' && needs.release.outputs.release-mode == 'publish' && needs.release.outputs.released-environment-matrix != '[]' }}
     runs-on: ubuntu-24.04
-    outputs:
-      matrix: ${{ steps.validate.outputs.matrix }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.release.outputs.released-environment-matrix) }}
     permissions:
+      actions: write
       contents: read
     steps:
-      - name: Validate GitHub environments and protection rules
-        id: validate
+      - name: Dispatch Terraform environment release
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
-          RELEASED_ENVIRONMENT_MATRIX: ${{ needs.release.outputs.released-environment-matrix }}
+          APPLY_ENVIRONMENT: ${{ matrix.target.applyEnvironment }}
+          DEPLOYMENT_WORKFLOW: ${{ inputs.terraform-deployment-workflow }}
+          NX_PROJECT: ${{ matrix.target.project }}
+          PLAN_ENVIRONMENT: ${{ matrix.target.planEnvironment }}
+          RUNNER_LABEL: ${{ matrix.target.runnerLabel }}
+          SOURCE_REF: ${{ github.sha }}
+          WORKFLOW_REF: ${{ github.ref_name }}
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
           script: |
-            const matrix = JSON.parse(process.env.RELEASED_ENVIRONMENT_MATRIX);
-            const environments = await github.paginate(
-              github.rest.repos.getAllEnvironments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: process.env.DEPLOYMENT_WORKFLOW,
+              ref: process.env.WORKFLOW_REF,
+              inputs: {
+                project: process.env.NX_PROJECT,
+                "source-ref": process.env.SOURCE_REF,
+                "plan-environment": process.env.PLAN_ENVIRONMENT,
+                "apply-environment": process.env.APPLY_ENVIRONMENT,
+                "runner-label": process.env.RUNNER_LABEL,
               },
-              (response) => response.data
-            );
-            const environmentsByName = new Map(
-              environments.map((environment) => [environment.name, environment])
-            );
-
-            for (const target of matrix) {
-              if (!environmentsByName.has(target.planEnvironment)) {
-                core.setFailed(
-                  `Plan environment "${target.planEnvironment}" for "${target.project}" does not exist`
-                );
-                return;
-              }
-
-              const applyEnvironment = environmentsByName.get(
-                target.applyEnvironment
-              );
-              if (!applyEnvironment) {
-                core.setFailed(
-                  `Apply environment "${target.applyEnvironment}" for "${target.project}" does not exist`
-                );
-                return;
-              }
-
-              const hasRequiredReviewers =
-                applyEnvironment.protection_rules?.some(
-                  ({ type }) => type === "required_reviewers"
-                ) ?? false;
-              if (!hasRequiredReviewers) {
-                core.setFailed(
-                  `Apply environment "${target.applyEnvironment}" for "${target.project}" has no required reviewers`
-                );
-                return;
-              }
-            }
-
-            core.setOutput("matrix", JSON.stringify(matrix));
-
-  infra-plan:
-    name: Infra Plan (${{ matrix.target.planEnvironment }})
-    needs: [release, validate-infra-environments]
-    if: ${{ needs.validate-infra-environments.result == 'success' }}
-    runs-on: ["self-hosted", "${{ matrix.target.runnerLabel }}"]
-    # Every "infra-<env>-cd" environment has a paired "infra-<env>-ci"
-    # environment with read-only credentials, used here since planning does
-    # not require write access and must not trigger the apply approval gate.
-    environment: ${{ matrix.target.planEnvironment }}
-    # Shared with infra-apply below and keyed per environment. This prevents
-    # concurrent plan/apply operations against the same Terraform state.
-    concurrency:
-      group: infra-terraform-${{ matrix.target.applyEnvironment }}
-      cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJSON(needs.validate-infra-environments.outputs.matrix) }}
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-    env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_USE_OIDC: true
-      ARM_USE_AZUREAD: true
-      ARM_STORAGE_USE_AZUREAD: true
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          filter: tree:0
-
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
-
-      - name: Run Terraform plan-upload for this environment
-        run: pnpm nx run "${{ matrix.target.project }}:tf-plan-upload" -c ci
-
-  infra-apply:
-    name: Infra Apply (${{ matrix.target.applyEnvironment }})
-    needs: [release, validate-infra-environments, infra-plan]
-    if: ${{ needs.infra-plan.result == 'success' }}
-    runs-on: ["self-hosted", "${{ matrix.target.runnerLabel }}"]
-    # This environment has the `required_reviewers` protection rule
-    # configured on GitHub: the job pauses here until a human approves,
-    # after reviewing the plan produced by the infra-plan job above.
-    environment: ${{ matrix.target.applyEnvironment }}
-    # Same group as infra-plan above, so a pending approval also prevents a
-    # later plan/apply from racing against the same Terraform state.
-    concurrency:
-      group: infra-terraform-${{ matrix.target.applyEnvironment }}
-      cancel-in-progress: false
-    strategy:
-      fail-fast: false
-      matrix:
-        target: ${{ fromJSON(needs.validate-infra-environments.outputs.matrix) }}
-    permissions:
-      actions: read
-      contents: read
-      id-token: write
-    env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_USE_OIDC: true
-      ARM_USE_AZUREAD: true
-      ARM_STORAGE_USE_AZUREAD: true
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          filter: tree:0
-
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
-
-      - name: Run Terraform release-publish (apply) for this environment
-        run: pnpm nx release publish --projects="${{ matrix.target.project }}"
+            });

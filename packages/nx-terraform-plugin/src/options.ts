@@ -32,6 +32,7 @@ const terraformPluginOptionsSchema = z.object({
   planUploadTargetName: targetNameSchema,
   publish: publishOptionsSchema,
   publishTargetName: targetNameSchema,
+  sensitiveOutputKeys: z.array(z.string().min(1)),
   testTargetName: targetNameSchema,
   validateTargetName: targetNameSchema,
 });
@@ -55,6 +56,7 @@ const defaultOptions: TerraformPluginOptions = {
     mode: "github",
   },
   publishTargetName: "nx-release-publish",
+  sensitiveOutputKeys: [],
   testTargetName: "tf-test",
   validateTargetName: "tf-validate",
 };

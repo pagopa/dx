@@ -23,6 +23,15 @@
       "type": "boolean",
       "default": false
     },
+    "sensitiveKeys": {
+      "description": "Terraform output keys whose values must be redacted",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
     "verbose": {
       "description": "Whether to print the full terraform plan output",
       "type": "boolean",

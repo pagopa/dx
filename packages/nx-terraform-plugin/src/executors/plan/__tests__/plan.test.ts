@@ -66,6 +66,7 @@ describe("Plan Executor", () => {
       projectRoot: "infra/modules/azure_core_infra",
       refresh: true,
       report: true,
+      sensitiveKeys: ["hidden-link"],
       verbose: false,
     };
 
@@ -81,6 +82,7 @@ describe("Plan Executor", () => {
       out: "plan.tfplan",
       refresh: true,
       report: true,
+      sensitiveKeys: ["hidden-link"],
       verbose: false,
     });
     expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["plan"]);
@@ -99,6 +101,7 @@ describe("Plan Executor", () => {
       out: undefined,
       refresh: true,
       report: false,
+      sensitiveKeys: [],
       verbose: false,
     });
   });

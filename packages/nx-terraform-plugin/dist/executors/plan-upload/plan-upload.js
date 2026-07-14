@@ -1,4 +1,4 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-CKKSPoCe.js";
+import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-4u-PU-hx.js";
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
 import { z } from "zod/v4";
 
@@ -7,6 +7,7 @@ const planUploadExecutorSchema = z.object({
 	projectRoot: z.string().min(1),
 	refresh: z.boolean().default(true),
 	report: z.boolean().default(false),
+	sensitiveKeys: z.array(z.string().min(1)).default([]),
 	verbose: z.boolean().default(false)
 });
 
@@ -23,11 +24,12 @@ const runExecutor = async (options) => {
 		});
 		return { success: false };
 	}
-	const { projectRoot, refresh, report, verbose } = parseResult.data;
+	const { projectRoot, refresh, report, sensitiveKeys, verbose } = parseResult.data;
 	await createDefaultTaskDispatcher().dispatchTask("terraformPlanUpload", {
 		modulePath: projectRoot,
 		refresh,
 		report,
+		sensitiveKeys,
 		verbose
 	});
 	return { success: true };

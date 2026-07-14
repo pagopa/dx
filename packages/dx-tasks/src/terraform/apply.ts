@@ -22,6 +22,7 @@ export const TERRAFORM_APPLY_NAMESPACE = "terraform-apply";
 const terraformApplyPayloadShape = {
   modulePath: z.string().check(z.minLength(1)),
   report: z._default(z.boolean(), false),
+  sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
   verbose: z._default(z.boolean(), false),
 };
 
@@ -30,6 +31,7 @@ export const payloadSchema = z.object(terraformApplyPayloadShape);
 export interface TerraformApplyPayload {
   modulePath: string;
   report?: boolean;
+  sensitiveKeys?: readonly string[];
   verbose?: boolean;
 }
 
@@ -253,6 +255,7 @@ const executeTerraformApply = async (
   modulePath: string,
   verbose: boolean,
   report: boolean,
+  sensitiveKeys: readonly string[],
   context: TaskRunContext,
 ) => {
   const env: Record<string, string> = {};
@@ -287,6 +290,7 @@ const executeTerraformApply = async (
     [result.stdout, result.stderr]
       .filter((output) => output.trim().length > 0)
       .join("\n"),
+    [...sensitiveKeys],
   );
 
   const applyOutput = getApplyOutput(maskedOutput, verbose);
@@ -315,7 +319,12 @@ const executeTerraformApply = async (
 };
 
 export async function terraformApply(
-  { modulePath, report = false, verbose = false }: TerraformApplyPayload,
+  {
+    modulePath,
+    report = false,
+    sensitiveKeys = [],
+    verbose = false,
+  }: TerraformApplyPayload,
   context: TaskRunContext = {},
 ) {
   const runId = getRunId();
@@ -336,6 +345,12 @@ export async function terraformApply(
   // available for forensic inspection of what was attempted. Cleaning up
   // bundles from abandoned/failed runs across different workflow runs is not
   // automatic and is left to the storage backend's own retention policy.
-  await executeTerraformApply(modulePath, verbose, report, context);
+  await executeTerraformApply(
+    modulePath,
+    verbose,
+    report,
+    sensitiveKeys,
+    context,
+  );
   await deleteRemotePlanBundle({ backend, planPath });
 }

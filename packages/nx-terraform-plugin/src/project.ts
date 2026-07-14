@@ -127,6 +127,7 @@ const getEnvironmentReleaseTargets = (
         projectRoot: "{projectRoot}",
         refresh: true,
         report: false,
+        sensitiveKeys: opts.sensitiveOutputKeys,
         verbose: true,
       },
     },
@@ -140,6 +141,7 @@ const getEnvironmentReleaseTargets = (
       options: {
         projectRoot: "{projectRoot}",
         report: false,
+        sensitiveKeys: opts.sensitiveOutputKeys,
         verbose: true,
       },
     },
@@ -317,6 +319,7 @@ const getTargets = (
             projectRoot: "{projectRoot}",
             refresh: true,
             report: false,
+            sensitiveKeys: opts.sensitiveOutputKeys,
             verbose: true,
           },
         },

@@ -1,0 +1,192 @@
+name: Terraform Environment Release v1
+run-name: Terraform release ${{ inputs.project }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      project:
+        description: "Nx Terraform environment project to release"
+        required: true
+        type: string
+      source-ref:
+        description: "Git commit containing the released infrastructure configuration"
+        required: true
+        type: string
+      plan-environment:
+        description: "GitHub environment providing read-only plan credentials"
+        required: true
+        type: string
+      apply-environment:
+        description: "Approval-protected GitHub environment providing apply credentials"
+        required: true
+        type: string
+      runner-label:
+        description: "Self-hosted runner label for this environment"
+        required: true
+        type: string
+
+concurrency:
+  group: infra-terraform-${{ inputs.apply-environment }}
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  validate:
+    name: Validate Deployment Environment
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Validate GitHub environments and protection rules
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          APPLY_ENVIRONMENT: ${{ inputs.apply-environment }}
+          PLAN_ENVIRONMENT: ${{ inputs.plan-environment }}
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            const environments = await github.paginate(
+              github.rest.repos.getAllEnvironments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                per_page: 100,
+              },
+              (response) => response.data
+            );
+            const environmentsByName = new Map(
+              environments.map((environment) => [environment.name, environment])
+            );
+
+            if (!environmentsByName.has(process.env.PLAN_ENVIRONMENT)) {
+              core.setFailed(
+                `Plan environment "${process.env.PLAN_ENVIRONMENT}" does not exist`
+              );
+              return;
+            }
+
+            const applyEnvironment = environmentsByName.get(
+              process.env.APPLY_ENVIRONMENT
+            );
+            if (!applyEnvironment) {
+              core.setFailed(
+                `Apply environment "${process.env.APPLY_ENVIRONMENT}" does not exist`
+              );
+              return;
+            }
+
+            const hasRequiredReviewers =
+              applyEnvironment.protection_rules?.some(
+                ({ type }) => type === "required_reviewers"
+              ) ?? false;
+            if (!hasRequiredReviewers) {
+              core.setFailed(
+                `Apply environment "${process.env.APPLY_ENVIRONMENT}" has no required reviewers`
+              );
+            }
+
+  plan:
+    name: Terraform Plan
+    needs: validate
+    runs-on: ["self-hosted", "${{ inputs.runner-label }}"]
+    environment: ${{ inputs.plan-environment }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      ARM_STORAGE_USE_AZUREAD: true
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+      - name: Check out released configuration
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+          ref: ${{ inputs.source-ref }}
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Setup Node.js
+        id: node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Setup Terraform
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+
+      - name: Install dependencies (pnpm)
+        if: steps.node-setup.outputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install dependencies (yarn)
+        if: steps.node-setup.outputs.package-manager == 'yarn'
+        run: yarn install --immutable
+
+      - name: Install dependencies (npm)
+        if: steps.node-setup.outputs.package-manager == 'npm'
+        run: npm ci
+
+      - name: Run Terraform plan-upload
+        env:
+          NX_PROJECT: ${{ inputs.project }}
+        run: npx nx run "$NX_PROJECT:tf-plan-upload" -c ci
+
+  apply:
+    name: Terraform Apply
+    needs: plan
+    runs-on: ["self-hosted", "${{ inputs.runner-label }}"]
+    environment: ${{ inputs.apply-environment }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_USE_OIDC: true
+      ARM_USE_AZUREAD: true
+      ARM_STORAGE_USE_AZUREAD: true
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+      - name: Check out released configuration
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+          ref: ${{ inputs.source-ref }}
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Setup Node.js
+        id: node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Setup Terraform
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+
+      - name: Install dependencies (pnpm)
+        if: steps.node-setup.outputs.package-manager == 'pnpm'
+        run: pnpm install --frozen-lockfile
+
+      - name: Install dependencies (yarn)
+        if: steps.node-setup.outputs.package-manager == 'yarn'
+        run: yarn install --immutable
+
+      - name: Install dependencies (npm)
+        if: steps.node-setup.outputs.package-manager == 'npm'
+        run: npm ci
+
+      - name: Apply reviewed Terraform plan
+        env:
+          NX_PROJECT: ${{ inputs.project }}
+        run: npx nx release publish --projects="$NX_PROJECT"

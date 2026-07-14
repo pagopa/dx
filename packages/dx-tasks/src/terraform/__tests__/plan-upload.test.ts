@@ -75,6 +75,25 @@ describe("terraformPlanUpload", () => {
     );
   });
 
+  it("masks configured sensitive output keys", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: 'hidden-link = "sensitive-value"',
+    });
+
+    await terraformPlanUpload({
+      modulePath: "/tmp/module",
+      sensitiveKeys: ["hidden-link"],
+    });
+
+    expect(console.log).toHaveBeenNthCalledWith(
+      1,
+      'hidden-link = "[REDACTED]"',
+    );
+  });
+
   it("uploads the plan bundle using the same fixed plan file name", async () => {
     await terraformPlanUpload({ modulePath: "/tmp/module" });
 

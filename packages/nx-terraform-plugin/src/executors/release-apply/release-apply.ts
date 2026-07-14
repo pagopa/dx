@@ -25,13 +25,14 @@ const runExecutor: PromiseExecutor<ReleaseApplyExecutorInput> = async (
     };
   }
 
-  const { projectRoot, report, verbose } = parseResult.data;
+  const { projectRoot, report, sensitiveKeys, verbose } = parseResult.data;
 
   const dispatcher = createDefaultTaskDispatcher();
 
   await dispatcher.dispatchTask("terraformApply", {
     modulePath: projectRoot,
     report,
+    sensitiveKeys,
     verbose,
   });
 

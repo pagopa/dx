@@ -2,20 +2,21 @@
 sidebar_position: 11
 ---
 
-# Automate versioning and publishing with Nx
+# Automate versioning, publishing, and deployments with Nx
 
 :::info Reusable Workflows
 
 | Workflow                             | Version | Source                                                                                          |
 | ------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
 | **Validate** (PR version-plan check) | v1      | [`validate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v1.yaml) |
-| **Release** (publish to npm)         | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
+| **Release** (publish and deploy)     | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
 
 :::
 
-A reusable GitHub workflow that automates package versioning and publishing for
-[Nx](https://nx.dev) monorepos using
-[Nx Release](https://nx.dev/features/manage-releases) with version plans.
+A reusable GitHub workflow that automates package versioning, publishing, and
+approval-gated Terraform environment deployments for [Nx](https://nx.dev)
+monorepos using [Nx Release](https://nx.dev/features/manage-releases) with
+version plans.
 
 ## Features
 
@@ -24,6 +25,8 @@ A reusable GitHub workflow that automates package versioning and publishing for
 - 🔄 Automatically creates or updates a `Version Packages` pull request when new
   version plans are pushed to `main`
 - 📦 Publishes packages to npm when the `Version Packages` PR is merged
+- 🌍 Dispatches one independent plan/approval/apply workflow for each released
+  Terraform environment
 - 🎯 Agnostic: Works with pnpm, yarn, and npm
 - ♻️ Idempotent: `workflow_dispatch` can recover missed tags or releases
 
@@ -35,8 +38,10 @@ The workflow automates the release lifecycle in two steps:
    a `Version Packages` pull request that bumps versions and updates changelogs
    automatically.
 2. **When the `Version Packages` PR is merged** — the workflow publishes the
-   packages to npm with provenance, creates git tags, and creates the
-   corresponding GitHub Releases.
+   packages to npm with provenance, creates git tags and GitHub Releases, and
+   dispatches one independent deployment workflow for each released Terraform
+   environment. Package publishing completes without waiting for infrastructure
+   approvals.
 
 If you also enable the DX validation workflow, pull requests can receive a
 warning comment when the changes look releasable but the PR does not include a
@@ -44,9 +49,10 @@ matching version plan.
 
 :::tip Recovery
 
-If something goes wrong mid-publish, re-run the action or trigger
-`workflow_dispatch` manually. The workflow will pick up from where it left off,
-creating only the missing tags and releases.
+If package publishing or tag synchronization fails, re-run the action or trigger
+`workflow_dispatch` manually. Terraform deployments run separately: re-run the
+failed environment workflow, or manually dispatch it with the same project and
+source commit.
 
 :::
 
@@ -60,6 +66,17 @@ creating only the missing tags and releases.
 - Public packages must be tagged as public in their Nx project configuration.
   The `nx-release` workflow treats any tag equal to `public` or ending with
   `:public` (for example, `npm:public`) as publishable.
+
+Terraform environment releases additionally require:
+
+- an `environment.json` manifest and the inferred `tf-plan-upload` and
+  `nx-release-publish` targets;
+- a workflow in the caller repository that accepts the Terraform deployment
+  inputs. DX uses `release-terraform-environment-v1.yaml`;
+- paired plan/apply GitHub environments, with required reviewers configured on
+  the apply environment;
+- self-hosted runners and cloud credentials available through those
+  environments.
 
 ### Marking a package as public
 
@@ -156,14 +173,17 @@ jobs:
   release:
     name: Nx Release
     permissions:
+      actions: write
       contents: write
       id-token: write
       pull-requests: write
     uses: pagopa/dx/.github/workflows/release-v2.yaml@main
     with:
       environment: npm-prod-cd
+      terraform-deployment-workflow: release-terraform-environment-v1.yaml
     secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+      app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+      app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
 ```
 
 ### Optional: enable the pull request warning
@@ -192,20 +212,23 @@ missing or incomplete.
 
 ## Inputs
 
-| Input         | Description                                              | Required | Default       |
-| ------------- | -------------------------------------------------------- | -------- | ------------- |
-| `environment` | Repository Environment to associate with the release job | Yes      | `app-prod-cd` |
+| Input                           | Description                                                    | Required | Default                                 |
+| ------------------------------- | -------------------------------------------------------------- | -------- | --------------------------------------- |
+| `environment`                   | Repository Environment associated with the package release job | Yes      | `app-prod-cd`                           |
+| `terraform-deployment-workflow` | Workflow file that deploys one released Terraform environment  | No       | `release-terraform-environment-v1.yaml` |
 
 ## Secrets
 
-| Secret         | Description                                                              | Required |
-| -------------- | ------------------------------------------------------------------------ | -------- |
-| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions | Yes      |
+| Secret            | Description            | Required |
+| ----------------- | ---------------------- | -------- |
+| `app-client-id`   | GitHub App client ID   | Yes      |
+| `app-private-key` | GitHub App private key | Yes      |
 
 ## Required Permissions
 
 ```yaml
 permissions:
+  actions: write # To dispatch independent Terraform deployment workflows
   contents: write # To push version bumps, tags, and commits
   id-token: write # For npm provenance (trusted publishing)
   pull-requests: write # To create/update the Version Packages PR
@@ -252,7 +275,9 @@ git push origin main
 ```
 
 Pushing to `main` triggers the workflow, which opens (or updates) the
-`Version Packages` PR automatically. Merging that PR publishes the packages.
+`Version Packages` PR automatically. Merging that PR publishes packages and
+dispatches released Terraform environments without waiting for their approval
+gates.
 
 :::info
 
@@ -282,6 +307,20 @@ as well.
 - Verify that packages have the `npm:public` tag in their Nx configuration
 - Check that OIDC trusted publishing is configured on npm
 - Ensure `id-token: write` permission is granted to the workflow
+
+### Terraform deployment is not dispatched
+
+- Ensure the release caller grants `actions: write`
+- Ensure `terraform-deployment-workflow` names a workflow file in the caller
+  repository
+- Check that the Version Packages PR contains valid `nx-release-tags` metadata
+- Verify that the released project has a valid `environment.json`
+
+### Terraform deployment fails or is rejected
+
+Re-run the independent environment workflow. For recovery outside the original
+run, dispatch `release-terraform-environment-v1.yaml` manually with the released
+project, source commit, GitHub environment names, and runner label.
 
 ### Git tags or GitHub Releases are missing
 

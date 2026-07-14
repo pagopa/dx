@@ -209,6 +209,27 @@ describe("terraformApply", () => {
     );
   });
 
+  it("masks configured sensitive output keys", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: `hidden-link = "sensitive-value"
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.`,
+    });
+
+    await terraformApply({
+      modulePath: "/tmp/module",
+      sensitiveKeys: ["hidden-link"],
+      verbose: true,
+    });
+
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(
+      `hidden-link = "[REDACTED]"
+Apply complete! Resources: 0 added, 0 changed, 0 destroyed.`,
+    );
+  });
+
   it("deletes the remote plan bundle after a successful apply", async () => {
     mockRunCommand.mockResolvedValue({
       exitCode: 0,

@@ -65,6 +65,7 @@ describe("Plan Upload Executor", () => {
       projectRoot: "infra/resources/dev",
       refresh: true,
       report: true,
+      sensitiveKeys: ["hidden-link"],
       verbose: false,
     };
 
@@ -81,6 +82,7 @@ describe("Plan Upload Executor", () => {
         modulePath: "infra/resources/dev",
         refresh: true,
         report: true,
+        sensitiveKeys: ["hidden-link"],
         verbose: false,
       },
     );
@@ -101,6 +103,7 @@ describe("Plan Upload Executor", () => {
         modulePath: "infra/resources/dev",
         refresh: true,
         report: false,
+        sensitiveKeys: [],
         verbose: false,
       },
     );

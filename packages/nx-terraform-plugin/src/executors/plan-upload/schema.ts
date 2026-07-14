@@ -4,6 +4,7 @@ export const planUploadExecutorSchema = z.object({
   projectRoot: z.string().min(1),
   refresh: z.boolean().default(true),
   report: z.boolean().default(false),
+  sensitiveKeys: z.array(z.string().min(1)).default([]),
   verbose: z.boolean().default(false),
 });
 

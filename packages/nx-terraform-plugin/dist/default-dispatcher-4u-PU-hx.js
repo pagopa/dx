@@ -573,6 +573,7 @@ const TERRAFORM_APPLY_NAMESPACE = "terraform-apply";
 const terraformApplyPayloadShape = {
 	modulePath: z.string().check(z.minLength(1)),
 	report: z._default(z.boolean(), false),
+	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
 	verbose: z._default(z.boolean(), false)
 };
 const payloadSchema$2 = z.object(terraformApplyPayloadShape);
@@ -662,7 +663,7 @@ const getRunId$1 = () => {
 	if (!runId) throw new Error("GITHUB_RUN_ID environment variable is required to locate the Terraform plan bundle to apply");
 	return runId;
 };
-const executeTerraformApply = async (modulePath, verbose, report, context) => {
+const executeTerraformApply = async (modulePath, verbose, report, sensitiveKeys, context) => {
 	const env = {};
 	if (!verbose) env.TF_IN_AUTOMATION = "true";
 	if (isRunningInCI$1()) env.TF_IN_AUTOMATION = "true";
@@ -675,7 +676,7 @@ const executeTerraformApply = async (modulePath, verbose, report, context) => {
 		PLAN_FILE_NAME
 	], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage$1(result));
-	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
+	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"), [...sensitiveKeys]);
 	const applyOutput = getApplyOutput(maskedOutput, verbose);
 	const notices = getApplyNotices(maskedOutput);
 	const summaryLine = getApplySummaryLine(maskedOutput);
@@ -689,7 +690,7 @@ const executeTerraformApply = async (modulePath, verbose, report, context) => {
 	});
 	if (result.exitCode !== 0) throw new Error(getFailureMessage$1(result));
 };
-async function terraformApply({ modulePath, report = false, verbose = false }, context = {}) {
+async function terraformApply({ modulePath, report = false, sensitiveKeys = [], verbose = false }, context = {}) {
 	const runId = getRunId$1();
 	const { key, ...backend } = await readBackendConfig(modulePath);
 	const planPath = computePlanPath(key, runId);
@@ -698,7 +699,7 @@ async function terraformApply({ modulePath, report = false, verbose = false }, c
 		planPath,
 		workingDirectory: modulePath
 	});
-	await executeTerraformApply(modulePath, verbose, report, context);
+	await executeTerraformApply(modulePath, verbose, report, sensitiveKeys, context);
 	await deleteRemotePlanBundle({
 		backend,
 		planPath
@@ -714,6 +715,7 @@ const terraformPlanPayloadShape = {
 	out: z.optional(z.string().check(z.minLength(1))),
 	refresh: z._default(z.boolean(), true),
 	report: z._default(z.boolean(), false),
+	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
 	verbose: z._default(z.boolean(), false)
 };
 const payloadSchema$1 = z.object(terraformPlanPayloadShape);
@@ -801,10 +803,10 @@ const getFailureMessage = (result) => {
 	if (result.exitCode !== 0) return `Terraform plan exited with code ${result.exitCode}`;
 	return noPlanOutputMessage;
 };
-const executeTerraformPlan = async (modulePath, env, verbose, report, context) => {
+const executeTerraformPlan = async (modulePath, env, verbose, report, sensitiveKeys, context) => {
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
-	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
+	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"), [...sensitiveKeys]);
 	const planOutput = getPlanOutput(maskedOutput, verbose);
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
@@ -818,7 +820,7 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, context) =
 	});
 	if (result.exitCode !== 0) throw new Error(getFailureMessage(result));
 };
-async function terraformPlan({ modulePath, out, refresh = true, report = false, verbose = false }, context = {}) {
+async function terraformPlan({ modulePath, out, refresh = true, report = false, sensitiveKeys = [], verbose = false }, context = {}) {
 	const args = /* @__PURE__ */ new Map();
 	const env = {};
 	args.set("lock-timeout", "120s");
@@ -834,7 +836,7 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 		env.TF_IN_AUTOMATION = "true";
 	}
 	env.TF_CLI_ARGS_plan = args.entries().reduce((acc, [key, value]) => `${acc}-${key}${value === true ? "" : `=${value}`} `, "");
-	await executeTerraformPlan(modulePath, env, verbose, report, context);
+	await executeTerraformPlan(modulePath, env, verbose, report, sensitiveKeys, context);
 }
 
 //#endregion
@@ -844,6 +846,7 @@ const terraformPlanUploadPayloadShape = {
 	modulePath: z.string().check(z.minLength(1)),
 	refresh: z._default(z.boolean(), true),
 	report: z._default(z.boolean(), false),
+	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
 	verbose: z._default(z.boolean(), false)
 };
 const payloadSchema = z.object(terraformPlanUploadPayloadShape);
@@ -852,12 +855,13 @@ const getRunId = () => {
 	if (!runId) throw new Error("GITHUB_RUN_ID environment variable is required to upload a Terraform plan bundle");
 	return runId;
 };
-async function terraformPlanUpload({ modulePath, refresh = true, report = false, verbose = false }, context = {}) {
+async function terraformPlanUpload({ modulePath, refresh = true, report = false, sensitiveKeys = [], verbose = false }, context = {}) {
 	await terraformPlan({
 		modulePath,
 		out: PLAN_FILE_NAME,
 		refresh,
 		report,
+		sensitiveKeys,
 		verbose
 	}, context);
 	const { backend, planPath } = await uploadPlanBundle({
