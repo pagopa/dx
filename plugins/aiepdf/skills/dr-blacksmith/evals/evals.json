@@ -48,7 +48,7 @@
       "expectations": [
         "Creates stable UC-01 and UC-02 catalog entries with title, linked JTBD, priority, child link, and status/gap.",
         "Does not generate triggers, flows, postconditions, acceptance checks, or tracking events for the child Use Cases.",
-        "Keeps detailed behavior delegated to the separate Use Case skill."
+        "Keeps detailed behavior delegated to uc-engraver."
       ],
       "files": []
     },
@@ -62,6 +62,19 @@
         "Does not publish without an affirmative answer.",
         "Does not ask for or assume publication language/location before confirmation.",
         "Delegates confirmed publication to confluence-librarian and does not duplicate its publication mechanics."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "delegated-use-case-authoring",
+      "prompt": "While creating the parent DR/SRS for a payment authorization initiative, I also want detailed UC-01 and UC-02 Use Cases generated from the linked PRD and JTBDs. Keep the parent catalog synchronized, but do not write the detailed child Use Case bodies in the parent.",
+      "expected_output": "The agent invokes uc-engraver for detailed child documents and updates the parent catalog with the returned stable IDs, links, priorities, and status gaps.",
+      "expectations": [
+        "Delegates detailed Use Case authoring to uc-engraver.",
+        "Keeps only catalog entries in the parent DR/SRS.",
+        "Synchronizes the parent rows with child paths, stable IDs, and status gaps.",
+        "Preserves actor names from the linked PRD."
       ],
       "files": []
     }
