@@ -1,6 +1,6 @@
 ---
 name: dr-blacksmith
-description: Create and update a structured parent Design Review / Software Requirements Specification (DR/SRS) from PRDs, discovery, architecture, compliance, contracts, and delivery inputs. Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, maintain a Use Case index without generating child Use Cases, and hand confirmed Confluence publication to the confluence-librarian skill.
+description: Create and update a structured parent Design Review / Software Requirements Specification (DR/SRS) from PRDs, discovery, architecture, compliance, contracts, and delivery inputs. Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, maintain and verify a Use Case index without generating child Use Cases, invoke uc-engraver when detailed Use Cases are requested, and hand confirmed Confluence publication to the confluence-librarian skill.
 ---
 
 # DR Blacksmith
@@ -73,6 +73,8 @@ is given. Never overwrite the bundled template.
 6. **Maintain the Use Case index.** Add stable `UC-XX` entries with title,
    linked JTBD, priority, status, and child-page link when known. Flag missing
    or stale child documents for the Use Case skill; do not write their bodies.
+   When child pages are published, require verification that the Confluence
+   parent page also contains the returned child URLs and no stale placeholders.
 7. **Validate the document.** Check that all stable sections are present,
    required fields are populated or explicitly unresolved, conditional
    sections have justified `N/A` values, links and IDs are consistent, and
