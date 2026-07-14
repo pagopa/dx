@@ -101,7 +101,7 @@ availability zones or regions where relevant._
 | `nfr.scalability`   | Scalability                | _<target or N/A — reason>_        | _<evidence>_            | _<owner>_ | _<status>_ |
 | `nfr.security`      | Security                   | _<requirement>_                   | _<review / control>_    | _<owner>_ | _<status>_ |
 | `nfr.privacy`       | Legal / privacy            | _<requirement or N/A — reason>_   | _<DPIA / review>_       | _<owner>_ | _<status>_ |
-| `nfr.continuity`    | Business continuity / DR   | _<RPO/RTO or N/A — reason>_       | _<exercise / plan>_     | _<owner>_ | _<status>_ |
+| `nfr.continuity`    | Business continuity / disaster recovery | _<RPO/RTO or N/A — reason>_ | _<exercise / plan>_ | _<owner>_ | _<status>_ |
 | `nfr.monitoring`    | Monitoring / observability | _<logs, metrics, traces, alerts>_ | _<dashboard / runbook>_ | _<owner>_ | _<status>_ |
 | `nfr.accessibility` | Accessibility / UX         | _<requirement or N/A — reason>_   | _<audit / test>_        | _<owner>_ | _<status>_ |
 
