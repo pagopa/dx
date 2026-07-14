@@ -35,7 +35,8 @@ Accept the following from the calling skill or user:
 | Operation        | Yes         | Create a new page or update an existing page                     |
 | Title            | Yes         | Page title, inferred only when unambiguous                       |
 | Language         | Yes         | Visible page language; preserve machine-facing IDs               |
-| Space and parent | Yes         | Target Confluence space and parent page, inferred only when safe |
+| Space           | Yes         | Target Confluence space, inferred only when safe                 |
+| Parent page     | When needed | Parent page for hierarchical content such as a Use Case          |
 | Existing page ID | For updates | Page ID or URL when updating an existing page                    |
 
 If the source document is not available, ask the user to provide it. Do not
@@ -46,9 +47,10 @@ claim to have published content that was not read.
 1. **Confirm publication.** Before creating or updating a page, obtain an
    explicit affirmative answer. If the user only asks to write a document,
    stop after the local artifact and do not start publication questions.
-2. **Resolve destination.** Ask for the target space, parent page, title,
-   language, and operation when they cannot be inferred safely. For updates,
-   resolve the existing page ID and fetch the current page before replacing it.
+2. **Resolve destination.** Ask for the target space, parent page when the
+   document belongs in an existing page hierarchy, title, language, and
+   operation when they cannot be inferred safely. For updates, resolve the
+   existing page ID and fetch the current page before replacing it.
 3. **Read and validate the source.** Preserve the complete heading hierarchy,
    tables, lists, links, code blocks, stable HTML-comment IDs, table IDs,
    statuses, `N/A` reasons, open questions, and source references. Identify
