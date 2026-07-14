@@ -73,6 +73,7 @@ export async function loadAzureConfig(
 
   return {
     preferredLocation: "italynorth",
+    sources: ["advisor", "custom"],
     subscriptionIds,
     timespanDays: 30,
   };

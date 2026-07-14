@@ -80,13 +80,6 @@ describe("resolveSourcesOption", () => {
     expect(resolveSourcesOption(undefined, ["custom"])).toEqual(["custom"]);
   });
 
-  it("uses both sources when --source is omitted and config has no sources", () => {
-    expect(resolveSourcesOption(undefined, undefined)).toEqual([
-      "advisor",
-      "custom",
-    ]);
-  });
-
   it("lets explicit --source all override a narrowed config", () => {
     expect(resolveSourcesOption("all", ["custom"])).toEqual([
       "advisor",

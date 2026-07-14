@@ -1,4 +1,4 @@
-import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
+import type { AzureConfig } from "@pagopa/dx-savemoney";
 
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
@@ -136,10 +136,10 @@ export function parseTagsOption(
  */
 export function resolveSourcesOption(
   option: SourceOption | undefined,
-  configSources: AzureSource[] | undefined,
-): AzureSource[] {
+  configSources: AzureConfig["sources"],
+): AzureConfig["sources"] {
   if (option === undefined) {
-    return configSources ?? ["advisor", "custom"];
+    return configSources;
   }
   return option === "all" ? ["advisor", "custom"] : [option];
 }
