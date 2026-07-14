@@ -1,0 +1,69 @@
+{
+  "skill_name": "uc-engraver",
+  "evals": [
+    {
+      "id": 0,
+      "name": "create-complete-use-case",
+      "prompt": "Using the existing parent DR/SRS and its linked PRD for a saved-payment experience, create UC-01 for selecting a saved card. The PRD defines the actor exactly as \"Cittadino pagatore\". Include the linked JTBD, trigger, preconditions, main and alternate flows, edge cases, postconditions, binary acceptance checks, tracking events, and relevant API/Figma links. Write the child Markdown under use-cases/ and update the parent Use Case index.",
+      "expected_output": "A complete UC-01 child document and a synchronized parent catalog row, with all required DR-01 sections and the exact PRD actor name.",
+      "expectations": [
+        "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
+        "Includes all required behavior, acceptance, tracking, and traceability sections.",
+        "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
+        "Updates the parent catalog with stable ID, title, linked JTBD, priority, child link, and status."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "preserve-actors-and-gaps",
+      "prompt": "Create a Use Case from a PRD and Service Blueprint where the PRD calls the primary actor \"Operatore di assistenza\" but the Service Blueprint says \"Support agent\". The owner, timeout, tracking event, and privacy behavior are not confirmed. Do not invent decisions.",
+      "expected_output": "The Use Case copies the PRD actor exactly, records the terminology conflict and missing decisions as open questions or gaps, and avoids fabricated behavior.",
+      "expectations": [
+        "Uses \"Operatore di assistenza\" exactly as the actor name.",
+        "Does not silently replace the PRD actor with the Service Blueprint wording.",
+        "Makes missing owner, timeout, tracking, and privacy decisions visible.",
+        "Does not invent a flow, metric, approval, or compliance outcome."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "update-stable-use-case",
+      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-UC-02-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
+      "expected_output": "The existing child is updated in place, stable IDs are preserved, the new behavior has a new acceptance check, and the parent index remains aligned.",
+      "expectations": [
+        "Preserves the existing UC-02 ID and unchanged acceptance-check IDs.",
+        "Adds a distinct acceptance check for the retry behavior without renumbering.",
+        "Updates the child document rather than creating a duplicate.",
+        "Synchronizes the parent catalog row and records any required propagation gap."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "require-parent-document",
+      "prompt": "Directly invoke the Use Case skill to create a new use case for payment receipts, but do not provide an existing parent DR/SRS path or URL.",
+      "expected_output": "The agent asks for the existing parent DR/SRS and stops instead of creating an orphan Use Case or a new parent.",
+      "expectations": [
+        "Requests the existing parent DR/SRS location.",
+        "Does not create a child document without a parent.",
+        "Does not create a new parent DR/SRS as an implicit fallback."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "publication-handoff",
+      "prompt": "The local UC-03 Markdown and parent DR/SRS index are complete and validated. Publish UC-03 as a child page under the parent DR/SRS in Confluence.",
+      "expected_output": "The agent confirms publication, delegates the Confluence operation to confluence-librarian, and keeps both local and Confluence links in the parent index after success.",
+      "expectations": [
+        "Does not publish before explicit confirmation.",
+        "Delegates publication mechanics to confluence-librarian.",
+        "Uses the parent DR/SRS as the Confluence parent page.",
+        "Retains both the local Markdown link and returned Confluence URL in the parent index."
+      ],
+      "files": []
+    }
+  ]
+}

@@ -63,10 +63,10 @@ The parent contains only the dynamic view/catalog:
 - child document link;
 - lifecycle/status and any missing-content gap.
 
-The separate Use Case skill owns trigger, preconditions, main and alternate
-flows, exception/edge cases, postconditions, binary acceptance checks,
-tracking events, and detailed evidence links. Do not duplicate those details
-in the parent.
+The `uc-engraver` skill owns trigger, preconditions, main and alternate flows,
+exception/edge cases, postconditions, binary acceptance checks, tracking
+events, and detailed evidence links. Do not duplicate those details in the
+parent.
 
 ## Incremental adoption
 

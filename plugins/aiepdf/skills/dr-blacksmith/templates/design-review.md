@@ -109,9 +109,9 @@ availability zones or regions where relevant._
 
 ## Dynamic component view and Use Case index
 
-The individual Use Case documents are maintained by the dedicated Use Case
-skill. Keep this section as the parent catalog only. Each entry must have a
-stable `UC-XX` ID and a link or an explicit gap.
+The individual Use Case documents are maintained by the `uc-engraver` skill.
+Keep this section as the parent catalog only. Each entry must have a stable
+`UC-XX` ID and a link or an explicit gap.
 
 | ID      | Title     | Linked JTBD                 | Priority          | Child document  | Status / gap                          |
 | ------- | --------- | --------------------------- | ----------------- | --------------- | ------------------------------------- |
