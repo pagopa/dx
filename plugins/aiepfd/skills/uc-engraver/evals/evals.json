@@ -61,7 +61,22 @@
         "Does not publish before explicit confirmation.",
         "Delegates publication mechanics to confluence-librarian.",
         "Uses the parent DR/SRS as the Confluence parent page.",
-        "Retains both the local Markdown link and returned Confluence URL in the parent index."
+        "Retains both the local Markdown link and returned Confluence URL in the parent index.",
+        "Updates and verifies the published parent Confluence catalog row instead of leaving a TBD or missing-child placeholder."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "hierarchical-publication-synchronization",
+      "prompt": "Publish three already-authored Use Case child documents under an existing Confluence Design Review whose catalog rows currently contain local links and TBD Confluence URLs. Keep each child in draft/candidate lifecycle state, update the parent catalog with the returned URLs, re-fetch the parent, and report any failed synchronization instead of claiming completion.",
+      "expected_output": "All child pages are created under the existing parent, the parent catalog is updated with the three returned URLs and no stale placeholders, the parent is re-fetched for verification, and lifecycle states remain unchanged.",
+      "expectations": [
+        "Creates child pages under the existing parent and does not create a duplicate parent.",
+        "Preserves stable UC IDs, candidate child status, and draft page status.",
+        "Updates each parent catalog row with both local and Confluence links.",
+        "Re-fetches the parent and verifies that TBD or missing-child placeholders are gone.",
+        "Reports publication as incomplete if any parent synchronization fails."
       ],
       "files": []
     }

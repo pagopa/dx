@@ -1,6 +1,6 @@
 ---
 name: uc-engraver
-description: Create and update structured Use Case child documents for a parent Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks to define, write, refine, or synchronize a Use Case, UC, scenario, acceptance checks, or detailed behavior from a PRD, DR/SRS, JTBD, Service Blueprint, Figma, RFC, contract, or task intake. Preserve stable UC/AC IDs, reuse actor names exactly from the linked PRD, expose gaps without inventing behavior, update the parent DR/SRS catalog, and hand confirmed Confluence publication to confluence-librarian.
+description: Create and update structured Use Case child documents for a parent Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks to define, write, refine, synchronize, or publish a Use Case, UC, scenario, acceptance checks, or detailed behavior from a PRD, DR/SRS, JTBD, Service Blueprint, Figma, RFC, contract, or task intake. Preserve stable UC/AC IDs, reuse actor names exactly from the linked PRD, expose gaps without inventing behavior, update and verify the parent DR/SRS catalog, and hand confirmed Confluence publication to confluence-librarian.
 ---
 
 # UC Engraver
@@ -42,6 +42,10 @@ bundled template.
   user explicitly requests a lifecycle transition.
 - Keep every unknown, contradiction, and unverified claim visible as an
   assumption, open question, proposed value, or justified `N/A`.
+- A published child Use Case is not complete until the parent Confluence
+  catalog row contains both the local child link and the returned Confluence
+  URL. Treat the parent update and its verification as part of publication,
+  not as optional follow-up work.
 
 ## Source and actor discipline
 
@@ -106,7 +110,10 @@ readiness, and change propagation.
    the child source, parent page context, title, operation, language, and
    preservation constraints to `confluence-librarian`. Do not publish directly.
    Keep both the local Markdown link and the returned Confluence URL in the
-   parent catalog.
+   parent catalog. When the parent catalog is itself published, ensure the
+   Confluence parent page is updated and re-fetched so it no longer contains
+   `TBD` or missing-child placeholders. If that synchronization fails, report
+   publication as incomplete rather than claiming success.
 
 ## Clarification rules
 
@@ -124,4 +131,6 @@ readiness, and change propagation.
 When invoked directly, own the complete child-authoring and parent-sync
 workflow. When invoked by `dr-blacksmith`, return the created or updated child
 path, stable ID, parent index changes, unresolved gaps, and any Confluence URL
-so `dr-blacksmith` can continue the parent document workflow.
+so `dr-blacksmith` can continue the parent document workflow. For published
+children, also return the verified parent-page URL and the synchronized row
+state.
