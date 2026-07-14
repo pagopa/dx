@@ -56,11 +56,12 @@
       "id": 4,
       "name": "publication-confirmation",
       "prompt": "The local DR/SRS has been written and validated. Ask whether I want it published to Confluence, but do not publish, choose a language, or assume a target space until I explicitly confirm.",
-      "expected_output": "The agent asks for explicit publication confirmation and does not choose a language or target location before confirmation.",
+      "expected_output": "The agent asks for explicit publication confirmation and does not choose a language or target location before confirmation. After confirmation, it delegates the operation to confluence-librarian rather than publishing directly.",
       "expectations": [
         "Requests explicit confirmation before creating or updating a Confluence page.",
         "Does not publish without an affirmative answer.",
-        "Does not ask for or assume publication language/location before confirmation."
+        "Does not ask for or assume publication language/location before confirmation.",
+        "Delegates confirmed publication to confluence-librarian and does not duplicate its publication mechanics."
       ],
       "files": []
     }
