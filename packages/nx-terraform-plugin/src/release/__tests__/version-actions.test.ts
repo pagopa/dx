@@ -37,7 +37,7 @@ const createMockFinalConfigForProject = (): any => ({
 // eslint-disable-next-line max-lines-per-function
 describe("TerraformVersionActions", () => {
   describe("validManifestFilenames", () => {
-    it("declares both module.json and environment.json as valid manifest filenames", () => {
+    it("selects module.json for library projects", () => {
       const releaseGroup = createMockReleaseGroup();
       const projectGraphNode = createMockProjectGraphNode("infra/modules/test");
       const finalConfigForProject = createMockFinalConfigForProject();
@@ -48,8 +48,24 @@ describe("TerraformVersionActions", () => {
         finalConfigForProject,
       );
 
+      expect(versionActions.validManifestFilenames).toEqual(["module.json"]);
+    });
+
+    it("selects environment.json for application projects", () => {
+      const releaseGroup = createMockReleaseGroup();
+      const projectGraphNode = createMockProjectGraphNode(
+        "infra/resources/dev",
+        "application",
+      );
+      const finalConfigForProject = createMockFinalConfigForProject();
+
+      const versionActions = new TerraformVersionActions(
+        releaseGroup,
+        projectGraphNode,
+        finalConfigForProject,
+      );
+
       expect(versionActions.validManifestFilenames).toEqual([
-        "module.json",
         "environment.json",
       ]);
     });

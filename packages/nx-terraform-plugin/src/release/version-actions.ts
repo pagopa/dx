@@ -4,8 +4,7 @@ import { VersionActions } from "nx/release";
 
 // Library modules track their version in "module.json" (publishable Terraform
 // modules), while application projects (deployable environments, e.g.
-// infra/resources/dev) track theirs in "environment.json". Both filenames are
-// declared as valid so Nx's internal manifest bookkeeping accepts either one.
+// infra/resources/dev) track theirs in "environment.json".
 const moduleManifestFilename = "module.json";
 const environmentManifestFilename = "environment.json";
 
@@ -29,10 +28,7 @@ const environmentManifestFilename = "environment.json";
  * in inferred Terraform project configuration.
  */
 export default class TerraformVersionActions extends VersionActions {
-  validManifestFilenames = [
-    moduleManifestFilename,
-    environmentManifestFilename,
-  ];
+  validManifestFilenames = [this.getManifestFilename()];
 
   /**
    * Registry-based version resolution is not supported for Terraform modules.
