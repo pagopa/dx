@@ -179,6 +179,16 @@ describe("computeReleaseTags", () => {
     ]);
   });
 
+  it("never adds latest for a prerelease", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.9.0\n");
+
+    expect(computeReleaseTags("my-app", "2.0.0-rc.1")).toEqual([
+      "2.0.0-rc.1",
+      "2.0",
+      "2",
+    ]);
+  });
+
   it("omits latest when a higher version was already released", () => {
     childProcessMocks.execFileSync.mockReturnValue("my-app@9.0.0\n");
 

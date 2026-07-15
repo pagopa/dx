@@ -112,8 +112,8 @@ const isHighestReleasedVersion = (projectName, currentVersion) => {
 * Computes the alias tags for a single semver release version: the version
 * itself, `major.minor`, `major` (skipped for all 0.x releases, which would
 * be ambiguous/unstable), and `latest` when this is the highest version
-* released so far for the project (see `isHighestReleasedVersion`). Returns
-* an empty array when `version` isn't a valid semver string. Shared by
+* released stable version for the project (see `isHighestReleasedVersion`).
+* Returns an empty array when `version` isn't a valid semver string. Shared by
 * `computeImageTags` (CI tag-push events) and the `release-publish` executor
 * (wraps `@nx/docker`'s own `nx-release-publish` executor, which only ever
 * pushes a single version-only tag).
@@ -125,7 +125,7 @@ const computeReleaseTags = (projectName, version) => {
 	const { major, minor } = parsedVersion;
 	tags.push(`${major}.${minor}`);
 	if (major !== 0) tags.push(String(major));
-	if (isHighestReleasedVersion(projectName, version)) tags.push("latest");
+	if (parsedVersion.prerelease.length === 0 && isHighestReleasedVersion(projectName, version)) tags.push("latest");
 	return tags;
 };
 /**

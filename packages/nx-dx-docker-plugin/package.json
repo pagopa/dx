@@ -16,7 +16,11 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "executors.json", "src/executors/**/schema.json"],
+  "files": [
+    "dist",
+    "executors.json",
+    "src/executors/**/schema.json"
+  ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
@@ -49,10 +53,14 @@
   "nx": {
     "targets": {
       "build": {
-        "inputs": ["default", "^default"],
-        "outputs": ["{projectRoot}/dist/**"]
+        "inputs": [
+          "default",
+          "^default"
+        ],
+        "outputs": [
+          "{projectRoot}/dist/**"
+        ]
       }
     }
   }
 }
-
