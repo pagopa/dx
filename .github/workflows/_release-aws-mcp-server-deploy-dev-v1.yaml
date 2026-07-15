@@ -1,15 +1,12 @@
 name: Deploy MCP Server to Dev
 
 # Automated workflow to build MCP Server Docker image and deploy it to
-# AWS Lambda when changes are made or new tags are pushed
+# AWS Lambda after a project release tag is pushed
 
 on:
   push:
-    branches:
-      - "main"
-    paths:
-      - "apps/mcpserver/**"
-      - "packages/mcp-prompts/**"
+    tags:
+      - "@pagopa/dx-mcpserver@**"
   workflow_dispatch:
 
 jobs:

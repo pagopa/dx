@@ -3,11 +3,9 @@ name: Deploy DX Metrics Container App
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - "apps/dx-metrics/package.json"
-      - "packages/dx-metrics-core/**"
+    # Scope production deployment to the Nx release tag for this project.
+    tags:
+      - "dx-metrics@*"
 
 permissions:
   contents: read

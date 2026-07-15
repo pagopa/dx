@@ -3,11 +3,9 @@ name: Publish DX Metrics Import Job Image
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - "apps/dx-metrics-import/package.json"
-      - "packages/dx-metrics-core/**"
+    # Publish the image only after this project's Nx release tag exists.
+    tags:
+      - "dx-metrics-import@*"
 
 permissions:
   contents: read
