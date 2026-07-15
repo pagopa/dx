@@ -105,7 +105,7 @@ jobs:
                 base: sourceRef,
                 head: defaultBranch,
               });
-            if (!["behind", "identical"].includes(comparison.status)) {
+            if (!["ahead", "identical"].includes(comparison.status)) {
               throw new Error(
                 `Commit "${sourceRef}" is not reachable from "${defaultBranch}"`
               );
