@@ -5,6 +5,11 @@
   "description": "Downloads the previously uploaded terraform plan bundle and applies it, through @pagopa/dx-tasks. Intended to be assigned to the nx-release-publish target of deployable Terraform environment projects.",
   "type": "object",
   "properties": {
+    "dryRun": {
+      "description": "Whether to skip applying infrastructure and only preview the release",
+      "type": "boolean",
+      "default": false
+    },
     "projectRoot": {
       "description": "Terraform project root used as the module path",
       "type": "string"

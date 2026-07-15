@@ -1,5 +1,5 @@
 import { ExecutorContext } from "@nx/devkit";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { ReleaseApplyExecutorSchema } from "../schema.ts";
 
@@ -60,8 +60,13 @@ describe("Release Apply Executor", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("dispatches terraformApply with the project root as module path", async () => {
     const options: ReleaseApplyExecutorSchema = {
+      dryRun: false,
       projectRoot: "infra/resources/prod",
       report: true,
       sensitiveKeys: ["hidden-link"],
@@ -87,6 +92,41 @@ describe("Release Apply Executor", () => {
     expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith([
       "release-apply",
     ]);
+  });
+
+  it("does not dispatch terraformApply when the executor is a dry run", async () => {
+    const options: ReleaseApplyExecutorSchema = {
+      dryRun: true,
+      projectRoot: "infra/resources/prod",
+      report: false,
+      sensitiveKeys: [],
+      verbose: false,
+    };
+
+    const output = await executor(options, baseContext);
+
+    expect(output.success).toBe(true);
+    expect(dispatcherMocks.createDefaultTaskDispatcher).not.toHaveBeenCalled();
+    expect(dispatcherMocks.dispatchTask).not.toHaveBeenCalled();
+    expect(loggerMocks.info).toHaveBeenCalledWith(
+      "Skipping Terraform apply during release dry run",
+      {
+        projectRoot: "infra/resources/prod",
+      },
+    );
+  });
+
+  it("does not dispatch terraformApply when Nx sets dry-run mode", async () => {
+    vi.stubEnv("NX_DRY_RUN", "true");
+    const options = {
+      projectRoot: "infra/resources/prod",
+    } satisfies Partial<ReleaseApplyExecutorSchema>;
+
+    const output = await executor(options, baseContext);
+
+    expect(output.success).toBe(true);
+    expect(dispatcherMocks.createDefaultTaskDispatcher).not.toHaveBeenCalled();
+    expect(dispatcherMocks.dispatchTask).not.toHaveBeenCalled();
   });
 
   it("applies default options when only projectRoot is provided", async () => {
