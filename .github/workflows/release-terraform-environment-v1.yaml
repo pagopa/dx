@@ -28,7 +28,6 @@ on:
 concurrency:
   group: infra-terraform-${{ inputs.apply-environment }}
   cancel-in-progress: false
-  queue: max
 
 jobs:
   validate:
