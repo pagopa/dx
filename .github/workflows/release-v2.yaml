@@ -17,16 +17,18 @@ on:
         required: true
       app-tf-client-id:
         description: "GitHub App Client ID for authentication for Terraform publish"
-        required: true
+        required: false
       app-tf-private-key:
         description: "GitHub App private key for authentication for Terraform publish"
-        required: true
+        required: false
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      HAS_TF_APP_CREDENTIALS: ${{ secrets.app-tf-client-id != '' && secrets.app-tf-private-key != '' }}
     permissions:
       contents: write
       id-token: write
@@ -42,6 +44,7 @@ jobs:
           permission-pull-requests: write
 
       - name: Generate GitHub App token for Terraform publish
+        if: env.HAS_TF_APP_CREDENTIALS == 'true'
         id: generate-terraform-token
         uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
         with:
@@ -91,9 +94,17 @@ jobs:
         shell: bash
         run: npm ci
 
-      - name: Nx Publish
+      - name: Nx Publish with Terraform token
+        if: env.HAS_TF_APP_CREDENTIALS == 'true'
         uses: pagopa/dx/actions/nx-release@main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
           github-terraform-token: ${{ steps.generate-terraform-token.outputs.token }}
+
+      - name: Nx Publish
+        if: env.HAS_TF_APP_CREDENTIALS != 'true'
+        uses: pagopa/dx/actions/nx-release@main
+        with:
+          app-slug: ${{ steps.generate-token.outputs.app-slug }}
+          github-token: ${{ steps.generate-token.outputs.token }}

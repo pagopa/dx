@@ -9,7 +9,7 @@ inputs:
     description: "GitHub App slug associated with github-token"
     required: true
   github-terraform-token:
-    description: "Pre-generated GitHub App installation token for Terraform publish"
+    description: "Optional pre-generated GitHub App installation token for Terraform publish"
     required: false
     default: ""
   base-branch:
