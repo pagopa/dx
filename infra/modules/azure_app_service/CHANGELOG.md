@@ -1,3 +1,13 @@
+## 4.0.2 (2026-07-15)
+
+### 🩹 Fixes
+
+- Fix case when selected SKU P0v3 zone redundancy is disabled ([#1984](https://github.com/pagopa/dx/pull/1984))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 4.0.1 (2026-07-07)
 
 ### 🩹 Fixes
