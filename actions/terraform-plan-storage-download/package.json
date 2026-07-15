@@ -22,5 +22,15 @@
     "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "inputs": [
+          "default",
+          "^default"
+        ]
+      }
+    }
   }
 }
