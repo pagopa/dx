@@ -7,6 +7,13 @@ export {
   type PrCommentPayload,
   type PrCommentResult,
 } from "./github/pr-comment.ts";
+export {
+  type GitHubTerraformEnvironmentReleaseClient,
+  type GitHubTerraformEnvironmentReleaseClientFactory,
+  validateTerraformEnvironmentRelease,
+  type ValidateTerraformEnvironmentReleasePayload,
+  type ValidateTerraformEnvironmentReleaseResult,
+} from "./github/validate-terraform-environment-release.ts";
 export * from "./mask-output.ts";
 export * from "./render-report.ts";
 export {

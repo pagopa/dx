@@ -9,6 +9,12 @@ import {
   type PrCommentResult,
 } from "./github/pr-comment.ts";
 import {
+  validateTerraformEnvironmentRelease,
+  type ValidateTerraformEnvironmentReleasePayload,
+  payloadSchema as validateTerraformEnvironmentReleasePayloadSchema,
+  type ValidateTerraformEnvironmentReleaseResult,
+} from "./github/validate-terraform-environment-release.ts";
+import {
   renderReport,
   type RenderReportPayload,
   payloadSchema as renderReportPayloadSchema,
@@ -74,3 +80,12 @@ export const prCommentTask: TaskDefinition<PrCommentPayload, PrCommentResult> =
     payloadSchema: prCommentPayloadSchema,
     run: prComment,
   };
+
+export const validateTerraformEnvironmentReleaseTask: TaskDefinition<
+  ValidateTerraformEnvironmentReleasePayload,
+  ValidateTerraformEnvironmentReleaseResult
+> = {
+  name: "validateTerraformEnvironmentRelease",
+  payloadSchema: validateTerraformEnvironmentReleasePayloadSchema,
+  run: validateTerraformEnvironmentRelease,
+};

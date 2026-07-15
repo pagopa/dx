@@ -18,6 +18,13 @@ const { octokitMock } = vi.hoisted(() => ({
           deleteComment: vi.fn(),
           listComments: vi.fn(),
         },
+        repos: {
+          compareCommits: vi.fn(),
+          get: vi.fn(),
+          getAllEnvironments: vi.fn(),
+          getBranch: vi.fn(),
+          getContent: vi.fn(),
+        },
       },
     },
   },
@@ -43,6 +50,60 @@ vi.mock("octokit", () => ({
 
 import { createDefaultTaskDispatcher } from "../default-dispatcher.ts";
 
+const validateTerraformEnvironmentRelease = async () => {
+  octokitMock.instance.rest.repos.get.mockResolvedValue({
+    data: { default_branch: "main" },
+  });
+  octokitMock.instance.rest.repos.getBranch.mockResolvedValue({
+    data: { protected: true },
+  });
+  octokitMock.instance.rest.repos.compareCommits.mockResolvedValue({
+    data: { status: "ahead" },
+  });
+  octokitMock.instance.rest.repos.getContent.mockResolvedValue({
+    data: {
+      content: Buffer.from(JSON.stringify({ version: "1.0.0" })).toString(
+        "base64",
+      ),
+      encoding: "base64",
+      type: "file",
+    },
+  });
+  octokitMock.instance.rest.repos.getAllEnvironments.mockResolvedValue({
+    data: {
+      environments: [
+        { name: "infra-prod-ci", protection_rules: [] },
+        {
+          name: "infra-prod-cd",
+          protection_rules: [{ type: "required_reviewers" }],
+        },
+      ],
+    },
+  });
+  const dispatcher = createDefaultTaskDispatcher({
+    githubToken: "test-token",
+  });
+
+  await expect(
+    dispatcher.dispatchTask("validateTerraformEnvironmentRelease", {
+      owner: "pagopa",
+      project: "resources-prod",
+      projectRoot: "infra/resources/prod",
+      repo: "dx",
+      sourceRef: "a".repeat(40),
+    }),
+  ).resolves.toStrictEqual({
+    applyEnvironment: "infra-prod-cd",
+    planEnvironment: "infra-prod-ci",
+    project: "resources-prod",
+    runnerLabel: "prod",
+    sourceRef: "a".repeat(40),
+  });
+  expect(octokitMock.constructor).toHaveBeenCalledExactlyOnceWith({
+    auth: "test-token",
+  });
+};
+
 describe("createDefaultTaskDispatcher", () => {
   let originalCwd = "";
   let tempDirectoryPath = "";
@@ -54,6 +115,11 @@ describe("createDefaultTaskDispatcher", () => {
     octokitMock.instance.rest.issues.createComment.mockReset();
     octokitMock.instance.rest.issues.deleteComment.mockReset();
     octokitMock.instance.rest.issues.listComments.mockReset();
+    octokitMock.instance.rest.repos.compareCommits.mockReset();
+    octokitMock.instance.rest.repos.get.mockReset();
+    octokitMock.instance.rest.repos.getAllEnvironments.mockReset();
+    octokitMock.instance.rest.repos.getBranch.mockReset();
+    octokitMock.instance.rest.repos.getContent.mockReset();
     octokitMock.instance.paginate.mockReset();
     vi.stubEnv("CI", "false");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
@@ -201,5 +267,10 @@ describe("createDefaultTaskDispatcher", () => {
       repo: "dx",
     });
     expect(console.log).not.toHaveBeenCalled();
+  });
+
+  it("registers validateTerraformEnvironmentRelease and returns trusted metadata", async () => {
+    expect.hasAssertions();
+    await validateTerraformEnvironmentRelease();
   });
 });

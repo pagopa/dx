@@ -28,198 +28,25 @@ jobs:
     permissions:
       contents: read
     outputs:
-      apply-environment: ${{ steps.release-metadata.outputs.apply-environment }}
-      plan-environment: ${{ steps.release-metadata.outputs.plan-environment }}
-      runner-label: ${{ steps.release-metadata.outputs.runner-label }}
-      source-ref: ${{ steps.release-metadata.outputs.source-ref }}
+      apply-environment: ${{ fromJSON(steps.release-metadata.outputs.result).applyEnvironment }}
+      plan-environment: ${{ fromJSON(steps.release-metadata.outputs.result).planEnvironment }}
+      runner-label: ${{ fromJSON(steps.release-metadata.outputs.result).runnerLabel }}
+      source-ref: ${{ fromJSON(steps.release-metadata.outputs.result).sourceRef }}
     steps:
       - name: Validate release source and deployment metadata
         id: release-metadata
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        uses: pagopa/dx/actions/run-dx-task@main
         env:
-          NX_PROJECT: ${{ inputs.project }}
-          PROJECT_ROOT: ${{ inputs.project-root }}
-          SOURCE_REF: ${{ inputs.source-ref }}
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const path = require("node:path");
-            const project = process.env.NX_PROJECT;
-            const projectRoot = process.env.PROJECT_ROOT;
-            const sourceRef = process.env.SOURCE_REF;
-            const defaultBranch = context.payload.repository?.default_branch;
-            const isNonEmptyString = (value) =>
-              typeof value === "string" && value.trim().length > 0;
-
-            if (!defaultBranch) {
-              throw new Error("Could not resolve the repository default branch");
-            }
-            if (
-              !isNonEmptyString(project) ||
-              !isNonEmptyString(projectRoot) ||
-              !isNonEmptyString(sourceRef)
-            ) {
-              throw new Error("Project, project root, and source ref are required");
-            }
-            if (!/^[0-9a-f]{40}$/i.test(sourceRef)) {
-              throw new Error("source-ref must be a full Git commit SHA");
-            }
-            if (
-              projectRoot.includes("\\") ||
-              path.posix.normalize(projectRoot) !== projectRoot ||
-              !projectRoot.startsWith("infra/resources/")
-            ) {
-              throw new Error(
-                `Project root "${projectRoot}" is not a normalized Terraform environment path`
-              );
-            }
-
-            const expectedProject = projectRoot
-              .split("/")
-              .slice(1)
-              .map((part) =>
-                part === "_modules" ? "modules" : part.replaceAll("_", "-")
-              )
-              .join("-");
-            if (project !== expectedProject) {
-              throw new Error(
-                `Project "${project}" does not match root "${projectRoot}"`
-              );
-            }
-
-            const { data: branch } = await github.rest.repos.getBranch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              branch: defaultBranch,
-            });
-            if (!branch.protected) {
-              throw new Error(
-                `Default branch "${defaultBranch}" is not protected`
-              );
-            }
-
-            const { data: comparison } =
-              await github.rest.repos.compareCommits({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: sourceRef,
-                head: defaultBranch,
-              });
-            if (!["ahead", "identical"].includes(comparison.status)) {
-              throw new Error(
-                `Commit "${sourceRef}" is not reachable from "${defaultBranch}"`
-              );
-            }
-
-            const manifestPath = `${projectRoot}/environment.json`;
-            const { data: manifestFile } = await github.rest.repos.getContent({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              path: manifestPath,
-              ref: sourceRef,
-            });
-            if (
-              Array.isArray(manifestFile) ||
-              manifestFile.type !== "file" ||
-              manifestFile.encoding !== "base64" ||
-              !manifestFile.content
-            ) {
-              throw new Error(`Could not read "${manifestPath}"`);
-            }
-
-            let manifest;
-            try {
-              manifest = JSON.parse(
-                Buffer.from(manifestFile.content, "base64").toString("utf8")
-              );
-            } catch (error) {
-              throw new Error(`Failed to parse "${manifestPath}"`, {
-                cause: error,
-              });
-            }
-
-            if (
-              typeof manifest !== "object" ||
-              manifest === null ||
-              !isNonEmptyString(manifest.version)
-            ) {
-              throw new Error(`Manifest "${manifestPath}" has no valid version`);
-            }
-
-            const environmentName = path.posix.basename(projectRoot);
-            const deployment = manifest.deployment ?? {
-              applyEnvironment: `infra-${environmentName}-cd`,
-              planEnvironment: `infra-${environmentName}-ci`,
-              runnerLabel: environmentName,
-            };
-            if (typeof deployment !== "object" || deployment === null) {
-              throw new Error(
-                `Manifest "${manifestPath}" has invalid deployment metadata`
-              );
-            }
-            for (const key of [
-              "applyEnvironment",
-              "planEnvironment",
-              "runnerLabel",
-            ]) {
-              if (!isNonEmptyString(deployment[key])) {
-                throw new Error(
-                  `Manifest "${manifestPath}" has invalid deployment.${key}`
-                );
-              }
-            }
-
-            core.setOutput("apply-environment", deployment.applyEnvironment);
-            core.setOutput("plan-environment", deployment.planEnvironment);
-            core.setOutput("runner-label", deployment.runnerLabel);
-            core.setOutput("source-ref", sourceRef);
-
-      - name: Validate GitHub environments and protection rules
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        env:
-          APPLY_ENVIRONMENT: ${{ steps.release-metadata.outputs.apply-environment }}
-          PLAN_ENVIRONMENT: ${{ steps.release-metadata.outputs.plan-environment }}
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const environments = await github.paginate(
-              github.rest.repos.getAllEnvironments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
-              },
-              (response) => response.data
-            );
-            const environmentsByName = new Map(
-              environments.map((environment) => [environment.name, environment])
-            );
-
-            if (!environmentsByName.has(process.env.PLAN_ENVIRONMENT)) {
-              core.setFailed(
-                `Plan environment "${process.env.PLAN_ENVIRONMENT}" does not exist`
-              );
-              return;
-            }
-
-            const applyEnvironment = environmentsByName.get(
-              process.env.APPLY_ENVIRONMENT
-            );
-            if (!applyEnvironment) {
-              core.setFailed(
-                `Apply environment "${process.env.APPLY_ENVIRONMENT}" does not exist`
-              );
-              return;
-            }
-
-            const hasRequiredReviewers =
-              applyEnvironment.protection_rules?.some(
-                ({ type }) => type === "required_reviewers"
-              ) ?? false;
-            if (!hasRequiredReviewers) {
-              core.setFailed(
-                `Apply environment "${process.env.APPLY_ENVIRONMENT}" has no required reviewers`
-              );
+          task: validateTerraformEnvironmentRelease
+          payload: >-
+            {
+              "owner": ${{ toJSON(github.repository_owner) }},
+              "project": ${{ toJSON(inputs.project) }},
+              "projectRoot": ${{ toJSON(inputs.project-root) }},
+              "repo": ${{ toJSON(github.event.repository.name) }},
+              "sourceRef": ${{ toJSON(inputs.source-ref) }}
             }
 
   plan:

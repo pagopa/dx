@@ -1,7 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import * as z from "zod/mini";
+import * as z$1 from "zod/mini";
 import { Octokit } from "octokit";
+import { z } from "zod/v4";
 import util, { promisify } from "node:util";
 import childProcess, { execFile } from "node:child_process";
 import { DeleteObjectCommand, GetObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
@@ -34,7 +35,7 @@ const createTaskDispatcher = ({ context = {} } = {}) => {
 //#endregion
 //#region ../dx-tasks/dist/report-store.js
 /** This module stores and renders dx-tasks reports under a per-namespace directory tree. */
-const nonEmptyStringSchema$3 = z.string().check(z.minLength(1));
+const nonEmptyStringSchema$4 = z$1.string().check(z$1.minLength(1));
 const readReports = async (directoryPath) => {
 	let entries;
 	try {
@@ -59,7 +60,7 @@ var ReportStore = class {
 		this.rootDirectoryPath = path.join(baseDirectoryPath, ".dx-tasks");
 	}
 	register(namespace) {
-		const name = nonEmptyStringSchema$3.parse(namespace.name);
+		const name = nonEmptyStringSchema$4.parse(namespace.name);
 		if (this.namespaces.has(name)) throw new Error(`Report namespace "${name}" is already registered`);
 		this.namespaces.set(name, namespace);
 		return this;
@@ -77,12 +78,12 @@ var ReportStore = class {
 		return sections.join("\n\n");
 	}
 	async write(namespaceName, objectName, content) {
-		const name = nonEmptyStringSchema$3.parse(namespaceName);
+		const name = nonEmptyStringSchema$4.parse(namespaceName);
 		const namespace = this.namespaces.get(name);
 		if (!namespace) throw new Error(`Report namespace "${name}" is not registered`);
 		const report = namespace.schema.parse(content);
 		const directoryPath = path.join(this.rootDirectoryPath, name);
-		const filePath = path.join(directoryPath, `${nonEmptyStringSchema$3.parse(objectName)}.json`);
+		const filePath = path.join(directoryPath, `${nonEmptyStringSchema$4.parse(objectName)}.json`);
 		try {
 			await fs.mkdir(directoryPath, { recursive: true });
 		} catch (cause) {
@@ -99,27 +100,27 @@ var ReportStore = class {
 //#endregion
 //#region ../dx-tasks/dist/github/pr-comment.js
 /** This module creates GitHub PR comments as a reusable dx-tasks task. */
-const nonEmptyStringSchema$2 = z.string().check(z.minLength(1));
+const nonEmptyStringSchema$3 = z$1.string().check(z$1.minLength(1));
 const prCommentPayloadShape = {
-	commentBody: nonEmptyStringSchema$2,
-	footer: z.optional(nonEmptyStringSchema$2),
-	githubToken: z.optional(nonEmptyStringSchema$2),
-	issueNumber: z.number().check(z.int(), z.positive()),
-	owner: nonEmptyStringSchema$2,
-	repo: nonEmptyStringSchema$2,
-	searchPattern: z.optional(nonEmptyStringSchema$2),
-	title: z.optional(nonEmptyStringSchema$2)
+	commentBody: nonEmptyStringSchema$3,
+	footer: z$1.optional(nonEmptyStringSchema$3),
+	githubToken: z$1.optional(nonEmptyStringSchema$3),
+	issueNumber: z$1.number().check(z$1.int(), z$1.positive()),
+	owner: nonEmptyStringSchema$3,
+	repo: nonEmptyStringSchema$3,
+	searchPattern: z$1.optional(nonEmptyStringSchema$3),
+	title: z$1.optional(nonEmptyStringSchema$3)
 };
-const payloadSchema$5 = z.object(prCommentPayloadShape);
+const payloadSchema$6 = z$1.object(prCommentPayloadShape);
 const githubCommentShape = {
-	body: z.optional(z.nullable(z.string())),
-	id: z.number().check(z.int(), z.positive())
+	body: z$1.optional(z$1.nullable(z$1.string())),
+	id: z$1.number().check(z$1.int(), z$1.positive())
 };
-const githubCreatedCommentSchema = z.object({
+const githubCreatedCommentSchema = z$1.object({
 	...githubCommentShape,
-	html_url: z.string().check(z.minLength(1))
+	html_url: z$1.string().check(z$1.minLength(1))
 });
-const githubCommentsSchema = z.array(z.object(githubCommentShape));
+const githubCommentsSchema = z$1.array(z$1.object(githubCommentShape));
 var OctokitPrCommentClient = class {
 	octokit;
 	constructor(token) {
@@ -190,10 +191,168 @@ async function prComment({ commentBody, footer, githubToken, issueNumber, owner,
 }
 
 //#endregion
+//#region ../dx-tasks/dist/github/validate-terraform-environment-release.js
+/** This module validates trusted Terraform environment releases through GitHub APIs. */
+const nonEmptyStringSchema$2 = z.string().refine((value) => value.trim().length > 0, "String cannot be blank");
+const commitShaSchema = z.string().regex(/^[0-9a-f]{40}$/i, "sourceRef must be a full Git commit SHA");
+const normalizedProjectRootSchema = nonEmptyStringSchema$2.refine((projectRoot) => !projectRoot.includes("\\") && path.posix.normalize(projectRoot) === projectRoot && projectRoot.startsWith("infra/resources/") && path.posix.basename(projectRoot) !== "resources", "projectRoot must be a normalized Terraform environment path");
+const payloadSchema$5 = z.object({
+	owner: nonEmptyStringSchema$2,
+	project: nonEmptyStringSchema$2,
+	projectRoot: normalizedProjectRootSchema,
+	repo: nonEmptyStringSchema$2,
+	sourceRef: commitShaSchema
+});
+const resultSchema = z.object({
+	applyEnvironment: nonEmptyStringSchema$2,
+	planEnvironment: nonEmptyStringSchema$2,
+	project: nonEmptyStringSchema$2,
+	runnerLabel: nonEmptyStringSchema$2,
+	sourceRef: commitShaSchema
+});
+const repositorySchema = z.object({ default_branch: nonEmptyStringSchema$2 });
+const branchSchema = z.object({ protected: z.boolean() });
+const comparisonSchema = z.object({ status: z.enum([
+	"ahead",
+	"behind",
+	"diverged",
+	"identical"
+]) });
+const fileContentSchema = z.object({
+	content: nonEmptyStringSchema$2,
+	encoding: z.literal("base64"),
+	type: z.literal("file")
+});
+const environmentSchema = z.object({
+	name: nonEmptyStringSchema$2,
+	protection_rules: z.array(z.object({ type: nonEmptyStringSchema$2 })).optional()
+});
+const environmentPageSchema = z.object({ environments: z.array(environmentSchema) });
+const environmentManifestSchema = z.object({
+	deployment: z.object({
+		applyEnvironment: nonEmptyStringSchema$2,
+		planEnvironment: nonEmptyStringSchema$2,
+		runnerLabel: nonEmptyStringSchema$2
+	}).optional(),
+	version: nonEmptyStringSchema$2
+});
+var OctokitTerraformEnvironmentReleaseClient = class {
+	octokit;
+	constructor(token) {
+		this.octokit = new Octokit({ auth: token });
+	}
+	async compareCommits({ owner, repo }, base, head) {
+		const { data } = await this.octokit.rest.repos.compareCommits({
+			base,
+			head,
+			owner,
+			repo
+		});
+		const parseResult = comparisonSchema.safeParse(data);
+		if (!parseResult.success) throw new Error("GitHub returned an invalid commit comparison", { cause: parseResult.error });
+		return parseResult.data.status;
+	}
+	async getDefaultBranch({ owner, repo }) {
+		const repositoryResponse = await this.octokit.rest.repos.get({
+			owner,
+			repo
+		});
+		const repositoryResult = repositorySchema.safeParse(repositoryResponse.data);
+		if (!repositoryResult.success) throw new Error("GitHub returned invalid repository metadata", { cause: repositoryResult.error });
+		const branchResponse = await this.octokit.rest.repos.getBranch({
+			branch: repositoryResult.data.default_branch,
+			owner,
+			repo
+		});
+		const branchResult = branchSchema.safeParse(branchResponse.data);
+		if (!branchResult.success) throw new Error("GitHub returned invalid default branch metadata", { cause: branchResult.error });
+		return {
+			name: repositoryResult.data.default_branch,
+			protected: branchResult.data.protected
+		};
+	}
+	async getFileContent({ owner, repo }, filePath, ref) {
+		const { data } = await this.octokit.rest.repos.getContent({
+			owner,
+			path: filePath,
+			ref,
+			repo
+		});
+		const parseResult = fileContentSchema.safeParse(data);
+		if (!parseResult.success) throw new Error(`GitHub returned invalid content for "${filePath}"`, { cause: parseResult.error });
+		return Buffer.from(parseResult.data.content, "base64").toString("utf8");
+	}
+	async listEnvironments({ owner, repo }) {
+		const environments = [];
+		const perPage = 100;
+		for (let page = 1;; page += 1) {
+			const { data } = await this.octokit.rest.repos.getAllEnvironments({
+				owner,
+				page,
+				per_page: perPage,
+				repo
+			});
+			const parseResult = environmentPageSchema.safeParse(data);
+			if (!parseResult.success) throw new Error("GitHub returned invalid environment metadata", { cause: parseResult.error });
+			environments.push(...parseResult.data.environments.map((environment) => ({
+				name: environment.name,
+				protectionRules: environment.protection_rules?.map(({ type }) => type) ?? []
+			})));
+			if (parseResult.data.environments.length < perPage) return environments;
+		}
+	}
+};
+const createOctokitTerraformEnvironmentReleaseClient = (token) => new OctokitTerraformEnvironmentReleaseClient(token);
+const getExpectedProjectName = (projectRoot) => projectRoot.split("/").slice(1).map((part) => part === "_modules" ? "modules" : part.replaceAll("_", "-")).join("-");
+const parseManifest = (manifestPath, content) => {
+	let manifest;
+	try {
+		manifest = JSON.parse(content);
+	} catch (error) {
+		throw new Error(`Failed to parse "${manifestPath}"`, { cause: error });
+	}
+	const parseResult = environmentManifestSchema.safeParse(manifest);
+	if (!parseResult.success) throw new Error(`Manifest "${manifestPath}" is invalid`, { cause: parseResult.error });
+	return parseResult.data;
+};
+const getDeploymentMetadata = (projectRoot, manifest) => manifest.deployment ?? {
+	applyEnvironment: `infra-${path.posix.basename(projectRoot)}-cd`,
+	planEnvironment: `infra-${path.posix.basename(projectRoot)}-ci`,
+	runnerLabel: path.posix.basename(projectRoot)
+};
+async function validateTerraformEnvironmentRelease({ owner, project, projectRoot, repo, sourceRef }, context = {}, createClient = createOctokitTerraformEnvironmentReleaseClient) {
+	if (!context.githubToken) throw new Error("GitHub token is required to validate a Terraform release");
+	if (project !== getExpectedProjectName(projectRoot)) throw new Error(`Project "${project}" does not match root "${projectRoot}"`);
+	const client = createClient(context.githubToken);
+	const target = {
+		owner,
+		repo
+	};
+	const defaultBranch = await client.getDefaultBranch(target);
+	if (!defaultBranch.protected) throw new Error(`Default branch "${defaultBranch.name}" is not protected`);
+	const comparisonStatus = await client.compareCommits(target, sourceRef, defaultBranch.name);
+	if (!["ahead", "identical"].includes(comparisonStatus)) throw new Error(`Commit "${sourceRef}" is not reachable from "${defaultBranch.name}"`);
+	const manifestPath = `${projectRoot}/environment.json`;
+	const manifest = parseManifest(manifestPath, await client.getFileContent(target, manifestPath, sourceRef));
+	const deployment = getDeploymentMetadata(projectRoot, manifest);
+	const environments = await client.listEnvironments(target);
+	const planEnvironment = environments.find(({ name }) => name === deployment.planEnvironment);
+	const applyEnvironment = environments.find(({ name }) => name === deployment.applyEnvironment);
+	if (!planEnvironment) throw new Error(`Plan environment "${deployment.planEnvironment}" does not exist`);
+	if (!applyEnvironment) throw new Error(`Apply environment "${deployment.applyEnvironment}" does not exist`);
+	if (!applyEnvironment.protectionRules.includes("required_reviewers")) throw new Error(`Apply environment "${deployment.applyEnvironment}" has no required reviewers`);
+	return resultSchema.parse({
+		...deployment,
+		project,
+		sourceRef
+	});
+}
+
+//#endregion
 //#region ../dx-tasks/dist/render-report.js
 /** This module renders persisted dx-tasks reports and prints them to stdout. */
-const renderReportPayloadShape = { format: z._default(z.literal("markdown"), "markdown") };
-const payloadSchema$4 = z.object(renderReportPayloadShape);
+const renderReportPayloadShape = { format: z$1._default(z$1.literal("markdown"), "markdown") };
+const payloadSchema$4 = z$1.object(renderReportPayloadShape);
 async function renderReport({ format = "markdown" }, context = {}) {
 	if (!context.reports) throw new Error("renderReport requires reports in the task context");
 	const renderedReport = await context.reports.render(format);
@@ -203,19 +362,19 @@ async function renderReport({ format = "markdown" }, context = {}) {
 //#endregion
 //#region ../dx-tasks/dist/report-pr-comment.js
 /** This module renders persisted dx-tasks reports and posts them as GitHub PR comments. */
-const nonEmptyStringSchema$1 = z.string().check(z.minLength(1));
+const nonEmptyStringSchema$1 = z$1.string().check(z$1.minLength(1));
 const reportPrCommentPayloadShape = {
-	footer: z.optional(nonEmptyStringSchema$1),
-	format: z._default(z.literal("markdown"), "markdown"),
-	githubToken: z.optional(nonEmptyStringSchema$1),
-	issueNumber: z.number().check(z.int(), z.positive()),
+	footer: z$1.optional(nonEmptyStringSchema$1),
+	format: z$1._default(z$1.literal("markdown"), "markdown"),
+	githubToken: z$1.optional(nonEmptyStringSchema$1),
+	issueNumber: z$1.number().check(z$1.int(), z$1.positive()),
 	owner: nonEmptyStringSchema$1,
 	repo: nonEmptyStringSchema$1,
-	searchPattern: z.optional(nonEmptyStringSchema$1),
-	sourceUrl: z.optional(nonEmptyStringSchema$1),
-	title: z.optional(nonEmptyStringSchema$1)
+	searchPattern: z$1.optional(nonEmptyStringSchema$1),
+	sourceUrl: z$1.optional(nonEmptyStringSchema$1),
+	title: z$1.optional(nonEmptyStringSchema$1)
 };
-const payloadSchema$3 = z.object(reportPrCommentPayloadShape);
+const payloadSchema$3 = z$1.object(reportPrCommentPayloadShape);
 async function reportPrComment({ footer, format = "markdown", githubToken, issueNumber, owner, repo, searchPattern, sourceUrl, title }, context = {}, createClient) {
 	if (!context.reports) throw new Error("reportPrComment requires reports in the task context");
 	const renderedReport = await context.reports.render(format, { sourceUrl });
@@ -336,30 +495,30 @@ const PLAN_FILE_NAME = "tfplan.binary";
 //#endregion
 //#region ../dx-tasks/dist/terraform/plan-storage.js
 /** This module stores Terraform plan bundles in the configured Terraform state backend. */
-const nonEmptyStringSchema = z.string().check(z.minLength(1));
+const nonEmptyStringSchema = z$1.string().check(z$1.minLength(1));
 const execFileAsync = promisify(execFile);
-const azurermBackendSchema = z.object({
-	config: z.object({
+const azurermBackendSchema = z$1.object({
+	config: z$1.object({
 		container_name: nonEmptyStringSchema,
 		key: nonEmptyStringSchema,
 		storage_account_name: nonEmptyStringSchema
 	}),
-	type: z.literal("azurerm")
+	type: z$1.literal("azurerm")
 });
-const s3BackendSchema = z.object({
-	config: z.object({
+const s3BackendSchema = z$1.object({
+	config: z$1.object({
 		bucket: nonEmptyStringSchema,
 		key: nonEmptyStringSchema,
 		region: nonEmptyStringSchema
 	}),
-	type: z.literal("s3")
+	type: z$1.literal("s3")
 });
-const rawTerraformStateSchema = z.object({ backend: z.object({
-	config: z.unknown(),
+const rawTerraformStateSchema = z$1.object({ backend: z$1.object({
+	config: z$1.unknown(),
 	type: nonEmptyStringSchema
 }) });
-const supportedBackendTypeSchema = z.union([z.literal("azurerm"), z.literal("s3")]);
-const terraformStateSchema = z.object({ backend: z.discriminatedUnion("type", [azurermBackendSchema, s3BackendSchema]) });
+const supportedBackendTypeSchema = z$1.union([z$1.literal("azurerm"), z$1.literal("s3")]);
+const terraformStateSchema = z$1.object({ backend: z$1.discriminatedUnion("type", [azurermBackendSchema, s3BackendSchema]) });
 const formatZodIssues = (error) => error.issues.map((issue) => issue.message).join("; ");
 const getAbsoluteWorkingDirectory = (workingDirectory) => path.resolve(workingDirectory);
 const getTerraformStatePath = (workingDirectory) => path.join(getAbsoluteWorkingDirectory(workingDirectory), ".terraform", "terraform.tfstate");
@@ -572,23 +731,23 @@ const deleteRemotePlanBundle = async ({ backend, planPath }) => {
 /** This module downloads and applies a previously generated Terraform plan bundle. */
 const TERRAFORM_APPLY_NAMESPACE = "terraform-apply";
 const terraformApplyPayloadShape = {
-	modulePath: z.string().check(z.minLength(1)),
-	report: z._default(z.boolean(), false),
-	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
-	verbose: z._default(z.boolean(), false)
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	report: z$1._default(z$1.boolean(), false),
+	sensitiveKeys: z$1._default(z$1.array(z$1.string().check(z$1.minLength(1))), []),
+	verbose: z$1._default(z$1.boolean(), false)
 };
-const payloadSchema$2 = z.object(terraformApplyPayloadShape);
+const payloadSchema$2 = z$1.object(terraformApplyPayloadShape);
 const terraformApplyReportShape = {
-	applyOutput: z.string(),
-	modulePath: z.string().check(z.minLength(1)),
-	notices: z.array(z.object({
-		message: z.string().check(z.minLength(1)),
-		severity: z.union([z.literal("warning"), z.literal("error")])
+	applyOutput: z$1.string(),
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	notices: z$1.array(z$1.object({
+		message: z$1.string().check(z$1.minLength(1)),
+		severity: z$1.union([z$1.literal("warning"), z$1.literal("error")])
 	})),
-	success: z._default(z.boolean(), true),
-	summaryLine: z.optional(z.string().check(z.minLength(1)))
+	success: z$1._default(z$1.boolean(), true),
+	summaryLine: z$1.optional(z$1.string().check(z$1.minLength(1)))
 };
-const terraformApplyReportSchema = z.object(terraformApplyReportShape);
+const terraformApplyReportSchema = z$1.object(terraformApplyReportShape);
 const noApplyOutputMessage = "No apply output available.";
 const terraformApplyReportSeparator = "\n\n";
 const renderNoticeMarkdown$1 = ({ message, severity }) => {
@@ -712,25 +871,25 @@ async function terraformApply({ modulePath, report = false, sensitiveKeys = [], 
 /** This module runs Terraform plans for dx-tasks without external process helpers. */
 const TERRAFORM_PLAN_NAMESPACE = "terraform-plan";
 const terraformPlanPayloadShape = {
-	modulePath: z.string().check(z.minLength(1)),
-	out: z.optional(z.string().check(z.minLength(1))),
-	refresh: z._default(z.boolean(), true),
-	report: z._default(z.boolean(), false),
-	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
-	verbose: z._default(z.boolean(), false)
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	out: z$1.optional(z$1.string().check(z$1.minLength(1))),
+	refresh: z$1._default(z$1.boolean(), true),
+	report: z$1._default(z$1.boolean(), false),
+	sensitiveKeys: z$1._default(z$1.array(z$1.string().check(z$1.minLength(1))), []),
+	verbose: z$1._default(z$1.boolean(), false)
 };
-const payloadSchema$1 = z.object(terraformPlanPayloadShape);
+const payloadSchema$1 = z$1.object(terraformPlanPayloadShape);
 const terraformPlanReportShape = {
-	modulePath: z.string().check(z.minLength(1)),
-	notices: z.array(z.object({
-		message: z.string().check(z.minLength(1)),
-		severity: z.union([z.literal("warning"), z.literal("error")])
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	notices: z$1.array(z$1.object({
+		message: z$1.string().check(z$1.minLength(1)),
+		severity: z$1.union([z$1.literal("warning"), z$1.literal("error")])
 	})),
-	planOutput: z.string(),
-	success: z._default(z.boolean(), true),
-	summaryLine: z.optional(z.string().check(z.minLength(1)))
+	planOutput: z$1.string(),
+	success: z$1._default(z$1.boolean(), true),
+	summaryLine: z$1.optional(z$1.string().check(z$1.minLength(1)))
 };
-const terraformPlanReportSchema = z.object(terraformPlanReportShape);
+const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
 const renderTerraformPlanReports = (reports, { sourceUrl } = {}) => reports.map((report) => renderTerraformPlanReport(report, { sourceUrl })).join(terraformPlanReportSeparator).trim();
@@ -844,13 +1003,13 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 //#region ../dx-tasks/dist/terraform/plan-upload.js
 /** This module runs a Terraform plan and uploads the resulting bundle for a later apply. */
 const terraformPlanUploadPayloadShape = {
-	modulePath: z.string().check(z.minLength(1)),
-	refresh: z._default(z.boolean(), true),
-	report: z._default(z.boolean(), false),
-	sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
-	verbose: z._default(z.boolean(), false)
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	refresh: z$1._default(z$1.boolean(), true),
+	report: z$1._default(z$1.boolean(), false),
+	sensitiveKeys: z$1._default(z$1.array(z$1.string().check(z$1.minLength(1))), []),
+	verbose: z$1._default(z$1.boolean(), false)
 };
-const payloadSchema = z.object(terraformPlanUploadPayloadShape);
+const payloadSchema = z$1.object(terraformPlanUploadPayloadShape);
 const getRunId = () => {
 	const runId = process.env.GITHUB_RUN_ID;
 	if (!runId) throw new Error("GITHUB_RUN_ID environment variable is required to upload a Terraform plan bundle");
@@ -903,22 +1062,31 @@ const reportPrCommentTask = {
 };
 const prCommentTask = {
 	name: "prComment",
-	payloadSchema: payloadSchema$5,
+	payloadSchema: payloadSchema$6,
 	run: prComment
+};
+const validateTerraformEnvironmentReleaseTask = {
+	name: "validateTerraformEnvironmentRelease",
+	payloadSchema: payloadSchema$5,
+	run: validateTerraformEnvironmentRelease
 };
 
 //#endregion
 //#region ../dx-tasks/dist/default-dispatcher.js
 /** This module wires the default dx-tasks registry with built-in task definitions. */
 const createDefaultReportStore = () => new ReportStore(process.cwd()).register(terraformPlanReportNamespace).register(terraformApplyReportNamespace);
-const createDefaultTaskDispatcher = ({ reports = createDefaultReportStore() } = {}) => {
-	const dispatcher = createTaskDispatcher({ context: { reports } });
+const createDefaultTaskDispatcher = ({ githubToken, reports = createDefaultReportStore() } = {}) => {
+	const dispatcher = createTaskDispatcher({ context: {
+		githubToken,
+		reports
+	} });
 	dispatcher.registerTask(terraformPlanTask);
 	dispatcher.registerTask(terraformPlanUploadTask);
 	dispatcher.registerTask(terraformApplyTask);
 	dispatcher.registerTask(renderReportTask);
 	dispatcher.registerTask(reportPrCommentTask);
 	dispatcher.registerTask(prCommentTask);
+	dispatcher.registerTask(validateTerraformEnvironmentReleaseTask);
 	return dispatcher;
 };
 
