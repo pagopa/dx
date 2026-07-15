@@ -2,6 +2,11 @@ name: Deploy DX Metrics Container App
 
 on:
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Released DX Metrics image version to deploy
+        required: true
+        type: string
   push:
     # Scope production deployment to the Nx release tag for this project.
     tags:
@@ -23,10 +28,8 @@ jobs:
     uses: pagopa/dx/.github/workflows/release-azure-containerapp-v1.yaml@main
     secrets: inherit
     with:
-      dockerfile_path: ./apps/dx-metrics/Dockerfile
-      dockerfile_context: .
       docker_image_name: pagopa/dx-metrics
-      docker_image_description: "DX Metrics is a monitoring and analytics service for the PagoPA Developer Experience (DX) team, providing insights into development experience."
+      docker_image_tag: ${{ inputs.image_tag || github.ref_name }}
       container_app: dx-p-itn-metrics-portal-ca-01
       resource_group_name: dx-p-itn-common-rg-01
       environment: app-prod
