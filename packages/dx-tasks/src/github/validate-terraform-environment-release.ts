@@ -16,9 +16,15 @@ import type { TaskRunContext } from "../dispatcher.ts";
 const nonEmptyStringSchema = z
   .string()
   .refine((value) => value.trim().length > 0, "String cannot be blank");
+
+// Fundamental: a full immutable SHA ensures plan and apply use the exact
+// revision that was validated, without mutable branch or tag references.
 const commitShaSchema = z
   .string()
   .regex(/^[0-9a-f]{40}$/i, "sourceRef must be a full Git commit SHA");
+
+// Fundamental: constrain manifest lookup to unambiguous Terraform environment
+// roots before binding that root to the Nx project executed later.
 const normalizedProjectRootSchema = nonEmptyStringSchema.refine(
   (projectRoot) =>
     !projectRoot.includes("\\") &&
@@ -36,6 +42,8 @@ export const payloadSchema = z.object({
   sourceRef: commitShaSchema,
 });
 
+// Technical robustness: validate task outputs at the boundary even though all
+// fields have already been derived from validated inputs and GitHub metadata.
 export const resultSchema = z.object({
   applyEnvironment: nonEmptyStringSchema,
   planEnvironment: nonEmptyStringSchema,
@@ -58,6 +66,8 @@ export interface GitHubRepositoryTarget {
   repo: string;
 }
 
+// Testability: this port and its factory isolate Octokit from the release
+// policy. They do not add runtime security controls themselves.
 export interface GitHubTerraformEnvironmentReleaseClient {
   compareCommits: (
     target: GitHubRepositoryTarget,
@@ -89,6 +99,9 @@ export type ValidateTerraformEnvironmentReleaseResult = z.infer<
   typeof resultSchema
 >;
 
+// Technical robustness: GitHub responses are external data and are validated
+// at runtime. These schemas protect against malformed or changed API payloads,
+// but are not part of the release authorization policy itself.
 const repositorySchema = z.object({
   default_branch: nonEmptyStringSchema,
 });
@@ -117,6 +130,9 @@ const environmentPageSchema = z.object({
   environments: z.array(environmentSchema),
 });
 const environmentManifestSchema = z.object({
+  // Optional flexibility: deployment overrides support repositories whose
+  // runner labels or GitHub environment names do not follow DX conventions.
+  // They are not required by the core security model.
   deployment: z
     .object({
       applyEnvironment: nonEmptyStringSchema,
@@ -124,6 +140,9 @@ const environmentManifestSchema = z.object({
       runnerLabel: nonEmptyStringSchema,
     })
     .optional(),
+
+  // Operational safety: validating the version keeps this task aligned with
+  // the Nx environment manifest contract, although the value is not consumed.
   version: nonEmptyStringSchema,
 });
 
@@ -222,9 +241,9 @@ class OctokitTerraformEnvironmentReleaseClient implements GitHubTerraformEnviron
     const environments: GitHubEnvironment[] = [];
     const perPage = 100;
 
-    // Repositories can have more than one API page of deployment environments.
-    // Loading every page prevents a valid environment from being rejected only
-    // because it was not included in the first response.
+    // Edge-case robustness: repositories can have more than one API page of
+    // deployment environments. Loading every page prevents a valid environment
+    // from being rejected only because it was not included in the first page.
     for (let page = 1; ; page += 1) {
       const { data } = await this.octokit.rest.repos.getAllEnvironments({
         owner,
@@ -262,8 +281,9 @@ const createOctokitTerraformEnvironmentReleaseClient: GitHubTerraformEnvironment
  * Mirrors the Terraform Nx plugin project naming convention.
  *
  * Example: `infra/resources/prod` becomes `resources-prod`.
- * Checking this relationship prevents a caller from validating one manifest
- * while later running Nx against a different project.
+ * Fundamental: checking this relationship prevents a caller from validating
+ * one manifest while later running Nx against a different project, runner, or
+ * credential environment.
  */
 const getExpectedProjectName = (projectRoot: string): string =>
   projectRoot
@@ -301,9 +321,9 @@ const getDeploymentMetadata = (
   projectRoot: string,
   manifest: z.infer<typeof environmentManifestSchema>,
 ) =>
-  // Most repositories follow the environment basename convention. Explicit
-  // manifest values remain available for repositories with custom GitHub
-  // environment names or runner labels.
+  // Optional flexibility: most repositories follow the environment basename
+  // convention. Explicit values support custom GitHub environment names or
+  // runner labels, but increase the manifest contract surface.
   manifest.deployment ?? {
     applyEnvironment: `infra-${path.posix.basename(projectRoot)}-cd`,
     planEnvironment: `infra-${path.posix.basename(projectRoot)}-ci`,
@@ -354,13 +374,16 @@ export async function validateTerraformEnvironmentRelease(
   const target = { owner, repo };
   const defaultBranch = await client.getDefaultBranch(target);
 
+  // Important but incomplete: branch protection establishes a governance
+  // baseline, but `protected: true` alone does not prove PR reviews are required.
   if (!defaultBranch.protected) {
     throw new Error(`Default branch "${defaultBranch.name}" is not protected`);
   }
 
-  // GitHub describes `head` relative to `base`. With sourceRef as the base and
-  // the default branch as the head, "ahead" means the branch contains the
-  // source commit; "identical" means sourceRef is the current branch tip.
+  // Fundamental: only commits already reachable from the protected default
+  // branch may execute on credentialed self-hosted runners. GitHub describes
+  // `head` relative to `base`: "ahead" means the branch contains sourceRef,
+  // while "identical" means sourceRef is the current branch tip.
   const comparisonStatus = await client.compareCommits(
     target,
     sourceRef,
@@ -372,8 +395,9 @@ export async function validateTerraformEnvironmentRelease(
     );
   }
 
-  // Fetching the manifest through the API avoids executing or checking out the
-  // requested revision before its trust relationship has been established.
+  // Fundamental: derive deployment metadata from the exact validated commit.
+  // Using the API instead of checking out the revision first is additional
+  // defense in depth because no repository code is executed during validation.
   const manifestPath = `${projectRoot}/environment.json`;
   const manifest = parseManifest(
     manifestPath,
@@ -388,19 +412,24 @@ export async function validateTerraformEnvironmentRelease(
     ({ name }) => name === deployment.applyEnvironment,
   );
 
+  // Operational safety: the plan environment is not the human approval
+  // boundary, but requiring it prevents silent configuration drift or typos.
   if (!planEnvironment) {
     throw new Error(
       `Plan environment "${deployment.planEnvironment}" does not exist`,
     );
   }
+
+  // Fundamental: the apply environment must exist so the expected credential
+  // and approval boundary cannot be replaced by an unconfigured environment.
   if (!applyEnvironment) {
     throw new Error(
       `Apply environment "${deployment.applyEnvironment}" does not exist`,
     );
   }
+
+  // Fundamental: Terraform apply must remain behind an explicit human approval.
   if (!applyEnvironment.protectionRules.includes("required_reviewers")) {
-    // The plan environment is intentionally read-only. The apply environment
-    // is the final safety boundary and must require an explicit human approval.
     throw new Error(
       `Apply environment "${deployment.applyEnvironment}" has no required reviewers`,
     );
