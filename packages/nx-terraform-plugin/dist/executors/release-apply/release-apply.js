@@ -1,9 +1,10 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-4u-PU-hx.js";
+import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-Cew2veTb.js";
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
 import { z } from "zod/v4";
 
 //#region src/executors/release-apply/schema.ts
 const releaseApplyExecutorSchema = z.object({
+	dryRun: z.boolean().default(false),
 	projectRoot: z.string().min(1),
 	report: z.boolean().default(false),
 	sensitiveKeys: z.array(z.string().min(1)).default([]),
@@ -12,9 +13,11 @@ const releaseApplyExecutorSchema = z.object({
 
 //#endregion
 //#region src/executors/release-apply/release-apply.ts
+const nxDryRunSchema = z.enum(["false", "true"]).optional();
 const runExecutor = async (options) => {
 	const logger = getPackageLogger(["release-apply"]);
 	const parseResult = releaseApplyExecutorSchema.safeParse(options);
+	const nxDryRunParseResult = nxDryRunSchema.safeParse(process.env.NX_DRY_RUN);
 	await configureLogger();
 	if (!parseResult.success) {
 		logger.warn("Invalid release-apply options", {
@@ -23,7 +26,15 @@ const runExecutor = async (options) => {
 		});
 		return { success: false };
 	}
-	const { projectRoot, report, sensitiveKeys, verbose } = parseResult.data;
+	if (!nxDryRunParseResult.success) {
+		logger.warn("Invalid NX_DRY_RUN environment variable", { issues: nxDryRunParseResult.error.issues });
+		return { success: false };
+	}
+	const { dryRun, projectRoot, report, sensitiveKeys, verbose } = parseResult.data;
+	if (dryRun || nxDryRunParseResult.data === "true") {
+		logger.info("Skipping Terraform apply during release dry run", { projectRoot });
+		return { success: true };
+	}
 	await createDefaultTaskDispatcher().dispatchTask("terraformApply", {
 		modulePath: projectRoot,
 		report,

@@ -9,7 +9,8 @@ import { AzureCliCredential } from "@azure/identity";
 import { BlobServiceClient } from "@azure/storage-blob";
 import os from "node:os";
 
-//#region ../dx-tasks/src/dispatcher.ts
+//#region ../dx-tasks/dist/dispatcher.js
+/** This module registers dx-tasks tasks and dispatches them from decoded inputs. */
 const createTaskDispatcher = ({ context = {} } = {}) => {
 	const tasks = /* @__PURE__ */ new Map();
 	const registerTask = (task) => {
@@ -31,7 +32,7 @@ const createTaskDispatcher = ({ context = {} } = {}) => {
 };
 
 //#endregion
-//#region ../dx-tasks/src/report-store.ts
+//#region ../dx-tasks/dist/report-store.js
 /** This module stores and renders dx-tasks reports under a per-namespace directory tree. */
 const nonEmptyStringSchema$3 = z.string().check(z.minLength(1));
 const readReports = async (directoryPath) => {
@@ -96,7 +97,7 @@ var ReportStore = class {
 };
 
 //#endregion
-//#region ../dx-tasks/src/github/pr-comment.ts
+//#region ../dx-tasks/dist/github/pr-comment.js
 /** This module creates GitHub PR comments as a reusable dx-tasks task. */
 const nonEmptyStringSchema$2 = z.string().check(z.minLength(1));
 const prCommentPayloadShape = {
@@ -189,7 +190,7 @@ async function prComment({ commentBody, footer, githubToken, issueNumber, owner,
 }
 
 //#endregion
-//#region ../dx-tasks/src/render-report.ts
+//#region ../dx-tasks/dist/render-report.js
 /** This module renders persisted dx-tasks reports and prints them to stdout. */
 const renderReportPayloadShape = { format: z._default(z.literal("markdown"), "markdown") };
 const payloadSchema$4 = z.object(renderReportPayloadShape);
@@ -200,7 +201,7 @@ async function renderReport({ format = "markdown" }, context = {}) {
 }
 
 //#endregion
-//#region ../dx-tasks/src/report-pr-comment.ts
+//#region ../dx-tasks/dist/report-pr-comment.js
 /** This module renders persisted dx-tasks reports and posts them as GitHub PR comments. */
 const nonEmptyStringSchema$1 = z.string().check(z.minLength(1));
 const reportPrCommentPayloadShape = {
@@ -232,7 +233,7 @@ async function reportPrComment({ footer, format = "markdown", githubToken, issue
 }
 
 //#endregion
-//#region ../dx-tasks/src/run-command.ts
+//#region ../dx-tasks/dist/run-command.js
 /** This module wraps child-process execution for dx-tasks Terraform commands. */
 const runCommand = async (command, args, cwd, env) => {
 	const { promise, reject, resolve } = Promise.withResolvers();
@@ -284,7 +285,7 @@ const runCommand = async (command, args, cwd, env) => {
 };
 
 //#endregion
-//#region ../dx-tasks/src/terraform/mask-output.ts
+//#region ../dx-tasks/dist/terraform/mask-output.js
 /** This module masks sensitive Terraform output before dx-tasks prints it. */
 const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const beginPemMarker = "-----BEGIN ";
@@ -328,12 +329,12 @@ const maskOutput = (input, additionalKeys = []) => {
 };
 
 //#endregion
-//#region ../dx-tasks/src/terraform/plan-file.ts
+//#region ../dx-tasks/dist/terraform/plan-file.js
 /** This module defines the on-disk plan file name shared by the plan-upload and apply tasks. */
 const PLAN_FILE_NAME = "tfplan.binary";
 
 //#endregion
-//#region ../dx-tasks/src/terraform/plan-storage.ts
+//#region ../dx-tasks/dist/terraform/plan-storage.js
 /** This module stores Terraform plan bundles in the configured Terraform state backend. */
 const nonEmptyStringSchema = z.string().check(z.minLength(1));
 const execFileAsync = promisify(execFile);
@@ -567,7 +568,7 @@ const deleteRemotePlanBundle = async ({ backend, planPath }) => {
 };
 
 //#endregion
-//#region ../dx-tasks/src/terraform/apply.ts
+//#region ../dx-tasks/dist/terraform/apply.js
 /** This module downloads and applies a previously generated Terraform plan bundle. */
 const TERRAFORM_APPLY_NAMESPACE = "terraform-apply";
 const terraformApplyPayloadShape = {
@@ -707,7 +708,7 @@ async function terraformApply({ modulePath, report = false, sensitiveKeys = [], 
 }
 
 //#endregion
-//#region ../dx-tasks/src/terraform/plan.ts
+//#region ../dx-tasks/dist/terraform/plan.js
 /** This module runs Terraform plans for dx-tasks without external process helpers. */
 const TERRAFORM_PLAN_NAMESPACE = "terraform-plan";
 const terraformPlanPayloadShape = {
@@ -840,7 +841,7 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 }
 
 //#endregion
-//#region ../dx-tasks/src/terraform/plan-upload.ts
+//#region ../dx-tasks/dist/terraform/plan-upload.js
 /** This module runs a Terraform plan and uploads the resulting bundle for a later apply. */
 const terraformPlanUploadPayloadShape = {
 	modulePath: z.string().check(z.minLength(1)),
@@ -873,7 +874,8 @@ async function terraformPlanUpload({ modulePath, refresh = true, report = false,
 }
 
 //#endregion
-//#region ../dx-tasks/src/tasks.ts
+//#region ../dx-tasks/dist/tasks.js
+/** This module exposes built-in dx-tasks task definitions for external registries. */
 const terraformPlanTask = {
 	name: "terraformPlan",
 	payloadSchema: payloadSchema$1,
@@ -906,7 +908,7 @@ const prCommentTask = {
 };
 
 //#endregion
-//#region ../dx-tasks/src/default-dispatcher.ts
+//#region ../dx-tasks/dist/default-dispatcher.js
 /** This module wires the default dx-tasks registry with built-in task definitions. */
 const createDefaultReportStore = () => new ReportStore(process.cwd()).register(terraformPlanReportNamespace).register(terraformApplyReportNamespace);
 const createDefaultTaskDispatcher = ({ reports = createDefaultReportStore() } = {}) => {

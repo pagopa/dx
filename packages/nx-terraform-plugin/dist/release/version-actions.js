@@ -23,7 +23,7 @@ const environmentManifestFilename = "environment.json";
 * in inferred Terraform project configuration.
 */
 var TerraformVersionActions = class extends VersionActions {
-	validManifestFilenames = [moduleManifestFilename, environmentManifestFilename];
+	validManifestFilenames = [this.getManifestFilename()];
 	/**
 	* Registry-based version resolution is not supported for Terraform modules.
 	*
