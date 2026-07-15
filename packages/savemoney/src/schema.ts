@@ -103,7 +103,9 @@ export const ThresholdsSchema = z
 
 // ── top-level config schema ──────────────────────────────────────────────────
 
-const AzureSourceSchema = z.enum(["advisor", "custom"]);
+export const AZURE_SOURCE_VALUES = ["advisor", "custom"] as const;
+
+const AzureSourceSchema = z.enum(AZURE_SOURCE_VALUES);
 
 const AzureSectionSchema = z
   .object({
@@ -121,7 +123,7 @@ const AzureSectionSchema = z
     sources: z
       .tuple([AzureSourceSchema])
       .rest(AzureSourceSchema)
-      .default(["advisor", "custom"]),
+      .default([...AZURE_SOURCE_VALUES]),
     subscriptionIds: z
       .array(z.string())
       .min(
