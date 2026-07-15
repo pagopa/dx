@@ -1,15 +1,45 @@
 on:
   workflow_call:
     inputs:
+      dockerfile_path:
+        type: string
+        required: false
+        default: "./Dockerfile"
+        description: Dockerfile path
+      dockerfile_context:
+        type: string
+        required: false
+        default: "."
+        description: Dockerfile build context
       docker_image_name:
         type: string
         required: false
         default: ${{ github.repository }}
-        description: Released Docker image name, defaults to repository name
+        description: Docker image name, defaults to repository name
+      docker_image_description:
+        type: string
+        required: false
+        description: A description to use as image label
+      docker_image_authors:
+        type: string
+        required: false
+        default: PagoPA
+        description: Authors names to use as image label
+      build_args:
+        description:
+          List of build arguments to use for Dockerfile build, given in
+          env=value format.
+        type: string
+        required: false
+      build_platforms:
+        type: string
+        required: false
+        default: linux/amd64
+        description: Image runtime platform, supports multiple comma-separated values
       docker_image_tag:
         type: string
-        required: true
-        description: Released image version or Nx project release tag
+        required: false
+        description: Released image version or Nx project release tag. Skips image build when set.
       container_app:
         type: string
         required: true
@@ -31,9 +61,40 @@ env:
   IMAGE_NAME: ${{ inputs.docker_image_name }}
 
 jobs:
+  build:
+    name: Build Docker Image
+    if: ${{ inputs.docker_image_tag == '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+      packages: write
+
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        name: Checkout
+
+      - name: Docker Build and Push
+        id: docker_build
+        uses: pagopa/dx/actions/docker-build-push@main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          dockerfile_path: ${{ inputs.dockerfile_path }}
+          dockerfile_context: ${{ inputs.dockerfile_context }}
+          docker_image_name: ${{ env.IMAGE_NAME }}
+          docker_image_description: "${{ inputs.docker_image_description }}"
+          docker_image_authors: ${{ inputs.docker_image_authors }}
+          build_args: ${{ inputs.build_args }}
+          build_platforms: ${{ inputs.build_platforms }}
+          push_to_registry: true
+
   release:
     name: Deploy To Container App
     runs-on: ubuntu-latest
+    needs: build
+    if: ${{ always() && needs.build.result != 'failure' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
@@ -47,21 +108,39 @@ jobs:
       RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
 
     steps:
-      - name: Resolve Released Image
-        id: image
+      - name: Checkout
+        if: ${{ inputs.docker_image_tag == '' }}
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Get Short SHA of Latest Commit
+        id: get_commit_sha
+        if: ${{ inputs.docker_image_tag == '' }}
         env:
-          RELEASE_TAG: ${{ inputs.docker_image_tag }}
+          GIT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
 
-          image_tag="${RELEASE_TAG##*@}"
-          if [[ -z "$image_tag" ]]; then
-            echo "::error::A release image tag is required."
-            exit 1
+          sha=$(git rev-parse --short "$GIT_SHA")
+
+          echo "::notice::Latest commit: $sha"
+          echo "short_sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Resolve Deployment Image
+        id: image
+        env:
+          RELEASE_TAG: ${{ inputs.docker_image_tag }}
+          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$RELEASE_TAG" ]]; then
+            image_tag="${RELEASE_TAG##*@}"
+          else
+            image_tag="sha-$SHORT_SHA"
           fi
 
           image_ref="ghcr.io/$IMAGE_NAME:$image_tag"
-          echo "::notice::Deploying released image: $image_ref"
+          echo "::notice::Deploying image: $image_ref"
           echo "image_ref=$image_ref" >> $GITHUB_OUTPUT
 
       - name: Cloud Login
