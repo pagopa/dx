@@ -10,7 +10,8 @@ inputs:
     required: true
   github-terraform-token:
     description: "Pre-generated GitHub App installation token for Terraform publish"
-    required: true
+    required: false
+    default: ""
   base-branch:
     description: "Base branch where release flow runs"
     required: false
