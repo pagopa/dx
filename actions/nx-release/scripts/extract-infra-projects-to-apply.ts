@@ -33,6 +33,7 @@ interface EnvironmentTarget {
   applyEnvironment: string;
   planEnvironment: string;
   project: string;
+  projectRoot: string;
   runnerLabel: string;
 }
 
@@ -46,7 +47,7 @@ const isFileNotFoundError = (error: unknown): boolean =>
 
 const inferDeploymentMetadata = (
   projectRoot: string,
-): Omit<EnvironmentTarget, "project"> => {
+): Omit<EnvironmentTarget, "project" | "projectRoot"> => {
   const environmentName = path.basename(projectRoot);
 
   if (!environmentName || environmentName === ".") {
@@ -97,6 +98,7 @@ const readEnvironmentTarget = async (
 
   return {
     project,
+    projectRoot,
     ...(parseResult.data.deployment ?? inferDeploymentMetadata(projectRoot)),
   };
 };

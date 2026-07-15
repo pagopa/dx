@@ -18332,6 +18332,7 @@ var readEnvironmentTarget = async (project, projectRoot) => {
   }
   return {
     project,
+    projectRoot,
     ...parseResult.data.deployment ?? inferDeploymentMetadata(projectRoot)
   };
 };

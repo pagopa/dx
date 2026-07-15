@@ -125,7 +125,7 @@ describe("run output", () => {
       repo: "dx",
     });
     expect(stdoutWriteSpy).toHaveBeenCalledWith(
-      '[{"project":"infra-resources-dev","applyEnvironment":"infra-dev-cd","planEnvironment":"infra-dev-ci","runnerLabel":"dev"}]',
+      '[{"project":"infra-resources-dev","projectRoot":"infra/resources/dev","applyEnvironment":"infra-dev-cd","planEnvironment":"infra-dev-ci","runnerLabel":"dev"}]',
     );
     expect(fsReadFileMock).toHaveBeenCalledWith(
       "infra/resources/dev/environment.json",
