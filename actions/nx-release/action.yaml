@@ -8,6 +8,9 @@ inputs:
   app-slug:
     description: "GitHub App slug associated with github-token"
     required: true
+  github-terraform-token:
+    description: "Pre-generated GitHub App installation token for Terraform publish"
+    required: true
   base-branch:
     description: "Base branch where release flow runs"
     required: false
@@ -163,6 +166,7 @@ runs:
       env:
         NPM_CONFIG_PROVENANCE: true
         GH_TOKEN: ${{ inputs.github-token }}
+        GH_TF_TOKEN: ${{ inputs.github-terraform-token }}
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}

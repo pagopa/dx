@@ -15,6 +15,12 @@ on:
       app-private-key:
         description: "GitHub App private key for authentication"
         required: true
+      app-tf-client-id:
+        description: "GitHub App Client ID for authentication for Terraform publish"
+        required: true
+      app-tf-private-key:
+        description: "GitHub App private key for authentication for Terraform publish"
+        required: true
 
 jobs:
   release:
@@ -32,6 +38,15 @@ jobs:
         with:
           client-id: ${{ secrets.app-client-id }}
           private-key: ${{ secrets.app-private-key }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Generate GitHub App token for Terraform publish
+        id: generate-terraform-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
+        with:
+          client-id: ${{ secrets.app-tf-client-id }}
+          private-key: ${{ secrets.app-tf-private-key }}
           permission-contents: write
           permission-pull-requests: write
 
@@ -81,3 +96,4 @@ jobs:
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
+          github-terraform-token: ${{ steps.generate-terraform-token.outputs.token }}

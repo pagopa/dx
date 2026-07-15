@@ -22,3 +22,5 @@ jobs:
     secrets:
       app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
       app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+      app-tf-client-id: ${{ secrets.GH_TF_APP_RELEASE_CLIENT_ID }}
+      app-tf-private-key: ${{ secrets.GH_TF_APP_RELEASE_APP_KEY }}
