@@ -277,7 +277,7 @@ jobs:
 
   apply:
     name: Terraform Apply
-    needs: plan
+    needs: [plan, validate]
     runs-on: ["self-hosted", "${{ needs.validate.outputs.runner-label }}"]
     environment: ${{ needs.validate.outputs.apply-environment }}
     permissions:
