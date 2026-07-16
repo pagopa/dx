@@ -34,7 +34,7 @@ jobs:
           private-key: ${{ secrets.app-private-key }}
           permission-contents: write
           permission-pull-requests: write
-          enterprise: ${{ vars.GITHUB_ENTERPRISE || null }}
+          enterprise: ${{ vars.GH_ENTERPRISE || null }}
 
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
