@@ -31,7 +31,7 @@ off for Confluence publication.
 - [ ] The Use Case catalog has stable `UC-XX` IDs, titles, linked JTBDs,
       priorities, and lifecycle status or explicit gaps.
 - [ ] Detailed triggers, flows, exceptions, postconditions, acceptance checks,
-      and tracking events are delegated to `uc-engraver`.
+      and tracking events are delegated to the dedicated Use Case skill.
 - [ ] The DR/SRS does not require duplicated child-page URLs.
 
 ## Delivery readiness

@@ -1,6 +1,6 @@
 ---
 name: dr-blacksmith
-description: Create and update a structured Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, invoke uc-engraver when detailed Use Cases are requested, and hand confirmed Confluence publication to the confluence-librarian skill.
+description: Create and update a structured Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, delegate detailed Use Cases to the dedicated Use Case skill, and hand confirmed Confluence publication to the confluence-librarian skill.
 ---
 
 # DR Blacksmith
@@ -52,7 +52,7 @@ is given. Never overwrite the bundled template.
 ## Workflow
 
 1. **Collect source material.** Read the linked PRD and any other source provided
-   by user or linked in the PDR.
+   by user or linked in the PRD.
 2. **Establish the source of truth.** Treat the current DR/SRS as the
    operational description of confirmed behavior. An RFC is a discussion and
    decision record, not an operational instruction. Apply an accepted RFC only
