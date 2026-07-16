@@ -3,11 +3,11 @@
   "evals": [
     {
       "id": 0,
-      "name": "complete-parent-design-review",
-      "prompt": "Create a parent Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md and do not publish it.",
-      "expected_output": "A complete parent DR/SRS Markdown document with stable IDs, all always-required sections, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
+      "name": "complete-design-review",
+      "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md and do not publish it.",
+      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
       "expectations": [
-        "Uses the bundled parent DR/SRS template structure and includes the required sections.",
+        "Uses the bundled DR/SRS template structure and includes the required sections.",
         "Includes technical contracts, security/privacy, performance/availability, rollout/rollback, validation, monitoring, and readiness content.",
         "Creates a UC-01 index entry without generating trigger, flow, edge-case, or acceptance-check child content.",
         "Preserves traceability to the PRD and other supplied source artifacts."
@@ -43,12 +43,12 @@
     {
       "id": 3,
       "name": "use-case-boundary",
-      "prompt": "Create the parent DR/SRS for a payment authorization initiative. Add UC-01 and UC-02 entries with titles, linked JTBDs, priorities, child-page placeholders, and status gaps. Do not write the individual Use Cases because another skill owns them.",
-      "expected_output": "A parent document containing a stable Use Case catalog and no detailed child Use Case sections.",
+      "prompt": "Create the DR/SRS for a payment authorization initiative. Add UC-01 and UC-02 entries with titles, linked JTBDs, priorities, and status gaps. Do not write the individual Use Cases because another skill owns them.",
+      "expected_output": "A DR/SRS containing a stable Use Case catalog and no detailed Use Case sections.",
       "expectations": [
-        "Creates stable UC-01 and UC-02 catalog entries with title, linked JTBD, priority, child link, and status/gap.",
+        "Creates stable UC-01 and UC-02 catalog entries with title, linked JTBD, priority, and status/gap.",
         "Does not generate triggers, flows, postconditions, acceptance checks, or tracking events for the child Use Cases.",
-        "Keeps detailed behavior delegated to uc-engraver."
+        "Keeps detailed behavior delegated to the separate Use Case skill."
       ],
       "files": []
     },
@@ -62,19 +62,6 @@
         "Does not publish without an affirmative answer.",
         "Does not ask for or assume publication language/location before confirmation.",
         "Delegates confirmed publication to confluence-librarian and does not duplicate its publication mechanics."
-      ],
-      "files": []
-    },
-    {
-      "id": 5,
-      "name": "delegated-use-case-authoring",
-      "prompt": "While creating the parent DR/SRS for a payment authorization initiative, I also want detailed UC-01 and UC-02 Use Cases generated from the linked PRD and JTBDs. Keep the parent catalog synchronized, but do not write the detailed child Use Case bodies in the parent.",
-      "expected_output": "The agent invokes uc-engraver for detailed child documents and updates the parent catalog with the returned stable IDs, links, priorities, and status gaps.",
-      "expectations": [
-        "Delegates detailed Use Case authoring to uc-engraver.",
-        "Keeps only catalog entries in the parent DR/SRS.",
-        "Synchronizes the parent rows with child paths, stable IDs, and status gaps.",
-        "Preserves actor names from the linked PRD."
       ],
       "files": []
     }
