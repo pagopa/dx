@@ -102,6 +102,10 @@ Source: <document path or artifact>
 - Preserve visible status values and do not infer approval from publication.
 - Keep detailed source content in the page; do not replace it with a summary
   unless the user explicitly requests a summary.
+- Treat the Confluence page title as separate from the body. When the source
+  starts with a Markdown H1 whose text exactly matches the page title, omit
+  that H1 from the published body to avoid displaying the title twice. Keep
+  later H1 headings and a leading H1 with different text unchanged.
 - For updates, fetch the existing page first when the operation could overwrite
   comments, local IDs, links, or page metadata.
 - Use the authenticated integration's native document representation when
