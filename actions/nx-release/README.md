@@ -80,6 +80,11 @@ This action automates the Nx release flow in three phases:
 | `published-pr-number`         | PR number of the merged Version Packages PR whose projects were published in this run. Only set when `release-mode` is `publish` (empty for `publish-all`, which republishes all public projects rather than a single merged PR). |
 | `released-environment-matrix` | JSON matrix of released Terraform environments, including the Nx project and resolved plan/apply environment and runner metadata. Values default from the project directory and can be overridden in `environment.json`.          |
 
+`release-v2.yaml` consumes `released-environment-matrix` by dispatching one
+independent Terraform deployment workflow run per environment. Package
+publishing therefore does not remain blocked while infrastructure waits for
+approval.
+
 ## Prerequisites
 
 - Repository configured with `nx.json` (Nx monorepo)
