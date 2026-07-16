@@ -1,0 +1,42 @@
+{
+  "skill_name": "confluence-librarian",
+  "evals": [
+    {
+      "id": 0,
+      "name": "publication-confirmation",
+      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page.",
+      "expected_output": "The agent asks for explicit confirmation or confirms the already explicit publication request, then asks only for missing destination details before showing the final operation.",
+      "expectations": [
+        "Does not publish before resolving the destination and operation.",
+        "Asks for missing space, parent, title, or language rather than inventing them.",
+        "Summarizes the irreversible operation before executing it."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "stable-id-preservation",
+      "prompt": "Create a Confluence page from this Markdown architecture guide. Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.",
+      "expected_output": "The page content is translated only where requested while machine-facing identifiers and document structure remain unchanged.",
+      "expectations": [
+        "Preserves stable IDs and machine-facing status values exactly.",
+        "Preserves headings, tables, links, and conditional N/A reasons.",
+        "Translates human-facing prose without translating code, URLs, or operation names."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "safe-update",
+      "prompt": "Update the existing Confluence page at https://pagopa.atlassian.net/wiki/spaces/TEAM/pages/123 with the contents of design-review.md. Keep the document status unchanged and do not create a duplicate.",
+      "expected_output": "The agent resolves and fetches the existing page, updates that page, preserves the status, and returns the updated URL.",
+      "expectations": [
+        "Uses the existing page as the update target.",
+        "Does not create a duplicate page.",
+        "Does not change lifecycle status merely because publication occurred.",
+        "Returns the updated page URL only after a successful update."
+      ],
+      "files": []
+    }
+  ]
+}
