@@ -1,6 +1,6 @@
 ---
 name: confluence-librarian
-description: Publish and update prepared pages and document artifacts in Confluence without losing structure or traceability. Use whenever a user asks to publish, create, update, translate, or synchronize Markdown, HTML, or another readable document to Confluence, including hierarchical child pages under a parent catalog. Require explicit confirmation before irreversible publication, synchronize and verify affected parent indexes, and preserve headings, tables, links, statuses, IDs, and intentional gaps.
+description: Publish and update prepared pages and document artifacts in Confluence without losing structure or traceability. Use whenever a user asks to publish, create, update, translate, or synchronize Markdown, HTML, or another readable document to Confluence, including hierarchical child pages under a parent catalog. Require explicit confirmation before irreversible publication and preserve headings, tables, links, statuses, IDs, and intentional gaps.
 ---
 
 # Confluence Librarian
@@ -70,14 +70,6 @@ claim to have published content that was not read.
 8. **Preserve lifecycle state.** Publication alone must not change a source
    document's status such as `draft` or `review`. Change lifecycle state only
    when the user explicitly requests it and the domain skill permits it.
-9. **Synchronize hierarchical parents.** When creating a child page under a
-   parent whose catalog contains a placeholder, update the parent catalog with
-   the child title, stable ID, local source link, and returned Confluence URL.
-   Fetch the parent before replacing its body, preserve its complete content,
-   and re-fetch it after the update. A child publication is incomplete until
-   the parent row is verified; do not leave `TBD` or missing-child placeholders
-   in a successfully published parent catalog.
-
 ## Confirmation protocol
 
 Use this question when a prepared document is ready but publication has not

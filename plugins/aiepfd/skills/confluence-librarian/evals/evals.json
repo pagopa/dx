@@ -37,20 +37,6 @@
         "Returns the updated page URL only after a successful update."
       ],
       "files": []
-    },
-    {
-      "id": 3,
-      "name": "hierarchical-child-catalog-sync",
-      "prompt": "Create a Use Case child page under an existing Confluence Design Review. The parent page already has a catalog row with the stable UC ID, local Markdown link, and a TBD Confluence URL. After creating the child, update and re-fetch the parent so the row contains the returned child URL and no stale placeholder. Keep the child and parent lifecycle statuses unchanged.",
-      "expected_output": "The child is created under the existing parent, the parent catalog is updated in place and verified, and the final response includes both page URLs and unchanged lifecycle states.",
-      "expectations": [
-        "Fetches the existing parent before replacing its body.",
-        "Creates the child under the existing parent rather than creating a duplicate hierarchy.",
-        "Preserves stable IDs, local links, status values, and intentional gaps.",
-        "Updates the parent row with the returned child URL and removes the stale TBD placeholder.",
-        "Re-fetches the parent after the update and reports the verified result."
-      ],
-      "files": []
     }
   ]
 }
