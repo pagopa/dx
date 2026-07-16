@@ -55,11 +55,14 @@ const baseContext: ExecutorContext = {
   root: "",
 };
 
-describe("Publish Executor", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+beforeEach(() => {
+  vi.clearAllMocks();
+  vi.stubEnv("GH_APP_CLIENT_ID", "Iv23.client-id");
+  vi.stubEnv("GH_APP_KEY", "private-key\\nsecond-line");
+  vi.stubEnv("GH_TOKEN", "legacy-token");
+});
 
+describe("Publish Executor", () => {
   it("derives a repo name from project root", () => {
     expect(
       getRepoNameFromProjectRoot("infra/modules/azure_core_infra", "azurerm"),
@@ -72,6 +75,7 @@ describe("Publish Executor", () => {
       githubOwner: "pagopa-dx",
       projectRoot: "infra/modules/azure_core_infra",
       provider: "aws",
+      useGitHubAppAuthentication: true,
       version: "1.2.3",
       workspaceRoot: "/repo",
     };
@@ -85,7 +89,12 @@ describe("Publish Executor", () => {
     expect(loggerMocks.configureLogger).toHaveBeenCalledTimes(1);
     expect(publisherMocks.publishToGithub).toHaveBeenCalledWith({
       description: "Terraform module description",
+      githubAppCredentials: {
+        clientId: "Iv23.client-id",
+        privateKey: "private-key\nsecond-line",
+      },
       githubOwner: "pagopa-dx",
+      githubToken: "",
       projectRoot: "infra/modules/azure_core_infra",
       provider: "aws",
       version: "1.2.3",
@@ -100,7 +109,84 @@ describe("Publish Executor", () => {
       },
     );
   });
+});
 
+describe("Publish Executor authentication", () => {
+  it("fails when GitHub App credentials are missing", async () => {
+    vi.stubEnv("GH_APP_CLIENT_ID", "");
+    vi.stubEnv("GH_APP_KEY", "");
+    const options: NxReleasePublishExecutorSchema = {
+      description: "Terraform module description",
+      githubOwner: "pagopa-dx",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      useGitHubAppAuthentication: true,
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    };
+
+    const output = await executor(options, baseContext);
+
+    expect(output.success).toBe(false);
+    expect(loggerMocks.warn).toHaveBeenCalledWith(
+      "Invalid GitHub authentication environment",
+      expect.objectContaining({
+        issues: expect.arrayContaining([
+          expect.objectContaining({ path: ["GH_APP_CLIENT_ID"] }),
+          expect.objectContaining({ path: ["GH_APP_KEY"] }),
+        ]),
+      }),
+    );
+    expect(publisherMocks.publishToGithub).not.toHaveBeenCalled();
+  });
+
+  it("uses GH_TOKEN when the owner is not configured in nx.json", async () => {
+    vi.stubEnv("GH_APP_CLIENT_ID", "");
+    vi.stubEnv("GH_APP_KEY", "");
+    const options: NxReleasePublishExecutorSchema = {
+      description: "Terraform module description",
+      githubOwner: "manifest-owner",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      useGitHubAppAuthentication: false,
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    };
+
+    const output = await executor(options, baseContext);
+
+    expect(output.success).toBe(true);
+    expect(publisherMocks.publishToGithub).toHaveBeenCalledWith(
+      expect.objectContaining({
+        githubOwner: "manifest-owner",
+        githubToken: "legacy-token",
+      }),
+    );
+  });
+
+  it("falls back to GITHUB_TOKEN when GH_TOKEN is not set", async () => {
+    vi.stubEnv("GH_TOKEN", undefined);
+    vi.stubEnv("GITHUB_TOKEN", "github-token");
+    const options: NxReleasePublishExecutorSchema = {
+      description: "Terraform module description",
+      githubOwner: "manifest-owner",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      useGitHubAppAuthentication: false,
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    };
+
+    const output = await executor(options, baseContext);
+
+    expect(output.success).toBe(true);
+    expect(publisherMocks.publishToGithub).toHaveBeenCalledWith(
+      expect.objectContaining({ githubToken: "github-token" }),
+    );
+  });
+});
+
+describe("Publish Executor validation", () => {
   it('logs "Skipping release, tag already exists" when publish is skipped', async () => {
     const options: NxReleasePublishExecutorSchema = {
       description: "Terraform module description",

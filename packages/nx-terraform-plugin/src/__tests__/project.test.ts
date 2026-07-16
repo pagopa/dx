@@ -90,7 +90,10 @@ const getExpectedDocsTarget = () => ({
   outputs: ["{projectRoot}/README.md"],
 });
 
-const getExpectedPublishTarget = (githubOwner: string) => ({
+const getExpectedPublishTarget = (
+  githubOwner: string,
+  useGitHubAppAuthentication: boolean,
+) => ({
   cache: false,
   executor: "@pagopa/nx-terraform-plugin:publish",
   options: {
@@ -101,6 +104,7 @@ const getExpectedPublishTarget = (githubOwner: string) => ({
     githubOwner,
     projectRoot: "{projectRoot}",
     provider: "aws",
+    useGitHubAppAuthentication,
     version: "1.2.3",
     workspaceRoot: "{workspaceRoot}",
   },
@@ -429,7 +433,7 @@ describe("getProject libraries", () => {
         "tf-output",
       ]);
       expect(targets["nx-release-publish"]).toEqual(
-        getExpectedPublishTarget("pagopa-dx"),
+        getExpectedPublishTarget("pagopa-dx", false),
       );
       expect(project.tags).toEqual(["terraform", "terraform:public"]);
     });
@@ -469,7 +473,7 @@ describe("getProject libraries", () => {
       );
 
       expect(getTargetsOrThrow(project)["nx-release-publish"]).toEqual(
-        getExpectedPublishTarget("pagopa-dx"),
+        getExpectedPublishTarget("pagopa-dx", true),
       );
     });
 

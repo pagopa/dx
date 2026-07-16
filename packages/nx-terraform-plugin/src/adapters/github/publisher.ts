@@ -5,11 +5,18 @@ import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 
-import { ensureGitHubRepository, getGitHubToken } from "./octokit.ts";
+import {
+  createGitHubAppToken,
+  ensureGitHubRepository,
+  type GitHubAppCredentials,
+  revokeGitHubAppToken,
+} from "./octokit.ts";
 
 export interface PublishToGithubInput {
   description: string;
+  githubAppCredentials?: GitHubAppCredentials;
   githubOwner: string;
+  githubToken: string;
   projectRoot: string;
   provider: string;
   version: string;
@@ -63,14 +70,20 @@ export const publishToGithub = async (
   const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
   const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
   const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
-
-  await ensureGitHubRepository(input.githubOwner, repo);
+  const token =
+    input.githubAppCredentials === undefined
+      ? input.githubToken
+      : await createGitHubAppToken(
+          input.githubOwner,
+          input.githubAppCredentials,
+        );
 
   let publishError: unknown;
   let publishResult: PublishToGithubResult = "published";
   let tempExportDir: string | undefined;
 
   try {
+    await ensureGitHubRepository(input.githubOwner, repo, token);
     tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 
     await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
@@ -78,6 +91,7 @@ export const publishToGithub = async (
     const $ = $_({
       cwd: tempExportDir,
       env: {
+        GH_TOKEN: token,
         GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
         GIT_AUTHOR_NAME: "PagoPA DX Bot",
         GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
@@ -96,9 +110,7 @@ export const publishToGithub = async (
     // GITHUB_TOKEN and serves credentials for github.com HTTPS remotes, so the
     // token never lands in the remote URL, `.git/config`, or `git remote -v`
     // output, and every later git operation is covered without per-call wiring.
-    if (getGitHubToken() !== undefined) {
-      await $`gh auth setup-git`;
-    }
+    await $`gh auth setup-git`;
 
     const remoteAdd = await safe$`git remote add origin ${repoUrl}`;
     if (remoteAdd.exitCode !== 0) {
@@ -156,26 +168,32 @@ export const publishToGithub = async (
     publishError = error;
   }
 
+  let cleanupError: unknown;
   if (tempExportDir !== undefined) {
     try {
       await rm(tempExportDir, { force: true, recursive: true });
-    } catch (cleanupError) {
-      if (publishError !== undefined) {
-        throw publishError;
-      }
+    } catch (error) {
       const cleanupMessage = `Failed to remove temporary export directory ${tempExportDir}: ${
-        cleanupError instanceof Error
-          ? cleanupError.message
-          : String(cleanupError)
+        error instanceof Error ? error.message : String(error)
       }`;
-      throw new Error(cleanupMessage, {
-        cause: cleanupError,
+      cleanupError = new Error(cleanupMessage, {
+        cause: error,
       });
     }
   }
 
-  if (publishError !== undefined) {
-    throw publishError;
+  let revokeError: unknown;
+  if (input.githubAppCredentials !== undefined) {
+    try {
+      await revokeGitHubAppToken(token);
+    } catch (error) {
+      revokeError = error;
+    }
+  }
+
+  const finalError = publishError ?? cleanupError ?? revokeError;
+  if (finalError !== undefined) {
+    throw finalError;
   }
 
   return publishResult;

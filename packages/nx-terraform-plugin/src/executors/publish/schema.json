@@ -25,6 +25,11 @@
       "description": "Optional GitHub owner override from module.json.github.owner",
       "type": "string"
     },
+    "useGitHubAppAuthentication": {
+      "default": false,
+      "description": "Generate an installation token when the GitHub owner is configured in nx.json",
+      "type": "boolean"
+    },
     "workspaceRoot": {
       "description": "Workspace root path",
       "type": "string"
