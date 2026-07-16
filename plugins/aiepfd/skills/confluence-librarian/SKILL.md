@@ -19,8 +19,6 @@ Use this skill when:
   confirms publication;
 - a user asks to translate or synchronize an existing document into a
   Confluence page;
-- a Confluence page must be updated without losing stable IDs, links, open
-  questions, or status values.
 
 Do not invent missing domain decisions. Do not rewrite the source content's
 meaning merely to make publication easier.
@@ -117,9 +115,9 @@ Source: <document path or artifact>
 - Use the authenticated integration's native document representation when
   available. Never store credentials in the skill or generated document.
 - Markdown front matter is not native Confluence metadata. When publishing a
-  Markdown child document, preserve the front-matter values visibly or through
-  an equivalent traceability section, and verify that stable IDs and lifecycle
-  status remain visible after conversion.
+  Markdown document, render its front-matter values as a Confluence metadata
+  table, and verify that stable IDs and lifecycle status remain visible after
+  conversion.
 
 ## Translation rules
 
