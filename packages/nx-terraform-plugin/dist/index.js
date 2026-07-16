@@ -207,6 +207,7 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 			projectRoot: "{projectRoot}",
 			refresh: true,
 			report: false,
+			sensitiveKeys: opts.sensitiveOutputKeys,
 			verbose: true
 		}
 	}], [opts.applyTargetName, {
@@ -298,8 +299,10 @@ const terraformPluginOptionsSchema = z.object({
 	lintTargetName: targetNameSchema,
 	outputTargetName: targetNameSchema,
 	planTargetName: targetNameSchema,
+	planUploadTargetName: targetNameSchema,
 	publish: publishOptionsSchema,
 	publishTargetName: targetNameSchema,
+	sensitiveOutputKeys: z.array(z.string().min(1)),
 	testTargetName: targetNameSchema,
 	validateTargetName: targetNameSchema
 });
@@ -313,8 +316,10 @@ const defaultOptions = {
 	lintTargetName: "tflint",
 	outputTargetName: "tf-output",
 	planTargetName: "tf-plan",
+	planUploadTargetName: "tf-plan-upload",
 	publish: { mode: "github" },
 	publishTargetName: "nx-release-publish",
+	sensitiveOutputKeys: [],
 	testTargetName: "tf-test",
 	validateTargetName: "tf-validate"
 };

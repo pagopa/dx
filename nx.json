@@ -137,6 +137,10 @@
       "plugin": "@pagopa/nx-terraform-plugin",
       "include": ["infra/**"],
       "options": {
+        "sensitiveOutputKeys": [
+          "hidden-link",
+          "APPINSIGHTS_INSTRUMENTATIONKEY"
+        ],
         "publish": {
           "mode": "github",
           "github": {

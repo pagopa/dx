@@ -1,16 +1,12 @@
 {
   "$schema": "https://json-schema.org/schema",
   "version": 2,
-  "title": "Plan executor",
-  "description": "Runs terraform plan for a Terraform project through @pagopa/dx-tasks",
+  "title": "Plan upload executor",
+  "description": "Runs terraform plan for a Terraform project and uploads the resulting plan bundle to the Terraform state storage backend, through @pagopa/dx-tasks",
   "type": "object",
   "properties": {
     "projectRoot": {
       "description": "Terraform project root used as the module path",
-      "type": "string"
-    },
-    "out": {
-      "description": "Optional path passed to terraform plan -out",
       "type": "string"
     },
     "refresh": {

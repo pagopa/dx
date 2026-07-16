@@ -4,9 +4,26 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc --build tsconfig.build.json"
+  },
   "exports": {
-    "./default-dispatcher": "./src/default-dispatcher.ts",
-    "./terraform-plan-storage": "./src/terraform/plan-storage.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./default-dispatcher": {
+      "types": "./dist/default-dispatcher.d.ts",
+      "import": "./dist/default-dispatcher.js"
+    },
+    "./tasks": {
+      "types": "./dist/tasks.d.ts",
+      "import": "./dist/tasks.js"
+    },
+    "./terraform-plan-storage": {
+      "types": "./dist/terraform/plan-storage.d.ts",
+      "import": "./dist/terraform/plan-storage.js"
+    }
   },
   "repository": {
     "type": "git",
@@ -29,9 +46,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:aws",
     "@azure/identity": "catalog:",
-    "@azure/storage-blob": "catalog:azure"
-  },
-  "peerDependencies": {
+    "@azure/storage-blob": "catalog:azure",
     "octokit": "catalog:",
     "zod": "catalog:"
   }

@@ -14,10 +14,12 @@ describe("parseOptions", () => {
       lintTargetName: "tflint",
       outputTargetName: "tf-output",
       planTargetName: "tf-plan",
+      planUploadTargetName: "tf-plan-upload",
       publish: {
         mode: "github",
       },
       publishTargetName: "nx-release-publish",
+      sensitiveOutputKeys: [],
       testTargetName: "tf-test",
       validateTargetName: "tf-validate",
     });
@@ -56,6 +58,14 @@ describe("parseOptions", () => {
         additionalEnvironments: ["sandbox", "qa_env"],
       }).additionalEnvironments,
     ).toEqual(["sandbox", "qa_env"]);
+  });
+
+  it("accepts sensitive Terraform output keys", () => {
+    expect(
+      parseOptions({
+        sensitiveOutputKeys: ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"],
+      }).sensitiveOutputKeys,
+    ).toEqual(["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"]);
   });
 
   it("rejects invalid additional environment names", () => {

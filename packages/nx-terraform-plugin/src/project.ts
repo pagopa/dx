@@ -273,6 +273,7 @@ const getTargets = (
             projectRoot: "{projectRoot}",
             refresh: true,
             report: false,
+            sensitiveKeys: opts.sensitiveOutputKeys,
             verbose: true,
           },
         },
