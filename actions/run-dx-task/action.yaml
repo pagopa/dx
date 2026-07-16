@@ -9,6 +9,10 @@ inputs:
     description: JSON payload passed to the selected task.
     required: true
 
+outputs:
+  result:
+    description: JSON-serialized result returned by the dispatched task.
+
 runs:
   using: node24
   main: dist/index.mjs
