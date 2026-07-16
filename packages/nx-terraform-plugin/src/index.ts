@@ -6,16 +6,20 @@ import {
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { readModulePublishManifest } from "./discovery.ts";
+import {
+  readEnvironmentManifest,
+  readModulePublishManifest,
+} from "./discovery.ts";
 import { getStaticDependenciesFromFile } from "./fs.ts";
 import { configureLogger } from "./logger.ts";
-import { ModulePublishManifest } from "./manifest.ts";
+import { EnvironmentManifest, ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
 import { getProject } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
+const environmentManifestFileName = "environment.json";
 
 const isIgnoredRoot = (root: string) => {
   const rootSegments = new Set(root.split(path.sep));
@@ -42,6 +46,7 @@ const fileExists = async (filePath: string) => {
 export const getDiscoveryState = (configFiles: readonly string[]) => {
   const terraformConfigFiles: string[] = [];
   const moduleManifestRoots = new Set<string>();
+  const environmentManifestRoots = new Set<string>();
 
   for (const configFile of configFiles) {
     const root = path.dirname(configFile);
@@ -53,10 +58,15 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
       moduleManifestRoots.add(root);
       continue;
     }
+    if (fileName === environmentManifestFileName) {
+      environmentManifestRoots.add(root);
+      continue;
+    }
     terraformConfigFiles.push(configFile);
   }
 
   return {
+    environmentManifestRoots,
     moduleManifestRoots,
     terraformConfigFiles,
   };
@@ -82,34 +92,68 @@ export const getPublishableManifestByRoot = async (
   );
 };
 
+export const getEnvironmentManifestByRoot = async (
+  environmentManifestRoots: readonly string[],
+  workspaceRoot: string,
+): Promise<Map<string, EnvironmentManifest>> => {
+  const validationResults = await Promise.all(
+    environmentManifestRoots.map(async (root) => {
+      const absoluteRoot = path.join(workspaceRoot, root);
+      const manifest = await readEnvironmentManifest(absoluteRoot);
+      return manifest ? [root, manifest] : null;
+    }),
+  );
+
+  return new Map(
+    validationResults.filter(
+      (rootManifest): rootManifest is [string, EnvironmentManifest] =>
+        rootManifest !== null,
+    ),
+  );
+};
+
 export const getDiscoveryStateWithValidation = async (
   configFiles: readonly string[],
   workspaceRoot: string,
 ) => {
-  const { moduleManifestRoots, terraformConfigFiles } =
-    getDiscoveryState(configFiles);
+  const {
+    environmentManifestRoots,
+    moduleManifestRoots,
+    terraformConfigFiles,
+  } = getDiscoveryState(configFiles);
   const publishableManifestByRoot = await getPublishableManifestByRoot(
     Array.from(moduleManifestRoots),
     workspaceRoot,
   );
+  const environmentManifestByRoot = await getEnvironmentManifestByRoot(
+    Array.from(environmentManifestRoots),
+    workspaceRoot,
+  );
 
   return {
+    environmentManifestByRoot,
     publishableManifestByRoot,
     terraformConfigFiles,
   };
 };
 
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
-  // We discover both Terraform modules and module manifests in one pass.
-  "**/{*.tf,module.json}",
+  // We discover Terraform files, module manifests, and environment manifests in one pass.
+  "**/{*.tf,module.json,environment.json}",
   async (configFiles, options, context) => {
     await configureLogger();
     const opts = parseOptions(options);
     const hasRootTflintConfig = await fileExists(
       path.join(context.workspaceRoot, ".tflint.hcl"),
     );
-    const { publishableManifestByRoot, terraformConfigFiles } =
-      await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
+    const {
+      environmentManifestByRoot,
+      publishableManifestByRoot,
+      terraformConfigFiles,
+    } = await getDiscoveryStateWithValidation(
+      configFiles,
+      context.workspaceRoot,
+    );
 
     return createNodesFromFiles(
       (configFile) => {
@@ -126,6 +170,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
               root,
               hasRootTflintConfig,
               publishableManifestByRoot.get(root),
+              environmentManifestByRoot.get(root),
             ),
           },
         };

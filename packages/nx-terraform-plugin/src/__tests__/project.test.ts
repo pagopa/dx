@@ -55,6 +55,10 @@ const publishManifestWithOwner = {
   },
 };
 
+const environmentManifest = {
+  version: "0.1.0",
+};
+
 const getExpectedLintTarget = (root: string) => ({
   cache: true,
   command: "tflint",
@@ -335,6 +339,66 @@ describe("getProject applications", () => {
       expect(project.tags).toEqual(["terraform", "env:prod"]);
     });
   });
+
+  describe("when the application has an environment.json manifest", () => {
+    it("adds tf-plan-upload and nx-release-publish targets", () => {
+      const root = path.join("infra", "resources", "dev");
+      const targets = getTargetsOrThrow(
+        getProject(defaultOptions, root, false, undefined, environmentManifest),
+      );
+
+      expect(Object.keys(targets)).toEqual([
+        "tf-init",
+        "tf-fmt",
+        "tf-test",
+        "tf-validate",
+        "tf-console",
+        "tf-output",
+        "tf-plan",
+        "tf-apply",
+        "tf-plan-upload",
+        "nx-release-publish",
+      ]);
+      expect(targets["tf-plan-upload"]).toEqual({
+        cache: false,
+        configurations: {
+          ci: {
+            refresh: true,
+            report: true,
+            verbose: false,
+          },
+        },
+        dependsOn: ["tf-init"],
+        executor: "@pagopa/nx-terraform-plugin:plan-upload",
+        options: {
+          projectRoot: "{projectRoot}",
+          refresh: true,
+          report: false,
+          sensitiveKeys: [],
+          verbose: true,
+        },
+      });
+      expect(targets["nx-release-publish"]).toEqual({
+        cache: false,
+        dependsOn: ["tf-init"],
+        executor: "@pagopa/nx-terraform-plugin:release-apply",
+        options: {
+          projectRoot: "{projectRoot}",
+          report: false,
+          sensitiveKeys: [],
+          verbose: true,
+        },
+      });
+    });
+
+    it("does not add tf-plan-upload or nx-release-publish without a manifest", () => {
+      const root = path.join("infra", "resources", "dev");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["tf-plan-upload"]).toBeUndefined();
+      expect(targets["nx-release-publish"]).toBeUndefined();
+    });
+  });
 });
 
 describe("getProject libraries", () => {
@@ -583,6 +647,31 @@ describe("getProject release configuration", () => {
         true,
         publishManifestWithOwner,
       );
+
+      expect(project.release).toBeUndefined();
+    });
+
+    it("infers release.version config for applications with an environment.json manifest", () => {
+      const root = path.join("infra", "resources", "dev");
+      const project = getProject(
+        defaultOptions,
+        root,
+        false,
+        undefined,
+        environmentManifest,
+      );
+
+      expect(project.release).toBeDefined();
+      expect(project.release?.version).toEqual({
+        currentVersionResolver: "disk",
+        manifestRootsToUpdate: ["{projectRoot}"],
+        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+      });
+    });
+
+    it("does not infer release config for applications without an environment.json manifest", () => {
+      const root = path.join("infra", "resources", "dev");
+      const project = getProject(defaultOptions, root);
 
       expect(project.release).toBeUndefined();
     });

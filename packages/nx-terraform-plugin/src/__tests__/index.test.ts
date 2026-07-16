@@ -28,8 +28,8 @@ import { createNodesV2, getDiscoveryStateWithValidation } from "../index.ts";
 import { parseOptions } from "../options.ts";
 
 describe("createNodesV2", () => {
-  it("discovers both terraform and module manifests", () => {
-    expect(createNodesV2[0]).toBe("**/{*.tf,module.json}");
+  it("discovers terraform files, module manifests, and environment manifests", () => {
+    expect(createNodesV2[0]).toBe("**/{*.tf,module.json,environment.json}");
   });
 });
 

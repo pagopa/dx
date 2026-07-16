@@ -3,8 +3,11 @@ import path from "node:path";
 
 import { getPackageLogger } from "./logger.ts";
 import {
+  EnvironmentManifest,
+  EnvironmentManifestError,
   ModulePublishManifest,
   ModulePublishManifestError,
+  parseEnvironmentManifest,
   parseModulePublishManifest,
 } from "./manifest.ts";
 
@@ -48,4 +51,38 @@ export const hasPublishableModuleManifest = async (
 ): Promise<boolean> => {
   const manifest = await readModulePublishManifest(moduleRoot);
   return manifest !== undefined;
+};
+
+export const readEnvironmentManifest = async (
+  environmentRoot: string,
+): Promise<EnvironmentManifest | undefined> => {
+  const manifestPath = path.join(environmentRoot, "environment.json");
+  const logger = getPackageLogger(["discovery"]);
+  try {
+    const rawManifest = await fs.readFile(manifestPath, "utf-8");
+    return parseEnvironmentManifest(JSON.parse(rawManifest));
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return undefined;
+    }
+    if (error instanceof SyntaxError) {
+      logger.warn(
+        `Invalid environment manifest at ${manifestPath}. ${error.message}`,
+      );
+      return undefined;
+    }
+    if (error instanceof EnvironmentManifestError) {
+      logger.warn("Invalid manifest file", {
+        issues: error.issues,
+        path: manifestPath,
+      });
+      return undefined;
+    }
+    throw error;
+  }
 };
