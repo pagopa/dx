@@ -6,6 +6,8 @@ import {
 } from "../../adapters/github/publisher.ts";
 import { configureLogger, getPackageLogger } from "../../logger.ts";
 import {
+  githubAppEnvironmentSchema,
+  githubTokenEnvironmentSchema,
   type NxReleasePublishExecutorInput,
   nxReleasePublishExecutorSchema,
 } from "./schema.ts";
@@ -31,6 +33,41 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
   }
 
   const validatedOptions = parseResult.data;
+  let githubAppCredentials:
+    | undefined
+    | { clientId: string; privateKey: string };
+  let githubToken: string;
+
+  if (validatedOptions.useGitHubAppAuthentication) {
+    const environmentParseResult = githubAppEnvironmentSchema.safeParse(
+      process.env,
+    );
+    if (!environmentParseResult.success) {
+      logger.warn("Invalid GitHub authentication environment", {
+        issues: environmentParseResult.error.issues,
+        path: validatedOptions.projectRoot,
+      });
+      return { success: false };
+    }
+    githubAppCredentials = {
+      clientId: environmentParseResult.data.GH_APP_CLIENT_ID,
+      privateKey: environmentParseResult.data.GH_APP_KEY,
+    };
+    githubToken = "";
+  } else {
+    const environmentParseResult = githubTokenEnvironmentSchema.safeParse(
+      process.env,
+    );
+    if (!environmentParseResult.success) {
+      logger.warn("Invalid GitHub authentication environment", {
+        issues: environmentParseResult.error.issues,
+        path: validatedOptions.projectRoot,
+      });
+      return { success: false };
+    }
+    githubToken = environmentParseResult.data;
+  }
+
   const repoName = getRepoNameFromProjectRoot(
     validatedOptions.projectRoot,
     validatedOptions.provider,
@@ -46,7 +83,9 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
 
   const publishResult = await publishToGithub({
     description: validatedOptions.description,
+    githubAppCredentials,
     githubOwner: validatedOptions.githubOwner,
+    githubToken,
     projectRoot: validatedOptions.projectRoot,
     provider: validatedOptions.provider,
     version: validatedOptions.version,

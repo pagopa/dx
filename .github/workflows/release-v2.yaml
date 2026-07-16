@@ -34,7 +34,6 @@ jobs:
           private-key: ${{ secrets.app-private-key }}
           permission-contents: write
           permission-pull-requests: write
-          enterprise: ${{ vars.GH_ENTERPRISE || null }}
 
       - name: Checkout repository
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -79,6 +78,9 @@ jobs:
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
+        env:
+          GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
+          GH_APP_KEY: ${{ secrets.app-private-key }}
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}

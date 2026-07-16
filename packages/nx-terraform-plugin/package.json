@@ -49,6 +49,7 @@
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "^22.7.6",
+    "@octokit/auth-app": "^8.2.0",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
