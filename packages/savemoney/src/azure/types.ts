@@ -5,6 +5,7 @@
 import type * as armResources from "@azure/arm-resources";
 
 import type { Finding } from "../finding.js";
+import type { Config } from "../schema.js";
 import type {
   AnalysisResult,
   BaseConfig,
@@ -38,9 +39,10 @@ export type AzureConfig = BaseConfig & {
    * - `"custom"`  → enables the per-resource analyzer plugins
    * - `"advisor"` → enables the Azure Advisor subscription-level analyzer
    *
-   * Defaults to `["advisor", "custom"]` when omitted (i.e. all sources).
+   * Config loading applies the `["advisor", "custom"]` default, so this list
+   * is always defined and contains at least one source.
    */
-  sources?: AzureSource[];
+  sources: Config["azure"]["sources"];
   subscriptionIds: string[];
   /**
    * Analysis thresholds. Defaults from DEFAULT_THRESHOLDS are used when not provided.
@@ -88,7 +90,7 @@ export type AzureResourceReport = {
  * Narrowed from `FindingSource` to exclude "aws", which is not a valid
  * filter for Azure runs and would silently produce an empty report.
  */
-export type AzureSource = "advisor" | "custom";
+export type AzureSource = Config["azure"]["sources"][number];
 
 export type PricingConfig = {
   /**

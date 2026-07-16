@@ -103,6 +103,10 @@ export const ThresholdsSchema = z
 
 // ── top-level config schema ──────────────────────────────────────────────────
 
+export const AZURE_SOURCE_VALUES = ["advisor", "custom"] as const;
+
+const AzureSourceSchema = z.enum(AZURE_SOURCE_VALUES);
+
 const AzureSectionSchema = z
   .object({
     /**
@@ -117,9 +121,9 @@ const AzureSectionSchema = z
      * Azure Advisor recommendations, or `["custom"]` to skip Advisor.
      */
     sources: z
-      .array(z.enum(["advisor", "custom"]))
-      .nonempty()
-      .default(["advisor", "custom"]),
+      .tuple([AzureSourceSchema])
+      .rest(AzureSourceSchema)
+      .default([...AZURE_SOURCE_VALUES]),
     subscriptionIds: z
       .array(z.string())
       .min(

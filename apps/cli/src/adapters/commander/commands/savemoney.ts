@@ -1,6 +1,6 @@
-import type { AzureConfig, AzureSource } from "@pagopa/dx-savemoney";
+import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-import { azure, loadConfig } from "@pagopa/dx-savemoney";
+import { azure, AZURE_SOURCE_VALUES, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
 import { oraPromise } from "ora";
 import { z } from "zod";
@@ -90,7 +90,7 @@ export const makeSavemoneyCommand = () =>
       }
     });
 
-const SourceSchema = z.enum(["advisor", "all", "custom"]);
+const SourceSchema = z.enum([...AZURE_SOURCE_VALUES, "all"]);
 type SourceOption = z.infer<typeof SourceSchema>;
 
 /**
@@ -136,10 +136,10 @@ export function parseTagsOption(
  */
 export function resolveSourcesOption(
   option: SourceOption | undefined,
-  configSources: AzureSource[] | undefined,
-): AzureSource[] {
+  configSources: AzureConfig["sources"],
+): AzureConfig["sources"] {
   if (option === undefined) {
-    return configSources ?? ["advisor", "custom"];
+    return configSources;
   }
-  return option === "all" ? ["advisor", "custom"] : [option];
+  return option === "all" ? [...AZURE_SOURCE_VALUES] : [option];
 }

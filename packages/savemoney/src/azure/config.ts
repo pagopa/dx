@@ -71,11 +71,7 @@ export async function loadAzureConfig(
     ? process.env.ARM_SUBSCRIPTION_ID.split(",")
     : (await prompt("Enter Subscription IDs (comma-separated): ")).split(",");
 
-  return {
-    preferredLocation: "italynorth",
-    subscriptionIds,
-    timespanDays: 30,
-  };
+  return ConfigSchema.parse({ azure: { subscriptionIds } }).azure;
 }
 
 /**
