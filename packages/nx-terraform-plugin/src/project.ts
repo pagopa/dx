@@ -83,6 +83,8 @@ const getPublishTarget = (
           ...publishOptions,
           githubOwner: publishOptions.github.owner,
           projectRoot: "{projectRoot}",
+          // Only an owner explicitly configured in nx.json enables App auth;
+          // an owner inherited from module.json keeps the legacy token flow.
           useGitHubAppAuthentication: opts.publish.github?.owner !== undefined,
           workspaceRoot: "{workspaceRoot}",
         },

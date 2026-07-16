@@ -185,12 +185,15 @@ export const publishToGithub = async (
   let revokeError: unknown;
   if (input.githubAppCredentials !== undefined) {
     try {
+      // Installation tokens are temporary, but revoking them minimizes their
+      // usable lifetime even when publishing failed or was skipped.
       await revokeGitHubAppToken(token);
     } catch (error) {
       revokeError = error;
     }
   }
 
+  // Cleanup must not hide the error that caused publishing to fail.
   const finalError = publishError ?? cleanupError ?? revokeError;
   if (finalError !== undefined) {
     throw finalError;
