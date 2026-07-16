@@ -2,8 +2,8 @@
 
 ## Document hierarchy
 
-The parent DR/SRS is the operational source of truth for the confirmed
-solution and requirements. Keep it linked to, but distinct from:
+The DR/SRS is the operational source of truth for the confirmed solution and
+requirements. Keep it linked to, but distinct from:
 
 - the PRD, which owns product need, outcomes, JTBD, KPIs, and guardrails;
 - Service Blueprint and Figma, which own discovery and UX evidence;
@@ -14,7 +14,7 @@ solution and requirements. Keep it linked to, but distinct from:
 - Jira, which projects the operational work and validation.
 
 Do not copy whole source documents into the DR/SRS. Link them and summarize
-only the decision or requirement the parent needs to govern.
+only the decision or requirement the DR/SRS needs to govern.
 
 ## Living-document and RFC rule
 
@@ -52,28 +52,27 @@ Classify statements as:
 Never turn an inferred architecture, target, owner, compliance result, or
 operational promise into a confirmed value.
 
-## Parent versus child Use Cases
+## DR/SRS and Use Cases
 
-The parent contains only the dynamic view/catalog:
+The DR/SRS contains only the dynamic view/catalog:
 
 - stable `UC-XX` ID;
 - explicit title;
 - linked `JTBD-XX` when applicable;
 - `Must` or `Should` priority;
-- child document link;
 - lifecycle/status and any missing-content gap.
 
 The `uc-engraver` skill owns trigger, preconditions, main and alternate flows,
 exception/edge cases, postconditions, binary acceptance checks, tracking
 events, and detailed evidence links. Do not duplicate those details in the
-parent.
+DR/SRS.
 
 ## Incremental adoption
 
 - For a new initiative, use the complete template and fill every
   `Always` section.
 - For a task-centric intake, start from the most granular reliable artifact,
-  then complete the parent `Always` sections and record the missing links.
+  then complete the DR/SRS `Always` sections and record the missing links.
 - For an in-flight initiative, migrate the minimum viable header/references,
   outcome and scope, solution design, Use Case index, relevant contracts, and
   execution/readiness sections, then complete the remaining gaps progressively.
@@ -85,7 +84,7 @@ The DR/SRS is ready for solutioning or backlog generation when:
 - the linked PRD has an owner, outcome, JTBD, KPI, and guardrails;
 - all `Always` sections are complete;
 - relevant conditional sections are populated or marked `N/A` with reasons;
-- Use Cases have stable IDs, priorities, linked JTBDs, and child documents or
+- Use Cases have stable IDs, priorities, linked JTBDs, and lifecycle status or
   explicit handoff gaps;
 - Figma/Service Blueprint links exist for user-facing work;
 - privacy, security, accessibility, tracking, and support readiness are

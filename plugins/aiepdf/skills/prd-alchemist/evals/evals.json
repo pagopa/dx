@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "complete-confluence-compatible-prd",
-      "prompt": "Write a PRD for a saved-payment experience from these complete notes. Sponsor: Payments Director. Product owner: Payments PM. Priority: high. Budget: 2026 Payments roadmap. Target release: 2026-10-01. Users repeatedly entering card details on mobile abandon or slow down payments. Actors: returning card-paying users and Customer Care. User JTBD: when returning to pay, users want to select a masked saved card so they can complete payment faster. Expected outcome: faster completed repeat payments. Success metric: median completion time falls from 74 seconds to 45 seconds. Quality guardrail: no full card number is stored. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks. Outcome KPI source: payments funnel dashboard reviewed weekly. Strategic dependency: PSP token lifecycle events. Constraint: maximum five visible cards. Preliminary Engineering opinion: tokenization is available. Preliminary Legal/Compliance opinion: requested. Design discovery: https://figma.example/saved-cards. Support needs: troubleshooting guidance for expired or declined cards. Open non-blocking assumption: Amex is excluded from this release. Write the machine-first PRD in English.",
+      "prompt": "Write a PRD for a saved-payment experience from these complete notes. Sponsor: Payments Director. Product owner: Payments PM. Priority: high. Budget: 2026 Payments roadmap. Target release: 2026-10-01. Users repeatedly entering card details on mobile abandon or slow down payments. Actors: returning card-paying users and Customer Care. User JTBD: when returning to pay, users want to select a masked saved card so they can complete payment faster. Expected outcome: faster completed repeat payments. Success metric: median completion time falls from 74 seconds to 45 seconds. Quality guardrail: no full card number is stored. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks. Outcome KPI source: payments funnel dashboard reviewed weekly. Strategic dependency: PSP token lifecycle events. Constraint: maximum five visible cards. Preliminary Engineering opinion: tokenization is available. Preliminary Legal/Compliance opinion: requested. Design discovery: https://figma.example/saved-cards. Support needs: troubleshooting guidance for expired or declined cards. Open non-blocking assumption: Amex is excluded from this release.",
       "expected_output": "A Confluence-compatible PRD with visible Metadata, Need definition, Actors, Objectives with a complete JTBD catalog, Success metrics with outcome KPIs and quality guardrails, strategic dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. It starts with status draft.",
       "expectations": [
         "The PRD has a visible Metadata section with stable IDs for status, sponsor, owner, budget, Legal/Compliance, Engineering, target release, and priority",
@@ -12,6 +12,7 @@
         "Outcome KPIs and quality guardrails are separate sections",
         "Stable English IDs are present for each canonical section and table row",
         "The PRD does not include a use-case catalog, RACI, backlog, or detailed implementation specification",
+        "Narrative PRD sentences identify the user group, actor, team, owner, stakeholder, or system responsible for each confirmed statement",
         "metadata.status is draft"
       ],
       "files": []
@@ -77,6 +78,20 @@
         "The agent does not publish without explicit confirmation",
         "The agent does not choose or ask for a publication language before confirmation",
         "The agent delegates confirmed publication to confluence-librarian"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "explicit-subject-prose",
+      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers.",
+      "expected_output": "A draft PRD whose narrative prose names confirmed actors such as merchants and Customer Operations, while the missing decision-maker, monitoring owner, Legal-review initiator, and support owner remain explicit open questions.",
+      "expectations": [
+        "Narrative sentences use explicit subjects instead of retaining impersonal, passive, or subjectless wording from the notes",
+        "The PRD names merchants and Customer Operations where the source confirms those actors",
+        "The PRD records targeted open questions for the decision-maker, monitoring owner, Legal-review initiator, and support owner",
+        "The PRD does not invent an actor, owner, or decision-maker",
+        "metadata.status remains draft"
       ],
       "files": []
     }

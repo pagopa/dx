@@ -13,6 +13,10 @@ signals. It is outcome-oriented and does not replace downstream use cases,
 technical specifications, acceptance criteria, QA checklists, or implementation
 plans.
 
+Product managers use the PRD to align sponsors, engineers, designers,
+Legal/Compliance, Support/Operations, and other stakeholders before downstream
+solution design and delivery planning.
+
 ## When to Use This Skill
 
 Use this skill when the user wants to:
@@ -32,8 +36,6 @@ Produce one PRD using [`templates/prd.md`](./templates/prd.md). Write it to the
 path requested by the user, or to `prd.md` in the current working directory when
 no path is given. Never overwrite the bundled template.
 
-- Write the document in **English** unless the user explicitly requests another
-  language for the visible content.
 - Include the visible `Metadata` section from the template and set
   `metadata.status` to `draft` when creating or updating the PRD.
 - Preserve every stable ID exactly as written. IDs are always English and are
@@ -44,6 +46,22 @@ no path is given. Never overwrite the bundled template.
 - Keep concrete facts traceable to source inputs.
 - Do not advance the status without the explicit confirmation described below or
   create downstream use cases, backlog items, or implementation specifications.
+
+## PRD Writing Style
+
+Write narrative PRD prose with an explicit subject so readers can identify who
+experiences a need, performs an action, owns a decision, measures an outcome, or
+enforces a constraint.
+
+- Prefer active constructions that name the relevant user group, actor, team,
+  owner, stakeholder, or system.
+- Replace impersonal or subjectless phrases such as “it is necessary,” “it was
+  decided,” “should be monitored,” or standalone infinitive instructions with a
+  sentence that names the confirmed subject.
+- When the source does not identify the subject, preserve the gap as a targeted
+  open question. Do not invent an actor merely to complete the sentence.
+- Apply this rule to narrative sentences in the PRD. Headings, stable IDs,
+  metadata values, and intentionally compact table cells may remain fragments.
 
 ## Workflow
 
@@ -61,9 +79,10 @@ no path is given. Never overwrite the bundled template.
    `draft` solely because a conditional field is unknown; record the unknown as
    an open question or justified `Not applicable` value.
 4. **Write or update the PRD.** Rewrite confirmed material into clear,
-   outcome-oriented language. Every JTBD row must include persona, canonical job
-   statement, expected outcome, success metric, quality guardrail, priority, and
-   notes. Keep detailed use cases and implementation content out of the PRD.
+   outcome-oriented language whose narrative sentences identify explicit
+   subjects. Every JTBD row must include persona, canonical job statement,
+   expected outcome, success metric, quality guardrail, priority, and notes. Keep
+   detailed use cases and implementation content out of the PRD.
 5. **Validate the document.** Confirm that every stable section and field ID is
    present, status is valid, confirmed values are traceable, conditional sections
    are populated or explicitly marked not applicable, and authoring guidance is

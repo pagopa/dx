@@ -3,9 +3,12 @@
 <!--
   AUTHORING GUIDANCE — DELETE THIS ENTIRE COMMENT BLOCK IN THE FINISHED DOCUMENT.
 
-  Write the machine-first PRD in English. Replace placeholders only with
-  confirmed information. A draft may be incomplete: record missing information
-  as an open question, assumption, or justified Not applicable value.
+  Replace placeholders only with confirmed information. A draft may be
+  incomplete: record missing information as an open question, assumption, or
+  justified Not applicable value.
+  Give every narrative sentence an explicit subject that identifies the actor,
+  owner, user group, team, stakeholder, or system. If the source does not name
+  the subject, record a targeted open question instead of inventing one.
   Preserve every stable section comment and every ID exactly as written.
   Status starts as draft. Change it to review only after explicit user
   confirmation and validation of the review-entry criteria.
@@ -30,7 +33,8 @@
 
 ## Need definition
 
-_<Describe the context and user or business need without assuming a solution.>_
+_<Name the affected users or business actors and describe their context and need
+without assuming a solution.>_
 
 <!-- id: actors -->
 
