@@ -38,3 +38,45 @@ export const parseModulePublishManifest = (
   }
   return parseResult.data;
 };
+
+// Parses and validates environment.json files for deployable Terraform
+// environments (e.g. infra/resources/dev). Unlike module.json, this manifest
+// only tracks a release version — there is no registry/publish metadata.
+export const environmentManifestSchema = z.object({
+  deployment: z
+    .object({
+      applyEnvironment: z.string().min(1),
+      planEnvironment: z.string().min(1),
+      runnerLabel: z.string().min(1),
+    })
+    .optional(),
+  version: z.string().min(1),
+});
+
+export type EnvironmentManifest = z.infer<typeof environmentManifestSchema>;
+
+export class EnvironmentManifestError extends Error {
+  readonly issues: z.core.$ZodIssue[];
+  readonly reasons: string[];
+
+  constructor(issues: z.core.$ZodIssue[], reasons: string[]) {
+    super(reasons.join("; "));
+    this.issues = issues;
+    this.reasons = reasons;
+    this.name = "EnvironmentManifestError";
+  }
+}
+
+export const parseEnvironmentManifest = (
+  input: unknown,
+): EnvironmentManifest => {
+  const parseResult = environmentManifestSchema.safeParse(input);
+  if (!parseResult.success) {
+    const reasons = parseResult.error.issues.map((issue) => {
+      const issuePath = issue.path.join(".");
+      return `${issuePath}: ${issue.message}`;
+    });
+    throw new EnvironmentManifestError(parseResult.error.issues, reasons);
+  }
+  return parseResult.data;
+};

@@ -27,6 +27,34 @@ const parseModulePublishManifest = (input) => {
 	}
 	return parseResult.data;
 };
+const environmentManifestSchema = z.object({
+	deployment: z.object({
+		applyEnvironment: z.string().min(1),
+		planEnvironment: z.string().min(1),
+		runnerLabel: z.string().min(1)
+	}).optional(),
+	version: z.string().min(1)
+});
+var EnvironmentManifestError = class extends Error {
+	issues;
+	reasons;
+	constructor(issues, reasons) {
+		super(reasons.join("; "));
+		this.issues = issues;
+		this.reasons = reasons;
+		this.name = "EnvironmentManifestError";
+	}
+};
+const parseEnvironmentManifest = (input) => {
+	const parseResult = environmentManifestSchema.safeParse(input);
+	if (!parseResult.success) {
+		const reasons = parseResult.error.issues.map((issue) => {
+			return `${issue.path.join(".")}: ${issue.message}`;
+		});
+		throw new EnvironmentManifestError(parseResult.error.issues, reasons);
+	}
+	return parseResult.data;
+};
 
 //#endregion
 //#region src/discovery.ts
@@ -43,6 +71,28 @@ const readModulePublishManifest = async (moduleRoot) => {
 			return;
 		}
 		if (error instanceof ModulePublishManifestError) {
+			logger.warn("Invalid manifest file", {
+				issues: error.issues,
+				path: manifestPath
+			});
+			return;
+		}
+		throw error;
+	}
+};
+const readEnvironmentManifest = async (environmentRoot) => {
+	const manifestPath = path.join(environmentRoot, "environment.json");
+	const logger = getPackageLogger(["discovery"]);
+	try {
+		const rawManifest = await fs.readFile(manifestPath, "utf-8");
+		return parseEnvironmentManifest(JSON.parse(rawManifest));
+	} catch (error) {
+		if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return;
+		if (error instanceof SyntaxError) {
+			logger.warn(`Invalid environment manifest at ${manifestPath}. ${error.message}`);
+			return;
+		}
+		if (error instanceof EnvironmentManifestError) {
 			logger.warn("Invalid manifest file", {
 				issues: error.issues,
 				path: manifestPath
@@ -101,7 +151,34 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		throw error;
 	}
 };
-const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifest) => {
+const getEnvironmentReleaseTargets = (opts) => [[opts.planUploadTargetName, {
+	cache: false,
+	configurations: { ci: {
+		refresh: true,
+		report: true,
+		verbose: false
+	} },
+	dependsOn: [opts.initTargetName],
+	executor: "@pagopa/nx-terraform-plugin:plan-upload",
+	options: {
+		projectRoot: "{projectRoot}",
+		refresh: true,
+		report: false,
+		sensitiveKeys: opts.sensitiveOutputKeys,
+		verbose: true
+	}
+}], [opts.publishTargetName, {
+	cache: false,
+	dependsOn: [opts.initTargetName],
+	executor: "@pagopa/nx-terraform-plugin:release-apply",
+	options: {
+		projectRoot: "{projectRoot}",
+		report: false,
+		sensitiveKeys: opts.sensitiveOutputKeys,
+		verbose: true
+	}
+}]];
+const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifest, environmentManifest) => {
 	const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
@@ -194,37 +271,41 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 		dependsOn: [opts.initTargetName],
 		options: { cwd }
 	}]);
-	if (projectType === "application") targets.push([opts.planTargetName, {
-		cache: false,
-		configurations: { ci: {
-			refresh: true,
-			report: true,
-			verbose: false
-		} },
-		dependsOn: [opts.initTargetName],
-		executor: "@pagopa/nx-terraform-plugin:plan",
-		options: {
-			projectRoot: "{projectRoot}",
-			refresh: true,
-			report: false,
-			sensitiveKeys: opts.sensitiveOutputKeys,
-			verbose: true
-		}
-	}], [opts.applyTargetName, {
-		cache: false,
-		command: `terraform apply`,
-		dependsOn: [opts.initTargetName],
-		options: {
-			cwd,
-			tty: true
-		}
-	}]);
+	if (projectType === "application") {
+		targets.push([opts.planTargetName, {
+			cache: false,
+			configurations: { ci: {
+				refresh: true,
+				report: true,
+				verbose: false
+			} },
+			dependsOn: [opts.initTargetName],
+			executor: "@pagopa/nx-terraform-plugin:plan",
+			options: {
+				projectRoot: "{projectRoot}",
+				refresh: true,
+				report: false,
+				sensitiveKeys: opts.sensitiveOutputKeys,
+				verbose: true
+			}
+		}], [opts.applyTargetName, {
+			cache: false,
+			command: `terraform apply`,
+			dependsOn: [opts.initTargetName],
+			options: {
+				cwd,
+				tty: true
+			}
+		}]);
+		if (environmentManifest) targets.push(...getEnvironmentReleaseTargets(opts));
+	}
 	return Object.fromEntries(targets);
 };
-const getProject = (opts, root, hasRootTflintConfig = false, publishManifest = void 0) => {
+const getProject = (opts, root, hasRootTflintConfig = false, publishManifest = void 0, environmentManifest = void 0) => {
 	const projectType = getProjectType(root);
 	const isPublishableLibrary = projectType === "library" && publishManifest !== void 0;
-	const targets = getTargets(opts, root, projectType, hasRootTflintConfig, publishManifest);
+	const isReleasableEnvironment = projectType === "application" && environmentManifest !== void 0;
+	const targets = getTargets(opts, root, projectType, hasRootTflintConfig, publishManifest, environmentManifest);
 	const environmentTag = projectType === "application" ? getEnvironmentTag(root, opts.additionalEnvironments) : void 0;
 	const tags = ["terraform", ...environmentTag ? [environmentTag] : []];
 	if (isPublishableLibrary) tags.push("terraform:public");
@@ -240,7 +321,7 @@ const getProject = (opts, root, hasRootTflintConfig = false, publishManifest = v
 		tags,
 		targets
 	};
-	if (isPublishableLibrary) config.release = { version: {
+	if (isPublishableLibrary || isReleasableEnvironment) config.release = { version: {
 		currentVersionResolver: "disk",
 		manifestRootsToUpdate: ["{projectRoot}"],
 		versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"
@@ -369,6 +450,7 @@ const ignoreModules = [
 	"example"
 ];
 const moduleManifestFileName = "module.json";
+const environmentManifestFileName = "environment.json";
 const isIgnoredRoot = (root) => {
 	const rootSegments = new Set(root.split(path.sep));
 	return ignoreModules.some((module) => rootSegments.has(module));
@@ -385,16 +467,23 @@ const fileExists = async (filePath) => {
 const getDiscoveryState = (configFiles) => {
 	const terraformConfigFiles = [];
 	const moduleManifestRoots = /* @__PURE__ */ new Set();
+	const environmentManifestRoots = /* @__PURE__ */ new Set();
 	for (const configFile of configFiles) {
 		const root = path.dirname(configFile);
 		if (isIgnoredRoot(root)) continue;
-		if (path.basename(configFile) === moduleManifestFileName) {
+		const fileName = path.basename(configFile);
+		if (fileName === moduleManifestFileName) {
 			moduleManifestRoots.add(root);
+			continue;
+		}
+		if (fileName === environmentManifestFileName) {
+			environmentManifestRoots.add(root);
 			continue;
 		}
 		terraformConfigFiles.push(configFile);
 	}
 	return {
+		environmentManifestRoots,
 		moduleManifestRoots,
 		terraformConfigFiles
 	};
@@ -406,22 +495,31 @@ const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) 
 	}));
 	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));
 };
+const getEnvironmentManifestByRoot = async (environmentManifestRoots, workspaceRoot) => {
+	const validationResults = await Promise.all(environmentManifestRoots.map(async (root) => {
+		const manifest = await readEnvironmentManifest(path.join(workspaceRoot, root));
+		return manifest ? [root, manifest] : null;
+	}));
+	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));
+};
 const getDiscoveryStateWithValidation = async (configFiles, workspaceRoot) => {
-	const { moduleManifestRoots, terraformConfigFiles } = getDiscoveryState(configFiles);
+	const { environmentManifestRoots, moduleManifestRoots, terraformConfigFiles } = getDiscoveryState(configFiles);
+	const publishableManifestByRoot = await getPublishableManifestByRoot(Array.from(moduleManifestRoots), workspaceRoot);
 	return {
-		publishableManifestByRoot: await getPublishableManifestByRoot(Array.from(moduleManifestRoots), workspaceRoot),
+		environmentManifestByRoot: await getEnvironmentManifestByRoot(Array.from(environmentManifestRoots), workspaceRoot),
+		publishableManifestByRoot,
 		terraformConfigFiles
 	};
 };
-const createNodesV2 = ["**/{*.tf,module.json}", async (configFiles, options, context) => {
+const createNodesV2 = ["**/{*.tf,module.json,environment.json}", async (configFiles, options, context) => {
 	await configureLogger();
 	const opts = parseOptions(options);
 	const hasRootTflintConfig = await fileExists(path.join(context.workspaceRoot, ".tflint.hcl"));
-	const { publishableManifestByRoot, terraformConfigFiles } = await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
+	const { environmentManifestByRoot, publishableManifestByRoot, terraformConfigFiles } = await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
 	return createNodesFromFiles((configFile) => {
 		const root = path.dirname(configFile);
 		if (isIgnoredRoot(root)) return { projects: {} };
-		return { projects: { [root]: getProject(opts, root, hasRootTflintConfig, publishableManifestByRoot.get(root)) } };
+		return { projects: { [root]: getProject(opts, root, hasRootTflintConfig, publishableManifestByRoot.get(root), environmentManifestByRoot.get(root)) } };
 	}, terraformConfigFiles, options, context);
 }];
 const createDependencies = async (opts, ctx) => {
@@ -430,4 +528,4 @@ const createDependencies = async (opts, ctx) => {
 };
 
 //#endregion
-export { createDependencies, createNodesV2, getDiscoveryState, getDiscoveryStateWithValidation, getPublishableManifestByRoot };
+export { createDependencies, createNodesV2, getDiscoveryState, getDiscoveryStateWithValidation, getEnvironmentManifestByRoot, getPublishableManifestByRoot };
