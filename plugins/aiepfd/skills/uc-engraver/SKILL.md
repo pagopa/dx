@@ -25,9 +25,10 @@ the parent document.
 
 ## Output contract
 
-Write one Markdown file per Use Case at
+Write one Markdown file per selected Use Case at
 `use-cases/uc-XX-<slug>.md`, relative to the parent DR/SRS directory, unless
-the user explicitly requests another path. Use
+the user explicitly requests another path. When the user requests all Use Cases
+in a parent catalog, create or update every selected catalog entry. Use
 [`templates/use-case.md`](./templates/use-case.md) and never overwrite the
 bundled template.
 
@@ -70,9 +71,10 @@ Complete every section in the bundled template:
 - design maturity, trigger, and preconditions;
 - main, alternate, and exception/edge-case flows;
 - postconditions;
+- inline Mermaid or PlantUML sequence diagram;
 - numbered binary acceptance checks;
 - tracking events;
-- links to diagrams, Figma, endpoints/contracts, and validation evidence.
+- links to Figma, endpoints/contracts, and validation evidence.
 
 The child document owns behavior-level detail. The parent owns the catalog and
 cross-Use Case architecture, NFRs, contracts, rollout, validation strategy,
@@ -87,20 +89,22 @@ readiness, and change propagation.
    reviews, tests, and supplied task context. Ask only about contradictions or
    missing decisions that affect behavior, ownership, contracts, compliance,
    tracking, or readiness.
-3. **Choose the identity.** Match an existing `UC-XX` by ID or unambiguous
-   title. For a new Use Case, allocate the next available stable ID without
-   renumbering existing entries.
-4. **Draft or update the child.** Fill the complete template. Reuse PRD actor
-   names exactly, preserve stable IDs, and distinguish confirmed behavior from
-   proposed behavior, assumptions, and open questions.
-5. **Validate the child.** Check that flows are coherent, acceptance checks are
-   binary and traceable, tracking is explicit or justified `N/A`, links and
-   IDs are consistent, and no unsupported decision was invented.
-6. **Synchronize the parent.** Update the existing parent DR/SRS Use Case
-   index in the same workflow. Keep the row's ID, title, linked JTBD,
-   priority, child-document link, and status/gap aligned. Preserve the
-   parent's catalog-only boundary.
-7. **Record propagation.** When the Use Case changes confirmed behavior,
+3. **Select catalog entries.** Match a requested `UC-XX` by ID or unambiguous
+   title. When the user requests all Use Cases, select every applicable parent
+   catalog entry. For a genuinely new Use Case, allocate the next available
+   stable ID without renumbering existing entries.
+4. **Draft or update each child.** Fill the complete template for every selected
+   entry. Reuse PRD actor names exactly, preserve stable IDs, and distinguish
+   confirmed behavior from proposed behavior, assumptions, and open questions.
+5. **Validate each child.** Check that flows are coherent, acceptance checks are
+   binary and traceable, tracking is explicit or justified `N/A`, an inline
+   Mermaid or PlantUML sequence diagram is present, links and IDs are
+   consistent, and no unsupported decision was invented.
+6. **Synchronize the parent.** Update every selected row in the existing parent
+   DR/SRS Use Case index in the same workflow. Keep each row's ID, title,
+   linked JTBD, priority, child-document link, and status/gap aligned. Preserve
+   the parent's catalog-only boundary.
+7. **Record propagation.** When a Use Case changes confirmed behavior,
    contracts, tracking, privacy/security, or acceptance checks, update the
    parent open-question/decision propagation area when the change requires
    coordination, and identify affected downstream artifacts without editing
@@ -129,8 +133,8 @@ readiness, and change propagation.
 ## Direct and delegated invocation
 
 When invoked directly, own the complete child-authoring and parent-sync
-workflow. When invoked by `dr-blacksmith`, return the created or updated child
-path, stable ID, parent index changes, unresolved gaps, and any Confluence URL
-so `dr-blacksmith` can continue the parent document workflow. For published
+workflow. When invoked by `dr-blacksmith`, return every created or updated child
+path, stable ID, parent index change, unresolved gap, and Confluence URL so
+`dr-blacksmith` can continue the parent document workflow. For published
 children, also return the verified parent-page URL and the synchronized row
 state.

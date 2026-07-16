@@ -9,6 +9,7 @@
       "expectations": [
         "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
         "Includes all required behavior, acceptance, tracking, and traceability sections.",
+        "Includes an inline Mermaid or PlantUML sequence diagram and a reference to the relevant Endpoint, OpenAPI, AsyncAPI, or Data Contract.",
         "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
         "Updates the parent catalog with stable ID, title, linked JTBD, priority, child link, and status."
       ],
@@ -77,6 +78,19 @@
         "Updates each parent catalog row with both local and Confluence links.",
         "Re-fetches the parent and verifies that TBD or missing-child placeholders are gone.",
         "Reports publication as incomplete if any parent synchronization fails."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "create-use-cases-from-parent-catalog",
+      "prompt": "The parent DR/SRS already has catalog entries UC-01, UC-02, and UC-03, each with a title, linked JTBD, and priority. Create every missing child Use Case from this catalog, using the linked PRD and artifacts. Write one child file for each entry and synchronize every parent row without creating a new parent.",
+      "expected_output": "One complete child Use Case document is created for every selected catalog entry, and every parent catalog row is synchronized with its child path, stable ID, and status/gap.",
+      "expectations": [
+        "Processes all selected catalog entries rather than stopping after one Use Case.",
+        "Creates one child Markdown file per catalog entry under use-cases/.",
+        "Preserves each existing UC ID, linked JTBD, and priority.",
+        "Synchronizes every parent catalog row and does not create a new parent DR/SRS."
       ],
       "files": []
     }

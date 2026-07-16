@@ -58,6 +58,18 @@ status: candidate
 
 - _<observable state or outcome>_
 
+## Sequence diagram
+
+Use an inline Mermaid or PlantUML diagram to show the primary interaction.
+
+```mermaid
+sequenceDiagram
+  participant Actor
+  participant System
+  Actor->>System: <trigger or action>
+  System-->>Actor: <observable response>
+```
+
 ## Acceptance checks
 
 Each check must be binary, independently verifiable, and stable across
@@ -74,9 +86,8 @@ updates. Link it to evidence or a test when available.
 
 ## Relevant links
 
-- Sequence diagram: _<link or TBD>_
 - Figma / design flow: _<link or N/A — confirmed reason>_
-- Endpoint / OpenAPI / AsyncAPI / Data Contract: _<operation, link, or N/A — reason>_
+- Endpoint / OpenAPI / AsyncAPI / Data Contract: _<operation ID, link, or N/A — reason>_
 - Validation evidence: _<test plan, mock, report, or TBD>_
 
 ## Open questions and propagation
