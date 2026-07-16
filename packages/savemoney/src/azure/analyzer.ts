@@ -32,11 +32,7 @@ import { getLogger } from "@logtape/logtape";
 import pLimit from "p-limit";
 
 import type { Finding } from "../finding.js";
-import type {
-  AzureConfig,
-  AzureDetailedResourceReport,
-  AzureSource,
-} from "./types.js";
+import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 
 import { findingsFromAnalysisResult } from "../finding.js";
 import {
@@ -58,7 +54,6 @@ import { PricingClient, PricingService } from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
-const DEFAULT_SOURCES: AzureSource[] = ["advisor", "custom"];
 
 const RISK_ORDER: Record<CostRisk, number> = { high: 0, low: 2, medium: 1 };
 
@@ -86,9 +81,8 @@ export async function analyzeAzureResources(
   const credential = new DefaultAzureCredential();
   const allReports: AzureDetailedResourceReport[] = [];
 
-  const sources = config.sources ?? DEFAULT_SOURCES;
-  const customEnabled = sources.includes("custom");
-  const advisorEnabled = sources.includes("advisor");
+  const customEnabled = config.sources.includes("custom");
+  const advisorEnabled = config.sources.includes("advisor");
 
   const analyzers = createDefaultAnalyzers();
   const subscriptionAnalyzers = advisorEnabled

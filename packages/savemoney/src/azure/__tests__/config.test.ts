@@ -8,7 +8,9 @@
 
 import path from "path";
 import { fileURLToPath } from "url";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, expectTypeOf, it, vi } from "vitest";
+
+import type { AzureConfig, AzureSource } from "../../index.js";
 
 import { loadConfig } from "../../index.js";
 import { ConfigSchema } from "../../schema.js";
@@ -24,6 +26,10 @@ const FIXTURE_PARTIAL = path.resolve(
 const FIXTURE_FULL = path.resolve(__dirname, "fixtures/full-override.yaml");
 
 describe("loadConfig", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("throws when explicit path does not exist", async () => {
     await expect(loadConfig("/nonexistent/config.yaml")).rejects.toThrow(
       "Config file not found",
@@ -33,11 +39,23 @@ describe("loadConfig", () => {
   it("loads subscriptionIds and defaults from a partial YAML file", async () => {
     const result = await loadConfig(FIXTURE_PARTIAL);
 
+    expectTypeOf<AzureConfig["sources"]>().toEqualTypeOf<
+      [AzureSource, ...AzureSource[]]
+    >();
     expect(result.subscriptionIds).toEqual([
       "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
     ]);
     expect(result.preferredLocation).toBe("italynorth");
+    expect(result.sources).toEqual(["advisor", "custom"]);
     expect(result.timespanDays).toBe(30);
+  });
+
+  it("applies sources defaults when loading from the environment", async () => {
+    vi.stubEnv("ARM_SUBSCRIPTION_ID", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx");
+
+    const result = await loadConfig();
+
+    expect(result.sources).toEqual(["advisor", "custom"]);
   });
 
   it("loads partial threshold overrides and keeps defaults for missing fields", async () => {
@@ -70,6 +88,7 @@ describe("loadConfig", () => {
 
     expect(result.subscriptionIds).toHaveLength(2);
     expect(result.preferredLocation).toBe("westeurope");
+    expect(result.sources).toEqual(["custom"]);
     expect(result.timespanDays).toBe(60);
 
     expect(result.thresholds?.vm.cpuPercent).toBe(5);
@@ -94,6 +113,17 @@ describe("loadConfig", () => {
     expect(result.thresholds).toHaveProperty("storage");
     expect(result.thresholds).toHaveProperty("publicIp");
     expect(result.thresholds).toHaveProperty("staticSite");
+  });
+
+  it("rejects an empty sources list", () => {
+    const result = ConfigSchema.safeParse({
+      azure: {
+        sources: [],
+        subscriptionIds: ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
+      },
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("does not expose pricing settings in YAML config", () => {
