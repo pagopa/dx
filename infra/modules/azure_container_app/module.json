@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Provisions an Azure Container App with a given configuration",
   "provider": "azurerm",
-  "version": "6.0.1"
+  "version": "6.0.2"
 }

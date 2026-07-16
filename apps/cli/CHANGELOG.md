@@ -1,3 +1,19 @@
+## 0.26.2 (2026-07-16)
+
+### 🩹 Fixes
+
+- Align the SaveMoney CLI source resolution with the required non-empty ([#1983](https://github.com/pagopa/dx/pull/1983))
+  `AzureConfig.sources` type, removing the unreachable fallback for missing
+  sources without changing CLI behavior.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.5.0
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.26.1 (2026-07-09)
 
 ### 🩹 Fixes
