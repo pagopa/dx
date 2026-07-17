@@ -199,7 +199,7 @@ describe("run output", () => {
 });
 
 describe("run validation", () => {
-  it("writes an empty string when matched projects are not environment projects", async () => {
+  it("writes an empty JSON array when matched projects are not environment projects", async () => {
     pullsGetMock.mockResolvedValue({
       data: {
         body: "<!-- nx-release-tags: [] -->",
