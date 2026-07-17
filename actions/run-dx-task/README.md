@@ -4,14 +4,22 @@ Dispatches `@pagopa/dx-tasks` tasks from GitHub Actions by passing a task name a
 
 ## Inputs
 
+- `github-token`: optional GitHub token passed to tasks that call GitHub. When
+  omitted, the action falls back to the `GITHUB_TOKEN` environment variable.
 - `task`: dx-tasks task name to dispatch.
 - `payload`: JSON payload consumed by the selected task.
+
+## Outputs
+
+- `result`: JSON-serialized value returned by the selected task. Tasks without
+  a return value produce `null`.
 
 ## Example
 
 ```yaml
 - uses: pagopa/dx/actions/run-dx-task@main
   with:
+    github-token: ${{ github.token }}
     task: terraformPlan
     payload: >-
       {"modulePath":"infra/resources/example","refresh":false,"verbose":true}

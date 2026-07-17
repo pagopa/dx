@@ -12,7 +12,8 @@
     "tasks"
   ],
   "scripts": {
-    "build": "tsdown"
+    "build": "tsdown",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@actions/core": "catalog:github-actions",
@@ -24,6 +25,7 @@
     "prettier": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
+    "vitest": "catalog:",
     "zod": "catalog:"
   },
   "dependencies": {

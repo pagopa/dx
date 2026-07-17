@@ -25,6 +25,7 @@ export interface TaskDispatcherOptions {
 }
 
 export interface TaskRunContext {
+  githubToken?: string;
   reports?: ReportStore;
 }
 
