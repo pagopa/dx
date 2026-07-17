@@ -2,6 +2,9 @@ name: Run DX Task
 description: Dispatches DX task
 
 inputs:
+  github-token:
+    description: GitHub token passed to tasks that call GitHub. Falls back to the GITHUB_TOKEN environment variable.
+    required: false
   task:
     description: Task name to run.
     required: true

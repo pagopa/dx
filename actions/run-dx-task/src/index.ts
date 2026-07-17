@@ -4,6 +4,8 @@ import * as core from "@actions/core";
 import { createDefaultTaskDispatcher } from "@pagopa/dx-tasks/default-dispatcher";
 import * as z from "zod/mini";
 
+import { resolveGitHubToken } from "./github-token.js";
+
 const actionInputsSchema = z.object({
   payload: z.string().check(z.minLength(1, "Payload cannot be empty")),
   task: z.string().check(z.minLength(1, "Task name cannot be empty")),
@@ -34,7 +36,7 @@ async function run(): Promise<void> {
   }
 
   const githubTokenResult = githubTokenSchema.safeParse(
-    process.env.GITHUB_TOKEN,
+    resolveGitHubToken(core.getInput("github-token"), process.env.GITHUB_TOKEN),
   );
   if (!githubTokenResult.success) {
     throw new Error(z.prettifyError(githubTokenResult.error));
