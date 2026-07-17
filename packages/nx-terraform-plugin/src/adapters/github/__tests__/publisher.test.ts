@@ -1,10 +1,24 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const githubMocks = vi.hoisted(() => ({
+  appOctokit: { client: "app" },
+  createGitHubAppOctokit: vi.fn(),
   createGitHubAppToken: vi.fn(),
   ensureGitHubRepository: vi.fn(),
   revokeGitHubAppToken: vi.fn(),
 }));
+
+const octokitMocks = vi.hoisted(() => {
+  const repoOctokit = { client: "repo" };
+  const Octokit = vi.fn(function Octokit() {
+    return repoOctokit;
+  });
+
+  return {
+    Octokit,
+    repoOctokit,
+  };
+});
 
 const execaMocks = vi.hoisted(() => ({
   $: vi.fn(),
@@ -22,9 +36,14 @@ const osMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../octokit.ts", () => ({
+  createGitHubAppOctokit: githubMocks.createGitHubAppOctokit,
   createGitHubAppToken: githubMocks.createGitHubAppToken,
   ensureGitHubRepository: githubMocks.ensureGitHubRepository,
   revokeGitHubAppToken: githubMocks.revokeGitHubAppToken,
+}));
+
+vi.mock("octokit", () => ({
+  Octokit: octokitMocks.Octokit,
 }));
 
 vi.mock("execa", () => ({
@@ -117,6 +136,7 @@ const createGitCommandHarness = ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  githubMocks.createGitHubAppOctokit.mockReturnValue(githubMocks.appOctokit);
   githubMocks.createGitHubAppToken.mockResolvedValue("installation-token");
   githubMocks.revokeGitHubAppToken.mockResolvedValue(undefined);
   osMocks.tmpdir.mockReturnValue("/tmp-prefix");
@@ -140,11 +160,22 @@ it("publishes by committing on top of remote main without force-pushing history"
   expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
     "pagopa-dx",
     expectedRepo,
-    "installation-token",
+    octokitMocks.repoOctokit,
   );
-  expect(githubMocks.createGitHubAppToken).toHaveBeenCalledWith("pagopa-dx", {
+  expect(githubMocks.createGitHubAppOctokit).toHaveBeenCalledWith({
     clientId: "Iv23.client-id",
     privateKey: "private-key",
+  });
+  expect(githubMocks.createGitHubAppToken).toHaveBeenCalledWith(
+    "pagopa-dx",
+    {
+      clientId: "Iv23.client-id",
+      privateKey: "private-key",
+    },
+    githubMocks.appOctokit,
+  );
+  expect(octokitMocks.Octokit).toHaveBeenCalledWith({
+    auth: "installation-token",
   });
   expect(osMocks.tmpdir).toHaveBeenCalledWith();
   expect(fsMocks.mkdtemp).toHaveBeenCalledWith("/tmp-prefix/export-repo-");
@@ -343,8 +374,11 @@ it("uses the provided token without generating a GitHub App token", async () => 
   expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
     "pagopa-dx",
     expectedRepo,
-    "legacy-token",
+    octokitMocks.repoOctokit,
   );
+  expect(octokitMocks.Octokit).toHaveBeenCalledWith({
+    auth: "legacy-token",
+  });
   expect(execaMocks.$).toHaveBeenCalledWith(
     expect.objectContaining({
       env: expect.objectContaining({ GH_TOKEN: "legacy-token" }),
@@ -358,8 +392,16 @@ it("revokes the GitHub App token after a successful publish", async () => {
   await publishToGithub(publishInput);
 
   expect(githubMocks.revokeGitHubAppToken).toHaveBeenCalledWith(
-    "installation-token",
+    octokitMocks.repoOctokit,
   );
+});
+
+it("fails with revoke error when token revocation fails after a successful publish", async () => {
+  const revokeError = new Error("revoke failed");
+  createGitCommandHarness();
+  githubMocks.revokeGitHubAppToken.mockRejectedValue(revokeError);
+
+  await expect(publishToGithub(publishInput)).rejects.toBe(revokeError);
 });
 
 it("cleans up temporary directory after successful publish", async () => {
@@ -402,7 +444,25 @@ it("cleans up temporary directory even when publish fails", async () => {
     recursive: true,
   });
   expect(githubMocks.revokeGitHubAppToken).toHaveBeenCalledWith(
-    "installation-token",
+    octokitMocks.repoOctokit,
+  );
+});
+
+it("prioritizes publish failure over revoke failure", async () => {
+  const publishError = new Error("push failed");
+  const revokeError = new Error("revoke failed");
+  createGitCommandHarness({
+    onCommand: (command) => {
+      if (command.startsWith("git push ")) {
+        return Promise.reject(publishError);
+      }
+    },
+  });
+  githubMocks.revokeGitHubAppToken.mockRejectedValue(revokeError);
+
+  await expect(publishToGithub(publishInput)).rejects.toBe(publishError);
+  expect(githubMocks.revokeGitHubAppToken).toHaveBeenCalledWith(
+    octokitMocks.repoOctokit,
   );
 });
 
