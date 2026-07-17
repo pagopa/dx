@@ -132,8 +132,10 @@ describe("Publish Executor authentication", () => {
       "Invalid GitHub authentication environment",
       expect.objectContaining({
         issues: expect.arrayContaining([
-          expect.objectContaining({ path: ["GH_APP_CLIENT_ID"] }),
-          expect.objectContaining({ path: ["GH_APP_KEY"] }),
+          expect.objectContaining({
+            path: ["environment", "GH_APP_CLIENT_ID"],
+          }),
+          expect.objectContaining({ path: ["environment", "GH_APP_KEY"] }),
         ]),
       }),
     );

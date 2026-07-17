@@ -28,7 +28,7 @@ export const githubTokenEnvironmentSchema = z
     return token;
   });
 
-export const nxReleasePublishExecutorSchema = z.object({
+const nxReleasePublishExecutorOptionsSchema = z.object({
   description: publishSchema.shape.description,
   githubOwner: publishSchema.shape.github.shape.owner,
   projectRoot: z.string().min(1),
@@ -38,9 +38,58 @@ export const nxReleasePublishExecutorSchema = z.object({
   workspaceRoot: z.string(),
 });
 
+const hasOwnProperty = (value: object, property: string): boolean =>
+  Object.prototype.hasOwnProperty.call(value, property);
+
+const nxReleasePublishExecutorAuthenticationSchema = z.preprocess(
+  (input) => {
+    if (
+      input !== null &&
+      typeof input === "object" &&
+      !Array.isArray(input) &&
+      !hasOwnProperty(input, "useGitHubAppAuthentication")
+    ) {
+      return {
+        ...input,
+        useGitHubAppAuthentication: false,
+      };
+    }
+
+    return input;
+  },
+  z.xor([
+    nxReleasePublishExecutorOptionsSchema
+      .extend({
+        environment: githubAppEnvironmentSchema,
+        useGitHubAppAuthentication: z.literal(true),
+      })
+      .transform(({ environment, ...options }) => ({
+        ...options,
+        githubAppCredentials: {
+          clientId: environment.GH_APP_CLIENT_ID,
+          privateKey: environment.GH_APP_KEY,
+        },
+        githubToken: "",
+      })),
+    nxReleasePublishExecutorOptionsSchema
+      .extend({
+        environment: githubTokenEnvironmentSchema,
+        useGitHubAppAuthentication: z.literal(false).default(false),
+      })
+      .transform(({ environment, ...options }) => ({
+        ...options,
+        githubAppCredentials: undefined,
+        githubToken: environment,
+      })),
+  ]),
+);
+
+export const nxReleasePublishExecutorSchema =
+  nxReleasePublishExecutorAuthenticationSchema;
+
 export type NxReleasePublishExecutorInput =
   Partial<NxReleasePublishExecutorSchema>;
 
 export type NxReleasePublishExecutorSchema = z.input<
-  typeof nxReleasePublishExecutorSchema
+  typeof nxReleasePublishExecutorOptionsSchema
 >;

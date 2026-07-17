@@ -9,14 +9,15 @@ import { tmpdir } from "node:os";
 import { createAppAuth } from "@octokit/auth-app";
 
 //#region src/adapters/github/octokit.ts
-const createGitHubAppToken = async (owner, credentials) => {
-	const installation = await new Octokit({
-		auth: {
-			appId: credentials.clientId,
-			privateKey: credentials.privateKey
-		},
-		authStrategy: createAppAuth
-	}).rest.apps.getOrgInstallation({ org: owner });
+const createGitHubAppOctokit = (credentials) => new Octokit({
+	auth: {
+		appId: credentials.clientId,
+		privateKey: credentials.privateKey
+	},
+	authStrategy: createAppAuth
+});
+const createGitHubAppToken = async (owner, credentials, appOctokit = createGitHubAppOctokit(credentials)) => {
+	const installation = await appOctokit.rest.apps.getOrgInstallation({ org: owner });
 	return (await createAppAuth({
 		appId: credentials.clientId,
 		installationId: installation.data.id,
@@ -26,8 +27,8 @@ const createGitHubAppToken = async (owner, credentials) => {
 		type: "installation"
 	})).token;
 };
-const revokeGitHubAppToken = async (token) => {
-	await new Octokit({ auth: token }).rest.apps.revokeInstallationAccessToken();
+const revokeGitHubAppToken = async (octokit) => {
+	await octokit.rest.apps.revokeInstallationAccessToken();
 };
 const getAuthenticatedUserLogin = async (octokit, owner) => {
 	try {
@@ -36,8 +37,7 @@ const getAuthenticatedUserLogin = async (octokit, owner) => {
 		throw new Error(`Cannot create repository for user owner "${owner}" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.`, { cause: error });
 	}
 };
-const ensureGitHubRepository = async (owner, repo, token) => {
-	const octokit = new Octokit({ auth: token });
+const ensureGitHubRepository = async (owner, repo, octokit) => {
 	try {
 		await octokit.rest.repos.get({
 			owner,
@@ -83,22 +83,36 @@ const clearExportWorkingTree = async (exportDirectory) => {
 		recursive: true
 	})));
 };
+const createPublishGitHubAuthentication = async (input) => {
+	if (input.githubAppCredentials === void 0) return {
+		octokit: new Octokit({ auth: input.githubToken }),
+		shouldRevokeToken: false,
+		token: input.githubToken
+	};
+	const appOctokit = createGitHubAppOctokit(input.githubAppCredentials);
+	const token = await createGitHubAppToken(input.githubOwner, input.githubAppCredentials, appOctokit);
+	return {
+		octokit: new Octokit({ auth: token }),
+		shouldRevokeToken: true,
+		token
+	};
+};
 const publishToGithub = async (input) => {
 	const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
 	const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
 	const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
-	const token = input.githubAppCredentials === void 0 ? input.githubToken : await createGitHubAppToken(input.githubOwner, input.githubAppCredentials);
+	const githubAuthentication = await createPublishGitHubAuthentication(input);
 	let publishError;
 	let publishResult = "published";
 	let tempExportDir;
 	try {
-		await ensureGitHubRepository(input.githubOwner, repo, token);
+		await ensureGitHubRepository(input.githubOwner, repo, githubAuthentication.octokit);
 		tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 		await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
 		const $$1 = $({
 			cwd: tempExportDir,
 			env: {
-				GH_TOKEN: token,
+				GH_TOKEN: githubAuthentication.token,
 				GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
 				GIT_AUTHOR_NAME: "PagoPA DX Bot",
 				GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
@@ -146,8 +160,8 @@ const publishToGithub = async (input) => {
 		cleanupError = new Error(cleanupMessage, { cause: error });
 	}
 	let revokeError;
-	if (input.githubAppCredentials !== void 0) try {
-		await revokeGitHubAppToken(token);
+	if (githubAuthentication.shouldRevokeToken) try {
+		await revokeGitHubAppToken(githubAuthentication.octokit);
 	} catch (error) {
 		revokeError = error;
 	}
@@ -177,7 +191,7 @@ const githubTokenEnvironmentSchema = z.object({
 	}
 	return token;
 });
-const nxReleasePublishExecutorSchema = z.object({
+const nxReleasePublishExecutorOptionsSchema = z.object({
 	description: publishSchema.shape.description,
 	githubOwner: publishSchema.shape.github.shape.owner,
 	projectRoot: z.string().min(1),
@@ -186,48 +200,52 @@ const nxReleasePublishExecutorSchema = z.object({
 	version: publishSchema.shape.version,
 	workspaceRoot: z.string()
 });
+const hasOwnProperty = (value, property) => Object.prototype.hasOwnProperty.call(value, property);
+const nxReleasePublishExecutorAuthenticationSchema = z.preprocess((input) => {
+	if (input !== null && typeof input === "object" && !Array.isArray(input) && !hasOwnProperty(input, "useGitHubAppAuthentication")) return {
+		...input,
+		useGitHubAppAuthentication: false
+	};
+	return input;
+}, z.xor([nxReleasePublishExecutorOptionsSchema.extend({
+	environment: githubAppEnvironmentSchema,
+	useGitHubAppAuthentication: z.literal(true)
+}).transform(({ environment, ...options }) => ({
+	...options,
+	githubAppCredentials: {
+		clientId: environment.GH_APP_CLIENT_ID,
+		privateKey: environment.GH_APP_KEY
+	},
+	githubToken: ""
+})), nxReleasePublishExecutorOptionsSchema.extend({
+	environment: githubTokenEnvironmentSchema,
+	useGitHubAppAuthentication: z.literal(false).default(false)
+}).transform(({ environment, ...options }) => ({
+	...options,
+	githubAppCredentials: void 0,
+	githubToken: environment
+}))]));
+const nxReleasePublishExecutorSchema = nxReleasePublishExecutorAuthenticationSchema;
 
 //#endregion
 //#region src/executors/publish/publish.ts
 const runExecutor = async (options) => {
 	const logger = getPackageLogger(["publish"]);
-	const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
+	const parseResult = nxReleasePublishExecutorSchema.safeParse({
+		...options,
+		environment: process.env
+	});
 	await configureLogger();
 	if (!parseResult.success) {
-		logger.warn("Invalid publish options", {
-			issues: parseResult.error.issues,
+		const issues = parseResult.error.issues.flatMap((issue) => issue.code === "invalid_union" ? issue.errors.flat() : [issue]);
+		const hasEnvironmentIssue = issues.some((issue) => issue.path[0] === "environment");
+		logger.warn(hasEnvironmentIssue ? "Invalid GitHub authentication environment" : "Invalid publish options", {
+			issues,
 			path: options.projectRoot ?? "publish options"
 		});
 		return { success: false };
 	}
 	const validatedOptions = parseResult.data;
-	let githubAppCredentials;
-	let githubToken;
-	if (validatedOptions.useGitHubAppAuthentication) {
-		const environmentParseResult = githubAppEnvironmentSchema.safeParse(process.env);
-		if (!environmentParseResult.success) {
-			logger.warn("Invalid GitHub authentication environment", {
-				issues: environmentParseResult.error.issues,
-				path: validatedOptions.projectRoot
-			});
-			return { success: false };
-		}
-		githubAppCredentials = {
-			clientId: environmentParseResult.data.GH_APP_CLIENT_ID,
-			privateKey: environmentParseResult.data.GH_APP_KEY
-		};
-		githubToken = "";
-	} else {
-		const environmentParseResult = githubTokenEnvironmentSchema.safeParse(process.env);
-		if (!environmentParseResult.success) {
-			logger.warn("Invalid GitHub authentication environment", {
-				issues: environmentParseResult.error.issues,
-				path: validatedOptions.projectRoot
-			});
-			return { success: false };
-		}
-		githubToken = environmentParseResult.data;
-	}
 	const repoName = getRepoNameFromProjectRoot(validatedOptions.projectRoot, validatedOptions.provider);
 	logger.info("Publishing Terraform module from {projectRoot} to repository {repoName}...", {
 		projectRoot: validatedOptions.projectRoot,
@@ -235,9 +253,9 @@ const runExecutor = async (options) => {
 	});
 	if (await publishToGithub({
 		description: validatedOptions.description,
-		githubAppCredentials,
+		githubAppCredentials: validatedOptions.githubAppCredentials,
 		githubOwner: validatedOptions.githubOwner,
-		githubToken,
+		githubToken: validatedOptions.githubToken,
 		projectRoot: validatedOptions.projectRoot,
 		provider: validatedOptions.provider,
 		version: validatedOptions.version,

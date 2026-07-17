@@ -4,8 +4,10 @@ import { $ as $_ } from "execa";
 import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import { Octokit } from "octokit";
 
 import {
+  createGitHubAppOctokit,
   createGitHubAppToken,
   ensureGitHubRepository,
   type GitHubAppCredentials,
@@ -24,6 +26,12 @@ export interface PublishToGithubInput {
 }
 
 export type PublishToGithubResult = "published" | "skipped";
+
+interface PublishGitHubAuthentication {
+  octokit: Octokit;
+  shouldRevokeToken: boolean;
+  token: string;
+}
 
 export const getRepoNameFromProjectRoot = (
   projectRoot: string,
@@ -64,26 +72,49 @@ const clearExportWorkingTree = async (
   );
 };
 
+const createPublishGitHubAuthentication = async (
+  input: PublishToGithubInput,
+): Promise<PublishGitHubAuthentication> => {
+  if (input.githubAppCredentials === undefined) {
+    return {
+      octokit: new Octokit({ auth: input.githubToken }),
+      shouldRevokeToken: false,
+      token: input.githubToken,
+    };
+  }
+
+  const appOctokit = createGitHubAppOctokit(input.githubAppCredentials);
+  const token = await createGitHubAppToken(
+    input.githubOwner,
+    input.githubAppCredentials,
+    appOctokit,
+  );
+
+  return {
+    octokit: new Octokit({ auth: token }),
+    shouldRevokeToken: true,
+    token,
+  };
+};
+
 export const publishToGithub = async (
   input: PublishToGithubInput,
 ): Promise<PublishToGithubResult> => {
   const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
   const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
   const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
-  const token =
-    input.githubAppCredentials === undefined
-      ? input.githubToken
-      : await createGitHubAppToken(
-          input.githubOwner,
-          input.githubAppCredentials,
-        );
+  const githubAuthentication = await createPublishGitHubAuthentication(input);
 
   let publishError: unknown;
   let publishResult: PublishToGithubResult = "published";
   let tempExportDir: string | undefined;
 
   try {
-    await ensureGitHubRepository(input.githubOwner, repo, token);
+    await ensureGitHubRepository(
+      input.githubOwner,
+      repo,
+      githubAuthentication.octokit,
+    );
     tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 
     await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
@@ -91,7 +122,7 @@ export const publishToGithub = async (
     const $ = $_({
       cwd: tempExportDir,
       env: {
-        GH_TOKEN: token,
+        GH_TOKEN: githubAuthentication.token,
         GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
         GIT_AUTHOR_NAME: "PagoPA DX Bot",
         GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
@@ -183,11 +214,11 @@ export const publishToGithub = async (
   }
 
   let revokeError: unknown;
-  if (input.githubAppCredentials !== undefined) {
+  if (githubAuthentication.shouldRevokeToken) {
     try {
       // Installation tokens are temporary, but revoking them minimizes their
       // usable lifetime even when publishing failed or was skipped.
-      await revokeGitHubAppToken(token);
+      await revokeGitHubAppToken(githubAuthentication.octokit);
     } catch (error) {
       revokeError = error;
     }
