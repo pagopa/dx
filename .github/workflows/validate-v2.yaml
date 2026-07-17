@@ -287,8 +287,9 @@ jobs:
 
       - name: Post Code Review Report
         uses: pagopa/dx/actions/run-dx-task@main
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          github-token: ${{ github.token }}
           task: reportPrComment
           payload: >-
             {
