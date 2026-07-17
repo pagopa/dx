@@ -14,16 +14,17 @@ import {
   revokeGitHubAppToken,
 } from "./octokit.ts";
 
-export interface PublishToGithubInput {
-  description: string;
-  githubAppCredentials?: GitHubAppCredentials;
-  githubOwner: string;
-  githubToken: string;
-  projectRoot: string;
-  provider: string;
-  version: string;
-  workspaceRoot: string;
-}
+export type PublishToGithubInput = PublishToGithubOptions &
+  (
+    | {
+        githubAppCredentials: GitHubAppCredentials;
+        useGitHubAppAuthentication: true;
+      }
+    | {
+        githubToken: string;
+        useGitHubAppAuthentication: false;
+      }
+  );
 
 export type PublishToGithubResult = "published" | "skipped";
 
@@ -31,6 +32,15 @@ interface PublishGitHubAuthentication {
   octokit: Octokit;
   shouldRevokeToken: boolean;
   token: string;
+}
+
+interface PublishToGithubOptions {
+  description: string;
+  githubOwner: string;
+  projectRoot: string;
+  provider: string;
+  version: string;
+  workspaceRoot: string;
 }
 
 export const getRepoNameFromProjectRoot = (
@@ -75,7 +85,7 @@ const clearExportWorkingTree = async (
 const createPublishGitHubAuthentication = async (
   input: PublishToGithubInput,
 ): Promise<PublishGitHubAuthentication> => {
-  if (input.githubAppCredentials === undefined) {
+  if (!input.useGitHubAppAuthentication) {
     return {
       octokit: new Octokit({ auth: input.githubToken }),
       shouldRevokeToken: false,

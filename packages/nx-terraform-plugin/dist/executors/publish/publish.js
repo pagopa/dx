@@ -16,7 +16,7 @@ const createGitHubAppOctokit = (credentials) => new Octokit({
 	},
 	authStrategy: createAppAuth
 });
-const createGitHubAppToken = async (owner, credentials, appOctokit = createGitHubAppOctokit(credentials)) => {
+const createGitHubAppToken = async (owner, credentials, appOctokit) => {
 	const installation = await appOctokit.rest.apps.getOrgInstallation({ org: owner });
 	return (await createAppAuth({
 		appId: credentials.clientId,
@@ -84,7 +84,7 @@ const clearExportWorkingTree = async (exportDirectory) => {
 	})));
 };
 const createPublishGitHubAuthentication = async (input) => {
-	if (input.githubAppCredentials === void 0) return {
+	if (!input.useGitHubAppAuthentication) return {
 		octokit: new Octokit({ auth: input.githubToken }),
 		shouldRevokeToken: false,
 		token: input.githubToken
@@ -196,35 +196,28 @@ const nxReleasePublishExecutorOptionsSchema = z.object({
 	githubOwner: publishSchema.shape.github.shape.owner,
 	projectRoot: z.string().min(1),
 	provider: publishSchema.shape.provider,
-	useGitHubAppAuthentication: z.boolean().default(false),
 	version: publishSchema.shape.version,
 	workspaceRoot: z.string()
 });
-const hasOwnProperty = (value, property) => Object.prototype.hasOwnProperty.call(value, property);
-const nxReleasePublishExecutorAuthenticationSchema = z.preprocess((input) => {
-	if (input !== null && typeof input === "object" && !Array.isArray(input) && !hasOwnProperty(input, "useGitHubAppAuthentication")) return {
-		...input,
-		useGitHubAppAuthentication: false
+const nxReleasePublishExecutorGitHubAppOptionsSchema = nxReleasePublishExecutorOptionsSchema.extend({ useGitHubAppAuthentication: z.literal(true) });
+const nxReleasePublishExecutorGitHubTokenOptionsSchema = nxReleasePublishExecutorOptionsSchema.extend({ useGitHubAppAuthentication: z.literal(false) });
+const nxReleasePublishExecutorAuthenticationSchema = z.looseObject({ useGitHubAppAuthentication: z.boolean().default(false) }).pipe(z.discriminatedUnion("useGitHubAppAuthentication", [nxReleasePublishExecutorGitHubAppOptionsSchema.extend({ environment: githubAppEnvironmentSchema }), nxReleasePublishExecutorGitHubTokenOptionsSchema.extend({ environment: githubTokenEnvironmentSchema })])).transform((options) => {
+	if (options.useGitHubAppAuthentication) {
+		const { environment, ...publishOptions } = options;
+		return {
+			...publishOptions,
+			githubAppCredentials: {
+				clientId: environment.GH_APP_CLIENT_ID,
+				privateKey: environment.GH_APP_KEY
+			}
+		};
+	}
+	const { environment: githubToken, ...publishOptions } = options;
+	return {
+		...publishOptions,
+		githubToken
 	};
-	return input;
-}, z.xor([nxReleasePublishExecutorOptionsSchema.extend({
-	environment: githubAppEnvironmentSchema,
-	useGitHubAppAuthentication: z.literal(true)
-}).transform(({ environment, ...options }) => ({
-	...options,
-	githubAppCredentials: {
-		clientId: environment.GH_APP_CLIENT_ID,
-		privateKey: environment.GH_APP_KEY
-	},
-	githubToken: ""
-})), nxReleasePublishExecutorOptionsSchema.extend({
-	environment: githubTokenEnvironmentSchema,
-	useGitHubAppAuthentication: z.literal(false).default(false)
-}).transform(({ environment, ...options }) => ({
-	...options,
-	githubAppCredentials: void 0,
-	githubToken: environment
-}))]));
+});
 const nxReleasePublishExecutorSchema = nxReleasePublishExecutorAuthenticationSchema;
 
 //#endregion
@@ -237,10 +230,8 @@ const runExecutor = async (options) => {
 	});
 	await configureLogger();
 	if (!parseResult.success) {
-		const issues = parseResult.error.issues.flatMap((issue) => issue.code === "invalid_union" ? issue.errors.flat() : [issue]);
-		const hasEnvironmentIssue = issues.some((issue) => issue.path[0] === "environment");
-		logger.warn(hasEnvironmentIssue ? "Invalid GitHub authentication environment" : "Invalid publish options", {
-			issues,
+		logger.warn("Invalid publish options", {
+			error: z.prettifyError(parseResult.error),
 			path: options.projectRoot ?? "publish options"
 		});
 		return { success: false };
@@ -251,16 +242,7 @@ const runExecutor = async (options) => {
 		projectRoot: validatedOptions.projectRoot,
 		repoName
 	});
-	if (await publishToGithub({
-		description: validatedOptions.description,
-		githubAppCredentials: validatedOptions.githubAppCredentials,
-		githubOwner: validatedOptions.githubOwner,
-		githubToken: validatedOptions.githubToken,
-		projectRoot: validatedOptions.projectRoot,
-		provider: validatedOptions.provider,
-		version: validatedOptions.version,
-		workspaceRoot: validatedOptions.workspaceRoot
-	}) === "skipped") logger.info("Skipping release, tag already exists");
+	if (await publishToGithub(validatedOptions) === "skipped") logger.info("Skipping release, tag already exists");
 	return { success: true };
 };
 

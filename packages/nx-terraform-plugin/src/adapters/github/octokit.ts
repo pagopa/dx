@@ -24,7 +24,7 @@ export const createGitHubAppOctokit = (
 export const createGitHubAppToken = async (
   owner: string,
   credentials: GitHubAppCredentials,
-  appOctokit: Octokit = createGitHubAppOctokit(credentials),
+  appOctokit: Octokit,
 ): Promise<string> => {
   const installation = await appOctokit.rest.apps.getOrgInstallation({
     org: owner,

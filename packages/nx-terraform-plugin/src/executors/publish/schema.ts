@@ -33,56 +33,52 @@ const nxReleasePublishExecutorOptionsSchema = z.object({
   githubOwner: publishSchema.shape.github.shape.owner,
   projectRoot: z.string().min(1),
   provider: publishSchema.shape.provider,
-  useGitHubAppAuthentication: z.boolean().default(false),
   version: publishSchema.shape.version,
   workspaceRoot: z.string(),
 });
 
-const hasOwnProperty = (value: object, property: string): boolean =>
-  Object.prototype.hasOwnProperty.call(value, property);
+const nxReleasePublishExecutorGitHubAppOptionsSchema =
+  nxReleasePublishExecutorOptionsSchema.extend({
+    useGitHubAppAuthentication: z.literal(true),
+  });
 
-const nxReleasePublishExecutorAuthenticationSchema = z.preprocess(
-  (input) => {
-    if (
-      input !== null &&
-      typeof input === "object" &&
-      !Array.isArray(input) &&
-      !hasOwnProperty(input, "useGitHubAppAuthentication")
-    ) {
-      return {
-        ...input,
-        useGitHubAppAuthentication: false,
-      };
-    }
+const nxReleasePublishExecutorGitHubTokenOptionsSchema =
+  nxReleasePublishExecutorOptionsSchema.extend({
+    useGitHubAppAuthentication: z.literal(false),
+  });
 
-    return input;
-  },
-  z.xor([
-    nxReleasePublishExecutorOptionsSchema
-      .extend({
+const nxReleasePublishExecutorAuthenticationSchema = z
+  .looseObject({
+    useGitHubAppAuthentication: z.boolean().default(false),
+  })
+  .pipe(
+    z.discriminatedUnion("useGitHubAppAuthentication", [
+      nxReleasePublishExecutorGitHubAppOptionsSchema.extend({
         environment: githubAppEnvironmentSchema,
-        useGitHubAppAuthentication: z.literal(true),
-      })
-      .transform(({ environment, ...options }) => ({
-        ...options,
+      }),
+      nxReleasePublishExecutorGitHubTokenOptionsSchema.extend({
+        environment: githubTokenEnvironmentSchema,
+      }),
+    ]),
+  )
+  .transform((options) => {
+    if (options.useGitHubAppAuthentication) {
+      const { environment, ...publishOptions } = options;
+      return {
+        ...publishOptions,
         githubAppCredentials: {
           clientId: environment.GH_APP_CLIENT_ID,
           privateKey: environment.GH_APP_KEY,
         },
-        githubToken: "",
-      })),
-    nxReleasePublishExecutorOptionsSchema
-      .extend({
-        environment: githubTokenEnvironmentSchema,
-        useGitHubAppAuthentication: z.literal(false).default(false),
-      })
-      .transform(({ environment, ...options }) => ({
-        ...options,
-        githubAppCredentials: undefined,
-        githubToken: environment,
-      })),
-  ]),
-);
+      };
+    }
+
+    const { environment: githubToken, ...publishOptions } = options;
+    return {
+      ...publishOptions,
+      githubToken,
+    };
+  });
 
 export const nxReleasePublishExecutorSchema =
   nxReleasePublishExecutorAuthenticationSchema;
@@ -90,6 +86,8 @@ export const nxReleasePublishExecutorSchema =
 export type NxReleasePublishExecutorInput =
   Partial<NxReleasePublishExecutorSchema>;
 
-export type NxReleasePublishExecutorSchema = z.input<
-  typeof nxReleasePublishExecutorOptionsSchema
->;
+export type NxReleasePublishExecutorSchema =
+  | z.input<typeof nxReleasePublishExecutorGitHubAppOptionsSchema>
+  | (z.input<typeof nxReleasePublishExecutorOptionsSchema> & {
+      useGitHubAppAuthentication?: false;
+    });

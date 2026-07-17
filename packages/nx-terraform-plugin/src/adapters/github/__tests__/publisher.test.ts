@@ -56,7 +56,11 @@ vi.mock("node:os", () => ({
   tmpdir: osMocks.tmpdir,
 }));
 
-import { getRepoNameFromProjectRoot, publishToGithub } from "../publisher.ts";
+import {
+  getRepoNameFromProjectRoot,
+  publishToGithub,
+  type PublishToGithubInput,
+} from "../publisher.ts";
 
 const defaultCommandResult = {
   exitCode: 0,
@@ -64,19 +68,23 @@ const defaultCommandResult = {
   stdout: "",
 };
 
-const publishInput = {
+const publishOptions = {
   description: "Terraform module description",
-  githubAppCredentials: {
-    clientId: "Iv23.client-id",
-    privateKey: "private-key",
-  },
   githubOwner: "pagopa-dx",
-  githubToken: "legacy-token",
   projectRoot: "infra/modules/azure_core_infra",
   provider: "aws",
   version: "1.2.3",
   workspaceRoot: "/repo",
 };
+
+const publishInput = {
+  ...publishOptions,
+  githubAppCredentials: {
+    clientId: "Iv23.client-id",
+    privateKey: "private-key",
+  },
+  useGitHubAppAuthentication: true,
+} satisfies PublishToGithubInput;
 
 const expectedRepo = "terraform-aws-azure-core-infra";
 const expectedRepoUrl = `https://github.com/pagopa-dx/${expectedRepo}.git`;
@@ -362,10 +370,10 @@ it("configures git credentials and keeps the remote URL token-free", async () =>
 it("uses the provided token without generating a GitHub App token", async () => {
   createGitCommandHarness();
   const legacyInput = {
-    ...publishInput,
-    githubAppCredentials: undefined,
+    ...publishOptions,
     githubToken: "legacy-token",
-  };
+    useGitHubAppAuthentication: false,
+  } satisfies PublishToGithubInput;
 
   await publishToGithub(legacyInput);
 
