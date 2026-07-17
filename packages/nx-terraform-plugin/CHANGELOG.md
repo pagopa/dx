@@ -1,3 +1,14 @@
+## 0.5.1 (2026-07-17)
+
+### 🩹 Fixes
+
+- Refine Terraform module publish GitHub authentication by reusing Octokit clients and validating authentication inputs with a single schema. ([#1999](https://github.com/pagopa/dx/pull/1999))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+- Mario Mupo @mamu0
+
 ## 0.5.0 (2026-07-16)
 
 ### 🚀 Features
