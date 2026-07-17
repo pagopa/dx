@@ -101,6 +101,23 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		throw error;
 	}
 };
+const getPlanTarget = (opts, executor) => ({
+	cache: false,
+	configurations: { ci: {
+		refresh: true,
+		report: true,
+		verbose: false
+	} },
+	dependsOn: [opts.initTargetName],
+	executor,
+	options: {
+		projectRoot: "{projectRoot}",
+		refresh: true,
+		report: false,
+		sensitiveKeys: opts.sensitiveOutputKeys,
+		verbose: true
+	}
+});
 const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifest) => {
 	const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
 	const formatArgs = ["-list=true", "-recursive=true"];
@@ -194,23 +211,7 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 		dependsOn: [opts.initTargetName],
 		options: { cwd }
 	}]);
-	if (projectType === "application") targets.push([opts.planTargetName, {
-		cache: false,
-		configurations: { ci: {
-			refresh: true,
-			report: true,
-			verbose: false
-		} },
-		dependsOn: [opts.initTargetName],
-		executor: "@pagopa/nx-terraform-plugin:plan",
-		options: {
-			projectRoot: "{projectRoot}",
-			refresh: true,
-			report: false,
-			sensitiveKeys: opts.sensitiveOutputKeys,
-			verbose: true
-		}
-	}], [opts.applyTargetName, {
+	if (projectType === "application") targets.push([opts.planTargetName, getPlanTarget(opts, "@pagopa/nx-terraform-plugin:plan")], [opts.planUploadTargetName, getPlanTarget(opts, "@pagopa/nx-terraform-plugin:plan-upload")], [opts.applyTargetName, {
 		cache: false,
 		command: `terraform apply`,
 		dependsOn: [opts.initTargetName],

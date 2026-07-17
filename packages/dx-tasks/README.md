@@ -8,7 +8,7 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `terraformPlan`       | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                                                                                                                                    |
 | `terraformPlanUpload` | Runs `terraformPlan` with a fixed output path, then uploads the resulting plan bundle (plan file, lock file, and module cache) to the same cloud storage backend used for the Terraform state, so it can be applied later by `terraformApply`.                   |
-| `terraformApply`      | Downloads the plan bundle uploaded by `terraformPlanUpload` (recomputing its deterministic storage path from the Terraform backend state and the current CI run), applies it non-interactively, and deletes the remote bundle only after a **successful** apply. |
+| `terraformApply`      | Downloads the plan bundle uploaded by `terraformPlanUpload` (recomputing its deterministic storage path from the Terraform backend state and the current CI run), applies it non-interactively, and attempts to delete the remote bundle only after a **successful** apply. |
 | `renderReport`        | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers.                                                                                                               |
 | `prComment`           | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                                                                                                                                     |
 | `reportPrComment`     | Renders persisted reports and posts the rendered Markdown as a GitHub pull request comment.                                                                                                                                                                      |
@@ -101,12 +101,13 @@ projects that must be applied non-interactively (e.g. from CI), while still guar
    the backend state key and the `GITHUB_RUN_ID` environment variable.
 2. `terraformApply` independently recomputes that same deterministic path (reading the same
    `.terraform/terraform.tfstate` and the same `GITHUB_RUN_ID`), downloads and extracts the bundle,
-   runs `terraform apply` non-interactively against the exact downloaded plan file, and deletes the
-   remote bundle only after a **successful** apply. On failure, the bundle is deliberately left in
-   place: a re-run of the same workflow run's apply job can retry against the exact reviewed plan,
-   and the bundle remains available for forensic inspection. Bundles left behind by abandoned or
-   failed workflow runs are not cleaned up automatically and rely on the storage backend's own
-   retention/lifecycle policy.
+   runs `terraform apply` non-interactively against the exact downloaded plan file, and attempts to
+   delete the remote bundle only after a **successful** apply. Cleanup failures are logged as
+   warnings without changing the successful apply result. On apply failure, the bundle is
+   deliberately left in place: a re-run of the same workflow run's apply job can retry against the
+   exact reviewed plan, and the bundle remains available for forensic inspection. Bundles left
+   behind by abandoned or failed workflow runs are not cleaned up automatically and rely on the
+   storage backend's own retention/lifecycle policy.
 
 Because the remote path is derived deterministically rather than passed explicitly between steps,
 the two tasks can run in separate CI jobs — even with different cloud credentials — as long as both

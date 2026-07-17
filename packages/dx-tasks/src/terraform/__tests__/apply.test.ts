@@ -3,8 +3,6 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { TerraformApplyPayload } from "../apply.ts";
-
 import { ReportStore } from "../../report-store.ts";
 
 const { mockRunCommand } = vi.hoisted(() => ({
@@ -36,6 +34,7 @@ vi.mock("../plan-storage.ts", () => ({
 
 import {
   terraformApply,
+  payloadSchema as terraformApplyPayloadSchema,
   terraformApplyReportNamespace,
   terraformApplyReportSchema,
 } from "../apply.ts";
@@ -128,6 +127,7 @@ describe("terraformApply", () => {
     vi.stubEnv("CI", "false");
     vi.stubEnv("GITHUB_RUN_ID", "12345");
     vi.spyOn(console, "log").mockImplementation(() => undefined);
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
 
     mockReadBackendConfig.mockResolvedValue(azureBackend);
     mockComputePlanPath.mockReturnValue(
@@ -250,6 +250,26 @@ Apply complete! Resources: 0 added, 0 changed, 0 destroyed.`,
     });
   });
 
+  it("warns without failing when remote plan bundle cleanup fails", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: applies.changes,
+    });
+    mockDeleteRemotePlanBundle.mockRejectedValue(
+      new Error("Storage unavailable"),
+    );
+
+    await expect(
+      terraformApply({ modulePath: "/tmp/module" }),
+    ).resolves.toBeUndefined();
+
+    expect(console.warn).toHaveBeenCalledExactlyOnceWith(
+      'Failed to delete remote Terraform plan bundle at "prod/plan-artifacts/terraform.tfstate.12345": Storage unavailable',
+    );
+  });
+
   it("does not delete the remote plan bundle when the apply fails", async () => {
     mockRunCommand.mockResolvedValue({
       exitCode: 1,
@@ -349,14 +369,9 @@ Apply complete! Resources: 0 added, 0 changed, 0 destroyed.`,
 
 describe("terraformApply payload validation", () => {
   it("requires a non-empty modulePath", () => {
-    const invalidPayload = { modulePath: "" } as TerraformApplyPayload;
-
     expect(() =>
-      terraformApplyReportSchema.parse({
-        applyOutput: "",
-        modulePath: invalidPayload.modulePath,
-        notices: [],
-        success: true,
+      terraformApplyPayloadSchema.parse({
+        modulePath: "",
       }),
     ).toThrow();
   });

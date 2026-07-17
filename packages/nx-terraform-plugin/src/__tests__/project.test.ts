@@ -29,6 +29,7 @@ const customOptions = parseOptions({
   lintTargetName: "terraform-lint",
   outputTargetName: "terraform-output",
   planTargetName: "terraform-plan",
+  planUploadTargetName: "terraform-plan-upload",
   testTargetName: "terraform-test",
   validateTargetName: "terraform-validate",
 });
@@ -223,6 +224,7 @@ describe("getProject applications", () => {
         "tf-console",
         "tf-output",
         "tf-plan",
+        "tf-plan-upload",
         "tf-apply",
       ]);
     });
@@ -234,6 +236,7 @@ describe("getProject applications", () => {
       expect(targets["tf-console"]?.cache).toBe(false);
       expect(targets["tf-output"]?.cache).toBe(false);
       expect(targets["tf-plan"]?.cache).toBe(false);
+      expect(targets["tf-plan-upload"]?.cache).toBe(false);
       expect(targets["tf-apply"]?.cache).toBe(false);
     });
 
@@ -260,6 +263,7 @@ describe("getProject applications", () => {
         "tf-console",
         "tf-output",
         "tf-plan",
+        "tf-plan-upload",
         "tf-apply",
       ]);
       expect(targets.tflint).toEqual(getExpectedLintTarget(root));
@@ -280,6 +284,7 @@ describe("getProject applications", () => {
         "tf-console",
         "tf-output",
         "tf-plan",
+        "tf-plan-upload",
         "tf-apply",
       ]);
       expect(targets["terraform-docs"]).toBeUndefined();
@@ -292,7 +297,34 @@ describe("getProject applications", () => {
 
       expect(targets["tf-test"]?.dependsOn).toEqual(["tf-init"]);
       expect(targets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
+      expect(targets["tf-plan-upload"]?.dependsOn).toEqual(["tf-init"]);
       expect(targets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
+    });
+
+    it("uses the configured plan-upload target name", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(customOptions, root));
+
+      expect(targets["terraform-plan-upload"]).toEqual({
+        cache: false,
+        configurations: {
+          ci: {
+            refresh: true,
+            report: true,
+            verbose: false,
+          },
+        },
+        dependsOn: ["terraform-init"],
+        executor: "@pagopa/nx-terraform-plugin:plan-upload",
+        options: {
+          projectRoot: "{projectRoot}",
+          refresh: true,
+          report: false,
+          sensitiveKeys: [],
+          verbose: true,
+        },
+      });
+      expect(targets["tf-plan-upload"]).toBeUndefined();
     });
 
     it("adds the resource environment tag to flat resource applications", () => {
@@ -367,6 +399,7 @@ describe("getProject libraries", () => {
       expect(project.projectType).toBe("library");
       expect(project.tags).toEqual(["terraform"]);
       expect(getTargetsOrThrow(project)["tf-plan"]).toBeUndefined();
+      expect(getTargetsOrThrow(project)["tf-plan-upload"]).toBeUndefined();
       expect(getTargetsOrThrow(project)["tf-apply"]).toBeUndefined();
     });
 

@@ -700,10 +700,14 @@ async function terraformApply({ modulePath, report = false, sensitiveKeys = [], 
 		workingDirectory: modulePath
 	});
 	await executeTerraformApply(modulePath, verbose, report, sensitiveKeys, context);
-	await deleteRemotePlanBundle({
-		backend,
-		planPath
-	});
+	try {
+		await deleteRemotePlanBundle({
+			backend,
+			planPath
+		});
+	} catch (error) {
+		console.warn(`Failed to delete remote Terraform plan bundle at "${planPath}": ${error instanceof Error ? error.message : String(error)}`);
+	}
 }
 
 //#endregion
