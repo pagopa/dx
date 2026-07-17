@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: "app-prod-cd"
+      terraform-deployment-workflow:
+        description: "Workflow file in the caller repository that deploys one released Terraform environment"
+        required: false
+        type: string
+        default: "release-terraform-environment-v1.yaml"
     secrets:
       app-client-id:
         description: "GitHub App Client ID for authentication"
@@ -77,6 +82,7 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
+        id: nx-release
         uses: pagopa/dx/actions/nx-release@main
         env:
           GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
@@ -84,3 +90,43 @@ jobs:
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
+    outputs:
+      published-pr-number: ${{ steps.nx-release.outputs.published-pr-number }}
+      released-environment-matrix: ${{ steps.nx-release.outputs.released-environment-matrix }}
+      release-mode: ${{ steps.nx-release.outputs.release-mode }}
+
+  dispatch-infra-releases:
+    name: Dispatch Infra Release (${{ matrix.target.project }})
+    needs: release
+    if: ${{ needs.release.result == 'success' && needs.release.outputs.release-mode == 'publish' && needs.release.outputs.released-environment-matrix != '[]' }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.release.outputs.released-environment-matrix) }}
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Dispatch Terraform environment release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          DEPLOYMENT_WORKFLOW: ${{ inputs.terraform-deployment-workflow }}
+          NX_PROJECT: ${{ matrix.target.project }}
+          PROJECT_ROOT: ${{ matrix.target.projectRoot }}
+          SOURCE_REF: ${{ github.sha }}
+          WORKFLOW_REF: ${{ github.event.repository.default_branch }}
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: process.env.DEPLOYMENT_WORKFLOW,
+              ref: process.env.WORKFLOW_REF,
+              inputs: {
+                project: process.env.NX_PROJECT,
+                "project-root": process.env.PROJECT_ROOT,
+                "source-ref": process.env.SOURCE_REF,
+              },
+            });

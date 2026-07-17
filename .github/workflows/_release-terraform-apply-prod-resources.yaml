@@ -2,13 +2,6 @@ name: Terraform apply on prod resources
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "infra/resources/prod/**"
-      - "infra/resources/_modules/**"
-      - ".github/workflows/_release-terraform-apply-prod-resources.yaml"
 jobs:
   deploy:
     uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
