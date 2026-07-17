@@ -8,17 +8,24 @@ export interface GitHubAppCredentials {
   privateKey: string;
 }
 
-export const createGitHubAppToken = async (
-  owner: string,
+export const createGitHubAppOctokit = (
   credentials: GitHubAppCredentials,
-): Promise<string> => {
-  const appOctokit = new Octokit({
+): Octokit =>
+  new Octokit({
     auth: {
       appId: credentials.clientId,
       privateKey: credentials.privateKey,
     },
     authStrategy: createAppAuth,
   });
+
+// Resolves the owner installation and creates the short-lived token used by
+// git and repository API calls during the Terraform module publish flow.
+export const createGitHubAppToken = async (
+  owner: string,
+  credentials: GitHubAppCredentials,
+  appOctokit: Octokit,
+): Promise<string> => {
   const installation = await appOctokit.rest.apps.getOrgInstallation({
     org: owner,
   });
@@ -37,8 +44,7 @@ export const createGitHubAppToken = async (
   return authentication.token;
 };
 
-export const revokeGitHubAppToken = async (token: string): Promise<void> => {
-  const octokit = new Octokit({ auth: token });
+export const revokeGitHubAppToken = async (octokit: Octokit): Promise<void> => {
   await octokit.rest.apps.revokeInstallationAccessToken();
 };
 
@@ -60,12 +66,8 @@ const getAuthenticatedUserLogin = async (
 export const ensureGitHubRepository = async (
   owner: string,
   repo: string,
-  token: string,
+  octokit: Octokit,
 ): Promise<void> => {
-  const octokit = new Octokit({
-    auth: token,
-  });
-
   try {
     await octokit.rest.repos.get({
       owner,

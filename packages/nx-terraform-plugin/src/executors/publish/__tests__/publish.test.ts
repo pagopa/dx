@@ -94,9 +94,9 @@ describe("Publish Executor", () => {
         privateKey: "private-key\nsecond-line",
       },
       githubOwner: "pagopa-dx",
-      githubToken: "",
       projectRoot: "infra/modules/azure_core_infra",
       provider: "aws",
+      useGitHubAppAuthentication: true,
       version: "1.2.3",
       workspaceRoot: "/repo",
     });
@@ -129,12 +129,11 @@ describe("Publish Executor authentication", () => {
 
     expect(output.success).toBe(false);
     expect(loggerMocks.warn).toHaveBeenCalledWith(
-      "Invalid GitHub authentication environment",
+      "Invalid publish options",
       expect.objectContaining({
-        issues: expect.arrayContaining([
-          expect.objectContaining({ path: ["GH_APP_CLIENT_ID"] }),
-          expect.objectContaining({ path: ["GH_APP_KEY"] }),
-        ]),
+        error: expect.stringMatching(
+          /environment\.(GH_APP_CLIENT_ID|GH_APP_KEY)/,
+        ),
       }),
     );
     expect(publisherMocks.publishToGithub).not.toHaveBeenCalled();
@@ -156,12 +155,16 @@ describe("Publish Executor authentication", () => {
     const output = await executor(options, baseContext);
 
     expect(output.success).toBe(true);
-    expect(publisherMocks.publishToGithub).toHaveBeenCalledWith(
-      expect.objectContaining({
-        githubOwner: "manifest-owner",
-        githubToken: "legacy-token",
-      }),
-    );
+    expect(publisherMocks.publishToGithub).toHaveBeenCalledWith({
+      description: "Terraform module description",
+      githubOwner: "manifest-owner",
+      githubToken: "legacy-token",
+      projectRoot: "infra/modules/azure_core_infra",
+      provider: "aws",
+      useGitHubAppAuthentication: false,
+      version: "1.2.3",
+      workspaceRoot: "/repo",
+    });
   });
 
   it("falls back to GITHUB_TOKEN when GH_TOKEN is not set", async () => {
@@ -228,17 +231,7 @@ describe("Publish Executor validation", () => {
     expect(loggerMocks.warn).toHaveBeenCalledWith(
       "Invalid publish options",
       expect.objectContaining({
-        issues: expect.arrayContaining([
-          expect.objectContaining({
-            path: ["githubOwner"],
-          }),
-          expect.objectContaining({
-            path: ["projectRoot"],
-          }),
-          expect.objectContaining({
-            path: ["workspaceRoot"],
-          }),
-        ]),
+        error: expect.stringMatching(/githubOwner|projectRoot|workspaceRoot/),
         path: "publish options",
       }),
     );

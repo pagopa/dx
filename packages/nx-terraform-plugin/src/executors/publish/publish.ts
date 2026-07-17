@@ -1,4 +1,5 @@
 import { PromiseExecutor } from "@nx/devkit";
+import { z } from "zod/v4";
 
 import {
   getRepoNameFromProjectRoot,
@@ -6,8 +7,6 @@ import {
 } from "../../adapters/github/publisher.ts";
 import { configureLogger, getPackageLogger } from "../../logger.ts";
 import {
-  githubAppEnvironmentSchema,
-  githubTokenEnvironmentSchema,
   type NxReleasePublishExecutorInput,
   nxReleasePublishExecutorSchema,
 } from "./schema.ts";
@@ -18,13 +17,16 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
   options,
 ) => {
   const logger = getPackageLogger(["publish"]);
-  const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
+  const parseResult = nxReleasePublishExecutorSchema.safeParse({
+    ...options,
+    environment: process.env,
+  });
 
   await configureLogger();
 
   if (!parseResult.success) {
     logger.warn("Invalid publish options", {
-      issues: parseResult.error.issues,
+      error: z.prettifyError(parseResult.error),
       path: options.projectRoot ?? "publish options",
     });
     return {
@@ -33,40 +35,6 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
   }
 
   const validatedOptions = parseResult.data;
-  let githubAppCredentials:
-    | undefined
-    | { clientId: string; privateKey: string };
-  let githubToken: string;
-
-  if (validatedOptions.useGitHubAppAuthentication) {
-    const environmentParseResult = githubAppEnvironmentSchema.safeParse(
-      process.env,
-    );
-    if (!environmentParseResult.success) {
-      logger.warn("Invalid GitHub authentication environment", {
-        issues: environmentParseResult.error.issues,
-        path: validatedOptions.projectRoot,
-      });
-      return { success: false };
-    }
-    githubAppCredentials = {
-      clientId: environmentParseResult.data.GH_APP_CLIENT_ID,
-      privateKey: environmentParseResult.data.GH_APP_KEY,
-    };
-    githubToken = "";
-  } else {
-    const environmentParseResult = githubTokenEnvironmentSchema.safeParse(
-      process.env,
-    );
-    if (!environmentParseResult.success) {
-      logger.warn("Invalid GitHub authentication environment", {
-        issues: environmentParseResult.error.issues,
-        path: validatedOptions.projectRoot,
-      });
-      return { success: false };
-    }
-    githubToken = environmentParseResult.data;
-  }
 
   const repoName = getRepoNameFromProjectRoot(
     validatedOptions.projectRoot,
@@ -81,16 +49,7 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
     },
   );
 
-  const publishResult = await publishToGithub({
-    description: validatedOptions.description,
-    githubAppCredentials,
-    githubOwner: validatedOptions.githubOwner,
-    githubToken,
-    projectRoot: validatedOptions.projectRoot,
-    provider: validatedOptions.provider,
-    version: validatedOptions.version,
-    workspaceRoot: validatedOptions.workspaceRoot,
-  });
+  const publishResult = await publishToGithub(validatedOptions);
 
   if (publishResult === "skipped") {
     logger.info("Skipping release, tag already exists");

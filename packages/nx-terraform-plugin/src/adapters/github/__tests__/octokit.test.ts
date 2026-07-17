@@ -51,8 +51,10 @@ vi.mock("octokit", () => ({
 }));
 
 import { createAppAuth } from "@octokit/auth-app";
+import { Octokit } from "octokit";
 
 import {
+  createGitHubAppOctokit,
   createGitHubAppToken,
   ensureGitHubRepository,
   revokeGitHubAppToken,
@@ -64,13 +66,32 @@ const appCredentials = {
 };
 const token = "installation-token";
 
+beforeEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("createGitHubAppOctokit", () => {
+  it("creates an app-authenticated Octokit client", () => {
+    createGitHubAppOctokit(appCredentials);
+
+    expect(octokitMocks.Octokit).toHaveBeenCalledWith({
+      auth: {
+        appId: "Iv23.client-id",
+        privateKey: "private-key",
+      },
+      authStrategy: createAppAuth,
+    });
+  });
+});
+
 describe("createGitHubAppToken", () => {
   it("creates an owner installation token with contents write permission", async () => {
     octokitMocks.getOrgInstallation.mockResolvedValue({ data: { id: 123 } });
     octokitMocks.auth.mockResolvedValue({ token });
+    const appOctokit = createGitHubAppOctokit(appCredentials);
 
     await expect(
-      createGitHubAppToken("pagopa-dx", appCredentials),
+      createGitHubAppToken("pagopa-dx", appCredentials, appOctokit),
     ).resolves.toBe(token);
 
     expect(octokitMocks.getOrgInstallation).toHaveBeenCalledWith({
@@ -93,8 +114,9 @@ describe("createGitHubAppToken", () => {
 describe("revokeGitHubAppToken", () => {
   it("revokes the installation token", async () => {
     octokitMocks.revokeInstallationAccessToken.mockResolvedValue(undefined);
+    const octokit = new Octokit({ auth: token });
 
-    await expect(revokeGitHubAppToken(token)).resolves.toBeUndefined();
+    await expect(revokeGitHubAppToken(octokit)).resolves.toBeUndefined();
 
     expect(octokitMocks.Octokit).toHaveBeenCalledWith({ auth: token });
     expect(octokitMocks.revokeInstallationAccessToken).toHaveBeenCalledTimes(1);
@@ -102,17 +124,14 @@ describe("revokeGitHubAppToken", () => {
 });
 
 describe("ensureGitHubRepository", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("returns created false when the repository exists", async () => {
     octokitMocks.get.mockResolvedValue({ data: {} });
+    const octokit = new Octokit({ auth: token });
 
     const result = await ensureGitHubRepository(
       "pagopa-dx",
       "terraform-aws-x",
-      token,
+      octokit,
     );
 
     expect(result).toBeUndefined();
@@ -133,11 +152,12 @@ describe("ensureGitHubRepository", () => {
       data: { type: "Organization" },
     });
     octokitMocks.createInOrg.mockResolvedValue({ data: {} });
+    const octokit = new Octokit({ auth: token });
 
     const result = await ensureGitHubRepository(
       "pagopa-dx",
       "terraform-aws-x",
-      token,
+      octokit,
     );
 
     expect(result).toBeUndefined();
@@ -165,11 +185,12 @@ describe("ensureGitHubRepository", () => {
     octokitMocks.createForAuthenticatedUser.mockResolvedValueOnce({
       data: {},
     });
+    const octokit = new Octokit({ auth: token });
 
     const result = await ensureGitHubRepository(
       "pagopa-user",
       "terraform-aws-x",
-      token,
+      octokit,
     );
 
     expect(result).toBeUndefined();
@@ -195,9 +216,10 @@ describe("ensureGitHubRepository", () => {
     octokitMocks.getAuthenticated.mockResolvedValueOnce({
       data: { login: "another-user" },
     });
+    const octokit = new Octokit({ auth: token });
 
     await expect(
-      ensureGitHubRepository("pagopa-user", "terraform-aws-x", token),
+      ensureGitHubRepository("pagopa-user", "terraform-aws-x", octokit),
     ).rejects.toThrow(
       'Cannot create repository for user owner "pagopa-user" with authenticated user "another-user".',
     );
@@ -222,9 +244,10 @@ describe("ensureGitHubRepository", () => {
         status: 403,
       }),
     );
+    const octokit = new Octokit({ auth: token });
 
     await expect(
-      ensureGitHubRepository("pagopa-user", "terraform-aws-x", token),
+      ensureGitHubRepository("pagopa-user", "terraform-aws-x", octokit),
     ).rejects.toThrow(
       'Cannot create repository for user owner "pagopa-user" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.',
     );

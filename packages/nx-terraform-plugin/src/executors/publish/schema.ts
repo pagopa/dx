@@ -28,19 +28,66 @@ export const githubTokenEnvironmentSchema = z
     return token;
   });
 
-export const nxReleasePublishExecutorSchema = z.object({
+const nxReleasePublishExecutorOptionsSchema = z.object({
   description: publishSchema.shape.description,
   githubOwner: publishSchema.shape.github.shape.owner,
   projectRoot: z.string().min(1),
   provider: publishSchema.shape.provider,
-  useGitHubAppAuthentication: z.boolean().default(false),
   version: publishSchema.shape.version,
   workspaceRoot: z.string(),
 });
 
+const nxReleasePublishExecutorGitHubAppOptionsSchema =
+  nxReleasePublishExecutorOptionsSchema.extend({
+    useGitHubAppAuthentication: z.literal(true),
+  });
+
+const nxReleasePublishExecutorGitHubTokenOptionsSchema =
+  nxReleasePublishExecutorOptionsSchema.extend({
+    useGitHubAppAuthentication: z.literal(false),
+  });
+
+const nxReleasePublishExecutorAuthenticationSchema = z
+  .looseObject({
+    useGitHubAppAuthentication: z.boolean().default(false),
+  })
+  .pipe(
+    z.discriminatedUnion("useGitHubAppAuthentication", [
+      nxReleasePublishExecutorGitHubAppOptionsSchema.extend({
+        environment: githubAppEnvironmentSchema,
+      }),
+      nxReleasePublishExecutorGitHubTokenOptionsSchema.extend({
+        environment: githubTokenEnvironmentSchema,
+      }),
+    ]),
+  )
+  .transform((options) => {
+    if (options.useGitHubAppAuthentication) {
+      const { environment, ...publishOptions } = options;
+      return {
+        ...publishOptions,
+        githubAppCredentials: {
+          clientId: environment.GH_APP_CLIENT_ID,
+          privateKey: environment.GH_APP_KEY,
+        },
+      };
+    }
+
+    const { environment: githubToken, ...publishOptions } = options;
+    return {
+      ...publishOptions,
+      githubToken,
+    };
+  });
+
+export const nxReleasePublishExecutorSchema =
+  nxReleasePublishExecutorAuthenticationSchema;
+
 export type NxReleasePublishExecutorInput =
   Partial<NxReleasePublishExecutorSchema>;
 
-export type NxReleasePublishExecutorSchema = z.input<
-  typeof nxReleasePublishExecutorSchema
->;
+export type NxReleasePublishExecutorSchema =
+  | z.input<typeof nxReleasePublishExecutorGitHubAppOptionsSchema>
+  | (z.input<typeof nxReleasePublishExecutorOptionsSchema> & {
+      useGitHubAppAuthentication?: false;
+    });
