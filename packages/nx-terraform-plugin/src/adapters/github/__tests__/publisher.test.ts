@@ -1,8 +1,9 @@
 import { beforeEach, expect, it, vi } from "vitest";
 
 const githubMocks = vi.hoisted(() => ({
+  createGitHubAppToken: vi.fn(),
   ensureGitHubRepository: vi.fn(),
-  getGitHubToken: vi.fn(),
+  revokeGitHubAppToken: vi.fn(),
 }));
 
 const execaMocks = vi.hoisted(() => ({
@@ -21,8 +22,9 @@ const osMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../octokit.ts", () => ({
+  createGitHubAppToken: githubMocks.createGitHubAppToken,
   ensureGitHubRepository: githubMocks.ensureGitHubRepository,
-  getGitHubToken: githubMocks.getGitHubToken,
+  revokeGitHubAppToken: githubMocks.revokeGitHubAppToken,
 }));
 
 vi.mock("execa", () => ({
@@ -45,7 +47,12 @@ const defaultCommandResult = {
 
 const publishInput = {
   description: "Terraform module description",
+  githubAppCredentials: {
+    clientId: "Iv23.client-id",
+    privateKey: "private-key",
+  },
   githubOwner: "pagopa-dx",
+  githubToken: "legacy-token",
   projectRoot: "infra/modules/azure_core_infra",
   provider: "aws",
   version: "1.2.3",
@@ -110,6 +117,8 @@ const createGitCommandHarness = ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  githubMocks.createGitHubAppToken.mockResolvedValue("installation-token");
+  githubMocks.revokeGitHubAppToken.mockResolvedValue(undefined);
   osMocks.tmpdir.mockReturnValue("/tmp-prefix");
   fsMocks.mkdtemp.mockResolvedValue(expectedTempDir);
   fsMocks.readdir.mockResolvedValue([]);
@@ -131,7 +140,12 @@ it("publishes by committing on top of remote main without force-pushing history"
   expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
     "pagopa-dx",
     expectedRepo,
+    "installation-token",
   );
+  expect(githubMocks.createGitHubAppToken).toHaveBeenCalledWith("pagopa-dx", {
+    clientId: "Iv23.client-id",
+    privateKey: "private-key",
+  });
   expect(osMocks.tmpdir).toHaveBeenCalledWith();
   expect(fsMocks.mkdtemp).toHaveBeenCalledWith("/tmp-prefix/export-repo-");
   expect(fsMocks.cp).toHaveBeenCalledWith(
@@ -142,6 +156,7 @@ it("publishes by committing on top of remote main without force-pushing history"
 
   expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
     { command: "git init -b main", cwd: expectedTempDir },
+    { command: "gh auth setup-git", cwd: expectedTempDir },
     {
       command: `git remote add origin ${expectedRepoUrl}`,
       cwd: expectedTempDir,
@@ -289,9 +304,8 @@ it("uses shell mode plus explicit commit author and committer environment variab
   });
 });
 
-it("configures git credentials and keeps the remote URL token-free when a token is available", async () => {
+it("configures git credentials and keeps the remote URL token-free", async () => {
   const { commands } = createGitCommandHarness();
-  githubMocks.getGitHubToken.mockReturnValue("secret-token");
 
   githubMocks.ensureGitHubRepository.mockResolvedValue({
     created: false,
@@ -304,24 +318,48 @@ it("configures git credentials and keeps the remote URL token-free when a token 
   const commandStrings = commands.map((c) => c.command);
   expect(commandStrings).toContain("gh auth setup-git");
   expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
-  expect(commandStrings.join("\n")).not.toContain("secret-token");
+  expect(commandStrings.join("\n")).not.toContain("installation-token");
+  expect(execaMocks.$).toHaveBeenCalledWith(
+    expect.objectContaining({
+      env: expect.objectContaining({
+        GH_TOKEN: "installation-token",
+      }),
+    }),
+  );
 });
 
-it("skips git credential setup when no token is available", async () => {
-  const { commands } = createGitCommandHarness();
-  githubMocks.getGitHubToken.mockReturnValue(undefined);
+it("uses the provided token without generating a GitHub App token", async () => {
+  createGitCommandHarness();
+  const legacyInput = {
+    ...publishInput,
+    githubAppCredentials: undefined,
+    githubToken: "legacy-token",
+  };
 
-  githubMocks.ensureGitHubRepository.mockResolvedValue({
-    created: false,
-    owner: "pagopa-dx",
-    repo: expectedRepo,
-  });
+  await publishToGithub(legacyInput);
+
+  expect(githubMocks.createGitHubAppToken).not.toHaveBeenCalled();
+  expect(githubMocks.revokeGitHubAppToken).not.toHaveBeenCalled();
+  expect(githubMocks.ensureGitHubRepository).toHaveBeenCalledWith(
+    "pagopa-dx",
+    expectedRepo,
+    "legacy-token",
+  );
+  expect(execaMocks.$).toHaveBeenCalledWith(
+    expect.objectContaining({
+      env: expect.objectContaining({ GH_TOKEN: "legacy-token" }),
+    }),
+  );
+});
+
+it("revokes the GitHub App token after a successful publish", async () => {
+  createGitCommandHarness();
 
   await publishToGithub(publishInput);
 
-  const commandStrings = commands.map((c) => c.command);
-  expect(commandStrings).not.toContain("gh auth setup-git");
-  expect(commandStrings).toContain(`git remote add origin ${expectedRepoUrl}`);
+  expect(githubMocks.revokeGitHubAppToken).toHaveBeenCalledWith(
+    "installation-token",
+  );
 });
 
 it("cleans up temporary directory after successful publish", async () => {
@@ -363,6 +401,9 @@ it("cleans up temporary directory even when publish fails", async () => {
     force: true,
     recursive: true,
   });
+  expect(githubMocks.revokeGitHubAppToken).toHaveBeenCalledWith(
+    "installation-token",
+  );
 });
 
 it("reports cleanup failure if cleanup fails but publish succeeded", async () => {
@@ -457,6 +498,7 @@ it("creates and force-pushes a tag named after version", async () => {
 
   expect(commands.map((c) => ({ command: c.command, cwd: c.cwd }))).toEqual([
     { command: "git init -b main", cwd: expectedTempDir },
+    { command: "gh auth setup-git", cwd: expectedTempDir },
     {
       command: `git remote add origin ${expectedRepoUrl}`,
       cwd: expectedTempDir,
@@ -505,6 +547,7 @@ it("still tags and pushes when there is nothing to commit (content already match
 
   expect(commands.map((c) => c.command)).toEqual([
     "git init -b main",
+    "gh auth setup-git",
     `git remote add origin ${expectedRepoUrl}`,
     "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
     "git ls-remote --exit-code --heads origin main",
@@ -566,6 +609,7 @@ it("skips publishing when the remote tag already exists", async () => {
 
   expect(commands.map((c) => c.command)).toEqual([
     "git init -b main",
+    "gh auth setup-git",
     `git remote add origin ${expectedRepoUrl}`,
     "git ls-remote --exit-code --tags origin refs/tags/1.2.3",
   ]);

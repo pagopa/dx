@@ -1,14 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const octokitMocks = vi.hoisted(() => {
+  const auth = vi.fn();
   const createInOrg = vi.fn();
   const createForAuthenticatedUser = vi.fn();
   const get = vi.fn();
   const getAuthenticated = vi.fn();
   const getByUsername = vi.fn();
+  const getOrgInstallation = vi.fn();
+  const revokeInstallationAccessToken = vi.fn();
   const Octokit = vi.fn(function Octokit() {
     return {
       rest: {
+        apps: {
+          getOrgInstallation,
+          revokeInstallationAccessToken,
+        },
         repos: {
           createForAuthenticatedUser,
           createInOrg,
@@ -23,20 +30,76 @@ const octokitMocks = vi.hoisted(() => {
   });
 
   return {
+    auth,
     createForAuthenticatedUser,
     createInOrg,
     get,
     getAuthenticated,
     getByUsername,
+    getOrgInstallation,
     Octokit,
+    revokeInstallationAccessToken,
   };
 });
+
+vi.mock("@octokit/auth-app", () => ({
+  createAppAuth: vi.fn(() => octokitMocks.auth),
+}));
 
 vi.mock("octokit", () => ({
   Octokit: octokitMocks.Octokit,
 }));
 
-import { ensureGitHubRepository } from "../octokit.ts";
+import { createAppAuth } from "@octokit/auth-app";
+
+import {
+  createGitHubAppToken,
+  ensureGitHubRepository,
+  revokeGitHubAppToken,
+} from "../octokit.ts";
+
+const appCredentials = {
+  clientId: "Iv23.client-id",
+  privateKey: "private-key",
+};
+const token = "installation-token";
+
+describe("createGitHubAppToken", () => {
+  it("creates an owner installation token with contents write permission", async () => {
+    octokitMocks.getOrgInstallation.mockResolvedValue({ data: { id: 123 } });
+    octokitMocks.auth.mockResolvedValue({ token });
+
+    await expect(
+      createGitHubAppToken("pagopa-dx", appCredentials),
+    ).resolves.toBe(token);
+
+    expect(octokitMocks.getOrgInstallation).toHaveBeenCalledWith({
+      org: "pagopa-dx",
+    });
+    expect(createAppAuth).toHaveBeenLastCalledWith({
+      appId: "Iv23.client-id",
+      installationId: 123,
+      privateKey: "private-key",
+    });
+    expect(octokitMocks.auth).toHaveBeenCalledWith({
+      permissions: {
+        contents: "write",
+      },
+      type: "installation",
+    });
+  });
+});
+
+describe("revokeGitHubAppToken", () => {
+  it("revokes the installation token", async () => {
+    octokitMocks.revokeInstallationAccessToken.mockResolvedValue(undefined);
+
+    await expect(revokeGitHubAppToken(token)).resolves.toBeUndefined();
+
+    expect(octokitMocks.Octokit).toHaveBeenCalledWith({ auth: token });
+    expect(octokitMocks.revokeInstallationAccessToken).toHaveBeenCalledTimes(1);
+  });
+});
 
 describe("ensureGitHubRepository", () => {
   beforeEach(() => {
@@ -46,7 +109,11 @@ describe("ensureGitHubRepository", () => {
   it("returns created false when the repository exists", async () => {
     octokitMocks.get.mockResolvedValue({ data: {} });
 
-    const result = await ensureGitHubRepository("pagopa-dx", "terraform-aws-x");
+    const result = await ensureGitHubRepository(
+      "pagopa-dx",
+      "terraform-aws-x",
+      token,
+    );
 
     expect(result).toBeUndefined();
     expect(octokitMocks.get).toHaveBeenCalledWith({
@@ -67,7 +134,11 @@ describe("ensureGitHubRepository", () => {
     });
     octokitMocks.createInOrg.mockResolvedValue({ data: {} });
 
-    const result = await ensureGitHubRepository("pagopa-dx", "terraform-aws-x");
+    const result = await ensureGitHubRepository(
+      "pagopa-dx",
+      "terraform-aws-x",
+      token,
+    );
 
     expect(result).toBeUndefined();
     expect(octokitMocks.getByUsername).toHaveBeenCalledWith({
@@ -98,6 +169,7 @@ describe("ensureGitHubRepository", () => {
     const result = await ensureGitHubRepository(
       "pagopa-user",
       "terraform-aws-x",
+      token,
     );
 
     expect(result).toBeUndefined();
@@ -125,7 +197,7 @@ describe("ensureGitHubRepository", () => {
     });
 
     await expect(
-      ensureGitHubRepository("pagopa-user", "terraform-aws-x"),
+      ensureGitHubRepository("pagopa-user", "terraform-aws-x", token),
     ).rejects.toThrow(
       'Cannot create repository for user owner "pagopa-user" with authenticated user "another-user".',
     );
@@ -152,7 +224,7 @@ describe("ensureGitHubRepository", () => {
     );
 
     await expect(
-      ensureGitHubRepository("pagopa-user", "terraform-aws-x"),
+      ensureGitHubRepository("pagopa-user", "terraform-aws-x", token),
     ).rejects.toThrow(
       'Cannot create repository for user owner "pagopa-user" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.',
     );

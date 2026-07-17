@@ -1,9 +1,46 @@
 // Provides the concrete Octokit-backed GitHub repository adapter for publish flows.
 
+import { createAppAuth } from "@octokit/auth-app";
 import { Octokit } from "octokit";
 
-export const getGitHubToken = (): string | undefined =>
-  process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+export interface GitHubAppCredentials {
+  clientId: string;
+  privateKey: string;
+}
+
+export const createGitHubAppToken = async (
+  owner: string,
+  credentials: GitHubAppCredentials,
+): Promise<string> => {
+  const appOctokit = new Octokit({
+    auth: {
+      appId: credentials.clientId,
+      privateKey: credentials.privateKey,
+    },
+    authStrategy: createAppAuth,
+  });
+  const installation = await appOctokit.rest.apps.getOrgInstallation({
+    org: owner,
+  });
+  const auth = createAppAuth({
+    appId: credentials.clientId,
+    installationId: installation.data.id,
+    privateKey: credentials.privateKey,
+  });
+  const authentication = await auth({
+    permissions: {
+      contents: "write",
+    },
+    type: "installation",
+  });
+
+  return authentication.token;
+};
+
+export const revokeGitHubAppToken = async (token: string): Promise<void> => {
+  const octokit = new Octokit({ auth: token });
+  await octokit.rest.apps.revokeInstallationAccessToken();
+};
 
 const getAuthenticatedUserLogin = async (
   octokit: Octokit,
@@ -23,9 +60,10 @@ const getAuthenticatedUserLogin = async (
 export const ensureGitHubRepository = async (
   owner: string,
   repo: string,
+  token: string,
 ): Promise<void> => {
   const octokit = new Octokit({
-    auth: getGitHubToken(),
+    auth: token,
   });
 
   try {

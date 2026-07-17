@@ -86,6 +86,7 @@ const getPublishTarget = (opts, root, publishManifest) => {
 				...publishOptions,
 				githubOwner: publishOptions.github.owner,
 				projectRoot: "{projectRoot}",
+				useGitHubAppAuthentication: opts.publish.github?.owner !== void 0,
 				workspaceRoot: "{workspaceRoot}"
 			}
 		}];

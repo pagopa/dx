@@ -1,3 +1,15 @@
+## 0.5.0 (2026-07-16)
+
+### 🚀 Features
+
+- Authenticate Terraform module publishing with a GitHub App when ([#1992](https://github.com/pagopa/dx/pull/1992))
+  publish.github.owner is configured, revoking the installation token after
+  publishing while preserving GH_TOKEN and GITHUB_TOKEN fallback.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.4.2 (2026-07-09)
 
 ### 🩹 Fixes

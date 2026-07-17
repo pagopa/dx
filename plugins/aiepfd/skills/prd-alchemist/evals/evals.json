@@ -1,0 +1,99 @@
+{
+  "skill_name": "prd-alchemist",
+  "evals": [
+    {
+      "id": 0,
+      "name": "complete-confluence-compatible-prd",
+      "prompt": "Write a PRD for a saved-payment experience from these complete notes. Sponsor: Payments Director. Product owner: Payments PM. Priority: high. Budget: 2026 Payments roadmap. Target release: 2026-10-01. Users repeatedly entering card details on mobile abandon or slow down payments. Actors: returning card-paying users and Customer Care. User JTBD: when returning to pay, users want to select a masked saved card so they can complete payment faster. Expected outcome: faster completed repeat payments. Success metric: median completion time falls from 74 seconds to 45 seconds. Quality guardrail: no full card number is stored. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks. Outcome KPI source: payments funnel dashboard reviewed weekly. Strategic dependency: PSP token lifecycle events. Constraint: maximum five visible cards. Preliminary Engineering opinion: tokenization is available. Preliminary Legal/Compliance opinion: requested. Design discovery: https://figma.example/saved-cards. Support needs: troubleshooting guidance for expired or declined cards. Open non-blocking assumption: Amex is excluded from this release.",
+      "expected_output": "A Confluence-compatible PRD with visible Metadata, Need definition, Actors, Objectives with a complete JTBD catalog, Success metrics with outcome KPIs and quality guardrails, strategic dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. It starts with status draft.",
+      "expectations": [
+        "The PRD has a visible Metadata section with stable IDs for status, sponsor, owner, budget, Legal/Compliance, Engineering, target release, and priority",
+        "The JTBD row includes persona, canonical job statement, expected outcome, success metric, quality guardrail, priority, and notes",
+        "Outcome KPIs and quality guardrails are separate sections",
+        "Stable English IDs are present for each canonical section and table row",
+        "The PRD does not include a use-case catalog, RACI, backlog, or detailed implementation specification",
+        "Narrative PRD sentences identify the user group, actor, team, owner, stakeholder, or system responsible for each confirmed statement",
+        "metadata.status is draft"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "incomplete-material-remains-draft",
+      "prompt": "Create a PRD for a shared workspace idea. Sales reports that enterprise customers want collaboration, but there is no confirmed sponsor, owner, target user segment, measurable goal, or decision about whether the scope is shared folders only or also roles and audit logs. Engineering and Legal have not been consulted. Do not invent answers. Produce the PRD in draft state and make the uncertainties visible.",
+      "expected_output": "The agent produces a structured draft without inventing missing information, records the unresolved scope and ownership questions, and keeps status draft.",
+      "expectations": [
+        "The PRD is created in draft state despite incomplete information",
+        "Missing sponsor, owner, audience, goals, and preliminary consultations are visible as open questions or justified not-applicable values",
+        "The conflicting scope proposals are preserved as an unresolved question",
+        "The agent does not invent metrics, ownership, actors, or feasibility conclusions"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "review-ready-status-transition",
+      "prompt": "The existing PRD has a visible Metadata section with status draft. Its context, sponsor, Product owner, and problem statement are clear enough to share with stakeholders. It still has two non-blocking open questions about a future design decision. I have reviewed it and say it is good enough and ready for review. Change the status only. Do not publish it or modify any other content.",
+      "expected_output": "The agent changes only metadata.status from draft to review. Non-blocking open questions remain unchanged and no publication is offered.",
+      "expectations": [
+        "metadata.status changes from draft to review",
+        "Non-blocking open questions do not prevent the transition",
+        "No other PRD content is changed",
+        "The agent does not publish or offer publication"
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "review-blocked-missing-entry-criteria",
+      "prompt": "The existing PRD is marked draft. It contains an idea and some technical notes, but no confirmed sponsor, Product owner, or clear problem statement. I say it is ready for review. Do not change the status yet; identify the missing review-entry information and ask targeted questions.",
+      "expected_output": "The agent keeps status draft, explains that review readiness is not established, and asks for the missing sponsor, owner, and problem definition without inventing them.",
+      "expectations": [
+        "metadata.status remains draft",
+        "The agent identifies missing context, sponsor, owner, or problem clarity as the reason",
+        "The agent asks targeted clarification questions",
+        "The agent does not infer values from technical notes"
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "downstream-detail-boundary",
+      "prompt": "Write a PRD from these notes. Include the need, actors, JTBD, goals, metrics, and risks, but keep the following out of the PRD: endpoint schemas, database tables, retry algorithms, detailed use cases, acceptance criteria, deployment steps, and backlog tickets. Mention only the high-level constraint that an existing indexed read model must be available.",
+      "expected_output": "The PRD contains product outcomes and high-level constraints while excluding detailed implementation, use-case, acceptance, deployment, and backlog content.",
+      "expectations": [
+        "The PRD contains no detailed endpoint, database, retry, deployment, acceptance-criteria, use-case, or backlog content",
+        "The high-level indexed-read-model dependency is retained",
+        "The PRD remains organized according to the Confluence-compatible hierarchy"
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "publication-handoff",
+      "prompt": "The PRD has just been written and validated. Ask me whether I want to create a Confluence page. Do not choose a publication language until I answer yes.",
+      "expected_output": "The agent asks for explicit confirmation to create a Confluence page and hands publication to confluence-librarian without asking for or assuming a language before confirmation.",
+      "expectations": [
+        "The agent asks whether to create a Confluence page",
+        "The agent does not publish without explicit confirmation",
+        "The agent does not choose or ask for a publication language before confirmation",
+        "The agent delegates confirmed publication to confluence-librarian"
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "explicit-subject-prose",
+      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers.",
+      "expected_output": "A draft PRD whose narrative prose names confirmed actors such as merchants and Customer Operations, while the missing decision-maker, monitoring owner, Legal-review initiator, and support owner remain explicit open questions.",
+      "expectations": [
+        "Narrative sentences use explicit subjects instead of retaining impersonal, passive, or subjectless wording from the notes",
+        "The PRD names merchants and Customer Operations where the source confirms those actors",
+        "The PRD records targeted open questions for the decision-maker, monitoring owner, Legal-review initiator, and support owner",
+        "The PRD does not invent an actor, owner, or decision-maker",
+        "metadata.status remains draft"
+      ],
+      "files": []
+    }
+  ]
+}

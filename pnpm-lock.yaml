@@ -1268,6 +1268,9 @@ importers:
       '@nx/devkit':
         specifier: ^22.7.6
         version: 22.7.6(nx@22.7.5(@swc-node/register@1.11.1(@swc/core@1.15.43(@swc/helpers@0.5.21))(@swc/types@0.1.27)(typescript@5.9.3))(@swc/core@1.15.43(@swc/helpers@0.5.21)))
+      '@octokit/auth-app':
+        specifier: ^8.2.0
+        version: 8.2.0
       execa:
         specifier: 'catalog:'
         version: 9.6.1
