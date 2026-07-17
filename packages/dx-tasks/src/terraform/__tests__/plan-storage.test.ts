@@ -545,9 +545,7 @@ describe("downloadPlanBundle", () => {
       "utf8",
     );
 
-    const archive = await createArchiveBuffer(sourceDirectory, [
-      "plan.tfplan",
-    ]);
+    const archive = await createArchiveBuffer(sourceDirectory, ["plan.tfplan"]);
 
     mocks.mockBlobDownloadToBuffer.mockResolvedValue(archive);
 
