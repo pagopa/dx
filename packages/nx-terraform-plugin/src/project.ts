@@ -103,6 +103,29 @@ const getPublishTarget = (
   }
 };
 
+const getPlanTarget = (
+  opts: TerraformPluginOptions,
+  executor: string,
+): TargetConfiguration => ({
+  cache: false,
+  configurations: {
+    ci: {
+      refresh: true,
+      report: true,
+      verbose: false,
+    },
+  },
+  dependsOn: [opts.initTargetName],
+  executor,
+  options: {
+    projectRoot: "{projectRoot}",
+    refresh: true,
+    report: false,
+    sensitiveKeys: opts.sensitiveOutputKeys,
+    verbose: true,
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
@@ -258,24 +281,11 @@ const getTargets = (
     targets.push(
       [
         opts.planTargetName,
-        {
-          cache: false,
-          configurations: {
-            ci: {
-              refresh: true,
-              report: true,
-              verbose: false,
-            },
-          },
-          dependsOn: [opts.initTargetName],
-          executor: "@pagopa/nx-terraform-plugin:plan",
-          options: {
-            projectRoot: "{projectRoot}",
-            refresh: true,
-            report: false,
-            verbose: true,
-          },
-        },
+        getPlanTarget(opts, "@pagopa/nx-terraform-plugin:plan"),
+      ],
+      [
+        opts.planUploadTargetName,
+        getPlanTarget(opts, "@pagopa/nx-terraform-plugin:plan-upload"),
       ],
       [
         opts.applyTargetName,

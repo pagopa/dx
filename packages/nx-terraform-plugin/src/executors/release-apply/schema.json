@@ -1,25 +1,21 @@
 {
   "$schema": "https://json-schema.org/schema",
   "version": 2,
-  "title": "Plan executor",
-  "description": "Runs terraform plan for a Terraform project through @pagopa/dx-tasks",
+  "title": "Release apply executor",
+  "description": "Downloads the previously uploaded terraform plan bundle and applies it, through @pagopa/dx-tasks. Intended to be assigned to the nx-release-publish target of deployable Terraform environment projects.",
   "type": "object",
   "properties": {
+    "dryRun": {
+      "description": "Whether to skip applying infrastructure and only preview the release",
+      "type": "boolean",
+      "default": false
+    },
     "projectRoot": {
       "description": "Terraform project root used as the module path",
       "type": "string"
     },
-    "out": {
-      "description": "Optional path passed to terraform plan -out",
-      "type": "string"
-    },
-    "refresh": {
-      "description": "Whether to refresh state before planning",
-      "type": "boolean",
-      "default": true
-    },
     "report": {
-      "description": "Whether to write a dx-tasks JSON report of the plan output",
+      "description": "Whether to write a dx-tasks JSON report of the apply output",
       "type": "boolean",
       "default": false
     },
@@ -33,7 +29,7 @@
       "default": []
     },
     "verbose": {
-      "description": "Whether to print the full terraform plan output",
+      "description": "Whether to print the full terraform apply output",
       "type": "boolean",
       "default": false
     }

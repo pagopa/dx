@@ -17,6 +17,7 @@ const terraformPlanPayloadShape = {
   out: z.optional(z.string().check(z.minLength(1))),
   refresh: z._default(z.boolean(), true),
   report: z._default(z.boolean(), false),
+  sensitiveKeys: z._default(z.array(z.string().check(z.minLength(1))), []),
   verbose: z._default(z.boolean(), false),
 };
 
@@ -27,6 +28,7 @@ export interface TerraformPlanPayload {
   out?: string;
   refresh?: boolean;
   report?: boolean;
+  sensitiveKeys?: readonly string[];
   verbose?: boolean;
 }
 
@@ -232,6 +234,7 @@ const executeTerraformPlan = async (
   env: Record<string, string>,
   verbose: boolean,
   report: boolean,
+  sensitiveKeys: readonly string[],
   context: TaskRunContext,
 ) => {
   const result = await runCommand("terraform", ["plan"], modulePath, env);
@@ -244,6 +247,7 @@ const executeTerraformPlan = async (
     [result.stdout, result.stderr]
       .filter((output) => output.trim().length > 0)
       .join("\n"),
+    [...sensitiveKeys],
   );
 
   const planOutput = getPlanOutput(maskedOutput, verbose);
@@ -277,6 +281,7 @@ export async function terraformPlan(
     out,
     refresh = true,
     report = false,
+    sensitiveKeys = [],
     verbose = false,
   }: TerraformPlanPayload,
   context: TaskRunContext = {},
@@ -313,5 +318,12 @@ export async function terraformPlan(
       "",
     );
 
-  await executeTerraformPlan(modulePath, env, verbose, report, context);
+  await executeTerraformPlan(
+    modulePath,
+    env,
+    verbose,
+    report,
+    sensitiveKeys,
+    context,
+  );
 }

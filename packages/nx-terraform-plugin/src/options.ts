@@ -29,8 +29,10 @@ const terraformPluginOptionsSchema = z.object({
   lintTargetName: targetNameSchema,
   outputTargetName: targetNameSchema,
   planTargetName: targetNameSchema,
+  planUploadTargetName: targetNameSchema,
   publish: publishOptionsSchema,
   publishTargetName: targetNameSchema,
+  sensitiveOutputKeys: z.array(z.string().min(1)),
   testTargetName: targetNameSchema,
   validateTargetName: targetNameSchema,
 });
@@ -49,10 +51,12 @@ const defaultOptions: TerraformPluginOptions = {
   lintTargetName: "tflint",
   outputTargetName: "tf-output",
   planTargetName: "tf-plan",
+  planUploadTargetName: "tf-plan-upload",
   publish: {
     mode: "github",
   },
   publishTargetName: "nx-release-publish",
+  sensitiveOutputKeys: [],
   testTargetName: "tf-test",
   validateTargetName: "tf-validate",
 };

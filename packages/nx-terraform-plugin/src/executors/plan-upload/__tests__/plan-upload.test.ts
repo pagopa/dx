@@ -1,7 +1,7 @@
 import { ExecutorContext } from "@nx/devkit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { PlanExecutorSchema } from "../schema.ts";
+import type { PlanUploadExecutorSchema } from "../schema.ts";
 
 const loggerMocks = vi.hoisted(() => {
   const configureLogger = vi.fn(async () => {});
@@ -38,7 +38,7 @@ vi.mock("@pagopa/dx-tasks/default-dispatcher", () => ({
   createDefaultTaskDispatcher: dispatcherMocks.createDefaultTaskDispatcher,
 }));
 
-import executor from "../plan.ts";
+import executor from "../plan-upload.ts";
 
 const baseContext: ExecutorContext = {
   cwd: process.cwd(),
@@ -55,15 +55,14 @@ const baseContext: ExecutorContext = {
   root: "",
 };
 
-describe("Plan Executor", () => {
+describe("Plan Upload Executor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("dispatches terraformPlan with the project root as module path", async () => {
-    const options: PlanExecutorSchema = {
-      out: "plan.tfplan",
-      projectRoot: "infra/modules/azure_core_infra",
+  it("dispatches terraformPlanUpload with the project root as module path", async () => {
+    const options: PlanUploadExecutorSchema = {
+      projectRoot: "infra/resources/dev",
       refresh: true,
       report: true,
       sensitiveKeys: ["hidden-link"],
@@ -77,51 +76,55 @@ describe("Plan Executor", () => {
     expect(dispatcherMocks.createDefaultTaskDispatcher).toHaveBeenCalledTimes(
       1,
     );
-    expect(dispatcherMocks.dispatchTask).toHaveBeenCalledWith("terraformPlan", {
-      modulePath: "infra/modules/azure_core_infra",
-      out: "plan.tfplan",
-      refresh: true,
-      report: true,
-      sensitiveKeys: ["hidden-link"],
-      verbose: false,
-    });
-    expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["plan"]);
+    expect(dispatcherMocks.dispatchTask).toHaveBeenCalledWith(
+      "terraformPlanUpload",
+      {
+        modulePath: "infra/resources/dev",
+        refresh: true,
+        report: true,
+        sensitiveKeys: ["hidden-link"],
+        verbose: false,
+      },
+    );
+    expect(loggerMocks.getPackageLogger).toHaveBeenCalledWith(["plan-upload"]);
   });
 
   it("applies default options when only projectRoot is provided", async () => {
     const options = {
-      projectRoot: "infra/modules/azure_core_infra",
-    } satisfies Partial<PlanExecutorSchema>;
+      projectRoot: "infra/resources/dev",
+    } satisfies Partial<PlanUploadExecutorSchema>;
 
     const output = await executor(options, baseContext);
 
     expect(output.success).toBe(true);
-    expect(dispatcherMocks.dispatchTask).toHaveBeenCalledWith("terraformPlan", {
-      modulePath: "infra/modules/azure_core_infra",
-      out: undefined,
-      refresh: true,
-      report: false,
-      sensitiveKeys: [],
-      verbose: false,
-    });
+    expect(dispatcherMocks.dispatchTask).toHaveBeenCalledWith(
+      "terraformPlanUpload",
+      {
+        modulePath: "infra/resources/dev",
+        refresh: true,
+        report: false,
+        sensitiveKeys: [],
+        verbose: false,
+      },
+    );
   });
 
   it("fails when projectRoot is missing", async () => {
-    const options = {} satisfies Partial<PlanExecutorSchema>;
+    const options = {} satisfies Partial<PlanUploadExecutorSchema>;
 
     const output = await executor(options, baseContext);
 
     expect(output.success).toBe(false);
     expect(loggerMocks.configureLogger).toHaveBeenCalledTimes(1);
     expect(loggerMocks.warn).toHaveBeenCalledWith(
-      "Invalid plan options",
+      "Invalid plan-upload options",
       expect.objectContaining({
         issues: expect.arrayContaining([
           expect.objectContaining({
             path: ["projectRoot"],
           }),
         ]),
-        path: "plan options",
+        path: "plan-upload options",
       }),
     );
     expect(dispatcherMocks.dispatchTask).not.toHaveBeenCalled();

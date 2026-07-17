@@ -1,7 +1,6 @@
 import { z } from "zod/v4";
 
-export const planExecutorSchema = z.object({
-  out: z.string().min(1).optional(),
+export const planUploadExecutorSchema = z.object({
   projectRoot: z.string().min(1),
   refresh: z.boolean().default(true),
   report: z.boolean().default(false),
@@ -9,6 +8,6 @@ export const planExecutorSchema = z.object({
   verbose: z.boolean().default(false),
 });
 
-export type PlanExecutorInput = Partial<PlanExecutorSchema>;
+export type PlanUploadExecutorInput = Partial<PlanUploadExecutorSchema>;
 
-export type PlanExecutorSchema = z.infer<typeof planExecutorSchema>;
+export type PlanUploadExecutorSchema = z.infer<typeof planUploadExecutorSchema>;

@@ -2,9 +2,8 @@ import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-X0vwz
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
 import { z } from "zod/v4";
 
-//#region src/executors/plan/schema.ts
-const planExecutorSchema = z.object({
-	out: z.string().min(1).optional(),
+//#region src/executors/plan-upload/schema.ts
+const planUploadExecutorSchema = z.object({
 	projectRoot: z.string().min(1),
 	refresh: z.boolean().default(true),
 	report: z.boolean().default(false),
@@ -13,22 +12,21 @@ const planExecutorSchema = z.object({
 });
 
 //#endregion
-//#region src/executors/plan/plan.ts
+//#region src/executors/plan-upload/plan-upload.ts
 const runExecutor = async (options) => {
-	const logger = getPackageLogger(["plan"]);
-	const parseResult = planExecutorSchema.safeParse(options);
+	const logger = getPackageLogger(["plan-upload"]);
+	const parseResult = planUploadExecutorSchema.safeParse(options);
 	await configureLogger();
 	if (!parseResult.success) {
-		logger.warn("Invalid plan options", {
+		logger.warn("Invalid plan-upload options", {
 			issues: parseResult.error.issues,
-			path: options.projectRoot ?? "plan options"
+			path: options?.projectRoot ?? "plan-upload options"
 		});
 		return { success: false };
 	}
-	const { out, projectRoot, refresh, report, sensitiveKeys, verbose } = parseResult.data;
-	await createDefaultTaskDispatcher().dispatchTask("terraformPlan", {
+	const { projectRoot, refresh, report, sensitiveKeys, verbose } = parseResult.data;
+	await createDefaultTaskDispatcher().dispatchTask("terraformPlanUpload", {
 		modulePath: projectRoot,
-		out,
 		refresh,
 		report,
 		sensitiveKeys,

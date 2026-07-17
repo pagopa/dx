@@ -19,6 +19,16 @@ import {
   payloadSchema as reportPrCommentPayloadSchema,
 } from "./report-pr-comment.ts";
 import {
+  terraformApply,
+  type TerraformApplyPayload,
+  payloadSchema as terraformApplyPayloadSchema,
+} from "./terraform/apply.ts";
+import {
+  terraformPlanUpload,
+  type TerraformPlanUploadPayload,
+  payloadSchema as terraformPlanUploadPayloadSchema,
+} from "./terraform/plan-upload.ts";
+import {
   terraformPlan,
   type TerraformPlanPayload,
   payloadSchema as terraformPlanPayloadSchema,
@@ -28,6 +38,19 @@ export const terraformPlanTask: TaskDefinition<TerraformPlanPayload> = {
   name: "terraformPlan",
   payloadSchema: terraformPlanPayloadSchema,
   run: terraformPlan,
+};
+
+export const terraformPlanUploadTask: TaskDefinition<TerraformPlanUploadPayload> =
+  {
+    name: "terraformPlanUpload",
+    payloadSchema: terraformPlanUploadPayloadSchema,
+    run: terraformPlanUpload,
+  };
+
+export const terraformApplyTask: TaskDefinition<TerraformApplyPayload> = {
+  name: "terraformApply",
+  payloadSchema: terraformApplyPayloadSchema,
+  run: terraformApply,
 };
 
 export const renderReportTask: TaskDefinition<RenderReportPayload> = {

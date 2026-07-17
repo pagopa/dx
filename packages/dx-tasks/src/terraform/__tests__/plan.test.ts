@@ -400,6 +400,37 @@ describe("terraformPlan", () => {
   });
 });
 
+describe("terraformPlan masking", () => {
+  beforeEach(() => {
+    mockRunCommand.mockReset();
+    vi.stubEnv("CI", "false");
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("masks configured sensitive output keys", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: 'hidden-link = "sensitive-value"',
+    });
+
+    await terraformPlan({
+      modulePath: "/tmp/module",
+      sensitiveKeys: ["hidden-link"],
+    });
+
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(
+      'hidden-link = "[REDACTED]"',
+    );
+  });
+});
+
 describe("terraformPlan notice reports", () => {
   let tempDirectoryPath = "";
 
