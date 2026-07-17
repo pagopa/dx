@@ -289,11 +289,14 @@ describe("uploadPlanBundle", () => {
 
   beforeEach(() => {
     temporaryDirectories = [];
+    mocks.putObjectCommandInputs.length = 0;
     mocks.mockBlobUploadFile.mockReset();
+    mocks.mockS3Send.mockReset();
     mocks.mockGetBlockBlobClient.mockClear();
     mocks.mockGetContainerClient.mockClear();
     mocks.MockAzureCliCredential.mockClear();
     mocks.MockBlobServiceClient.mockClear();
+    mocks.MockS3Client.mockClear();
     vi.spyOn(console, "warn").mockImplementation(() => undefined);
   });
 
@@ -378,6 +381,62 @@ describe("uploadPlanBundle", () => {
       expect.stringContaining("bundle.tar.gz"),
     );
   });
+
+  it("uploads the bundle to s3", async () => {
+    const workingDirectory = await createTestDirectory();
+
+    temporaryDirectories.push(workingDirectory);
+
+    await writeTerraformState(workingDirectory, {
+      backend: {
+        config: {
+          bucket: "terraform-state",
+          key: "env/prod/terraform.tfstate",
+          region: "eu-south-1",
+        },
+        type: "s3",
+      },
+    });
+    await fs.writeFile(
+      path.join(workingDirectory, "plan.tfplan"),
+      "plan",
+      "utf8",
+    );
+    await fs.writeFile(
+      path.join(workingDirectory, ".terraform.lock.hcl"),
+      "lock",
+      "utf8",
+    );
+
+    await expect(
+      uploadPlanBundle({
+        planFile: "plan.tfplan",
+        runId: "123456",
+        workingDirectory,
+      }),
+    ).resolves.toStrictEqual({
+      backend: {
+        bucket: "terraform-state",
+        region: "eu-south-1",
+        type: "s3",
+      },
+      planPath: "env/prod/plan-artifacts/terraform.tfstate.123456",
+    });
+
+    expect(mocks.MockS3Client).toHaveBeenCalledExactlyOnceWith({
+      region: "eu-south-1",
+    });
+    expect(mocks.putObjectCommandInputs).toStrictEqual([
+      {
+        Body: expect.any(Buffer),
+        Bucket: "terraform-state",
+        Key: "env/prod/plan-artifacts/terraform.tfstate.123456",
+      },
+    ]);
+    expect(mocks.mockS3Send).toHaveBeenCalledExactlyOnceWith(
+      expect.any(mocks.MockPutObjectCommand),
+    );
+  });
 });
 
 describe("downloadPlanBundle", () => {
@@ -386,7 +445,12 @@ describe("downloadPlanBundle", () => {
   beforeEach(() => {
     temporaryDirectories = [];
     mocks.getObjectCommandInputs.length = 0;
+    mocks.mockBlobDownloadToBuffer.mockReset();
     mocks.mockS3Send.mockReset();
+    mocks.mockGetBlobClient.mockClear();
+    mocks.mockGetContainerClient.mockClear();
+    mocks.MockAzureCliCredential.mockClear();
+    mocks.MockBlobServiceClient.mockClear();
     mocks.MockS3Client.mockClear();
   });
 
@@ -467,6 +531,51 @@ describe("downloadPlanBundle", () => {
         Key: "env/prod/plan-artifacts/terraform.tfstate.123456",
       },
     ]);
+  });
+
+  it("downloads a bundle from azure and extracts it into the target directory", async () => {
+    const sourceDirectory = await createTestDirectory();
+    const workingDirectory = await createTestDirectory();
+
+    temporaryDirectories.push(sourceDirectory, workingDirectory);
+
+    await fs.writeFile(
+      path.join(sourceDirectory, "plan.tfplan"),
+      "plan",
+      "utf8",
+    );
+
+    const archive = await createArchiveBuffer(sourceDirectory, [
+      "plan.tfplan",
+    ]);
+
+    mocks.mockBlobDownloadToBuffer.mockResolvedValue(archive);
+
+    await downloadPlanBundle({
+      backend: {
+        container: "terraform-state",
+        storageAccount: "dxstate",
+        type: "azurerm",
+      },
+      planPath: "env/prod/plan-artifacts/terraform.tfstate.123456",
+      workingDirectory,
+    });
+
+    await expect(
+      fs.readFile(path.join(workingDirectory, "plan.tfplan"), "utf8"),
+    ).resolves.toBe("plan");
+    expect(mocks.MockAzureCliCredential).toHaveBeenCalledExactlyOnceWith();
+    expect(mocks.MockBlobServiceClient).toHaveBeenCalledExactlyOnceWith(
+      "https://dxstate.blob.core.windows.net",
+      expect.any(Object),
+    );
+    expect(mocks.mockGetContainerClient).toHaveBeenCalledExactlyOnceWith(
+      "terraform-state",
+    );
+    expect(mocks.mockGetBlobClient).toHaveBeenCalledExactlyOnceWith(
+      "env/prod/plan-artifacts/terraform.tfstate.123456",
+    );
+    expect(mocks.mockBlobDownloadToBuffer).toHaveBeenCalledExactlyOnceWith();
   });
 });
 
