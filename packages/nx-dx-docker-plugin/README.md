@@ -26,10 +26,11 @@ version-only tag — see `src/executors/release-publish`.
 ## Installation
 
 ```bash
-pnpm add -D @pagopa/nx-dx-docker-plugin
+pnpm nx add @pagopa/nx-dx-docker-plugin
 ```
 
-Then register it in your `nx.json` `plugins` array without options:
+The generator registers `@nx/docker` and `@pagopa/nx-dx-docker-plugin` in the
+required order. To configure an existing installation manually, use:
 
 ```jsonc
 {

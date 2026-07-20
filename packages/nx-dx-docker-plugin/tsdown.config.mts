@@ -22,6 +22,7 @@ export default defineConfig({
       "src/executors/docker-push/docker-push.ts",
     "executors/release-publish/release-publish":
       "src/executors/release-publish/release-publish.ts",
+    "generators/init/generator": "src/generators/init/generator.ts",
     index: "src/index.ts",
   },
   fixedExtension: false,

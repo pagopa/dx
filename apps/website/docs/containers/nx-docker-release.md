@@ -34,8 +34,14 @@ publisher so a release pushes the primary semver tag and its aliases.
 
 ## nx.json configuration
 
-Register both plugins, in this order (`@nx/docker` first, then
-`@pagopa/nx-dx-docker-plugin`):
+Install and configure both plugins with:
+
+```bash
+pnpm nx add @pagopa/nx-dx-docker-plugin
+```
+
+The generator registers both plugins, in this order (`@nx/docker` first, then
+`@pagopa/nx-dx-docker-plugin`). For a manual configuration, use:
 
 ```json
 {
