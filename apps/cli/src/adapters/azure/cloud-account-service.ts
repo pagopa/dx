@@ -133,6 +133,68 @@ export class AzureCloudAccountService implements CloudAccountService {
     this.#credential = credential;
   }
 
+  async configureGitHubEnvironment(
+    cloudAccount: CloudAccount,
+    { name, prefix }: EnvironmentId,
+    github: GitHubRepo,
+    gitHubService: GitHubService,
+    runnerAppCredentials?: GitHubAppCredentials,
+  ): Promise<void> {
+    assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
+    assert.ok(
+      isAzureLocation(cloudAccount.defaultLocation),
+      "The default location of the cloud account is not a valid Azure location",
+    );
+
+    const short = {
+      env: getEnvironmentShort(name),
+      location: locationShort[cloudAccount.defaultLocation],
+    };
+    const resourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
+    const cdIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
+    const ciIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
+    const msiClient = new ManagedServiceIdentityClient(
+      this.#credential,
+      cloudAccount.id,
+    );
+
+    const [cdIdentity, ciIdentity] = await Promise.all([
+      this.#getBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
+        identityName: cdIdentityName,
+        msiClient,
+        resourceGroupName,
+      }),
+      this.#getBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
+        identityName: ciIdentityName,
+        msiClient,
+        resourceGroupName,
+      }),
+    ]);
+
+    const subscriptionClient = new SubscriptionClient(this.#credential);
+    const subscription = await subscriptionClient.subscriptions.get(
+      cloudAccount.id,
+    );
+    assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+
+    await this.#configureBootstrapperGitHubEnvironments({
+      cdIdentityClientId: cdIdentity.clientId,
+      cdIdentityName: cdIdentity.name,
+      ciIdentityClientId: ciIdentity.clientId,
+      ciIdentityName: ciIdentity.name,
+      cloudAccountId: cloudAccount.id,
+      github,
+      gitHubService,
+      msiClient,
+      name,
+      resourceGroupName,
+      runnerAppCredentials,
+      tenantId: subscription.tenantId,
+    });
+  }
+
   async getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     { name, prefix }: EnvironmentId,
@@ -628,7 +690,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     msiClient: ManagedServiceIdentityClient;
     name: EnvironmentId["name"];
     resourceGroupName: string;
-    runnerAppCredentials: GitHubAppCredentials;
+    runnerAppCredentials?: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);
@@ -825,6 +887,36 @@ export class AzureCloudAccountService implements CloudAccountService {
     roleDefinitionId: string,
   ): string {
     return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
+  }
+
+  async #getBootstrapperIdentity({
+    cloudAccountId,
+    identityName,
+    msiClient,
+    resourceGroupName,
+  }: {
+    cloudAccountId: string;
+    identityName: BootstrapperIdentityName;
+    msiClient: ManagedServiceIdentityClient;
+    resourceGroupName: string;
+  }): Promise<Pick<BootstrapperIdentity, "clientId" | "name">> {
+    const logger = getLogger(["gen", "env"]);
+    const identity = await msiClient.userAssignedIdentities.get(
+      resourceGroupName,
+      identityName,
+    );
+
+    assert.ok(identity.clientId, "Managed identity client ID is undefined");
+
+    logger.debug(
+      "Read identity {identityName} in subscription {subscriptionId}",
+      { identityName, subscriptionId: cloudAccountId },
+    );
+
+    return {
+      clientId: identity.clientId,
+      name: identityName,
+    };
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {

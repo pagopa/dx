@@ -11,6 +11,7 @@ import { provisionTerraformBackend } from "../provision-terraform-backend.js";
 const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),

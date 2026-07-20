@@ -21,6 +21,7 @@ import createMonorepoGenerator, {
   payloadSchema as monorepoPayloadSchema,
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
+import setConfigureGitHubEnvironmentsAction from "./actions/configure-github-environments.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
 export const setMonorepoGenerator = (
@@ -197,6 +198,12 @@ export const setDeploymentEnvironmentGenerator = (
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
+
+  setConfigureGitHubEnvironmentsAction(
+    plop,
+    cloudAccountService,
+    gitHubService,
+  );
 
   createDeploymentEnvironmentGenerator(
     plop,

@@ -85,6 +85,12 @@ export default function getActions(
       {
         type: "syncRepositoryEnvironments",
       },
+      // Bootstrap Azure resources can pre-exist, but OIDC credentials and
+      // GitHub environment secrets are repository-specific and must be ensured
+      // on every add-environment run.
+      {
+        type: "configureGitHubEnvironments",
+      },
       addWorkflowModule(templatesPath),
       ...addEnvironmentModule("bootstrapper"),
     ];
