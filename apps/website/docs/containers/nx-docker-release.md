@@ -54,7 +54,12 @@ The generator registers both plugins, in this order (`@nx/docker` first, then
       }
     },
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin"
+      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "options": {
+        "imageAuthors": "Custom Team",
+        "imageNamePrefix": "custom/repository",
+        "imageUrl": "https://example.com/custom/repository"
+      }
     }
   ]
 }
@@ -76,18 +81,8 @@ plugin:
 - defaults OCI authors to `PagoPA`
 - builds for `linux/amd64,linux/arm64`
 
-Workspace plugin options configure OCI metadata shared by every inferred target:
-
-```json
-{
-  "plugin": "@pagopa/nx-dx-docker-plugin",
-  "options": {
-    "imageAuthors": "Custom Team",
-    "imageNamePrefix": "custom/repository",
-    "imageUrl": "https://example.com/custom/repository"
-  }
-}
-```
+The optional `imageAuthors`, `imageNamePrefix`, and `imageUrl` settings shown
+above configure OCI metadata shared by every inferred target.
 
 ## Generated targets
 
