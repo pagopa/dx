@@ -76,10 +76,19 @@ describe("getProjectDisplayName", () => {
 });
 
 describe("getImageName", () => {
-  it("builds <registry>/<prefix>/<slug> from the project display name, stripping any npm scope", () => {
+  it("builds <registry>/<prefix>/<slug> from the project display name, including its npm scope", () => {
     const result = getImageName("ghcr.io", "pagopa/dx", "@pagopa/my-app");
 
-    expect(result).toBe("ghcr.io/pagopa/dx/my-app");
+    expect(result).toBe("ghcr.io/pagopa/dx/pagopa-my-app");
+  });
+
+  it("keeps scoped projects with the same name in distinct image repositories", () => {
+    expect(getImageName("ghcr.io", "pagopa/dx", "@team-a/api")).toBe(
+      "ghcr.io/pagopa/dx/team-a-api",
+    );
+    expect(getImageName("ghcr.io", "pagopa/dx", "@team-b/api")).toBe(
+      "ghcr.io/pagopa/dx/team-b-api",
+    );
   });
 
   it("slugifies a path-derived display name unchanged (no package.json case)", () => {
@@ -179,14 +188,10 @@ describe("computeReleaseTags", () => {
     ]);
   });
 
-  it("never adds latest for a prerelease", () => {
+  it("emits only the complete tag for a prerelease", () => {
     childProcessMocks.execFileSync.mockReturnValue("my-app@1.9.0\n");
 
-    expect(computeReleaseTags("my-app", "2.0.0-rc.1")).toEqual([
-      "2.0.0-rc.1",
-      "2.0",
-      "2",
-    ]);
+    expect(computeReleaseTags("my-app", "2.0.0-rc.1")).toEqual(["2.0.0-rc.1"]);
   });
 
   it("omits latest when a higher version was already released", () => {

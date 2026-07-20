@@ -38,7 +38,7 @@ const getProjectDisplayName = (workspaceRoot, projectRoot) => {
 const getImageName = (registry, imageNamePrefix, projectDisplayName, repositoryNameOverride) => `${registry}/${repositoryNameOverride ?? `${imageNamePrefix}/${getImageSlug(projectDisplayName)}`}`;
 /**
 * The per-project path segment of the pushed image name: the project's
-* display name (package.json's "name", stripped of any npm scope) rather
+* display name (package.json's "name", including any npm scope) rather
 * than the full nested project path — Nx already enforces unique project
 * names workspace-wide, so no path nesting is needed to avoid collisions
 * within a repo, and `imageNamePrefix` already isolates images *across*
@@ -53,7 +53,7 @@ const getImageName = (registry, imageNamePrefix, projectDisplayName, repositoryN
 * in `@nx/docker`'s plugin) — changing that would break `docker run`
 * against the image this plugin builds.
 */
-const getImageSlug = (projectDisplayName) => slugifyRef(projectDisplayName.replace(/^@[^/]+\//, ""));
+const getImageSlug = (projectDisplayName) => slugifyRef(projectDisplayName.replace(/^@/, ""));
 /**
 * `projectName` ultimately comes from an unsanitized CLI argument
 * (`--project-display-name`, forwarded from `package.json`'s `name` field or
@@ -122,10 +122,11 @@ const computeReleaseTags = (projectName, version) => {
 	const parsedVersion = parseDockerSemver(version);
 	if (!parsedVersion) return [];
 	const tags = [version];
+	if (parsedVersion.prerelease.length > 0) return tags;
 	const { major, minor } = parsedVersion;
 	tags.push(`${major}.${minor}`);
 	if (major !== 0) tags.push(String(major));
-	if (parsedVersion.prerelease.length === 0 && isHighestReleasedVersion(projectName, version)) tags.push("latest");
+	if (isHighestReleasedVersion(projectName, version)) tags.push("latest");
 	return tags;
 };
 /**

@@ -1,11 +1,27 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-BIp_NCWD.js');
+const require_docker_image = require('./docker-image-DgdWlpzQ.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
 let node_fs = require("node:fs");
 let node_path = require("node:path");
 
+//#region src/docker-build-layout.ts
+const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return {
+		contextPath: ".",
+		dockerfilePath: `${projectRoot}/Dockerfile`
+	};
+	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	return {
+		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
+		dockerfilePath: packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+		platform: packageJson.nx?.docker?.platform
+	};
+};
+
+//#endregion
 //#region src/docker-targets.ts
 const buildDockerBuildTarget = (options) => ({
 	executor: "@pagopa/nx-dx-docker-plugin:build",
@@ -118,34 +134,18 @@ const getBuildImageRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
 	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? null;
 };
-/**
-* Resolves the project-level Docker build layout. Both values are relative
-* to the workspace root because executors always run Docker from
-* `context.root`; this keeps Docker COPY paths deterministic in monorepos.
-*/
-const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
-	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return {
-		contextPath: ".",
-		dockerfilePath: `${projectRoot}/Dockerfile`
-	};
-	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
-	return {
-		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
-		dockerfilePath: packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`
-	};
-};
 const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const targets = {};
+	const buildLayout = getBuildLayoutOverrides(context.workspaceRoot, projectRoot);
 	const projectDisplayName = require_docker_image.getProjectDisplayName(context.workspaceRoot, projectRoot);
 	const imageName = require_docker_image.getImageName(options.registry, options.imageNamePrefix, projectDisplayName, getBuildImageRepositoryNameOverride(context.workspaceRoot, projectRoot) ?? void 0);
 	const dockerRunOptions = {
-		...getBuildLayoutOverrides(context.workspaceRoot, projectRoot),
+		...buildLayout,
 		defaultBranch: options.defaultBranch,
 		imageAuthors: options.imageAuthors,
 		imageName,
 		imageUrl: options.imageUrl,
-		platform: options.platform,
+		platform: buildLayout.platform ?? options.platform,
 		projectDisplayName,
 		projectRoot
 	};

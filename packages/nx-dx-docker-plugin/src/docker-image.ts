@@ -67,7 +67,7 @@ export const getImageName = (
 
 /**
  * The per-project path segment of the pushed image name: the project's
- * display name (package.json's "name", stripped of any npm scope) rather
+ * display name (package.json's "name", including any npm scope) rather
  * than the full nested project path — Nx already enforces unique project
  * names workspace-wide, so no path nesting is needed to avoid collisions
  * within a repo, and `imageNamePrefix` already isolates images *across*
@@ -83,7 +83,7 @@ export const getImageName = (
  * against the image this plugin builds.
  */
 const getImageSlug = (projectDisplayName: string): string =>
-  slugifyRef(projectDisplayName.replace(/^@[^/]+\//, ""));
+  slugifyRef(projectDisplayName.replace(/^@/, ""));
 
 /**
  * `projectName` ultimately comes from an unsanitized CLI argument
@@ -177,15 +177,15 @@ export const computeReleaseTags = (
     return [];
   }
   const tags = [version];
+  if (parsedVersion.prerelease.length > 0) {
+    return tags;
+  }
   const { major, minor } = parsedVersion;
   tags.push(`${major}.${minor}`);
   if (major !== 0) {
     tags.push(String(major));
   }
-  if (
-    parsedVersion.prerelease.length === 0 &&
-    isHighestReleasedVersion(projectName, version)
-  ) {
+  if (isHighestReleasedVersion(projectName, version)) {
     tags.push("latest");
   }
   return tags;

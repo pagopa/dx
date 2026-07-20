@@ -52,9 +52,9 @@ inference or PagoPA conventions do not represent the repository correctly.
 ## Per-project Docker build layout
 
 Generated targets run Docker from the workspace root. By default they use
-the workspace root (`.`) as build context and `{projectRoot}/Dockerfile` as
-the Dockerfile. Override either value in a project's `package.json` when a
-Dockerfile needs a narrower context or lives outside the project root:
+the workspace root (`.`) as build context, `{projectRoot}/Dockerfile` as
+the Dockerfile, and build for `linux/amd64,linux/arm64`. Override these values
+in a project's `package.json` when its Docker build differs:
 
 ```jsonc
 {
@@ -62,13 +62,16 @@ Dockerfile needs a narrower context or lives outside the project root:
     "docker": {
       "contextPath": "apps/my-app",
       "dockerfilePath": "apps/my-app/docker/Dockerfile.release",
+      "platform": "linux/amd64",
     },
   },
 }
 ```
 
-Both paths are workspace-relative. The same options can be supplied for a
-single invocation, for example `nx run my-app:docker:build --contextPath=apps/my-app`.
+Both paths are workspace-relative. `platform` accepts the comma-separated value
+passed to `docker buildx --platform`. The same options can be supplied for a
+single invocation, for example
+`nx run my-app:docker:build --platform=linux/amd64`.
 
 Projects without a `package.json` can configure the generated target directly
 in `project.json` instead:
@@ -127,8 +130,8 @@ explicitly. The DX plugin still supplies project-specific options:
 
 See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
 (mirrors `docker/metadata-action`'s default `flavor: latest=auto`). `latest`
-is emitted only for stable SemVer releases; prereleases such as `1.2.3-rc.1`
-never receive it.
+and major/minor aliases are emitted only for stable SemVer releases;
+prereleases such as `1.2.3-rc.1` receive only their complete prerelease tag.
 
 ## CI job summary
 
