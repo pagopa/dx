@@ -128,14 +128,14 @@ npx @pagopa/dx-cli add environment \
 
 The `--name` and `--prefix` values have different purposes:
 
-| Option | Purpose | Example |
-| ------ | ------- | ------- |
-| `--name` | GitHub environment and infrastructure folder name. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with one of them. | `ced-prod` |
-| `--prefix` | Short 2–4 character prefix used in Azure resource names. | `ced` |
+| Option     | Purpose                                                                                                                                | Example    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `--name`   | GitHub environment and infrastructure folder name. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with one of them. | `ced-prod` |
+| `--prefix` | Short 2–4 character prefix used in Azure resource names.                                                                               | `ced`      |
 
 The lifecycle suffix determines the Azure environment short code used by the
-generated resources: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod`
-maps to `p`. For example, `--name ced-prod --prefix ced` creates files under
+generated resources: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod` maps
+to `p`. For example, `--name ced-prod --prefix ced` creates files under
 `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`, while Azure resource
 names use the `ced-p-...` prefix convention.
 
