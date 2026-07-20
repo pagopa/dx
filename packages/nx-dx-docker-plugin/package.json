@@ -19,7 +19,9 @@
   "files": [
     "dist",
     "executors.json",
-    "src/executors/**/schema.json"
+    "generators.json",
+    "src/executors/**/schema.json",
+    "src/generators/**/schema.json"
   ],
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -29,6 +31,7 @@
     "build": "tsdown"
   },
   "executors": "./executors.json",
+  "generators": "./generators.json",
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
