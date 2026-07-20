@@ -17,6 +17,7 @@ import {
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
+import { getBuildLayoutOverrides } from "./docker-build-layout.ts";
 import { getImageName, getProjectDisplayName } from "./docker-image.ts";
 import {
   buildDockerBuildTarget,
@@ -87,33 +88,16 @@ const getBuildImageRepositoryNameOverride = (
   );
 };
 
-/**
- * Resolves the project-level Docker build layout. Both values are relative
- * to the workspace root because executors always run Docker from
- * `context.root`; this keeps Docker COPY paths deterministic in monorepos.
- */
-const getBuildLayoutOverrides = (
-  workspaceRoot: string,
-  projectRoot: string,
-): { readonly contextPath: string; readonly dockerfilePath: string } => {
-  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
-  if (!existsSync(packageJsonPath)) {
-    return { contextPath: ".", dockerfilePath: `${projectRoot}/Dockerfile` };
-  }
-  const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
-  return {
-    contextPath: packageJson.nx?.docker?.contextPath ?? ".",
-    dockerfilePath:
-      packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
-  };
-};
-
 export const createDockerReleaseNodes = (
   projectRoot: string,
   options: DockerPluginOptions,
   context: CreateNodesContextV2,
 ) => {
   const targets: Record<string, TargetConfiguration> = {};
+  const buildLayout = getBuildLayoutOverrides(
+    context.workspaceRoot,
+    projectRoot,
+  );
 
   const projectDisplayName = getProjectDisplayName(
     context.workspaceRoot,
@@ -128,12 +112,12 @@ export const createDockerReleaseNodes = (
   );
 
   const dockerRunOptions = {
-    ...getBuildLayoutOverrides(context.workspaceRoot, projectRoot),
+    ...buildLayout,
     defaultBranch: options.defaultBranch,
     imageAuthors: options.imageAuthors,
     imageName,
     imageUrl: options.imageUrl,
-    platform: options.platform,
+    platform: buildLayout.platform ?? options.platform,
     projectDisplayName,
     projectRoot,
   };

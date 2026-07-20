@@ -76,10 +76,19 @@ describe("getProjectDisplayName", () => {
 });
 
 describe("getImageName", () => {
-  it("builds <registry>/<prefix>/<slug> from the project display name, stripping any npm scope", () => {
+  it("builds <registry>/<prefix>/<slug> from the project display name, including its npm scope", () => {
     const result = getImageName("ghcr.io", "pagopa/dx", "@pagopa/my-app");
 
-    expect(result).toBe("ghcr.io/pagopa/dx/my-app");
+    expect(result).toBe("ghcr.io/pagopa/dx/pagopa-my-app");
+  });
+
+  it("keeps scoped projects with the same name in distinct image repositories", () => {
+    expect(getImageName("ghcr.io", "pagopa/dx", "@team-a/api")).toBe(
+      "ghcr.io/pagopa/dx/team-a-api",
+    );
+    expect(getImageName("ghcr.io", "pagopa/dx", "@team-b/api")).toBe(
+      "ghcr.io/pagopa/dx/team-b-api",
+    );
   });
 
   it("slugifies a path-derived display name unchanged (no package.json case)", () => {
@@ -130,11 +139,32 @@ describe("isHighestReleasedVersion", () => {
 
     expect(isHighestReleasedVersion("my-app", "1.0.0")).toBe(true);
   });
+
+  it("compares numeric prerelease identifiers using SemVer precedence", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.0.0-rc.10\n");
+
+    expect(isHighestReleasedVersion("my-app", "1.0.0-rc.2")).toBe(false);
+  });
+
+  it("gives numeric prerelease identifiers lower precedence than non-numeric ones", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.0.0-beta.alpha\n");
+
+    expect(isHighestReleasedVersion("my-app", "1.0.0-beta.1")).toBe(false);
+  });
 });
 
 describe("computeReleaseTags", () => {
   it("returns an empty array for a non-semver version", () => {
     expect(computeReleaseTags("my-app", "not-a-version")).toEqual([]);
+  });
+
+  it("rejects SemVer build metadata because it is not a valid Docker tag", () => {
+    expect(computeReleaseTags("my-app", "1.2.3+build.1")).toEqual([]);
+  });
+
+  it("rejects non-strict SemVer strings", () => {
+    expect(computeReleaseTags("my-app", "v1.2.3")).toEqual([]);
+    expect(computeReleaseTags("my-app", "01.2.3")).toEqual([]);
   });
 
   it("includes version, major.minor, major, and latest for a stable highest release", () => {
@@ -156,6 +186,12 @@ describe("computeReleaseTags", () => {
       "0.2",
       "latest",
     ]);
+  });
+
+  it("emits only the complete tag for a prerelease", () => {
+    childProcessMocks.execFileSync.mockReturnValue("my-app@1.9.0\n");
+
+    expect(computeReleaseTags("my-app", "2.0.0-rc.1")).toEqual(["2.0.0-rc.1"]);
   });
 
   it("omits latest when a higher version was already released", () => {

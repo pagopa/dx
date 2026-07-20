@@ -39,6 +39,7 @@ locals {
   app_service = {
     name                  = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_service" }))
     sku_name              = var.size != null ? var.size : local.use_case_features.sku
+    zone_balancing        = var.size != null && var.size == "P0v3" ? false : local.use_case_features.zone_balancing
     has_existing_subnet   = var.subnet_id != null
     private_endpoint_name = provider::dx::resource_name(merge(local.naming_config, { resource_type = "app_private_endpoint" }))
   }

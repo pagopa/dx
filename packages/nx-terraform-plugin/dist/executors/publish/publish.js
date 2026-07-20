@@ -6,9 +6,30 @@ import { Octokit } from "octokit";
 import { z } from "zod/v4";
 import { $ } from "execa";
 import { tmpdir } from "node:os";
+import { createAppAuth } from "@octokit/auth-app";
 
 //#region src/adapters/github/octokit.ts
-const getGitHubToken = () => process.env.GH_TOKEN ?? process.env.GITHUB_TOKEN;
+const createGitHubAppOctokit = (credentials) => new Octokit({
+	auth: {
+		appId: credentials.clientId,
+		privateKey: credentials.privateKey
+	},
+	authStrategy: createAppAuth
+});
+const createGitHubAppToken = async (owner, credentials, appOctokit) => {
+	const installation = await appOctokit.rest.apps.getOrgInstallation({ org: owner });
+	return (await createAppAuth({
+		appId: credentials.clientId,
+		installationId: installation.data.id,
+		privateKey: credentials.privateKey
+	})({
+		permissions: { contents: "write" },
+		type: "installation"
+	})).token;
+};
+const revokeGitHubAppToken = async (octokit) => {
+	await octokit.rest.apps.revokeInstallationAccessToken();
+};
 const getAuthenticatedUserLogin = async (octokit, owner) => {
 	try {
 		return (await octokit.rest.users.getAuthenticated()).data.login;
@@ -16,8 +37,7 @@ const getAuthenticatedUserLogin = async (octokit, owner) => {
 		throw new Error(`Cannot create repository for user owner "${owner}" without user-scoped GitHub credentials. GitHub App installation tokens can create organization repositories, but not user-owned repositories.`, { cause: error });
 	}
 };
-const ensureGitHubRepository = async (owner, repo) => {
-	const octokit = new Octokit({ auth: getGitHubToken() });
+const ensureGitHubRepository = async (owner, repo, octokit) => {
 	try {
 		await octokit.rest.repos.get({
 			owner,
@@ -63,20 +83,36 @@ const clearExportWorkingTree = async (exportDirectory) => {
 		recursive: true
 	})));
 };
+const createPublishGitHubAuthentication = async (input) => {
+	if (!input.useGitHubAppAuthentication) return {
+		octokit: new Octokit({ auth: input.githubToken }),
+		shouldRevokeToken: false,
+		token: input.githubToken
+	};
+	const appOctokit = createGitHubAppOctokit(input.githubAppCredentials);
+	const token = await createGitHubAppToken(input.githubOwner, input.githubAppCredentials, appOctokit);
+	return {
+		octokit: new Octokit({ auth: token }),
+		shouldRevokeToken: true,
+		token
+	};
+};
 const publishToGithub = async (input) => {
 	const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
 	const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
 	const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
-	await ensureGitHubRepository(input.githubOwner, repo);
+	const githubAuthentication = await createPublishGitHubAuthentication(input);
 	let publishError;
 	let publishResult = "published";
 	let tempExportDir;
 	try {
+		await ensureGitHubRepository(input.githubOwner, repo, githubAuthentication.octokit);
 		tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 		await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
 		const $$1 = $({
 			cwd: tempExportDir,
 			env: {
+				GH_TOKEN: githubAuthentication.token,
 				GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
 				GIT_AUTHOR_NAME: "PagoPA DX Bot",
 				GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
@@ -86,7 +122,7 @@ const publishToGithub = async (input) => {
 		});
 		const safe$ = $$1({ reject: false });
 		await $$1`git init -b main`;
-		if (getGitHubToken() !== void 0) await $$1`gh auth setup-git`;
+		await $$1`gh auth setup-git`;
 		if ((await safe$`git remote add origin ${repoUrl}`).exitCode !== 0) throw new Error(`Failed to add git remote origin for ${repoUrl}`);
 		const remoteTag = await safe$`git ls-remote --exit-code --tags origin refs/tags/${input.version}`;
 		if (remoteTag.exitCode === 0) publishResult = "skipped";
@@ -113,23 +149,49 @@ const publishToGithub = async (input) => {
 	} catch (error) {
 		publishError = error;
 	}
+	let cleanupError;
 	if (tempExportDir !== void 0) try {
 		await rm(tempExportDir, {
 			force: true,
 			recursive: true
 		});
-	} catch (cleanupError) {
-		if (publishError !== void 0) throw publishError;
-		const cleanupMessage = `Failed to remove temporary export directory ${tempExportDir}: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}`;
-		throw new Error(cleanupMessage, { cause: cleanupError });
+	} catch (error) {
+		const cleanupMessage = `Failed to remove temporary export directory ${tempExportDir}: ${error instanceof Error ? error.message : String(error)}`;
+		cleanupError = new Error(cleanupMessage, { cause: error });
 	}
-	if (publishError !== void 0) throw publishError;
+	let revokeError;
+	if (githubAuthentication.shouldRevokeToken) try {
+		await revokeGitHubAppToken(githubAuthentication.octokit);
+	} catch (error) {
+		revokeError = error;
+	}
+	const finalError = publishError ?? cleanupError ?? revokeError;
+	if (finalError !== void 0) throw finalError;
 	return publishResult;
 };
 
 //#endregion
 //#region src/executors/publish/schema.ts
-const nxReleasePublishExecutorSchema = z.object({
+const githubAppEnvironmentSchema = z.object({
+	GH_APP_CLIENT_ID: z.string().min(1),
+	GH_APP_KEY: z.string().min(1).transform((privateKey) => privateKey.replaceAll("\\n", "\n"))
+});
+const githubTokenEnvironmentSchema = z.object({
+	GH_TOKEN: z.string().min(1).optional(),
+	GITHUB_TOKEN: z.string().min(1).optional()
+}).transform((environment, context) => {
+	const token = environment.GH_TOKEN ?? environment.GITHUB_TOKEN;
+	if (token === void 0) {
+		context.addIssue({
+			code: "custom",
+			message: "GH_TOKEN or GITHUB_TOKEN is required",
+			path: ["GH_TOKEN"]
+		});
+		return z.NEVER;
+	}
+	return token;
+});
+const nxReleasePublishExecutorOptionsSchema = z.object({
 	description: publishSchema.shape.description,
 	githubOwner: publishSchema.shape.github.shape.owner,
 	projectRoot: z.string().min(1),
@@ -137,16 +199,39 @@ const nxReleasePublishExecutorSchema = z.object({
 	version: publishSchema.shape.version,
 	workspaceRoot: z.string()
 });
+const nxReleasePublishExecutorGitHubAppOptionsSchema = nxReleasePublishExecutorOptionsSchema.extend({ useGitHubAppAuthentication: z.literal(true) });
+const nxReleasePublishExecutorGitHubTokenOptionsSchema = nxReleasePublishExecutorOptionsSchema.extend({ useGitHubAppAuthentication: z.literal(false) });
+const nxReleasePublishExecutorAuthenticationSchema = z.looseObject({ useGitHubAppAuthentication: z.boolean().default(false) }).pipe(z.discriminatedUnion("useGitHubAppAuthentication", [nxReleasePublishExecutorGitHubAppOptionsSchema.extend({ environment: githubAppEnvironmentSchema }), nxReleasePublishExecutorGitHubTokenOptionsSchema.extend({ environment: githubTokenEnvironmentSchema })])).transform((options) => {
+	if (options.useGitHubAppAuthentication) {
+		const { environment, ...publishOptions } = options;
+		return {
+			...publishOptions,
+			githubAppCredentials: {
+				clientId: environment.GH_APP_CLIENT_ID,
+				privateKey: environment.GH_APP_KEY
+			}
+		};
+	}
+	const { environment: githubToken, ...publishOptions } = options;
+	return {
+		...publishOptions,
+		githubToken
+	};
+});
+const nxReleasePublishExecutorSchema = nxReleasePublishExecutorAuthenticationSchema;
 
 //#endregion
 //#region src/executors/publish/publish.ts
 const runExecutor = async (options) => {
 	const logger = getPackageLogger(["publish"]);
-	const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
+	const parseResult = nxReleasePublishExecutorSchema.safeParse({
+		...options,
+		environment: process.env
+	});
 	await configureLogger();
 	if (!parseResult.success) {
 		logger.warn("Invalid publish options", {
-			issues: parseResult.error.issues,
+			error: z.prettifyError(parseResult.error),
 			path: options.projectRoot ?? "publish options"
 		});
 		return { success: false };
@@ -157,14 +242,7 @@ const runExecutor = async (options) => {
 		projectRoot: validatedOptions.projectRoot,
 		repoName
 	});
-	if (await publishToGithub({
-		description: validatedOptions.description,
-		githubOwner: validatedOptions.githubOwner,
-		projectRoot: validatedOptions.projectRoot,
-		provider: validatedOptions.provider,
-		version: validatedOptions.version,
-		workspaceRoot: validatedOptions.workspaceRoot
-	}) === "skipped") logger.info("Skipping release, tag already exists");
+	if (await publishToGithub(validatedOptions) === "skipped") logger.info("Skipping release, tag already exists");
 	return { success: true };
 };
 

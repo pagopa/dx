@@ -37,6 +37,7 @@ export {
   type Money,
   type ResourceReport,
 } from "./finding.js";
+export { AZURE_SOURCE_VALUES } from "./schema.js";
 
 export * from "./types.js";
 

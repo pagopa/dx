@@ -17,19 +17,8 @@
 //   NX_RELEASE_DOCKER_PROJECTS=dockerapp3 \
 //     pnpm exec nx release version --projects=dockerapp3 --dry-run
 import { execFileSync } from "node:child_process";
-import { z } from "zod/v4";
 
-// `NX_RELEASE_DOCKER_PROJECTS` is an unsanitized environment variable that
-// ends up as an `nx run-many -p` argument. Restrict it to the characters Nx
-// project names/patterns actually use, so a malformed or hostile value fails
-// loudly instead of reaching a child process command line.
-const projectsFilterSchema = z
-  .string()
-  .min(1)
-  .regex(
-    /^[A-Za-z0-9@][A-Za-z0-9@/_.,\s*-]*$/,
-    "must be a comma/space-separated list of project names or patterns",
-  );
+import { parseDockerProjectsFilter } from "./docker-prebuild-args.ts";
 
 const main = (): void => {
   const rawProjectsFilter = process.env.NX_RELEASE_DOCKER_PROJECTS;
@@ -40,7 +29,7 @@ const main = (): void => {
         "-t",
         "docker:build",
         "-p",
-        projectsFilterSchema.parse(rawProjectsFilter),
+        ...parseDockerProjectsFilter(rawProjectsFilter),
       ]
     : ["nx", "affected", "-t", "docker:build"];
 

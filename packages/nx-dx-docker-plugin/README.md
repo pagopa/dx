@@ -16,7 +16,7 @@ the `docker:run` convenience target. See `src/docker-targets.ts` for the
 rationale on why this plugin owns the whole `docker:build`/`docker:push`
 targets instead of layering on top of `@nx/docker`'s own.
 
-Projects using the *official* Nx Docker release flow
+Projects using the _official_ Nx Docker release flow
 (`nx.release.docker.repositoryName` in `package.json`) also get their
 `nx-release-publish` target overridden with this plugin's
 `@pagopa/nx-dx-docker-plugin:release-publish` executor, which pushes the
@@ -33,7 +33,7 @@ Then register it in your `nx.json` `plugins` array without options:
 
 ```jsonc
 {
-  "plugin": "@pagopa/nx-dx-docker-plugin"
+  "plugin": "@pagopa/nx-dx-docker-plugin",
 }
 ```
 
@@ -52,23 +52,26 @@ inference or PagoPA conventions do not represent the repository correctly.
 ## Per-project Docker build layout
 
 Generated targets run Docker from the workspace root. By default they use
-the workspace root (`.`) as build context and `{projectRoot}/Dockerfile` as
-the Dockerfile. Override either value in a project's `package.json` when a
-Dockerfile needs a narrower context or lives outside the project root:
+the workspace root (`.`) as build context, `{projectRoot}/Dockerfile` as
+the Dockerfile, and build for `linux/amd64,linux/arm64`. Override these values
+in a project's `package.json` when its Docker build differs:
 
 ```jsonc
 {
   "nx": {
     "docker": {
       "contextPath": "apps/my-app",
-      "dockerfilePath": "apps/my-app/docker/Dockerfile.release"
-    }
-  }
+      "dockerfilePath": "apps/my-app/docker/Dockerfile.release",
+      "platform": "linux/amd64",
+    },
+  },
 }
 ```
 
-Both paths are workspace-relative. The same options can be supplied for a
-single invocation, for example `nx run my-app:docker:build --contextPath=apps/my-app`.
+Both paths are workspace-relative. `platform` accepts the comma-separated value
+passed to `docker buildx --platform`. The same options can be supplied for a
+single invocation, for example
+`nx run my-app:docker:build --platform=linux/amd64`.
 
 Projects without a `package.json` can configure the generated target directly
 in `project.json` instead:
@@ -79,10 +82,10 @@ in `project.json` instead:
     "docker:build": {
       "options": {
         "contextPath": "infra/modules/example/tests/apps/probe",
-        "dockerfilePath": "infra/modules/example/tests/apps/probe/Dockerfile"
-      }
-    }
-  }
+        "dockerfilePath": "infra/modules/example/tests/apps/probe/Dockerfile",
+      },
+    },
+  },
 }
 ```
 
@@ -96,10 +99,10 @@ using Nx's standard `nx.release.docker.repositoryName` setting:
   "nx": {
     "release": {
       "docker": {
-        "repositoryName": "pagopa/my-app"
-      }
-    }
-  }
+        "repositoryName": "pagopa/my-app",
+      },
+    },
+  },
 }
 ```
 
@@ -116,17 +119,19 @@ explicitly. The DX plugin still supplies project-specific options:
   "nx": {
     "targets": {
       "nx-release-publish": {
-        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
-      }
-    }
-  }
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish",
+      },
+    },
+  },
 }
 ```
 
 ## Tag strategy
 
 See `src/docker-image.ts`'s `computeImageTags` for the full tag strategy
-(mirrors `docker/metadata-action`'s default `flavor: latest=auto`).
+(mirrors `docker/metadata-action`'s default `flavor: latest=auto`). `latest`
+and major/minor aliases are emitted only for stable SemVer releases;
+prereleases such as `1.2.3-rc.1` receive only their complete prerelease tag.
 
 ## CI job summary
 
@@ -203,9 +208,9 @@ locally), wire this plugin's `src/docker-prebuild.ts` into your `nx.json`:
 {
   "release": {
     "docker": {
-      "preVersionCommand": "node ./node_modules/@pagopa/nx-dx-docker-plugin/dist/docker-prebuild.js"
-    }
-  }
+      "preVersionCommand": "node ./node_modules/@pagopa/nx-dx-docker-plugin/dist/docker-prebuild.js",
+    },
+  },
 }
 ```
 
@@ -217,4 +222,3 @@ release:
 NX_RELEASE_DOCKER_PROJECTS=dockerapp3 \
   pnpm exec nx release version --projects=dockerapp3 --dry-run
 ```
-

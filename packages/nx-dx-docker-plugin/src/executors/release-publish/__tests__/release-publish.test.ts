@@ -163,4 +163,22 @@ describe("release-publish executor", () => {
     );
     expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
   });
+
+  it("reports the Docker process exit code when available", async () => {
+    fsMocks.existsSync.mockReturnValue(true);
+    fsMocks.readFileSync.mockReturnValue("ghcr.io/pagopa/dx/my-app:1.2.3");
+    dockerImageMocks.computeReleaseTags.mockReturnValue(["1.2.3"]);
+    childProcessMocks.execFileSync.mockImplementation(() => {
+      throw Object.assign(new Error("docker push failed"), { status: 125 });
+    });
+
+    const result = await executor(validOptions, baseContext);
+
+    expect(result).toEqual({ success: false });
+    expect(githubSummaryMocks.summarizeDockerFailure).toHaveBeenCalledWith(
+      "my-app",
+      "push",
+      125,
+    );
+  });
 });

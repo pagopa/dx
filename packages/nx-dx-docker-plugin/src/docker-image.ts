@@ -1,7 +1,7 @@
 // Image naming and tag-strategy helpers. Reaches feature parity with
 // `docker/metadata-action`: `latest` on the default branch, semver tags
 // derived from a project-scoped release tag (`{projectName}@{version}`,
-// skipping the major-only alias for 0.x pre-releases), a branch-ref tag, and
+// skipping the major-only alias for 0.x releases), a branch-ref tag, and
 // a short-sha tag. Also mirrors `docker/metadata-action`'s default
 // `flavor: latest=auto` behavior: `latest` also follows a semver release tag
 // when it is the highest version released so far for that project (see
@@ -10,6 +10,7 @@ import { readJsonFile } from "@nx/devkit";
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
+import { compare, parse } from "semver";
 import { z } from "zod/v4";
 
 interface ProjectPackageJson {
@@ -66,7 +67,7 @@ export const getImageName = (
 
 /**
  * The per-project path segment of the pushed image name: the project's
- * display name (package.json's "name", stripped of any npm scope) rather
+ * display name (package.json's "name", including any npm scope) rather
  * than the full nested project path — Nx already enforces unique project
  * names workspace-wide, so no path nesting is needed to avoid collisions
  * within a repo, and `imageNamePrefix` already isolates images *across*
@@ -82,9 +83,7 @@ export const getImageName = (
  * against the image this plugin builds.
  */
 const getImageSlug = (projectDisplayName: string): string =>
-  slugifyRef(projectDisplayName.replace(/^@[^/]+\//, ""));
-
-const SEMVER_RE = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
+  slugifyRef(projectDisplayName.replace(/^@/, ""));
 
 /**
  * `projectName` ultimately comes from an unsanitized CLI argument
@@ -104,34 +103,15 @@ const projectNameSchema = z
 const slugifyRef = (ref: string): string =>
   ref.toLowerCase().replace(/[^a-z0-9._-]+/g, "-");
 
-interface ParsedSemver {
-  readonly major: number;
-  readonly minor: number;
-  readonly patch: number;
-  readonly prerelease: string | undefined;
-}
-
-/** @param version A string already matched by `SEMVER_RE`. */
-const parseSemver = (version: string): ParsedSemver => {
-  const [core, prerelease] = version.split(/-(.+)/);
-  const [major, minor, patch] = core.split(".").map(Number);
-  return { major, minor, patch, prerelease };
-};
-
 /**
- * Standard semver precedence: compares major, then minor, then patch, then
- * treats a release as higher than any pre-release of the same
- * major.minor.patch (e.g. `1.0.0` > `1.0.0-rc.1`).
- * @returns positive if `a` > `b`, negative if `a` < `b`, 0 if equal.
+ * Parses strict SemVer strings that can also be used as Docker tags. Build
+ * metadata is valid SemVer but contains `+`, which Docker tags do not allow.
  */
-const compareSemver = (a: ParsedSemver, b: ParsedSemver): number => {
-  if (a.major !== b.major) return a.major - b.major;
-  if (a.minor !== b.minor) return a.minor - b.minor;
-  if (a.patch !== b.patch) return a.patch - b.patch;
-  if (a.prerelease === b.prerelease) return 0;
-  if (!a.prerelease) return 1;
-  if (!b.prerelease) return -1;
-  return a.prerelease < b.prerelease ? -1 : 1;
+const parseDockerSemver = (version: string) => {
+  const parsed = parse(version);
+  return parsed?.version === version && parsed.build.length === 0
+    ? parsed
+    : null;
 };
 
 /**
@@ -147,7 +127,10 @@ export const isHighestReleasedVersion = (
   projectName: string,
   currentVersion: string,
 ): boolean => {
-  const currentParsed = parseSemver(currentVersion);
+  const currentParsed = parseDockerSemver(currentVersion);
+  if (!currentParsed) {
+    return false;
+  }
   const parsedProjectName = projectNameSchema.parse(projectName);
   const prefix = `${parsedProjectName}@`;
 
@@ -170,19 +153,17 @@ export const isHighestReleasedVersion = (
     if (!tag.startsWith(prefix) || otherVersion === currentVersion) {
       return true;
     }
-    const otherParsed = SEMVER_RE.test(otherVersion)
-      ? parseSemver(otherVersion)
-      : null;
-    return !otherParsed || compareSemver(otherParsed, currentParsed) <= 0;
+    const otherParsed = parseDockerSemver(otherVersion);
+    return !otherParsed || compare(otherParsed, currentParsed) <= 0;
   });
 };
 
 /**
  * Computes the alias tags for a single semver release version: the version
- * itself, `major.minor`, `major` (skipped for 0.x pre-releases, which would
+ * itself, `major.minor`, `major` (skipped for all 0.x releases, which would
  * be ambiguous/unstable), and `latest` when this is the highest version
- * released so far for the project (see `isHighestReleasedVersion`). Returns
- * an empty array when `version` isn't a valid semver string. Shared by
+ * released stable version for the project (see `isHighestReleasedVersion`).
+ * Returns an empty array when `version` isn't a valid semver string. Shared by
  * `computeImageTags` (CI tag-push events) and the `release-publish` executor
  * (wraps `@nx/docker`'s own `nx-release-publish` executor, which only ever
  * pushes a single version-only tag).
@@ -191,14 +172,18 @@ export const computeReleaseTags = (
   projectName: string,
   version: string,
 ): readonly string[] => {
-  if (!SEMVER_RE.test(version)) {
+  const parsedVersion = parseDockerSemver(version);
+  if (!parsedVersion) {
     return [];
   }
   const tags = [version];
-  const [major, minor] = version.split(".");
+  if (parsedVersion.prerelease.length > 0) {
+    return tags;
+  }
+  const { major, minor } = parsedVersion;
   tags.push(`${major}.${minor}`);
-  if (major !== "0") {
-    tags.push(major);
+  if (major !== 0) {
+    tags.push(String(major));
   }
   if (isHighestReleasedVersion(projectName, version)) {
     tags.push("latest");

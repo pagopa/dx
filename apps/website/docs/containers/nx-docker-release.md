@@ -57,7 +57,9 @@ Register both plugins, in this order (`@nx/docker` first, then
 Plugin order matters: register the DX plugin after `@nx/docker` so its inferred
 `docker:build` target wins.
 
-No option is required. The plugin:
+While no options are strictly required since they all have default values, they
+can still be fully customized when the inferred DX conventions do not fit. The
+plugin:
 
 - uses fixed `docker:build` and `docker:push` target names
 - reads the default branch from `defaultBase`, falling back to `main`
@@ -68,7 +70,7 @@ No option is required. The plugin:
 - defaults OCI authors to `PagoPA`
 - builds for `linux/amd64,linux/arm64`
 
-Only descriptive metadata can be overridden when conventions do not fit:
+Workspace plugin options configure OCI metadata shared by every inferred target:
 
 ```json
 {
@@ -106,28 +108,37 @@ the job summary (`GITHUB_STEP_SUMMARY`).
 ## Image name and per-project overrides
 
 By default the image name is `{registry}/{imageNamePrefix}/{image-slug}`, where
-`image-slug` is the project's `package.json` `name` (stripped of any npm scope,
-e.g. `@pagopa/mcpserver` becomes `mcpserver`), or a path-derived slug for
-projects without a `package.json`.
+`image-slug` is the project's `package.json` `name`, normalized for OCI image
+names, or a path-derived slug for projects without a `package.json`. Npm scopes
+are retained: `@team-a/api` becomes `team-a-api` and `@team-b/api` becomes
+`team-b-api`. Projects with the same unscoped name therefore publish to distinct
+repositories.
 
-Projects released through Nx Docker should set their image repository once in
-`nx.release.docker.repositoryName`:
+Use `nx.docker` for project-specific Docker build and push settings:
 
 ```json
 {
   "nx": {
-    "release": {
-      "docker": {
-        "repositoryName": "pagopa/my-image-name"
-      }
+    "docker": {
+      "repositoryName": "pagopa/my-image-name",
+      "contextPath": ".",
+      "dockerfilePath": "apps/my-app/Dockerfile",
+      "platform": "linux/amd64"
     }
   }
 }
 ```
 
-The DX plugin reuses this value for both build/push and release publishing.
-`nx.docker.repositoryName` remains an optional build-only override for projects
-that intentionally need a different repository outside the Nx release flow.
+`repositoryName` pins the image repository; `contextPath` and `dockerfilePath`
+are workspace-relative; `platform` is passed directly to `docker buildx
+--platform`. All four values are optional.
+
+`nx.release.docker.repositoryName` has a separate Nx Release meaning: it
+replaces the project's `nx-release-publish` target with Docker publishing. Use
+it only for projects that publish Docker images through Nx Release and do not
+need the default npm publisher. Projects that publish both an npm package and a
+Docker image should configure `nx.docker.repositoryName` and publish the image
+from a release-tag workflow.
 
 ## Nx Release configuration
 
@@ -158,6 +169,9 @@ Every CI build gets a `sha-<short>` tag and a slugified branch-ref tag, plus
 - minor alias, for example `1.4`
 - major alias, for example `1` (omitted for `0.x` releases)
 - `latest` when the version is the highest release for the project
+
+A prerelease, such as `1.4.2-rc.1`, publishes only its complete prerelease tag.
+It never updates the stable major, minor, or `latest` aliases.
 
 This mirrors `docker/metadata-action`'s default `flavor: latest=auto`, using
 local project release tags as source of truth.

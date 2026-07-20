@@ -1,3 +1,17 @@
+## 0.5.0 (2026-07-16)
+
+### 🚀 Features
+
+- Align `AzureConfig.sources` with the decoded configuration by making it a ([#1983](https://github.com/pagopa/dx/pull/1983))
+  required non-empty list. Callers constructing `AzureConfig` directly must now
+  provide at least one source; `loadConfig` continues to default to
+  `["advisor", "custom"]`. The supported values are available through
+  `AZURE_SOURCE_VALUES`.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.4.0 (2026-07-09)
 
 ### 🚀 Features

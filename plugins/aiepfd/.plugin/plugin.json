@@ -6,5 +6,7 @@
     "name": "PagoPA DX Team"
   },
   "repository": "https://github.com/pagopa/dx",
-  "keywords": ["product development", "plugin"]
+  "keywords": ["product development", "plugin"],
+  "skills": ["./skills"],
+  "mcpServers": ".mcp.json"
 }

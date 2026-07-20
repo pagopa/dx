@@ -1,0 +1,69 @@
+{
+  "skill_name": "dr-blacksmith",
+  "evals": [
+    {
+      "id": 0,
+      "name": "complete-design-review",
+      "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md and do not publish it.",
+      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
+      "expectations": [
+        "Uses the bundled DR/SRS template structure and includes the required sections.",
+        "Includes technical contracts, security/privacy, performance/availability, rollout/rollback, validation, monitoring, and readiness content.",
+        "Creates a UC-01 index entry without generating trigger, flow, edge-case, or acceptance-check child content.",
+        "Preserves traceability to the PRD and other supplied source artifacts."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "incomplete-draft-with-visible-gaps",
+      "prompt": "Draft a Design Review for a collaboration workspace. The notes mention enterprise collaboration but do not confirm the owner, target users, scope of roles and audit logs, architecture, privacy review, availability target, or rollout strategy. Do not invent decisions. Produce a draft and make every material gap visible.",
+      "expected_output": "A draft DR/SRS that preserves uncertainty as assumptions/open questions or justified N/A values and does not fabricate owners, architecture, targets, compliance outcomes, or rollout decisions.",
+      "expectations": [
+        "Keeps metadata.status as draft.",
+        "Makes missing ownership, scope, architecture, compliance, NFR, and delivery decisions visible.",
+        "Does not invent metrics, components, owners, or approval outcomes.",
+        "Uses N/A only with an explicit confirmed reason."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "accepted-rfc-requires-propagation",
+      "prompt": "Update the existing DR/SRS after RFC-07 was accepted to replace synchronous notifications with an event. The RFC page is linked, but its decision has not yet been propagated into the DR/SRS. Keep the operational document honest and identify the propagation work instead of silently treating the RFC as the current design.",
+      "expected_output": "The DR/SRS does not silently apply the RFC. It records the missing propagation, preserves the current operational behavior, and identifies affected contracts, Use Cases, tests, and backlog as follow-up work.",
+      "expectations": [
+        "Treats the existing DR/SRS as the operational source of truth.",
+        "Does not apply RFC-07 behavior before propagation.",
+        "Records RFC-07 and the propagation gap in the decision/open-question area.",
+        "Identifies affected contracts and downstream artifacts without generating their implementation."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "use-case-boundary",
+      "prompt": "Create the DR/SRS for a payment authorization initiative. Add UC-01 and UC-02 entries with titles, linked JTBDs, priorities, and status gaps. Do not write the individual Use Cases because another skill owns them.",
+      "expected_output": "A DR/SRS containing a stable Use Case catalog and no detailed Use Case sections.",
+      "expectations": [
+        "Creates stable UC-01 and UC-02 catalog entries with title, linked JTBD, priority, and status/gap.",
+        "Does not generate triggers, flows, postconditions, acceptance checks, or tracking events for the child Use Cases.",
+        "Keeps detailed behavior delegated to the separate Use Case skill."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "publication-confirmation",
+      "prompt": "The local DR/SRS has been written and validated. Ask whether I want it published to Confluence, but do not publish, choose a language, or assume a target space until I explicitly confirm.",
+      "expected_output": "The agent asks for explicit publication confirmation and does not choose a language or target location before confirmation. After confirmation, it delegates the operation to confluence-librarian rather than publishing directly.",
+      "expectations": [
+        "Requests explicit confirmation before creating or updating a Confluence page.",
+        "Does not publish without an affirmative answer.",
+        "Does not ask for or assume publication language/location before confirmation.",
+        "Delegates confirmed publication to confluence-librarian and does not duplicate its publication mechanics."
+      ],
+      "files": []
+    }
+  ]
+}
