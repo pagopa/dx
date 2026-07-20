@@ -133,4 +133,21 @@ describe("resourcePrefix", () => {
 
     expect(result).toBe("ab-d");
   });
+
+  it("should derive the environment short code from tenant-qualified environment names", () => {
+    const payload = createMockPayload({
+      env: {
+        cloudAccounts: [],
+        name: "ced-prod",
+        prefix: "ced",
+      },
+      workspace: {
+        domain: "bonus",
+      },
+    });
+
+    const result = resourcePrefix(payload);
+
+    expect(result).toBe("ced-p-bonus");
+  });
 });

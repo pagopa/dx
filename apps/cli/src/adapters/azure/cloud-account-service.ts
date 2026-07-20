@@ -23,8 +23,8 @@ import {
 } from "../../domain/cloud-account.js";
 import {
   type EnvironmentId,
-  environmentShort,
   EnvironmentShortValue,
+  getEnvironmentShort,
 } from "../../domain/environment.js";
 import { type GitHubRepo } from "../../domain/github-repo.js";
 import {
@@ -138,7 +138,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
   ): Promise<TerraformBackend | undefined> {
     const allLocations = Object.values(locationShort).join("|");
-    const shortEnv = environmentShort[name];
+    const shortEnv = getEnvironmentShort(name);
     // Check if a storage account with the expected name exists
     // $prefix + environment short + location + "tfstatest" + suffix (e.g., "dxpitntfstatest01")
     // it can return multiple results (e.g. for different location or instance number)
@@ -272,7 +272,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     const short = {
-      env: environmentShort[name],
+      env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
 
@@ -401,7 +401,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
   ): Promise<boolean> {
     const allLocations = Object.values(locationShort).join("|");
-    const shortEnv = environmentShort[name];
+    const shortEnv = getEnvironmentShort(name);
 
     const identityResourceName = `${prefix}-${shortEnv}-(${allLocations})-bootstrap-id-(0[1-9]|[1-9]\\d)`;
     const identityQuery = `resources
@@ -462,7 +462,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     const short = {
-      env: environmentShort[name],
+      env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
 

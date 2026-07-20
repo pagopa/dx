@@ -100,7 +100,7 @@ prompt expects and where to find the required values.
 
 | Prompt                               | What to enter                                                                                                                                          |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Environment name**                 | Select `PROD`, `UAT`, or `DEV`.                                                                                                                        |
+| **Environment name**                 | Enter `prod`, `uat`, `dev`, or a tenant-qualified name ending with one of them (for example `ced-prod` or `cgn-dev`).                                  |
 | **Cloud provider(s)**                | Select `Microsoft Azure` (currently the only supported provider).                                                                                      |
 | **Account(s)**                       | Select one or more Azure subscriptions belonging to your product. Contact your Engineering Leader if you are unsure which subscriptions to pick.       |
 | **Prefix**                           | A short identifier (2–4 characters) used in Azure resource names. It should match the prefix already in use for your product (e.g., `dx`, `io`, `pn`). |
@@ -109,6 +109,38 @@ prompt expects and where to find the required values.
 | **Business unit**                    | The business unit or team that owns this project (free text).                                                                                          |
 | **Management team**                  | The team responsible for managing the environment (free text, e.g., `devex`).                                                                          |
 | **Default location for \<account\>** | The primary Azure region for the selected account (e.g., `Italy North`). Asked once per selected account.                                              |
+
+#### Multi-tenant environments
+
+Use a tenant-qualified environment name when the same monorepo needs separate
+deployment environments for different tenants or product scopes.
+
+```bash
+npx @pagopa/dx-cli add environment \
+  --name ced-prod \
+  --prefix ced \
+  --account <subscription-id> \
+  --location <subscription-id>=italynorth \
+  --domain bonus \
+  --business-unit devex \
+  --management-team devex
+```
+
+The `--name` and `--prefix` values have different purposes:
+
+| Option | Purpose | Example |
+| ------ | ------- | ------- |
+| `--name` | GitHub environment and infrastructure folder name. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with one of them. | `ced-prod` |
+| `--prefix` | Short 2–4 character prefix used in Azure resource names. | `ced` |
+
+The lifecycle suffix determines the Azure environment short code used by the
+generated resources: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod`
+maps to `p`. For example, `--name ced-prod --prefix ced` creates files under
+`infra/bootstrapper/ced-prod` and `infra/core/ced-prod`, while Azure resource
+names use the `ced-p-...` prefix convention.
+
+Run `add environment` once for each tenant/environment pair you need, changing
+both `--name` and `--prefix` when the tenant changes.
 
 **Initialization** _(conditional — only asked when the environment is new)_
 
@@ -128,7 +160,7 @@ npx @pagopa/dx-cli add environment
 ✔ Terraform is installed!
 ✔ You are logged in to Azure (andrea.grillo@pagopa.it)
 
-? Environment name PROD
+? Environment name prod
 ? Cloud provider(s) Microsoft Azure
 ? Account(s) (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
  ◯ DEV-ENGINEERING

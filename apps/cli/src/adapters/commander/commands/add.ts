@@ -29,7 +29,7 @@ import {
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   environmentSchema,
-  environmentShort,
+  getEnvironmentShort,
 } from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
 import {
@@ -263,7 +263,7 @@ export const authorizeCloudAccounts =
 
     const logger = getLogger(["dx-cli", "add-environment"]);
     const { name, prefix } = envPayload.env;
-    const envShort = environmentShort[name];
+    const envShort = getEnvironmentShort(name);
 
     const requestAll = async (): Promise<AuthorizationResult[]> => {
       const results: AuthorizationResult[] = [];
@@ -419,11 +419,10 @@ export const makeAddCommand = (
       new Command("environment")
         .description("Add a new deployment environment")
         .addOption(
-          new Option("--name <name>", "Environment name").choices([
-            "dev",
-            "uat",
-            "prod",
-          ]),
+          new Option(
+            "--name <name>",
+            "Environment name (dev, uat, prod, or tenant-qualified like cgn-prod)",
+          ),
         )
         .addOption(
           new Option(
