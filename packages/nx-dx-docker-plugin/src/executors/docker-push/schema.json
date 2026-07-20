@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Docker push executor",
+  "description": "Builds and pushes this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
+  "type": "object",
+  "properties": {
+    "contextPath": {
+      "description": "Workspace-relative Docker build context",
+      "type": "string",
+      "default": "."
+    },
+    "projectRoot": {
+      "description": "Project root containing the Dockerfile",
+      "type": "string"
+    },
+    "dockerfilePath": {
+      "description": "Workspace-relative Dockerfile path",
+      "type": "string"
+    },
+    "projectDisplayName": {
+      "description": "Human-readable project name used for OCI labels and to match this project's release git tags",
+      "type": "string"
+    },
+    "imageName": {
+      "description": "Full <registry>/<namespace>/<repo> image reference, without a tag",
+      "type": "string"
+    },
+    "defaultBranch": {
+      "description": "Branch that gets the 'latest' tag",
+      "type": "string"
+    },
+    "imageAuthors": {
+      "description": "OCI 'authors' label value",
+      "type": "string"
+    },
+    "imageUrl": {
+      "description": "OCI 'source'/'url' label value",
+      "type": "string"
+    },
+    "platform": {
+      "description": "Comma-separated `docker buildx --platform` value",
+      "type": "string",
+      "default": "linux/amd64,linux/arm64"
+    }
+  },
+  "required": [
+    "projectRoot",
+    "dockerfilePath",
+    "projectDisplayName",
+    "imageName",
+    "defaultBranch",
+    "imageAuthors",
+    "imageUrl"
+  ]
+}

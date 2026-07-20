@@ -4,6 +4,7 @@
   "targets": {
     "docker:build": {
       "options": {
+        "contextPath": "containers/self-hosted-runner",
         "platform": "linux/amd64"
       }
     }
