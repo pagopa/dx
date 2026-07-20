@@ -131,8 +131,8 @@ Use `nx.docker` for project-specific Docker build and push settings:
 ```
 
 `repositoryName` pins the image repository; `contextPath` and `dockerfilePath`
-are workspace-relative; `platform` is passed directly to `docker buildx
---platform`. All four values are optional.
+are workspace-relative; `platform` is passed directly to
+`docker buildx --platform`. All four values are optional.
 
 `nx.release.docker.repositoryName` has a separate Nx Release meaning: it
 replaces the project's `nx-release-publish` target with Docker publishing. Use

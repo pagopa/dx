@@ -12,11 +12,11 @@ describe("initGenerator", () => {
 
     expect(readJson(tree, "nx.json").plugins).toEqual([
       {
-        plugin: "@nx/docker",
         options: {
           buildTarget: "docker:build",
           runTarget: "docker:run",
         },
+        plugin: "@nx/docker",
       },
       { plugin: "@pagopa/nx-dx-docker-plugin" },
     ]);
@@ -26,7 +26,9 @@ describe("initGenerator", () => {
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
       "nx.json",
-      JSON.stringify({ plugins: ["@nx/docker", "@pagopa/nx-dx-docker-plugin"] }),
+      JSON.stringify({
+        plugins: ["@nx/docker", "@pagopa/nx-dx-docker-plugin"],
+      }),
     );
 
     await initGenerator(tree);

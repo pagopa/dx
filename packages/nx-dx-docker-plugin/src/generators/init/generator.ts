@@ -1,23 +1,23 @@
 // Registers the Docker plugins required for DX Docker target inference.
 import { type Tree, updateJson } from "@nx/devkit";
 
+interface NxJsonConfiguration {
+  readonly plugins?: NxPlugin[];
+}
+
+type NxPlugin = NxPluginConfiguration | string;
+
 interface NxPluginConfiguration {
   readonly options?: Record<string, unknown>;
   readonly plugin: string;
 }
 
-type NxPlugin = NxPluginConfiguration | string;
-
-interface NxJsonConfiguration {
-  readonly plugins?: NxPlugin[];
-}
-
 const nxDockerPlugin: NxPluginConfiguration = {
-  plugin: "@nx/docker",
   options: {
     buildTarget: "docker:build",
     runTarget: "docker:run",
   },
+  plugin: "@nx/docker",
 };
 
 const dxDockerPlugin: NxPluginConfiguration = {
