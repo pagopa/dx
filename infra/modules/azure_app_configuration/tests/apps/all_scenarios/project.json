@@ -7,6 +7,7 @@
   "targets": {
     "docker:build": {
       "options": {
+        "contextPath": "infra/modules/azure_app_configuration/tests/apps/all_scenarios",
         "platform": "linux/amd64,linux/arm64"
       }
     },

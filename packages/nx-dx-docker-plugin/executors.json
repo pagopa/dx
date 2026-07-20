@@ -1,0 +1,19 @@
+{
+  "executors": {
+    "build": {
+      "implementation": "./dist/executors/docker-build/docker-build.js",
+      "schema": "./src/executors/docker-build/schema.json",
+      "description": "Builds this project's Docker image locally with full OCI labels (RFC-DX-076 feature parity with docker/metadata-action)"
+    },
+    "push": {
+      "implementation": "./dist/executors/docker-push/docker-push.js",
+      "schema": "./src/executors/docker-push/schema.json",
+      "description": "Builds and pushes this project's Docker image with full OCI labels and index+manifest annotations"
+    },
+    "release-publish": {
+      "implementation": "./dist/executors/release-publish/release-publish.js",
+      "schema": "./src/executors/release-publish/schema.json",
+      "description": "Pushes this release's version tag plus major/major.minor/latest alias tags, for projects using the official Nx Docker release flow"
+    }
+  }
+}

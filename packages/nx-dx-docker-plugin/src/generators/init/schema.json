@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Initialize the DX Docker plugin",
+  "description": "Registers @nx/docker and @pagopa/nx-dx-docker-plugin in nx.json.",
+  "type": "object",
+  "properties": {}
+}

@@ -4,10 +4,37 @@ import { $ as $_ } from "execa";
 import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
+import { Octokit } from "octokit";
 
-import { ensureGitHubRepository, getGitHubToken } from "./octokit.ts";
+import {
+  createGitHubAppOctokit,
+  createGitHubAppToken,
+  ensureGitHubRepository,
+  type GitHubAppCredentials,
+  revokeGitHubAppToken,
+} from "./octokit.ts";
 
-export interface PublishToGithubInput {
+export type PublishToGithubInput = PublishToGithubOptions &
+  (
+    | {
+        githubAppCredentials: GitHubAppCredentials;
+        useGitHubAppAuthentication: true;
+      }
+    | {
+        githubToken: string;
+        useGitHubAppAuthentication: false;
+      }
+  );
+
+export type PublishToGithubResult = "published" | "skipped";
+
+interface PublishGitHubAuthentication {
+  octokit: Octokit;
+  shouldRevokeToken: boolean;
+  token: string;
+}
+
+interface PublishToGithubOptions {
   description: string;
   githubOwner: string;
   projectRoot: string;
@@ -15,8 +42,6 @@ export interface PublishToGithubInput {
   version: string;
   workspaceRoot: string;
 }
-
-export type PublishToGithubResult = "published" | "skipped";
 
 export const getRepoNameFromProjectRoot = (
   projectRoot: string,
@@ -57,20 +82,49 @@ const clearExportWorkingTree = async (
   );
 };
 
+const createPublishGitHubAuthentication = async (
+  input: PublishToGithubInput,
+): Promise<PublishGitHubAuthentication> => {
+  if (!input.useGitHubAppAuthentication) {
+    return {
+      octokit: new Octokit({ auth: input.githubToken }),
+      shouldRevokeToken: false,
+      token: input.githubToken,
+    };
+  }
+
+  const appOctokit = createGitHubAppOctokit(input.githubAppCredentials);
+  const token = await createGitHubAppToken(
+    input.githubOwner,
+    input.githubAppCredentials,
+    appOctokit,
+  );
+
+  return {
+    octokit: new Octokit({ auth: token }),
+    shouldRevokeToken: true,
+    token,
+  };
+};
+
 export const publishToGithub = async (
   input: PublishToGithubInput,
 ): Promise<PublishToGithubResult> => {
   const repo = getRepoNameFromProjectRoot(input.projectRoot, input.provider);
   const repoUrl = `https://github.com/${input.githubOwner}/${repo}.git`;
   const sourceModuleDirectory = join(input.workspaceRoot, input.projectRoot);
-
-  await ensureGitHubRepository(input.githubOwner, repo);
+  const githubAuthentication = await createPublishGitHubAuthentication(input);
 
   let publishError: unknown;
   let publishResult: PublishToGithubResult = "published";
   let tempExportDir: string | undefined;
 
   try {
+    await ensureGitHubRepository(
+      input.githubOwner,
+      repo,
+      githubAuthentication.octokit,
+    );
     tempExportDir = await mkdtemp(join(tmpdir(), "export-repo-"));
 
     await copyModuleDirectoryContents(sourceModuleDirectory, tempExportDir);
@@ -78,6 +132,7 @@ export const publishToGithub = async (
     const $ = $_({
       cwd: tempExportDir,
       env: {
+        GH_TOKEN: githubAuthentication.token,
         GIT_AUTHOR_EMAIL: "pagopa-dx-bot@pagopa.it",
         GIT_AUTHOR_NAME: "PagoPA DX Bot",
         GIT_COMMITTER_EMAIL: "pagopa-dx-bot@pagopa.it",
@@ -96,9 +151,7 @@ export const publishToGithub = async (
     // GITHUB_TOKEN and serves credentials for github.com HTTPS remotes, so the
     // token never lands in the remote URL, `.git/config`, or `git remote -v`
     // output, and every later git operation is covered without per-call wiring.
-    if (getGitHubToken() !== undefined) {
-      await $`gh auth setup-git`;
-    }
+    await $`gh auth setup-git`;
 
     const remoteAdd = await safe$`git remote add origin ${repoUrl}`;
     if (remoteAdd.exitCode !== 0) {
@@ -156,26 +209,35 @@ export const publishToGithub = async (
     publishError = error;
   }
 
+  let cleanupError: unknown;
   if (tempExportDir !== undefined) {
     try {
       await rm(tempExportDir, { force: true, recursive: true });
-    } catch (cleanupError) {
-      if (publishError !== undefined) {
-        throw publishError;
-      }
+    } catch (error) {
       const cleanupMessage = `Failed to remove temporary export directory ${tempExportDir}: ${
-        cleanupError instanceof Error
-          ? cleanupError.message
-          : String(cleanupError)
+        error instanceof Error ? error.message : String(error)
       }`;
-      throw new Error(cleanupMessage, {
-        cause: cleanupError,
+      cleanupError = new Error(cleanupMessage, {
+        cause: error,
       });
     }
   }
 
-  if (publishError !== undefined) {
-    throw publishError;
+  let revokeError: unknown;
+  if (githubAuthentication.shouldRevokeToken) {
+    try {
+      // Installation tokens are temporary, but revoking them minimizes their
+      // usable lifetime even when publishing failed or was skipped.
+      await revokeGitHubAppToken(githubAuthentication.octokit);
+    } catch (error) {
+      revokeError = error;
+    }
+  }
+
+  // Cleanup must not hide the error that caused publishing to fail.
+  const finalError = publishError ?? cleanupError ?? revokeError;
+  if (finalError !== undefined) {
+    throw finalError;
   }
 
   return publishResult;

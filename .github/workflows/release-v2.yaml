@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Generate GitHub App token
         id: generate-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # 3.2.0
         with:
           client-id: ${{ secrets.app-client-id }}
           private-key: ${{ secrets.app-private-key }}
@@ -78,6 +78,9 @@ jobs:
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
+        env:
+          GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
+          GH_APP_KEY: ${{ secrets.app-private-key }}
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}

@@ -206,7 +206,8 @@ resource "azurerm_container_app" "this" {
 
     ignore_changes = [
       # The image is not managed by Terraform, but instead updated by CD pipelines
-      template[0].container[0].image
+      template[0].container[0].image,
+      latest_revision_fqdn,
     ]
   }
 

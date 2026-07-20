@@ -1,4 +1,5 @@
 import { PromiseExecutor } from "@nx/devkit";
+import { z } from "zod/v4";
 
 import {
   getRepoNameFromProjectRoot,
@@ -16,13 +17,16 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
   options,
 ) => {
   const logger = getPackageLogger(["publish"]);
-  const parseResult = nxReleasePublishExecutorSchema.safeParse(options);
+  const parseResult = nxReleasePublishExecutorSchema.safeParse({
+    ...options,
+    environment: process.env,
+  });
 
   await configureLogger();
 
   if (!parseResult.success) {
     logger.warn("Invalid publish options", {
-      issues: parseResult.error.issues,
+      error: z.prettifyError(parseResult.error),
       path: options.projectRoot ?? "publish options",
     });
     return {
@@ -31,6 +35,7 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
   }
 
   const validatedOptions = parseResult.data;
+
   const repoName = getRepoNameFromProjectRoot(
     validatedOptions.projectRoot,
     validatedOptions.provider,
@@ -44,14 +49,7 @@ const runExecutor: PromiseExecutor<NxReleasePublishExecutorInput> = async (
     },
   );
 
-  const publishResult = await publishToGithub({
-    description: validatedOptions.description,
-    githubOwner: validatedOptions.githubOwner,
-    projectRoot: validatedOptions.projectRoot,
-    provider: validatedOptions.provider,
-    version: validatedOptions.version,
-    workspaceRoot: validatedOptions.workspaceRoot,
-  });
+  const publishResult = await publishToGithub(validatedOptions);
 
   if (publishResult === "skipped") {
     logger.info("Skipping release, tag already exists");

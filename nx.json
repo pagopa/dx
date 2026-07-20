@@ -77,6 +77,12 @@
     ],
     "projectsRelationship": "independent",
     "version": {},
+    "docker": {
+      "registryUrl": "ghcr.io",
+      "versionSchemes": {
+        "production": "{versionActionsVersion}"
+      }
+    },
     "changelog": {
       "projectChangelogs": {
         "createRelease": false,
@@ -101,11 +107,13 @@
   "plugins": [
     {
       "plugin": "@nx/docker",
-      "exclude": ["apps/*/Dockerfile"],
       "options": {
         "buildTarget": "docker:build",
         "runTarget": "docker:run"
       }
+    },
+    {
+      "plugin": "@pagopa/nx-dx-docker-plugin"
     },
     {
       "plugin": "@nx/vitest",

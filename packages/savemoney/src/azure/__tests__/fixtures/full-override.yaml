@@ -3,6 +3,8 @@ azure:
     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     - yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
   preferredLocation: westeurope
+  sources:
+    - custom
   timespanDays: 60
   thresholds:
     vm:
