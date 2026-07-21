@@ -18,6 +18,14 @@ import type {
  */
 export type AzureConfig = BaseConfig & {
   /**
+   * Optional path to an AZQR (`azqr scan --json`) report. When set, the
+   * orchestrator ingests its `impacted` resources, filters them down to
+   * FinOps-relevant opportunities and merges them into the run output as
+   * findings with `source: "azqr"`. Can be set via YAML (`azure.azqrReportPath`)
+   * or the CLI `--azqr-report` flag, which takes precedence.
+   */
+  azqrReportPath?: string;
+  /**
    * Maximum number of resources analyzed in parallel within a single
    * subscription. Defaults to 8 when not provided. Set to 1 for a fully
    * sequential run (useful for debugging or to be gentler on quotas).

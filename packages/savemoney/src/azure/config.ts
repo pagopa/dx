@@ -42,6 +42,7 @@ export async function loadAzureConfig(
       const rawYaml = yaml.load(raw);
       const parsed = ConfigSchema.parse(rawYaml);
       return {
+        azqrReportPath: parsed.azure.azqrReportPath,
         concurrency: parsed.azure.concurrency,
         preferredLocation: parsed.azure.preferredLocation,
         sources: parsed.azure.sources,

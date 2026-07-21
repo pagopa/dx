@@ -78,9 +78,10 @@ export type FindingCategory =
  *
  * - `custom`  → emitted by a savemoney analyzer plugin
  * - `advisor` → fetched from Azure Advisor recommendations
+ * - `azqr`    → ingested from an AZQR (`azqr scan --json`) report
  * - `aws`     → reserved for future AWS Trusted Advisor / Compute Optimizer
  */
-export type FindingSource = "advisor" | "aws" | "custom";
+export type FindingSource = "advisor" | "aws" | "azqr" | "custom";
 
 /**
  * Monetary value associated with a finding, when known.
