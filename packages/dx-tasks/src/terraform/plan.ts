@@ -1,5 +1,6 @@
 /** This module runs Terraform plans for dx-tasks without external process helpers. */
 
+import fs from "node:fs/promises";
 import util from "node:util";
 import * as z from "zod/mini";
 
@@ -60,6 +61,51 @@ export interface TerraformPlanReport {
 
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
+
+// CI step logs can truncate output for large plans; this limit keeps each plan's
+// console output well within safe bounds while leaving room for task runner overhead.
+const PLAN_CONSOLE_MAX_CHARS = 50_000;
+
+// Appends the full Terraform plan output to a summary file as a collapsible
+// <details> block. No-ops when summaryFilePath is not provided.
+// Errors are swallowed since this is best-effort; the report artifact and console log remain available.
+export const appendPlanOutputToSummary = async (
+  summaryFilePath: string | undefined,
+  modulePath: string,
+  strippedOutput: string,
+): Promise<void> => {
+  if (!summaryFilePath) {
+    return;
+  }
+
+  const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${strippedOutput}\n\`\`\`\n\n</details>\n\n`;
+
+  try {
+    await fs.appendFile(summaryFilePath, markdown, "utf8");
+  } catch (e) {
+    console.warn("Failed to write Terraform plan output summary", e);
+  }
+};
+
+// Truncates plan output to maxChars for console logging. When the output exceeds the limit,
+// replaces it with the summary line and a notice pointing users to the output summary file.
+export const truncateForConsoleLog = (
+  output: string,
+  summaryLine: string | undefined,
+  maxChars: number,
+  shouldTruncate: boolean,
+  hasSummaryFile: boolean,
+): string => {
+  if (!shouldTruncate || output.length <= maxChars) {
+    return output;
+  }
+
+  const truncationTarget = hasSummaryFile
+    ? "See the plan output summary for the full output."
+    : "See the plan report artifacts for the full output.";
+
+  return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. ${truncationTarget}]`;
+};
 
 const renderTerraformPlanReports = (
   reports: readonly TerraformPlanReport[],
@@ -232,6 +278,8 @@ const executeTerraformPlan = async (
   env: Record<string, string>,
   verbose: boolean,
   report: boolean,
+  summaryFilePath: string | undefined,
+  shouldTruncate: boolean,
   context: TaskRunContext,
 ) => {
   const result = await runCommand("terraform", ["plan"], modulePath, env);
@@ -249,8 +297,20 @@ const executeTerraformPlan = async (
   const planOutput = getPlanOutput(maskedOutput, verbose);
   const notices = getPlanNotices(maskedOutput);
   const summaryLine = getPlanSummaryLine(maskedOutput);
+  // Strip ANSI codes once and reuse for both the Step Summary and the report artifact.
+  const strippedOutput = util.stripVTControlCharacters(planOutput);
 
-  console.log(planOutput);
+  await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+
+  console.log(
+    truncateForConsoleLog(
+      planOutput,
+      summaryLine,
+      PLAN_CONSOLE_MAX_CHARS,
+      shouldTruncate,
+      Boolean(summaryFilePath),
+    ),
+  );
 
   if (report && context.reports) {
     await context.reports.write(
@@ -259,7 +319,7 @@ const executeTerraformPlan = async (
       {
         modulePath,
         notices,
-        planOutput: util.stripVTControlCharacters(planOutput),
+        planOutput: strippedOutput,
         success: result.exitCode === 0,
         ...(summaryLine ? { summaryLine } : {}),
       },
@@ -283,6 +343,7 @@ export async function terraformPlan(
 ) {
   const args = new Map<string, string | true>();
   const env: Record<string, string> = {};
+  const runningInCI = isRunningInCI();
 
   args.set("lock-timeout", "120s");
 
@@ -299,7 +360,7 @@ export async function terraformPlan(
     env.TF_IN_AUTOMATION = "true";
   }
 
-  if (isRunningInCI()) {
+  if (runningInCI) {
     args.set("input", "false");
     args.set("no-color", true);
     env.TF_IN_AUTOMATION = "true";
@@ -313,5 +374,13 @@ export async function terraformPlan(
       "",
     );
 
-  await executeTerraformPlan(modulePath, env, verbose, report, context);
+  await executeTerraformPlan(
+    modulePath,
+    env,
+    verbose,
+    report,
+    process.env.GITHUB_STEP_SUMMARY,
+    runningInCI,
+    context,
+  );
 }
