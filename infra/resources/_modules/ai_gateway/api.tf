@@ -71,7 +71,7 @@ resource "azurerm_api_management_api_policy" "foundry" {
     <llm-emit-token-metric>
       <dimension name="Operation ID" />
     </llm-emit-token-metric>
-    <llm-token-limit remaining-quota-tokens-header-name="remaining-tokens" remaining-tokens-header-name="remaining-tokens" tokens-per-minute="100000" token-quota="10000000" token-quota-period="Daily" counter-key="@(context.Subscription.Id)" estimate-prompt-tokens="false" tokens-consumed-header-name="consumed-tokens" />
+    <llm-token-limit remaining-quota-tokens-header-name="remaining-tokens" remaining-tokens-header-name="remaining-tokens" tokens-per-minute="100000" token-quota="10000000" token-quota-period="Daily" counter-key="@(context.Request.IpAddress)" estimate-prompt-tokens="false" tokens-consumed-header-name="consumed-tokens" />
     <!--TODO: add cache-->
   </inbound>
   <backend>
