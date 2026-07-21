@@ -4,10 +4,10 @@ import { addCommentMarker } from "../index.js";
 import { buildResponsesRequest } from "../prompt.js";
 
 describe("buildResponsesRequest", () => {
-  it("uses the DX skill as instructions and includes the MCP context in the user input", () => {
+  it("uses the DX skill as instructions and includes SDK RBAC context in the user input", () => {
     const request = buildResponsesRequest(
       {
-        azureMcpContext: "Status: collected. Live role assignments follow.",
+        azureRbacContext: "Status: collected. Live role assignments follow.",
         cdIdentityName: "dx-d-itn-infra-cd-id-01",
         planText: "# azurerm_resource_group.example will be created",
         skillText: "# Terraform CD Permission Check",

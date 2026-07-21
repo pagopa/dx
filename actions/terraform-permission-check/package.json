@@ -13,8 +13,9 @@
   },
   "dependencies": {
     "@actions/core": "catalog:github-actions",
+    "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-msi": "^2.2.0",
     "@azure/identity": "catalog:",
-    "@modelcontextprotocol/sdk": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

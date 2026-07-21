@@ -411,12 +411,15 @@ importers:
       '@actions/core':
         specifier: catalog:github-actions
         version: 3.0.1
+      '@azure/arm-authorization':
+        specifier: ^9.0.0
+        version: 9.0.0
+      '@azure/arm-msi':
+        specifier: ^2.2.0
+        version: 2.2.0
       '@azure/identity':
         specifier: 'catalog:'
         version: 4.13.1
-      '@modelcontextprotocol/sdk':
-        specifier: 'catalog:'
-        version: 1.29.0(zod@4.4.3)
       zod:
         specifier: 'catalog:'
         version: 4.4.3

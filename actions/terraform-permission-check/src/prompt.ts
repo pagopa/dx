@@ -6,7 +6,7 @@
  */
 
 export interface PromptContext {
-  azureMcpContext: string;
+  azureRbacContext: string;
   cdIdentityName?: string;
   planText: string;
   skillText: string;
@@ -28,11 +28,11 @@ export function buildPrompt(context: PromptContext): string {
     "",
     `Terraform working directory: ${context.workingDirectory}`,
     `Infra CD identity: ${context.cdIdentityName ?? "not pre-resolved; infer it from the repository conventions if possible"}`,
-    "Check path requested by the action: live Azure MCP read-only facts when available, otherwise Terraform-derived fallback.",
+    "Check path requested by the action: live Azure SDK read-only RBAC facts when available, otherwise Terraform-derived fallback.",
     "",
-    "Azure MCP read-only context:",
+    "Azure SDK read-only RBAC context:",
     "```text",
-    context.azureMcpContext.trim(),
+    context.azureRbacContext.trim(),
     "```",
     "",
     "Sanitized Terraform plan:",

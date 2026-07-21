@@ -10,7 +10,7 @@ import * as core from "@actions/core";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { collectAzureMcpContext } from "./azure-mcp.js";
+import { collectAzureRbacContext } from "./azure-sdk-rbac.js";
 import { callFoundryGateway } from "./foundry-client.js";
 import { buildResponsesRequest } from "./prompt.js";
 import { type Inputs, InputsSchema } from "./schema.js";
@@ -35,21 +35,17 @@ export async function run(): Promise<void> {
       "utf8",
     );
     const skillText = await fs.readFile(resolveSkillPath(inputs), "utf8");
-    const azureMcpContext = await collectAzureMcpContext({
-      argsText: inputs["azure-mcp-args"],
+    const azureRbacContext = await collectAzureRbacContext({
       cdIdentityName: inputs["cd-identity-name"],
-      command: inputs["azure-mcp-command"],
-      enabled: inputs["azure-mcp-enabled"],
+      cdIdentityResourceGroupName: inputs["cd-identity-resource-group-name"],
       environment: process.env,
       planText,
       subscriptionId: inputs["azure-subscription-id"],
-      timeoutMs: inputs["azure-mcp-timeout-ms"],
-      workingDirectory,
     });
 
     const request = buildResponsesRequest(
       {
-        azureMcpContext,
+        azureRbacContext,
         cdIdentityName: inputs["cd-identity-name"],
         planText,
         skillText,
@@ -83,12 +79,11 @@ export async function run(): Promise<void> {
 
 function parseInputs(): Inputs {
   const result = InputsSchema.safeParse({
-    "azure-mcp-args": core.getInput("azure-mcp-args"),
-    "azure-mcp-command": core.getInput("azure-mcp-command"),
-    "azure-mcp-enabled": core.getInput("azure-mcp-enabled"),
-    "azure-mcp-timeout-ms": core.getInput("azure-mcp-timeout-ms"),
     "azure-subscription-id": core.getInput("azure-subscription-id"),
     "cd-identity-name": core.getInput("cd-identity-name"),
+    "cd-identity-resource-group-name": core.getInput(
+      "cd-identity-resource-group-name",
+    ),
     "filtered-plan-path": core.getInput("filtered-plan-path"),
     "gateway-token-scope": core.getInput("gateway-token-scope"),
     "gateway-url": core.getInput("gateway-url"),

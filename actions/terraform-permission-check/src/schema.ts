@@ -46,17 +46,12 @@ const optionalNonEmpty = z
   .transform((value) => (value && value.length > 0 ? value : undefined));
 
 export const InputsSchema = z.object({
-  "azure-mcp-args": z.string().min(1),
-  "azure-mcp-command": z.string().min(1),
-  "azure-mcp-enabled": z
-    .enum(["true", "false"])
-    .transform((value) => value === "true"),
-  "azure-mcp-timeout-ms": z.coerce.number().int().min(1000).max(60000),
   "azure-subscription-id": optionalNonEmpty,
   "cd-identity-name": z
     .string()
     .optional()
     .transform((value) => (value && value.length > 0 ? value : undefined)),
+  "cd-identity-resource-group-name": optionalNonEmpty,
   "filtered-plan-path": safePath("filtered-plan-path"),
   "gateway-token-scope": z.string().min(1),
   "gateway-url": z.string().url(),

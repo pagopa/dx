@@ -37,10 +37,10 @@ follow it exactly. This file orchestrates it.
 
 - The target repository's Terraform is available locally (to identify the CD
   identity and, if needed, the fallback baseline).
-- For the authoritative live check: the **official Azure MCP server** must be
-  available and running in **read-only mode** (`azureMcp.readOnly`). See the
-  live-check policy in the procedure. If it is running but not read-only, the
-  skill **stops** and tells you how to enable it.
+- For the authoritative CI live check: the workflow's OIDC identity must have
+  read access to the target CD UAMI, role assignments, and role definitions.
+  The action collects these facts through the Azure SDK; see the live-check
+  policy in the procedure.
 
 ## Workflow
 
@@ -64,19 +64,14 @@ they require (create/update/replace/destroy; and especially any
 Resolve the Infra CD identity by naming convention from the repo's Terraform, per
 Step 1 of the procedure.
 
-### Step 3 — Live check (read-only Azure MCP) — preferred
+### Step 3 — Live check (read-only Azure SDK) — preferred
 
 Follow Step 2 of the procedure:
 
-- Confirm the Azure MCP server is available and **read-only**. If it is available
-  but **not** read-only → **STOP** and instruct the user to enable read-only
-  (`--read-only`), then re-run.
-- If it is **not available** or returns no usable answer → tell the user, then
-  go to Step 4.
-- Otherwise, ask the server whether the CD identity holds the required
-  roles/actions at the target scopes.
-
-Do **not** use `az`, Azure Resource Graph, or any other live mechanism.
+- Use the deployed assignments and definitions collected by the action's
+  read-only Azure SDK adapter to evaluate the CD identity at target scopes.
+- If the SDK facts are **unavailable** or incomplete → tell the user, then go to
+  Step 4. Do not attempt a mutation or broaden the CI identity's permissions.
 
 ### Step 4 — Fallback: local Terraform-derived check
 
@@ -88,7 +83,7 @@ at the role level, so flag uncertain conclusions.
 ### Step 5 — Report
 
 Produce a concise verdict (see format below). Always state which path was used
-(live Azure MCP vs. Terraform-derived fallback) so the reader knows how
+(live Azure SDK vs. Terraform-derived fallback) so the reader knows how
 authoritative the result is.
 
 ## Output format
@@ -97,7 +92,7 @@ authoritative the result is.
 ## Terraform CD Permission Check
 
 Identity: <cd-identity-name>
-Check path: <live (Azure MCP, read-only) | fallback (Terraform-derived, best-effort)>
+Check path: <Azure RBAC | fallback (Terraform)>
 
 Result: <✅ no gaps found | ⚠️ N potential gap(s)>
 

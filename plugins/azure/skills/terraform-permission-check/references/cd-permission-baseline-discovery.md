@@ -30,30 +30,28 @@ the definitions tell you the actions.
 
 - The target repository's Terraform (to detect module version + customizations).
 - The environment under analysis (`dev` / `uat` / `prod`).
-- For live checks: the **official Azure MCP server**, running **read-only** (see
-  the live-check policy below).
+- For CI live checks: the CI OIDC identity, configured with read access to the
+  CD UAMI, role assignments, and role definitions.
 
-## Live-check policy (read-only, Azure MCP only)
+## Live-check policy (read-only Azure SDK)
 
-A live permission check has **exactly one supported mechanism**: the **official
-Azure MCP server**, running in **read-only mode**. This is deliberate — a
-developer's own credential typically carries write permissions, so the safe
-surface must be enforced by the mechanism, not by trusting the caller's RBAC.
+A CI live permission check uses the action's Azure SDK adapter under the
+workflow OIDC identity. The target CD identity is resolved through
+`ManagedServiceIdentityClient`, then role assignments and role definitions are
+read through `AuthorizationManagementClient`.
 
 Rules:
 
-- The Azure MCP server **MUST** be started with read-only enabled
-  (`azureMcp.readOnly`). Concretely, add the `--read-only` argument to the Azure
-  MCP server's `args` in your MCP configuration (e.g. `.vscode/mcp.json` or your
-  MCP client config) and restart the server.
-- **If read-only is not enabled: STOP.** Do not run any live check. Tell the
-  user to enable read-only mode and exactly how (above), then re-run.
-- **Do not use any other live mechanism** — no `az`, no Azure Resource Graph /
-  `az graph`, no direct ARM/REST calls. The read-only Azure MCP server is the
-  only permitted live path.
-- **If the Azure MCP server is not available**, or it returns no usable answer:
-  **tell the user**, then fall back to the local Terraform-derived check
-  (Step 3).
+- The CI identity must have least-privilege management-plane reads for
+  `Microsoft.ManagedIdentity/userAssignedIdentities/read`,
+  `Microsoft.Authorization/roleAssignments/read`, and
+  `Microsoft.Authorization/roleDefinitions/read` in the target subscription.
+- The SDK adapter must perform reads only. It must not invoke `az`, Azure
+  Resource Graph, or any mutating ARM operation.
+- **If SDK facts are unavailable**, or a target scope cannot be evaluated,
+  report the limitation and fall back to the Terraform-derived check (Step 3).
+- The live check does not currently collect management-group inherited role
+  assignments or deny assignments. Mark these cases as uncertain in the report.
 
 ## Step 1 — Identify the CD identity (naming convention)
 
@@ -73,30 +71,30 @@ its object id; resolve it by name.
 
 Resolve the values from the repository's Terraform (`environment` block:
 `prefix`, `env_short`, `location`, `domain`, `instance_number`). When the
-read-only Azure MCP server is available (Step 2), use it to resolve the
-identity's `principalId`.
+CI action has the identity name and resource group, use the Azure SDK to resolve
+its `principalId`. The standard DX identity naming convention supports a
+resource-group fallback, but callers should pass the resource group when the
+identity does not follow it.
 
-## Step 2 — Live check (Azure MCP, read-only) — preferred
+## Step 2 — Live check (Azure SDK, read-only) — preferred
 
-This is the authoritative path: it reflects the **deployed** truth and catches
-drift. It requires the read-only Azure MCP server per the live-check policy.
+This is the preferred path: it reflects deployed role assignments and catches
+drift that Terraform cannot see.
 
-1. **Precondition.** Confirm the Azure MCP server is available and in read-only
-   mode. If it is available but **not** read-only → **STOP** and instruct the
-   user to enable read-only (`--read-only`). If it is **not available** → tell
-   the user and go to Step 3.
+1. **Precondition.** Confirm the CI OIDC identity has the required read access.
+   If it does not, report the unavailable SDK context and go to Step 3.
 2. **Derive the targets.** From the change set, list the target resources/scopes
    and the ARM actions they require (creating, updating, replacing, destroying
    resources; and especially any role assignments — `roleAssignments/write`).
-3. **Query.** Ask the Azure MCP server whether the CD identity (Step 1) holds
-   the required roles/actions at those scopes.
+3. **Query.** Use the CD identity's deployed role assignments and role
+   definitions collected by the Azure SDK adapter at the target scopes.
 4. **Conclude.** Report any (action, scope) the identity is missing, with the
-   suggested role/scope to grant. If the server returns no usable answer for
+   suggested role/scope to grant. If the SDK context is unavailable for
    some targets → tell the user and complete those with Step 3.
 
 ## Step 3 — Fallback: local Terraform-derived check
 
-Use this only when the live check cannot run (Azure MCP unavailable or
+Use this only when the live check cannot run (Azure SDK facts unavailable or
 inconclusive). It reconstructs the baseline from the repository's Terraform, so
 it is best-effort: it **cannot see drift** and **cannot fully expand built-in
 roles to actions** without Azure. Reason at the **role / source-role** level.
