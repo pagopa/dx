@@ -100,6 +100,9 @@ type BootstrapperIdentityParameters = {
   tags: Record<string, string>;
 };
 
+type BootstrapperResourceGroupName =
+  `${string}-${EnvironmentShortValue}-${LocationShortValue}-common-rg-${string}`;
+
 const keyVaultDnsErrorSchema = z.object({
   code: z.enum(["EAI_AGAIN", "ENOTFOUND"]),
 });
@@ -150,7 +153,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
-    const resourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
+    const resourceGroupName: BootstrapperResourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
     const cdIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
     const ciIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
     const msiClient = new ManagedServiceIdentityClient(
@@ -338,7 +341,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       location: locationShort[cloudAccount.defaultLocation],
     };
 
-    const resourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
+    const resourceGroupName: BootstrapperResourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
 
     const parameters = {
       location: cloudAccount.defaultLocation,
@@ -632,7 +635,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     scope,
   }: {
     authorizationManagementClient: AuthorizationManagementClient;
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     identity: BootstrapperIdentity;
     roleDefinitionIds: readonly string[];
     scope: string;
@@ -684,12 +687,12 @@ export class AzureCloudAccountService implements CloudAccountService {
     cdIdentityName: string;
     ciIdentityClientId: string;
     ciIdentityName: string;
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     github: GitHubRepo;
     gitHubService: GitHubService;
     msiClient: ManagedServiceIdentityClient;
     name: EnvironmentId["name"];
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
     runnerAppCredentials?: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
@@ -758,11 +761,11 @@ export class AzureCloudAccountService implements CloudAccountService {
     parameters,
     resourceGroupName,
   }: {
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     identityName: BootstrapperIdentityName;
     msiClient: ManagedServiceIdentityClient;
     parameters: BootstrapperIdentityParameters;
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
   }): Promise<BootstrapperIdentity> {
     const logger = getLogger(["gen", "env"]);
     const identity = await msiClient.userAssignedIdentities.createOrUpdate(
@@ -802,7 +805,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     cloudAccount: CloudAccount;
     name: EnvironmentId["name"];
     prefix: string;
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
     shortEnv: string;
     shortLocation: string;
     tags: Record<string, string>;
@@ -895,10 +898,10 @@ export class AzureCloudAccountService implements CloudAccountService {
     msiClient,
     resourceGroupName,
   }: {
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     identityName: BootstrapperIdentityName;
     msiClient: ManagedServiceIdentityClient;
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
   }): Promise<Pick<BootstrapperIdentity, "clientId" | "name">> {
     const logger = getLogger(["gen", "env"]);
     const identity = await msiClient.userAssignedIdentities.get(

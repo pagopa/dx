@@ -21,15 +21,22 @@ export type EnvironmentShortValue =
 
 const baseEnvironmentNameSchema = z.enum(baseEnvironmentNames);
 
+const tenantNameSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+const tenantQualifiedEnvironmentNameSchema = z.templateLiteral([
+  tenantNameSchema,
+  z.literal("-"),
+  baseEnvironmentNameSchema,
+]);
+
 const environmentNameSchema = z
   .string()
   .trim()
   .toLowerCase()
   // Keep the lifecycle suffix explicit so tenant-qualified names such as
   // `ced-prod` can still reuse the same Azure short code as `prod`.
-  .regex(
-    /^(?:[a-z0-9]+(?:-[a-z0-9]+)*-)?(?:dev|prod|uat)$/,
-    "Environment name must be dev, prod, uat, or a tenant-qualified name ending with -dev, -prod, or -uat",
+  .pipe(
+    z.union([baseEnvironmentNameSchema, tenantQualifiedEnvironmentNameSchema]),
   );
 
 export const environmentSchema = z.object({
