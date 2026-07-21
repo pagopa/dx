@@ -63,6 +63,11 @@ on:
         type: boolean
         required: false
         default: true
+      terraform_permission_check_dx_ref:
+        description: Git ref in pagopa/dx containing the Terraform CD permission check action.
+        type: string
+        required: false
+        default: main
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -393,7 +398,7 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: pagopa/dx
-          ref: ${{ github.workflow_sha }}
+          ref: ${{ inputs.terraform_permission_check_dx_ref }}
           path: .dx-actions
 
       - name: Terraform Permission Check
