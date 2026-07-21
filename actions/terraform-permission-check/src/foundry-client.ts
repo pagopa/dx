@@ -27,14 +27,7 @@ export async function callFoundryGateway({
   url,
 }: FoundryGatewayRequest): Promise<string> {
   const token = await getRequiredToken(credential, tokenScope);
-  const response = await fetchImpl(url, {
-    body: JSON.stringify(body),
-    headers: {
-      Authorization: `Bearer ${token.token}`,
-      "Content-Type": "application/json",
-    },
-    method: "POST",
-  });
+  const response = await requestGateway(fetchImpl, url, body, token.token);
 
   const responseBody = await response.text();
   if (!response.ok) {
@@ -52,6 +45,39 @@ export async function callFoundryGateway({
   }
 
   return extractOutputText(parseResult.data);
+}
+
+async function requestGateway(
+  fetchImpl: typeof fetch,
+  url: string,
+  body: unknown,
+  token: string,
+): Promise<Response> {
+  try {
+    return await fetchImpl(url, {
+      body: JSON.stringify(body),
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      method: "POST",
+    });
+  } catch (error) {
+    throw new Error(
+      `Foundry gateway request to ${url} failed: ${formatFetchError(error)}`,
+      { cause: error },
+    );
+  }
+}
+
+function formatFetchError(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  return error.cause instanceof Error
+    ? `${error.message}: ${error.cause.message}`
+    : error.message;
 }
 
 export function extractOutputText(response: FoundryResponse): string {

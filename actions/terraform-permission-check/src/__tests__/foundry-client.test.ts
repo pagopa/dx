@@ -42,6 +42,26 @@ describe("callFoundryGateway", () => {
     });
   });
 
+  it("reports the gateway URL and transport cause when the request fails", async () => {
+    const fetchImpl: typeof fetch = async () => {
+      throw new TypeError("fetch failed", {
+        cause: new Error("getaddrinfo ENOTFOUND dx-d-itn-ai-apim-01"),
+      });
+    };
+
+    await expect(
+      callFoundryGateway({
+        body: { input: "hello" },
+        credential: new FakeCredential(),
+        fetchImpl,
+        tokenScope: "https://ai.azure.com/.default",
+        url: "https://dx-d-itn-ai-apim-01/ai/v1/responses",
+      }),
+    ).rejects.toThrow(
+      "Foundry gateway request to https://dx-d-itn-ai-apim-01/ai/v1/responses failed: fetch failed: getaddrinfo ENOTFOUND dx-d-itn-ai-apim-01",
+    );
+  });
+
   it("extracts text from standard Responses API output content", () => {
     expect(
       extractOutputText({
