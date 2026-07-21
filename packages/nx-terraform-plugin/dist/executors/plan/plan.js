@@ -349,6 +349,20 @@ const terraformPlanReportShape = {
 const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
+const PLAN_CONSOLE_MAX_CHARS = 5e4;
+const appendPlanOutputToSummary = async (summaryFilePath, modulePath, strippedOutput) => {
+	if (!summaryFilePath) return;
+	const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${strippedOutput}\n\`\`\`\n\n</details>\n\n`;
+	try {
+		await fs.appendFile(summaryFilePath, markdown, "utf8");
+	} catch (e) {
+		console.warn("Failed to write Terraform plan output summary", e);
+	}
+};
+const truncateForConsoleLog = (output, summaryLine, maxChars, shouldTruncate, hasSummaryFile) => {
+	if (!shouldTruncate || output.length <= maxChars) return output;
+	return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. ${hasSummaryFile ? "See the plan output summary for the full output." : "See the plan report artifacts for the full output."}]`;
+};
 const renderTerraformPlanReports = (reports, { sourceUrl } = {}) => reports.map((report) => renderTerraformPlanReport(report, { sourceUrl })).join(terraformPlanReportSeparator).trim();
 const renderPlanOutputReference = (sourceUrl) => {
 	return `> [!NOTE]\n> Full plan output is not included in this comment.\n> ${sourceUrl ? `See the [workflow run](${sourceUrl}) logs or downloaded Terraform plan report artifacts for the complete output.` : "See the workflow run logs or downloaded Terraform plan report artifacts for the complete output."}`;
@@ -420,18 +434,20 @@ const getFailureMessage = (result) => {
 	if (result.exitCode !== 0) return `Terraform plan exited with code ${result.exitCode}`;
 	return noPlanOutputMessage;
 };
-const executeTerraformPlan = async (modulePath, env, verbose, report, context) => {
+const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFilePath, shouldTruncate, context) => {
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
 	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
 	const planOutput = getPlanOutput(maskedOutput, verbose);
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
-	console.log(planOutput);
+	const strippedOutput = util.stripVTControlCharacters(planOutput);
+	await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+	console.log(truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS, shouldTruncate, Boolean(summaryFilePath)));
 	if (report && context.reports) await context.reports.write(TERRAFORM_PLAN_NAMESPACE, Buffer.from(modulePath).toString("base64url"), {
 		modulePath,
 		notices,
-		planOutput: util.stripVTControlCharacters(planOutput),
+		planOutput: strippedOutput,
 		success: result.exitCode === 0,
 		...summaryLine ? { summaryLine } : {}
 	});
@@ -440,6 +456,7 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, context) =
 async function terraformPlan({ modulePath, out, refresh = true, report = false, verbose = false }, context = {}) {
 	const args = /* @__PURE__ */ new Map();
 	const env = {};
+	const runningInCI = isRunningInCI();
 	args.set("lock-timeout", "120s");
 	if (out) args.set("out", out);
 	if (!refresh) {
@@ -447,13 +464,13 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 		args.set("lock", "false");
 	}
 	if (!verbose) env.TF_IN_AUTOMATION = "true";
-	if (isRunningInCI()) {
+	if (runningInCI) {
 		args.set("input", "false");
 		args.set("no-color", true);
 		env.TF_IN_AUTOMATION = "true";
 	}
 	env.TF_CLI_ARGS_plan = args.entries().reduce((acc, [key, value]) => `${acc}-${key}${value === true ? "" : `=${value}`} `, "");
-	await executeTerraformPlan(modulePath, env, verbose, report, context);
+	await executeTerraformPlan(modulePath, env, verbose, report, process.env.GITHUB_STEP_SUMMARY, runningInCI, context);
 }
 
 //#endregion
