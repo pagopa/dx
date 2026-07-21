@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { collectAzureMcpContext, splitCommandLine } from "../azure-mcp.js";
+import {
+  collectAzureMcpContext,
+  formatMcpError,
+  splitCommandLine,
+} from "../azure-mcp.js";
 
 describe("splitCommandLine", () => {
   it("preserves quoted arguments", () => {
@@ -17,6 +21,19 @@ describe("splitCommandLine", () => {
       "--name",
       "DX AI",
     ]);
+  });
+});
+
+describe("formatMcpError", () => {
+  it("includes bounded MCP stderr when startup fails", () => {
+    expect(
+      formatMcpError(
+        new Error("MCP error -32000: Connection closed"),
+        "npm error code EAI_AGAIN",
+      ),
+    ).toBe(
+      "MCP error -32000: Connection closed. MCP stderr: npm error code EAI_AGAIN",
+    );
   });
 });
 

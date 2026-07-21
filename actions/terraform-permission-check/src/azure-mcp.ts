@@ -24,6 +24,8 @@ interface AzureMcpContextOptions {
 
 type ListedTool = Awaited<ReturnType<Client["listTools"]>>["tools"][number];
 
+const MAX_MCP_STDERR_LENGTH = 2000;
+
 export async function collectAzureMcpContext(
   options: AzureMcpContextOptions,
 ): Promise<string> {
@@ -44,6 +46,10 @@ export async function collectAzureMcpContext(
     cwd: options.workingDirectory,
     env: inheritAzureEnvironment(options.environment),
     stderr: "pipe",
+  });
+  const stderrChunks: string[] = [];
+  transport.stderr?.on("data", (chunk: Buffer | string) => {
+    stderrChunks.push(chunk.toString());
   });
 
   try {
@@ -99,10 +105,18 @@ export async function collectAzureMcpContext(
       formatToolResult(toolResult),
     ].join("\n");
   } catch (error) {
-    return `Status: unavailable. Azure MCP live context could not be collected: ${error instanceof Error ? error.message : String(error)}`;
+    return `Status: unavailable. Azure MCP live context could not be collected: ${formatMcpError(error, stderrChunks.join(""))}`;
   } finally {
     await transport.close().catch(() => undefined);
   }
+}
+
+export function formatMcpError(error: unknown, stderr: string): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const diagnostic = stderr.trim();
+  return diagnostic.length > 0
+    ? `${message}. MCP stderr: ${truncate(diagnostic, MAX_MCP_STDERR_LENGTH)}`
+    : message;
 }
 
 export function splitCommandLine(value: string): string[] {
