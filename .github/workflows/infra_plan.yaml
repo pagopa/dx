@@ -418,6 +418,7 @@ jobs:
           working-directory: ${{ steps.directory.outputs.dir }}
           cd-identity-name: ${{ inputs.terraform_permission_check_cd_identity_name }}
           azure-mcp-enabled: ${{ inputs.terraform_permission_check_azure_mcp_enabled }}
+          skill-path: .dx-actions/plugins/azure/skills/terraform-permission-check/SKILL.md
 
       - name: Post Terraform Permission Check on PR
         if: >-
