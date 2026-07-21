@@ -58,11 +58,14 @@ export async function run(): Promise<void> {
       inputs["model-deployment-name"],
     );
 
-    const markdownReport = await callFoundryGateway({
-      body: request,
-      tokenScope: inputs["gateway-token-scope"],
-      url: inputs["gateway-url"],
-    });
+    const markdownReport = addCommentMarker(
+      await callFoundryGateway({
+        body: request,
+        tokenScope: inputs["gateway-token-scope"],
+        url: inputs["gateway-url"],
+      }),
+      inputs["working-directory"],
+    );
 
     const outputFile = resolveOutputFile(
       workingDirectory,
@@ -131,6 +134,16 @@ function resolveSkillPath(inputs: Inputs): string {
 
   const actionPath = process.env["GITHUB_ACTION_PATH"] ?? process.cwd();
   return path.resolve(actionPath, ...DEFAULT_SKILL_RELATIVE_PATH);
+}
+
+export function addCommentMarker(
+  markdownReport: string,
+  workingDirectory: string,
+): string {
+  return [
+    `<!-- Terraform Permission Check (${workingDirectory}) -->`,
+    markdownReport,
+  ].join("\n\n");
 }
 
 if (require.main === module) {
