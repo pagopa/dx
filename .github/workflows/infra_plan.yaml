@@ -388,6 +388,17 @@ jobs:
           echo "" >> message_body.txt
           echo "</details>" >> message_body.txt
 
+      - name: Setup Node.js for Azure MCP
+        if: >-
+          always() && github.event_name == 'pull_request' &&
+          steps.plan.outcome == 'success' &&
+          inputs.terraform_permission_check_enabled &&
+          inputs.terraform_permission_check_gateway_url != '' &&
+          inputs.terraform_permission_check_model_deployment_name != ''
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version: "22"
+
       - name: Checkout DX Terraform Permission Check action
         if: >-
           always() && github.event_name == 'pull_request' &&
