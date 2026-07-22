@@ -903,12 +903,6 @@ describe("appendPlanOutputToSummary", () => {
     vi.restoreAllMocks();
   });
 
-  it("does nothing when summaryFilePath is undefined", async () => {
-    await appendPlanOutputToSummary(undefined, "/tmp/module", "No changes.");
-
-    await expect(fs.readdir(tempDirectoryPath)).resolves.toHaveLength(0);
-  });
-
   it("appends markdown with a collapsible details block to the summary file", async () => {
     await appendPlanOutputToSummary(
       summaryFilePath,
@@ -964,7 +958,7 @@ describe("truncateForConsoleLog", () => {
   it("returns output unchanged when it fits within maxChars", () => {
     const output = "No changes. Your infrastructure matches the configuration.";
 
-    expect(truncateForConsoleLog(output, undefined, 100, true, false)).toBe(
+    expect(truncateForConsoleLog(output, undefined, 100)).toBe(
       output,
     );
   });
@@ -972,25 +966,16 @@ describe("truncateForConsoleLog", () => {
   it("returns output unchanged when length equals maxChars exactly", () => {
     const output = "x".repeat(50);
 
-    expect(truncateForConsoleLog(output, undefined, 50, true, false)).toBe(
+    expect(truncateForConsoleLog(output, undefined, 50)).toBe(
       output,
     );
   });
 
-  it("does not truncate outside CI even when output is larger than maxChars", () => {
+  it("replaces output with summaryLine and artifact notice when too large", () => {
     const output = "x".repeat(100);
     const summaryLine = "Plan: 1 to add, 0 to change, 0 to destroy.";
 
-    const result = truncateForConsoleLog(output, summaryLine, 50, false, false);
-
-    expect(result).toBe(output);
-  });
-
-  it("replaces output with summaryLine and artifact notice when too large in CI and no summary file", () => {
-    const output = "x".repeat(100);
-    const summaryLine = "Plan: 1 to add, 0 to change, 0 to destroy.";
-
-    const result = truncateForConsoleLog(output, summaryLine, 50, true, false);
+    const result = truncateForConsoleLog(output, summaryLine, 50);
 
     expect(result).toBe(
       `${summaryLine}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`,
@@ -998,21 +983,10 @@ describe("truncateForConsoleLog", () => {
     expect(result).not.toContain("x".repeat(10));
   });
 
-  it("mentions the output summary when a summary file is available", () => {
-    const output = "x".repeat(100);
-    const summaryLine = "Plan: 1 to add, 0 to change, 0 to destroy.";
-
-    const result = truncateForConsoleLog(output, summaryLine, 50, true, true);
-
-    expect(result).toContain(
-      "See the plan output summary for the full output.",
-    );
-  });
-
   it("falls back to a default message when summaryLine is undefined and output is too large", () => {
     const output = "x".repeat(100);
 
-    const result = truncateForConsoleLog(output, undefined, 50, true, false);
+    const result = truncateForConsoleLog(output, undefined, 50);
 
     expect(result).toContain("No plan output available.");
   });

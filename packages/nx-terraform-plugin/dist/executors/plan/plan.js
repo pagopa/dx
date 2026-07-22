@@ -350,18 +350,17 @@ const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
 const PLAN_CONSOLE_MAX_CHARS = 5e4;
-const appendPlanOutputToSummary = async (summaryFilePath, modulePath, strippedOutput) => {
-	if (!summaryFilePath) return;
-	const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${strippedOutput}\n\`\`\`\n\n</details>\n\n`;
+const appendPlanOutputToSummary = async (summaryFilePath, modulePath, output) => {
+	const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>\n\n`;
 	try {
 		await fs.appendFile(summaryFilePath, markdown, "utf8");
 	} catch (e) {
 		console.warn("Failed to write Terraform plan output summary", e);
 	}
 };
-const truncateForConsoleLog = (output, summaryLine, maxChars, shouldTruncate, hasSummaryFile) => {
-	if (!shouldTruncate || output.length <= maxChars) return output;
-	return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. ${hasSummaryFile ? "See the plan output summary for the full output." : "See the plan report artifacts for the full output."}]`;
+const truncateForConsoleLog = (output, summaryLine, maxChars) => {
+	if (output.length <= maxChars) return output;
+	return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`;
 };
 const renderTerraformPlanReports = (reports, { sourceUrl } = {}) => reports.map((report) => renderTerraformPlanReport(report, { sourceUrl })).join(terraformPlanReportSeparator).trim();
 const renderPlanOutputReference = (sourceUrl) => {
@@ -434,7 +433,7 @@ const getFailureMessage = (result) => {
 	if (result.exitCode !== 0) return `Terraform plan exited with code ${result.exitCode}`;
 	return noPlanOutputMessage;
 };
-const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFilePath, shouldTruncate, context) => {
+const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFilePath, runningInCI, context) => {
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
 	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
@@ -442,8 +441,9 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFil
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
 	const strippedOutput = util.stripVTControlCharacters(planOutput);
-	await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
-	console.log(truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS, shouldTruncate, Boolean(summaryFilePath)));
+	if (summaryFilePath) await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+	if (runningInCI) console.log(truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS));
+	else console.log(planOutput);
 	if (report && context.reports) await context.reports.write(TERRAFORM_PLAN_NAMESPACE, Buffer.from(modulePath).toString("base64url"), {
 		modulePath,
 		notices,

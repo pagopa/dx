@@ -67,18 +67,14 @@ const terraformPlanReportSeparator = "\n\n";
 const PLAN_CONSOLE_MAX_CHARS = 50_000;
 
 // Appends the full Terraform plan output to a summary file as a collapsible
-// <details> block. No-ops when summaryFilePath is not provided.
-// Errors are swallowed since this is best-effort; the report artifact and console log remain available.
+// <details> block. Errors are swallowed since this is best-effort; the report
+// artifact and console log remain available.
 export const appendPlanOutputToSummary = async (
-  summaryFilePath: string | undefined,
+  summaryFilePath: string,
   modulePath: string,
-  strippedOutput: string,
+  output: string,
 ): Promise<void> => {
-  if (!summaryFilePath) {
-    return;
-  }
-
-  const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${strippedOutput}\n\`\`\`\n\n</details>\n\n`;
+  const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>\n\n`;
 
   try {
     await fs.appendFile(summaryFilePath, markdown, "utf8");
@@ -87,24 +83,18 @@ export const appendPlanOutputToSummary = async (
   }
 };
 
-// Truncates plan output to maxChars for console logging. When the output exceeds the limit,
-// replaces it with the summary line and a notice pointing users to the output summary file.
+// Truncates plan output to maxChars for console logging. When the output exceeds
+// the limit, replaces it with the summary line and a notice pointing to artifacts.
 export const truncateForConsoleLog = (
   output: string,
   summaryLine: string | undefined,
   maxChars: number,
-  shouldTruncate: boolean,
-  hasSummaryFile: boolean,
 ): string => {
-  if (!shouldTruncate || output.length <= maxChars) {
+  if (output.length <= maxChars) {
     return output;
   }
 
-  const truncationTarget = hasSummaryFile
-    ? "See the plan output summary for the full output."
-    : "See the plan report artifacts for the full output.";
-
-  return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. ${truncationTarget}]`;
+  return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`;
 };
 
 const renderTerraformPlanReports = (
@@ -279,7 +269,7 @@ const executeTerraformPlan = async (
   verbose: boolean,
   report: boolean,
   summaryFilePath: string | undefined,
-  shouldTruncate: boolean,
+  runningInCI: boolean,
   context: TaskRunContext,
 ) => {
   const result = await runCommand("terraform", ["plan"], modulePath, env);
@@ -300,17 +290,17 @@ const executeTerraformPlan = async (
   // Strip ANSI codes once and reuse for both the Step Summary and the report artifact.
   const strippedOutput = util.stripVTControlCharacters(planOutput);
 
-  await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+  if (summaryFilePath) {
+    await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+  }
 
-  console.log(
-    truncateForConsoleLog(
-      planOutput,
-      summaryLine,
-      PLAN_CONSOLE_MAX_CHARS,
-      shouldTruncate,
-      Boolean(summaryFilePath),
-    ),
-  );
+  if (runningInCI) {
+    console.log(
+      truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS),
+    );
+  } else {
+    console.log(planOutput);
+  }
 
   if (report && context.reports) {
     await context.reports.write(
