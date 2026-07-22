@@ -1,0 +1,59 @@
+{
+  "skill_name": "terraform-permission-check",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Our resources PR creates azurerm_resource_group.analytics and assigns Reader on it to a Function UAMI. The Infra CD identity has no Microsoft.Resources/subscriptions/resourceGroups/write at subscription scope. What should the permission check report as the remediation?",
+      "expected_output": "Classifies the gap as bootstrapper-owned; requires the new RG in bootstrap Terraform, its ID in additional_resource_group_ids, bootstrap applied first, and rejects direct Contributor or User Access Administrator grants to Infra CD.",
+      "files": [],
+      "expectations": [
+        "Classifies the missing resource-group creation permission as bootstrapper-owned.",
+        "Requires the new resource group ID to be passed through additional_resource_group_ids and bootstrap to be applied first.",
+        "Rejects a direct broad Contributor, Owner, or User Access Administrator grant to the Infra CD identity."
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "The resources CD pipeline cannot write the blob container holding its Terraform state. The storage account is created by core. Explain where the permission change belongs. Then explain what to do if the core pipeline itself cannot access the core state account yet.",
+      "expected_output": "Places normal state-storage access in core using the DX role-assignment module when it supports the scope, otherwise a narrow plain resource; treats the core-state access failure as a manual bootstrap prerequisite for an Entra security group or UAMI, never an individual user.",
+      "files": [],
+      "expectations": [
+        "Places the resources pipeline state-storage permission in the core configuration that owns the account.",
+        "Treats core access to its own state account as a manual bootstrap prerequisite.",
+        "Limits the manual prerequisite to an Entra ID security group or UAMI, and uses the DX module or a narrow plain azurerm_role_assignment for a Terraform-managed core fix."
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "A new Function App needs writer access to a blob container in the same resources configuration. The plan has no access for the Function UAMI. Give the DX-compliant remediation, including the Terraform construct and what the description must contain.",
+      "expected_output": "Places the change next to the target resource in resources; uses pagopa-dx/azure-role-assignments/azurerm when the installed module supports the blob scope, otherwise uses a narrow plain resource and asks the user to report the gap to DX; requires an exhaustive description.",
+      "files": [],
+      "expectations": [
+        "Places the Function UAMI blob permission in the resources configuration next to the target resource.",
+        "Checks whether the installed pagopa-dx/azure-role-assignments/azurerm version supports the blob scope, then uses the module or a narrow plain azurerm_role_assignment plus a DX-team support-gap report.",
+        "Requires the role description to cover purpose, principal, target scope, access level, consuming workload or pipeline, and ticket or request reference."
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "A managed identity in Subscription A must read a Key Vault in Subscription B. The current resources PR is in Subscription A. Where should the role assignment be managed and how should it be expressed?",
+      "expected_output": "Places the assignment in Subscription B's target-resource owner configuration, checks whether pagopa-dx/azure-role-assignments/azurerm supports the Key Vault scope, otherwise uses a narrow plain resource and asks the user to report the gap to DX; includes the source UAMI or Entra group principal ID, complete description, and source-identity Reader consideration.",
+      "files": [],
+      "expectations": [
+        "Places the assignment in the Subscription B configuration that owns the target Key Vault.",
+        "Checks whether pagopa-dx/azure-role-assignments/azurerm supports the Key Vault scope, then uses the module or a narrow plain azurerm_role_assignment plus a DX-team support-gap report.",
+        "Requires an exhaustive description of the cross-subscription relationship."
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "The plan wants to create a private endpoint and the permission check finds a missing Microsoft.Network/privateEndpoints/write action. What IAM change should we add to make the CD identity apply the plan?",
+      "expected_output": "Does not propose a manual networking role grant; identifies the gap as a DX support escalation because standard networking permissions are bootstrap-managed.",
+      "files": [],
+      "expectations": [
+        "Classifies the networking permission gap as bootstrap-managed and a DX support escalation.",
+        "Does not recommend a direct manual networking role grant."
+      ]
+    }
+  ]
+}

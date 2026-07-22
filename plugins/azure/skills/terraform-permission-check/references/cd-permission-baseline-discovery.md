@@ -33,6 +33,34 @@ the definitions tell you the actions.
 - For CI live checks: the CI OIDC identity, configured with read access to the
   CD UAMI, role assignments, and role definitions.
 
+## DX remediation ownership
+
+Use the policy in `SKILL.md` when reporting a gap. The relevant ownership model
+is `core` → `bootstrapper` → `resources`:
+
+- **Subscription or team-owned resource-group access** belongs in bootstrapper.
+  Create a new team-owned group in bootstrap Terraform and pass its ID through
+  `additional_resource_group_ids` to `azure_github_environment_bootstrap`.
+- **Terraform state storage access** belongs in core, which owns the state
+  account. If core cannot access its own state, report an external manual
+  bootstrap prerequisite for an Entra ID security group or UAMI, never an
+  individual user.
+- **Specific resource access** belongs next to the target resource in resources,
+  using `pagopa-dx/azure-role-assignments/azurerm` when the installed module
+  supports the exact scope, otherwise a narrow `azurerm_role_assignment` and a
+  report to the DX team about the unsupported scope.
+- **Cross-subscription access** belongs in the target subscription's owning
+  configuration. Apply the same module-or-plain-resource rule there and follow
+  the [DX cross-subscription procedure](https://dx.pagopa.it/docs/azure/iam/iam-cross-subscription).
+- **Networking gaps** are a DX support escalation because bootstrap manages the
+  standard networking permissions.
+
+Do not recommend broad direct grants to the Infra CD identity, invented custom
+roles, or assignments to individual users. Use the DX role-assignment module
+where its installed version supports the exact scope; otherwise use a narrow
+plain resource and report the support gap to the DX team. The custom-role list
+for human reference is the [DX custom-roles page](https://dx.pagopa.it/docs/azure/iam/custom-roles).
+
 ## Live-check policy (read-only Azure SDK)
 
 A CI live permission check uses the action's Azure SDK adapter under the
@@ -60,7 +88,7 @@ its object id; resolve it by name.
 
 - Managed identity name pattern (via the `dx` provider `resource_name`):
 
-  ```
+  ```text
   {prefix}-{env_short}-{location}-{domain}-infra-github-cd-id-{instance}
   ```
 
@@ -89,8 +117,9 @@ drift that Terraform cannot see.
 3. **Query.** Use the CD identity's deployed role assignments and role
    definitions collected by the Azure SDK adapter at the target scopes.
 4. **Conclude.** Report any (action, scope) the identity is missing, with the
-   suggested role/scope to grant. If the SDK context is unavailable for
-   some targets → tell the user and complete those with Step 3.
+   remediation layer, apply ordering, and DX module input required by the
+   remediation ownership policy. If the SDK context is unavailable for some
+   targets → tell the user and complete those with Step 3.
 
 ## Step 3 — Fallback: local Terraform-derived check
 
@@ -151,9 +180,10 @@ permissions. Check for:
 
 - **`additional_resource_group_ids`** input — extends the
   `DX Infra CD Resource Groups` assignment to more RGs.
-- **Repo-level `azurerm_role_assignment`** resources whose `principal_id`
-  targets the Infra CD identity (or its `principalId`), granting extra roles at
-  extra scopes.
+- **Existing repo-level role assignments** whose `principal_id` targets the
+  Infra CD identity (or its `principalId`), granting extra roles at extra scopes.
+  Include them in the baseline but do not use a raw `azurerm_role_assignment` as
+  the remediation pattern for a new gap.
 - **Bootstrap module outputs** used elsewhere to grant custom roles (e.g. the
   CD identity's `principal_id` output wired into another role assignment).
 
@@ -162,9 +192,9 @@ Add every discovered (role, scope) to the baseline.
 ### 3e — Combine
 
 Merge 3b–3d into a single list of **(role/action, scope)** entries and compare it
-against the actions the change set requires. Report gaps with the suggested
-role/scope to grant, and flag any conclusions that are uncertain because the
-built-in roles could not be expanded.
+against the actions the change set requires. Report gaps with the owning layer
+and DX-compliant remediation, and flag any conclusions that are uncertain because
+the built-in roles could not be expanded.
 
 ## Out of scope (postponed)
 
