@@ -25,5 +25,3 @@ module "mcp_server" {
 
   tags = local.tags
 }
-
-# Mock change to trigger a new plan in nx affected command, Remove before merge
