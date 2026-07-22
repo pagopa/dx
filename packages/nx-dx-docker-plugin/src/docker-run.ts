@@ -48,6 +48,9 @@ const getCommitSha = (): string => {
   }
 };
 
+const getAnnotationLevels = (platform: string): string =>
+  platform.split(",").filter(Boolean).length > 1 ? "index,manifest" : "manifest";
+
 /**
  * Runs `docker build`/`docker buildx build --push` with full OCI labels and
  * a multi-tag strategy (RFC-DX-076 feature parity with
@@ -145,11 +148,13 @@ export const runDockerCommand = (
     // mirrors docker/metadata-action's recommended
     // `DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index`, so the annotation
     // shows up both on the manifest list and on each per-architecture entry.
+    // A single-platform export has no OCI index, so Buildx only accepts
+    // manifest annotations in that case.
     dockerArgs.push("--push");
     for (const [key, value] of Object.entries(labels)) {
       dockerArgs.push(
         "--annotation",
-        `index,manifest:org.opencontainers.image.${key}=${value}`,
+        `${getAnnotationLevels(platform)}:org.opencontainers.image.${key}=${value}`,
       );
     }
   }

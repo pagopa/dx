@@ -48,6 +48,7 @@ const getCommitSha = () => {
 		return process.env.GITHUB_SHA ?? "unknown";
 	}
 };
+const getAnnotationLevels = (platform) => platform.split(",").filter(Boolean).length > 1 ? "index,manifest" : "manifest";
 /**
 * Runs `docker build`/`docker buildx build --push` with full OCI labels and
 * a multi-tag strategy (RFC-DX-076 feature parity with
@@ -96,7 +97,7 @@ const runDockerCommand = (mode, options, workspaceRoot, releaseVersion) => {
 	dockerArgs.push("--provenance=false");
 	if (mode === "push") {
 		dockerArgs.push("--push");
-		for (const [key, value] of Object.entries(labels)) dockerArgs.push("--annotation", `index,manifest:org.opencontainers.image.${key}=${value}`);
+		for (const [key, value] of Object.entries(labels)) dockerArgs.push("--annotation", `${getAnnotationLevels(platform)}:org.opencontainers.image.${key}=${value}`);
 	}
 	const exitCode = (0, node_child_process.spawnSync)("docker", dockerArgs, {
 		cwd: workspaceRoot,
