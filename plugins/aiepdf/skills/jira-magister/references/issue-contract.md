@@ -29,6 +29,25 @@ Source: DR-01 | JTBD-02 | UC-03 | AC-UC-03-01
   capacity. Flag the split for approval when the source does not define the
   boundary.
 
+## Hierarchy and dependency links
+
+Keep ownership hierarchy separate from delivery dependencies:
+
+- Use the Epic parent relationship for Stories and Tasks that belong to the
+  Epic. Do not represent Epic ownership with `blocks`.
+- Use a Sub-task for an implementation step that is tightly coupled to one
+  parent issue and does not need independent prioritization.
+- Use `blocks` from an independent enabling Task to the Story or Task that
+  cannot proceed without it. The dependent issue is then `is blocked by` that
+  Task.
+- Use `blocks` between Stories or between Tasks only when the source identifies
+  a real sequencing or delivery dependency.
+- Do not create links for ordinary Epic membership, related context, or
+  speculative dependencies.
+
+Record each dependency as `blocking issue -> blocked issue -> link type` and
+create the link only after both Jira issues exist.
+
 ## Definition of Ready blockers
 
 Block creation when any material item is missing or contradictory:

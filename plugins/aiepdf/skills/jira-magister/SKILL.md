@@ -52,8 +52,8 @@ Require:
 
 Ask one focused clarification at a time when any required context is missing.
 Inspect the target Jira project's available issue types and required fields
-before assuming that Epic, Story, Task, parent, links, labels, or custom fields
-are supported.
+and issue-link types before assuming that Epic, Story, Task, parent, links,
+labels, or custom fields are supported.
 
 ### 2. Propose Epic slices
 
@@ -88,6 +88,16 @@ security controls, deployment, or readiness actions. A Task may support a Story
 or Epic but must not masquerade as actor value. A task that cannot fit one sprint
 must be split or flagged.
 
+Keep hierarchy and dependencies distinct:
+
+- Use the Epic parent relationship for Epic membership, not `blocks`.
+- Use a Sub-task for tightly coupled work that does not need independent
+  prioritization.
+- Use `blocks` from an independent enabling Task to the Story or Task that
+  cannot proceed without it; the dependent issue is `is blocked by` the Task.
+- Use Story-to-Story or Task-to-Task links only for explicit sequencing or
+  delivery dependencies. Do not create speculative or informational links.
+
 Read [issue-contract.md](./references/issue-contract.md) for required content,
 traceability, sizing, and matching rules.
 
@@ -97,7 +107,8 @@ Show a complete human-readable draft before any Jira mutation:
 
 - proposed Epic, Story, and Task hierarchy;
 - summaries and descriptions;
-- issue type, parent, dependencies, labels, and project;
+- issue type, parent, dependency links with direction and link type, labels, and
+  project;
 - source links and stable IDs;
 - acceptance checks, KPI target, qualitative guardrail, and readiness gaps;
 - proposed creates, updates, splits, and unchanged items.
@@ -111,7 +122,10 @@ Use the authenticated Atlassian MCP integration when available. If it is not
 available, use the repository's `jira-cli` skill and follow its authentication
 and command guidance; never silently switch tools.
 
-Create parents before children. For synchronization, match in this order:
+Create parents before children, then create confirmed dependency links after both
+linked issues exist. Use the project's supported link type for `blocks` and
+preserve its direction: blocking issue -> blocked issue. For synchronization,
+match in this order:
 
 1. explicitly supplied Jira key;
 2. existing source mapping containing the stable source ID and URL;
@@ -128,6 +142,7 @@ this projection.
 Re-fetch every created or updated item and verify:
 
 - parent-child hierarchy and issue types;
+- every confirmed dependency link, including direction and link type;
 - source links and stable IDs;
 - Story acceptance checks and Task/Story classification;
 - no duplicate was created;
