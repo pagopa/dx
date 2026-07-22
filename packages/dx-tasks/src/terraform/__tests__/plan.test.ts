@@ -958,17 +958,13 @@ describe("truncateForConsoleLog", () => {
   it("returns output unchanged when it fits within maxChars", () => {
     const output = "No changes. Your infrastructure matches the configuration.";
 
-    expect(truncateForConsoleLog(output, undefined, 100)).toBe(
-      output,
-    );
+    expect(truncateForConsoleLog(output, undefined, 100)).toBe(output);
   });
 
   it("returns output unchanged when length equals maxChars exactly", () => {
     const output = "x".repeat(50);
 
-    expect(truncateForConsoleLog(output, undefined, 50)).toBe(
-      output,
-    );
+    expect(truncateForConsoleLog(output, undefined, 50)).toBe(output);
   });
 
   it("replaces output with summaryLine and artifact notice when too large", () => {

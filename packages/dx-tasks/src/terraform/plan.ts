@@ -291,7 +291,11 @@ const executeTerraformPlan = async (
   const strippedOutput = util.stripVTControlCharacters(planOutput);
 
   if (summaryFilePath) {
-    await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
+    await appendPlanOutputToSummary(
+      summaryFilePath,
+      modulePath,
+      strippedOutput,
+    );
   }
 
   if (runningInCI) {
