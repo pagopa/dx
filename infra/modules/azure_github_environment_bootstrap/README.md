@@ -32,9 +32,6 @@ module "bootstrap" {
     instance_number = "01"
   }
 
-  subscription_id = data.azurerm_subscription.current.id
-  tenant_id       = data.azurerm_client_config.current.tenant_id
-
   entraid_groups = {
     admins_object_id = data.azuread_group.admins.object_id
     devs_object_id   = data.azuread_group.developers.object_id
@@ -152,14 +149,8 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `github_private_runner`              | object       |    ✅    | Self-hosted runner configuration                       |
 | `private_dns_zone_resource_group_id` | string       |    ✅    | Resource group with private DNS zones                  |
 | `opex_resource_group_id`             | string       |    ✅    | Resource group for Opex dashboards                     |
-| `subscription_id`                    | string       |    ✅    | Azure subscription ID                                  |
-| `tenant_id`                          | string       |    ✅    | Azure tenant ID                                        |
 | `tags`                               | map(string)  |    ✅    | Tags for all resources                                 |
 | `additional_resource_group_ids`      | set(string)  |    ❌    | Extra resource groups for role assignments             |
-| `apim_id`                            | string       |    ❌    | API Management instance ID                             |
-| `sbns_id`                            | string       |    ❌    | Service Bus Namespace ID                               |
-| `log_analytics_workspace_id`         | string       |    ❌    | Log Analytics Workspace ID                             |
-| `keyvault_common_ids`                | list(string) |    ❌    | Common Key Vault IDs                                   |
 
 ### Required Variables
 
@@ -267,24 +258,6 @@ Resource group for operational dashboards. The Opex managed identity receives co
 opex_resource_group_id = data.azurerm_resource_group.dashboards.id
 ```
 
-#### `subscription_id` and `tenant_id`
-
-Azure subscription and tenant identifiers.
-
-The module also uses `subscription_id` to resolve the merged DX custom role definitions created by `azure-core-infra` at subscription scope. Custom role names are resolved using the current subscription display name prefix.
-
-For example, if the Azure subscription display name is `DX Dev Subscription`, the module resolves custom roles such as:
-
-- `DX Dev Subscription DX App CI Resource Groups`
-- `DX Dev Subscription DX App CD Resource Groups`
-- `DX Dev Subscription DX Infra CI Subscription`
-- `DX Dev Subscription DX Infra CD Subscription`
-
-```hcl
-subscription_id = data.azurerm_subscription.current.id
-tenant_id       = data.azurerm_client_config.current.tenant_id
-```
-
 #### `tags`
 
 Tags applied to all created resources.
@@ -309,40 +282,6 @@ Additional resource groups where the managed identities should have access. Usef
 additional_resource_group_ids = [
   azurerm_resource_group.custom_rg_01.id,
   azurerm_resource_group.custom_rg_02.id,
-]
-```
-
-#### `apim_id`
-
-Azure API Management instance ID. When provided, the infra CD identity receives API Management Service Contributor role.
-
-```hcl
-apim_id = data.azurerm_api_management.main.id
-```
-
-#### `sbns_id`
-
-Azure Service Bus Namespace ID. When provided, the infra CD identity receives Service Bus contributor role.
-
-```hcl
-sbns_id = data.azurerm_servicebus_namespace.main.id
-```
-
-#### `log_analytics_workspace_id`
-
-Log Analytics Workspace ID. When provided, the infra CD identity receives Log Analytics Contributor role.
-
-```hcl
-log_analytics_workspace_id = data.azurerm_log_analytics_workspace.main.id
-```
-
-#### `keyvault_common_ids`
-
-List of common Key Vault IDs. When provided, access policies are created for the managed identities.
-
-```hcl
-keyvault_common_ids = [
-  data.azurerm_key_vault.common.id,
 ]
 ```
 
@@ -470,14 +409,9 @@ resource "azurerm_role_assignment" "infra_<env>_cd_dns_zone_contributor" {
 
 ### Managing roles to common resources
 
-The module facilitates the role assignment to resources that are generally, by their nature, centralized and shared by the entire product. These are the following ones:
+This module no longer provides dedicated inputs for assigning roles on centralized resources (for example API Management, Service Bus Namespace, and Log Analytics Workspace).
 
-- API Management
-- Service Bus Namespace
-- Log Analytics Workspace
-- NAT Gateway
-
-For each of these resources, the module provides an optional variable to which their IDs can be passed. Utilizing these IDs ensures that the requisite roles for operating on the resources are assigned to the Managed Identities associated with the repository's workflows.
+If your workflows need access to these shared resources, use the exported `identities` output and add explicit `azurerm_role_assignment` resources in your root module.
 
 ## Examples
 
