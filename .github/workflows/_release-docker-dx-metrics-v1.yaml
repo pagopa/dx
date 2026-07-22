@@ -28,6 +28,8 @@ jobs:
     uses: ./.github/workflows/release-azure-containerapp-v1.yaml
     secrets: inherit
     with:
+      dockerfile_path: ./apps/dx-metrics/Dockerfile
+      dockerfile_context: .
       docker_image_name: pagopa/dx-metrics
       docker_image_tag: ${{ github.event_name == 'push' && github.ref_name || inputs.image_tag }}
       container_app: dx-p-itn-metrics-portal-ca-01
