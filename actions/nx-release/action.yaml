@@ -121,7 +121,7 @@ runs:
 
         git tag -l | sort > /tmp/nx-tags-before.txt
 
-        npx nx release --preid rc --skip-publish
+        npx nx release --preid rc --skip-publish --verbose
 
         # Capture the exact tags Nx just created locally (not pushed yet).
         # comm -13 outputs lines in the second file only = new tags.
@@ -172,7 +172,7 @@ runs:
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: build and publish all public projects (recovery mode)
           npx nx run-many --target=build --projects="tag:*:public"
-          npx nx release publish
+          npx nx release publish --verbose
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -186,7 +186,7 @@ runs:
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
-            npx nx release publish --projects="$PROJECTS_TO_BUILD"
+            npx nx release publish --projects="$PROJECTS_TO_BUILD" --verbose
           else
             echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
           fi
