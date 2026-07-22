@@ -1,9 +1,3 @@
-data "azurerm_subscription" "current_dev" {
-}
-
-data "azurerm_client_config" "current_dev" {
-}
-
 data "azurerm_container_app_environment" "runner_dev" {
   name                = format(local.runner.cae_name, "d")
   resource_group_name = format(local.runner.cae_resource_group_name, "d")
@@ -34,9 +28,6 @@ module "dev" {
   version = "~> 3.1"
 
   environment = merge(local.environment, { env_short = "d" })
-
-  subscription_id = data.azurerm_subscription.current_dev.id
-  tenant_id       = data.azurerm_client_config.current_dev.tenant_id
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins_dev.object_id
