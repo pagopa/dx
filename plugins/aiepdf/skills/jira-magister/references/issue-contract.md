@@ -5,11 +5,11 @@
 Project-specific Jira fields vary. Query the project metadata first, then map
 these portable fields to the available schema:
 
-| Issue | Required content |
-| --- | --- |
-| Epic | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note |
-| Story | exact actor-facing `As [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps |
-| Task | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID; dependency and verification evidence |
+| Issue | Required content                                                                                                                                                                              |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note      |
+| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps |
+| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID; dependency and verification evidence                                                 |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Always include links to the source documents and stable IDs in a

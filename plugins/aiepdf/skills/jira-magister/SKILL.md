@@ -74,7 +74,7 @@ final Stories and Tasks. Do not create or update Jira during this phase.
 Create actor-facing Stories only for observable user value. Use this exact
 structure:
 
-> As [exact Actor name from the Use Case], I want to [observable action], so
+> As a [exact Actor name from the Use Case], I want to [observable action], so
 > that [user or business gain].
 
 Every Story must be independently deliverable within one two-week sprint. Split
