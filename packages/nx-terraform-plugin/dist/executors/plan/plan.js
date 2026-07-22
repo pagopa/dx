@@ -349,19 +349,6 @@ const terraformPlanReportShape = {
 const terraformPlanReportSchema = z$1.object(terraformPlanReportShape);
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
-const PLAN_CONSOLE_MAX_CHARS = 5e4;
-const appendPlanOutputToSummary = async (summaryFilePath, modulePath, output) => {
-	const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>\n\n`;
-	try {
-		await fs.appendFile(summaryFilePath, markdown, "utf8");
-	} catch (e) {
-		console.warn("Failed to write Terraform plan output summary", e);
-	}
-};
-const truncateForConsoleLog = (output, summaryLine, maxChars) => {
-	if (output.length <= maxChars) return output;
-	return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`;
-};
 const renderTerraformPlanReports = (reports, { sourceUrl } = {}) => reports.map((report) => renderTerraformPlanReport(report, { sourceUrl })).join(terraformPlanReportSeparator).trim();
 const renderPlanOutputReference = (sourceUrl) => {
 	return `> [!NOTE]\n> Full plan output is not included in this comment.\n> ${sourceUrl ? `See the [workflow run](${sourceUrl}) logs or downloaded Terraform plan report artifacts for the complete output.` : "See the workflow run logs or downloaded Terraform plan report artifacts for the complete output."}`;
@@ -433,7 +420,7 @@ const getFailureMessage = (result) => {
 	if (result.exitCode !== 0) return `Terraform plan exited with code ${result.exitCode}`;
 	return noPlanOutputMessage;
 };
-const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFilePath, runningInCI, context) => {
+const executeTerraformPlan = async (modulePath, env, verbose, report, context) => {
 	const result = await runCommand("terraform", ["plan"], modulePath, env);
 	if (result.signal) throw new Error(getFailureMessage(result));
 	const maskedOutput = maskOutput([result.stdout, result.stderr].filter((output) => output.trim().length > 0).join("\n"));
@@ -441,9 +428,7 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, summaryFil
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
 	const strippedOutput = util.stripVTControlCharacters(planOutput);
-	if (summaryFilePath) await appendPlanOutputToSummary(summaryFilePath, modulePath, strippedOutput);
-	if (runningInCI) console.log(truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS));
-	else console.log(planOutput);
+	console.log(planOutput);
 	if (report && context.reports) await context.reports.write(TERRAFORM_PLAN_NAMESPACE, Buffer.from(modulePath).toString("base64url"), {
 		modulePath,
 		notices,
@@ -470,7 +455,7 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 		env.TF_IN_AUTOMATION = "true";
 	}
 	env.TF_CLI_ARGS_plan = args.entries().reduce((acc, [key, value]) => `${acc}-${key}${value === true ? "" : `=${value}`} `, "");
-	await executeTerraformPlan(modulePath, env, verbose, report, process.env.GITHUB_STEP_SUMMARY, runningInCI, context);
+	await executeTerraformPlan(modulePath, env, verbose, report, context);
 }
 
 //#endregion

@@ -16,11 +16,9 @@ vi.mock("../../run-command.ts", () => ({
 }));
 
 import {
-  appendPlanOutputToSummary,
   terraformPlan,
   terraformPlanReportNamespace,
   terraformPlanReportSchema,
-  truncateForConsoleLog,
 } from "../plan.ts";
 
 const createReports = (baseDirectoryPath: string) =>
@@ -886,104 +884,5 @@ describe("terraformPlanReportNamespace", () => {
     expect(markdown).toBe(
       "### Terraform Plan: `./infra/modules/success` - ✅ Success\n\n> [!NOTE]\n> Full plan output is not included in this comment.\n> See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.",
     );
-  });
-});
-
-describe("appendPlanOutputToSummary", () => {
-  let tempDirectoryPath = "";
-  let summaryFilePath = "";
-
-  beforeEach(async () => {
-    tempDirectoryPath = await createTestDirectory();
-    summaryFilePath = path.join(tempDirectoryPath, "step-summary.md");
-  });
-
-  afterEach(async () => {
-    await fs.rm(tempDirectoryPath, { force: true, recursive: true });
-    vi.restoreAllMocks();
-  });
-
-  it("appends markdown with a collapsible details block to the summary file", async () => {
-    await appendPlanOutputToSummary(
-      summaryFilePath,
-      "/tmp/module",
-      "No changes.",
-    );
-
-    const content = await fs.readFile(summaryFilePath, "utf8");
-
-    expect(content).toContain("### Terraform Plan: `/tmp/module`");
-    expect(content).toContain("<details><summary>Show Plan</summary>");
-    expect(content).toContain("```\nNo changes.\n```");
-    expect(content).toContain("</details>");
-  });
-
-  it("appends multiple plans to the same summary file without overwriting", async () => {
-    await appendPlanOutputToSummary(
-      summaryFilePath,
-      "/tmp/module-a",
-      "No changes.",
-    );
-    await appendPlanOutputToSummary(
-      summaryFilePath,
-      "/tmp/module-b",
-      "Plan: 1 to add.",
-    );
-
-    const content = await fs.readFile(summaryFilePath, "utf8");
-
-    expect(content).toContain("### Terraform Plan: `/tmp/module-a`");
-    expect(content).toContain("### Terraform Plan: `/tmp/module-b`");
-  });
-
-  it("swallows errors when the summary file cannot be written", async () => {
-    vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const invalidPath = path.join(
-      tempDirectoryPath,
-      "nonexistent-dir",
-      "summary.md",
-    );
-
-    await expect(
-      appendPlanOutputToSummary(invalidPath, "/tmp/module", "No changes."),
-    ).resolves.toBeUndefined();
-    expect(console.warn).toHaveBeenCalledWith(
-      "Failed to write Terraform plan output summary",
-      expect.any(Error),
-    );
-  });
-});
-
-describe("truncateForConsoleLog", () => {
-  it("returns output unchanged when it fits within maxChars", () => {
-    const output = "No changes. Your infrastructure matches the configuration.";
-
-    expect(truncateForConsoleLog(output, undefined, 100)).toBe(output);
-  });
-
-  it("returns output unchanged when length equals maxChars exactly", () => {
-    const output = "x".repeat(50);
-
-    expect(truncateForConsoleLog(output, undefined, 50)).toBe(output);
-  });
-
-  it("replaces output with summaryLine and artifact notice when too large", () => {
-    const output = "x".repeat(100);
-    const summaryLine = "Plan: 1 to add, 0 to change, 0 to destroy.";
-
-    const result = truncateForConsoleLog(output, summaryLine, 50);
-
-    expect(result).toBe(
-      `${summaryLine}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`,
-    );
-    expect(result).not.toContain("x".repeat(10));
-  });
-
-  it("falls back to a default message when summaryLine is undefined and output is too large", () => {
-    const output = "x".repeat(100);
-
-    const result = truncateForConsoleLog(output, undefined, 50);
-
-    expect(result).toContain("No plan output available.");
   });
 });

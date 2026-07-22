@@ -1,6 +1,5 @@
 /** This module runs Terraform plans for dx-tasks without external process helpers. */
 
-import fs from "node:fs/promises";
 import util from "node:util";
 import * as z from "zod/mini";
 
@@ -61,41 +60,6 @@ export interface TerraformPlanReport {
 
 const noPlanOutputMessage = "No plan output available.";
 const terraformPlanReportSeparator = "\n\n";
-
-// CI step logs can truncate output for large plans; this limit keeps each plan's
-// console output well within safe bounds while leaving room for task runner overhead.
-const PLAN_CONSOLE_MAX_CHARS = 50_000;
-
-// Appends the full Terraform plan output to a summary file as a collapsible
-// <details> block. Errors are swallowed since this is best-effort; the report
-// artifact and console log remain available.
-export const appendPlanOutputToSummary = async (
-  summaryFilePath: string,
-  modulePath: string,
-  output: string,
-): Promise<void> => {
-  const markdown = `### Terraform Plan: \`${modulePath}\`\n\n<details><summary>Show Plan</summary>\n\n\`\`\`\n${output}\n\`\`\`\n\n</details>\n\n`;
-
-  try {
-    await fs.appendFile(summaryFilePath, markdown, "utf8");
-  } catch (e) {
-    console.warn("Failed to write Terraform plan output summary", e);
-  }
-};
-
-// Truncates plan output to maxChars for console logging. When the output exceeds
-// the limit, replaces it with the summary line and a notice pointing to artifacts.
-export const truncateForConsoleLog = (
-  output: string,
-  summaryLine: string | undefined,
-  maxChars: number,
-): string => {
-  if (output.length <= maxChars) {
-    return output;
-  }
-
-  return `${summaryLine ?? noPlanOutputMessage}\n\n[Plan output truncated. See the plan report artifacts for the full output.]`;
-};
 
 const renderTerraformPlanReports = (
   reports: readonly TerraformPlanReport[],
@@ -268,8 +232,6 @@ const executeTerraformPlan = async (
   env: Record<string, string>,
   verbose: boolean,
   report: boolean,
-  summaryFilePath: string | undefined,
-  runningInCI: boolean,
   context: TaskRunContext,
 ) => {
   const result = await runCommand("terraform", ["plan"], modulePath, env);
@@ -287,24 +249,9 @@ const executeTerraformPlan = async (
   const planOutput = getPlanOutput(maskedOutput, verbose);
   const notices = getPlanNotices(maskedOutput);
   const summaryLine = getPlanSummaryLine(maskedOutput);
-  // Strip ANSI codes once and reuse for both the Step Summary and the report artifact.
+  // Strip ANSI codes once and reuse for the report artifact.
   const strippedOutput = util.stripVTControlCharacters(planOutput);
-
-  if (summaryFilePath) {
-    await appendPlanOutputToSummary(
-      summaryFilePath,
-      modulePath,
-      strippedOutput,
-    );
-  }
-
-  if (runningInCI) {
-    console.log(
-      truncateForConsoleLog(planOutput, summaryLine, PLAN_CONSOLE_MAX_CHARS),
-    );
-  } else {
-    console.log(planOutput);
-  }
+  console.log(planOutput);
 
   if (report && context.reports) {
     await context.reports.write(
@@ -368,13 +315,5 @@ export async function terraformPlan(
       "",
     );
 
-  await executeTerraformPlan(
-    modulePath,
-    env,
-    verbose,
-    report,
-    process.env.GITHUB_STEP_SUMMARY,
-    runningInCI,
-    context,
-  );
+  await executeTerraformPlan(modulePath, env, verbose, report, context);
 }
