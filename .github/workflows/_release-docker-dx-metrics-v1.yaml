@@ -25,7 +25,7 @@ jobs:
       group: ${{ github.workflow }}-cd
       # Override this configuration to prevent cancelling a running deploy.
       cancel-in-progress: false
-    uses: pagopa/dx/.github/workflows/release-azure-containerapp-v1.yaml@main
+    uses: ./.github/workflows/release-azure-containerapp-v1.yaml
     secrets: inherit
     with:
       docker_image_name: pagopa/dx-metrics
