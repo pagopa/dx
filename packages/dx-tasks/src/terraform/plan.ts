@@ -249,6 +249,7 @@ const executeTerraformPlan = async (
   const planOutput = getPlanOutput(maskedOutput, verbose);
   const notices = getPlanNotices(maskedOutput);
   const summaryLine = getPlanSummaryLine(maskedOutput);
+
   console.log(planOutput);
 
   if (report && context.reports) {
