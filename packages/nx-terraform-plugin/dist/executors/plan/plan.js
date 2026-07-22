@@ -427,12 +427,11 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, context) =
 	const planOutput = getPlanOutput(maskedOutput, verbose);
 	const notices = getPlanNotices(maskedOutput);
 	const summaryLine = getPlanSummaryLine(maskedOutput);
-	const strippedOutput = util.stripVTControlCharacters(planOutput);
 	console.log(planOutput);
 	if (report && context.reports) await context.reports.write(TERRAFORM_PLAN_NAMESPACE, Buffer.from(modulePath).toString("base64url"), {
 		modulePath,
 		notices,
-		planOutput: strippedOutput,
+		planOutput: util.stripVTControlCharacters(planOutput),
 		success: result.exitCode === 0,
 		...summaryLine ? { summaryLine } : {}
 	});
@@ -441,7 +440,6 @@ const executeTerraformPlan = async (modulePath, env, verbose, report, context) =
 async function terraformPlan({ modulePath, out, refresh = true, report = false, verbose = false }, context = {}) {
 	const args = /* @__PURE__ */ new Map();
 	const env = {};
-	const runningInCI = isRunningInCI();
 	args.set("lock-timeout", "120s");
 	if (out) args.set("out", out);
 	if (!refresh) {
@@ -449,7 +447,7 @@ async function terraformPlan({ modulePath, out, refresh = true, report = false, 
 		args.set("lock", "false");
 	}
 	if (!verbose) env.TF_IN_AUTOMATION = "true";
-	if (runningInCI) {
+	if (isRunningInCI()) {
 		args.set("input", "false");
 		args.set("no-color", true);
 		env.TF_IN_AUTOMATION = "true";

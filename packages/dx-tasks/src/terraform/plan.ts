@@ -249,8 +249,6 @@ const executeTerraformPlan = async (
   const planOutput = getPlanOutput(maskedOutput, verbose);
   const notices = getPlanNotices(maskedOutput);
   const summaryLine = getPlanSummaryLine(maskedOutput);
-  // Strip ANSI codes once and reuse for the report artifact.
-  const strippedOutput = util.stripVTControlCharacters(planOutput);
   console.log(planOutput);
 
   if (report && context.reports) {
@@ -260,7 +258,7 @@ const executeTerraformPlan = async (
       {
         modulePath,
         notices,
-        planOutput: strippedOutput,
+        planOutput: util.stripVTControlCharacters(planOutput),
         success: result.exitCode === 0,
         ...(summaryLine ? { summaryLine } : {}),
       },
@@ -284,7 +282,6 @@ export async function terraformPlan(
 ) {
   const args = new Map<string, string | true>();
   const env: Record<string, string> = {};
-  const runningInCI = isRunningInCI();
 
   args.set("lock-timeout", "120s");
 
@@ -301,7 +298,7 @@ export async function terraformPlan(
     env.TF_IN_AUTOMATION = "true";
   }
 
-  if (runningInCI) {
+  if (isRunningInCI()) {
     args.set("input", "false");
     args.set("no-color", true);
     env.TF_IN_AUTOMATION = "true";
