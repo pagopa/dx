@@ -50,6 +50,26 @@ describe("getBuildLayoutOverrides", () => {
       platform: undefined,
     });
   });
+
+  it("reads Docker layout overrides from project metadata without package.json", () => {
+    fileSystemMocks.existsSync
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    vi.mocked(readJsonFile).mockReturnValue({
+      metadata: {
+        docker: {
+          contextPath: "containers/runner",
+          platform: "linux/amd64",
+        },
+      },
+    });
+
+    expect(getBuildLayoutOverrides("/workspace", "containers/runner")).toEqual({
+      contextPath: "containers/runner",
+      dockerfilePath: "containers/runner/Dockerfile",
+      platform: "linux/amd64",
+    });
+  });
 });
 
 describe("buildDockerPushTarget", () => {

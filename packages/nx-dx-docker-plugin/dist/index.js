@@ -9,10 +9,15 @@ let node_path = require("node:path");
 //#region src/docker-build-layout.ts
 const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return {
-		contextPath: ".",
-		dockerfilePath: `${projectRoot}/Dockerfile`
-	};
+	if (!(0, node_fs.existsSync)(packageJsonPath)) {
+		const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+		const projectJson = (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
+		return {
+			contextPath: projectJson?.metadata?.docker?.contextPath ?? ".",
+			dockerfilePath: projectJson?.metadata?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+			platform: projectJson?.metadata?.docker?.platform
+		};
+	}
 	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
 	return {
 		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
@@ -27,7 +32,7 @@ const buildDockerBuildTarget = (options) => ({
 	executor: "@pagopa/nx-dx-docker-plugin:build",
 	metadata: {
 		description: "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
-		technologies: ["docker"]
+		technologies: ["container-image"]
 	},
 	options
 });
@@ -36,7 +41,7 @@ const buildDockerPushTarget = (options, buildTargetName) => ({
 	executor: "@pagopa/nx-dx-docker-plugin:push",
 	metadata: {
 		description: "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
-		technologies: ["docker"]
+		technologies: ["container-image"]
 	},
 	options
 });
@@ -49,9 +54,14 @@ const nxConfigurationSchema = zod_v4.z.object({
 	release: zod_v4.z.object({ docker: zod_v4.z.object({ registryUrl: zod_v4.z.string().min(1).optional() }).optional() }).optional()
 });
 const pluginOptionsSchema = zod_v4.z.object({
+	buildTarget: zod_v4.z.union([zod_v4.z.string().min(1), zod_v4.z.object({
+		args: zod_v4.z.array(zod_v4.z.string()).optional(),
+		name: zod_v4.z.string().min(1).optional()
+	}).passthrough()]).optional(),
 	imageAuthors: zod_v4.z.string().min(1).optional(),
 	imageNamePrefix: zod_v4.z.string().min(1).optional(),
-	imageUrl: zod_v4.z.string().url().optional()
+	imageUrl: zod_v4.z.string().url().optional(),
+	runTarget: zod_v4.z.unknown().optional()
 }).strict();
 const githubRemotePattern = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([^/]+)\/(.+?)(?:\.git)?$/;
 const toRepositoryMetadata = (owner, repository) => ({
@@ -80,6 +90,10 @@ const deriveFromWorkspacePackage = (workspaceRoot) => {
 	const [scope, scopedName] = parseResult.data.name.split("/");
 	return toRepositoryMetadata(scopedName ? scope.replace(/^@/, "") : "pagopa", scopedName ?? scope);
 };
+const getPlatform = (buildTarget) => {
+	if (typeof buildTarget === "string") return "linux/amd64,linux/arm64";
+	return (buildTarget?.args?.find((argument) => argument.startsWith("--platform ")))?.slice(11) ?? "linux/amd64,linux/arm64";
+};
 const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 	const optionsResult = pluginOptionsSchema.safeParse(options ?? {});
 	if (!optionsResult.success) throw new Error("Invalid @pagopa/nx-dx-docker-plugin options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.");
@@ -100,7 +114,7 @@ const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 		defaultBranch: nxResult.data.defaultBase ?? "main",
 		imageAuthors: optionsResult.data.imageAuthors ?? "PagoPA",
 		...repository,
-		platform: "linux/amd64,linux/arm64",
+		platform: getPlatform(optionsResult.data.buildTarget),
 		pushTargetName: "docker:push",
 		registry: nxResult.data.release?.docker?.registryUrl ?? "ghcr.io"
 	};
@@ -109,6 +123,10 @@ const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 //#endregion
 //#region src/index.ts
 const dockerfileGlob = "**/Dockerfile";
+const getProjectJson = (workspaceRoot, projectRoot) => {
+	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
+};
 /**
 * Detects the *official* Nx Docker release flow's per-project override
 * (`nx.release.docker.repositoryName` in package.json). Projects using it
@@ -119,8 +137,9 @@ const dockerfileGlob = "**/Dockerfile";
 */
 const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
-	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.release?.docker?.repositoryName ?? null;
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker?.repositoryName ?? null;
+	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	return packageJson.nx?.release?.docker?.repositoryName ?? packageJson.release?.docker?.repositoryName ?? null;
 };
 /**
 * An optional `nx.docker.repositoryName` customizes only this plugin's
@@ -130,9 +149,9 @@ const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 */
 const getBuildImageRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker?.repositoryName ?? null;
 	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
-	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? null;
+	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? packageJson.release?.docker?.repositoryName ?? null;
 };
 const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const targets = {};
@@ -155,12 +174,9 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
-			technologies: ["docker"]
+			technologies: ["container-image"]
 		},
-		options: {
-			projectName: projectDisplayName,
-			projectRoot
-		}
+		options: { ...dockerRunOptions }
 	};
 	return { projects: { [projectRoot]: {
 		root: projectRoot,

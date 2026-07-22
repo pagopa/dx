@@ -141,6 +141,37 @@ need the default npm publisher. Projects that publish both an npm package and a
 Docker image should configure `nx.docker.repositoryName` and publish the image
 from a release-tag workflow.
 
+### Container-only projects
+
+For a Docker-only project without `package.json`, keep its durable release
+version in `project.json` and use the plugin's VersionActions implementation:
+
+```json
+{
+  "metadata": {
+    "docker": {
+      "contextPath": "containers/my-container",
+      "platform": "linux/amd64",
+      "repositoryName": "pagopa/my-container"
+    },
+    "version": "0.0.2"
+  },
+  "release": {
+    "version": {
+      "currentVersionResolver": "disk",
+      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+    }
+  }
+}
+```
+
+`metadata.docker` accepts the same `contextPath`, `dockerfilePath`, and
+`platform` build overrides as `nx.docker`. The plugin infers
+`nx-release-publish` from `metadata.docker.repositoryName`.
+`pnpm nx release` updates `metadata.version`; the publish step builds and pushes
+the image using that version. No package manifest or temporary version file is
+needed.
+
 ## Nx Release configuration
 
 Use the semantic version produced by Nx version actions as the Docker version:

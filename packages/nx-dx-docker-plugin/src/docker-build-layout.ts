@@ -13,6 +13,16 @@ interface ProjectPackageJson {
   };
 }
 
+interface ProjectJson {
+  readonly metadata?: {
+    readonly docker?: {
+      readonly contextPath?: string;
+      readonly dockerfilePath?: string;
+      readonly platform?: string;
+    };
+  };
+}
+
 export const getBuildLayoutOverrides = (
   workspaceRoot: string,
   projectRoot: string,
@@ -23,7 +33,17 @@ export const getBuildLayoutOverrides = (
 } => {
   const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
   if (!existsSync(packageJsonPath)) {
-    return { contextPath: ".", dockerfilePath: `${projectRoot}/Dockerfile` };
+    const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
+    const projectJson = existsSync(projectJsonPath)
+      ? readJsonFile<ProjectJson>(projectJsonPath)
+      : null;
+    return {
+      contextPath: projectJson?.metadata?.docker?.contextPath ?? ".",
+      dockerfilePath:
+        projectJson?.metadata?.docker?.dockerfilePath ??
+        `${projectRoot}/Dockerfile`,
+      platform: projectJson?.metadata?.docker?.platform,
+    };
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
   return {

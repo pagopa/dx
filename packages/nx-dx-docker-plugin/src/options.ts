@@ -26,9 +26,21 @@ const nxConfigurationSchema = z.object({
 
 const pluginOptionsSchema = z
   .object({
+    buildTarget: z
+      .union([
+        z.string().min(1),
+        z
+          .object({
+            args: z.array(z.string()).optional(),
+            name: z.string().min(1).optional(),
+          })
+          .passthrough(),
+      ])
+      .optional(),
     imageAuthors: z.string().min(1).optional(),
     imageNamePrefix: z.string().min(1).optional(),
     imageUrl: z.string().url().optional(),
+    runTarget: z.unknown().optional(),
   })
   .strict();
 
@@ -38,7 +50,7 @@ export interface DockerPluginOptions {
   readonly imageAuthors: string;
   readonly imageNamePrefix: string;
   readonly imageUrl: string;
-  readonly platform: "linux/amd64,linux/arm64";
+  readonly platform: string;
   readonly pushTargetName: "docker:push";
   readonly registry: string;
 }
@@ -92,6 +104,21 @@ const deriveFromWorkspacePackage = (
   return toRepositoryMetadata(owner, repository);
 };
 
+const getPlatform = (
+  buildTarget: z.infer<typeof pluginOptionsSchema>["buildTarget"],
+): string => {
+  if (typeof buildTarget === "string") {
+    return "linux/amd64,linux/arm64";
+  }
+
+  const platformArgument = buildTarget?.args?.find((argument) =>
+    argument.startsWith("--platform "),
+  );
+  return (
+    platformArgument?.slice("--platform ".length) ?? "linux/amd64,linux/arm64"
+  );
+};
+
 export const parseDockerReleasePluginOptions = (
   options: unknown,
   workspaceRoot: string,
@@ -132,7 +159,7 @@ export const parseDockerReleasePluginOptions = (
     defaultBranch: nxResult.data.defaultBase ?? "main",
     imageAuthors: optionsResult.data.imageAuthors ?? "PagoPA",
     ...repository,
-    platform: "linux/amd64,linux/arm64",
+    platform: getPlatform(optionsResult.data.buildTarget),
     pushTargetName: "docker:push",
     registry: nxResult.data.release?.docker?.registryUrl ?? "ghcr.io",
   };

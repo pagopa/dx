@@ -11,7 +11,11 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { z } from "zod/v4";
 
-import { computeImageTags, getProjectSlug } from "./docker-image.ts";
+import {
+  computeImageTags,
+  computeReleaseTags,
+  getProjectSlug,
+} from "./docker-image.ts";
 import {
   summarizeDockerFailure,
   summarizeDockerPush,
@@ -62,6 +66,7 @@ export const runDockerCommand = (
   mode: "build" | "push",
   options: DockerRunOptions,
   workspaceRoot: string,
+  releaseVersion?: string,
 ): { readonly success: boolean } => {
   const {
     contextPath,
@@ -75,7 +80,16 @@ export const runDockerCommand = (
     projectRoot,
   } = options;
 
-  const tags = computeImageTags(projectDisplayName, defaultBranch);
+  const tags = releaseVersion
+    ? computeReleaseTags(projectDisplayName, releaseVersion)
+    : computeImageTags(projectDisplayName, defaultBranch);
+
+  if (releaseVersion && tags.length === 0) {
+    console.error(
+      `[@pagopa/nx-dx-docker-plugin] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`,
+    );
+    return { success: false };
+  }
 
   if (mode === "push" && tags.length === 0) {
     console.log(
