@@ -14,6 +14,6 @@ output "project_endpoint" {
 }
 
 output "model_deployment_name" {
-  value       = azurerm_cognitive_deployment.this.name
+  value       = azurerm_cognitive_deployment.gpt_5_5.name
   description = "The name of the model deployment exposed for inference."
 }

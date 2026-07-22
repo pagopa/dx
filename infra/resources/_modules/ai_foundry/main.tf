@@ -103,7 +103,12 @@ resource "azurerm_cognitive_account_project" "terraform_ci" {
   tags = var.tags
 }
 
-resource "azurerm_cognitive_deployment" "this" {
+moved {
+  from = azurerm_cognitive_deployment.this
+  to   = azurerm_cognitive_deployment.gpt_5_5
+}
+
+resource "azurerm_cognitive_deployment" "gpt_5_5" {
   name                 = "gpt-5-5"
   cognitive_account_id = azurerm_cognitive_account.this.id
 
@@ -111,6 +116,22 @@ resource "azurerm_cognitive_deployment" "this" {
     format  = "OpenAI"
     name    = "gpt-5.5"
     version = "2026-04-24"
+  }
+
+  sku {
+    name     = "GlobalStandard"
+    capacity = 100
+  }
+}
+
+resource "azurerm_cognitive_deployment" "gpt_5_6_luna" {
+  name                 = "gpt-5-6-luna"
+  cognitive_account_id = azurerm_cognitive_account.this.id
+
+  model {
+    format  = "OpenAI"
+    name    = "gpt-5.6-luna"
+    version = "2026-07-09"
   }
 
   sku {
