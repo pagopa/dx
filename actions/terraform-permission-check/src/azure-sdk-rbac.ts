@@ -146,7 +146,9 @@ function createAzureRbacReader(
       return identity.principalId;
     },
     listRoleAssignments(scope) {
-      return authorizationClient.roleAssignments.listForScope(scope);
+      return authorizationClient.roleAssignments.listForScope(scope, {
+        filter: "atScope()",
+      });
     },
   };
 }
@@ -165,7 +167,7 @@ async function collectAssignments(
         assignment.roleDefinitionId
       ) {
         assignments.push({
-          assignmentScope: scope,
+          assignmentScope: assignment.scope ?? scope,
           roleDefinitionId: assignment.roleDefinitionId,
         });
       }
