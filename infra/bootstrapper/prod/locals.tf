@@ -29,5 +29,3 @@ locals {
     ManagementTeam = "Developer Experience"
   }
 }
-
-# Mock change to trigger a new plan in nx affected command, Remove before merge
