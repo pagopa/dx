@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: Released DX Metrics image version to deploy
-        required: true
+        description: Optional released DX Metrics image version to deploy
+        required: false
         type: string
   push:
     # Scope production deployment to the Nx release tag for this project.
@@ -29,7 +29,7 @@ jobs:
     secrets: inherit
     with:
       docker_image_name: pagopa/dx-metrics
-      docker_image_tag: ${{ inputs.image_tag || github.ref_name }}
+      docker_image_tag: ${{ github.event_name == 'push' && github.ref_name || inputs.image_tag }}
       container_app: dx-p-itn-metrics-portal-ca-01
       resource_group_name: dx-p-itn-common-rg-01
       environment: app-prod
