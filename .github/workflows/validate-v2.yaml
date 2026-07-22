@@ -245,11 +245,11 @@ jobs:
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
           if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME},!repository"
+            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME},!repository"
           elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
+            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
           else
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*,repository"
+            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*,repository"
           fi
 
       - name: Upload Terraform plan report
