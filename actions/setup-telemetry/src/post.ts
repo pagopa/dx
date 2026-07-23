@@ -221,9 +221,9 @@ async function post(): Promise<void> {
   });
   const loggerProvider = new LoggerProvider({
     processors: [
-      new SimpleLogRecordProcessor(
-        new AzureMonitorLogExporter(exporterOptions),
-      ),
+      new SimpleLogRecordProcessor({
+        exporter: new AzureMonitorLogExporter(exporterOptions),
+      }),
     ],
     resource,
   });

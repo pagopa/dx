@@ -2,11 +2,11 @@ let _nx_devkit = require("@nx/devkit");
 
 //#region src/generators/init/generator.ts
 const nxDockerPlugin = {
-	plugin: "@nx/docker",
 	options: {
 		buildTarget: "docker:build",
 		runTarget: "docker:run"
-	}
+	},
+	plugin: "@nx/docker"
 };
 const dxDockerPlugin = { plugin: "@pagopa/nx-dx-docker-plugin" };
 const getPluginName = (plugin) => typeof plugin === "string" ? plugin : plugin.plugin;

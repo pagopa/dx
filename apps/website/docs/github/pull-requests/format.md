@@ -102,7 +102,7 @@ reference is still included to maintain clarity and ensure proper sequencing.
 
 ```markdown
 <Pull Request description>
-  
+
 Close DX-002 CES-50
 ```
 

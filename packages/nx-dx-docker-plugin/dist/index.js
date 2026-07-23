@@ -78,7 +78,8 @@ const deriveFromWorkspacePackage = (workspaceRoot) => {
 	const parseResult = workspacePackageSchema.safeParse((0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, "package.json")));
 	if (!parseResult.success) throw new Error("Unable to infer Docker repository metadata: root package.json must have a name.");
 	const [scope, scopedName] = parseResult.data.name.split("/");
-	return toRepositoryMetadata(scopedName ? scope.replace(/^@/, "") : "pagopa", scopedName ?? scope);
+	const owner = scopedName ? scope.replace(/^@/, "") : "pagopa";
+	return toRepositoryMetadata(owner, scopedName ?? scope);
 };
 const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 	const optionsResult = pluginOptionsSchema.safeParse(options ?? {});

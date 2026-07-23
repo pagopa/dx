@@ -6,9 +6,7 @@ import { useCallback } from "react";
 import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
 
 export type DashboardFilterMode =
-  | "repository-and-time"
-  | "repository-only"
-  | "time-only";
+  "repository-and-time" | "repository-only" | "time-only";
 
 interface DashboardFilterUpdates {
   days?: number;
