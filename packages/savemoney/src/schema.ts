@@ -110,6 +110,12 @@ const AzureSourceSchema = z.enum(AZURE_SOURCE_VALUES);
 const AzureSectionSchema = z
   .object({
     /**
+     * Optional path to an AZQR (`azqr scan --json`) report. When set, its
+     * FinOps-relevant impacted resources are merged into the analysis. The
+     * `--azqr-report` CLI flag, when provided, overrides this value.
+     */
+    azqrReportPath: z.string().optional(),
+    /**
      * Maximum number of resources analyzed in parallel within a single
      * subscription. Defaults to 8 when not provided.
      */

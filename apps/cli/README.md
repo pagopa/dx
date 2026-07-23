@@ -218,14 +218,15 @@ dx savemoney [options]
 
 **Options:**
 
-| Option       | Alias | Description                                                                                                                                  | Default      |
-| :----------- | :---- | :------------------------------------------------------------------------------------------------------------------------------------------- | :----------- |
-| `--config`   | `-c`  | Path to a YAML configuration file.                                                                                                           | N/A          |
-| `--format`   | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                  | `table`      |
-| `--days`     | `-d`  | Metric analysis period in days (overrides config file).                                                                                      | `30`         |
-| `--location` | `-l`  | Preferred Azure location for resources (overrides config file).                                                                              | `italynorth` |
-| `--tags`     | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated). | N/A          |
-| `--source`   | `-s`  | Restrict findings to a specific source: `advisor`, `custom`, or `all`.                                                                       | `all`        |
+| Option          | Alias | Description                                                                                                                                  | Default      |
+| :-------------- | :---- | :------------------------------------------------------------------------------------------------------------------------------------------- | :----------- |
+| `--config`      | `-c`  | Path to a YAML configuration file.                                                                                                           | N/A          |
+| `--format`      | `-f`  | Report format: `table`, `json`, `detailed-json`, or `lint`.                                                                                  | `table`      |
+| `--days`        | `-d`  | Metric analysis period in days (overrides config file).                                                                                      | `30`         |
+| `--location`    | `-l`  | Preferred Azure location for resources (overrides config file).                                                                              | `italynorth` |
+| `--tags`        | `-t`  | Filter resources by tags (`key=value key2=value2`). Only resources matching **all** specified tags are analyzed (variadic: space-separated). | N/A          |
+| `--source`      | `-s`  | Restrict findings to a specific source: `advisor`, `custom`, or `all`.                                                                       | `all`        |
+| `--azqr-report` |       | Path to an [AZQR](https://github.com/Azure/azqr) `scan --json` report to merge as additional findings (overrides `azure.azqrReportPath`).    | N/A          |
 
 > `--verbose` / `-v` is inherited from the root command. See [Global Options](#global-options).
 
@@ -249,6 +250,9 @@ dx savemoney --config config.yaml --tags "environment=prod"
 
 # Analyze with specific timespan
 dx savemoney --days 60 --location italynorth
+
+# Merge an AZQR report (run `azqr scan --mask=false --json` first)
+dx savemoney --config config.yaml --azqr-report azqr_action_plan.json
 ```
 
 **Configuration file example (`config.yaml`):**
@@ -260,6 +264,7 @@ azure:
     - subscription-2
   preferredLocation: italynorth
   timespanDays: 30
+  azqrReportPath: ./azqr_action_plan.json # optional — merge an AZQR scan report
   thresholds: # optional — omit to use built-in defaults
     vm:
       cpuPercent: 5
@@ -282,6 +287,7 @@ azure:
 - **Container Apps**: Not running, zero replicas, low resource usage
 - **Static Web Apps**: No traffic or very low usage patterns
 - **Azure Advisor recommendations**: Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other cost recommendations surfaced directly from Azure Advisor — with estimated monthly savings where available
+- **AZQR report** (optional, via `--azqr-report`): billable orphans (cost) and free orphaned resources such as empty subnets or unattached NSGs (cleanup candidates) parsed from an `azqr scan --json` report
 
 > [!NOTE]
 > Currently only Azure is supported. Support for additional cloud providers (AWS) is planned for future releases.

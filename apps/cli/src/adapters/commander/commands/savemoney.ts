@@ -42,6 +42,10 @@ export const makeSavemoneyCommand = () =>
       "--no-pricing",
       "Disable Azure Retail Prices enrichment (skips custom cost-at-risk estimates)",
     )
+    .option(
+      "--azqr-report <path>",
+      "Path to an AZQR (`azqr scan --json`) report; its FinOps-relevant impacted resources are merged into the output. Overrides `azure.azqrReportPath` from the config file. Run AZQR with `--mask=false` so resource IDs match.",
+    )
     .action(async function (options) {
       const { verbose } = this.optsWithGlobals<GlobalOptions>();
       try {
@@ -54,6 +58,7 @@ export const makeSavemoneyCommand = () =>
 
         const finalConfig: AzureConfig = {
           ...config,
+          ...(options.azqrReport ? { azqrReportPath: options.azqrReport } : {}),
           filterTags,
           preferredLocation:
             this.getOptionValueSource("location") === "cli"
