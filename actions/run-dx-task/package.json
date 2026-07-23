@@ -27,7 +27,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
-    "@nx/devkit": "^22.7.6",
+    "@nx/devkit": "^22.7.7",
     "nx": "22.7.5"
   },
   "nx": {
