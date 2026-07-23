@@ -9,7 +9,7 @@
       "expectations": [
         "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
         "Includes all required behavior, acceptance, tracking, and traceability sections.",
-        "Includes an inline Mermaid or PlantUML sequence diagram and a reference to the relevant Endpoint, OpenAPI, AsyncAPI, or Data Contract.",
+        "Includes an inline or linked Mermaid/PlantUML sequence diagram and a reference to the relevant Endpoint, OpenAPI, AsyncAPI, or Data Contract.",
         "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
         "Updates the parent catalog with stable ID, title, linked JTBD, priority, child link, and status."
       ],
@@ -31,7 +31,7 @@
     {
       "id": 2,
       "name": "update-stable-use-case",
-      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-UC-02-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
+      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
       "expected_output": "The existing child is updated in place, stable IDs are preserved, the new behavior has a new acceptance check, and the parent index remains aligned.",
       "expectations": [
         "Preserves the existing UC-02 ID and unchanged acceptance-check IDs.",
@@ -91,6 +91,19 @@
         "Creates one child Markdown file per catalog entry under use-cases/.",
         "Preserves each existing UC ID, linked JTBD, and priority.",
         "Synchronizes every parent catalog row and does not create a new parent DR/SRS."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "follow-dr01-use-case-template",
+      "prompt": "Create UC-01 from a parent DR/SRS using the DR-01 Use Case template contract. Keep the canonical field order, include design maturity, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
+      "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata and explicit gaps.",
+      "expectations": [
+        "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, design maturity, trigger, preconditions, flows, postconditions, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
+        "Uses AC-01-style acceptance-check IDs scoped by the Use Case document.",
+        "Includes Call for Task among the supported source artifact types.",
+        "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."
       ],
       "files": []
     }

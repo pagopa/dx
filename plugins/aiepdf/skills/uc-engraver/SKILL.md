@@ -34,13 +34,14 @@ bundled template.
 
 - Preserve the existing `UC-XX` ID when updating. Allocate the next
   non-conflicting ID only for a genuinely new Use Case.
-- Preserve existing `AC-*` IDs when their meaning remains unchanged. Add a
-  new ID only for new acceptance meaning; do not renumber existing checks.
+- Preserve existing Use Case-local `AC-XX` IDs when their meaning remains
+  unchanged. Add a new ID only for new acceptance meaning; do not renumber
+  existing checks.
 - Write visible content in English unless another language is requested.
   Stable IDs, status values, endpoint names, metric identifiers, and URLs are
   machine-facing and remain unchanged.
-- Keep `metadata.status` and the Use Case lifecycle status unchanged unless the
-  user explicitly requests a lifecycle transition.
+- Keep the frontmatter `status` and the visible design-maturity value unchanged
+  unless the user explicitly requests a lifecycle transition.
 - Keep every unknown, contradiction, and unverified claim visible as an
   assumption, open question, proposed value, or justified `N/A`.
 - A published child Use Case is not complete until the parent Confluence
@@ -64,17 +65,22 @@ bundled template.
 
 Complete every section in the bundled template:
 
-- stable ID and title;
-- linked JTBD and priority;
+- stable ID, title, status, priority, and parent DR/SRS metadata;
+- linked JTBD;
 - primary and secondary actors;
-- source artifact and Service Blueprint step when applicable;
-- design maturity, trigger, and preconditions;
+- source artifact, including Call for Task when applicable;
+- Service Blueprint step and design maturity;
+- trigger and preconditions;
 - main, alternate, and exception/edge-case flows;
 - postconditions;
-- inline Mermaid or PlantUML sequence diagram;
-- numbered binary acceptance checks;
+- numbered binary acceptance checks local to the Use Case;
 - tracking events;
-- links to Figma, endpoints/contracts, and validation evidence.
+- relevant Service Blueprint, Figma, endpoint/contract, validation, and
+  sequence-diagram references.
+
+Keep these body fields in the same order as the DR-01 Use Case template so the
+Markdown maps predictably to Confluence. A sequence diagram may be inline
+Mermaid/PlantUML or a link to a repository diagram.
 
 The child document owns behavior-level detail. The parent owns the catalog and
 cross-Use Case architecture, NFRs, contracts, rollout, validation strategy,
@@ -97,9 +103,9 @@ readiness, and change propagation.
    entry. Reuse PRD actor names exactly, preserve stable IDs, and distinguish
    confirmed behavior from proposed behavior, assumptions, and open questions.
 5. **Validate each child.** Check that flows are coherent, acceptance checks are
-   binary and traceable, tracking is explicit or justified `N/A`, an inline
-   Mermaid or PlantUML sequence diagram is present, links and IDs are
-   consistent, and no unsupported decision was invented.
+   binary and traceable, tracking is explicit or justified `N/A`, a sequence
+   diagram is supplied inline or by link, links and IDs are consistent, and no
+   unsupported decision was invented.
 6. **Synchronize the parent.** Update every selected row in the existing parent
    DR/SRS Use Case index in the same workflow. Keep each row's ID, title,
    linked JTBD, priority, child-document link, and status/gap aligned. Preserve
