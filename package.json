@@ -14,7 +14,7 @@
     "@swc/core": "^1.15.46",
     "@tsconfig/node24": "catalog:",
     "eslint": "catalog:",
-    "nx": "22.7.5",
+    "nx": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

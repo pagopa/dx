@@ -30,7 +30,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1090.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
-    "@octokit/rest": "^22.0.1",
+    "@octokit/rest": "catalog:",
     "@pagopa/azure-tracing": "workspace:^",
     "axios": "^1.18.1",
     "zod": "catalog:"
