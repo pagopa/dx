@@ -38,6 +38,9 @@ to the owning skill.
 5. If a material criterion is missing, contradictory, or unpropagated, stop Jira
    creation and report the gap, impact, owner if known, and required resolution.
    Do not infer a value to make an item appear ready.
+6. Preserve source traceability in both the issue description and native Jira
+   remote links. When a source has a Confluence or Figma URL, link that page or
+   design artifact to the Jira item instead of relying only on prose references.
 
 ## Workflow
 
@@ -54,6 +57,8 @@ Ask one focused clarification at a time when any required context is missing.
 Inspect the target Jira project's available issue types and required fields
 and issue-link types before assuming that Epic, Story, Task, parent, links,
 labels, or custom fields are supported.
+Collect the canonical Confluence URLs for the parent DR/SRS, linked PRD, and
+selected Use Case pages, plus applicable Figma URLs, when they are available.
 
 ### 2. Propose Epic slices
 
@@ -136,6 +141,13 @@ Update only fields included in the confirmed diff. Do not change lifecycle
 status, assignee, priority, estimates, or unrelated description content unless
 the user confirmed those changes. Preserve existing Jira content not owned by
 this projection.
+After creating or updating each confirmed Jira item, use the Atlassian MCP
+`addTeamworkGraphContext` relationship type
+`jira-work-item-links-jira-work-item-remote-link` to attach each applicable
+Confluence source page or Figma design artifact. Set the Jira issue as
+`objectIdentifier`, the full source URL as `targetObjectIdentifier`, and the
+page or artifact title as `title`. Keep the machine-readable source line in the
+description as well.
 
 ### 6. Verify and report
 
@@ -147,6 +159,9 @@ Re-fetch every created or updated item and verify:
 - Story acceptance checks and Task/Story classification;
 - no duplicate was created;
 - the returned Jira keys and URLs are usable.
+- every requested Confluence or Figma remote link is present on the intended
+  Jira item; verify with Jira remote-link retrieval when graph-context traversal
+  does not expose the relationship.
 
 Report partial failures explicitly. Never claim the backlog is synchronized if a
 parent, child, link, or verification step failed.
