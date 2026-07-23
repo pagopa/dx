@@ -124,6 +124,13 @@
       }
     },
     {
+      "plugin": "@nx/docker",
+      "options": {
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    },
+    {
       "plugin": "@pagopa/nx-dx-docker-plugin",
       "options": {
         "buildTarget": {
