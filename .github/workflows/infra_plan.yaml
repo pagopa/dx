@@ -38,6 +38,20 @@ on:
         type: string
         required: false
         default: ""
+      infra_cd_identity_name:
+        description:
+          Name of the Azure Infra CD managed identity to evaluate. The permission
+          check is skipped when this or infra_cd_identity_resource_group_name is empty.
+        type: string
+        required: false
+        default: ""
+      infra_cd_identity_resource_group_name:
+        description:
+          Resource group containing the Azure Infra CD managed identity. The
+          permission check is skipped when this or infra_cd_identity_name is empty.
+        type: string
+        required: false
+        default: ""
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -296,6 +310,7 @@ jobs:
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
+          plan-file: ${{ inputs.infra_cd_identity_name != '' && inputs.infra_cd_identity_resource_group_name != '' && '.terraform-permission-check.tfplan' || '' }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
           no-refresh: ${{ steps.set-refresh-flag.outputs.disable_tf_plan_refresh }}
 
@@ -305,6 +320,30 @@ jobs:
         with:
           name: terraform-plan
           span_phase: end
+
+      - name: Check Infra CD Terraform permissions
+        id: permission-check
+        if: >-
+          steps.plan.outcome == 'success' &&
+          inputs.infra_cd_identity_name != '' &&
+          inputs.infra_cd_identity_resource_group_name != ''
+        continue-on-error: true
+        uses: pagopa/dx/actions/terraform-permission-check@ci-det-phase/01
+        with:
+          terraform-plan-path: ${{ steps.directory.outputs.dir }}/.terraform-permission-check.tfplan
+          azure-subscription-id: ${{ env.ARM_SUBSCRIPTION_ID }}
+          cd-identity-name: ${{ inputs.infra_cd_identity_name }}
+          cd-identity-resource-group-name: ${{ inputs.infra_cd_identity_resource_group_name }}
+          working-directory: ${{ steps.directory.outputs.dir }}
+
+      - name: Post Terraform permission check on PR
+        if: >-
+          github.event_name == 'pull_request' &&
+          steps.permission-check.outcome == 'success'
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: ${{ steps.permission-check.outputs.markdown-report-file }}
+          search-pattern: "Terraform Permission Check (${{ steps.directory.outputs.dir }})"
 
       - name: Check Plan length
         id: check-length

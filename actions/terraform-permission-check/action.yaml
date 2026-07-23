@@ -1,0 +1,45 @@
+name: "Terraform Permission Check"
+description: "Deterministically checks whether the Terraform CD identity can apply planned Azure RBAC changes"
+author: "PagoPA DX Team"
+
+inputs:
+  terraform-plan-path:
+    description: "Path to the binary Terraform plan generated with terraform plan -out"
+    required: true
+  azure-subscription-id:
+    description: "Subscription containing the Infra CD managed identity"
+    required: true
+  cd-identity-name:
+    description: "Name of the Infra CD user-assigned managed identity"
+    required: true
+  cd-identity-resource-group-name:
+    description: "Resource group containing the Infra CD managed identity"
+    required: true
+  working-directory:
+    description: "Terraform working directory, used for terraform show and report labels"
+    required: false
+    default: "."
+  output-file:
+    description: "Report path, relative to the Terraform working directory unless absolute"
+    required: false
+    default: "terraform-permission-check.md"
+
+outputs:
+  markdown-report:
+    description: "Deterministic Markdown permission report"
+  markdown-report-file:
+    description: "Path to the generated Markdown report"
+  pass-count:
+    description: "Number of requirements confirmed as granted"
+  gap-count:
+    description: "Number of confirmed permission gaps"
+  inconclusive-count:
+    description: "Number of requirements or changes that could not be evaluated"
+
+runs:
+  using: "node24"
+  main: "dist/index.cjs"
+
+branding:
+  icon: "shield"
+  color: "blue"

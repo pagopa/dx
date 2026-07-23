@@ -1,0 +1,34 @@
+{
+  "name": "@pagopa-dx/terraform-permission-check",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Deterministic Azure RBAC preflight for Terraform plans",
+  "main": "dist/index.cjs",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@actions/core": "catalog:github-actions",
+    "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-msi": "^2.2.0",
+    "@azure/identity": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
