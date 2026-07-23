@@ -48,6 +48,7 @@ describe("loadConfig", () => {
     expect(result.preferredLocation).toBe("italynorth");
     expect(result.sources).toEqual(["advisor", "custom"]);
     expect(result.timespanDays).toBe(30);
+    expect(result.azqrReportPath).toBeUndefined();
   });
 
   it("applies sources defaults when loading from the environment", async () => {
@@ -90,6 +91,7 @@ describe("loadConfig", () => {
     expect(result.preferredLocation).toBe("westeurope");
     expect(result.sources).toEqual(["custom"]);
     expect(result.timespanDays).toBe(60);
+    expect(result.azqrReportPath).toBe("./azqr_action_plan.json");
 
     expect(result.thresholds?.vm.cpuPercent).toBe(5);
     expect(result.thresholds?.vm.networkInBytesPerDay).toBe(10485760);

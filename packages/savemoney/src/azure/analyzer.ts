@@ -50,6 +50,11 @@ import {
   createDefaultSubscriptionAnalyzers,
   type SubscriptionAnalyzer,
 } from "./analyzers/index.js";
+import {
+  azqrImpactedToFindings,
+  isAzqrReportMasked,
+  loadAzqrReport,
+} from "./azqr.js";
 import { PricingClient, PricingService } from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
 
@@ -171,6 +176,12 @@ export async function analyzeAzureResources(
         verbose: config.verbose ?? false,
       });
     }
+  }
+
+  // Ingest an AZQR (`azqr scan --json`) report when provided, merging its
+  // FinOps-relevant `impacted` rows into the aggregated reports as findings.
+  if (config.azqrReportPath) {
+    await ingestAzqrReport(config.azqrReportPath, allReports, logger);
   }
 
   // Sort to make the output more readable:
@@ -431,6 +442,42 @@ async function collectTaggedResourceIds(args: {
 
 function hasTagFilter(filterTags: Map<string, string> | undefined): boolean {
   return Boolean(filterTags && filterTags.size > 0);
+}
+
+/**
+ * Loads an AZQR report, filters it down to FinOps opportunities and merges the
+ * resulting findings into the aggregated reports. Runs once per invocation
+ * (the report is subscription-agnostic), building a global index from every
+ * report collected during the live scan so AZQR findings attach to their
+ * resource when present or create a stub otherwise.
+ *
+ * When the report is still masked, findings cannot match live resource IDs, so
+ * a warning advises re-running AZQR with `--mask=false`.
+ */
+async function ingestAzqrReport(
+  azqrReportPath: string,
+  reports: AzureDetailedResourceReport[],
+  logger: ReturnType<typeof getLogger>,
+): Promise<void> {
+  const report = await loadAzqrReport(azqrReportPath);
+  if (isAzqrReportMasked(report)) {
+    logger.warn(
+      "AZQR report has masked subscription IDs: findings may not match live" +
+        " resources and can appear as separate stub entries. Re-run with" +
+        " `azqr scan --mask=false` for accurate merging.",
+    );
+  }
+
+  const findings = azqrImpactedToFindings(report);
+  const reportsById = new Map<string, AzureDetailedResourceReport>(
+    reports.map((r) => [(r.resource.id ?? "").toLowerCase(), r]),
+  );
+  for (const finding of findings) {
+    mergeFinding(finding, reports, reportsById);
+  }
+  logger.info(
+    `AZQR: merged ${findings.length} finding(s) from ${azqrReportPath}`,
+  );
 }
 
 function isResourceScopedFinding(resourceId: string): boolean {
