@@ -49,7 +49,9 @@ const getCommitSha = (): string => {
 };
 
 const getAnnotationLevels = (platform: string): string =>
-  platform.split(",").filter(Boolean).length > 1 ? "index,manifest" : "manifest";
+  platform.split(",").filter(Boolean).length > 1
+    ? "index,manifest"
+    : "manifest";
 
 /**
  * Runs `docker build`/`docker buildx build --push` with full OCI labels and

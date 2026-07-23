@@ -2,7 +2,7 @@ let zod_v4 = require("zod/v4");
 let nx_release = require("nx/release");
 
 //#region src/release/version-actions.ts
-const projectJsonSchema = zod_v4.z.object({ metadata: zod_v4.z.object({ version: zod_v4.z.string().trim().min(1) }).passthrough() });
+const projectJsonSchema = zod_v4.z.object({ metadata: zod_v4.z.object({ version: zod_v4.z.string().trim().min(1) }).passthrough() }).passthrough();
 /**
 * Implements Nx Release for container-only projects that have no package
 * manifest. The version lives in project.json metadata.version so it can be
@@ -49,7 +49,7 @@ var DockerProjectVersionActions = class extends nx_release.VersionActions {
 		const parsed = projectJsonSchema.safeParse(projectJson);
 		if (!parsed.success) throw new Error(`Could not read metadata.version from ${manifestPath}.`, { cause: parsed.error });
 		tree.write(manifestPath, JSON.stringify({
-			...projectJson,
+			...parsed.data,
 			metadata: {
 				...parsed.data.metadata,
 				version: newVersion

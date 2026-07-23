@@ -155,9 +155,7 @@ describe("runDockerCommand", () => {
     );
 
     const [, args] = childProcessMocks.spawnSync.mock.calls[0];
-    expect(args).toContain(
-      "manifest:org.opencontainers.image.title=my-app",
-    );
+    expect(args).toContain("manifest:org.opencontainers.image.title=my-app");
     expect(args).not.toContain(
       "index,manifest:org.opencontainers.image.title=my-app",
     );

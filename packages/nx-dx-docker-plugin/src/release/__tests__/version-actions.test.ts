@@ -9,6 +9,7 @@ const createVersionActions = (projectRoot: string) =>
       name: "container-release",
       projects: ["container-release"],
       projectsRelationship: "independent",
+      resolvedVersionPlans: false,
       version: {},
     },
     {
@@ -21,8 +22,23 @@ const createVersionActions = (projectRoot: string) =>
       type: "app",
     },
     {
+      adjustSemverBumpsForZeroMajorVersion: false,
+      applyPreidToDependents: false,
       currentVersionResolver: "disk",
-      manifestRootsToUpdate: ["{projectRoot}"],
+      currentVersionResolverMetadata: {},
+      dockerOptions: {},
+      fallbackCurrentVersionResolver: "disk",
+      manifestRootsToUpdate: [
+        {
+          path: "{projectRoot}",
+          preserveLocalDependencyProtocols: false,
+        },
+      ],
+      preserveLocalDependencyProtocols: false,
+      preserveMatchingDependencyRanges: false,
+      specifierSource: "prompt",
+      versionActionsOptions: {},
+      versionPrefix: "auto",
     },
   );
 
@@ -48,10 +64,11 @@ describe("DockerProjectVersionActions", () => {
       manifestPath: `${projectRoot}/project.json`,
     });
 
-    await expect(versionActions.updateProjectVersion(tree, "0.0.3")).resolves
-      .toEqual([
-        `Updated container-release version to 0.0.3 in ${projectRoot}/project.json`,
-      ]);
+    await expect(
+      versionActions.updateProjectVersion(tree, "0.0.3"),
+    ).resolves.toEqual([
+      `Updated container-release version to 0.0.3 in ${projectRoot}/project.json`,
+    ]);
 
     const updated = tree.read(`${projectRoot}/project.json`, "utf-8");
     if (!updated) {

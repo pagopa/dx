@@ -1,5 +1,6 @@
 /** Manages Docker-only project versions persisted in Nx project metadata. */
 import type { ProjectGraph, Tree } from "@nx/devkit";
+
 import { VersionActions } from "nx/release";
 import { z } from "zod/v4";
 
@@ -9,7 +10,7 @@ const projectJsonSchema = z.object({
       version: z.string().trim().min(1),
     })
     .passthrough(),
-});
+}).passthrough();
 
 /**
  * Implements Nx Release for container-only projects that have no package
@@ -57,7 +58,10 @@ export default class DockerProjectVersionActions extends VersionActions {
     return [];
   }
 
-  async updateProjectVersion(tree: Tree, newVersion: string): Promise<string[]> {
+  async updateProjectVersion(
+    tree: Tree,
+    newVersion: string,
+  ): Promise<string[]> {
     const manifestPath = `${this.projectGraphNode.data.root}/project.json`;
     const content = tree.read(manifestPath, "utf-8");
     if (!content) {
@@ -82,7 +86,7 @@ export default class DockerProjectVersionActions extends VersionActions {
       manifestPath,
       JSON.stringify(
         {
-          ...projectJson,
+          ...parsed.data,
           metadata: { ...parsed.data.metadata, version: newVersion },
         },
         null,
@@ -90,6 +94,8 @@ export default class DockerProjectVersionActions extends VersionActions {
       ) + "\n",
     );
 
-    return [`Updated ${this.projectGraphNode.name} version to ${newVersion} in ${manifestPath}`];
+    return [
+      `Updated ${this.projectGraphNode.name} version to ${newVersion} in ${manifestPath}`,
+    ];
   }
 }

@@ -90,7 +90,9 @@ describe("release-publish executor", () => {
 
   it("reads metadata.version from project.json when package.json is absent", async () => {
     fsMocks.readFile
-      .mockRejectedValueOnce(Object.assign(new Error("missing"), { code: "ENOENT" }))
+      .mockRejectedValueOnce(
+        Object.assign(new Error("missing"), { code: "ENOENT" }),
+      )
       .mockResolvedValueOnce('{"metadata":{"version":"0.0.2"}}');
 
     await expect(

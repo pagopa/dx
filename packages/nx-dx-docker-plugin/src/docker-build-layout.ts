@@ -3,8 +3,8 @@ import { readJsonFile } from "@nx/devkit";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
-interface ProjectPackageJson {
-  readonly nx?: {
+interface ProjectJson {
+  readonly metadata?: {
     readonly docker?: {
       readonly contextPath?: string;
       readonly dockerfilePath?: string;
@@ -13,8 +13,8 @@ interface ProjectPackageJson {
   };
 }
 
-interface ProjectJson {
-  readonly metadata?: {
+interface ProjectPackageJson {
+  readonly nx?: {
     readonly docker?: {
       readonly contextPath?: string;
       readonly dockerfilePath?: string;

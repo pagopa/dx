@@ -167,10 +167,9 @@ version in `project.json` and use the plugin's VersionActions implementation:
 
 `metadata.docker` accepts the same `contextPath`, `dockerfilePath`, and
 `platform` build overrides as `nx.docker`. The plugin infers
-`nx-release-publish` from `metadata.docker.repositoryName`.
-`pnpm nx release` updates `metadata.version`; the publish step builds and pushes
-the image using that version. No package manifest or temporary version file is
-needed.
+`nx-release-publish` from `metadata.docker.repositoryName`. `pnpm nx release`
+updates `metadata.version`; the publish step builds and pushes the image using
+that version. No package manifest or temporary version file is needed.
 
 ## Nx Release configuration
 
