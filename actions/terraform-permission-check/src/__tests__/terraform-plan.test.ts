@@ -398,3 +398,93 @@ describe("extractPlanRequirements data-plane resources", () => {
     ).toThrowError("Invalid Terraform plan JSON");
   });
 });
+
+describe("extractPlanRequirements selected Terrawiz resources", () => {
+  it("extracts direct, nested, and parent-ID scoped ARM requirements", () => {
+    const result = extract({
+      resource_changes: [
+        {
+          address: "azurerm_container_app.example",
+          change: {
+            actions: ["create"],
+            after: { name: "app", resource_group_name: "platform" },
+            before: null,
+          },
+          type: "azurerm_container_app",
+        },
+        {
+          address: "azurerm_subnet.example",
+          change: {
+            actions: ["create"],
+            after: {
+              name: "apps",
+              resource_group_name: "network",
+              virtual_network_name: "hub",
+            },
+            before: null,
+          },
+          type: "azurerm_subnet",
+        },
+        {
+          address: "azurerm_servicebus_subscription.example",
+          change: {
+            actions: ["create"],
+            after: {
+              name: "consumer",
+              namespace_name: "messaging",
+              resource_group_name: "platform",
+              topic_name: "events",
+            },
+            before: null,
+          },
+          type: "azurerm_servicebus_subscription",
+        },
+        {
+          address: "azurerm_cdn_frontdoor_endpoint.example",
+          change: {
+            actions: ["create"],
+            after: {
+              cdn_frontdoor_profile_id:
+                "/subscriptions/000/resourceGroups/platform/providers/Microsoft.Cdn/profiles/example",
+              name: "public",
+            },
+            before: null,
+          },
+          type: "azurerm_cdn_frontdoor_endpoint",
+        },
+      ],
+    });
+
+    expect(result.inconclusive).toEqual([]);
+    expect(result.requirements).toEqual([
+      {
+        action: "Microsoft.App/containerApps/write",
+        operation: "create",
+        resourceAddress: "azurerm_container_app.example",
+        scope:
+          "/subscriptions/000/resourceGroups/platform/providers/Microsoft.App/containerApps/app",
+      },
+      {
+        action: "Microsoft.Network/virtualNetworks/subnets/write",
+        operation: "create",
+        resourceAddress: "azurerm_subnet.example",
+        scope:
+          "/subscriptions/000/resourceGroups/network/providers/Microsoft.Network/virtualNetworks/hub/subnets/apps",
+      },
+      {
+        action: "Microsoft.ServiceBus/namespaces/topics/subscriptions/write",
+        operation: "create",
+        resourceAddress: "azurerm_servicebus_subscription.example",
+        scope:
+          "/subscriptions/000/resourceGroups/platform/providers/Microsoft.ServiceBus/namespaces/messaging/topics/events/subscriptions/consumer",
+      },
+      {
+        action: "Microsoft.Cdn/profiles/afdEndpoints/write",
+        operation: "create",
+        resourceAddress: "azurerm_cdn_frontdoor_endpoint.example",
+        scope:
+          "/subscriptions/000/resourceGroups/platform/providers/Microsoft.Cdn/profiles/example/afdEndpoints/public",
+      },
+    ]);
+  });
+});

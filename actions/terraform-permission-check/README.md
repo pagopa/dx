@@ -14,8 +14,8 @@ the action and should be handled with `continue-on-error` by advisory workflows.
 
 1. Runs `terraform show -json` against a binary plan generated with
    `terraform plan -out=<path>`.
-2. Extracts management-plane permission requirements from supported Terraform
-   resource changes.
+2. Extracts management-plane and supported service data-plane permission
+   requirements from Terraform resource changes.
 3. Resolves the Infra CD user-assigned managed identity with the Azure SDK.
 4. Reads its live role assignments and referenced role definitions at the
    applicable Azure scopes.
@@ -28,16 +28,24 @@ Terraform state, or source code.
 
 ## Current coverage
 
-The rule catalog supports the resource changes exercised by the deterministic
-PoC:
+The rule catalog supports the selected Terrawiz resource types exercised by the
+deterministic PoC:
 
-| Terraform resource         | Required Azure action                                                | Evaluation scope                                                                         |
-| -------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `azurerm_role_assignment`  | `Microsoft.Authorization/roleAssignments/write` or `delete`          | Planned `scope`, or the referenced supported resource scope from Terraform configuration |
-| `azurerm_resource_group`   | `Microsoft.Resources/subscriptions/resourceGroups/write` or `delete` | Subscription                                                                             |
-| `azurerm_api_management`   | `Microsoft.ApiManagement/service/write` or `delete`                  | API Management service resource                                                          |
-| `azurerm_cosmosdb_account` | `Microsoft.DocumentDB/databaseAccounts/write` or `delete`            | Cosmos DB account resource                                                               |
-| `azurerm_private_endpoint` | `Microsoft.Network/privateEndpoints/write` or `delete`               | Private endpoint resource                                                                |
+- Baseline: role assignments, role definitions, and resource groups.
+- Platform: API Management, Container Apps and environments, App Service and
+  Function App slots, Service Plans, and Front Door profiles/endpoints.
+- Data and messaging: Cosmos accounts/databases/containers, PostgreSQL Flexible
+  Server, Redis Cache, Service Bus namespaces/queues/topics/subscriptions, and
+  Event Hubs namespaces.
+- Networking: private endpoints, network security groups, subnets and subnet
+  NSG associations, public DNS CNAME records, and private DNS A records.
+- Storage: accounts, customer-managed keys, containers, queues, and tables.
+- Key Vault: vaults, access policies, secrets, keys, and certificates.
+
+Management-plane resources require their explicit ARM `write` or `delete`
+action at the exact resource scope. Storage and Key Vault child resources are
+evaluated as service data-plane operations; Key Vault supports both RBAC-enabled
+vaults and legacy access policies.
 
 Create and update operations require `write`; delete operations require
 `delete`. Replacements evaluate both actions at the old and new scopes.
@@ -57,7 +65,7 @@ assignment, a missing role definition, or an unavailable Azure read.
 
 - `azurerm_role_definition` is not evaluated.
 - Resources outside this rule catalog are reported as inconclusive.
-- Azure data-plane actions are collected but not evaluated.
+- Resource types outside the selected catalog are reported as inconclusive.
 - Role-assignment conditions and Azure deny assignments are not interpreted.
 - The action does not recommend broad built-in roles or make automatic changes.
 

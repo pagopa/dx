@@ -109,6 +109,39 @@ const buildResourceId = (
 ): string =>
   `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/${provider}/${resourceType}/${name}`;
 
+const resourceGroupResourceScope =
+  (provider: string, resourceType: string): SupportedResourceRule["scope"] =>
+  (values, subscriptionId) => {
+    const name = getStringValue(values, "name");
+    const resourceGroupName = getStringValue(values, "resource_group_name");
+    return name && resourceGroupName
+      ? buildResourceId(
+          subscriptionId,
+          resourceGroupName,
+          provider,
+          resourceType,
+          name,
+        )
+      : undefined;
+  };
+
+const nestedResourceScope =
+  (
+    provider: string,
+    parentResourceType: string,
+    parentNameKey: string,
+    resourceType: string,
+    nameKey = "name",
+  ): SupportedResourceRule["scope"] =>
+  (values, subscriptionId) => {
+    const name = getStringValue(values, nameKey);
+    const parentName = getStringValue(values, parentNameKey);
+    const resourceGroupName = getStringValue(values, "resource_group_name");
+    return name && parentName && resourceGroupName
+      ? `${buildResourceId(subscriptionId, resourceGroupName, provider, parentResourceType, parentName)}/${resourceType}/${name}`
+      : undefined;
+  };
+
 const getScope = (
   values: z.infer<typeof resourceValuesSchema>,
 ): string | undefined => {
@@ -132,35 +165,97 @@ const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
   {
     azurerm_api_management: {
       actionNamespace: "Microsoft.ApiManagement/service",
-      scope: (values, subscriptionId) => {
+      scope: resourceGroupResourceScope("Microsoft.ApiManagement", "service"),
+    },
+    azurerm_app_service_slot: {
+      actionNamespace: "Microsoft.Web/sites/slots",
+      scope: nestedResourceScope(
+        "Microsoft.Web",
+        "sites",
+        "app_service_name",
+        "slots",
+      ),
+    },
+    azurerm_cdn_frontdoor_endpoint: {
+      actionNamespace: "Microsoft.Cdn/profiles/afdEndpoints",
+      scope: (values) => {
+        const profileId = getStringValue(values, "cdn_frontdoor_profile_id");
         const name = getStringValue(values, "name");
-        const resourceGroupName = getStringValue(values, "resource_group_name");
-        return name && resourceGroupName
-          ? buildResourceId(
-              subscriptionId,
-              resourceGroupName,
-              "Microsoft.ApiManagement",
-              "service",
-              name,
-            )
+        return profileId && name
+          ? `${profileId}/afdEndpoints/${name}`
           : undefined;
       },
     },
+    azurerm_cdn_frontdoor_profile: {
+      actionNamespace: "Microsoft.Cdn/profiles",
+      scope: resourceGroupResourceScope("Microsoft.Cdn", "profiles"),
+    },
+    azurerm_container_app: {
+      actionNamespace: "Microsoft.App/containerApps",
+      scope: resourceGroupResourceScope("Microsoft.App", "containerApps"),
+    },
+    azurerm_container_app_environment: {
+      actionNamespace: "Microsoft.App/managedEnvironments",
+      scope: resourceGroupResourceScope("Microsoft.App", "managedEnvironments"),
+    },
     azurerm_cosmosdb_account: {
       actionNamespace: "Microsoft.DocumentDB/databaseAccounts",
+      scope: resourceGroupResourceScope(
+        "Microsoft.DocumentDB",
+        "databaseAccounts",
+      ),
+    },
+    azurerm_cosmosdb_sql_container: {
+      actionNamespace:
+        "Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers",
       scope: (values, subscriptionId) => {
+        const accountName = getStringValue(values, "account_name");
+        const databaseName = getStringValue(values, "database_name");
         const name = getStringValue(values, "name");
         const resourceGroupName = getStringValue(values, "resource_group_name");
-        return name && resourceGroupName
-          ? buildResourceId(
-              subscriptionId,
-              resourceGroupName,
-              "Microsoft.DocumentDB",
-              "databaseAccounts",
-              name,
-            )
+        return accountName && databaseName && name && resourceGroupName
+          ? `${buildResourceId(subscriptionId, resourceGroupName, "Microsoft.DocumentDB", "databaseAccounts", accountName)}/sqlDatabases/${databaseName}/containers/${name}`
           : undefined;
       },
+    },
+    azurerm_cosmosdb_sql_database: {
+      actionNamespace: "Microsoft.DocumentDB/databaseAccounts/sqlDatabases",
+      scope: nestedResourceScope(
+        "Microsoft.DocumentDB",
+        "databaseAccounts",
+        "account_name",
+        "sqlDatabases",
+      ),
+    },
+    azurerm_dns_cname_record: {
+      actionNamespace: "Microsoft.Network/dnsZones/CNAME",
+      scope: nestedResourceScope(
+        "Microsoft.Network",
+        "dnsZones",
+        "zone_name",
+        "CNAME",
+      ),
+    },
+    azurerm_eventhub_namespace: {
+      actionNamespace: "Microsoft.EventHub/namespaces",
+      scope: resourceGroupResourceScope("Microsoft.EventHub", "namespaces"),
+    },
+    azurerm_function_app_slot: {
+      actionNamespace: "Microsoft.Web/sites/slots",
+      scope: nestedResourceScope(
+        "Microsoft.Web",
+        "sites",
+        "function_app_name",
+        "slots",
+      ),
+    },
+    azurerm_key_vault: {
+      actionNamespace: "Microsoft.KeyVault/vaults",
+      scope: resourceGroupResourceScope("Microsoft.KeyVault", "vaults"),
+    },
+    azurerm_key_vault_access_policy: {
+      actionNamespace: "Microsoft.KeyVault/vaults/accessPolicies",
+      scope: (values) => getStringValue(values, "key_vault_id"),
     },
     azurerm_key_vault_certificate: {
       actionNamespace: keyVaultActionFor("certificates", "create"),
@@ -177,25 +272,119 @@ const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
       plane: "key-vault-data",
       scope: (values) => getStringValue(values, "key_vault_id"),
     },
+    azurerm_linux_function_app: {
+      actionNamespace: "Microsoft.Web/sites",
+      scope: resourceGroupResourceScope("Microsoft.Web", "sites"),
+    },
+    azurerm_linux_function_app_slot: {
+      actionNamespace: "Microsoft.Web/sites/slots",
+      scope: nestedResourceScope(
+        "Microsoft.Web",
+        "sites",
+        "function_app_name",
+        "slots",
+      ),
+    },
+    azurerm_linux_web_app: {
+      actionNamespace: "Microsoft.Web/sites",
+      scope: resourceGroupResourceScope("Microsoft.Web", "sites"),
+    },
+    azurerm_linux_web_app_slot: {
+      actionNamespace: "Microsoft.Web/sites/slots",
+      scope: nestedResourceScope(
+        "Microsoft.Web",
+        "sites",
+        "app_service_name",
+        "slots",
+      ),
+    },
+    azurerm_network_security_group: {
+      actionNamespace: "Microsoft.Network/networkSecurityGroups",
+      scope: resourceGroupResourceScope(
+        "Microsoft.Network",
+        "networkSecurityGroups",
+      ),
+    },
+    azurerm_postgresql_flexible_server: {
+      actionNamespace: "Microsoft.DBforPostgreSQL/flexibleServers",
+      scope: resourceGroupResourceScope(
+        "Microsoft.DBforPostgreSQL",
+        "flexibleServers",
+      ),
+    },
+    azurerm_private_dns_a_record: {
+      actionNamespace: "Microsoft.Network/privateDnsZones/A",
+      scope: nestedResourceScope(
+        "Microsoft.Network",
+        "privateDnsZones",
+        "zone_name",
+        "A",
+      ),
+    },
     azurerm_private_endpoint: {
       actionNamespace: "Microsoft.Network/privateEndpoints",
-      scope: (values, subscriptionId) => {
-        const name = getStringValue(values, "name");
-        const resourceGroupName = getStringValue(values, "resource_group_name");
-        return name && resourceGroupName
-          ? buildResourceId(
-              subscriptionId,
-              resourceGroupName,
-              "Microsoft.Network",
-              "privateEndpoints",
-              name,
-            )
-          : undefined;
-      },
+      scope: resourceGroupResourceScope(
+        "Microsoft.Network",
+        "privateEndpoints",
+      ),
+    },
+    azurerm_redis_cache: {
+      actionNamespace: "Microsoft.Cache/Redis",
+      scope: resourceGroupResourceScope("Microsoft.Cache", "Redis"),
     },
     azurerm_resource_group: {
       actionNamespace: "Microsoft.Resources/subscriptions/resourceGroups",
       scope: (_values, subscriptionId) => `/subscriptions/${subscriptionId}`,
+    },
+    azurerm_role_definition: {
+      actionNamespace: "Microsoft.Authorization/roleDefinitions",
+      scope: (values) => getScope(values),
+    },
+    azurerm_service_plan: {
+      actionNamespace: "Microsoft.Web/serverfarms",
+      scope: resourceGroupResourceScope("Microsoft.Web", "serverfarms"),
+    },
+    azurerm_servicebus_namespace: {
+      actionNamespace: "Microsoft.ServiceBus/namespaces",
+      scope: resourceGroupResourceScope("Microsoft.ServiceBus", "namespaces"),
+    },
+    azurerm_servicebus_queue: {
+      actionNamespace: "Microsoft.ServiceBus/namespaces/queues",
+      scope: nestedResourceScope(
+        "Microsoft.ServiceBus",
+        "namespaces",
+        "namespace_name",
+        "queues",
+      ),
+    },
+    azurerm_servicebus_subscription: {
+      actionNamespace: "Microsoft.ServiceBus/namespaces/topics/subscriptions",
+      scope: (values, subscriptionId) => {
+        const name = getStringValue(values, "name");
+        const namespaceName = getStringValue(values, "namespace_name");
+        const resourceGroupName = getStringValue(values, "resource_group_name");
+        const topicName = getStringValue(values, "topic_name");
+        return name && namespaceName && resourceGroupName && topicName
+          ? `${buildResourceId(subscriptionId, resourceGroupName, "Microsoft.ServiceBus", "namespaces", namespaceName)}/topics/${topicName}/subscriptions/${name}`
+          : undefined;
+      },
+    },
+    azurerm_servicebus_topic: {
+      actionNamespace: "Microsoft.ServiceBus/namespaces/topics",
+      scope: nestedResourceScope(
+        "Microsoft.ServiceBus",
+        "namespaces",
+        "namespace_name",
+        "topics",
+      ),
+    },
+    azurerm_storage_account: {
+      actionNamespace: "Microsoft.Storage/storageAccounts",
+      scope: resourceGroupResourceScope("Microsoft.Storage", "storageAccounts"),
+    },
+    azurerm_storage_account_customer_managed_key: {
+      actionNamespace: "Microsoft.Storage/storageAccounts",
+      scope: (values) => getStringValue(values, "storage_account_id"),
     },
     azurerm_storage_container: {
       actionNamespace:
@@ -212,6 +401,19 @@ const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
       actionNamespace: "Microsoft.Storage/storageAccounts/tableServices/tables",
       plane: "storage-data",
       scope: (values) => getStringValue(values, "storage_account_id"),
+    },
+    azurerm_subnet: {
+      actionNamespace: "Microsoft.Network/virtualNetworks/subnets",
+      scope: nestedResourceScope(
+        "Microsoft.Network",
+        "virtualNetworks",
+        "virtual_network_name",
+        "subnets",
+      ),
+    },
+    azurerm_subnet_network_security_group_association: {
+      actionNamespace: "Microsoft.Network/virtualNetworks/subnets",
+      scope: (values) => getStringValue(values, "subnet_id"),
     },
   };
 
