@@ -101,6 +101,7 @@
       "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata and explicit gaps.",
       "expectations": [
         "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, design maturity, trigger, preconditions, flows, postconditions, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
+        "Omits title from frontmatter so the Markdown heading and Confluence page title remain the single title sources.",
         "Uses AC-01-style acceptance-check IDs scoped by the Use Case document.",
         "Includes Call for Task among the supported source artifact types.",
         "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."

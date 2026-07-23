@@ -65,7 +65,7 @@ bundled template.
 
 Complete every section in the bundled template:
 
-- stable ID, title, status, priority, and parent DR/SRS metadata;
+- stable ID, status, priority, and parent DR/SRS metadata;
 - linked JTBD;
 - primary and secondary actors;
 - source artifact, including Call for Task when applicable;

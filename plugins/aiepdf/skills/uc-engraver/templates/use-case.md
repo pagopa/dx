@@ -1,5 +1,4 @@
 ---
-title: "<Use Case title>"
 id: UC-XX
 status: candidate
 priority: <Must / Should>
