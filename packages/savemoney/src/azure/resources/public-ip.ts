@@ -66,8 +66,7 @@ export async function analyzePublicIp(
   // Capture details outside the try so the pricing enrichment below can
   // reuse them without an extra API round-trip.
   let publicIpDetails:
-    | Awaited<ReturnType<typeof networkClient.publicIPAddresses.get>>
-    | undefined;
+    Awaited<ReturnType<typeof networkClient.publicIPAddresses.get>> | undefined;
 
   try {
     // Get detailed Public IP information

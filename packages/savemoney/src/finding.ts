@@ -67,11 +67,7 @@ export type Finding = {
  * model is open to future Advisor categories.
  */
 export type FindingCategory =
-  | "cost"
-  | "operationalExcellence"
-  | "performance"
-  | "reliability"
-  | "security";
+  "cost" | "operationalExcellence" | "performance" | "reliability" | "security";
 
 /**
  * Where the finding originated from.

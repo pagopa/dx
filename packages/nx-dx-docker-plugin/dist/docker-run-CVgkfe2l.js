@@ -1,5 +1,5 @@
 const require_docker_image = require('./docker-image-DgdWlpzQ.js');
-const require_github_summary = require('./github-summary-cLWwWKVU.js');
+const require_github_summary = require('./github-summary-B-OfRxUQ.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 
