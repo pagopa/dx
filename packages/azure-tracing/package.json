@@ -88,7 +88,7 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@t3-oss/env-core": "^0.13.11",
-    "import-in-the-middle": "^3.2.0",
+    "import-in-the-middle": "^3.3.1",
     "zod": "catalog:"
   },
   "devDependencies": {
