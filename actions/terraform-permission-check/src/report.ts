@@ -147,7 +147,7 @@ export const renderReport = (input: ReportInput): ReportOutput => {
     "",
     `**${overallResult}** - ${passCount} passed, ${gapCount} gaps, ${inconclusiveCount} inconclusive.`,
     "",
-    "This deterministic, read-only advisory check evaluates supported Azure management-plane RBAC requirements for the Infra CD identity. It does not modify Azure, Terraform state, or source code.",
+    "This deterministic, read-only advisory check evaluates supported Azure management-plane and service data-plane requirements for the Infra CD identity. It does not modify Azure, Terraform state, or source code.",
   ];
 
   if (evaluationRows.length > 0) {

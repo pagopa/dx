@@ -40,6 +40,24 @@ const createFacts = (
   ],
 });
 
+const dataRequirement: PermissionRequirement = {
+  action: "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+  operation: "create",
+  plane: "storage-data",
+  resourceAddress: "azurerm_storage_container.example",
+  scope:
+    "/subscriptions/sub/resourceGroups/target/providers/Microsoft.Storage/storageAccounts/example/blobServices/default/containers/example",
+};
+
+const keyVaultRequirement: PermissionRequirement = {
+  action: "Microsoft.KeyVault/vaults/secrets/setSecret/action",
+  operation: "create",
+  plane: "key-vault-data",
+  resourceAddress: "azurerm_key_vault_secret.example",
+  scope:
+    "/subscriptions/sub/resourceGroups/target/providers/Microsoft.KeyVault/vaults/example",
+};
+
 describe("isScopeApplicable", () => {
   it("applies parent scopes case-insensitively", () => {
     expect(
@@ -92,6 +110,97 @@ describe("evaluateRequirement", () => {
     );
 
     expect(evaluation.result).toBe("gap");
+  });
+
+  it("passes data-plane requirements with matching DataActions", () => {
+    const facts = createFacts([]);
+    const evaluation = evaluateRequirement(dataRequirement, {
+      ...facts,
+      roleDefinitions: [
+        {
+          ...facts.roleDefinitions[0],
+          dataActions: [
+            "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+          ],
+        },
+      ],
+    });
+
+    expect(evaluation.result).toBe("pass");
+  });
+
+  it("does not use management Actions to pass data-plane requirements", () => {
+    const evaluation = evaluateRequirement(
+      dataRequirement,
+      createFacts(["Microsoft.Storage/*"]),
+    );
+
+    expect(evaluation.result).toBe("gap");
+  });
+
+  it("reports a gap when NotDataActions excludes the required action", () => {
+    const facts = createFacts([]);
+    const evaluation = evaluateRequirement(dataRequirement, {
+      ...facts,
+      roleDefinitions: [
+        {
+          ...facts.roleDefinitions[0],
+          dataActions: ["Microsoft.Storage/*"],
+          notDataActions: [
+            "Microsoft.Storage/storageAccounts/blobServices/containers/read",
+          ],
+        },
+      ],
+    });
+
+    expect(evaluation.result).toBe("gap");
+  });
+
+  it("passes Key Vault data requirements through matching access policies", () => {
+    const evaluation = evaluateRequirement(keyVaultRequirement, {
+      ...createFacts([]),
+      keyVaults: [
+        {
+          accessPolicy: {
+            certificates: [],
+            keys: [],
+            secrets: ["set"],
+          },
+          authorizationMode: "access-policy",
+          scope: keyVaultRequirement.scope,
+        },
+      ],
+    });
+
+    expect(evaluation.result).toBe("pass");
+  });
+
+  it("does not use Key Vault access policies for RBAC-enabled vaults", () => {
+    const evaluation = evaluateRequirement(keyVaultRequirement, {
+      ...createFacts([]),
+      keyVaults: [
+        {
+          accessPolicy: {
+            certificates: [],
+            keys: [],
+            secrets: ["set"],
+          },
+          authorizationMode: "rbac",
+          scope: keyVaultRequirement.scope,
+        },
+      ],
+    });
+
+    expect(evaluation.result).toBe("gap");
+  });
+
+  it("is inconclusive when Key Vault authorization facts are unavailable", () => {
+    const evaluation = evaluateRequirement(
+      keyVaultRequirement,
+      createFacts([]),
+    );
+
+    expect(evaluation.result).toBe("inconclusive");
   });
 
   it("reports a gap when assignments do not apply at the target scope", () => {

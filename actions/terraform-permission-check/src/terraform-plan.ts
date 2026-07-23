@@ -66,9 +66,12 @@ export interface InconclusiveChange {
   resourceType: string;
 }
 
+export type PermissionPlane = "key-vault-data" | "management" | "storage-data";
+
 export interface PermissionRequirement {
   action: string;
   operation: "create" | "delete" | "update";
+  plane?: PermissionPlane;
   resourceAddress: string;
   scope: string;
 }
@@ -82,6 +85,7 @@ type ResourceChange = z.infer<typeof resourceChangeSchema>;
 
 interface SupportedResourceRule {
   actionNamespace: string;
+  plane?: PermissionPlane;
   scope: (
     values: z.infer<typeof resourceValuesSchema>,
     subscriptionId: string,
@@ -111,6 +115,18 @@ const getScope = (
   const scope = values?.scope;
   return typeof scope === "string" && scope.length > 0 ? scope : undefined;
 };
+
+const actionFor = (
+  resourceRule: SupportedResourceRule | undefined,
+  operation: PermissionRequirement["operation"],
+): string =>
+  `${resourceRule?.actionNamespace ?? "Microsoft.Authorization/roleAssignments"}/${operation === "delete" ? "delete" : "write"}`;
+
+const keyVaultActionFor = (
+  resource: "certificates" | "keys" | "secrets",
+  operation: PermissionRequirement["operation"],
+): string =>
+  `Microsoft.KeyVault/vaults/${resource}/${operation === "delete" ? `delete${resource.slice(0, -1).replace(/^./u, (letter) => letter.toUpperCase())}` : resource === "secrets" ? "setSecret" : "create"}/action`;
 
 const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
   {
@@ -146,6 +162,21 @@ const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
           : undefined;
       },
     },
+    azurerm_key_vault_certificate: {
+      actionNamespace: keyVaultActionFor("certificates", "create"),
+      plane: "key-vault-data",
+      scope: (values) => getStringValue(values, "key_vault_id"),
+    },
+    azurerm_key_vault_key: {
+      actionNamespace: keyVaultActionFor("keys", "create"),
+      plane: "key-vault-data",
+      scope: (values) => getStringValue(values, "key_vault_id"),
+    },
+    azurerm_key_vault_secret: {
+      actionNamespace: keyVaultActionFor("secrets", "create"),
+      plane: "key-vault-data",
+      scope: (values) => getStringValue(values, "key_vault_id"),
+    },
     azurerm_private_endpoint: {
       actionNamespace: "Microsoft.Network/privateEndpoints",
       scope: (values, subscriptionId) => {
@@ -165,6 +196,22 @@ const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
     azurerm_resource_group: {
       actionNamespace: "Microsoft.Resources/subscriptions/resourceGroups",
       scope: (_values, subscriptionId) => `/subscriptions/${subscriptionId}`,
+    },
+    azurerm_storage_container: {
+      actionNamespace:
+        "Microsoft.Storage/storageAccounts/blobServices/containers",
+      plane: "storage-data",
+      scope: (values) => getStringValue(values, "storage_account_id"),
+    },
+    azurerm_storage_queue: {
+      actionNamespace: "Microsoft.Storage/storageAccounts/queueServices/queues",
+      plane: "storage-data",
+      scope: (values) => getStringValue(values, "storage_account_id"),
+    },
+    azurerm_storage_table: {
+      actionNamespace: "Microsoft.Storage/storageAccounts/tableServices/tables",
+      plane: "storage-data",
+      scope: (values) => getStringValue(values, "storage_account_id"),
     },
   };
 
@@ -291,8 +338,18 @@ export const extractPlanRequirements = (
                   requirements: [
                     ...operationResult.requirements,
                     {
-                      action: `${resourceRule?.actionNamespace ?? "Microsoft.Authorization/roleAssignments"}/${operation === "delete" ? "delete" : "write"}`,
+                      action:
+                        resourceChange.type === "azurerm_key_vault_certificate"
+                          ? keyVaultActionFor("certificates", operation)
+                          : resourceChange.type === "azurerm_key_vault_key"
+                            ? keyVaultActionFor("keys", operation)
+                            : resourceChange.type === "azurerm_key_vault_secret"
+                              ? keyVaultActionFor("secrets", operation)
+                              : actionFor(resourceRule, operation),
                       operation,
+                      ...(resourceRule?.plane
+                        ? { plane: resourceRule.plane }
+                        : {}),
                       resourceAddress: resourceChange.address,
                       scope: resolvedScope,
                     },

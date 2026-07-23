@@ -417,6 +417,9 @@ importers:
       '@azure/arm-authorization':
         specifier: ^9.0.0
         version: 9.0.0
+      '@azure/arm-keyvault':
+        specifier: ^4.0.0
+        version: 4.0.0
       '@azure/arm-msi':
         specifier: ^2.2.0
         version: 2.2.0

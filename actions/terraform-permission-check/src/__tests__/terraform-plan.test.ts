@@ -110,6 +110,83 @@ const playgroundRequirements = [
   },
 ];
 
+const dataPlanePlanFixture = {
+  resource_changes: [
+    {
+      address: "azurerm_storage_container.example",
+      change: {
+        actions: ["create"],
+        after: {
+          storage_account_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+        },
+        before: null,
+      },
+      type: "azurerm_storage_container",
+    },
+    {
+      address: "azurerm_storage_queue.example",
+      change: {
+        actions: ["create"],
+        after: {
+          storage_account_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+        },
+        before: null,
+      },
+      type: "azurerm_storage_queue",
+    },
+    {
+      address: "azurerm_storage_table.example",
+      change: {
+        actions: ["create"],
+        after: {
+          storage_account_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+        },
+        before: null,
+      },
+      type: "azurerm_storage_table",
+    },
+    {
+      address: "azurerm_key_vault_secret.example",
+      change: {
+        actions: ["create"],
+        after: {
+          key_vault_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+        },
+        before: null,
+      },
+      type: "azurerm_key_vault_secret",
+    },
+    {
+      address: "azurerm_key_vault_key.example",
+      change: {
+        actions: ["create"],
+        after: {
+          key_vault_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+        },
+        before: null,
+      },
+      type: "azurerm_key_vault_key",
+    },
+    {
+      address: "azurerm_key_vault_certificate.example",
+      change: {
+        actions: ["create"],
+        after: {
+          key_vault_id:
+            "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+        },
+        before: null,
+      },
+      type: "azurerm_key_vault_certificate",
+    },
+  ],
+};
+
 describe("extractPlanRequirements", () => {
   it("extracts role assignment writes from creates", () => {
     const result = extract({
@@ -254,6 +331,65 @@ describe("extractPlanRequirements", () => {
 
     expect(result.inconclusive).toEqual([]);
     expect(result.requirements).toEqual(playgroundRequirements);
+  });
+});
+
+describe("extractPlanRequirements data-plane resources", () => {
+  it("extracts Storage and Key Vault data-plane requirements", () => {
+    const result = extract(dataPlanePlanFixture);
+
+    expect(result.inconclusive).toEqual([]);
+    expect(result.requirements).toEqual([
+      {
+        action:
+          "Microsoft.Storage/storageAccounts/blobServices/containers/write",
+        operation: "create",
+        plane: "storage-data",
+        resourceAddress: "azurerm_storage_container.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+      },
+      {
+        action: "Microsoft.Storage/storageAccounts/queueServices/queues/write",
+        operation: "create",
+        plane: "storage-data",
+        resourceAddress: "azurerm_storage_queue.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+      },
+      {
+        action: "Microsoft.Storage/storageAccounts/tableServices/tables/write",
+        operation: "create",
+        plane: "storage-data",
+        resourceAddress: "azurerm_storage_table.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.Storage/storageAccounts/example",
+      },
+      {
+        action: "Microsoft.KeyVault/vaults/secrets/setSecret/action",
+        operation: "create",
+        plane: "key-vault-data",
+        resourceAddress: "azurerm_key_vault_secret.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+      },
+      {
+        action: "Microsoft.KeyVault/vaults/keys/create/action",
+        operation: "create",
+        plane: "key-vault-data",
+        resourceAddress: "azurerm_key_vault_key.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+      },
+      {
+        action: "Microsoft.KeyVault/vaults/certificates/create/action",
+        operation: "create",
+        plane: "key-vault-data",
+        resourceAddress: "azurerm_key_vault_certificate.example",
+        scope:
+          "/subscriptions/000/resourceGroups/data/providers/Microsoft.KeyVault/vaults/example",
+      },
+    ]);
   });
 
   it("rejects malformed Terraform plans", () => {

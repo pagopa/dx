@@ -45,6 +45,9 @@ const run = async (): Promise<void> => {
     const collection = await collectAzureRbacFacts({
       cdIdentityName: inputs.cdIdentityName,
       cdIdentityResourceGroupName: inputs.cdIdentityResourceGroupName,
+      keyVaultScopes: planRequirements.requirements
+        .filter((requirement) => requirement.plane === "key-vault-data")
+        .map((requirement) => requirement.scope),
       subscriptionId: inputs.azureSubscriptionId,
       targetScopes: planRequirements.requirements.map(
         (requirement) => requirement.scope,

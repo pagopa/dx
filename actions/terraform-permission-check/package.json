@@ -16,6 +16,7 @@
   "dependencies": {
     "@actions/core": "catalog:github-actions",
     "@azure/arm-authorization": "^9.0.0",
+    "@azure/arm-keyvault": "^4.0.0",
     "@azure/arm-msi": "^2.2.0",
     "@azure/identity": "catalog:",
     "zod": "catalog:"

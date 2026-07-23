@@ -34,6 +34,9 @@ describe("collectAzureRbacFacts", () => {
   it("filters the principal and preserves the actual assignment scope", async () => {
     const queriedScopes: string[] = [];
     const reader: AzureRbacReader = {
+      async getKeyVault() {
+        throw new Error("Key Vault reads are not expected");
+      },
       async getRoleDefinition(roleDefinitionId) {
         return {
           id: roleDefinitionId,
@@ -102,9 +105,78 @@ describe("collectAzureRbacFacts", () => {
       },
     ]);
   });
+});
 
+describe("collectAzureRbacFacts Key Vault facts", () => {
+  it("collects the CD identity's Key Vault access policy for legacy vaults", async () => {
+    const reader: AzureRbacReader = {
+      async getKeyVault(resourceGroupName, vaultName) {
+        expect(resourceGroupName).toBe("target");
+        expect(vaultName).toBe("example");
+        return {
+          properties: {
+            accessPolicies: [
+              {
+                objectId: "target-principal",
+                permissions: {
+                  certificates: ["get"],
+                  keys: ["create", "delete"],
+                  secrets: ["get", "set"],
+                },
+              },
+              {
+                objectId: "other-principal",
+                permissions: { secrets: ["set"] },
+              },
+            ],
+            enableRbacAuthorization: false,
+          },
+        };
+      },
+      async getRoleDefinition() {
+        throw new Error("Role definitions are not expected");
+      },
+      async getUserAssignedIdentity() {
+        return { principalId: "target-principal" };
+      },
+      async *listRoleAssignments() {
+        yield* [];
+      },
+    };
+
+    const result = await collectAzureRbacFacts({
+      cdIdentityName: "infra-cd",
+      cdIdentityResourceGroupName: "identity-rg",
+      keyVaultScopes: [targetScope],
+      reader,
+      subscriptionId: "sub",
+      targetScopes: [targetScope],
+    });
+
+    expect(result.status).toBe("collected");
+    if (result.status !== "collected") {
+      return;
+    }
+    expect(result.facts.keyVaults).toEqual([
+      {
+        accessPolicy: {
+          certificates: ["get"],
+          keys: ["create", "delete"],
+          secrets: ["get", "set"],
+        },
+        authorizationMode: "access-policy",
+        scope: targetScope,
+      },
+    ]);
+  });
+});
+
+describe("collectAzureRbacFacts failures", () => {
   it("returns unavailable when any Azure read fails", async () => {
     const reader: AzureRbacReader = {
+      async getKeyVault() {
+        throw new Error("Key Vault reads are not expected");
+      },
       async getRoleDefinition() {
         return {};
       },
@@ -134,6 +206,9 @@ describe("collectAzureRbacFacts", () => {
 
   it("discards assignments collected before a later scope read fails", async () => {
     const reader: AzureRbacReader = {
+      async getKeyVault() {
+        throw new Error("Key Vault reads are not expected");
+      },
       async getRoleDefinition() {
         throw new Error("Role definitions must not be read from partial facts");
       },

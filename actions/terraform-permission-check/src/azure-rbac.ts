@@ -1,11 +1,14 @@
 /** Collects the CD identity's effective RBAC facts through read-only Azure SDK calls. */
 
 import { AuthorizationManagementClient } from "@azure/arm-authorization";
+import { KeyVaultManagementClient } from "@azure/arm-keyvault";
 import { ManagedServiceIdentityClient } from "@azure/arm-msi";
 import { AzureCliCredential, type TokenCredential } from "@azure/identity";
 import { z } from "zod";
 
 import type {
+  KeyVaultAccessPolicyFact,
+  KeyVaultAuthorizationFact,
   PermissionFacts,
   RoleAssignmentFact,
   RoleDefinitionFact,
@@ -35,6 +38,28 @@ const roleDefinitionSchema = z.object({
   roleName: z.string().min(1).optional(),
 });
 
+const keyVaultSchema = z.object({
+  properties: z
+    .object({
+      accessPolicies: z
+        .array(
+          z.object({
+            objectId: z.string().min(1),
+            permissions: z
+              .object({
+                certificates: z.array(z.string()).nullish(),
+                keys: z.array(z.string()).nullish(),
+                secrets: z.array(z.string()).nullish(),
+              })
+              .nullish(),
+          }),
+        )
+        .nullish(),
+      enableRbacAuthorization: z.boolean().nullish(),
+    })
+    .nullish(),
+});
+
 export type AzureRbacCollection =
   | {
       facts: PermissionFacts;
@@ -46,8 +71,8 @@ export type AzureRbacCollection =
       reason: string;
       status: "unavailable";
     };
-
 export interface AzureRbacReader {
+  getKeyVault(resourceGroupName: string, vaultName: string): Promise<unknown>;
   getRoleDefinition(roleDefinitionId: string): Promise<unknown>;
   getUserAssignedIdentity(
     resourceGroupName: string,
@@ -60,14 +85,25 @@ export interface CollectAzureRbacOptions {
   cdIdentityName: string;
   cdIdentityResourceGroupName: string;
   credential?: TokenCredential;
+  keyVaultScopes?: readonly string[];
   reader?: AzureRbacReader;
   subscriptionId: string;
   targetScopes: readonly string[];
 }
 
+type KeyVaultAccessPolicy = NonNullable<
+  KeyVaultProperties["accessPolicies"]
+>[number];
+
+type KeyVaultProperties = NonNullable<
+  z.infer<typeof keyVaultSchema>["properties"]
+>;
+
 const subscriptionScopePattern = /^\/subscriptions\/[^/]+/iu;
 const resourceGroupScopePattern =
   /^(\/subscriptions\/[^/]+\/resourceGroups\/[^/]+)/iu;
+const keyVaultScopePattern =
+  /^\/subscriptions\/[^/]+\/resourceGroups\/([^/]+)\/providers\/Microsoft\.KeyVault\/vaults\/([^/]+)$/iu;
 
 export const deriveRbacQueryScopes = (
   targetScopes: readonly string[],
@@ -107,8 +143,15 @@ const createAzureRbacReader = (
     credential,
     subscriptionId,
   );
+  const keyVaultClient = new KeyVaultManagementClient(
+    credential,
+    subscriptionId,
+  );
 
   return {
+    getKeyVault(resourceGroupName, vaultName) {
+      return keyVaultClient.vaults.get(resourceGroupName, vaultName);
+    },
     getRoleDefinition(roleDefinitionId) {
       return authorizationClient.roleDefinitions.getById(roleDefinitionId);
     },
@@ -213,6 +256,51 @@ const collectRoleDefinitions = async (
   );
 };
 
+const normalizeKeyVaultAccessPolicy = (
+  value: KeyVaultAccessPolicy,
+): KeyVaultAccessPolicyFact => ({
+  certificates: value.permissions?.certificates ?? [],
+  keys: value.permissions?.keys ?? [],
+  secrets: value.permissions?.secrets ?? [],
+});
+
+const collectKeyVaultFacts = async (
+  reader: AzureRbacReader,
+  principalId: string,
+  keyVaultScopes: readonly string[],
+): Promise<readonly KeyVaultAuthorizationFact[]> =>
+  Promise.all(
+    [
+      ...new Map(
+        keyVaultScopes.map((scope) => [scope.toLowerCase(), scope]),
+      ).values(),
+    ].map(async (scope) => {
+      const scopeMatch = keyVaultScopePattern.exec(scope);
+      if (!scopeMatch) {
+        throw new Error(`Invalid Key Vault scope ${scope}`);
+      }
+
+      const vault = parseExternalValue(
+        keyVaultSchema,
+        await reader.getKeyVault(scopeMatch[1], scopeMatch[2]),
+        `Invalid Key Vault ${scope}`,
+      );
+      const accessPolicy = vault.properties?.accessPolicies?.find(
+        (policy) => policy.objectId.toLowerCase() === principalId.toLowerCase(),
+      );
+      return {
+        ...(accessPolicy
+          ? { accessPolicy: normalizeKeyVaultAccessPolicy(accessPolicy) }
+          : {}),
+        authorizationMode:
+          vault.properties?.enableRbacAuthorization === true
+            ? "rbac"
+            : "access-policy",
+        scope,
+      };
+    }),
+  );
+
 const formatAzureError = (error: unknown): string => {
   if (!(error instanceof Error)) {
     return String(error);
@@ -257,9 +345,21 @@ export const collectAzureRbacFacts = async (
       queryScopes,
     );
     const roleDefinitions = await collectRoleDefinitions(reader, assignments);
+    const keyVaults =
+      options.keyVaultScopes && options.keyVaultScopes.length > 0
+        ? await collectKeyVaultFacts(
+            reader,
+            identity.principalId,
+            options.keyVaultScopes,
+          )
+        : undefined;
 
     return {
-      facts: { assignments, roleDefinitions },
+      facts: {
+        assignments,
+        ...(keyVaults ? { keyVaults } : {}),
+        roleDefinitions,
+      },
       principalId: identity.principalId,
       queriedScopes: queryScopes,
       status: "collected",
