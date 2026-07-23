@@ -24,6 +24,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      packages: write
       pull-requests: write
     steps:
       - name: Generate GitHub App token
@@ -33,6 +34,7 @@ jobs:
           client-id: ${{ secrets.app-client-id }}
           private-key: ${{ secrets.app-private-key }}
           permission-contents: write
+          permission-packages: write
           permission-pull-requests: write
 
       - name: Checkout repository
