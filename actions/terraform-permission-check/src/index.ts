@@ -36,7 +36,9 @@ const run = async (): Promise<void> => {
   const workingDirectory = resolveFromWorkspace(inputs.workingDirectory);
   const terraformPlanPath = resolveFromWorkspace(inputs.terraformPlanPath);
   const plan = await showTerraformPlan(terraformPlanPath, workingDirectory);
-  const planRequirements = extractPlanRequirements(plan);
+  const planRequirements = extractPlanRequirements(plan, {
+    subscriptionId: inputs.azureSubscriptionId,
+  });
 
   let evaluations: readonly PermissionEvaluation[] = [];
   if (planRequirements.requirements.length > 0) {

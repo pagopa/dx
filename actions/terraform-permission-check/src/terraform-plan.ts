@@ -22,9 +22,43 @@ const resourceChangeSchema = z.object({
   type: z.string().min(1),
 });
 
+const configurationResourceSchema = z.object({
+  address: z.string().min(1),
+  expressions: z
+    .object({
+      scope: z
+        .object({
+          references: z.array(z.string().min(1)).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+});
+
+interface ConfigurationModule {
+  child_modules?: ConfigurationModule[];
+  resources?: ConfigurationResource[];
+}
+
+type ConfigurationResource = z.infer<typeof configurationResourceSchema>;
+
+const configurationModuleSchema: z.ZodType<ConfigurationModule> = z.lazy(() =>
+  z.object({
+    child_modules: z.array(configurationModuleSchema).optional(),
+    resources: z.array(configurationResourceSchema).optional(),
+  }),
+);
+
 export const terraformPlanSchema = z.object({
+  configuration: z
+    .object({ root_module: configurationModuleSchema.optional() })
+    .optional(),
   resource_changes: z.array(resourceChangeSchema).optional().default([]),
 });
+
+export interface ExtractPlanRequirementsOptions {
+  subscriptionId?: string;
+}
 
 export interface InconclusiveChange {
   reason: string;
@@ -44,6 +78,33 @@ export interface PlanRequirements {
   requirements: readonly PermissionRequirement[];
 }
 
+type ResourceChange = z.infer<typeof resourceChangeSchema>;
+
+interface SupportedResourceRule {
+  actionNamespace: string;
+  scope: (
+    values: z.infer<typeof resourceValuesSchema>,
+    subscriptionId: string,
+  ) => string | undefined;
+}
+
+const getStringValue = (
+  values: z.infer<typeof resourceValuesSchema>,
+  key: string,
+): string | undefined => {
+  const value = values?.[key];
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+};
+
+const buildResourceId = (
+  subscriptionId: string,
+  resourceGroupName: string,
+  provider: string,
+  resourceType: string,
+  name: string,
+): string =>
+  `/subscriptions/${subscriptionId}/resourceGroups/${resourceGroupName}/providers/${provider}/${resourceType}/${name}`;
+
 const getScope = (
   values: z.infer<typeof resourceValuesSchema>,
 ): string | undefined => {
@@ -51,8 +112,114 @@ const getScope = (
   return typeof scope === "string" && scope.length > 0 ? scope : undefined;
 };
 
+const supportedResourceRules: Readonly<Record<string, SupportedResourceRule>> =
+  {
+    azurerm_api_management: {
+      actionNamespace: "Microsoft.ApiManagement/service",
+      scope: (values, subscriptionId) => {
+        const name = getStringValue(values, "name");
+        const resourceGroupName = getStringValue(values, "resource_group_name");
+        return name && resourceGroupName
+          ? buildResourceId(
+              subscriptionId,
+              resourceGroupName,
+              "Microsoft.ApiManagement",
+              "service",
+              name,
+            )
+          : undefined;
+      },
+    },
+    azurerm_cosmosdb_account: {
+      actionNamespace: "Microsoft.DocumentDB/databaseAccounts",
+      scope: (values, subscriptionId) => {
+        const name = getStringValue(values, "name");
+        const resourceGroupName = getStringValue(values, "resource_group_name");
+        return name && resourceGroupName
+          ? buildResourceId(
+              subscriptionId,
+              resourceGroupName,
+              "Microsoft.DocumentDB",
+              "databaseAccounts",
+              name,
+            )
+          : undefined;
+      },
+    },
+    azurerm_private_endpoint: {
+      actionNamespace: "Microsoft.Network/privateEndpoints",
+      scope: (values, subscriptionId) => {
+        const name = getStringValue(values, "name");
+        const resourceGroupName = getStringValue(values, "resource_group_name");
+        return name && resourceGroupName
+          ? buildResourceId(
+              subscriptionId,
+              resourceGroupName,
+              "Microsoft.Network",
+              "privateEndpoints",
+              name,
+            )
+          : undefined;
+      },
+    },
+    azurerm_resource_group: {
+      actionNamespace: "Microsoft.Resources/subscriptions/resourceGroups",
+      scope: (_values, subscriptionId) => `/subscriptions/${subscriptionId}`,
+    },
+  };
+
+const configurationResources = (
+  module: ConfigurationModule | undefined,
+): readonly ConfigurationResource[] => [
+  ...(module?.resources ?? []),
+  ...(module?.child_modules?.flatMap(configurationResources) ?? []),
+];
+
+const resourceScope = (
+  resourceChange: ResourceChange,
+  operation: PermissionRequirement["operation"],
+  subscriptionId: string | undefined,
+): string | undefined => {
+  const values =
+    operation === "delete"
+      ? resourceChange.change.before
+      : resourceChange.change.after;
+  const resourceRule = supportedResourceRules[resourceChange.type];
+  return subscriptionId
+    ? resourceRule?.scope(values, subscriptionId)
+    : undefined;
+};
+
+const roleAssignmentScope = (
+  resourceChange: ResourceChange,
+  operation: PermissionRequirement["operation"],
+  subscriptionId: string | undefined,
+  configurationByAddress: ReadonlyMap<string, ConfigurationResource>,
+  changesByAddress: ReadonlyMap<string, ResourceChange>,
+): string | undefined => {
+  const directScope = getScope(
+    operation === "delete"
+      ? resourceChange.change.before
+      : resourceChange.change.after,
+  );
+  if (directScope) {
+    return directScope;
+  }
+
+  const reference = configurationByAddress
+    .get(resourceChange.address)
+    ?.expressions?.scope?.references?.at(0);
+  const referencedChange = reference
+    ? changesByAddress.get(reference)
+    : undefined;
+  return referencedChange
+    ? resourceScope(referencedChange, operation, subscriptionId)
+    : undefined;
+};
+
 export const extractPlanRequirements = (
   planInput: unknown,
+  options: ExtractPlanRequirementsOptions = {},
 ): PlanRequirements => {
   const parsedPlan = terraformPlanSchema.safeParse(planInput);
 
@@ -61,6 +228,18 @@ export const extractPlanRequirements = (
       `Invalid Terraform plan JSON: ${z.prettifyError(parsedPlan.error)}`,
     );
   }
+
+  const configurationByAddress = new Map(
+    configurationResources(parsedPlan.data.configuration?.root_module).map(
+      (resource) => [resource.address, resource],
+    ),
+  );
+  const changesByAddress = new Map(
+    parsedPlan.data.resource_changes.map((resourceChange) => [
+      resourceChange.address,
+      resourceChange,
+    ]),
+  );
 
   return parsedPlan.data.resource_changes.reduce<PlanRequirements>(
     (result, resourceChange) => {
@@ -73,7 +252,8 @@ export const extractPlanRequirements = (
         return result;
       }
 
-      if (resourceChange.type !== "azurerm_role_assignment") {
+      const resourceRule = supportedResourceRules[resourceChange.type];
+      if (resourceChange.type !== "azurerm_role_assignment" && !resourceRule) {
         return {
           ...result,
           inconclusive: [
@@ -90,25 +270,31 @@ export const extractPlanRequirements = (
       const operationRequirements =
         actionableOperations.reduce<PlanRequirements>(
           (operationResult, operation) => {
-            const scope = getScope(
-              operation === "delete"
-                ? resourceChange.change.before
-                : resourceChange.change.after,
-            );
+            const resolvedScope =
+              resourceChange.type === "azurerm_role_assignment"
+                ? roleAssignmentScope(
+                    resourceChange,
+                    operation,
+                    options.subscriptionId,
+                    configurationByAddress,
+                    changesByAddress,
+                  )
+                : resourceScope(
+                    resourceChange,
+                    operation,
+                    options.subscriptionId,
+                  );
 
-            return scope
+            return resolvedScope
               ? {
                   ...operationResult,
                   requirements: [
                     ...operationResult.requirements,
                     {
-                      action:
-                        operation === "delete"
-                          ? "Microsoft.Authorization/roleAssignments/delete"
-                          : "Microsoft.Authorization/roleAssignments/write",
+                      action: `${resourceRule?.actionNamespace ?? "Microsoft.Authorization/roleAssignments"}/${operation === "delete" ? "delete" : "write"}`,
                       operation,
                       resourceAddress: resourceChange.address,
-                      scope,
+                      scope: resolvedScope,
                     },
                   ],
                 }
@@ -117,7 +303,7 @@ export const extractPlanRequirements = (
                   inconclusive: [
                     ...operationResult.inconclusive,
                     {
-                      reason: `Role assignment ${operation} scope cannot be resolved from the plan`,
+                      reason: `${resourceChange.type === "azurerm_role_assignment" ? "Role assignment" : resourceChange.type} ${operation} scope cannot be resolved from the plan`,
                       resourceAddress: resourceChange.address,
                       resourceType: resourceChange.type,
                     },

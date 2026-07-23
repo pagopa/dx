@@ -4,9 +4,115 @@ import { describe, expect, it } from "vitest";
 
 import { extractPlanRequirements } from "../terraform-plan.js";
 
+const extract = (plan: unknown) =>
+  extractPlanRequirements(plan, { subscriptionId: "000" });
+
+const playgroundPlanFixture = {
+  configuration: {
+    root_module: {
+      resources: [
+        {
+          address: "azurerm_role_assignment.no_permissions",
+          expressions: {
+            scope: {
+              references: ["azurerm_resource_group.no_permissions"],
+            },
+          },
+        },
+      ],
+    },
+  },
+  resource_changes: [
+    {
+      address: "azurerm_resource_group.no_permissions",
+      change: {
+        actions: ["create"],
+        after: {
+          location: "Italy North",
+          name: "permissions",
+        },
+        before: null,
+      },
+      type: "azurerm_resource_group",
+    },
+    {
+      address: "azurerm_role_assignment.no_permissions",
+      change: {
+        actions: ["create"],
+        after: { scope: null },
+        before: null,
+      },
+      type: "azurerm_role_assignment",
+    },
+    {
+      address: "module.apim.azurerm_api_management.this",
+      change: {
+        actions: ["create"],
+        after: { name: "apim", resource_group_name: "platform" },
+        before: null,
+      },
+      type: "azurerm_api_management",
+    },
+    {
+      address: "module.cosmos.azurerm_cosmosdb_account.this",
+      change: {
+        actions: ["create"],
+        after: { name: "cosmos", resource_group_name: "platform" },
+        before: null,
+      },
+      type: "azurerm_cosmosdb_account",
+    },
+    {
+      address: "module.cosmos.azurerm_private_endpoint.sql[0]",
+      change: {
+        actions: ["create"],
+        after: { name: "cosmos-pe", resource_group_name: "platform" },
+        before: null,
+      },
+      type: "azurerm_private_endpoint",
+    },
+  ],
+};
+
+const playgroundRequirements = [
+  {
+    action: "Microsoft.Resources/subscriptions/resourceGroups/write",
+    operation: "create",
+    resourceAddress: "azurerm_resource_group.no_permissions",
+    scope: "/subscriptions/000",
+  },
+  {
+    action: "Microsoft.Authorization/roleAssignments/write",
+    operation: "create",
+    resourceAddress: "azurerm_role_assignment.no_permissions",
+    scope: "/subscriptions/000",
+  },
+  {
+    action: "Microsoft.ApiManagement/service/write",
+    operation: "create",
+    resourceAddress: "module.apim.azurerm_api_management.this",
+    scope:
+      "/subscriptions/000/resourceGroups/platform/providers/Microsoft.ApiManagement/service/apim",
+  },
+  {
+    action: "Microsoft.DocumentDB/databaseAccounts/write",
+    operation: "create",
+    resourceAddress: "module.cosmos.azurerm_cosmosdb_account.this",
+    scope:
+      "/subscriptions/000/resourceGroups/platform/providers/Microsoft.DocumentDB/databaseAccounts/cosmos",
+  },
+  {
+    action: "Microsoft.Network/privateEndpoints/write",
+    operation: "create",
+    resourceAddress: "module.cosmos.azurerm_private_endpoint.sql[0]",
+    scope:
+      "/subscriptions/000/resourceGroups/platform/providers/Microsoft.Network/privateEndpoints/cosmos-pe",
+  },
+];
+
 describe("extractPlanRequirements", () => {
   it("extracts role assignment writes from creates", () => {
-    const result = extractPlanRequirements({
+    const result = extract({
       resource_changes: [
         {
           address: "azurerm_role_assignment.example",
@@ -34,7 +140,7 @@ describe("extractPlanRequirements", () => {
   });
 
   it("extracts delete and write requirements from replacements", () => {
-    const result = extractPlanRequirements({
+    const result = extract({
       resource_changes: [
         {
           address: "azurerm_role_assignment.example",
@@ -65,7 +171,7 @@ describe("extractPlanRequirements", () => {
   });
 
   it("identifies the unresolved operation in partial replacements", () => {
-    const result = extractPlanRequirements({
+    const result = extract({
       resource_changes: [
         {
           address: "azurerm_role_assignment.example",
@@ -96,8 +202,8 @@ describe("extractPlanRequirements", () => {
     ]);
   });
 
-  it("marks unsupported resource changes as inconclusive", () => {
-    const result = extractPlanRequirements({
+  it("extracts resource group requirements at subscription scope", () => {
+    const result = extract({
       resource_changes: [
         {
           address: "azurerm_resource_group.example",
@@ -112,19 +218,20 @@ describe("extractPlanRequirements", () => {
     });
 
     expect(result).toEqual({
-      inconclusive: [
+      inconclusive: [],
+      requirements: [
         {
-          reason: "Terraform resource type is not covered by this PoC",
+          action: "Microsoft.Resources/subscriptions/resourceGroups/write",
+          operation: "create",
           resourceAddress: "azurerm_resource_group.example",
-          resourceType: "azurerm_resource_group",
+          scope: "/subscriptions/000",
         },
       ],
-      requirements: [],
     });
   });
 
   it("marks role assignments without a known scope as inconclusive", () => {
-    const result = extractPlanRequirements({
+    const result = extract({
       resource_changes: [
         {
           address: "azurerm_role_assignment.example",
@@ -140,6 +247,13 @@ describe("extractPlanRequirements", () => {
 
     expect(result.inconclusive).toHaveLength(1);
     expect(result.requirements).toEqual([]);
+  });
+
+  it("extracts the report fixture resource types and linked assignment scope", () => {
+    const result = extract(playgroundPlanFixture);
+
+    expect(result.inconclusive).toEqual([]);
+    expect(result.requirements).toEqual(playgroundRequirements);
   });
 
   it("rejects malformed Terraform plans", () => {

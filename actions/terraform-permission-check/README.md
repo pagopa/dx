@@ -28,13 +28,19 @@ Terraform state, or source code.
 
 ## Current coverage
 
-The initial rule catalog supports `azurerm_role_assignment`:
+The rule catalog supports the resource changes exercised by the deterministic
+PoC:
 
-| Planned operation | Required Azure action                               |
-| ----------------- | --------------------------------------------------- |
-| Create or update  | `Microsoft.Authorization/roleAssignments/write`     |
-| Delete            | `Microsoft.Authorization/roleAssignments/delete`    |
-| Replacement       | Delete at the old scope and create at the new scope |
+| Terraform resource         | Required Azure action                                                | Evaluation scope                                                                         |
+| -------------------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `azurerm_role_assignment`  | `Microsoft.Authorization/roleAssignments/write` or `delete`          | Planned `scope`, or the referenced supported resource scope from Terraform configuration |
+| `azurerm_resource_group`   | `Microsoft.Resources/subscriptions/resourceGroups/write` or `delete` | Subscription                                                                             |
+| `azurerm_api_management`   | `Microsoft.ApiManagement/service/write` or `delete`                  | API Management service resource                                                          |
+| `azurerm_cosmosdb_account` | `Microsoft.DocumentDB/databaseAccounts/write` or `delete`            | Cosmos DB account resource                                                               |
+| `azurerm_private_endpoint` | `Microsoft.Network/privateEndpoints/write` or `delete`               | Private endpoint resource                                                                |
+
+Create and update operations require `write`; delete operations require
+`delete`. Replacements evaluate both actions at the old and new scopes.
 
 The evaluator reports:
 
@@ -50,7 +56,7 @@ assignment, a missing role definition, or an unavailable Azure read.
 ## Explicit limitations
 
 - `azurerm_role_definition` is not evaluated.
-- Resources outside the rule catalog are reported as inconclusive.
+- Resources outside this rule catalog are reported as inconclusive.
 - Azure data-plane actions are collected but not evaluated.
 - Role-assignment conditions and Azure deny assignments are not interpreted.
 - The action does not recommend broad built-in roles or make automatic changes.
