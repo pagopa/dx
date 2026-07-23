@@ -25,9 +25,9 @@
     "dx": "./dist/cli.js"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1075.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1090.0",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/s3-request-presigner": "^3.1075.0",
+    "@aws-sdk/s3-request-presigner": "^3.1090.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "^22.0.1",

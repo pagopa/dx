@@ -93,7 +93,7 @@
   },
   "devDependencies": {
     "@azure/cosmos": "^4.9.3",
-    "@azure/functions": "^4.16.1",
+    "@azure/functions": "^4.16.2",
     "@azure/storage-blob": "catalog:azure",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
