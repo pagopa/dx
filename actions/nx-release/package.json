@@ -34,7 +34,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
-    "@octokit/rest": "^22.0.1",
+    "@octokit/rest": "catalog:",
     "js-yaml": "catalog:",
     "zod": "catalog:"
   }
