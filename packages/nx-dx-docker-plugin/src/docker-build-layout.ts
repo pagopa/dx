@@ -3,25 +3,38 @@ import { readJsonFile } from "@nx/devkit";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 
+interface DockerBuildOptions {
+  readonly contextPath?: string;
+  readonly dockerfilePath?: string;
+  readonly platform?: string;
+}
+
 interface ProjectJson {
   readonly metadata?: {
-    readonly docker?: {
-      readonly contextPath?: string;
-      readonly dockerfilePath?: string;
-      readonly platform?: string;
-    };
+    readonly docker?: DockerBuildOptions;
   };
 }
 
 interface ProjectPackageJson {
   readonly nx?: {
-    readonly docker?: {
-      readonly contextPath?: string;
-      readonly dockerfilePath?: string;
-      readonly platform?: string;
-    };
+    readonly docker?: DockerBuildOptions;
   };
 }
+
+const getDockerBuildOptions = (
+  workspaceRoot: string,
+  projectRoot: string,
+): DockerBuildOptions | undefined => {
+  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
+  if (existsSync(packageJsonPath)) {
+    return readJsonFile<ProjectPackageJson>(packageJsonPath).nx?.docker;
+  }
+
+  const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
+  return existsSync(projectJsonPath)
+    ? readJsonFile<ProjectJson>(projectJsonPath).metadata?.docker
+    : undefined;
+};
 
 export const getBuildLayoutOverrides = (
   workspaceRoot: string,
@@ -31,25 +44,10 @@ export const getBuildLayoutOverrides = (
   readonly dockerfilePath: string;
   readonly platform?: string;
 } => {
-  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
-  if (!existsSync(packageJsonPath)) {
-    const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
-    const projectJson = existsSync(projectJsonPath)
-      ? readJsonFile<ProjectJson>(projectJsonPath)
-      : null;
-    return {
-      contextPath: projectJson?.metadata?.docker?.contextPath ?? ".",
-      dockerfilePath:
-        projectJson?.metadata?.docker?.dockerfilePath ??
-        `${projectRoot}/Dockerfile`,
-      platform: projectJson?.metadata?.docker?.platform,
-    };
-  }
-  const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
+  const docker = getDockerBuildOptions(workspaceRoot, projectRoot);
   return {
-    contextPath: packageJson.nx?.docker?.contextPath ?? ".",
-    dockerfilePath:
-      packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
-    platform: packageJson.nx?.docker?.platform,
+    contextPath: docker?.contextPath ?? ".",
+    dockerfilePath: docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+    platform: docker?.platform,
   };
 };

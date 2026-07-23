@@ -1,16 +1,18 @@
 /** Manages Docker-only project versions persisted in Nx project metadata. */
-import type { ProjectGraph, Tree } from "@nx/devkit";
+import type { Tree } from "@nx/devkit";
 
 import { VersionActions } from "nx/release";
 import { z } from "zod/v4";
 
-const projectJsonSchema = z.object({
-  metadata: z
-    .object({
-      version: z.string().trim().min(1),
-    })
-    .passthrough(),
-}).passthrough();
+const projectJsonSchema = z
+  .object({
+    metadata: z
+      .object({
+        version: z.string().trim().min(1),
+      })
+      .passthrough(),
+  })
+  .passthrough();
 
 /**
  * Implements Nx Release for container-only projects that have no package
@@ -43,11 +45,7 @@ export default class DockerProjectVersionActions extends VersionActions {
     }
   }
 
-  async readCurrentVersionOfDependency(
-    _tree: Tree,
-    _projectGraph: ProjectGraph,
-    _dependencyProjectName: string,
-  ): Promise<{
+  async readCurrentVersionOfDependency(): Promise<{
     currentVersion: null;
     dependencyCollection: null;
   }> {

@@ -7,22 +7,18 @@ let node_fs = require("node:fs");
 let node_path = require("node:path");
 
 //#region src/docker-build-layout.ts
-const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+const getDockerBuildOptions = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) {
-		const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
-		const projectJson = (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
-		return {
-			contextPath: projectJson?.metadata?.docker?.contextPath ?? ".",
-			dockerfilePath: projectJson?.metadata?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
-			platform: projectJson?.metadata?.docker?.platform
-		};
-	}
-	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	if ((0, node_fs.existsSync)(packageJsonPath)) return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.docker;
+	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath).metadata?.docker : void 0;
+};
+const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+	const docker = getDockerBuildOptions(workspaceRoot, projectRoot);
 	return {
-		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
-		dockerfilePath: packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
-		platform: packageJson.nx?.docker?.platform
+		contextPath: docker?.contextPath ?? ".",
+		dockerfilePath: docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+		platform: docker?.platform
 	};
 };
 

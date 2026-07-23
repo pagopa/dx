@@ -27,7 +27,7 @@ var DockerProjectVersionActions = class extends nx_release.VersionActions {
 			return null;
 		}
 	}
-	async readCurrentVersionOfDependency(_tree, _projectGraph, _dependencyProjectName) {
+	async readCurrentVersionOfDependency() {
 		return {
 			currentVersion: null,
 			dependencyCollection: null
