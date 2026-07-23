@@ -78,7 +78,7 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@verbose-docker-build-nx
+        uses: pagopa/dx/actions/nx-release@main
         env:
           GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
           GH_APP_KEY: ${{ secrets.app-private-key }}
