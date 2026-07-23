@@ -5,7 +5,7 @@
     "docker": {
       "contextPath": "containers/self-hosted-runner",
       "platform": "linux/amd64",
-      "repositoryName": "pagopa/github-self-hosted-runner-azure"
+      "repositoryName": "pagopa/dx-github-self-hosted-runner"
     },
     "version": "0.0.2"
   },
