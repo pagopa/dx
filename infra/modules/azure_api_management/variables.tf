@@ -1,7 +1,3 @@
-#---------#
-# General #
-#---------#
-
 variable "tags" {
   type        = map(any)
   description = "A map of tags to assign to the resources."
@@ -62,7 +58,6 @@ variable "autoscale" {
 
   validation {
     condition = var.autoscale == null || local.use_case_features.zones == null ? true : (
-      # Validate user-provided values only (if not null)
       (try(var.autoscale.minimum_instances, null) == null || var.autoscale.minimum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
       (try(var.autoscale.maximum_instances, null) == null || var.autoscale.maximum_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
       (try(var.autoscale.default_instances, null) == null || var.autoscale.default_instances % length(coalesce(local.use_case_features.zones, [1])) == 0) &&
@@ -96,73 +91,21 @@ variable "autoscale" {
   }
 }
 
-#------------#
-# Networking #
-#------------#
-
 variable "virtual_network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  description = "Virtual network in which to create the subnet."
-}
-
-variable "subnet_id" {
   type        = string
-  default     = null
-  description = "The ID of the subnet that will be used for the API Management."
-}
-
-variable "subnet_pep_id" {
-  type        = string
-  description = "ID of the subnet hosting private endpoints."
-  default     = null
+  description = "The resource ID of the virtual network in which to create the APIM subnet and resolve private endpoint subnets."
 
   validation {
-    condition     = local.use_case_features.private_endpoint != true || var.subnet_pep_id != null
-    error_message = "You must provide a subnet_pep_id when use_case use StandardV2 SKU."
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.virtual_network))
+    error_message = "virtual_network must be a valid Microsoft.Network/virtualNetworks resource ID."
   }
-}
-
-variable "virtual_network_type_internal" {
-  type        = bool
-  description = "Specifies the type of virtual network to use. If true, it will be Internal and requires a subnet_id; otherwise, it will be None."
-  default     = null
-}
-
-variable "enable_public_network_access" {
-  type        = bool
-  description = "Specifies whether public network access is enabled (`true` as Default)."
-  default     = true
-}
-
-variable "public_ip_address_id" {
-  type        = string
-  description = "The ID of the public IP address that will be used for the API Management. Custom public IPs are only supported on the non development use cases when deployed in a virtual network."
-  default     = null
 }
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "The resource group name of the private DNS zone. This is only required when the resource group name differs from the VNet resource group."
+  description = "The resource group name of the private DNS zones. Defaults to the Virtual Network resource group. Zones are resolved in the current subscription."
   default     = null
 }
-
-variable "private_dns_zone_ids" {
-  type = object({
-    azure_api_net             = optional(string)
-    management_azure_api_net  = optional(string)
-    scm_azure_api_net         = optional(string)
-    privatelink_azure_api_net = optional(string)
-  })
-  default     = null
-  description = "Override IDs for private DNS zones. If not provided, zones will be looked up in \"private_dns_zone_resource_group_name\". Use this to reference DNS zones in different subscriptions."
-}
-
-#---------------------------#
-# Policies & Configurations #
-#---------------------------#
 
 variable "publisher_name" {
   type        = string
@@ -171,13 +114,7 @@ variable "publisher_name" {
 
 variable "publisher_email" {
   type        = string
-  description = "The email address of the publisher or company."
-}
-
-variable "notification_sender_email" {
-  type        = string
-  description = "The email address from which notifications will be sent."
-  default     = null
+  description = "The email address of the publisher or company. Also used as the notification sender email."
 }
 
 variable "xml_content" {
@@ -188,150 +125,59 @@ variable "xml_content" {
 
 variable "hostname_configuration" {
   type = object({
-    proxy = optional(list(object({
-      host_name           = string
-      key_vault_id        = string
-      default_ssl_binding = optional(bool, false)
-    })), [])
+    proxy = optional(object({
+      use_resource_name_as_default = optional(bool, false)
+    }), {})
     management = optional(list(object({
-      host_name    = string
-      key_vault_id = string
+      host_name                = string
+      key_vault_certificate_id = string
     })), [])
     portal = optional(list(object({
-      host_name    = string
-      key_vault_id = string
+      host_name                = string
+      key_vault_certificate_id = string
     })), [])
     developer_portal = optional(list(object({
-      host_name    = string
-      key_vault_id = string
+      host_name                = string
+      key_vault_certificate_id = string
     })), [])
     scm = optional(list(object({
-      host_name    = string
-      key_vault_id = string
+      host_name                = string
+      key_vault_certificate_id = string
     })), [])
   })
   default     = {}
-  description = "Custom domain configurations organized by type. Each type (proxy, management, portal, developer_portal, scm) contains a list of domain configurations."
+  description = "Custom domain configurations. The proxy hostname is managed by the module; only whether the resource-name hostname is the default can be configured. Key Vault certificate IDs may include a version; the module strips it internally."
 }
-
-#---------------#
-# Administrator #
-#---------------#
-
-variable "key_vault_id" {
-  type        = string
-  default     = null
-  description = "The ID of the Key Vault."
-}
-
-variable "certificate_names" {
-  type        = list(string)
-  default     = []
-  description = "A list of Key Vault certificate names."
-}
-
-variable "lock_enable" {
-  type        = bool
-  default     = false
-  description = "Specifies whether to apply a lock to prevent accidental deletions."
-}
-
-#------------------------#
-# Tracing and Monitoring #
-#------------------------#
 
 variable "application_insights" {
   type = object({
-    enabled             = bool
-    connection_string   = string
     id                  = optional(string, null)
-    sampling_percentage = number
-    verbosity           = string
+    sampling_percentage = optional(number, 0)
+    verbosity           = optional(string, "error")
   })
-  default = {
-    enabled             = false
-    connection_string   = null
-    id                  = null
-    sampling_percentage = 0
-    verbosity           = "error"
-  }
-  description = "Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100) and the verbosity level (verbose, information, error)."
+  default     = {}
+  description = "Application Insights integration. Set id to enable it; the module resolves the connection string from the resource ID."
 
   validation {
-    condition     = !var.application_insights.enabled || var.application_insights.connection_string != null
-    error_message = "You must provide a connection string when enabling Application Insights integration."
-  }
-
-  validation {
-    condition     = var.application_insights.sampling_percentage >= 0 && var.application_insights.sampling_percentage <= 100
+    condition     = try(var.application_insights.sampling_percentage, 0) >= 0 && try(var.application_insights.sampling_percentage, 0) <= 100
     error_message = "Invalid \"sampling_percentage\" value provided. Valid values are between 0 and 100."
   }
 
   validation {
-    condition     = contains(["verbose", "information", "error"], var.application_insights.verbosity)
+    condition     = contains(["verbose", "information", "error"], try(var.application_insights.verbosity, "error"))
     error_message = "Invalid \"verbosity\" value provided. Valid values are \"verbose\", \"information\", \"error\"."
   }
 }
 
-variable "monitoring" {
-  type = object({
-    enabled                    = bool
-    log_analytics_workspace_id = string
+variable "log_analytics_workspace_id" {
+  type        = string
+  default     = null
+  description = "The Log Analytics workspace ID used for diagnostic logs and metrics. Required when the selected use_case enables monitoring."
 
-    logs = optional(object({
-      enabled    = bool
-      groups     = optional(list(string), [])
-      categories = optional(list(string), [])
-    }), { enabled = false, groups = [], categories = [] })
-
-    metrics = optional(object({
-      enabled = bool
-    }), { enabled = false })
-
-  })
-  default = {
-    enabled                    = false
-    log_analytics_workspace_id = null
-  }
-  description = "Enable collecting resources to send to Azure Monitor into AzureDiagnostics table"
-
-  # At least one between logs and metrics must be enabled
   validation {
-    condition = (
-      # If monitoring is not enabled, no validation needed
-      !var.monitoring.enabled ||
-      # At least one of logs or metrics must be enabled
-      var.monitoring.logs.enabled ||
-      var.monitoring.metrics.enabled
-    )
-    error_message = "At least one between \"logs\" and \"metrics\" must be enabled when monitoring is enabled."
+    condition     = !local.use_case_features.monitoring || var.log_analytics_workspace_id != null
+    error_message = "log_analytics_workspace_id must be provided when the selected use_case enables monitoring."
   }
-
-  # Exactly one of logs.groups or logs.categories must be provided, but not both
-  validation {
-    condition = (
-      !var.monitoring.logs.enabled ||
-      (length(var.monitoring.logs.groups) == 0) != (length(var.monitoring.logs.categories) == 0)
-    )
-    error_message = "If logs are enabled, exactly one of \"logs.groups\" or \"logs.categories\" must be provided, but not both."
-  }
-
-  # Validate logs.groups values
-  validation {
-    condition = var.monitoring.logs.enabled == false || alltrue([
-      for group in var.monitoring.logs.groups : contains(local.apim.log_category_groups, group)
-    ])
-    error_message = format("Invalid value in \"logs.groups\". Allowed values are: %#v", join(", ", local.apim.log_category_groups))
-  }
-
-  # Validate logs.categories values
-  validation {
-    condition = var.monitoring.enabled == false || alltrue([
-      for category in var.monitoring.logs.categories : contains(local.apim.log_category_types, category)
-    ])
-    error_message = format("Invalid value in \"logs.categories\". Allowed values are: %#v", join(", ", local.apim.log_category_types))
-  }
-
 }
 
 variable "metric_alerts" {
@@ -342,19 +188,14 @@ Map of name = criteria objects
 EOD
 
   type = map(object({
-    description = string
-    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H
-    frequency = string
-    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.
-    window_size = string
-    # Possible values are 0, 1, 2, 3.
-    severity = number
-    # Possible values are true, false
+    description   = string
+    frequency     = string
+    window_size   = string
+    severity      = number
     auto_mitigate = bool
 
     criteria = set(object(
       {
-        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]
         aggregation = string
         dimension = list(object(
           {
@@ -363,9 +204,8 @@ EOD
             values   = list(string)
           }
         ))
-        metric_name      = string
-        metric_namespace = string
-        # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]
+        metric_name            = string
+        metric_namespace       = string
         operator               = string
         skip_metric_validation = bool
         threshold              = number
@@ -374,16 +214,9 @@ EOD
 
     dynamic_criteria = set(object(
       {
-        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]
-        aggregation       = string
-        alert_sensitivity = string
-        dimension = list(object(
-          {
-            name     = string
-            operator = string
-            values   = list(string)
-          }
-        ))
+        aggregation              = string
+        alert_sensitivity        = string
+        dimension                = list(object({ name = string, operator = string, values = list(string) }))
         evaluation_failure_count = number
         evaluation_total_count   = number
         ignore_data_before       = string
@@ -400,10 +233,4 @@ variable "action_group_id" {
   description = "The ID of the custom string properties Action Group to include with the post webhook operation."
   type        = string
   default     = null
-}
-
-variable "management_logger_application_insight_enabled" {
-  type        = bool
-  description = "Specifies whether to enable the management logger application insight block."
-  default     = true
 }

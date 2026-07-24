@@ -8,3 +8,15 @@ variable "environment" {
     instance_number = string
   })
 }
+
+variable "tags" {
+  type        = map(any)
+  default     = {}
+  description = "Tags to apply to setup resources."
+}
+
+variable "test_kind" {
+  type        = string
+  default     = "integration"
+  description = "The test kind used in generated test tags."
+}

@@ -40,5 +40,18 @@ output "principal_id" {
 
 output "logger_id" {
   description = "The ID of the Application Insights logger associated with the Azure API Management instance (null if Application Insights is disabled)."
-  value       = var.application_insights.enabled ? azurerm_api_management_logger.this[0].id : null
+  value       = var.application_insights.id != null ? azurerm_api_management_logger.this[0].id : null
+}
+
+output "subnet" {
+  description = "The APIM subnet managed by this module."
+  value = {
+    id   = azurerm_subnet.apim.id
+    name = azurerm_subnet.apim.name
+  }
+}
+
+output "public_ip_id" {
+  description = "The ID of the public IP address managed by this module, when required by the selected use case."
+  value       = local.use_case_features.public_ip ? azurerm_public_ip.apim[0].id : null
 }
