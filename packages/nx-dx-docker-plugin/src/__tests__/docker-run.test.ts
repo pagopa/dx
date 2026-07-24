@@ -143,6 +143,24 @@ describe("runDockerCommand", () => {
     );
   });
 
+  it("uses manifest annotations for a single-platform push", () => {
+    dockerImageMocks.computeImageTags.mockReturnValue(["latest"]);
+    childProcessMocks.execFileSync.mockReturnValue("abc1234\n");
+    childProcessMocks.spawnSync.mockReturnValue({ status: 0 });
+
+    runDockerCommand(
+      "push",
+      { ...baseOptions, platform: "linux/amd64" },
+      "/workspace",
+    );
+
+    const [, args] = childProcessMocks.spawnSync.mock.calls[0];
+    expect(args).toContain("manifest:org.opencontainers.image.title=my-app");
+    expect(args).not.toContain(
+      "index,manifest:org.opencontainers.image.title=my-app",
+    );
+  });
+
   it("reports a failure and returns success: false when docker exits non-zero", () => {
     dockerImageMocks.computeImageTags.mockReturnValue(["main"]);
     childProcessMocks.execFileSync.mockReturnValue("abc1234\n");

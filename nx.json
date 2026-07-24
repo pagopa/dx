@@ -1,9 +1,6 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 10,
-  "namedInputs": {
-    "default": ["{projectRoot}/src/**/*.ts"]
-  },
   "targetDefaults": {
     "build": {
       "dependsOn": ["^build"],
@@ -71,18 +68,13 @@
       "apps/*",
       "packages/*",
       "actions/*",
+      "containers/*",
       "infra/modules/*",
       "providers/*",
       "infra/scripts"
     ],
     "projectsRelationship": "independent",
     "version": {},
-    "docker": {
-      "registryUrl": "ghcr.io",
-      "versionSchemes": {
-        "production": "{versionActionsVersion}"
-      }
-    },
     "changelog": {
       "projectChangelogs": {
         "createRelease": false,
@@ -105,16 +97,6 @@
     }
   },
   "plugins": [
-    {
-      "plugin": "@nx/docker",
-      "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
-      }
-    },
-    {
-      "plugin": "@pagopa/nx-dx-docker-plugin"
-    },
     {
       "plugin": "@nx/vitest",
       "options": {
@@ -142,15 +124,31 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
-      "include": ["infra/**"],
+      "plugin": "@nx/docker",
       "options": {
-        "publish": {
-          "mode": "github",
-          "github": {
-            "owner": "pagopa-dx"
+        "buildTarget": "docker:build",
+        "runTarget": "docker:run"
+      }
+    },
+    {
+      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build",
+          "args": ["--platform linux/amd64"],
+          "metadata": {
+            "tags": [
+              "type=raw,value=latest,enable={{is_default_branch}}",
+              "type=semver,pattern={{version}}",
+              "type=semver,pattern={{major}}.{{minor}}",
+              "type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}",
+              "type=ref,event=branch",
+              "type=sha",
+              "${{ env.TAG_NAME }}"
+            ]
           }
-        }
+        },
+        "runTarget": "docker:run"
       }
     }
   ],

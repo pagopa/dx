@@ -1,6 +1,20 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "self-hosted-runner",
+  "metadata": {
+    "docker": {
+      "contextPath": "containers/self-hosted-runner",
+      "platform": "linux/amd64",
+      "repositoryName": "pagopa/dx-github-self-hosted-runner"
+    },
+    "version": "0.0.2"
+  },
+  "release": {
+    "version": {
+      "currentVersionResolver": "disk",
+      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+    }
+  },
   "targets": {
     "docker:build": {
       "options": {

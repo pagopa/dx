@@ -1,8 +1,26 @@
 const require_docker_image = require('./docker-image-DgdWlpzQ.js');
-const require_github_summary = require('./github-summary-cLWwWKVU.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
+let node_fs = require("node:fs");
 
+//#region src/github-summary.ts
+const appendSummary = (markdown, env) => {
+	const summaryFile = env.GITHUB_STEP_SUMMARY;
+	if (!summaryFile) return;
+	try {
+		(0, node_fs.appendFileSync)(summaryFile, `${markdown}\n`);
+	} catch (err) {
+		console.warn("[@pagopa/nx-dx-docker-plugin] Could not write to GITHUB_STEP_SUMMARY", err);
+	}
+};
+const summarizeDockerPush = (projectDisplayName, imageName, tags, env = process.env) => {
+	appendSummary(`### 🐳 ${projectDisplayName} — image pushed\n\n${tags.map((tag) => `- \`${imageName}:${tag}\``).join("\n")}`, env);
+};
+const summarizeDockerFailure = (projectDisplayName, action, exitCode, env = process.env) => {
+	appendSummary(`### ❌ ${projectDisplayName} — docker ${action} failed (exit code ${exitCode})`, env);
+};
+
+//#endregion
 //#region src/docker-run.ts
 const nonEmptyString = zod_v4.z.string().min(1);
 const dockerRunOptionsSchema = zod_v4.z.object({
@@ -30,6 +48,7 @@ const getCommitSha = () => {
 		return process.env.GITHUB_SHA ?? "unknown";
 	}
 };
+const getAnnotationLevels = (platform) => platform.split(",").filter(Boolean).length > 1 ? "index,manifest" : "manifest";
 /**
 * Runs `docker build`/`docker buildx build --push` with full OCI labels and
 * a multi-tag strategy (RFC-DX-076 feature parity with
@@ -44,9 +63,13 @@ const getCommitSha = () => {
 * monorepo-root context (`.`) and `{projectRoot}/Dockerfile`, per
 * RFC-DX-076's Option 4; projects can override either path independently.
 */
-const runDockerCommand = (mode, options, workspaceRoot) => {
+const runDockerCommand = (mode, options, workspaceRoot, releaseVersion) => {
 	const { contextPath, defaultBranch, dockerfilePath, imageAuthors, imageName, imageUrl, platform, projectDisplayName, projectRoot } = options;
-	const tags = require_docker_image.computeImageTags(projectDisplayName, defaultBranch);
+	const tags = releaseVersion ? require_docker_image.computeReleaseTags(projectDisplayName, releaseVersion) : require_docker_image.computeImageTags(projectDisplayName, defaultBranch);
+	if (releaseVersion && tags.length === 0) {
+		console.error(`[@pagopa/nx-dx-docker-plugin] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`);
+		return { success: false };
+	}
 	if (mode === "push" && tags.length === 0) {
 		console.log(`[@pagopa/nx-dx-docker-plugin] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`);
 		return { success: true };
@@ -74,7 +97,7 @@ const runDockerCommand = (mode, options, workspaceRoot) => {
 	dockerArgs.push("--provenance=false");
 	if (mode === "push") {
 		dockerArgs.push("--push");
-		for (const [key, value] of Object.entries(labels)) dockerArgs.push("--annotation", `index,manifest:org.opencontainers.image.${key}=${value}`);
+		for (const [key, value] of Object.entries(labels)) dockerArgs.push("--annotation", `${getAnnotationLevels(platform)}:org.opencontainers.image.${key}=${value}`);
 	}
 	const exitCode = (0, node_child_process.spawnSync)("docker", dockerArgs, {
 		cwd: workspaceRoot,
@@ -86,10 +109,10 @@ const runDockerCommand = (mode, options, workspaceRoot) => {
 		stdio: "inherit"
 	}).status ?? 1;
 	if (exitCode !== 0) {
-		require_github_summary.summarizeDockerFailure(projectDisplayName, mode, exitCode);
+		summarizeDockerFailure(projectDisplayName, mode, exitCode);
 		return { success: false };
 	}
-	if (mode === "push") require_github_summary.summarizeDockerPush(projectDisplayName, imageName, publishTags);
+	if (mode === "push") summarizeDockerPush(projectDisplayName, imageName, publishTags);
 	return { success: true };
 };
 

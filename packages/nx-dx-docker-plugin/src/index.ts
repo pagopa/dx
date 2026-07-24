@@ -30,6 +30,14 @@ import {
 
 const dockerfileGlob = "**/Dockerfile";
 
+interface ProjectJson {
+  readonly metadata?: {
+    readonly docker?: {
+      readonly repositoryName?: string;
+    };
+  };
+}
+
 interface ProjectPackageJson {
   readonly name?: string;
   readonly nx?: {
@@ -44,7 +52,22 @@ interface ProjectPackageJson {
       };
     };
   };
+  readonly release?: {
+    readonly docker?: {
+      readonly repositoryName?: string;
+    };
+  };
 }
+
+const getProjectJson = (
+  workspaceRoot: string,
+  projectRoot: string,
+): null | ProjectJson => {
+  const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
+  return existsSync(projectJsonPath)
+    ? readJsonFile<ProjectJson>(projectJsonPath)
+    : null;
+};
 
 /**
  * Detects the *official* Nx Docker release flow's per-project override
@@ -60,10 +83,17 @@ const getDockerRepositoryNameOverride = (
 ): null | string => {
   const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
   if (!existsSync(packageJsonPath)) {
-    return null;
+    return (
+      getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker
+        ?.repositoryName ?? null
+    );
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
-  return packageJson.nx?.release?.docker?.repositoryName ?? null;
+  return (
+    packageJson.nx?.release?.docker?.repositoryName ??
+    packageJson.release?.docker?.repositoryName ??
+    null
+  );
 };
 
 /**
@@ -78,12 +108,16 @@ const getBuildImageRepositoryNameOverride = (
 ): null | string => {
   const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
   if (!existsSync(packageJsonPath)) {
-    return null;
+    return (
+      getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker
+        ?.repositoryName ?? null
+    );
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
   return (
     packageJson.nx?.docker?.repositoryName ??
     packageJson.nx?.release?.docker?.repositoryName ??
+    packageJson.release?.docker?.repositoryName ??
     null
   );
 };
@@ -141,11 +175,10 @@ export const createDockerReleaseNodes = (
       metadata: {
         description:
           "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
-        technologies: ["docker"],
+        technologies: ["container-image"],
       },
       options: {
-        projectName: projectDisplayName,
-        projectRoot,
+        ...dockerRunOptions,
       },
     };
   }

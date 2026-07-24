@@ -156,6 +156,14 @@ runs:
         # Create or update PR (script writes to GITHUB_OUTPUT)
         RELEASE_TAGS="$RELEASE_TAGS" node "$ACTION_PATH/scripts/dist/manage-version-pr.js"
 
+    - name: Log in to GitHub Container Registry
+      if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ github.token }}
+
     - name: Publish with Nx release
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       id: publish
