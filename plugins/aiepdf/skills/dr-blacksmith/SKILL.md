@@ -27,6 +27,11 @@ Do not use it to generate individual Use Case child documents. The
 `uc-engraver` skill owns the `UC-XX` content. This skill creates and maintains
 only the DR/SRS Use Case catalog.
 
+The `jira-magister` skill owns the Jira execution projection. When the user asks
+to generate or synchronize Jira Epics, Stories, or Tasks from validated Use
+Cases, hand off the parent DR/SRS, selected Use Case paths and IDs, linked JTBDs,
+acceptance checks, and unresolved readiness gaps to `jira-magister`.
+
 ## Output contract
 
 Produce one Markdown document using
