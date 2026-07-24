@@ -1,20 +1,21 @@
 name: Deploy MCP Server to Dev
 
-# Automated workflow to build MCP Server Docker image and deploy it to
-# AWS Lambda when changes are made or new tags are pushed
+# Promotes a released MCP Server image to ECR and deploys it to AWS Lambda.
 
 on:
   push:
-    branches:
-      - "main"
-    paths:
-      - "apps/mcpserver/**"
-      - "packages/mcp-prompts/**"
+    tags:
+      - "@pagopa/dx-mcpserver@**"
   workflow_dispatch:
+    inputs:
+      image_tag:
+        description: Released MCP Server image version to deploy
+        required: true
+        type: string
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy MCP on AWS Lambda
+  promote-and-deploy:
+    name: Promote and Deploy MCP on AWS Lambda
     runs-on: ubuntu-latest
     environment: app-dev-cd
     env:
@@ -23,37 +24,60 @@ jobs:
       LAMBDA_FUNCTION_NAME: dx-d-euc1-mcp-server-lambda-01
       IMAGE_NAME: dx/mcp-server
     permissions:
-      contents: write
+      contents: read
       packages: read
-      actions: read
       id-token: write
-      attestations: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Resolve Released Image
+        id: image
+        env:
+          RELEASE_TAG: ${{ inputs.image_tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          image_tag="${RELEASE_TAG##*@}"
+          if [[ -z "$image_tag" ]]; then
+            echo "::error::A release image tag is required."
+            exit 1
+          fi
+
+          echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
+
+      - name: Log In to GitHub Container Registry
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      - name: Build and Push to ECR
-        id: build-and-push
-        uses: pagopa/dx/actions/docker-build-push@main
-        with:
-          registry: ecr
-          dockerfile_path: apps/mcpserver/Dockerfile
-          dockerfile_context: "."
-          docker_image_description: "DX MCP Server"
-          docker_image_authors: "DevEx"
-          docker_image_name: ${{ env.IMAGE_NAME }}
-          build_platforms: linux/arm64
-          push_to_registry: true
+      - name: Log In to Amazon ECR
+        id: ecr
+        uses: aws-actions/amazon-ecr-login@d539f0932e70871a027e9d5a9d8fc38589180a64 # v2.1.6
+
+      - name: Promote Released Image to ECR
+        id: promote
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.image.outputs.image_tag }}
+          ECR_REGISTRY: ${{ steps.ecr.outputs.registry }}
+        run: |
+          set -euo pipefail
+
+          source_image="ghcr.io/$IMAGE_NAME:$RELEASE_VERSION"
+          target_image="$ECR_REGISTRY/$IMAGE_NAME:$RELEASE_VERSION"
+
+          docker pull --platform linux/arm64 "$source_image"
+          docker tag "$source_image" "$target_image"
+          docker push "$target_image"
+
+          echo "image_uri=$target_image" >> $GITHUB_OUTPUT
 
       - name: Deploy Lambda
         uses: aws-actions/aws-lambda-deploy@d496277188b89f0be02d7a2216fc912c0427702a # v1.1.2
         with:
           function-name: ${{ env.LAMBDA_FUNCTION_NAME }}
           package-type: Image
-          image-uri: ${{ steps.build-and-push.outputs.image_uri }}
+          image-uri: ${{ steps.promote.outputs.image_uri }}
