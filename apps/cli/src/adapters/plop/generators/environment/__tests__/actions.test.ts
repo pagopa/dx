@@ -67,6 +67,7 @@ describe("actions", () => {
     const actionsOrder = [
       "getTerraformBackend",
       "syncRepositoryEnvironments",
+      "configureGitHubEnvironments",
       "addMany",
       "addMany",
       "addMany",

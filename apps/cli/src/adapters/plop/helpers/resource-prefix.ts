@@ -1,14 +1,14 @@
 import { type NodePlopAPI } from "node-plop";
 import * as assert from "node:assert/strict";
 
-import { environmentShort } from "../../../domain/environment.js";
+import { getEnvironmentShort } from "../../../domain/environment.js";
 import { Payload, payloadSchema } from "../generators/environment/prompts.js";
 
 export const resourcePrefix = (
   payload: Pick<Payload, "env" | "workspace">,
 ): string => {
   const { env, workspace } = payload;
-  const prefix = [env.prefix, environmentShort[env.name]];
+  const prefix = [env.prefix, getEnvironmentShort(env.name)];
   if (workspace.domain) {
     prefix.push(workspace.domain);
   }

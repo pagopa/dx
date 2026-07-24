@@ -142,6 +142,7 @@ describe("prompts with prefilled answers", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue({
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
@@ -249,6 +250,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -318,6 +320,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -415,6 +418,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -489,6 +493,7 @@ describe("prompts with prefilled initialization answers", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),

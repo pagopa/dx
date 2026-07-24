@@ -18,6 +18,7 @@ import type { CloudAccountService } from "../../../../../domain/cloud-account.js
 import type { GitHubService } from "../../../../../domain/github.js";
 import type { TerraformBackend } from "../../../../../domain/remote-backend.js";
 
+import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-github-environments.js";
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
@@ -61,6 +62,11 @@ const registerEnvironmentSetup = (
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
   setInitCloudAccountsAction(plop, mockCloudAccountService, mockGitHubService);
+  setConfigureGitHubEnvironmentsAction(
+    plop,
+    mockCloudAccountService,
+    mockGitHubService,
+  );
   setSyncRepositoryEnvironmentsAction(plop);
 };
 
@@ -75,6 +81,7 @@ const createMockCloudAccountService = (
   backend: TerraformBackend,
   isInitialized: boolean,
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(backend),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),

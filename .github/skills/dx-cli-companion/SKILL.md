@@ -1,6 +1,6 @@
 ---
 name: dx-cli-companion
-description: 'Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, or create an environment with `add environment`. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint.'
+description: 'Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, create an environment with `add environment`, or scaffold multi-tenant environments such as `ced-prod`/`cgn-dev` with custom prefixes. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint.'
 ---
 
 # DX CLI Companion
@@ -13,6 +13,7 @@ Use this skill when the user wants guided execution of the DX CLI, especially fo
 - Inspect the command contract with `spec`.
 - Initialize a new repository with `init`.
 - Add a deployment environment with `add environment`.
+- Add a tenant-qualified environment such as `ced-prod` or `cgn-dev` with a tenant-specific prefix.
 - Turn an interactive DX CLI flow into a non-interactive command sequence.
 
 ## Default Workflow
@@ -101,6 +102,7 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 - Run `spec` first even if the command shape seems obvious.
 - `--description ""` does not suppress the description prompt; treat an empty description as a deliberate blank-line answer on stdin.
 - There is no `--no-publish` flag. If the user does not want publication, answer the publish prompt explicitly on stdin instead of guessing.
+- Do not try to configure deployment environments, tenants, prefixes, Azure subscriptions, or `infra/bootstrapper/<env>` folders with `init`. Use `add environment` for those concerns.
 - If the user explicitly wants the local JS entrypoint, replace `npx -y @pagopa/dx-cli` with `node apps/cli/bin/index.js`.
 
 ## Preparing `add environment`
@@ -109,6 +111,18 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 - Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and runner app credentials when environment initialization still needs them.
 - Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus runner app values when they are in scope.
 - For a first-time environment setup, ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before the first `add environment` execution unless the user explicitly confirms runner setup is already initialized and those values are not needed.
+- For multi-tenant architectures, collect both the tenant-qualified environment name and the prefix. The environment name identifies the generated GitHub environment and infrastructure folder (for example `ced-prod` creates `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`), while the prefix identifies the Azure resource naming prefix (for example `ced`). These are separate values and are not passed as `name=prefix`.
+
+### Multi-Tenant Environment Names
+
+Use tenant-qualified environment names when a repository hosts multiple tenants or product scopes that share the same base lifecycle environment.
+
+| Input | Meaning | Example |
+| --- | --- | --- |
+| `--name` | Environment identifier. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with `-dev`, `-uat`, or `-prod`. | `ced-prod` |
+| `--prefix` | Short 2–4 character tenant/product prefix used in Azure resource names. | `ced` |
+
+The suffix of `--name` determines the base environment short code used in Azure names: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod` maps to `p`. For example, `--name ced-prod --prefix ced` uses `p` as the environment short code and generates infrastructure under `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`.
 
 ### GitHub Runner App Value Sources
 
@@ -145,7 +159,7 @@ Run this command from inside the generated repository:
 cd /path/to/generated-repo
 CI=1 npx -y @pagopa/dx-cli add environment \
   --account <subscription-id> \
-  --name <dev|uat|prod> \
+  --name <dev|uat|prod|tenant-dev|tenant-uat|tenant-prod> \
   --prefix <prefix> \
   --domain <domain> \
   --location <subscription-id>=<region> \
@@ -170,6 +184,8 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - The spec output lists the Runner App flags as required because they are declared with value placeholders, but the runtime only needs them when the initialization flow reaches GitHub Runner App setup. Ask for them upfront when the goal is a fully non-interactive initialization of an environment that still needs setup.
 - Do not defer Runner App value collection to runtime prompts when performing first-time setup: collect them upfront unless the user explicitly confirms runner setup is already completed for the target environment.
 - Repeat `--account` and `--location` for multi-subscription environments.
+- For multi-tenant environments, repeat the command once per tenant/environment combination, using a different `--name` and `--prefix` when needed. Do not encode both values into one flag.
+- If the user wants to minimize resource creation while trying a new tenant-qualified name, run without `-y` first so the DX CLI shows the resources to be created and lets the user decline the initialization confirmation. There is no scaffold-only mode for `add environment`: generating bootstrapper/core files for an uninitialized environment also involves repository environment synchronization and, when confirmed, cloud initialization.
 - If a subscription was inferred from Azure CLI, show both its ID and name to the user and ask for confirmation before using it.
 - The current CLI spec does not expose a separate cost center flag. If the user provides a cost center requirement, surface that mismatch and ask how it should be mapped instead of inventing an unsupported flag.
 - If the user explicitly wants the local JS entrypoint, replace `npx -y @pagopa/dx-cli` with `node /absolute/path/to/apps/cli/bin/index.js`.
