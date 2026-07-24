@@ -14,15 +14,17 @@ terraform {
 }
 
 resource "azurerm_api_management" "this" {
-  name                          = local.apim.name
-  resource_group_name           = var.resource_group_name
-  location                      = var.environment.location
-  publisher_name                = var.publisher_name
-  publisher_email               = var.publisher_email
-  notification_sender_email     = var.publisher_email
+  name                = local.apim.name
+  resource_group_name = var.resource_group_name
+  location            = var.environment.location
+
+  publisher_name            = var.publisher_name
+  publisher_email           = var.publisher_email
+  notification_sender_email = var.publisher_email
+
   sku_name                      = local.use_case_features.sku
   zones                         = local.use_case_features.zones
-  public_network_access_enabled = local.public_network
+  public_network_access_enabled = local.use_case_features.public_network_access_enabled
   public_ip_address_id          = local.use_case_features.public_ip ? azurerm_public_ip.apim[0].id : null
 
   min_api_version = "2021-08-01"
@@ -33,11 +35,8 @@ resource "azurerm_api_management" "this" {
 
   virtual_network_type = local.virtual_network_type
 
-  dynamic "virtual_network_configuration" {
-    for_each = local.virtual_network_configuration_enabled ? [1] : []
-    content {
-      subnet_id = local.subnet_id
-    }
+  virtual_network_configuration {
+    subnet_id = azurerm_subnet.apim.id
   }
 
   dynamic "sign_up" {
@@ -112,13 +111,15 @@ resource "azurerm_api_management" "this" {
 }
 
 resource "azurerm_api_management_policy" "this" {
-  count             = var.xml_content != null ? 1 : 0
+  count = var.xml_content != null ? 1 : 0
+
   api_management_id = azurerm_api_management.this.id
   xml_content       = var.xml_content
 }
 
 resource "azurerm_monitor_autoscale_setting" "this" {
-  count               = local.use_case_features.autoscale ? 1 : 0
+  count = local.use_case_features.autoscale ? 1 : 0
+
   name                = local.apim.autoscale_name
   resource_group_name = var.resource_group_name
   location            = var.environment.location
@@ -181,8 +182,8 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 
 resource "azurerm_management_lock" "this" {
   count      = local.use_case_features.lock ? 1 : 0
-  name       = "${azurerm_api_management.this.name}-lock"
+  name       = azurerm_api_management.this.name
   scope      = azurerm_api_management.this.id
   lock_level = "CanNotDelete"
-  notes      = "This item can't be deleted in this subscription!"
+  notes      = "This item can't be deleted"
 }

@@ -58,10 +58,7 @@ run "apply_development" {
     publisher_email     = "example@pagopa.it"
     publisher_name      = "Example Publisher"
 
-    virtual_network = {
-      name                = run.setup.vnet.name
-      resource_group_name = run.setup.vnet.resource_group_name
-    }
+    virtual_network = run.setup.virtual_network_id
   }
 
   assert {
@@ -105,10 +102,7 @@ run "apply_cost_optimized" {
     publisher_name             = "Example Publisher"
     log_analytics_workspace_id = run.setup.log_analytics_workspace_id
 
-    virtual_network = {
-      name                = run.setup.vnet.name
-      resource_group_name = run.setup.vnet.resource_group_name
-    }
+    virtual_network = run.setup.virtual_network_id
   }
 
   assert {

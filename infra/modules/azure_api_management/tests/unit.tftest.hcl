@@ -25,55 +25,16 @@ variables {
   publisher_name             = "Example Publisher"
   log_analytics_workspace_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.OperationalInsights/workspaces/law-test"
 
-  virtual_network = {
-    name                = "dx-d-itn-common-vnet-01"
-    resource_group_name = "dx-d-itn-network-rg-01"
-  }
+  virtual_network = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01"
 }
 
 mock_provider "azurerm" {}
 mock_provider "dx" {}
 
-override_data {
-  target = data.azurerm_virtual_network.this
-  values = {
-    id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-common-vnet-01"
-    name                = "dx-d-itn-common-vnet-01"
-    resource_group_name = "dx-d-itn-network-rg-01"
-  }
-}
 
-override_data {
-  target = data.azurerm_private_dns_zone.azure_api_net
-  values = {
-    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/azure-api.net"
-    name = "azure-api.net"
-  }
-}
 
-override_data {
-  target = data.azurerm_private_dns_zone.management_azure_api_net
-  values = {
-    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/management.azure-api.net"
-    name = "management.azure-api.net"
-  }
-}
 
-override_data {
-  target = data.azurerm_private_dns_zone.scm_azure_api_net
-  values = {
-    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
-    name = "scm.azure-api.net"
-  }
-}
 
-override_data {
-  target = data.azurerm_private_dns_zone.apim
-  values = {
-    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.azure-api.net"
-    name = "privatelink.azure-api.net"
-  }
-}
 
 override_data {
   target = data.azurerm_application_insights.this
@@ -151,6 +112,16 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
+    condition     = azurerm_private_dns_a_record.apim_azure_api_net.zone_name == "azure-api.net" && azurerm_private_dns_a_record.apim_management_azure_api_net.zone_name == "management.azure-api.net" && azurerm_private_dns_a_record.apim_scm_azure_api_net.zone_name == "scm.azure-api.net"
+    error_message = "APIM DNS A records must use their fixed Azure API Management zone names."
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.apim_pep[0].private_dns_zone_group[0].private_dns_zone_ids[0] == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.azure-api.net"
+    error_message = "The private endpoint must use the computed private DNS zone ID."
+  }
+
+  assert {
     condition     = length(azurerm_monitor_diagnostic_setting.apim) == 1
     error_message = "cost_optimized must enable diagnostic settings."
   }
@@ -163,6 +134,16 @@ run "azure_api_management_cost_optimized_defaults" {
 
 run "azure_api_management_subnet_created_from_dx_cidr" {
   command = plan
+
+  assert {
+    condition     = local.virtual_network_name == "dx-d-itn-common-vnet-01" && local.virtual_network_resource_group_name == "dx-d-itn-network-rg-01"
+    error_message = "The virtual network ID must be parsed into its name and resource group."
+  }
+
+  assert {
+    condition     = local.private_dns_zone_resource_group_name == "dx-d-itn-network-rg-01"
+    error_message = "The private DNS zone resource group must default to the parsed VNet resource group."
+  }
 
   assert {
     condition     = dx_available_subnet_cidr.apim.prefix_length == 24

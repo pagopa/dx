@@ -1,5 +1,5 @@
 resource "azurerm_api_management_logger" "this" {
-  count = local.application_insights_enabled ? 1 : 0
+  count = var.application_insights.id != null ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
@@ -12,7 +12,7 @@ resource "azurerm_api_management_logger" "this" {
 }
 
 resource "azurerm_api_management_diagnostic" "applicationinsights" {
-  count = local.application_insights_enabled ? 1 : 0
+  count = var.application_insights.id != null ? 1 : 0
 
   identifier               = "applicationinsights"
   api_management_name      = azurerm_api_management.this.name
@@ -35,12 +35,8 @@ resource "azurerm_monitor_diagnostic_setting" "apim" {
   log_analytics_workspace_id     = var.log_analytics_workspace_id
   log_analytics_destination_type = "AzureDiagnostics"
 
-  dynamic "enabled_log" {
-    for_each = local.apim.log_category_groups
-
-    content {
-      category_group = enabled_log.value
-    }
+  enabled_log {
+    category_group = "allLogs"
   }
 
   enabled_metric {
