@@ -2,11 +2,8 @@ output "resource_group_name" {
   value = data.azurerm_resource_group.rg.name
 }
 
-output "vnet" {
-  value = {
-    name                = data.azurerm_virtual_network.vnet.name
-    resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
-  }
+output "virtual_network_id" {
+  value = data.azurerm_virtual_network.vnet.id
 }
 
 output "log_analytics_workspace_id" {

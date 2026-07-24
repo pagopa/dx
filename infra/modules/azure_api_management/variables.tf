@@ -92,11 +92,13 @@ variable "autoscale" {
 }
 
 variable "virtual_network" {
-  type = object({
-    name                = string
-    resource_group_name = string
-  })
-  description = "Virtual network in which to create the APIM subnet and resolve private endpoint subnets."
+  type        = string
+  description = "The resource ID of the virtual network in which to create the APIM subnet and resolve private endpoint subnets."
+
+  validation {
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.virtual_network))
+    error_message = "virtual_network must be a valid Microsoft.Network/virtualNetworks resource ID."
+  }
 }
 
 variable "private_dns_zone_resource_group_name" {

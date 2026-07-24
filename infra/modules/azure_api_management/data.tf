@@ -1,32 +1,5 @@
-data "azurerm_virtual_network" "this" {
-  name                = var.virtual_network.name
-  resource_group_name = var.virtual_network.resource_group_name
-}
-
-data "azurerm_private_dns_zone" "azure_api_net" {
-  name                = "azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
-}
-
-data "azurerm_private_dns_zone" "management_azure_api_net" {
-  name                = "management.azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
-}
-
-data "azurerm_private_dns_zone" "scm_azure_api_net" {
-  name                = "scm.azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
-}
-
-data "azurerm_private_dns_zone" "apim" {
-  count = local.use_case_features.private_endpoint ? 1 : 0
-
-  name                = "privatelink.azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
-}
-
 data "azurerm_application_insights" "this" {
-  count = local.application_insights_enabled ? 1 : 0
+  count = var.application_insights.id != null ? 1 : 0
 
   name                = provider::azurerm::parse_resource_id(var.application_insights.id).resource_name
   resource_group_name = provider::azurerm::parse_resource_id(var.application_insights.id).resource_group_name

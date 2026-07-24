@@ -4,6 +4,13 @@ resource "azurerm_resource_group" "example" {
     resource_type = "resource_group"
   }))
   location = local.environment.location
+
+  tags = local.tags
+}
+
+data "azurerm_virtual_network" "this" {
+  name                = local.virtual_network.name
+  resource_group_name = local.virtual_network.resource_group_name
 }
 
 data "azurerm_log_analytics_workspace" "common" {
@@ -25,16 +32,13 @@ module "azure_apim" {
 
   environment                = local.environment
   resource_group_name        = azurerm_resource_group.example.name
-  use_case                   = "high_load"
+  use_case                   = "development"
   log_analytics_workspace_id = data.azurerm_log_analytics_workspace.common.id
 
   publisher_email = "example@pagopa.it"
   publisher_name  = "Example Publisher"
 
-  virtual_network = {
-    name                = local.virtual_network.name
-    resource_group_name = local.virtual_network.resource_group_name
-  }
+  virtual_network = data.azurerm_virtual_network.this.id
 
   hostname_configuration = {
     proxy = {

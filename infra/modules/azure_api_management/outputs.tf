@@ -40,7 +40,7 @@ output "principal_id" {
 
 output "logger_id" {
   description = "The ID of the Application Insights logger associated with the Azure API Management instance (null if Application Insights is disabled)."
-  value       = local.application_insights_enabled ? azurerm_api_management_logger.this[0].id : null
+  value       = var.application_insights.id != null ? azurerm_api_management_logger.this[0].id : null
 }
 
 output "subnet" {

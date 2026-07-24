@@ -38,5 +38,5 @@ No modules.
 | <a name="output_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#output\_log\_analytics\_workspace\_id) | n/a |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | n/a |
 | <a name="output_tags"></a> [tags](#output\_tags) | n/a |
-| <a name="output_vnet"></a> [vnet](#output\_vnet) | n/a |
+| <a name="output_virtual_network_id"></a> [virtual\_network\_id](#output\_virtual\_network\_id) | n/a |
 <!-- END_TF_DOCS -->
