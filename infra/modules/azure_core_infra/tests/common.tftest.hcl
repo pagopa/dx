@@ -66,6 +66,15 @@ run "core_is_correct_plan" {
   }
 
   assert {
+    condition = alltrue([
+      module.dns.private_dns_zones.cognitiveservices.name == "privatelink.cognitiveservices.azure.com",
+      module.dns.private_dns_zones.openai.name == "privatelink.openai.azure.com",
+      module.dns.private_dns_zones.ai_services.name == "privatelink.services.ai.azure.com"
+    ])
+    error_message = "The Azure Foundry Private DNS Zones configuration must be correct"
+  }
+
+  assert {
     condition     = try(azurerm_resource_group.test[0], "NotTestEnv") == "NotTestEnv"
     error_message = "This Environment is not a Test Environment"
   }

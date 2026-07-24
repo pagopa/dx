@@ -35,5 +35,8 @@ locals {
     "apim"                     = "privatelink.azure-api.net"
     "appcs"                    = "privatelink.azconfig.io"
     "redis_managed"            = "privatelink.redis.azure.net"
+    "cognitiveservices"        = "privatelink.cognitiveservices.azure.com"
+    "openai"                   = "privatelink.openai.azure.com"
+    "ai_services"              = "privatelink.services.ai.azure.com"
   }
 }
