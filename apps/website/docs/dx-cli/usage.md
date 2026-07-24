@@ -339,6 +339,9 @@ The tool supports multiple authentication methods:
   `json`, `detailed-json`, `lint`
 - `--source`, `-s` - Restrict findings to a specific source: `advisor`,
   `custom`, or `all` (default: `all`)
+- `--azqr-report` - Path to an [AZQR](https://github.com/Azure/azqr)
+  `scan --json` report to merge as additional findings (overrides
+  `azure.azqrReportPath`)
 - `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
 - `--verbose`, `-v` - Enable detailed logging
 
@@ -353,6 +356,7 @@ azure:
     - yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
   preferredLocation: italynorth
   timespanDays: 30
+  azqrReportPath: ./azqr_action_plan.json # optional — merge an AZQR scan report
   thresholds: # optional — omit to use built-in defaults
     vm:
       cpuPercent: 5
@@ -380,18 +384,19 @@ identity).
 The tool analyzes the following Azure resource types for potential cost
 optimization:
 
-| Resource Type       | Risk | What It Detects                                    |
-| :------------------ | :--: | :------------------------------------------------- |
-| Virtual Machines    |  🔴  | VMs that are deallocated or severely underutilized |
-| App Service Plans   |  🔴  | Empty or underutilized plans (especially Premium)  |
-| Managed Disks       |  🟡  | Unattached disks incurring storage costs           |
-| Public IP Addresses |  🟡  | Unused static IPs that continue billing            |
-| Network Interfaces  |  🟡  | NICs not attached to VMs or Private Endpoints      |
-| Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints          |
-| Storage Accounts    |  🟡  | Storage accounts with minimal activity             |
-| Container Apps      |  🟡  | Not running, zero replicas, low resource usage     |
-| Static Web Apps     |  🟢  | No traffic or very low usage patterns              |
-| Azure Advisor       |  ⚪  | Reserved Instance and Savings Plan opportunities   |
+| Resource Type       | Risk | What It Detects                                                   |
+| :------------------ | :--: | :---------------------------------------------------------------- |
+| Virtual Machines    |  🔴  | VMs that are deallocated or severely underutilized                |
+| App Service Plans   |  🔴  | Empty or underutilized plans (especially Premium)                 |
+| Managed Disks       |  🟡  | Unattached disks incurring storage costs                          |
+| Public IP Addresses |  🟡  | Unused static IPs that continue billing                           |
+| Network Interfaces  |  🟡  | NICs not attached to VMs or Private Endpoints                     |
+| Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints                         |
+| Storage Accounts    |  🟡  | Storage accounts with minimal activity                            |
+| Container Apps      |  🟡  | Not running, zero replicas, low resource usage                    |
+| Static Web Apps     |  🟢  | No traffic or very low usage patterns                             |
+| Azure Advisor       |  ⚪  | Reserved Instance and Savings Plan opportunities                  |
+| AZQR report         |  ⚪  | Billable orphans and free cleanup candidates from `--azqr-report` |
 
 **Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low · ⚪ Varies
 
@@ -486,6 +491,9 @@ npx @pagopa/dx-cli savemoney --config config.yaml --format lint
 
 # Filter to a specific environment
 npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod
+
+# Merge an AZQR report (run `azqr scan --mask=false --json` first)
+npx @pagopa/dx-cli savemoney --config config.yaml --azqr-report azqr_action_plan.json
 
 # Verbose output for debugging
 npx @pagopa/dx-cli savemoney --config config.yaml --verbose

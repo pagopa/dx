@@ -3,6 +3,7 @@ azure:
     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
     - yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
   preferredLocation: westeurope
+  azqrReportPath: ./azqr_action_plan.json
   sources:
     - custom
   timespanDays: 60

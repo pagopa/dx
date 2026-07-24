@@ -102,6 +102,7 @@ The tool analyzes the following Azure resource types with specific detection met
 | **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                                                                       |
 | **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
 | **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
+| **AZQR report**         | `--azqr-report` JSON    | ⚪ Varies | Optional. Billable orphans (cost) and free orphaned resources such as empty subnets or unattached NSGs (cleanup candidates) parsed from an AZQR scan        |
 
 #### Pricing Coverage
 
@@ -160,6 +161,7 @@ The tool requires the following configuration:
 | `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
 | `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
 | `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
+| `azqrReportPath`    | `string`                 |    ❌    | -            | Path to an AZQR `--json` report to ingest (see AZQR Report Ingestion)     |
 
 #### Output Formats
 
@@ -327,6 +329,52 @@ const config = await loadConfig(); // Will read from env vars
 const reports = await azure.analyzeAzureResources(config);
 await azure.generateReport(reports, "json");
 ```
+
+#### AZQR Report Ingestion
+
+SaveMoney can enrich a live scan with an [AZQR](https://github.com/Azure/azqr)
+(`azqr scan --json`) report. Provide its path either with the `--azqr-report
+<path>` CLI flag or via the `azure.azqrReportPath` YAML key (the CLI flag takes
+precedence when both are set): the FinOps-relevant resources from the report's
+`impacted` section are merged into the normal output as findings tagged with the
+`[azqr]` source.
+
+```bash
+# Generate the AZQR report first (disable masking so resource IDs match)
+azqr scan --subscription-id <sub-id> --json --mask=false
+
+# Feed it into SaveMoney alongside the live scan
+dx savemoney --azqr-report ./azqr_action_plan.json
+```
+
+Or persist the path in the YAML config:
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  azqrReportPath: ./azqr_action_plan.json
+```
+
+Notes:
+
+- **Disable masking.** AZQR masks subscription IDs by default
+  (`/subscriptions/xxxxxxxx-…/`). Masked IDs cannot be matched to live
+  resources, so findings would appear as separate stub entries. SaveMoney logs
+  a warning when it detects a masked report; re-run AZQR with `--mask=false`.
+- **Noise reduction.** Rows are classified into two buckets and everything else
+  (security, reliability, high-availability best practices) is dropped:
+  - **Cost opportunities** (`cost` category): rows AZQR categorises as `Cost`,
+    plus orphaned/unassociated **billable** resources (public IPs, NAT gateways,
+    application gateways, App Service plans, SQL elastic pools, load balancers,
+    DDoS plans, VNet gateways, managed disks/snapshots).
+  - **Cleanup candidates** (`operationalExcellence` category, low severity):
+    orphaned **free** resources flagged by AZQR's `AOR` (Azure Orphan Resources)
+    checks — empty subnets, unattached NSGs, orphan API connections, unconnected
+    private endpoints. They carry no direct cost but are worth removing after
+    verifying they are unused.
+- AZQR carries no monetary estimate, so these findings have no per-finding
+  saving amount; they surface as opportunities to review.
 
 ## AWS (Coming Soon)
 
