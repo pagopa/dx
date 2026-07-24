@@ -111,8 +111,7 @@ export function createAdvisorAnalyzer(clientFactory?: {
         if (rec.category?.toLowerCase() !== "cost") continue;
         const rawResourceId = rec.resourceMetadata?.resourceId;
         const props = rec.extendedProperties as
-          | Record<string, string>
-          | undefined;
+          Record<string, string> | undefined;
         const savings = parseSavings(props);
         if (rawResourceId && /\/providers\//i.test(rawResourceId)) {
           resourceFindings.push(

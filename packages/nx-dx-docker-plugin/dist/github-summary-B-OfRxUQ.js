@@ -11,7 +11,8 @@ const appendSummary = (markdown, env) => {
 	}
 };
 const summarizeDockerPush = (projectDisplayName, imageName, tags, env = process.env) => {
-	appendSummary(`### 🐳 ${projectDisplayName} — image pushed\n\n${tags.map((tag) => `- \`${imageName}:${tag}\``).join("\n")}`, env);
+	const tagList = tags.map((tag) => `- \`${imageName}:${tag}\``).join("\n");
+	appendSummary(`### 🐳 ${projectDisplayName} — image pushed\n\n${tagList}`, env);
 };
 const summarizeDockerFailure = (projectDisplayName, action, exitCode, env = process.env) => {
 	appendSummary(`### ❌ ${projectDisplayName} — docker ${action} failed (exit code ${exitCode})`, env);

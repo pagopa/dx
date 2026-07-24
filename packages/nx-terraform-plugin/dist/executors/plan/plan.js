@@ -66,7 +66,8 @@ var ReportStore = class {
 		for (const namespace of this.namespaces.values()) {
 			const renderReports = namespace.renderers?.[format];
 			if (!renderReports) continue;
-			const reports = (await readReports(path.join(this.rootDirectoryPath, namespace.name))).map((report) => namespace.schema.parse(report));
+			const directoryPath = path.join(this.rootDirectoryPath, namespace.name);
+			const reports = (await readReports(directoryPath)).map((report) => namespace.schema.parse(report));
 			if (reports.length === 0) continue;
 			sections.push(renderReports(reports, context));
 		}

@@ -88,12 +88,12 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@t3-oss/env-core": "^0.13.11",
-    "import-in-the-middle": "^3.2.0",
+    "import-in-the-middle": "^3.3.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@azure/cosmos": "^4.9.3",
-    "@azure/functions": "^4.16.1",
+    "@azure/functions": "^4.16.2",
     "@azure/storage-blob": "catalog:azure",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
