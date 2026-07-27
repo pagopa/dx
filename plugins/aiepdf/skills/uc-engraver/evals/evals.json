@@ -1,0 +1,112 @@
+{
+  "skill_name": "uc-engraver",
+  "evals": [
+    {
+      "id": 0,
+      "name": "create-complete-use-case",
+      "prompt": "Using the existing parent DR/SRS and its linked PRD for a saved-payment experience, create UC-01 for selecting a saved card. The PRD defines the actor exactly as \"Cittadino pagatore\". Include the linked JTBD, trigger, preconditions, main and alternate flows, edge cases, postconditions, binary acceptance checks, tracking events, and relevant API/Figma links. Write the child Markdown under use-cases/ and update the parent Use Case index.",
+      "expected_output": "A complete UC-01 child document and a synchronized parent catalog row, with all required DR-01 sections and the exact PRD actor name.",
+      "expectations": [
+        "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
+        "Includes all required behavior, acceptance, tracking, and traceability sections.",
+        "Includes an inline or linked Mermaid/PlantUML sequence diagram and a reference to the relevant Endpoint, OpenAPI, AsyncAPI, or Data Contract.",
+        "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
+        "Updates the parent catalog with stable ID, title, linked JTBD, priority, child link, and status."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "preserve-actors-and-gaps",
+      "prompt": "Create a Use Case from a PRD and Service Blueprint where the PRD calls the primary actor \"Operatore di assistenza\" but the Service Blueprint says \"Support agent\". The owner, timeout, tracking event, and privacy behavior are not confirmed. Do not invent decisions.",
+      "expected_output": "The Use Case copies the PRD actor exactly, records the terminology conflict and missing decisions as open questions or gaps, and avoids fabricated behavior.",
+      "expectations": [
+        "Uses \"Operatore di assistenza\" exactly as the actor name.",
+        "Does not silently replace the PRD actor with the Service Blueprint wording.",
+        "Makes missing owner, timeout, tracking, and privacy decisions visible.",
+        "Does not invent a flow, metric, approval, or compliance outcome."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "update-stable-use-case",
+      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
+      "expected_output": "The existing child is updated in place, stable IDs are preserved, the new behavior has a new acceptance check, and the parent index remains aligned.",
+      "expectations": [
+        "Preserves the existing UC-02 ID and unchanged acceptance-check IDs.",
+        "Adds a distinct acceptance check for the retry behavior without renumbering.",
+        "Updates the child document rather than creating a duplicate.",
+        "Synchronizes the parent catalog row and records any required propagation gap."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "require-parent-document",
+      "prompt": "Directly invoke the Use Case skill to create a new use case for payment receipts, but do not provide an existing parent DR/SRS path or URL.",
+      "expected_output": "The agent asks for the existing parent DR/SRS and stops instead of creating an orphan Use Case or a new parent.",
+      "expectations": [
+        "Requests the existing parent DR/SRS location.",
+        "Does not create a child document without a parent.",
+        "Does not create a new parent DR/SRS as an implicit fallback."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "publication-handoff",
+      "prompt": "The local UC-03 Markdown and parent DR/SRS index are complete and validated. Publish UC-03 as a child page under the parent DR/SRS in Confluence.",
+      "expected_output": "The agent confirms publication, delegates the Confluence operation to confluence-librarian, and keeps both local and Confluence links in the parent index after success.",
+      "expectations": [
+        "Does not publish before explicit confirmation.",
+        "Delegates publication mechanics to confluence-librarian.",
+        "Uses the parent DR/SRS as the Confluence parent page.",
+        "Retains both the local Markdown link and returned Confluence URL in the parent index.",
+        "Updates and verifies the published parent Confluence catalog row instead of leaving a TBD or missing-child placeholder."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "hierarchical-publication-synchronization",
+      "prompt": "Publish three already-authored Use Case child documents under an existing Confluence Design Review whose catalog rows currently contain local links and TBD Confluence URLs. Keep each child in draft/candidate lifecycle state, update the parent catalog with the returned URLs, re-fetch the parent, and report any failed synchronization instead of claiming completion.",
+      "expected_output": "All child pages are created under the existing parent, the parent catalog is updated with the three returned URLs and no stale placeholders, the parent is re-fetched for verification, and lifecycle states remain unchanged.",
+      "expectations": [
+        "Creates child pages under the existing parent and does not create a duplicate parent.",
+        "Preserves stable UC IDs, candidate child status, and draft page status.",
+        "Updates each parent catalog row with both local and Confluence links.",
+        "Re-fetches the parent and verifies that TBD or missing-child placeholders are gone.",
+        "Reports publication as incomplete if any parent synchronization fails."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "create-use-cases-from-parent-catalog",
+      "prompt": "The parent DR/SRS already has catalog entries UC-01, UC-02, and UC-03, each with a title, linked JTBD, and priority. Create every missing child Use Case from this catalog, using the linked PRD and artifacts. Write one child file for each entry and synchronize every parent row without creating a new parent.",
+      "expected_output": "One complete child Use Case document is created for every selected catalog entry, and every parent catalog row is synchronized with its child path, stable ID, and status/gap.",
+      "expectations": [
+        "Processes all selected catalog entries rather than stopping after one Use Case.",
+        "Creates one child Markdown file per catalog entry under use-cases/.",
+        "Preserves each existing UC ID, linked JTBD, and priority.",
+        "Synchronizes every parent catalog row and does not create a new parent DR/SRS."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "follow-dr01-use-case-template",
+      "prompt": "Create UC-01 from a parent DR/SRS using the DR-01 Use Case template contract. Keep the canonical field order, include design maturity, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
+      "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata and explicit gaps.",
+      "expectations": [
+        "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, design maturity, trigger, preconditions, flows, postconditions, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
+        "Omits title from frontmatter so the Markdown heading and Confluence page title remain the single title sources.",
+        "Uses AC-01-style acceptance-check IDs scoped by the Use Case document.",
+        "Includes Call for Task among the supported source artifact types.",
+        "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."
+      ],
+      "files": []
+    }
+  ]
+}

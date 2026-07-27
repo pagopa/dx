@@ -62,10 +62,10 @@ The DR/SRS contains only the dynamic view/catalog:
 - `Must` or `Should` priority;
 - lifecycle/status and any missing-content gap.
 
-The separate Use Case skill owns trigger, preconditions, main and alternate
-flows, exception/edge cases, postconditions, binary acceptance checks,
-tracking events, and detailed evidence links. Do not duplicate those details
-in the DR/SRS.
+The `uc-engraver` skill owns trigger, preconditions, main and alternate flows,
+exception/edge cases, postconditions, binary acceptance checks, tracking
+events, and detailed evidence links. Do not duplicate those details in the
+DR/SRS.
 
 ## Incremental adoption
 

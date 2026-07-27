@@ -1,6 +1,6 @@
 ---
 name: dr-blacksmith
-description: Create and update a structured Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, delegate detailed Use Cases to the dedicated Use Case skill, and hand confirmed Confluence publication to the confluence-librarian skill.
+description: Create and update a structured Design Review / Software Requirements Specification (DR/SRS). Use whenever a user asks for a Design Review, DR, SRS, solution design, technical requirements document, architecture review, or to turn an accepted RFC into the operational design. Write Markdown first, preserve stable IDs, expose gaps without inventing decisions, invoke uc-engraver when detailed Use Cases are requested, and hand confirmed Confluence publication to the confluence-librarian skill.
 ---
 
 # DR Blacksmith
@@ -23,9 +23,9 @@ Use this skill to:
 - keep a DR/SRS aligned with linked PRD, RFC, ADR, API, event, data, security,
   privacy, and operational artifacts.
 
-Do not use it to generate individual Use Case child documents. A separate skill
-owns the `UC-XX` content. This skill creates and maintains only the DR/SRS Use
-Case catalog.
+Do not use it to generate individual Use Case child documents. The
+`uc-engraver` skill owns the `UC-XX` content. This skill creates and maintains
+only the DR/SRS Use Case catalog.
 
 ## Output contract
 
@@ -70,8 +70,11 @@ is given. Never overwrite the bundled template.
    `Open questions, assumptions, and decisions`. Never convert a proposal into
    a confirmed decision without evidence or user confirmation.
 6. **Maintain the Use Case index.** Add stable `UC-XX` entries with title,
-   linked JTBD, priority, and status. Flag missing or stale Use Case documents
-   for the Use Case skill; do not write their bodies.
+   linked JTBD, and priority. If the user asks for detailed Use Cases during
+   this workflow, invoke `uc-engraver` with the existing parent DR/SRS and
+   source artifacts. Incorporate its returned child path, stable ID, unresolved
+   gaps, and publication URL into the parent index. Do not write child bodies or
+   leave the parent index unsynchronized.
 7. **Validate the document.** Apply
    [`references/validation-checklist.md`](./references/validation-checklist.md).
 8. **Handle review readiness explicitly.** Change `metadata.status` only when
@@ -98,7 +101,7 @@ is given. Never overwrite the bundled template.
   DR/SRS. An RFC that has not been propagated must not guide implementation.
 - Link existing contracts and reviews instead of copying their full contents.
 - Keep the DR/SRS concise enough to govern the system; delegate
-  behavior-level detail to the Use Case skill.
+  behavior-level detail to `uc-engraver`.
 
 ## References
 
