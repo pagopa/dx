@@ -1,184 +1,146 @@
-import type { ExecutorContext } from "@nx/devkit";
+/** Verifies Docker release publishing derives tags from the released package. */
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-const fsMocks = vi.hoisted(() => ({
-  existsSync: vi.fn(),
-  readFileSync: vi.fn(),
-}));
-
-const childProcessMocks = vi.hoisted(() => ({
-  execFileSync: vi.fn(),
+const dockerRunMocks = vi.hoisted(() => ({
+  runDockerCommand: vi.fn(() => ({ success: true })),
 }));
 
 const dockerImageMocks = vi.hoisted(() => ({
-  computeReleaseTags: vi.fn(),
+  computeReleaseTags: vi.fn(() => ["1.2.3", "1.2", "1", "latest"]),
 }));
 
-const githubSummaryMocks = vi.hoisted(() => ({
-  summarizeDockerFailure: vi.fn(),
-  summarizeDockerPush: vi.fn(),
+const fsMocks = vi.hoisted(() => ({
+  readFile: vi.fn(() => Promise.resolve('{"version":"1.2.3"}')),
 }));
 
-vi.mock("node:fs", () => ({
-  existsSync: fsMocks.existsSync,
-  readFileSync: fsMocks.readFileSync,
+vi.mock("../../../docker-run.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../../../docker-run.ts")>()),
+  ...dockerRunMocks,
 }));
+vi.mock("../../../docker-image.ts", () => dockerImageMocks);
+vi.mock("node:fs/promises", () => fsMocks);
 
-vi.mock("node:child_process", () => ({
-  execFileSync: childProcessMocks.execFileSync,
-}));
+import {
+  type DockerPublishExecutorContext,
+  releasePublishExecutor,
+} from "../release-publish.ts";
 
-vi.mock("../../../docker-image.ts", () => ({
-  computeReleaseTags: dockerImageMocks.computeReleaseTags,
-}));
-
-vi.mock("../../../github-summary.ts", () => ({
-  summarizeDockerFailure: githubSummaryMocks.summarizeDockerFailure,
-  summarizeDockerPush: githubSummaryMocks.summarizeDockerPush,
-}));
-
-import type { ReleasePublishExecutorInput } from "../schema.ts";
-
-import executor from "../release-publish.ts";
-
-const baseContext: ExecutorContext = {
-  cwd: process.cwd(),
-  isVerbose: false,
-  nxJsonConfiguration: {},
-  projectGraph: {
-    dependencies: {},
-    nodes: {},
-  },
-  projectsConfigurations: {
-    projects: {},
-    version: 2,
-  },
+const createContext = (): DockerPublishExecutorContext => ({
   root: "/workspace",
-};
+});
 
-const validOptions = {
-  projectName: "my-app",
-  projectRoot: "apps/my-app",
-} satisfies ReleasePublishExecutorInput;
+const createOptions = () => ({
+  contextPath: ".",
+  defaultBranch: "main",
+  dockerfilePath: "apps/sample/Dockerfile",
+  imageAuthors: "PagoPA",
+  imageName: "ghcr.io/pagopa/example",
+  imageUrl: "https://github.com/pagopa/example",
+  platform: "linux/amd64",
+  projectDisplayName: "@pagopa/example",
+  projectRoot: "apps/sample",
+});
 
 describe("release-publish executor", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   afterEach(() => {
-    vi.unstubAllEnvs();
-  });
-
-  it("fails without touching docker when required options are missing", async () => {
-    const result = await executor({}, baseContext);
-
-    expect(result).toEqual({ success: false });
-    expect(fsMocks.existsSync).not.toHaveBeenCalled();
-  });
-
-  it("fails when the .docker-version file written by 'nx release version' is missing", async () => {
-    fsMocks.existsSync.mockReturnValue(false);
-
-    const result = await executor(validOptions, baseContext);
-
-    expect(result).toEqual({ success: false });
-    expect(fsMocks.existsSync).toHaveBeenCalledWith(
-      "/workspace/tmp/apps/my-app/.docker-version",
-    );
-  });
-
-  it("does not push in dry-run mode", async () => {
-    vi.stubEnv("NX_DRY_RUN", "true");
-    fsMocks.existsSync.mockReturnValue(true);
-    fsMocks.readFileSync.mockReturnValue("ghcr.io/pagopa/dx/my-app:1.2.3");
+    dockerImageMocks.computeReleaseTags.mockClear();
     dockerImageMocks.computeReleaseTags.mockReturnValue([
       "1.2.3",
       "1.2",
       "1",
       "latest",
     ]);
-
-    const result = await executor(validOptions, baseContext);
-
-    expect(result).toEqual({ success: true });
-    expect(childProcessMocks.execFileSync).not.toHaveBeenCalled();
+    dockerRunMocks.runDockerCommand.mockClear();
+    dockerRunMocks.runDockerCommand.mockReturnValue({ success: true });
+    fsMocks.readFile.mockClear();
+    fsMocks.readFile.mockResolvedValue('{"version":"1.2.3"}');
+    delete process.env.NX_DRY_RUN;
   });
 
-  it("pushes the primary version tag plus every alias tag", async () => {
-    fsMocks.existsSync.mockReturnValue(true);
-    fsMocks.readFileSync.mockReturnValue("ghcr.io/pagopa/dx/my-app:1.2.3");
-    dockerImageMocks.computeReleaseTags.mockReturnValue([
+  it("builds and pushes tags derived from the released package version", async () => {
+    await expect(
+      releasePublishExecutor(createOptions(), createContext()),
+    ).resolves.toEqual({ success: true });
+
+    expect(fsMocks.readFile).toHaveBeenCalledWith(
+      "/workspace/apps/sample/package.json",
+      "utf8",
+    );
+    expect(dockerImageMocks.computeReleaseTags).toHaveBeenCalledWith(
+      "@pagopa/example",
       "1.2.3",
-      "1.2",
-      "1",
-      "latest",
-    ]);
-
-    const result = await executor(validOptions, baseContext);
-
-    expect(result).toEqual({ success: true });
-    expect(childProcessMocks.execFileSync).toHaveBeenCalledWith(
-      "docker",
-      ["push", "ghcr.io/pagopa/dx/my-app:1.2.3"],
-      expect.anything(),
     );
-    expect(childProcessMocks.execFileSync).toHaveBeenCalledWith(
-      "docker",
-      [
-        "tag",
-        "ghcr.io/pagopa/dx/my-app:1.2.3",
-        "ghcr.io/pagopa/dx/my-app:latest",
-      ],
-      expect.anything(),
-    );
-    expect(childProcessMocks.execFileSync).toHaveBeenCalledWith(
-      "docker",
-      ["push", "ghcr.io/pagopa/dx/my-app:latest"],
-      expect.anything(),
-    );
-    expect(githubSummaryMocks.summarizeDockerPush).toHaveBeenCalledWith(
-      "my-app",
-      "ghcr.io/pagopa/dx/my-app",
-      ["1.2.3", "1.2", "1", "latest"],
-    );
-  });
-
-  it("reports a failure when the docker push fails", async () => {
-    fsMocks.existsSync.mockReturnValue(true);
-    fsMocks.readFileSync.mockReturnValue("ghcr.io/pagopa/dx/my-app:1.2.3");
-    dockerImageMocks.computeReleaseTags.mockReturnValue(["1.2.3"]);
-    childProcessMocks.execFileSync.mockImplementation(() => {
-      throw new Error("docker push failed");
-    });
-
-    const result = await executor(validOptions, baseContext);
-
-    expect(result).toEqual({ success: false });
-    expect(githubSummaryMocks.summarizeDockerFailure).toHaveBeenCalledWith(
-      "my-app",
+    expect(dockerRunMocks.runDockerCommand).toHaveBeenCalledWith(
       "push",
+      createOptions(),
+      "/workspace",
+      "1.2.3",
+    );
+  });
+
+  it("does not invoke Docker in dry run mode", async () => {
+    process.env.NX_DRY_RUN = "true";
+
+    await expect(
+      releasePublishExecutor(createOptions(), createContext()),
+    ).resolves.toEqual({ success: true });
+
+    expect(dockerRunMocks.runDockerCommand).not.toHaveBeenCalled();
+  });
+
+  it("reads metadata.version from project.json when package.json is absent", async () => {
+    fsMocks.readFile
+      .mockRejectedValueOnce(
+        Object.assign(new Error("missing"), { code: "ENOENT" }),
+      )
+      .mockResolvedValueOnce('{"metadata":{"version":"0.0.2"}}');
+
+    await expect(
+      releasePublishExecutor(createOptions(), createContext()),
+    ).resolves.toEqual({ success: true });
+
+    expect(fsMocks.readFile).toHaveBeenNthCalledWith(
       1,
+      "/workspace/apps/sample/package.json",
+      "utf8",
     );
-    expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
+    expect(fsMocks.readFile).toHaveBeenNthCalledWith(
+      2,
+      "/workspace/apps/sample/project.json",
+      "utf8",
+    );
+    expect(dockerRunMocks.runDockerCommand).toHaveBeenCalledWith(
+      "push",
+      createOptions(),
+      "/workspace",
+      "0.0.2",
+    );
   });
 
-  it("reports the Docker process exit code when available", async () => {
-    fsMocks.existsSync.mockReturnValue(true);
-    fsMocks.readFileSync.mockReturnValue("ghcr.io/pagopa/dx/my-app:1.2.3");
-    dockerImageMocks.computeReleaseTags.mockReturnValue(["1.2.3"]);
-    childProcessMocks.execFileSync.mockImplementation(() => {
-      throw Object.assign(new Error("docker push failed"), { status: 125 });
-    });
+  it("rejects a package without a release version", async () => {
+    fsMocks.readFile.mockResolvedValue("{}");
 
-    const result = await executor(validOptions, baseContext);
-
-    expect(result).toEqual({ success: false });
-    expect(githubSummaryMocks.summarizeDockerFailure).toHaveBeenCalledWith(
-      "my-app",
-      "push",
-      125,
+    await expect(
+      releasePublishExecutor(createOptions(), createContext()),
+    ).rejects.toThrow(
+      "Could not read a version from /workspace/apps/sample/package.json.",
     );
+  });
+
+  it("rejects a version that cannot become a Docker tag", async () => {
+    dockerImageMocks.computeReleaseTags.mockReturnValue([]);
+
+    await expect(
+      releasePublishExecutor(createOptions(), createContext()),
+    ).rejects.toThrow(
+      "Version '1.2.3' in apps/sample/package.json is not Docker-compatible semantic version.",
+    );
+    expect(dockerRunMocks.runDockerCommand).not.toHaveBeenCalled();
+  });
+
+  it("rejects invalid executor options", async () => {
+    await expect(
+      releasePublishExecutor({ projectRoot: "apps/sample" }, createContext()),
+    ).rejects.toThrow("Invalid Docker publish executor options.");
   });
 });

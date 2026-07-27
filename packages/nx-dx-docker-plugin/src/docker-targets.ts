@@ -29,7 +29,7 @@ export const buildDockerBuildTarget = (
   metadata: {
     description:
       "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
-    technologies: ["docker"],
+    technologies: ["container-image"],
   },
   options,
 });
@@ -43,7 +43,7 @@ export const buildDockerPushTarget = (
   metadata: {
     description:
       "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
-    technologies: ["docker"],
+    technologies: ["container-image"],
   },
   options,
 });

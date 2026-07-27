@@ -1,5 +1,5 @@
 ---
-"@pagopa/nx-dx-docker-plugin": minor
+"@pagopa/nx-dx-docker-plugin": patch
 ---
 
 Add Nx plugin that infers language-agnostic Docker build/push targets for
