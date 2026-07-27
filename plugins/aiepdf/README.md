@@ -1,6 +1,6 @@
-# AIEPFD plugin
+# AIEPDF plugin
 
-To enable the plugin in another repository, add `aiepfd@pagopa-dx` to that repository's
+To enable the plugin in another repository, add `aiepdf@pagopa-dx` to that repository's
 Copilot settings:
 
 ```json
@@ -14,7 +14,7 @@ Copilot settings:
     }
   },
   "enabledPlugins": {
-    "aiepfd@pagopa-dx": true
+    "aiepdf@pagopa-dx": true
   }
 }
 ```
