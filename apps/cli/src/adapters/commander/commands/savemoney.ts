@@ -1,5 +1,6 @@
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
+import { trace } from "@opentelemetry/api";
 import { azure, AZURE_SOURCE_VALUES, loadConfig } from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
 import { oraPromise } from "ora";
@@ -74,6 +75,34 @@ export const makeSavemoneyCommand = () =>
           verbose: verbose ?? false,
         };
 
+        // Record usage attributes on the active root span so Application
+        // Insights can slice usage by format, source, and feature flags.
+        //
+        // azqr_report_source distinguishes how the AZQR report path was
+        // provided: "cli" (--azqr-report flag), "config" (azqrReportPath in
+        // the YAML config file), or "none" (not provided at all).
+        const azqrReportSource = options.azqrReport
+          ? "cli"
+          : finalConfig.azqrReportPath
+            ? "config"
+            : "none";
+        // subscriptions_source mirrors the priority in loadAzureConfig:
+        // config file > ARM_SUBSCRIPTION_ID env var > interactive prompt.
+        const subscriptionsSource = options.config
+          ? "config"
+          : process.env.ARM_SUBSCRIPTION_ID
+            ? "env"
+            : "prompt";
+        trace.getActiveSpan()?.setAttributes({
+          "savemoney.azqr_report_source": azqrReportSource,
+          "savemoney.format": options.format,
+          "savemoney.has_config": Boolean(options.config),
+          "savemoney.pricing_enabled": finalConfig.pricing?.enabled !== false,
+          "savemoney.sources": finalConfig.sources?.join(",") ?? "all",
+          "savemoney.subscriptions_count": finalConfig.subscriptionIds.length,
+          "savemoney.subscriptions_source": subscriptionsSource,
+        });
+
         // Run analysis showing a progress spinner on stderr so the CLI doesn't
         // look frozen during the (potentially several-minute) Azure round-trips.
         const reports = await oraPromise(
@@ -85,6 +114,16 @@ export const makeSavemoneyCommand = () =>
             text: "Analyzing Azure resources",
           },
         );
+
+        // Record outcome attributes after analysis completes.
+        trace.getActiveSpan()?.setAttributes({
+          "savemoney.findings_count": reports.reduce(
+            (sum, r) => sum + (r.findings?.length ?? 0),
+            0,
+          ),
+          "savemoney.resources_analyzed": reports.length,
+        });
+
         await azure.generateReport(reports, options.format);
       } catch (error) {
         exitWithError(this)(
