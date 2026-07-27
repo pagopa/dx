@@ -3,10 +3,7 @@
 import { sql } from "drizzle-orm";
 
 export type MemberMatchColumn =
-  | "author"
-  | "ipr.author"
-  | "merged_by"
-  | "pr.merged_by";
+  "author" | "ipr.author" | "merged_by" | "pr.merged_by";
 
 const buildTextArraySql = (members: readonly string[]) =>
   members.length === 0
