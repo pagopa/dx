@@ -1,138 +1,116 @@
-// Nx executor wired as `nx-release-publish` for projects using the
-// *official* Nx Docker release flow (`nx.release.docker.repositoryName` in
-// package.json) — see index.ts's `getDockerRepositoryNameOverride`. Wraps
-// @nx/docker's own `nx-release-publish` behavior: the official
-// `@nx/docker:release-publish` executor only ever pushes a single,
-// version-only tag (it reads `tmp/<projectRoot>/.docker-version`, a file
-// written by `nx release version` via `docker tag <local-alias>
-// <registry>/<repositoryName>:<version>`, and does `docker push` on exactly
-// that one reference — see @nx/docker's
-// src/release/version-utils.js/handleDockerVersion and
-// src/executors/release-publish/release-publish.impl.js). That's why
-// projects using the per-project `nx.release.docker.repositoryName`
-// override (the *official* Nx Docker release flow) never got `latest` or
-// any other dynamic alias tag, even after `computeImageTags`/`docker:push`
-// (this plugin's *own* target, used by CI tag-push events) gained that
-// logic: `nx release publish` never runs `docker:push`, it runs
-// `nx-release-publish` directly.
-//
-// This executor reads that same `.docker-version` file (so it stays in
-// sync with whatever version `nx release version` just decided) and, in
-// addition to pushing that primary version tag itself, also computes and
-// pushes the alias tags via `computeReleaseTags` (major, major.minor, and
-// `latest` when this is the highest released version) — reusing the exact
-// same logic `docker:push` already uses for CI tag-push events, so both
-// paths agree on what "latest" means.
-import type { ExecutorContext, PromiseExecutor } from "@nx/devkit";
-
-import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+/** Publishes a release Docker image directly from the released package version. */
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod/v4";
 
 import { computeReleaseTags } from "../../docker-image.ts";
-import {
-  summarizeDockerFailure,
-  summarizeDockerPush,
-} from "../../github-summary.ts";
-import {
-  type ReleasePublishExecutorInput,
-  releasePublishExecutorSchema,
-} from "./schema.ts";
+import { runDockerCommand } from "../../docker-run.ts";
+import { releasePublishSchema } from "./schema.ts";
 
-/** Mirrors @nx/docker's own dry-run check (see version-utils.js). */
-const isDryRun = (): boolean => {
-  const value = process.env.NX_DRY_RUN;
-  return Boolean(value) && value !== "false";
+export interface DockerPublishExecutorContext {
+  root: string;
+}
+
+const packageJsonSchema = z.object({
+  version: z.string().trim().min(1),
+});
+
+const projectJsonSchema = z.object({
+  metadata: z.object({
+    version: z.string().trim().min(1),
+  }),
+});
+
+const readJson = async (filePath: string): Promise<unknown> => {
+  const content = await readFile(filePath, "utf8");
+
+  try {
+    return JSON.parse(content);
+  } catch (cause) {
+    throw new Error(`Could not parse ${filePath}.`, { cause });
+  }
 };
 
-const splitImageReference = (
-  fullImageRef: string,
-): { imageBase: string; version: string } => {
-  const separatorIndex = fullImageRef.lastIndexOf(":");
+const isFileNotFound = (error: unknown): boolean =>
+  error instanceof Error && "code" in error && error.code === "ENOENT";
+
+const readReleasedVersion = async (
+  workspaceRoot: string,
+  projectRoot: string,
+): Promise<{ readonly sourcePath: string; readonly version: string }> => {
+  const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
+  try {
+    const parseResult = packageJsonSchema.safeParse(
+      await readJson(packageJsonPath),
+    );
+    if (!parseResult.success) {
+      throw new Error(`Could not read a version from ${packageJsonPath}.`, {
+        cause: parseResult.error,
+      });
+    }
+
+    return {
+      sourcePath: `${projectRoot}/package.json`,
+      version: parseResult.data.version,
+    };
+  } catch (error) {
+    if (!isFileNotFound(error)) {
+      throw error;
+    }
+  }
+
+  const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
+  const parseResult = projectJsonSchema.safeParse(
+    await readJson(projectJsonPath),
+  );
+  if (!parseResult.success) {
+    throw new Error(
+      `Could not read a version from ${projectJsonPath} metadata.version.`,
+      { cause: parseResult.error },
+    );
+  }
+
   return {
-    imageBase: fullImageRef.slice(0, separatorIndex),
-    version: fullImageRef.slice(separatorIndex + 1),
+    sourcePath: `${projectRoot}/project.json`,
+    version: parseResult.data.metadata.version,
   };
 };
 
-const getExitCode = (error: unknown): number => {
-  if (
-    typeof error === "object" &&
-    error !== null &&
-    "status" in error &&
-    typeof error.status === "number"
-  ) {
-    return error.status;
-  }
-  return 1;
-};
-
-const runExecutor: PromiseExecutor<ReleasePublishExecutorInput> = async (
-  options,
-  context: ExecutorContext,
+export const releasePublishExecutor = async (
+  rawOptions: unknown,
+  context: DockerPublishExecutorContext,
 ) => {
-  const parseResult = releasePublishExecutorSchema.safeParse(options);
+  const parseResult = releasePublishSchema.safeParse(rawOptions);
+
   if (!parseResult.success) {
-    console.warn(
-      "[@pagopa/nx-dx-docker-plugin] Invalid nx-release-publish options:",
-      parseResult.error.issues,
-    );
-    return { success: false };
-  }
-  const { projectName, projectRoot } = parseResult.data;
-
-  // Matches @nx/docker's own `getDockerVersionPath(workspaceRoot, projectRoot)`.
-  const versionFilePath = join(
-    context.root,
-    "tmp",
-    projectRoot,
-    ".docker-version",
-  );
-  if (!existsSync(versionFilePath)) {
-    console.error(
-      `[@pagopa/nx-dx-docker-plugin] Could not find ${versionFilePath}. Did you run 'nx release version'?`,
-    );
-    return { success: false };
+    throw new Error("Invalid Docker publish executor options.", {
+      cause: parseResult.error,
+    });
   }
 
-  const fullImageRef = readFileSync(versionFilePath, "utf8").trim();
-  const { imageBase, version } = splitImageReference(fullImageRef);
-  const aliasTags = computeReleaseTags(projectName, version).filter(
-    (tag) => tag !== version,
+  const options = parseResult.data;
+  const release = await readReleasedVersion(context.root, options.projectRoot);
+  const releaseTags = computeReleaseTags(
+    options.projectDisplayName,
+    release.version,
   );
-
-  if (isDryRun()) {
-    console.log(
-      `Docker Image ${fullImageRef} was not pushed as --dry-run is enabled.`,
+  if (releaseTags.length === 0) {
+    throw new Error(
+      `Version '${release.version}' in ${release.sourcePath} is not Docker-compatible semantic version.`,
     );
-    for (const tag of aliasTags) {
-      console.log(
-        `Docker Image ${imageBase}:${tag} was not tagged/pushed as --dry-run is enabled.`,
-      );
-    }
+  }
+
+  // nx release forwards dry-run through NX_DRY_RUN, but the executor also supports direct invocation.
+  const dryRun = process.env.NX_DRY_RUN === "true" || options.dryRun === true;
+
+  if (dryRun) {
+    console.info(
+      `Dry run enabled: would build and push '${options.imageName}' with tags ${releaseTags.join(", ")}.`,
+    );
     return { success: true };
   }
 
-  try {
-    execFileSync("docker", ["push", fullImageRef], { stdio: "inherit" });
-    console.log(`Successfully pushed ${fullImageRef}`);
-
-    for (const tag of aliasTags) {
-      const aliasRef = `${imageBase}:${tag}`;
-      execFileSync("docker", ["tag", fullImageRef, aliasRef], {
-        stdio: "inherit",
-      });
-      execFileSync("docker", ["push", aliasRef], { stdio: "inherit" });
-      console.log(`Successfully pushed ${aliasRef}`);
-    }
-  } catch (err) {
-    summarizeDockerFailure(projectName, "push", getExitCode(err));
-    console.error("[@pagopa/nx-dx-docker-plugin] Docker push failed:", err);
-    return { success: false };
-  }
-
-  summarizeDockerPush(projectName, imageBase, [version, ...aliasTags]);
-  return { success: true };
+  return runDockerCommand("push", options, context.root, release.version);
 };
 
-export default runExecutor;
+export default releasePublishExecutor;

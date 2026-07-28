@@ -24,6 +24,7 @@ export default defineConfig({
       "src/executors/release-publish/release-publish.ts",
     "generators/init/generator": "src/generators/init/generator.ts",
     index: "src/index.ts",
+    "release/version-actions": "src/release/version-actions.ts",
   },
   fixedExtension: false,
   format: "cjs",

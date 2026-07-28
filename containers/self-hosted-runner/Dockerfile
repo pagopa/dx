@@ -4,10 +4,14 @@ ARG RUNNER_DIGEST
 
 FROM ghcr.io/actions/actions-runner${RUNNER_DIGEST:+@${RUNNER_DIGEST}} AS base
 
+ARG RUNNER_DIGEST
+
 LABEL base_runner_digest=${RUNNER_DIGEST}
 
 USER root
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
+    > /etc/apt/apt.conf.d/80network-retries && \
+    apt-get update && apt-get install -y --no-install-recommends \
     zip wget xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
@@ -20,7 +24,18 @@ RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-li
 
 # === Stage 3: Install Azure CLI ===
 FROM nodejs AS azure
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+RUN set -eux; \
+        for attempt in 1 2 3; do \
+            if curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
+                https://aka.ms/InstallAzureCLIDeb --output /tmp/install-azure-cli.sh && \
+                bash /tmp/install-azure-cli.sh; then \
+                rm -f /tmp/install-azure-cli.sh; \
+                exit 0; \
+            fi; \
+            rm -f /tmp/install-azure-cli.sh; \
+            echo "Azure CLI installation attempt ${attempt} failed; retrying." >&2; \
+        done; \
+        exit 1
 
 # === Stage 4: Install AWS CLI ===
 FROM azure AS aws

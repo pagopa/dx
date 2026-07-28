@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "type": "module",
   "nx": {
     "docker": {
@@ -25,9 +25,9 @@
     "dx": "./dist/cli.js"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1090.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1095.0",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/s3-request-presigner": "^3.1090.0",
+    "@aws-sdk/s3-request-presigner": "^3.1095.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "catalog:",

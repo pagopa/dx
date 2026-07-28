@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.22.0",
+  "version": "0.22.1",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -41,7 +41,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
-    "docusaurus-plugin-llms": "^0.5.0",
+    "docusaurus-plugin-llms": "^0.5.1",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
