@@ -36,7 +36,7 @@
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "^10.8.0",
+    "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.11",
     "postcss": "^8.5.23",
     "tailwindcss": "^4.3.3",
