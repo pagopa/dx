@@ -16,7 +16,8 @@ import type { CostRisk } from "./types.js";
  * A single, atomic observation about a resource.
  *
  * One resource can produce multiple findings (e.g. "no tags" + "low CPU").
- * Findings are designed to be deduplicated by `(resourceId, source, code)`.
+ * Findings are deduplicated on `(resourceId, recommendationId)` — see
+ * {@link Finding.recommendationId}.
  */
 export type Finding = {
   /**
@@ -27,8 +28,8 @@ export type Finding = {
   /**
    * Stable machine-readable identifier for the kind of finding, e.g.
    * `vm.deallocated`, `disk.unattached`, `advisor.right-size-vm`.
-   * Used for deduplication and grouping. Free-form for now to keep the
-   * adapter from existing analyzers cheap; can be tightened later.
+   * Free-form and source-specific: use `recommendationId` for
+   * deduplication across sources.
    */
   code: string;
   /**
@@ -42,6 +43,19 @@ export type Finding = {
    * legacy `AnalysisResult.reason` field.
    */
   reason: string;
+  /**
+   * Canonical, source-independent identity of the underlying problem.
+   * Together with `resourceId` it forms the deduplication key, so the same
+   * waste reported by different sources collapses into a single finding
+   * (see `azure/finding-dedup.ts`).
+   *
+   * Producers normalise it whenever a shared vocabulary exists — orphaned
+   * resources use `orphan.<resourceType>` regardless of the source that
+   * detected them — and fall back to their native recommendation ID
+   * otherwise. Left unset when the source has no stable identifier: such
+   * findings are never deduplicated.
+   */
+  recommendationId?: string;
   /**
    * Optional, machine-friendly hint about how to remediate. For Advisor
    * this typically maps to `shortDescription.solution`.

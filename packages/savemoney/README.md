@@ -77,6 +77,7 @@ yarn add @pagopa/dx-savemoney
 - **Intelligent Detection**: Uses Azure Monitor metrics (e.g. CPU, network traffic, transactions) to scientifically identify inactive resources.
 - **Azure Advisor Integration**: Fetches Cost recommendations directly from Azure Advisor, including Reserved Instance and Savings Plan opportunities with estimated monthly savings.
 - **Orphaned Resource Identification**: Detects commonly "forgotten" resources like unattached disks, unassociated public IPs, and unused network interfaces.
+- **Cross-Source Deduplication**: Findings reported by more than one source (live scan, Azure Advisor, AZQR) are collapsed onto a single entry, keeping the one that carries the monetary estimate.
 - **Flexible Reporting**: Offers multiple output formats:
   - `table`: A human-readable summary for the terminal.
   - `json`: Standard format for integration with other tools.
@@ -122,6 +123,9 @@ All resources are also checked for:
 
 - **Missing tags**: Resources without tags are flagged as potentially unmanaged
 - **Location mismatch**: Resources not in the preferred location are reported
+
+Both are governance signals, not billable waste, so they are reported under the
+`operationalExcellence` category and never carry a saving estimate.
 
 ### Prerequisites
 
@@ -375,6 +379,35 @@ Notes:
     verifying they are unused.
 - AZQR carries no monetary estimate, so these findings have no per-finding
   saving amount; they surface as opportunities to review.
+- **Cross-source deduplication.** An AZQR row is dropped when the live scan
+  already reports the same problem on the same resource (see below).
+
+#### Cross-Source Deduplication
+
+The three sources overlap: an unattached disk is waste whether it is spotted by
+the live analyzers, by Azure Advisor, or by AZQR. Findings are therefore
+unified on the `resourceId + recommendationId` key, where `recommendationId` is
+normalised onto a shared vocabulary — orphaned resources become
+`orphan.<resourceType>` regardless of which source detected them.
+
+When an AZQR row collides with an already-collected finding, the AZQR row is
+dropped and the surviving finding keeps the highest severity, the only
+available monetary estimate, and gains a short note recording the corroborating
+source (e.g. `Also flagged by azqr as an orphaned resource.`). This keeps a
+resource on a single line of the report while preserving its provenance.
+
+Only findings that carry a `recommendationId` participate: custom analyzer
+sentences have no stable identifier and are never collapsed on guesswork.
+
+#### Cost vs Governance Findings
+
+The `cost` category means "money is being wasted". Governance and diagnostic
+observations from the custom analyzers — missing tags, a resource outside the
+preferred location, an unsupported resource type, a failed detail lookup — are
+reported as `operationalExcellence` instead, and never carry a saving estimate.
+Besides keeping the FinOps signal clean, this is what makes deduplication safe:
+a resource flagged only for missing tags is not evidence of waste, so it does
+not absorb the corresponding AZQR orphan row.
 
 ## AWS (Coming Soon)
 
