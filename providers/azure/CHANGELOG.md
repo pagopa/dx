@@ -1,3 +1,13 @@
+## 0.12.5 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2013](https://github.com/pagopa/dx/pull/2013), [#8203](https://github.com/pagopa/dx/issues/8203))
+
+### ❤️ Thank You
+
+- Marco Comi
+
 ## 0.12.4 (2026-07-09)
 
 ### 🩹 Fixes
