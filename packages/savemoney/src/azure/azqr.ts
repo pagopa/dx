@@ -34,6 +34,7 @@ import { z } from "zod";
 import type { CostRisk } from "../types.js";
 
 import { type Finding } from "../finding.js";
+import { orphanRecommendationId } from "./finding-dedup.js";
 
 /** A single `impacted` row from an AZQR JSON report (fields we consume). */
 const azqrImpactedRowSchema = z.object({
@@ -140,6 +141,7 @@ export function azqrImpactedToFindings(report: AzqrReport): Finding[] {
         ? `azqr.${row.recommendationId}`
         : "azqr.impacted",
       reason: buildReason(row, inventory),
+      recommendationId: canonicalRecommendationId(row),
       recommendedAction: row.learn
         ? `${remediation} Learn more: ${row.learn}`
         : remediation,
@@ -172,7 +174,7 @@ export function classifyAzqrRow(
   if ((row.category ?? "").toLowerCase().includes("cost")) {
     return "cost";
   }
-  if ((row.source ?? "").toLowerCase() !== ORPHAN_CHECK_SOURCE) {
+  if (!isOrphanRow(row)) {
     return null;
   }
   const resourceType = (row.resourceType ?? "").toLowerCase();
@@ -252,6 +254,28 @@ function buildReason(
   }
   if (inventory?.location) context.push(inventory.location);
   return context.length > 0 ? `${sentence} (${context.join(", ")})` : sentence;
+}
+
+/**
+ * Canonical identity of the problem a row describes, used to deduplicate it
+ * against findings coming from other sources.
+ *
+ * Orphaned resources (AZQR's `AOR` check) map onto the shared
+ * `orphan.<resourceType>` vocabulary, so the same waste reported by Azure
+ * Advisor or by a custom analyzer collapses onto a single finding. Every other
+ * row keeps AZQR's own recommendation ID, namespaced so it can only ever match
+ * another AZQR row.
+ */
+function canonicalRecommendationId(row: AzqrImpactedRow): string | undefined {
+  if (isOrphanRow(row) && row.resourceType) {
+    return orphanRecommendationId(row.resourceType);
+  }
+  return row.recommendationId ? `azqr.${row.recommendationId}` : undefined;
+}
+
+/** Whether the row comes from AZQR's Azure Orphan Resources check. */
+function isOrphanRow(row: AzqrImpactedRow): boolean {
+  return (row.source ?? "").toLowerCase() === ORPHAN_CHECK_SOURCE;
 }
 
 /**
