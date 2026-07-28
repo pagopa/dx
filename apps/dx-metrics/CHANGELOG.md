@@ -1,3 +1,17 @@
+## 0.5.13 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.6
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.11 (2026-07-02)
 
 ### 🩹 Fixes

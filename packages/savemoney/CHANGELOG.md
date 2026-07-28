@@ -1,3 +1,17 @@
+## 0.6.1 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.0 (2026-07-16)
 
 ### 🚀 Features

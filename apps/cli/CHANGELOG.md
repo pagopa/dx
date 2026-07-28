@@ -1,3 +1,18 @@
+## 0.26.4 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+- Updated @pagopa/dx-savemoney to 0.6.1
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.26.2 (2026-07-16)
 
 ### 🩹 Fixes
