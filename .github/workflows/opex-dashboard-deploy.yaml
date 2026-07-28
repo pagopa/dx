@@ -41,7 +41,7 @@ jobs:
       # The standard DX Node.js setup action cannot be used here
       # because it only runs on JavaScript projects with a configured package manager
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 #v7.0.0 v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
 

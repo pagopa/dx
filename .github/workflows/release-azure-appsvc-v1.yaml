@@ -115,7 +115,7 @@ jobs:
 
       - name: Generate artifact attestation (build provenance)
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f #v3.2.0 v3
+        uses: actions/attest-build-provenance@96278af6caaf10aea03fd8d33a09a777ca52d62f # v3.2.0
         with:
           subject-path: ${{ steps.make-artifact.outputs.artifact-path }}
           show-summary: false
