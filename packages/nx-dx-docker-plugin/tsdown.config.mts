@@ -11,7 +11,7 @@ import { defineConfig } from "tsdown";
 // have this problem.
 export default defineConfig({
   deps: {
-    skipNodeModulesBundle: true,
+    neverBundle: true,
   },
   dts: false,
   entry: {

@@ -2,7 +2,10 @@ import { defineConfig } from "tsdown";
 
 export default defineConfig({
   deps: {
-    skipNodeModulesBundle: true,
+    // @pagopa/dx-tasks is a workspace-only devDependency: it must be inlined
+    // because it is not installable as a runtime dependency of this plugin.
+    alwaysBundle: [/^@pagopa\/dx-tasks(\/|$)/],
+    neverBundle: true,
   },
   dts: false,
   entry: {
