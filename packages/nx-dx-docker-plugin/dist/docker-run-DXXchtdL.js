@@ -1,4 +1,4 @@
-const require_docker_image = require('./docker-image-DgdWlpzQ.js');
+const require_docker_image = require('./docker-image-DJPPGLZP.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let node_fs = require("node:fs");

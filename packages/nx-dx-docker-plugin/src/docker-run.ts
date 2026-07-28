@@ -123,8 +123,8 @@ export const runDockerCommand = (
   ];
 
   if (mode === "build") {
-    // Untagged local alias kept for `@nx/docker`'s own `docker:run` target
-    // (`docker run {args} {imageRef}`). Only added for local builds: with
+    // Untagged local alias consumed by this plugin's `docker:run` target.
+    // Only added for local builds: with
     // `--push`, buildx pushes *every* `--tag`, and an unqualified name
     // resolves to `docker.io/library/...` (Docker Hub) rather than staying
     // local, which fails without Hub credentials/permissions.

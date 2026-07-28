@@ -7,9 +7,8 @@ let semver = require("semver");
 
 //#region src/docker-image.ts
 /**
-* Mirrors `@nx/docker`'s own default image slug so the `docker:run` target
-* it generates (`docker run {args} {imageRef}`) keeps working against the
-* bare (untagged) image this plugin also produces.
+* Path-derived local image slug used by this plugin's `docker:run` target.
+* It matches the bare (untagged) image produced by `docker:build`.
 */
 const getProjectSlug = (projectRoot) => projectRoot.replace(/^[\\/]/, "").replace(/[\\/\s]+/g, "-").toLowerCase();
 /**
@@ -47,11 +46,9 @@ const getImageName = (registry, imageNamePrefix, projectDisplayName, repositoryN
 * `getProjectDisplayName`), so this still degrades gracefully for
 * non-JS Docker projects.
 *
-* Deliberately independent of `getProjectSlug`, which stays purely
-* path-based because it also has to match `@nx/docker`'s own local image
-* ref for its generated `docker:run` target (see `getProjectNameFromPath`
-* in `@nx/docker`'s plugin) — changing that would break `docker run`
-* against the image this plugin builds.
+* Deliberately independent of `getProjectSlug`, which remains path-based
+* for the locally tagged image consumed by this plugin's `docker:run`
+* target.
 */
 const getImageSlug = (projectDisplayName) => slugifyRef(projectDisplayName.replace(/^@/, ""));
 /**

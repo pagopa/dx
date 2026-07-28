@@ -1,5 +1,5 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-DgdWlpzQ.js');
+const require_docker_image = require('./docker-image-DJPPGLZP.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
@@ -125,12 +125,9 @@ const getProjectJson = (workspaceRoot, projectRoot) => {
 	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
 };
 /**
-* Detects the *official* Nx Docker release flow's per-project override
+* Detects a per-project Docker release override
 * (`nx.release.docker.repositoryName` in package.json). Projects using it
-* get their `nx-release-publish` target overridden to also push the
-* dynamic alias tags (see executors/release-publish), since
-* `@nx/docker:release-publish` on its own only ever pushes a single
-* version-only tag.
+* get an `nx-release-publish` target that pushes the dynamic alias tags.
 */
 const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
@@ -167,6 +164,15 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 	};
 	targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
 	targets[options.pushTargetName] = buildDockerPushTarget(dockerRunOptions, options.buildTargetName);
+	targets["docker:run"] = {
+		command: `docker run {args} ${require_docker_image.getProjectSlug(projectRoot)}`,
+		dependsOn: [options.buildTargetName],
+		metadata: {
+			description: "Run this project's locally built Docker image",
+			technologies: ["container-image"]
+		},
+		options: { cwd: projectRoot }
+	};
 	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
 		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {

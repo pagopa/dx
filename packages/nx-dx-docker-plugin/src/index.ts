@@ -1,6 +1,5 @@
-// Nx plugin implementing RFC-DX-076's decision: `@nx/docker` remains the
-// official base plugin for the `docker:run` convenience target and the
-// `nx-release-publish` executor, while this plugin owns:
+// Nx plugin implementing RFC-DX-076's Docker target inference. This plugin
+// owns the build, push, run, and release-publish targets:
 //
 // - the `docker:build`/`docker:push` targets for every project with a
 //   Dockerfile, to reach feature parity with `docker/metadata-action`
@@ -18,7 +17,11 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { getBuildLayoutOverrides } from "./docker-build-layout.ts";
-import { getImageName, getProjectDisplayName } from "./docker-image.ts";
+import {
+  getImageName,
+  getProjectDisplayName,
+  getProjectSlug,
+} from "./docker-image.ts";
 import {
   buildDockerBuildTarget,
   buildDockerPushTarget,
@@ -70,12 +73,9 @@ const getProjectJson = (
 };
 
 /**
- * Detects the *official* Nx Docker release flow's per-project override
+ * Detects a per-project Docker release override
  * (`nx.release.docker.repositoryName` in package.json). Projects using it
- * get their `nx-release-publish` target overridden to also push the
- * dynamic alias tags (see executors/release-publish), since
- * `@nx/docker:release-publish` on its own only ever pushes a single
- * version-only tag.
+ * get an `nx-release-publish` target that pushes the dynamic alias tags.
  */
 const getDockerRepositoryNameOverride = (
   workspaceRoot: string,
@@ -125,7 +125,7 @@ const getBuildImageRepositoryNameOverride = (
 export const createDockerReleaseNodes = (
   projectRoot: string,
   options: DockerPluginOptions,
-  context: CreateNodesContextV2,
+  context: Pick<CreateNodesContextV2, "workspaceRoot">,
 ) => {
   const targets: Record<string, TargetConfiguration> = {};
   const buildLayout = getBuildLayoutOverrides(
@@ -166,6 +166,18 @@ export const createDockerReleaseNodes = (
     dockerRunOptions,
     options.buildTargetName,
   );
+
+  targets["docker:run"] = {
+    command: `docker run {args} ${getProjectSlug(projectRoot)}`,
+    dependsOn: [options.buildTargetName],
+    metadata: {
+      description: "Run this project's locally built Docker image",
+      technologies: ["container-image"],
+    },
+    options: {
+      cwd: projectRoot,
+    },
+  };
 
   if (
     getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null
