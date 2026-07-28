@@ -5,8 +5,8 @@ sidebar_position: 2
 # Release Docker images with the Nx Docker plugin
 
 This page describes `@pagopa/nx-dx-docker-plugin`, the Nx plugin that infers
-`docker:build`, `docker:push`, and `docker:run` targets for every project with
-a `Dockerfile`, regardless of its language or framework.
+`docker:build`, `docker:push`, and `docker:run` targets for every project with a
+`Dockerfile`, regardless of its language or framework.
 
 ## When to use this guide
 
@@ -30,9 +30,9 @@ Do not register `@nx/docker` alongside this plugin. Its Docker Release
 integration treats Docker targets as release-versioning inputs and can prompt
 for an interactive `production` or `hotfix` scheme. The DX plugin uses
 `container-image` target metadata instead, so `nx release` does not enter that
-interactive flow. For projects configured with `nx.release.docker.repositoryName`,
-the plugin adds a custom publisher that pushes the primary semver tag and its
-aliases.
+interactive flow. For projects configured with
+`nx.release.docker.repositoryName`, the plugin adds a custom publisher that
+pushes the primary semver tag and its aliases.
 
 ## nx.json configuration
 

@@ -6,11 +6,11 @@ interface NxJsonConfiguration {
 }
 
 type NxPlugin =
+  | string
   | {
       readonly options?: Record<string, unknown>;
       readonly plugin: string;
-    }
-  | string;
+    };
 
 const dxDockerPlugin = {
   plugin: "@pagopa/nx-dx-docker-plugin",
