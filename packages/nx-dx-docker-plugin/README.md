@@ -1,8 +1,8 @@
 # Nx DX Docker Plugin
 
-`@pagopa/nx-dx-docker-plugin` is an Nx plugin that extends `@nx/docker` with workspace-wide Docker conventions.
+`@pagopa/nx-dx-docker-plugin` is an Nx plugin that infers Docker targets with workspace-wide Docker conventions.
 
-It keeps the standard Docker target inference provided by Nx, then enriches the inferred targets with:
+It provides the Docker target inference with:
 
 - automatic Docker build context selection
 - automatic `--file` resolution relative to the selected build context
@@ -30,9 +30,14 @@ yarn add -D @pagopa/nx-dx-docker-plugin
 
 Then register it in `nx.json`.
 
+Do not register `@nx/docker` alongside this plugin. The DX plugin infers the
+complete Docker target set itself, including `docker:run`. Keeping the upstream
+plugin out prevents Nx Release from treating those targets as Docker release
+versioning inputs and prompting for a `production` or `hotfix` scheme.
+
 ## Configure The Plugin
 
-No plugin options are required when the default target names inferred by `@nx/docker` are acceptable.
+No plugin options are required when the default target names are acceptable.
 
 Minimal configuration:
 
@@ -77,10 +82,9 @@ Plugin options in `nx.json` are all optional.
 
 The plugin accepts these optional parameters:
 
-- `buildTarget`: same contract supported by `@nx/docker`. Use it to customize the inferred Docker build target name or pass supported upstream target options.
+- `buildTarget`: customizes the inferred Docker build target name and build options.
 - `buildTarget.metadata.tags`: optional tag descriptors preserved on the inferred Docker build target for downstream tooling or workspace-specific release flows.
 - `buildTarget.metadata.labels`: optional additional labels expressed as `key=value` entries. They are appended after the automatic OCI labels, so repeated keys can override the defaults.
-- `runTarget`: same contract supported by `@nx/docker`, used for the inferred Docker run target.
 - `dockerImageAuthors`: value used for the `org.opencontainers.image.authors` OCI label. When omitted, the plugin tries to use the GitHub organization or owner extracted from the workspace `origin` remote. If that information is unavailable, it falls back to `PagoPA`.
 
 The plugin does not require any mandatory custom parameters.
@@ -93,17 +97,22 @@ The plugin applies these defaults even when they are not declared in `nx.json`:
 - OCI labels are generated automatically from project metadata and workspace Git metadata.
 - optional metadata tags and labels are attached to the inferred Docker build target.
 - Projects configured for Docker release publishing get a custom `nx-release-publish` target.
-- target option objects without an explicit `name` are normalized to `docker:build` or `docker:run` before they are passed to `@nx/docker`
+- target option objects without an explicit `name` are normalized to `docker:build`
 
 ### `docker:run` Behavior
 
-The plugin does not rewrite the inferred Docker run target.
+The plugin infers `docker:run` directly. It depends on `docker:build` and runs
+the local, untagged image produced by that target. This preserves the standard
+`nx run <project>:docker:run -- --port 3000:3000` workflow without activating
+Nx's experimental Docker release versioning.
 
-- discovery of the run target is still delegated to `@nx/docker`
-- the optional `runTarget` plugin option keeps the same public contract as `@nx/docker`; this package only fills the default target name before delegating
-- once the target is inferred, the plugin leaves its command and options untouched
+### Nx Release Behavior
 
-This means the package owns Docker build normalization, metadata propagation, and publish behavior, while `docker:run` keeps the standard Nx Docker semantics.
+Do not configure `release.docker.versionSchemes` for this plugin. The inferred
+`nx-release-publish` target reads the version produced by Nx from `package.json`
+or `project.json` `metadata.version`, then derives semver aliases itself. This
+keeps Docker publishing non-interactive while preserving the project's Nx
+release version as the source of truth.
 
 ## How Target Inference Works
 
