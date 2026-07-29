@@ -8,6 +8,12 @@ description: Create and update structured Use Case child documents for a parent 
 Forge the detailed Use Case child document that makes one behavior
 implementable, testable, and traceable without duplicating the parent DR/SRS.
 
+## Shared glossary
+
+Before proceeding, read the shared plugin glossary at
+[`../../references/glossary.md`](../../references/glossary.md). Use its
+definitions to keep framework terminology consistent across plugin artifacts.
+
 ## When to use this skill
 
 Use this skill to:
