@@ -105,10 +105,8 @@ export type Money = {
 /**
  * Aggregate view: one resource with the list of findings emitted for it.
  *
- * This is the type future report generators should consume. The current
- * report layer still works on `AzureDetailedResourceReport`; a helper
- * (`legacyReportFromResourceReport`) bridges the two until the report
- * layer is migrated.
+ * This is the type future report generators should consume; the current
+ * report layer still works on `AzureDetailedResourceReport`.
  */
 export type ResourceReport<TResource = unknown> = {
   findings: Finding[];
