@@ -16,8 +16,8 @@ resource "azurerm_application_insights" "appi" {
   tags = var.tags
 }
 
-#tfsec:ignore:AZU023
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AZU-0017
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "appinsights_instrumentation_key" {
   name         = "appinsights-instrumentation-key"
   value        = azurerm_application_insights.appi.instrumentation_key
