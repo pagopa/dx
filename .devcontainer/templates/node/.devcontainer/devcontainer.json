@@ -7,7 +7,6 @@
     "ghcr.io/devcontainers/features/terraform:1": {
       "version": "${templateOption:terraformVersion}",
       "tflint": "latest",
-      "installTFsec": false,
       "installTerraformDocs": true
     },
     "ghcr.io/pagopa/devcontainer-features/trivy:1": {},
