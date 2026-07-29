@@ -13,6 +13,11 @@ requirements. Keep it linked to, but distinct from:
   technical contract detail;
 - Jira, which projects the operational work and validation.
 
+The `jira-magister` skill owns the Jira projection workflow: Epic slicing,
+actor-facing Stories, technical Tasks, confirmation, synchronization, and
+verification. Jira remains downstream of the DR/SRS and must not become a
+requirements source.
+
 Do not copy whole source documents into the DR/SRS. Link them and summarize
 only the decision or requirement the DR/SRS needs to govern.
 

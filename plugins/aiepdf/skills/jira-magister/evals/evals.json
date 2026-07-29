@@ -1,0 +1,70 @@
+{
+  "skill_name": "jira-magister",
+  "evals": [
+    {
+      "id": 0,
+      "name": "slice-dr-into-approved-epics",
+      "prompt": "Using the existing DR/SRS, linked PRD, and completed Use Cases, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Group related Use Cases by outcome, show the proposed boundaries and traceability, and ask me to approve the grouping before drafting Jira items. Do not call Jira yet.",
+      "expected_output": "A reviewable Epic proposal grouped by cohesive outcome and bounded to a few sprints, with source traceability and an explicit approval gate before Jira mutation.",
+      "expectations": [
+        "Proposes multiple Epic slices when one DR/SRS contains enough scope for more than one few-sprint outcome.",
+        "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
+        "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
+        "Asks for explicit approval before drafting or mutating Jira items."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "write-actor-stories-and-technical-tasks",
+      "prompt": "After the Epic grouping is approved, create the Jira backlog projection for UC-01 and UC-02. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using exactly \"As [Actor], I want to [action], so that [Gain]\". Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and source UC/AC IDs.",
+      "expected_output": "A Jira-ready draft containing canonical actor-facing Stories, sprint-sized scope, technical Tasks for enabling work, and complete hierarchy/traceability.",
+      "expectations": [
+        "Uses the exact actor names supplied by the Use Cases.",
+        "Uses the canonical As/ I want/ so that Story structure.",
+        "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
+        "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
+        "Links each item to its Epic and one or more source UC-XX or AC-XX IDs."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "block-incomplete-readiness",
+      "prompt": "Generate Jira backlog items from a DR/SRS whose PRD has no confirmed owner or KPI, the Use Case has no binary acceptance checks, and RFC-07 is accepted but not propagated into the DR/SRS. Explain what is blocked and identify the gaps. Do not invent values and do not create Jira items.",
+      "expected_output": "The skill blocks backlog creation, reports each readiness gap and its impact, and does not infer requirements or call Jira.",
+      "expectations": [
+        "Blocks or pauses Jira creation because Definition of Ready evidence is incomplete.",
+        "Reports the missing PRD owner and KPI, missing binary acceptance checks, and unpropagated RFC decision.",
+        "Does not invent owners, KPI targets, acceptance criteria, or implementation behavior.",
+        "Does not create Jira items while material blockers remain unresolved."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "synchronize-existing-backlog",
+      "prompt": "Synchronize the existing Jira projection after UC-02 gains a confirmed retry flow. Preserve the existing Epic, UC-02 link, and unchanged AC-UC-02-* identifiers. Add only the new retry acceptance traceability, avoid duplicate issues, show a proposed diff, and wait for explicit confirmation before updating Jira.",
+      "expected_output": "A non-destructive synchronization proposal that matches existing issues by stable source identifiers, preserves unchanged data, and requires confirmation before updating.",
+      "expectations": [
+        "Matches existing Jira items using stable source links or IDs and does not create duplicates.",
+        "Preserves the existing Epic, UC-02 identity, and unchanged acceptance-check IDs.",
+        "Adds only the new retry behavior and its new traceability.",
+        "Shows a human-readable proposed diff and asks for explicit confirmation before mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "require-project-context",
+      "prompt": "Create the Jira projection from a Use Case, but do not provide a Jira project key or enough information to identify the target board. Ask only for the missing Jira context and stop without inventing a project or creating issues.",
+      "expected_output": "The skill requests the missing Jira project context and stops without making Jira changes.",
+      "expectations": [
+        "Requests the Jira project key or unambiguous target board.",
+        "Does not guess a project, issue type mapping, or required custom field.",
+        "Does not create or update Jira items before the missing context is supplied."
+      ],
+      "files": []
+    }
+  ]
+}
