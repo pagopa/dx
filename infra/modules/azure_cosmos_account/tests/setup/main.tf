@@ -58,7 +58,7 @@ resource "random_integer" "kv_instance" {
   max = 99
 }
 
-#tfsec:ignore:AVD-AZU-0013
+#trivy:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(var.environment, { resource_type = "key_vault", domain = "int", instance_number = random_integer.kv_instance.result }))
   location                      = azurerm_resource_group.sut.location

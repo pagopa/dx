@@ -103,9 +103,9 @@ resource "random_integer" "kv_instance" {
   max = 99
 }
 
-#tfsec:ignore:AVD-AZU-0013
-#tfsec:ignore:AVD-AZU-0016
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0013
+#trivy:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault" "test" {
   name = provider::dx::resource_name(
     merge(var.environment,
@@ -130,9 +130,9 @@ resource "azurerm_role_assignment" "kv_admin" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-#tfsec:ignore:AVD-AZU-0015
-#tfsec:ignore:AVD-AZU-0016
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "pat" {
   name         = "github-runner-pat"
   value        = "ghp_test_dummy_value_for_integration_test"
@@ -140,8 +140,8 @@ resource "azurerm_key_vault_secret" "pat" {
   depends_on   = [azurerm_role_assignment.kv_admin]
 }
 
-#tfsec:ignore:AVD-AZU-0015
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "app_id" {
   name         = "github-runner-app-id"
   value        = "12345"
@@ -149,8 +149,8 @@ resource "azurerm_key_vault_secret" "app_id" {
   depends_on   = [azurerm_role_assignment.kv_admin]
 }
 
-#tfsec:ignore:AVD-AZU-0015
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "app_installation_id" {
   name         = "github-runner-app-installation-id"
   value        = "67890"
@@ -158,8 +158,8 @@ resource "azurerm_key_vault_secret" "app_installation_id" {
   depends_on   = [azurerm_role_assignment.kv_admin]
 }
 
-#tfsec:ignore:AVD-AZU-0015
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "app_key" {
   name         = "github-runner-app-key"
   value        = "dummy-rsa-key-for-integration-test"

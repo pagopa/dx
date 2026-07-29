@@ -58,8 +58,8 @@ resource "azurerm_container_app_environment" "runner" {
   tags = local.tags
 }
 
-#tfsec:ignore:AVD-AZU-0013
-#tfsec:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0013
+#trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "test" {
   name                          = provider::dx::resource_name(merge(local.environment, { resource_type = "key_vault", instance_number = random_integer.kv_instance.result }))
   location                      = azurerm_resource_group.sut.location
@@ -79,9 +79,9 @@ resource "azurerm_role_assignment" "kv_admin" {
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
-#tfsec:ignore:AVD-AZU-0015
-#tfsec:ignore:AVD-AZU-0016
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "runner_pat" {
   name         = "github-runner-pat"
   value        = local.github_runner_pat_placeholder
