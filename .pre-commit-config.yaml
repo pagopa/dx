@@ -16,6 +16,12 @@ repos:
         language: script
         pass_filenames: false
         verbose: true
+      - id: legacy_scanner_reference_check
+        name: Prevent legacy Terraform scanner references
+        entry: infra/scripts/check-legacy-scanner-reference.sh
+        language: script
+        pass_filenames: false
+        always_run: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.105.0
     hooks:
