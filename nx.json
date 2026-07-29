@@ -124,10 +124,15 @@
       }
     },
     {
-      "plugin": "@nx/docker",
+      "plugin": "@pagopa/nx-terraform-plugin",
+      "include": ["infra/**"],
       "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
+        "publish": {
+          "mode": "github",
+          "github": {
+            "owner": "pagopa-dx"
+          }
+        }
       }
     },
     {
@@ -147,8 +152,7 @@
               "${{ env.TAG_NAME }}"
             ]
           }
-        },
-        "runTarget": "docker:run"
+        }
       }
     }
   ],

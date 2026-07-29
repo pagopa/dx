@@ -12,12 +12,11 @@
 // (see dx/actions/docker-build-push).
 //
 // This plugin owns the whole `docker:build`/`docker:push` targets (rather
-// than layering extra options on top of `@nx/docker`'s own inferred
+// rather than layering extra options on top of another plugin's inferred
 // targets) because Nx target-merging replaces an inferred target's
 // `options` wholesale, key-by-key, when a later-registered plugin also
-// contributes the same key — a plugin-ordering footgun this sidesteps by
-// keeping a single, fully self-contained source of truth. `@nx/docker` is
-// still registered in `nx.json` for the `docker:run` convenience target.
+// contributes the same key. Keeping the DX targets self-contained avoids
+// that ordering hazard.
 import type { TargetConfiguration } from "@nx/devkit";
 
 import type { DockerRunOptions } from "./docker-run.ts";

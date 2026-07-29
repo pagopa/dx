@@ -5,24 +5,17 @@ import { describe, expect, it } from "vitest";
 import initGenerator from "./generator.ts";
 
 describe("initGenerator", () => {
-  it("registers the Docker plugins in the required order", async () => {
+  it("registers the DX Docker plugin", async () => {
     const tree = createTreeWithEmptyWorkspace();
 
     await initGenerator(tree);
 
     expect(readJson(tree, "nx.json").plugins).toEqual([
-      {
-        options: {
-          buildTarget: "docker:build",
-          runTarget: "docker:run",
-        },
-        plugin: "@nx/docker",
-      },
       { plugin: "@pagopa/nx-dx-docker-plugin" },
     ]);
   });
 
-  it("does not duplicate plugins already registered in nx.json", async () => {
+  it("removes the upstream Docker plugin and preserves the DX plugin", async () => {
     const tree = createTreeWithEmptyWorkspace();
     tree.write(
       "nx.json",
@@ -34,7 +27,6 @@ describe("initGenerator", () => {
     await initGenerator(tree);
 
     expect(readJson(tree, "nx.json").plugins).toEqual([
-      "@nx/docker",
       "@pagopa/nx-dx-docker-plugin",
     ]);
   });

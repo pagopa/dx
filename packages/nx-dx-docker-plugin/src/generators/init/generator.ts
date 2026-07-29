@@ -5,22 +5,14 @@ interface NxJsonConfiguration {
   readonly plugins?: NxPlugin[];
 }
 
-type NxPlugin = NxPluginConfiguration | string;
+type NxPlugin =
+  | string
+  | {
+      readonly options?: Record<string, unknown>;
+      readonly plugin: string;
+    };
 
-interface NxPluginConfiguration {
-  readonly options?: Record<string, unknown>;
-  readonly plugin: string;
-}
-
-const nxDockerPlugin: NxPluginConfiguration = {
-  options: {
-    buildTarget: "docker:build",
-    runTarget: "docker:run",
-  },
-  plugin: "@nx/docker",
-};
-
-const dxDockerPlugin: NxPluginConfiguration = {
+const dxDockerPlugin = {
   plugin: "@pagopa/nx-dx-docker-plugin",
 };
 
@@ -32,10 +24,9 @@ const hasPlugin = (plugins: readonly NxPlugin[], pluginName: string): boolean =>
 
 export default async function initGenerator(tree: Tree): Promise<void> {
   updateJson<NxJsonConfiguration>(tree, "nx.json", (nxJson) => {
-    const plugins = [...(nxJson.plugins ?? [])];
-    if (!hasPlugin(plugins, "@nx/docker")) {
-      plugins.push(nxDockerPlugin);
-    }
+    const plugins = (nxJson.plugins ?? []).filter(
+      (plugin) => getPluginName(plugin) !== "@nx/docker",
+    );
     if (!hasPlugin(plugins, "@pagopa/nx-dx-docker-plugin")) {
       plugins.push(dxDockerPlugin);
     }
