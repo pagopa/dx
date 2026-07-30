@@ -4,9 +4,9 @@ import prettier from "eslint-plugin-prettier/recommended";
 import tseslint from "typescript-eslint";
 
 export const TEST_FILES = [
-  "**/tests/**/*.{js,ts}",
-  "**/__tests__/**/*.{js,ts}",
-  "**/*.{test,spec}.{js,ts}",
+  "**/tests/**/*.{js,ts,tsx}",
+  "**/__tests__/**/*.{js,ts,tsx}",
+  "**/*.{test,spec}.{js,ts,tsx}",
 ];
 
 export default [

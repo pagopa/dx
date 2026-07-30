@@ -1,3 +1,15 @@
+## 6.2.2 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+- Support TSX test files in Jest configuration ([#2016](https://github.com/pagopa/dx/pull/2016))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 6.2.0 (2026-07-02)
 
 ### 🚀 Features

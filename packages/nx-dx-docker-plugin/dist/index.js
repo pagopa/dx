@@ -1,5 +1,5 @@
 Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
-const require_docker_image = require('./docker-image-DgdWlpzQ.js');
+const require_docker_image = require('./docker-image-DJPPGLZP.js');
 let node_child_process = require("node:child_process");
 let zod_v4 = require("zod/v4");
 let _nx_devkit = require("@nx/devkit");
@@ -7,17 +7,18 @@ let node_fs = require("node:fs");
 let node_path = require("node:path");
 
 //#region src/docker-build-layout.ts
-const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+const getDockerBuildOptions = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return {
-		contextPath: ".",
-		dockerfilePath: `${projectRoot}/Dockerfile`
-	};
-	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	if ((0, node_fs.existsSync)(packageJsonPath)) return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.docker;
+	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath).metadata?.docker : void 0;
+};
+const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
+	const docker = getDockerBuildOptions(workspaceRoot, projectRoot);
 	return {
-		contextPath: packageJson.nx?.docker?.contextPath ?? ".",
-		dockerfilePath: packageJson.nx?.docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
-		platform: packageJson.nx?.docker?.platform
+		contextPath: docker?.contextPath ?? ".",
+		dockerfilePath: docker?.dockerfilePath ?? `${projectRoot}/Dockerfile`,
+		platform: docker?.platform
 	};
 };
 
@@ -27,7 +28,7 @@ const buildDockerBuildTarget = (options) => ({
 	executor: "@pagopa/nx-dx-docker-plugin:build",
 	metadata: {
 		description: "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
-		technologies: ["docker"]
+		technologies: ["container-image"]
 	},
 	options
 });
@@ -36,7 +37,7 @@ const buildDockerPushTarget = (options, buildTargetName) => ({
 	executor: "@pagopa/nx-dx-docker-plugin:push",
 	metadata: {
 		description: "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
-		technologies: ["docker"]
+		technologies: ["container-image"]
 	},
 	options
 });
@@ -49,9 +50,14 @@ const nxConfigurationSchema = zod_v4.z.object({
 	release: zod_v4.z.object({ docker: zod_v4.z.object({ registryUrl: zod_v4.z.string().min(1).optional() }).optional() }).optional()
 });
 const pluginOptionsSchema = zod_v4.z.object({
+	buildTarget: zod_v4.z.union([zod_v4.z.string().min(1), zod_v4.z.object({
+		args: zod_v4.z.array(zod_v4.z.string()).optional(),
+		name: zod_v4.z.string().min(1).optional()
+	}).passthrough()]).optional(),
 	imageAuthors: zod_v4.z.string().min(1).optional(),
 	imageNamePrefix: zod_v4.z.string().min(1).optional(),
-	imageUrl: zod_v4.z.string().url().optional()
+	imageUrl: zod_v4.z.string().url().optional(),
+	runTarget: zod_v4.z.unknown().optional()
 }).strict();
 const githubRemotePattern = /^(?:https:\/\/github\.com\/|git@github\.com:|ssh:\/\/git@github\.com\/)([^/]+)\/(.+?)(?:\.git)?$/;
 const toRepositoryMetadata = (owner, repository) => ({
@@ -78,7 +84,12 @@ const deriveFromWorkspacePackage = (workspaceRoot) => {
 	const parseResult = workspacePackageSchema.safeParse((0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, "package.json")));
 	if (!parseResult.success) throw new Error("Unable to infer Docker repository metadata: root package.json must have a name.");
 	const [scope, scopedName] = parseResult.data.name.split("/");
-	return toRepositoryMetadata(scopedName ? scope.replace(/^@/, "") : "pagopa", scopedName ?? scope);
+	const owner = scopedName ? scope.replace(/^@/, "") : "pagopa";
+	return toRepositoryMetadata(owner, scopedName ?? scope);
+};
+const getPlatform = (buildTarget) => {
+	if (typeof buildTarget === "string") return "linux/amd64,linux/arm64";
+	return (buildTarget?.args?.find((argument) => argument.startsWith("--platform ")))?.slice(11) ?? "linux/amd64,linux/arm64";
 };
 const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 	const optionsResult = pluginOptionsSchema.safeParse(options ?? {});
@@ -100,7 +111,7 @@ const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 		defaultBranch: nxResult.data.defaultBase ?? "main",
 		imageAuthors: optionsResult.data.imageAuthors ?? "PagoPA",
 		...repository,
-		platform: "linux/amd64,linux/arm64",
+		platform: getPlatform(optionsResult.data.buildTarget),
 		pushTargetName: "docker:push",
 		registry: nxResult.data.release?.docker?.registryUrl ?? "ghcr.io"
 	};
@@ -109,18 +120,20 @@ const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 //#endregion
 //#region src/index.ts
 const dockerfileGlob = "**/Dockerfile";
+const getProjectJson = (workspaceRoot, projectRoot) => {
+	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
+	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
+};
 /**
-* Detects the *official* Nx Docker release flow's per-project override
+* Detects a per-project Docker release override
 * (`nx.release.docker.repositoryName` in package.json). Projects using it
-* get their `nx-release-publish` target overridden to also push the
-* dynamic alias tags (see executors/release-publish), since
-* `@nx/docker:release-publish` on its own only ever pushes a single
-* version-only tag.
+* get an `nx-release-publish` target that pushes the dynamic alias tags.
 */
 const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
-	return (0, _nx_devkit.readJsonFile)(packageJsonPath).nx?.release?.docker?.repositoryName ?? null;
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker?.repositoryName ?? null;
+	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
+	return packageJson.nx?.release?.docker?.repositoryName ?? packageJson.release?.docker?.repositoryName ?? null;
 };
 /**
 * An optional `nx.docker.repositoryName` customizes only this plugin's
@@ -130,9 +143,9 @@ const getDockerRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 */
 const getBuildImageRepositoryNameOverride = (workspaceRoot, projectRoot) => {
 	const packageJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "package.json");
-	if (!(0, node_fs.existsSync)(packageJsonPath)) return null;
+	if (!(0, node_fs.existsSync)(packageJsonPath)) return getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker?.repositoryName ?? null;
 	const packageJson = (0, _nx_devkit.readJsonFile)(packageJsonPath);
-	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? null;
+	return packageJson.nx?.docker?.repositoryName ?? packageJson.nx?.release?.docker?.repositoryName ?? packageJson.release?.docker?.repositoryName ?? null;
 };
 const createDockerReleaseNodes = (projectRoot, options, context) => {
 	const targets = {};
@@ -151,16 +164,22 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 	};
 	targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
 	targets[options.pushTargetName] = buildDockerPushTarget(dockerRunOptions, options.buildTargetName);
+	targets["docker:run"] = {
+		command: `docker run {args} ${require_docker_image.getProjectSlug(projectRoot)}`,
+		dependsOn: [options.buildTargetName],
+		metadata: {
+			description: "Run this project's locally built Docker image",
+			technologies: ["container-image"]
+		},
+		options: { cwd: projectRoot }
+	};
 	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
 		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
-			technologies: ["docker"]
+			technologies: ["container-image"]
 		},
-		options: {
-			projectName: projectDisplayName,
-			projectRoot
-		}
+		options: { ...dockerRunOptions }
 	};
 	return { projects: { [projectRoot]: {
 		root: projectRoot,

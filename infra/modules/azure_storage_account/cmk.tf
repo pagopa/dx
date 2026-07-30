@@ -1,5 +1,5 @@
 # Create a CMK key vault key if a key is not provided
-# tfsec:ignore:azure-keyvault-ensure-key-expiry
+# trivy:ignore:azure-keyvault-ensure-key-expiry
 resource "azurerm_key_vault_key" "key" {
   for_each     = (local.cmk_flags.kv && var.customer_managed_key.key_name == null ? toset(["kv"]) : toset([]))
   name         = provider::dx::resource_name(merge(local.naming_config, { resource_type = "customer_key_storage_account" }))

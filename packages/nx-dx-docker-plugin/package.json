@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-dx-docker-plugin",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Nx plugin generating Docker build/push/package targets, feature-matching docker/metadata-action.",
   "repository": {
     "type": "git",
@@ -14,6 +14,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./release/version-actions": {
+      "types": "./dist/release/version-actions.d.ts",
+      "default": "./dist/release/version-actions.js"
     }
   },
   "files": [
@@ -48,9 +52,9 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
-    "@nx/devkit": "^22.7.6",
+    "@nx/devkit": "catalog:",
     "semver": "catalog:",
-    "tslib": "^2.8.1",
+    "tslib": "catalog:",
     "zod": "catalog:"
   },
   "nx": {

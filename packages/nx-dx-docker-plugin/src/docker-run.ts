@@ -11,7 +11,11 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import { z } from "zod/v4";
 
-import { computeImageTags, getProjectSlug } from "./docker-image.ts";
+import {
+  computeImageTags,
+  computeReleaseTags,
+  getProjectSlug,
+} from "./docker-image.ts";
 import {
   summarizeDockerFailure,
   summarizeDockerPush,
@@ -44,6 +48,11 @@ const getCommitSha = (): string => {
   }
 };
 
+const getAnnotationLevels = (platform: string): string =>
+  platform.split(",").filter(Boolean).length > 1
+    ? "index,manifest"
+    : "manifest";
+
 /**
  * Runs `docker build`/`docker buildx build --push` with full OCI labels and
  * a multi-tag strategy (RFC-DX-076 feature parity with
@@ -62,6 +71,7 @@ export const runDockerCommand = (
   mode: "build" | "push",
   options: DockerRunOptions,
   workspaceRoot: string,
+  releaseVersion?: string,
 ): { readonly success: boolean } => {
   const {
     contextPath,
@@ -75,7 +85,16 @@ export const runDockerCommand = (
     projectRoot,
   } = options;
 
-  const tags = computeImageTags(projectDisplayName, defaultBranch);
+  const tags = releaseVersion
+    ? computeReleaseTags(projectDisplayName, releaseVersion)
+    : computeImageTags(projectDisplayName, defaultBranch);
+
+  if (releaseVersion && tags.length === 0) {
+    console.error(
+      `[@pagopa/nx-dx-docker-plugin] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`,
+    );
+    return { success: false };
+  }
 
   if (mode === "push" && tags.length === 0) {
     console.log(
@@ -104,8 +123,8 @@ export const runDockerCommand = (
   ];
 
   if (mode === "build") {
-    // Untagged local alias kept for `@nx/docker`'s own `docker:run` target
-    // (`docker run {args} {imageRef}`). Only added for local builds: with
+    // Untagged local alias consumed by this plugin's `docker:run` target.
+    // Only added for local builds: with
     // `--push`, buildx pushes *every* `--tag`, and an unqualified name
     // resolves to `docker.io/library/...` (Docker Hub) rather than staying
     // local, which fails without Hub credentials/permissions.
@@ -131,11 +150,13 @@ export const runDockerCommand = (
     // mirrors docker/metadata-action's recommended
     // `DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index`, so the annotation
     // shows up both on the manifest list and on each per-architecture entry.
+    // A single-platform export has no OCI index, so Buildx only accepts
+    // manifest annotations in that case.
     dockerArgs.push("--push");
     for (const [key, value] of Object.entries(labels)) {
       dockerArgs.push(
         "--annotation",
-        `index,manifest:org.opencontainers.image.${key}=${value}`,
+        `${getAnnotationLevels(platform)}:org.opencontainers.image.${key}=${value}`,
       );
     }
   }

@@ -1,6 +1,5 @@
-// Nx plugin implementing RFC-DX-076's decision: `@nx/docker` remains the
-// official base plugin for the `docker:run` convenience target and the
-// `nx-release-publish` executor, while this plugin owns:
+// Nx plugin implementing RFC-DX-076's Docker target inference. This plugin
+// owns the build, push, run, and release-publish targets:
 //
 // - the `docker:build`/`docker:push` targets for every project with a
 //   Dockerfile, to reach feature parity with `docker/metadata-action`
@@ -18,7 +17,11 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 
 import { getBuildLayoutOverrides } from "./docker-build-layout.ts";
-import { getImageName, getProjectDisplayName } from "./docker-image.ts";
+import {
+  getImageName,
+  getProjectDisplayName,
+  getProjectSlug,
+} from "./docker-image.ts";
 import {
   buildDockerBuildTarget,
   buildDockerPushTarget,
@@ -29,6 +32,14 @@ import {
 } from "./options.ts";
 
 const dockerfileGlob = "**/Dockerfile";
+
+interface ProjectJson {
+  readonly metadata?: {
+    readonly docker?: {
+      readonly repositoryName?: string;
+    };
+  };
+}
 
 interface ProjectPackageJson {
   readonly name?: string;
@@ -44,15 +55,27 @@ interface ProjectPackageJson {
       };
     };
   };
+  readonly release?: {
+    readonly docker?: {
+      readonly repositoryName?: string;
+    };
+  };
 }
 
+const getProjectJson = (
+  workspaceRoot: string,
+  projectRoot: string,
+): null | ProjectJson => {
+  const projectJsonPath = join(workspaceRoot, projectRoot, "project.json");
+  return existsSync(projectJsonPath)
+    ? readJsonFile<ProjectJson>(projectJsonPath)
+    : null;
+};
+
 /**
- * Detects the *official* Nx Docker release flow's per-project override
+ * Detects a per-project Docker release override
  * (`nx.release.docker.repositoryName` in package.json). Projects using it
- * get their `nx-release-publish` target overridden to also push the
- * dynamic alias tags (see executors/release-publish), since
- * `@nx/docker:release-publish` on its own only ever pushes a single
- * version-only tag.
+ * get an `nx-release-publish` target that pushes the dynamic alias tags.
  */
 const getDockerRepositoryNameOverride = (
   workspaceRoot: string,
@@ -60,10 +83,17 @@ const getDockerRepositoryNameOverride = (
 ): null | string => {
   const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
   if (!existsSync(packageJsonPath)) {
-    return null;
+    return (
+      getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker
+        ?.repositoryName ?? null
+    );
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
-  return packageJson.nx?.release?.docker?.repositoryName ?? null;
+  return (
+    packageJson.nx?.release?.docker?.repositoryName ??
+    packageJson.release?.docker?.repositoryName ??
+    null
+  );
 };
 
 /**
@@ -78,12 +108,16 @@ const getBuildImageRepositoryNameOverride = (
 ): null | string => {
   const packageJsonPath = join(workspaceRoot, projectRoot, "package.json");
   if (!existsSync(packageJsonPath)) {
-    return null;
+    return (
+      getProjectJson(workspaceRoot, projectRoot)?.metadata?.docker
+        ?.repositoryName ?? null
+    );
   }
   const packageJson = readJsonFile<ProjectPackageJson>(packageJsonPath);
   return (
     packageJson.nx?.docker?.repositoryName ??
     packageJson.nx?.release?.docker?.repositoryName ??
+    packageJson.release?.docker?.repositoryName ??
     null
   );
 };
@@ -91,7 +125,7 @@ const getBuildImageRepositoryNameOverride = (
 export const createDockerReleaseNodes = (
   projectRoot: string,
   options: DockerPluginOptions,
-  context: CreateNodesContextV2,
+  context: Pick<CreateNodesContextV2, "workspaceRoot">,
 ) => {
   const targets: Record<string, TargetConfiguration> = {};
   const buildLayout = getBuildLayoutOverrides(
@@ -133,6 +167,18 @@ export const createDockerReleaseNodes = (
     options.buildTargetName,
   );
 
+  targets["docker:run"] = {
+    command: `docker run {args} ${getProjectSlug(projectRoot)}`,
+    dependsOn: [options.buildTargetName],
+    metadata: {
+      description: "Run this project's locally built Docker image",
+      technologies: ["container-image"],
+    },
+    options: {
+      cwd: projectRoot,
+    },
+  };
+
   if (
     getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null
   ) {
@@ -141,11 +187,10 @@ export const createDockerReleaseNodes = (
       metadata: {
         description:
           "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
-        technologies: ["docker"],
+        technologies: ["container-image"],
       },
       options: {
-        projectName: projectDisplayName,
-        projectRoot,
+        ...dockerRunOptions,
       },
     };
   }

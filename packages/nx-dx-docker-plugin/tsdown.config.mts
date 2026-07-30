@@ -11,7 +11,7 @@ import { defineConfig } from "tsdown";
 // have this problem.
 export default defineConfig({
   deps: {
-    skipNodeModulesBundle: true,
+    neverBundle: true,
   },
   dts: false,
   entry: {
@@ -24,6 +24,7 @@ export default defineConfig({
       "src/executors/release-publish/release-publish.ts",
     "generators/init/generator": "src/generators/init/generator.ts",
     index: "src/index.ts",
+    "release/version-actions": "src/release/version-actions.ts",
   },
   fixedExtension: false,
   format: "cjs",
