@@ -9,7 +9,7 @@ go = "1.26"
 golangci-lint = "2.12.2"
 jq = "1.8"
 node = { version = "24.14", postinstall = "corepack enable" }
-"npm:nx" = "22.7"
+"npm:nx" = "23.1"
 pre-commit = "4.6"
 python = { version = "3.14.6", postinstall = "python -m ensurepip --upgrade" }
 qdns = "latest"

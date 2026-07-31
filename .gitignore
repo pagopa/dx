@@ -70,3 +70,5 @@ tsconfig.*.tsbuildinfo
 .worktrees
 
 .dx-tasks
+
+.nx/migrate-runs
