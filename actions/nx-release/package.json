@@ -6,12 +6,7 @@
   "private": true,
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
-    "lint": "eslint --fix scripts",
-    "lint:check": "eslint scripts",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "test:coverage": "vitest run --coverage"
+    "dev": "tsup --watch"
   },
   "keywords": [
     "github",
