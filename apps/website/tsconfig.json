@@ -1,9 +1,17 @@
 {
   // This file is not used in compilation. It is here just for a nice editor experience.
-  "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
+    "allowJs": true,
+    "esModuleInterop": true,
     "jsx": "react-jsx",
-    "types": ["react", "react-dom"],
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "target": "ES2022",
+    "types": ["node", "react", "react-dom"],
     "paths": {
       "@site/*": ["./*"]
     }

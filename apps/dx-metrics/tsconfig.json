@@ -1,11 +1,12 @@
 {
   "extends": "@tsconfig/node24/tsconfig.json",
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": ["dom", "esnext"],
     "allowJs": true,
     "noEmit": true,
     "module": "esnext",
     "moduleResolution": "bundler",
+    "types": ["node"],
     "resolveJsonModule": true,
     "isolatedModules": true,
     "jsx": "preserve",

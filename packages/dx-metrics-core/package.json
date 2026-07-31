@@ -23,7 +23,7 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "db:push": "drizzle-kit push --config drizzle.config.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
@@ -40,7 +40,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "typescript": "catalog:"
   }
 }

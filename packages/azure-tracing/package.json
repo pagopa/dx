@@ -102,13 +102,13 @@
     "eslint": "catalog:",
     "redis": "^5.12.1",
     "testcontainers": "^12.0.4",
-    "tsup": "catalog:",
+    "tsdown": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "test:integration": "vitest run --config vitest.integration.config.js"
   }
 }

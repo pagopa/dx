@@ -5,7 +5,8 @@
     "rootDir": "./src",
     "declaration": true,
     "lib": ["ES2023", "ES2024.Object", "ESNext.Collection"],
-    "target": "ES2023"
+    "target": "ES2023",
+    "types": ["node"]
   },
   "include": ["./src/**/*.ts"]
 }

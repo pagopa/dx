@@ -6,7 +6,8 @@
     "sourceMap": true,
     "declaration": true,
     "moduleResolution": "bundler",
-    "module": "ESNext"
+    "module": "ESNext",
+    "types": ["node"]
   },
   "include": ["./src/**/*.ts"]
 }
