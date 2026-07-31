@@ -2,34 +2,35 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 10,
   "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
-      "cache": true
-    },
-    "format:check": {
-      "cache": true
-    },
-    "lint": {
-      "dependsOn": ["^build"],
-      "options": {
-        "fix": true
-      },
-      "configurations": {
-        "ci": {
-          "fix": false
+    "lint": [
+      {
+        "filter": {
+          "plugin": "@nx/eslint"
+        },
+        "dependsOn": ["^build"],
+        "options": {
+          "fix": true
+        },
+        "configurations": {
+          "ci": {
+            "fix": false
+          }
         }
       }
-    },
-    "test": {
-      "dependsOn": ["^build"],
-      "configurations": {
-        "ci": {
-          "coverage": true
+    ],
+    "test": [
+      {
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
+        "dependsOn": ["^build"],
+        "configurations": {
+          "ci": {
+            "coverage": true
+          }
         }
       }
-    },
+    ],
     "tf-init": {
       "inputs": ["{projectRoot}/**/*.tf"]
     },
@@ -101,8 +102,7 @@
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
-      },
-      "include": ["apps/**", "packages/**"]
+      }
     },
     {
       "plugin": "@nx/eslint/plugin",
@@ -156,5 +156,6 @@
       }
     }
   ],
-  "analytics": false
+  "analytics": false,
+  "neverConnectToCloud": true
 }
