@@ -23,9 +23,9 @@
  * resources — {@link isAzqrReportMasked} lets the orchestrator warn and advise
  * re-running with `azqr scan --mask=false`.
  *
- * Scope note (CES-2192 / Fase 1): only `impacted` rows are ingested, enriched
- * with `inventory` metadata when available. AZQR `advisor` rows are ignored to
- * avoid duplicating SaveMoney's own Azure Advisor cost query.
+ * Scope note: only `impacted` rows are ingested, enriched with `inventory`
+ * metadata when available. AZQR `advisor` rows are ignored to avoid
+ * duplicating SaveMoney's own Azure Advisor cost query.
  */
 
 import { readFile } from "node:fs/promises";

@@ -3,9 +3,9 @@
  *
  * SaveMoney observes the same subscription through three lenses: the custom
  * live-scan analyzers, Azure Advisor, and an optional AZQR report. They
- * overlap — an unattached disk is waste no matter who reports it — and before
- * CES-2193 the same resource could therefore appear several times in the
- * output, once per source.
+ * overlap — an unattached disk is waste no matter who reports it — so without
+ * deduplication the same resource could appear several times in the output,
+ * once per source.
  *
  * Findings are unified on the `resourceId + recommendationId` key. Sources
  * normalise `recommendationId` onto a shared vocabulary whenever one exists:

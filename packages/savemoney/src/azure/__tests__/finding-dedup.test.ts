@@ -1,5 +1,5 @@
 /**
- * Unit tests for cross-source finding deduplication (CES-2193).
+ * Unit tests for cross-source finding deduplication.
  *
  * The same waste can be reported by AZQR, Azure Advisor and the custom
  * analyzers at once. These tests pin down when the incoming finding collapses
