@@ -1,5 +1,5 @@
 /**
- * Unit tests for the categorisation of custom analyzer reasons (CES-2193).
+ * Unit tests for the categorisation of custom analyzer reasons.
  *
  * The per-resource analyzers describe governance observations and billable
  * waste in the same `reason` string, so the classifier is what keeps the

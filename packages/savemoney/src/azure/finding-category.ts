@@ -9,9 +9,9 @@
  * missing tags or a failed detail lookup — statements that carry no billable
  * waste and would suggest a "saving" that does not exist.
  *
- * CES-2193 separates the two: governance / diagnostic sentences are reported as
- * `operationalExcellence`, leaving `cost` to mean "actual billable waste". The
- * distinction is also what makes cross-source deduplication safe (see
+ * This module separates the two: governance / diagnostic sentences are reported
+ * as `operationalExcellence`, leaving `cost` to mean "actual billable waste".
+ * The distinction is also what makes cross-source deduplication safe (see
  * `finding-dedup.ts`): a resource flagged only for missing tags is not evidence
  * that it is wasted, so it must not absorb the corresponding AZQR orphan row.
  *
