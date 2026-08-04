@@ -5,8 +5,13 @@ ARG RUNNER_DIGEST
 FROM ghcr.io/actions/actions-runner${RUNNER_DIGEST:+@${RUNNER_DIGEST}} AS base
 
 ARG RUNNER_DIGEST
+ARG MISE_VERSION=2026.8.1
+ARG MISE_SHA256=961b1fcc78830e861ab887abd19d9b961478bcf252e37881fdd61c81388308d4
 
 LABEL base_runner_digest=${RUNNER_DIGEST}
+
+ENV MISE_DATA_DIR=/home/runner/.local/share/mise
+ENV PATH="${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
 RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
@@ -15,36 +20,27 @@ RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https:
     zip wget xz-utils && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# === Stage 2: Install Node.js ===
-FROM base AS nodejs
+# === Stage 2: Install mise ===
+FROM base AS mise
+ARG MISE_VERSION
+ARG MISE_SHA256
+RUN mkdir -p "${MISE_DATA_DIR}/bin"
+RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
+        "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" \
+        --output "${MISE_DATA_DIR}/bin/mise" && \
+    echo "${MISE_SHA256}  ${MISE_DATA_DIR}/bin/mise" | sha256sum --check --strict && \
+    chmod +x "${MISE_DATA_DIR}/bin/mise" && \
+    chown -R runner:runner "${MISE_DATA_DIR}"
+
+# === Stage 3: Install Node.js ===
+FROM mise AS nodejs
 ENV NODE_VERSION=20.12.2
 RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz | \
     tar -xJ -C /usr/local --strip-components=1 && \
     corepack enable
 
-# === Stage 3: Install Azure CLI ===
-FROM nodejs AS azure
-RUN set -eux; \
-        for attempt in 1 2 3; do \
-            if curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
-                https://aka.ms/InstallAzureCLIDeb --output /tmp/install-azure-cli.sh && \
-                bash /tmp/install-azure-cli.sh; then \
-                rm -f /tmp/install-azure-cli.sh; \
-                exit 0; \
-            fi; \
-            rm -f /tmp/install-azure-cli.sh; \
-            echo "Azure CLI installation attempt ${attempt} failed; retrying." >&2; \
-        done; \
-        exit 1
-
-# === Stage 4: Install AWS CLI ===
-FROM azure AS aws
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
-    unzip -q awscliv2.zip && ./aws/install && \
-    rm -rf awscliv2.zip aws
-
-# === Stage 5: Cleanup ===
-FROM aws AS cleanup
+# === Stage 4: Cleanup ===
+FROM nodejs AS cleanup
 
 RUN apt-get remove -y xz-utils && \
     apt-get autoremove -y && \
@@ -58,8 +54,7 @@ FROM cleanup AS final
 
 RUN node --version && \
     npm --version && \
-    az --version && \
-    aws --version
+    mise --version
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
