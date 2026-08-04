@@ -84,10 +84,18 @@ jobs:
         id: mise
         shell: bash
         run: |
-          if command -v mise >/dev/null && [ -f "$GITHUB_WORKSPACE/mise.toml" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "version=$(mise --version | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          if ! command -v mise >/dev/null; then
+            echo "::notice::mise is not available in PATH; repository tool setup is skipped."
+            exit 0
           fi
+
+          if [ ! -f "$GITHUB_WORKSPACE/mise.toml" ]; then
+            echo "::notice::No mise.toml found at the repository root; repository tool setup is skipped."
+            exit 0
+          fi
+
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "version=$(mise --version | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
 
       - name: Setup repository tools
         if: ${{ steps.mise.outputs.enabled == 'true' }}
