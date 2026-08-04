@@ -7,8 +7,6 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
 - **Node.js**: Installs Node.js (v20.12.2) and enables Corepack for package management.
 - **mise**: Installs repository-specific development tools declared in `mise.toml`.
-- **Flexible authentication** – accepts a registration token, a GitHub PAT, or
-  GitHub App credentials.
 - **Graceful cleanup** – the runner unregisters itself from GitHub on container shutdown, avoiding “ghost” runners.
 
 ## Entrypoint

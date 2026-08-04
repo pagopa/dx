@@ -24,13 +24,11 @@ RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https:
 FROM base AS mise
 ARG MISE_VERSION
 ARG MISE_SHA256
-RUN mkdir -p "${MISE_DATA_DIR}/bin"
 RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
         "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" \
-        --output "${MISE_DATA_DIR}/bin/mise" && \
-    echo "${MISE_SHA256}  ${MISE_DATA_DIR}/bin/mise" | sha256sum --check --strict && \
-    chmod +x "${MISE_DATA_DIR}/bin/mise" && \
-    chown -R runner:runner "${MISE_DATA_DIR}"
+        --output /usr/local/bin/mise && \
+    echo "${MISE_SHA256}  /usr/local/bin/mise" | sha256sum --check --strict && \
+    chmod +x /usr/local/bin/mise
 
 # === Stage 3: Install Node.js ===
 FROM mise AS nodejs
@@ -54,7 +52,6 @@ FROM cleanup AS final
 
 RUN node --version && \
     npm --version && \
-    openssl version && \
     mise --version
 
 COPY entrypoint.sh /entrypoint.sh
