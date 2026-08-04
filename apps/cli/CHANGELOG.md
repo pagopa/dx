@@ -1,3 +1,14 @@
+## 0.27.0 (2026-08-04)
+
+### 🚀 Features
+
+- Support tenant-qualified environment names in add environment for multi-tenant scaffolding. ([#2002](https://github.com/pagopa/dx/pull/2002))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.26.4 (2026-07-28)
 
 ### 🩹 Fixes

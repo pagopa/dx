@@ -1,3 +1,14 @@
+## 0.0.5 (2026-08-04)
+
+### 🩹 Fixes
+
+- Upgrade actions ([#2018](https://github.com/pagopa/dx/pull/2018))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.0.4 (2026-07-06)
 
 ### 🩹 Fixes

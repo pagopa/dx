@@ -1,3 +1,24 @@
+## 0.0.5 (2026-08-04)
+
+### 🩹 Fixes
+
+- Mark self-hosted-runner as public to publish the Docker image in release pipeline. ([#2036](https://github.com/pagopa/dx/pull/2036))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.0.4 (2026-08-04)
+
+### 🩹 Fixes
+
+- Add mise to the DX self-hosted runner image and move cloud CLI provisioning to repository mise configurations ([#2032](https://github.com/pagopa/dx/pull/2032))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.0.2
 
 ### Patch Changes
