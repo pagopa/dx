@@ -54,6 +54,7 @@ FROM cleanup AS final
 
 RUN node --version && \
     npm --version && \
+    openssl version && \
     mise --version
 
 COPY entrypoint.sh /entrypoint.sh

@@ -7,6 +7,8 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
 - **Node.js**: Installs Node.js (v20.12.2) and enables Corepack for package management.
 - **mise**: Installs repository-specific development tools declared in `mise.toml`.
+- **Flexible authentication** – accepts a registration token, a GitHub PAT, or
+  GitHub App credentials.
 - **Graceful cleanup** – the runner unregisters itself from GitHub on container shutdown, avoiding “ghost” runners.
 
 ## Entrypoint
@@ -15,17 +17,22 @@ The Docker image includes an entrypoint script (`entrypoint.sh`) that is respons
 
 ### Environment variables
 
-| Variable                     | Required | Default            | Description                                                                                                                                                                           |
-| ---------------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `REPO_URL`                   | **Yes**  | –                  | Full URL of the repo where the runner will register (e.g. `https://github.com/[REPOSITORY_OWNER]/[REPOSITORY_NAME]`).                                                                 |
-| `RUNNER_TOKEN`               | Cond.\*  | –                  | 60‑minute registration token obtained via the GitHub REST API. Required unless `GITHUB_PAT` **and** `REGISTRATION_TOKEN_API_URL` are provided (the entrypoint can fetch one for you). |
-| `GITHUB_PAT`                 | Cond.\*  | –                  | A GitHub PAT with `admin:org` or `repo` scope used to fetch `RUNNER_TOKEN` automatically.                                                                                             |
-| `REGISTRATION_TOKEN_API_URL` | Cond.\*  | –                  | API endpoint to request a token (e.g. `"https://api.github.com/repos/[REPOSITORY_OWNER]/[REPOSITORY_NAME]/actions/runners/registration-token"`).                                      |
-| `RUNNER_NAME`                | No       | Container hostname | Friendly name shown in the GitHub UI.                                                                                                                                                 |
-| `WORK_DIR`                   | No       | `/_work`           | Directory where each job’s workspace is placed. Must be **writeable**.                                                                                                                |
-| `LABELS`                     | No       | None               | Comma‑separated list of runner labels.                                                                                                                                                |
+| Variable                     | Required | Default            | Description                                                                                                                                                              |
+| ---------------------------- | -------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `REPO_URL`                   | **Yes**  | –                  | Full URL of the repo where the runner will register (e.g. `https://github.com/[REPOSITORY_OWNER]/[REPOSITORY_NAME]`). `GITHUB_REPOSITORY` is accepted as a legacy alias. |
+| `RUNNER_TOKEN`               | Cond.\*  | –                  | 60-minute registration token obtained via the GitHub REST API. `GITHUB_TOKEN` is accepted as a legacy alias.                                                             |
+| `GITHUB_PAT`                 | Cond.\*  | –                  | A GitHub PAT with `admin:org` or `repo` scope used to fetch `RUNNER_TOKEN` automatically.                                                                                |
+| `GITHUB_APP_ID`              | Cond.\*  | –                  | ID of the GitHub App used to obtain an installation access token.                                                                                                        |
+| `GITHUB_APP_KEY`             | Cond.\*  | –                  | PEM private key of the GitHub App.                                                                                                                                       |
+| `GITHUB_APP_INSTALLATION_ID` | Cond.\*  | –                  | Installation ID of the GitHub App for the target repository.                                                                                                             |
+| `REGISTRATION_TOKEN_API_URL` | Cond.\*  | –                  | API endpoint to request a token (e.g. `"https://api.github.com/repos/[REPOSITORY_OWNER]/[REPOSITORY_NAME]/actions/runners/registration-token"`).                         |
+| `RUNNER_NAME`                | No       | Container hostname | Friendly name shown in the GitHub UI.                                                                                                                                    |
+| `WORK_DIR`                   | No       | `_work`            | Directory where each job’s workspace is placed. Must be **writeable**.                                                                                                   |
+| `LABELS`                     | No       | None               | Comma‑separated list of runner labels.                                                                                                                                   |
 
-\* **Cond.** – Required only if `RUNNER_TOKEN` is **not** provided.
+\* **Cond.** – Provide one authentication method: `RUNNER_TOKEN`;
+`GITHUB_PAT` with `REGISTRATION_TOKEN_API_URL`; or all three GitHub App
+variables with `REGISTRATION_TOKEN_API_URL`.
 
 ## Testing
 
