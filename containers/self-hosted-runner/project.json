@@ -9,6 +9,7 @@
   },
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "self-hosted-runner",
+  "tags": ["container:public"],
   "release": {
     "version": {
       "currentVersionResolver": "disk",
