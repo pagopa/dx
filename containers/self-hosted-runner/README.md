@@ -6,8 +6,7 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
 - **Node.js**: Installs Node.js (v20.12.2) and enables Corepack for package management.
-- **Azure CLI**: Includes the Azure CLI for managing Azure resources.
-- **AWS CLI**: Includes the AWS CLI for managing AWS resources.
+- **mise**: Installs repository-specific development tools declared in `mise.toml`.
 - **Graceful cleanup** – the runner unregisters itself from GitHub on container shutdown, avoiding “ghost” runners.
 
 ## Entrypoint
@@ -34,5 +33,4 @@ The image includes basic tests to verify the installation of key tools:
 
 - Node.js (`node --version`)
 - npm (`npm --version`)
-- Azure CLI (`az --version`)
-- AWS CLI (`aws --version`)
+- mise (`mise --version`)
