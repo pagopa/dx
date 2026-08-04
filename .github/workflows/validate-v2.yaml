@@ -66,7 +66,7 @@ jobs:
 
   static-review:
     name: Static Review
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     permissions:
@@ -79,6 +79,21 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+
+      - name: Detect mise configuration
+        id: mise
+        shell: bash
+        run: |
+          if command -v mise >/dev/null && [ -f "$GITHUB_WORKSPACE/mise.toml" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "version=$(mise --version | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup repository tools
+        if: ${{ steps.mise.outputs.enabled == 'true' }}
+        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          version: ${{ steps.mise.outputs.version }}
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
