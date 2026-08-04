@@ -4,6 +4,8 @@ import { CloudAccount, CloudAccountService } from "../cloud-account.js";
 import {
   Environment,
   environmentSchema,
+  getBaseEnvironmentName,
+  getEnvironmentShort,
   getInitializationStatus,
   getTerraformBackend,
   hasUserPermissionToInitialize,
@@ -13,6 +15,7 @@ import { TerraformBackend } from "../remote-backend.js";
 const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
@@ -375,7 +378,7 @@ describe("environmentSchema — prefix transforms", () => {
         id: "test-account-id",
       },
     ],
-    name: "dev" as const,
+    name: "dev",
     prefix: "dx",
   };
 
@@ -427,5 +430,54 @@ describe("environmentSchema — prefix transforms", () => {
 
     expect(result.success).toBe(true);
     expect(result.success && result.data.prefix).toBe("dx");
+  });
+});
+
+describe("environmentSchema — tenant-qualified names", () => {
+  const baseEnv = {
+    cloudAccounts: [
+      {
+        csp: "azure" as const,
+        defaultLocation: "westeurope",
+        displayName: "Test Account",
+        id: "test-account-id",
+      },
+    ],
+    name: "prod",
+    prefix: "dx",
+  };
+
+  it("accepts tenant-qualified environment names ending with a known environment", () => {
+    const result = environmentSchema.safeParse({
+      ...baseEnv,
+      name: "ced-prod",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.name).toBe("ced-prod");
+  });
+
+  it("trims and lowercases tenant-qualified environment names", () => {
+    const result = environmentSchema.safeParse({
+      ...baseEnv,
+      name: " CED-Prod ",
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.name).toBe("ced-prod");
+  });
+
+  it("rejects names that do not end with dev, prod, or uat", () => {
+    const result = environmentSchema.safeParse({
+      ...baseEnv,
+      name: "ced-test",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("derives the base environment from tenant-qualified names", () => {
+    expect(getBaseEnvironmentName("ced-prod")).toBe("prod");
+    expect(getEnvironmentShort("ced-prod")).toBe("p");
   });
 });

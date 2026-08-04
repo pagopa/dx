@@ -7,18 +7,41 @@ import {
 } from "./cloud-account.js";
 import { TerraformBackend } from "./remote-backend.js";
 
+export const baseEnvironmentNames = ["dev", "prod", "uat"] as const;
+
 export const environmentShort = {
   dev: "d",
   prod: "p",
   uat: "u",
-} as const satisfies Record<Environment["name"], string>;
+} as const satisfies Record<BaseEnvironmentName, string>;
 
+export type BaseEnvironmentName = (typeof baseEnvironmentNames)[number];
 export type EnvironmentShortValue =
   (typeof environmentShort)[keyof typeof environmentShort];
 
+const baseEnvironmentNameSchema = z.enum(baseEnvironmentNames);
+
+const tenantNameSchema = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
+
+const tenantQualifiedEnvironmentNameSchema = z.templateLiteral([
+  tenantNameSchema,
+  z.literal("-"),
+  baseEnvironmentNameSchema,
+]);
+
+const environmentNameSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  // Keep the lifecycle suffix explicit so tenant-qualified names such as
+  // `ced-prod` can still reuse the same Azure short code as `prod`.
+  .pipe(
+    z.union([baseEnvironmentNameSchema, tenantQualifiedEnvironmentNameSchema]),
+  );
+
 export const environmentSchema = z.object({
   cloudAccounts: z.array(cloudAccountSchema).min(1),
-  name: z.enum(["dev", "prod", "uat"]),
+  name: environmentNameSchema,
   // Trim and lowercase at the schema level so the constraint is enforced
   // regardless of how the data enters the system (prompt, test, or API).
   prefix: z
@@ -32,6 +55,20 @@ export const environmentSchema = z.object({
 export type Environment = z.infer<typeof environmentSchema>;
 
 export type EnvironmentId = Pick<Environment, "name" | "prefix">;
+
+export const getBaseEnvironmentName = (
+  environmentName: Environment["name"],
+): BaseEnvironmentName => {
+  // Tenant-qualified environments encode the lifecycle as the last segment:
+  // `cgn-dev` behaves like `dev`, `ced-prod` behaves like `prod`.
+  const baseName = environmentName.split("-").at(-1);
+  return baseEnvironmentNameSchema.parse(baseName);
+};
+
+export const getEnvironmentShort = (
+  environmentName: Environment["name"],
+): EnvironmentShortValue =>
+  environmentShort[getBaseEnvironmentName(environmentName)];
 
 export type EnvironmentInitStatus =
   | {

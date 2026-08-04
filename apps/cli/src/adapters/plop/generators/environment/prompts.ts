@@ -174,15 +174,12 @@ const getBaseQuestions = (
 
   if (initialAnswers.env?.name === undefined) {
     questions.push({
-      choices: [
-        { name: "PROD", value: "prod" },
-        { name: "UAT", value: "uat" },
-        { name: "DEV", value: "dev" },
-      ],
       default: "prod",
-      message: "Environment name",
+      filter: (value: string) => value.trim().toLowerCase(),
+      message: "Environment name (dev, uat, prod, or tenant-env like cgn-prod)",
       name: "env.name",
-      type: "list",
+      type: "input",
+      validate: validatePrompt(environmentSchema.shape.name),
     });
   }
 

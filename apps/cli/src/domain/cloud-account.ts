@@ -19,6 +19,14 @@ export type CloudAccountRepository = {
 };
 
 export type CloudAccountService = {
+  configureGitHubEnvironment(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+    github: GitHubRepo,
+    gitHubService: GitHubService,
+    runnerAppCredentials?: GitHubAppCredentials,
+  ): Promise<void>;
+
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,

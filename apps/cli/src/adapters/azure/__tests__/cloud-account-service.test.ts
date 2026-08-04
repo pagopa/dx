@@ -28,6 +28,7 @@ const {
   mockCreateKeyVault,
   mockCreateResourceGroup,
   mockDeleteResourceGroup,
+  mockGetIdentity,
   mockGetSubscription,
   mockKeyVaultNameAvailability,
   mockSetSecret,
@@ -39,6 +40,7 @@ const {
   mockCreateKeyVault: vi.fn().mockResolvedValue({}),
   mockCreateResourceGroup: vi.fn().mockResolvedValue({}),
   mockDeleteResourceGroup: vi.fn().mockResolvedValue({}),
+  mockGetIdentity: vi.fn().mockResolvedValue({ clientId: "client-1" }),
   mockGetSubscription: vi.fn().mockResolvedValue({ tenantId: "tenant-1" }),
   mockKeyVaultNameAvailability: vi.fn().mockResolvedValue({
     nameAvailable: true,
@@ -78,6 +80,7 @@ vi.mock("@azure/arm-msi", () => ({
 
     userAssignedIdentities = {
       createOrUpdate: mockCreateIdentity,
+      get: mockGetIdentity,
     };
   },
 }));
@@ -143,6 +146,8 @@ beforeEach(() => {
   queryResources.mockReset();
   queryResources.mockResolvedValue({ data: [], totalRecords: 0 });
   mockCreateFederatedIdentityCredential.mockClear();
+  mockGetIdentity.mockClear();
+  mockGetIdentity.mockResolvedValue({ clientId: "client-1" });
   mockCreateIdentity.mockClear();
   mockCreateIdentity.mockResolvedValue({
     clientId: "client-1",
@@ -191,16 +196,25 @@ const expectBootstrapperEnvironmentSecrets = (
   {
     cdClientId = "client-1",
     ciClientId = "client-1",
-  }: { cdClientId?: string; ciClientId?: string } = {},
+    includesRunnerSecrets = true,
+  }: {
+    cdClientId?: string;
+    ciClientId?: string;
+    includesRunnerSecrets?: boolean;
+  } = {},
 ) => {
   const expectedSecrets = [
     ["bootstrapper-dev-cd", "ARM_CLIENT_ID", cdClientId],
     ["bootstrapper-dev-cd", "ARM_TENANT_ID", "tenant-1"],
     ["bootstrapper-dev-cd", "ARM_SUBSCRIPTION_ID", "sub-1"],
-    ["bootstrapper-dev-cd", "GH_APP_ID", "app-id"],
-    ["bootstrapper-dev-cd", "GH_APP_CLIENT_ID", "app-client-id"],
-    ["bootstrapper-dev-cd", "GH_APP_INSTALLATION_ID", "installation-id"],
-    ["bootstrapper-dev-cd", "GH_APP_KEY", "private-key"],
+    ...(includesRunnerSecrets
+      ? [
+          ["bootstrapper-dev-cd", "GH_APP_ID", "app-id"],
+          ["bootstrapper-dev-cd", "GH_APP_CLIENT_ID", "app-client-id"],
+          ["bootstrapper-dev-cd", "GH_APP_INSTALLATION_ID", "installation-id"],
+          ["bootstrapper-dev-cd", "GH_APP_KEY", "private-key"],
+        ]
+      : []),
     ["bootstrapper-dev-ci", "ARM_CLIENT_ID", ciClientId],
     ["bootstrapper-dev-ci", "ARM_TENANT_ID", "tenant-1"],
     ["bootstrapper-dev-ci", "ARM_SUBSCRIPTION_ID", "sub-1"],
@@ -492,6 +506,61 @@ describe("initialize", () => {
     expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
       cdClientId: "cd-client-1",
       ciClientId: "ci-client-1",
+    });
+  });
+
+  describe("configureGitHubEnvironment", () => {
+    test("creates repository-specific federated credentials for existing bootstrap identities", async ({
+      cloudAccountService,
+    }) => {
+      const createOrUpdateEnvironmentSecret = vi
+        .fn()
+        .mockResolvedValue(undefined);
+      mockGetIdentity
+        .mockResolvedValueOnce({ clientId: "cd-client-1" })
+        .mockResolvedValueOnce({ clientId: "ci-client-1" });
+
+      await cloudAccountService.configureGitHubEnvironment(
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "Test subscription",
+          id: "sub-1",
+        },
+        {
+          name: "dev",
+          prefix: "dx",
+        },
+        {
+          owner: "pagopa",
+          repo: "dx",
+        },
+        {
+          createBranch: vi.fn(),
+          createOrUpdateEnvironmentSecret,
+          createPullRequest: vi.fn(),
+          getFileContent: vi.fn(),
+          getRepository: vi.fn(),
+          updateFile: vi.fn(),
+        },
+      );
+
+      expect(mockCreateIdentity).not.toHaveBeenCalled();
+      expect(mockGetIdentity).toHaveBeenCalledWith(
+        "dx-d-itn-common-rg-01",
+        "dx-d-itn-bootstrap-id-01",
+      );
+      expect(mockGetIdentity).toHaveBeenCalledWith(
+        "dx-d-itn-common-rg-01",
+        "dx-d-itn-bootstrap-ci-id-01",
+      );
+      expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledTimes(2);
+      expectBootstrapperFederatedCredentials("dx");
+      expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
+        cdClientId: "cd-client-1",
+        ciClientId: "ci-client-1",
+        includesRunnerSecrets: false,
+      });
     });
   });
 
