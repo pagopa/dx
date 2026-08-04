@@ -219,7 +219,11 @@ export function verboseLog(
   if (verbose) {
     const logger = getLogger(["savemoney", "azure", "verbose"]);
     if (object !== undefined) {
-      logger.debug(`${message} ${JSON.stringify(object, null, 2)}`);
+      // Passed as a template property (see pricing-service.ts for why: avoids
+      // logtape misparsing literal `{`/`}` in the JSON as placeholders).
+      logger.debug(`${message} {object}`, {
+        object: JSON.stringify(object, null, 2),
+      });
     } else {
       logger.debug(message);
     }
@@ -308,8 +312,10 @@ async function fetchMetric(
     return aggregatedValue;
   } catch (error) {
     const logger = getLogger(["savemoney", "azure", "metrics"]);
+    // Passed as a template property (see pricing-service.ts for why).
     logger.error(
-      `Failed to fetch metric ${metricName} for resource ${resourceId}: ${error instanceof Error ? error.message : String(error)}`,
+      `Failed to fetch metric ${metricName} for resource ${resourceId}: {message}`,
+      { message: error instanceof Error ? error.message : String(error) },
     );
     return null;
   }

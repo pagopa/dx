@@ -139,7 +139,8 @@ export async function analyzeAppServicePlan(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to get App Service Plan details for ${planName}: ${error instanceof Error ? error.message : error}`,
+      `Failed to get App Service Plan details for ${planName}: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
     reason += "Could not retrieve detailed App Service Plan information. ";
   }
@@ -184,7 +185,8 @@ async function enrichWithPricing(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to enrich App Service Plan ${resource.name ?? "unknown"} with pricing: ${error instanceof Error ? error.message : error}`,
+      `Failed to enrich App Service Plan ${resource.name ?? "unknown"} with pricing: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
     return result;
   }
