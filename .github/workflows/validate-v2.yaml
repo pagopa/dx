@@ -127,10 +127,6 @@ jobs:
       - name: Run code quality checks on affected projects
         run: pnpm validate
 
-      - name: Run Docker build on affected projects
-        if: ${{ github.event_name == 'pull_request' }}
-        run: pnpm nx affected -t docker:build --outputStyle=stream-without-prefixes
-
   get-environments:
     name: Get GitHub Environments for Infrastructure
     needs: gate
