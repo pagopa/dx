@@ -239,4 +239,29 @@ describe("foldDuplicateFinding", () => {
       ),
     ).toBe(false);
   });
+
+  // Custom analyzer sentences with a known template carry a stable
+  // recommendationId too (see finding-code.ts), so two custom findings for
+  // the same problem must collapse just like a custom/advisor pair does.
+  it("folds two custom findings sharing a stable recommendation id", () => {
+    const report = mkReport([
+      mkFinding({
+        code: "custom.disk.unattached",
+        recommendationId: "custom.disk.unattached",
+      }),
+    ]);
+
+    const folded = foldDuplicateFinding(
+      mkFinding({
+        code: "custom.disk.unattached",
+        recommendationId: "custom.disk.unattached",
+      }),
+      report,
+    );
+
+    expect(folded).toBe(true);
+    expect(report.findings).toHaveLength(1);
+    // Same-source fold: no corroboration note is appended.
+    expect(report.findings?.[0].reason).toBe("Disk is unattached.");
+  });
 });

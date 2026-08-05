@@ -396,8 +396,13 @@ available monetary estimate, and gains a short note recording the corroborating
 source (e.g. `Also flagged by azqr as an orphaned resource.`). This keeps a
 resource on a single line of the report while preserving its provenance.
 
-Only findings that carry a `recommendationId` participate: custom analyzer
-sentences have no stable identifier and are never collapsed on guesswork.
+Only findings that carry a `recommendationId` participate. Custom analyzer
+sentences with a known template (e.g. `Disk is unattached.`, `Very low CPU
+usage (...)`) get a stable `custom.<id>` identity, so two custom findings
+describing the same problem on the same resource collapse just like a
+custom/advisor pair would. Sentences that match no known template keep
+`code: "custom.unknown"` and no `recommendationId`, and are never collapsed on
+guesswork.
 
 #### Cost vs Governance Findings
 

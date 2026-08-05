@@ -62,6 +62,7 @@ import {
   NO_ANALYZER_REASON,
   unpreferredLocationReason,
 } from "./finding-category.js";
+import { assignCustomFindingCodes } from "./finding-code.js";
 import { foldDuplicateFinding } from "./finding-dedup.js";
 import { PricingClient, PricingService } from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
@@ -591,9 +592,8 @@ async function runPerResourceAnalysis(args: {
 
       if (analysis.suspectedUnused) {
         const reason = analysis.reason || "No specific findings.";
-        const report: AzureDetailedResourceReport = {
-          analysis: { ...analysis, reason },
-          findings: categorizeCustomFindings(
+        const findings = assignCustomFindingCodes(
+          categorizeCustomFindings(
             findingsFromAnalysisResult({
               reason,
               resourceId: resource.id ?? "",
@@ -601,8 +601,20 @@ async function runPerResourceAnalysis(args: {
               source: "custom",
             }),
           ),
+        );
+        const report: AzureDetailedResourceReport = {
+          analysis: { ...analysis, reason },
+          findings: [],
           resource,
         };
+        // Fold sentences that share a stable recommendationId so e.g. two
+        // "Very low CPU usage" hits on the same resource collapse into one
+        // row instead of appearing as separate findings.
+        for (const finding of findings) {
+          if (!foldDuplicateFinding(finding, report)) {
+            report.findings?.push(finding);
+          }
+        }
         reports.push(report);
         const idKey = (resource.id ?? "").toLowerCase();
         if (idKey) reportsById.set(idKey, report);
