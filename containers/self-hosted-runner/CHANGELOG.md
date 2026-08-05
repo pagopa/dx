@@ -1,3 +1,14 @@
+## 0.0.6 (2026-08-05)
+
+### 🩹 Fixes
+
+- Support GitHub App authentication in the runner entrypoint. ([#2039](https://github.com/pagopa/dx/pull/2039))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.0.5 (2026-08-04)
 
 ### 🩹 Fixes
