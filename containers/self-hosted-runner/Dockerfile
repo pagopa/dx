@@ -31,7 +31,8 @@ RUN install -d -o runner -g runner -m 0755 \
         /home/runner/.local/share/gh \
         /home/runner/.local/state/mise \
         /home/runner/.config/mise \
-        /home/runner/.cache/mise
+        /home/runner/.cache/mise \
+        /home/runner/.cache/node
 RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
         "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" \
         --output "${MISE_DATA_DIR}/bin/mise" && \
