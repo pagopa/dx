@@ -47,6 +47,17 @@ describe("syncRepositoryTerraformEnvironments", () => {
     expect(result).toContain('    environments           = ["uat", "prod"]');
   });
 
+  it("adds a tenant-qualified environment while preserving the implicit prod default", () => {
+    const result = syncRepositoryTerraformEnvironments(
+      repositoryConfig,
+      "ced-prod",
+    );
+
+    expect(result).toContain(
+      '    environments           = ["prod", "ced-prod"]',
+    );
+  });
+
   it("preserves prod when an existing explicit list does not include it", () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []\n",

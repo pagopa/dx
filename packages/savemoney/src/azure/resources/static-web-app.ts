@@ -101,7 +101,8 @@ export async function analyzeStaticSite(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to get metrics for Static Web App ${resource.name}: ${error instanceof Error ? error.message : error}`,
+      `Failed to get metrics for Static Web App ${resource.name}: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
   }
 

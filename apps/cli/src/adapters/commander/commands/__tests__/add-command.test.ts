@@ -272,3 +272,47 @@ describe("makeAddCommand", () => {
     ).toThrow(/Invalid add environment command options/);
   });
 });
+
+describe("makeAddCommand tenant-qualified environments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockResolvedValue({
+      generator: {},
+      payload,
+    });
+    mocks.runDeploymentEnvironmentActions.mockResolvedValue(payload);
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("accepts tenant-qualified environment names for multi-tenant scaffolding", async () => {
+    const program = makeProgram();
+
+    await program.parseAsync([
+      "node",
+      "dx",
+      "add",
+      "environment",
+      "--name",
+      "CED-Prod",
+      "--prefix",
+      "CED",
+    ]);
+
+    expect(mocks.collectDeploymentEnvironmentPayload).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      undefined,
+      {
+        env: {
+          name: "ced-prod",
+          prefix: "ced",
+        },
+      },
+    );
+  });
+});

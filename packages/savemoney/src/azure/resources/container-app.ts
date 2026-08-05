@@ -100,7 +100,8 @@ export async function analyzeContainerApp(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to get Container App details for ${containerAppName}: ${error instanceof Error ? error.message : error}`,
+      `Failed to get Container App details for ${containerAppName}: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
     reason += "Could not retrieve detailed Container App information. ";
   }

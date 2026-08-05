@@ -116,9 +116,12 @@ export class PricingService {
     try {
       return await factory();
     } catch (error) {
-      logger.warn(
-        `Pricing lookup failed: ${error instanceof Error ? error.message : String(error)}`,
-      );
+      // Passed as a template property, not string-interpolated: logtape parses
+      // `{...}` in the message itself as placeholders (e.g. a ZodError's
+      // JSON-formatted issues would otherwise get swallowed as `undefined`).
+      logger.warn("Pricing lookup failed: {message}", {
+        message: error instanceof Error ? error.message : String(error),
+      });
       return undefined;
     }
   }

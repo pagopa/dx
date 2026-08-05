@@ -1,3 +1,13 @@
+## 0.1.1 (2026-08-05)
+
+### 🩹 Fixes
+
+- Read Terraform module versions from module manifests ([#2046](https://github.com/pagopa/dx/pull/2046))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.1.0
 
 ### Minor Changes

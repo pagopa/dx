@@ -1,5 +1,5 @@
 resource "azurerm_container_app" "this" {
-  name                         = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app" }))
+  name                         = local.container_app_name
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
   revision_mode                = local.revision_mode
@@ -103,7 +103,7 @@ resource "azurerm_container_app" "this" {
         memory = local.memory_size
 
         dynamic "env" {
-          for_each = container.value.app_settings
+          for_each = merge({ OTEL_SERVICE_NAME = local.container_app_name }, container.value.app_settings)
 
           content {
             name  = env.key

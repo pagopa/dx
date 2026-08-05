@@ -100,7 +100,8 @@ export async function analyzePrivateEndpoint(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to get Private Endpoint details for ${privateEndpointName}: ${error instanceof Error ? error.message : error}`,
+      `Failed to get Private Endpoint details for ${privateEndpointName}: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
     reason += "Could not retrieve detailed Private Endpoint information. ";
   }

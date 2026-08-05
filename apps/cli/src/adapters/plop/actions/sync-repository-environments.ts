@@ -19,11 +19,13 @@ import {
   payloadSchema,
 } from "../generators/environment/prompts.js";
 
-const KNOWN_ENVIRONMENTS: Environment["name"][] = ["dev", "uat", "prod"];
+const KNOWN_ENVIRONMENTS = ["dev", "uat", "prod"] as const;
 const KNOWN_ENVIRONMENT_NAMES: readonly string[] = KNOWN_ENVIRONMENTS;
 
 const environmentList = (environments: Set<string>): string =>
   `[${[
+    // Keep the historical lifecycle environments first for stable diffs, then
+    // append tenant-qualified names in their existing insertion order.
     ...KNOWN_ENVIRONMENTS.filter((environment) =>
       environments.has(environment),
     ),

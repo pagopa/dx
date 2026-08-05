@@ -106,7 +106,8 @@ export async function analyzePublicIp(
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(
-      `Failed to get Public IP details for ${publicIpName}: ${error instanceof Error ? error.message : error}`,
+      `Failed to get Public IP details for ${publicIpName}: {message}`,
+      { message: error instanceof Error ? error.message : error },
     );
     reason += "Could not retrieve detailed Public IP information. ";
   }
@@ -160,9 +161,9 @@ async function enrichWithPricing(
     return { ...result, estimatedMonthlySavings };
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
-    logger.warn(
-      `Failed to enrich Public IP with pricing: ${error instanceof Error ? error.message : error}`,
-    );
+    logger.warn("Failed to enrich Public IP with pricing: {message}", {
+      message: error instanceof Error ? error.message : error,
+    });
     return result;
   }
 }
