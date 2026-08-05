@@ -81,9 +81,9 @@ export async function analyzeDisk(
     }
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
-    logger.warn(
-      `Failed to get disk details for ${diskName}: ${error instanceof Error ? error.message : error}`,
-    );
+    logger.warn(`Failed to get disk details for ${diskName}: {message}`, {
+      message: error instanceof Error ? error.message : error,
+    });
     // Fallback to checking properties if API call fails
     // Note: GenericResource doesn't have diskState property
     // Without API access, we can't determine if disk is unattached

@@ -12,6 +12,14 @@
 import { z } from "zod";
 
 const NonEmptyStringSchema = z.string().min(1);
+/**
+ * Optional metadata fields. The Retail Prices API returns `""` (not the
+ * field omitted) for meters where a given attribute doesn't apply (e.g.
+ * `armSkuName` for Bandwidth/Support meters), so these must tolerate empty
+ * strings — resolvers already treat empty and missing values the same way
+ * (`?.toLowerCase() ?? ""`).
+ */
+const OptionalStringSchema = z.string().optional();
 const PriceTypeSchema = z.enum([
   "Consumption",
   "DevTestConsumption",
@@ -31,23 +39,23 @@ const PriceValueSchema = z.number().finite().nonnegative();
  *   want on-demand pricing must filter by `type === "Consumption"`.
  */
 export const PriceItemSchema = z.object({
-  armRegionName: NonEmptyStringSchema.optional(),
-  armSkuName: NonEmptyStringSchema.optional(),
+  armRegionName: OptionalStringSchema,
+  armSkuName: OptionalStringSchema,
   currencyCode: z.string().length(3),
-  effectiveStartDate: NonEmptyStringSchema.optional(),
+  effectiveStartDate: OptionalStringSchema,
   isPrimaryMeterRegion: z.boolean().optional(),
-  location: NonEmptyStringSchema.optional(),
-  meterId: NonEmptyStringSchema.optional(),
-  meterName: NonEmptyStringSchema.optional(),
-  productId: NonEmptyStringSchema.optional(),
-  productName: NonEmptyStringSchema.optional(),
-  reservationTerm: NonEmptyStringSchema.optional(),
+  location: OptionalStringSchema,
+  meterId: OptionalStringSchema,
+  meterName: OptionalStringSchema,
+  productId: OptionalStringSchema,
+  productName: OptionalStringSchema,
+  reservationTerm: OptionalStringSchema,
   retailPrice: PriceValueSchema,
-  serviceFamily: NonEmptyStringSchema.optional(),
-  serviceId: NonEmptyStringSchema.optional(),
-  serviceName: NonEmptyStringSchema.optional(),
-  skuId: NonEmptyStringSchema.optional(),
-  skuName: NonEmptyStringSchema.optional(),
+  serviceFamily: OptionalStringSchema,
+  serviceId: OptionalStringSchema,
+  serviceName: OptionalStringSchema,
+  skuId: OptionalStringSchema,
+  skuName: OptionalStringSchema,
   tierMinimumUnits: PriceValueSchema.optional(),
   /** "Consumption" | "Reservation" | "DevTestConsumption". */
   type: PriceTypeSchema,
