@@ -1,3 +1,13 @@
+## 6.1.0 (2026-08-05)
+
+### 🚀 Features
+
+- Add OTEL_SERVICE_NAME environment variable to set the service name in Open Telemetry sessions ([#2043](https://github.com/pagopa/dx/pull/2043))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 6.0.2 (2026-07-16)
 
 ### 🩹 Fixes
