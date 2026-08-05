@@ -17,7 +17,7 @@ USER root
 RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
     > /etc/apt/apt.conf.d/80network-retries && \
     apt-get update && apt-get install -y --no-install-recommends \
-    zip wget xz-utils && \
+    zip wget && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # === Stage 2: Install mise ===
@@ -38,21 +38,11 @@ RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
     echo "${MISE_SHA256}  ${MISE_DATA_DIR}/bin/mise" | sha256sum --check --strict && \
     chmod +x "${MISE_DATA_DIR}/bin/mise"
 
-# === Stage 3: Install Node.js ===
-FROM mise AS nodejs
-ENV NODE_VERSION=20.12.2
-RUN curl -fsSL https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz | \
-    tar -xJ -C /usr/local --strip-components=1 && \
-    corepack enable
+# === Stage 3: Cleanup ===
+FROM mise AS cleanup
 
-# === Stage 4: Cleanup ===
-FROM nodejs AS cleanup
-
-RUN apt-get remove -y xz-utils && \
-    apt-get autoremove -y && \
-    apt-get clean && \
+RUN apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /usr/share/man/* /var/cache/debconf/* && \
-    npm cache clean --force && \
     rm -rf /root/.npm /home/runner/.cache
 
 # === Final Stage ===
@@ -63,9 +53,7 @@ RUN chmod +x /entrypoint.sh
 
 USER runner
 
-RUN node --version && \
-    npm --version && \
-    openssl version && \
+RUN openssl version && \
     mise --version && \
     test -s ./run.sh && \
     test -s ./externals/node24/bin/node && \

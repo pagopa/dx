@@ -5,8 +5,8 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 ## Features
 
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
-- **Node.js**: Installs Node.js (v20.12.2) and enables Corepack for package management.
-- **mise**: Installs repository-specific development tools declared in `mise.toml`.
+- **mise**: Installs repository-specific development tools, including Node.js,
+  declared in `mise.toml`.
 - **Scoped writable tool directories** – allows `mise` backends and installed
   tools to write only to their expected locations under the runner user's home.
 - **Flexible authentication** – accepts a registration token, a GitHub PAT, or
@@ -40,6 +40,5 @@ variables with `REGISTRATION_TOKEN_API_URL`.
 
 The image includes basic tests to verify the installation of key tools:
 
-- Node.js (`node --version`)
-- npm (`npm --version`)
 - mise (`mise --version`)
+- GitHub Actions Node.js runtime (`externals/node24/bin/node --version`)
