@@ -9,14 +9,17 @@
  * missing tags or a failed detail lookup — statements that carry no billable
  * waste and would suggest a "saving" that does not exist.
  *
- * This module separates the two: governance / diagnostic sentences are reported
- * as `operationalExcellence`, leaving `cost` to mean "actual billable waste".
- * The distinction is also what makes cross-source deduplication safe (see
- * `finding-dedup.ts`): a resource flagged only for missing tags is not evidence
- * that it is wasted, so it must not absorb the corresponding AZQR orphan row.
+ * This module separates the two: governance / diagnostic sentences are
+ * reported as `operationalExcellence`, leaving `cost` to mean "actual billable
+ * waste". The distinction is also what makes cross-source deduplication safe
+ * (see `finding-dedup.ts`): a resource flagged only for missing tags is not
+ * evidence that it is wasted, so it must not absorb the corresponding AZQR
+ * orphan row.
  *
  * The generic reason strings are defined here and consumed by `analyzer.ts`, so
- * the classifier cannot drift from the text it has to recognise.
+ * the classifier cannot drift from the text it has to recognise. `finding-code.ts`
+ * reuses the same constants to assign a stable per-sentence `recommendationId`,
+ * so both classifiers stay in sync with the actual analyzer output.
  */
 
 import type { Finding, FindingCategory } from "../finding.js";
@@ -33,10 +36,10 @@ export const NO_ANALYZER_REASON =
  * an Azure detail lookup fails (e.g. "Could not retrieve detailed NIC
  * information."). They report a gap in the scan, not a cost opportunity.
  */
-const DETAIL_LOOKUP_FAILURE_PREFIX = "could not retrieve detailed";
+export const DETAIL_LOOKUP_FAILURE_PREFIX = "could not retrieve detailed";
 
 /** Prefix of the reason emitted when a resource sits outside the target region. */
-const UNPREFERRED_LOCATION_REASON = "Resource not in preferred location";
+export const UNPREFERRED_LOCATION_REASON = "Resource not in preferred location";
 
 /**
  * Re-categorises the findings produced from a custom analyzer's `reason`
