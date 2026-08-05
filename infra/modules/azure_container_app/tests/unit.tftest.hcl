@@ -522,8 +522,9 @@ run "container_app_app_settings" {
       {
         image = "nginx:latest"
         app_settings = {
-          "KEY_ONE" = "value_one"
-          "KEY_TWO" = "value_two"
+          "KEY_ONE"           = "value_one"
+          "KEY_TWO"           = "value_two"
+          "OTEL_SERVICE_NAME" = "caller-value"
         }
         liveness_probe = {
           path = "/"
@@ -536,15 +537,23 @@ run "container_app_app_settings" {
     condition = length([
       for env in azurerm_container_app.this.template[0].container[0].env :
       env if env.secret_name == null
-    ]) == 2
-    error_message = "Two non-secret environment variables must be created from app_settings"
+    ]) == 3
+    error_message = "Two app_settings variables and OTEL_SERVICE_NAME must be created"
   }
 
   assert {
     condition = alltrue([
       for env in azurerm_container_app.this.template[0].container[0].env :
-      contains(["KEY_ONE", "KEY_TWO"], env.name) if env.secret_name == null
+      contains(["KEY_ONE", "KEY_TWO", "OTEL_SERVICE_NAME"], env.name) if env.secret_name == null
     ])
     error_message = "Environment variable names must match app_settings keys"
+  }
+
+  assert {
+    condition = one([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.value if env.name == "OTEL_SERVICE_NAME"
+    ]) == "caller-value"
+    error_message = "A manually configured OTEL_SERVICE_NAME must override the Container App name"
   }
 }
