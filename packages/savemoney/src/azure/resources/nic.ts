@@ -77,9 +77,9 @@ export async function analyzeNic(
     // The primary checks (attachment to VM and public IP assignment) are sufficient
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
-    logger.warn(
-      `Failed to get NIC details for ${nicName}: ${error instanceof Error ? error.message : error}`,
-    );
+    logger.warn(`Failed to get NIC details for ${nicName}: {message}`, {
+      message: error instanceof Error ? error.message : error,
+    });
     reason += "Could not retrieve detailed NIC information. ";
   }
 

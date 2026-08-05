@@ -114,9 +114,9 @@ export async function analyzeVM(
     }
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
-    logger.warn(
-      `Failed to get VM instance view for ${vmName}: ${error instanceof Error ? error.message : error}`,
-    );
+    logger.warn(`Failed to get VM instance view for ${vmName}: {message}`, {
+      message: error instanceof Error ? error.message : error,
+    });
     // Continue with metric analysis if instance view fails
   }
 
@@ -203,9 +203,9 @@ async function enrichWithPricing(
     return { ...result, estimatedMonthlySavings };
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
-    logger.warn(
-      `Failed to enrich VM ${vmName} with pricing: ${error instanceof Error ? error.message : error}`,
-    );
+    logger.warn(`Failed to enrich VM ${vmName} with pricing: {message}`, {
+      message: error instanceof Error ? error.message : error,
+    });
     return result;
   }
 }
