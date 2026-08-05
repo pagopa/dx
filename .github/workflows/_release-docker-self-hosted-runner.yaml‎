@@ -37,23 +37,11 @@ jobs:
 
       - name: Get official Runner image digests
         id: latest_digest
-        env:
-          FALLBACK_DIGEST: sha256:3f06bf70688f9d314884d5bde3e7403eaea257d9a5120a635f4b7788d3411bf2
         run: |
           # Fetch the latest digest of the official GitHub Actions Runner image for amd64 Linux
           latest_digest=$(docker manifest inspect ghcr.io/actions/actions-runner:latest | jq -r '.manifests[] | select(.platform.architecture == "amd64" and .platform.os == "linux") | .digest')
-          docker pull "ghcr.io/actions/actions-runner@$latest_digest"
-
-          if docker run --rm --entrypoint bash "ghcr.io/actions/actions-runner@$latest_digest" \
-            -c 'test -s ./run.sh && test -s ./externals/node24/bin/node'; then
-            selected_digest=$latest_digest
-          else
-            echo "::warning::The latest official runner image is incomplete; using the last known-good digest"
-            selected_digest=$FALLBACK_DIGEST
-          fi
-
-          echo "$selected_digest"
-          echo "latest_digest=$selected_digest" >> "$GITHUB_OUTPUT"
+          echo $latest_digest
+          echo "latest_digest=$latest_digest" >> "$GITHUB_OUTPUT"
 
   publish:
     name: Publish GitHub Self-Hosted Runner
