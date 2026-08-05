@@ -24,13 +24,14 @@ RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https:
 FROM base AS mise
 ARG MISE_VERSION
 ARG MISE_SHA256
-RUN mkdir -p \
+RUN install -d -o runner -g runner -m 0755 \
+        "${MISE_DATA_DIR}" \
         "${MISE_DATA_DIR}/bin" \
-        /home/runner/.local/state \
-        /home/runner/.config && \
-    chown -R runner:runner \
-        /home/runner/.local \
-        /home/runner/.config
+        /home/runner/.local/share/aube \
+        /home/runner/.local/share/gh \
+        /home/runner/.local/state/mise \
+        /home/runner/.config/mise \
+        /home/runner/.cache/mise
 RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
         "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" \
         --output "${MISE_DATA_DIR}/bin/mise" && \
@@ -52,19 +53,19 @@ RUN apt-get remove -y xz-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /usr/share/man/* /var/cache/debconf/* && \
     npm cache clean --force && \
-    rm -rf /root/.npm
+    rm -rf /root/.npm /home/runner/.cache
 
 # === Final Stage ===
 FROM cleanup AS final
-
-RUN node --version && \
-    npm --version && \
-    openssl version && \
-    mise --version
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 USER runner
+
+RUN node --version && \
+    npm --version && \
+    openssl version && \
+    mise --version
 
 ENTRYPOINT ["/entrypoint.sh"]
