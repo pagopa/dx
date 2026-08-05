@@ -1,6 +1,6 @@
 
 # === Stage 1: Use base Runner and install tools ===
-ARG RUNNER_DIGEST
+ARG RUNNER_DIGEST=sha256:3f06bf70688f9d314884d5bde3e7403eaea257d9a5120a635f4b7788d3411bf2
 
 FROM ghcr.io/actions/actions-runner${RUNNER_DIGEST:+@${RUNNER_DIGEST}} AS base
 
@@ -66,6 +66,9 @@ USER runner
 RUN node --version && \
     npm --version && \
     openssl version && \
-    mise --version
+    mise --version && \
+    test -s ./run.sh && \
+    test -s ./externals/node24/bin/node && \
+    ./externals/node24/bin/node --version
 
 ENTRYPOINT ["/entrypoint.sh"]
