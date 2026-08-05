@@ -38,15 +38,8 @@ RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
     echo "${MISE_SHA256}  ${MISE_DATA_DIR}/bin/mise" | sha256sum --check --strict && \
     chmod +x "${MISE_DATA_DIR}/bin/mise"
 
-# === Stage 3: Cleanup ===
-FROM mise AS cleanup
-
-RUN apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* /usr/share/man/* /var/cache/debconf/* && \
-    rm -rf /root/.npm /home/runner/.cache
-
 # === Final Stage ===
-FROM cleanup AS final
+FROM mise AS final
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
