@@ -1,3 +1,13 @@
+## 0.6.2 (2026-08-06)
+
+### 🩹 Fixes
+
+- Resolve `Pricing lookup failed` warnings caused by logtape misparsing error messages containing `{}` characters, and relax the Retail Prices API schema to accept empty-string metadata fields (e.g. `armSkuName`) that Azure legitimately returns for some meters. ([#2040](https://github.com/pagopa/dx/pull/2040))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.1 (2026-07-28)
 
 ### 🩹 Fixes
