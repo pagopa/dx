@@ -1,8 +1,8 @@
 
-# === Stage 1: Use base Runner and install tools ===
+# === Stage 1: Install runner dependencies and mise ===
 ARG RUNNER_DIGEST=sha256:3f06bf70688f9d314884d5bde3e7403eaea257d9a5120a635f4b7788d3411bf2
 
-FROM ghcr.io/actions/actions-runner${RUNNER_DIGEST:+@${RUNNER_DIGEST}} AS base
+FROM ghcr.io/actions/actions-runner${RUNNER_DIGEST:+@${RUNNER_DIGEST}} AS mise
 
 ARG RUNNER_DIGEST
 ARG MISE_VERSION=2026.8.1
@@ -17,13 +17,11 @@ USER root
 RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
     > /etc/apt/apt.conf.d/80network-retries && \
     apt-get update && apt-get install -y --no-install-recommends \
-    zip wget && \
+    zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# === Stage 2: Install mise ===
-FROM base AS mise
-ARG MISE_VERSION
-ARG MISE_SHA256
+# Keep ownership scoped to the state and cache paths used by mise backends and
+# workflow setup actions instead of making the runner home broadly writable.
 RUN install -d -o runner -g runner -m 0755 \
         "${MISE_DATA_DIR}" \
         "${MISE_DATA_DIR}/bin" \
@@ -63,9 +61,6 @@ RUN set -eux; \
     mise --version; \
     mise exec -- aws --version; \
     mise exec -- az version; \
-    mise exec -- node --version; \
-    mise exec -- python --version; \
-    mise exec -- terraform version; \
     mise exec -- uv --version
 
 RUN set -eux; \
