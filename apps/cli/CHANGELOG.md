@@ -1,3 +1,17 @@
+## 0.27.1 (2026-08-06)
+
+### 🩹 Fixes
+
+- Fix Node.js `module.register()` deprecation warning printed on every CLI invocation by using the synchronous `module.registerHooks()` API when the running Node.js version supports it, falling back to the previous behavior otherwise. ([#2050](https://github.com/pagopa/dx/pull/2050), [#59929](https://github.com/pagopa/dx/issues/59929))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.2
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.0 (2026-08-04)
 
 ### 🚀 Features
