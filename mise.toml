@@ -8,14 +8,11 @@ github-cli = { version = "latest", postinstall = "gh extension install seachicke
 go = "1.26"
 golangci-lint = "2.12.2"
 jq = "1.8"
-node = { version = "24.14", postinstall = "corepack enable" }
-"npm:nx" = "23.1"
+"npm:nx" = "22.7"
 pre-commit = "4.6"
-python = { version = "{{ read_file(path='.python-version') | trim }}", postinstall = "python -m ensurepip --upgrade" }
 qdns = "latest"
 ripgrep = "latest"
 shellcheck = "0.11"
-terraform = "1.15"
 terraform-docs = "0.24"
 tflint = "0.63"
 trivy = "0.71"
@@ -26,5 +23,6 @@ COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 NX_DAEMON=true
 
 [settings]
+idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
 minimum_release_age = "7d"
 minimum_release_age_excludes = ["copilot", "github-cli"]
