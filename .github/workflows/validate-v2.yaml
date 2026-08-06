@@ -177,7 +177,9 @@ jobs:
     needs: get-environments
     if: ${{ needs.get-environments.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
-    environment: ${{ matrix.target.github-environment }}
+    environment:
+      name: ${{ matrix.target.github-environment }}
+      deployment: false
     strategy:
       fail-fast: false
       matrix:
