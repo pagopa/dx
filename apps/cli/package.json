@@ -76,8 +76,6 @@
     "vitest-mock-extended": "catalog:"
   },
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "plop": "plop"
   },
   "engines": {

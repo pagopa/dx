@@ -2,7 +2,7 @@ import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { readFileSync } from "fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { mockDeep } from "vitest-mock-extended";
+import { mockDeep, mockReset } from "vitest-mock-extended";
 
 import { run } from "../src/index.js";
 
@@ -63,6 +63,7 @@ describe("PR Comment Manager Action", () => {
   beforeEach(() => {
     // Reset all mocks before each test
     vi.clearAllMocks();
+    mockReset(mockOctokit);
 
     // Set up default mocks
     mockGithub.getOctokit.mockReturnValue(

@@ -22,8 +22,6 @@
     "access": "public"
   },
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "build": "tsup && tsx scripts/generate-json-schema.ts",
     "dev": "tsup --watch"
   },

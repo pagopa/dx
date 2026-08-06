@@ -47,8 +47,6 @@
   },
   "scripts": {
     "start": "tsx src/cli.ts",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "version": "node ./scripts/generate-server-manifest.js"
   }
 }
