@@ -1,13 +1,7 @@
 [tools]
-aws-cli = { version = "2.35", symlink_bins = "true" }
-azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
-node = { version = "24.14", postinstall = "corepack enable" }
-python = { version = "3.14.6", postinstall = "python -m ensurepip --upgrade" }
-terraform = "1.15"
-uv = "latest"
-
-[env]
-COREPACK_ENABLE_DOWNLOAD_PROMPT = 0
+aws-cli = { version = "2.35.24", symlink_bins = "true" }
+azure-cli = { version = "2.87.0", uvx_args = "--prerelease=allow" }
+uv = "0.12.0"
 
 [settings]
 minimum_release_age = "7d"

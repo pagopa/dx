@@ -5,12 +5,12 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 ## Features
 
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
-- **mise**: Installs repository-specific development tools, including Node.js,
-  declared in `mise.toml`.
-- **Pre-installed tool baseline** – provides AWS CLI, Azure CLI, Node.js,
-  Python, Terraform, and uv through the image's `mise.toml`; repository
-  configurations can extend or override it. The mise shims expose baseline
-  tools directly on `PATH`.
+- **mise**: Installs repository-specific development tools declared in
+  `mise.toml`.
+- **Pre-installed tool baseline** – provides AWS CLI, Azure CLI, and uv through
+  the image's `mise.toml`; repository configurations can extend or override it.
+  The mise shims expose baseline tools directly on `PATH`. Language runtimes
+  and Terraform remain managed by their official workflow setup actions.
 - **Scoped writable tool directories** – allows `mise` backends and installed
   tools to write only to their expected locations under the runner user's home.
 - **Flexible authentication** – accepts a registration token, a GitHub PAT, or
@@ -40,6 +40,23 @@ The Docker image includes an entrypoint script (`entrypoint.sh`) that is respons
 `GITHUB_PAT` with `REGISTRATION_TOKEN_API_URL`; or all three GitHub App
 variables with `REGISTRATION_TOKEN_API_URL`.
 
+## Writable tool directories
+
+The runner user owns only the state and cache directories required at runtime:
+
+| Path                     | Used by                              |
+| ------------------------ | ------------------------------------ |
+| `~/.local/share/mise`    | mise installations and shims         |
+| `~/.local/share/aube`    | npm packages installed through mise  |
+| `~/.local/share/gh`      | GitHub CLI                           |
+| `~/.local/state/mise`    | mise tracked configuration state     |
+| `~/.config/mise`         | mise configuration                   |
+| `~/.cache/mise`          | mise downloads and metadata          |
+| `~/.cache/node`          | Corepack in the Node.js setup action |
+| `~/.cache/rosetta`       | mise artifact metadata               |
+| `~/.cache/sigstore-rust` | artifact attestation verification    |
+| `~/.cache/uv`            | uv and Azure CLI installation        |
+
 ## Testing
 
 The image includes basic tests to verify the installation of key tools:
@@ -47,8 +64,5 @@ The image includes basic tests to verify the installation of key tools:
 - mise (`mise --version`)
 - AWS CLI (`aws --version`)
 - Azure CLI (`az version`)
-- Node.js (`node --version`)
-- Python (`python --version`)
-- Terraform (`terraform version`)
 - uv (`uv --version`)
 - GitHub Actions Node.js runtime (`externals/node24/bin/node --version`)
