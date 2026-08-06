@@ -70,8 +70,8 @@ jobs:
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     env:
-      # Load CI-specific mise settings; local mise keeps the complete toolchain.
-      MISE_ENV: ci
+      # Official setup actions own these runtimes in CI; local mise remains complete.
+      MISE_DISABLE_TOOLS: go,node,pnpm,python,terraform
     permissions:
       actions: read
       contents: read

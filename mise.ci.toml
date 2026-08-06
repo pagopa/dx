@@ -1,2 +1,0 @@
-[settings]
-disable_tools = ["go", "node", "pnpm", "python", "terraform"]
