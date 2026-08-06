@@ -3,5 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure Event Hub with monitoring and network configuration"
+  "description": "Creates an Azure Event Hub with monitoring and network configuration",
+  "scripts": {
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
 }
