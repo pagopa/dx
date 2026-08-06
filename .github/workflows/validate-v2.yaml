@@ -96,7 +96,7 @@ jobs:
           version: ${{ steps.mise.outputs.version }}
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: ./.github/actions/node-setup
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
