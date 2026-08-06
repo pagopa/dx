@@ -11,6 +11,7 @@ ARG MISE_SHA256=961b1fcc78830e861ab887abd19d9b961478bcf252e37881fdd61c81388308d4
 LABEL base_runner_digest=${RUNNER_DIGEST}
 
 ENV MISE_DATA_DIR=/home/runner/.local/share/mise
+ENV MISE_DISABLE_TOOLS=go,node,pnpm,python,terraform
 ENV PATH="${MISE_DATA_DIR}/shims:${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
