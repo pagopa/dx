@@ -66,7 +66,7 @@ jobs:
 
   static-review:
     name: Static Review
-    runs-on: [self-hosted, local-dx-test-20260806]
+    runs-on: ubuntu-24.04
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     permissions:
