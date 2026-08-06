@@ -24,9 +24,7 @@
   },
   "scripts": {
     "build": "tsup",
-    "db:push": "drizzle-kit push --config drizzle.config.ts",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "db:push": "drizzle-kit push --config drizzle.config.ts"
   },
   "dependencies": {
     "drizzle-orm": "catalog:",

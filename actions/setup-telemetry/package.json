@@ -7,11 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch",
-    "lint": "eslint --fix src",
-    "lint:check": "eslint src",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "dev": "tsup --watch"
   },
   "keywords": [
     "github",

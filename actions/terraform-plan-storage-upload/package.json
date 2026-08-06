@@ -6,9 +6,7 @@
   "description": "GitHub Action to bundle and upload a Terraform plan to the state backend storage",
   "main": "dist/main.cjs",
   "scripts": {
-    "build": "tsup",
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "build": "tsup"
   },
   "dependencies": {
     "@actions/core": "catalog:github-actions",

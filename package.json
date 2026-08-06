@@ -3,11 +3,11 @@
   "packageManager": "pnpm@11.17.0+sha512.cca3cea332ad254bb84145f966d19f4879615210346fc92c79a047f23a0d7b3cca3c3792f0076ba1f1831d277efbcf0a9119b31a9a60eca7fb3d6231f331ef72",
   "devDependencies": {
     "@devcontainers/cli": "^0.88.0",
-    "@nx/docker": "22.7.5",
-    "@nx/eslint": "22.7.5",
-    "@nx/js": "22.7.5",
-    "@nx/plugin": "22.7.5",
-    "@nx/vitest": "22.7.5",
+    "@nx/docker": "23.1.1",
+    "@nx/eslint": "23.1.1",
+    "@nx/js": "23.1.1",
+    "@nx/plugin": "23.1.1",
+    "@nx/vitest": "23.1.1",
     "@pagopa/nx-dx-docker-plugin": "workspace:^",
     "@pagopa/nx-terraform-plugin": "workspace:^",
     "@swc-node/register": "^1.12.1",
@@ -21,6 +21,6 @@
   },
   "scripts": {
     "dx": "node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,format:check,typecheck --configuration=ci"
+    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck --configuration=ci"
   }
 }

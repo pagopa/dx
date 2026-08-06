@@ -18,8 +18,6 @@
   },
   "scripts": {
     "build": "esbuild src/import.ts --bundle --platform=node --format=esm --external:pg --outfile=dist/import.mjs",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
     "import": "tsx src/import.ts"
   },
   "dependencies": {

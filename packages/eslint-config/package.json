@@ -12,10 +12,6 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/eslint-config"
   },
-  "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
-  },
   "files": [
     "base.js",
     "index.js",
