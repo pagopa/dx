@@ -11,6 +11,10 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
   the image's `mise.toml`; repository configurations can extend or override it.
   The mise shims expose baseline tools directly on `PATH`. Language runtimes
   and Terraform remain managed by their official workflow setup actions.
+- **Setup action runtime policy** – disables Go, Node.js, pnpm, Python, and
+  Terraform in mise by default because workflows install them through their
+  setup actions. Workflows that intentionally delegate these tools to mise can
+  override the image default with `MISE_DISABLE_TOOLS: ""`.
 - **Scoped writable tool directories** – allows `mise` backends and installed
   tools to write only to their expected locations under the runner user's home.
 - **Flexible authentication** – accepts a registration token, a GitHub PAT, or
@@ -56,6 +60,24 @@ The runner user owns only the state and cache directories required at runtime:
 | `~/.cache/rosetta`       | mise artifact metadata               |
 | `~/.cache/sigstore-rust` | artifact attestation verification    |
 | `~/.cache/uv`            | uv and Azure CLI installation        |
+
+## Mise runtime policy
+
+The image sets:
+
+```text
+MISE_DISABLE_TOOLS=go,node,pnpm,python,terraform
+```
+
+This prevents repository `mise.toml` files from duplicating or shadowing the
+runtimes installed by workflow setup actions. The policy is part of the image
+so every workflow using the DX runner receives the same safe default. A
+workflow that does not use those setup actions can explicitly opt back in:
+
+```yaml
+env:
+  MISE_DISABLE_TOOLS: ""
+```
 
 ## Testing
 
