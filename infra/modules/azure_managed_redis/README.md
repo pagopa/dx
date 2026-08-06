@@ -136,8 +136,7 @@ These features are intentionally left out of v0.x to keep the surface small. The
 ## Testing
 
 ```bash
-pnpm nx run azure_managed_redis:test:unit
-pnpm nx run azure_managed_redis:test:contract
+pnpm nx run azure_managed_redis:tf-test
 ```
 
 Integration and end-to-end test layers are tracked as follow-ups under [CES-1909](https://pagopa.atlassian.net/browse/CES-1909).

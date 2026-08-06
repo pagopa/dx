@@ -18,8 +18,7 @@ terraform test -filter=tests/unit.tftest.hcl
 terraform test -filter=tests/contract.tftest.hcl
 
 # Or via Nx
-pnpm nx run azure_managed_redis:test:unit
-pnpm nx run azure_managed_redis:test:contract
+pnpm nx run azure_managed_redis:tf-test
 ```
 
 ## Mock data
