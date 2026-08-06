@@ -12,11 +12,11 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
   The mise shims expose baseline tools directly on `PATH`. Language runtimes
   and Terraform remain managed by their official workflow setup actions.
 - **Setup action runtime policy** – disables Go, Node.js, pnpm, Python, and
-  Terraform in mise by default because workflows install them through their
-  setup actions. Workflows that intentionally delegate these tools to mise can
-  override the image default with `MISE_DISABLE_TOOLS: ""`.
-- **Scoped writable tool directories** – allows `mise` backends and installed
-  tools to write only to their expected locations under the runner user's home.
+  Terraform in mise by default, reserving those runtimes for workflow setup
+  actions.
+- **Scoped writable tool directories** – allows arbitrary `mise` backends and
+  installed tools to use the standard XDG locations under the runner user's
+  home.
 - **Flexible authentication** – accepts a registration token, a GitHub PAT, or
   GitHub App credentials.
 - **Graceful cleanup** – the runner unregisters itself from GitHub on container shutdown, avoiding “ghost” runners.
@@ -46,21 +46,17 @@ variables with `REGISTRATION_TOKEN_API_URL`.
 
 ## Writable tool directories
 
-The runner user owns only the state and cache directories required at runtime:
+Mise backends do not share a fixed set of tool-specific paths. The runner user
+therefore owns the standard XDG roots used by repository tools without changing
+ownership outside those locations:
 
-| Path                     | Used by                              |
-| ------------------------ | ------------------------------------ |
-| `~/.local/bin`           | User-local Corepack shims            |
-| `~/.local/share/mise`    | mise installations and shims         |
-| `~/.local/share/aube`    | npm packages installed through mise  |
-| `~/.local/share/gh`      | GitHub CLI                           |
-| `~/.local/state/mise`    | mise tracked configuration state     |
-| `~/.config/mise`         | mise configuration                   |
-| `~/.cache/mise`          | mise downloads and metadata          |
-| `~/.cache/node`          | Corepack in the Node.js setup action |
-| `~/.cache/rosetta`       | mise artifact metadata               |
-| `~/.cache/sigstore-rust` | artifact attestation verification    |
-| `~/.cache/uv`            | uv and Azure CLI installation        |
+| Path             | Used by                            |
+| ---------------- | ---------------------------------- |
+| `~/.local/bin`   | User-local executable shims        |
+| `~/.local/share` | Tool installations and shared data |
+| `~/.local/state` | Tool state                         |
+| `~/.config`      | Tool configuration                 |
+| `~/.cache`       | Downloads and cached metadata      |
 
 ## Mise runtime policy
 
@@ -71,14 +67,8 @@ MISE_DISABLE_TOOLS=go,node,pnpm,python,terraform
 ```
 
 This prevents repository `mise.toml` files from duplicating or shadowing the
-runtimes installed by workflow setup actions. The policy is part of the image
-so every workflow using the DX runner receives the same safe default. A
-workflow that does not use those setup actions can explicitly opt back in:
-
-```yaml
-env:
-  MISE_DISABLE_TOOLS: ""
-```
+runtimes reserved for workflow setup actions. The policy is part of the image
+so every workflow using the DX runner receives the same safe default.
 
 ## Testing
 

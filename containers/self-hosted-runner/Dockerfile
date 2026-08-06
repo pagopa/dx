@@ -21,21 +21,21 @@ RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https:
     zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Keep ownership scoped to the state and cache paths used by mise backends and
-# workflow setup actions instead of making the runner home broadly writable.
+# Mise backends use standard XDG directories that vary by tool. Keep those
+# roots writable without changing ownership outside those locations.
 RUN install -d -o runner -g runner -m 0755 \
-        "${MISE_DATA_DIR}" \
-        "${MISE_DATA_DIR}/bin" \
         /home/runner/.local/bin \
-        /home/runner/.local/share/aube \
-        /home/runner/.local/share/gh \
-        /home/runner/.local/state/mise \
-        /home/runner/.config/mise \
-        /home/runner/.cache/mise \
-        /home/runner/.cache/node \
-        /home/runner/.cache/rosetta \
-        /home/runner/.cache/sigstore-rust \
-        /home/runner/.cache/uv
+        /home/runner/.local/share \
+        /home/runner/.local/state \
+        /home/runner/.config \
+        /home/runner/.cache \
+        "${MISE_DATA_DIR}/bin" && \
+    chown -R runner:runner \
+        /home/runner/.local/bin \
+        /home/runner/.local/share \
+        /home/runner/.local/state \
+        /home/runner/.config \
+        /home/runner/.cache
 RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
         "https://github.com/jdx/mise/releases/download/v${MISE_VERSION}/mise-v${MISE_VERSION}-linux-x64" \
         --output "${MISE_DATA_DIR}/bin/mise" && \
