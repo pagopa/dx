@@ -184,7 +184,9 @@ jobs:
       (inputs.override_labels != '' && inputs.override_labels ||
       inputs.environment) || inputs.use_private_agent && 'self-hosted' ||
       'ubuntu-latest' }}
-    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+    environment:
+      name: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+      deployment: false
     concurrency:
       group: ${{ github.workflow }}-${{ inputs.environment }}-${{ matrix.dir }}-ci
       cancel-in-progress: false

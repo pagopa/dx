@@ -75,7 +75,9 @@ jobs:
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
     runs-on: "ubuntu-latest"
-    environment: opex-${{ matrix.dashboard.environment }}-ci
+    environment:
+      name: opex-${{ matrix.dashboard.environment }}-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read
