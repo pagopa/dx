@@ -124,7 +124,9 @@ jobs:
     name: Validate Web App
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-ci
+    environment:
+      name: ${{ inputs.environment }}-ci
+      deployment: false
 
     permissions:
       id-token: write

@@ -161,7 +161,9 @@ jobs:
       'ubuntu-latest' }}
     needs: [get-terraform-version, tf-modules-check, detect-projects]
     if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
-    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+    environment:
+      name: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read
