@@ -50,6 +50,7 @@ The runner user owns only the state and cache directories required at runtime:
 
 | Path                     | Used by                              |
 | ------------------------ | ------------------------------------ |
+| `~/.local/bin`           | User-local Corepack shims            |
 | `~/.local/share/mise`    | mise installations and shims         |
 | `~/.local/share/aube`    | npm packages installed through mise  |
 | `~/.local/share/gh`      | GitHub CLI                           |

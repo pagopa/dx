@@ -26,6 +26,7 @@ RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https:
 RUN install -d -o runner -g runner -m 0755 \
         "${MISE_DATA_DIR}" \
         "${MISE_DATA_DIR}/bin" \
+        /home/runner/.local/bin \
         /home/runner/.local/share/aube \
         /home/runner/.local/share/gh \
         /home/runner/.local/state/mise \
