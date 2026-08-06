@@ -51,19 +51,27 @@ RUN chmod +x /entrypoint.sh
 
 USER runner
 
-RUN cd /home/runner && \
-    mise trust mise.toml && \
-    mise install && \
-    openssl version && \
-    mise --version && \
-    mise exec -- aws --version && \
-    mise exec -- az version && \
-    mise exec -- node --version && \
-    mise exec -- python --version && \
-    mise exec -- terraform version && \
-    mise exec -- uv --version && \
-    test -s ./run.sh && \
-    test -s ./externals/node24/bin/node && \
+RUN set -eux; \
+    cd /home/runner; \
+    mise trust mise.toml; \
+    mise install; \
+    mise ls --current
+
+RUN set -eux; \
+    cd /home/runner; \
+    openssl version; \
+    mise --version; \
+    mise exec -- aws --version; \
+    mise exec -- az version; \
+    mise exec -- node --version; \
+    mise exec -- python --version; \
+    mise exec -- terraform version; \
+    mise exec -- uv --version
+
+RUN set -eux; \
+    cd /home/runner; \
+    test -s ./run.sh; \
+    test -s ./externals/node24/bin/node; \
     ./externals/node24/bin/node --version
 
 ENTRYPOINT ["/entrypoint.sh"]
