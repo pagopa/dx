@@ -33,7 +33,9 @@ jobs:
   feed_docs_knowledge_base:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
     name: Update MCP Server Knowledge Base
-    environment: app-prod-ci
+    environment:
+      name: app-prod-ci
+      deployment: false
     needs: deploy_to_static_web_app
     runs-on: ubuntu-latest
     permissions:

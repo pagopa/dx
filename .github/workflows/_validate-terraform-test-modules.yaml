@@ -50,7 +50,9 @@ jobs:
   terraform-test:
     runs-on: ubuntu-latest
     needs: detect-modules
-    environment: infra-dev-ci
+    environment:
+      name: infra-dev-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read

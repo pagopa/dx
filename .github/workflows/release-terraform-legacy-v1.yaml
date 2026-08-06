@@ -87,7 +87,9 @@ jobs:
     # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
     needs: [get-terraform-version, tf-modules-check]
-    environment: ${{ inputs.environment }}-ci
+    environment:
+      name: ${{ inputs.environment }}-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read
