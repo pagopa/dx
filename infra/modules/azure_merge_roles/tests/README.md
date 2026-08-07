@@ -11,18 +11,15 @@ This module currently provides fast local coverage through mocked Terraform test
 From the module directory:
 
 ```bash
-pnpm run tf-init
-pnpm run test:unit
-pnpm run test:contract
-pnpm run test:e2e
+nx test
+nx test -c e2e
 ```
 
 From the workspace root:
 
 ```bash
-pnpm nx run azure_merge_roles:test:unit
-pnpm nx run azure_merge_roles:test:contract
-pnpm nx run azure_merge_roles:test:e2e
+nx run azure_merge_roles:test
+nx run azure_merge_roles:test:e2e
 ```
 
 ## Notes

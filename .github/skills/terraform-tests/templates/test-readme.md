@@ -8,13 +8,13 @@ This directory contains comprehensive tests for the `<module_name>` Terraform mo
 
 Fast, mocked tests that verify module logic without provisioning infrastructure.
 
-Run: `nx run <module-name>:test:unit`
+Run: `nx run <module-name>:test`
 
 ### Contract Tests (contract.tftest.hcl)
 
 Validate input contracts, constraints, and expected failures.
 
-Run: `nx run <module-name>:test:contract`
+Run: `nx run <module-name>:test`
 
 ### Integration Tests (integration.tftest.hcl)
 

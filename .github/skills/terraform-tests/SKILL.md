@@ -53,8 +53,7 @@ tests/
 Tests are run using NX commands:
 
 ```bash
-nx run <module-name>:test:unit
-nx run <module-name>:test:contract
+nx run <module-name>:test
 nx run <module-name>:test:integration
 nx run <module-name>:test:e2e
 ```
