@@ -94,7 +94,7 @@ jobs:
         working-directory: .
 
       - name: Upload Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           bundle_name: ${{ inputs.artifactName }}
           file_path: "${{ env.GENERATED_CODE_DIR }}"
@@ -113,7 +113,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           bundle_name: ${{ inputs.artifactName }}
           file_path: ${{ env.GENERATED_CODE_DIR }}

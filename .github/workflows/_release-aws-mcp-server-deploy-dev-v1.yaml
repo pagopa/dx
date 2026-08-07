@@ -52,7 +52,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Log In to Amazon ECR
         id: ecr

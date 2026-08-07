@@ -34,7 +34,7 @@ runs:
         rm -f "$PLAN_FILE"
 
     - name: Upload Terraform Plan as Artifact
-      uses: pagopa/dx/.github/actions/upload-artifact@main
+      uses: pagopa/dx/.github/actions/upload-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
       with:
         bundle_name: ${{ inputs.artifact-name }}
         file_path: ${{ inputs.working-directory }}/${{ inputs.plan-file }}.enc
