@@ -38,6 +38,13 @@ export {
   type ResourceReport,
 } from "./finding.js";
 export { AZURE_SOURCE_VALUES } from "./schema.js";
+export {
+  buildSavemoneyInvocationTelemetryAttributes,
+  buildSavemoneyOutcomeTelemetryAttributes,
+  type SavemoneyAzqrReportSource,
+  type SavemoneyCommandInput,
+  type SavemoneySubscriptionsSource,
+} from "./telemetry/savemoney-command-telemetry.js";
 
 export * from "./types.js";
 
