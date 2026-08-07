@@ -41,7 +41,12 @@ FROM mise AS final
 
 COPY entrypoint.sh /entrypoint.sh
 COPY --chown=runner:runner mise.toml /home/runner/mise.toml
-RUN chmod +x /entrypoint.sh
+RUN chmod +x /entrypoint.sh && \
+    printf '%s\n' \
+        '#!/bin/sh' \
+        'exec /home/runner/externals/node24/bin/node /home/runner/externals/node24/lib/node_modules/corepack/dist/corepack.js "$@"' \
+        > /usr/local/bin/corepack && \
+    chmod +x /usr/local/bin/corepack
 
 USER runner
 
@@ -55,6 +60,7 @@ RUN set -eux; \
     cd /home/runner; \
     openssl version; \
     mise --version; \
+    corepack --version; \
     mise exec -- aws --version; \
     mise exec -- az version; \
     mise exec -- uv --version; \
