@@ -19,7 +19,7 @@ runs:
   using: "composite"
 
   steps:
-    - name: Bootstrap Node.js
+    - name: Setup Node.js
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
       with:
         node-version-file: .node-version
@@ -44,10 +44,53 @@ runs:
       id: detect-pm
       uses: pagopa/dx/actions/detect-node-package-manager@main
 
-    - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+    - name: Resolve package manager cache
+      id: package-manager-cache
+      shell: bash
+      env:
+        PACKAGE_MANAGER: ${{ steps.detect-pm.outputs.package-manager }}
+        WORKING_DIR: ${{ inputs.working_dir }}
+      run: |
+        cd "$WORKING_DIR"
+
+        case "$PACKAGE_MANAGER" in
+          npm)
+            cache_path=$(npm config get cache)
+            lock_file=$(find . -maxdepth 1 \
+              \( -name package-lock.json -o -name npm-shrinkwrap.json \) \
+              -print -quit)
+            ;;
+          pnpm)
+            cache_path=$(pnpm store path --silent)
+            lock_file=$(find . -maxdepth 1 -name pnpm-lock.yaml -print -quit)
+            ;;
+          yarn)
+            if [[ $(yarn --version) == 1.* ]]; then
+              cache_path=$(yarn cache dir)
+            else
+              cache_path=$(yarn config get cacheFolder)
+            fi
+            lock_file=$(find . -maxdepth 1 -name yarn.lock -print -quit)
+            ;;
+          *)
+            echo "::error::Unsupported package manager: $PACKAGE_MANAGER"
+            exit 1
+            ;;
+        esac
+
+        if [ -z "$lock_file" ]; then
+          echo "::error::No lock file found for $PACKAGE_MANAGER in $WORKING_DIR"
+          exit 1
+        fi
+
+        echo "path=$cache_path" >> "$GITHUB_OUTPUT"
+        echo "key=$(sha256sum "$lock_file" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache package manager
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
-        node-version-file: .node-version
-        cache: ${{ steps.detect-pm.outputs.package-manager }}
+        path: ${{ steps.package-manager-cache.outputs.path }}
+        key: ${{ runner.os }}-node-${{ runner.arch }}-${{ steps.detect-pm.outputs.package-manager }}-${{ steps.package-manager-cache.outputs.key }}
 
     - name: Setup turbo cache
       if: ${{ env.TURBO_CACHE_DIR != '' }}
