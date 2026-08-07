@@ -127,6 +127,9 @@ jobs:
       - name: Run code quality checks on affected projects
         run: pnpm validate
 
+      - name: Build affected Docker images
+        run: pnpm nx affected -t docker:build
+
   get-environments:
     name: Get GitHub Environments for Infrastructure
     needs: gate
