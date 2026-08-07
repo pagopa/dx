@@ -93,14 +93,14 @@ jobs:
       - name: Build Package
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         id: build-package
-        uses: pagopa/dx/.github/actions/build-workspace@main
+        uses: pagopa/dx/.github/actions/build-workspace@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
 
       - name: Make artifact
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
         id: make-artifact
-        uses: pagopa/dx/actions/make-artifact@main
+        uses: pagopa/dx/actions/make-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           package-manager: ${{ steps.build-package.outputs.package-manager }}
           workspace-name: ${{ env.WORKSPACE_NAME }}
@@ -108,7 +108,7 @@ jobs:
 
       - name: Upload Artifact
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
           bundle_name: ${{ env.BUNDLE_NAME }}
@@ -135,7 +135,7 @@ jobs:
       use_staging_slot: ${{ steps.query-staging-slot.outputs.use_staging_slot }}
     steps:
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -186,7 +186,7 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
@@ -201,7 +201,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -290,13 +290,13 @@ jobs:
 
     steps:
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Swap Staging and Production Slots
-        uses: pagopa/dx/actions/incremental-rollout@main
+        uses: pagopa/dx/actions/incremental-rollout@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.WEB_APP_NAME }}

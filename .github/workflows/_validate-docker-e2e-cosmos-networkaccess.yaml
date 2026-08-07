@@ -28,7 +28,7 @@ jobs:
 
       - name: Docker Build
         id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:

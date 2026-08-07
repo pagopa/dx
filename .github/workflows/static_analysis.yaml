@@ -55,12 +55,12 @@ jobs:
       - name: Get terraform version from .terraform-version file
         id: get-terraform-version
         if: ${{ inputs.terraform_version == '' }}
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
         if: ${{ inputs.pre_commit_tf_tag == '' }}
-        uses: pagopa/dx/.github/actions/get-pre-commit-version@main
+        uses: pagopa/dx/.github/actions/get-pre-commit-version@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           default_version: "1.96.2"
 
@@ -412,14 +412,14 @@ jobs:
 
       - name: Post Trivy Summary on PR
         if: always() && github.event_name == 'pull_request' && steps.trivy_summary.outputs.has_findings == 'true'
-        uses: pagopa/dx/actions/pr-comment@main
+        uses: pagopa/dx/actions/pr-comment@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           comment-body-file: ${{ steps.trivy_summary.outputs.summary_file }}
           search-pattern: ${{ steps.trivy_summary.outputs.search_pattern }}
 
       - name: Post Summary on PR
         if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/actions/pr-comment@main
+        uses: pagopa/dx/actions/pr-comment@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           comment-body-file: ${{ steps.summary.outputs.summary_file }}
           search-pattern: ${{ steps.summary.outputs.decouple_string }}

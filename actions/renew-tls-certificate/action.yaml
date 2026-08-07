@@ -55,7 +55,7 @@ runs:
         echo "kv_cert_name=$key_vault_cert_name" >> $GITHUB_OUTPUT
 
     - name: Cloud Login
-      uses: pagopa/dx/actions/csp-login@main
+      uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
       env:
         ARM_CLIENT_ID: ${{ inputs.arm_client_id }}
         ARM_TENANT_ID: ${{ inputs.arm_tenant_id }}

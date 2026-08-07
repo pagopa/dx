@@ -42,18 +42,18 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Cloud Provider Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
@@ -75,7 +75,7 @@ jobs:
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'
-        uses: pagopa/dx/.github/actions/slack-notification@main
+        uses: pagopa/dx/.github/actions/slack-notification@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           id: "Terraform Integration Tests"
           title: "*Terraform Integration Tests failed*"

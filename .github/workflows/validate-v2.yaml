@@ -53,13 +53,13 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Install dependencies
         run: pnpm --filter . ci
 
       - name: Warn missing version plan coverage
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -96,7 +96,7 @@ jobs:
           version: ${{ steps.mise.outputs.version }}
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -104,7 +104,7 @@ jobs:
           go-version-file: "go.work"
 
       - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Install dependencies
         run: pnpm ci
@@ -203,13 +203,13 @@ jobs:
           filter: tree:0
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -303,7 +303,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-task@main
+        uses: pagopa/dx/actions/run-dx-task@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:

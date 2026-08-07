@@ -19,12 +19,12 @@ jobs:
 
       - name: Node Setup
         id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Post Plan on PR
         id: comment
         if: steps.node-setup.outputs.package-manager != 'pnpm' && github.event_name == 'pull_request'
-        uses: pagopa/dx/actions/pr-comment@main
+        uses: pagopa/dx/actions/pr-comment@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           comment-body: |
             ### ⚠️ Deprecation Notice

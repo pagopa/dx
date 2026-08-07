@@ -56,7 +56,7 @@ jobs:
 
       - name: Setup Node.js
         id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Update npm (for provenance support)
         shell: bash
@@ -78,7 +78,7 @@ jobs:
         run: npm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
           GH_APP_KEY: ${{ secrets.app-private-key }}

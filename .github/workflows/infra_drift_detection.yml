@@ -113,11 +113,11 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
@@ -218,7 +218,7 @@ jobs:
       - name: Drift Notification
         if: ${{ steps.drift.outputs.drift_found == 'true' }}
         id: drift_notify
-        uses: pagopa/dx/.github/actions/slack-notification@main
+        uses: pagopa/dx/.github/actions/slack-notification@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           id: "Drift Detected"
           title: ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
@@ -237,7 +237,7 @@ jobs:
       - name: Failure Notification
         if: ${{ failure() }}
         id: failure_notify
-        uses: pagopa/dx/.github/actions/slack-notification@main
+        uses: pagopa/dx/.github/actions/slack-notification@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           id: "Workflow Failed"
           title: ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."

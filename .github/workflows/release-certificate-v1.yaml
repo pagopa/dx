@@ -37,7 +37,7 @@ jobs:
     environment: ${{ inputs.environment }}-cd
     steps:
       - name: Renew TLS Certificate
-        uses: pagopa/dx/actions/renew-tls-certificate@main
+        uses: pagopa/dx/actions/renew-tls-certificate@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         with:
           force_renewal: ${{ inputs.force_renewal }}
           key_vault_name: ${{ inputs.key_vault_name }}
@@ -52,7 +52,7 @@ jobs:
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule' && env.SLACK_WEBHOOK_URL != ''
-        uses: pagopa/dx/.github/actions/slack-notification@main
+        uses: pagopa/dx/.github/actions/slack-notification@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:

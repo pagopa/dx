@@ -11,7 +11,7 @@ on:
       - ".github/workflows/_release-terraform-apply-dev-resources.yaml"
 jobs:
   dev_itn_common_deploy:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: pagopa/dx/.github/workflows/infra_apply.yaml@5dd06bf87a5b37b0c1515b8c4891b53445f723c7 # main
     name: Dev - Deploy
     secrets: inherit
     with:
