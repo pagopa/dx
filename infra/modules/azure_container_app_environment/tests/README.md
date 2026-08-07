@@ -8,19 +8,19 @@ This directory contains comprehensive tests for the `azure_container_app_environ
 
 Fast, mocked tests that verify module logic without provisioning infrastructure.
 
-Run: `nx run azure_container_app_environment:tf-test`
+Run: `nx run azure_container_app_environment:test`
 
 ### Contract Tests (contract.tftest.hcl)
 
 Validate input contracts, type constraints, and expected failures.
 
-Run: `nx run azure_container_app_environment:tf-test`
+Run: `nx run azure_container_app_environment:test`
 
 ### Integration Tests (integration.tftest.hcl)
 
 Provision real Azure resources to test module behavior in isolation.
 
-Run: `nx run azure_container_app_environment:tf-test:integration`
+Run: `nx run azure_container_app_environment:test:integration`
 
 **Note**: Integration tests provision real Azure resources and may incur costs.
 

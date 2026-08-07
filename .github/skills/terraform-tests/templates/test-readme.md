@@ -8,19 +8,19 @@ This directory contains comprehensive tests for the `<module_name>` Terraform mo
 
 Fast, mocked tests that verify module logic without provisioning infrastructure.
 
-Run: `nx run <module-name>:tf-test`
+Run: `nx run <module-name>:test`
 
 ### Contract Tests (contract.tftest.hcl)
 
 Validate input contracts, constraints, and expected failures.
 
-Run: `nx run <module-name>:tf-test`
+Run: `nx run <module-name>:test`
 
 ### Integration Tests (integration.tftest.hcl)
 
 Provision real Azure resources to test module behavior in isolation.
 
-Run: `nx run <module-name>:tf-test:integration`
+Run: `nx run <module-name>:test:integration`
 
 **Note**: Integration tests provision real Azure resources and may incur costs.
 
@@ -28,7 +28,7 @@ Run: `nx run <module-name>:tf-test:integration`
 
 Deploy complete scenarios with workloads to verify end-to-end functionality.
 
-Run: `nx run <module-name>:tf-test:e2e`
+Run: `nx run <module-name>:test:e2e`
 
 **Note**: E2E tests deploy full infrastructure and workloads, taking longer to complete.
 
