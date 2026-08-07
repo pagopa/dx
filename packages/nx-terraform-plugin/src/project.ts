@@ -104,6 +104,7 @@ const getPublishTarget = (
 };
 
 const getTestTarget = (initTargetName: string): TargetConfiguration => ({
+  // Fixed names keep each test layer isolated while exposing one Nx target.
   cache: true,
   command: `terraform test`,
   configurations: {
