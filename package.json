@@ -21,6 +21,6 @@
   },
   "scripts": {
     "dx": "node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck --configuration=ci"
+    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci"
   }
 }
