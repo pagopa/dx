@@ -35,10 +35,15 @@ const customOptions = parseOptions({
 
 const expectedNamedInputs = {
   default: ["{projectRoot}/*.{tf,tfvars}"],
+  e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
   examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
+  integrationTests: [
+    "{projectRoot}/tests/integration.tftest.hcl",
+    "{projectRoot}/tests/setup/*.tf",
+  ],
   tests: [
-    "{projectRoot}/tests/**/*.{tf,tfvars}",
-    "{projectRoot}/tests/**/*.tftest.hcl",
+    "{projectRoot}/tests/unit.tftest.hcl",
+    "{projectRoot}/tests/contract.tftest.hcl",
   ],
 };
 
@@ -58,13 +63,46 @@ const publishManifestWithOwner = {
 const getExpectedLintTarget = (root: string) => ({
   cache: true,
   command: "tflint",
-  inputs: ["default", "examples", "tests", "{workspaceRoot}/.tflint.hcl"],
+  inputs: [
+    "default",
+    "examples",
+    "tests",
+    "integrationTests",
+    "e2eTests",
+    "{workspaceRoot}/.tflint.hcl",
+  ],
   options: {
     args: [
       "--disable-rule=terraform_required_version",
       "--disable-rule=terraform_required_providers",
       "--config",
       path.relative(root, ".tflint.hcl") || ".tflint.hcl",
+    ],
+    cwd: "{projectRoot}",
+  },
+});
+
+const getExpectedTestTarget = () => ({
+  cache: true,
+  command: "terraform test",
+  configurations: {
+    e2e: {
+      args: [],
+      command:
+        "if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi",
+      inputs: ["default", "e2eTests"],
+    },
+    integration: {
+      args: ["-filter='tests/integration.tftest.hcl'"],
+      inputs: ["default", "integrationTests"],
+    },
+  },
+  dependsOn: ["tf-init"],
+  inputs: ["default", "tests"],
+  options: {
+    args: [
+      "-filter='tests/unit.tftest.hcl'",
+      "-filter='tests/contract.tftest.hcl'",
     ],
     cwd: "{projectRoot}",
   },
@@ -290,11 +328,13 @@ describe("getProject applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
-      expect(targets["tf-test"]?.dependsOn).toEqual(["tf-init"]);
+      expect(targets["tf-test"]).toEqual(getExpectedTestTarget());
       expect(targets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
       expect(targets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
     });
+  });
 
+  describe("environment tags", () => {
     it("adds the resource environment tag to flat resource applications", () => {
       const root = path.join("infra", "resources", "dev");
       const project = getProject(defaultOptions, root);

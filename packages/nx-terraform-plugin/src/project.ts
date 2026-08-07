@@ -103,6 +103,31 @@ const getPublishTarget = (
   }
 };
 
+const getTestTarget = (initTargetName: string): TargetConfiguration => ({
+  cache: true,
+  command: `terraform test`,
+  configurations: {
+    e2e: {
+      args: [],
+      command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
+      inputs: ["default", "e2eTests"],
+    },
+    integration: {
+      args: ["-filter='tests/integration.tftest.hcl'"],
+      inputs: ["default", "integrationTests"],
+    },
+  },
+  dependsOn: [initTargetName],
+  inputs: ["default", "tests"],
+  options: {
+    args: [
+      "-filter='tests/unit.tftest.hcl'",
+      "-filter='tests/contract.tftest.hcl'",
+    ],
+    cwd: "{projectRoot}",
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
@@ -158,33 +183,7 @@ const getTargets = (
         },
       },
     ],
-    [
-      opts.testTargetName,
-      {
-        cache: true,
-        command: `terraform test`,
-        configurations: {
-          e2e: {
-            args: [],
-            command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
-            inputs: ["default", "e2eTests"],
-          },
-          integration: {
-            args: ["-filter='tests/integration.tftest.hcl'"],
-            inputs: ["default", "integrationTests"],
-          },
-        },
-        dependsOn: [opts.initTargetName],
-        inputs: ["default", "tests"],
-        options: {
-          args: [
-            "-filter='tests/unit.tftest.hcl'",
-            "-filter='tests/contract.tftest.hcl'",
-          ],
-          cwd,
-        },
-      },
-    ],
+    [opts.testTargetName, getTestTarget(opts.initTargetName)],
     [
       opts.validateTargetName,
       {

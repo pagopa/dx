@@ -101,6 +101,27 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		throw error;
 	}
 };
+const getTestTarget = (initTargetName) => ({
+	cache: true,
+	command: `terraform test`,
+	configurations: {
+		e2e: {
+			args: [],
+			command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
+			inputs: ["default", "e2eTests"]
+		},
+		integration: {
+			args: ["-filter='tests/integration.tftest.hcl'"],
+			inputs: ["default", "integrationTests"]
+		}
+	},
+	dependsOn: [initTargetName],
+	inputs: ["default", "tests"],
+	options: {
+		args: ["-filter='tests/unit.tftest.hcl'", "-filter='tests/contract.tftest.hcl'"],
+		cwd: "{projectRoot}"
+	}
+});
 const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifest) => {
 	const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
 	const formatArgs = ["-list=true", "-recursive=true"];
@@ -108,7 +129,9 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 	const inputs = [
 		"default",
 		"examples",
-		"tests"
+		"tests",
+		"integrationTests",
+		"e2eTests"
 	];
 	const targets = [
 		[opts.initTargetName, {
@@ -128,13 +151,7 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 				cwd
 			}
 		}],
-		[opts.testTargetName, {
-			cache: true,
-			command: `terraform test`,
-			dependsOn: [opts.initTargetName],
-			inputs: ["default", "tests"],
-			options: { cwd }
-		}],
+		[opts.testTargetName, getTestTarget(opts.initTargetName)],
 		[opts.validateTargetName, {
 			cache: true,
 			command: `terraform validate`,
@@ -231,8 +248,10 @@ const getProject = (opts, root, hasRootTflintConfig = false, publishManifest = v
 		name: getProjectNameFromRoot(root),
 		namedInputs: {
 			default: ["{projectRoot}/*.{tf,tfvars}"],
+			e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
 			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
-			tests: ["{projectRoot}/tests/**/*.{tf,tfvars}", "{projectRoot}/tests/**/*.tftest.hcl"]
+			integrationTests: ["{projectRoot}/tests/integration.tftest.hcl", "{projectRoot}/tests/setup/*.tf"],
+			tests: ["{projectRoot}/tests/unit.tftest.hcl", "{projectRoot}/tests/contract.tftest.hcl"]
 		},
 		projectType,
 		root,
