@@ -41,20 +41,20 @@ export type TerraformPluginOptions = z.infer<
 
 const defaultOptions: TerraformPluginOptions = {
   additionalEnvironments: [],
-  applyTargetName: "tf-apply",
-  consoleTargetName: "tf-console",
-  docsTargetName: "terraform-docs",
-  formatTargetName: "tf-fmt",
-  initTargetName: "tf-init",
-  lintTargetName: "tflint",
-  outputTargetName: "tf-output",
-  planTargetName: "tf-plan",
+  applyTargetName: "apply",
+  consoleTargetName: "console",
+  docsTargetName: "docs",
+  formatTargetName: "fmt",
+  initTargetName: "init",
+  lintTargetName: "lint",
+  outputTargetName: "output",
+  planTargetName: "plan",
   publish: {
     mode: "github",
   },
   publishTargetName: "nx-release-publish",
-  testTargetName: "tf-test",
-  validateTargetName: "tf-validate",
+  testTargetName: "test",
+  validateTargetName: "validate",
 };
 
 export const parseOptions = (

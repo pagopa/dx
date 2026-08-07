@@ -71,7 +71,7 @@ jobs:
       - name: Run Terraform Integration Tests
         timeout-minutes: 120
         run: |
-          npx nx run-many --target tf-test --configuration integration
+          npx nx run-many --target test --configuration integration
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'

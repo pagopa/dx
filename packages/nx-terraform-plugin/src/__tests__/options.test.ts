@@ -6,20 +6,20 @@ describe("parseOptions", () => {
   it("returns default target names when options are undefined", () => {
     expect(parseOptions(undefined)).toEqual({
       additionalEnvironments: [],
-      applyTargetName: "tf-apply",
-      consoleTargetName: "tf-console",
-      docsTargetName: "terraform-docs",
-      formatTargetName: "tf-fmt",
-      initTargetName: "tf-init",
-      lintTargetName: "tflint",
-      outputTargetName: "tf-output",
-      planTargetName: "tf-plan",
+      applyTargetName: "apply",
+      consoleTargetName: "console",
+      docsTargetName: "docs",
+      formatTargetName: "fmt",
+      initTargetName: "init",
+      lintTargetName: "lint",
+      outputTargetName: "output",
+      planTargetName: "plan",
       publish: {
         mode: "github",
       },
       publishTargetName: "nx-release-publish",
-      testTargetName: "tf-test",
-      validateTargetName: "tf-validate",
+      testTargetName: "test",
+      validateTargetName: "validate",
     });
   });
 
@@ -82,17 +82,17 @@ describe("parseOptions", () => {
   it("rejects duplicate target names", () => {
     expect(() =>
       parseOptions({
-        applyTargetName: "tf-plan",
-        consoleTargetName: "tf-console",
-        docsTargetName: "terraform-docs",
-        formatTargetName: "tf-fmt",
-        initTargetName: "tf-init",
-        lintTargetName: "tflint",
-        outputTargetName: "tf-output",
-        planTargetName: "tf-plan",
-        testTargetName: "tf-test",
-        validateTargetName: "tf-validate",
+        applyTargetName: "plan",
+        consoleTargetName: "console",
+        docsTargetName: "docs",
+        formatTargetName: "fmt",
+        initTargetName: "init",
+        lintTargetName: "lint",
+        outputTargetName: "output",
+        planTargetName: "plan",
+        testTargetName: "test",
+        validateTargetName: "validate",
       }),
-    ).toThrow('Target name "tf-plan" is duplicated');
+    ).toThrow('Target name "plan" is duplicated');
   });
 });
