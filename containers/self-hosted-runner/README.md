@@ -7,10 +7,11 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
 - **mise**: Installs repository-specific development tools declared in
   `mise.toml`.
-- **Pre-installed tool baseline** – provides AWS CLI, Azure CLI, and uv through
-  the image's `mise.toml`; repository configurations can extend or override it.
-  The mise shims expose baseline tools directly on `PATH`. Language runtimes
-  and Terraform remain managed by their official workflow setup actions.
+- **Pre-installed tool baseline** – provides AWS CLI, Azure CLI, uv, and zip
+  through the image's `mise.toml`; repository configurations can extend or
+  override it. The mise shims expose baseline tools directly on `PATH`.
+  Language runtimes and Terraform remain managed by their official workflow
+  setup actions.
 - **Setup action runtime policy** – disables Go, Node.js, pnpm, Python, and
   Terraform in mise by default, reserving those runtimes for workflow setup
   actions.
@@ -78,4 +79,5 @@ The image includes basic tests to verify the installation of key tools:
 - AWS CLI (`aws --version`)
 - Azure CLI (`az version`)
 - uv (`uv --version`)
+- zip (`zip -v`)
 - GitHub Actions Node.js runtime (`externals/node24/bin/node --version`)

@@ -15,12 +15,6 @@ ENV MISE_DISABLE_TOOLS=go,node,pnpm,python,terraform
 ENV PATH="${MISE_DATA_DIR}/shims:${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
-RUN printf 'Acquire::Retries "5";\nAcquire::http::Timeout "30";\nAcquire::https::Timeout "30";\n' \
-    > /etc/apt/apt.conf.d/80network-retries && \
-    apt-get update && apt-get install -y --no-install-recommends \
-    zip && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Mise backends use standard XDG directories that vary by tool. Keep those
 # roots writable without changing ownership outside those locations.
 RUN install -d -o runner -g runner -m 0755 \
@@ -63,7 +57,8 @@ RUN set -eux; \
     mise --version; \
     mise exec -- aws --version; \
     mise exec -- az version; \
-    mise exec -- uv --version
+    mise exec -- uv --version; \
+    mise exec -- zip -v | head -n 2
 
 RUN set -eux; \
     cd /home/runner; \
