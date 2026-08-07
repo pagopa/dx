@@ -103,7 +103,7 @@ jobs:
 
       - name: Fix Alpine Container Image
         run: |
-          apk --no-cache add tar
+          apk --no-cache add tar yq
           python -m pip freeze --local
 
       - name: Run Trivy custom policies
@@ -272,6 +272,34 @@ jobs:
           # Utility functions to add content to both summary and temporary file
           add_to_summary() { echo "$1" >> "$GITHUB_STEP_SUMMARY"; echo "$1" >> "$SUMMARY_FILE"; }
           add_markdown() { for line in "$@"; do add_to_summary "$line"; done; }
+
+          # Warn when the caller still uses an outdated DX pre-commit script.
+          REQUIRED_DX_SCRIPT_VERSION="0.1.1"
+          DX_SCRIPT_REVISION=$(yq -r '
+            .repos[] |
+            select(.repo == "https://github.com/pagopa/dx") |
+            .rev // ""
+          ' .pre-commit-config.yaml)
+          DX_SCRIPT_VERSION="${DX_SCRIPT_REVISION##*@}"
+          DX_SCRIPT_VERSION="${DX_SCRIPT_VERSION#v}"
+
+          if [[ "$DX_SCRIPT_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] &&
+            [ "$DX_SCRIPT_VERSION" != "$REQUIRED_DX_SCRIPT_VERSION" ] &&
+            [ "$(printf '%s\n' "$DX_SCRIPT_VERSION" "$REQUIRED_DX_SCRIPT_VERSION" | sort -V | head -n1)" = "$DX_SCRIPT_VERSION" ]; then
+            {
+              echo "> [!WARNING]"
+              echo "> ### ⚠️ Outdated PagoPA DX pre-commit script"
+              echo ">"
+              echo "> Your repository uses PagoPA DX pre-commit script version \`$DX_SCRIPT_VERSION\`, but version \`$REQUIRED_DX_SCRIPT_VERSION\` or newer is required."
+              echo ">"
+              echo "> Run the following command locally to update it:"
+              echo ">"
+              echo "> \`\`\`bash"
+              echo "> pre-commit autoupdate --repo https://github.com/pagopa/dx"
+              echo "> \`\`\`"
+              echo ""
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
 
           # Terraform modules handling
           if [ -f "lock_output.json" ]; then

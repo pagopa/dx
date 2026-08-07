@@ -3,5 +3,9 @@
   "version": "4.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Creates an Azure App Service with networking and deployment slot support"
+  "description": "Creates an Azure App Service with networking and deployment slot support",
+  "scripts": {
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
 }
