@@ -37,8 +37,9 @@ import type { AzureConfig, AzureDetailedResourceReport } from "./types.js";
 import { findingsFromAnalysisResult } from "../finding.js";
 import {
   type AnalysisResult,
-  type CostRisk,
+  COST_RISK_ORDER,
   DEFAULT_THRESHOLDS,
+  maxCostRisk,
   mergeResults,
   type Thresholds,
 } from "../types.js";
@@ -55,12 +56,17 @@ import {
   isAzqrReportMasked,
   loadAzqrReport,
 } from "./azqr.js";
+import {
+  categorizeCustomFindings,
+  MISSING_TAGS_REASON,
+  NO_ANALYZER_REASON,
+  unpreferredLocationReason,
+} from "./finding-category.js";
+import { foldDuplicateFinding } from "./finding-dedup.js";
 import { PricingClient, PricingService } from "./pricing/index.js";
 import { matchesTags, type MetricsCache } from "./utils.js";
 
 const DEFAULT_CONCURRENCY = 8;
-
-const RISK_ORDER: Record<CostRisk, number> = { high: 0, low: 2, medium: 1 };
 
 /**
  * Analyzes resources in every configured Azure subscription and returns
@@ -195,7 +201,10 @@ export async function analyzeAzureResources(
     if (aSub !== bSub) return aSub ? 1 : -1;
     if (a.analysis.costRisk === b.analysis.costRisk)
       return (a.resource.name ?? "").localeCompare(b.resource.name ?? "");
-    return RISK_ORDER[a.analysis.costRisk] - RISK_ORDER[b.analysis.costRisk];
+    return (
+      COST_RISK_ORDER[a.analysis.costRisk] -
+      COST_RISK_ORDER[b.analysis.costRisk]
+    );
   });
 
   return allReports;
@@ -236,7 +245,7 @@ export async function analyzeResource(
   // Generic check: lack of tags is a common sign of unmanaged resources.
   if (!resource.tags || Object.keys(resource.tags).length === 0) {
     result.suspectedUnused = true;
-    result.reason += "No tags found. ";
+    result.reason += `${MISSING_TAGS_REASON} `;
   }
 
   const ctx: AnalyzerContext = {
@@ -261,7 +270,7 @@ export async function analyzeResource(
   }
 
   if (!matched) {
-    result.reason += "No specific analysis for this resource type. ";
+    result.reason += `${NO_ANALYZER_REASON} `;
   }
 
   // Generic check for location
@@ -269,7 +278,7 @@ export async function analyzeResource(
     resource.location &&
     !resource.location.toLowerCase().includes(preferredLocation.toLowerCase())
   ) {
-    result.reason += `Resource not in preferred location (${preferredLocation}). `;
+    result.reason += `${unpreferredLocationReason(preferredLocation)} `;
   }
 
   return { ...result, reason: result.reason.trim() };
@@ -294,10 +303,7 @@ export function mergeFinding(
     // don't produce "Sentence one.Sentence two." when the existing reason is
     // already trimmed (i.e. has no trailing separator space).
     existing.analysis = {
-      costRisk:
-        RISK_ORDER[existing.analysis.costRisk] <= RISK_ORDER[added.costRisk]
-          ? existing.analysis.costRisk
-          : added.costRisk,
+      costRisk: maxCostRisk(existing.analysis.costRisk, added.costRisk),
       estimatedMonthlySavings: existing.analysis.estimatedMonthlySavings,
       reason:
         existing.analysis.reason && added.reason
@@ -451,6 +457,11 @@ function hasTagFilter(filterTags: Map<string, string> | undefined): boolean {
  * report collected during the live scan so AZQR findings attach to their
  * resource when present or create a stub otherwise.
  *
+ * Findings that duplicate what a live source already reported for the same
+ * resource are folded into the existing finding instead of being appended, so
+ * an orphaned resource seen by both AZQR and Advisor/custom analyzers shows up
+ * once — on the entry that carries the monetary estimate.
+ *
  * When the report is still masked, findings cannot match live resource IDs, so
  * a warning advises re-running AZQR with `--mask=false`.
  */
@@ -472,11 +483,22 @@ async function ingestAzqrReport(
   const reportsById = new Map<string, AzureDetailedResourceReport>(
     reports.map((r) => [(r.resource.id ?? "").toLowerCase(), r]),
   );
+  let merged = 0;
+  let deduplicated = 0;
   for (const finding of findings) {
+    const existing = reportsById.get(finding.resourceId.toLowerCase());
+    if (existing && foldDuplicateFinding(finding, existing)) {
+      deduplicated++;
+      continue;
+    }
     mergeFinding(finding, reports, reportsById);
+    merged++;
   }
   logger.info(
-    `AZQR: merged ${findings.length} finding(s) from ${azqrReportPath}`,
+    `AZQR: merged ${merged} finding(s) from ${azqrReportPath}` +
+      (deduplicated > 0
+        ? `, ${deduplicated} deduplicated onto existing findings`
+        : ""),
   );
 }
 
@@ -571,12 +593,14 @@ async function runPerResourceAnalysis(args: {
         const reason = analysis.reason || "No specific findings.";
         const report: AzureDetailedResourceReport = {
           analysis: { ...analysis, reason },
-          findings: findingsFromAnalysisResult({
-            reason,
-            resourceId: resource.id ?? "",
-            severity: analysis.costRisk,
-            source: "custom",
-          }),
+          findings: categorizeCustomFindings(
+            findingsFromAnalysisResult({
+              reason,
+              resourceId: resource.id ?? "",
+              severity: analysis.costRisk,
+              source: "custom",
+            }),
+          ),
           resource,
         };
         reports.push(report);
