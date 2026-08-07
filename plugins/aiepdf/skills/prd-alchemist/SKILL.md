@@ -93,10 +93,13 @@ enforces a constraint.
    questions may remain. If the criterion is met, change only
    `metadata.status` from `draft` to `review`; otherwise keep `draft` and ask
    targeted questions. Never infer this transition.
-7. **Offer Confluence publication.** After writing a new PRD, ask:
-   **"Do you want me to create a Confluence page for this PRD?"** Do not publish
-   without an affirmative answer. When handling a status-only completion
-   request, do not offer publication unless the user separately asks for it.
+7. **Offer Confluence publication.** After writing a new PRD, in the same reply
+   ask **"Do you want me to create a Confluence page for this PRD?"** and state
+   that, if confirmed, the `confluence-librarian` skill will handle the
+   publication. Do not publish, and do not ask for or assume a publication
+   language or other destination details, until the user gives an affirmative
+   answer. When handling a status-only completion request, do not offer
+   publication unless the user separately asks for it.
 8. **Hand off publication.** If the user confirms, invoke or hand off to the
    `confluence-librarian` skill with the PRD path, title, and any known
    destination details. The librarian owns publication mechanics, translation,
