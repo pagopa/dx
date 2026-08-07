@@ -258,6 +258,7 @@ const sidebars: SidebarsConfig = {
     {
       className: categoryClass("contributing"),
       items: [
+        "contributing/local-environment-setup",
         "contributing/contributing-to-dx-provider",
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",
