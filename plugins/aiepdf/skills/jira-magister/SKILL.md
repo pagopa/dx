@@ -8,6 +8,12 @@ description: Project approved DR/SRS and Use Case contracts into a reviewable Ji
 Turn validated Use Cases into a Jira execution projection without replacing the
 PRD or DR/SRS as the source of truth.
 
+## Shared glossary
+
+Before proceeding, read the shared plugin glossary at
+[`../../references/glossary.md`](../../references/glossary.md). Use its
+definitions to keep framework terminology consistent across plugin artifacts.
+
 ## When to use this skill
 
 Use this skill when the user asks to:
