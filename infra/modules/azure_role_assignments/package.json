@@ -3,5 +3,9 @@
   "version": "3.0.0",
   "private": true,
   "provider": "azurerm",
-  "description": "Manages Azure RBAC role assignments for resources and security principals"
+  "description": "Manages Azure RBAC role assignments for resources and security principals",
+  "scripts": {
+    "test:unit": "terraform test -filter='tests/unit.tftest.hcl'",
+    "test:contract": "terraform test -filter='tests/contract.tftest.hcl'"
+  }
 }

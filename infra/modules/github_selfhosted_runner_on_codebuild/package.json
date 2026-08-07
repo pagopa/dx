@@ -3,5 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "provider": "aws",
-  "description": "Deploy a self-hosted runner based on AWS CodeBuild"
+  "description": "Deploy a self-hosted runner based on AWS CodeBuild",
+  "scripts": {
+    "test:contract": "terraform test -test-directory=_tests -filter=_tests/contract.tftest.hcl",
+    "test:unit": "terraform test -test-directory=_tests -filter=_tests/unit.tftest.hcl"
+  }
 }
