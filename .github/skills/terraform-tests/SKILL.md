@@ -53,10 +53,9 @@ tests/
 Tests are run using NX commands:
 
 ```bash
-nx run <module-name>:test:unit
-nx run <module-name>:test:contract
-nx run <module-name>:test:integration
-nx run <module-name>:test:e2e
+nx run <module-name>:tf-test
+nx run <module-name>:tf-test:integration
+nx run <module-name>:tf-test:e2e
 ```
 
 **Important**: After modifying unit and contract tests, **always execute them** to verify they pass. Integration and E2E tests are slow and should not be run during development, only in CI/CD.

@@ -103,6 +103,32 @@ const getPublishTarget = (
   }
 };
 
+const getTestTarget = (initTargetName: string): TargetConfiguration => ({
+  // Fixed names keep each test layer isolated while exposing one Nx target.
+  cache: true,
+  command: `terraform test`,
+  configurations: {
+    e2e: {
+      args: [],
+      command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
+      inputs: ["default", "e2eTests"],
+    },
+    integration: {
+      args: ["-filter='tests/integration.tftest.hcl'"],
+      inputs: ["default", "integrationTests"],
+    },
+  },
+  dependsOn: [initTargetName],
+  inputs: ["default", "tests"],
+  options: {
+    args: [
+      "-filter='tests/unit.tftest.hcl'",
+      "-filter='tests/contract.tftest.hcl'",
+    ],
+    cwd: "{projectRoot}",
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   root: string,
@@ -114,7 +140,13 @@ const getTargets = (
   const formatArgs = ["-list=true", "-recursive=true"];
 
   const cwd = "{projectRoot}";
-  const inputs = ["default", "examples", "tests"];
+  const inputs = [
+    "default",
+    "examples",
+    "tests",
+    "integrationTests",
+    "e2eTests",
+  ];
 
   // Shared targets for applications and libraries.
   // To speed up the development loop, frequently used tasks like "validate"
@@ -152,18 +184,7 @@ const getTargets = (
         },
       },
     ],
-    [
-      opts.testTargetName,
-      {
-        cache: true,
-        command: `terraform test`,
-        dependsOn: [opts.initTargetName],
-        inputs: ["default", "tests"],
-        options: {
-          cwd,
-        },
-      },
-    ],
+    [opts.testTargetName, getTestTarget(opts.initTargetName)],
     [
       opts.validateTargetName,
       {
@@ -324,10 +345,15 @@ export const getProject = (
     name: getProjectNameFromRoot(root),
     namedInputs: {
       default: ["{projectRoot}/*.{tf,tfvars}"],
+      e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
+      integrationTests: [
+        "{projectRoot}/tests/integration.tftest.hcl",
+        "{projectRoot}/tests/setup/*.tf",
+      ],
       tests: [
-        "{projectRoot}/tests/**/*.{tf,tfvars}",
-        "{projectRoot}/tests/**/*.tftest.hcl",
+        "{projectRoot}/tests/unit.tftest.hcl",
+        "{projectRoot}/tests/contract.tftest.hcl",
       ],
     },
     projectType,
