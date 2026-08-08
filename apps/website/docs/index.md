@@ -125,10 +125,6 @@ All DX Terraform modules are available on
 [the public Terraform Registry](https://registry.terraform.io/namespaces/pagopa-dx)
 under the `pagopa-dx` organization.
 
-Of course,
-[everyone can contribute](./contributing/contributing-to-dx-terraform-modules.md)
-to improve them.
-
 ### ⚙️ **GitHub Actions Workflows**
 
 Reusable workflows for common scenarios:
@@ -163,13 +159,9 @@ Consistent approaches across teams:
 We're building this platform together! Whether you're fixing a typo or proposing
 a new tool, your contributions make DX better for everyone.
 
-- **📝 Improve documentation** - Found something unclear? Submit a PR!
-- **🔧 Contribute tools** - Share reusable modules and workflows
-- **💡 Share ideas** - Open an issue to discuss new features
-
-We encourage you to contribute to the DX project! Start by reviewing our
-[contribution guidelines](https://github.com/pagopa/dx/blob/main/CONTRIBUTING.md)
-to understand how you can get involved and make a meaningful impact.
+Start with [Local environment setup](contributing/local-environment-setup.md) to
+prepare your machine or development container and choose the contribution guide
+that matches your work.
 
 :::tip **Need help deciding?**
 
