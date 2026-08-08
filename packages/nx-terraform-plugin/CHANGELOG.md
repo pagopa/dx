@@ -1,3 +1,14 @@
+## 0.5.3 (2026-08-07)
+
+### 🩹 Fixes
+
+- Move Terraform integration and e2e tests to dedicated Nx target configurations. ([#2054](https://github.com/pagopa/dx/pull/2054))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Luca Cavallaro
+
 ## 0.5.2 (2026-07-28)
 
 ### 🧱 Updated Dependencies
