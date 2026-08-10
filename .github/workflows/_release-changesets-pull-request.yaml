@@ -17,7 +17,7 @@ jobs:
       id-token: write
       packages: write
       pull-requests: write
-    uses: ./.github/workflows/release-v2.yaml
+    uses: $/.github/workflows/release-v2.yaml
     with:
       environment: npm-prod-cd
     secrets:

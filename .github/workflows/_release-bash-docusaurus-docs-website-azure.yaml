@@ -21,7 +21,7 @@ jobs:
       contents: read
       id-token: write
       pull-requests: write
-    uses: ./.github/workflows/release-azure-staticapp-v1.yaml
+    uses: $/.github/workflows/release-azure-staticapp-v1.yaml
     secrets: inherit
     with:
       workspace_name: "docs" # The 'name' from the app's package.json

@@ -7,7 +7,7 @@ on:
 
 jobs:
   drift_detection_prod:
-    uses: ./.github/workflows/infra_drift_detection.yml
+    uses: $/.github/workflows/infra_drift_detection.yml
     name: Drift Detection - PROD
     permissions:
       contents: read

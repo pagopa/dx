@@ -77,22 +77,15 @@ jobs:
         run: |
           npx nx@latest init --yes
 
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-tags: "true"
-          fetch-depth: 0
-          path: dx
-
       - name: Build Package
         id: build-package
-        uses: ./dx/.github/actions/build-workspace
+        uses: $/.github/actions/build-workspace
         with:
           workspace_name: my-app
 
       - name: Make artifact
         id: make-artifact
-        uses: ./dx/actions/make-artifact
+        uses: $/actions/make-artifact
         with:
           package-manager: ${{ steps.build-package.outputs.package-manager }}
           workspace-name: my-app

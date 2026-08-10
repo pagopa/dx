@@ -82,7 +82,7 @@ jobs:
 
       - name: Run renew TLS certificate action
         id: renew-certificate
-        uses: ./actions/renew-tls-certificate
+        uses: $/actions/renew-tls-certificate
         env:
           LETS_ENCRYPT_DIRECTORY_URL: https://acme-staging-v02.api.letsencrypt.org/directory
         with:
