@@ -133,6 +133,7 @@ const getExpectedPublishTarget = (
   useGitHubAppAuthentication: boolean,
 ) => ({
   cache: false,
+  dependsOn: ["@pagopa/nx-terraform-plugin:build"],
   executor: "@pagopa/nx-terraform-plugin:publish",
   options: {
     description: "Terraform module description",
@@ -329,7 +330,10 @@ describe("getProject applications", () => {
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
       expect(targets["test"]).toEqual(getExpectedTestTarget());
-      expect(targets["plan"]?.dependsOn).toEqual(["init"]);
+      expect(targets["plan"]?.dependsOn).toEqual([
+        "init",
+        "@pagopa/nx-terraform-plugin:build",
+      ]);
       expect(targets["apply"]?.dependsOn).toEqual(["init"]);
     });
   });
