@@ -67,6 +67,11 @@ const getEnvironmentTag = (
 const getRootConfigPath = (root: string, configFileName: string) =>
   path.relative(root, configFileName) || configFileName;
 
+// Custom executors (plan, publish) run compiled JS from this package's dist/
+// folder, which isn't committed to the repo. Any target using one of them
+// must depend on this plugin's own build so the executor exists before it runs.
+const PLUGIN_BUILD_TARGET = "@pagopa/nx-terraform-plugin:build";
+
 const getPublishTarget = (
   opts: TerraformPluginOptions,
   root: string,
@@ -78,6 +83,7 @@ const getPublishTarget = (
       opts.publishTargetName,
       {
         cache: false,
+        dependsOn: [PLUGIN_BUILD_TARGET],
         executor: "@pagopa/nx-terraform-plugin:publish",
         options: {
           ...publishOptions,
@@ -288,7 +294,7 @@ const getTargets = (
               verbose: false,
             },
           },
-          dependsOn: [opts.initTargetName],
+          dependsOn: [opts.initTargetName, PLUGIN_BUILD_TARGET],
           executor: "@pagopa/nx-terraform-plugin:plan",
           options: {
             projectRoot: "{projectRoot}",
