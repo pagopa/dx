@@ -29,12 +29,12 @@ jobs:
       - name: Get all modules
         id: get-all-modules
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-all-resources@main
+        uses: $/.github/actions/get-all-resources
 
       - name: Get modified modules
         id: get-modified-modules
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-modified-resources@main
+        uses: $/.github/actions/get-modified-resources
         with:
           current_ref: ${{ github.event.before }}
 
@@ -57,7 +57,7 @@ jobs:
 
       - name: Push module to subrepository
         id: push-to-subrepository
-        uses: pagopa/dx/.github/actions/push-to-subrepo@main
+        uses: $/.github/actions/push-to-subrepo
         with:
           name: ${{ matrix.module }}
           github_pat: ${{ secrets.PUSH_TF_MODULES_PAT }}

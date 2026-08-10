@@ -77,7 +77,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: $/actions/docker-build-push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -144,7 +144,7 @@ jobs:
           echo "image_ref=$image_ref" >> $GITHUB_OUTPUT
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: $/actions/csp-login
 
       - name: Configure AZ CLI
         run: |
@@ -270,7 +270,7 @@ jobs:
           echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
 
       - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@main
+        uses: $/actions/incremental-rollout
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         with:

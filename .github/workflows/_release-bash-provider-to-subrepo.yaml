@@ -27,14 +27,14 @@ jobs:
       - name: Get all providers
         id: get-all-providers
         if: ${{ github.event_name == 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-all-resources@main
+        uses: $/.github/actions/get-all-resources
         with:
           resource_type: "provider"
 
       - name: Get modified providers
         id: get-modified-providers
         if: ${{ github.event_name != 'workflow_dispatch' }}
-        uses: pagopa/dx/.github/actions/get-modified-resources@main
+        uses: $/.github/actions/get-modified-resources
         with:
           current_ref: ${{ github.event.before }}
           resource_type: "provider"

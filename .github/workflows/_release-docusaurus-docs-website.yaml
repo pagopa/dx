@@ -30,7 +30,7 @@ jobs:
           fetch-depth: 0
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: $/.github/actions/node-setup
 
       - name: Install dependencies
         run: pnpm install

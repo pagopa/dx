@@ -70,7 +70,7 @@ jobs:
         run: npx turbo@2 prune --scope "$WORKSPACE"
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: $/.github/actions/node-setup
         with:
           working_dir: ./out
 
@@ -136,7 +136,7 @@ jobs:
           echo "artifact-path=$(realpath "$BUNDLE_NAME.zip")" >> "$GITHUB_OUTPUT"
 
       - name: Upload Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: $/.github/actions/upload-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-artifact.outputs.artifact-path }}
@@ -153,12 +153,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: $/.github/actions/download-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: $/actions/csp-login
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -251,12 +251,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: $/.github/actions/download-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: $/actions/csp-login
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -283,7 +283,7 @@ jobs:
 
     steps:
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: $/actions/csp-login
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}

@@ -21,7 +21,7 @@ Always prefer explicit inputs over implicit environment variables for workflow a
 
 Maintain a clear distinction between internal and external dependencies.
 
-- **Internal DX Actions**: It is acceptable to use branch names like `main` or semantic tags for internal PagoPA DX actions during development or when they are part of the same lifecycle as the caller.
+- **Internal DX Actions (same repository)**: Reference sibling actions and reusable workflows with the self-repository `$/` syntax (e.g. `uses: $/actions/csp-login`, `uses: $/.github/workflows/static_analysis.yaml`), without a `@ref` suffix. `$/` always resolves to the exact commit currently running, so it never needs to track `main` and automatically stays in sync even when the caller is pinned to a tag or full commit SHA. Requires Actions runner >= 2.336.0. Do **not** use `pagopa/dx/...@main` or other branch/tag references for same-repository actions.
 - **External Actions**: **MUST** always be pinned to a specific version using a full commit SHA. This protects the pipeline from supply chain attacks and prevents unexpected failures caused by upstream breaking changes.
 
 ### 3. Parameter Management

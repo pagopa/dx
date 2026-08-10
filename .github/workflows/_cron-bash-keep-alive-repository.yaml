@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Keep Alive
-        uses: pagopa/dx/actions/keep-alive@main
+        uses: $/actions/keep-alive
         with:
           bypass: ${{ github.event.inputs.bypass || 'false' }}
           bot_token: ${{ secrets.BOT_GH_TOKEN }}

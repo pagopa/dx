@@ -130,7 +130,7 @@ jobs:
           mv "$BUNDLE_NAME.zip" "../$BUNDLE_NAME.zip"
 
       - name: Upload Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: $/.github/actions/upload-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: "${{ github.workspace }}/${{ env.BUNDLE_NAME }}.zip"
@@ -149,12 +149,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: $/.github/actions/download-artifact
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: $/actions/csp-login
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
