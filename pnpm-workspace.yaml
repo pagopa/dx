@@ -38,7 +38,7 @@ catalog:
   "@tsconfig/node24": 24.0.4
   "@types/js-yaml": ^4.0.9
   "@types/node": ^22.20.1
-  "@types/semver": ^7.7.1
+  "@types/semver": ^7.8.0
   "@vitest/coverage-v8": ^4.1.10
   commander: ^14.0.3
   drizzle-orm: ^0.45.2
@@ -55,7 +55,7 @@ catalog:
   tsdown: ^0.22.14
   tslib: ^2.8.1
   tsup: ^8.5.1
-  tsx: ^4.23.1
+  tsx: ^4.23.10
   typescript: ~5.9.3
   vitest: ^4.1.10
   vitest-mock-extended: ^4.0.0
@@ -85,8 +85,8 @@ catalogs:
     "@opentelemetry/sdk-logs": ^0.221.0
 
   react:
-    "@types/react": ^19.2.17
-    "@types/react-dom": ^19.2.3
+    "@types/react": ^19.2.18
+    "@types/react-dom": ^19.2.4
     react: ^19.2.8
     react-dom: ^19.2.8
 

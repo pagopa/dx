@@ -11,7 +11,7 @@
     "@pagopa/nx-dx-docker-plugin": "workspace:^",
     "@pagopa/nx-terraform-plugin": "workspace:^",
     "@swc-node/register": "^1.12.1",
-    "@swc/core": "^1.15.46",
+    "@swc/core": "^1.15.47",
     "@tsconfig/node24": "catalog:",
     "eslint": "catalog:",
     "nx": "catalog:",

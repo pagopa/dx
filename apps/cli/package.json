@@ -68,7 +68,7 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "fast-check": "^4.9.0",
-    "memfs": "^4.64.0",
+    "memfs": "^4.68.0",
     "plop": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
