@@ -29,13 +29,13 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
-        uses: $/.github/actions/node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Warn missing version plan coverage
-        uses: $/actions/nx-release
+        uses: pagopa/dx/actions/nx-release@main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -55,7 +55,7 @@ jobs:
           filter: tree:0
 
       - name: Setup Node.js
-        uses: $/.github/actions/node-setup
+        uses: pagopa/dx/.github/actions/node-setup@main
 
       - name: Setup Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -64,7 +64,7 @@ jobs:
           cache-dependency-path: "providers/**/*.sum"
 
       - name: Setup Terraform
-        uses: $/.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Install dependencies
         run: pnpm install

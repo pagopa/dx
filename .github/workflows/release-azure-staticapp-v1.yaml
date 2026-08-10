@@ -95,7 +95,7 @@ jobs:
 
       - name: Build Package
         id: build-package
-        uses: $/.github/actions/build-workspace
+        uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
@@ -111,7 +111,7 @@ jobs:
           OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
 
       - name: Upload Artifact
-        uses: $/.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.get-artifact-path.outputs.artifact-path }}
@@ -137,7 +137,7 @@ jobs:
       - name: Download Artifact
         # Closed PR cleanup does not need the built site bundle.
         if: github.event_name != 'pull_request' || github.event.action != 'closed'
-        uses: $/.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: "./${{ env.OUTPUT_DIR }}"
@@ -148,7 +148,7 @@ jobs:
         run: mkdir -p "./${{ env.OUTPUT_DIR }}"
 
       - name: Cloud Login
-        uses: $/actions/csp-login
+        uses: pagopa/dx/actions/csp-login@main
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}

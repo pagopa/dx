@@ -81,7 +81,7 @@ jobs:
 
       - name: Build Package
         id: build-package
-        uses: $/.github/actions/build-workspace
+        uses: pagopa/dx/.github/actions/build-workspace@main
         with:
           workspace_name: ${{ env.WORKSPACE_NAME }}
         env:
@@ -97,7 +97,7 @@ jobs:
           OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
 
       - name: Upload Artifact
-        uses: $/.github/actions/upload-artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.get-artifact-path.outputs.artifact-path }}
@@ -117,20 +117,20 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download Artifact
-        uses: $/.github/actions/download-artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: "./${{ env.OUTPUT_DIR }}"
 
       - name: Cloud Login
-        uses: $/actions/csp-login
+        uses: pagopa/dx/actions/csp-login@main
         env:
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
 
       - name: Deploy Assets and Purge CDN
-        uses: $/actions/static-assets-deploy
+        uses: pagopa/dx/actions/static-assets-deploy@main
         with:
           use_cdn_classic: ${{ env.USE_CDN_CLASSIC }}
           storage_account_name: ${{ env.STORAGE_ACCOUNT_NAME }}

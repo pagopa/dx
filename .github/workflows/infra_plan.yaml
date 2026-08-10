@@ -86,7 +86,7 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: $/.github/actions/get-terraform-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
 
   detect-projects:
     name: Detect Terraform Projects
@@ -154,7 +154,7 @@ jobs:
           echo "Detected matrix: $MATRIX"
 
   tf-modules-check:
-    uses: $/.github/workflows/static_analysis.yaml
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [gate, get-terraform-version, detect-projects]
     if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
@@ -233,14 +233,14 @@ jobs:
           done <<< "$ENV_VARS"
 
       - name: Setup Telemetry Session
-        uses: $/actions/setup-telemetry
+        uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
-        uses: $/actions/csp-login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: $/.github/actions/terraform-setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
@@ -288,14 +288,14 @@ jobs:
           fi
 
       - name: Start Terraform Plan telemetry span
-        uses: $/actions/log-telemetry-event
+        uses: pagopa/dx/actions/log-telemetry-event@main
         with:
           name: terraform-plan
           span_phase: start
 
       - name: Terraform Plan
         id: plan
-        uses: $/actions/sanitize-terraform-plan
+        uses: pagopa/dx/actions/sanitize-terraform-plan@main
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -303,7 +303,7 @@ jobs:
 
       - name: End Terraform Plan telemetry span
         if: always()
-        uses: $/actions/log-telemetry-event
+        uses: pagopa/dx/actions/log-telemetry-event@main
         with:
           name: terraform-plan
           span_phase: end
@@ -360,7 +360,7 @@ jobs:
       - name: Post Plan on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
-        uses: $/actions/pr-comment
+        uses: pagopa/dx/actions/pr-comment@main
         env:
           COMMENT_BODY_FILE: "${{ steps.directory.outputs.dir }}/message_body.txt"
         with:

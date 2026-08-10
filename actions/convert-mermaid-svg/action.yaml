@@ -50,7 +50,7 @@ runs:
     - name: Node Setup
       if: steps.check-mermaid.outputs.has_mermaid == 'true'
       id: node-setup
-      uses: $/.github/actions/node-setup
+      uses: pagopa/dx/.github/actions/node-setup@main
 
     - name: Install mermaid-cli
       if: steps.check-mermaid.outputs.has_mermaid == 'true'
