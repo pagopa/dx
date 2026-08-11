@@ -22,15 +22,15 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: $/.github/actions/get-terraform-version
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: $/.github/actions/terraform-setup
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: $/.github/actions/node-setup
         with:
           working_dir: ./out

@@ -17,7 +17,7 @@ on:
 
 jobs:
   code_review:
-    uses: pagopa/dx/.github/workflows/infra_plan.yaml@main
+    uses: $/.github/workflows/infra_plan.yaml
     name: Terraform Plan
     secrets: inherit
     with:
