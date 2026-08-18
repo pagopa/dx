@@ -10,7 +10,7 @@ Usage: validate-evals.sh [--strict-files] [--help]
 Validates evals/evals.json relative to the Terraform best-practices skill.
 
 Options:
-  --strict-files  Fail when an eval has no input fixture files.
+  --strict-files  Fail when a required eval has no valid scaffold files.
   --help          Show this help text.
 EOF
 }
@@ -59,6 +59,11 @@ jq -e '
     and (.prompt | type == "string" and length > 0)
     and (.expected_output | type == "string" and length > 0)
     and (.fixture_required | type == "boolean")
+    and (.knowledge_base == "available" or .knowledge_base == "unavailable")
+    and (
+      (has("follow_up") | not)
+      or (.follow_up | type == "string" and length > 0)
+    )
     and (.files | type == "array")
     and (.assertions | type == "array" and length > 0)
   )
@@ -90,6 +95,22 @@ if [ "$missing_files" -ne 0 ]; then
   exit 1
 fi
 
+invalid_scaffold_files=$(jq -r '
+  .evals[]
+  | select(.fixture_required)
+  | .files[]
+  | select(
+      test("^evals/scaffolds/(azure-consumer-base|overlays/[^/]+)/repository/.+")
+      | not
+    )
+' "$manifest")
+
+if [ -n "$invalid_scaffold_files" ]; then
+  printf 'Required eval files must use a scaffold repository path:\n%s\n' \
+    "$invalid_scaffold_files" >&2
+  exit 1
+fi
+
 empty_file_evals=$(jq -r '.evals[] | select(.fixture_required and (.files | length == 0)) | .name' "$manifest")
 if [ -n "$empty_file_evals" ]; then
   while IFS= read -r eval_name; do
@@ -100,6 +121,41 @@ if [ -n "$empty_file_evals" ]; then
     exit 1
   fi
 fi
+
+missing_base_evals=$(jq -r '
+  .evals[]
+  | select(
+      .fixture_required
+      and ([.files[] | startswith("evals/scaffolds/azure-consumer-base/repository/")] | any | not)
+    )
+  | .name
+' "$manifest")
+
+if [ -n "$missing_base_evals" ]; then
+  printf 'Required evals without the Azure consumer base:\n%s\n' \
+    "$missing_base_evals" >&2
+  exit 1
+fi
+
+while IFS= read -r eval_name; do
+  duplicate_targets=$(
+    jq -r --arg eval_name "$eval_name" '
+      .evals[]
+      | select(.name == $eval_name)
+      | .files[]
+    ' "$manifest" |
+      sed 's#^.*/repository/##' |
+      sort |
+      uniq -d
+  )
+
+  if [ -n "$duplicate_targets" ]; then
+    printf 'Eval %s maps multiple scaffold files to the same target:\n%s\n' \
+      "$eval_name" \
+      "$duplicate_targets" >&2
+    exit 1
+  fi
+done < <(jq -r '.evals[] | select(.fixture_required) | .name' "$manifest")
 
 known_guardrails=$(grep -oE 'TF-G[0-9]{2}' "$guardrails" | sort -u)
 referenced_guardrails=$(jq -r '.evals[].assertions[]' "$manifest" |
