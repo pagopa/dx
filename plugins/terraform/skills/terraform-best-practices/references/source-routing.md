@@ -2,6 +2,8 @@
 
 Read only the sources relevant to the requested change. Resolve the knowledge-base root from `DX_KB_PATH`, the current `pagopa/dx` checkout, or `~/.dx`.
 
+Use the bundled [Terraform Guardrails](./guardrails.md) and [Implementation Workflow](./implementation-workflow.md) as the authoritative source for architecture constraints and exceptions. Use the knowledge base for repository conventions and service contracts.
+
 | Concern | Authoritative source |
 | --- | --- |
 | Infrastructure placement | `apps/website/docs/terraform/infra-folder-structure.md` |
@@ -10,7 +12,6 @@ Read only the sources relevant to the requested change. Resolve the knowledge-ba
 | Registry module usage and locking | `apps/website/docs/terraform/using-terraform-registry-modules.md` |
 | Naming and subnet allocation | `apps/website/docs/azure/using-azure-registry-provider.md` or the corresponding AWS provider documentation |
 | Validation and pre-commit | `apps/website/docs/terraform/static-analysis.md` and `pre-commit-terraform.md` |
-| Architectural rationale or exception | `apps/website/docs/terraform/decisions/` |
 | Service-specific behavior | The matching DX module's `README.md`, variables, validations, implementation, outputs, examples, and `package.json` |
 | New technology choice | The Technology Radar |
 
