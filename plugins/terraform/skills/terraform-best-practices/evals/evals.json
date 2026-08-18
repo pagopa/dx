@@ -1,0 +1,123 @@
+{
+  "skill_name": "terraform-best-practices",
+  "evals": [
+    {
+      "id": 1,
+      "name": "prefer-dx-storage-module",
+      "fixture_required": true,
+      "prompt": "Add a production-ready Azure Storage Account for a new payments processor in the dev environment. Follow DX Terraform conventions and infer all values you can from the existing infra. Do not ask me for values that are already present in the repository.",
+      "expected_output": "The agent discovers the DX storage module, preserves the repository environment and tags, presents the source-derived use_case trade-off instead of choosing from the dev folder alone, implements the selected configuration completely, and validates it.",
+      "files": [],
+      "assertions": [
+        "[TF-G01] A matching pagopa-dx storage module is used for every supported capability.",
+        "[TF-G04] Existing environment fields are reused for naming and any supported raw resource name uses provider::dx::resource_name().",
+        "[TF-G06] The module version is derived from package.json and pinned with ~> major.minor.",
+        "[TF-G08] Existing required tags are applied to every taggable resource and module.",
+        "[TF-G10] The implementation contains no placeholders or deferred required wiring.",
+        "[TF-G11] Applicable Terraform and repository validation is run or reported unavailable.",
+        "The agent asks the user to choose a source-derived use_case because production-ready behavior in a dev folder is a material decision."
+      ]
+    },
+    {
+      "id": 2,
+      "name": "key-vault-reference-safety",
+      "fixture_required": true,
+      "prompt": "Add an app setting named DATABASE_PASSWORD to the existing Function App so it reads from Azure Key Vault. If any role assignment is needed, add it.",
+      "expected_output": "The agent uses a versionless Key Vault reference, keeps the secret value out of Terraform, and adds only the runtime identity permissions required to resolve it.",
+      "files": [],
+      "assertions": [
+        "[TF-G02] No secret value is introduced into Terraform code, inputs, application settings, environment variables, outputs, or state.",
+        "[TF-G02] The runtime reference is versionless and follows the azure-keyvault-reference skill.",
+        "[TF-G03] The existing managed identity receives least-privilege secret-reader access when missing.",
+        "Broad roles such as Contributor or Key Vault Administrator are not used."
+      ]
+    },
+    {
+      "id": 3,
+      "name": "automatic-subnet-allocation",
+      "fixture_required": true,
+      "prompt": "Add a private endpoint subnet for the existing workload network. Keep it consistent with DX conventions and avoid CIDR collisions.",
+      "expected_output": "The agent reuses existing network outputs, allocates the subnet with the DX provider, and adds the private endpoint DNS support required by the selected service.",
+      "files": [],
+      "assertions": [
+        "[TF-G03] Required private endpoint and private DNS wiring is added or reused.",
+        "[TF-G05] dx_available_subnet_cidr is used for the new subnet.",
+        "[TF-G05] No subnet CIDR is manually calculated or hardcoded.",
+        "Existing core-values-exporter VNet and resource-group outputs are reused when available."
+      ]
+    },
+    {
+      "id": 4,
+      "name": "radar-gated-queue-choice",
+      "fixture_required": false,
+      "prompt": "Add the cheapest queueing technology you recommend for a new asynchronous ingestion flow. Generate the Terraform change and explain why that technology fits.",
+      "expected_output": "The agent checks the Technology Radar, explains cost and operational trade-offs between relevant choices, and waits for confirmation before making an unresolved material technology decision.",
+      "files": [],
+      "assertions": [
+        "[TF-G09] The Technology Radar is checked before selecting a new queueing service.",
+        "[TF-G09] Trial technologies are explained and assess or hold technologies require explicit confirmation.",
+        "Cost, durability, throughput, resilience, and operational effects are explained.",
+        "The agent may recommend an option but does not silently select an unresolved material technology choice."
+      ]
+    },
+    {
+      "id": 5,
+      "name": "compose-service-as-local-module",
+      "fixture_required": true,
+      "prompt": "Create Terraform for a new service that needs a Container App, its managed identity, a storage account, and Key Vault-backed environment variables. Put it in the right place in infra.",
+      "expected_output": "The agent creates one service-owned local module, uses DX modules where available, and wires identity, secrets, storage, networking, outputs, and environment composition without asking about an unambiguous layout.",
+      "files": [],
+      "assertions": [
+        "[TF-G01] Matching DX modules are used for supported Container App, storage, and role-assignment capabilities.",
+        "[TF-G02] Key Vault-backed environment variables use state-safe references.",
+        "[TF-G03] Managed identity and least-privilege role assignments are complete.",
+        "[TF-G07] The service is implemented under _modules with main.tf, variables.tf, iam.tf, and outputs.tf.",
+        "[TF-G07] The environment root uses locals.tf and does not gain variables.tf.",
+        "[TF-G10] Required supporting resources are complete and contain no placeholders."
+      ]
+    },
+    {
+      "id": 6,
+      "name": "explicit-use-case-decision",
+      "fixture_required": true,
+      "prompt": "Add the DX Cosmos DB module to the dev environment. Pick the most appropriate use_case and proceed without asking unnecessary questions.",
+      "expected_output": "The agent derives the valid Cosmos DB use cases from source, explains their defaults and production effects, recommends when justified, and still asks the user to choose without opening unrelated optional capability questions.",
+      "files": [],
+      "assertions": [
+        "[TF-G01] The DX Cosmos DB module contract is inspected before implementation.",
+        "Every valid use_case and the module default are derived from module source.",
+        "Production suitability and material cost, resilience, and operational effects are explained.",
+        "The agent does not infer use_case from the dev folder and asks for an explicit choice.",
+        "Unrelated low-impact optional variables are not presented as questions."
+      ]
+    },
+    {
+      "id": 7,
+      "name": "raw-resource-naming-contract",
+      "fixture_required": true,
+      "prompt": "Add one Azure resource that is not covered by a DX module to the existing dev environment. Keep its name consistent with the repository and do not introduce new naming inputs.",
+      "expected_output": "The agent verifies that no DX module covers the capability, reuses the standard environment object, configures the DX provider, and generates the supported resource name with provider::dx::resource_name().",
+      "files": [],
+      "assertions": [
+        "[TF-G01] Raw Terraform is used only after the unsupported module capability is established.",
+        "[TF-G04] The pagopa-dx Azure provider is configured.",
+        "[TF-G04] prefix, env_short, location, domain, app_name, and instance_number are inferred from the existing environment object.",
+        "[TF-G04] provider::dx::resource_name() is used when the resource type is supported.",
+        "No duplicate module-specific naming variables are introduced."
+      ]
+    },
+    {
+      "id": 8,
+      "name": "missing-knowledge-base-blocks-generation",
+      "fixture_required": false,
+      "prompt": "Generate Terraform for a new Azure service, but the DX knowledge base is not available locally and DX_KB_PATH is not set.",
+      "expected_output": "The agent provides read-only guidance, explains how to make the DX knowledge base available, and does not generate Terraform based on guessed module contracts or versions.",
+      "files": [],
+      "assertions": [
+        "The agent does not generate Terraform without the DX documentation and module source.",
+        "The agent asks for a valid DX_KB_PATH or pagopa/dx checkout.",
+        "No module version, use_case, variable contract, or provider capability is invented."
+      ]
+    }
+  ]
+}
