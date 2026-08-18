@@ -1,19 +1,22 @@
 # Terraform Skill Evals
 
-`evals.json` is the canonical Agent Skills evaluation manifest. `rubric.md` defines the cross-prompt scoring gates.
+`evals.json` is the canonical Agent Skills evaluation manifest. `rubric.md` defines the cross-prompt scoring gates. The reusable TypeScript runner lives in `packages/skill-evals`.
 
 The suite intentionally contains only `terraform-best-practices` behavior. Diagram generation and module migration belong to their owning skill or command eval suites.
 
 ## Validate the Manifest
 
 ```bash
-./scripts/validate-evals.sh
+pnpm nx run @pagopa/skill-evals:validate -- \
+  --skill plugins/terraform/skills/terraform-best-practices
 ```
 
 Use `--strict-files` to require every context-dependent eval to include a valid scaffold:
 
 ```bash
-./scripts/validate-evals.sh --strict-files
+pnpm nx run @pagopa/skill-evals:validate -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --strict-files
 ```
 
 The validator checks:
@@ -29,10 +32,13 @@ The validator checks:
 Build one disposable consumer repository from the shared Azure base and the overlays listed in the eval's `files`:
 
 ```bash
-./scripts/scaffold-eval.sh prefer-dx-storage-module /tmp/tf-eval-storage
+pnpm nx run @pagopa/skill-evals:scaffold -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --eval prefer-dx-storage-module \
+  --output /tmp/tf-eval-storage
 ```
 
-The script:
+The runner:
 
 1. Copies the selected base and overlay files into their repository-relative paths.
 2. Refuses a non-empty destination or duplicate target path.
@@ -48,16 +54,19 @@ Scaffold source files live under `evals/scaffolds/`. See `evals/scaffolds/README
 Run the complete suite without interactive input:
 
 ```bash
-./scripts/run-evals.sh
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices
 ```
 
 Run one case while developing:
 
 ```bash
-./scripts/run-evals.sh --eval explicit-use-case-decision
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --eval explicit-use-case-decision
 ```
 
-The runner automatically:
+The shared runner automatically:
 
 1. Resolves `DX_KB_PATH`, using the current DX checkout, `~/.dx`, or a shallow clone.
 2. Builds isolated plugin wrappers for the current skill and its previous committed version.
@@ -65,22 +74,26 @@ The runner automatically:
 3. Materializes fresh current and baseline repositories.
 4. Invokes Copilot CLI non-interactively with the same model, reasoning effort, restricted tool set, and disabled MCP servers.
 5. Resumes the same session with a scripted answer when an eval defines `follow_up`.
-6. Captures responses, tool requests, Git diffs, validation evidence, telemetry, duration, and token usage.
-7. Runs a separate isolated grader against every assertion and rubric gate.
+6. Captures responses, tool requests, Git diffs, deterministic mechanical checks, telemetry, duration, token usage, and Copilot AI credits.
+7. Runs one separate isolated LLM grader per eval against both variants and retries invalid grader output once.
 8. Produces `summary.json` and `summary.md` with pass rates, cost indicators, winners, regressions, and recurring guardrail failures.
 
-The default artifact location is `/tmp/terraform-best-practices-evals/<timestamp>`. The command exits unsuccessfully when a current-skill eval or automated grade fails.
+The default artifact location is under `/tmp/skill-evals/terraform-best-practices/`. The command exits unsuccessfully when a current-skill eval, deterministic execution constraint, or automated grade fails, so no interactive input or additional CI wrapper is required.
 
 Use `--dry-run` to prepare every plugin and workspace without spending AI credits:
 
 ```bash
-./scripts/run-evals.sh --dry-run
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --dry-run
 ```
 
 The previous committed `SKILL.md` version is selected from Git history. When history is unavailable, the baseline runs without the skill. Override the baseline only when reproducing a specific comparison:
 
 ```bash
-./scripts/run-evals.sh --baseline-ref <git-ref>
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --baseline-ref <git-ref>
 ```
 
 An authenticated Copilot CLI session is required before starting. Once launched, the suite requires no user interaction.

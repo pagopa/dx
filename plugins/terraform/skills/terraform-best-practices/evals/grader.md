@@ -1,6 +1,6 @@
 # Automated Eval Grader
 
-Evaluate both variants using only the supplied grading packet. The packet contains `grade-input.json`, the rubric, and the referenced artifacts.
+Evaluate both variants using only the supplied grading packet. The packet contains the eval input, rubric, current evidence, and baseline evidence.
 
 ## Evidence Rules
 
@@ -25,14 +25,14 @@ Return JSON only, without Markdown fences or surrounding prose:
       {
         "assertion": "exact assertion text",
         "passed": true,
-        "evidence": "short evidence with artifact path"
+        "evidence": "short evidence from the grading packet"
       }
     ],
     "rubric": [
       {
         "criterion": "criterion name from rubric.md",
         "score": 2,
-        "evidence": "short evidence with artifact path"
+        "evidence": "short evidence from the grading packet"
       }
     ],
     "gates": {

@@ -16,4 +16,4 @@ Scaffolds must:
 - avoid vendoring DX module source, so module discovery is still evaluated
 - require no template rendering or network access
 
-Run `scripts/scaffold-eval.sh` to materialize a fixture and initialize its Git baseline.
+Run the shared `@pagopa/skill-evals:scaffold` Nx target documented in `evals/README.md` to materialize a fixture and initialize its Git baseline.
