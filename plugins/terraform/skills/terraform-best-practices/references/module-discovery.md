@@ -1,67 +1,44 @@
-# Module Discovery
+# Staged Module Discovery
 
-Use this workflow before writing any raw Terraform resource.
+Use this workflow before writing raw provider resources. Search only as deeply as needed to establish module fit and resolve material decisions.
 
-## Inputs to Collect
+## Stage 1: Find Candidates
 
-- The target cloud provider and service.
-- The target repository folder and environment.
-- The resource capabilities requested by the user.
-- Existing module calls in the target area.
+Resolve the target provider, service, environment, requested capabilities, and existing module calls from the request and target area.
 
-## Discovery Steps
+Search DX module names, READMEs, and `package.json` files for candidates. Cover compute, storage and data services, messaging such as Service Bus and Event Hub, ingress such as CDN and API Management, IAM/RBAC, monitoring, networking, DNS, and private endpoints.
 
-1. List available DX modules under `infra/modules/` in the DX knowledge base.
-2. For each resource you intend to create, search module names, READMEs, `variables.tf`, `outputs.tf`, `main.tf`, and `examples/` for a matching module.
-3. For broad changes with multiple independent resources, consider parallelizing those per-resource searches.
-4. For each candidate module, inspect source rather than relying on summaries:
-   - `README.md`
-   - `variables.tf`
-   - `outputs.tf`
-   - `main.tf`
-   - supporting `.tf` files
-   - `examples/`
-   - `package.json`
-5. Build a capability map from the source:
-   - supported `use_case` values and their intended environments
-   - optional variables and defaults
-   - nested object/list fields
-   - validation constraints
-   - generated resources and IAM/RBAC behavior
-   - examples showing common configurations
-6. If a module covers the capability, use it instead of raw `azurerm_*` or `aws_*` resources.
-7. Pin the module version with `~> major.minor`, deriving the version from `package.json`.
-8. Use raw provider resources only for capabilities not covered by DX modules, and explain why.
+If no candidate exists, record the unsupported capability before considering raw resources.
 
-## Commonly Missed Module Categories
+## Stage 2: Establish the Contract
 
-Always search for modules related to:
+For each plausible candidate, inspect:
 
-- role assignments and IAM/RBAC
-- Service Bus and Event Hub
-- CDN and API Management
-- Container Apps and Function Apps
-- storage and data services
-- monitoring and diagnostics
-- networking, private endpoints, DNS, and subnet allocation
+- required and optional variables
+- relevant nested object and list fields
+- defaults and validation blocks
+- supported `use_case` values and their intended environments
+- outputs
+- current package version
 
-## Capability Questions
+Build a capability map only for the requested behavior and material defaults. Do not inventory every optional variable.
 
-Ask about a capability only when it affects behavior and cannot be inferred.
+## Stage 3: Verify Behavior
 
-For each user-facing option:
+Inspect implementation files when needed to verify:
 
-1. Explain what it controls.
-2. Explain the default behavior.
-3. Explain what changes if it is enabled, disabled, or changed.
-4. Offer known choices when possible.
-5. Ask follow-up questions only for fields required by the selected option.
+- resources created by the module
+- identity and IAM/RBAC behavior
+- networking, private endpoint, and DNS behavior
+- secret handling
+- diagnostics and operational defaults
 
-Example for a module `use_case`:
+Read examples only when the contract or implementation leaves the intended configuration ambiguous.
 
-| use_case | Description | Production fit |
-| --- | --- | --- |
-| `development` | Cost-efficient configuration for development or testing. | No |
-| `default` | Production-oriented defaults for predictable behavior. | Yes |
+## Select the Implementation
 
-Ask: "Which `use_case` best fits this environment?"
+Use the DX module when it covers the capability. Pin its version using the package version and guardrail `TF-G05`.
+
+Use raw `azurerm_*` or `aws_*` resources only for the unsupported portion. Explain the gap and keep supported capabilities on DX modules instead of replacing the whole module with raw resources.
+
+Apply the [Decision Policy](./question-policy.md) to every unresolved material input.

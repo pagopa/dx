@@ -1,19 +1,70 @@
-# Question Policy
+# Decision Policy
 
-Use this policy whenever Terraform generation needs input from the user.
+Use this policy to resolve Terraform inputs without guessing project values or transferring convention-owned decisions to the user.
 
-## Infer Before Asking
+## Classify Before Asking
 
-Ask the user only for values that could not be inferred from:
+Classify every unresolved input:
 
-- DX Terraform documentation
-- the target Terraform files
-- existing environment locals
-- existing tags
-- DX module README, source, variables, outputs, validations, and examples
-- existing shared outputs such as core-values-exporter module outputs for VNet IDs, VNet resource groups, private endpoint subnet IDs, and platform defaults
+| Class | Evidence | Action |
+| --- | --- | --- |
+| DX convention | DX documentation or an applicable guardrail determines the value or pattern. | Apply it and disclose it in the pre-edit summary. |
+| Repository fact | The same environment, service, or explicitly requested reference instance provides the value. | Reuse it and cite the file or module instance used as evidence. |
+| Material decision | The choice changes security, cost, exposure, scale, resilience, retention, durability, or operations. | Present source-derived options and require an explicit user choice. |
+| Low-impact optional input | The module defines a safe default and the capability is not relevant to the request. | Omit the input intentionally and do not ask about it. |
 
-Common values to infer before asking:
+Do not infer a material decision from an environment name, generic best practice, or the module default alone.
+
+## Material Decisions
+
+Treat these as material unless the user already made the choice explicitly:
+
+- module `use_case`
+- public or private exposure
+- SKU, sizing, throughput, and autoscaling bounds
+- redundancy, replicas, zones, and geo-replication
+- retention, backup, and data durability
+- authentication and authorization modes
+- creation or use of secret material
+- adoption of a new service or Technology Radar item
+- destructive migration behavior
+- code structure when two layouts are equally consistent with the repository
+
+Only ask about capabilities relevant to the requested outcome or a material module default. Do not enumerate every optional variable.
+
+## Decision Card
+
+Ask about one trade-off at a time. A decision may include several fields that must be considered together; do not split it into one prompt per scalar.
+
+Before asking:
+
+1. Derive valid options from module variables, validation blocks, locals, implementation, and examples.
+2. State the behavior when the input is omitted.
+3. Explain relevant security, cost, scale, resilience, and operational effects.
+4. Recommend an option when evidence supports one, but do not preselect it.
+
+Use this shape:
+
+| Option | Behavior | Material effects |
+| --- | --- | --- |
+| `<source-derived value>` | What the module creates or configures. | Security, cost, resilience, or operational consequences. |
+
+Then ask for the decision explicitly.
+
+## `use_case` Policy
+
+Never invent or silently select a `use_case`.
+
+Ask the user unless:
+
+- the user supplied the exact value; or
+- the user explicitly asked to mirror a named existing module instance.
+
+Do not select a `use_case` from `env_short`, folder name, or production heuristics alone. Present every valid source-derived option, identify the module default, explain production suitability, and allow the user to choose.
+
+## Factual Inputs
+
+Infer factual inputs before asking:
 
 - `prefix`
 - `env_short`
@@ -21,118 +72,18 @@ Common values to infer before asking:
 - `domain`
 - `app_name`
 - `instance_number`
-- resource group references
 - subscription references
-- `BusinessUnit`
-- `ManagementTeam`
-- `CostCenter`
-- backend state configuration
-
-## Ask One Question at a Time
-
-Never bundle multiple unknowns into one prompt. Ask each unresolved value or decision separately.
-
-Wrong:
-
-```text
-Please provide prefix, domain, app_name, and instance_number separated by commas.
-```
-
-Right:
-
-```text
-What is the `prefix` for this project?
-```
-
-Then, after the user answers:
-
-```text
-What is the `domain`?
-```
-
-This reduces input errors and makes the workflow resumable.
-
-## Offer Choices When Known
-
-When the valid values are known, present choices instead of asking for free-form text.
-
-Useful choice sets:
-
-| Field            | Choices                                                                                                                                                                                                                        |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `env_short`      | `p` for prod, `d` for dev, `u` for uat                                                                                                                                                                                         |
-| `location`       | `italynorth`, `westeurope`, `spaincentral`, or values already used in the target repository                                                                                                                                    |
-| `BusinessUnit`   | Values already used in the repository; otherwise `App IO`, `CGN`, `Carta della Cultura`, `IT Wallet`, `DevEx`, or a free-form fallback                                                                                         |
-| `ManagementTeam` | Values already used in the repository; otherwise `IO Platform`, `IO Wallet`, `IO Comunicazione`, `IO Enti & Servizi`, `IO Autenticazione`, `IO Bonus & Pagamenti`, `IO Firma`, `Developer Experience`, or a free-form fallback |
-
-Use free-form only for values with no fixed set, such as `prefix`, `domain`, and `app_name`.
-
-## Module `use_case` Questions
-
-For module `use_case` values, always derive valid options from the module documentation and source. Present a concise table before asking.
-
-Example:
-
-| use_case      | Description                                              | Production fit |
-| ------------- | -------------------------------------------------------- | -------------- |
-| `development` | Cost-efficient configuration for development or testing. | No             |
-| `default`     | Production-oriented defaults for predictable behavior.   | Yes            |
-
-Ask:
-
-```text
-Which `use_case` best fits this environment?
-```
-
-Do not invent `use_case` values.
-
-## Never Assume Default Values
-
-Do not silently choose project-specific defaults. If configuration is not found in the workspace and is not determined by DX conventions, ask the user.
-
-This applies especially to:
-
-- environment naming fields
+- resource group references
 - required tags
-- backend state configuration
-- production-impacting `use_case`, SKU, sizing, retention, redundancy, and exposure choices
+- shared core-values-exporter outputs
+- backend configuration already present in the target area
 
-## Dynamic Capability Questions
+When several independent factual inputs remain missing, collect them in one structured prompt. Offer choices only when the valid set is known; otherwise use free text.
 
-Derive optional capability questions from the module capability map built from `variables.tf`, validation blocks, examples, and implementation files.
+Preserve the repository's standard `environment` object instead of replacing it with unrelated module-specific naming inputs.
 
-For each optional capability:
+Never invent ownership, cost allocation, naming, backend, or subscription values.
 
-1. Explain what it does in plain language.
-2. Explain the default behavior if left unconfigured.
-3. Explain what changes if the user enables, disables, or changes it.
-4. Mention security, cost, scale, resilience, and operations impact when relevant.
-5. Ask whether the user needs it.
-6. If enabled, ask follow-up questions only for required sub-fields.
+## Required Follow-ups
 
-Capabilities that often require this treatment:
-
-- public vs private exposure
-- custom domains
-- Entra ID authentication
-- Key Vault secret references
-- autoscaling
-- sizing and SKU choices
-- diagnostics and retention
-- private endpoints
-- replicas or geo-redundancy
-
-## Do Not Ask About Convention-Decided Details
-
-Do not ask the user to decide details already determined by DX conventions unless there is a genuine trade-off.
-
-Apply the convention directly for:
-
-- `provider::dx::resource_name()` naming
-- `dx_available_subnet_cidr` for new subnets
-- `~> major.minor` module version constraints
-- required tags inferred from the target environment
-- least-privilege secret-reader role assignment when an app must read Key Vault secrets
-- local module layout when the service clearly has multiple related resources
-
-Mention these automatic choices in the summary so the user understands what was added.
+After a capability is selected, ask only for sub-fields required by that selection. Stop asking once the requested outcome can be implemented completely and safely.

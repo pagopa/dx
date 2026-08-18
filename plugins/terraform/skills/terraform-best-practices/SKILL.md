@@ -29,47 +29,35 @@ Local KB paths to inspect, relative to the selected knowledge-base root (`DX_KB_
 - `infra/modules/` - source code for DX Terraform modules.
 - `infra/modules/<module>/README.md` and `examples/` - module usage documentation and examples.
 
-## Core Rules
+## Guardrails
 
-- Read the authoritative DX Terraform docs under `apps/website/docs/terraform/` before generating code.
-- Check the Technology Radar before recommending new services or technologies. Prefer `adopt`, allow `trial` with explanation, avoid `assess` unless explicitly requested, and block `hold` unless the user confirms.
-- Search for a matching `pagopa-dx/*` registry module before writing any raw `azurerm_*` or `aws_*` resource. See [Module Discovery](./references/module-discovery.md).
-- Infer values from existing Terraform before asking the user. Ask one focused question at a time only for values or decisions that cannot be inferred.
-- Use secure secret patterns: no secret values in Terraform code, variables, locals, outputs, `.tfvars`, app settings, or container environment variables.
-- Use `provider::dx::resource_name()` for resource names and `dx_available_subnet_cidr` for every new subnet.
-- Pin DX registry module versions with `~> major.minor`, using the module `package.json` as the source for the current version.
-- Never create `variables.tf` in root environment folders. Root environment configuration belongs in `locals.tf`; local modules own their own `variables.tf`.
+Apply the [Terraform Guardrails](./references/guardrails.md) to every change. Use [Source Routing](./references/source-routing.md) to load only the authoritative documentation and module source needed for the request.
 
 ## Workflow
 
-1. **Plan** by reading the relevant DX docs, inspecting the target Terraform area, checking the Technology Radar, and discovering matching DX modules. For each resource you intend to create, explicitly look for a matching DX module; for broad changes that span several services, consider parallelizing independent inspections of documentation, module source, existing infrastructure, and the radar.
-2. **Summarize before editing**: briefly state the current relevant infrastructure and the planned changes, including any non-standard choices.
-3. **Implement** using [Implementation Workflow](./references/implementation-workflow.md). Prefer existing patterns in the target folder and keep changes complete rather than skeletal.
-4. **Validate** in the target Terraform directory:
-   - Run `terraform init`; if backend configuration is unavailable, run `terraform init -backend=false`.
-   - Run `terraform validate` and fix all errors.
-   - Run `terraform plan` only when credentials and backend access are already available.
-   - Run the smallest existing pre-commit or Nx validation that covers the changed Terraform files.
-   - For common errors and fixes, see [Terraform Troubleshooting](./references/troubleshooting.md).
-5. **Review** against the [Terraform Best Practices Checklist](./references/checklist.md), then report any unmet criteria with a concrete next step.
+1. **Discover** the target area and matching DX modules using [Staged Module Discovery](./references/module-discovery.md).
+2. **Decide** by separating repository facts, convention-owned choices, and material trade-offs.
+3. **Summarize** the current state, planned change, applicable guardrails, and unresolved decisions before editing.
+4. **Implement and validate** using [Implementation Workflow](./references/implementation-workflow.md).
+5. **Review** every applicable guardrail ID and report any exception with a concrete next step.
 
-## Question Policy
+## Decision Ownership
 
-Follow [Question Policy](./references/question-policy.md) whenever user input is needed. In short: infer first, ask only unresolved decisions, ask one question at a time, offer choices when valid values are known, and explain the default plus security/cost/operations impact for optional capabilities.
+Follow the [Decision Policy](./references/question-policy.md):
 
-## Code Generation Policy
-
-- Write complete, working Terraform. Do not leave placeholder comments such as `TODO`, `add here`, or `configure later`.
-- Add comments only for non-obvious user-choosable parameters where changing the value affects cost, security, scale, resilience, or operations.
-- Auto-wire implicit dependencies required by a chosen feature: role assignments, managed identities, private endpoints, private DNS, write-only secret resources, tags, and explicit `depends_on` where Terraform ordering is otherwise ambiguous.
-- Reuse shared outputs from `pagopa-dx/<csp>-core-values-exporter/<provider>` modules instead of duplicating `data` sources when those outputs already exist.
+- infer factual values only from explicit repository evidence
+- preserve the base `environment` contract and map it to `provider::dx::resource_name()`
+- apply convention-owned details without asking
+- ask about one material trade-off at a time
+- derive choices from module source and explain their effects
+- never silently select `use_case`; ask unless the user supplied it or explicitly requested mirroring a named instance
+- do not question the user about unrelated low-impact optional variables
 
 ## References
 
 - [Module Discovery](./references/module-discovery.md)
 - [Implementation Workflow](./references/implementation-workflow.md)
-- [Question Policy](./references/question-policy.md)
-- [Terraform Best Practices Checklist](./references/checklist.md)
+- [Decision Policy](./references/question-policy.md)
+- [Terraform Guardrails](./references/guardrails.md)
+- [Source Routing](./references/source-routing.md)
 - [Terraform Troubleshooting](./references/troubleshooting.md)
-- [Eval Test Prompts](./references/eval-prompts.md)
-- [Eval Rubric](./references/eval-rubric.md)

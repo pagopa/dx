@@ -1,6 +1,6 @@
 # Eval Test Prompts
 
-Use these prompts to evaluate regressions in the Terraform plugin skills. Run each prompt in a disposable copy of the repository or a purpose-built fixture branch, then score the output with [Eval Rubric](./eval-rubric.md).
+Use these prompts to evaluate regressions in the Terraform plugin skills. Run each prompt in a disposable copy of the repository or a purpose-built fixture branch, then score the output with [Eval Rubric](./rubric.md).
 
 ## Prompt 1 - Prefer DX Module Over Raw Resource
 
@@ -10,11 +10,13 @@ Add a production-ready Azure Storage Account for a new payments processor in the
 
 Expected behavior:
 
-- reads DX Terraform docs
-- searches for a matching `pagopa-dx/*` storage module
+- reads only the relevant DX Terraform docs
+- searches for a matching `pagopa-dx/*` storage module (`TF-G01`)
 - uses the module if available instead of raw `azurerm_storage_account`
-- pins the module with `~> major.minor`
-- infers environment and tags from existing Terraform
+- pins the module with `~> major.minor` (`TF-G05`)
+- infers `prefix`, `env_short`, `location`, `domain`, `app_name`, `instance_number`, and tags from existing Terraform
+- preserves the standard `environment` object, configures the DX provider, and uses `provider::dx::resource_name()` for any supported raw resource names
+- applies required tags to every taggable resource and module
 
 ## Prompt 2 - Secret Reference Safety
 
@@ -25,9 +27,9 @@ Add an app setting named DATABASE_PASSWORD to the existing Function App so it re
 Expected behavior:
 
 - does not put the secret value in Terraform
-- uses a Key Vault reference or host-native secret reference
+- uses a versionless Key Vault reference or host-native secret reference
 - invokes or follows `azure-keyvault-reference`
-- adds least-privilege secret-reader access for the runtime identity when missing
+- adds least-privilege secret-reader access for the runtime identity when missing (`TF-G02`, `TF-G03`)
 - avoids broad roles such as Contributor or Key Vault Administrator
 
 ## Prompt 3 - New Subnet Allocation
@@ -38,7 +40,7 @@ Add a private endpoint subnet for the existing workload network. Keep it consist
 
 Expected behavior:
 
-- uses `dx_available_subnet_cidr`
+- uses `dx_available_subnet_cidr` (`TF-G04`)
 - does not hardcode a new subnet CIDR
 - reuses existing VNet/resource group outputs when available
 - adds required private endpoint/private DNS wiring if the selected service requires it
@@ -53,7 +55,7 @@ Expected behavior:
 
 - checks the Technology Radar before choosing
 - prefers `adopt` or established repository patterns
-- asks for confirmation before using unknown or non-recommended technologies
+- asks for confirmation before using unknown or non-recommended technologies (`TF-G08`)
 - warns and blocks by default for `hold` technologies
 
 ## Prompt 5 - Local Module Decision
@@ -65,7 +67,7 @@ Create Terraform for a new service that needs a Container App, its managed ident
 Expected behavior:
 
 - proposes or creates a local module because multiple related resources form one logical service
-- keeps root environment configuration in `locals.tf`
+- keeps root environment configuration in `locals.tf` (`TF-G06`)
 - creates local module `main.tf`, `variables.tf`, `iam.tf`, and `outputs.tf`
 - uses DX registry modules where available
 - auto-wires managed identity, secret references, and role assignments
@@ -108,3 +110,17 @@ Expected behavior:
 - updates all and only matching module source usages
 - checks changelog/migration notes
 - adds moved blocks or variable migrations when required
+
+## Prompt 9 - Explicit Use Case Decision
+
+```
+Add the DX Cosmos DB module to the dev environment. Pick the most appropriate use_case and proceed without asking unnecessary questions.
+```
+
+Expected behavior:
+
+- derives every valid `use_case` from module source
+- identifies the module default and explains production suitability and material effects
+- may recommend an option but does not select it from the dev environment alone
+- asks the user to choose the `use_case` explicitly
+- does not ask about unrelated low-impact optional variables

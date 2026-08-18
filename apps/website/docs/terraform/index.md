@@ -60,6 +60,8 @@ Custom Terraform provider for Azure resources:
   Consistent resource naming
 - **[Secrets management](../azure/application-deployment/appservice-hidden-appsettings.md)** -
   Use Key Vault references in AppSettings
+- **[Architecture decisions](./decisions/index.md)** - Understand the rationale
+  behind durable Terraform constraints
 
 ## Azure Resources Guide
 

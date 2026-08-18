@@ -1,35 +1,23 @@
 # Implementation Workflow
 
-Use this workflow after module discovery and before final validation.
+Use this workflow after staged module discovery.
 
-## Determine the Target Folder
+## Resolve Scope and Placement
 
-Read `apps/website/docs/terraform/infra-folder-structure.md` from the DX knowledge base and inspect the repository structure.
+Read the relevant sources from [Source Routing](./source-routing.md), then inspect the target Terraform area.
 
-Typical placements:
+Determine placement from the request, DX folder guidance, and existing repository structure:
 
-- ongoing environment resources: `infra/resources/<env>/<region>/` or the existing environment layout
-- shared local resource modules: `infra/resources/_modules/<service-name>/`
-- reusable registry modules: `infra/modules/<module-name>/`
-- bootstrapping resources: `infra/bootstrapper/<env>/`
+- environment composition belongs in the existing environment root
+- shared service implementations belong under `infra/resources/_modules/<service>/`
+- reusable published modules belong under `infra/modules/<module>/`
+- bootstrapping resources belong under the repository's bootstrapper layout
 
-Only ask the user which folder to use when the DX docs and existing repository structure do not make the location clear.
+Ask about placement only when more than one location is equally valid.
 
-## Summarize Before Editing
+## Resolve the Base Environment Contract
 
-Before writing or editing Terraform, briefly present:
-
-1. **Current state**: the existing infrastructure relevant to the request.
-2. **Planned changes**: what will be added, modified, or removed.
-3. **Standards alignment**: how the plan relates to DX modules, folder structure, and the Technology Radar.
-
-Keep the summary focused on affected resources and direct dependencies. Do not produce a full infrastructure inventory.
-
-When the plan diverges from a standard DX pattern, explain the exception and the reason before editing.
-
-## Infer Values Before Asking
-
-Inspect existing `.tf` files in the target area to infer:
+Before asking for naming values, inspect the target environment and equivalent module calls for:
 
 - `prefix`
 - `env_short`
@@ -37,128 +25,91 @@ Inspect existing `.tf` files in the target area to infer:
 - `domain`
 - `app_name`
 - `instance_number`
-- resource group references
-- subscription references
-- existing tags such as `BusinessUnit`, `ManagementTeam`, and `CostCenter`
-- existing core-values-exporter module outputs for shared values such as VNet IDs, VNet resource groups, private endpoint subnet IDs, and platform defaults
 
-Prefer `module.<name>.<output>` from `pagopa-dx/<csp>-core-values-exporter/<provider>` over new `data` sources when shared values are already exported.
+Reuse the existing `environment` object when calling DX or local modules.
 
-Never invent project-specific default values. If a required value is not present in the repository, docs, module source, examples, or user request, ask the user.
+For raw resources with a supported DX resource type, build or reuse this mapping:
 
-## Choose Inline Resources vs Local Module
-
-Use a local module under `infra/resources/_modules/<service-name>/` when:
-
-- creating two or more related resources for one logical service
-- the service will likely be reused across environments
-- the implementation is expected to grow over time
-
-Use inline resources when:
-
-- adding one standalone resource
-- patching an existing flat pattern
-- the surrounding target area already uses a flat convention for the same kind of change
-
-If a local module is warranted, create:
-
-- `main.tf` for DX registry module calls and raw resources not covered by DX modules
-- `variables.tf` for all local module inputs with descriptions and validation blocks where constraints are known
-- `iam.tf` for DX role-assignment modules and any raw role assignment resources
-- `outputs.tf` for IDs, names, and endpoints needed by callers
-
-Instantiate local modules from the environment folder, preferably in a dedicated `<service>.tf`, and pass values from `locals.tf`. Do not create `variables.tf` in root environment folders.
-
-If a local module is recommended but not strictly required, ask the user whether they want that structure:
-
-```text
-Should these resources be organized as a local module in `_modules/`? This is recommended when the service will grow or be reused across environments.
+```hcl
+locals {
+  naming_config = {
+    prefix          = var.environment.prefix
+    environment     = var.environment.env_short
+    location        = var.environment.location
+    domain          = var.environment.domain
+    name            = var.environment.app_name
+    instance_number = tonumber(var.environment.instance_number)
+  }
+}
 ```
 
-## Secret Handling
+Use `local.environment` instead in an environment root where the naming configuration is defined directly in `locals.tf`.
 
-Never put secret values in Terraform code, variables, locals, outputs, `.tfvars`, app settings, or container environment variables.
+Generate names with `provider::dx::resource_name(merge(local.naming_config, { resource_type = "<type>" }))`.
 
-Use these patterns:
+Treat missing base fields as factual inputs under the [Decision Policy](./question-policy.md). Do not derive them from the resource type or silently replace the repository's naming contract.
 
-- `azure-keyvault-secret` for `azurerm_key_vault_secret` resources with write-only `value_wo`.
-- `azure-keyvault-reference` for App Service, Function App, and Container Apps secret references.
-- versionless Key Vault references by default.
-- least-privilege secret-reader access for the runtime identity.
+## Build a Decision Inventory
 
-If a secret value would be required and no secure pattern is available, stop and ask the user to manage the secret outside Terraform or enable the required Azure skill.
+Before editing, separate:
 
-## Auto-Wire Required Capabilities
+1. **Repository facts**: inferred values with their source file or module instance.
+2. **Convention decisions**: applicable guardrail IDs that will be applied automatically.
+3. **Material decisions**: unresolved choices requiring the [Decision Policy](./question-policy.md).
 
-When a higher-level feature requires supporting infrastructure, add it automatically instead of leaving it to the user:
+Briefly summarize the current affected infrastructure, planned changes, automatic supporting infrastructure, and any deviation from a guardrail.
 
-- role assignments when an identity needs data-plane or secret access
-- managed identity when a service reads protected resources
-- private endpoints and private DNS wiring for private service patterns
-- write-only secret resources when Terraform must create Key Vault secret metadata
-- required DX tags
-- explicit dependencies where Terraform ordering would otherwise be ambiguous
-- `dx_available_subnet_cidr` for every new subnet
+## Choose Inline or Local Module
 
-Mention auto-wired capabilities in the final summary.
+Use a local module when the implementation:
+
+- owns multiple related resources for one logical service
+- centralizes that service's IAM and network dependencies
+- is reused across environments
+- is expected to grow as one capability
+
+Use the existing flat structure when adding one standalone resource or making a narrow change to an established flat pattern.
+
+Ask only when both structures are equally consistent. Do not ask merely because a local module is technically possible.
+
+A new local module normally contains:
+
+- `main.tf` for module calls and uncovered raw resources
+- `variables.tf` for documented inputs and known validations
+- `iam.tf` for service-owned permissions
+- `outputs.tf` for IDs, names, endpoints, and other values required by callers
+
+Instantiate it from the environment composition layer, preferably in a dedicated `<service>.tf` when that matches the repository layout, and pass configuration from `locals.tf`. Never create root environment variables.
+
+## Implement Completely
+
+Apply every relevant [Terraform Guardrail](./guardrails.md).
+
+Add supporting infrastructure implied by a confirmed feature, including managed identities, least-privilege role assignments or IAM, private endpoints, private DNS, diagnostics, write-only secret resources, required tags, subnet allocation, and explicit `depends_on` when Terraform cannot infer ordering.
+
+Reuse existing core-values-exporter outputs instead of duplicating data sources.
+
+Do not introduce optional capabilities that the user did not request or select.
+
+Mention automatically added identities, permissions, networking, secret references, diagnostics, and other supporting infrastructure in the final summary.
 
 ## Comment Policy
 
-Write complete Terraform. Never leave comments that merely instruct the user what to add later.
+Add a code comment only when future maintainers need rationale that is not evident from the Terraform expression, such as a confirmed non-standard Radar choice or an unusual operational trade-off.
 
-For every non-obvious user-choosable parameter, add a short inline comment just above the value explaining:
+Keep option comparisons and user-facing explanations in the decision conversation and final summary, not as repeated comments in generated HCL.
 
-1. what the parameter controls
-2. what changes if the value changes
+## Validate
 
-Avoid comments for obvious parameters.
+Run validation in the target Terraform directory:
 
-Wrong:
+1. `terraform init`, or `terraform init -backend=false` when backend access is unavailable.
+2. `terraform validate`, fixing every error.
+3. `terraform plan` when credentials and backend access are already available, fixing actionable errors.
+4. The smallest existing repository validation covering the changed files.
 
-```hcl
-# Changes the Node.js runtime version the web app executes with.
-node_version = 22
-```
-
-Right:
-
-```hcl
-# Choose "development" for cost-effective, flexible environments. This disables performance optimizations but may have higher latency.
-# For predictable performance in production, choose "default" instead, which enables performance optimizations.
-use_case = "development"
-```
-
-## Technology Radar Handling
-
-Before introducing a new service or technology:
-
-1. Check the `technology-radar` skill or `https://dx.pagopa.it/radar.json`.
-2. Prefer `adopt` technologies.
-3. Use `trial` technologies with a short explanation.
-4. Avoid `assess` unless the user explicitly asks for it.
-5. Do not use `hold` technologies unless the user confirms after a warning.
-
-For confirmed `hold` usage, add a nearby Terraform comment:
-
-```hcl
-# radar: hold - consider migrating to <alternative>
-```
-
-## Validation
-
-Validate in the target Terraform directory:
-
-1. Run `terraform init`, or `terraform init -backend=false` if backend configuration is unavailable.
-2. Run `terraform validate` and fix all errors.
-3. Run `terraform plan` only when credentials and backend access are already available. Investigate and fix errors reported by the plan.
-4. Run the smallest existing validation that covers the changed files. For pre-commit, prefer `pre-commit run --files <changed .tf files>` over `pre-commit run -a` unless broad validation is intentional.
-
-For common errors and fixes, see [Terraform Troubleshooting](./troubleshooting.md).
-
-Iterate until `terraform validate` and, when applicable, `terraform plan` pass. Do not present Terraform as complete while validation fails.
+Do not present the implementation as complete while applicable validation fails.
 
 ## Final Review
 
-Refactor until the [Terraform Best Practices Checklist](./checklist.md) is satisfied.
-
-In the final report, include explanations for any checklist item that is not fully met and the concrete next step needed to address it.
+Review every applicable guardrail ID against the diff and validation output. Report any exception by ID with its concrete next step.
