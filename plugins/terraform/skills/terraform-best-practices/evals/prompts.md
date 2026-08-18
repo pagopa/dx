@@ -13,7 +13,7 @@ Expected behavior:
 - reads only the relevant DX Terraform docs
 - searches for a matching `pagopa-dx/*` storage module (`TF-G01`)
 - uses the module if available instead of raw `azurerm_storage_account`
-- pins the module with `~> major.minor` (`TF-G05`)
+- pins the module with `~> major.minor` (`TF-G06`)
 - infers `prefix`, `env_short`, `location`, `domain`, `app_name`, `instance_number`, and tags from existing Terraform
 - preserves the standard `environment` object, configures the DX provider, and uses `provider::dx::resource_name()` for any supported raw resource names
 - applies required tags to every taggable resource and module
@@ -40,7 +40,7 @@ Add a private endpoint subnet for the existing workload network. Keep it consist
 
 Expected behavior:
 
-- uses `dx_available_subnet_cidr` (`TF-G04`)
+- uses `dx_available_subnet_cidr` (`TF-G05`)
 - does not hardcode a new subnet CIDR
 - reuses existing VNet/resource group outputs when available
 - adds required private endpoint/private DNS wiring if the selected service requires it
@@ -55,7 +55,7 @@ Expected behavior:
 
 - checks the Technology Radar before choosing
 - prefers `adopt` or established repository patterns
-- asks for confirmation before using unknown or non-recommended technologies (`TF-G08`)
+- asks for confirmation before using unknown or non-recommended technologies (`TF-G09`)
 - warns and blocks by default for `hold` technologies
 
 ## Prompt 5 - Local Module Decision
@@ -67,7 +67,7 @@ Create Terraform for a new service that needs a Container App, its managed ident
 Expected behavior:
 
 - proposes or creates a local module because multiple related resources form one logical service
-- keeps root environment configuration in `locals.tf` (`TF-G06`)
+- keeps root environment configuration in `locals.tf` (`TF-G07`)
 - creates local module `main.tf`, `variables.tf`, `iam.tf`, and `outputs.tf`
 - uses DX registry modules where available
 - auto-wires managed identity, secret references, and role assignments

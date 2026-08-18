@@ -37,7 +37,7 @@ Read examples only when the contract or implementation leaves the intended confi
 
 ## Select the Implementation
 
-Use the DX module when it covers the capability. Pin its version using the package version and guardrail `TF-G05`.
+Use the DX module when it covers the capability. Pin its version using the package version and guardrail `TF-G06`.
 
 Use raw `azurerm_*` or `aws_*` resources only for the unsupported portion. Explain the gap and keep supported capabilities on DX modules instead of replacing the whole module with raw resources.
 
