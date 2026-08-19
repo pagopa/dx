@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { z } from "zod";
 
 import { describeCopilotEvent } from "./copilot-events.js";
+import { formatConversationBlock, formatLogText } from "./format.js";
 import { runSkillHook } from "./hooks.js";
 import { runCommand, runCommandToFiles } from "./process.js";
 import { type Progress, silentProgress } from "./progress.js";
@@ -281,6 +282,14 @@ const runTurn = async (
       turn,
     },
   );
+  if (progress.verbosity >= 2) {
+    progress.debug(
+      formatConversationBlock(
+        `Question (turn ${turn}, ${prompt.length} chars)`,
+        formatLogText(prompt),
+      ),
+    );
+  }
 
   const startedAt = Date.now();
   const heartbeat = progress.verbose
@@ -314,7 +323,7 @@ const runTurn = async (
         env: environment,
         onStdoutLine: progress.verbose
           ? (line) => {
-              const event = describeCopilotEvent(line);
+              const event = describeCopilotEvent(line, progress.verbosity);
               if (event) {
                 progress.debug(event.message, event.properties);
               }
@@ -332,8 +341,19 @@ const runTurn = async (
       turn,
     });
 
+    const events = await parseJsonLines(eventsPath);
+    const answer = extractResponse(events);
+    if (answer && progress.verbosity >= 2) {
+      progress.debug(
+        formatConversationBlock(
+          `Answer (turn ${turn}, ${answer.length} chars)`,
+          formatLogText(answer),
+        ),
+      );
+    }
+
     return {
-      events: await parseJsonLines(eventsPath),
+      events,
       exitCode,
     };
   } finally {

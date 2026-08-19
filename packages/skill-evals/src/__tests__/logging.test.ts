@@ -17,6 +17,51 @@ vi.mock("@logtape/logtape", () => ({
   getTextFormatter: logtapeMocks.getTextFormatter,
 }));
 
+describe("formatLogLine", () => {
+  it("uses the eval name next to the level when present", async () => {
+    vi.resetModules();
+    const { formatLogLine } = await import("../logging.ts");
+
+    expect(
+      formatLogLine({
+        category: "eval",
+        level: "DBG",
+        message: "Starting Copilot turn 1",
+        properties: { eval: "create-function-app" },
+        timestamp: "10:21:00.000",
+      }),
+    ).toBe("10:21:00.000 [DBG] create-function-app: Starting Copilot turn 1");
+  });
+
+  it("keeps the category when no eval is active", async () => {
+    vi.resetModules();
+    const { formatLogLine } = await import("../logging.ts");
+
+    expect(
+      formatLogLine({
+        category: "eval",
+        level: "DBG",
+        message: "Preparing runtime",
+        timestamp: "10:21:00.000",
+      }),
+    ).toBe("10:21:00.000 [DBG] eval: Preparing runtime");
+  });
+});
+
+describe("formatLogValue", () => {
+  it("prints strings without inspect quoting", async () => {
+    vi.resetModules();
+    const { formatLogValue } = await import("../logging.ts");
+    const inspect = vi.fn(() => '"quoted\\n" + "lines"');
+
+    expect(formatLogValue("hello\nworld", inspect)).toBe("hello\nworld");
+    expect(inspect).not.toHaveBeenCalled();
+    expect(formatLogValue({ path: "infra" }, inspect)).toBe(
+      '"quoted\\n" + "lines"',
+    );
+  });
+});
+
 describe("logging", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -56,6 +101,7 @@ describe("logging", () => {
       format: expect.any(Function),
       level: "ABBR",
       timestamp: "time",
+      value: expect.any(Function),
     });
     expect(logtapeMocks.getConsoleSink).toHaveBeenCalledWith({
       formatter: "text-formatter",

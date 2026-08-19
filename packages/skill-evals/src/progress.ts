@@ -5,10 +5,13 @@
  * they stay free of logging configuration and can be tested with a collector.
  */
 import { formatCredits, formatDuration, formatTokens } from "./format.js";
+import { type Verbosity } from "./verbosity.js";
 
 export type Progress = ProgressSink &
   Readonly<{
+    forEval: (evalName: string) => Progress;
     verbose: boolean;
+    verbosity: Verbosity;
   }>;
 
 export type ProgressSink = Readonly<{
@@ -26,22 +29,33 @@ export type UsageSnapshot = Readonly<{
 
 export const silentProgress: Progress = {
   debug: () => undefined,
+  forEval: () => silentProgress,
   info: () => undefined,
   verbose: false,
+  verbosity: 0,
 };
 
 export const createProgress = (
   logger: ProgressSink,
-  verbose: boolean,
-): Progress => ({
-  debug: (message, properties = {}) => {
-    logger.debug(message, properties);
-  },
-  info: (message, properties = {}) => {
-    logger.info(message, properties);
-  },
-  verbose,
-});
+  verbosity: Verbosity,
+  evalName?: string,
+): Progress => {
+  const propertiesFor = (
+    properties: Record<string, unknown> = {},
+  ): Record<string, unknown> =>
+    evalName === undefined ? properties : { ...properties, eval: evalName };
+
+  return {
+    // Call through the logger object so LogTape methods keep `this`.
+    debug: (message, properties) =>
+      logger.debug(message, propertiesFor(properties)),
+    forEval: (name) => createProgress(logger, verbosity, name),
+    info: (message, properties) =>
+      logger.info(message, propertiesFor(properties)),
+    verbose: verbosity >= 1,
+    verbosity,
+  };
+};
 
 export const formatUsage = (usage: UsageSnapshot): string => {
   const models =

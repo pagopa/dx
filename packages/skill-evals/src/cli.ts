@@ -24,6 +24,7 @@ import {
 } from "./runtime.js";
 import { scaffoldEval } from "./scaffold.js";
 import { type ReasoningEffort, reasoningEffortSchema } from "./schema.js";
+import { parseCliVerbosity, type Verbosity } from "./verbosity.js";
 
 type EvalOptions = Readonly<{
   baselineRef?: string;
@@ -35,7 +36,7 @@ type EvalOptions = Readonly<{
   maxAiCredits: number;
   output?: string;
   reasoningEffort: ReasoningEffort;
-  verbose: boolean;
+  verbosity: Verbosity;
 }> &
   SharedOptions;
 
@@ -116,8 +117,11 @@ const writeMetadata = async (
 };
 
 const runEval = async (options: EvalOptions): Promise<void> => {
-  await configureLogging(options.verbose);
-  const progress = createProgress(getPackageLogger(["eval"]), options.verbose);
+  await configureLogging(options.verbosity >= 1);
+  const progress = createProgress(
+    getPackageLogger(["eval"]),
+    options.verbosity,
+  );
   const elapsed = createElapsedTimer();
   const invocationDirectory = await resolveInvocationDirectory();
   const skillDirectory = await resolveSkillDirectory(
@@ -196,15 +200,16 @@ const runEval = async (options: EvalOptions): Promise<void> => {
       process.env,
     );
     for (const evalCase of selectedEvals) {
+      const evalProgress = progress.forEval(evalCase.name);
       await Promise.all([
         prepareEvalWorkspace(
-          current,
+          { ...current, progress: evalProgress },
           evalCase,
           join(outputDirectory, evalCase.name, "current", "workspace"),
           process.env,
         ),
         prepareEvalWorkspace(
-          baseline,
+          { ...baseline, progress: evalProgress },
           evalCase,
           join(outputDirectory, evalCase.name, "baseline", "workspace"),
           process.env,
@@ -322,20 +327,22 @@ program
     (value: string) => maxAiCreditsSchema.parse(value),
   )
   .option(
-    "-v, --verbose",
-    "Stream local progress: phases, models, Copilot events, credits, and timing",
-    false,
+    "-v, --verbose [level]",
+    "Stream local progress. Repeat or pass 2 (-vv, --verbose=2) for agent Q&A and tool arguments",
   )
-  .action(async (options: EvalOptions) =>
+  .action(async (options: Omit<EvalOptions, "verbosity">) =>
     runEval({
       ...options,
       eval: options.eval ?? [],
       maxAiCredits: options.maxAiCredits ?? 30,
-      verbose: options.verbose ?? false,
+      verbosity: parseCliVerbosity(process.argv),
     }),
   );
 
 program.parseAsync().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : String(error));
+  if (parseCliVerbosity(process.argv) >= 1 && error instanceof Error) {
+    console.error(error.stack);
+  }
   process.exitCode = 1;
 });

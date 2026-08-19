@@ -461,32 +461,35 @@ export const runEvaluationSuite = async (
     );
 
     for (const [index, evalCase] of evals.entries()) {
-      progress.info("Running {eval} ({index}/{total})", {
+      const evalProgress = progress.forEval(evalCase.name);
+      const currentScoped = { ...currentConfig, progress: evalProgress };
+      const baselineScoped = { ...baselineConfig, progress: evalProgress };
+      evalProgress.info("Running {eval} ({index}/{total})", {
         eval: evalCase.name,
         index: index + 1,
         total: evals.length,
       });
       const current = await runEvalVariant(
-        currentConfig,
+        currentScoped,
         evalCase,
         environment,
       );
-      progress.debug("Finished {eval} current: {usage}", {
+      evalProgress.debug("Finished {eval} current: {usage}", {
         eval: evalCase.name,
         usage: formatUsage(current.metrics),
       });
       const baseline = await runEvalVariant(
-        baselineConfig,
+        baselineScoped,
         evalCase,
         environment,
       );
-      progress.debug("Finished {eval} baseline: {usage}", {
+      evalProgress.debug("Finished {eval} baseline: {usage}", {
         eval: evalCase.name,
         usage: formatUsage(baseline.metrics),
       });
       const evalDirectory = join(runtime.outputDirectory, evalCase.name);
       const graded = await gradeEval(
-        currentConfig,
+        currentScoped,
         evalCase,
         evalDirectory,
         buildGradingPacket(
@@ -499,7 +502,7 @@ export const runEvaluationSuite = async (
         ),
         environment,
       );
-      progress.debug("Finished {eval} grader: {usage}", {
+      evalProgress.debug("Finished {eval} grader: {usage}", {
         eval: evalCase.name,
         usage: formatUsage(graded.metrics),
       });
@@ -534,7 +537,7 @@ export const runEvaluationSuite = async (
         addMetrics(addMetrics(suiteUsage, current.metrics), baseline.metrics),
         graded.metrics,
       );
-      progress.debug(
+      evalProgress.debug(
         "Eval {eval} current={current} baseline={baseline} winner={winner} · suite {usage} · wall {elapsed}",
         {
           baseline: grade.baseline.pass ? "pass" : "fail",
