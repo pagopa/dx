@@ -40,6 +40,7 @@ type EvalOptions = Readonly<{
   graderModel: string;
   mainModel: string;
   maxAiCredits: number;
+  noBaseline: boolean;
   output?: string;
   reasoningEffort: ReasoningEffort;
   verbosity: Verbosity;
@@ -161,6 +162,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
     baselineRef: options.baselineRef,
     currentOnly: options.currentOnly,
     manifest: manifest.runner.comparison,
+    noBaseline: options.noBaseline,
   });
   progress.debug("Preparing runtime in {output}", { output: outputDirectory });
   const runtime = await prepareRuntime(
@@ -339,9 +341,10 @@ program
     ),
   )
   .option("--output <directory>", "Artifact directory")
+  .option("--baseline-ref <ref>", "Git ref for the baseline skill")
   .option(
-    "--baseline-ref <ref>",
-    "Git ref for the baseline skill, or without-skill",
+    "--no-baseline",
+    "Compare the local skill with a run that has no skill plugin",
   )
   .option(
     "--current-only",
@@ -367,14 +370,20 @@ program
     "-v, --verbose [level]",
     "Stream local progress. Repeat or pass 2 (-vv, --verbose=2) for agent Q&A and tool arguments",
   )
-  .action(async (options: Omit<EvalOptions, "verbosity">) =>
-    runEval({
-      ...options,
-      currentOnly: options.currentOnly ?? false,
-      eval: options.eval ?? [],
-      maxAiCredits: options.maxAiCredits ?? 30,
-      verbosity: parseCliVerbosity(process.argv),
-    }),
+  .action(
+    async (
+      options: Omit<EvalOptions, "noBaseline" | "verbosity"> & {
+        baseline?: boolean;
+      },
+    ) =>
+      runEval({
+        ...options,
+        currentOnly: options.currentOnly ?? false,
+        eval: options.eval ?? [],
+        maxAiCredits: options.maxAiCredits ?? 30,
+        noBaseline: options.baseline === false,
+        verbosity: parseCliVerbosity(process.argv),
+      }),
   );
 
 program.parseAsync().catch((error: unknown) => {

@@ -3,11 +3,12 @@
  */
 import { describe, expect, it } from "vitest";
 
-import {
-  isComparedRun,
-  resolveComparison,
-  WITHOUT_SKILL_REF,
-} from "../comparison.js";
+import { isComparedRun, resolveComparison } from "../comparison.js";
+
+const silent = {
+  currentOnly: false,
+  noBaseline: false,
+} as const;
 
 describe("isComparedRun", () => {
   it("is false only for current-only", () => {
@@ -19,23 +20,33 @@ describe("isComparedRun", () => {
 
 describe("resolveComparison", () => {
   it("uses the manifest when the CLI is silent", () => {
-    expect(
-      resolveComparison({ currentOnly: false, manifest: "without-skill" }),
-    ).toEqual({ mode: "without-skill" });
-    expect(
-      resolveComparison({ currentOnly: false, manifest: "current-only" }),
-    ).toEqual({ mode: "current-only" });
-    expect(
-      resolveComparison({ currentOnly: false, manifest: "previous" }),
-    ).toEqual({ mode: "previous" });
+    expect(resolveComparison({ ...silent, manifest: "without-skill" })).toEqual(
+      { mode: "without-skill" },
+    );
+    expect(resolveComparison({ ...silent, manifest: "current-only" })).toEqual({
+      mode: "current-only",
+    });
+    expect(resolveComparison({ ...silent, manifest: "previous" })).toEqual({
+      mode: "previous",
+    });
   });
 
-  it("treats without-skill as a sentinel, not a Git ref", () => {
+  it("treats --baseline-ref as a Git ref, including without-skill", () => {
     expect(
       resolveComparison({
-        baselineRef: WITHOUT_SKILL_REF,
-        currentOnly: false,
+        ...silent,
+        baselineRef: "without-skill",
         manifest: "previous",
+      }),
+    ).toEqual({ baselineRef: "without-skill", mode: "previous" });
+  });
+
+  it("lets --no-baseline override the manifest", () => {
+    expect(
+      resolveComparison({
+        ...silent,
+        manifest: "previous",
+        noBaseline: true,
       }),
     ).toEqual({ mode: "without-skill" });
   });
@@ -43,8 +54,8 @@ describe("resolveComparison", () => {
   it("lets --baseline-ref override a current-only manifest", () => {
     expect(
       resolveComparison({
+        ...silent,
         baselineRef: "main",
-        currentOnly: false,
         manifest: "current-only",
       }),
     ).toEqual({ baselineRef: "main", mode: "previous" });
@@ -52,17 +63,37 @@ describe("resolveComparison", () => {
 
   it("lets --current-only override the manifest", () => {
     expect(
-      resolveComparison({ currentOnly: true, manifest: "previous" }),
+      resolveComparison({
+        ...silent,
+        currentOnly: true,
+        manifest: "previous",
+      }),
     ).toEqual({ mode: "current-only" });
   });
 
-  it("rejects combining --current-only with --baseline-ref", () => {
+  it("rejects combining exclusive CLI overrides", () => {
     expect(() =>
       resolveComparison({
         baselineRef: "main",
         currentOnly: true,
         manifest: "previous",
+        noBaseline: false,
       }),
-    ).toThrow("--current-only cannot be combined with --baseline-ref");
+    ).toThrow("cannot be combined");
+    expect(() =>
+      resolveComparison({
+        currentOnly: true,
+        manifest: "previous",
+        noBaseline: true,
+      }),
+    ).toThrow("cannot be combined");
+    expect(() =>
+      resolveComparison({
+        baselineRef: "main",
+        currentOnly: false,
+        manifest: "previous",
+        noBaseline: true,
+      }),
+    ).toThrow("cannot be combined");
   });
 });

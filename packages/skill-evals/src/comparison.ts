@@ -1,17 +1,19 @@
 /**
  * Resolves how a suite compares the local skill against a baseline.
  *
- * CLI flags override evals.json. `without-skill` is a reserved sentinel, not a
- * Git ref, so a branch with that name cannot hijack the no-plugin baseline.
+ * CLI flags override evals.json. `--baseline-ref` is always a Git ref; the
+ * no-plugin baseline is `--no-baseline`, never a fake branch name.
  */
 import { type ComparisonMode } from "./schema.js";
 
+/** Internal token for createBaselinePlugin. Not a CLI or Git value. */
 export const WITHOUT_SKILL_REF = "without-skill";
 
 export type ComparisonRequest = Readonly<{
   baselineRef?: string;
   currentOnly: boolean;
   manifest: ComparisonMode;
+  noBaseline: boolean;
 }>;
 
 export type ResolvedComparison = Readonly<{
@@ -22,17 +24,27 @@ export type ResolvedComparison = Readonly<{
 export const isComparedRun = (mode: ComparisonMode): boolean =>
   mode !== "current-only";
 
-/** CLI wins over the manifest. `--current-only` and `--baseline-ref` conflict. */
+const exclusiveCliFlags = (request: ComparisonRequest): readonly string[] =>
+  [
+    request.currentOnly ? "--current-only" : undefined,
+    request.noBaseline ? "--no-baseline" : undefined,
+    request.baselineRef === undefined ? undefined : "--baseline-ref",
+  ].filter((flag): flag is string => flag !== undefined);
+
+/** CLI wins over the manifest. The three CLI overrides are mutually exclusive. */
 export const resolveComparison = (
   request: ComparisonRequest,
 ): ResolvedComparison => {
-  if (request.currentOnly && request.baselineRef !== undefined) {
-    throw new Error("--current-only cannot be combined with --baseline-ref");
+  const flags = exclusiveCliFlags(request);
+  if (flags.length > 1) {
+    throw new Error(
+      "--current-only, --no-baseline, and --baseline-ref cannot be combined",
+    );
   }
   if (request.currentOnly) {
     return { mode: "current-only" };
   }
-  if (request.baselineRef === WITHOUT_SKILL_REF) {
+  if (request.noBaseline) {
     return { mode: "without-skill" };
   }
   if (request.baselineRef !== undefined) {

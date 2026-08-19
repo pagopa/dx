@@ -131,7 +131,7 @@ Compare the local skill with a run that has **no** skill plugin:
 ```bash
 pnpm nx run @pagopa/skill-evals:eval -- \
   --skill plugins/terraform/skills/terraform-best-practices \
-  --baseline-ref without-skill
+  --no-baseline
 ```
 
 Grade only the local skill (one agent session, no winner):
@@ -149,8 +149,9 @@ pnpm nx run @pagopa/skill-evals:eval -- \
 | `--skill <dir>`               | required                                   | Skill directory that contains `evals/evals.json`.                       |
 | `--eval <name>`               | all evals                                  | Repeatable. Run only these cases.                                       |
 | `--output <dir>`              | temp dir under `/tmp/skill-evals/<skill>/` | Must be missing or empty.                                               |
-| `--baseline-ref <ref>`        | previous `SKILL.md` commit                 | Git branch, tag, or SHA, or the sentinel `without-skill`.               |
-| `--current-only`              | off                                        | Grade only the local skill. Cannot be combined with `--baseline-ref`.   |
+| `--baseline-ref <ref>`        | previous `SKILL.md` commit                 | Git branch, tag, or SHA. Never a mode name.                             |
+| `--no-baseline`               | off                                        | Compare against a run with **no** skill plugin.                         |
+| `--current-only`              | off                                        | Grade only the local skill. No baseline session and no winner.          |
 | `--dry-run`                   | off                                        | Stop after plugins + workspaces are prepared.                           |
 | `--copilot-bin <path>`        | `copilot`                                  | Copilot CLI executable.                                                 |
 | `--main-model <model>`        | `gpt-5.6-sol`                              | Model that **plays the agent** (current and, when compared, baseline).  |
@@ -182,17 +183,18 @@ point of the comparison.
 
 ### 4. Choose how to compare
 
-Three suite-level modes. The CLI overrides `evals.json`. You cannot pass
-`--current-only` and `--baseline-ref` together.
+Three suite-level modes. The CLI overrides `evals.json`. `--current-only`,
+`--no-baseline`, and `--baseline-ref` cannot be combined.
 
-| Mode              | How to select it                                                                 | What runs                                                                                          |
-| ----------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| **previous**      | Default. Or `--baseline-ref <git-ref>` to pin a commit/branch/tag.               | Current (local skill) **and** baseline (that Git copy of the skill).                               |
-| **without-skill** | `--baseline-ref without-skill`, or `"comparison": "without-skill"` in the manifest. | Current **and** a baseline Copilot session with **no** skill plugin.                               |
-| **current-only**  | `--current-only`, or `"comparison": "current-only"` in the manifest.             | Only current. No baseline workspace, no winner, cheaper (one agent session + grader).              |
+| Mode              | How to select it                                                      | What runs                                                                             |
+| ----------------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **previous**      | Default. Or `--baseline-ref <git-ref>` to pin a commit/branch/tag.    | Current (local skill) **and** baseline (that Git copy of the skill).                  |
+| **without-skill** | `--no-baseline`, or `"comparison": "without-skill"` in the manifest.  | Current **and** a baseline Copilot session with **no** skill plugin.                  |
+| **current-only**  | `--current-only`, or `"comparison": "current-only"` in the manifest.  | Only current. No baseline workspace, no winner, cheaper (one agent session + grader). |
 
-`without-skill` is a reserved word, not a Git branch name. Use it whenever you
-want “does this skill beat an unskilled agent?”, even if Git history exists.
+`--baseline-ref` is always a Git ref. A branch named `without-skill` is just a
+branch. Use `--no-baseline` when you want “does this skill beat an unskilled
+agent?”, even if Git history exists.
 
 Set the default for a skill in `evals/evals.json`:
 
@@ -205,7 +207,7 @@ Set the default for a skill in `evals/evals.json`:
 Allowed values: `previous` (default if omitted), `without-skill`, `current-only`.
 Flags always win, so a skill that defaults to comparison can still be graded
 alone with `--current-only`, and a current-only skill can still be compared with
-`--baseline-ref without-skill` or `--baseline-ref main`.
+`--no-baseline` or `--baseline-ref main`.
 
 ## How a run works
 
@@ -254,7 +256,7 @@ question is what the baseline plugin contains.
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **current**                    | Isolated plugin built from the skill directory on disk. Label: `local`. Always runs.                                                                                                                                                                           |
 | **baseline, previous version** | Isolated plugin from `git archive` of `--baseline-ref`, or of the previous commit that touched `SKILL.md` (`git log`; index `[0]` is HEAD, `[1]` is the baseline). Label: short SHA, or `branch@sha` when you passed a named ref / the commit is a branch tip. |
-| **baseline, without-skill**    | No `--plugin-dir`. Used when you ask for `without-skill`, or when mode is `previous` but there is no Git repo, no previous `SKILL.md` commit, or that ref has no `SKILL.md`. Label: `without-skill`.                                                           |
+| **baseline, without-skill**    | No `--plugin-dir`. Used with `--no-baseline` / `"comparison": "without-skill"`, or when mode is `previous` but there is no Git repo, no previous `SKILL.md` commit, or that ref has no `SKILL.md`. Label: `without-skill`.                                      |
 | **current-only**               | No baseline session. The report shows `Comparison: current-only` and `n/a` for winner.                                                                                                                                                                         |
 
 Supporting skills listed in the manifest are copied into the plugin
