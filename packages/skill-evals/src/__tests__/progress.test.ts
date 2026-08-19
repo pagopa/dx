@@ -1,28 +1,13 @@
 /**
- * Verifies the progress port formats usage and stays silent when disabled.
+ * Verifies the progress port tags lines and stays silent when disabled.
  */
 import { describe, expect, it, vi } from "vitest";
 
 import {
   createElapsedTimer,
   createProgress,
-  formatUsage,
   silentProgress,
 } from "../progress.js";
-
-describe("formatUsage", () => {
-  it("summarizes credits, model time, tokens, and models", () => {
-    expect(
-      formatUsage({
-        aiCredits: 1.5,
-        durationMs: 61_000,
-        inputTokens: 10,
-        models: ["gpt-5.6-sol"],
-        outputTokens: 4,
-      }),
-    ).toBe("1.50 credits · 1m 1s model · 10 in / 4 out · gpt-5.6-sol");
-  });
-});
 
 describe("createProgress", () => {
   it("forwards debug and info to the logger", () => {

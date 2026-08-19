@@ -3,7 +3,8 @@
  *
  * Each variant gets a disposable workspace plus a JSONL event log. Mechanical
  * checks are generic (diff, skill load/invoke); skill-specific checks arrive
- * from after_each. The grader is a separate session with only the view tool.
+ * from after_each. Grading sessions run a single isolated turn; the grader
+ * contract (isolation, packet, schema) lives in grader.ts.
  */
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -13,6 +14,7 @@ import { z } from "zod";
 import { describeCopilotEvent } from "./copilot-events.js";
 import { formatConversationBlock, formatLogText } from "./format.js";
 import { runSkillHook } from "./hooks.js";
+import { emptyMetrics, type RunMetrics } from "./metrics.js";
 import { runCommand, runCommandToFiles } from "./process.js";
 import { type Progress, silentProgress } from "./progress.js";
 import { initializeGitRepository, scaffoldEval } from "./scaffold.js";
@@ -68,14 +70,6 @@ export type MechanicalChecks = Readonly<
     skillLoaded: boolean;
   }>;
 
-export type RunMetrics = Readonly<{
-  aiCredits: number;
-  durationMs: number;
-  inputTokens: number;
-  models: readonly string[];
-  outputTokens: number;
-}>;
-
 const eventSchema = z.object({
   attributes: z.record(z.string(), z.unknown()).optional(),
   data: z.record(z.string(), z.unknown()).optional(),
@@ -103,14 +97,6 @@ const skillInvocationSchema = z
     name: z.literal("skill"),
   })
   .catchall(z.unknown());
-
-const emptyMetrics = (): RunMetrics => ({
-  aiCredits: 0,
-  durationMs: 0,
-  inputTokens: 0,
-  models: [],
-  outputTokens: 0,
-});
 
 /**
  * Copilot may emit a trailing incomplete line. Invalid rows are skipped so
@@ -593,8 +579,11 @@ export const runEvalVariant = async (
   );
 };
 
-/** Grades one eval in a tool-limited session that cannot see the skill plugin. */
-export const runGrader = async (
+/**
+ * Executes one isolated grading turn: no workspace prep, no artifact
+ * collection. Callers supply an already-isolated config (see grader.ts).
+ */
+export const runGradingSession = async (
   config: CopilotRunConfiguration,
   prompt: string,
   workingDirectory: string,
@@ -616,12 +605,7 @@ export const runGrader = async (
 
   const sessionId = randomUUID();
   const result = await runTurn(
-    {
-      ...config,
-      availableTools: ["view"],
-      knowledgeBase: undefined,
-      pluginDirectory: undefined,
-    },
+    config,
     workingDirectory,
     artifactDirectory,
     1,

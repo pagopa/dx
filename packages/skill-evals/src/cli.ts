@@ -109,7 +109,7 @@ const writeMetadata = async (
     join(runtime.outputDirectory, "metadata.json"),
     `${JSON.stringify(
       {
-        baseline: runtime.baselineLabel,
+        baseline: runtime.baseline.label,
         comparison: runtime.comparison,
         createdAt: new Date().toISOString(),
         current: runtime.currentLabel,
@@ -187,7 +187,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
   progress.debug(
     "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} comparison={comparison} current={current} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
     {
-      baseline: runtime.baselineLabel,
+      baseline: runtime.baseline.label,
       comparison: runtime.comparison,
       copilot: runtime.copilotBin,
       current: runtime.currentLabel,
@@ -208,7 +208,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
   if (options.dryRun) {
     const current = createRunConfiguration(manifest, runtime, "current");
     const baseline =
-      runtime.comparison === "current-only"
+      runtime.baseline.kind === "none"
         ? undefined
         : createRunConfiguration(manifest, runtime, "baseline");
     await runSkillHook(
@@ -237,7 +237,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
           prepareEvalWorkspace(
             {
               ...baseline,
-              progress: progress.forEval(evalCase.name, runtime.baselineLabel),
+              progress: progress.forEval(evalCase.name, runtime.baseline.label),
             },
             evalCase,
             join(outputDirectory, evalCase.name, "baseline", "workspace"),

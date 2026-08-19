@@ -6,9 +6,6 @@
  */
 import { type ComparisonMode } from "./schema.js";
 
-/** Internal token for createBaselinePlugin. Not a CLI or Git value. */
-export const WITHOUT_SKILL_REF = "without-skill";
-
 export type ComparisonRequest = Readonly<{
   baselineRef?: string;
   currentOnly: boolean;

@@ -4,7 +4,7 @@
  * The CLI builds a LogTape-backed reporter. Domain modules take this port so
  * they stay free of logging configuration and can be tested with a collector.
  */
-import { formatCredits, formatDuration, formatTokens } from "./format.js";
+import { formatDuration } from "./format.js";
 import { type Verbosity } from "./verbosity.js";
 
 export type Progress = ProgressSink &
@@ -17,14 +17,6 @@ export type Progress = ProgressSink &
 export type ProgressSink = Readonly<{
   debug: (message: string, properties?: Record<string, unknown>) => void;
   info: (message: string, properties?: Record<string, unknown>) => void;
-}>;
-
-export type UsageSnapshot = Readonly<{
-  aiCredits: number;
-  durationMs: number;
-  inputTokens: number;
-  models?: readonly string[];
-  outputTokens: number;
 }>;
 
 export const silentProgress: Progress = {
@@ -59,16 +51,6 @@ export const createProgress = (
     verbose: verbosity >= 1,
     verbosity,
   };
-};
-
-export const formatUsage = (usage: UsageSnapshot): string => {
-  const models =
-    usage.models && usage.models.length > 0
-      ? ` · ${usage.models.join(", ")}`
-      : "";
-  return `${formatCredits(usage.aiCredits)} credits · ${formatDuration(
-    usage.durationMs,
-  )} model · ${formatTokens(usage.inputTokens, usage.outputTokens)}${models}`;
 };
 
 export const createElapsedTimer = (
