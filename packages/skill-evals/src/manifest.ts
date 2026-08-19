@@ -1,11 +1,16 @@
 /**
- * Loads and deterministically validates a skill eval manifest and its references.
+ * Loads evals.json and checks the skill tree on disk.
+ *
+ * Shape, uniqueness, and path format live in schema.ts. This module only
+ * answers questions that need the filesystem: do fixtures exist, do hook
+ * scripts exist, and does every catalog ID appear in some assertion.
  */
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 import {
   type EvalCase,
+  parseJson,
   type SkillEvalManifest,
   skillEvalManifestSchema,
 } from "./schema.js";
@@ -32,11 +37,15 @@ const extractMatches = (value: string, pattern: string): readonly string[] => {
   return [...value.matchAll(expression)].map(([match]) => match);
 };
 
+/**
+ * Destination of a scaffold file inside the disposable workspace.
+ * `evals/scaffolds/base/repository/infra/main.tf` → `infra/main.tf`.
+ */
 const relativeFixtureTarget = (file: string): string => {
   const marker = "/repository/";
   const markerIndex = file.indexOf(marker);
 
-  if (!file.startsWith("evals/scaffolds/") || markerIndex === -1) {
+  if (markerIndex === -1) {
     throw new Error(`Invalid scaffold path: ${file}`);
   }
 
@@ -73,6 +82,7 @@ const validateFixture = async (
 
   if (evalCase.fixture_required) {
     for (const prefix of requiredPrefixes) {
+      // Shared prefixes keep overlay-only evals from omitting the base tree.
       if (!evalCase.files.some((file) => file.startsWith(prefix))) {
         throw new Error(
           `Eval ${evalCase.name} requires a fixture under ${prefix}.`,
@@ -129,6 +139,7 @@ const validateHooks = async (
   }
 };
 
+/** Parses and schema-validates evals.json. Does not touch the filesystem tree. */
 export const loadManifest = async (
   skillDirectory: string,
 ): Promise<SkillEvalManifest> => {
@@ -136,7 +147,9 @@ export const loadManifest = async (
     join(skillDirectory, "evals/evals.json"),
     "utf8",
   );
-  const parsed = skillEvalManifestSchema.safeParse(JSON.parse(content));
+  const parsed = skillEvalManifestSchema.safeParse(
+    parseJson(content, "evals/evals.json"),
+  );
 
   if (!parsed.success) {
     throw new Error(
@@ -154,30 +167,15 @@ const zodIssues = (
     .map((issue) => `- ${issue.path.join(".")}: ${issue.message}`)
     .join("\n");
 
+/** Schema plus on-disk fixtures, hooks, and catalog coverage. */
 export const validateManifest = async (
   skillDirectory: string,
   strictFiles: boolean,
 ): Promise<ManifestValidation> => {
   const manifest = await loadManifest(skillDirectory);
-  const ids = new Set<number>();
-  const names = new Set<string>();
   const warnings: string[] = [];
 
   for (const evalCase of manifest.evals) {
-    if (ids.has(evalCase.id)) {
-      throw new Error(`Duplicate eval ID: ${evalCase.id}`);
-    }
-    if (names.has(evalCase.name)) {
-      throw new Error(`Duplicate eval name: ${evalCase.name}`);
-    }
-    if (/<[^>]+>/.test(evalCase.prompt)) {
-      throw new Error(
-        `Eval ${evalCase.name} contains an unresolved placeholder.`,
-      );
-    }
-
-    ids.add(evalCase.id);
-    names.add(evalCase.name);
     warnings.push(
       ...(await validateFixture(
         skillDirectory,

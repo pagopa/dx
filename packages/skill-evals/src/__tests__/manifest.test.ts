@@ -103,4 +103,49 @@ describe("validateManifest", () => {
       "maps multiple files to README.md",
     );
   });
+
+  it("rejects an unresolved prompt placeholder", async () => {
+    const skillDirectory = await createSkill();
+    const invalid = structuredClone(validManifest);
+    invalid.evals[0].prompt = "Produce the <result>.";
+    await writeFile(
+      join(skillDirectory, "evals/evals.json"),
+      JSON.stringify(invalid),
+    );
+
+    await expect(validateManifest(skillDirectory, true)).rejects.toThrow(
+      "unresolved <placeholder>",
+    );
+  });
+
+  it("rejects a duplicate eval ID", async () => {
+    const skillDirectory = await createSkill();
+    const invalid = structuredClone(validManifest);
+    invalid.evals.push({
+      ...invalid.evals[0],
+      name: "second-eval",
+    });
+    await writeFile(
+      join(skillDirectory, "evals/evals.json"),
+      JSON.stringify(invalid),
+    );
+
+    await expect(validateManifest(skillDirectory, true)).rejects.toThrow(
+      "Duplicate eval ID: 1",
+    );
+  });
+
+  it("rejects a fixture path outside the scaffold repository", async () => {
+    const skillDirectory = await createSkill();
+    const invalid = structuredClone(validManifest);
+    invalid.evals[0].files = ["evals/README.md"];
+    await writeFile(
+      join(skillDirectory, "evals/evals.json"),
+      JSON.stringify(invalid),
+    );
+
+    await expect(validateManifest(skillDirectory, true)).rejects.toThrow(
+      "evals/scaffolds",
+    );
+  });
 });

@@ -1,5 +1,8 @@
 /**
- * Provides a small typed adapter around child processes used by the eval runtime.
+ * Typed spawn adapter for Copilot, Git, and skill hooks.
+ *
+ * stdin is ignored so a stray TTY cannot stall a non-interactive run.
+ * A null exit code (signal kill) is treated as failure (1).
  */
 import { spawn } from "node:child_process";
 import { open } from "node:fs/promises";
@@ -15,6 +18,7 @@ type RunCommandOptions = Readonly<{
   env?: NodeJS.ProcessEnv;
 }>;
 
+/** Captures stdout/stderr in memory. Used for short Git and hook commands. */
 export const runCommand = async (
   command: string,
   args: readonly string[],
@@ -47,6 +51,7 @@ type RunCommandToFilesOptions = Readonly<{
 }> &
   RunCommandOptions;
 
+/** Streams Copilot output to files so large JSONL event streams stay off-heap. */
 export const runCommandToFiles = async (
   command: string,
   args: readonly string[],

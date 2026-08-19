@@ -1,14 +1,24 @@
 /**
- * Executes isolated Copilot CLI eval variants and grader turns with captured evidence.
+ * Runs one Copilot session (skill variant or grader) and captures evidence.
+ *
+ * Each variant gets a disposable workspace plus a JSONL event log. Mechanical
+ * checks are generic (diff, skill load/invoke); skill-specific checks arrive
+ * from after_each. The grader is a separate session with only the view tool.
  */
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { z } from "zod";
 
 import { runSkillHook } from "./hooks.js";
 import { runCommand, runCommandToFiles } from "./process.js";
-import { scaffoldEval } from "./scaffold.js";
-import { type EvalCase, type SkillEvalManifest } from "./schema.js";
+import { initializeGitRepository, scaffoldEval } from "./scaffold.js";
+import {
+  type EvalCase,
+  type EvalVariant,
+  type ReasoningEffort,
+  type SkillEvalManifest,
+} from "./schema.js";
 
 export type CopilotRunConfiguration = Readonly<{
   availableTools: readonly string[];
@@ -23,10 +33,10 @@ export type CopilotRunConfiguration = Readonly<{
   outputDirectory: string;
   pluginDirectory?: string;
   promptPrefix?: string;
-  reasoningEffort: string;
+  reasoningEffort: ReasoningEffort;
   skillDirectory: string;
   skillName: string;
-  variant?: "baseline" | "current";
+  variant?: EvalVariant;
 }>;
 
 export type EvalRunResult = Readonly<{
@@ -62,12 +72,33 @@ export type RunMetrics = Readonly<{
   outputTokens: number;
 }>;
 
-type Event = Readonly<{
-  attributes?: Readonly<Record<string, unknown>>;
-  data?: Readonly<Record<string, unknown>>;
-  name?: string;
-  type?: string;
-}>;
+const eventSchema = z.object({
+  attributes: z.record(z.string(), z.unknown()).optional(),
+  data: z.record(z.string(), z.unknown()).optional(),
+  name: z.string().optional(),
+  type: z.string().optional(),
+});
+
+type Event = z.infer<typeof eventSchema>;
+
+const assistantMessageSchema = z.object({
+  data: z.object({
+    content: z.string(),
+    toolRequests: z.array(z.unknown()),
+  }),
+  type: z.literal("assistant.message"),
+});
+
+const pluginSkillSchema = z.object({
+  name: z.string(),
+  source: z.literal("plugin"),
+});
+
+const skillInvocationSchema = z
+  .object({
+    name: z.literal("skill"),
+  })
+  .catchall(z.unknown());
 
 const emptyMetrics = (): RunMetrics => ({
   aiCredits: 0,
@@ -77,32 +108,36 @@ const emptyMetrics = (): RunMetrics => ({
   outputTokens: 0,
 });
 
+/**
+ * Copilot may emit a trailing incomplete line. Invalid rows are skipped so
+ * one corrupt event cannot abort an otherwise successful run.
+ */
 const parseJsonLines = async (path: string): Promise<readonly Event[]> => {
   const content = await readFile(path, "utf8");
-  return content
-    .split("\n")
-    .filter(Boolean)
-    .map((line) => JSON.parse(line))
-    .filter(
-      (event): event is Event => typeof event === "object" && event !== null,
-    );
-};
-
-const extractResponse = (events: readonly Event[]): string => {
-  const responses = events.flatMap((event) => {
-    const data = event.data;
-    if (
-      event.type !== "assistant.message" ||
-      !data ||
-      !("content" in data) ||
-      typeof data.content !== "string" ||
-      !("toolRequests" in data) ||
-      !Array.isArray(data.toolRequests) ||
-      data.toolRequests.length > 0
-    ) {
+  return content.split("\n").flatMap((line) => {
+    if (!line) {
       return [];
     }
-    return [data.content];
+    try {
+      const parsed = eventSchema.safeParse(JSON.parse(line));
+      return parsed.success ? [parsed.data] : [];
+    } catch {
+      return [];
+    }
+  });
+};
+
+/**
+ * The last assistant.message without tool requests is the final answer.
+ * Earlier messages are tool-call narration and would confuse the grader.
+ */
+const extractResponse = (events: readonly Event[]): string => {
+  const responses = events.flatMap((event) => {
+    const parsed = assistantMessageSchema.safeParse(event);
+    if (!parsed.success || parsed.data.data.toolRequests.length > 0) {
+      return [];
+    }
+    return [parsed.data.data.content];
   });
   return responses.at(-1) ?? "";
 };
@@ -223,6 +258,8 @@ const runTurn = async (
     COPILOT_OTEL_SOURCE_NAME: "skill-evals",
   };
 
+  // Assigning undefined omits the variable from the child env. Do not delete
+  // a dynamic key: ESLint forbids that, and spawn already drops undefined.
   const knowledgeBaseVariable = config.knowledgeBaseEnvironmentVariable;
   if (knowledgeBaseVariable) {
     environment[knowledgeBaseVariable] = config.knowledgeBase;
@@ -256,6 +293,7 @@ const runTurn = async (
   };
 };
 
+/** Builds the workspace and runs before_each before any Copilot turn. */
 export const prepareEvalWorkspace = async (
   config: CopilotRunConfiguration,
   evalCase: EvalCase,
@@ -266,24 +304,7 @@ export const prepareEvalWorkspace = async (
     await scaffoldEval(config.skillDirectory, evalCase.name, workspace);
   } else {
     await mkdir(workspace, { recursive: true });
-    const commands: readonly (readonly string[])[] = [
-      ["init", "--quiet"],
-      ["config", "user.name", "Skill Evals"],
-      ["config", "user.email", "skill-evals@example.invalid"],
-      [
-        "commit",
-        "--quiet",
-        "--allow-empty",
-        "-m",
-        "Baseline skill eval fixture",
-      ],
-    ];
-    for (const args of commands) {
-      const result = await runCommand("git", args, { cwd: workspace });
-      if (result.exitCode !== 0) {
-        throw new Error(`git ${args[0]} failed: ${result.stderr.trim()}`);
-      }
-    }
+    await initializeGitRepository(workspace, "empty");
   }
 
   await runSkillHook(
@@ -334,23 +355,16 @@ const collectArtifacts = async (
       ? skills
       : [];
   });
-  const skillLoaded = loadedSkills.some(
-    (skill) =>
-      typeof skill === "object" &&
-      skill !== null &&
-      "name" in skill &&
-      skill.name === config.skillName &&
-      "source" in skill &&
-      skill.source === "plugin",
-  );
-  const skillInvoked = toolRequests.some(
-    (request) =>
-      typeof request === "object" &&
-      request !== null &&
-      "name" in request &&
-      request.name === "skill" &&
-      JSON.stringify(request).includes(config.skillName),
-  );
+  const skillLoaded = loadedSkills.some((skill) => {
+    const parsed = pluginSkillSchema.safeParse(skill);
+    return parsed.success && parsed.data.name === config.skillName;
+  });
+  const skillInvoked = toolRequests.some((request) => {
+    const parsed = skillInvocationSchema.safeParse(request);
+    return (
+      parsed.success && JSON.stringify(parsed.data).includes(config.skillName)
+    );
+  });
   const addedPlaceholders = /^\+[^+].*(TODO|FIXME|<[^>]+>)/m.test(diff.stdout);
   const hookChecks = await runSkillHook(
     config.hooks,
@@ -424,11 +438,13 @@ const collectArtifacts = async (
   };
 };
 
+/** Executes the skill prompt (and optional follow-up) for one variant. */
 export const runEvalVariant = async (
   config: CopilotRunConfiguration,
   evalCase: EvalCase,
   environment: NodeJS.ProcessEnv,
 ): Promise<EvalRunResult> => {
+  // Evals that declare the KB unavailable must not inherit the suite clone.
   const evalConfig =
     evalCase.knowledge_base === "available"
       ? config
@@ -485,6 +501,7 @@ export const runEvalVariant = async (
   );
 };
 
+/** Grades one eval in a tool-limited session that cannot see the skill plugin. */
 export const runGrader = async (
   config: CopilotRunConfiguration,
   prompt: string,

@@ -1,10 +1,14 @@
 #!/usr/bin/env node
-import { Command, Option } from "commander";
 /**
- * Exposes reusable validate, scaffold, and non-interactive eval commands.
+ * Entrypoint for validate, scaffold, and non-interactive eval.
+ *
+ * This is the only module that may read process.env. Copilot, models, and
+ * credit limits are CLI flags so the rest of the package stays testable.
  */
+import { Command, Option } from "commander";
 import { mkdir, readdir, realpath, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
+import { z } from "zod";
 
 import { prepareEvalWorkspace } from "./copilot-run.js";
 import { runSkillHook } from "./hooks.js";
@@ -17,6 +21,7 @@ import {
   type RuntimeConfiguration,
 } from "./runtime.js";
 import { scaffoldEval } from "./scaffold.js";
+import { type ReasoningEffort, reasoningEffortSchema } from "./schema.js";
 
 type EvalOptions = Readonly<{
   baselineRef?: string;
@@ -27,14 +32,20 @@ type EvalOptions = Readonly<{
   mainModel: string;
   maxAiCredits: number;
   output?: string;
-  reasoningEffort: string;
+  reasoningEffort: ReasoningEffort;
 }> &
   SharedOptions;
+
+const maxAiCreditsSchema = z.coerce.number().int().positive();
 
 type SharedOptions = Readonly<{
   skill: string;
 }>;
 
+/**
+ * Prefer the repo root so `--skill plugins/...` works from any subdirectory.
+ * Outside a Git checkout we fall back to cwd.
+ */
 const resolveInvocationDirectory = async (): Promise<string> => {
   const result = await runCommand("git", ["rev-parse", "--show-toplevel"], {
     cwd: process.cwd(),
@@ -271,11 +282,16 @@ program
   .option("--copilot-bin <path>", "Copilot CLI executable", "copilot")
   .option("--main-model <model>", "Model for skill runs", "gpt-5.6-sol")
   .option("--grader-model <model>", "Model for grading", "gpt-5-mini")
-  .option("--reasoning-effort <effort>", "Copilot reasoning effort", "high")
+  .option(
+    "--reasoning-effort <effort>",
+    "Copilot reasoning effort",
+    (value: string) => reasoningEffortSchema.parse(value),
+    "high",
+  )
   .option(
     "--max-ai-credits <credits>",
     "Per-session AI credit limit",
-    (value) => Number.parseInt(value, 10),
+    (value: string) => maxAiCreditsSchema.parse(value),
   )
   .action(async (options: EvalOptions) =>
     runEval({

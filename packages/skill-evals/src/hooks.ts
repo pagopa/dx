@@ -1,18 +1,26 @@
 /**
- * Runs optional skill-owned eval lifecycle hooks declared in the manifest.
+ * Runs optional skill-owned lifecycle scripts declared in evals.json.
+ *
+ * The package stays skill-agnostic: hooks live under evals/ and never reach
+ * the isolated plugin. A non-zero exit fails the suite. after_each may print
+ * a flat JSON object that is merged into mechanical.json.
  */
 import { join } from "node:path";
 import { z } from "zod";
 
 import { runCommand } from "./process.js";
-import { type HookName, type SkillEvalManifest } from "./schema.js";
+import {
+  type EvalVariant,
+  type HookName,
+  type SkillEvalManifest,
+} from "./schema.js";
 
 export type HookContext = Readonly<{
   artifactDirectory?: string;
   evalName?: string;
   outputDirectory: string;
   skillDirectory: string;
-  variant?: "baseline" | "current";
+  variant?: EvalVariant;
   workspace?: string;
 }>;
 
@@ -42,6 +50,10 @@ const hookEnvironment = (
   ...(context.workspace ? { SKILL_EVAL_WORKSPACE: context.workspace } : {}),
 });
 
+/**
+ * Hooks often print logs. Only a single JSON object is treated as output;
+ * anything else is ignored so diagnostic text cannot fail a passing run.
+ */
 const parseHookOutput = (stdout: string): HookOutput => {
   const trimmed = stdout.trim();
   if (!trimmed.startsWith("{")) {
@@ -56,6 +68,7 @@ const parseHookOutput = (stdout: string): HookOutput => {
   }
 };
 
+/** Runs one declared hook, or returns {} when the skill omitted that slot. */
 export const runSkillHook = async (
   hooks: SkillEvalManifest["hooks"],
   name: HookName,

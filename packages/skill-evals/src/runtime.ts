@@ -1,5 +1,9 @@
 /**
- * Prepares isolated current/baseline plugins and shared runtime configuration.
+ * Builds the isolated plugin pair and optional knowledge-base checkout.
+ *
+ * Current is a copy of the skill minus evals/ and scripts/. Baseline is the
+ * previous SKILL.md commit when one exists, otherwise a plugin without the
+ * skill so the suite can still compare "with skill" versus "without".
  */
 import {
   cp,
@@ -12,9 +16,14 @@ import {
 } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
+import { z } from "zod";
 
 import { runCommand } from "./process.js";
-import { type SkillEvalManifest } from "./schema.js";
+import {
+  parseJson,
+  type ReasoningEffort,
+  type SkillEvalManifest,
+} from "./schema.js";
 
 export type RuntimeConfiguration = Readonly<{
   baselineLabel: string;
@@ -28,7 +37,7 @@ export type RuntimeConfiguration = Readonly<{
   mainModel: string;
   maxAiCredits: number;
   outputDirectory: string;
-  reasoningEffort: string;
+  reasoningEffort: ReasoningEffort;
   skillDirectory: string;
 }>;
 
@@ -41,7 +50,7 @@ type PrepareRuntimeOptions = Readonly<{
   mainModel: string;
   maxAiCredits: number;
   outputDirectory: string;
-  reasoningEffort: string;
+  reasoningEffort: ReasoningEffort;
   skillDirectory: string;
 }>;
 
@@ -85,6 +94,7 @@ const copySkill = async (
   await cp(sourceSkill, target, {
     filter: (source) => {
       const name = basename(source);
+      // Keep eval fixtures and hook scripts out of the agent plugin.
       return name !== "evals" && name !== "scripts";
     },
     recursive: true,
@@ -118,6 +128,7 @@ const resolveBaselineRef = async (
     return undefined;
   }
 
+  // [0] is HEAD (the skill under test). [1] is the previous committed copy.
   return result.stdout.split("\n").filter(Boolean)[1];
 };
 
@@ -182,12 +193,16 @@ const createBaselinePlugin = async (
   return `git:${baselineRef}`;
 };
 
+const installedSkillSchema = z.object({
+  enabled: z.boolean(),
+  name: z.string(),
+  path: z.string(),
+});
+
 const installedSkills = async (
   copilotBin: string,
   invocationDirectory: string,
-): Promise<
-  readonly Readonly<{ enabled: boolean; name: string; path: string }>[]
-> => {
+): Promise<readonly z.infer<typeof installedSkillSchema>[]> => {
   const result = await runCommand(copilotBin, [
     "-C",
     invocationDirectory,
@@ -199,26 +214,10 @@ const installedSkills = async (
     return [];
   }
 
-  const parsed: unknown = JSON.parse(result.stdout);
-  return Array.isArray(parsed)
-    ? parsed.filter(
-        (
-          value,
-        ): value is Readonly<{
-          enabled: boolean;
-          name: string;
-          path: string;
-        }> =>
-          typeof value === "object" &&
-          value !== null &&
-          "enabled" in value &&
-          typeof value.enabled === "boolean" &&
-          "name" in value &&
-          typeof value.name === "string" &&
-          "path" in value &&
-          typeof value.path === "string",
-      )
-    : [];
+  const parsed = z
+    .array(installedSkillSchema)
+    .safeParse(parseJson(result.stdout, "copilot skill list"));
+  return parsed.success ? parsed.data : [];
 };
 
 const copySupportingSkills = async (
@@ -295,6 +294,8 @@ const resolveKnowledgeBase = async (
     }
   }
 
+  // Last resort: shallow-clone so CI machines without a local DX checkout
+  // can still run evals that need the knowledge base.
   const clone = join(runtimeDirectory, "knowledge-base");
   const result = await runCommand("git", [
     "clone",
@@ -327,19 +328,17 @@ const disabledMcps = async (
     return [];
   }
 
-  const parsed: unknown = JSON.parse(result.stdout);
-  if (
-    typeof parsed !== "object" ||
-    parsed === null ||
-    !("mcpServers" in parsed) ||
-    typeof parsed.mcpServers !== "object" ||
-    parsed.mcpServers === null
-  ) {
-    return [];
-  }
-  return Object.keys(parsed.mcpServers);
+  const parsed = z
+    .object({
+      mcpServers: z.record(z.string(), z.unknown()),
+    })
+    .safeParse(parseJson(result.stdout, "copilot mcp list"));
+  // Unknown shapes mean we cannot disable user MCPs; continue without them
+  // rather than aborting the suite.
+  return parsed.success ? Object.keys(parsed.data.mcpServers) : [];
 };
 
+/** Creates isolated plugins, resolves the KB, and lists MCPs to disable. */
 export const prepareRuntime = async (
   manifest: SkillEvalManifest,
   options: PrepareRuntimeOptions,

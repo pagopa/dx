@@ -1,5 +1,9 @@
 /**
- * Orchestrates deterministic checks, LLM grading, metrics, and CI reports.
+ * Orchestrates the suite: hooks, both Copilot variants, grading, and reports.
+ *
+ * Mechanical failures override the LLM grade. Current must load and invoke
+ * the skill; baseline may pass without it so a missing previous commit still
+ * produces a comparison. after_all runs in finally so cleanup always happens.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
@@ -15,7 +19,12 @@ import {
 import { runSkillHook } from "./hooks.js";
 import { runCommand } from "./process.js";
 import { type RuntimeConfiguration } from "./runtime.js";
-import { type EvalCase, type SkillEvalManifest } from "./schema.js";
+import {
+  type EvalCase,
+  type EvalVariant,
+  parseJson,
+  type SkillEvalManifest,
+} from "./schema.js";
 
 const assertionGradeSchema = z.object({
   assertion: z.string().min(1),
@@ -93,10 +102,11 @@ const emptyMetrics = (): RunMetrics => ({
   outputTokens: 0,
 });
 
+/** Maps a suite variant onto Copilot flags, plugin path, and hook config. */
 export const createRunConfiguration = (
   manifest: SkillEvalManifest,
   runtime: RuntimeConfiguration,
-  variant: "baseline" | "current",
+  variant: EvalVariant,
 ): CopilotRunConfiguration => ({
   availableTools: manifest.runner.available_tools,
   copilotBin: runtime.copilotBin,
@@ -134,7 +144,7 @@ const normalizeGrade = (
 ): Grade | undefined => {
   try {
     const parsed = gradeSchema.safeParse(
-      JSON.parse(cleanJsonResponse(response)),
+      parseJson(cleanJsonResponse(response), "grader response"),
     );
     if (!parsed.success || parsed.data.eval_name !== evalCase.name) {
       return undefined;
@@ -156,6 +166,10 @@ const normalizeGrade = (
   }
 };
 
+/**
+ * The LLM cannot overrule a failed execution. Current also must invoke the
+ * skill; otherwise a lucky unskilled answer would look like a regression win.
+ */
 const constrainVariant = (
   grade: VariantGrade,
   run: EvalRunResult,
@@ -243,6 +257,8 @@ const gradeEval = async (
 > => {
   const packetPath = join(evalDirectory, "grading-packet.md");
   await writeFile(packetPath, packet);
+  // Inline packets stay under Copilot's practical prompt budget. Larger ones
+  // are written to disk so the grader reads them with the view tool.
   const prompt =
     Buffer.byteLength(packet) <= 180_000
       ? `Do not call tools. Grade the complete packet below and return only the required JSON.\n\n${packet}`
@@ -405,6 +421,7 @@ const knowledgeBaseStatus = async (
   return result.exitCode === 0 ? result.stdout : undefined;
 };
 
+/** Runs selected evals, writes summary.json/md, and returns CI success. */
 export const runEvaluationSuite = async (
   manifest: SkillEvalManifest,
   runtime: RuntimeConfiguration,
@@ -508,6 +525,7 @@ export const runEvaluationSuite = async (
         rows.every((row) => row.grading_error === null),
     };
   } finally {
+    // after_all must run even when a later eval or the KB-dirty check fails.
     await runSkillHook(
       manifest.hooks,
       "after_all",

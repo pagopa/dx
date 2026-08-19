@@ -1,5 +1,8 @@
 /**
- * Materializes deterministic repository fixtures declared by any skill manifest.
+ * Layers declared scaffold files into an empty workspace and commits them.
+ *
+ * The resulting Git baseline makes later diffs contain only the agent change.
+ * Destination paths come from the portion after repository/ in each fixture.
  */
 import { cp, mkdir, readdir, realpath, stat } from "node:fs/promises";
 import { dirname, join } from "node:path";
@@ -18,6 +21,39 @@ const directoryExists = async (path: string): Promise<boolean> => {
   }
 };
 
+/**
+ * Creates a disposable Git repo. `tracked` commits copied fixtures; `empty`
+ * is for prompt-only evals that still need a clean `git diff`.
+ */
+export const initializeGitRepository = async (
+  directory: string,
+  mode: "empty" | "tracked",
+): Promise<void> => {
+  const commands: readonly (readonly string[])[] = [
+    ["init", "--quiet"],
+    ["config", "user.name", "Skill Evals"],
+    ["config", "user.email", "skill-evals@example.invalid"],
+    ...(mode === "tracked" ? [["add", "."]] : []),
+    mode === "tracked"
+      ? ["commit", "--quiet", "-m", "Baseline skill eval fixture"]
+      : [
+          "commit",
+          "--quiet",
+          "--allow-empty",
+          "-m",
+          "Baseline skill eval fixture",
+        ],
+  ];
+
+  for (const args of commands) {
+    const result = await runCommand("git", args, { cwd: directory });
+    if (result.exitCode !== 0) {
+      throw new Error(`git ${args[0]} failed: ${result.stderr.trim()}`);
+    }
+  }
+};
+
+/** Copies one eval's fixture files into an empty directory and commits them. */
 export const scaffoldEval = async (
   skillDirectory: string,
   evalName: string,
@@ -48,22 +84,6 @@ export const scaffoldEval = async (
     });
   }
 
-  const commands: readonly (readonly string[])[] = [
-    ["init", "--quiet"],
-    ["config", "user.name", "Skill Evals"],
-    ["config", "user.email", "skill-evals@example.invalid"],
-    ["add", "."],
-    ["commit", "--quiet", "-m", "Baseline skill eval fixture"],
-  ];
-
-  for (const args of commands) {
-    const result = await runCommand("git", args, {
-      cwd: resolvedDestination,
-    });
-    if (result.exitCode !== 0) {
-      throw new Error(`git ${args[0]} failed: ${result.stderr.trim()}`);
-    }
-  }
-
+  await initializeGitRepository(resolvedDestination, "tracked");
   return resolvedDestination;
 };
