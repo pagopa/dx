@@ -15,6 +15,13 @@ export const evalVariantSchema = z.enum(["baseline", "current"]);
 /** Copilot CLI `--effort` values accepted by the eval runner. */
 export const reasoningEffortSchema = z.enum(["low", "medium", "high", "xhigh"]);
 
+/** How the suite compares the local skill. CLI flags can override this. */
+export const comparisonModeSchema = z.enum([
+  "current-only",
+  "previous",
+  "without-skill",
+]);
+
 export const hookNameSchema = z.enum([
   "after_all",
   "after_each",
@@ -116,6 +123,7 @@ const hooksSchema = z
 
 const runnerSchema = z.object({
   available_tools: z.array(nonEmptyString).min(1),
+  comparison: comparisonModeSchema.default("previous"),
   knowledge_base: knowledgeBaseSchema.optional(),
   prompt_prefix: nonEmptyString,
   supporting_skills: z.array(supportingSkillSchema).default([]),
@@ -169,6 +177,7 @@ export const skillEvalManifestSchema = z
     }
   });
 
+export type ComparisonMode = z.infer<typeof comparisonModeSchema>;
 export type EvalCase = z.infer<typeof evalCaseSchema>;
 export type EvalVariant = z.infer<typeof evalVariantSchema>;
 export type HookName = z.infer<typeof hookNameSchema>;

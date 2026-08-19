@@ -1,14 +1,16 @@
 /**
- * Orchestrates the suite: hooks, both Copilot variants, grading, and reports.
+ * Orchestrates the suite: hooks, Copilot variants, grading, and reports.
  *
  * Mechanical failures override the LLM grade. Current must load and invoke
  * the skill; baseline may pass without it so a missing previous commit still
- * produces a comparison. after_all runs in finally so cleanup always happens.
+ * produces a comparison. current-only skips the baseline session. after_all
+ * runs in finally so cleanup always happens.
  */
 import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 
+import { isComparedRun } from "./comparison.js";
 import {
   type CopilotRunConfiguration,
   type EvalRunResult,
@@ -22,6 +24,7 @@ import { runCommand } from "./process.js";
 import { createElapsedTimer, formatUsage, silentProgress } from "./progress.js";
 import { type RuntimeConfiguration } from "./runtime.js";
 import {
+  type ComparisonMode,
   type EvalCase,
   type EvalVariant,
   parseJson,
@@ -50,13 +53,15 @@ const variantGradeSchema = z.object({
   summary: z.string().min(1),
 });
 
+const comparisonSchema = z.object({
+  material_differences: z.array(z.string()),
+  regressions: z.array(z.string()),
+  winner: z.enum(["baseline", "current", "tie"]),
+});
+
 const gradeSchema = z.object({
-  baseline: variantGradeSchema,
-  comparison: z.object({
-    material_differences: z.array(z.string()),
-    regressions: z.array(z.string()),
-    winner: z.enum(["baseline", "current", "tie"]),
-  }),
+  baseline: variantGradeSchema.optional(),
+  comparison: comparisonSchema.optional(),
   current: variantGradeSchema,
   eval_name: z.string().min(1),
 });
@@ -66,19 +71,9 @@ export type SuiteResult = Readonly<{
   success: boolean;
 }>;
 type EvalRow = Readonly<{
-  baseline: Readonly<{
-    assertions: VariantGrade["assertions"];
-    metrics: RunMetrics;
-    pass: boolean;
-    summary: string;
-  }>;
-  comparison: Grade["comparison"];
-  current: Readonly<{
-    assertions: VariantGrade["assertions"];
-    metrics: RunMetrics;
-    pass: boolean;
-    summary: string;
-  }>;
+  baseline?: VariantRow;
+  comparison?: Grade["comparison"];
+  current: VariantRow;
   eval_name: string;
   grader_metrics: RunMetrics;
   grading_error: null | string;
@@ -87,6 +82,13 @@ type EvalRow = Readonly<{
 type Grade = z.infer<typeof gradeSchema>;
 
 type VariantGrade = z.infer<typeof variantGradeSchema>;
+
+type VariantRow = Readonly<{
+  assertions: VariantGrade["assertions"];
+  metrics: RunMetrics;
+  pass: boolean;
+  summary: string;
+}>;
 
 const addMetrics = (left: RunMetrics, right: RunMetrics): RunMetrics => ({
   aiCredits: left.aiCredits + right.aiCredits,
@@ -141,9 +143,15 @@ const cleanJsonResponse = (response: string): string =>
     .replace(/^\s*```\s*$/gm, "")
     .trim();
 
+const assertionNames = (
+  assertions: VariantGrade["assertions"],
+): readonly string[] =>
+  [...assertions.map(({ assertion }) => assertion)].sort();
+
 const normalizeGrade = (
   response: string,
   evalCase: EvalCase,
+  requireComparison: boolean,
 ): Grade | undefined => {
   try {
     const parsed = gradeSchema.safeParse(
@@ -154,14 +162,23 @@ const normalizeGrade = (
     }
 
     const expected = [...evalCase.assertions].sort();
-    const current = parsed.data.current.assertions
-      .map(({ assertion }) => assertion)
-      .sort();
-    const baseline = parsed.data.baseline.assertions
-      .map(({ assertion }) => assertion)
-      .sort();
-    return JSON.stringify(current) === JSON.stringify(expected) &&
-      JSON.stringify(baseline) === JSON.stringify(expected)
+    const currentMatches =
+      JSON.stringify(assertionNames(parsed.data.current.assertions)) ===
+      JSON.stringify(expected);
+    if (!currentMatches) {
+      return undefined;
+    }
+    if (!requireComparison) {
+      return {
+        current: parsed.data.current,
+        eval_name: parsed.data.eval_name,
+      };
+    }
+    if (!parsed.data.baseline || !parsed.data.comparison) {
+      return undefined;
+    }
+    return JSON.stringify(assertionNames(parsed.data.baseline.assertions)) ===
+      JSON.stringify(expected)
       ? parsed.data
       : undefined;
   } catch {
@@ -195,7 +212,11 @@ const constrainVariant = (
   };
 };
 
-const failedGrade = (evalCase: EvalCase, message: string): Grade => {
+const failedGrade = (
+  evalCase: EvalCase,
+  message: string,
+  requireComparison: boolean,
+): Grade => {
   const variant = {
     assertions: [],
     gates: {},
@@ -211,12 +232,16 @@ const failedGrade = (evalCase: EvalCase, message: string): Grade => {
   };
 
   return {
-    baseline: variant,
-    comparison: {
-      material_differences: [],
-      regressions: [],
-      winner: "tie",
-    },
+    ...(requireComparison
+      ? {
+          baseline: variant,
+          comparison: {
+            material_differences: [],
+            regressions: [],
+            winner: "tie",
+          } satisfies NonNullable<Grade["comparison"]>,
+        }
+      : {}),
     current: variant,
     eval_name: evalCase.name,
   };
@@ -228,14 +253,18 @@ const buildGradingPacket = (
   evalCase: EvalCase,
   baselineLabel: string,
   current: EvalRunResult,
-  baseline: EvalRunResult,
-): string =>
-  [
+  baseline: EvalRunResult | undefined,
+): string => {
+  const compared = baseline !== undefined;
+  return [
     `<grader-instructions>\n${instructions}\n</grader-instructions>`,
+    compared
+      ? undefined
+      : "<comparison-mode>\nThis run has no baseline. Return only `eval_name` and `current`. Do not include `baseline` or `comparison`.\n</comparison-mode>",
     `<grade-input>\n${JSON.stringify(
       {
         assertions: evalCase.assertions,
-        baseline: baselineLabel,
+        baseline: compared ? baselineLabel : null,
         eval_name: evalCase.name,
         expected_output: evalCase.expected_output,
         follow_up: evalCase.follow_up ?? null,
@@ -246,8 +275,13 @@ const buildGradingPacket = (
     )}\n</grade-input>`,
     `<rubric>\n${rubric}\n</rubric>`,
     `<current-evidence>\n${current.evidence}\n</current-evidence>`,
-    `<baseline-evidence>\n${baseline.evidence}\n</baseline-evidence>`,
-  ].join("\n\n");
+    compared
+      ? `<baseline-evidence>\n${baseline.evidence}\n</baseline-evidence>`
+      : undefined,
+  ]
+    .filter((section): section is string => section !== undefined)
+    .join("\n\n");
+};
 
 const gradeEval = async (
   config: CopilotRunConfiguration,
@@ -255,6 +289,7 @@ const gradeEval = async (
   evalDirectory: string,
   packet: string,
   environment: NodeJS.ProcessEnv,
+  requireComparison: boolean,
 ): Promise<
   Readonly<{ grade: Grade; gradingError: null | string; metrics: RunMetrics }>
 > => {
@@ -283,7 +318,7 @@ const gradeEval = async (
     metrics = addMetrics(metrics, result.metrics);
     const grade = result.error
       ? undefined
-      : normalizeGrade(result.output, evalCase);
+      : normalizeGrade(result.output, evalCase, requireComparison);
     await writeFile(
       join(result.artifactDirectory, "response.txt"),
       result.output,
@@ -296,7 +331,7 @@ const gradeEval = async (
 
   const message = "The automated grader did not return valid JSON.";
   return {
-    grade: failedGrade(evalCase, message),
+    grade: failedGrade(evalCase, message, requireComparison),
     gradingError: message,
     metrics,
   };
@@ -306,6 +341,7 @@ const writeReport = async (
   outputDirectory: string,
   baselineLabel: string,
   rows: readonly EvalRow[],
+  comparison: ComparisonMode,
   guardrailPattern?: string,
 ): Promise<string> => {
   const failedGuardrails = new Map<string, number>();
@@ -339,11 +375,15 @@ const writeReport = async (
           left.guardrail.localeCompare(right.guardrail),
       ),
     totals: {
-      baseline_ai_credits: sum((row) => row.baseline.metrics.aiCredits),
-      baseline_duration_ms: sum((row) => row.baseline.metrics.durationMs),
-      baseline_input_tokens: sum((row) => row.baseline.metrics.inputTokens),
-      baseline_output_tokens: sum((row) => row.baseline.metrics.outputTokens),
-      baseline_passes: rows.filter((row) => row.baseline.pass).length,
+      baseline_ai_credits: sum((row) => row.baseline?.metrics.aiCredits ?? 0),
+      baseline_duration_ms: sum((row) => row.baseline?.metrics.durationMs ?? 0),
+      baseline_input_tokens: sum(
+        (row) => row.baseline?.metrics.inputTokens ?? 0,
+      ),
+      baseline_output_tokens: sum(
+        (row) => row.baseline?.metrics.outputTokens ?? 0,
+      ),
+      baseline_passes: rows.filter((row) => row.baseline?.pass).length,
       current_ai_credits: sum((row) => row.current.metrics.aiCredits),
       current_duration_ms: sum((row) => row.current.metrics.durationMs),
       current_input_tokens: sum((row) => row.current.metrics.inputTokens),
@@ -361,20 +401,26 @@ const writeReport = async (
   const lines = [
     "# Skill Eval Report",
     "",
-    `Baseline: \`${baselineLabel}\``,
+    comparison === "current-only"
+      ? "Comparison: current-only"
+      : `Baseline: \`${baselineLabel}\``,
     "",
     "| Eval | Current | Baseline | Winner | Current tokens | Baseline tokens |",
     "| --- | --- | --- | --- | ---: | ---: |",
-    ...rows.map(
-      (row) =>
-        `| ${row.eval_name} | ${row.current.pass ? "pass" : "fail"} | ${
-          row.baseline.pass ? "pass" : "fail"
-        } | ${row.comparison.winner} | ${
-          row.current.metrics.inputTokens + row.current.metrics.outputTokens
-        } | ${
-          row.baseline.metrics.inputTokens + row.baseline.metrics.outputTokens
-        } |`,
-    ),
+    ...rows.map((row) => {
+      const currentTokens =
+        row.current.metrics.inputTokens + row.current.metrics.outputTokens;
+      if (!row.baseline || !row.comparison) {
+        return `| ${row.eval_name} | ${
+          row.current.pass ? "pass" : "fail"
+        } | n/a | n/a | ${currentTokens} | n/a |`;
+      }
+      return `| ${row.eval_name} | ${row.current.pass ? "pass" : "fail"} | ${
+        row.baseline.pass ? "pass" : "fail"
+      } | ${row.comparison.winner} | ${currentTokens} | ${
+        row.baseline.metrics.inputTokens + row.baseline.metrics.outputTokens
+      } |`;
+    }),
     "",
     "## Totals",
     "",
@@ -383,12 +429,16 @@ const writeReport = async (
     } tokens, ${summary.totals.current_duration_ms} ms model time, ${
       summary.totals.current_ai_credits
     } AI credits.`,
-    `- Baseline: ${summary.totals.baseline_passes}/${summary.totals.eval_count} passed, ${
-      summary.totals.baseline_input_tokens +
-      summary.totals.baseline_output_tokens
-    } tokens, ${summary.totals.baseline_duration_ms} ms model time, ${
-      summary.totals.baseline_ai_credits
-    } AI credits.`,
+    ...(comparison === "current-only"
+      ? []
+      : [
+          `- Baseline: ${summary.totals.baseline_passes}/${summary.totals.eval_count} passed, ${
+            summary.totals.baseline_input_tokens +
+            summary.totals.baseline_output_tokens
+          } tokens, ${summary.totals.baseline_duration_ms} ms model time, ${
+            summary.totals.baseline_ai_credits
+          } AI credits.`,
+        ]),
     `- Grader: ${
       summary.totals.grader_input_tokens + summary.totals.grader_output_tokens
     } tokens.`,
@@ -424,6 +474,161 @@ const knowledgeBaseStatus = async (
   return result.exitCode === 0 ? result.stdout : undefined;
 };
 
+const toVariantRow = (
+  grade: VariantGrade,
+  metrics: RunMetrics,
+): VariantRow => ({
+  assertions: grade.assertions,
+  metrics,
+  pass: grade.pass,
+  summary: grade.summary,
+});
+
+const constrainGrade = (
+  grade: Grade,
+  current: EvalRunResult,
+  baseline: EvalRunResult | undefined,
+): Grade => ({
+  ...grade,
+  current: constrainVariant(grade.current, current, true),
+  ...(baseline && grade.baseline
+    ? {
+        baseline: constrainVariant(grade.baseline, baseline, false),
+      }
+    : { baseline: undefined, comparison: undefined }),
+});
+
+type SuiteEvalRequest = Readonly<{
+  baselineConfig?: CopilotRunConfiguration;
+  compared: boolean;
+  currentConfig: CopilotRunConfiguration;
+  elapsed: () => string;
+  environment: NodeJS.ProcessEnv;
+  evalCase: EvalCase;
+  index: number;
+  instructions: string;
+  rubric: string;
+  runtime: RuntimeConfiguration;
+  suiteUsage: RunMetrics;
+  total: number;
+}>;
+
+const evaluateCase = async (
+  request: SuiteEvalRequest,
+): Promise<Readonly<{ row: EvalRow; usage: RunMetrics }>> => {
+  const progress = request.runtime.progress ?? silentProgress;
+  const evalProgress = progress.forEval(request.evalCase.name);
+  const currentProgress = progress.forEval(
+    request.evalCase.name,
+    request.runtime.currentLabel,
+  );
+  const currentScoped = { ...request.currentConfig, progress: currentProgress };
+  evalProgress.info("Running {eval} ({index}/{total})", {
+    eval: request.evalCase.name,
+    index: request.index,
+    total: request.total,
+  });
+  const current = await runEvalVariant(
+    currentScoped,
+    request.evalCase,
+    request.environment,
+  );
+  currentProgress.debug("Finished {eval} current: {usage}", {
+    eval: request.evalCase.name,
+    usage: formatUsage(current.metrics),
+  });
+  const baseline = request.baselineConfig
+    ? await runEvalVariant(
+        {
+          ...request.baselineConfig,
+          progress: progress.forEval(
+            request.evalCase.name,
+            request.runtime.baselineLabel,
+          ),
+        },
+        request.evalCase,
+        request.environment,
+      )
+    : undefined;
+  if (baseline) {
+    progress
+      .forEval(request.evalCase.name, request.runtime.baselineLabel)
+      .debug("Finished {eval} baseline: {usage}", {
+        eval: request.evalCase.name,
+        usage: formatUsage(baseline.metrics),
+      });
+  }
+  const evalDirectory = join(
+    request.runtime.outputDirectory,
+    request.evalCase.name,
+  );
+  const graded = await gradeEval(
+    currentScoped,
+    request.evalCase,
+    evalDirectory,
+    buildGradingPacket(
+      request.instructions,
+      request.rubric,
+      request.evalCase,
+      request.runtime.baselineLabel,
+      current,
+      baseline,
+    ),
+    request.environment,
+    request.compared,
+  );
+  evalProgress.debug("Finished {eval} grader: {usage}", {
+    eval: request.evalCase.name,
+    usage: formatUsage(graded.metrics),
+  });
+  const grade = constrainGrade(graded.grade, current, baseline);
+  await writeFile(
+    join(evalDirectory, "grade.json"),
+    `${JSON.stringify(grade, null, 2)}\n`,
+  );
+  const usage = addMetrics(
+    addMetrics(request.suiteUsage, current.metrics),
+    baseline ? addMetrics(baseline.metrics, graded.metrics) : graded.metrics,
+  );
+  evalProgress.debug(
+    request.compared
+      ? "Eval {eval} current={current} baseline={baseline} winner={winner} · suite {usage} · wall {elapsed}"
+      : "Eval {eval} current={current} · suite {usage} · wall {elapsed}",
+    {
+      ...(request.compared
+        ? {
+            baseline: formatEvalOutcome(
+              grade.baseline?.pass ?? false,
+              request.runtime.baselineLabel,
+            ),
+            winner: grade.comparison?.winner ?? "n/a",
+          }
+        : {}),
+      current: formatEvalOutcome(
+        grade.current.pass,
+        request.runtime.currentLabel,
+      ),
+      elapsed: request.elapsed(),
+      eval: request.evalCase.name,
+      usage: formatUsage(usage),
+    },
+  );
+  return {
+    row: {
+      baseline:
+        baseline && grade.baseline
+          ? toVariantRow(grade.baseline, baseline.metrics)
+          : undefined,
+      comparison: grade.comparison,
+      current: toVariantRow(grade.current, current.metrics),
+      eval_name: request.evalCase.name,
+      grader_metrics: graded.metrics,
+      grading_error: graded.gradingError,
+    },
+    usage,
+  };
+};
+
 /** Runs selected evals, writes summary.json/md, and returns CI success. */
 export const runEvaluationSuite = async (
   manifest: SkillEvalManifest,
@@ -441,8 +646,11 @@ export const runEvaluationSuite = async (
   ]);
   const progress = runtime.progress ?? silentProgress;
   const elapsed = createElapsedTimer();
+  const compared = isComparedRun(runtime.comparison);
   const currentConfig = createRunConfiguration(manifest, runtime, "current");
-  const baselineConfig = createRunConfiguration(manifest, runtime, "baseline");
+  const baselineConfig = compared
+    ? createRunConfiguration(manifest, runtime, "baseline")
+    : undefined;
   const suiteHookContext = {
     outputDirectory: runtime.outputDirectory,
     skillDirectory: runtime.skillDirectory,
@@ -462,110 +670,29 @@ export const runEvaluationSuite = async (
     );
 
     for (const [index, evalCase] of evals.entries()) {
-      const evalProgress = progress.forEval(evalCase.name);
-      const currentProgress = progress.forEval(
-        evalCase.name,
-        runtime.currentLabel,
-      );
-      const baselineProgress = progress.forEval(
-        evalCase.name,
-        runtime.baselineLabel,
-      );
-      const currentScoped = { ...currentConfig, progress: currentProgress };
-      const baselineScoped = { ...baselineConfig, progress: baselineProgress };
-      evalProgress.info("Running {eval} ({index}/{total})", {
-        eval: evalCase.name,
+      const evaluated = await evaluateCase({
+        baselineConfig,
+        compared,
+        currentConfig,
+        elapsed,
+        environment,
+        evalCase,
         index: index + 1,
+        instructions,
+        rubric,
+        runtime,
+        suiteUsage,
         total: evals.length,
       });
-      const current = await runEvalVariant(
-        currentScoped,
-        evalCase,
-        environment,
-      );
-      currentProgress.debug("Finished {eval} current: {usage}", {
-        eval: evalCase.name,
-        usage: formatUsage(current.metrics),
-      });
-      const baseline = await runEvalVariant(
-        baselineScoped,
-        evalCase,
-        environment,
-      );
-      baselineProgress.debug("Finished {eval} baseline: {usage}", {
-        eval: evalCase.name,
-        usage: formatUsage(baseline.metrics),
-      });
-      const evalDirectory = join(runtime.outputDirectory, evalCase.name);
-      const graded = await gradeEval(
-        currentScoped,
-        evalCase,
-        evalDirectory,
-        buildGradingPacket(
-          instructions,
-          rubric,
-          evalCase,
-          runtime.baselineLabel,
-          current,
-          baseline,
-        ),
-        environment,
-      );
-      evalProgress.debug("Finished {eval} grader: {usage}", {
-        eval: evalCase.name,
-        usage: formatUsage(graded.metrics),
-      });
-      const grade: Grade = {
-        ...graded.grade,
-        baseline: constrainVariant(graded.grade.baseline, baseline, false),
-        current: constrainVariant(graded.grade.current, current, true),
-      };
-      await writeFile(
-        join(evalDirectory, "grade.json"),
-        `${JSON.stringify(grade, null, 2)}\n`,
-      );
-      rows.push({
-        baseline: {
-          assertions: grade.baseline.assertions,
-          metrics: baseline.metrics,
-          pass: grade.baseline.pass,
-          summary: grade.baseline.summary,
-        },
-        comparison: grade.comparison,
-        current: {
-          assertions: grade.current.assertions,
-          metrics: current.metrics,
-          pass: grade.current.pass,
-          summary: grade.current.summary,
-        },
-        eval_name: evalCase.name,
-        grader_metrics: graded.metrics,
-        grading_error: graded.gradingError,
-      });
-      suiteUsage = addMetrics(
-        addMetrics(addMetrics(suiteUsage, current.metrics), baseline.metrics),
-        graded.metrics,
-      );
-      evalProgress.debug(
-        "Eval {eval} current={current} baseline={baseline} winner={winner} · suite {usage} · wall {elapsed}",
-        {
-          baseline: formatEvalOutcome(
-            grade.baseline.pass,
-            runtime.baselineLabel,
-          ),
-          current: formatEvalOutcome(grade.current.pass, runtime.currentLabel),
-          elapsed: elapsed(),
-          eval: evalCase.name,
-          usage: formatUsage(suiteUsage),
-          winner: grade.comparison.winner,
-        },
-      );
+      rows.push(evaluated.row);
+      suiteUsage = evaluated.usage;
     }
 
     const reportPath = await writeReport(
       runtime.outputDirectory,
       runtime.baselineLabel,
       rows,
+      runtime.comparison,
       manifest.validation.coverage?.pattern,
     );
     const statusAfter = await knowledgeBaseStatus(runtime.knowledgeBase);

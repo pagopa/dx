@@ -2,8 +2,8 @@
  * Builds the isolated plugin pair and optional knowledge-base checkout.
  *
  * Current is a copy of the skill minus evals/ and scripts/. Baseline is the
- * previous SKILL.md commit when one exists, otherwise a plugin without the
- * skill so the suite can still compare "with skill" versus "without".
+ * previous SKILL.md commit, an explicit Git ref, or a without-skill plugin.
+ * current-only skips the baseline plugin entirely.
  */
 import {
   cp,
@@ -18,10 +18,12 @@ import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { z } from "zod";
 
+import { WITHOUT_SKILL_REF } from "./comparison.js";
 import { formatSkillRef } from "./format.js";
 import { runCommand } from "./process.js";
 import { type Progress, silentProgress } from "./progress.js";
 import {
+  type ComparisonMode,
   parseJson,
   type ReasoningEffort,
   type SkillEvalManifest,
@@ -29,7 +31,8 @@ import {
 
 export type RuntimeConfiguration = Readonly<{
   baselineLabel: string;
-  baselinePlugin: string;
+  baselinePlugin?: string;
+  comparison: ComparisonMode;
   copilotBin: string;
   currentLabel: string;
   currentPlugin: string;
@@ -47,6 +50,7 @@ export type RuntimeConfiguration = Readonly<{
 
 type PrepareRuntimeOptions = Readonly<{
   baselineRef?: string;
+  comparison: ComparisonMode;
   copilotBin: string;
   graderModel: string;
   invocationDirectory: string;
@@ -184,6 +188,9 @@ const createBaselinePlugin = async (
   requestedRef?: string,
 ): Promise<string> => {
   await createPluginManifest(pluginDirectory, "skill-eval-baseline");
+  if (requestedRef === WITHOUT_SKILL_REF) {
+    return formatSkillRef({ kind: "without-skill" });
+  }
   if (!repositoryRoot) {
     return formatSkillRef({ kind: "without-skill" });
   }
@@ -267,7 +274,7 @@ const copySupportingSkills = async (
   manifest: SkillEvalManifest,
   repositoryRoot: string | undefined,
   currentPlugin: string,
-  baselinePlugin: string,
+  baselinePlugin: string | undefined,
   copilotBin: string,
   invocationDirectory: string,
 ): Promise<void> => {
@@ -288,10 +295,10 @@ const copySupportingSkills = async (
           : undefined;
 
     if (source && (await isDirectory(source))) {
-      await Promise.all([
-        copySkill(source, currentPlugin, supportingSkill.name),
-        copySkill(source, baselinePlugin, supportingSkill.name),
-      ]);
+      await copySkill(source, currentPlugin, supportingSkill.name);
+      if (baselinePlugin) {
+        await copySkill(source, baselinePlugin, supportingSkill.name);
+      }
     }
   }
 };
@@ -389,26 +396,35 @@ export const prepareRuntime = async (
   const progress = options.progress ?? silentProgress;
   const runtimeDirectory = join(options.outputDirectory, "runtime");
   const currentPlugin = join(runtimeDirectory, "current-plugin");
-  const baselinePlugin = join(runtimeDirectory, "baseline-plugin");
+  const compared = options.comparison !== "current-only";
+  const baselinePlugin = compared
+    ? join(runtimeDirectory, "baseline-plugin")
+    : undefined;
   const repositoryRoot = await gitRepositoryRoot(options.skillDirectory);
 
   progress.debug("Preparing isolated plugins for {skill}", {
     skill: manifest.skill_name,
   });
-  await Promise.all([
-    createPluginManifest(currentPlugin, "skill-eval-current"),
-    mkdir(join(baselinePlugin, "skills"), { recursive: true }),
-  ]);
+  await createPluginManifest(currentPlugin, "skill-eval-current");
+  if (baselinePlugin) {
+    await mkdir(join(baselinePlugin, "skills"), { recursive: true });
+  }
   await copySkill(options.skillDirectory, currentPlugin, manifest.skill_name);
-  progress.debug("Resolving baseline skill");
-  const baselineLabel = await createBaselinePlugin(
-    repositoryRoot,
-    options.skillDirectory,
-    manifest.skill_name,
-    baselinePlugin,
-    runtimeDirectory,
-    options.baselineRef,
-  );
+  progress.debug("Resolving baseline skill ({comparison})", {
+    comparison: options.comparison,
+  });
+  const baselineLabel = baselinePlugin
+    ? await createBaselinePlugin(
+        repositoryRoot,
+        options.skillDirectory,
+        manifest.skill_name,
+        baselinePlugin,
+        runtimeDirectory,
+        options.comparison === "without-skill"
+          ? WITHOUT_SKILL_REF
+          : options.baselineRef,
+      )
+    : "skipped";
   progress.debug("Baseline ready ({baseline})", { baseline: baselineLabel });
   await copySupportingSkills(
     manifest,
@@ -440,6 +456,7 @@ export const prepareRuntime = async (
   return {
     baselineLabel,
     baselinePlugin,
+    comparison: options.comparison,
     copilotBin: options.copilotBin,
     currentLabel: formatSkillRef({ kind: "local" }),
     currentPlugin,

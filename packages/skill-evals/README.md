@@ -6,16 +6,19 @@ live inside the skill: the skill only owns the test data, and the runner
 executes it the same way in local debug and in CI.
 
 Each evaluation asks: _does the current skill help the agent do the right
-thing, compared with a previous version of that skill (or with no skill at
-all)?_
+thing?_ By default the runner also compares that answer with a **baseline**
+(the previous Git version of the skill, or a run with no skill). You can skip
+the comparison and grade only the local skill.
 
 The runner:
 
-1. Builds two isolated copies of the problem (same prompt, same starter files).
-2. Lets Copilot CLI solve one copy **with the local skill** (`current`) and one
-   copy **with a baseline** (`previous commit` or `without-skill`).
+1. Builds one or two isolated copies of the problem (same prompt, same starter
+   files).
+2. Lets Copilot CLI solve one copy **with the local skill** (`current`). Unless
+   you asked for **current-only**, it also solves a second copy **with a
+   baseline** (`previous commit` or `without-skill`).
 3. Collects evidence (answers, diffs, tool calls, usage).
-4. Asks a second, isolated model — the **grader** — to score both runs against
+4. Asks a second, isolated model — the **grader** — to score the run(s) against
    a written **rubric** and a list of **assertions**.
 5. Writes `summary.json` / `summary.md` and exits non-zero if the current skill
    failed or the grader returned invalid output.
@@ -32,7 +35,7 @@ These words are used throughout the package. They are not Terraform-specific.
 | **Eval**               | One test case: a prompt, optional starter repository, expected behaviour, and checks. Declared in `evals/evals.json`.                                                              |
 | **Suite**              | All evals in that manifest, or the subset selected with `--eval`.                                                                                                                  |
 | **Current**            | The skill as it exists on disk right now (your working tree). Always labelled `local`.                                                                                             |
-| **Baseline**           | The comparison skill: usually the previous Git commit of `SKILL.md`, or a ref you pass with `--baseline-ref`. If no previous copy exists, the baseline runs **without** the skill. |
+| **Baseline**           | The comparison skill: usually the previous Git commit of `SKILL.md`, a ref you pass with `--baseline-ref`, or an explicit **without-skill** run (no plugin). Omitted entirely in **current-only** mode. |
 | **Fixture / scaffold** | Starter files copied into a disposable Git repo so the agent has a realistic workspace.                                                                                            |
 | **Assertion**          | A yes/no statement the grader must judge, for example “no secret value is written into Terraform”.                                                                                 |
 | **Rubric**             | The scoring guide (`evals/rubric.md`): named criteria, a 0–2 scale, and pass/fail **gates**.                                                                                       |
@@ -123,22 +126,39 @@ pnpm nx run @pagopa/skill-evals:eval -- \
   --dry-run
 ```
 
+Compare the local skill with a run that has **no** skill plugin:
+
+```bash
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --baseline-ref without-skill
+```
+
+Grade only the local skill (one agent session, no winner):
+
+```bash
+pnpm nx run @pagopa/skill-evals:eval -- \
+  --skill plugins/terraform/skills/terraform-best-practices \
+  --current-only
+```
+
 #### `eval` flags
 
-| Flag                          | Default                                    | Purpose                                                 |
-| ----------------------------- | ------------------------------------------ | ------------------------------------------------------- |
-| `--skill <dir>`               | required                                   | Skill directory that contains `evals/evals.json`.       |
-| `--eval <name>`               | all evals                                  | Repeatable. Run only these cases.                       |
-| `--output <dir>`              | temp dir under `/tmp/skill-evals/<skill>/` | Must be missing or empty.                               |
-| `--baseline-ref <ref>`        | previous `SKILL.md` commit                 | Branch, tag, or SHA for the baseline skill.             |
-| `--dry-run`                   | off                                        | Stop after plugins + workspaces are prepared.           |
-| `--copilot-bin <path>`        | `copilot`                                  | Copilot CLI executable.                                 |
-| `--main-model <model>`        | `gpt-5.6-sol`                              | Model that **plays the agent** (current and baseline).  |
-| `--grader-model <model>`      | `gpt-5-mini`                               | Model that **scores** both runs.                        |
-| `--reasoning-effort <effort>` | `high`                                     | Copilot `--effort`: `low`, `medium`, `high`, `xhigh`.   |
-| `--max-ai-credits <n>`        | `30`                                       | Per-session Copilot credit cap.                         |
-| `-v` / `--verbose`            | quiet                                      | Local progress: phases, models, tools, credits, timing. |
-| `-vv` / `--verbose=2`         | —                                          | Also print prompts, agent Q&A, and tool arguments.      |
+| Flag                          | Default                                    | Purpose                                                                 |
+| ----------------------------- | ------------------------------------------ | ----------------------------------------------------------------------- |
+| `--skill <dir>`               | required                                   | Skill directory that contains `evals/evals.json`.                       |
+| `--eval <name>`               | all evals                                  | Repeatable. Run only these cases.                                       |
+| `--output <dir>`              | temp dir under `/tmp/skill-evals/<skill>/` | Must be missing or empty.                                               |
+| `--baseline-ref <ref>`        | previous `SKILL.md` commit                 | Git branch, tag, or SHA, or the sentinel `without-skill`.               |
+| `--current-only`              | off                                        | Grade only the local skill. Cannot be combined with `--baseline-ref`.   |
+| `--dry-run`                   | off                                        | Stop after plugins + workspaces are prepared.                           |
+| `--copilot-bin <path>`        | `copilot`                                  | Copilot CLI executable.                                                 |
+| `--main-model <model>`        | `gpt-5.6-sol`                              | Model that **plays the agent** (current and, when compared, baseline).  |
+| `--grader-model <model>`      | `gpt-5-mini`                               | Model that **scores** the run(s).                                       |
+| `--reasoning-effort <effort>` | `high`                                     | Copilot `--effort`: `low`, `medium`, `high`, `xhigh`.                   |
+| `--max-ai-credits <n>`        | `30`                                       | Per-session Copilot credit cap.                                         |
+| `-v` / `--verbose`            | quiet                                      | Local progress: phases, models, tools, credits, timing.                 |
+| `-vv` / `--verbose=2`         | —                                          | Also print prompts, agent Q&A, and tool arguments.                      |
 
 CI should omit `-v` so the Nx TUI stays quiet. Full JSONL event logs are always
 written to the artifact directory.
@@ -160,6 +180,33 @@ The command exits `1` when any **current** eval fails, or when the grader never
 returns valid JSON. A failing baseline alone does not fail CI: that is the
 point of the comparison.
 
+### 4. Choose how to compare
+
+Three suite-level modes. The CLI overrides `evals.json`. You cannot pass
+`--current-only` and `--baseline-ref` together.
+
+| Mode              | How to select it                                                                 | What runs                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **previous**      | Default. Or `--baseline-ref <git-ref>` to pin a commit/branch/tag.               | Current (local skill) **and** baseline (that Git copy of the skill).                               |
+| **without-skill** | `--baseline-ref without-skill`, or `"comparison": "without-skill"` in the manifest. | Current **and** a baseline Copilot session with **no** skill plugin.                               |
+| **current-only**  | `--current-only`, or `"comparison": "current-only"` in the manifest.             | Only current. No baseline workspace, no winner, cheaper (one agent session + grader).              |
+
+`without-skill` is a reserved word, not a Git branch name. Use it whenever you
+want “does this skill beat an unskilled agent?”, even if Git history exists.
+
+Set the default for a skill in `evals/evals.json`:
+
+```json
+"runner": {
+  "comparison": "previous"
+}
+```
+
+Allowed values: `previous` (default if omitted), `without-skill`, `current-only`.
+Flags always win, so a skill that defaults to comparison can still be graded
+alone with `--current-only`, and a current-only skill can still be compared with
+`--baseline-ref without-skill` or `--baseline-ref main`.
+
 ## How a run works
 
 ```text
@@ -168,8 +215,8 @@ validate evals.json
         ▼
 prepare runtime
   • copy local skill → current plugin (no evals/ or scripts/)
-  • resolve baseline plugin (previous SKILL.md, --baseline-ref, or none)
-  • copy supporting skills into both plugins when available
+  • unless current-only: resolve baseline (previous SKILL.md, Git ref, or none)
+  • copy supporting skills into the plugin(s) when available
   • resolve knowledge base, list user MCP servers to disable
         │
         ▼
@@ -177,10 +224,11 @@ before_all hook (optional)
         │
         ▼
 for each eval
-  ├─ materialize two Git workspaces from the same fixtures
+  ├─ materialize Git workspace(s) from the same fixtures
   ├─ current:  Copilot + current plugin + prompt [+ follow_up]
   ├─ baseline: Copilot + baseline plugin (or no plugin) + same prompt
-  ├─ after_each hook on each variant (optional)
+  │            (skipped in current-only)
+  ├─ after_each hook on each variant that ran (optional)
   ├─ collect evidence (response, diff, tools, mechanical.json, metrics)
   └─ grader session (no skill plugin, view tool only)
         │     invalid JSON → one retry
@@ -192,25 +240,26 @@ after_all hook (always, even on failure)
 summary.json + summary.md
 ```
 
-Both variants use the same model, effort, tool allow-list, disabled MCPs, and
-credit cap. The grader is a **third** session per eval: it cannot load the
-skill under test, so it cannot “help” the answer it is scoring.
+Compared runs use the same model, effort, tool allow-list, disabled MCPs, and
+credit cap on both variants. The grader is an extra session per eval: it cannot
+load the skill under test, so it cannot “help” the answer it is scoring.
 
 ### Current vs baseline vs without-skill
 
-The framework always runs **two agent sessions** per eval. It never asks you
-“with or without skill?” — that decision is only about **what the baseline
-plugin contains**.
+The framework does **not** ask you “with or without skill?” at runtime. That
+choice is the **comparison mode** above. When a baseline runs, the only
+question is what the baseline plugin contains.
 
 | Variant                        | What the agent sees                                                                                                                                                                                                                                            |
 | ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **current**                    | Isolated plugin built from the skill directory on disk. Label: `local`.                                                                                                                                                                                        |
+| **current**                    | Isolated plugin built from the skill directory on disk. Label: `local`. Always runs.                                                                                                                                                                           |
 | **baseline, previous version** | Isolated plugin from `git archive` of `--baseline-ref`, or of the previous commit that touched `SKILL.md` (`git log`; index `[0]` is HEAD, `[1]` is the baseline). Label: short SHA, or `branch@sha` when you passed a named ref / the commit is a branch tip. |
-| **baseline, without-skill**    | No `--plugin-dir` for the skill under test. Used when there is no Git repo, no previous `SKILL.md` commit, or that ref has no `SKILL.md`. Label: `without-skill`.                                                                                              |
+| **baseline, without-skill**    | No `--plugin-dir`. Used when you ask for `without-skill`, or when mode is `previous` but there is no Git repo, no previous `SKILL.md` commit, or that ref has no `SKILL.md`. Label: `without-skill`.                                                           |
+| **current-only**               | No baseline session. The report shows `Comparison: current-only` and `n/a` for winner.                                                                                                                                                                         |
 
-Supporting skills listed in the manifest are copied into both plugin
-directories when a source exists. When the baseline is `without-skill`, Copilot
-is started **without** `--plugin-dir`, so that session sees neither the
+Supporting skills listed in the manifest are copied into the plugin
+directories that exist. When the baseline is `without-skill`, Copilot is
+started **without** `--plugin-dir`, so that session sees neither the
 evaluated skill nor the supporting skills.
 
 **Current** must load and invoke the evaluated skill or the runner forces
@@ -250,6 +299,7 @@ Root object. `schema_version` must be `1`.
   "schema_version": 1,
   "skill_name": "terraform-best-practices",
   "runner": {
+    "comparison": "previous",
     "prompt_prefix": "Invoke the terraform-best-practices skill before acting.",
     "available_tools": ["view", "skill", "bash"],
     "supporting_skills": [
@@ -303,8 +353,9 @@ Root object. `schema_version` must be `1`.
 
 | Field               | Required | Meaning                                                                                                                                                                                                                                                                       |
 | ------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `prompt_prefix`     | yes      | Prepended to every agent prompt (current and baseline). Use it to tell the agent to invoke the skill.                                                                                                                                                                         |
+| `prompt_prefix`     | yes      | Prepended to every agent prompt (current and, when compared, baseline). Use it to tell the agent to invoke the skill.                                                                                                                                                         |
 | `available_tools`   | yes      | Copilot tool allow-list. At least one name.                                                                                                                                                                                                                                   |
+| `comparison`        | no       | Suite default: `previous` (omit for this), `without-skill`, or `current-only`. CLI flags override this field.                                                                                                                                                                 |
 | `supporting_skills` | no       | Extra skills copied into the isolated plugins. Each entry needs `name` and `repository_path` (relative to the Git root). If that directory is missing, an enabled Copilot install of the same `name` is used instead. If neither exists, the extra skill is skipped.          |
 | `knowledge_base`    | no       | How to find extra docs. Resolution order: `environment_variable`, repo root, cwd, `fallback_path`, then `git clone --depth 1 clone_url`. A candidate is accepted only if every `markers` path exists as a directory. Needed when any eval sets `knowledge_base: "available"`. |
 
@@ -404,11 +455,11 @@ per variant, with `score` in `0…2` or `null`.
 ### `evals/grader.md`
 
 Instructions for the scoring model. The runner sends this file, the rubric, the
-eval input, and both evidence bundles, then accepts **only** JSON (Markdown
+eval input, and the evidence bundle(s), then accepts **only** JSON (Markdown
 fences are stripped). Invalid output is retried once, then the eval is marked
 as a grading error.
 
-Required object (field names are validated):
+Required object when a baseline ran (field names are validated):
 
 ```json
 {
@@ -444,12 +495,16 @@ Required object (field names are validated):
 }
 ```
 
+In **current-only** mode the packet says there is no baseline. The grader must
+return only `eval_name` and `current` (same `current` shape as above). Extra
+`baseline` / `comparison` fields are ignored.
+
 Rules the runner enforces:
 
 - `eval_name` must match the case being graded.
-- `current.assertions` and `baseline.assertions` must be the **same set** of
-  strings as `evals.json` (order ignored).
-- `winner` is `current`, `baseline`, or `tie`.
+- `current.assertions` (and `baseline.assertions` when compared) must be the
+  **same set** of strings as `evals.json` (order ignored).
+- When compared, `winner` is `current`, `baseline`, or `tie`.
 - `gates` is an open map of booleans — define the keys in `grader.md` so they
   match `rubric.md`.
 - `score` is `0`, `1`, `2`, or `null` (not applicable).
@@ -480,7 +535,7 @@ Default output: `/tmp/skill-evals/<skill-name>/<timestamp>-XXXX/`.
     │   ├── mechanical.json
     │   ├── metrics.json
     │   └── tool-requests.json
-    └── baseline/                    # same layout
+    └── baseline/                    # same layout; omitted in current-only
 ```
 
 `mechanical.json` always includes `executionSuccess`, `skillLoaded`,
@@ -496,9 +551,9 @@ For **current** (this is what CI uses):
 3. The grader returned valid JSON.
 4. The grader’s `current.pass` is true after mechanical constraints.
 
-For **baseline**, (2) is not required. The report still shows
+For **baseline**, (2) is not required. On compared runs the report still shows
 baseline pass/fail and a `winner` so you can see regressions or “the old skill
-was already good”.
+was already good”. Current-only reports omit those columns (`n/a`).
 
 `summary.md` also lists recurring failed assertion IDs when `validation.coverage.pattern`
 is set.

@@ -5,7 +5,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { validateManifest } from "../manifest.js";
+import { loadManifest, validateManifest } from "../manifest.js";
 import { temporaryDirectory } from "./temporary-directory.js";
 
 const validManifest = {
@@ -132,6 +132,30 @@ describe("validateManifest", () => {
 
     await expect(validateManifest(skillDirectory, true)).rejects.toThrow(
       "Duplicate eval ID: 1",
+    );
+  });
+
+  it("defaults runner.comparison to previous", async () => {
+    const skillDirectory = await createSkill();
+
+    const manifest = await loadManifest(skillDirectory);
+
+    expect(manifest.runner.comparison).toBe("previous");
+  });
+
+  it("rejects an unknown runner.comparison value", async () => {
+    const skillDirectory = await createSkill();
+    const runner: Record<string, unknown> = {
+      ...validManifest.runner,
+      comparison: "maybe",
+    };
+    await writeFile(
+      join(skillDirectory, "evals/evals.json"),
+      JSON.stringify({ ...validManifest, runner }),
+    );
+
+    await expect(validateManifest(skillDirectory, true)).rejects.toThrow(
+      "runner.comparison",
     );
   });
 

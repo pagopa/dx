@@ -10,6 +10,7 @@ import { mkdir, readdir, realpath, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { z } from "zod";
 
+import { resolveComparison } from "./comparison.js";
 import { prepareEvalWorkspace } from "./copilot-run.js";
 import { runSkillHook } from "./hooks.js";
 import {
@@ -33,6 +34,7 @@ import { parseCliVerbosity, type Verbosity } from "./verbosity.js";
 type EvalOptions = Readonly<{
   baselineRef?: string;
   copilotBin: string;
+  currentOnly: boolean;
   dryRun: boolean;
   eval: readonly string[];
   graderModel: string;
@@ -107,6 +109,7 @@ const writeMetadata = async (
     `${JSON.stringify(
       {
         baseline: runtime.baselineLabel,
+        comparison: runtime.comparison,
         createdAt: new Date().toISOString(),
         current: runtime.currentLabel,
         evals,
@@ -154,11 +157,17 @@ const runEval = async (options: EvalOptions): Promise<void> => {
           options.eval.includes(evalCase.name),
         )
       : manifest.evals;
+  const comparison = resolveComparison({
+    baselineRef: options.baselineRef,
+    currentOnly: options.currentOnly,
+    manifest: manifest.runner.comparison,
+  });
   progress.debug("Preparing runtime in {output}", { output: outputDirectory });
   const runtime = await prepareRuntime(
     { ...manifest, evals: selectedEvals },
     {
-      baselineRef: options.baselineRef,
+      baselineRef: comparison.baselineRef,
+      comparison: comparison.mode,
       copilotBin: options.copilotBin,
       graderModel: options.graderModel,
       invocationDirectory,
@@ -174,9 +183,10 @@ const runEval = async (options: EvalOptions): Promise<void> => {
     },
   );
   progress.debug(
-    "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} current={current} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
+    "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} comparison={comparison} current={current} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
     {
       baseline: runtime.baselineLabel,
+      comparison: runtime.comparison,
       copilot: runtime.copilotBin,
       current: runtime.currentLabel,
       effort: runtime.reasoningEffort,
@@ -195,7 +205,10 @@ const runEval = async (options: EvalOptions): Promise<void> => {
 
   if (options.dryRun) {
     const current = createRunConfiguration(manifest, runtime, "current");
-    const baseline = createRunConfiguration(manifest, runtime, "baseline");
+    const baseline =
+      runtime.comparison === "current-only"
+        ? undefined
+        : createRunConfiguration(manifest, runtime, "baseline");
     await runSkillHook(
       manifest.hooks,
       "before_all",
@@ -206,7 +219,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
       process.env,
     );
     for (const evalCase of selectedEvals) {
-      await Promise.all([
+      const workspaces = [
         prepareEvalWorkspace(
           {
             ...current,
@@ -216,16 +229,21 @@ const runEval = async (options: EvalOptions): Promise<void> => {
           join(outputDirectory, evalCase.name, "current", "workspace"),
           process.env,
         ),
-        prepareEvalWorkspace(
-          {
-            ...baseline,
-            progress: progress.forEval(evalCase.name, runtime.baselineLabel),
-          },
-          evalCase,
-          join(outputDirectory, evalCase.name, "baseline", "workspace"),
-          process.env,
-        ),
-      ]);
+      ];
+      if (baseline) {
+        workspaces.push(
+          prepareEvalWorkspace(
+            {
+              ...baseline,
+              progress: progress.forEval(evalCase.name, runtime.baselineLabel),
+            },
+            evalCase,
+            join(outputDirectory, evalCase.name, "baseline", "workspace"),
+            process.env,
+          ),
+        );
+      }
+      await Promise.all(workspaces);
     }
     progress.info("Prepared {count} evals at {output} in {elapsed}", {
       count: selectedEvals.length,
@@ -321,7 +339,15 @@ program
     ),
   )
   .option("--output <directory>", "Artifact directory")
-  .option("--baseline-ref <ref>", "Git ref for the baseline skill")
+  .option(
+    "--baseline-ref <ref>",
+    "Git ref for the baseline skill, or without-skill",
+  )
+  .option(
+    "--current-only",
+    "Grade only the local skill; skip baseline and comparison",
+    false,
+  )
   .option("--dry-run", "Prepare runtime and fixtures without AI calls", false)
   .option("--copilot-bin <path>", "Copilot CLI executable", "copilot")
   .option("--main-model <model>", "Model for skill runs", "gpt-5.6-sol")
@@ -344,6 +370,7 @@ program
   .action(async (options: Omit<EvalOptions, "verbosity">) =>
     runEval({
       ...options,
+      currentOnly: options.currentOnly ?? false,
       eval: options.eval ?? [],
       maxAiCredits: options.maxAiCredits ?? 30,
       verbosity: parseCliVerbosity(process.argv),
