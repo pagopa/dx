@@ -1,5 +1,5 @@
 /**
- * Human-readable duration, credit, and token formatting for progress logs.
+ * Human-readable duration, credit, token, and skill-ref formatting for logs.
  */
 export const formatDuration = (milliseconds: number): string => {
   const totalSeconds = Math.max(0, Math.round(milliseconds / 1000));
@@ -21,6 +21,31 @@ export const formatCredits = (credits: number): string =>
 
 export const formatTokens = (input: number, output: number): string =>
   `${input} in / ${output} out`;
+
+export type SkillRef = Readonly<{
+  branch?: string;
+  kind: "git" | "local" | "without-skill";
+  sha?: string;
+}>;
+
+/** Compact current/baseline identity: local, without-skill, sha, or branch@sha. */
+export const formatSkillRef = (ref: SkillRef): string => {
+  if (ref.kind === "local") {
+    return "local";
+  }
+  if (ref.kind === "without-skill") {
+    return "without-skill";
+  }
+  const shortSha = ref.sha?.slice(0, 7);
+  if (ref.branch && shortSha) {
+    return `${ref.branch}@${shortSha}`;
+  }
+  return ref.branch ?? shortSha ?? "git";
+};
+
+/** `pass (local)` / `fail (8ca09db)` for the per-eval summary line. */
+export const formatEvalOutcome = (pass: boolean, ref: string): string =>
+  `${pass ? "pass" : "fail"} (${ref})`;
 
 /** Keeps verbose Q&A readable in the Nx TUI without dumping grader packets. */
 export const LOG_TEXT_LIMIT = 4_000;

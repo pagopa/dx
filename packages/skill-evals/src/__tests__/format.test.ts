@@ -7,7 +7,9 @@ import {
   formatConversationBlock,
   formatCredits,
   formatDuration,
+  formatEvalOutcome,
   formatLogText,
+  formatSkillRef,
   formatStructuredValue,
   formatTokens,
   LOG_TEXT_LIMIT,
@@ -32,6 +34,39 @@ describe("formatCredits", () => {
 describe("formatTokens", () => {
   it("prints input and output token counts", () => {
     expect(formatTokens(12, 34)).toBe("12 in / 34 out");
+  });
+});
+
+describe("formatSkillRef", () => {
+  it("labels the working tree as local", () => {
+    expect(formatSkillRef({ kind: "local" })).toBe("local");
+  });
+
+  it("prefers branch@sha when both are known", () => {
+    expect(
+      formatSkillRef({
+        branch: "main",
+        kind: "git",
+        sha: "8ca09dbb6a0fd78b412a425a91cf15e507eb0138",
+      }),
+    ).toBe("main@8ca09db");
+  });
+
+  it("falls back to a short sha or without-skill", () => {
+    expect(
+      formatSkillRef({
+        kind: "git",
+        sha: "8ca09dbb6a0fd78b412a425a91cf15e507eb0138",
+      }),
+    ).toBe("8ca09db");
+    expect(formatSkillRef({ kind: "without-skill" })).toBe("without-skill");
+  });
+});
+
+describe("formatEvalOutcome", () => {
+  it("puts the skill ref in parentheses next to pass or fail", () => {
+    expect(formatEvalOutcome(true, "local")).toBe("pass (local)");
+    expect(formatEvalOutcome(false, "8ca09db")).toBe("fail (8ca09db)");
   });
 });
 

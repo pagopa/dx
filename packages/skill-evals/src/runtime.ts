@@ -18,6 +18,7 @@ import { homedir, tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import { z } from "zod";
 
+import { formatSkillRef } from "./format.js";
 import { runCommand } from "./process.js";
 import { type Progress, silentProgress } from "./progress.js";
 import {
@@ -30,6 +31,7 @@ export type RuntimeConfiguration = Readonly<{
   baselineLabel: string;
   baselinePlugin: string;
   copilotBin: string;
+  currentLabel: string;
   currentPlugin: string;
   disabledMcps: readonly string[];
   graderModel: string;
@@ -135,6 +137,44 @@ const resolveBaselineRef = async (
   return result.stdout.split("\n").filter(Boolean)[1];
 };
 
+const isCommitSha = (value: string): boolean => /^[0-9a-f]{7,40}$/i.test(value);
+
+const describeGitBaseline = async (
+  repositoryRoot: string,
+  ref: string,
+): Promise<string> => {
+  const resolved = await runCommand(
+    "git",
+    ["rev-parse", "--verify", `${ref}^{commit}`],
+    { cwd: repositoryRoot },
+  );
+  const sha = resolved.exitCode === 0 ? resolved.stdout.trim() : undefined;
+
+  if (!isCommitSha(ref)) {
+    return formatSkillRef({ branch: ref, kind: "git", sha });
+  }
+
+  let branch: string | undefined;
+  if (sha) {
+    const branches = await runCommand(
+      "git",
+      [
+        "for-each-ref",
+        "--format=%(refname:short)",
+        `--points-at=${sha}`,
+        "refs/heads",
+      ],
+      { cwd: repositoryRoot },
+    );
+    branch =
+      branches.exitCode === 0
+        ? branches.stdout.split("\n").filter(Boolean)[0]
+        : undefined;
+  }
+
+  return formatSkillRef({ branch, kind: "git", sha: sha ?? ref });
+};
+
 const createBaselinePlugin = async (
   repositoryRoot: string | undefined,
   skillDirectory: string,
@@ -145,7 +185,7 @@ const createBaselinePlugin = async (
 ): Promise<string> => {
   await createPluginManifest(pluginDirectory, "skill-eval-baseline");
   if (!repositoryRoot) {
-    return "without-skill";
+    return formatSkillRef({ kind: "without-skill" });
   }
 
   const skillRelativePath = relative(repositoryRoot, skillDirectory);
@@ -155,7 +195,7 @@ const createBaselinePlugin = async (
     requestedRef,
   );
   if (!baselineRef) {
-    return "without-skill";
+    return formatSkillRef({ kind: "without-skill" });
   }
 
   const exists = await runCommand(
@@ -164,7 +204,7 @@ const createBaselinePlugin = async (
     { cwd: repositoryRoot },
   );
   if (exists.exitCode !== 0) {
-    return "without-skill";
+    return formatSkillRef({ kind: "without-skill" });
   }
 
   const archive = join(runtimeDirectory, "baseline.tar");
@@ -193,7 +233,7 @@ const createBaselinePlugin = async (
   }
 
   await copySkill(join(source, skillRelativePath), pluginDirectory, skillName);
-  return `git:${baselineRef}`;
+  return describeGitBaseline(repositoryRoot, baselineRef);
 };
 
 const installedSkillSchema = z.object({
@@ -401,6 +441,7 @@ export const prepareRuntime = async (
     baselineLabel,
     baselinePlugin,
     copilotBin: options.copilotBin,
+    currentLabel: formatSkillRef({ kind: "local" }),
     currentPlugin,
     disabledMcps: mcpServers,
     graderModel: options.graderModel,

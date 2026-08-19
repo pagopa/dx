@@ -21,7 +21,7 @@ pnpm nx run @pagopa/skill-evals:eval -- --skill <skill-directory>
 
 Use `--eval <name>` to select individual cases, `--dry-run` to prepare plugins and workspaces without AI calls, `--baseline-ref <ref>` to override the previous committed skill version, and `-v` / `--verbose` for continuous local progress.
 
-`-v` streams run parameters, phase changes, Copilot model/tool activity, credit and token usage, and wall-clock timing. `-vv` or `--verbose=2` also prints the prompt, agent replies, and tool arguments as readable multiline blocks (truncated when long). Each line is prefixed with the active eval name next to `[DBG]` / `[INF]`. Omit the flag in CI to keep the default quiet summary. Full event logs remain in the eval artifacts.
+`-v` streams run parameters, phase changes, Copilot model/tool activity, credit and token usage, and wall-clock timing. Per-eval summaries show `current=pass (local)` and `baseline=fail (8ca09db)` (or `branch@sha` / `without-skill`). `-vv` or `--verbose=2` also prints the prompt, agent replies, and tool arguments as readable multiline blocks (truncated when long). Each line is prefixed with the active eval name next to `[DBG]` / `[INF]`. Omit the flag in CI to keep the default quiet summary. Full event logs remain in the eval artifacts.
 
 ## Skill Contract
 

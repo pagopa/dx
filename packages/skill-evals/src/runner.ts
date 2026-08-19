@@ -16,6 +16,7 @@ import {
   runGrader,
   type RunMetrics,
 } from "./copilot-run.js";
+import { formatEvalOutcome } from "./format.js";
 import { runSkillHook } from "./hooks.js";
 import { runCommand } from "./process.js";
 import { createElapsedTimer, formatUsage, silentProgress } from "./progress.js";
@@ -540,8 +541,11 @@ export const runEvaluationSuite = async (
       evalProgress.debug(
         "Eval {eval} current={current} baseline={baseline} winner={winner} · suite {usage} · wall {elapsed}",
         {
-          baseline: grade.baseline.pass ? "pass" : "fail",
-          current: grade.current.pass ? "pass" : "fail",
+          baseline: formatEvalOutcome(
+            grade.baseline.pass,
+            runtime.baselineLabel,
+          ),
+          current: formatEvalOutcome(grade.current.pass, runtime.currentLabel),
           elapsed: elapsed(),
           eval: evalCase.name,
           usage: formatUsage(suiteUsage),

@@ -108,6 +108,7 @@ const writeMetadata = async (
       {
         baseline: runtime.baselineLabel,
         createdAt: new Date().toISOString(),
+        current: runtime.currentLabel,
         evals,
         graderModel: runtime.graderModel,
         knowledgeBase: runtime.knowledgeBase ?? null,
@@ -173,10 +174,11 @@ const runEval = async (options: EvalOptions): Promise<void> => {
     },
   );
   progress.debug(
-    "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
+    "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} current={current} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
     {
       baseline: runtime.baselineLabel,
       copilot: runtime.copilotBin,
+      current: runtime.currentLabel,
       effort: runtime.reasoningEffort,
       evals: selectedEvals.map(({ name }) => name).join(", "),
       grader: runtime.graderModel,
