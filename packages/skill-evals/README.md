@@ -169,13 +169,20 @@ Verbose lines look like:
 ```text
 10:21:00.000 [DBG] prefer-dx-storage-module (local): Started tool view
 10:21:00.000 [DBG] prefer-dx-storage-module (8ca09db): Started tool view
-10:21:00.000 [DBG] prefer-dx-storage-module: Eval prefer-dx-storage-module current=pass (local) baseline=fail (8ca09db) winner=current · suite 33 credits · 6m 43s model · 1103435 in / 26316 out · grok-4.6, gpt-5-mini · wall 7m 27s
+10:21:00.000 [DBG] prefer-dx-storage-module: Eval prefer-dx-storage-module current=fail (local) baseline=fail (8ca09db) winner=tie · suite 33 credits · 6m 43s model · 1103435 in / 26316 out · grok-4.6, gpt-5-mini · wall 7m 27s
+10:21:00.000 [DBG] prefer-dx-storage-module: Failed constraints: safety (grader); [TF-G02] No secret values are written into Terraform. (grader): DATABASE_PASSWORD in locals; terraformFormat (hook)
 ```
 
 The prefix after the eval name is the skill in play for that line: `local` for
 the working-tree plugin, a short SHA or `branch@sha` for the previous commit,
 or `without-skill`. Shared lines (suite start, grader, final summary) keep
 only the eval name; the summary still repeats both refs in the message.
+
+On a failing variant, the next debug line lists the constraints that explain
+the fail: grader gates and assertions (with evidence when the grader supplied
+it), hook mechanical checks that returned `false`, and runner checks such as
+a failed Copilot exit or a current run that did not load/invoke the skill.
+Passing variants omit that line.
 
 The command exits `1` when any **current** eval fails, or when the grader never
 returns valid JSON. A failing baseline alone does not fail CI: that is the
@@ -644,4 +651,6 @@ baseline pass/fail and a `winner` so you can see regressions or “the old skill
 was already good”. Current-only reports omit those columns (`n/a`).
 
 `summary.md` also lists recurring failed assertion IDs when `validation.coverage.pattern`
-is set.
+is set, and a **Failed Constraints** section for each failing variant (same
+grader / hook / runner breakdown as the verbose log). `summary.json` stores
+that list on the variant as `failed_constraints`.

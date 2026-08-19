@@ -10,8 +10,15 @@ import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import {
+  collectFailedConstraints,
+  type FailedConstraint,
+  formatFailedConstraintMarkdown,
+  formatFailedConstraints,
+} from "./constraints.js";
+import {
   type CopilotRunConfiguration,
   type EvalRunResult,
+  type MechanicalChecks,
   runEvalVariant,
 } from "./copilot-run.js";
 import { formatEvalOutcome } from "./format.js";
@@ -48,6 +55,7 @@ type EvalRow = Readonly<{
 
 type VariantRow = Readonly<{
   assertions: VariantGrade["assertions"];
+  failed_constraints?: readonly FailedConstraint[];
   metrics: RunMetrics;
   pass: boolean;
   summary: string;
@@ -227,6 +235,41 @@ const writeReport = async (
     );
   }
 
+  const failedConstraintLines = rows.flatMap((row) => {
+    const current = row.current.failed_constraints ?? [];
+    const baseline = row.baseline?.failed_constraints ?? [];
+    if (current.length === 0 && baseline.length === 0) {
+      return [];
+    }
+    return [
+      `### ${row.eval_name}`,
+      "",
+      ...(current.length > 0
+        ? [
+            "Current:",
+            "",
+            ...current.map(
+              (failed) => `- ${formatFailedConstraintMarkdown(failed)}`,
+            ),
+            "",
+          ]
+        : []),
+      ...(baseline.length > 0
+        ? [
+            "Baseline:",
+            "",
+            ...baseline.map(
+              (failed) => `- ${formatFailedConstraintMarkdown(failed)}`,
+            ),
+            "",
+          ]
+        : []),
+    ];
+  });
+  if (failedConstraintLines.length > 0) {
+    lines.push("", "## Failed Constraints", "", ...failedConstraintLines);
+  }
+
   const reportPath = join(outputDirectory, "summary.md");
   await writeFile(reportPath, `${lines.join("\n")}\n`);
   return reportPath;
@@ -247,12 +290,24 @@ const knowledgeBaseStatus = async (
 const toVariantRow = (
   grade: VariantGrade,
   metrics: RunMetrics,
-): VariantRow => ({
-  assertions: grade.assertions,
-  metrics,
-  pass: grade.pass,
-  summary: grade.summary,
-});
+  mechanical: MechanicalChecks,
+  options: Readonly<{ gradingError?: string; requireSkill: boolean }>,
+): VariantRow => {
+  const failedConstraints = collectFailedConstraints(
+    grade,
+    mechanical,
+    options,
+  );
+  return {
+    assertions: grade.assertions,
+    metrics,
+    pass: grade.pass,
+    summary: grade.summary,
+    ...(failedConstraints.length > 0
+      ? { failed_constraints: failedConstraints }
+      : {}),
+  };
+};
 
 const constrainGrade = (
   grade: Grade,
@@ -379,14 +434,40 @@ const evaluateCase = async (
       usage: formatUsage(usage),
     },
   );
+  const currentRow = toVariantRow(
+    grade.current,
+    current.metrics,
+    current.mechanical,
+    {
+      gradingError: graded.gradingError ?? undefined,
+      requireSkill: true,
+    },
+  );
+  const baselineRow =
+    baseline && grade.baseline
+      ? toVariantRow(grade.baseline, baseline.metrics, baseline.mechanical, {
+          requireSkill: false,
+        })
+      : undefined;
+  if (currentRow.failed_constraints) {
+    evalProgress.debug("Failed constraints: {constraints}", {
+      constraints: formatFailedConstraints(currentRow.failed_constraints),
+      eval: request.evalCase.name,
+    });
+  }
+  if (baselineRow?.failed_constraints) {
+    progress
+      .forEval(request.evalCase.name, request.runtime.baseline.label)
+      .debug("Failed constraints: {constraints}", {
+        constraints: formatFailedConstraints(baselineRow.failed_constraints),
+        eval: request.evalCase.name,
+      });
+  }
   return {
     row: {
-      baseline:
-        baseline && grade.baseline
-          ? toVariantRow(grade.baseline, baseline.metrics)
-          : undefined,
+      baseline: baselineRow,
       comparison: grade.comparison,
-      current: toVariantRow(grade.current, current.metrics),
+      current: currentRow,
       eval_name: request.evalCase.name,
       grader_metrics: graded.metrics,
       grading_error: graded.gradingError,
