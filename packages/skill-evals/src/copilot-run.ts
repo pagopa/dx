@@ -2,19 +2,22 @@
  * Executes isolated Copilot CLI eval variants and grader turns with captured evidence.
  */
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
+import { runSkillHook } from "./hooks.js";
 import { runCommand, runCommandToFiles } from "./process.js";
 import { scaffoldEval } from "./scaffold.js";
-import { type EvalCase } from "./schema.js";
+import { type EvalCase, type SkillEvalManifest } from "./schema.js";
 
 export type CopilotRunConfiguration = Readonly<{
   availableTools: readonly string[];
   copilotBin: string;
   disabledMcps: readonly string[];
   graderModel: string;
+  hooks: SkillEvalManifest["hooks"];
   knowledgeBase?: string;
+  knowledgeBaseEnvironmentVariable?: string;
   mainModel: string;
   maxAiCredits: number;
   outputDirectory: string;
@@ -40,14 +43,16 @@ export type GraderRunResult = Readonly<{
   output: string;
 }>;
 
-export type MechanicalChecks = Readonly<{
-  addedPlaceholders: boolean;
-  diffCheck: boolean;
-  executionSuccess: boolean;
-  skillInvoked: boolean;
-  skillLoaded: boolean;
-  terraformFormat: boolean | null;
-}>;
+export type MechanicalChecks = Readonly<
+  Record<string, boolean | null | number | string>
+> &
+  Readonly<{
+    addedPlaceholders: boolean;
+    diffCheck: boolean;
+    executionSuccess: boolean;
+    skillInvoked: boolean;
+    skillLoaded: boolean;
+  }>;
 
 export type RunMetrics = Readonly<{
   aiCredits: number;
@@ -218,10 +223,9 @@ const runTurn = async (
     COPILOT_OTEL_SOURCE_NAME: "skill-evals",
   };
 
-  if (config.knowledgeBase) {
-    environment.DX_KB_PATH = config.knowledgeBase;
-  } else {
-    delete environment.DX_KB_PATH;
+  const knowledgeBaseVariable = config.knowledgeBaseEnvironmentVariable;
+  if (knowledgeBaseVariable) {
+    environment[knowledgeBaseVariable] = config.knowledgeBase;
   }
 
   const exitCode = await runCommandToFiles(
@@ -256,25 +260,44 @@ export const prepareEvalWorkspace = async (
   config: CopilotRunConfiguration,
   evalCase: EvalCase,
   workspace: string,
+  environment: NodeJS.ProcessEnv,
 ): Promise<void> => {
   if (evalCase.fixture_required) {
     await scaffoldEval(config.skillDirectory, evalCase.name, workspace);
-    return;
-  }
-
-  await mkdir(workspace, { recursive: true });
-  const commands: readonly (readonly string[])[] = [
-    ["init", "--quiet"],
-    ["config", "user.name", "Skill Evals"],
-    ["config", "user.email", "skill-evals@example.invalid"],
-    ["commit", "--quiet", "--allow-empty", "-m", "Baseline skill eval fixture"],
-  ];
-  for (const args of commands) {
-    const result = await runCommand("git", args, { cwd: workspace });
-    if (result.exitCode !== 0) {
-      throw new Error(`git ${args[0]} failed: ${result.stderr.trim()}`);
+  } else {
+    await mkdir(workspace, { recursive: true });
+    const commands: readonly (readonly string[])[] = [
+      ["init", "--quiet"],
+      ["config", "user.name", "Skill Evals"],
+      ["config", "user.email", "skill-evals@example.invalid"],
+      [
+        "commit",
+        "--quiet",
+        "--allow-empty",
+        "-m",
+        "Baseline skill eval fixture",
+      ],
+    ];
+    for (const args of commands) {
+      const result = await runCommand("git", args, { cwd: workspace });
+      if (result.exitCode !== 0) {
+        throw new Error(`git ${args[0]} failed: ${result.stderr.trim()}`);
+      }
     }
   }
+
+  await runSkillHook(
+    config.hooks,
+    "before_each",
+    {
+      evalName: evalCase.name,
+      outputDirectory: config.outputDirectory,
+      skillDirectory: config.skillDirectory,
+      variant: config.variant,
+      workspace,
+    },
+    environment,
+  );
 };
 
 const collectArtifacts = async (
@@ -284,6 +307,7 @@ const collectArtifacts = async (
   workspace: string,
   responses: readonly string[],
   exitCodes: readonly number[],
+  environment: NodeJS.ProcessEnv,
 ): Promise<EvalRunResult> => {
   const diff = await runCommand("git", ["diff", "--binary"], {
     cwd: workspace,
@@ -328,27 +352,27 @@ const collectArtifacts = async (
       JSON.stringify(request).includes(config.skillName),
   );
   const addedPlaceholders = /^\+[^+].*(TODO|FIXME|<[^>]+>)/m.test(diff.stdout);
-  const terraformFormat = await stat(join(workspace, "infra"))
-    .then((value) =>
-      value.isDirectory()
-        ? runCommand("terraform", [
-            "fmt",
-            "-check",
-            "-recursive",
-            join(workspace, "infra"),
-          ]).catch(() => undefined)
-        : undefined,
-    )
-    .catch(() => undefined);
+  const hookChecks = await runSkillHook(
+    config.hooks,
+    "after_each",
+    {
+      artifactDirectory,
+      evalName: evalCase.name,
+      outputDirectory: config.outputDirectory,
+      skillDirectory: config.skillDirectory,
+      variant: config.variant,
+      workspace,
+    },
+    environment,
+  );
   const metrics = await readMetrics(join(artifactDirectory, "telemetry.jsonl"));
   const mechanical: MechanicalChecks = {
+    ...hookChecks,
     addedPlaceholders,
     diffCheck: diffCheck.exitCode === 0,
     executionSuccess: exitCodes.every((exitCode) => exitCode === 0),
     skillInvoked,
     skillLoaded,
-    terraformFormat:
-      terraformFormat === undefined ? null : terraformFormat.exitCode === 0,
   };
   const combinedResponse = responses
     .map((response, index) => {
@@ -417,7 +441,7 @@ export const runEvalVariant = async (
   );
   const workspace = join(artifactDirectory, "workspace");
   await mkdir(join(artifactDirectory, "logs"), { recursive: true });
-  await prepareEvalWorkspace(config, evalCase, workspace);
+  await prepareEvalWorkspace(config, evalCase, workspace, environment);
 
   const sessionId = randomUUID();
   const first = await runTurn(
@@ -450,30 +474,15 @@ export const runEvalVariant = async (
     exitCodes.push(second.exitCode);
   }
 
-  const result = await collectArtifacts(
+  return collectArtifacts(
     config,
     evalCase,
     artifactDirectory,
     workspace,
     responses,
     exitCodes,
+    environment,
   );
-  const terraformDirectories = await runCommand("find", [
-    workspace,
-    "-type",
-    "d",
-    "-name",
-    ".terraform",
-    "-prune",
-    "-print",
-  ]);
-  await Promise.all(
-    terraformDirectories.stdout
-      .split("\n")
-      .filter(Boolean)
-      .map((path) => rm(path, { force: true, recursive: true })),
-  );
-  return result;
 };
 
 export const runGrader = async (

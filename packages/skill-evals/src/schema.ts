@@ -33,6 +33,20 @@ const gradingSchema = z.object({
   rubric: nonEmptyString,
 });
 
+const hookPathSchema = nonEmptyString.refine(
+  (value) => value.startsWith("evals/") && !value.includes(".."),
+  "Hook scripts must be relative paths under evals/",
+);
+
+const hooksSchema = z
+  .object({
+    after_all: hookPathSchema.optional(),
+    after_each: hookPathSchema.optional(),
+    before_all: hookPathSchema.optional(),
+    before_each: hookPathSchema.optional(),
+  })
+  .default({});
+
 const runnerSchema = z.object({
   available_tools: z.array(nonEmptyString).min(1),
   knowledge_base: knowledgeBaseSchema.optional(),
@@ -55,6 +69,7 @@ export const evalCaseSchema = z.object({
 export const skillEvalManifestSchema = z.object({
   evals: z.array(evalCaseSchema).min(1),
   grading: gradingSchema,
+  hooks: hooksSchema,
   runner: runnerSchema,
   schema_version: z.literal(1),
   skill_name: nonEmptyString,
@@ -64,4 +79,6 @@ export const skillEvalManifestSchema = z.object({
 });
 
 export type EvalCase = z.infer<typeof evalCaseSchema>;
+export type HookName =
+  "after_all" | "after_each" | "before_all" | "before_each";
 export type SkillEvalManifest = z.infer<typeof skillEvalManifestSchema>;

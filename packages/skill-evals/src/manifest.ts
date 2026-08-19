@@ -118,6 +118,17 @@ const validateCoverage = async (
   return known.size;
 };
 
+const validateHooks = async (
+  skillDirectory: string,
+  manifest: SkillEvalManifest,
+): Promise<void> => {
+  for (const [name, script] of Object.entries(manifest.hooks)) {
+    if (script && !(await exists(join(skillDirectory, script)))) {
+      throw new Error(`Missing ${name} hook: ${script}`);
+    }
+  }
+};
+
 export const loadManifest = async (
   skillDirectory: string,
 ): Promise<SkillEvalManifest> => {
@@ -176,6 +187,8 @@ export const validateManifest = async (
       )),
     );
   }
+
+  await validateHooks(skillDirectory, manifest);
 
   return {
     evalCount: manifest.evals.length,

@@ -40,8 +40,22 @@ Each skill owns only its evaluation data:
 
 - runner settings, supporting skills, and an optional knowledge base
 - grader and rubric paths
+- optional Vitest-style lifecycle hooks under `evals/`
 - optional reference-coverage validation
 - eval prompts, scripted follow-ups, expected output, assertions, and fixture files
+
+Optional hooks:
+
+| Hook | When |
+| --- | --- |
+| `before_all` | once after runtime setup, before any eval |
+| `before_each` | after a workspace is materialized, before Copilot |
+| `after_each` | after the Copilot turns, before evidence is written |
+| `after_all` | once after the suite, even if an eval fails |
+
+Hook scripts receive `SKILL_EVAL_HOOK`, `SKILL_EVAL_SKILL_DIR`, `SKILL_EVAL_OUTPUT_DIR`, and when applicable `SKILL_EVAL_NAME`, `SKILL_EVAL_VARIANT`, `SKILL_EVAL_WORKSPACE`, and `SKILL_EVAL_ARTIFACT_DIR`. A non-zero exit fails the run. Flat JSON on stdout from `after_each` is merged into `mechanical.json`.
+
+The knowledge-base environment variable comes from `runner.knowledge_base.environment_variable`. Grader `gates` are an open boolean map defined by the skill's `grader.md`.
 
 Fixture paths must be under `evals/scaffolds/**/repository/`. Files after the `repository/` segment are copied to the same relative path in a disposable Git repository.
 

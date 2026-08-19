@@ -45,9 +45,17 @@ The runner:
 3. Initializes Git and commits the untouched fixture as the comparison baseline.
 4. Prints the eval prompt and the current `DX_KB_PATH` status.
 
-It does not invoke the DX CLI, Terraform, GitHub, Azure, or any network service.
+It does not invoke the DX CLI, Terraform, GitHub, Azure, or any network service. Terraform-specific checks live in `evals/scripts/` and are declared as Vitest-style hooks in `evals.json`.
 
 Scaffold source files live under `evals/scaffolds/`. See `evals/scaffolds/README.md` for the composition contract.
+
+## Skill Hooks
+
+Terraform-specific workspace checks are not part of `@pagopa/skill-evals`. They are declared in `evals.json` with Vitest-style names and live under `evals/scripts/`:
+
+- `after_each` → `evals/scripts/after-each.sh` runs `terraform fmt -check` when `infra/` exists, writes `terraformFormat` into mechanical checks, and deletes `.terraform` caches.
+
+Add `before_all`, `before_each`, or `after_all` in the same folder if a future eval needs extra setup or teardown.
 
 ## Run Evals
 
@@ -74,7 +82,7 @@ The shared runner automatically:
 3. Materializes fresh current and baseline repositories.
 4. Invokes Copilot CLI non-interactively with the same model, reasoning effort, restricted tool set, and disabled MCP servers.
 5. Resumes the same session with a scripted answer when an eval defines `follow_up`.
-6. Captures responses, tool requests, Git diffs, deterministic mechanical checks, telemetry, duration, token usage, and Copilot AI credits.
+6. Runs the skill `after_each` hook (`evals/scripts/after-each.sh`) for `terraform fmt -check` and `.terraform` cleanup, then captures responses, tool requests, Git diffs, deterministic mechanical checks, telemetry, duration, token usage, and Copilot AI credits.
 7. Runs one separate isolated LLM grader per eval against both variants and retries invalid grader output once.
 8. Produces `summary.json` and `summary.md` with pass rates, cost indicators, winners, regressions, and recurring guardrail failures.
 

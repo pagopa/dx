@@ -43,6 +43,9 @@
     "instructions": "evals/grader.md",
     "rubric": "evals/rubric.md"
   },
+  "hooks": {
+    "after_each": "evals/scripts/after-each.sh"
+  },
   "validation": {
     "coverage": {
       "catalog": "references/guardrails.md",

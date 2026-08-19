@@ -7,6 +7,7 @@ import { mkdir, readdir, realpath, stat, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
 import { prepareEvalWorkspace } from "./copilot-run.js";
+import { runSkillHook } from "./hooks.js";
 import { loadManifest, validateManifest } from "./manifest.js";
 import { runCommand } from "./process.js";
 import { createRunConfiguration, runEvaluationSuite } from "./runner.js";
@@ -151,17 +152,28 @@ const runEval = async (options: EvalOptions): Promise<void> => {
   if (options.dryRun) {
     const current = createRunConfiguration(manifest, runtime, "current");
     const baseline = createRunConfiguration(manifest, runtime, "baseline");
+    await runSkillHook(
+      manifest.hooks,
+      "before_all",
+      {
+        outputDirectory,
+        skillDirectory,
+      },
+      process.env,
+    );
     for (const evalCase of selectedEvals) {
       await Promise.all([
         prepareEvalWorkspace(
           current,
           evalCase,
           join(outputDirectory, evalCase.name, "current", "workspace"),
+          process.env,
         ),
         prepareEvalWorkspace(
           baseline,
           evalCase,
           join(outputDirectory, evalCase.name, "baseline", "workspace"),
+          process.env,
         ),
       ]);
     }

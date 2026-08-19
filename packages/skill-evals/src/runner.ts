@@ -12,6 +12,7 @@ import {
   runGrader,
   type RunMetrics,
 } from "./copilot-run.js";
+import { runSkillHook } from "./hooks.js";
 import { runCommand } from "./process.js";
 import { type RuntimeConfiguration } from "./runtime.js";
 import { type EvalCase, type SkillEvalManifest } from "./schema.js";
@@ -28,13 +29,7 @@ const rubricGradeSchema = z.object({
   score: z.number().min(0).max(2).nullable(),
 });
 
-const gatesSchema = z.object({
-  completeness: z.boolean(),
-  decision_ux: z.boolean(),
-  dx_conventions: z.boolean(),
-  safety: z.boolean(),
-  total_score: z.boolean(),
-});
+const gatesSchema = z.record(z.string(), z.boolean());
 
 const variantGradeSchema = z.object({
   assertions: z.array(assertionGradeSchema),
@@ -107,7 +102,10 @@ export const createRunConfiguration = (
   copilotBin: runtime.copilotBin,
   disabledMcps: runtime.disabledMcps,
   graderModel: runtime.graderModel,
+  hooks: manifest.hooks,
   knowledgeBase: runtime.knowledgeBase,
+  knowledgeBaseEnvironmentVariable:
+    manifest.runner.knowledge_base?.environment_variable,
   mainModel: runtime.mainModel,
   maxAiCredits: runtime.maxAiCredits,
   outputDirectory: runtime.outputDirectory,
@@ -183,13 +181,7 @@ const constrainVariant = (
 const failedGrade = (evalCase: EvalCase, message: string): Grade => {
   const variant = {
     assertions: [],
-    gates: {
-      completeness: false,
-      decision_ux: false,
-      dx_conventions: false,
-      safety: false,
-      total_score: false,
-    },
+    gates: {},
     pass: false,
     rubric: [
       {
@@ -429,74 +421,98 @@ export const runEvaluationSuite = async (
   ]);
   const currentConfig = createRunConfiguration(manifest, runtime, "current");
   const baselineConfig = createRunConfiguration(manifest, runtime, "baseline");
+  const suiteHookContext = {
+    outputDirectory: runtime.outputDirectory,
+    skillDirectory: runtime.skillDirectory,
+  };
   const rows: EvalRow[] = [];
 
-  for (const evalCase of evals) {
-    console.log(`Running ${evalCase.name}`);
-    const current = await runEvalVariant(currentConfig, evalCase, environment);
-    const baseline = await runEvalVariant(
-      baselineConfig,
-      evalCase,
+  try {
+    await runSkillHook(
+      manifest.hooks,
+      "before_all",
+      suiteHookContext,
       environment,
     );
-    const evalDirectory = join(runtime.outputDirectory, evalCase.name);
-    const graded = await gradeEval(
-      currentConfig,
-      evalCase,
-      evalDirectory,
-      buildGradingPacket(
-        instructions,
-        rubric,
-        evalCase,
-        runtime.baselineLabel,
-        current,
-        baseline,
-      ),
-      environment,
-    );
-    const grade: Grade = {
-      ...graded.grade,
-      baseline: constrainVariant(graded.grade.baseline, baseline, false),
-      current: constrainVariant(graded.grade.current, current, true),
-    };
-    await writeFile(
-      join(evalDirectory, "grade.json"),
-      `${JSON.stringify(grade, null, 2)}\n`,
-    );
-    rows.push({
-      baseline: {
-        assertions: grade.baseline.assertions,
-        metrics: baseline.metrics,
-        pass: grade.baseline.pass,
-        summary: grade.baseline.summary,
-      },
-      comparison: grade.comparison,
-      current: {
-        assertions: grade.current.assertions,
-        metrics: current.metrics,
-        pass: grade.current.pass,
-        summary: grade.current.summary,
-      },
-      eval_name: evalCase.name,
-      grader_metrics: graded.metrics,
-      grading_error: graded.gradingError,
-    });
-  }
 
-  const reportPath = await writeReport(
-    runtime.outputDirectory,
-    runtime.baselineLabel,
-    rows,
-    manifest.validation.coverage?.pattern,
-  );
-  const statusAfter = await knowledgeBaseStatus(runtime.knowledgeBase);
-  if (statusBefore !== statusAfter) {
-    throw new Error("The knowledge base changed during eval execution.");
+    for (const evalCase of evals) {
+      console.log(`Running ${evalCase.name}`);
+      const current = await runEvalVariant(
+        currentConfig,
+        evalCase,
+        environment,
+      );
+      const baseline = await runEvalVariant(
+        baselineConfig,
+        evalCase,
+        environment,
+      );
+      const evalDirectory = join(runtime.outputDirectory, evalCase.name);
+      const graded = await gradeEval(
+        currentConfig,
+        evalCase,
+        evalDirectory,
+        buildGradingPacket(
+          instructions,
+          rubric,
+          evalCase,
+          runtime.baselineLabel,
+          current,
+          baseline,
+        ),
+        environment,
+      );
+      const grade: Grade = {
+        ...graded.grade,
+        baseline: constrainVariant(graded.grade.baseline, baseline, false),
+        current: constrainVariant(graded.grade.current, current, true),
+      };
+      await writeFile(
+        join(evalDirectory, "grade.json"),
+        `${JSON.stringify(grade, null, 2)}\n`,
+      );
+      rows.push({
+        baseline: {
+          assertions: grade.baseline.assertions,
+          metrics: baseline.metrics,
+          pass: grade.baseline.pass,
+          summary: grade.baseline.summary,
+        },
+        comparison: grade.comparison,
+        current: {
+          assertions: grade.current.assertions,
+          metrics: current.metrics,
+          pass: grade.current.pass,
+          summary: grade.current.summary,
+        },
+        eval_name: evalCase.name,
+        grader_metrics: graded.metrics,
+        grading_error: graded.gradingError,
+      });
+    }
+
+    const reportPath = await writeReport(
+      runtime.outputDirectory,
+      runtime.baselineLabel,
+      rows,
+      manifest.validation.coverage?.pattern,
+    );
+    const statusAfter = await knowledgeBaseStatus(runtime.knowledgeBase);
+    if (statusBefore !== statusAfter) {
+      throw new Error("The knowledge base changed during eval execution.");
+    }
+    return {
+      reportPath,
+      success:
+        rows.every((row) => row.current.pass) &&
+        rows.every((row) => row.grading_error === null),
+    };
+  } finally {
+    await runSkillHook(
+      manifest.hooks,
+      "after_all",
+      suiteHookContext,
+      environment,
+    );
   }
-  return {
-    reportPath,
-    success:
-      rows.every((row) => row.current.pass) &&
-      rows.every((row) => row.grading_error === null),
-  };
 };
