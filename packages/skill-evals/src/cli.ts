@@ -12,7 +12,11 @@ import { z } from "zod";
 
 import { prepareEvalWorkspace } from "./copilot-run.js";
 import { runSkillHook } from "./hooks.js";
-import { configureLogging, getPackageLogger } from "./logging.js";
+import {
+  configureLogging,
+  getPackageLogger,
+  toProgressSink,
+} from "./logging.js";
 import { loadManifest, validateManifest } from "./manifest.js";
 import { runCommand } from "./process.js";
 import { createElapsedTimer, createProgress } from "./progress.js";
@@ -119,7 +123,7 @@ const writeMetadata = async (
 const runEval = async (options: EvalOptions): Promise<void> => {
   await configureLogging(options.verbosity >= 1);
   const progress = createProgress(
-    getPackageLogger(["eval"]),
+    toProgressSink(getPackageLogger(["eval"])),
     options.verbosity,
   );
   const elapsed = createElapsedTimer();

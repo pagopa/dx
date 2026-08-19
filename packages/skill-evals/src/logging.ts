@@ -12,8 +12,42 @@ import {
   type Logger,
 } from "@logtape/logtape";
 
+import { type ProgressSink } from "./progress.js";
+
 export const getPackageLogger = (category: readonly string[] = []): Logger =>
   getLogger(["skill-evals", ...category]);
+
+/**
+ * LogTape interpolates `{key}` from properties. JSON tool args and Terraform
+ * snippets contain literal braces, which otherwise render as `undefined`.
+ * Known placeholders stay intact; everything else is escaped as `{{` / `}}`.
+ */
+export const escapeLogTapeLiterals = (
+  message: string,
+  properties: Readonly<Record<string, unknown>>,
+): string => {
+  if (!message.includes("{") && !message.includes("}")) {
+    return message;
+  }
+  return message
+    .replaceAll("{", "{{")
+    .replaceAll("}", "}}")
+    .replace(/\{\{([^{}]*)\}\}/g, (escaped, key: string) => {
+      const trimmed = key.trim();
+      if (trimmed === "*" || key in properties || trimmed in properties) {
+        return `{${key}}`;
+      }
+      return escaped;
+    });
+};
+
+/** Adapts a LogTape logger so conversation blocks keep literal braces. */
+export const toProgressSink = (logger: ProgressSink): ProgressSink => ({
+  debug: (message, properties = {}) =>
+    logger.debug(escapeLogTapeLiterals(message, properties), properties),
+  info: (message, properties = {}) =>
+    logger.info(escapeLogTapeLiterals(message, properties), properties),
+});
 
 /**
  * Print strings as-is. LogTape's default inspect() turns multiline Q&A into

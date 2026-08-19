@@ -48,6 +48,48 @@ describe("formatLogLine", () => {
   });
 });
 
+describe("escapeLogTapeLiterals", () => {
+  it("keeps known placeholders and escapes JSON braces", async () => {
+    vi.resetModules();
+    const { escapeLogTapeLiterals } = await import("../logging.ts");
+    const args = '{\n  "path": "infra/main.tf"\n}';
+
+    expect(
+      escapeLogTapeLiterals(`Started tool {tool}\n  ${args}`, {
+        tool: "view",
+      }),
+    ).toBe('Started tool {tool}\n  {{\n  "path": "infra/main.tf"\n}}');
+  });
+
+  it("leaves messages without braces unchanged", async () => {
+    vi.resetModules();
+    const { escapeLogTapeLiterals } = await import("../logging.ts");
+
+    expect(escapeLogTapeLiterals("Copilot session started", {})).toBe(
+      "Copilot session started",
+    );
+  });
+});
+
+describe("toProgressSink", () => {
+  it("forwards escaped messages to the logger", async () => {
+    vi.resetModules();
+    const { toProgressSink } = await import("../logging.ts");
+    const debug = vi.fn();
+    const info = vi.fn();
+    const sink = toProgressSink({ debug, info });
+
+    sink.debug('Started tool view\n  {\n  "path": "infra/main.tf"\n}', {
+      tool: "view",
+    });
+
+    expect(debug).toHaveBeenCalledWith(
+      'Started tool view\n  {{\n  "path": "infra/main.tf"\n}}',
+      { tool: "view" },
+    );
+  });
+});
+
 describe("formatLogValue", () => {
   it("prints strings without inspect quoting", async () => {
     vi.resetModules();
