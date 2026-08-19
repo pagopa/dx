@@ -10,8 +10,10 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { z } from "zod";
 
+import { describeCopilotEvent } from "./copilot-events.js";
 import { runSkillHook } from "./hooks.js";
 import { runCommand, runCommandToFiles } from "./process.js";
+import { type Progress, silentProgress } from "./progress.js";
 import { initializeGitRepository, scaffoldEval } from "./scaffold.js";
 import {
   type EvalCase,
@@ -32,6 +34,7 @@ export type CopilotRunConfiguration = Readonly<{
   maxAiCredits: number;
   outputDirectory: string;
   pluginDirectory?: string;
+  progress?: Progress;
   promptPrefix?: string;
   reasoningEffort: ReasoningEffort;
   skillDirectory: string;
@@ -238,6 +241,8 @@ const copilotArguments = (
   return args;
 };
 
+const HEARTBEAT_MS = 15_000;
+
 const runTurn = async (
   config: CopilotRunConfiguration,
   workspace: string,
@@ -252,6 +257,7 @@ const runTurn = async (
   const eventsPath = join(artifactDirectory, `turn-${turn}.events.jsonl`);
   const stderrPath = join(artifactDirectory, `turn-${turn}.stderr.log`);
   const telemetryPath = join(artifactDirectory, "telemetry.jsonl");
+  const progress = config.progress ?? silentProgress;
   const environment: NodeJS.ProcessEnv = {
     ...baseEnvironment,
     COPILOT_OTEL_FILE_EXPORTER_PATH: telemetryPath,
@@ -265,32 +271,76 @@ const runTurn = async (
     environment[knowledgeBaseVariable] = config.knowledgeBase;
   }
 
-  const exitCode = await runCommandToFiles(
-    config.copilotBin,
-    [
-      ...copilotArguments(
-        config,
-        workspace,
-        join(artifactDirectory, "logs"),
-        sessionId,
-        mode,
-        model,
-      ),
-      "-p",
-      prompt,
-    ],
+  progress.debug(
+    "Starting Copilot turn {turn} ({mode}) model={model} effort={effort} maxCredits={maxCredits}",
     {
-      cwd: workspace,
-      env: environment,
-      stderrPath,
-      stdoutPath: eventsPath,
+      effort: config.reasoningEffort,
+      maxCredits: config.maxAiCredits,
+      mode,
+      model,
+      turn,
     },
   );
 
-  return {
-    events: await parseJsonLines(eventsPath),
-    exitCode,
-  };
+  const startedAt = Date.now();
+  const heartbeat = progress.verbose
+    ? setInterval(() => {
+        progress.debug("Waiting for Copilot turn {turn} ({elapsed}s)", {
+          elapsed: Math.round((Date.now() - startedAt) / 1000),
+          model,
+          turn,
+        });
+      }, HEARTBEAT_MS)
+    : undefined;
+  heartbeat?.unref();
+
+  try {
+    const exitCode = await runCommandToFiles(
+      config.copilotBin,
+      [
+        ...copilotArguments(
+          config,
+          workspace,
+          join(artifactDirectory, "logs"),
+          sessionId,
+          mode,
+          model,
+        ),
+        "-p",
+        prompt,
+      ],
+      {
+        cwd: workspace,
+        env: environment,
+        onStdoutLine: progress.verbose
+          ? (line) => {
+              const event = describeCopilotEvent(line);
+              if (event) {
+                progress.debug(event.message, event.properties);
+              }
+            }
+          : undefined,
+        stderrPath,
+        stdoutPath: eventsPath,
+      },
+    );
+
+    progress.debug("Copilot turn {turn} exited {exitCode} after {elapsed}s", {
+      elapsed: Math.round((Date.now() - startedAt) / 1000),
+      exitCode,
+      model,
+      turn,
+    });
+
+    return {
+      events: await parseJsonLines(eventsPath),
+      exitCode,
+    };
+  } finally {
+    if (heartbeat) {
+      clearInterval(heartbeat);
+    }
+  }
 };
 
 /** Builds the workspace and runs before_each before any Copilot turn. */
@@ -300,6 +350,13 @@ export const prepareEvalWorkspace = async (
   workspace: string,
   environment: NodeJS.ProcessEnv,
 ): Promise<void> => {
+  const progress = config.progress ?? silentProgress;
+  progress.debug("Preparing {variant} workspace for {eval}", {
+    eval: evalCase.name,
+    fixture: evalCase.fixture_required,
+    variant: config.variant ?? "current",
+  });
+
   if (evalCase.fixture_required) {
     await scaffoldEval(config.skillDirectory, evalCase.name, workspace);
   } else {
@@ -307,6 +364,9 @@ export const prepareEvalWorkspace = async (
     await initializeGitRepository(workspace, "empty");
   }
 
+  if (config.hooks.before_each) {
+    progress.debug("Running before_each for {eval}", { eval: evalCase.name });
+  }
   await runSkillHook(
     config.hooks,
     "before_each",
@@ -366,6 +426,10 @@ const collectArtifacts = async (
     );
   });
   const addedPlaceholders = /^\+[^+].*(TODO|FIXME|<[^>]+>)/m.test(diff.stdout);
+  const progress = config.progress ?? silentProgress;
+  if (config.hooks.after_each) {
+    progress.debug("Running after_each for {eval}", { eval: evalCase.name });
+  }
   const hookChecks = await runSkillHook(
     config.hooks,
     "after_each",
@@ -459,6 +523,14 @@ export const runEvalVariant = async (
   await mkdir(join(artifactDirectory, "logs"), { recursive: true });
   await prepareEvalWorkspace(config, evalCase, workspace, environment);
 
+  const progress = config.progress ?? silentProgress;
+  progress.debug("Running {eval} ({variant}) with {model}", {
+    eval: evalCase.name,
+    followUp: Boolean(evalCase.follow_up),
+    model: config.mainModel,
+    variant,
+  });
+
   const sessionId = randomUUID();
   const first = await runTurn(
     evalConfig,
@@ -515,6 +587,12 @@ export const runGrader = async (
     `attempt-${attempt}`,
   );
   await mkdir(join(artifactDirectory, "logs"), { recursive: true });
+
+  const progress = config.progress ?? silentProgress;
+  progress.debug("Grading attempt {attempt} with {model}", {
+    attempt,
+    model: config.graderModel,
+  });
 
   const sessionId = randomUUID();
   const result = await runTurn(

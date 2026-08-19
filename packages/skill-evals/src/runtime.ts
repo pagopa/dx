@@ -19,6 +19,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { z } from "zod";
 
 import { runCommand } from "./process.js";
+import { type Progress, silentProgress } from "./progress.js";
 import {
   parseJson,
   type ReasoningEffort,
@@ -37,6 +38,7 @@ export type RuntimeConfiguration = Readonly<{
   mainModel: string;
   maxAiCredits: number;
   outputDirectory: string;
+  progress: Progress;
   reasoningEffort: ReasoningEffort;
   skillDirectory: string;
 }>;
@@ -50,6 +52,7 @@ type PrepareRuntimeOptions = Readonly<{
   mainModel: string;
   maxAiCredits: number;
   outputDirectory: string;
+  progress?: Progress;
   reasoningEffort: ReasoningEffort;
   skillDirectory: string;
 }>;
@@ -343,16 +346,21 @@ export const prepareRuntime = async (
   manifest: SkillEvalManifest,
   options: PrepareRuntimeOptions,
 ): Promise<RuntimeConfiguration> => {
+  const progress = options.progress ?? silentProgress;
   const runtimeDirectory = join(options.outputDirectory, "runtime");
   const currentPlugin = join(runtimeDirectory, "current-plugin");
   const baselinePlugin = join(runtimeDirectory, "baseline-plugin");
   const repositoryRoot = await gitRepositoryRoot(options.skillDirectory);
 
+  progress.debug("Preparing isolated plugins for {skill}", {
+    skill: manifest.skill_name,
+  });
   await Promise.all([
     createPluginManifest(currentPlugin, "skill-eval-current"),
     mkdir(join(baselinePlugin, "skills"), { recursive: true }),
   ]);
   await copySkill(options.skillDirectory, currentPlugin, manifest.skill_name);
+  progress.debug("Resolving baseline skill");
   const baselineLabel = await createBaselinePlugin(
     repositoryRoot,
     options.skillDirectory,
@@ -361,6 +369,7 @@ export const prepareRuntime = async (
     runtimeDirectory,
     options.baselineRef,
   );
+  progress.debug("Baseline ready ({baseline})", { baseline: baselineLabel });
   await copySupportingSkills(
     manifest,
     repositoryRoot,
@@ -369,28 +378,38 @@ export const prepareRuntime = async (
     options.copilotBin,
     options.invocationDirectory,
   );
+  if (manifest.runner.supporting_skills.length > 0) {
+    progress.debug("Copied {count} supporting skills", {
+      count: manifest.runner.supporting_skills.length,
+    });
+  }
+
+  progress.debug("Resolving knowledge base and MCP servers");
+  const knowledgeBase = await resolveKnowledgeBase(
+    manifest,
+    repositoryRoot,
+    options.invocationDirectory,
+    runtimeDirectory,
+    options.knowledgeBaseEnvironmentPath,
+  );
+  const mcpServers = await disabledMcps(
+    options.copilotBin,
+    options.outputDirectory,
+  );
 
   return {
     baselineLabel,
     baselinePlugin,
     copilotBin: options.copilotBin,
     currentPlugin,
-    disabledMcps: await disabledMcps(
-      options.copilotBin,
-      options.outputDirectory,
-    ),
+    disabledMcps: mcpServers,
     graderModel: options.graderModel,
     invocationDirectory: options.invocationDirectory,
-    knowledgeBase: await resolveKnowledgeBase(
-      manifest,
-      repositoryRoot,
-      options.invocationDirectory,
-      runtimeDirectory,
-      options.knowledgeBaseEnvironmentPath,
-    ),
+    knowledgeBase,
     mainModel: options.mainModel,
     maxAiCredits: options.maxAiCredits,
     outputDirectory: options.outputDirectory,
+    progress,
     reasoningEffort: options.reasoningEffort,
     skillDirectory: options.skillDirectory,
   };

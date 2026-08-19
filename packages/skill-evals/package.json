@@ -25,6 +25,7 @@
     "vitest": "catalog:"
   },
   "dependencies": {
+    "@logtape/logtape": "catalog:",
     "commander": "catalog:",
     "tslib": "catalog:",
     "zod": "catalog:"

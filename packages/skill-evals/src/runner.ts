@@ -18,6 +18,7 @@ import {
 } from "./copilot-run.js";
 import { runSkillHook } from "./hooks.js";
 import { runCommand } from "./process.js";
+import { createElapsedTimer, formatUsage, silentProgress } from "./progress.js";
 import { type RuntimeConfiguration } from "./runtime.js";
 import {
   type EvalCase,
@@ -125,6 +126,7 @@ export const createRunConfiguration = (
       : runtime.baselineLabel === "without-skill"
         ? undefined
         : runtime.baselinePlugin,
+  progress: runtime.progress,
   promptPrefix: `${manifest.runner.prompt_prefix}\n\n`,
   reasoningEffort: runtime.reasoningEffort,
   skillDirectory: runtime.skillDirectory,
@@ -436,6 +438,8 @@ export const runEvaluationSuite = async (
     readFile(join(runtime.skillDirectory, manifest.grading.rubric), "utf8"),
     knowledgeBaseStatus(runtime.knowledgeBase),
   ]);
+  const progress = runtime.progress ?? silentProgress;
+  const elapsed = createElapsedTimer();
   const currentConfig = createRunConfiguration(manifest, runtime, "current");
   const baselineConfig = createRunConfiguration(manifest, runtime, "baseline");
   const suiteHookContext = {
@@ -443,8 +447,12 @@ export const runEvaluationSuite = async (
     skillDirectory: runtime.skillDirectory,
   };
   const rows: EvalRow[] = [];
+  let suiteUsage = emptyMetrics();
 
   try {
+    if (manifest.hooks.before_all) {
+      progress.debug("Running before_all");
+    }
     await runSkillHook(
       manifest.hooks,
       "before_all",
@@ -452,18 +460,30 @@ export const runEvaluationSuite = async (
       environment,
     );
 
-    for (const evalCase of evals) {
-      console.log(`Running ${evalCase.name}`);
+    for (const [index, evalCase] of evals.entries()) {
+      progress.info("Running {eval} ({index}/{total})", {
+        eval: evalCase.name,
+        index: index + 1,
+        total: evals.length,
+      });
       const current = await runEvalVariant(
         currentConfig,
         evalCase,
         environment,
       );
+      progress.debug("Finished {eval} current: {usage}", {
+        eval: evalCase.name,
+        usage: formatUsage(current.metrics),
+      });
       const baseline = await runEvalVariant(
         baselineConfig,
         evalCase,
         environment,
       );
+      progress.debug("Finished {eval} baseline: {usage}", {
+        eval: evalCase.name,
+        usage: formatUsage(baseline.metrics),
+      });
       const evalDirectory = join(runtime.outputDirectory, evalCase.name);
       const graded = await gradeEval(
         currentConfig,
@@ -479,6 +499,10 @@ export const runEvaluationSuite = async (
         ),
         environment,
       );
+      progress.debug("Finished {eval} grader: {usage}", {
+        eval: evalCase.name,
+        usage: formatUsage(graded.metrics),
+      });
       const grade: Grade = {
         ...graded.grade,
         baseline: constrainVariant(graded.grade.baseline, baseline, false),
@@ -506,6 +530,21 @@ export const runEvaluationSuite = async (
         grader_metrics: graded.metrics,
         grading_error: graded.gradingError,
       });
+      suiteUsage = addMetrics(
+        addMetrics(addMetrics(suiteUsage, current.metrics), baseline.metrics),
+        graded.metrics,
+      );
+      progress.debug(
+        "Eval {eval} current={current} baseline={baseline} winner={winner} · suite {usage} · wall {elapsed}",
+        {
+          baseline: grade.baseline.pass ? "pass" : "fail",
+          current: grade.current.pass ? "pass" : "fail",
+          elapsed: elapsed(),
+          eval: evalCase.name,
+          usage: formatUsage(suiteUsage),
+          winner: grade.comparison.winner,
+        },
+      );
     }
 
     const reportPath = await writeReport(
@@ -518,6 +557,10 @@ export const runEvaluationSuite = async (
     if (statusBefore !== statusAfter) {
       throw new Error("The knowledge base changed during eval execution.");
     }
+    progress.debug("Suite complete in {elapsed}: {usage}", {
+      elapsed: elapsed(),
+      usage: formatUsage(suiteUsage),
+    });
     return {
       reportPath,
       success:
@@ -526,6 +569,9 @@ export const runEvaluationSuite = async (
     };
   } finally {
     // after_all must run even when a later eval or the KB-dirty check fails.
+    if (manifest.hooks.after_all) {
+      progress.debug("Running after_all");
+    }
     await runSkillHook(
       manifest.hooks,
       "after_all",

@@ -46,10 +46,27 @@ export const runCommand = async (
   });
 
 type RunCommandToFilesOptions = Readonly<{
+  onStdoutLine?: (line: string) => void;
   stderrPath: string;
   stdoutPath: string;
 }> &
   RunCommandOptions;
+
+const splitStdoutLines = (
+  buffer: string,
+  chunk: Buffer,
+  onLine: (line: string) => void,
+): string => {
+  const combined = `${buffer}${chunk.toString("utf8")}`;
+  const lines = combined.split("\n");
+  const rest = lines.pop() ?? "";
+  for (const line of lines) {
+    if (line.length > 0) {
+      onLine(line);
+    }
+  }
+  return rest;
+};
 
 /** Streams Copilot output to files so large JSONL event streams stay off-heap. */
 export const runCommandToFiles = async (
@@ -65,11 +82,28 @@ export const runCommandToFiles = async (
       const child = spawn(command, args, {
         cwd: options.cwd,
         env: options.env,
-        stdio: ["ignore", stdout.fd, stderr.fd],
+        stdio: options.onStdoutLine
+          ? ["ignore", "pipe", stderr.fd]
+          : ["ignore", stdout.fd, stderr.fd],
       });
 
+      let lineBuffer = "";
+      const writes: Promise<unknown>[] = [];
+      if (options.onStdoutLine && child.stdout) {
+        const onLine = options.onStdoutLine;
+        child.stdout.on("data", (chunk: Buffer) => {
+          writes.push(stdout.write(chunk));
+          lineBuffer = splitStdoutLines(lineBuffer, chunk, onLine);
+        });
+      }
+
       child.on("error", reject);
-      child.on("close", (exitCode) => resolve(exitCode ?? 1));
+      child.on("close", (exitCode) => {
+        if (lineBuffer.length > 0 && options.onStdoutLine) {
+          options.onStdoutLine(lineBuffer);
+        }
+        void Promise.all(writes).then(() => resolve(exitCode ?? 1), reject);
+      });
     });
   } finally {
     await Promise.all([stdout.close(), stderr.close()]);

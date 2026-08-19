@@ -19,7 +19,9 @@ pnpm nx run @pagopa/skill-evals:scaffold -- --skill <skill-directory> --eval <na
 pnpm nx run @pagopa/skill-evals:eval -- --skill <skill-directory>
 ```
 
-Use `--eval <name>` to select individual cases, `--dry-run` to prepare plugins and workspaces without AI calls, and `--baseline-ref <ref>` to override the previous committed skill version.
+Use `--eval <name>` to select individual cases, `--dry-run` to prepare plugins and workspaces without AI calls, `--baseline-ref <ref>` to override the previous committed skill version, and `--verbose` for continuous local progress.
+
+`--verbose` streams run parameters, phase changes, Copilot model/tool activity, credit and token usage, and wall-clock timing. Omit it in CI to keep the default quiet summary.
 
 ## Skill Contract
 

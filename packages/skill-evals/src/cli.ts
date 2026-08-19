@@ -12,8 +12,10 @@ import { z } from "zod";
 
 import { prepareEvalWorkspace } from "./copilot-run.js";
 import { runSkillHook } from "./hooks.js";
+import { configureLogging, getPackageLogger } from "./logging.js";
 import { loadManifest, validateManifest } from "./manifest.js";
 import { runCommand } from "./process.js";
+import { createElapsedTimer, createProgress } from "./progress.js";
 import { createRunConfiguration, runEvaluationSuite } from "./runner.js";
 import {
   createTemporaryOutput,
@@ -33,6 +35,7 @@ type EvalOptions = Readonly<{
   maxAiCredits: number;
   output?: string;
   reasoningEffort: ReasoningEffort;
+  verbose: boolean;
 }> &
   SharedOptions;
 
@@ -113,11 +116,15 @@ const writeMetadata = async (
 };
 
 const runEval = async (options: EvalOptions): Promise<void> => {
+  await configureLogging(options.verbose);
+  const progress = createProgress(getPackageLogger(["eval"]), options.verbose);
+  const elapsed = createElapsedTimer();
   const invocationDirectory = await resolveInvocationDirectory();
   const skillDirectory = await resolveSkillDirectory(
     invocationDirectory,
     options.skill,
   );
+  progress.debug("Validating skill at {skill}", { skill: skillDirectory });
   await validateManifest(skillDirectory, true);
   const manifest = await loadManifest(skillDirectory);
   const unknown = options.eval.filter(
@@ -138,6 +145,7 @@ const runEval = async (options: EvalOptions): Promise<void> => {
           options.eval.includes(evalCase.name),
         )
       : manifest.evals;
+  progress.debug("Preparing runtime in {output}", { output: outputDirectory });
   const runtime = await prepareRuntime(
     { ...manifest, evals: selectedEvals },
     {
@@ -151,8 +159,23 @@ const runEval = async (options: EvalOptions): Promise<void> => {
       mainModel: options.mainModel,
       maxAiCredits: options.maxAiCredits,
       outputDirectory,
+      progress,
       reasoningEffort: options.reasoningEffort,
       skillDirectory,
+    },
+  );
+  progress.debug(
+    "Run parameters: skill={skill} evals={evals} model={model} grader={grader} effort={effort} maxCredits={maxCredits} baseline={baseline} knowledgeBase={knowledgeBase} copilot={copilot}",
+    {
+      baseline: runtime.baselineLabel,
+      copilot: runtime.copilotBin,
+      effort: runtime.reasoningEffort,
+      evals: selectedEvals.map(({ name }) => name).join(", "),
+      grader: runtime.graderModel,
+      knowledgeBase: runtime.knowledgeBase ?? "none",
+      maxCredits: runtime.maxAiCredits,
+      model: runtime.mainModel,
+      skill: manifest.skill_name,
     },
   );
   await writeMetadata(
@@ -188,9 +211,11 @@ const runEval = async (options: EvalOptions): Promise<void> => {
         ),
       ]);
     }
-    console.log(
-      `Prepared ${selectedEvals.length} evals at ${outputDirectory}.`,
-    );
+    progress.info("Prepared {count} evals at {output} in {elapsed}", {
+      count: selectedEvals.length,
+      elapsed: elapsed(),
+      output: outputDirectory,
+    });
     return;
   }
 
@@ -200,7 +225,10 @@ const runEval = async (options: EvalOptions): Promise<void> => {
     selectedEvals,
     process.env,
   );
-  console.log(`Eval report: ${result.reportPath}`);
+  progress.info("Eval report: {report} ({elapsed})", {
+    elapsed: elapsed(),
+    report: result.reportPath,
+  });
   if (!result.success) {
     process.exitCode = 1;
   }
@@ -293,11 +321,17 @@ program
     "Per-session AI credit limit",
     (value: string) => maxAiCreditsSchema.parse(value),
   )
+  .option(
+    "-v, --verbose",
+    "Stream local progress: phases, models, Copilot events, credits, and timing",
+    false,
+  )
   .action(async (options: EvalOptions) =>
     runEval({
       ...options,
       eval: options.eval ?? [],
       maxAiCredits: options.maxAiCredits ?? 30,
+      verbose: options.verbose ?? false,
     }),
   );
 
