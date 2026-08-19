@@ -75,6 +75,20 @@ describe("createProgress", () => {
       eval: "create-function-app",
     });
   });
+
+  it("tags variant lines with the skill ref", () => {
+    const debug = vi.fn();
+
+    createProgress({ debug, info: vi.fn() }, 1)
+      .forEval("create-function-app", "local")
+      .debug("Started tool {tool}", { tool: "view" });
+
+    expect(debug).toHaveBeenCalledWith("Started tool {tool}", {
+      eval: "create-function-app",
+      skillRef: "local",
+      tool: "view",
+    });
+  });
 });
 
 describe("silentProgress", () => {

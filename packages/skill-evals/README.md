@@ -146,11 +146,15 @@ written to the artifact directory.
 Verbose lines look like:
 
 ```text
+10:21:00.000 [DBG] prefer-dx-storage-module (local): Started tool view
+10:21:00.000 [DBG] prefer-dx-storage-module (8ca09db): Started tool view
 10:21:00.000 [DBG] prefer-dx-storage-module: Eval prefer-dx-storage-module current=pass (local) baseline=fail (8ca09db) winner=current · suite 33 credits · 6m 43s model · 1103435 in / 26316 out · grok-4.6, gpt-5-mini · wall 7m 27s
 ```
 
-`current=pass (local)` is the working-tree skill. `baseline=fail (8ca09db)` is
-the previous commit (or `branch@sha`, or `without-skill`).
+The prefix after the eval name is the skill in play for that line: `local` for
+the working-tree plugin, a short SHA or `branch@sha` for the previous commit,
+or `without-skill`. Shared lines (suite start, grader, final summary) keep
+only the eval name; the summary still repeats both refs in the message.
 
 The command exits `1` when any **current** eval fails, or when the grader never
 returns valid JSON. A failing baseline alone does not fail CI: that is the

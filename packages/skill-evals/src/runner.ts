@@ -463,8 +463,16 @@ export const runEvaluationSuite = async (
 
     for (const [index, evalCase] of evals.entries()) {
       const evalProgress = progress.forEval(evalCase.name);
-      const currentScoped = { ...currentConfig, progress: evalProgress };
-      const baselineScoped = { ...baselineConfig, progress: evalProgress };
+      const currentProgress = progress.forEval(
+        evalCase.name,
+        runtime.currentLabel,
+      );
+      const baselineProgress = progress.forEval(
+        evalCase.name,
+        runtime.baselineLabel,
+      );
+      const currentScoped = { ...currentConfig, progress: currentProgress };
+      const baselineScoped = { ...baselineConfig, progress: baselineProgress };
       evalProgress.info("Running {eval} ({index}/{total})", {
         eval: evalCase.name,
         index: index + 1,
@@ -475,7 +483,7 @@ export const runEvaluationSuite = async (
         evalCase,
         environment,
       );
-      evalProgress.debug("Finished {eval} current: {usage}", {
+      currentProgress.debug("Finished {eval} current: {usage}", {
         eval: evalCase.name,
         usage: formatUsage(current.metrics),
       });
@@ -484,7 +492,7 @@ export const runEvaluationSuite = async (
         evalCase,
         environment,
       );
-      evalProgress.debug("Finished {eval} baseline: {usage}", {
+      baselineProgress.debug("Finished {eval} baseline: {usage}", {
         eval: evalCase.name,
         usage: formatUsage(baseline.metrics),
       });

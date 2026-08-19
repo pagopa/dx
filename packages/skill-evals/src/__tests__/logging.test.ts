@@ -33,6 +33,21 @@ describe("formatLogLine", () => {
     ).toBe("10:21:00.000 [DBG] create-function-app: Starting Copilot turn 1");
   });
 
+  it("adds the skill ref after the eval name", async () => {
+    vi.resetModules();
+    const { formatLogLine } = await import("../logging.ts");
+
+    expect(
+      formatLogLine({
+        category: "eval",
+        level: "DBG",
+        message: "Started tool view",
+        properties: { eval: "create-function-app", skillRef: "local" },
+        timestamp: "10:21:00.000",
+      }),
+    ).toBe("10:21:00.000 [DBG] create-function-app (local): Started tool view");
+  });
+
   it("keeps the category when no eval is active", async () => {
     vi.resetModules();
     const { formatLogLine } = await import("../logging.ts");

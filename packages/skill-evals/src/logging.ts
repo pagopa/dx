@@ -67,19 +67,29 @@ export type LogLineParts = Readonly<{
   timestamp: string;
 }>;
 
-/** Puts the active eval name next to [DBG] so parallel-looking lines stay scoped. */
+const formatLogScope = (
+  category: string,
+  properties: Readonly<Record<string, unknown>>,
+): string => {
+  const evalName = properties.eval;
+  if (typeof evalName !== "string" || evalName.length === 0) {
+    return category;
+  }
+  const skillRef = properties.skillRef;
+  return typeof skillRef === "string" && skillRef.length > 0
+    ? `${evalName} (${skillRef})`
+    : evalName;
+};
+
+/** Puts the active eval and skill ref next to [DBG] so variant lines stay scoped. */
 export const formatLogLine = ({
   category,
   level,
   message,
   properties = {},
   timestamp,
-}: LogLineParts): string => {
-  const evalName = properties.eval;
-  const scope =
-    typeof evalName === "string" && evalName.length > 0 ? evalName : category;
-  return `${timestamp} [${level}] ${scope}: ${message}`;
-};
+}: LogLineParts): string =>
+  `${timestamp} [${level}] ${formatLogScope(category, properties)}: ${message}`;
 
 /** Compact console lines so Nx TUI stays readable during a long eval. */
 export const configureLogging = async (verbose: boolean): Promise<void> =>

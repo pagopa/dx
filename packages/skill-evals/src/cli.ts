@@ -206,16 +206,21 @@ const runEval = async (options: EvalOptions): Promise<void> => {
       process.env,
     );
     for (const evalCase of selectedEvals) {
-      const evalProgress = progress.forEval(evalCase.name);
       await Promise.all([
         prepareEvalWorkspace(
-          { ...current, progress: evalProgress },
+          {
+            ...current,
+            progress: progress.forEval(evalCase.name, runtime.currentLabel),
+          },
           evalCase,
           join(outputDirectory, evalCase.name, "current", "workspace"),
           process.env,
         ),
         prepareEvalWorkspace(
-          { ...baseline, progress: evalProgress },
+          {
+            ...baseline,
+            progress: progress.forEval(evalCase.name, runtime.baselineLabel),
+          },
           evalCase,
           join(outputDirectory, evalCase.name, "baseline", "workspace"),
           process.env,

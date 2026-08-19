@@ -9,7 +9,7 @@ import { type Verbosity } from "./verbosity.js";
 
 export type Progress = ProgressSink &
   Readonly<{
-    forEval: (evalName: string) => Progress;
+    forEval: (evalName: string, skillRef?: string) => Progress;
     verbose: boolean;
     verbosity: Verbosity;
   }>;
@@ -39,17 +39,21 @@ export const createProgress = (
   logger: ProgressSink,
   verbosity: Verbosity,
   evalName?: string,
+  skillRef?: string,
 ): Progress => {
   const propertiesFor = (
     properties: Record<string, unknown> = {},
-  ): Record<string, unknown> =>
-    evalName === undefined ? properties : { ...properties, eval: evalName };
+  ): Record<string, unknown> => {
+    const withEval =
+      evalName === undefined ? properties : { ...properties, eval: evalName };
+    return skillRef === undefined ? withEval : { ...withEval, skillRef };
+  };
 
   return {
     // Call through the logger object so LogTape methods keep `this`.
     debug: (message, properties) =>
       logger.debug(message, propertiesFor(properties)),
-    forEval: (name) => createProgress(logger, verbosity, name),
+    forEval: (name, ref) => createProgress(logger, verbosity, name, ref),
     info: (message, properties) =>
       logger.info(message, propertiesFor(properties)),
     verbose: verbosity >= 1,
