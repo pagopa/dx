@@ -1,0 +1,14 @@
+{
+  "name": "mise-setup",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "description": "GitHub Action to set up repository tools when mise is pre-installed",
+  "devDependencies": {
+    "prettier": "catalog:"
+  },
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}

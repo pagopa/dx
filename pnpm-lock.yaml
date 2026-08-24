@@ -250,6 +250,12 @@ importers:
 
   actions/make-artifact: {}
 
+  actions/mise-setup:
+    devDependencies:
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.6
+
   actions/nx-release:
     dependencies:
       '@octokit/rest':
