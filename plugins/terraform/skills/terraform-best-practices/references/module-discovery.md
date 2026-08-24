@@ -21,7 +21,7 @@ Use this workflow before writing any raw Terraform resource.
    - `main.tf`
    - supporting `.tf` files
    - `examples/`
-   - `package.json`
+   - `module.json`
 5. Build a capability map from the source:
    - supported `use_case` values and their intended environments
    - optional variables and defaults
@@ -30,7 +30,7 @@ Use this workflow before writing any raw Terraform resource.
    - generated resources and IAM/RBAC behavior
    - examples showing common configurations
 6. If a module covers the capability, use it instead of raw `azurerm_*` or `aws_*` resources.
-7. Pin the module version with `~> major.minor`, deriving the version from `package.json`.
+7. Pin the module version with `~> major.minor`, deriving the version from `module.json`.
 8. Use raw provider resources only for capabilities not covered by DX modules, and explain why.
 
 ## Commonly Missed Module Categories
@@ -59,9 +59,9 @@ For each user-facing option:
 
 Example for a module `use_case`:
 
-| use_case | Description | Production fit |
-| --- | --- | --- |
-| `development` | Cost-efficient configuration for development or testing. | No |
-| `default` | Production-oriented defaults for predictable behavior. | Yes |
+| use_case      | Description                                              | Production fit |
+| ------------- | -------------------------------------------------------- | -------------- |
+| `development` | Cost-efficient configuration for development or testing. | No             |
+| `default`     | Production-oriented defaults for predictable behavior.   | Yes            |
 
 Ask: "Which `use_case` best fits this environment?"
