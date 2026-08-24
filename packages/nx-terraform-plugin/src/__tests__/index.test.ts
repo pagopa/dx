@@ -24,12 +24,44 @@ vi.mock("@logtape/logtape", () => ({
   getLogger: logtapeMocks.getLogger,
 }));
 
-import { createNodesV2, getDiscoveryStateWithValidation } from "../index.ts";
+import {
+  createNodesV2,
+  getDiscoveryStateWithValidation,
+  getTestCapabilitiesByRoot,
+} from "../index.ts";
 import { parseOptions } from "../options.ts";
 
 describe("createNodesV2", () => {
-  it("discovers both terraform and module manifests", () => {
-    expect(createNodesV2[0]).toBe("**/{*.tf,module.json}");
+  it("discovers Terraform, module manifest, and test artifacts", () => {
+    expect(createNodesV2[0]).toBe(
+      "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*.go}",
+    );
+  });
+});
+
+describe("getTestCapabilitiesByRoot", () => {
+  it("derives supported test capabilities without treating test files as Terraform roots", () => {
+    const root = path.join("infra", "_modules", "good-module");
+    const capabilitiesByRoot = getTestCapabilitiesByRoot([
+      path.join(root, "main.tf"),
+      path.join(root, "tests", "unit.tftest.hcl"),
+      path.join(root, "tests", "integration.tftest.hcl"),
+      path.join(root, "tests", "e2e.go"),
+      path.join(root, "tests", "unsupported.tftest.hcl"),
+    ]);
+
+    expect(Array.from(capabilitiesByRoot.entries())).toEqual([
+      [
+        root,
+        {
+          hasContractTests: false,
+          hasE2eTests: true,
+          hasIntegrationTests: true,
+          hasTests: true,
+          hasUnitTests: true,
+        },
+      ],
+    ]);
   });
 });
 

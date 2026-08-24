@@ -16,6 +16,22 @@ import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
 
 const logger = getPackageLogger(["project"]);
 
+export interface TerraformTestCapabilities {
+  hasContractTests: boolean;
+  hasE2eTests: boolean;
+  hasIntegrationTests: boolean;
+  hasTests: boolean;
+  hasUnitTests: boolean;
+}
+
+const defaultTestCapabilities: TerraformTestCapabilities = {
+  hasContractTests: true,
+  hasE2eTests: true,
+  hasIntegrationTests: true,
+  hasTests: true,
+  hasUnitTests: true,
+};
+
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
 export const getProjectNameFromRoot = (root: string) =>
@@ -103,31 +119,64 @@ const getPublishTarget = (
   }
 };
 
-const getTestTarget = (initTargetName: string): TargetConfiguration => ({
-  // Fixed names keep each test layer isolated while exposing one Nx target.
-  cache: true,
-  command: `terraform test`,
-  configurations: {
-    e2e: {
-      args: [],
-      command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
-      inputs: ["default", "e2eTests"],
-    },
-    integration: {
-      args: ["-filter='tests/integration.tftest.hcl'"],
+const getTestTarget = (
+  initTargetName: string,
+  testCapabilities: TerraformTestCapabilities,
+): TargetConfiguration => {
+  const configurations: TargetConfiguration["configurations"] = {};
+  const args: string[] = [];
+  const hasTerraformTests =
+    testCapabilities.hasUnitTests || testCapabilities.hasContractTests;
+
+  if (testCapabilities.hasUnitTests) {
+    args.push("-filter='tests/unit.tftest.hcl'");
+  }
+
+  if (testCapabilities.hasContractTests) {
+    args.push("-filter='tests/contract.tftest.hcl'");
+  }
+
+  if (testCapabilities.hasIntegrationTests) {
+    configurations.integration = {
+      command: `terraform test`,
+      executor: "nx:run-commands",
       inputs: ["default", "integrationTests"],
+      options: {
+        args: ["-filter='tests/integration.tftest.hcl'"],
+        cwd: "{projectRoot}",
+      },
+    };
+  }
+
+  if (testCapabilities.hasE2eTests) {
+    configurations.e2e = {
+      command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
+      executor: "nx:run-commands",
+      inputs: ["default", "e2eTests"],
+    };
+  }
+
+  if (!hasTerraformTests) {
+    return {
+      cache: true,
+      configurations,
+      executor: "nx:noop",
+    };
+  }
+
+  return {
+    // Fixed names keep each test layer isolated while exposing one Nx target.
+    cache: true,
+    command: `terraform test`,
+    configurations,
+    dependsOn: [initTargetName],
+    inputs: ["default", "tests"],
+    options: {
+      args,
+      cwd: "{projectRoot}",
     },
-  },
-  dependsOn: [initTargetName],
-  inputs: ["default", "tests"],
-  options: {
-    args: [
-      "-filter='tests/unit.tftest.hcl'",
-      "-filter='tests/contract.tftest.hcl'",
-    ],
-    cwd: "{projectRoot}",
-  },
-});
+  };
+};
 
 const getTargets = (
   opts: TerraformPluginOptions,
@@ -135,6 +184,7 @@ const getTargets = (
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
   publishManifest: ModulePublishManifest | undefined,
+  testCapabilities: TerraformTestCapabilities,
 ): Record<string, TargetConfiguration> => {
   const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -184,7 +234,6 @@ const getTargets = (
         },
       },
     ],
-    [opts.testTargetName, getTestTarget(opts.initTargetName)],
     [
       opts.validateTargetName,
       {
@@ -197,6 +246,13 @@ const getTargets = (
       },
     ],
   ];
+
+  if (testCapabilities.hasTests) {
+    targets.push([
+      opts.testTargetName,
+      getTestTarget(opts.initTargetName, testCapabilities),
+    ]);
+  }
 
   if (hasRootTflintConfig) {
     targets.push([
@@ -321,6 +377,7 @@ export const getProject = (
   root: string,
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
+  testCapabilities: TerraformTestCapabilities = defaultTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
   const isPublishableLibrary =
@@ -331,6 +388,7 @@ export const getProject = (
     projectType,
     hasRootTflintConfig,
     publishManifest,
+    testCapabilities,
   );
   const environmentTag =
     projectType === "application"

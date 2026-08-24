@@ -12,10 +12,46 @@ import { configureLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
-import { getProject } from "./project.ts";
+import { getProject, TerraformTestCapabilities } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
+const testDirectoryName = "tests";
+
+export const getTestCapabilitiesByRoot = (
+  configFiles: readonly string[],
+): Map<string, TerraformTestCapabilities> =>
+  configFiles.reduce((capabilitiesByRoot, configFile) => {
+    const fileName = path.basename(configFile);
+    const testDirectory = path.dirname(configFile);
+    if (path.basename(testDirectory) !== testDirectoryName) {
+      return capabilitiesByRoot;
+    }
+
+    const root = path.dirname(testDirectory);
+    const capabilities = capabilitiesByRoot.get(root) ?? {
+      hasContractTests: false,
+      hasE2eTests: false,
+      hasIntegrationTests: false,
+      hasTests: false,
+      hasUnitTests: false,
+    };
+
+    if (fileName === "unit.tftest.hcl") {
+      capabilities.hasUnitTests = true;
+    } else if (fileName === "contract.tftest.hcl") {
+      capabilities.hasContractTests = true;
+    } else if (fileName === "integration.tftest.hcl") {
+      capabilities.hasIntegrationTests = true;
+    } else if (fileName.endsWith(".go")) {
+      capabilities.hasE2eTests = true;
+    } else {
+      return capabilitiesByRoot;
+    }
+
+    capabilities.hasTests = true;
+    return new Map(capabilitiesByRoot).set(root, capabilities);
+  }, new Map<string, TerraformTestCapabilities>());
 
 const isIgnoredRoot = (root: string) => {
   const rootSegments = new Set(root.split(path.sep));
@@ -53,7 +89,9 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
       moduleManifestRoots.add(root);
       continue;
     }
-    terraformConfigFiles.push(configFile);
+    if (fileName.endsWith(".tf")) {
+      terraformConfigFiles.push(configFile);
+    }
   }
 
   return {
@@ -101,7 +139,7 @@ export const getDiscoveryStateWithValidation = async (
 
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // We discover both Terraform modules and module manifests in one pass.
-  "**/{*.tf,module.json}",
+  "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*.go}",
   async (configFiles, options, context) => {
     await configureLogger();
     const opts = parseOptions(options);
@@ -110,6 +148,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
     );
     const { publishableManifestByRoot, terraformConfigFiles } =
       await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
+    const testCapabilitiesByRoot = getTestCapabilitiesByRoot(configFiles);
 
     return createNodesFromFiles(
       (configFile) => {
@@ -126,6 +165,13 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
               root,
               hasRootTflintConfig,
               publishableManifestByRoot.get(root),
+              testCapabilitiesByRoot.get(root) ?? {
+                hasContractTests: false,
+                hasE2eTests: false,
+                hasIntegrationTests: false,
+                hasTests: false,
+                hasUnitTests: false,
+              },
             ),
           },
         };

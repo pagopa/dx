@@ -87,14 +87,19 @@ const getExpectedTestTarget = () => ({
   command: "terraform test",
   configurations: {
     e2e: {
-      args: [],
       command:
         "if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi",
+      executor: "nx:run-commands",
       inputs: ["default", "e2eTests"],
     },
     integration: {
-      args: ["-filter='tests/integration.tftest.hcl'"],
+      command: "terraform test",
+      executor: "nx:run-commands",
       inputs: ["default", "integrationTests"],
+      options: {
+        args: ["-filter='tests/integration.tftest.hcl'"],
+        cwd: "{projectRoot}",
+      },
     },
   },
   dependsOn: ["init"],
@@ -243,6 +248,56 @@ describe("getProjectNameFromRoot", () => {
 
 describe("getProject applications", () => {
   describe("when the root is an application", () => {
+    it("adds test when only contract tests are available", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(
+        getProject(defaultOptions, root, false, undefined, {
+          hasContractTests: true,
+          hasE2eTests: false,
+          hasIntegrationTests: false,
+          hasTests: true,
+          hasUnitTests: false,
+        }),
+      );
+
+      expect(targets["test"]?.options).toEqual({
+        args: ["-filter='tests/contract.tftest.hcl'"],
+        cwd: "{projectRoot}",
+      });
+    });
+
+    it("adds only available test layers", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(
+        getProject(defaultOptions, root, false, undefined, {
+          hasContractTests: false,
+          hasE2eTests: false,
+          hasIntegrationTests: true,
+          hasTests: true,
+          hasUnitTests: true,
+        }),
+      );
+
+      expect(targets["test"]).toEqual({
+        ...getExpectedTestTarget(),
+        configurations: {
+          integration: {
+            command: "terraform test",
+            executor: "nx:run-commands",
+            inputs: ["default", "integrationTests"],
+            options: {
+              args: ["-filter='tests/integration.tftest.hcl'"],
+              cwd: "{projectRoot}",
+            },
+          },
+        },
+        options: {
+          args: ["-filter='tests/unit.tftest.hcl'"],
+          cwd: "{projectRoot}",
+        },
+      });
+    });
+
     it("returns an application project with all targets", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const project = getProject(defaultOptions, root);
@@ -256,8 +311,8 @@ describe("getProject applications", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "console",
         "output",
         "plan",
@@ -292,8 +347,8 @@ describe("getProject applications", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "lint",
         "console",
         "output",
@@ -312,8 +367,8 @@ describe("getProject applications", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "lint",
         "console",
         "output",
@@ -377,6 +432,48 @@ describe("getProject applications", () => {
   });
 });
 
+describe("getProject no-op tests", () => {
+  const root = path.join("infra", "resources", "prod", "my_stack");
+
+  it("adds a no-op test target when only integration and e2e tests exist", () => {
+    const targets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        hasContractTests: false,
+        hasE2eTests: true,
+        hasIntegrationTests: true,
+        hasTests: true,
+        hasUnitTests: false,
+      }),
+    );
+
+    expect(targets["test"]).toEqual({
+      cache: true,
+      configurations: getExpectedTestTarget().configurations,
+      executor: "nx:noop",
+    });
+  });
+
+  it("adds a no-op test target when only e2e tests exist", () => {
+    const targets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        hasContractTests: false,
+        hasE2eTests: true,
+        hasIntegrationTests: false,
+        hasTests: true,
+        hasUnitTests: false,
+      }),
+    );
+
+    expect(targets["test"]).toEqual({
+      cache: true,
+      configurations: {
+        e2e: getExpectedTestTarget().configurations?.e2e,
+      },
+      executor: "nx:noop",
+    });
+  });
+});
+
 describe("getProject libraries", () => {
   describe("when the root is a library", () => {
     it("classifies a modules root as a library without plan and apply", () => {
@@ -392,8 +489,8 @@ describe("getProject libraries", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "docs",
         "console",
         "output",
@@ -425,8 +522,8 @@ describe("getProject libraries", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "lint",
         "docs",
         "console",
@@ -442,8 +539,8 @@ describe("getProject libraries", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "docs",
         "console",
         "output",
@@ -464,8 +561,8 @@ describe("getProject libraries", () => {
       expect(Object.keys(targets)).toEqual([
         "init",
         "fmt",
-        "test",
         "validate",
+        "test",
         "lint",
         "docs",
         "nx-release-publish",
