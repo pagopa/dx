@@ -138,41 +138,32 @@ const getTestTarget = (
 
   if (testCapabilities.hasIntegrationTests) {
     configurations.integration = {
-      command: `terraform test`,
-      executor: "nx:run-commands",
-      inputs: ["default", "integrationTests"],
-      options: {
-        args: ["-filter='tests/integration.tftest.hcl'"],
-        cwd: "{projectRoot}",
-      },
+      command: `terraform test -filter='tests/integration.tftest.hcl'`,
     };
   }
 
   if (testCapabilities.hasE2eTests) {
     configurations.e2e = {
       command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
-      executor: "nx:run-commands",
-      inputs: ["default", "e2eTests"],
-    };
-  }
-
-  if (!hasTerraformTests) {
-    return {
-      cache: true,
-      configurations,
-      executor: "nx:noop",
     };
   }
 
   return {
     // Fixed names keep each test layer isolated while exposing one Nx target.
     cache: true,
-    command: `terraform test`,
     configurations,
     dependsOn: [initTargetName],
-    inputs: ["default", "tests"],
+    executor: "nx:run-commands",
+    inputs: [
+      "default",
+      ...(hasTerraformTests ? ["tests"] : []),
+      ...(testCapabilities.hasIntegrationTests ? ["integrationTests"] : []),
+      ...(testCapabilities.hasE2eTests ? ["e2eTests"] : []),
+    ],
     options: {
-      args,
+      command: hasTerraformTests
+        ? `terraform test ${args.join(" ")}`
+        : "echo No unit or contract Terraform tests found",
       cwd: "{projectRoot}",
     },
   };

@@ -84,31 +84,21 @@ const getExpectedLintTarget = (root: string) => ({
 
 const getExpectedTestTarget = () => ({
   cache: true,
-  command: "terraform test",
   configurations: {
     e2e: {
       command:
         "if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi",
-      executor: "nx:run-commands",
-      inputs: ["default", "e2eTests"],
     },
     integration: {
-      command: "terraform test",
-      executor: "nx:run-commands",
-      inputs: ["default", "integrationTests"],
-      options: {
-        args: ["-filter='tests/integration.tftest.hcl'"],
-        cwd: "{projectRoot}",
-      },
+      command: "terraform test -filter='tests/integration.tftest.hcl'",
     },
   },
   dependsOn: ["init"],
-  inputs: ["default", "tests"],
+  executor: "nx:run-commands",
+  inputs: ["default", "tests", "integrationTests", "e2eTests"],
   options: {
-    args: [
-      "-filter='tests/unit.tftest.hcl'",
-      "-filter='tests/contract.tftest.hcl'",
-    ],
+    command:
+      "terraform test -filter='tests/unit.tftest.hcl' -filter='tests/contract.tftest.hcl'",
     cwd: "{projectRoot}",
   },
 });
@@ -261,7 +251,7 @@ describe("getProject applications", () => {
       );
 
       expect(targets["test"]?.options).toEqual({
-        args: ["-filter='tests/contract.tftest.hcl'"],
+        command: "terraform test -filter='tests/contract.tftest.hcl'",
         cwd: "{projectRoot}",
       });
     });
@@ -282,17 +272,12 @@ describe("getProject applications", () => {
         ...getExpectedTestTarget(),
         configurations: {
           integration: {
-            command: "terraform test",
-            executor: "nx:run-commands",
-            inputs: ["default", "integrationTests"],
-            options: {
-              args: ["-filter='tests/integration.tftest.hcl'"],
-              cwd: "{projectRoot}",
-            },
+            command: "terraform test -filter='tests/integration.tftest.hcl'",
           },
         },
+        inputs: ["default", "tests", "integrationTests"],
         options: {
-          args: ["-filter='tests/unit.tftest.hcl'"],
+          command: "terraform test -filter='tests/unit.tftest.hcl'",
           cwd: "{projectRoot}",
         },
       });
@@ -447,9 +432,12 @@ describe("getProject no-op tests", () => {
     );
 
     expect(targets["test"]).toEqual({
-      cache: true,
-      configurations: getExpectedTestTarget().configurations,
-      executor: "nx:noop",
+      ...getExpectedTestTarget(),
+      inputs: ["default", "integrationTests", "e2eTests"],
+      options: {
+        command: "echo No unit or contract Terraform tests found",
+        cwd: "{projectRoot}",
+      },
     });
   });
 
@@ -469,7 +457,13 @@ describe("getProject no-op tests", () => {
       configurations: {
         e2e: getExpectedTestTarget().configurations?.e2e,
       },
-      executor: "nx:noop",
+      dependsOn: ["init"],
+      executor: "nx:run-commands",
+      inputs: ["default", "e2eTests"],
+      options: {
+        command: "echo No unit or contract Terraform tests found",
+        cwd: "{projectRoot}",
+      },
     });
   });
 });

@@ -63,6 +63,31 @@ describe("getTestCapabilitiesByRoot", () => {
       ],
     ]);
   });
+
+  it("keeps capabilities isolated between Terraform roots", () => {
+    const unitTestRoot = path.join("infra", "_modules", "unit-module");
+    const e2eTestRoot = path.join("infra", "_modules", "e2e-module");
+
+    const capabilitiesByRoot = getTestCapabilitiesByRoot([
+      path.join(unitTestRoot, "tests", "unit.tftest.hcl"),
+      path.join(e2eTestRoot, "tests", "e2e.go"),
+    ]);
+
+    expect(capabilitiesByRoot.get(unitTestRoot)).toEqual({
+      hasContractTests: false,
+      hasE2eTests: false,
+      hasIntegrationTests: false,
+      hasTests: true,
+      hasUnitTests: true,
+    });
+    expect(capabilitiesByRoot.get(e2eTestRoot)).toEqual({
+      hasContractTests: false,
+      hasE2eTests: true,
+      hasIntegrationTests: false,
+      hasTests: true,
+      hasUnitTests: false,
+    });
+  });
 });
 
 describe("getDiscoveryStateWithValidation", () => {

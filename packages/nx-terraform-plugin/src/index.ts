@@ -17,6 +17,13 @@ import { getProject, TerraformTestCapabilities } from "./project.ts";
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
 const testDirectoryName = "tests";
+const emptyTestCapabilities = (): TerraformTestCapabilities => ({
+  hasContractTests: false,
+  hasE2eTests: false,
+  hasIntegrationTests: false,
+  hasTests: false,
+  hasUnitTests: false,
+});
 
 export const getTestCapabilitiesByRoot = (
   configFiles: readonly string[],
@@ -29,13 +36,8 @@ export const getTestCapabilitiesByRoot = (
     }
 
     const root = path.dirname(testDirectory);
-    const capabilities = capabilitiesByRoot.get(root) ?? {
-      hasContractTests: false,
-      hasE2eTests: false,
-      hasIntegrationTests: false,
-      hasTests: false,
-      hasUnitTests: false,
-    };
+    const capabilities =
+      capabilitiesByRoot.get(root) ?? emptyTestCapabilities();
 
     if (fileName === "unit.tftest.hcl") {
       capabilities.hasUnitTests = true;
@@ -50,7 +52,8 @@ export const getTestCapabilitiesByRoot = (
     }
 
     capabilities.hasTests = true;
-    return new Map(capabilitiesByRoot).set(root, capabilities);
+    capabilitiesByRoot.set(root, capabilities);
+    return capabilitiesByRoot;
   }, new Map<string, TerraformTestCapabilities>());
 
 const isIgnoredRoot = (root: string) => {
@@ -165,13 +168,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
               root,
               hasRootTflintConfig,
               publishableManifestByRoot.get(root),
-              testCapabilitiesByRoot.get(root) ?? {
-                hasContractTests: false,
-                hasE2eTests: false,
-                hasIntegrationTests: false,
-                hasTests: false,
-                hasUnitTests: false,
-              },
+              testCapabilitiesByRoot.get(root) ?? emptyTestCapabilities(),
             ),
           },
         };
