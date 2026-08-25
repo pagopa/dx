@@ -5,8 +5,19 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 ## Features
 
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
-- **Node.js**: Installs Node.js (v20.12.2) and enables Corepack for package management.
-- **mise**: Installs repository-specific development tools declared in `mise.toml`.
+- **mise**: Installs repository-specific development tools declared in
+  `mise.toml`.
+- **Pre-installed tool baseline** – Provides a baseline of common tools required by GitHub actions.
+  Repository configurations can extend or override the
+  baseline. The mise shims expose installed tools directly on `PATH`. Language
+  runtimes and Terraform remain managed by their official workflow setup
+  actions.
+- **Setup action runtime policy** – disables Go, Node.js, pnpm, Python, and
+  Terraform in mise by default, reserving those runtimes for workflow setup
+  actions.
+- **Scoped writable tool directories** – allows arbitrary `mise` backends and
+  installed tools to use the standard XDG locations under the runner user's
+  home.
 - **Flexible authentication** – accepts a registration token, a GitHub PAT, or
   GitHub App credentials.
 - **Graceful cleanup** – the runner unregisters itself from GitHub on container shutdown, avoiding “ghost” runners.
@@ -34,10 +45,23 @@ The Docker image includes an entrypoint script (`entrypoint.sh`) that is respons
 `GITHUB_PAT` with `REGISTRATION_TOKEN_API_URL`; or all three GitHub App
 variables with `REGISTRATION_TOKEN_API_URL`.
 
+## Writable tool directories
+
+Mise backends do not share a fixed set of tool-specific paths. The runner user
+therefore owns the standard XDG roots used by repository tools without changing
+ownership outside those locations:
+
+| Path             | Used by                            |
+| ---------------- | ---------------------------------- |
+| `~/.local/bin`   | User-local executable shims        |
+| `~/.local/share` | Tool installations and shared data |
+| `~/.local/state` | Tool state                         |
+| `~/.config`      | Tool configuration                 |
+| `~/.cache`       | Downloads and cached metadata      |
+
 ## Testing
 
 The image includes basic tests to verify the installation of key tools:
 
-- Node.js (`node --version`)
-- npm (`npm --version`)
 - mise (`mise --version`)
+- zip (`zip -v`)
