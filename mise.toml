@@ -1,7 +1,7 @@
 [tools]
 acli = "latest"
 act = "latest"
-aws-cli = { version = "2.35", symlink_bins = "true" }
+aws-cli = { version = "2.36", symlink_bins = "true" }
 azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
 copilot = "latest"
 github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
@@ -23,8 +23,14 @@ uv = "latest"
 
 [env]
 COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+TFLINT_PLUGIN_DIR="./.tflint.d/plugins"
 NX_DAEMON=true
 
 [settings]
 minimum_release_age = "7d"
 minimum_release_age_excludes = ["copilot", "github-cli"]
+
+[deps.tflint]
+sources = [".tflint.hcl"]
+outputs = [".tflint.d/plugins"]
+run = "tflint --init"
