@@ -1,12 +1,11 @@
 
 # === Stage 1: Install runner dependencies and mise ===
-FROM ghcr.io/actions/actions-runner:2.335.0@sha256:3f06bf70688f9d314884d5bde3e7403eaea257d9a5120a635f4b7788d3411bf2 AS mise
+FROM ghcr.io/actions/actions-runner:2.336.0@sha256:0cfdcc701ce933c6d243c6b0b2da767366dc9f2e99961d4c3754b0b78084cdda AS mise
 
 ARG MISE_VERSION=2026.8.1
 ARG MISE_SHA256=961b1fcc78830e861ab887abd19d9b961478bcf252e37881fdd61c81388308d4
 
 ENV MISE_DATA_DIR=/home/runner/.local/share/mise
-ENV MISE_DISABLE_TOOLS=go,node,pnpm,python,terraform
 ENV PATH="${MISE_DATA_DIR}/shims:${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
