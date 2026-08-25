@@ -1,9 +1,5 @@
 [tools]
-aws-cli = { version = "2.35.24", symlink_bins = "true" }
-# The pipx backend used by Azure CLI requires uv or pipx.
-azure-cli = { version = "2.87.0", uvx_args = "--prerelease=allow" }
 "conda:zip" = "3.0"
-uv = "0.12.0"
 
 [settings]
 minimum_release_age = "7d"
