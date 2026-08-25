@@ -18,20 +18,14 @@ runs:
       run: |
         set -euo pipefail
 
-        if ! command -v mise >/dev/null; then
+        if ! version=$(mise --version 2>/dev/null); then
           echo "enabled=false" >> "$GITHUB_OUTPUT"
           echo "::notice::mise is not installed; skipping repository tool setup"
           exit 0
         fi
 
-        version=$(mise --version | awk 'NR == 1 { print $1 }')
-        if [ -z "$version" ]; then
-          echo "::error::Unable to detect the installed mise version"
-          exit 1
-        fi
-
         echo "enabled=true" >> "$GITHUB_OUTPUT"
-        echo "version=$version" >> "$GITHUB_OUTPUT"
+        echo "version=${version%% *}" >> "$GITHUB_OUTPUT"
 
     - name: Setup repository tools
       if: ${{ steps.detect.outputs.enabled == 'true' }}
