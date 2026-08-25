@@ -12,7 +12,10 @@ vi.mock("../logger.ts", () => ({
 }));
 
 import { parseOptions } from "../options.ts";
-import { getProject, getProjectNameFromRoot } from "../project.ts";
+import {
+  getProject as getProjectDefinition,
+  getProjectNameFromRoot,
+} from "../project.ts";
 
 afterEach(() => {
   loggerMocks.warn.mockReset();
@@ -60,7 +63,26 @@ const publishManifestWithOwner = {
   },
 };
 
-const getExpectedLintTarget = (root: string) => ({
+const workspaceRoot = "/workspace";
+
+const getProject = (
+  opts: typeof defaultOptions,
+  root: string,
+  hasRootTflintConfig = false,
+  manifest:
+    | typeof publishManifest
+    | typeof publishManifestWithOwner
+    | undefined = undefined,
+) =>
+  getProjectDefinition(
+    opts,
+    workspaceRoot,
+    root,
+    hasRootTflintConfig,
+    manifest,
+  );
+
+const getExpectedLintTarget = () => ({
   cache: true,
   command: "tflint",
   inputs: [
@@ -70,15 +92,13 @@ const getExpectedLintTarget = (root: string) => ({
     "integrationTests",
     "e2eTests",
     "{workspaceRoot}/.tflint.hcl",
+    { env: "TFLINT_PLUGIN_DIR" },
   ],
   options: {
-    args: [
-      "--disable-rule=terraform_required_version",
-      "--disable-rule=terraform_required_providers",
-      "--config",
-      path.relative(root, ".tflint.hcl") || ".tflint.hcl",
-    ],
     cwd: "{projectRoot}",
+    env: {
+      TFLINT_CONFIG_FILE: path.join(workspaceRoot, ".tflint.hcl"),
+    },
   },
 });
 
@@ -300,7 +320,7 @@ describe("getProject applications", () => {
         "plan",
         "apply",
       ]);
-      expect(targets.lint).toEqual(getExpectedLintTarget(root));
+      expect(targets.lint).toEqual(getExpectedLintTarget());
     });
 
     it("does not add docs to applications", () => {
@@ -432,7 +452,7 @@ describe("getProject libraries", () => {
         "console",
         "output",
       ]);
-      expect(targets.lint).toEqual(getExpectedLintTarget(root));
+      expect(targets.lint).toEqual(getExpectedLintTarget());
     });
 
     it("adds docs to libraries", () => {
@@ -551,6 +571,7 @@ describe("getProject libraries", () => {
       expect(() =>
         getProjectWithUnexpectedFailure(
           defaultOptions,
+          workspaceRoot,
           moduleRoot,
           true,
           publishManifestWithOwner,
