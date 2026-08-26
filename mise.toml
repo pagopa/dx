@@ -19,7 +19,6 @@ trivy = "0.71"
 uv = "latest"
 
 [env]
-COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
 
 [settings]
@@ -31,3 +30,5 @@ minimum_release_age_excludes = ["copilot", "github-cli"]
 sources = [".tflint.hcl"]
 outputs = [".tflint.d/plugins"]
 run = "tflint --init"
+
+[deps.pnpm]
