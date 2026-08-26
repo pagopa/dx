@@ -1,6 +1,13 @@
 import type { AzureConfig } from "@pagopa/dx-savemoney";
 
-import { azure, AZURE_SOURCE_VALUES, loadConfig } from "@pagopa/dx-savemoney";
+import { trace } from "@opentelemetry/api";
+import {
+  azure,
+  AZURE_SOURCE_VALUES,
+  buildSavemoneyInvocationTelemetryAttributes,
+  buildSavemoneyOutcomeTelemetryAttributes,
+  loadConfig,
+} from "@pagopa/dx-savemoney";
 import { Command, InvalidArgumentError } from "commander";
 import { oraPromise } from "ora";
 import { z } from "zod";
@@ -74,6 +81,18 @@ export const makeSavemoneyCommand = () =>
           verbose: verbose ?? false,
         };
 
+        // Record usage attributes on the active root span so Application
+        // Insights can slice usage by format, source, and feature flags.
+        trace.getActiveSpan()?.setAttributes(
+          buildSavemoneyInvocationTelemetryAttributes({
+            azqrReportPathOption: options.azqrReport,
+            configPathOption: options.config,
+            format: options.format,
+            resolvedConfig: finalConfig,
+            subscriptionIdsEnv: process.env.ARM_SUBSCRIPTION_ID,
+          }),
+        );
+
         // Run analysis showing a progress spinner on stderr so the CLI doesn't
         // look frozen during the (potentially several-minute) Azure round-trips.
         const reports = await oraPromise(
@@ -85,6 +104,12 @@ export const makeSavemoneyCommand = () =>
             text: "Analyzing Azure resources",
           },
         );
+
+        // Record outcome attributes after analysis completes.
+        trace
+          .getActiveSpan()
+          ?.setAttributes(buildSavemoneyOutcomeTelemetryAttributes(reports));
+
         await azure.generateReport(reports, options.format);
       } catch (error) {
         exitWithError(this)(
