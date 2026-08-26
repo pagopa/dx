@@ -173,68 +173,8 @@ Il sistema di bootstrap è composto da quattro piani distinti:
 3. **Piano dichiarativo Terraform** — tre configurazioni con cicli di vita separati: `infra/repository` (GitHub), `infra/core/<env>` (baseline Azure condivisa), `infra/bootstrapper/<env>` (identità operative, RBAC, runner, secret).
 4. **Piano di desired state organizzativo** — i repository `eng-azure-authorization` ed `eng-github-authorization`, che restano la fonte di verità per gruppi Entra, ruoli a scope subscription, Directory Readers, censimento repository e associazione della GitHub App.
 
-### Flusso AS-IS end-to-end
-
-```mermaid
-flowchart TD
-  P0["Prerequisiti: subscription, environment, prefix, dominio, tag, owner"] --> P1{"GitHub App del prodotto esiste?"}
-  P1 -->|No| P2["PR a eng-github-authorization e creazione App da parte degli App Admin"]
-  P1 -->|Si| P3["Recupero App ID, Client ID, Installation ID, private key"]
-  P2 --> P3
-  P3 --> P4["Gruppi Entra e membership predisposti tramite eng-azure-authorization"]
-
-  P4 --> I1["dx init: precondition Terraform e Corepack, autenticazione GitHub"]
-  I1 --> I2["Scaffolding workspace e infra/repository"]
-  I2 --> I3{"Pubblicare su GitHub?"}
-  I3 -->|No| I4["Solo artefatti locali e istruzioni manuali"]
-  I3 -->|Si| I5["terraform init e apply su infra/repository, creazione repository"]
-  I5 --> I6["git init, branch features/scaffold-workspace, push, PR Scaffold repository"]
-
-  I6 --> A1["dx add environment: precondition Terraform, az login, Corepack"]
-  A1 --> A2["Discovery subscription abilitate e prompt input"]
-  A2 --> A3{"Environment gia inizializzato?"}
-
-  A3 -->|Si| S1["getTerraformBackend"]
-  A3 -->|No| C1["Conferma effetti e verifica permessi del principal umano"]
-  C1 --> C2["initCloudAccounts: provider, bootstrap RG, identity CD e CI, ruoli, OIDC, secret, Key Vault"]
-  C2 --> C3{"Backend Terraform presente?"}
-  C3 -->|No| C4["provisionTerraformBackend: RG, Storage Account, container terraform-state"]
-  C3 -->|Si| S1
-  C4 --> S1
-
-  S1 --> S2["syncRepositoryEnvironments: patch di infra/repository/main.tf e apply automatico"]
-  S2 --> S3["configureGitHubEnvironments: OIDC e secret bootstrapper repository-specific"]
-  S3 --> S4["Generazione workflow bootstrapper e infra/bootstrapper/env"]
-  S4 --> S5{"Ramo di inizializzazione?"}
-  S5 -->|Si| S6["Generazione infra/core/env e import block"]
-  S5 -->|No| S7["Nessun core generato"]
-  S6 --> Z1["PR best-effort su eng-azure-authorization"]
-  S7 --> Z3
-
-  Z1 --> Z1b["Review CODEOWNER, plan su PR, apply su main"]
-  Z1b --> Z2["Apply iniziale di core da parte dell EL"]
-  Z2 --> Z3["Apply iniziale di bootstrapper da parte dell EL o del workflow"]
-  Z3 --> Z4["PR manuale su eng-github-authorization: censimento repository e associazione GitHub App"]
-  Z4 --> Z5["Stato finale operativo: workflow bootstrapper autonomi"]
-```
-
 > **Nota evolutiva Nx (stato futuro, non implementato)**
-> Quando tutti i team saranno migrati ai workflow Nx, l'ordine cambia: la **registrazione GitHub esterna** (oggi ultimo passo, `Z4`) verrà eseguita **prima** degli apply, così che i workflow Nx possano applicare automaticamente sia `core` sia `bootstrapper`, eliminando gli apply manuali dell'EL (`Z2` e `Z3`). Nel flusso attuale l'ordine è invece: apply `core` → apply `bootstrapper` → registrazione GitHub.
-
-```mermaid
-flowchart LR
-  subgraph ASIS["AS-IS"]
-    A1["dx add environment"] --> A2["Apply core - EL"]
-    A2 --> A3["Apply bootstrapper - EL o workflow"]
-    A3 --> A4["Registrazione su eng-github-authorization"]
-  end
-
-  subgraph TOBE["TO-BE con Nx - non implementato"]
-    B1["dx add environment"] --> B2["Registrazione su eng-github-authorization"]
-    B2 --> B3["Workflow Nx applica core"]
-    B3 --> B4["Workflow Nx applica bootstrapper"]
-  end
-```
+> Quando tutti i team saranno migrati ai workflow Nx, l'ordine cambia: la **registrazione GitHub esterna** verrà eseguita **prima** degli apply, così che i workflow Nx possano applicare automaticamente sia `core` sia `bootstrapper`, eliminando gli apply manuali dell'EL. Nel flusso attuale l'ordine è invece: apply `core` → apply `bootstrapper` → registrazione GitHub.
 
 ## Servizi cloud
 
@@ -260,133 +200,105 @@ flowchart LR
 ### Diagramma delle dipendenze
 
 ```mermaid
-flowchart LR
-  CLI["DX CLI"] --> REPOTF["infra/repository - modulo github-environment-bootstrap"]
-  CLI --> BOOTRES["Risorse di bootstrap create via SDK: RG, identity CD e CI, OIDC, secret, Key Vault"]
-  CLI --> BACKEND["Backend Terraform: RG, Storage Account, container terraform-state"]
+C4Context
+  title System Context diagram for DX Bootstrapping
 
-  BACKEND --> CORETF["infra/core/env - modulo azure-core-infra"]
-  BOOTRES --> CORETF
-  CORETF --> CORESTATE["State remoto core.tfstate"]
-  CORESTATE --> EXPORTER["modulo azure-core-values-exporter"]
-  EXPORTER --> BOOTTF["infra/bootstrapper/env - modulo azure-github-environment-bootstrap"]
-  BACKEND --> BOOTTF
-  REPOTF --> GHENV["GitHub environment infra, app, opex, automation, bootstrapper"]
-  GHENV --> BOOTTF
-  BOOTTF --> RUNNER["Container App Job runner"]
-  BOOTTF --> IDS["Identity definitive app, infra, opex"]
-  CORETF --> ROLES["Custom role DX a scope subscription"]
-  ROLES --> BOOTTF
+  Person(engineer, "Engineer product team", "Provides inputs, runs the DX CLI and configures the repository")
+  Person(leader, "Engineering Leader", "Approves privileged operations and runs initial Terraform applies")
+  Person(app_admin, "GitHub App Admin", "Creates and configures the product GitHub App")
+
+  System(dx, "DX Bootstrapping", "Scaffolds repository and environment configurations and provisions Azure resources")
+
+  System_Ext(github, "GitHub", "Hosts repositories, environments and GitHub Actions workflows")
+  System_Ext(azure_rm, "Azure Resource Manager", "Provides Azure resource provisioning and management APIs")
+
+  Rel(engineer, dx, "Runs and configures")
+  Rel(leader, dx, "Approves and runs")
+  Rel(app_admin, github, "Creates and configures GitHub App")
+  Rel(dx, github, "Creates repository, environments and workflows")
+  Rel(dx, azure_rm, "Provisions Azure resources")
 ```
-
-Punti chiave della catena di dipendenze:
-
-- `bootstrapper` **non** legge lo state di `core` direttamente: usa il modulo `pagopa-dx/azure-core-values-exporter`, che accede al blob `<prefix>/<domain>/core.tfstate` sullo stesso Storage Account (`apps/cli/templates/environment/bootstrapper/{{env.name}}/main.tf.hbs`).
-- `bootstrapper` legge le **custom role** con `data "azurerm_role_definition"` a scope subscription: se `core` non è stato applicato, quei data source falliscono (`infra/modules/azure_github_environment_bootstrap/data.tf`). Questo è il motivo tecnico per cui, nel flusso iniziale attuale, **`core` va applicato prima di `bootstrapper`**.
-- `bootstrapper` legge i gruppi Entra con `data "azuread_group"`: se i gruppi non esistono o hanno nomi diversi, l'apply fallisce (`apps/cli/templates/environment/bootstrapper/{{env.name}}/data.tf.hbs`).
 
 ### Diagramma delle componenti
 
 ```mermaid
-flowchart TB
-  subgraph CLIAPP["apps/cli"]
-    CMD["adapters/commander: init, add environment"]
-    PROMPTS["plop/generators/environment/prompts.ts"]
-    ACTIONS["plop/generators/environment/actions.ts"]
-    PACTS["plop/actions: initCloudAccounts, provisionTerraformBackend, getTerraformBackend, syncRepositoryEnvironments, configureGitHubEnvironments"]
-    DOMAIN["domain: environment, cloud-account, authorization, remote-backend"]
-    AZ["adapters/azure: AzureCloudAccountService, AzureSubscriptionRepository"]
-    GH["adapters/octokit e github"]
-    PAGOPA["adapters/pagopa-technology: azure-authorization"]
-    TPL["templates: monorepo, environment"]
-  end
+C4Container
+  title Container diagram for DX Bootstrapping
 
-  subgraph MODULI["infra/modules"]
-    MREPO["github_environment_bootstrap"]
-    MCORE["azure_core_infra"]
-    MBOOT["azure_github_environment_bootstrap"]
-    MRUNNER["github_selfhosted_runner_on_container_app_jobs"]
-    MROLES["azure_merge_roles"]
-  end
+  System_Ext(github, "GitHub", "Hosts repositories, environments and GitHub Actions workflows")
+  System_Ext(azure_rm, "Azure Resource Manager", "Provides Azure resource provisioning and management APIs")
+  System_Ext(azure_auth, "eng-azure-authorization", "Repository for Entra groups and subscription authorization")
+  System_Ext(github_auth, "eng-github-authorization", "Repository for GitHub repository and App authorization")
 
-  subgraph ESTERNI["Sistemi esterni"]
-    ARM["Azure ARM e Graph"]
-    GHAPI["GitHub API"]
-    AUTHAZ["eng-azure-authorization"]
-    AUTHGH["eng-github-authorization"]
-  end
+  Container_Boundary(dx, "DX Bootstrapping") {
+    Container(cli, "DX CLI", "Node.js", "Scaffolds Terraform configurations and orchestrates bootstrap operations")
+    Container(repo_tf, "infra/repository", "Terraform", "Creates and configures the GitHub repository and environments")
+    Container(core_tf, "infra/core/<env>", "Terraform", "Provisions shared subscription infrastructure")
+    Container(bootstrap_tf, "infra/bootstrapper/<env>", "Terraform", "Provisions repository infrastructure, identities, RBAC and runner")
+  }
 
-  CMD --> PROMPTS
-  CMD --> PAGOPA
-  PROMPTS --> DOMAIN
-  PROMPTS --> AZ
-  ACTIONS --> PACTS
-  PACTS --> AZ
-  PACTS --> GH
-  PACTS --> TPL
-  AZ --> ARM
-  GH --> GHAPI
-  PAGOPA --> GHAPI
-  PAGOPA --> AUTHAZ
-  TPL --> MREPO
-  TPL --> MCORE
-  TPL --> MBOOT
-  MCORE --> MROLES
-  MBOOT --> MRUNNER
-  AUTHGH --> GHAPI
+  Rel(cli, repo_tf, "Generates")
+  Rel(cli, core_tf, "Generates")
+  Rel(cli, bootstrap_tf, "Generates")
+  Rel(cli, github, "Uses GitHub API")
+  Rel(cli, azure_rm, "Uses Azure API")
+  Rel(cli, azure_auth, "Opens authorization PR")
+  Rel(repo_tf, github, "Creates repository and environments")
+  Rel(core_tf, azure_rm, "Provisions shared infrastructure")
+  Rel(bootstrap_tf, azure_rm, "Provisions repository infrastructure")
+  Rel(bootstrap_tf, github, "Configures GitHub environments")
+  Rel(github_auth, github, "Manages GitHub authorization")
 ```
 
 ### Diagramma dell'architettura
 
 ```mermaid
-flowchart TB
-  subgraph LOCALE["Postazione dell'engineer"]
-    FS["Filesystem del monorepo"]
-    TFLOCAL["State locale di infra/repository"]
-    AZCLI["Credenziale Azure CLI"]
-    GHCRED["Credenziale GitHub"]
-  end
+C4Deployment
+  title DX Bootstrapping - Deployment Diagram
 
-  subgraph GITHUBP["GitHub"]
-    REPO["Repository monorepo"]
-    BRANCH["Branch features/scaffold-workspace e PR"]
-    ENVCICD["Environment bootstrapper, infra, app, opex, automation"]
-    SEC["Environment e repository secret"]
-    WF["Workflow bootstrapper generato"]
-  end
+  Deployment_Node(workstation, "Engineer workstation", "macOS", "Runs the DX CLI and local Terraform commands") {
+    Container(cli, "DX CLI", "Node.js", "Scaffolds the repository and environment configurations")
+    Container(repo_tf, "infra/repository", "Terraform", "Defines the GitHub repository and environments")
+    Container(core_tf, "infra/core/<env>", "Terraform", "Defines the shared Azure baseline")
+    Container(bootstrap_tf, "infra/bootstrapper/<env>", "Terraform", "Defines operational identities, RBAC and runner")
+    ContainerDb(local_state, "infra/repository state", "Terraform state", "Local state before remote migration")
+  }
 
-  subgraph AZUREP["Azure subscription"]
-    RGBOOT["Bootstrap common RG"]
-    IDBOOT["Identity bootstrap CD e CI"]
-    KV["Common Key Vault"]
-    TFST["Storage Account terraform-state"]
-    CORERES["Baseline core: rete, DNS, Key Vault, monitoring, runner env, custom role"]
-    BOOTRES["Bootstrapper: RG applicativo, identity app, infra, opex, runner job"]
-  end
+  Deployment_Node(github, "GitHub", "GitHub organization", "External platform") {
+    Container(monorepo, "Product monorepository", "Git repository", "Source code, Terraform configurations and workflows")
+    Container(environments, "GitHub environments", "GitHub Actions", "OIDC trust and environment secrets")
+    Container(workflows, "GitHub Actions workflows", "GitHub Actions", "Runs bootstrapper Terraform automation")
+    Container(github_auth, "eng-github-authorization", "Git repository", "Repository and GitHub App authorization")
+    Container(azure_auth, "eng-azure-authorization", "Git repository", "Entra groups and subscription authorization")
+  }
 
-  subgraph GOV["Desired state organizzativo"]
-    AZAUTH["eng-azure-authorization"]
-    GHAUTH["eng-github-authorization"]
-  end
+  Deployment_Node(azure, "Azure subscription", "Azure", "External cloud platform") {
+    Container(bootstrap_resources, "Bootstrap resources", "Azure resources", "Bootstrap resource group, identities and common Key Vault")
+    ContainerDb(terraform_state, "Terraform backend", "Azure Storage", "Remote state for core and bootstrapper")
+    Container(core_resources, "Core resources", "Azure resources", "Shared network, Key Vault, monitoring, runner environment and custom roles")
+    Container(bootstrapper_resources, "Bootstrapper resources", "Azure resources", "Application resource group, identities and Container App Job")
+  }
 
-  FS --> REPO
-  FS --> TFLOCAL
-  AZCLI --> RGBOOT
-  AZCLI --> IDBOOT
-  AZCLI --> KV
-  AZCLI --> TFST
-  GHCRED --> REPO
-  GHCRED --> SEC
-  GHCRED --> AZAUTH
-  TFLOCAL --> ENVCICD
-  IDBOOT --> ENVCICD
-  ENVCICD --> WF
-  WF --> BOOTRES
-  CORERES --> BOOTRES
-  TFST --> CORERES
-  TFST --> BOOTRES
-  AZAUTH --> IDBOOT
-  GHAUTH --> REPO
+  Rel(cli, repo_tf, "Generates")
+  Rel(cli, core_tf, "Generates")
+  Rel(cli, bootstrap_tf, "Generates")
+  Rel(cli, bootstrap_resources, "Provisions via Azure API")
+  Rel(cli, monorepo, "Creates and configures via GitHub API")
+  Rel(cli, azure_auth, "Opens authorization PR")
+
+  Rel(repo_tf, monorepo, "Creates and configures")
+  Rel(repo_tf, environments, "Creates")
+  Rel(repo_tf, local_state, "Writes")
+
+  Rel(core_tf, bootstrap_resources, "Imports common resources")
+  Rel(core_tf, core_resources, "Provisions")
+  Rel(core_tf, terraform_state, "Writes state")
+
+  Rel(bootstrap_tf, bootstrapper_resources, "Provisions")
+  Rel(bootstrap_tf, environments, "Configures secrets")
+  Rel(bootstrap_tf, terraform_state, "Reads core outputs and writes state")
+  Rel(workflows, bootstrap_tf, "Runs")
+  Rel(github_auth, monorepo, "Authorizes")
 ```
 
 ## Vista dinamica delle componenti
@@ -419,7 +331,7 @@ sequenceDiagram
     CLI->>GH: creazione PR "Scaffold repository"
     GH-->>CLI: URL della PR oppure errore non bloccante
   else Pubblicazione rifiutata
-    CLI-->>ENG: soli artefatti locali e istruzioni manuali
+    CLI-->>ENG: nessuna azione
   end
   CLI-->>ENG: riepilogo e next step
 ```
@@ -465,8 +377,8 @@ sequenceDiagram
   CLI->>ARM: riconfigurazione OIDC e secret bootstrapper repository-specific
   CLI->>ENG: generazione workflow bootstrapper e infra/bootstrapper/env
   opt Ramo di inizializzazione
-    CLI->>ENG: generazione infra/core/env e import block
-    CLI->>AUTH: PR best-effort con Directory Readers e gruppi standard
+    CLI->>ENG: generazione infra/core/env e blocchi import
+    CLI->>AUTH: PR configurazione Entra ID con Directory Readers e gruppi
     AUTH-->>ENG: URL della PR da far revisionare
   end
   CLI-->>ENG: riepilogo e next step
@@ -482,130 +394,107 @@ sequenceDiagram
   participant BOOT as Terraform bootstrapper
   participant ARM as Azure
   participant GH as GitHub
-  participant WF as Workflow bootstrapper
+  participant GHW as GitHub Workflow
 
-  EL->>CORE: terraform init e apply su infra/core/env
+  EL->>CORE: terraform apply su infra/core/env
   CORE->>ARM: import del common RG e del common Key Vault creati dal CLI
   CORE->>ARM: creazione rete, DNS, VPN, Key Vault, monitoring, ambiente runner
   CORE->>ARM: creazione delle custom role DX a scope subscription
-  EL->>BOOT: terraform init e apply su infra/bootstrapper/env
+  EL->>BOOT: terraform apply su infra/bootstrapper/env
   BOOT->>ARM: lettura delle custom role e dei gruppi Entra
   BOOT->>ARM: creazione RG applicativo e identity app, infra, opex CI e CD
   BOOT->>ARM: creazione federated credential per gli environment definitivi
   BOOT->>ARM: role assignment su RG, Storage Account di state, RG di rete e Opex
   BOOT->>GH: scrittura dei secret negli environment definitivi
   BOOT->>ARM: creazione del Container App Job del runner
-  Note over WF: dagli apply successivi il workflow generato usa l'environment bootstrapper-env-cd
-  WF->>BOOT: terraform apply -auto-approve in CI
+  Note over GHW: dagli apply successivi il workflow generato usa l'environment bootstrapper-env-cd
+  GHW->>BOOT: terraform apply -auto-approve in CI
 ```
 
 ## Data layer
 
-Non esiste un database applicativo. Il "data layer" del bootstrap è distribuito su quattro depositi con owner e cicli di vita diversi.
+Non esiste un database applicativo. Il diagramma mostra solo quali e dove sono i dati generati e persistiti dal bootstrap.
 
 ```mermaid
-flowchart TB
-  subgraph LOC["Stato locale"]
-    L1["Working tree del monorepo"]
-    L2["infra/repository/terraform.tfstate locale"]
-    L3["Branch features/scaffold-workspace"]
-  end
-
-  subgraph REM["Stato Terraform remoto"]
-    R1["Storage Account prefix-env-loc-tfstatest01"]
-    R2["Container terraform-state"]
-    R3["Blob prefix/domain/core.tfstate"]
-    R4["Blob prefix/domain/bootstrapper.tfstate"]
-  end
-
-  subgraph SEC["Secret e configurazione"]
-    S1["GitHub environment secret: ARM_CLIENT_ID, ARM_TENANT_ID, ARM_SUBSCRIPTION_ID"]
-    S2["GitHub environment secret CD: GH_APP_ID, GH_APP_CLIENT_ID, GH_APP_INSTALLATION_ID, GH_APP_KEY"]
-    S3["GitHub repository secret: ARM_TENANT_ID"]
-    S4["Key Vault comune: github-runner-app-id, github-runner-app-installation-id, github-runner-app-key"]
-  end
-
-  subgraph GOVD["Desired state organizzativo"]
-    G1["eng-azure-authorization: terraform.tfvars.json per subscription"]
-    G2["eng-github-authorization: censimento repository e apps.json"]
-  end
-
-  subgraph AUTO["Writer automatici"]
-    W1["DX CLI"]
-    W2["Modulo bootstrapper"]
-  end
-
-  subgraph APPL["Stato organizzativo applicato"]
-    A1["Entra ID: gruppi, ruoli e Directory Readers"]
-    A2["GitHub organization: repository, team e installazione App"]
-  end
-
-  L1 --> L3
-  L2 -->|migrazione manuale| R2
-  R1 --> R2
-  R2 --> R3
-  R2 --> R4
-  R3 --> R4
-  S4 --> S2
-  W1 --> S1
-  W1 --> S2
-  W1 --> S4
-  W2 --> S1
-  W2 --> S3
-  G1 --> A1
-  G2 --> A2
+erDiagram
+  "GitHub environment bootstrapper CD secrets" {
+    string client_id
+    string tenant_id
+    string subscription_id
+    string app_id
+    string app_client_id
+    string app_installation_id
+    string app_private_key
+  }
+  "GitHub environment bootstrapper CI secrets" {
+    string client_id
+    string tenant_id
+    string subscription_id
+  }
+  "GitHub environment infra/app/opex/automation" {
+    string client_id
+    string subscription_id
+  }
+  "GitHub repository secrets" {
+    string tenant_id
+  }
+  "Azure Key Vault Common" {
+    string runner_app_id
+    string runner_app_installation_id
+    string runner_app_private_key
+  }
+  "Azure Storage Account" {
+    string core_terraform_state
+    string bootstrapper_terraform_state
+  }
 ```
 
-| Deposito                                      | Contenuto                                                      | Owner                       | Note                                                                                                                                                               |
-| --------------------------------------------- | -------------------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Working tree locale                           | Workspace generato, configurazioni Terraform, workflow         | Engineer                    | Diventa condiviso solo con il push e il merge della PR.                                                                                                            |
-| State locale `infra/repository`               | Repository GitHub, environment, policy                         | Engineer                    | Nasce locale (`init.ts:338-351`) e viene ri-applicato ad ogni `add environment` (`sync-repository-environments.ts:157-159`). Migrazione al backend remoto manuale. |
-| Blob `<prefix>/<domain>/core.tfstate`         | Baseline Azure                                                 | Team + EL                   | Chiave generata da `terraformStateKey` (`terraform-state-key.ts:29-42`). Letto anche dal `core-values-exporter`.                                                   |
-| Blob `<prefix>/<domain>/bootstrapper.tfstate` | Identity definitive, RBAC, runner, secret                      | Team + workflow CD          | Il lock è gestito dal blob storage.                                                                                                                                |
-| GitHub environment secret                     | Client ID e subscription per OIDC, credenziali App nel solo CD | CLI e modulo `bootstrapper` | Il CLI scrive gli environment `bootstrapper-<name>-ci/cd`; il modulo scrive `infra/app/opex-<lifecycle>-ci/cd` e `automation-<lifecycle>-cd` (solo CD).            |
-| Key Vault comune                              | Secret della GitHub Runner App                                 | CLI, poi `core` (import)    | Consumati dal Container App Job del runner.                                                                                                                        |
-| `eng-azure-authorization`                     | Gruppi, ruoli a scope subscription, Directory Readers          | CODEOWNER del repository    | Applicato dalla pipeline dopo merge su `main`.                                                                                                                     |
-| `eng-github-authorization`                    | Censimento repository, team/collaborator, `apps.json`          | CODEOWNER e App Admin       | Abilita l'installazione della GitHub App sul repository.                                                                                                           |
+NOTE:
+
+- `tenant_id` è duplicato: CLI lo scrive negli environment `bootstrapper` CI/CD, il modulo `bootstrapper` lo scrive come repository secret.
+- Le credenziali GitHub App (`app_id`, `app_client_id`, `app_installation_id`, `app_private_key`) esistono solo nell'environment `bootstrapper` CD.
+- Il Key Vault Common conserva solo `runner_app_id`, `runner_app_installation_id` e `runner_app_private_key`. Manca `app_client_id`, presente invece su GitHub.
+- Due writer diversi configurano i secret GitHub: CLI per `bootstrapper-*`, Terraform per repository secret e environment `infra`/`app`/`opex`/`automation`.
 
 ## Inventario degli artefatti
 
-### Generati da `dx init` (file)
+### Generati da `dx init`
 
-| Artefatto                                                                                                                                   | Percorso template                                                              |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Workspace Nx + pnpm (`nx.json`, `pnpm-workspace.yaml`, `package.json`)                                                                      | `apps/cli/templates/monorepo/`                                                 |
-| Version pin (`.node-version`, `.terraform-version`)                                                                                         | `apps/cli/templates/monorepo/.node-version.hbs`, `.terraform-version.hbs`      |
-| Dotfile di qualità e sicurezza (`.pre-commit-config.yaml`, `.tflint.hcl`, `.trivyignore`, `.editorconfig`, `.prettierignore`, `.gitignore`) | `apps/cli/templates/monorepo/`                                                 |
-| README                                                                                                                                      | `apps/cli/templates/monorepo/README.md.hbs`                                    |
-| Configurazione Terraform del repository GitHub                                                                                              | `apps/cli/templates/monorepo/infra/repository/{main,outputs,providers}.tf.hbs` |
-| Configurazione marketplace/plugin Copilot                                                                                                   | `apps/cli/templates/monorepo/.github/copilot/settings.json`                    |
+| Artefatto                                      | Nome file                                                                                                  |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Workspace Nx + pnpm                            | `nx.json`, `pnpm-workspace.yaml`, `package.json`                                                           |
+| Version pin                                    | `.node-version`, `.terraform-version`                                                                      |
+| Dotfile di qualità e sicurezza                 | `.pre-commit-config.yaml`, `.tflint.hcl`, `.trivyignore`, `.editorconfig`, `.prettierignore`, `.gitignore` |
+| README                                         | `README.md`                                                                                                |
+| Configurazione Terraform del repository GitHub | `infra/repository/main.tf`, `infra/repository/outputs.tf`, `infra/repository/providers.tf`                 |
+| Configurazione marketplace/plugin Copilot      | `.github/copilot/settings.json`                                                                            |
 
-### Generati da `dx add environment` (file)
+### Generati da `dx add environment`
 
-| Artefatto                                                               | Condizione                    | Percorso template                                                           |
-| ----------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------- |
-| `infra/bootstrapper/<env>/{data,main,providers}.tf`                     | Sempre                        | `apps/cli/templates/environment/bootstrapper/{{env.name}}/`                 |
-| `infra/bootstrapper/<env>/{backend,locals}.tf`                          | Sempre                        | `apps/cli/templates/environment/shared/`                                    |
-| `.github/workflows/_release-terraform-apply-bootstrapper-<env>.yaml`    | Sempre                        | `apps/cli/templates/environment/workflow/`                                  |
-| `infra/core/<env>/{main,outputs,providers}.tf`                          | Solo ramo di inizializzazione | `apps/cli/templates/environment/core/{{env.name}}/`                         |
-| `infra/core/<env>/imports.tf` con import block di common RG e Key Vault | Solo ramo di inizializzazione | `apps/cli/templates/environment/core/{{env.name}}/imports.tf.hbs`           |
-| Modifica in-place di `infra/repository/main.tf` (lista `environments`)  | Sempre                        | `apps/cli/src/adapters/plop/actions/sync-repository-environments.ts:93-138` |
+| Artefatto                                                               | Condizione                    |
+| ----------------------------------------------------------------------- | ----------------------------- |
+| `infra/bootstrapper/<env>/{data,main,providers}.tf`                     | Sempre                        |
+| `infra/bootstrapper/<env>/{backend,locals}.tf`                          | Sempre                        |
+| `.github/workflows/_release-terraform-apply-bootstrapper-<env>.yaml`    | Sempre                        |
+| `infra/core/<env>/{main,outputs,providers}.tf`                          | Solo ramo di inizializzazione |
+| `infra/core/<env>/imports.tf` con import block di common RG e Key Vault | Solo ramo di inizializzazione |
+| Modifica in-place di `infra/repository/main.tf` (lista `environments`)  | Sempre                        |
 
-### Creati direttamente dal CLI via API/SDK
+### Creati da DX CLI
 
-| Artefatto                                                                       | Evidenza                                         |
-| ------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Repository GitHub, branch iniziale e PR di scaffolding (via Terraform e API)    | `init.ts:317-513`                                |
-| Registrazione dei 16 resource provider richiesti                                | `cloud-account-service.ts:114-131`, `:970-993`   |
-| Bootstrap common RG `<prefix>-<env>-<loc>-common-rg-01`                         | `cloud-account-service.ts:344-358`               |
-| Managed identity `…-bootstrap-id-01` (CD) e `…-bootstrap-ci-id-01` (CI)         | `cloud-account-service.ts:366-389`               |
-| Role assignment a scope subscription per le identity di bootstrap               | `cloud-account-service.ts:403-418`, `:630-670`   |
-| Federated credential OIDC per `bootstrapper-<env>-cd` e `-ci`                   | `cloud-account-service.ts:718-734`               |
-| Secret negli environment GitHub `bootstrapper-<env>-ci/cd`                      | `cloud-account-service.ts:1014-1047`             |
-| Common Key Vault e secret della Runner App                                      | `cloud-account-service.ts:795-859`, `:1055-1092` |
-| Backend Terraform: RG, Storage Account, container `terraform-state`             | `cloud-account-service.ts:511-614`               |
-| Apply automatico di `infra/repository` per creare/sincronizzare gli environment | `sync-repository-environments.ts:157-159`        |
-| PR su `eng-azure-authorization`                                                 | `azure-authorization.ts:217-357`                 |
+| Artefatto                                                                       |
+| ------------------------------------------------------------------------------- |
+| Repository GitHub, branch iniziale e PR di scaffolding (via Terraform e API)    |
+| Registrazione dei 16 resource provider richiesti                                |
+| Bootstrap common RG `<prefix>-<env>-<loc>-common-rg-01`                         |
+| Managed identity `…-bootstrap-id-01` (CD) e `…-bootstrap-ci-id-01` (CI)         |
+| Role assignment a scope subscription per le identity di bootstrap               |
+| Federated credential OIDC per `bootstrapper-<env>-cd` e `-ci`                   |
+| Secret negli environment GitHub `bootstrapper-<env>-ci/cd`                      |
+| Common Key Vault e secret della Runner App                                      |
+| Backend Terraform: RG, Storage Account, container `terraform-state`             |
+| Apply automatico di `infra/repository` per creare/sincronizzare gli environment |
+| PR su `eng-azure-authorization`                                                 |
 
 ### Non generati / manuali o esterni
 
@@ -621,115 +510,109 @@ flowchart TB
 | Implementazione dei plugin Copilot abilitati dallo scaffolding                            | DX Team (repository `pagopa/dx`) |
 | Codice applicativo e infrastruttura di prodotto (`infra/resources`)                       | Product team                     |
 
-> **Nota su `.github/copilot/settings.json`**: il file **viene** scaffoldato da `dx init` (`apps/cli/templates/monorepo/.github/copilot/settings.json`), contrariamente all'aspettativa iniziale che il bootstrap non toccasse la configurazione Copilot. Il file dichiara il marketplace `pagopa-dx` puntando al repository `pagopa/dx` e abilita plugin (`terraform`, `azure`, `project-management`, `standards`, `tests`, `typescript`) le cui **implementazioni vivono fuori dal repository generato**. Vedi il capitolo dei gap per la discrepanza rilevata sull'elenco dei plugin dichiarati.
-
 ## Matrice RBAC
 
 Legenda scope: `SUB` = subscription, `RG` = resource group, `RES` = risorsa singola, `DIR` = directory Entra.
 
-### Livello 1 — Permessi richiesti al principal umano
+### Permessi richiesti per nuovo ambiente (solo EL)
 
-| Grantor                               | Meccanismo                                                       | Principal                              | Ruolo                           | Scope                                     | Momento                                | Owner della modifica                              | Evidenza                                       |
-| ------------------------------------- | ---------------------------------------------------------------- | -------------------------------------- | ------------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------------------------- | ---------------------------------------------- |
-| Amministrazione Azure (fuori dal CLI) | Assegnazione preesistente, diretta o via gruppo Entra transitivo | Utente che esegue `dx add environment` | `Owner`                         | `SUB` (tutte le subscription selezionate) | Verificato prima dell'inizializzazione | `eng-azure-authorization` / amministrazione Azure | `cloud-account-service.ts:257-261`, `:268-299` |
-| Idem                                  | Idem                                                             | Idem                                   | `Storage Blob Data Contributor` | `SUB`                                     | Idem                                   | Idem                                              | `cloud-account-service.ts:257-261`             |
-| Idem                                  | Idem                                                             | Idem                                   | `Key Vault Secrets Officer`     | `SUB`                                     | Idem                                   | Idem                                              | `cloud-account-service.ts:257-261`             |
+| Meccanismo                                                       | Principal                              | Ruolo                                                                 | Scope                                     | Momento                                | Owner della modifica      |
+| ---------------------------------------------------------------- | -------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------- |
+| Assegnazione preesistente, diretta o via gruppo Entra transitivo | Utente che esegue `dx add environment` | `Owner`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` | `SUB` (tutte le subscription selezionate) | Verificato prima dell'inizializzazione | `eng-azure-authorization` |
 
-Il controllo raccoglie l'object id dell'utente e **tutti i gruppi transitivi** via Microsoft Graph (`/me`, `/me/transitiveMemberOf`) e considera soddisfatto il requisito se i tre ruoli risultano assegnati a uno qualsiasi di quei principal; in caso di 403 il risultato è `false` (`cloud-account-service.ts:300-312`). Il check è eseguito su **ogni** subscription selezionata (`apps/cli/src/domain/environment.ts:147-159`).
+### Grant assegnati direttamente dalla DX CLI alle identity di bootstrap
 
-### Livello 2 — Grant assegnati direttamente dal CLI alle identity di bootstrap
+| Principal              | Ruolo                                                                               | Scope            | Momento                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------- |
+| `…-bootstrap-id-01`    | `Role Based Access Control Administrator`                                           | `SUB`            | Inizializzazione Azure                                      |
+| `…-bootstrap-id-01`    | `Contributor`                                                                       | `SUB`            | Inizializzazione Azure                                      |
+| `…-bootstrap-id-01`    | `Storage Blob Data Contributor`                                                     | `SUB`            | Inizializzazione Azure                                      |
+| `…-bootstrap-ci-id-01` | `Reader`                                                                            | `SUB`            | Inizializzazione Azure                                      |
+| `…-bootstrap-ci-id-01` | `Storage Blob Data Contributor`                                                     | `SUB`            | Inizializzazione Azure                                      |
+| CD e CI di bootstrap   | Trust OIDC, subject `repo:<owner>/<repo>:environment:bootstrapper-<env>-cd` / `-ci` | `RES` (identity) | Inizializzazione Azure e configurazione GitHub environments |
 
-| Grantor                    | Meccanismo                                             | Principal                   | Ruolo                                                                               | Scope            | Momento                                                  | Owner  | Evidenza                                     |
-| -------------------------- | ------------------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------- | ------ | -------------------------------------------- |
-| Principal locale Azure CLI | `AuthorizationManagementClient.roleAssignments.create` | `…-bootstrap-id-01` (CD)    | `Role Based Access Control Administrator`                                           | `SUB`            | `initCloudAccounts`                                      | DX CLI | `cloud-account-service.ts:75-80`, `:403-410` |
-| Principal locale Azure CLI | Idem                                                   | `…-bootstrap-id-01` (CD)    | `Contributor`                                                                       | `SUB`            | Idem                                                     | DX CLI | `cloud-account-service.ts:75-80`             |
-| Principal locale Azure CLI | Idem                                                   | `…-bootstrap-id-01` (CD)    | `Storage Blob Data Contributor`                                                     | `SUB`            | Idem                                                     | DX CLI | `cloud-account-service.ts:75-80`             |
-| Principal locale Azure CLI | Idem                                                   | `…-bootstrap-ci-id-01` (CI) | `Reader`                                                                            | `SUB`            | Idem                                                     | DX CLI | `cloud-account-service.ts:82-86`, `:411-417` |
-| Principal locale Azure CLI | Idem                                                   | `…-bootstrap-ci-id-01` (CI) | `Storage Blob Data Contributor`                                                     | `SUB`            | Idem                                                     | DX CLI | `cloud-account-service.ts:82-86`             |
-| Principal locale Azure CLI | `federatedIdentityCredentials.createOrUpdate`          | CD e CI di bootstrap        | Trust OIDC, subject `repo:<owner>/<repo>:environment:bootstrapper-<env>-cd` / `-ci` | `RES` (identity) | `initCloudAccounts` e ogni `configureGitHubEnvironments` | DX CLI | `cloud-account-service.ts:700-734`           |
+Nota: il nome del federated credential include un suffisso derivato dal repository, così repository diversi possono condividere la stessa identity senza sovrascriversi.
 
-Nota: il nome del federated credential include un suffisso derivato dal repository, così repository diversi possono condividere la stessa identity senza sovrascriversi (`cloud-account-service.ts:716-717`, `:861-871`).
+### Grant assegnati tramite `eng-azure-authorization`
 
-### Livello 3 — Grant assegnati tramite `eng-azure-authorization`
+| Meccanismo                                  | Principal                                     | Ruolo                                                                                                                                                       | Scope | Momento                | Owner                                      |
+| ------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------- | ------------------------------------------ |
+| PR aperta dal CLI + merge su `main` + apply | `…-bootstrap-id-01` (CD)                      | Appartenenza a **Directory Readers**                                                                                                                        | `DIR` | Dopo il merge della PR | CODEOWNER del repository di autorizzazione |
+| Idem                                        | Gruppo `<prefix>-<envShort>-adgroup-admin`    | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-developers`                 | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-externals`                  | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-operations`                 | `Reader`, `Monitoring Contributor`, `Support Request Contributor`, `Storage Blob Data Reader`, `Storage Queue Data Reader`, `Cosmos DB Account Reader Role` | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-security`                   | `Reader`, `Support Request Contributor`                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-technical-project-managers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`                                                                                           | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-product-owners`             | `Reader`, `Support Request Contributor`                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  |
+| Idem                                        | Gruppo `…-adgroup-oncall`                     | `Reader`, `Monitoring Contributor`, `Support Request Contributor`, `Storage Blob Data Reader`, `Storage Queue Data Reader`, `Cosmos DB Account Reader Role` | `SUB` | Idem                   | CODEOWNER                                  |
 
-| Grantor                               | Meccanismo                                  | Principal                                     | Ruolo                                                                                                                                                       | Scope | Momento                | Owner                                      | Evidenza                                           |
-| ------------------------------------- | ------------------------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ---------------------- | ------------------------------------------ | -------------------------------------------------- |
-| Pipeline di `eng-azure-authorization` | PR aperta dal CLI + merge su `main` + apply | `…-bootstrap-id-01` (CD)                      | Appartenenza a **Directory Readers**                                                                                                                        | `DIR` | Dopo il merge della PR | CODEOWNER del repository di autorizzazione | `azure-authorization.ts:186-212`, `add.ts:281-288` |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `<prefix>-<envShort>-adgroup-admin`    | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:14`                 |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-developers`                 | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:15`                 |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-externals`                  | `Owner`                                                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:36`                 |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-operations`                 | `Reader`, `Monitoring Contributor`, `Support Request Contributor`, `Storage Blob Data Reader`, `Storage Queue Data Reader`, `Cosmos DB Account Reader Role` | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:16-26`              |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-security`                   | `Reader`, `Support Request Contributor`                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:27`                 |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-technical-project-managers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`                                                                                           | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:28-31`              |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-product-owners`             | `Reader`, `Support Request Contributor`                                                                                                                     | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:32-35`              |
-| Pipeline di `eng-azure-authorization` | Idem                                        | Gruppo `…-adgroup-oncall`                     | `Reader`, `Monitoring Contributor`, `Support Request Contributor`, `Storage Blob Data Reader`, `Storage Queue Data Reader`, `Cosmos DB Account Reader Role` | `SUB` | Idem                   | CODEOWNER                                  | `azure-authorization-config.ts:37-47`              |
+Il CLI **preserva** i membri esistenti e i gruppi custom, aggiornando solo i ruoli dei gruppi standard e aggiungendo quelli mancanti con lista membri vuota.
 
-Il CLI **preserva** i membri esistenti e i gruppi custom, aggiornando solo i ruoli dei gruppi standard e aggiungendo quelli mancanti con lista membri vuota (`azure-authorization.ts:70-119`).
+### Custom role create da `core` (definizione, non assegnazione)
 
-### Livello 4a — Custom role create da `core` (definizione, non assegnazione)
+| Meccanismo                           | Custom role                                                           | Ruoli sorgente uniti                                                                                                                                                                               | Scope di definizione |
+| ------------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX App CD Resource Groups`                                     | Website Contributor, CDN Profile Contributor, Container Apps Contributor, Storage Blob Data Contributor, PagoPA Static Web Apps List Secrets                                                       | `SUB`                |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX App CI Resource Groups`                                     | PagoPA IaC Reader, PagoPA Static Web Apps List Secrets                                                                                                                                             | `SUB`                |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX Infra CD Private Networking`                                | Private DNS Zone Contributor, Network Contributor                                                                                                                                                  | `SUB`                |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX Infra CD Resource Groups`                                   | Contributor, User Access Administrator, Key Vault Secrets/Certificates/Crypto Officer, Storage Blob/Queue/Table Data Contributor, Container Apps Contributor                                       | `SUB`                |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX Infra CD Subscription`                                      | Reader, Role Based Access Control Administrator, Log Analytics Contributor, Azure Service Bus Data Owner, API Management Service Contributor + action aggiuntive su NAT Gateway e Private Endpoint | `SUB`                |
+| modulo `pagopa-dx/azure-merge-roles` | `<sub> DX Infra CI Subscription`, `<sub> DX Infra CI Resource Groups` | Bundle di sola lettura per il piano CI                                                                                                                                                             | `SUB`                |
 
-| Grantor                              | Meccanismo                           | Custom role                                                           | Ruoli sorgente uniti                                                                                                                                                                               | Scope di definizione | Evidenza                                                              |
-| ------------------------------------ | ------------------------------------ | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- | --------------------------------------------------------------------- |
-| `core` (identity che esegue l'apply) | modulo `pagopa-dx/azure-merge-roles` | `<sub> DX App CD Resource Groups`                                     | Website Contributor, CDN Profile Contributor, Container Apps Contributor, Storage Blob Data Contributor, PagoPA Static Web Apps List Secrets                                                       | `SUB`                | `infra/modules/azure_core_infra/modules/custom_roles/custom_roles.tf` |
-| `core`                               | Idem                                 | `<sub> DX App CI Resource Groups`                                     | PagoPA IaC Reader, PagoPA Static Web Apps List Secrets                                                                                                                                             | `SUB`                | Idem                                                                  |
-| `core`                               | Idem                                 | `<sub> DX Infra CD Private Networking`                                | Private DNS Zone Contributor, Network Contributor                                                                                                                                                  | `SUB`                | Idem                                                                  |
-| `core`                               | Idem                                 | `<sub> DX Infra CD Resource Groups`                                   | Contributor, User Access Administrator, Key Vault Secrets/Certificates/Crypto Officer, Storage Blob/Queue/Table Data Contributor, Container Apps Contributor                                       | `SUB`                | Idem                                                                  |
-| `core`                               | Idem                                 | `<sub> DX Infra CD Subscription`                                      | Reader, Role Based Access Control Administrator, Log Analytics Contributor, Azure Service Bus Data Owner, API Management Service Contributor + action aggiuntive su NAT Gateway e Private Endpoint | `SUB`                | Idem                                                                  |
-| `core`                               | Idem                                 | `<sub> DX Infra CI Subscription`, `<sub> DX Infra CI Resource Groups` | Bundle di sola lettura per il piano CI                                                                                                                                                             | `SUB`                | Idem                                                                  |
+Le custom role sono **definite** da `core` e **assegnate** da `bootstrapper`, che le risolve con `data "azurerm_role_definition"` a scope subscription.
 
-Le custom role sono **definite** da `core` e **assegnate** da `bootstrapper`, che le risolve con `data "azurerm_role_definition"` a scope subscription (`infra/modules/azure_github_environment_bootstrap/data.tf`).
+### Grant assegnati dal modulo `bootstrapper`
 
-### Livello 4b — Grant assegnati dal modulo `bootstrapper`
+| Principal                           | Ruolo                                                                     | Scope                                             |
+| ----------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- |
+| Gruppo `admins`                     | `Owner`                                                                   | `RG` principale + `additional_resource_group_ids` |
+| Gruppo `admins`                     | `Key Vault Data Access Administrator`                                     | Stessi RG                                         |
+| Gruppo `admins`                     | `Key Vault Administrator`                                                 | Stessi RG                                         |
+| Gruppo `developers`                 | `Contributor`                                                             | Stessi RG                                         |
+| Gruppo `developers`                 | `Key Vault Secrets Officer`                                               | Stessi RG                                         |
+| Gruppo `externals` (opzionale)      | `Reader`                                                                  | Stessi RG                                         |
+| `infra-github-cd`                   | custom role `DX Infra CD Subscription`                                    | `SUB`                                             |
+| `infra-github-cd`                   | custom role `DX Infra CD Resource Groups`                                 | RG principale + aggiuntivi                        |
+| `infra-github-cd`                   | custom role `DX Infra CD Private Networking`                              | `RG` di rete creato da `core`                     |
+| `infra-github-cd`                   | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    |
+| `infra-github-ci`                   | custom role `DX Infra CI Subscription`                                    | `SUB`                                             |
+| `infra-github-ci`                   | custom role `DX Infra CI Resource Groups`                                 | RG principale + aggiuntivi                        |
+| `infra-github-ci`                   | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    |
+| `app-github-cd`                     | `Reader`                                                                  | `SUB`                                             |
+| `app-github-cd`                     | custom role `DX App CD Resource Groups`                                   | RG principale + aggiuntivi                        |
+| `app-github-cd`                     | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    |
+| `app-github-ci`                     | `Reader`                                                                  | `SUB`                                             |
+| `app-github-ci`                     | custom role `DX App CI Resource Groups`                                   | RG principale + aggiuntivi                        |
+| `opex-github-ci`                    | `Reader`, `Reader and Data Access`                                        | `SUB`                                             |
+| `opex-github-cd`                    | `Reader`                                                                  | `SUB`                                             |
+| `opex-github-ci` e `opex-github-cd` | `Storage Blob Data Contributor` (+ `Reader and Data Access` per CD)       | `RES` Storage Account di state                    |
+| `opex-github-cd`                    | `PagoPA Opex Dashboards Contributor`, `Monitoring Contributor`            | `RG` Opex creato da `core`                        |
+| Identity app/infra/opex             | Federated credential verso gli environment `<piano>-<lifecycle>-<ci\|cd>` | `RES` identity                                    |
 
-| Grantor                             | Meccanismo                | Principal                           | Ruolo                                                                     | Scope                                             | Evidenza                                 |
-| ----------------------------------- | ------------------------- | ----------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------- |
-| Identity che applica `bootstrapper` | `azurerm_role_assignment` | Gruppo `admins`                     | `Owner`                                                                   | `RG` principale + `additional_resource_group_ids` | `ad_admin_iam.tf`                        |
-| Idem                                | Idem                      | Gruppo `admins`                     | `Key Vault Data Access Administrator`                                     | Stessi RG                                         | `ad_admin_iam.tf`                        |
-| Idem                                | Idem                      | Gruppo `admins`                     | `Key Vault Administrator`                                                 | Stessi RG                                         | `ad_admin_iam.tf`                        |
-| Idem                                | Idem                      | Gruppo `developers`                 | `Contributor`                                                             | Stessi RG                                         | `ad_devs_iam.tf`                         |
-| Idem                                | Idem                      | Gruppo `developers`                 | `Key Vault Secrets Officer`                                               | Stessi RG                                         | `ad_devs_iam.tf`                         |
-| Idem                                | Idem                      | Gruppo `externals` (opzionale)      | `Reader`                                                                  | Stessi RG                                         | `ad_ext_iam.tf`                          |
-| Idem                                | Idem                      | `infra-github-cd`                   | custom role `DX Infra CD Subscription`                                    | `SUB`                                             | `id_infra_cd_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-cd`                   | custom role `DX Infra CD Resource Groups`                                 | RG principale + aggiuntivi                        | `id_infra_cd_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-cd`                   | custom role `DX Infra CD Private Networking`                              | `RG` di rete creato da `core`                     | `id_infra_cd_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-cd`                   | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    | `id_infra_cd_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-ci`                   | custom role `DX Infra CI Subscription`                                    | `SUB`                                             | `id_infra_ci_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-ci`                   | custom role `DX Infra CI Resource Groups`                                 | RG principale + aggiuntivi                        | `id_infra_ci_iam.tf`                     |
-| Idem                                | Idem                      | `infra-github-ci`                   | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    | `id_infra_ci_iam.tf`                     |
-| Idem                                | Idem                      | `app-github-cd`                     | `Reader`                                                                  | `SUB`                                             | `id_app_cd_iam.tf`                       |
-| Idem                                | Idem                      | `app-github-cd`                     | custom role `DX App CD Resource Groups`                                   | RG principale + aggiuntivi                        | `id_app_cd_iam.tf`                       |
-| Idem                                | Idem                      | `app-github-cd`                     | `Storage Blob Data Contributor`                                           | `RES` Storage Account di state                    | `id_app_cd_iam.tf`                       |
-| Idem                                | Idem                      | `app-github-ci`                     | `Reader`                                                                  | `SUB`                                             | `id_app_ci_iam.tf`                       |
-| Idem                                | Idem                      | `app-github-ci`                     | custom role `DX App CI Resource Groups`                                   | RG principale + aggiuntivi                        | `id_app_ci_iam.tf`                       |
-| Idem                                | Idem                      | `opex-github-ci`                    | `Reader`, `Reader and Data Access`                                        | `SUB`                                             | `id_opex_iam.tf`                         |
-| Idem                                | Idem                      | `opex-github-cd`                    | `Reader`                                                                  | `SUB`                                             | `id_opex_iam.tf`                         |
-| Idem                                | Idem                      | `opex-github-ci` e `opex-github-cd` | `Storage Blob Data Contributor` (+ `Reader and Data Access` per CD)       | `RES` Storage Account di state                    | `id_opex_iam.tf`                         |
-| Idem                                | Idem                      | `opex-github-cd`                    | `PagoPA Opex Dashboards Contributor`, `Monitoring Contributor`            | `RG` Opex creato da `core`                        | `id_opex_iam.tf`                         |
-| Idem                                | Idem                      | Identity app/infra/opex             | Federated credential verso gli environment `<piano>-<lifecycle>-<ci\|cd>` | `RES` identity                                    | `id_app.tf`, `id_infra.tf`, `id_opex.tf` |
+### Grant speciali generati dal template CLI (solo ramo di inizializzazione)
 
-### Livello 4c — Grant speciali generati dal template CLI (solo ramo di inizializzazione)
-
-| Grantor                             | Meccanismo                                  | Principal         | Ruolo                       | Scope                                            | Evidenza                                                               |
-| ----------------------------------- | ------------------------------------------- | ----------------- | --------------------------- | ------------------------------------------------ | ---------------------------------------------------------------------- |
-| Identity che applica `bootstrapper` | `azurerm_role_assignment` nel file generato | `infra-github-cd` | `User Access Administrator` | `RG` common creato dal CLI e importato da `core` | `apps/cli/templates/environment/bootstrapper/{{env.name}}/main.tf.hbs` |
-| Idem                                | Idem                                        | `infra-github-cd` | `Key Vault Secrets Officer` | `RES` common Key Vault                           | Idem                                                                   |
-| Idem                                | Idem                                        | `infra-github-ci` | `Key Vault Secrets User`    | `RES` common Key Vault                           | Idem                                                                   |
+| Meccanismo                                  | Principal         | Ruolo                       | Scope                                            |
+| ------------------------------------------- | ----------------- | --------------------------- | ------------------------------------------------ |
+| `azurerm_role_assignment` nel file generato | `infra-github-cd` | `User Access Administrator` | `RG` common creato dal CLI e importato da `core` |
+| Idem                                        | `infra-github-cd` | `Key Vault Secrets Officer` | `RES` common Key Vault                           |
+| Idem                                        | `infra-github-ci` | `Key Vault Secrets User`    | `RES` common Key Vault                           |
 
 ### Diagramma RBAC e trust OIDC
 
 ```mermaid
 flowchart TB
+  COREAPPLY["Apply del modulo core"] --> CUSTOM["Custom role DX a scope subscription"]
   HUMAN["Principal umano: Owner, Storage Blob Data Contributor, Key Vault Secrets Officer a scope subscription"]
+
+  AUTHREPO -->|ruoli a scope subscription| GROUPS["Gruppi Entra: admin, developers, externals, operations, security, tpm, product-owners, oncall"]
   HUMAN -->|crea e assegna ruoli| BCD["Identity bootstrap CD: RBAC Administrator, Contributor, Storage Blob Data Contributor a scope subscription"]
   HUMAN -->|crea e assegna ruoli| BCI["Identity bootstrap CI: Reader, Storage Blob Data Contributor a scope subscription"]
-
   AUTHREPO["eng-azure-authorization"] -->|Directory Readers| BCD
-  AUTHREPO -->|ruoli a scope subscription| GROUPS["Gruppi Entra: admin, developers, externals, operations, security, tpm, product-owners, oncall"]
 
   BCD -->|OIDC environment bootstrapper-env-cd| APPLYBOOT["Apply del modulo bootstrapper"]
   BCI -->|OIDC environment bootstrapper-env-ci| PLANBOOT["Plan del modulo bootstrapper"]
 
-  COREAPPLY["Apply del modulo core"] --> CUSTOM["Custom role DX a scope subscription"]
   CUSTOM --> APPLYBOOT
 
   APPLYBOOT --> INFRACD["infra-github-cd: custom role subscription e resource group, private networking, state"]
