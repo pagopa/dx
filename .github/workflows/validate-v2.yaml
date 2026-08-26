@@ -130,8 +130,24 @@ jobs:
     outputs:
       environments: ${{ steps.detect.outputs.environments }}
     permissions:
+      actions: read
       contents: read
     steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Set base and head SHAs for affected commands
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
       # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-cd`
       # define which credentials and runner labels are used for Terraform plans.
       - name: Get GitHub Environments
@@ -141,7 +157,8 @@ jobs:
         run: |
           set -euo pipefail
 
-          environments="$(
+          # Fetch all matching GitHub environments and build the candidate matrix.
+          candidate_environments="$(
             gh api \
               --paginate \
               --slurp \
@@ -158,6 +175,36 @@ jobs:
               ]
             '
           )"
+
+          # jq emits one compact JSON object per line for the Bash loop to process.
+          affected_environments=()
+          while IFS= read -r environment; do
+            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+
+            # Keep Terraform apps and exclude those not tagged for this environment.
+            affected_projects="$(
+              pnpm nx show projects \
+                --affected \
+                --type=app \
+                --projects=tag:terraform \
+                --exclude="!tag:env:$env_name" \
+                --json
+            )"
+
+            if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+              affected_environments+=("$environment")
+            fi
+          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+          # Rebuild the retained objects as the JSON array expected by the matrix.
+          if [ "${#affected_environments[@]}" -eq 0 ]; then
+            environments='[]'
+          else
+            environments="$(
+              printf '%s\n' "${affected_environments[@]}" |
+                jq --slurp --compact-output '.'
+            )"
+          fi
 
           printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
 
