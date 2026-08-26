@@ -179,6 +179,23 @@ describe("foldDuplicateFinding", () => {
     ).toBe(false);
   });
 
+  it("does not fold an orphan row onto a live finding with its own distinct identity", () => {
+    const report = mkReport([
+      mkFinding({
+        recommendationId: "advisor.right-size-vm",
+        source: "advisor",
+      }),
+    ]);
+
+    expect(
+      foldDuplicateFinding(
+        mkFinding({ recommendationId: ORPHAN_DISK, source: "azqr" }),
+        report,
+      ),
+    ).toBe(false);
+    expect(report.findings).toHaveLength(1);
+  });
+
   it("does not annotate same-source duplicates", () => {
     const report = mkReport([
       mkFinding({ recommendationId: ORPHAN_DISK, source: "azqr" }),

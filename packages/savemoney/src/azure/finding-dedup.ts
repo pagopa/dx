@@ -109,9 +109,13 @@ function corroborationNote(
  * 1. they share the exact canonical identity (`recommendationId`) on the same
  *    resource — a true duplicate, e.g. the same AZQR row ingested twice; or
  * 2. `incoming` reports the resource as orphaned and a live source already
- *    reported billable waste on it. An orphaned resource has a single cost
- *    problem — it exists — so the live finding, which can carry a monetary
- *    estimate, supersedes the static one.
+ *    reported billable waste on it with no stronger identity of its own (e.g.
+ *    a sentence-level custom finding with no `recommendationId`). An orphaned
+ *    resource has a single cost problem — it exists — so the live finding,
+ *    which can carry a monetary estimate, supersedes the static one. A live
+ *    finding that already carries its own distinct `recommendationId` (e.g.
+ *    an Advisor right-sizing recommendation) is a different problem and is
+ *    never absorbed this way.
  *
  * Findings without a `recommendationId` never match: sources that cannot
  * identify their recommendations (today the sentence-level custom findings)
@@ -136,7 +140,9 @@ function findDuplicateFinding(
   }
   return existing.find(
     (candidate) =>
-      candidate.category === "cost" && LIVE_SOURCES.has(candidate.source),
+      candidate.category === "cost" &&
+      LIVE_SOURCES.has(candidate.source) &&
+      !candidate.recommendationId,
   );
 }
 

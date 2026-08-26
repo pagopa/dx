@@ -55,10 +55,10 @@ describe("categorizeCustomFindings", () => {
   });
 
   it("preserves every other field of the finding", () => {
-    const finding = {
+    const finding: Finding = {
       ...customFinding(MISSING_TAGS_REASON),
       recommendedAction: "Add the required tags.",
-      severity: "medium" as const,
+      severity: "medium",
     };
 
     expect(categorizeCustomFindings([finding])).toEqual([
