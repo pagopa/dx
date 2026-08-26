@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Quickly configure alerts on Azure Service Bus",
   "provider": "azurerm",
-  "version": "1.0.0"
+  "version": "1.0.1"
 }

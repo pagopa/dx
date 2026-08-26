@@ -1,3 +1,17 @@
+## 0.27.2 (2026-08-26)
+
+### 🩹 Fixes
+
+- Improve dx savemoney telemetry with input-source and usage attributes ([#2014](https://github.com/pagopa/dx/pull/2014))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.3
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.1 (2026-08-06)
 
 ### 🩹 Fixes

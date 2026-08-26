@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Sets up federated identity between Azure and GitHub for authentication",
   "provider": "azurerm",
-  "version": "2.0.0"
+  "version": "2.0.1"
 }

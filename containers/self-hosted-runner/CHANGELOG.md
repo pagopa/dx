@@ -1,3 +1,14 @@
+## 0.0.7 (2026-08-26)
+
+### 🩹 Fixes
+
+- Make mise user directories writable. Install `aws-cli`, `az-cli`, and `zip` through mise, and pin the upstream runner version and digest for automated updates. ([#2048](https://github.com/pagopa/dx/pull/2048))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.0.6 (2026-08-05)
 
 ### 🩹 Fixes
