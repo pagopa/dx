@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Deploy a self-hosted runner based on AWS CodeBuild",
   "provider": "aws",
-  "version": "2.0.0"
+  "version": "2.0.1"
 }

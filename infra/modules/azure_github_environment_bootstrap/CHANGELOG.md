@@ -1,3 +1,13 @@
+## 5.0.2 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 5.0.1 (2026-07-09)
 
 ### 🩹 Fixes

@@ -1,3 +1,13 @@
+## 0.6.3 (2026-08-26)
+
+### 🩹 Fixes
+
+- Add telemetry with input-source and usage attributes ([#2014](https://github.com/pagopa/dx/pull/2014))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.2 (2026-08-06)
 
 ### 🩹 Fixes

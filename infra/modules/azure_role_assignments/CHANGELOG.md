@@ -1,3 +1,14 @@
+## 3.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Split Terraform unit and contract tests ([#2055](https://github.com/pagopa/dx/pull/2055))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 # 3.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes
