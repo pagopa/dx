@@ -195,7 +195,9 @@ describe("foldDuplicateFinding", () => {
     ).toBe(false);
     expect(report.findings).toHaveLength(1);
   });
+});
 
+describe("foldDuplicateFinding - repeated and idempotent folds", () => {
   it("does not annotate same-source duplicates", () => {
     const report = mkReport([
       mkFinding({ recommendationId: ORPHAN_DISK, source: "azqr" }),
