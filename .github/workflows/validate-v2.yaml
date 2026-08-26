@@ -136,31 +136,30 @@ jobs:
       # define which credentials and runner labels are used for Terraform plans.
       - name: Get GitHub Environments
         id: detect
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const environments = await github.paginate(
-              github.rest.repos.getAllEnvironments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
-              },
-              (response) => response.data
-            );
-            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-ci)$/;
-            const matrix = environments
-              .filter(({ name }) => planEnvironmentPattern.test(name))
-              .filter(({ name }) => !name.includes("uat"))
-              .map(({ name }) => {
-                const [, envName] = name.split("-");
-                return {
-                  "github-environment": name,
-                  "env-name": envName,
-                };
-              });
-            core.setOutput("environments", JSON.stringify(matrix));
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          environments="$(
+            gh api \
+              --paginate \
+              --slurp \
+              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+              jq --compact-output '
+              [
+                .[].environments[]
+                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
+                | select(.name | contains("uat") | not)
+                | {
+                    "github-environment": .name,
+                    "env-name": (.name | split("-")[1])
+                  }
+              ]
+            '
+          )"
+
+          printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
 
   infra-review:
     name: Infrastructure Review (${{ matrix.target.github-environment }})
