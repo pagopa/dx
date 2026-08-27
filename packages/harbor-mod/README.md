@@ -348,18 +348,25 @@ in-container strip applies exactly as for the workspace flow. No worktree or
 full-branch staging is needed.
 
 ```bash
-# 1. Baseline: current workspace skills
+# 1. Baseline: current workspace skills (named job, stable path)
 harbor-mod convert --scan-root plugins --out .harbor --config-out .harbor/config.yaml
-harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...   # -> jobs/<run-base>
+harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+  --jobs-dir runs --job-name skill-workspace
 
 # 2. Same config, skills from git (e.g. main) — pass one URL per plugin to compare
 harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+  --jobs-dir runs --job-name skill-main \
   --skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills \
-  --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills   # -> jobs/<run-head>
+  --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills
 
 # 3. Delta report (score, tokens, cost, duration)
-harbor-mod compare jobs/<run-base> jobs/<run-head> --report comparison.md
+harbor-mod compare runs/skill-workspace runs/skill-main --report comparison.md
 ```
+
+Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
+two `--job-name` flags above give stable, human-readable paths so `compare` and
+`harbor view runs` always know where the runs live. The full run path is always
+`<jobs-dir>/<job-name>/`.
 
 Notes:
 
@@ -367,6 +374,9 @@ Notes:
   commit SHA (`https://github.com/pagopa/dx/tree/<sha>/plugins/…`) so the
   comparison always uses the same skill version. Harbor caches by SHA, so
   re-runs are free.
+- **Job names are identifiers**: re-running the same `--job-name` with the same
+  config resumes (skipped existing trials); with a different config it errors.
+  Always use distinct names for the two versions you are comparing.
 - **Additive override**: `--skill` is appended to the config's `skills:` list
   and, per skill name, last-wins — the git skill replaces the workspace one for
   the same name. Pass **every** plugin you want to compare; plugins not passed
