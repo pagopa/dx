@@ -12,6 +12,43 @@ import pytest
 # (input_tokens, cache_read, cache_write, output, reasoning, total_nano_aiu).
 DEFAULT_USAGE_ROW = (20_474, 0, 20_471, 41, 20, 516_755_000)
 
+CASE_ONE = {
+    "id": 1,
+    "name": "case-one",
+    "prompt": "do the thing",
+    "expected_output": "the thing done",
+    "expectations": ["inspects repo"],
+    "files": [],
+    "overlays": [],
+}
+CASE_TWO = {
+    "id": 2,
+    "name": "case-two",
+    "prompt": "do the other thing",
+    "expected_output": "the other thing done",
+    "expectations": [],
+    "files": [],
+    "overlays": [],
+}
+
+
+def write_evals(
+    skill: Path,
+    *,
+    skill_name: str = "test-skill",
+    harbor: dict | None = None,
+    cases: list[dict] | None = None,
+) -> Path:
+    """Create a skill dir with an evals.json and return its path."""
+    (skill / "evals").mkdir(parents=True, exist_ok=True)
+    (skill / "SKILL.md").write_text("# Test")
+    data: dict = {"skill_name": skill_name, "evals": cases or [CASE_ONE]}
+    if harbor is not None:
+        data["harbor"] = harbor
+    path = skill / "evals" / "evals.json"
+    path.write_text(json.dumps(data))
+    return path
+
 
 def write_session_db(db_path: Path, rows: list[tuple] | None = None) -> None:
     """Write a ``session-store.db`` with an ``assistant_usage_events`` table."""
