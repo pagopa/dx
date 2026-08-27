@@ -60,9 +60,26 @@ def _deep_merge(base: dict, override: dict) -> dict:
     return out
 
 
-def _write_template(src: Path, dst: Path, **replacements: str) -> None:
-    text = src.read_text()
-    for key, value in replacements.items():
+def _write_with_override(
+    *,
+    target: str,
+    dst: Path,
+    overrides: dict[str, Path] | None,
+    default: str,
+    **placeholders: str,
+) -> None:
+    """Write ``dst``: the user override for ``target`` when present, otherwise
+    the generated ``default``.
+
+    ``{{KEY}}`` placeholders are substituted in both the override content and
+    the default, so a custom file can still reference per-case values.
+    """
+    text = (
+        overrides[target].read_text()
+        if overrides and target in overrides
+        else default
+    )
+    for key, value in placeholders.items():
         text = text.replace("{{" + key + "}}", value)
     dst.write_text(text)
 
@@ -105,8 +122,14 @@ def generate_task(
     overlays: list[Path] = (),
     files: list[Path] = (),
     env_overrides: dict | None = None,
+    overrides: dict[str, Path] | None = None,
 ) -> list[str]:
     """Write a full Harbor task tree at ``task_root`` for one eval case.
+
+    ``overrides`` maps a destination path (relative to the task root, see
+    ``OVERRIDABLE_TARGETS``) to an absolute source file in the skill dir. An
+    overridden destination replaces the generated file verbatim (with
+    ``{{KEY}}`` placeholder substitution); ``task.toml`` is replaced wholesale.
 
     Returns the list of created fixture paths (workspace files).
     """
@@ -160,7 +183,20 @@ def generate_task(
         task_toml["verifier"].pop("environment_mode", None)
         task_toml["artifacts"] = []
 
-    (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
+    if overrides and "task.toml" in overrides:
+        # Full replace: the user's task.toml wins wholesale; per-case values
+        # are available as {{TASK_NAME}}/{{TASK_DESCRIPTION}}/{{TASK_VERSION}}.
+        _write_with_override(
+            target="task.toml",
+            dst=task_root / "task.toml",
+            overrides=overrides,
+            default=tomli_w.dumps(task_toml),
+            TASK_NAME=task_toml["task"]["name"],
+            TASK_DESCRIPTION=task_toml["task"]["description"],
+            TASK_VERSION=task_toml["task"]["version"],
+        )
+    else:
+        (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
 
     (task_root / "instruction.md").write_text(case.prompt.strip() + "\n")
 
@@ -172,36 +208,57 @@ def generate_task(
         overlays=overlays,
         files=files,
     )
-    (env_dir / "Dockerfile").write_text(
-        (TEMPLATES / "Dockerfile").read_text().format(base_image=harbor.base_image)
+    _write_with_override(
+        target="environment/Dockerfile",
+        dst=env_dir / "Dockerfile",
+        overrides=overrides,
+        default=(TEMPLATES / "Dockerfile")
+        .read_text()
+        .format(base_image=harbor.base_image),
     )
-    (env_dir / ".dockerignore").write_text(
-        (TEMPLATES / "dockerignore").read_text()
+    _write_with_override(
+        target=".dockerignore",
+        dst=env_dir / ".dockerignore",
+        overrides=overrides,
+        default=(TEMPLATES / "dockerignore").read_text(),
     )
 
     # tests/ = verifier + RewardKit judge config
     tests_dir = task_root / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
-    _write_template(
-        TEMPLATES / "test.sh",
-        tests_dir / "test.sh",
+    _write_with_override(
+        target="tests/test.sh",
+        dst=tests_dir / "test.sh",
+        overrides=overrides,
+        default=(TEMPLATES / "test.sh").read_text(),
         SKILL_NAME=evals_file.skill_name,
     )
     # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
-    (tests_dir / "quality.toml").write_text(
-        build_quality_toml(case, harbor.judge_model)
+    _write_with_override(
+        target="tests/quality.toml",
+        dst=tests_dir / "quality.toml",
+        overrides=overrides,
+        default=build_quality_toml(case, harbor.judge_model),
+        JUDGE_MODEL=harbor.judge_model,
     )
     if verifier_mode == "separate":
         # Separate verifier image: Harbor builds the verifier container from
         # this Dockerfile; tests/ is NOT uploaded at runtime.
-        _write_template(
-            TEMPLATES / "verifier-Dockerfile",
-            tests_dir / "Dockerfile",
+        _write_with_override(
+            target="tests/Dockerfile",
+            dst=tests_dir / "Dockerfile",
+            overrides=overrides,
+            default=(TEMPLATES / "verifier-Dockerfile").read_text(),
         )
 
     # solution/ = oracle stub
     solution_dir = task_root / "solution"
     solution_dir.mkdir(parents=True, exist_ok=True)
-    _write_template(TEMPLATES / "solve.sh", solution_dir / "solve.sh")
+    _write_with_override(
+        target="solution/solve.sh",
+        dst=solution_dir / "solve.sh",
+        overrides=overrides,
+        default=(TEMPLATES / "solve.sh").read_text(),
+    )
 
     return created

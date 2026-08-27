@@ -91,6 +91,7 @@ def cmd_convert(args: argparse.Namespace) -> int:
                         overlays=paths["overlays"],
                         files=paths["files"],
                         env_overrides=env_overrides,
+                        overrides=paths["overrides"],
                     )
                 except WorkspaceError as exc:
                     print(f"error: task '{task_root.name}': {exc}", file=sys.stderr)

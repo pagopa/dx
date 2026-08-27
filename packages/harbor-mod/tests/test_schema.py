@@ -87,3 +87,78 @@ def test_verifier_mode_default_and_validation():
         EvalsFile.model_validate(
             make_evals(Path("."), harbor={"verifier_mode": "bogus"})
         )
+
+
+def _make_skill(tmp_path: Path, name: str = "s") -> Path:
+    skill = tmp_path / name
+    (skill / "evals").mkdir(parents=True)
+    (skill / "SKILL.md").write_text("# T")
+    return skill
+
+
+def test_overrides_merge_suite_then_case(tmp_path):
+    skill = _make_skill(tmp_path)
+    (skill / "harbor").mkdir()
+    (skill / "harbor" / "quality.toml").write_text("suite quality")
+    (skill / "harbor" / "case1.toml").write_text("case task")
+    (skill / "harbor" / "dockerfile").write_text("suite docker")
+    (skill / "harbor" / "case-dockerfile").write_text("case docker")
+
+    evals = EvalsFile.model_validate(
+        make_evals(
+            skill,
+            harbor={
+                "overrides": {
+                    "tests/quality.toml": "harbor/quality.toml",
+                    "environment/Dockerfile": "harbor/dockerfile",
+                }
+            },
+            case={
+                "files": [],
+                "overlays": [],
+                "harbor": {
+                    "overrides": {
+                        "task.toml": "harbor/case1.toml",
+                        "environment/Dockerfile": "harbor/case-dockerfile",
+                    }
+                },
+            },
+        )
+    )
+    resolved = resolve_eval_paths(evals, skill)
+    overrides = resolved[1]["overrides"]
+    assert overrides["tests/quality.toml"].name == "quality.toml"
+    assert overrides["task.toml"].name == "case1.toml"
+    # per-case override wins over the suite-level one
+    assert overrides["environment/Dockerfile"].name == "case-dockerfile"
+
+
+def test_override_missing_file_rejected(tmp_path):
+    skill = _make_skill(tmp_path)
+    evals = EvalsFile.model_validate(
+        make_evals(
+            skill,
+            harbor={"overrides": {"tests/quality.toml": "harbor/nope.toml"}},
+            case={"files": [], "overlays": []},
+        )
+    )
+    with pytest.raises(ValueError, match="override"):
+        resolve_eval_paths(evals, skill)
+
+
+def test_override_unknown_target_rejected(tmp_path):
+    skill = _make_skill(tmp_path)
+    with pytest.raises(ValueError, match="override target"):
+        EvalsFile.model_validate(
+            make_evals(skill, harbor={"overrides": {"foo.txt": "harbor/x"}})
+        )
+
+
+def test_override_unsafe_path_rejected(tmp_path):
+    skill = _make_skill(tmp_path)
+    with pytest.raises(ValueError, match="unsafe"):
+        EvalsFile.model_validate(
+            make_evals(
+                skill, case={"harbor": {"overrides": {"task.toml": "../x"}}}
+            )
+        )

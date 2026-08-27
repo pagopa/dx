@@ -86,6 +86,53 @@ contract and is passed verbatim:
 Layer order: `workspace_dir` → `overlays` → `files`; path collisions between
 layers are rejected.
 
+## Configuration file overrides
+
+`convert` generates every task config file from a template; the `overrides`
+map replaces a generated file with a custom one, either for the whole suite
+(`harbor.overrides`) or for a single eval (`evals[].harbor.overrides`). Per-eval
+wins over suite; precedence is **per-eval > suite > template**.
+
+Keys are destination paths in the generated task; values are paths relative to
+the skill dir (recommended: under `harbor/`, which is excluded from the staged
+skill):
+
+```jsonc
+{
+  "skill_name": "generate-backend-tests",
+  "harbor": {
+    "overrides": { "tests/quality.toml": "harbor/quality.toml" } // suite-wide
+  },
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "...",
+      "expected_output": "...",
+      "harbor": {
+        "overrides": {
+          "task.toml": "harbor/cases/case1.toml", // full replace of task.toml
+          "environment/Dockerfile": "harbor/cases/case1.Dockerfile",
+        }
+      }
+    },
+  ],
+}
+```
+
+Overridable targets: `task.toml`, `environment/Dockerfile`, `.dockerignore`,
+`tests/test.sh`, `tests/quality.toml`, `tests/Dockerfile` (separate verifier
+mode), `solution/solve.sh`.
+
+An overridden file replaces the generated one **verbatim**; `{{KEY}}`
+placeholders are still substituted when present:
+`{{TASK_NAME}}`, `{{TASK_DESCRIPTION}}`, `{{TASK_VERSION}}` in `task.toml`,
+`{{SKILL_NAME}}` in `test.sh`, `{{JUDGE_MODEL}}` in `quality.toml`.
+
+> `task.toml` is replaced wholesale (full replace): the converter no longer
+> injects `[task] name/description/version`, `[verifier]` env, or `artifacts`.
+> Your file must be a valid Harbor task.toml (schema 1.4); use the placeholders
+> above to keep the per-case identity.
+
 ## RewardKit LLM judge
 
 Grading uses **RewardKit** — Harbor's official verifier package

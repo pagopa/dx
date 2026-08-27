@@ -13,6 +13,39 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+# Destination paths (relative to the generated task root) that can be
+# overridden with a custom file from the skill dir.
+OVERRIDABLE_TARGETS = frozenset(
+    {
+        "task.toml",
+        "environment/Dockerfile",
+        ".dockerignore",
+        "tests/test.sh",
+        "tests/quality.toml",
+        "tests/Dockerfile",  # verifier image (separate mode only)
+        "solution/solve.sh",
+    }
+)
+
+
+def _assert_safe_rel(path: str) -> None:
+    """Reject absolute paths and ``..`` escapes (container workspace safety)."""
+    p = Path(path)
+    if p.is_absolute() or ".." in p.parts:
+        raise ValueError(f"unsafe relative path: {path!r}")
+
+
+def _validate_overrides(overrides: dict[str, str]) -> dict[str, str]:
+    """Check override map keys are known targets and values are safe paths."""
+    for target, rel in overrides.items():
+        if target not in OVERRIDABLE_TARGETS:
+            allowed = ", ".join(sorted(OVERRIDABLE_TARGETS))
+            raise ValueError(
+                f"unknown override target {target!r} (allowed: {allowed})"
+            )
+        _assert_safe_rel(rel)
+    return overrides
+
 
 class HarborMeta(BaseModel):
     """Optional per-skill Harbor evaluation metadata (enriches evals.json)."""
@@ -26,6 +59,7 @@ class HarborMeta(BaseModel):
     kwargs: dict[str, object] = Field(default_factory=dict)
     verifier_mode: str = "separate"
     artifacts: list[str] = Field(default_factory=list)
+    overrides: dict[str, str] = Field(default_factory=dict)
 
     @model_validator(mode="after")
     def _validate_verifier_mode(self) -> "HarborMeta":
@@ -33,6 +67,24 @@ class HarborMeta(BaseModel):
             raise ValueError(
                 f"verifier_mode must be 'separate' or 'shared', got: {self.verifier_mode!r}"
             )
+        return self
+
+    @model_validator(mode="after")
+    def _check_overrides(self) -> "HarborMeta":
+        _validate_overrides(self.overrides)
+        return self
+
+
+class EvalHarborMeta(BaseModel):
+    """Per-eval Harbor metadata (currently only config file overrides)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    overrides: dict[str, str] = Field(default_factory=dict)
+
+    @model_validator(mode="after")
+    def _check_overrides(self) -> "EvalHarborMeta":
+        _validate_overrides(self.overrides)
         return self
 
 
@@ -48,6 +100,7 @@ class EvalCase(BaseModel):
     expectations: list[str] = Field(default_factory=list)
     files: list[str] = Field(default_factory=list)
     overlays: list[str] = Field(default_factory=list)
+    harbor: EvalHarborMeta = Field(default_factory=EvalHarborMeta)
 
 
 class EvalsFile(BaseModel):
@@ -74,22 +127,19 @@ class EvalsFile(BaseModel):
         return self
 
 
-def _assert_safe_rel(path: str) -> None:
-    """Reject absolute paths and ``..`` escapes (container workspace safety)."""
-    p = Path(path)
-    if p.is_absolute() or ".." in p.parts:
-        raise ValueError(f"unsafe relative path: {path!r}")
-
-
 def resolve_eval_paths(
     evals_file: EvalsFile, skill_dir: Path
-) -> dict[int, dict[str, list[Path]]]:
-    """Resolve per-eval files/overlays to absolute paths within the skill dir.
+) -> dict[int, dict[str, list[Path] | dict[str, Path]]]:
+    """Resolve per-eval files/overlays/overrides to absolute paths within the
+    skill dir.
 
-    Returns ``{eval_id: {"files": [Path...], "overlays": [Path...]}}``.
-    Raises ``ValueError`` for unsafe or missing paths.
+    Returns ``{eval_id: {"files": [Path...], "overlays": [Path...],
+    "overrides": {target: Path}}}``. Overrides are the suite-level
+    ``harbor.overrides`` map merged with the per-eval ``evals[].harbor.overrides``
+    map (per-eval wins on key collision). Raises ``ValueError`` for unsafe or
+    missing paths.
     """
-    resolved: dict[int, dict[str, list[Path]]] = {}
+    resolved: dict[int, dict[str, list[Path] | dict[str, Path]]] = {}
     for case in evals_file.evals:
         files: list[Path] = []
         for rel in case.files:
@@ -109,5 +159,20 @@ def resolve_eval_paths(
                     f"eval {case.id}: overlay dir not found: {rel} (resolved to {path})"
                 )
             overlays.append(path)
-        resolved[case.id] = {"files": files, "overlays": overlays}
+        merged_overrides = dict(evals_file.harbor.overrides)
+        merged_overrides.update(case.harbor.overrides)
+        overrides: dict[str, Path] = {}
+        for target, rel in merged_overrides.items():
+            path = (skill_dir / rel).resolve()
+            if not path.is_file():
+                raise ValueError(
+                    f"eval {case.id}: override {target!r} not found: "
+                    f"{rel} (resolved to {path})"
+                )
+            overrides[target] = path
+        resolved[case.id] = {
+            "files": files,
+            "overlays": overlays,
+            "overrides": overrides,
+        }
     return resolved
