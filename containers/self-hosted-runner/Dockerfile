@@ -10,6 +10,8 @@ ENV PATH="${MISE_DATA_DIR}/shims:${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
 
+# The standalone pnpm binary installed by mise dynamically links libatomic,
+# which is not present in the upstream actions runner image.
 RUN apt-get update && \
     apt-get install --no-install-recommends --yes libatomic1 && \
     rm -rf /var/lib/apt/lists/*
