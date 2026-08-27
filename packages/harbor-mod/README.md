@@ -53,6 +53,42 @@ harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 `--without-skill` omits the injected skills (baseline comparison). Agent kwargs
 can be overridden at convert time with `--ak max_ai_credits=50`.
 
+### Running a subset of tasks
+
+The generated `config.yaml` points the `datasets` entry at the whole `tasks`
+directory, so `harbor run -c config.yaml` evaluates every generated task. To
+run only a subset, add glob filters to the dataset entry. Task names match the
+**task directory name** (e.g. `dr-blacksmith-complete-design-review`).
+
+Select every task of one skill:
+
+```yaml
+datasets:
+- path: /path/to/.harbor/tasks
+  task_names:
+  - dr-blacksmith-*
+```
+
+Select specific tasks (multiple entries act as an OR — include every task
+matching any pattern):
+
+```yaml
+datasets:
+- path: /path/to/.harbor/tasks
+  task_names:
+  - dr-blacksmith-complete-design-review
+  - dr-blacksmith-publication-confirmation
+```
+
+Other filters:
+
+- `exclude_task_names: [generate-backend-tests-*]` — exclude instead of
+  include (applied after `task_names`).
+- `n_tasks: 3` — cap the run at the first N matching tasks.
+
+These filters only apply when running from the config file (`-c config.yaml`);
+there is no equivalent CLI flag for a `--config`-based run.
+
 ## Agent model and reasoning effort
 
 `convert` bakes the **Copilot model** and **reasoning effort** into the
