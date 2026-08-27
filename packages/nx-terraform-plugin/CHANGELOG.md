@@ -1,3 +1,13 @@
+## 0.5.4 (2026-08-27)
+
+### 🩹 Fixes
+
+- Simplify tflint integration ([#2069](https://github.com/pagopa/dx/pull/2069))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.3 (2026-08-26)
 
 ### 🩹 Fixes
