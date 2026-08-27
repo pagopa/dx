@@ -53,6 +53,74 @@ harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 `--without-skill` omits the injected skills (baseline comparison). Agent kwargs
 can be overridden at convert time with `--ak max_ai_credits=50`.
 
+## Agent model and reasoning effort
+
+`convert` bakes the **Copilot model** and **reasoning effort** into the
+generated `config.yaml`. The defaults are:
+
+- model: `gpt-5.6-luna` (`harbor_mod.convert.config.DEFAULT_MODEL`)
+- effort: `high` (`harbor_mod.convert.config.DEFAULT_AGENT_KWARGS`)
+
+so the emitted agent entry looks like:
+
+```yaml
+agents:
+- import_path: harbor_mod.agents.copilot_cli_mod:CopilotCliMod
+  model_name: gpt-5.6-luna        # -> copilot --model=gpt-5.6-luna
+  kwargs:
+    reasoning_effort: high         # -> copilot --effort high
+  skills: [...]
+```
+
+`reasoning_effort` is a declared `CLI_FLAGS` of Harbor's Copilot CLI agent
+(`--effort`, choices `low|medium|high|xhigh|max`), so it is rendered by
+`build_cli_flags()` and never goes through the generic passthrough. Extra
+kwargs (`max_ai_credits`, ...) follow the `--ak` contract.
+
+### Kwarg naming: underscores become dashes
+
+Kwargs use **snake_case** (underscores) everywhere in `config.yaml` / `--ak
+KEY=VALUE` because Python identifiers and YAML keys cannot contain dashes.
+The conversion to Copilot CLI flags is automatic:
+
+- **Generic passthrough** — any kwarg not declared by Harbor is rendered as
+  `--kebab-case value` by `CopilotCliMod.build_cli_flags()`
+  (`key.replace("_", "-")`): `max_ai_credits=30` → `--max-ai-credits 30`,
+  boolean values become a bare flag (`--enable-memory`).
+- **Declared flags** — Harbor's `CliFlag`/`EnvVar` descriptors map a kwarg to
+  an explicit CLI name, which may differ from the kwarg (`reasoning_effort` →
+  `--effort`).
+
+The mapping is one-way (`_` → `-`); there is no reverse lookup from a CLI flag
+name to its kwarg.
+
+### Configuring it
+
+**1. At convert time (recommended)** — override the defaults so the generated
+`config.yaml` embeds your values:
+
+```bash
+harbor-mod convert --model claude-sonnet-4 --ak reasoning_effort=low \
+  --scan-root plugins --out .harbor --config-out .harbor/config.yaml
+```
+
+User-provided kwargs are merged over `DEFAULT_AGENT_KWARGS`, so
+`--ak reasoning_effort=low` wins over the `high` default.
+
+**2. Directly in `config.yaml`** — edit the `agents[0].model_name` /
+`agents[0].kwargs` keys of the generated file before `harbor run -c config.yaml`.
+This is the **only** override that works with `--config`: Harbor rejects
+`--model`/`--ak` when `-c/--config` is passed (`--config cannot be combined with
+flags mode options`).
+
+**3. CLI flags (no `--config`)** — when compiling tasks from flags instead of a
+config file, pass them directly to `harbor run`:
+
+```bash
+harbor run --agent harbor_mod.agents.copilot_cli_mod:CopilotCliMod \
+  --model gpt-5.6-luna --ak reasoning_effort=high ...
+```
+
 ## Enriched evals.json schema
 
 The base format is the agentskills.io `evals/evals.json`. The optional `harbor`

@@ -6,6 +6,14 @@ from pathlib import Path
 
 import yaml
 
+#: Default Copilot model used to run the agent tasks. Overridable at convert
+#: time with ``harbor-mod convert --model ...``.
+DEFAULT_MODEL = "gpt-5.6-luna"
+
+#: Default agent kwargs (the ``--ak``/``AgentConfig.kwargs`` contract) merged
+#: into the generated config. User-supplied kwargs win over these defaults.
+DEFAULT_AGENT_KWARGS: dict = {"reasoning_effort": "high"}
+
 
 def build_config(
     *,
@@ -13,7 +21,7 @@ def build_config(
     skill_dirs: list[Path],
     kwargs: dict | None = None,
     without_skill: bool = False,
-    model: str | None = None,
+    model: str | None = DEFAULT_MODEL,
     jobs_dir: Path | None = None,
     n_concurrent_trials: int = 4,
 ) -> dict:
@@ -22,17 +30,16 @@ def build_config(
     ``tasks_dir`` is the directory containing the generated task dirs.
     ``skill_dirs`` are the staged skill directories injected into the agent
     (skipped when ``without_skill=True``). ``kwargs`` are the agent kwargs
-    passed verbatim as ``--ak`` (AgentConfig.kwargs).
+    passed verbatim as ``--ak`` (AgentConfig.kwargs); they override the
+    ``DEFAULT_AGENT_KWARGS``. ``model`` defaults to ``DEFAULT_MODEL``.
     """
     agent: dict = {
         "import_path": "harbor_mod.agents.copilot_cli_mod:CopilotCliMod",
     }
     if not without_skill and skill_dirs:
         agent["skills"] = [str(d) for d in skill_dirs]
-    if kwargs:
-        agent["kwargs"] = dict(kwargs)
-    if model:
-        agent["model_name"] = model
+    agent["kwargs"] = {**DEFAULT_AGENT_KWARGS, **(kwargs or {})}
+    agent["model_name"] = model or DEFAULT_MODEL
 
     config: dict = {
         "jobs_dir": str(jobs_dir) if jobs_dir else "jobs",

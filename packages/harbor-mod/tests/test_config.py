@@ -6,7 +6,39 @@ from pathlib import Path
 
 import yaml
 
-from harbor_mod.convert.config import build_config, write_config
+from harbor_mod.convert.config import (
+    DEFAULT_AGENT_KWARGS,
+    DEFAULT_MODEL,
+    build_config,
+    write_config,
+)
+
+
+def test_default_model_and_effort(tmp_path: Path):
+    config = build_config(tasks_dir=tmp_path / "tasks", skill_dirs=[])
+    assert config["agents"][0]["model_name"] == DEFAULT_MODEL
+    assert config["agents"][0]["kwargs"] == DEFAULT_AGENT_KWARGS
+
+
+def test_kwargs_override_default(tmp_path: Path):
+    config = build_config(
+        tasks_dir=tmp_path / "tasks",
+        skill_dirs=[],
+        kwargs={"reasoning_effort": "low"},
+    )
+    assert config["agents"][0]["kwargs"] == {"reasoning_effort": "low"}
+
+
+def test_kwargs_merge_with_default(tmp_path: Path):
+    config = build_config(
+        tasks_dir=tmp_path / "tasks",
+        skill_dirs=[],
+        kwargs={"max_ai_credits": 50},
+    )
+    assert config["agents"][0]["kwargs"] == {
+        "reasoning_effort": "high",
+        "max_ai_credits": 50,
+    }
 
 
 def test_build_config_with_skills(tmp_path: Path):

@@ -19,7 +19,7 @@ import sys
 from pathlib import Path
 
 from .convert import task as task_module
-from .convert.config import build_config, write_config
+from .convert.config import DEFAULT_MODEL, build_config, write_config
 from .convert.discover import DiscoverError, find_evals_files, load_evals_file
 from .convert.schema import resolve_eval_paths
 from .convert.workspace import WorkspaceError
@@ -149,7 +149,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="omit agent skills (baseline comparison, no skill injection)",
     )
-    conv.add_argument("--model", help="Copilot model passed to the agent (model_name)")
+    conv.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Copilot model passed to the agent (model_name; default: {DEFAULT_MODEL})",
+    )
     conv.add_argument(
         "--ak",
         dest="agent_kwargs",
