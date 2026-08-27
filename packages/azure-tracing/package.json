@@ -88,7 +88,7 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@t3-oss/env-core": "^0.13.11",
-    "import-in-the-middle": "^3.3.2",
+    "import-in-the-middle": "^3.3.3",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -101,7 +101,7 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "redis": "^5.12.1",
-    "testcontainers": "^12.0.4",
+    "testcontainers": "^12.1.0",
     "tsup": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
