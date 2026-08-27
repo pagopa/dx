@@ -64,9 +64,6 @@ const getEnvironmentTag = (
   return `env:${environment ?? "prod"}`;
 };
 
-const getRootConfigPath = (root: string, configFileName: string) =>
-  path.relative(root, configFileName) || configFileName;
-
 const getPublishTarget = (
   opts: TerraformPluginOptions,
   root: string,
@@ -131,12 +128,12 @@ const getTestTarget = (initTargetName: string): TargetConfiguration => ({
 
 const getTargets = (
   opts: TerraformPluginOptions,
+  workspaceRoot: string,
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
   publishManifest: ModulePublishManifest | undefined,
 ): Record<string, TargetConfiguration> => {
-  const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
   const formatArgs = ["-list=true", "-recursive=true"];
 
   const cwd = "{projectRoot}";
@@ -204,15 +201,16 @@ const getTargets = (
       {
         cache: true,
         command: `tflint`,
-        inputs: [...inputs, "{workspaceRoot}/.tflint.hcl"],
+        inputs: [
+          ...inputs,
+          "{workspaceRoot}/.tflint.hcl",
+          { env: "TFLINT_PLUGIN_DIR" },
+        ],
         options: {
-          args: [
-            "--disable-rule=terraform_required_version",
-            "--disable-rule=terraform_required_providers",
-            "--config",
-            rootTflintConfigPath,
-          ],
           cwd,
+          env: {
+            TFLINT_CONFIG_FILE: path.resolve(workspaceRoot, ".tflint.hcl"),
+          },
         },
       },
     ]);
@@ -318,6 +316,7 @@ const getTargets = (
 
 export const getProject = (
   opts: TerraformPluginOptions,
+  workspaceRoot: string,
   root: string,
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
@@ -327,6 +326,7 @@ export const getProject = (
     projectType === "library" && publishManifest !== undefined;
   const targets = getTargets(
     opts,
+    workspaceRoot,
     root,
     projectType,
     hasRootTflintConfig,
