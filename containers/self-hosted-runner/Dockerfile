@@ -12,6 +12,7 @@ USER root
 
 # The standalone pnpm binary installed by mise dynamically links libatomic,
 # which is not present in the upstream actions runner image.
+# - libatomic needed to satisfy the dynamic linking requirement of the pnpm binary.
 RUN apt-get update && \
     apt-get install --no-install-recommends --yes libatomic1 && \
     rm -rf /var/lib/apt/lists/*
