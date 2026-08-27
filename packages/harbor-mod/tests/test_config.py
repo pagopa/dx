@@ -18,7 +18,7 @@ def test_build_config_with_skills(tmp_path: Path):
     assert config["agents"][0]["import_path"] == "harbor_mod.agents.copilot_cli_mod:CopilotCliMod"
     assert config["agents"][0]["skills"] == [str(tmp_path / "skills" / "test-skill")]
     assert config["agents"][0]["kwargs"] == {"max_ai_credits": 30, "reasoning_effort": "high"}
-    assert config["tasks"] == [{"path": str(tmp_path / "tasks")}]
+    assert config["datasets"] == [{"path": str(tmp_path / "tasks")}]
     assert config["n_concurrent_trials"] == 4
 
 

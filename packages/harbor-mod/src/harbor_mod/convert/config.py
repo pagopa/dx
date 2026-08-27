@@ -40,7 +40,7 @@ def build_config(
         "n_concurrent_trials": n_concurrent_trials,
         "environment": {"type": "docker"},
         "agents": [agent],
-        "tasks": [{"path": str(tasks_dir)}],
+        "datasets": [{"path": str(tasks_dir)}],
     }
     return config
 
