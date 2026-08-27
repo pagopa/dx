@@ -5,6 +5,9 @@ on:
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
+  # We handle Node.js setup with "pagopa/dx/.github/actions/node-setup@main" for now,
+  # which also configures the package manager cache and handles the package manager detection.
+  # It will be migrated later.
   MISE_DISABLE_TOOLS: node
 
 jobs:
@@ -111,6 +114,9 @@ jobs:
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      # We exclude all Terraform Apps from quality checks
+      # because they require a dedicated environment to be initialized.
+      # Their static checks (lint, test) run in the "infra-review" job.
       - name: Run code quality checks on affected projects
         run: |
             EXCLUDE=$(nx show projects --affected --type=app --projects=tag:terraform --sep=,)
@@ -201,8 +207,12 @@ jobs:
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
         with:
+          # Enable experimental features to use "mise deps"
           experimental: true
 
+      # Mise deps for pnpm only performs a global "pnpm install".
+      # Here we want to install only the root workspace dependencies,
+      # so we handle it manually.
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
