@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+import types
+from pathlib import Path
+
 from harbor_mod.agents import CopilotCliMod
-from harbor_mod.agents.copilot_cli_mod import CopilotCli
+from harbor_mod.agents.copilot_cli_mod import (
+    _STRIPPED_SKILL_DIRS,
+    CopilotCli,
+)
 
 BASE_FLAGS = {"reasoning_effort"} | {f.kwarg for f in CopilotCli.ENV_VARS}
 
@@ -52,3 +59,54 @@ def test_register_skills_command_targets_copilot_skills():
 def test_register_skills_none_without_skills_dir():
     agent = CopilotCliMod(logs_dir="logs")
     assert agent._build_register_skills_command() is None
+
+
+def test_strip_skills_command_removes_eval_data():
+    agent = CopilotCliMod(logs_dir="logs", skills_dir="/harbor/skills")
+    cmd = agent._build_strip_skills_command()
+    assert cmd is not None
+    assert "/harbor/skills" in cmd
+    for name in _STRIPPED_SKILL_DIRS:
+        assert name in cmd
+    assert "rm -rf" in cmd
+
+
+def test_strip_skills_none_without_skills_dir():
+    agent = CopilotCliMod(logs_dir="logs")
+    assert agent._build_strip_skills_command() is None
+
+
+class _FakeEnvironment:
+    """Minimal stand-in for Harbor's BaseEnvironment in agent setup tests."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str | None, str]] = []
+
+    async def exec(self, command, user=None, env=None, cwd=None, timeout_sec=None):
+        self.calls.append((user, command))
+        return types.SimpleNamespace(return_code=0, stdout="", stderr="")
+
+
+def test_setup_strips_skills_as_root_before_base_setup(monkeypatch):
+    env = _FakeEnvironment()
+    agent = CopilotCliMod(logs_dir=Path("logs"), skills_dir="/harbor/skills")
+
+    # The base setup would try to install the Copilot CLI over the network;
+    # stub install() so we only exercise the strip + setup ordering.
+    async def _noop_install(_environment):
+        return None
+
+    monkeypatch.setattr(agent, "install", _noop_install)
+    asyncio.run(agent.setup(env))
+
+    strip_commands = [
+        cmd for user, cmd in env.calls if user == "root" and "rm -rf" in cmd
+    ]
+    assert strip_commands, "expected a root strip command for the injected skills"
+    assert "/harbor/skills" in strip_commands[0]
+
+    strip_idx = next(i for i, (_, cmd) in enumerate(env.calls) if "rm -rf" in cmd)
+    mkdir_idx = next(
+        i for i, (_, cmd) in enumerate(env.calls) if "/installed-agent" in cmd
+    )
+    assert strip_idx < mkdir_idx, "strip must run before the base setup copies skills"

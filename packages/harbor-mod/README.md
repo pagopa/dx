@@ -6,13 +6,18 @@ PagoPA Harbor extensions.
    arbitrary `--ak key=value` kwargs verbatim to the Copilot CLI
    (`--kebab-case value`), covering `--max-ai-credits`, `--enable-memory`,
    `--model`, etc. It also fixes skill injection (copies to
-   `~/.copilot/skills/`, where Copilot discovers them).
+   `~/.copilot/skills/`, where Copilot discovers them) and strips eval data
+   from injected skills **inside the agent container** during `setup()`, so a
+   git-loaded skill (which ships `evals/`) never leaks the answers to the agent.
 2. **`harbor-mod convert`** — a runtime converter that reads the agentskills.io
    `evals/evals.json` files in the plugins and generates **on the fly** the
    Harbor task structures (task.toml, instruction.md, environment/Dockerfile +
    fixtures, tests/test.sh + RewardKit `tests/quality.toml` judge config,
    solution/solve.sh) plus a ready-to-run `config.yaml`, so
    `harbor run -c config.yaml` finds everything.
+3. **`harbor-mod compare`** — reads two Harbor job directories and prints a
+   per-task delta report (score, tokens, cost, duration) — see
+   [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
 
 The goal of `convert` is to avoid refactoring each `evals.json` into the
 per-task Harbor config files: `evals.json` stays the source of truth.
@@ -53,6 +58,11 @@ harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 `--without-skill` omits the injected skills (baseline comparison). Agent kwargs
 can be overridden at convert time with `--ak max_ai_credits=50`.
 
+The injected skills point at the **raw workspace skill directories** (`convert`
+no longer stages or copies them): eval data is stripped at runtime, inside the
+agent container, by `CopilotCliMod.setup()` — see
+[Skill eval data and git sources](#skill-eval-data-and-git-sources).
+
 ### Running a subset of tasks
 
 The generated `config.yaml` points the `datasets` entry at the whole `tasks`
@@ -64,9 +74,9 @@ Select every task of one skill:
 
 ```yaml
 datasets:
-- path: /path/to/.harbor/tasks
-  task_names:
-  - dr-blacksmith-*
+  - path: /path/to/.harbor/tasks
+    task_names:
+      - dr-blacksmith-*
 ```
 
 Select specific tasks (multiple entries act as an OR — include every task
@@ -74,10 +84,10 @@ matching any pattern):
 
 ```yaml
 datasets:
-- path: /path/to/.harbor/tasks
-  task_names:
-  - dr-blacksmith-complete-design-review
-  - dr-blacksmith-publication-confirmation
+  - path: /path/to/.harbor/tasks
+    task_names:
+      - dr-blacksmith-complete-design-review
+      - dr-blacksmith-publication-confirmation
 ```
 
 Other filters:
@@ -101,11 +111,11 @@ so the emitted agent entry looks like:
 
 ```yaml
 agents:
-- import_path: harbor_mod.agents.copilot_cli_mod:CopilotCliMod
-  model_name: gpt-5.6-luna        # -> copilot --model=gpt-5.6-luna
-  kwargs:
-    reasoning_effort: high         # -> copilot --effort high
-  skills: [...]
+  - import_path: harbor_mod.agents.copilot_cli_mod:CopilotCliMod
+    model_name: gpt-5.6-luna # -> copilot --model=gpt-5.6-luna
+    kwargs:
+      reasoning_effort: high # -> copilot --effort high
+    skills: [...]
 ```
 
 `reasoning_effort` is a declared `CLI_FLAGS` of Harbor's Copilot CLI agent
@@ -230,7 +240,7 @@ skill):
 {
   "skill_name": "generate-backend-tests",
   "harbor": {
-    "overrides": { "tests/quality.toml": "harbor/quality.toml" } // suite-wide
+    "overrides": { "tests/quality.toml": "harbor/quality.toml" }, // suite-wide
   },
   "evals": [
     {
@@ -241,8 +251,8 @@ skill):
         "overrides": {
           "task.toml": "harbor/cases/case1.toml", // full replace of task.toml
           "environment/Dockerfile": "harbor/cases/case1.Dockerfile",
-        }
-      }
+        },
+      },
     },
   ],
 }
@@ -299,11 +309,82 @@ uv + python; `tests/` is NOT uploaded at runtime). Override per skill/eval in
 evals.json with `"harbor": { "verifier_mode": "shared", "artifacts": [...] }`
 to fall back to the shared verifier (same container as the agent).
 
+## Skill eval data and git sources
+
+Harbor injects the skills listed in the agent's `skills:` (or `--skill`) **as-is**:
+`evals.json` — which contains the eval cases and their expected outputs — is part
+of every skill directory. When a skill is loaded from the local workspace the
+checkout may include `evals/`; when it is loaded from a git source
+(`--skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills`), the
+downloaded skill always ships `evals/` together with the harness material.
+
+If the agent under evaluation can read `evals/evals.json`, it can reproduce the
+expected outputs and game the judge, so `CopilotCliMod` strips it **inside the
+container** during `setup()`:
+
+- Harbor uploads each injected skill to `/harbor/skills/<name>` (whatever the
+  source: workspace path or git cache).
+- `CopilotCliMod.setup()` deletes `evals/`, `harbor/`, `.git` and `__pycache__`
+  from every skill under `/harbor/skills` **as root** (see
+  `_build_strip_skills_command()`), before the base setup copies them into
+  `~/.copilot/skills/`.
+
+This works identically for local and git-loaded skills, which is why `convert`
+does not need to stage/copy skills on the host anymore.
+
+> The container has no Python and Harbor's `environment.exec` always runs
+> `bash -c`, so the strip is a shell command. It is injection-safe: the skills
+> dir is `shlex`-quoted, the removed names come from a fixed constant, and the
+> glob `$skills_dir/*/` can never escape the skills root.
+
+## Comparing skill versions (workspace vs git)
+
+The eval set is always the current workspace (`convert` generates tasks from
+`plugins/**/skills/*/evals/evals.json`). To evaluate an **older skill version**
+against the same tasks, inject the skills from a git ref with `--skill`: Harbor
+sparse-checks-out only the skills subdir into a per-SHA cache
+(`~/.cache/harbor/skills/…`), resolves them by name (last-wins), and the
+in-container strip applies exactly as for the workspace flow. No worktree or
+full-branch staging is needed.
+
+```bash
+# 1. Baseline: current workspace skills
+harbor-mod convert --scan-root plugins --out .harbor --config-out .harbor/config.yaml
+harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...   # -> jobs/<run-base>
+
+# 2. Same config, skills from git (e.g. main) — pass one URL per plugin to compare
+harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+  --skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills \
+  --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills   # -> jobs/<run-head>
+
+# 3. Delta report (score, tokens, cost, duration)
+harbor-mod compare jobs/<run-base> jobs/<run-head> --report comparison.md
+```
+
+Notes:
+
+- **Reproducibility**: `main` moves between runs. Pin the ref to a tag or full
+  commit SHA (`https://github.com/pagopa/dx/tree/<sha>/plugins/…`) so the
+  comparison always uses the same skill version. Harbor caches by SHA, so
+  re-runs are free.
+- **Additive override**: `--skill` is appended to the config's `skills:` list
+  and, per skill name, last-wins — the git skill replaces the workspace one for
+  the same name. Pass **every** plugin you want to compare; plugins not passed
+  keep the workspace version. (Git URLs must point at the skills root, e.g.
+  `plugins/aiepdf/skills`, whose immediate children contain `SKILL.md`.)
+- **Delta semantics**: `harbor-mod compare <base> <head>` reports
+  `head − base`. Each task's `result.json` contributes the verifier rewards
+  (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent and
+  total duration, and pass/fail. Missing tasks (ran in only one job) are
+  reported as `(only base)` / `(new)`, plus a summary with totals/means.
+
 ## Gotchas (validated)
 
 - Base image must be **glibc** (ubuntu/debian), never Alpine — the Copilot CLI
   binary is a Node SEA for glibc.
 - Pin `harbor==0.22.0` — the Harbor API is under fast weekly evolution.
-- Skills are staged without `evals/`/`harbor/`/`.git` so the agent cannot read
-  the eval expected outputs.
+- Eval data (`evals/`, `harbor/`, `.git`) is removed **inside the agent
+  container** at setup time; Harbor uploads the skill dir as-is, so a
+  git-loaded `--skill` checkout that ships `evals/` is stripped before the
+  agent sees it.
 - CI needs `-y` to auto-confirm host env passthrough.

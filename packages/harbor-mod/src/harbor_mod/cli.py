@@ -5,11 +5,17 @@ Usage::
 
     harbor-mod convert [--evals PATH ...] [--out DIR] [--config-out FILE]
                        [--without-skill] [--model MODEL]
+    harbor-mod compare <job-base> <job-head> [--report out.md]
 
-Reads the agentskills.io ``evals/evals.json`` files (scanned from
-``plugins/**/skills/*/evals/`` by default), stages the skills for injection,
-generates one Harbor task per eval case, and emits a ready-to-run
-``config.yaml`` so ``harbor run -c config.yaml`` finds everything.
+``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
+``plugins/**/skills/*/evals/`` by default), generates one Harbor task per eval
+case, and emits a ready-to-run ``config.yaml`` so ``harbor run -c config.yaml``
+finds everything. Injected skills point at the raw skill directories: eval data
+(``evals/`` etc.) is stripped *inside the agent container* at runtime by
+``CopilotCliMod.setup()``, never on the host.
+
+``compare`` reads two Harbor job directories (``jobs/<run>``) and prints a
+per-task delta report (score, tokens, cost, duration).
 """
 
 from __future__ import annotations
@@ -18,12 +24,12 @@ import argparse
 import sys
 from pathlib import Path
 
+from .compare import build_report, load_job, render_markdown
 from .convert import task as task_module
 from .convert.config import DEFAULT_MODEL, build_config, write_config
 from .convert.discover import DiscoverError, find_evals_files, load_evals_file
 from .convert.schema import resolve_eval_paths
 from .convert.workspace import WorkspaceError
-from .staging import stage_skills
 
 DEFAULT_OUT = Path(".harbor")
 DEFAULT_SCAN_ROOT = Path("plugins")
@@ -54,16 +60,15 @@ def cmd_convert(args: argparse.Namespace) -> int:
         return 1
 
     tasks_dir = out / "tasks"
-    skills_dir = out / "skills"
-    staged: list[Path] = []
+    skill_dirs: list[Path] = []
     total_tasks = 0
 
     try:
         for evals_path in evals_paths:
             evals, skill_dir = load_evals_file(evals_path)
             print(f">> skill '{evals.skill_name}' ({evals_path})")
-            staged.append(stage_skill := stage_skills([skill_dir], skills_dir)[0])
-            print(f"   staged skill -> {stage_skill}")
+            skill_dirs.append(skill_dir)
+            print(f"   skill -> {skill_dir}")
 
             per_eval = resolve_eval_paths(evals, skill_dir)
             workspace_dir = None
@@ -108,7 +113,7 @@ def cmd_convert(args: argparse.Namespace) -> int:
 
     config = build_config(
         tasks_dir=tasks_dir,
-        skill_dirs=staged,
+        skill_dirs=skill_dirs,
         kwargs=args.agent_kwargs,
         without_skill=args.without_skill,
         model=args.model,
@@ -122,6 +127,22 @@ def cmd_convert(args: argparse.Namespace) -> int:
     if args.without_skill:
         print(">> without-skill: agent skills omitted (baseline comparison)")
     print(">> run:   harbor run -c %s -y --ae COPILOT_GITHUB_TOKEN=..." % config_out)
+    return 0
+
+
+def cmd_compare(args: argparse.Namespace) -> int:
+    """Compare two Harbor job directories and emit a delta report."""
+    base = load_job(Path(args.base).resolve())
+    head = load_job(Path(args.head).resolve())
+    report = build_report(base, head)
+    markdown = render_markdown(args.base, args.head, report)
+    if args.report:
+        out = Path(args.report)
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(markdown, encoding="utf-8")
+        print(f">> comparison report: {out}")
+    else:
+        print(markdown)
     return 0
 
 
@@ -165,6 +186,18 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--jobs-dir", help="Harbor output dir (default: jobs)")
     conv.add_argument("--n-concurrent", type=int, default=4, help="n_concurrent_trials")
     conv.set_defaults(func=cmd_convert)
+
+    cmp = sub.add_parser(
+        "compare",
+        help="compare two Harbor job directories and print a delta report",
+    )
+    cmp.add_argument("base", help="base job directory (e.g. jobs/<run-a>)")
+    cmp.add_argument("head", help="head job directory (e.g. jobs/<run-b>)")
+    cmp.add_argument(
+        "--report",
+        help="write the Markdown report to this path instead of stdout",
+    )
+    cmp.set_defaults(func=cmd_compare)
 
     return parser
 

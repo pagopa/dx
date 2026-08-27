@@ -13,6 +13,15 @@ It also fixes upstream skill registration: Harbor copies injected skills into
 ``~/.copilot/``, where Copilot CLI does not discover them — personal skills
 must live in ``~/.copilot/skills/``.
 
+It also strips eval data from injected skills **inside the container** during
+``setup()``: Harbor uploads each skill dir as-is, so a skill resolved from a
+git source (``--skill <repo>@<ref>``) arrives complete with ``evals/`` (the
+expected outputs). We remove ``evals/``, ``harbor/``, ``.git`` and
+``__pycache__`` from every injected skill as root before the base setup copies
+them into ``~/.copilot/skills/``, so the agent under evaluation never sees the
+answers — regardless of whether the skill came from the local workspace or
+from git.
+
 Load it with::
 
     harbor run ... --agent harbor_mod.agents.copilot_cli_mod:CopilotCliMod
@@ -34,6 +43,12 @@ from __future__ import annotations
 import shlex
 
 from harbor.agents.installed.copilot_cli import CopilotCli
+
+#: Subdirectories removed from every injected skill before it is exposed to the
+#: agent. ``evals/`` holds the eval cases + expected outputs (leak protection),
+#: ``harbor/`` the eval-harness fixtures, and ``.git``/``__pycache__`` are just
+#: noise. Mirrors what the old host-side staging in harbor-mod used to drop.
+_STRIPPED_SKILL_DIRS = ("evals", "harbor", ".git", "__pycache__")
 
 
 class CopilotCliMod(CopilotCli):
@@ -105,3 +120,38 @@ class CopilotCliMod(CopilotCli):
             f"cp -r {shlex.quote(self.skills_dir)}/* "
             "~/.copilot/skills/ 2>/dev/null || true"
         )
+
+    def _build_strip_skills_command(self) -> str | None:
+        """Build the shell command that removes eval data from injected skills.
+
+        Harbor uploads every injected skill dir as-is (a git-resolved
+        ``--skill`` includes ``evals/``), so we delete the sensitive
+        subdirectories from each skill *inside the container*, as root, before
+        the base setup copies them to ``~/.copilot/skills/``. This keeps the
+        eval answers hidden from the agent for both local and git-loaded skills.
+        """
+        if not self.skills_dir:
+            return None
+        skills_dir = shlex.quote(self.skills_dir)
+        names = " ".join(shlex.quote(name) for name in _STRIPPED_SKILL_DIRS)
+        return (
+            f"for d in {skills_dir}/*/; do "
+            "[ -d \"$d\" ] || continue; "
+            f"for name in {names}; do "
+            "rm -rf \"$d/$name\"; "
+            "done; "
+            "done"
+        )
+
+    async def setup(self, environment):
+        """Base setup, but strip eval data from injected skills first.
+
+        Runs :meth:`_build_strip_skills_command` as root (uploaded skills live
+        in ``<skills_dir>/<skill-name>/`` in the container), then delegates to
+        the base ``setup()`` which installs the CLI and copies skills into
+        ``~/.copilot/skills/``.
+        """
+        strip_command = self._build_strip_skills_command()
+        if strip_command:
+            await self.exec_as_root(environment, command=strip_command)
+        await super().setup(environment)
