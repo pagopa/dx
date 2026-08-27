@@ -75,7 +75,6 @@ const getEnvironmentTag = (root, additionalEnvironments) => {
 	const supportedEnvironments = /* @__PURE__ */ new Set([...defaultEnvironments, ...additionalEnvironments]);
 	return `env:${rootSegments.find((segment) => supportedEnvironments.has(segment)) ?? "prod"}`;
 };
-const getRootConfigPath = (root, configFileName) => path.relative(root, configFileName) || configFileName;
 const getPublishTarget = (opts, root, publishManifest) => {
 	try {
 		const publishOptions = mergePublishOptions(opts.publish, publishManifest);
@@ -122,8 +121,7 @@ const getTestTarget = (initTargetName) => ({
 		cwd: "{projectRoot}"
 	}
 });
-const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifest) => {
-	const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
+const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
 	const inputs = [
@@ -162,15 +160,14 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 	if (hasRootTflintConfig) targets.push([opts.lintTargetName, {
 		cache: true,
 		command: `tflint`,
-		inputs: [...inputs, "{workspaceRoot}/.tflint.hcl"],
+		inputs: [
+			...inputs,
+			"{workspaceRoot}/.tflint.hcl",
+			{ env: "TFLINT_PLUGIN_DIR" }
+		],
 		options: {
-			args: [
-				"--disable-rule=terraform_required_version",
-				"--disable-rule=terraform_required_providers",
-				"--config",
-				rootTflintConfigPath
-			],
-			cwd
+			cwd,
+			env: { TFLINT_CONFIG_FILE: path.resolve(workspaceRoot, ".tflint.hcl") }
 		}
 	}]);
 	if (projectType === "library") {
@@ -237,10 +234,10 @@ const getTargets = (opts, root, projectType, hasRootTflintConfig, publishManifes
 	}]);
 	return Object.fromEntries(targets);
 };
-const getProject = (opts, root, hasRootTflintConfig = false, publishManifest = void 0) => {
+const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publishManifest = void 0) => {
 	const projectType = getProjectType(root);
 	const isPublishableLibrary = projectType === "library" && publishManifest !== void 0;
-	const targets = getTargets(opts, root, projectType, hasRootTflintConfig, publishManifest);
+	const targets = getTargets(opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest);
 	const environmentTag = projectType === "application" ? getEnvironmentTag(root, opts.additionalEnvironments) : void 0;
 	const tags = ["terraform", ...environmentTag ? [environmentTag] : []];
 	if (isPublishableLibrary) tags.push("terraform:public");
@@ -435,7 +432,7 @@ const createNodesV2 = ["**/{*.tf,module.json}", async (configFiles, options, con
 	return createNodesFromFiles((configFile) => {
 		const root = path.dirname(configFile);
 		if (isIgnoredRoot(root)) return { projects: {} };
-		return { projects: { [root]: getProject(opts, root, hasRootTflintConfig, publishableManifestByRoot.get(root)) } };
+		return { projects: { [root]: getProject(opts, context.workspaceRoot, root, hasRootTflintConfig, publishableManifestByRoot.get(root)) } };
 	}, terraformConfigFiles, options, context);
 }];
 const createDependencies = async (opts, ctx) => {

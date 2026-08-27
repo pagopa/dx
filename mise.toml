@@ -19,16 +19,17 @@ trivy = "0.71"
 uv = "latest"
 
 [env]
-COREPACK_ENABLE_DOWNLOAD_PROMPT=0
-TFLINT_PLUGIN_DIR="./.tflint.d/plugins"
-NX_DAEMON=true
+TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
 minimum_release_age = "7d"
 minimum_release_age_excludes = ["copilot", "github-cli"]
+experimental = true
 
 [deps.tflint]
 sources = [".tflint.hcl"]
 outputs = [".tflint.d/plugins"]
 run = "tflint --init"
+
+[deps.pnpm]

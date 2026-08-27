@@ -5,6 +5,10 @@ on:
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
+  # We handle Node.js setup with "pagopa/dx/.github/actions/node-setup@main" for now,
+  # which also configures the package manager cache and handles the package manager detection.
+  # It will be migrated later.
+  MISE_DISABLE_TOOLS: node
 
 jobs:
   gate:
@@ -82,17 +86,15 @@ jobs:
 
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
-        uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
-        env:
-          MISE_DISABLE_TOOLS: node,terraform
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           experimental: true
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
 
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+      - name: Sets the base and head SHAs required for `nx affected` command
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       - name: Install dependencies
         run: mise deps
@@ -112,8 +114,13 @@ jobs:
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      # We exclude all Terraform Apps from quality checks
+      # because they require a dedicated environment to be initialized.
+      # Their static checks (lint, test) run in the "infra-review" job.
       - name: Run code quality checks on affected projects
-        run: pnpm validate
+        run: |
+            EXCLUDE=$(nx show projects --affected --type=app --projects=tag:terraform --sep=,)
+            nx affected --exclude=$EXCLUDE --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci
 
   get-environments:
     name: Get GitHub Environments for Infrastructure
@@ -123,37 +130,83 @@ jobs:
     outputs:
       environments: ${{ steps.detect.outputs.environments }}
     permissions:
+      actions: read
       contents: read
     steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: pagopa/dx/.github/actions/node-setup@main
+
+      - name: Set base and head SHAs for affected commands
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
       # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-cd`
       # define which credentials and runner labels are used for Terraform plans.
       - name: Get GitHub Environments
         id: detect
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const environments = await github.paginate(
-              github.rest.repos.getAllEnvironments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
-              },
-              (response) => response.data
-            );
-            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-ci)$/;
-            const matrix = environments
-              .filter(({ name }) => planEnvironmentPattern.test(name))
-              .filter(({ name }) => !name.includes("uat"))
-              .map(({ name }) => {
-                const [, envName] = name.split("-");
-                return {
-                  "github-environment": name,
-                  "env-name": envName,
-                };
-              });
-            core.setOutput("environments", JSON.stringify(matrix));
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # Fetch all matching GitHub environments and build the candidate matrix.
+          candidate_environments="$(
+            gh api \
+              --paginate \
+              --slurp \
+              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+              jq --compact-output '
+              [
+                .[].environments[]
+                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
+                | select(.name | contains("uat") | not)
+                | {
+                    "github-environment": .name,
+                    "env-name": (.name | split("-")[1])
+                  }
+              ]
+            '
+          )"
+
+          # jq emits one compact JSON object per line for the Bash loop to process.
+          affected_environments=()
+          while IFS= read -r environment; do
+            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+
+            # Keep Terraform apps and exclude those not tagged for this environment.
+            affected_projects="$(
+              pnpm nx show projects \
+                --affected \
+                --type=app \
+                --projects=tag:terraform \
+                --exclude="!tag:env:$env_name" \
+                --json
+            )"
+
+            if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+              affected_environments+=("$environment")
+            fi
+          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+          # Rebuild the retained objects as the JSON array expected by the matrix.
+          if [ "${#affected_environments[@]}" -eq 0 ]; then
+            environments='[]'
+          else
+            environments="$(
+              printf '%s\n' "${affected_environments[@]}" |
+                jq --slurp --compact-output '.'
+            )"
+          fi
+
+          printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
 
   infra-review:
     name: Infrastructure Review (${{ matrix.target.github-environment }})
@@ -190,17 +243,29 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
+      # Azure/AWS CLIs come from the repository mise.toml, not from the
+      # self-hosted runner image. Install them before Cloud Login so
+      # azure/login and aws-actions/configure-aws-credentials can find az/aws.
+      - name: Setup repository tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          # Enable experimental features to use "mise deps"
+          experimental: true
+
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
 
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
-
+      # Mise deps for pnpm only performs a global "pnpm install".
+      # Here we want to install only the root workspace dependencies,
+      # so we handle it manually.
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: |
+          mise deps --skip pnpm
+          pnpm --filter . ci
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -250,12 +315,14 @@ jobs:
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
           if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-            pnpm nx affected -t plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME},!repository"
+            EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
           elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            pnpm nx affected -t plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
+            EXCLUDE="*,!bootstrapper-${ENV_NAME}"
           else
-            pnpm nx affected -t plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*,repository"
+            EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
           fi
+          pnpm nx affected -t lint,test -c ci --exclude="$EXCLUDE" && \
+            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}
