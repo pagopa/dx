@@ -36,8 +36,8 @@ from .config import (
     write_config,
 )
 from .discover import DiscoverError, find_evals_files, load_evals_file
-from .schema import EvalsFile, ResolvedEvalPaths, resolve_eval_paths
-from .task import generate_task_atomic, task_dir_name
+from .schema import EvalsFile, resolve_eval_paths
+from .task import TaskSpec, generate_task_atomic, task_dir_name
 
 DEFAULT_OUT = Path(".harbor")
 DEFAULT_SCAN_ROOT = Path("plugins")
@@ -72,25 +72,11 @@ class ConvertOptions:
 
 
 @dataclass(frozen=True)
-class PlannedTask:
-    """One eval case fully planned: identity, resolved fixtures, write knobs."""
-
-    task_dir: str
-    source: str
-    evals: EvalsFile
-    case_id: int
-    skill_dir: Path
-    paths: ResolvedEvalPaths
-    workspace_dir: Path | None
-    env_overrides: dict | None
-
-
-@dataclass(frozen=True)
 class RunPlan:
     """A validated, collision-free plan for one Harbor benchmark run."""
 
     options: ConvertOptions
-    tasks: tuple[PlannedTask, ...]
+    tasks: tuple[TaskSpec, ...]
     skill_dirs: tuple[Path, ...]
     declared_kwargs: dict
     config_out: Path
@@ -189,7 +175,7 @@ def plan_run(options: ConvertOptions) -> RunPlan:
         else None
     )
 
-    tasks: list[PlannedTask] = []
+    tasks: list[TaskSpec] = []
     seen: dict[str, str] = {}
     for evals_path, evals, skill_dir in loaded:
         resolved = resolve_eval_paths(evals, skill_dir)
@@ -205,12 +191,11 @@ def plan_run(options: ConvertOptions) -> RunPlan:
                 )
             seen[dir_name] = source
             tasks.append(
-                PlannedTask(
+                TaskSpec(
                     task_dir=dir_name,
-                    source=source,
-                    evals=evals,
-                    case_id=case.id,
-                    skill_dir=skill_dir,
+                    skill_name=evals.skill_name,
+                    case=case,
+                    harbor=evals.harbor,
                     paths=resolved[case.id],
                     workspace_dir=workspace_dir,
                     env_overrides=env_overrides,
@@ -241,17 +226,7 @@ def apply_run(plan: RunPlan) -> RunResult:
 
     created: list[TaskWrite] = []
     for task in plan.tasks:
-        fixtures = generate_task_atomic(
-            evals_file=task.evals,
-            case_id=task.case_id,
-            task_root=tasks_dir / task.task_dir,
-            workspace_dir=task.workspace_dir,
-            overlays=task.paths["overlays"],
-            files=task.paths["files"],
-            prepare_script=task.paths["prepare_script"],
-            env_overrides=task.env_overrides,
-            overrides=task.paths["overrides"],
-        )
+        fixtures = generate_task_atomic(task, tasks_dir / task.task_dir)
         created.append(TaskWrite(task_dir=task.task_dir, fixtures=tuple(fixtures)))
 
     stale_removed: list[str] = []

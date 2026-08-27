@@ -2,6 +2,7 @@
 
 from .run import ConvertOptions, RunPlan, RunResult, apply_run, plan_run
 from .schema import EvalsFile, EvalCase, HarborMeta
+from .task import TaskSpec
 from .workspace import WorkspaceError, compose_workspace
 
 __all__ = [
@@ -10,6 +11,7 @@ __all__ = [
     "HarborMeta",
     "WorkspaceError",
     "compose_workspace",
+    "TaskSpec",
     "ConvertOptions",
     "RunPlan",
     "RunResult",

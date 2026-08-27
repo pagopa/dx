@@ -5,11 +5,12 @@ from __future__ import annotations
 import os
 import re
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 
 import tomli_w
 
-from .schema import EvalCase, EvalsFile
+from .schema import EvalCase, HarborMeta, ResolvedEvalPaths
 from .workspace import WorkspaceError, compose_workspace
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
@@ -50,6 +51,26 @@ DEFAULT_TASK_TOML: dict = {
 }
 
 
+@dataclass(frozen=True)
+class TaskSpec:
+    """The fully-resolved description of one Harbor task to generate.
+
+    Value-based: carries the resolved eval case, the suite metadata, the
+    precomputed directory name, and the resolved fixture paths — everything
+    generation needs, with no lookups and no reference back into an evals file.
+    The write destination (``task_root``) is deliberately NOT part of the spec:
+    the spec is the *what*, ``task_root`` is the *where*.
+    """
+
+    task_dir: str
+    skill_name: str
+    case: EvalCase
+    harbor: HarborMeta
+    paths: ResolvedEvalPaths
+    workspace_dir: Path | None = None
+    env_overrides: dict | None = None
+
+
 def task_dir_name(skill_name: str, case_id: int, case_name: str | None) -> str:
     """Stable, collision-free task directory name.
 
@@ -64,9 +85,9 @@ def task_dir_name(skill_name: str, case_id: int, case_name: str | None) -> str:
     return f"{skill_name}-{case_id}-{slug}" if slug else f"{skill_name}-{case_id}"
 
 
-def task_name(skill_name: str, case_id: int, case_name: str | None) -> str:
-    """Harbor task name: ``org/<task_dir_name>`` (both segments non-empty)."""
-    return f"pagopa/{task_dir_name(skill_name, case_id, case_name)}"
+def task_name(task_dir: str) -> str:
+    """Harbor task name: ``org/<task_dir>`` (both segments non-empty)."""
+    return f"pagopa/{task_dir}"
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -132,35 +153,26 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
     return header + "\n" + tomli_w.dumps({"criterion": criteria})
 
 
-def generate_task(
-    *,
-    evals_file: EvalsFile,
-    case_id: int,
-    task_root: Path,
-    workspace_dir: Path | None = None,
-    overlays: list[Path] = (),
-    files: list[Path] = (),
-    prepare_script: Path | None = None,
-    env_overrides: dict | None = None,
-    overrides: dict[str, Path] | None = None,
-) -> list[str]:
-    """Write a full Harbor task tree at ``task_root`` for one eval case.
+def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
+    """Write a full Harbor task tree at ``task_root`` from a :class:`TaskSpec`.
 
-    ``overrides`` maps a destination path (relative to the task root, see
-    ``OVERRIDABLE_TARGETS``) to an absolute source file in the skill dir. An
-    overridden destination replaces the generated file verbatim (with
+    ``spec.paths["overrides"]`` maps a destination path (relative to the task
+    root, see ``OVERRIDABLE_TARGETS``) to an absolute source file in the skill
+    dir. An overridden destination replaces the generated file verbatim (with
     ``{{KEY}}`` placeholder substitution); ``task.toml`` is replaced wholesale.
 
-    ``prepare_script`` (when set) is a build-time setup script from the skill
-    dir: it is copied into the workspace as ``prepare.sh`` and the generated
-    ``environment/Dockerfile`` runs it after ``COPY . /workspace/``, before the
-    git baseline. Per-eval ``prepare_script`` wins over the suite-level one (see
-    ``resolve_eval_paths``).
+    ``spec.paths["prepare_script"]`` (when set) is a build-time setup script
+    from the skill dir: it is copied into the workspace as ``prepare.sh`` and
+    the generated ``environment/Dockerfile`` runs it after ``COPY . /workspace/``,
+    before the git baseline. Per-eval ``prepare_script`` wins over the
+    suite-level one (see ``resolve_eval_paths``).
 
     Returns the list of created fixture paths (workspace files).
     """
-    case = next(c for c in evals_file.evals if c.id == case_id)
-    harbor = evals_file.harbor
+    case = spec.case
+    harbor = spec.harbor
+    env_overrides = spec.env_overrides
+    overrides = spec.paths["overrides"]
 
     task_root.mkdir(parents=True, exist_ok=True)
     # skeleton with harbor timeout defaults, THEN user overrides win
@@ -181,16 +193,14 @@ def generate_task(
     )
     task_toml = _deep_merge(task_toml, env_overrides or {})
     task_toml.setdefault("task", {})
-    task_toml["task"]["name"] = task_name(
-        evals_file.skill_name, case.id, case.name
-    )
+    task_toml["task"]["name"] = task_name(spec.task_dir)
     task_toml["task"]["description"] = case.expected_output.strip()[:200]
     task_toml["task"]["version"] = "1.0.0"
     task_toml.setdefault("metadata", {})
     task_toml["metadata"].setdefault("difficulty", "medium")
     task_toml["metadata"].setdefault("category", "skill-eval")
     task_toml["metadata"].setdefault(
-        "tags", [evals_file.skill_name, "skill-eval"]
+        "tags", [spec.skill_name, "skill-eval"]
     )
     task_toml["metadata"].setdefault("estimated_duration_sec", 900)
 
@@ -235,10 +245,11 @@ def generate_task(
     env_dir = task_root / "environment"
     created = compose_workspace(
         env_dir,
-        workspace_dir=workspace_dir,
-        overlays=overlays,
-        files=files,
+        workspace_dir=spec.workspace_dir,
+        overlays=spec.paths["overlays"],
+        files=spec.paths["files"],
     )
+    prepare_script = spec.paths["prepare_script"]
     if prepare_script is not None:
         # Build-time setup hook: the generated Dockerfile runs /workspace/prepare.sh
         # after copying the workspace and before the git baseline commit.
@@ -273,7 +284,7 @@ def generate_task(
         dst=tests_dir / "test.sh",
         overrides=overrides,
         default=(TEMPLATES / "test.sh").read_text(),
-        SKILL_NAME=evals_file.skill_name,
+        SKILL_NAME=spec.skill_name,
     )
     # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
     _write_with_override(
@@ -306,7 +317,7 @@ def generate_task(
     return created
 
 
-def generate_task_atomic(*, evals_file: EvalsFile, case_id: int, task_root: Path, **kwargs) -> list[str]:
+def generate_task_atomic(spec: TaskSpec, task_root: Path) -> list[str]:
     """Generate a task atomically: build in a sibling temp dir, swap in on success.
 
     On failure the previous complete task at ``task_root`` is left untouched and
@@ -314,7 +325,7 @@ def generate_task_atomic(*, evals_file: EvalsFile, case_id: int, task_root: Path
     (``task_root`` moves to a backup, the fresh temp dir moves into place, the
     backup is dropped), so ``task_root`` never holds a partially-written tree.
 
-    Accepts the same keyword arguments as :func:`generate_task`.
+    Same interface as :func:`generate_task`.
     """
     parent = task_root.parent
     parent.mkdir(parents=True, exist_ok=True)
@@ -324,9 +335,7 @@ def generate_task_atomic(*, evals_file: EvalsFile, case_id: int, task_root: Path
         if stale.exists():
             shutil.rmtree(stale)
     try:
-        created = generate_task(
-            evals_file=evals_file, case_id=case_id, task_root=tmp, **kwargs
-        )
+        created = generate_task(spec, tmp)
     except BaseException:
         shutil.rmtree(tmp, ignore_errors=True)
         raise

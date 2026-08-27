@@ -11,6 +11,7 @@ from harbor_mod.convert.discover import load_evals_file
 from harbor_mod.convert.schema import resolve_eval_paths
 from harbor_mod.convert.task import (
     DEFAULT_TASK_TOML,
+    TaskSpec,
     generate_task,
     generate_task_atomic,
     task_dir_name,
@@ -53,14 +54,33 @@ def skill(tmp_path: Path) -> Path:
     return skill
 
 
+def make_spec(
+    skill: Path,
+    case_id: int = 1,
+    *,
+    workspace_dir: Path | None = None,
+    env_overrides: dict | None = None,
+    paths: dict | None = None,
+) -> TaskSpec:
+    """Build a fully-resolved TaskSpec for ``case_id`` in ``skill``."""
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    resolved = resolve_eval_paths(evals, skill)
+    case = next(c for c in evals.evals if c.id == case_id)
+    return TaskSpec(
+        task_dir=task_dir_name(evals.skill_name, case.id, case.name),
+        skill_name=evals.skill_name,
+        case=case,
+        harbor=evals.harbor,
+        paths=paths if paths is not None else resolved[case_id],
+        workspace_dir=workspace_dir,
+        env_overrides=env_overrides,
+    )
+
+
 def test_generate_task_structure(skill: Path, tmp_path: Path):
-    evals, skill_dir = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task"
     created = generate_task(
-        evals_file=evals,
-        case_id=1,
-        task_root=task_root,
-        workspace_dir=skill_dir / "harbor" / "workspace",
+        make_spec(skill, workspace_dir=skill / "harbor" / "workspace"), task_root
     )
 
     assert "core.txt" in created
@@ -115,9 +135,8 @@ def test_shared_verifier_mode_omits_separation(skill: Path, tmp_path: Path):
             }
         )
     )
-    evals, _ = load_evals_file(skill_dir / "evals" / "evals.json")
     task_root = tmp_path / "shared-task"
-    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    generate_task(make_spec(skill_dir), task_root)
     toml = tomllib.loads((task_root / "task.toml").read_text())
     assert "environment_mode" not in toml["verifier"]
     assert toml["artifacts"] == []
@@ -125,9 +144,8 @@ def test_shared_verifier_mode_omits_separation(skill: Path, tmp_path: Path):
 
 
 def test_generate_task_empty_workspace(skill: Path, tmp_path: Path):
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task2"
-    created = generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    created = generate_task(make_spec(skill), task_root)
     assert created == []
     assert not list((task_root / "environment").iterdir()) or (
         task_root / "environment" / "Dockerfile"
@@ -135,13 +153,10 @@ def test_generate_task_empty_workspace(skill: Path, tmp_path: Path):
 
 
 def test_env_overrides_merge(skill: Path, tmp_path: Path):
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task3"
     generate_task(
-        evals_file=evals,
-        case_id=1,
-        task_root=task_root,
-        env_overrides={"agent": {"timeout_sec": 42.0}},
+        make_spec(skill, env_overrides={"agent": {"timeout_sec": 42.0}}),
+        task_root,
     )
     toml = tomllib.loads((task_root / "task.toml").read_text())
     assert toml["agent"]["timeout_sec"] == 42.0
@@ -154,27 +169,24 @@ def test_task_dir_name_includes_case_id():
     assert task_dir_name("skill", 1, "case-one") == "skill-1-case-one"
     assert task_dir_name("skill", 2, None) == "skill-2"
     assert task_dir_name("skill", 1, "same") != task_dir_name("skill", 2, "same")
-    assert task_name("skill", 1, "case-one") == "pagopa/skill-1-case-one"
-    assert task_name("skill", 2, None) == "pagopa/skill-2"
+    assert task_name("skill-1-case-one") == "pagopa/skill-1-case-one"
+    assert task_name("skill-2") == "pagopa/skill-2"
 
 
 def test_generate_task_atomic_preserves_previous_on_failure(
     skill: Path, tmp_path: Path
 ):
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task"
-    generate_task_atomic(evals_file=evals, case_id=1, task_root=task_root)
+    generate_task_atomic(make_spec(skill), task_root)
     marker = task_root / "instruction.md"
     original = marker.read_text()
     assert (task_root / "task.toml").is_file()
 
     with pytest.raises(WorkspaceError):
-        generate_task_atomic(
-            evals_file=evals,
-            case_id=1,
-            task_root=task_root,
-            files=[tmp_path / "does-not-exist.txt"],
-        )
+        evals, _ = load_evals_file(skill / "evals" / "evals.json")
+        bad_paths = resolve_eval_paths(evals, skill)
+        bad_paths[1]["files"] = [tmp_path / "does-not-exist.txt"]
+        generate_task_atomic(make_spec(skill, paths=bad_paths[1]), task_root)
     # the last complete task is preserved and no temp dirs leak
     assert marker.read_text() == original
     assert (task_root / "task.toml").is_file()
@@ -182,9 +194,8 @@ def test_generate_task_atomic_preserves_previous_on_failure(
 
 
 def test_generated_dockerfile_bakes_copilot_cli(skill: Path, tmp_path: Path):
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task"
-    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    generate_task(make_spec(skill), task_root)
     dockerfile = (task_root / "environment" / "Dockerfile").read_text()
     # the CLI is baked in so per-trial reinstalls are skipped at runtime
     assert "curl -fsSL https://gh.io/copilot-install | bash" in dockerfile
@@ -198,9 +209,8 @@ def test_generated_dockerfile_bakes_copilot_cli(skill: Path, tmp_path: Path):
 def test_generated_dockerfile_deterministic_git_baseline(
     skill: Path, tmp_path: Path
 ):
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
     task_root = tmp_path / "task"
-    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    generate_task(make_spec(skill), task_root)
     dockerfile = (task_root / "environment" / "Dockerfile").read_text()
     # deterministic repo-local identity, never the base image's global config
     assert 'git config user.name "harbor-mod"' in dockerfile
@@ -240,15 +250,7 @@ def _write_evals(
 
 
 def _generate(skill: Path, task_root: Path) -> None:
-    evals, _ = load_evals_file(skill / "evals" / "evals.json")
-    resolved = resolve_eval_paths(evals, skill)
-    generate_task(
-        evals_file=evals,
-        case_id=1,
-        task_root=task_root,
-        prepare_script=resolved[1]["prepare_script"],
-        overrides=resolved[1]["overrides"],
-    )
+    generate_task(make_spec(skill), task_root)
 
 
 def test_config_file_overrides(skill: Path, tmp_path: Path):
@@ -393,13 +395,9 @@ def test_prepare_script_collision_rejected(skill: Path, tmp_path: Path):
         skill_dir,
         harbor={"prepare_script": "harbor/prepare.sh"},
     )
-    evals, _ = load_evals_file(skill_dir / "evals" / "evals.json")
     task_root = tmp_path / "task"
     with pytest.raises(WorkspaceError, match="prepare.sh"):
         generate_task(
-            evals_file=evals,
-            case_id=1,
-            task_root=task_root,
-            workspace_dir=skill_dir / "harbor" / "workspace",
-            prepare_script=(skill_dir / "harbor" / "prepare.sh").resolve(),
+            make_spec(skill_dir, workspace_dir=skill_dir / "harbor" / "workspace"),
+            task_root,
         )
