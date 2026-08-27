@@ -22,6 +22,12 @@ them into ``~/.copilot/skills/``, so the agent under evaluation never sees the
 answers — regardless of whether the skill came from the local workspace or
 from git.
 
+It also skips the Copilot CLI reinstall when the binary is already on PATH
+(see :meth:`install`): every trial runs in a fresh container and the base
+``install()`` re-runs ``curl -fsSL https://gh.io/copilot-install | bash``
+unconditionally, which dominates environment setup. Baking the CLI into a
+reused/prebuilt image (see the README) makes that step a no-op.
+
 Load it with::
 
     harbor run ... --agent harbor_mod.agents.copilot_cli_mod:CopilotCliMod
@@ -147,12 +153,36 @@ class CopilotCliMod(CopilotCli):
             "done"
         )
 
+    async def install(self, environment):
+        """Install the Copilot CLI only when it is not already on PATH.
+
+        The base ``install()`` runs ``curl -fsSL https://gh.io/copilot-install |
+        bash`` unconditionally. That is the dominant cost of environment setup:
+        every trial gets a fresh container, so the CLI is re-downloaded even
+        when it is baked into the (reused) image. When ``copilot`` is already
+        on PATH — e.g. baked into a prebuilt image, see the README — we skip
+        the reinstall entirely.
+        """
+        result = await self.exec_as_agent(
+            environment,
+            command=(
+                'export PATH="$HOME/.local/bin:$PATH"; '
+                "if command -v copilot >/dev/null 2>&1; then "
+                "echo installed; else echo missing; fi"
+            ),
+        )
+        if result.stdout and "installed" in result.stdout:
+            self.logger.info("Copilot CLI already installed; skipping reinstall")
+            return
+        await super().install(environment)
+
     async def setup(self, environment):
         """Base setup, but strip eval data from injected skills first.
 
         Runs :meth:`_build_strip_skills_command` as root (uploaded skills live
         in ``<skills_dir>/<skill-name>/`` in the container), then delegates to
-        the base ``setup()`` which installs the CLI and copies skills into
+        the base ``setup()`` which installs the CLI (skipped when already
+        present, see :meth:`install`) and copies skills into
         ``~/.copilot/skills/``.
         """
         strip_command = self._build_strip_skills_command()

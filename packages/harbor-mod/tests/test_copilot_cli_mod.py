@@ -91,6 +91,41 @@ class _FakeEnvironment:
         return types.SimpleNamespace(return_code=0, stdout="", stderr="")
 
 
+class _ProbeEnvironment(_FakeEnvironment):
+    """Fake env that reports whether the Copilot CLI is installed."""
+
+    def __init__(self, installed: bool) -> None:
+        super().__init__()
+        self._installed = installed
+
+    async def exec(self, command, user=None, env=None, cwd=None, timeout_sec=None):
+        self.calls.append((user, command))
+        if "command -v copilot" in command:
+            return types.SimpleNamespace(
+                return_code=0,
+                stdout="installed" if self._installed else "missing",
+                stderr="",
+            )
+        return types.SimpleNamespace(return_code=0, stdout="", stderr="")
+
+
+def test_install_skips_reinstall_when_copilot_already_installed():
+    env = _ProbeEnvironment(installed=True)
+    agent = CopilotCliMod(logs_dir=Path("logs"))
+    asyncio.run(agent.install(env))
+    commands = " ".join(cmd for _, cmd in env.calls)
+    assert "copilot-install" not in commands
+    assert commands.count("command -v copilot") == 1
+
+
+def test_install_runs_base_install_when_copilot_missing():
+    env = _ProbeEnvironment(installed=False)
+    agent = CopilotCliMod(logs_dir=Path("logs"))
+    asyncio.run(agent.install(env))
+    commands = " ".join(cmd for _, cmd in env.calls)
+    assert "gh.io/copilot-install" in commands
+
+
 def test_setup_strips_skills_as_root_before_base_setup(monkeypatch):
     env = _FakeEnvironment()
     agent = CopilotCliMod(logs_dir=Path("logs"), skills_dir="/harbor/skills")

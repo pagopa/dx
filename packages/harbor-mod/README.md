@@ -101,6 +101,7 @@ Requirements and caveats:
   Without a configured kernel, `container build` fails with
   `default kernel not configured for architecture arm64` and every trial dies
   at environment start. `convert` verifies the CLI is on `PATH`.
+
 - **Native arm64 only**: the CLI runs Linux VMs without x86 emulation; base
   images must publish arm64 variants (`ubuntu:24.04` does). The generated
   Dockerfile's `ARG TARGETARCH=amd64` is declared but unused — leave it alone,
@@ -109,6 +110,58 @@ Requirements and caveats:
   N VMs, and `cpus`/`memory_mb` map directly to VM resources.
 - **Network**: `network_mode: public` (the generated default) is ignored by the
   Apple environment, which is fine for these evals.
+
+### Reusing the environment image (faster startup)
+
+By default **every trial builds the environment image from scratch and deletes
+it afterwards**: `environment.delete` defaults to `true`, the generated configs
+do not set a `docker_image`, so each `harbor run` pays a full `container build`
+plus a fresh Copilot CLI install (`curl -fsSL https://gh.io/copilot-install |
+bash`) before the agent starts. Measured on this repo, that setup phase is
+~40s per trial (image build + container start + CLI install + skill upload),
+vs. ~130s for the agent session itself.
+
+**1. Keep the image between runs (`delete: false`)** — add to `config.yaml`:
+
+```yaml
+environment:
+  type: apple-container
+  delete: false
+```
+
+The container and image survive the run. Subsequent runs still issue a
+`container build` but reuse cached layers instead of starting cold. Combine
+with a prebuilt image (below) to skip the build entirely.
+
+**2. Prebuild once and reference it (`docker_image`)** — point the task at an
+image that already exists locally, so Harbor skips the build and never deletes
+it. Two flavors, both set `docker_image` in the task's `task.toml`:
+
+```toml
+[environment]
+docker_image = "hb__dr-blacksmith-3-use-case-boundary"
+```
+
+- **Workspace baked in the image (image name must match)**. Build the task's
+  own `environment/Dockerfile` into the exact tag Harbor would use
+  (`hb__<task-short-name>`, i.e. the task directory name lowercased):
+
+  ```bash
+  container build \
+    -t hb__dr-blacksmith-3-use-case-boundary \
+    -f .harbor/tasks/dr-blacksmith-3-use-case-boundary/environment/Dockerfile \
+    .harbor/tasks/dr-blacksmith-3-use-case-boundary/environment/
+  ```
+
+  Because a Dockerfile is present, the environment dir is **not** re-uploaded at
+  runtime: the agent sees exactly what the image baked (`COPY . /workspace/` +
+  git baseline). Rebuild after task changes.
+
+- **Generic base image, workspace uploaded at runtime**. Build one reusable
+  base image (any tag, e.g. `hb__base`) with the Copilot CLI baked in, then
+  remove/rename the task's `environment/Dockerfile` so Harbor uploads the
+  environment dir into the workdir at start. One image serves all tasks and
+  workspace updates need no rebuild.
 
 ### Running a subset of tasks
 
@@ -492,7 +545,7 @@ Notes:
   `total_nano_aiu`), falling back to `agent/copilot-cli.jsonl` (cost from the
   `session.usage_checkpoint` event). Step count comes from
   `agent/trajectory.json`. So the report also shows `reasoning tokens`, `model
-  requests` and `steps` — and works retroactively on runs that predate the
+requests` and `steps` — and works retroactively on runs that predate the
   backfill.
 - **Verifier tokens**: `harbor-rewardkit` 0.2.0 LLM judges do not persist token
   usage. The generated `tests/test.sh` installs a `sitecustomize` shim that
