@@ -9,6 +9,14 @@ ENV MISE_DATA_DIR=/home/runner/.local/share/mise
 ENV PATH="${MISE_DATA_DIR}/shims:${MISE_DATA_DIR}/bin:${PATH}"
 
 USER root
+
+# The standalone pnpm binary installed by mise dynamically links libatomic,
+# which is not present in the upstream actions runner image.
+# - libatomic needed to satisfy the dynamic linking requirement of the pnpm binary.
+RUN apt-get update && \
+    apt-get install --no-install-recommends --yes libatomic1 && \
+    rm -rf /var/lib/apt/lists/*
+
 # Mise backends use standard XDG directories that vary by tool. Keep those
 # roots writable without changing ownership outside those locations.
 RUN install -d -o runner -g runner -m 0755 \
