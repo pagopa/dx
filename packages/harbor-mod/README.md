@@ -415,6 +415,36 @@ Notes:
   `verifier tokens` row. Runs generated before this shim (or without a judge
   token) show `—`.
 
+## Comparing with vs without skill (baseline)
+
+To measure what the skill actually contributes, run the same eval set twice —
+once with the injected skills and once without (`--without-skill` omits the
+skills from the agent config **and** disables the `SKILL_EVAL_ENFORCE_SKILL_USE`
+gate in the verifier, so cases are not marked as failed just because the agent
+did not invoke a skill). Generate a dedicated baseline config, run both jobs
+with distinct names, then diff them with `compare`:
+
+```bash
+# 1. Configs: with skills (default) and without (baseline)
+harbor-mod convert --scan-root plugins --out .harbor \
+  --config-out .harbor/config.yaml
+harbor-mod convert --scan-root plugins --out .harbor-baseline \
+  --config-out .harbor-baseline/config.yaml --without-skill
+
+# 2. Run both (distinct job names — same name with a different config errors)
+harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+  --jobs-dir runs --job-name with-skill
+harbor run -c .harbor-baseline/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+  --jobs-dir runs --job-name without-skill
+
+# 3. Delta report: with-skill − without-skill (score, tokens, cost, duration)
+harbor-mod compare runs/without-skill runs/with-skill --report comparison.md
+```
+
+Keep the two configs otherwise identical (same `--model`, same `--ak`) so the
+delta isolates the skill effect. In the run configuration section of the report
+the skills row shows `—` for the baseline job.
+
 ## Gotchas (validated)
 
 - Base image must be **glibc** (ubuntu/debian), never Alpine — the Copilot CLI
