@@ -181,7 +181,10 @@ def generate_task(
     if verifier_mode == "separate":
         task_toml["verifier"]["environment_mode"] = "separate"
         task_toml["artifacts"] = list(harbor.artifacts) or [
-            "/workspace",
+            # Object form: skip the git baseline (seeded by the Dockerfile's
+            # `git init` commit) so the collected workspace snapshot stays lean;
+            # the judge reads the workspace packet, never the repo metadata.
+            {"source": "/workspace", "exclude": [".git"]},
             "/logs/agent/copilot-cli.jsonl",
             # ATIF trajectory (written by the copilot-cli agent after the run);
             # RewardKit [judge].atif-trajectory points here for process criteria.

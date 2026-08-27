@@ -184,7 +184,7 @@ verifier only what is declared in the task-level `artifacts` list:
 
 ```toml
 artifacts = [
-  "/workspace",                       # files the agent produced (judge packet)
+  { source = "/workspace", exclude = [".git"] },  # agent-produced files (judge packet); skip the git baseline
   "/logs/agent/copilot-cli.jsonl",    # agent transcript (F1 skill proof)
   "/logs/agent/trajectory.json",      # ATIF trajectory (RewardKit process criteria)
 ]

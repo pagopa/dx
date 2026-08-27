@@ -72,7 +72,7 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["verifier"]["env"]["OPENAI_API_BASE"] == "https://api.githubcopilot.com"
     # separate verifier env (default): dedicated container, artifacts declared
     assert toml["verifier"]["environment_mode"] == "separate"
-    assert "/workspace" in toml["artifacts"]
+    assert {"source": "/workspace", "exclude": [".git"]} in toml["artifacts"]
     assert "/logs/agent/copilot-cli.jsonl" in toml["artifacts"]
     assert "/logs/agent/trajectory.json" in toml["artifacts"]
     # verifier image Dockerfile built from tests/
