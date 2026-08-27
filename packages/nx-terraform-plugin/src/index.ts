@@ -123,6 +123,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
           projects: {
             [root]: getProject(
               opts,
+              context.workspaceRoot,
               root,
               hasRootTflintConfig,
               publishableManifestByRoot.get(root),
