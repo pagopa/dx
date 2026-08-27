@@ -41,36 +41,45 @@ from harbor_mod.copilot_usage import extract_trial_usage
 
 JSON = dict[str, Any]
 
-#: Trial metrics reported per task (in display order). ``cost_usd`` and the
-#: durations are floats; token counts and step/request counts are ints;
-#: ``passed`` is a bool.
-_METRIC_ORDER = (
-    "input_tokens",
-    "cache_tokens",
-    "output_tokens",
-    "reasoning_tokens",
-    "n_requests",
-    "n_steps",
-    "cost_usd",
-    "verifier_tokens",
-    "agent_duration_sec",
-    "total_duration_sec",
-    "verifier_duration_sec",
-)
+@dataclass(frozen=True)
+class MetricSpec:
+    """One reportable metric: its key, display label, and summary aggregation.
 
-_METRIC_LABELS = {
-    "input_tokens": "input tokens",
-    "cache_tokens": "cache tokens",
-    "output_tokens": "output tokens",
-    "reasoning_tokens": "reasoning tokens",
-    "n_requests": "model requests",
-    "n_steps": "steps",
-    "cost_usd": "cost (USD)",
-    "verifier_tokens": "verifier tokens",
-    "agent_duration_sec": "agent duration (s)",
-    "total_duration_sec": "total duration (s)",
-    "verifier_duration_sec": "verifier duration (s)",
-}
+    ``kind`` selects how the summary aggregates the metric across tasks:
+    ``"score"`` for verifier rewards (mean), ``"total"`` for summed metrics
+    (tokens, requests, steps, cost), ``"mean"`` for averaged metrics
+    (durations). The :data:`_METRICS` registry below is the single place a new
+    metric is declared: the per-task table, the column label, and the summary
+    line all follow from one entry. ``passed`` is a trial-level flag and is
+    reported separately, not as a metric.
+    """
+
+    key: str
+    kind: str = "mean"
+    label: str | None = None
+
+    @property
+    def display_label(self) -> str:
+        return self.label or self.key
+
+
+#: Trial metrics reported per task, in display order. Verifier reward metrics
+#: are added dynamically from each job's reward keys (see :func:`metric_specs`);
+#: this registry declares the rest. ``cost_usd`` and the durations are floats;
+#: token counts and step/request counts are ints.
+_METRICS: tuple[MetricSpec, ...] = (
+    MetricSpec("input_tokens", "total", "input tokens"),
+    MetricSpec("cache_tokens", "total", "cache tokens"),
+    MetricSpec("output_tokens", "total", "output tokens"),
+    MetricSpec("reasoning_tokens", "total", "reasoning tokens"),
+    MetricSpec("n_requests", "total", "model requests"),
+    MetricSpec("n_steps", "total", "steps"),
+    MetricSpec("cost_usd", "total", "cost (USD)"),
+    MetricSpec("verifier_tokens", "total", "verifier tokens"),
+    MetricSpec("agent_duration_sec", "mean", "agent duration (s)"),
+    MetricSpec("total_duration_sec", "mean", "total duration (s)"),
+    MetricSpec("verifier_duration_sec", "mean", "verifier duration (s)"),
+)
 
 
 @dataclass
@@ -129,6 +138,22 @@ class JobMeta:
     judge_model: str | None = None
     judge_effort: str | None = None
     skills: list[SkillVersion] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
+class TrialComparison:
+    """One task's metrics from both jobs; either side may be absent."""
+
+    task: str
+    base: TrialMetrics | None = None
+    head: TrialMetrics | None = None
+
+
+@dataclass(frozen=True)
+class Report:
+    """A joined two-job comparison: one :class:`TrialComparison` per task."""
+
+    rows: tuple[TrialComparison, ...] = ()
 
 
 def _parse_timestamp(value: str | None) -> datetime | None:
@@ -202,6 +227,22 @@ def _normalize_usage(usage: dict[str, Any]) -> tuple[int, int]:
         return 0, 0
 
 
+def _load_reward_details(trial_dir: Path) -> dict[str, Any] | None:
+    """The ``reward`` dict from ``verifier/reward-details.json``, or ``None``.
+
+    Both verifier-token counts and the judge model/effort metadata are read
+    from this one file; this helper is the only place that knows its shape.
+    """
+    details = trial_dir / "verifier" / "reward-details.json"
+    if not details.is_file():
+        return None
+    try:
+        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
+    except (OSError, json.JSONDecodeError):
+        return None
+    return reward
+
+
 def _verifier_tokens(trial_dir: Path) -> int | None:
     """Total verifier (judge) tokens for a trial.
 
@@ -233,12 +274,8 @@ def _verifier_tokens(trial_dir: Path) -> int | None:
         if saw:
             return total
 
-    details = trial_dir / "verifier" / "reward-details.json"
-    if not details.is_file():
-        return None
-    try:
-        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
-    except (OSError, json.JSONDecodeError):
+    reward = _load_reward_details(trial_dir)
+    if reward is None:
         return None
     usage = reward.get("usage")
     if not isinstance(usage, dict):
@@ -251,12 +288,8 @@ def _load_judge_meta(data: JSON, trial_dir: Path, meta: JobMeta) -> None:
     """Fill judge model/effort from reward-details.json when still unknown."""
     if meta.judge_model is not None and meta.judge_effort is not None:
         return
-    details = trial_dir / "verifier" / "reward-details.json"
-    if not details.is_file():
-        return
-    try:
-        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
-    except (OSError, json.JSONDecodeError):
+    reward = _load_reward_details(trial_dir)
+    if reward is None:
         return
     judge = reward.get("judge") or {}
     meta.judge_model = meta.judge_model or judge.get("model")
@@ -403,36 +436,38 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
     return out
 
 
-def metric_names(
+def metric_specs(
     base: dict[str, TrialMetrics], head: dict[str, TrialMetrics]
-) -> list[str]:
-    """All metric names to compare, reward keys flattened as ``score.<key>``."""
+) -> list[MetricSpec]:
+    """All metrics to report: dynamic score specs first, then the registry.
+
+    Score specs come from the union of reward keys across both jobs (labeled by
+    their ``score.<key>`` name); the static registry supplies the ordered,
+    labeled non-score metrics. Declaring a metric once in the registry — or a
+    reward key simply appearing in a job — is all it takes for the per-task
+    table and the summary to pick it up.
+    """
     reward_keys = sorted(
         {key for m in (*base.values(), *head.values()) for key in m.rewards}
     )
-    return [f"score.{key}" for key in reward_keys] + list(_METRIC_ORDER)
+    return [MetricSpec(f"score.{key}", "score") for key in reward_keys] + list(_METRICS)
 
 
 def build_report(
     base: dict[str, TrialMetrics], head: dict[str, TrialMetrics]
-) -> dict[str, Any]:
-    """Join two jobs by task and compute deltas (head - base).
+) -> Report:
+    """Join two jobs by task into a typed :class:`Report` (head - base).
 
-    Returns ``{"base_job": ..., "head_job": ..., "rows": [...]}`` where each row
-    is ``{"task", "base", "head"}`` (either side may be None when the task only
-    ran in one job).
+    Each task gets one :class:`TrialComparison`; either side may be ``None``
+    when the task only ran in one job.
     """
     tasks = sorted(set(base) | set(head))
-    return {
-        "rows": [
-            {
-                "task": task,
-                "base": base.get(task),
-                "head": head.get(task),
-            }
+    return Report(
+        rows=tuple(
+            TrialComparison(task=task, base=base.get(task), head=head.get(task))
             for task in tasks
-        ]
-    }
+        )
+    )
 
 
 def _fmt(value: Any) -> str:
@@ -542,15 +577,14 @@ def _render_run_config(
 def render_markdown(
     base_job: str,
     head_job: str,
-    report: dict[str, Any],
+    report: Report,
     base_meta: JobMeta | None = None,
     head_meta: JobMeta | None = None,
 ) -> str:
     """Render the comparison as a Markdown report."""
-    rows: list[dict[str, Any]] = report["rows"]
-    base_map = {r["task"]: r["base"] for r in rows if r["base"]}
-    head_map = {r["task"]: r["head"] for r in rows if r["head"]}
-    names = metric_names(base_map, head_map)
+    base_map = {r.task: r.base for r in report.rows if r.base}
+    head_map = {r.task: r.head for r in report.rows if r.head}
+    specs = metric_specs(base_map, head_map)
 
     lines = [
         f"# Skill comparison: `{base_job}` → `{head_job}`",
@@ -563,71 +597,57 @@ def render_markdown(
     # --- Per-task tables -------------------------------------------------
     lines.append("## Per-task delta")
     lines.append("")
-    for row in rows:
-        task = row["task"]
-        base, head = row["base"], row["head"]
+    for row in report.rows:
+        task = row.task
+        base, head = row.base, row.head
         lines.append(f"### {task}")
         lines.append("")
         lines.append("| metric | base | head | Δ |")
         lines.append("|---|---|---|---|")
-        for name in names:
-            label = _METRIC_LABELS.get(name, name)
+        for spec in specs:
             lines.append(
-                f"| {label} | {_fmt(base.metric(name)) if base else '—'} | "
-                f"{_fmt(head.metric(name)) if head else '—'} | "
-                f"{_delta(base.metric(name) if base else None, head.metric(name) if head else None)} |"
+                f"| {spec.display_label} | {_fmt(base.metric(spec.key)) if base else '—'} | "
+                f"{_fmt(head.metric(spec.key)) if head else '—'} | "
+                f"{_delta(base.metric(spec.key) if base else None, head.metric(spec.key) if head else None)} |"
             )
         lines.append("")
 
     # --- Summary ---------------------------------------------------------
-    base_metrics = [r["base"] for r in rows if r["base"]]
-    head_metrics = [r["head"] for r in rows if r["head"]]
+    base_metrics = [r.base for r in report.rows if r.base]
+    head_metrics = [r.head for r in report.rows if r.head]
     lines.append("## Summary")
     lines.append("")
     lines.append(f"- tasks in base: {len(base_metrics)}; in head: {len(head_metrics)}")
     lines.append(
-        f"- tasks only in base: {sum(1 for r in rows if r['base'] and not r['head'])}; "
-        f"only in head: {sum(1 for r in rows if r['head'] and not r['base'])}"
+        f"- tasks only in base: {sum(1 for r in report.rows if r.base and not r.head)}; "
+        f"only in head: {sum(1 for r in report.rows if r.head and not r.base)}"
     )
 
-    for name in names:
+    for spec in specs:
         base_values = [
-            m.metric(name) for m in base_metrics if m.metric(name) is not None
+            m.metric(spec.key) for m in base_metrics if m.metric(spec.key) is not None
         ]
         head_values = [
-            m.metric(name) for m in head_metrics if m.metric(name) is not None
+            m.metric(spec.key) for m in head_metrics if m.metric(spec.key) is not None
         ]
-        if name.startswith("score."):
+        if spec.kind == "score":
             b_mean = _mean(base_values)
             h_mean = _mean(head_values)
             lines.append(
-                f"- {_METRIC_LABELS.get(name, name)}: mean "
+                f"- {spec.display_label}: mean "
                 f"{_fmt(b_mean)} → {_fmt(h_mean)}"
             )
-        elif name in (
-            "cost_usd",
-            "input_tokens",
-            "cache_tokens",
-            "output_tokens",
-            "reasoning_tokens",
-            "n_requests",
-            "n_steps",
-            "verifier_tokens",
-        ):
+        elif spec.kind == "total":
             lines.append(
-                f"- {_METRIC_LABELS.get(name, name)}: total "
-                f"{_fmt(_totals(base_metrics, name))} → "
-                f"{_fmt(_totals(head_metrics, name))}"
+                f"- {spec.display_label}: total "
+                f"{_fmt(_totals(base_metrics, spec.key))} → "
+                f"{_fmt(_totals(head_metrics, spec.key))}"
             )
-        elif name in (
-            "agent_duration_sec",
-            "total_duration_sec",
-            "verifier_duration_sec",
-        ):
+        else:
             b_mean = _mean(base_values)
             h_mean = _mean(head_values)
             lines.append(
-                f"- {_METRIC_LABELS.get(name, name)}: mean "
+                f"- {spec.display_label}: mean "
                 f"{_fmt(b_mean)} → {_fmt(h_mean)}"
             )
     pass_delta = (

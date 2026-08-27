@@ -50,3 +50,11 @@ _Avoid_: attempt, iteration
 A benchmark run's output directory (`jobs/<run>`): a set of trials produced by
 one `harbor run -c config.yaml`.
 _Avoid_: run, result set
+
+**Comparison report**:
+The per-task delta report produced by `harbor-mod compare` from two jobs: a
+typed `Report` of `TrialComparison` rows (one per task, base/head side), plus
+the run-configuration section. Its metrics are declared once in the compare
+metric registry (key, label, and total/mean aggregation), with verifier rewards
+added dynamically as `score.<key>` metrics.
+_Avoid_: diff, delta sheet

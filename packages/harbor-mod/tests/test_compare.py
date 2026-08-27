@@ -7,7 +7,15 @@ from pathlib import Path
 
 import pytest
 
-from harbor_mod.compare import build_report, load_job, load_job_meta, render_markdown
+from harbor_mod.compare import (
+    Report,
+    TrialComparison,
+    build_report,
+    load_job,
+    load_job_meta,
+    metric_specs,
+    render_markdown,
+)
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
 
@@ -102,11 +110,78 @@ def test_build_report_joins_by_task_and_computes_delta(tmp_path):
     _write_trial(head, "task-only-head", rewards={"quality": 0.5})
 
     report = build_report(load_job(base), load_job(head))
-    rows = {r["task"]: r for r in report["rows"]}
+    rows = {r.task: r for r in report.rows}
     assert set(rows) == {"task-a", "task-only-head"}
-    assert rows["task-a"]["base"] is not None and rows["task-a"]["head"] is not None
-    assert rows["task-only-head"]["base"] is None
-    assert rows["task-only-head"]["head"] is not None
+    assert rows["task-a"].base is not None and rows["task-a"].head is not None
+    assert rows["task-only-head"].base is None
+    assert rows["task-only-head"].head is not None
+
+
+def test_report_rows_are_typed_trial_comparisons(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8})
+    _write_trial(head, "task-a", rewards={"quality": 0.95})
+    _write_trial(head, "task-only-head", rewards={"quality": 0.5})
+
+    report = build_report(load_job(base), load_job(head))
+    assert isinstance(report, Report)
+    assert len(report.rows) == 2
+    task_a = next(r for r in report.rows if r.task == "task-a")
+    assert isinstance(task_a, TrialComparison)
+    assert task_a.base is not None and task_a.head is not None
+    only_head = next(r for r in report.rows if r.task == "task-only-head")
+    assert only_head.base is None and only_head.head is not None
+
+
+def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8, "pass": 1}, tokens=(1, 2, 3))
+    _write_trial(head, "task-a", rewards={"quality": 0.9, "pass": 1}, tokens=(1, 2, 3))
+
+    specs = metric_specs(load_job(base), load_job(head))
+    assert [s.key for s in specs] == [
+        "score.pass",
+        "score.quality",
+        "input_tokens",
+        "cache_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "n_requests",
+        "n_steps",
+        "cost_usd",
+        "verifier_tokens",
+        "agent_duration_sec",
+        "total_duration_sec",
+        "verifier_duration_sec",
+    ]
+    assert specs[0].kind == "score"
+    assert specs[0].display_label == "score.pass"
+
+
+def test_metric_registry_drives_summary_aggregation(tmp_path, monkeypatch):
+    """The registry, not a hardcoded list, decides total vs mean in the summary."""
+    import harbor_mod.compare as cmp
+
+    monkeypatch.setattr(
+        cmp,
+        "_METRICS",
+        tuple(
+            cmp.MetricSpec(s.key, "mean", s.label) if s.key == "cost_usd" else s
+            for s in cmp._METRICS
+        ),
+    )
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", tokens=(1000, 0, 100), cost=0.5)
+    _write_trial(head, "task-a", tokens=(1100, 50, 120), cost=0.8)
+
+    md = render_markdown(
+        "run-base", "run-head", build_report(load_job(base), load_job(head))
+    )
+    assert "cost (USD): mean" in md
+    assert "cost (USD): total" not in md
 
 
 def test_render_markdown_includes_deltas(tmp_path):
