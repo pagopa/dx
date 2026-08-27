@@ -62,6 +62,35 @@ if [ -n "$JUDGE_TOKEN" ]; then
     done
   } > /logs/artifacts/workspace-packet.md 2>/dev/null || true
 
+  # Record per-call judge token usage: harbor-rewardkit 0.2.0 discards the LLM
+  # response usage, so a `sitecustomize` shim patches `litellm.acompletion` to
+  # tee each response's usage into /logs/verifier/usage.jsonl (aggregated by
+  # `harbor-mod compare`). The patch is inert if litellm is unavailable.
+  cat > /tmp/sitecustomize.py << 'PYEOF'
+import json, os
+USAGE_FILE = os.environ.get("JUDGE_USAGE_FILE", "/logs/verifier/usage.jsonl")
+try:
+    import litellm
+    _original = litellm.acompletion
+    async def _patched(*args, **kwargs):
+        resp = await _original(*args, **kwargs)
+        try:
+            usage = getattr(resp, "usage", None)
+            if hasattr(usage, "model_dump"):
+                usage = usage.model_dump()
+            elif usage is not None and not isinstance(usage, dict):
+                usage = dict(usage)
+            with open(USAGE_FILE, "a", encoding="utf-8") as fh:
+                fh.write(json.dumps({"usage": usage or {}}) + "\n")
+        except Exception:
+            pass
+        return resp
+    litellm.acompletion = _patched
+except Exception:
+    pass
+PYEOF
+  export PYTHONPATH="/tmp:${PYTHONPATH:-}"
+
   uvx --from harbor-rewardkit==0.2.0 rewardkit /tests \
     --workspace /workspace \
     --output /logs/verifier/reward.json \

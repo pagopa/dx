@@ -8,8 +8,22 @@ task, the delta of the metrics the run produced:
 - score: the verifier rewards (e.g. RewardKit criteria in ``verifier_result``)
 - tokens: agent input/cache/output tokens
 - cost: agent execution cost in USD
-- duration: agent execution and total trial wall-clock
+- duration: agent execution, total trial and verifier wall-clock
+- steps: agent trajectory steps and model request count
 - pass/fail: whether the trial completed without an exception
+
+Token/cost values that ``result.json`` cannot report (GPT runs leave input/cache
+tokens and cost unset) are backfilled from the trial's raw artifacts when they
+are available: ``agent/copilot/session-store.db`` (authoritative per-request
+usage) with a fallback to ``agent/copilot-cli.jsonl``. Step counts come from
+``agent/trajectory.json``.
+
+Besides the per-task deltas, a **run configuration** section reports the agent
+and judge (grading) models with their reasoning effort, the version of each
+injected skill (local workspace vs. git ref), and a ready-to-run ``git diff``
+command comparing a git-loaded skill against the local checkout. Verifier
+tokens come from ``verifier/reward-details.json`` → ``reward.usage`` (persisted
+by agent-mode judges; LLM judges in harbor-rewardkit 0.2.0 do not record it).
 
 Use it to compare the same eval set run against two versions of a skill (e.g.
 the current workspace vs. a git ref loaded with ``harbor run --skill``).
@@ -18,31 +32,44 @@ the current workspace vs. a git ref loaded with ``harbor run --skill``).
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from harbor_mod.copilot_usage import extract_trial_usage
+
 JSON = dict[str, Any]
 
 #: Trial metrics reported per task (in display order). ``cost_usd`` and the
-#: durations are floats; token counts are ints; ``passed`` is a bool.
+#: durations are floats; token counts and step/request counts are ints;
+#: ``passed`` is a bool.
 _METRIC_ORDER = (
     "input_tokens",
     "cache_tokens",
     "output_tokens",
+    "reasoning_tokens",
+    "n_requests",
+    "n_steps",
     "cost_usd",
+    "verifier_tokens",
     "agent_duration_sec",
     "total_duration_sec",
+    "verifier_duration_sec",
 )
 
 _METRIC_LABELS = {
     "input_tokens": "input tokens",
     "cache_tokens": "cache tokens",
     "output_tokens": "output tokens",
+    "reasoning_tokens": "reasoning tokens",
+    "n_requests": "model requests",
+    "n_steps": "steps",
     "cost_usd": "cost (USD)",
+    "verifier_tokens": "verifier tokens",
     "agent_duration_sec": "agent duration (s)",
     "total_duration_sec": "total duration (s)",
+    "verifier_duration_sec": "verifier duration (s)",
 }
 
 
@@ -55,9 +82,14 @@ class TrialMetrics:
     input_tokens: int | None = None
     cache_tokens: int | None = None
     output_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    n_requests: int | None = None
+    n_steps: int | None = None
     cost_usd: float | None = None
+    verifier_tokens: int | None = None
     agent_duration_sec: float | None = None
     total_duration_sec: float | None = None
+    verifier_duration_sec: float | None = None
     passed: bool = True
     trial_name: str | None = None
 
@@ -66,6 +98,37 @@ class TrialMetrics:
         if name.startswith("score."):
             return self.rewards.get(name[len("score.") :])
         return getattr(self, name)
+
+
+@dataclass
+class SkillVersion:
+    """How a skill was sourced in a job run (local workspace or git cache)."""
+
+    name: str
+    kind: str  # "local" | "git"
+    path: str
+    repo: str | None = None
+    ref: str | None = None
+    rel_path: str | None = None
+
+    @property
+    def version(self) -> str:
+        """Human-readable version: ``(local)`` or ``(git: <repo>@<sha>)``."""
+        if self.kind == "git":
+            short = self.ref[:8] if self.ref else "?"
+            return f"(git: {self.repo}@{short})"
+        return "(local)"
+
+
+@dataclass
+class JobMeta:
+    """Job-level configuration extracted from a job directory."""
+
+    agent_model: str | None = None
+    agent_effort: str | None = None
+    judge_model: str | None = None
+    judge_effort: str | None = None
+    skills: list[SkillVersion] = field(default_factory=list)
 
 
 def _parse_timestamp(value: str | None) -> datetime | None:
@@ -85,12 +148,221 @@ def _seconds(start: str | None, end: str | None) -> float | None:
     return max(0.0, (finished - started).total_seconds())
 
 
+#: Root of Harbor's git-skill cache: ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``.
+_GIT_CACHE_PREFIX = Path.home() / ".cache" / "harbor" / "skills"
+
+
+def _describe_skill(path_str: str) -> SkillVersion:
+    """Classify a skill path as a local workspace skill or a git-cached one.
+
+    Harbor stores ``--skill <url>@<ref>`` checkouts under
+    ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``; the commit
+    SHA in the path is the tested git version. Everything else is local.
+    """
+    try:
+        rel = Path(path_str).resolve().relative_to(_GIT_CACHE_PREFIX.resolve())
+    except ValueError:
+        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
+    parts = rel.parts
+    if len(parts) < 4:
+        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
+    rel_path = "/".join(parts[4:])
+    return SkillVersion(
+        name=rel_path or parts[-1],
+        kind="git",
+        path=path_str,
+        repo=f"{parts[1]}/{parts[2]}",
+        ref=parts[3],
+        rel_path=rel_path,
+    )
+
+
+def _skill_diff_command(skill: SkillVersion) -> str | None:
+    """A ready-to-run ``git diff`` between the remote skill version and the local checkout.
+
+    Compares the working tree (the locally tested skill) against the git ref the
+    remote run loaded (``pagopa/dx@<sha>``), restricted to the skill path. Runs
+    from anywhere inside the repo thanks to the ``rev-parse`` substitution.
+    """
+    if skill.kind != "git" or not skill.ref or not skill.rel_path:
+        return None
+    return (
+        f'git -C "$(git rev-parse --show-toplevel)" diff {skill.ref} '
+        f"-- {skill.rel_path}"
+    )
+
+
+def _normalize_usage(usage: dict[str, Any]) -> tuple[int, int]:
+    """Extract (input, output) token counts from a LiteLLM usage dict."""
+    inp = usage.get("input_tokens") or usage.get("prompt_tokens") or 0
+    out = usage.get("output_tokens") or usage.get("completion_tokens") or 0
+    try:
+        return int(inp), int(out)
+    except (TypeError, ValueError):
+        return 0, 0
+
+
+def _verifier_tokens(trial_dir: Path) -> int | None:
+    """Total verifier (judge) tokens for a trial.
+
+    Prefers ``verifier/usage.jsonl`` — one line per judge LLM call, written by
+    the ``test.sh`` LiteLLM shim (see the ``tests/test.sh`` template). Falls
+    back to ``reward.usage`` in ``reward-details.json`` (normalized
+    ``JudgeUsage`` persisted by agent-mode judges or future rewardkit versions).
+    Returns ``None`` when no usage was recorded.
+    """
+    usage_file = trial_dir / "verifier" / "usage.jsonl"
+    if usage_file.is_file():
+        total = 0
+        saw = False
+        try:
+            lines = usage_file.read_text(encoding="utf-8", errors="replace").splitlines()
+        except OSError:
+            lines = []
+        for line in lines:
+            if not line.strip():
+                continue
+            try:
+                usage = (json.loads(line) or {}).get("usage") or {}
+            except json.JSONDecodeError:
+                continue
+            inp, out = _normalize_usage(usage)
+            if inp or out:
+                total += inp + out
+                saw = True
+        if saw:
+            return total
+
+    details = trial_dir / "verifier" / "reward-details.json"
+    if not details.is_file():
+        return None
+    try:
+        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
+    except (OSError, json.JSONDecodeError):
+        return None
+    usage = reward.get("usage")
+    if not isinstance(usage, dict):
+        return None
+    total = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
+    return int(total) if total else None
+
+
+def _load_judge_meta(data: JSON, trial_dir: Path, meta: JobMeta) -> None:
+    """Fill judge model/effort from reward-details.json when still unknown."""
+    if meta.judge_model is not None and meta.judge_effort is not None:
+        return
+    details = trial_dir / "verifier" / "reward-details.json"
+    if not details.is_file():
+        return
+    try:
+        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
+    except (OSError, json.JSONDecodeError):
+        return
+    judge = reward.get("judge") or {}
+    meta.judge_model = meta.judge_model or judge.get("model")
+    meta.judge_effort = meta.judge_effort or judge.get("reasoning_effort")
+
+
+def load_job_meta(job_dir: Path) -> JobMeta | None:
+    """Extract job-level configuration (models, effort, skill versions).
+
+    Reads the first trial's ``result.json`` ``config.agent`` for the session
+    model/effort and skill list, and the verifier ``reward-details.json`` for the
+    grading (judge) model/effort.
+    """
+    if not job_dir.is_dir():
+        return None
+    meta = JobMeta()
+    for trial_dir in sorted(p for p in job_dir.iterdir() if p.is_dir()):
+        result_path = trial_dir / "result.json"
+        if not result_path.is_file():
+            continue
+        try:
+            data = json.loads(result_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        agent = (data.get("config") or {}).get("agent") or {}
+        if meta.agent_model is None:
+            meta.agent_model = agent.get("model_name") or (
+                (data.get("agent_info") or {}).get("model_info") or {}
+            ).get("name")
+        if meta.agent_effort is None:
+            meta.agent_effort = (agent.get("kwargs") or {}).get("reasoning_effort")
+        if not meta.skills:
+            meta.skills = [_describe_skill(path) for path in agent.get("skills") or []]
+        _load_judge_meta(data, trial_dir, meta)
+        if (
+            meta.agent_model is not None
+            and meta.agent_effort is not None
+            and meta.judge_model is not None
+            and meta.judge_effort is not None
+            and meta.skills
+        ):
+            break
+    return meta
+
+
+def _trajectory_steps(path: Path) -> int | None:
+    """Read ``final_metrics.total_steps`` from an ATIF trajectory file."""
+    if not path.is_file():
+        return None
+    try:
+        trajectory = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    return (trajectory.get("final_metrics") or {}).get("total_steps")
+
+
+def _backfill_from_artifacts(metrics: TrialMetrics, trial_dir: Path) -> None:
+    """Fill metrics ``result.json`` could not report from raw trial artifacts.
+
+    GPT runs leave input/cache tokens and cost unset in ``agent_result``; the
+    trial's session database and JSONL stream carry the authoritative numbers
+    (see :mod:`harbor_mod.copilot_usage`). Only missing values are replaced, and
+    the trajectory file supplies the step count.
+    """
+    if metrics.n_steps is None:
+        metrics.n_steps = _trajectory_steps(trial_dir / "agent" / "trajectory.json")
+
+    has_all_tokens = all(
+        value is not None
+        for value in (
+            metrics.input_tokens,
+            metrics.cache_tokens,
+            metrics.output_tokens,
+            metrics.cost_usd,
+            metrics.n_requests,
+            metrics.reasoning_tokens,
+        )
+    )
+    if has_all_tokens:
+        return
+
+    usage = extract_trial_usage(trial_dir)
+    if usage is None:
+        return
+    if metrics.input_tokens is None:
+        metrics.input_tokens = usage.input_tokens
+    if metrics.cache_tokens is None:
+        metrics.cache_tokens = usage.cache_tokens
+    if metrics.output_tokens is None:
+        metrics.output_tokens = usage.output_tokens
+    if metrics.reasoning_tokens is None:
+        metrics.reasoning_tokens = usage.reasoning_tokens
+    if metrics.n_requests is None:
+        metrics.n_requests = usage.n_requests or None
+    if metrics.cost_usd is None:
+        metrics.cost_usd = usage.cost_usd
+
+
 def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
     """Load per-task metrics from a Harbor job directory.
 
     Scans ``<job_dir>/*/result.json`` (one subdir per trial) and returns a dict
     keyed by ``task_name``. With ``n_attempts > 1`` a task may appear more than
-    once: the last completed trial wins.
+    once: the last completed trial wins. Missing token/cost/step metrics are
+    backfilled from the trial's raw artifacts (see
+    :func:`_backfill_from_artifacts`).
     """
     if not job_dir.is_dir():
         raise FileNotFoundError(f"job directory not found: {job_dir}")
@@ -103,7 +375,7 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
         agent_result = data.get("agent_result") or {}
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
-        out[data.get("task_name", trial_dir.name)] = TrialMetrics(
+        metrics = TrialMetrics(
             task_name=data.get("task_name", trial_dir.name),
             trial_name=data.get("trial_name"),
             rewards=dict(rewards),
@@ -111,6 +383,7 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
             cache_tokens=agent_result.get("n_cache_tokens"),
             output_tokens=agent_result.get("n_output_tokens"),
             cost_usd=agent_result.get("cost_usd"),
+            verifier_tokens=_verifier_tokens(trial_dir),
             agent_duration_sec=_seconds(
                 agent_execution.get("started_at"),
                 agent_execution.get("finished_at"),
@@ -119,8 +392,14 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
                 data.get("started_at"),
                 data.get("finished_at"),
             ),
+            verifier_duration_sec=_seconds(
+                (data.get("verifier") or {}).get("started_at"),
+                (data.get("verifier") or {}).get("finished_at"),
+            ),
             passed=data.get("exception_info") is None,
         )
+        _backfill_from_artifacts(metrics, trial_dir)
+        out[metrics.task_name] = metrics
     return out
 
 
@@ -205,8 +484,67 @@ def _mean(values: list[float]) -> float | None:
     return sum(values) / len(values) if values else None
 
 
+def _render_run_config(
+    base_job: str,
+    head_job: str,
+    base_meta: JobMeta | None,
+    head_meta: JobMeta | None,
+) -> list[str]:
+    """Render the job-level run configuration section (models, skills, diff)."""
+    if base_meta is None and head_meta is None:
+        return []
+
+    def _model_cell(meta: JobMeta | None) -> str:
+        if meta is None or meta.agent_model is None:
+            return "—"
+        effort = f" (effort: {meta.agent_effort})" if meta.agent_effort else ""
+        return f"{meta.agent_model}{effort}"
+
+    def _judge_cell(meta: JobMeta | None) -> str:
+        if meta is None or meta.judge_model is None:
+            return "—"
+        effort = f" (effort: {meta.judge_effort})" if meta.judge_effort else ""
+        return f"{meta.judge_model}{effort}"
+
+    def _skills(meta: JobMeta | None) -> str:
+        if meta is None or not meta.skills:
+            return "—"
+        return "<br>".join(f"{s.name} {s.version}" for s in meta.skills)
+
+    lines = ["## Run configuration", ""]
+    lines.append(f"| | {base_job} | {head_job} |")
+    lines.append("|---|---|---|")
+    lines.append(f"| agent model | {_model_cell(base_meta)} | {_model_cell(head_meta)} |")
+    lines.append(f"| judge model | {_judge_cell(base_meta)} | {_judge_cell(head_meta)} |")
+    lines.append(f"| skills | {_skills(base_meta)} | {_skills(head_meta)} |")
+    lines.append("")
+
+    git_cmds = [
+        (skill, run)
+        for meta, run in ((base_meta, base_job), (head_meta, head_job))
+        if meta is not None
+        for skill in meta.skills
+        if _skill_diff_command(skill) is not None
+    ]
+    if git_cmds:
+        lines.append("Skill diff (local working tree vs. git-loaded version):")
+        lines.append("")
+        lines.append("```bash")
+        for skill, run in git_cmds:
+            cmd = _skill_diff_command(skill)
+            lines.append(f"# {run} · {skill.name} {skill.version}")
+            lines.append(cmd or "")
+        lines.append("```")
+        lines.append("")
+    return lines
+
+
 def render_markdown(
-    base_job: str, head_job: str, report: dict[str, Any]
+    base_job: str,
+    head_job: str,
+    report: dict[str, Any],
+    base_meta: JobMeta | None = None,
+    head_meta: JobMeta | None = None,
 ) -> str:
     """Render the comparison as a Markdown report."""
     rows: list[dict[str, Any]] = report["rows"]
@@ -220,6 +558,7 @@ def render_markdown(
         "Delta is **head − base**. ",
         "",
     ]
+    lines.extend(_render_run_config(base_job, head_job, base_meta, head_meta))
 
     # --- Per-task tables -------------------------------------------------
     lines.append("## Per-task delta")
@@ -265,13 +604,26 @@ def render_markdown(
                 f"- {_METRIC_LABELS.get(name, name)}: mean "
                 f"{_fmt(b_mean)} → {_fmt(h_mean)}"
             )
-        elif name in ("cost_usd", "input_tokens", "cache_tokens", "output_tokens"):
+        elif name in (
+            "cost_usd",
+            "input_tokens",
+            "cache_tokens",
+            "output_tokens",
+            "reasoning_tokens",
+            "n_requests",
+            "n_steps",
+            "verifier_tokens",
+        ):
             lines.append(
                 f"- {_METRIC_LABELS.get(name, name)}: total "
                 f"{_fmt(_totals(base_metrics, name))} → "
                 f"{_fmt(_totals(head_metrics, name))}"
             )
-        elif name in ("agent_duration_sec", "total_duration_sec"):
+        elif name in (
+            "agent_duration_sec",
+            "total_duration_sec",
+            "verifier_duration_sec",
+        ):
             b_mean = _mean(base_values)
             h_mean = _mean(head_values)
             lines.append(

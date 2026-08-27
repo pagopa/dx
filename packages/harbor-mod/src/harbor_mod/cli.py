@@ -15,7 +15,7 @@ finds everything. Injected skills point at the raw skill directories: eval data
 ``CopilotCliMod.setup()``, never on the host.
 
 ``compare`` reads two Harbor job directories (``jobs/<run>``) and prints a
-per-task delta report (score, tokens, cost, duration).
+per-task delta report (score, tokens, cost, steps, duration).
 """
 
 from __future__ import annotations
@@ -24,7 +24,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .compare import build_report, load_job, render_markdown
+from .compare import build_report, load_job, load_job_meta, render_markdown
 from .convert import task as task_module
 from .convert.config import DEFAULT_MODEL, build_config, write_config
 from .convert.discover import DiscoverError, find_evals_files, load_evals_file
@@ -135,7 +135,9 @@ def cmd_compare(args: argparse.Namespace) -> int:
     base = load_job(Path(args.base).resolve())
     head = load_job(Path(args.head).resolve())
     report = build_report(base, head)
-    markdown = render_markdown(args.base, args.head, report)
+    base_meta = load_job_meta(Path(args.base).resolve())
+    head_meta = load_job_meta(Path(args.head).resolve())
+    markdown = render_markdown(args.base, args.head, report, base_meta, head_meta)
     if args.report:
         out = Path(args.report)
         out.parent.mkdir(parents=True, exist_ok=True)

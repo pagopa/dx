@@ -16,7 +16,9 @@ PagoPA Harbor extensions.
    solution/solve.sh) plus a ready-to-run `config.yaml`, so
    `harbor run -c config.yaml` finds everything.
 3. **`harbor-mod compare`** — reads two Harbor job directories and prints a
-   per-task delta report (score, tokens, cost, duration) — see
+   per-task delta report (score, tokens, cost, steps, duration), plus a run
+   configuration section (agent/judge models and effort, skill versions, git
+   diff command) — see
    [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
 
 The goal of `convert` is to avoid refactoring each `evals.json` into the
@@ -384,9 +386,34 @@ Notes:
   `plugins/aiepdf/skills`, whose immediate children contain `SKILL.md`.)
 - **Delta semantics**: `harbor-mod compare <base> <head>` reports
   `head − base`. Each task's `result.json` contributes the verifier rewards
-  (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent and
-  total duration, and pass/fail. Missing tasks (ran in only one job) are
-  reported as `(only base)` / `(new)`, plus a summary with totals/means.
+  (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent,
+  total and verifier duration, verifier (judge) tokens, and pass/fail. Missing
+  tasks (ran in only one job) are reported as `(only base)` / `(new)`, plus a
+  summary with totals/means.
+- **Run configuration**: a section lists, for each job, the agent model and
+  reasoning effort, the grading (judge) model and effort (from
+  `verifier/reward-details.json`), and the version of each injected skill —
+  `(local)` for workspace skills, `(git: <org>/<repo>@<sha>)` for skills loaded
+  via `harbor run --skill`. For git-loaded skills a ready-to-run `git diff`
+  command is printed that compares the local working tree against the tested
+  git ref:
+  `git -C "$(git rev-parse --show-toplevel)" diff <sha> -- <skill path>`.
+- **Token/cost backfill**: GPT runs leave input/cache tokens and cost unset in
+  `result.json` (the JSONL stream reports only output tokens). `compare`
+  backfills them from the trial's raw artifacts when present:
+  `agent/copilot/session-store.db` (authoritative per-request usage: input,
+  cache read/write, output, reasoning tokens, cost metered via
+  `total_nano_aiu`), falling back to `agent/copilot-cli.jsonl` (cost from the
+  `session.usage_checkpoint` event). Step count comes from
+  `agent/trajectory.json`. So the report also shows `reasoning tokens`, `model
+  requests` and `steps` — and works retroactively on runs that predate the
+  backfill.
+- **Verifier tokens**: `harbor-rewardkit` 0.2.0 LLM judges do not persist token
+  usage. The generated `tests/test.sh` installs a `sitecustomize` shim that
+  patches `litellm.acompletion` and tees each judge call's usage into
+  `verifier/usage.jsonl` (one line per call); `compare` aggregates it into the
+  `verifier tokens` row. Runs generated before this shim (or without a judge
+  token) show `—`.
 
 ## Gotchas (validated)
 

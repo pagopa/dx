@@ -41,8 +41,12 @@ that runs ``harbor`` (``uv tool install harbor --with 'harbor-mod @ ...'`` or
 from __future__ import annotations
 
 import shlex
+from pathlib import Path
 
 from harbor.agents.installed.copilot_cli import CopilotCli
+from harbor.models.agent.context import AgentContext
+
+from harbor_mod.copilot_usage import extract_usage_from_session_db
 
 #: Subdirectories removed from every injected skill before it is exposed to the
 #: agent. ``evals/`` holds the eval cases + expected outputs (leak protection),
@@ -155,3 +159,41 @@ class CopilotCliMod(CopilotCli):
         if strip_command:
             await self.exec_as_root(environment, command=strip_command)
         await super().setup(environment)
+
+    def populate_context_post_run(self, context: AgentContext) -> None:
+        """Base post-run parsing, then backfill usage from the session DB.
+
+        The base parser derives token counts from the JSONL stream, which for
+        GPT models reports only ``outputTokens`` — input/cache tokens and cost
+        are left unset. The Copilot CLI session database
+        (``copilot/session-store.db``, preserved next to the logs by the base
+        ``_save_session_state``) records per-request input/cache/reasoning token
+        counts and a metered cost (``total_nano_aiu``); when available we
+        overwrite the trajectory numbers with those authoritative aggregates.
+        Extra per-request metrics (request count, reasoning tokens, cache write)
+        are surfaced under ``context.metadata`` for drill-down.
+        """
+        super().populate_context_post_run(context)
+
+        usage = extract_usage_from_session_db(
+            Path(self.logs_dir) / "copilot" / "session-store.db"
+        )
+        if usage is None or not usage.has_data:
+            return
+
+        for attr, value in (
+            ("n_input_tokens", usage.input_tokens),
+            ("n_cache_tokens", usage.cache_tokens),
+            ("n_output_tokens", usage.output_tokens),
+            ("cost_usd", usage.cost_usd),
+        ):
+            if value is not None:
+                setattr(context, attr, value)
+        context.metadata = {
+            **(context.metadata or {}),
+            "usage_source": usage.source,
+            "n_requests": usage.n_requests,
+            "reasoning_tokens": usage.reasoning_tokens,
+            "cache_read_tokens": usage.cache_read_tokens,
+            "cache_write_tokens": usage.cache_write_tokens,
+        }

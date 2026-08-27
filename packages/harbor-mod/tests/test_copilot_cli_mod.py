@@ -6,11 +6,15 @@ import asyncio
 import types
 from pathlib import Path
 
+from harbor.models.agent.context import AgentContext
+
 from harbor_mod.agents import CopilotCliMod
 from harbor_mod.agents.copilot_cli_mod import (
     _STRIPPED_SKILL_DIRS,
     CopilotCli,
 )
+
+from tests.conftest import write_session_db
 
 BASE_FLAGS = {"reasoning_effort"} | {f.kwarg for f in CopilotCli.ENV_VARS}
 
@@ -110,3 +114,35 @@ def test_setup_strips_skills_as_root_before_base_setup(monkeypatch):
         i for i, (_, cmd) in enumerate(env.calls) if "/installed-agent" in cmd
     )
     assert strip_idx < mkdir_idx, "strip must run before the base setup copies skills"
+
+
+def test_populate_context_post_run_backfills_usage_from_session_db(tmp_path):
+    """GPT runs miss input/cache/cost; the session DB backfills them."""
+    logs = tmp_path / "logs"
+    write_session_db(
+        logs / "copilot" / "session-store.db",
+        rows=[(35_190, 31_087, 4_100, 359, 290, 207_814_000)],
+    )
+    agent = CopilotCliMod(logs_dir=logs)
+    context = AgentContext(n_output_tokens=41)
+    agent.populate_context_post_run(context)
+    assert context.n_input_tokens == 35_190
+    assert context.n_cache_tokens == 31_087
+    assert context.n_output_tokens == 359  # DB is authoritative
+    assert context.cost_usd == 0.207814
+    assert context.metadata["n_requests"] == 1
+    assert context.metadata["reasoning_tokens"] == 290
+    assert context.metadata["cache_read_tokens"] == 31_087
+    assert context.metadata["cache_write_tokens"] == 4_100
+    assert context.metadata["usage_source"] == "session-store.db"
+
+
+def test_populate_context_post_run_leaves_context_without_session_db(tmp_path):
+    logs = tmp_path / "logs"
+    logs.mkdir(parents=True, exist_ok=True)
+    agent = CopilotCliMod(logs_dir=logs)
+    context = AgentContext(n_output_tokens=41)
+    agent.populate_context_post_run(context)
+    assert context.n_input_tokens is None
+    assert context.cost_usd is None
+    assert context.metadata is None
