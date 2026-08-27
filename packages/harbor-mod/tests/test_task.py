@@ -181,6 +181,20 @@ def test_generate_task_atomic_preserves_previous_on_failure(
     assert [p for p in tmp_path.iterdir() if p.name.startswith(".")] == []
 
 
+def test_generated_dockerfile_bakes_copilot_cli(skill: Path, tmp_path: Path):
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    task_root = tmp_path / "task"
+    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    dockerfile = (task_root / "environment" / "Dockerfile").read_text()
+    # the CLI is baked in so per-trial reinstalls are skipped at runtime
+    assert "curl -fsSL https://gh.io/copilot-install | bash" in dockerfile
+    # installs to $HOME/.local/bin and validates the binary at build time
+    assert 'export PATH="$HOME/.local/bin:$PATH"' in dockerfile
+    assert "copilot --version" in dockerfile
+    # baked before the workspace COPY so the layer survives workspace changes
+    assert dockerfile.index("copilot-install") < dockerfile.index("COPY . /workspace/")
+
+
 def test_generated_dockerfile_deterministic_git_baseline(
     skill: Path, tmp_path: Path
 ):

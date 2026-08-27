@@ -9,6 +9,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git bash curl ca-certificates unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Bake the Copilot CLI into the image (root HOME=/root, so it lands in
+# /root/.local/bin). CopilotCliMod skips its per-trial
+# `curl ... | bash` reinstall when `copilot` is already on PATH, so this makes
+# environment setup a no-op. Must be glibc (see above); `copilot --version`
+# fails the build visibly if the install went wrong.
+RUN curl -fsSL https://gh.io/copilot-install | bash \
+    && export PATH="$HOME/.local/bin:$PATH" \
+    && copilot --version
+
 WORKDIR /workspace
 
 # Deterministic fixture repository (git baseline so the agent can diff).

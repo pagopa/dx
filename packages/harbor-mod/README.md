@@ -116,10 +116,13 @@ Requirements and caveats:
 By default **every trial builds the environment image from scratch and deletes
 it afterwards**: `environment.delete` defaults to `true`, the generated configs
 do not set a `docker_image`, so each `harbor run` pays a full `container build`
-plus a fresh Copilot CLI install (`curl -fsSL https://gh.io/copilot-install |
-bash`) before the agent starts. Measured on this repo, that setup phase is
-~40s per trial (image build + container start + CLI install + skill upload),
-vs. ~130s for the agent session itself.
+before the agent starts. The build itself is cheap — the `container` CLI caches
+layers, so with an unchanged task `environment/` it is a ~0.4s cache hit. The
+historical ~40s setup cost came mostly from the **Copilot CLI install**
+(`curl -fsSL https://gh.io/copilot-install | bash`) inside the fresh container;
+the generated `environment/Dockerfile` now bakes the CLI into the image and
+`CopilotCliMod` skips the reinstall when `copilot` is already on PATH, so that
+step is a no-op for regenerated tasks.
 
 **1. Keep the image between runs (`delete: false`)** — add to `config.yaml`:
 
@@ -162,6 +165,12 @@ docker_image = "hb__dr-blacksmith-3-use-case-boundary"
   remove/rename the task's `environment/Dockerfile` so Harbor uploads the
   environment dir into the workdir at start. One image serves all tasks and
   workspace updates need no rebuild.
+
+> The generated `environment/Dockerfile` already bakes the Copilot CLI into the
+> image (`RUN curl -fsSL https://gh.io/copilot-install | bash`), and
+> `CopilotCliMod` skips the `curl ... | bash` reinstall when `copilot` is on
+> PATH — so regenerated tasks have a no-op install step even without
+> `docker_image`.
 
 ### Running a subset of tasks
 
