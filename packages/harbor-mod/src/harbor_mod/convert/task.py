@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import json
 import re
 from pathlib import Path
 
 import tomli_w
 
-from .schema import EvalsFile
+from .schema import EvalCase, EvalsFile
 from .workspace import compose_workspace
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
@@ -68,6 +67,35 @@ def _write_template(src: Path, dst: Path, **replacements: str) -> None:
     dst.write_text(text)
 
 
+def build_quality_toml(case: EvalCase, judge_model: str) -> str:
+    """Render ``tests/quality.toml``: RewardKit judge header + per-eval criteria.
+
+    The header (``quality-header.toml``) pins the judge model, the evidence
+    files (workspace packet + ATIF trajectory), and the scoring gate. The
+    criteria translate the agentskills.io rubric (``expected_output`` +
+    ``expectations``) into binary RewardKit criteria, one per assertion.
+    """
+    header = (
+        TEMPLATES / "quality-header.toml"
+    ).read_text().replace("{{JUDGE_MODEL}}", judge_model)
+
+    criteria: list[dict] = [
+        {
+            "description": (
+                "The agent's output satisfies the expected result: "
+                f"{case.expected_output.strip()}"
+            ),
+            "type": "binary",
+        }
+    ]
+    criteria += [
+        {"description": expectation.strip(), "type": "binary"}
+        for expectation in case.expectations
+        if expectation.strip()
+    ]
+    return header + "\n" + tomli_w.dumps({"criterion": criteria})
+
+
 def generate_task(
     *,
     evals_file: EvalsFile,
@@ -117,13 +145,16 @@ def generate_task(
 
     # Separate verifier env: the verifier runs in a dedicated container that
     # never receives the agent's injected skills. Harbor transfers only the
-    # declared artifacts (workspace + agent trajectory jsonl) at their paths.
+    # declared artifacts (workspace + agent trajectory) at their paths.
     verifier_mode = harbor.verifier_mode
     if verifier_mode == "separate":
         task_toml["verifier"]["environment_mode"] = "separate"
         task_toml["artifacts"] = list(harbor.artifacts) or [
             "/workspace",
             "/logs/agent/copilot-cli.jsonl",
+            # ATIF trajectory (written by the copilot-cli agent after the run);
+            # RewardKit [judge].atif-trajectory points here for process criteria.
+            "/logs/agent/trajectory.json",
         ]
     else:
         task_toml["verifier"].pop("environment_mode", None)
@@ -148,7 +179,7 @@ def generate_task(
         (TEMPLATES / "dockerignore").read_text()
     )
 
-    # tests/ = verifier + judge + rubric
+    # tests/ = verifier + RewardKit judge config
     tests_dir = task_root / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
     _write_template(
@@ -156,7 +187,10 @@ def generate_task(
         tests_dir / "test.sh",
         SKILL_NAME=evals_file.skill_name,
     )
-    _write_template(TEMPLATES / "judge.py", tests_dir / "judge.py")
+    # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
+    (tests_dir / "quality.toml").write_text(
+        build_quality_toml(case, harbor.judge_model)
+    )
     if verifier_mode == "separate":
         # Separate verifier image: Harbor builds the verifier container from
         # this Dockerfile; tests/ is NOT uploaded at runtime.
@@ -164,17 +198,6 @@ def generate_task(
             TEMPLATES / "verifier-Dockerfile",
             tests_dir / "Dockerfile",
         )
-    (tests_dir / "rubric.json").write_text(
-        json.dumps(
-            {
-                "prompt": case.prompt,
-                "expected_output": case.expected_output,
-                "expectations": case.expectations,
-                "judge_model": harbor.judge_model,
-            },
-            indent=2,
-        )
-    )
 
     # solution/ = oracle stub
     solution_dir = task_root / "solution"

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import tomllib
 from pathlib import Path
 
@@ -73,12 +72,19 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["verifier"]["environment_mode"] == "separate"
     assert "/workspace" in toml["artifacts"]
     assert "/logs/agent/copilot-cli.jsonl" in toml["artifacts"]
+    assert "/logs/agent/trajectory.json" in toml["artifacts"]
     # verifier image Dockerfile built from tests/
     assert (task_root / "tests" / "Dockerfile").is_file()
 
-    rubric = json.loads((task_root / "tests" / "rubric.json").read_text())
-    assert rubric["expectations"] == ["inspects repo"]
-    assert rubric["judge_model"] == "openai/gpt-5.6-luna"
+    quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
+    assert quality["judge"]["judge"] == "openai/gpt-5.6-luna"
+    assert quality["judge"]["files"] == ["/logs/artifacts/workspace-packet.md"]
+    # expected_output + expectations -> one binary criterion each
+    descriptions = [c["description"] for c in quality["criterion"]]
+    assert len(descriptions) == 2
+    assert "the thing done" in descriptions[0]
+    assert descriptions[1] == "inspects repo"
+    assert all(c["type"] == "binary" for c in quality["criterion"])
 
 
 def test_shared_verifier_mode_omits_separation(skill: Path, tmp_path: Path):

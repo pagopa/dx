@@ -3,9 +3,9 @@
 #
 # Runs in a SEPARATE verifier container that never sees the agent's injected
 # skills, workspace, or agent logs. Harbor transfers only the task-level
-# `artifacts` (here: /workspace + /logs/agent/copilot-cli.txt) re-materialized
-# at their original paths, plus /logs/artifacts/; /logs/verifier/ is mounted
-# for the reward.
+# `artifacts` (here: /workspace + /logs/agent/copilot-cli.jsonl +
+# /logs/agent/trajectory.json) re-materialized at their original paths, plus
+# /logs/artifacts/; /logs/verifier/ is mounted for the reward.
 set -uo pipefail
 
 # --- F1: skill load + invoke proof (agent trajectory under /logs/agent) ----------
@@ -37,7 +37,7 @@ if [ "$SKILL_OK" -eq 0 ]; then
   exit 0
 fi
 
-# --- LLM judge (single call via judge.py) -------------------------------------
+# --- LLM judge (RewardKit quality.toml) ---------------------------------------
 JUDGE_TOKEN="${OPENAI_API_KEY:-${COPILOT_GITHUB_TOKEN:-${GH_TOKEN:-${GITHUB_TOKEN:-}}}}"
 if [ -n "$JUDGE_TOKEN" ]; then
   export PATH="$HOME/.local/bin:$PATH"
@@ -47,8 +47,10 @@ if [ -n "$JUDGE_TOKEN" ]; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
   fi
-  # Recursive workspace packet: judge.py reads the produced files (transferred
-  # artifact /workspace) plus the Copilot CLI transcript (/logs/agent).
+  # Recursive workspace packet: RewardKit [judge].files does not recurse
+  # directories, so concat the produced files (transferred artifact /workspace)
+  # into one markdown the judge reads; the ATIF trajectory (/logs/agent) lets
+  # the judge see tool calls for process-based criteria.
   mkdir -p /logs/artifacts
   {
     for f in $(find /workspace -type f -not -path '*/.agents/*' -not -path '*/.git/*' | sort); do
@@ -60,19 +62,15 @@ if [ -n "$JUDGE_TOKEN" ]; then
     done
   } > /logs/artifacts/workspace-packet.md 2>/dev/null || true
 
-  uv run --no-project --with litellm python /tests/judge.py \
-    --rubric /tests/rubric.json \
-    --transcript "$TRANSCRIPT" \
-    --packet /logs/artifacts/workspace-packet.md \
+  uvx --from harbor-rewardkit==0.2.0 rewardkit /tests \
+    --workspace /workspace \
     --output /logs/verifier/reward.json \
-    --reason-output /logs/verifier/reason.txt \
     || true
 
-  if [ -f /logs/verifier/reward.json ]; then
-    python3 -c 'import json,sys; d=json.load(open("/logs/verifier/reward.json")); print(d["reward"])' \
-      > /logs/verifier/reward.txt 2>/dev/null \
-      || echo 0 > /logs/verifier/reward.txt
-  else
+  # Harbor reads reward.json by default and falls back to reward.txt. Only
+  # write the text fallback when RewardKit produced no usable reward.json.
+  if [ ! -s /logs/verifier/reward.json ]; then
+    rm -f /logs/verifier/reward.json
     echo 0 > /logs/verifier/reward.txt
   fi
 else
