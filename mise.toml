@@ -25,6 +25,7 @@ TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
 idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
 minimum_release_age = "7d"
 minimum_release_age_excludes = ["copilot", "github-cli"]
+experimental = true
 
 [deps.tflint]
 sources = [".tflint.hcl"]
