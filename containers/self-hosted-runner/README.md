@@ -65,4 +65,3 @@ The image includes basic tests to verify the installation of key tools:
 
 - mise (`mise --version`)
 - zip (`zip -v`)
-- libatomic (`ldconfig -p | grep libatomic.so.1`)
