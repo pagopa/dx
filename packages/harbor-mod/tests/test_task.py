@@ -10,6 +10,7 @@ import pytest
 from harbor_mod.convert.discover import load_evals_file
 from harbor_mod.convert.schema import resolve_eval_paths
 from harbor_mod.convert.task import DEFAULT_TASK_TOML, generate_task
+from harbor_mod.convert.workspace import WorkspaceError
 
 
 @pytest.fixture
@@ -173,6 +174,7 @@ def _generate(skill: Path, task_root: Path) -> None:
         evals_file=evals,
         case_id=1,
         task_root=task_root,
+        prepare_script=resolved[1]["prepare_script"],
         overrides=resolved[1]["overrides"],
     )
 
@@ -261,3 +263,71 @@ def test_task_toml_override_full_replace(skill: Path, tmp_path: Path):
     assert toml["agent"]["timeout_sec"] == 123.0
     # full replace: no auto-generated verifier env leaked in
     assert "verifier" not in toml
+
+
+def test_prepare_script_copied_into_workspace(skill: Path, tmp_path: Path):
+    skill_dir = skill
+    (skill_dir / "harbor").mkdir(exist_ok=True)
+    (skill_dir / "harbor" / "prepare.sh").write_text(
+        "#!/bin/sh\necho prepared > /workspace/status.txt\n"
+    )
+    _write_evals(
+        skill_dir,
+        harbor={"prepare_script": "harbor/prepare.sh"},
+    )
+    task_root = tmp_path / "task"
+    _generate(skill_dir, task_root)
+
+    prepare = task_root / "environment" / "prepare.sh"
+    assert prepare.is_file()
+    assert "prepared" in prepare.read_text()
+    # the generated Dockerfile runs it at build time, before the git baseline
+    dockerfile = (task_root / "environment" / "Dockerfile").read_text()
+    assert "prepare.sh" in dockerfile
+    assert dockerfile.index("prepare.sh") < dockerfile.index("git init")
+
+
+def test_prepare_script_per_eval_override(skill: Path, tmp_path: Path):
+    skill_dir = skill
+    (skill_dir / "harbor").mkdir(exist_ok=True)
+    (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
+    (skill_dir / "harbor" / "case-prepare.sh").write_text("case prepare")
+    _write_evals(
+        skill_dir,
+        harbor={"prepare_script": "harbor/prepare.sh"},
+        cases=[
+            {
+                "id": 1,
+                "name": "case-one",
+                "prompt": "do the thing",
+                "expected_output": "the thing done",
+                "expectations": ["inspects repo"],
+                "files": [],
+                "harbor": {"prepare_script": "harbor/case-prepare.sh"},
+            }
+        ],
+    )
+    task_root = tmp_path / "task"
+    _generate(skill_dir, task_root)
+    assert (task_root / "environment" / "prepare.sh").read_text() == "case prepare"
+
+
+def test_prepare_script_collision_rejected(skill: Path, tmp_path: Path):
+    skill_dir = skill
+    # a fixture layer already ships prepare.sh
+    (skill_dir / "harbor" / "workspace" / "prepare.sh").write_text("fixture")
+    (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
+    _write_evals(
+        skill_dir,
+        harbor={"prepare_script": "harbor/prepare.sh"},
+    )
+    evals, _ = load_evals_file(skill_dir / "evals" / "evals.json")
+    task_root = tmp_path / "task"
+    with pytest.raises(WorkspaceError, match="prepare.sh"):
+        generate_task(
+            evals_file=evals,
+            case_id=1,
+            task_root=task_root,
+            workspace_dir=skill_dir / "harbor" / "workspace",
+            prepare_script=(skill_dir / "harbor" / "prepare.sh").resolve(),
+        )

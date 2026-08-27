@@ -10,6 +10,7 @@ is passed verbatim to the agent.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -47,6 +48,13 @@ def _validate_overrides(overrides: dict[str, str]) -> dict[str, str]:
     return overrides
 
 
+def _validate_prepare_script(value: str | None) -> str | None:
+    """A ``prepare_script`` is a safe relative path (or ``None``)."""
+    if value:
+        _assert_safe_rel(value)
+    return value
+
+
 class HarborMeta(BaseModel):
     """Optional per-skill Harbor evaluation metadata (enriches evals.json)."""
 
@@ -56,6 +64,7 @@ class HarborMeta(BaseModel):
     judge_model: str = "openai/gpt-5.6-luna"
     timeout_sec: float = 900.0
     workspace_dir: str | None = None
+    prepare_script: str | None = None
     kwargs: dict[str, object] = Field(default_factory=dict)
     verifier_mode: str = "separate"
     artifacts: list[str] = Field(default_factory=list)
@@ -74,17 +83,28 @@ class HarborMeta(BaseModel):
         _validate_overrides(self.overrides)
         return self
 
+    @model_validator(mode="after")
+    def _check_prepare_script(self) -> "HarborMeta":
+        _validate_prepare_script(self.prepare_script)
+        return self
+
 
 class EvalHarborMeta(BaseModel):
-    """Per-eval Harbor metadata (currently only config file overrides)."""
+    """Per-eval Harbor metadata (config overrides + prepare_script hook)."""
 
     model_config = ConfigDict(extra="forbid")
 
     overrides: dict[str, str] = Field(default_factory=dict)
+    prepare_script: str | None = None
 
     @model_validator(mode="after")
     def _check_overrides(self) -> "EvalHarborMeta":
         _validate_overrides(self.overrides)
+        return self
+
+    @model_validator(mode="after")
+    def _check_prepare_script(self) -> "EvalHarborMeta":
+        _validate_prepare_script(self.prepare_script)
         return self
 
 
@@ -127,19 +147,30 @@ class EvalsFile(BaseModel):
         return self
 
 
+class ResolvedEvalPaths(TypedDict):
+    """Absolute paths for one eval case's fixtures and build hooks."""
+
+    files: list[Path]
+    overlays: list[Path]
+    overrides: dict[str, Path]
+    prepare_script: Path | None
+
+
 def resolve_eval_paths(
     evals_file: EvalsFile, skill_dir: Path
-) -> dict[int, dict[str, list[Path] | dict[str, Path]]]:
-    """Resolve per-eval files/overlays/overrides to absolute paths within the
-    skill dir.
+) -> dict[int, ResolvedEvalPaths]:
+    """Resolve per-eval files/overlays/overrides/prepare_script to absolute
+    paths within the skill dir.
 
     Returns ``{eval_id: {"files": [Path...], "overlays": [Path...],
-    "overrides": {target: Path}}}``. Overrides are the suite-level
-    ``harbor.overrides`` map merged with the per-eval ``evals[].harbor.overrides``
-    map (per-eval wins on key collision). Raises ``ValueError`` for unsafe or
-    missing paths.
+    "overrides": {target: Path}, "prepare_script": Path | None}}``. Overrides
+    are the suite-level ``harbor.overrides`` map merged with the per-eval
+    ``evals[].harbor.overrides`` map (per-eval wins on key collision).
+    ``prepare_script`` is the per-eval ``evals[].harbor.prepare_script`` when
+    set, otherwise the suite-level ``harbor.prepare_script``. Raises
+    ``ValueError`` for unsafe or missing paths.
     """
-    resolved: dict[int, dict[str, list[Path] | dict[str, Path]]] = {}
+    resolved: dict[int, ResolvedEvalPaths] = {}
     for case in evals_file.evals:
         files: list[Path] = []
         for rel in case.files:
@@ -170,9 +201,21 @@ def resolve_eval_paths(
                     f"{rel} (resolved to {path})"
                 )
             overrides[target] = path
+        prepare_script: Path | None = None
+        prepare_rel = case.harbor.prepare_script or evals_file.harbor.prepare_script
+        if prepare_rel:
+            _assert_safe_rel(prepare_rel)
+            path = (skill_dir / prepare_rel).resolve()
+            if not path.is_file():
+                raise ValueError(
+                    f"eval {case.id}: prepare_script not found: {prepare_rel} "
+                    f"(resolved to {path})"
+                )
+            prepare_script = path
         resolved[case.id] = {
             "files": files,
             "overlays": overlays,
             "overrides": overrides,
+            "prepare_script": prepare_script,
         }
     return resolved

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import re
+import shutil
 from pathlib import Path
 
 import tomli_w
 
 from .schema import EvalCase, EvalsFile
-from .workspace import compose_workspace
+from .workspace import WorkspaceError, compose_workspace
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 
@@ -121,6 +122,7 @@ def generate_task(
     workspace_dir: Path | None = None,
     overlays: list[Path] = (),
     files: list[Path] = (),
+    prepare_script: Path | None = None,
     env_overrides: dict | None = None,
     overrides: dict[str, Path] | None = None,
 ) -> list[str]:
@@ -130,6 +132,12 @@ def generate_task(
     ``OVERRIDABLE_TARGETS``) to an absolute source file in the skill dir. An
     overridden destination replaces the generated file verbatim (with
     ``{{KEY}}`` placeholder substitution); ``task.toml`` is replaced wholesale.
+
+    ``prepare_script`` (when set) is a build-time setup script from the skill
+    dir: it is copied into the workspace as ``prepare.sh`` and the generated
+    ``environment/Dockerfile`` runs it after ``COPY . /workspace/``, before the
+    git baseline. Per-eval ``prepare_script`` wins over the suite-level one (see
+    ``resolve_eval_paths``).
 
     Returns the list of created fixture paths (workspace files).
     """
@@ -208,6 +216,17 @@ def generate_task(
         overlays=overlays,
         files=files,
     )
+    if prepare_script is not None:
+        # Build-time setup hook: the generated Dockerfile runs /workspace/prepare.sh
+        # after copying the workspace and before the git baseline commit.
+        prepare_dst = env_dir / "prepare.sh"
+        if prepare_dst.exists():
+            raise WorkspaceError(
+                f"prepare_script would overwrite workspace file 'prepare.sh' "
+                f"(configured {prepare_script} collides with a fixture layer)"
+            )
+        shutil.copy2(prepare_script, prepare_dst)
+        created.append("prepare.sh")
     _write_with_override(
         target="environment/Dockerfile",
         dst=env_dir / "Dockerfile",

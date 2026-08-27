@@ -67,6 +67,7 @@ contract and is passed verbatim:
     "judge_model": "openai/gpt-5.6-luna", // Responses-capable model
     "timeout_sec": 900,
     "workspace_dir": "harbor/workspace", // per-skill fixture base layer
+    "prepare_script": "harbor/prepare.sh", // optional build-time setup hook
     "kwargs": { "reasoning_effort": "high", "max_ai_credits": 30 },
   },
   "evals": [
@@ -78,6 +79,10 @@ contract and is passed verbatim:
       "expectations": ["..."],
       "files": ["fixtures/seed.csv"], // per-eval files (rel. to skill dir)
       "overlays": ["fixtures/overlay-a"], // per-eval overlay dirs
+      "harbor": {
+        // per-eval override of the build-time setup hook
+        "prepare_script": "harbor/cases/case1-prepare.sh",
+      },
     },
   ],
 }
@@ -85,6 +90,26 @@ contract and is passed verbatim:
 
 Layer order: `workspace_dir` → `overlays` → `files`; path collisions between
 layers are rejected.
+
+## Build-time setup hook (`prepare.sh`)
+
+The generated `environment/Dockerfile` can run a **prepare.sh** at image build
+time to install extra tooling or seed the workspace **before the agent runs**
+(and before the git baseline commit, so prepared files are part of the agent's
+starting repo). The script lives in the skill dir and is copied into the
+workspace as `prepare.sh`; the Dockerfile runs it if present:
+
+```sh
+RUN if [ -f /workspace/prepare.sh ]; then \
+        bash /workspace/prepare.sh; \
+    fi
+```
+
+Point to it with `harbor.prepare_script` (suite-wide) or
+`evals[].harbor.prepare_script` (single eval — wins over the suite). Paths are
+relative to the skill dir (recommended: under `harbor/`, which is excluded from
+the staged skill). A configured `prepare_script` colliding with a fixture
+`prepare.sh` is rejected rather than silently overwritten.
 
 ## Configuration file overrides
 

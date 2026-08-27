@@ -14,6 +14,15 @@ WORKDIR /workspace
 # Deterministic fixture repository (git baseline so the agent can diff).
 # Identity comes from the base image global git config.
 COPY . /workspace/
+
+# Optional build-time setup: a skill can ship a prepare.sh (skill-level
+# `harbor.prepare_script`, overridable per eval) to install extra tooling or
+# seed the workspace before the agent runs. Runs before the git baseline so
+# prepared files are part of the agent's starting repo.
+RUN if [ -f /workspace/prepare.sh ]; then \
+        bash /workspace/prepare.sh; \
+    fi
+
 RUN git init -q && git add -A && git commit -qm baseline || true
 
 WORKDIR /workspace

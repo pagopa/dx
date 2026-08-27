@@ -162,3 +162,68 @@ def test_override_unsafe_path_rejected(tmp_path):
                 skill, case={"harbor": {"overrides": {"task.toml": "../x"}}}
             )
         )
+
+
+def test_prepare_script_default_none(tmp_path):
+    skill = _make_skill(tmp_path)
+    evals = EvalsFile.model_validate(
+        make_evals(skill, case={"files": [], "overlays": []})
+    )
+    assert evals.harbor.prepare_script is None
+    resolved = resolve_eval_paths(evals, skill)
+    assert resolved[1]["prepare_script"] is None
+
+
+def test_prepare_script_suite_and_per_eval(tmp_path):
+    skill = _make_skill(tmp_path)
+    (skill / "harbor").mkdir()
+    (skill / "harbor" / "prepare.sh").write_text("suite prepare")
+    (skill / "harbor" / "case-prepare.sh").write_text("case prepare")
+
+    evals = EvalsFile.model_validate(
+        make_evals(
+            skill,
+            harbor={"prepare_script": "harbor/prepare.sh"},
+            case={"files": [], "overlays": []},
+        )
+    )
+    resolved = resolve_eval_paths(evals, skill)
+    assert resolved[1]["prepare_script"] == (skill / "harbor" / "prepare.sh").resolve()
+
+    # per-eval prepare_script wins over the suite-level one
+    evals = EvalsFile.model_validate(
+        make_evals(
+            skill,
+            harbor={"prepare_script": "harbor/prepare.sh"},
+            case={
+                "files": [],
+                "overlays": [],
+                "harbor": {"prepare_script": "harbor/case-prepare.sh"},
+            },
+        )
+    )
+    resolved = resolve_eval_paths(evals, skill)
+    assert resolved[1]["prepare_script"] == (
+        skill / "harbor" / "case-prepare.sh"
+    ).resolve()
+
+
+def test_prepare_script_missing_rejected(tmp_path):
+    skill = _make_skill(tmp_path)
+    evals = EvalsFile.model_validate(
+        make_evals(
+            skill,
+            harbor={"prepare_script": "harbor/nope.sh"},
+            case={"files": [], "overlays": []},
+        )
+    )
+    with pytest.raises(ValueError, match="prepare_script not found"):
+        resolve_eval_paths(evals, skill)
+
+
+def test_prepare_script_unsafe_path_rejected(tmp_path):
+    skill = _make_skill(tmp_path)
+    with pytest.raises(ValueError, match="unsafe"):
+        EvalsFile.model_validate(
+            make_evals(skill, harbor={"prepare_script": "../x.sh"})
+        )

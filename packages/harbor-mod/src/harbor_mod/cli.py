@@ -90,6 +90,7 @@ def cmd_convert(args: argparse.Namespace) -> int:
                         workspace_dir=workspace_dir,
                         overlays=paths["overlays"],
                         files=paths["files"],
+                        prepare_script=paths["prepare_script"],
                         env_overrides=env_overrides,
                         overrides=paths["overrides"],
                     )
