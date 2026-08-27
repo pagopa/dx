@@ -24,6 +24,16 @@ class HarborMeta(BaseModel):
     timeout_sec: float = 900.0
     workspace_dir: str | None = None
     kwargs: dict[str, object] = Field(default_factory=dict)
+    verifier_mode: str = "separate"
+    artifacts: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validate_verifier_mode(self) -> "HarborMeta":
+        if self.verifier_mode not in ("separate", "shared"):
+            raise ValueError(
+                f"verifier_mode must be 'separate' or 'shared', got: {self.verifier_mode!r}"
+            )
+        return self
 
 
 class EvalCase(BaseModel):

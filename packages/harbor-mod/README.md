@@ -97,6 +97,25 @@ calls the GitHub Copilot responses endpoint through LiteLLM once, and writes
 `LITELLM_DROP_PARAMS=true`,
 `LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true`).
 
+## Separate verifier environment
+
+By default the verifier runs in a **dedicated container**
+(`[verifier] environment_mode = "separate"`), so it can never access the skills
+injected into the agent or the agent's runtime state. Harbor transfers to the
+verifier only what is declared in the task-level `artifacts` list:
+
+```toml
+artifacts = [
+  "/workspace",                       # files the agent produced (judge packet)
+  "/logs/agent/copilot-cli.jsonl",    # agent trajectory (F1 proof + judge)
+]
+```
+
+The verifier image is built from the generated `tests/Dockerfile` (ubuntu +
+uv + python; `tests/` is NOT uploaded at runtime). Override per skill/eval in
+evals.json with `"harbor": { "verifier_mode": "shared", "artifacts": [...] }`
+to fall back to the shared verifier (same container as the agent).
+
 ## Gotchas (validated)
 
 - Base image must be **glibc** (ubuntu/debian), never Alpine — the Copilot CLI

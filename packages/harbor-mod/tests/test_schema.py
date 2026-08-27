@@ -76,3 +76,14 @@ def test_unsafe_path_rejected(tmp_path):
     evals = EvalsFile.model_validate(make_evals(skill, case={"files": ["../x"]}))
     with pytest.raises(ValueError, match="unsafe"):
         resolve_eval_paths(evals, skill)
+
+
+def test_verifier_mode_default_and_validation():
+    data = make_evals(Path("."))
+    assert EvalsFile.model_validate(data).harbor.verifier_mode == "separate"
+    assert EvalsFile.model_validate(data).harbor.artifacts == []
+
+    with pytest.raises(ValueError, match="verifier_mode"):
+        EvalsFile.model_validate(
+            make_evals(Path("."), harbor={"verifier_mode": "bogus"})
+        )

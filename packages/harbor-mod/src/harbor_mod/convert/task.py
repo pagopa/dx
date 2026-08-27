@@ -114,6 +114,21 @@ def generate_task(
         "tags", [evals_file.skill_name, "skill-eval"]
     )
     task_toml["metadata"].setdefault("estimated_duration_sec", 900)
+
+    # Separate verifier env: the verifier runs in a dedicated container that
+    # never receives the agent's injected skills. Harbor transfers only the
+    # declared artifacts (workspace + agent trajectory jsonl) at their paths.
+    verifier_mode = harbor.verifier_mode
+    if verifier_mode == "separate":
+        task_toml["verifier"]["environment_mode"] = "separate"
+        task_toml["artifacts"] = list(harbor.artifacts) or [
+            "/workspace",
+            "/logs/agent/copilot-cli.jsonl",
+        ]
+    else:
+        task_toml["verifier"].pop("environment_mode", None)
+        task_toml["artifacts"] = []
+
     (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
 
     (task_root / "instruction.md").write_text(case.prompt.strip() + "\n")
@@ -142,6 +157,13 @@ def generate_task(
         SKILL_NAME=evals_file.skill_name,
     )
     _write_template(TEMPLATES / "judge.py", tests_dir / "judge.py")
+    if verifier_mode == "separate":
+        # Separate verifier image: Harbor builds the verifier container from
+        # this Dockerfile; tests/ is NOT uploaded at runtime.
+        _write_template(
+            TEMPLATES / "verifier-Dockerfile",
+            tests_dir / "Dockerfile",
+        )
     (tests_dir / "rubric.json").write_text(
         json.dumps(
             {

@@ -69,10 +69,45 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["task"]["name"].startswith("pagopa/")
     assert (task_root / "environment" / "core.txt").read_text() == "core"
     assert toml["verifier"]["env"]["OPENAI_API_BASE"] == "https://api.githubcopilot.com"
+    # separate verifier env (default): dedicated container, artifacts declared
+    assert toml["verifier"]["environment_mode"] == "separate"
+    assert "/workspace" in toml["artifacts"]
+    assert "/logs/agent/copilot-cli.jsonl" in toml["artifacts"]
+    # verifier image Dockerfile built from tests/
+    assert (task_root / "tests" / "Dockerfile").is_file()
 
     rubric = json.loads((task_root / "tests" / "rubric.json").read_text())
     assert rubric["expectations"] == ["inspects repo"]
     assert rubric["judge_model"] == "openai/gpt-5.6-luna"
+
+
+def test_shared_verifier_mode_omits_separation(skill: Path, tmp_path: Path):
+    import json as _json
+
+    skill_dir = skill
+    (skill_dir / "evals" / "evals.json").write_text(
+        _json.dumps(
+            {
+                "skill_name": "test-skill",
+                "harbor": {"verifier_mode": "shared"},
+                "evals": [
+                    {
+                        "id": 1,
+                        "prompt": "do the thing",
+                        "expected_output": "the thing done",
+                        "expectations": [],
+                    }
+                ],
+            }
+        )
+    )
+    evals, _ = load_evals_file(skill_dir / "evals" / "evals.json")
+    task_root = tmp_path / "shared-task"
+    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    toml = tomllib.loads((task_root / "task.toml").read_text())
+    assert "environment_mode" not in toml["verifier"]
+    assert toml["artifacts"] == []
+    assert not (task_root / "tests" / "Dockerfile").exists()
 
 
 def test_generate_task_empty_workspace(skill: Path, tmp_path: Path):
