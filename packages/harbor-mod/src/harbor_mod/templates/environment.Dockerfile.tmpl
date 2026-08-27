@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /workspace
 
 # Deterministic fixture repository (git baseline so the agent can diff).
-# Identity comes from the base image global git config.
 COPY . /workspace/
 
 # Optional build-time setup: a skill can ship a prepare.sh (skill-level
@@ -23,6 +22,14 @@ RUN if [ -f /workspace/prepare.sh ]; then \
         bash /workspace/prepare.sh; \
     fi
 
-RUN git init -q && git add -A && git commit -qm baseline || true
+# Deterministic repo-local identity for the baseline commit (never touches the
+# base image's global config). No `|| true`: image construction fails visibly
+# when the repo init or the baseline commit fails, so every generated
+# environment starts with a valid baseline and a clean worktree.
+RUN git init -q \
+    && git config user.name "harbor-mod" \
+    && git config user.email "harbor-mod@pagopa.invalid" \
+    && git add -A \
+    && git commit -qm baseline
 
 WORKDIR /workspace

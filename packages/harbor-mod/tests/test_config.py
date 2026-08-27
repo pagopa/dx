@@ -4,12 +4,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from harbor_mod.convert.config import (
     DEFAULT_AGENT_KWARGS,
     DEFAULT_MODEL,
     build_config,
+    collect_declared_kwargs,
     write_config,
 )
 
@@ -81,3 +83,64 @@ def test_write_config_yaml_roundtrip(tmp_path: Path):
     out = write_config(config, tmp_path / "config.yaml")
     loaded = yaml.safe_load(out.read_text())
     assert loaded == config
+
+
+def test_collect_declared_kwargs_merges_compatible():
+    merged = collect_declared_kwargs(
+        [
+            ("skill-a", {"max_ai_credits": 30}),
+            ("skill-b", {"max_ai_credits": 30, "enable_memory": True}),
+        ]
+    )
+    assert merged == {"max_ai_credits": 30, "enable_memory": True}
+
+
+def test_collect_declared_kwargs_conflict_raises():
+    with pytest.raises(ValueError, match="conflicting harbor.kwargs"):
+        collect_declared_kwargs(
+            [
+                ("skill-a", {"reasoning_effort": "high"}),
+                ("skill-b", {"reasoning_effort": "low"}),
+            ]
+        )
+
+
+def test_collect_declared_kwargs_diagnostic_lists_skills_and_keys():
+    with pytest.raises(ValueError) as excinfo:
+        collect_declared_kwargs(
+            [
+                ("skill-a", {"reasoning_effort": "high"}),
+                ("skill-b", {"reasoning_effort": "low"}),
+            ]
+        )
+    message = str(excinfo.value)
+    assert "reasoning_effort" in message
+    assert "skill-a" in message
+    assert "skill-b" in message
+
+
+def test_declared_kwargs_override_defaults(tmp_path: Path):
+    config = build_config(
+        tasks_dir=tmp_path / "tasks",
+        skill_dirs=[],
+        declared_kwargs={"reasoning_effort": "low"},
+    )
+    assert config["agents"][0]["kwargs"] == {"reasoning_effort": "low"}
+
+
+def test_cli_kwargs_override_declared(tmp_path: Path):
+    config = build_config(
+        tasks_dir=tmp_path / "tasks",
+        skill_dirs=[],
+        declared_kwargs={"reasoning_effort": "low", "max_ai_credits": 30},
+        kwargs={"reasoning_effort": "high"},
+    )
+    assert config["agents"][0]["kwargs"] == {
+        "reasoning_effort": "high",
+        "max_ai_credits": 30,
+    }
+
+
+def test_defaults_remain_without_declared_or_cli_kwargs(tmp_path: Path):
+    config = build_config(tasks_dir=tmp_path / "tasks", skill_dirs=[])
+    assert config["agents"][0]["kwargs"] == DEFAULT_AGENT_KWARGS

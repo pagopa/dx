@@ -70,7 +70,9 @@ agent container, by `CopilotCliMod.setup()` — see
 The generated `config.yaml` points the `datasets` entry at the whole `tasks`
 directory, so `harbor run -c config.yaml` evaluates every generated task. To
 run only a subset, add glob filters to the dataset entry. Task names match the
-**task directory name** (e.g. `dr-blacksmith-complete-design-review`).
+**task directory name**, which always embeds the eval ID (e.g.
+`dr-blacksmith-0-complete-design-review` — `<skill>-<eval-id>-<name>`; the ID
+makes names collision-free even when two cases share a name).
 
 Select every task of one skill:
 
@@ -88,8 +90,8 @@ matching any pattern):
 datasets:
   - path: /path/to/.harbor/tasks
     task_names:
-      - dr-blacksmith-complete-design-review
-      - dr-blacksmith-publication-confirmation
+      - dr-blacksmith-0-complete-design-review
+      - dr-blacksmith-4-publication-confirmation
 ```
 
 Other filters:
@@ -124,6 +126,27 @@ agents:
 (`--effort`, choices `low|medium|high|xhigh|max`), so it is rendered by
 `build_cli_flags()` and never goes through the generic passthrough. Extra
 kwargs (`max_ai_credits`, ...) follow the `--ak` contract.
+
+### Kwarg sources and precedence
+
+Agent kwargs come from three sources, merged in this precedence order (later
+wins):
+
+1. **`DEFAULT_AGENT_KWARGS`** (`reasoning_effort: high`) — the built-in default.
+2. **`harbor.kwargs`** declared in each skill's `evals.json` (suite-wide).
+3. **`--ak KEY=VALUE`** at convert time — overrides both.
+
+```python
+final = {**DEFAULT_AGENT_KWARGS, **merged_harbor_kwargs, **cli_kwargs}
+```
+
+Because all suites emitted into a single `config.yaml` share one agent, the
+declared `harbor.kwargs` must be **compatible across skills**: the same key may
+only appear with the same value. `convert` fails before writing anything with a
+diagnostic listing the conflicting skills and keys (e.g.
+`reasoning_effort: 'high' (skill-a) vs 'low' (skill-b)`) instead of silently
+picking one. Use `--ak` to override a conflicting key when you need a
+per-run value.
 
 ### Kwarg naming: underscores become dashes
 
@@ -204,6 +227,15 @@ contract and is passed verbatim:
 }
 ```
 
+`harbor.kwargs` follows the `--ak`/`AgentConfig.kwargs` contract and is passed
+verbatim. Suites emitted into the same config must declare **compatible**
+kwargs (see [Kwarg sources and precedence](#kwarg-sources-and-precedence)): a
+key declared with different values across skills fails the conversion with a
+diagnostic. `convert` embeds the eval ID in every task directory and Harbor
+task name (`<skill>-<id>-<name>`), so re-running `convert` produces exactly the
+tasks represented by the current evals, removes stale tasks, and never
+overwrites job results or the generated config.
+
 Layer order: `workspace_dir` → `overlays` → `files`; path collisions between
 layers are rejected.
 
@@ -226,6 +258,15 @@ Point to it with `harbor.prepare_script` (suite-wide) or
 relative to the skill dir (recommended: under `harbor/`, which is excluded from
 the staged skill). A configured `prepare_script` colliding with a fixture
 `prepare.sh` is rejected rather than silently overwritten.
+
+### Deterministic git baseline
+
+Every generated `environment/Dockerfile` creates a git baseline commit so the
+agent can diff its own edits. The commit uses a fixed repository-local identity
+(`user.name harbor-mod`, `user.email harbor-mod@pagopa.invalid`) — the base
+image's global git config is never touched — and image construction **fails
+visibly** when `git init` or the baseline commit fails (no `|| true`), so every
+environment starts from a valid baseline and a clean worktree.
 
 ## Configuration file overrides
 

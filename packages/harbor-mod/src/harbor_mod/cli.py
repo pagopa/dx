@@ -21,25 +21,28 @@ per-task delta report (score, tokens, cost, steps, duration).
 from __future__ import annotations
 
 import argparse
+import shutil
 import sys
 from pathlib import Path
 
 from .compare import build_report, load_job, load_job_meta, render_markdown
 from .convert import task as task_module
-from .convert.config import DEFAULT_MODEL, build_config, write_config
+from .convert.config import (
+    DEFAULT_MODEL,
+    build_config,
+    collect_declared_kwargs,
+    write_config,
+)
 from .convert.discover import DiscoverError, find_evals_files, load_evals_file
-from .convert.schema import resolve_eval_paths
+from .convert.schema import EvalCase, EvalsFile, resolve_eval_paths
 from .convert.workspace import WorkspaceError
 
 DEFAULT_OUT = Path(".harbor")
 DEFAULT_SCAN_ROOT = Path("plugins")
 
 
-def _task_dir_name(skill_name: str, case_id: int, case_name: str | None) -> str:
-    import re
-
-    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", (case_name or f"eval-{case_id}").strip()).strip("-")
-    return f"{skill_name}-{slug}"
+class TaskNameCollision(ValueError):
+    """Two eval cases resolve to the same generated task name."""
 
 
 def cmd_convert(args: argparse.Namespace) -> int:
@@ -60,54 +63,84 @@ def cmd_convert(args: argparse.Namespace) -> int:
         return 1
 
     tasks_dir = out / "tasks"
+    declared_kwargs: dict = {}
     skill_dirs: list[Path] = []
-    total_tasks = 0
 
     try:
+        # Load every evals file up front so the whole input set is validated
+        # (name collisions, declared kwargs) before anything is written.
+        loaded: list[tuple[Path, EvalsFile, Path]] = []
         for evals_path in evals_paths:
             evals, skill_dir = load_evals_file(evals_path)
             print(f">> skill '{evals.skill_name}' ({evals_path})")
-            skill_dirs.append(skill_dir)
             print(f"   skill -> {skill_dir}")
+            loaded.append((evals_path, evals, skill_dir))
+            skill_dirs.append(skill_dir)
 
+        declared_kwargs = collect_declared_kwargs(
+            [(evals.skill_name, evals.harbor.kwargs) for _, evals, _ in loaded]
+        )
+
+        planned: list[tuple[EvalsFile, Path, EvalCase, str]] = []
+        seen: dict[str, str] = {}
+        for evals_path, evals, skill_dir in loaded:
+            for case in evals.evals:
+                dir_name = task_module.task_dir_name(
+                    evals.skill_name, case.id, case.name
+                )
+                source = f"{evals.skill_name} eval {case.id} ({evals_path})"
+                if dir_name in seen:
+                    raise TaskNameCollision(
+                        f"duplicate task name {dir_name!r}: {seen[dir_name]} "
+                        f"vs {source}"
+                    )
+                seen[dir_name] = source
+                planned.append((evals, skill_dir, case, dir_name))
+
+        total_tasks = 0
+        for evals, skill_dir, case, dir_name in planned:
             per_eval = resolve_eval_paths(evals, skill_dir)
             workspace_dir = None
             if evals.harbor.workspace_dir:
                 workspace_dir = (skill_dir / evals.harbor.workspace_dir).resolve()
-
-            for case in evals.evals:
-                task_root = tasks_dir / _task_dir_name(
-                    evals.skill_name, case.id, case.name
-                )
-                paths = per_eval[case.id]
-                env_overrides: dict | None = None
-                if args.without_skill:
-                    env_overrides = {
-                        "verifier": {
-                            "env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}
-                        }
+            paths = per_eval[case.id]
+            env_overrides: dict | None = None
+            if args.without_skill:
+                env_overrides = {
+                    "verifier": {
+                        "env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}
                     }
-                try:
-                    created = task_module.generate_task(
-                        evals_file=evals,
-                        case_id=case.id,
-                        task_root=task_root,
-                        workspace_dir=workspace_dir,
-                        overlays=paths["overlays"],
-                        files=paths["files"],
-                        prepare_script=paths["prepare_script"],
-                        env_overrides=env_overrides,
-                        overrides=paths["overrides"],
-                    )
-                except WorkspaceError as exc:
-                    print(f"error: task '{task_root.name}': {exc}", file=sys.stderr)
-                    return 1
-                total_tasks += 1
-                if created:
-                    print(f"   task {task_root.name}: fixtures {created}")
-                else:
-                    print(f"   task {task_root.name}: (empty workspace)")
-    except (DiscoverError, WorkspaceError, FileNotFoundError) as exc:
+                }
+            try:
+                created = task_module.generate_task_atomic(
+                    evals_file=evals,
+                    case_id=case.id,
+                    task_root=tasks_dir / dir_name,
+                    workspace_dir=workspace_dir,
+                    overlays=paths["overlays"],
+                    files=paths["files"],
+                    prepare_script=paths["prepare_script"],
+                    env_overrides=env_overrides,
+                    overrides=paths["overrides"],
+                )
+            except WorkspaceError as exc:
+                print(f"error: task '{dir_name}': {exc}", file=sys.stderr)
+                return 1
+            total_tasks += 1
+            if created:
+                print(f"   task {dir_name}: fixtures {created}")
+            else:
+                print(f"   task {dir_name}: (empty workspace)")
+
+        # Remove tasks from previous conversions that are no longer part of the
+        # current input. Only the tasks dir is touched: job results (jobs_dir)
+        # and the generated config are never deleted.
+        if tasks_dir.is_dir():
+            for stale in sorted(p for p in tasks_dir.iterdir() if p.is_dir()):
+                if stale.name not in seen:
+                    shutil.rmtree(stale)
+                    print(f"   removed stale task {stale.name}")
+    except (DiscoverError, WorkspaceError, ValueError, FileNotFoundError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 
@@ -115,6 +148,7 @@ def cmd_convert(args: argparse.Namespace) -> int:
         tasks_dir=tasks_dir,
         skill_dirs=skill_dirs,
         kwargs=args.agent_kwargs,
+        declared_kwargs=declared_kwargs,
         without_skill=args.without_skill,
         model=args.model,
         jobs_dir=Path(args.jobs_dir).resolve() if args.jobs_dir else None,

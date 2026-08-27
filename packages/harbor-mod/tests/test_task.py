@@ -9,7 +9,13 @@ import pytest
 
 from harbor_mod.convert.discover import load_evals_file
 from harbor_mod.convert.schema import resolve_eval_paths
-from harbor_mod.convert.task import DEFAULT_TASK_TOML, generate_task
+from harbor_mod.convert.task import (
+    DEFAULT_TASK_TOML,
+    generate_task,
+    generate_task_atomic,
+    task_dir_name,
+    task_name,
+)
 from harbor_mod.convert.workspace import WorkspaceError
 
 
@@ -143,6 +149,55 @@ def test_env_overrides_merge(skill: Path, tmp_path: Path):
     assert toml["schema_version"] == DEFAULT_TASK_TOML["schema_version"]
 
 
+def test_task_dir_name_includes_case_id():
+    # the eval ID always participates, so distinct cases never collide
+    assert task_dir_name("skill", 1, "case-one") == "skill-1-case-one"
+    assert task_dir_name("skill", 2, None) == "skill-2"
+    assert task_dir_name("skill", 1, "same") != task_dir_name("skill", 2, "same")
+    assert task_name("skill", 1, "case-one") == "pagopa/skill-1-case-one"
+    assert task_name("skill", 2, None) == "pagopa/skill-2"
+
+
+def test_generate_task_atomic_preserves_previous_on_failure(
+    skill: Path, tmp_path: Path
+):
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    task_root = tmp_path / "task"
+    generate_task_atomic(evals_file=evals, case_id=1, task_root=task_root)
+    marker = task_root / "instruction.md"
+    original = marker.read_text()
+    assert (task_root / "task.toml").is_file()
+
+    with pytest.raises(WorkspaceError):
+        generate_task_atomic(
+            evals_file=evals,
+            case_id=1,
+            task_root=task_root,
+            files=[tmp_path / "does-not-exist.txt"],
+        )
+    # the last complete task is preserved and no temp dirs leak
+    assert marker.read_text() == original
+    assert (task_root / "task.toml").is_file()
+    assert [p for p in tmp_path.iterdir() if p.name.startswith(".")] == []
+
+
+def test_generated_dockerfile_deterministic_git_baseline(
+    skill: Path, tmp_path: Path
+):
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    task_root = tmp_path / "task"
+    generate_task(evals_file=evals, case_id=1, task_root=task_root)
+    dockerfile = (task_root / "environment" / "Dockerfile").read_text()
+    # deterministic repo-local identity, never the base image's global config
+    assert 'git config user.name "harbor-mod"' in dockerfile
+    assert 'git config user.email "harbor-mod@pagopa.invalid"' in dockerfile
+    # no `|| true`: image construction fails visibly when the baseline fails
+    assert "git commit -qm baseline" in dockerfile
+    assert "git commit -qm baseline || true" not in dockerfile
+    assert "|| true" not in dockerfile.split("RUN")[-1]
+    assert dockerfile.index("git init") < dockerfile.index("git commit")
+
+
 def _write_evals(
     skill: Path, *, harbor: dict | None = None, cases: list[dict] | None = None
 ) -> None:
@@ -257,7 +312,7 @@ def test_task_toml_override_full_replace(skill: Path, tmp_path: Path):
     _generate(skill_dir, task_root)
 
     toml = tomllib.loads((task_root / "task.toml").read_text())
-    assert toml["task"]["name"] == "pagopa/test-skill-case-one"
+    assert toml["task"]["name"] == "pagopa/test-skill-1-case-one"
     assert toml["task"]["description"] == "the thing done"
     assert toml["task"]["version"] == "1.0.0"
     assert toml["agent"]["timeout_sec"] == 123.0

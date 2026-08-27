@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import re
 import shutil
 from pathlib import Path
@@ -12,6 +13,11 @@ from .schema import EvalCase, EvalsFile
 from .workspace import WorkspaceError, compose_workspace
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
+
+#: Template for the task's environment Dockerfile. Named ``environment.*`` so
+#: the workspace Docker plugins do not infer it as a project root; it renders
+#: the ``environment/Dockerfile`` inside every generated task.
+ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 
 # schema 1.4 task.toml skeleton; skill defaults / overrides are merged in.
 DEFAULT_TASK_TOML: dict = {
@@ -44,11 +50,23 @@ DEFAULT_TASK_TOML: dict = {
 }
 
 
-def _task_name(skill_name: str, case_id: int, case_name: str | None) -> str:
-    """Harbor task name: org/name (both segments non-empty, no spaces)."""
-    org = "pagopa"
-    slug = re.sub(r"[^a-zA-Z0-9._-]+", "-", (case_name or f"eval-{case_id}").strip()).strip("-")
-    return f"{org}/{skill_name}-{slug}"
+def task_dir_name(skill_name: str, case_id: int, case_name: str | None) -> str:
+    """Stable, collision-free task directory name.
+
+    ``<skill>-<case_id>`` for nameless cases, ``<skill>-<case_id>-<slug>`` when
+    a human-readable name is declared. The eval ID always participates, so two
+    cases that share a name (or an unnamed case and a named one) still map to
+    distinct directories.
+    """
+    slug = re.sub(
+        r"[^a-zA-Z0-9._-]+", "-", (case_name or "").strip()
+    ).strip("-")
+    return f"{skill_name}-{case_id}-{slug}" if slug else f"{skill_name}-{case_id}"
+
+
+def task_name(skill_name: str, case_id: int, case_name: str | None) -> str:
+    """Harbor task name: ``org/<task_dir_name>`` (both segments non-empty)."""
+    return f"pagopa/{task_dir_name(skill_name, case_id, case_name)}"
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
@@ -163,7 +181,9 @@ def generate_task(
     )
     task_toml = _deep_merge(task_toml, env_overrides or {})
     task_toml.setdefault("task", {})
-    task_toml["task"]["name"] = _task_name(evals_file.skill_name, case.id, case.name)
+    task_toml["task"]["name"] = task_name(
+        evals_file.skill_name, case.id, case.name
+    )
     task_toml["task"]["description"] = case.expected_output.strip()[:200]
     task_toml["task"]["version"] = "1.0.0"
     task_toml.setdefault("metadata", {})
@@ -234,7 +254,7 @@ def generate_task(
         target="environment/Dockerfile",
         dst=env_dir / "Dockerfile",
         overrides=overrides,
-        default=(TEMPLATES / "Dockerfile")
+        default=(TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE)
         .read_text()
         .format(base_image=harbor.base_image),
     )
@@ -283,4 +303,40 @@ def generate_task(
         default=(TEMPLATES / "solve.sh").read_text(),
     )
 
+    return created
+
+
+def generate_task_atomic(*, evals_file: EvalsFile, case_id: int, task_root: Path, **kwargs) -> list[str]:
+    """Generate a task atomically: build in a sibling temp dir, swap in on success.
+
+    On failure the previous complete task at ``task_root`` is left untouched and
+    the temp dir is removed. On success the swap is a same-directory rename
+    (``task_root`` moves to a backup, the fresh temp dir moves into place, the
+    backup is dropped), so ``task_root`` never holds a partially-written tree.
+
+    Accepts the same keyword arguments as :func:`generate_task`.
+    """
+    parent = task_root.parent
+    parent.mkdir(parents=True, exist_ok=True)
+    tmp = parent / f".{task_root.name}.tmp-{os.getpid()}"
+    backup = parent / f".{task_root.name}.bak-{os.getpid()}"
+    for stale in (tmp, backup):
+        if stale.exists():
+            shutil.rmtree(stale)
+    try:
+        created = generate_task(
+            evals_file=evals_file, case_id=case_id, task_root=tmp, **kwargs
+        )
+    except BaseException:
+        shutil.rmtree(tmp, ignore_errors=True)
+        raise
+    if task_root.exists():
+        task_root.rename(backup)
+    try:
+        tmp.rename(task_root)
+    except BaseException:
+        if backup.exists() and not task_root.exists():
+            backup.rename(task_root)
+        raise
+    shutil.rmtree(backup, ignore_errors=True)
     return created
