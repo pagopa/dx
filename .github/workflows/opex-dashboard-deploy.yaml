@@ -56,7 +56,7 @@ jobs:
 
       - name: Generate dashboards
         id: generate-action
-        uses: pagopa/dx/actions/opex-dashboard-generate@main
+        uses: pagopa/dx/actions/opex-dashboard-generate@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           config_pattern: ".opex/**/config.yaml"
           opex_dashboard_version: ${{ env.OPEX_DASHBOARD_VERSION }}
@@ -64,7 +64,7 @@ jobs:
 
       - name: Upload generated Terraform files
         if: steps.generate-action.outputs.has_changes == 'true'
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           bundle_name: generated-terraform
           file_path: ${{ steps.generate-action.outputs.artifacts_path }}
@@ -96,21 +96,21 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download generated Terraform files
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           bundle_name: generated-terraform
           file_path: .
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@679a8dba79f0c2763da2111d138df45c92806a68 # main
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@679a8dba79f0c2763da2111d138df45c92806a68 # main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
@@ -148,7 +148,7 @@ jobs:
           echo "summary_line=$SUMMARY" >> "$GITHUB_OUTPUT"
 
       - name: Upload Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-upload@main
+        uses: pagopa/dx/actions/terraform-plan-upload@679a8dba79f0c2763da2111d138df45c92806a68 # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -199,13 +199,13 @@ jobs:
           echo "Generated artifact name: ${ARTIFACT_NAME}"
 
       - name: Download generated Terraform files
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           bundle_name: generated-terraform
           file_path: .
 
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-download@main
+        uses: pagopa/dx/actions/terraform-plan-download@679a8dba79f0c2763da2111d138df45c92806a68 # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -214,15 +214,15 @@ jobs:
           artifact-name: ${{ steps.artifact-name.outputs.name }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@679a8dba79f0c2763da2111d138df45c92806a68 # main
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@679a8dba79f0c2763da2111d138df45c92806a68 # main
 
       - name: Terraform Setup
         id: set-terraform-version
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@679a8dba79f0c2763da2111d138df45c92806a68 # main
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
