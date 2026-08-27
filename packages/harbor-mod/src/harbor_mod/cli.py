@@ -26,7 +26,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .compare import build_report, load_job, load_job_meta, render_markdown
+from .compare import build_report, meta_from_job, metrics_from_job, render_markdown
 from .convert.config import (
     DEFAULT_MODEL,
     DEFAULT_ENVIRONMENT_TYPE,
@@ -42,6 +42,7 @@ from .convert.run import (
     plan_run,
 )
 from .convert.workspace import WorkspaceError
+from .jobs import Job
 
 
 def cmd_convert(args: argparse.Namespace) -> int:
@@ -93,12 +94,17 @@ def cmd_convert(args: argparse.Namespace) -> int:
 
 
 def cmd_compare(args: argparse.Namespace) -> int:
-    """Compare two Harbor job directories and emit a delta report."""
-    base = load_job(Path(args.base).resolve())
-    head = load_job(Path(args.head).resolve())
-    report = build_report(base, head)
-    base_meta = load_job_meta(Path(args.base).resolve())
-    head_meta = load_job_meta(Path(args.head).resolve())
+    """Compare two Harbor job directories and emit a delta report.
+
+    Each job is read through a single :class:`Job`, so each trial's
+    ``result.json`` is parsed once and shared by the per-task metrics and the
+    job-level run configuration.
+    """
+    base_job = Job(Path(args.base).resolve())
+    head_job = Job(Path(args.head).resolve())
+    report = build_report(metrics_from_job(base_job), metrics_from_job(head_job))
+    base_meta = meta_from_job(base_job)
+    head_meta = meta_from_job(head_job)
     markdown = render_markdown(args.base, args.head, report, base_meta, head_meta)
     if args.report:
         out = Path(args.report)

@@ -8,14 +8,19 @@ from pathlib import Path
 import pytest
 
 from harbor_mod.compare import (
+    MetricSpec,
     Report,
     TrialComparison,
     build_report,
     load_job,
     load_job_meta,
+    meta_from_job,
     metric_specs,
+    metrics_from_job,
     render_markdown,
+    summarize,
 )
+from harbor_mod.jobs import Job
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
 
@@ -100,6 +105,87 @@ def test_load_job_marks_exception_as_failed(tmp_path):
 def test_load_job_missing_dir_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
         load_job(tmp_path / "nope")
+
+
+def test_job_seam_serves_metrics_and_meta(tmp_path):
+    """One Job read serves both the per-task metrics and the job meta."""
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"quality": 0.9}, tokens=(1000, 200, 300))
+    _write_meta_trial(
+        job,
+        "task-b",
+        agent_model="gpt-5.6-luna",
+        agent_effort="high",
+        skills=["/some/local/dr-blacksmith"],
+    )
+
+    read = Job(job)
+    metrics = metrics_from_job(read)
+    meta = meta_from_job(read)
+
+    assert set(metrics) == {"task-a", "task-b"}
+    assert metrics["task-a"].input_tokens == 1000
+    assert meta is not None
+    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_effort == "high"
+    assert meta.skills and meta.skills[0].name == "dr-blacksmith"
+
+
+def test_trial_task_name_falls_back_to_dir_name(tmp_path):
+    job = _make_job(tmp_path, "run-a")
+    trial_dir = job / "nameless"
+    trial_dir.mkdir(parents=True, exist_ok=True)
+    (trial_dir / "result.json").write_text(json.dumps({"verifier_result": {}}))
+    trial = next(Job(job).iter_trials())
+    assert trial.task_name == "nameless"
+
+
+def _specs_for(report: Report) -> list[MetricSpec]:
+    base_map = {r.task: r.base for r in report.rows if r.base}
+    head_map = {r.task: r.head for r in report.rows if r.head}
+    return metric_specs(base_map, head_map)
+
+
+def test_summarize_aggregates_numbers(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 0, 100), cost=0.5)
+    _write_trial(base, "task-b", rewards={"quality": 0.6}, tokens=(2000, 100, 200), cost=0.3)
+    _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120), cost=0.8)
+
+    report = build_report(load_job(base), load_job(head))
+    summary = summarize(report, _specs_for(report))
+
+    assert summary.base_tasks == 2
+    assert summary.head_tasks == 1
+    assert summary.base_only == 1  # task-b ran only in base
+    assert summary.head_only == 0
+    assert summary.base_passed == 2
+    assert summary.head_passed == 1
+
+    by_key = {line.spec.key: line for line in summary.lines}
+    assert by_key["input_tokens"].base == 3000  # summed, int
+    assert by_key["input_tokens"].head == 1100
+    assert by_key["cost_usd"].base == 0.8  # summed, float
+    assert by_key["cost_usd"].head == 0.8
+    assert by_key["score.quality"].base == 0.7  # mean of 0.8, 0.6
+    assert by_key["score.quality"].head == 0.95
+
+
+def test_metric_spec_aggregate_honors_kind_and_integer():
+    totals_int = MetricSpec("n_steps", "total", integer=True)
+    totals_float = MetricSpec("cost_usd", "total")
+    averaged = MetricSpec("agent_duration_sec", "mean")
+    score = MetricSpec("score.quality", "score")
+
+    assert totals_int.aggregate([1, 2, 3]) == 6
+    assert totals_int.aggregate([1.5, 2.5]) == 4  # int-forced sum
+    assert totals_float.aggregate([0.5, 0.25]) == 0.75
+    assert averaged.aggregate([10, 20]) == 15.0
+    assert score.aggregate([0.8, 0.6]) == 0.7
+    assert totals_int.aggregate([]) is None
+    assert totals_int.summary_word == "total"
+    assert averaged.summary_word == "mean"
 
 
 def test_build_report_joins_by_task_and_computes_delta(tmp_path):

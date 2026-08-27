@@ -37,9 +37,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from harbor_mod.copilot_usage import extract_trial_usage
+from harbor_mod.jobs import Job, Trial
 
-JSON = dict[str, Any]
 
 @dataclass(frozen=True)
 class MetricSpec:
@@ -48,19 +47,41 @@ class MetricSpec:
     ``kind`` selects how the summary aggregates the metric across tasks:
     ``"score"`` for verifier rewards (mean), ``"total"`` for summed metrics
     (tokens, requests, steps, cost), ``"mean"`` for averaged metrics
-    (durations). The :data:`_METRICS` registry below is the single place a new
-    metric is declared: the per-task table, the column label, and the summary
-    line all follow from one entry. ``passed`` is a trial-level flag and is
-    reported separately, not as a metric.
+    (durations). ``integer`` marks ``"total"`` metrics whose values are whole
+    counts (tokens, steps, requests), so their sum is reported as an int. The
+    :data:`_METRICS` registry below is the single place a new metric is
+    declared: the per-task table, the column label, and the summary line all
+    follow from one entry. ``passed`` is a trial-level flag and is reported
+    separately, not as a metric.
     """
 
     key: str
     kind: str = "mean"
     label: str | None = None
+    integer: bool = False
 
     @property
     def display_label(self) -> str:
         return self.label or self.key
+
+    @property
+    def summary_word(self) -> str:
+        """Summary aggregation word: ``"mean"`` for score/mean, ``"total"`` for totals."""
+        return "total" if self.kind == "total" else "mean"
+
+    def aggregate(self, values: list[Any]) -> int | float | None:
+        """Aggregate one metric's per-task values for the summary line.
+
+        ``"total"`` metrics are summed (as an int when ``integer``); ``"score"``
+        and ``"mean"`` metrics are averaged. Returns ``None`` when no task
+        reported a value for the metric.
+        """
+        if not values:
+            return None
+        if self.kind == "total":
+            total = sum(values)
+            return int(total) if self.integer else total
+        return sum(values) / len(values)
 
 
 #: Trial metrics reported per task, in display order. Verifier reward metrics
@@ -68,14 +89,14 @@ class MetricSpec:
 #: this registry declares the rest. ``cost_usd`` and the durations are floats;
 #: token counts and step/request counts are ints.
 _METRICS: tuple[MetricSpec, ...] = (
-    MetricSpec("input_tokens", "total", "input tokens"),
-    MetricSpec("cache_tokens", "total", "cache tokens"),
-    MetricSpec("output_tokens", "total", "output tokens"),
-    MetricSpec("reasoning_tokens", "total", "reasoning tokens"),
-    MetricSpec("n_requests", "total", "model requests"),
-    MetricSpec("n_steps", "total", "steps"),
+    MetricSpec("input_tokens", "total", "input tokens", integer=True),
+    MetricSpec("cache_tokens", "total", "cache tokens", integer=True),
+    MetricSpec("output_tokens", "total", "output tokens", integer=True),
+    MetricSpec("reasoning_tokens", "total", "reasoning tokens", integer=True),
+    MetricSpec("n_requests", "total", "model requests", integer=True),
+    MetricSpec("n_steps", "total", "steps", integer=True),
     MetricSpec("cost_usd", "total", "cost (USD)"),
-    MetricSpec("verifier_tokens", "total", "verifier tokens"),
+    MetricSpec("verifier_tokens", "total", "verifier tokens", integer=True),
     MetricSpec("agent_duration_sec", "mean", "agent duration (s)"),
     MetricSpec("total_duration_sec", "mean", "total duration (s)"),
     MetricSpec("verifier_duration_sec", "mean", "verifier duration (s)"),
@@ -156,6 +177,33 @@ class Report:
     rows: tuple[TrialComparison, ...] = ()
 
 
+@dataclass(frozen=True)
+class SummaryLine:
+    """One metric's base/head aggregate for the summary section."""
+
+    spec: MetricSpec
+    base: int | float | None = None
+    head: int | float | None = None
+
+
+@dataclass(frozen=True)
+class ReportSummary:
+    """The aggregated numbers behind the report's summary section.
+
+    ``lines`` holds one aggregate per metric (base/head side); the counts
+    summarize the two jobs. Rendering is a pure function of this value, so any
+    consumer (Markdown, JSON, …) shares the same numbers.
+    """
+
+    base_tasks: int
+    head_tasks: int
+    base_only: int
+    head_only: int
+    base_passed: int
+    head_passed: int
+    lines: tuple[SummaryLine, ...] = ()
+
+
 def _parse_timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -217,78 +265,11 @@ def _skill_diff_command(skill: SkillVersion) -> str | None:
     )
 
 
-def _normalize_usage(usage: dict[str, Any]) -> tuple[int, int]:
-    """Extract (input, output) token counts from a LiteLLM usage dict."""
-    inp = usage.get("input_tokens") or usage.get("prompt_tokens") or 0
-    out = usage.get("output_tokens") or usage.get("completion_tokens") or 0
-    try:
-        return int(inp), int(out)
-    except (TypeError, ValueError):
-        return 0, 0
-
-
-def _load_reward_details(trial_dir: Path) -> dict[str, Any] | None:
-    """The ``reward`` dict from ``verifier/reward-details.json``, or ``None``.
-
-    Both verifier-token counts and the judge model/effort metadata are read
-    from this one file; this helper is the only place that knows its shape.
-    """
-    details = trial_dir / "verifier" / "reward-details.json"
-    if not details.is_file():
-        return None
-    try:
-        reward = (json.loads(details.read_text(encoding="utf-8")) or {}).get("reward") or {}
-    except (OSError, json.JSONDecodeError):
-        return None
-    return reward
-
-
-def _verifier_tokens(trial_dir: Path) -> int | None:
-    """Total verifier (judge) tokens for a trial.
-
-    Prefers ``verifier/usage.jsonl`` — one line per judge LLM call, written by
-    the ``test.sh`` LiteLLM shim (see the ``tests/test.sh`` template). Falls
-    back to ``reward.usage`` in ``reward-details.json`` (normalized
-    ``JudgeUsage`` persisted by agent-mode judges or future rewardkit versions).
-    Returns ``None`` when no usage was recorded.
-    """
-    usage_file = trial_dir / "verifier" / "usage.jsonl"
-    if usage_file.is_file():
-        total = 0
-        saw = False
-        try:
-            lines = usage_file.read_text(encoding="utf-8", errors="replace").splitlines()
-        except OSError:
-            lines = []
-        for line in lines:
-            if not line.strip():
-                continue
-            try:
-                usage = (json.loads(line) or {}).get("usage") or {}
-            except json.JSONDecodeError:
-                continue
-            inp, out = _normalize_usage(usage)
-            if inp or out:
-                total += inp + out
-                saw = True
-        if saw:
-            return total
-
-    reward = _load_reward_details(trial_dir)
-    if reward is None:
-        return None
-    usage = reward.get("usage")
-    if not isinstance(usage, dict):
-        return None
-    total = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
-    return int(total) if total else None
-
-
-def _load_judge_meta(data: JSON, trial_dir: Path, meta: JobMeta) -> None:
-    """Fill judge model/effort from reward-details.json when still unknown."""
+def _load_judge_meta(meta: JobMeta, trial: Trial) -> None:
+    """Fill judge model/effort from the trial's reward-details.json when still unknown."""
     if meta.judge_model is not None and meta.judge_effort is not None:
         return
-    reward = _load_reward_details(trial_dir)
+    reward = trial.reward_details()
     if reward is None:
         return
     judge = reward.get("judge") or {}
@@ -296,22 +277,20 @@ def _load_judge_meta(data: JSON, trial_dir: Path, meta: JobMeta) -> None:
     meta.judge_effort = meta.judge_effort or judge.get("reasoning_effort")
 
 
-def load_job_meta(job_dir: Path) -> JobMeta | None:
+def meta_from_job(job: Job) -> JobMeta | None:
     """Extract job-level configuration (models, effort, skill versions).
 
     Reads the first trial's ``result.json`` ``config.agent`` for the session
     model/effort and skill list, and the verifier ``reward-details.json`` for the
-    grading (judge) model/effort.
+    grading (judge) model/effort. Trials with an unreadable ``result.json`` are
+    skipped. Returns ``None`` when the job directory does not exist.
     """
-    if not job_dir.is_dir():
+    if not job.path.is_dir():
         return None
     meta = JobMeta()
-    for trial_dir in sorted(p for p in job_dir.iterdir() if p.is_dir()):
-        result_path = trial_dir / "result.json"
-        if not result_path.is_file():
-            continue
+    for trial in job.iter_trials():
         try:
-            data = json.loads(result_path.read_text(encoding="utf-8"))
+            data = trial.data
         except (OSError, json.JSONDecodeError):
             continue
         agent = (data.get("config") or {}).get("agent") or {}
@@ -323,7 +302,7 @@ def load_job_meta(job_dir: Path) -> JobMeta | None:
             meta.agent_effort = (agent.get("kwargs") or {}).get("reasoning_effort")
         if not meta.skills:
             meta.skills = [_describe_skill(path) for path in agent.get("skills") or []]
-        _load_judge_meta(data, trial_dir, meta)
+        _load_judge_meta(meta, trial)
         if (
             meta.agent_model is not None
             and meta.agent_effort is not None
@@ -335,18 +314,7 @@ def load_job_meta(job_dir: Path) -> JobMeta | None:
     return meta
 
 
-def _trajectory_steps(path: Path) -> int | None:
-    """Read ``final_metrics.total_steps`` from an ATIF trajectory file."""
-    if not path.is_file():
-        return None
-    try:
-        trajectory = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return None
-    return (trajectory.get("final_metrics") or {}).get("total_steps")
-
-
-def _backfill_from_artifacts(metrics: TrialMetrics, trial_dir: Path) -> None:
+def _backfill_from_artifacts(metrics: TrialMetrics, trial: Trial) -> None:
     """Fill metrics ``result.json`` could not report from raw trial artifacts.
 
     GPT runs leave input/cache tokens and cost unset in ``agent_result``; the
@@ -355,7 +323,7 @@ def _backfill_from_artifacts(metrics: TrialMetrics, trial_dir: Path) -> None:
     the trajectory file supplies the step count.
     """
     if metrics.n_steps is None:
-        metrics.n_steps = _trajectory_steps(trial_dir / "agent" / "trajectory.json")
+        metrics.n_steps = trial.trajectory_steps()
 
     has_all_tokens = all(
         value is not None
@@ -371,7 +339,7 @@ def _backfill_from_artifacts(metrics: TrialMetrics, trial_dir: Path) -> None:
     if has_all_tokens:
         return
 
-    usage = extract_trial_usage(trial_dir)
+    usage = trial.usage()
     if usage is None:
         return
     if metrics.input_tokens is None:
@@ -388,35 +356,32 @@ def _backfill_from_artifacts(metrics: TrialMetrics, trial_dir: Path) -> None:
         metrics.cost_usd = usage.cost_usd
 
 
-def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
-    """Load per-task metrics from a Harbor job directory.
+def metrics_from_job(job: Job) -> dict[str, TrialMetrics]:
+    """Load per-task metrics from a :class:`Job`.
 
-    Scans ``<job_dir>/*/result.json`` (one subdir per trial) and returns a dict
-    keyed by ``task_name``. With ``n_attempts > 1`` a task may appear more than
-    once: the last completed trial wins. Missing token/cost/step metrics are
-    backfilled from the trial's raw artifacts (see
-    :func:`_backfill_from_artifacts`).
+    Each trial subdirectory contributes one entry keyed by ``task_name``. With
+    ``n_attempts > 1`` a task may appear more than once: the last completed
+    trial wins. Missing token/cost/step metrics are backfilled from the trial's
+    raw artifacts (see :func:`_backfill_from_artifacts`). Raises
+    ``FileNotFoundError`` when the job directory does not exist.
     """
-    if not job_dir.is_dir():
-        raise FileNotFoundError(f"job directory not found: {job_dir}")
+    if not job.path.is_dir():
+        raise FileNotFoundError(f"job directory not found: {job.path}")
     out: dict[str, TrialMetrics] = {}
-    for trial_dir in sorted(p for p in job_dir.iterdir() if p.is_dir()):
-        result_path = trial_dir / "result.json"
-        if not result_path.is_file():
-            continue
-        data = json.loads(result_path.read_text(encoding="utf-8"))
+    for trial in job.iter_trials():
+        data = trial.data
         agent_result = data.get("agent_result") or {}
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
         metrics = TrialMetrics(
-            task_name=data.get("task_name", trial_dir.name),
+            task_name=trial.task_name,
             trial_name=data.get("trial_name"),
             rewards=dict(rewards),
             input_tokens=agent_result.get("n_input_tokens"),
             cache_tokens=agent_result.get("n_cache_tokens"),
             output_tokens=agent_result.get("n_output_tokens"),
             cost_usd=agent_result.get("cost_usd"),
-            verifier_tokens=_verifier_tokens(trial_dir),
+            verifier_tokens=trial.verifier_tokens(),
             agent_duration_sec=_seconds(
                 agent_execution.get("started_at"),
                 agent_execution.get("finished_at"),
@@ -431,9 +396,31 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
             ),
             passed=data.get("exception_info") is None,
         )
-        _backfill_from_artifacts(metrics, trial_dir)
+        _backfill_from_artifacts(metrics, trial)
         out[metrics.task_name] = metrics
     return out
+
+
+def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
+    """Load per-task metrics from a Harbor job directory.
+
+    Scans ``<job_dir>/*/result.json`` (one subdir per trial) and returns a dict
+    keyed by ``task_name``. With ``n_attempts > 1`` a task may appear more than
+    once: the last completed trial wins. Missing token/cost/step metrics are
+    backfilled from the trial's raw artifacts (see
+    :func:`_backfill_from_artifacts`).
+    """
+    return metrics_from_job(Job(job_dir))
+
+
+def load_job_meta(job_dir: Path) -> JobMeta | None:
+    """Extract job-level configuration (models, effort, skill versions).
+
+    Reads the first trial's ``result.json`` ``config.agent`` for the session
+    model/effort and skill list, and the verifier ``reward-details.json`` for the
+    grading (judge) model/effort.
+    """
+    return meta_from_job(Job(job_dir))
 
 
 def metric_specs(
@@ -505,18 +492,36 @@ def _delta(base: Any, head: Any) -> str:
     return "—"
 
 
-def _totals(metrics: list[TrialMetrics], name: str) -> int | float | None:
-    values = [m.metric(name) for m in metrics if m.metric(name) is not None]
-    if not values:
-        return None
-    total = sum(values)
-    if name in ("input_tokens", "cache_tokens", "output_tokens"):
-        return int(total)
-    return total
+def summarize(report: Report, specs: list[MetricSpec]) -> ReportSummary:
+    """Aggregate per-task metrics into the report's summary numbers.
 
+    For each spec, the base/head sides are aggregated via
+    :meth:`MetricSpec.aggregate` (mean for scores and durations, sum for
+    totals). The task and pass counts are derived from the rows once, so the
+    renderer and any other consumer share the same numbers.
+    """
+    base_metrics = [r.base for r in report.rows if r.base]
+    head_metrics = [r.head for r in report.rows if r.head]
 
-def _mean(values: list[float]) -> float | None:
-    return sum(values) / len(values) if values else None
+    def _values(metrics: list[TrialMetrics], key: str) -> list[Any]:
+        return [m.metric(key) for m in metrics if m.metric(key) is not None]
+
+    return ReportSummary(
+        base_tasks=len(base_metrics),
+        head_tasks=len(head_metrics),
+        base_only=sum(1 for r in report.rows if r.base and not r.head),
+        head_only=sum(1 for r in report.rows if r.head and not r.base),
+        base_passed=sum(1 for m in base_metrics if m.passed),
+        head_passed=sum(1 for m in head_metrics if m.passed),
+        lines=tuple(
+            SummaryLine(
+                spec=spec,
+                base=spec.aggregate(_values(base_metrics, spec.key)),
+                head=spec.aggregate(_values(head_metrics, spec.key)),
+            )
+            for spec in specs
+        ),
+    )
 
 
 def _render_run_config(
@@ -613,48 +618,25 @@ def render_markdown(
         lines.append("")
 
     # --- Summary ---------------------------------------------------------
-    base_metrics = [r.base for r in report.rows if r.base]
-    head_metrics = [r.head for r in report.rows if r.head]
+    summary = summarize(report, specs)
     lines.append("## Summary")
     lines.append("")
-    lines.append(f"- tasks in base: {len(base_metrics)}; in head: {len(head_metrics)}")
     lines.append(
-        f"- tasks only in base: {sum(1 for r in report.rows if r.base and not r.head)}; "
-        f"only in head: {sum(1 for r in report.rows if r.head and not r.base)}"
+        f"- tasks in base: {summary.base_tasks}; in head: {summary.head_tasks}"
     )
-
-    for spec in specs:
-        base_values = [
-            m.metric(spec.key) for m in base_metrics if m.metric(spec.key) is not None
-        ]
-        head_values = [
-            m.metric(spec.key) for m in head_metrics if m.metric(spec.key) is not None
-        ]
-        if spec.kind == "score":
-            b_mean = _mean(base_values)
-            h_mean = _mean(head_values)
-            lines.append(
-                f"- {spec.display_label}: mean "
-                f"{_fmt(b_mean)} → {_fmt(h_mean)}"
-            )
-        elif spec.kind == "total":
-            lines.append(
-                f"- {spec.display_label}: total "
-                f"{_fmt(_totals(base_metrics, spec.key))} → "
-                f"{_fmt(_totals(head_metrics, spec.key))}"
-            )
-        else:
-            b_mean = _mean(base_values)
-            h_mean = _mean(head_values)
-            lines.append(
-                f"- {spec.display_label}: mean "
-                f"{_fmt(b_mean)} → {_fmt(h_mean)}"
-            )
-    pass_delta = (
-        f"{sum(1 for m in base_metrics if m.passed)}/{len(base_metrics)} → "
-        f"{sum(1 for m in head_metrics if m.passed)}/{len(head_metrics)}"
+    lines.append(
+        f"- tasks only in base: {summary.base_only}; "
+        f"only in head: {summary.head_only}"
     )
-    lines.append(f"- passed trials: {pass_delta}")
+    for line in summary.lines:
+        lines.append(
+            f"- {line.spec.display_label}: {line.spec.summary_word} "
+            f"{_fmt(line.base)} → {_fmt(line.head)}"
+        )
+    lines.append(
+        f"- passed trials: {summary.base_passed}/{summary.base_tasks} → "
+        f"{summary.head_passed}/{summary.head_tasks}"
+    )
     lines.append("")
 
     return "\n".join(lines)
