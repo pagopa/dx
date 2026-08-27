@@ -6,9 +6,10 @@ import argparse
 import json
 from pathlib import Path
 
+import pytest
 import yaml
 
-from harbor_mod.cli import cmd_convert
+from harbor_mod.cli import build_parser, cmd_convert
 
 CASE_ONE = {
     "id": 1,
@@ -59,6 +60,7 @@ def convert_args(out: Path, evals_paths: list[str], **overrides) -> argparse.Nam
         model=None,
         jobs_dir=None,
         n_concurrent=4,
+        environment="docker",
     )
     base.update(overrides)
     return argparse.Namespace(**base)
@@ -212,3 +214,58 @@ def test_convert_is_deterministic_across_runs(tmp_path: Path):
         for p in sorted(out.rglob("*")) if p.is_file()
     )
     assert first == second
+
+
+def test_default_environment_is_docker_in_config(tmp_path: Path):
+    skill = tmp_path / "skill"
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    assert cmd_convert(convert_args(out, [str(evals_path)])) == 0
+    assert load_config(out)["environment"] == {"type": "docker"}
+
+
+def test_convert_apple_container_environment(tmp_path: Path, monkeypatch):
+    # The host may lack the `container` CLI; the prerequisite check is a
+    # separate, host-dependent concern (covered by its own tests).
+    monkeypatch.setattr(
+        "harbor_mod.cli.validate_environment_prerequisites",
+        lambda environment: None,
+    )
+    skill = tmp_path / "skill"
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    assert (
+        cmd_convert(
+            convert_args(out, [str(evals_path)], environment="apple-container")
+        )
+        == 0
+    )
+    assert load_config(out)["environment"] == {"type": "apple-container"}
+
+
+def test_convert_apple_container_prerequisites_fail_fast(
+    tmp_path: Path, monkeypatch, capsys
+):
+    def fake_validate(environment: str) -> str | None:
+        assert environment == "apple-container"
+        return "Apple Container requires the 'container' CLI to be installed."
+
+    monkeypatch.setattr(
+        "harbor_mod.cli.validate_environment_prerequisites", fake_validate
+    )
+    skill = tmp_path / "skill"
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    rc = cmd_convert(
+        convert_args(out, [str(evals_path)], environment="apple-container")
+    )
+    assert rc == 1
+    assert "Apple Container requires" in capsys.readouterr().err
+    # fail-fast: nothing is written
+    assert not (out / "tasks").exists()
+    assert not (out / "config.yaml").exists()
+
+
+def test_parser_rejects_unknown_environment():
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["convert", "--environment", "podman"])

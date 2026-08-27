@@ -191,11 +191,14 @@ def test_generated_dockerfile_deterministic_git_baseline(
     # deterministic repo-local identity, never the base image's global config
     assert 'git config user.name "harbor-mod"' in dockerfile
     assert 'git config user.email "harbor-mod@pagopa.invalid"' in dockerfile
-    # no `|| true`: image construction fails visibly when the baseline fails
-    assert "git commit -qm baseline" in dockerfile
+    # no `|| true`: image construction fails visibly when the baseline fails;
+    # `--allow-empty` keeps the baseline valid for empty workspaces
+    assert "git commit -qm baseline --allow-empty" in dockerfile
     assert "git commit -qm baseline || true" not in dockerfile
     assert "|| true" not in dockerfile.split("RUN")[-1]
-    assert dockerfile.index("git init") < dockerfile.index("git commit")
+    # ordering within the RUN command (comments mention "git commit" too)
+    last_run = dockerfile.split("RUN")[-1]
+    assert last_run.index("git init") < last_run.index("git commit")
 
 
 def _write_evals(

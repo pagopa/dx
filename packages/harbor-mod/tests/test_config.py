@@ -10,6 +10,7 @@ import yaml
 from harbor_mod.convert.config import (
     DEFAULT_AGENT_KWARGS,
     DEFAULT_MODEL,
+    DEFAULT_ENVIRONMENT_TYPE,
     build_config,
     collect_declared_kwargs,
     write_config,
@@ -144,3 +145,27 @@ def test_cli_kwargs_override_declared(tmp_path: Path):
 def test_defaults_remain_without_declared_or_cli_kwargs(tmp_path: Path):
     config = build_config(tasks_dir=tmp_path / "tasks", skill_dirs=[])
     assert config["agents"][0]["kwargs"] == DEFAULT_AGENT_KWARGS
+
+
+def test_default_environment_type_is_docker(tmp_path: Path):
+    config = build_config(tasks_dir=tmp_path / "tasks", skill_dirs=[])
+    assert config["environment"] == {"type": DEFAULT_ENVIRONMENT_TYPE}
+    assert config["environment"]["type"] == "docker"
+
+
+def test_apple_container_environment_type(tmp_path: Path):
+    config = build_config(
+        tasks_dir=tmp_path / "tasks",
+        skill_dirs=[],
+        environment_type="apple-container",
+    )
+    assert config["environment"] == {"type": "apple-container"}
+
+
+def test_unsupported_environment_type_raises(tmp_path: Path):
+    with pytest.raises(ValueError, match="unsupported environment type"):
+        build_config(
+            tasks_dir=tmp_path / "tasks",
+            skill_dirs=[],
+            environment_type="podman",
+        )

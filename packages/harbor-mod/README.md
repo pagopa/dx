@@ -60,10 +60,55 @@ harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 `--without-skill` omits the injected skills (baseline comparison). Agent kwargs
 can be overridden at convert time with `--ak max_ai_credits=50`.
 
+By default the generated `config.yaml` targets the **docker** environment. To
+run the eval with Apple Container instead (see
+[Apple Container](#apple-container) below), regenerate the config with
+`--environment apple-container` — the tasks themselves are unchanged, only
+`[environment].type` in the config flips:
+
+```bash
+harbor-mod convert --scan-root plugins --out .harbor \
+  --config-out .harbor/config.yaml --environment apple-container
+```
+
 The injected skills point at the **raw workspace skill directories** (`convert`
 no longer stages or copies them): eval data is stripped at runtime, inside the
 agent container, by `CopilotCliMod.setup()` — see
 [Skill eval data and git sources](#skill-eval-data-and-git-sources).
+
+### Apple Container
+
+Harbor 0.22.0 ships an `AppleContainerEnvironment` (`EnvironmentType`
+`apple-container`) that runs the same OCI images / Dockerfiles through Apple's
+`container` CLI instead of a Docker daemon. `harbor-mod convert --environment
+apple-container` only rewrites `[environment].type` in the generated
+`config.yaml`; the task Dockerfiles (agent `environment/Dockerfile` and, in
+separate-verifier mode, `tests/Dockerfile`) are consumed unchanged, and the
+verifier reuses the same environment type automatically.
+
+Requirements and caveats:
+
+- **Host**: Mac with Apple silicon (arm64) on macOS 26+. `convert` fails fast
+  with a clear error on other hosts.
+- **CLI + kernel**: install the signed package from
+  https://github.com/apple/container/releases, then bootstrap the runtime once:
+
+  ```bash
+  container system start
+  container system kernel set --recommended   # arm64 Linux kernel (required!)
+  ```
+
+  Without a configured kernel, `container build` fails with
+  `default kernel not configured for architecture arm64` and every trial dies
+  at environment start. `convert` verifies the CLI is on `PATH`.
+- **Native arm64 only**: the CLI runs Linux VMs without x86 emulation; base
+  images must publish arm64 variants (`ubuntu:24.04` does). The generated
+  Dockerfile's `ARG TARGETARCH=amd64` is declared but unused — leave it alone,
+  or the literal value will be wrong on Apple silicon.
+- **Resources**: each trial is its own lightweight VM; `--n-concurrent N` means
+  N VMs, and `cpus`/`memory_mb` map directly to VM resources.
+- **Network**: `network_mode: public` (the generated default) is ignored by the
+  Apple environment, which is fine for these evals.
 
 ### Running a subset of tasks
 

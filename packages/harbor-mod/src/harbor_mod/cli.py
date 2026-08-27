@@ -5,6 +5,7 @@ Usage::
 
     harbor-mod convert [--evals PATH ...] [--out DIR] [--config-out FILE]
                        [--without-skill] [--model MODEL]
+                       [--environment docker|apple-container]
     harbor-mod compare <job-base> <job-head> [--report out.md]
 
 ``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
@@ -21,6 +22,7 @@ per-task delta report (score, tokens, cost, steps, duration).
 from __future__ import annotations
 
 import argparse
+import platform
 import shutil
 import sys
 from pathlib import Path
@@ -29,6 +31,8 @@ from .compare import build_report, load_job, load_job_meta, render_markdown
 from .convert import task as task_module
 from .convert.config import (
     DEFAULT_MODEL,
+    DEFAULT_ENVIRONMENT_TYPE,
+    SUPPORTED_ENVIRONMENT_TYPES,
     build_config,
     collect_declared_kwargs,
     write_config,
@@ -45,9 +49,40 @@ class TaskNameCollision(ValueError):
     """Two eval cases resolve to the same generated task name."""
 
 
+def validate_environment_prerequisites(environment: str) -> str | None:
+    """Return an error message when the requested environment cannot run here.
+
+    Only ``apple-container`` has host requirements: an Apple-silicon Mac and
+    Apple's ``container`` CLI (installed from
+    https://github.com/apple/container/releases, then ``container system start``).
+    ``docker`` requires no check: Harbor's own preflight validates the Docker
+    daemon at run time. Returns ``None`` when the host is ready.
+    """
+    if environment != "apple-container":
+        return None
+    if platform.machine() != "arm64":
+        return (
+            "Apple Container requires a Mac with Apple silicon (arm64); "
+            f"this host is {platform.machine()}. Use --environment docker instead."
+        )
+    if shutil.which("container") is None:
+        return (
+            "Apple Container requires Apple's 'container' CLI to be installed. "
+            "Download it from https://github.com/apple/container/releases and "
+            "run: container system start && container system kernel set --recommended"
+        )
+    return None
+
+
 def cmd_convert(args: argparse.Namespace) -> int:
     out = Path(args.out).resolve()
     config_out = Path(args.config_out).resolve() if args.config_out else (out / "config.yaml")
+
+    # Fail fast (before any writes) when the requested environment cannot run
+    # on this host: no tasks dir, no partial config.
+    if err := validate_environment_prerequisites(args.environment):
+        print(f"error: {err}", file=sys.stderr)
+        return 1
 
     if args.evals:
         evals_paths = [Path(p).resolve() for p in args.evals]
@@ -153,11 +188,13 @@ def cmd_convert(args: argparse.Namespace) -> int:
         model=args.model,
         jobs_dir=Path(args.jobs_dir).resolve() if args.jobs_dir else None,
         n_concurrent_trials=args.n_concurrent,
+        environment_type=args.environment,
     )
     write_config(config, config_out)
 
     print(f">> generated {total_tasks} task(s) in {tasks_dir}")
     print(f">> config: {config_out}")
+    print(f">> environment: {args.environment}")
     if args.without_skill:
         print(">> without-skill: agent skills omitted (baseline comparison)")
     print(">> run:   harbor run -c %s -y --ae COPILOT_GITHUB_TOKEN=..." % config_out)
@@ -210,6 +247,16 @@ def build_parser() -> argparse.ArgumentParser:
         "--model",
         default=DEFAULT_MODEL,
         help=f"Copilot model passed to the agent (model_name; default: {DEFAULT_MODEL})",
+    )
+    conv.add_argument(
+        "--environment",
+        default=DEFAULT_ENVIRONMENT_TYPE,
+        choices=SUPPORTED_ENVIRONMENT_TYPES,
+        help=(
+            "Harbor environment used to run the agent trials (and the separate "
+            "verifier when enabled): 'docker' (default) or 'apple-container' "
+            "(Apple-silicon Mac + container CLI required)"
+        ),
     )
     conv.add_argument(
         "--ak",

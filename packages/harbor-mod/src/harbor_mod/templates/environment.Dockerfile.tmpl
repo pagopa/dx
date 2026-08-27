@@ -23,13 +23,15 @@ RUN if [ -f /workspace/prepare.sh ]; then \
     fi
 
 # Deterministic repo-local identity for the baseline commit (never touches the
-# base image's global config). No `|| true`: image construction fails visibly
-# when the repo init or the baseline commit fails, so every generated
-# environment starts with a valid baseline and a clean worktree.
+# base image's global config). `--allow-empty` keeps the baseline commit valid
+# for empty workspaces (no files to stage), where `git commit` would otherwise
+# exit 1. No `|| true`: any other failure (e.g. broken git) still fails the
+# build visibly, so every generated environment starts with a valid baseline
+# and a clean worktree.
 RUN git init -q \
     && git config user.name "harbor-mod" \
     && git config user.email "harbor-mod@pagopa.invalid" \
     && git add -A \
-    && git commit -qm baseline
+    && git commit -qm baseline --allow-empty
 
 WORKDIR /workspace
