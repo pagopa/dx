@@ -13,9 +13,7 @@ from harbor_mod.compare import (
     TrialComparison,
     build_document,
     build_report,
-    meta_from_job,
     metric_specs,
-    metrics_from_job,
     summarize,
 )
 from harbor_mod.jobs import Job
@@ -73,7 +71,7 @@ def _make_job(tmp_path: Path, name: str) -> Path:
     return job
 
 
-def test_metrics_from_job_parses_metrics(tmp_path):
+def test_job_metrics_parses_metrics(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(
         job,
@@ -82,7 +80,7 @@ def test_metrics_from_job_parses_metrics(tmp_path):
         tokens=(1000, 200, 300),
         cost=0.05,
     )
-    metrics = metrics_from_job(Job(job))
+    metrics = Job(job).metrics()
     assert list(metrics) == ["skill-task-1"]
     m = metrics["skill-task-1"]
     assert m.rewards == {"quality": 0.9, "pass": 1}
@@ -95,15 +93,15 @@ def test_metrics_from_job_parses_metrics(tmp_path):
     assert m.passed is True
 
 
-def test_metrics_from_job_marks_exception_as_failed(tmp_path):
+def test_job_metrics_marks_exception_as_failed(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "skill-task-1", exception=True)
-    assert metrics_from_job(Job(job))["skill-task-1"].passed is False
+    assert Job(job).metrics()["skill-task-1"].passed is False
 
 
-def test_metrics_from_job_missing_dir_raises(tmp_path):
+def test_job_metrics_missing_dir_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
-        metrics_from_job(Job(tmp_path / "nope"))
+        Job(tmp_path / "nope").metrics()
 
 
 def test_job_seam_serves_metrics_and_meta(tmp_path):
@@ -119,8 +117,8 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     )
 
     read = Job(job)
-    metrics = metrics_from_job(read)
-    meta = meta_from_job(read)
+    metrics = read.metrics()
+    meta = read.meta()
 
     assert set(metrics) == {"task-a", "task-b"}
     assert metrics["task-a"].input_tokens == 1000
@@ -128,6 +126,41 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     assert meta.agent_model == "gpt-5.6-luna"
     assert meta.agent_effort == "high"
     assert meta.skills and meta.skills[0].name == "dr-blacksmith"
+
+
+def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatch):
+    """One Job serves both derivations without re-parsing result.json.
+
+    The deepened seam caches the ordered trial list, so each trial's
+    result.json parses exactly once — shared by metrics() and meta().
+    """
+    real_loads = json.loads
+    calls = 0
+
+    def counting_loads(*args, **kwargs):
+        nonlocal calls
+        calls += 1
+        return real_loads(*args, **kwargs)
+
+    monkeypatch.setattr(json, "loads", counting_loads)
+
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"quality": 0.9}, tokens=(1000, 200, 300))
+    _write_meta_trial(
+        job,
+        "task-b",
+        agent_model="gpt-5.6-luna",
+        agent_effort="high",
+        skills=["/some/local/dr-blacksmith"],
+    )
+
+    read = Job(job)
+    metrics = read.metrics()
+    meta = read.meta()
+
+    assert set(metrics) == {"task-a", "task-b"}
+    assert meta is not None and meta.agent_model == "gpt-5.6-luna"
+    assert calls == 2  # one parse per trial, shared by both derivations
 
 
 def test_trial_task_name_falls_back_to_dir_name(tmp_path):
@@ -222,7 +255,7 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = meta_from_job(Job(job))
+    meta = Job(job).meta()
 
     base = _make_job(tmp_path, "run-base")
     head = _make_job(tmp_path, "run-head")
@@ -232,7 +265,7 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     document = build_document(
         "run-base",
         "run-head",
-        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        build_report(Job(base).metrics(), Job(head).metrics()),
         base_meta=meta,
         head_meta=meta,
     )
@@ -258,7 +291,7 @@ def test_summarize_aggregates_numbers(tmp_path):
     _write_trial(base, "task-b", rewards={"quality": 0.6}, tokens=(2000, 100, 200), cost=0.3)
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120), cost=0.8)
 
-    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    report = build_report(Job(base).metrics(), Job(head).metrics())
     summary = summarize(report, _specs_for(report))
 
     assert summary.base_tasks == 2
@@ -300,7 +333,7 @@ def test_build_report_joins_by_task_and_computes_delta(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
     _write_trial(head, "task-only-head", rewards={"quality": 0.5})
 
-    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    report = build_report(Job(base).metrics(), Job(head).metrics())
     rows = {r.task: r for r in report.rows}
     assert set(rows) == {"task-a", "task-only-head"}
     assert rows["task-a"].base is not None and rows["task-a"].head is not None
@@ -315,7 +348,7 @@ def test_report_rows_are_typed_trial_comparisons(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95})
     _write_trial(head, "task-only-head", rewards={"quality": 0.5})
 
-    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    report = build_report(Job(base).metrics(), Job(head).metrics())
     assert isinstance(report, Report)
     assert len(report.rows) == 2
     task_a = next(r for r in report.rows if r.task == "task-a")
@@ -331,7 +364,7 @@ def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
     _write_trial(base, "task-a", rewards={"quality": 0.8, "pass": 1}, tokens=(1, 2, 3))
     _write_trial(head, "task-a", rewards={"quality": 0.9, "pass": 1}, tokens=(1, 2, 3))
 
-    specs = metric_specs(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    specs = metric_specs(Job(base).metrics(), Job(head).metrics())
     assert [s.key for s in specs] == [
         "score.pass",
         "score.quality",
@@ -398,7 +431,7 @@ def test_metric_registry_drives_summary_aggregation(tmp_path, monkeypatch):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
         )
     )
     assert "cost (USD): mean" in md
@@ -415,7 +448,7 @@ def test_render_markdown_includes_deltas(tmp_path):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
         )
     )
     assert "# Skill comparison: `run-base` → `run-head`" in md
@@ -454,7 +487,7 @@ def _write_artifacts(
         )
 
 
-def test_metrics_from_job_backfills_missing_tokens_from_session_db(tmp_path):
+def test_job_metrics_backfills_missing_tokens_from_session_db(tmp_path):
     """GPT runs leave input/cache/cost unset; the session DB fills them."""
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, 4870), cost=None)
@@ -462,7 +495,7 @@ def test_metrics_from_job_backfills_missing_tokens_from_session_db(tmp_path):
         job / "task-a",
         session_db_rows=[DEFAULT_USAGE_ROW, (35_190, 31_087, 4_100, 359, 290, 207_814_000)],
     )
-    m = metrics_from_job(Job(job))["task-a"]
+    m = Job(job).metrics()["task-a"]
     assert m.input_tokens == 55_664
     assert m.cache_tokens == 31_087
     assert m.output_tokens == 4870  # already reported, left untouched
@@ -471,21 +504,21 @@ def test_metrics_from_job_backfills_missing_tokens_from_session_db(tmp_path):
     assert m.reasoning_tokens == 310
 
 
-def test_metrics_from_job_falls_back_to_jsonl_without_session_db(tmp_path):
+def test_job_metrics_falls_back_to_jsonl_without_session_db(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, None), cost=None)
     _write_artifacts(job / "task-a", jsonl_output_tokens=[41, 196], jsonl_nano_aiu=1_665_217_000)
-    m = metrics_from_job(Job(job))["task-a"]
+    m = Job(job).metrics()["task-a"]
     assert m.output_tokens == 237
     assert m.cost_usd == 1.665217
     assert m.input_tokens is None  # not present in the JSONL stream
 
 
-def test_metrics_from_job_reads_steps_from_trajectory(tmp_path):
+def test_job_metrics_reads_steps_from_trajectory(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(1000, 200, 300), cost=0.05)
     _write_artifacts(job / "task-a", steps=7)
-    m = metrics_from_job(Job(job))["task-a"]
+    m = Job(job).metrics()["task-a"]
     assert m.n_steps == 7
 
 
@@ -501,7 +534,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
         )
     )
     assert "reasoning tokens" in md
@@ -514,7 +547,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
 VERIFIER_TIMES = ("2026-08-27T10:05:00+00:00", "2026-08-27T10:06:30+00:00")
 
 
-def test_metrics_from_job_parses_verifier_duration_and_tokens(tmp_path):
+def test_job_metrics_parses_verifier_duration_and_tokens(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", verifier=VERIFIER_TIMES)
     vdir = job / "task-a" / "verifier"
@@ -526,12 +559,12 @@ def test_metrics_from_job_parses_verifier_duration_and_tokens(tmp_path):
         + json.dumps({"usage": {"prompt_tokens": 300, "completion_tokens": 20}})
         + "\n"
     )
-    m = metrics_from_job(Job(job))["task-a"]
+    m = Job(job).metrics()["task-a"]
     assert m.verifier_duration_sec == 90.0
     assert m.verifier_tokens == 1600  # (1200 + 80) + (300 + 20)
 
 
-def test_metrics_from_job_verifier_tokens_from_reward_details(tmp_path):
+def test_job_metrics_verifier_tokens_from_reward_details(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a")
     vdir = job / "task-a" / "verifier"
@@ -539,13 +572,13 @@ def test_metrics_from_job_verifier_tokens_from_reward_details(tmp_path):
     (vdir / "reward-details.json").write_text(
         json.dumps({"reward": {"usage": {"input_tokens": 1000, "output_tokens": 200}}})
     )
-    assert metrics_from_job(Job(job))["task-a"].verifier_tokens == 1200
+    assert Job(job).metrics()["task-a"].verifier_tokens == 1200
 
 
-def test_metrics_from_job_verifier_tokens_none_without_usage(tmp_path):
+def test_job_metrics_verifier_tokens_none_without_usage(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", verifier=VERIFIER_TIMES)
-    assert metrics_from_job(Job(job))["task-a"].verifier_tokens is None
+    assert Job(job).metrics()["task-a"].verifier_tokens is None
 
 
 def _write_meta_trial(
@@ -594,7 +627,7 @@ _GIT_SKILL = (
 )
 
 
-def test_meta_from_job_models_and_skill_versions(tmp_path, monkeypatch):
+def test_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
     import harbor_mod.jobs as jobs
 
     home = tmp_path / "home"
@@ -610,7 +643,7 @@ def test_meta_from_job_models_and_skill_versions(tmp_path, monkeypatch):
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = meta_from_job(Job(job))
+    meta = Job(job).meta()
     assert meta.agent_model == "gpt-5.6-luna"
     assert meta.agent_effort == "high"
     assert meta.judge_model == "openai/gpt-5.6-luna"
@@ -641,7 +674,7 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = meta_from_job(Job(job))
+    meta = Job(job).meta()
     base = _make_job(tmp_path, "run-base")
     head = _make_job(tmp_path, "run-head")
     _write_trial(base, "task-a")
@@ -651,7 +684,7 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
             base_meta=meta,
             head_meta=meta,
         )
@@ -676,7 +709,7 @@ def test_render_json_shares_report_numbers(tmp_path):
     _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 0, 100))
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
 
-    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    report = build_report(Job(base).metrics(), Job(head).metrics())
     doc = render_json(
         build_document(
             "run-base",
@@ -716,7 +749,7 @@ def test_render_json_one_sided_tasks_are_null(tmp_path):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
         )
     )
     rows = {t["task"]: t for t in doc["tasks"]}
@@ -733,7 +766,7 @@ def test_render_json_run_config_present_but_null_without_meta(tmp_path):
         build_document(
             "run-base",
             "run-base",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(base))),
+            build_report(Job(base).metrics(), Job(base).metrics()),
         )
     )
     assert doc["run_config"]["agent"]["base"] is None
@@ -758,7 +791,7 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = meta_from_job(Job(job))
+    meta = Job(job).meta()
     base = _make_job(tmp_path, "run-base")
     head = _make_job(tmp_path, "run-head")
     _write_trial(base, "task-a")
@@ -768,7 +801,7 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
         build_document(
             "run-base",
             "run-head",
-            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            build_report(Job(base).metrics(), Job(head).metrics()),
             base_meta=meta,
             head_meta=meta,
         )

@@ -397,14 +397,27 @@ class Trial:
 class Job:
     """A Harbor job directory: a set of trials (one subdirectory each).
 
-    Iterating yields a :class:`Trial` per subdirectory that holds a
-    ``result.json``, in sorted order. ``result.json`` is parsed once per trial
-    (cached on the :class:`Trial`), so both the trial metrics and the job-level
-    metadata can be derived from a single pass over the directory.
+    The deep seam for reading a job: the directory is read once into a cached
+    ordered trial list, and :meth:`metrics` and :meth:`meta` are pure
+    derivations from it — one parse of each ``result.json`` serves both.
+    ``iter_trials`` is the internal seam the derivations (and the Trial tests)
+    iterate through.
     """
 
     def __init__(self, path: Path) -> None:
         self.path = path
+        self._trials: tuple[Trial, ...] | None = None
+
+    def _read_trials(self) -> tuple[Trial, ...]:
+        """Load the ordered trial list once; cached for later derivations.
+
+        Each :class:`Trial` parses its own ``result.json`` lazily (cached on
+        the trial), so :meth:`metrics` and :meth:`meta` sharing this list is
+        what makes the whole job a single read.
+        """
+        if self._trials is None:
+            self._trials = tuple(self.iter_trials())
+        return self._trials
 
     def iter_trials(self) -> Iterator[Trial]:
         """Yield each trial subdirectory (sorted, deterministic)."""
@@ -413,3 +426,51 @@ class Job:
         for entry in sorted(p for p in self.path.iterdir() if p.is_dir()):
             if (entry / "result.json").is_file():
                 yield Trial(entry)
+
+    def metrics(self) -> dict[str, TrialMetrics]:
+        """Per-task metrics for this job, keyed by task name.
+
+        With ``n_attempts > 1`` a task may appear more than once: the trial
+        last in sorted directory order wins. Raises ``FileNotFoundError`` when
+        the job directory does not exist; a corrupt ``result.json`` raises on
+        first access (the report treats a broken trial as a hard failure).
+        """
+        if not self.path.is_dir():
+            raise FileNotFoundError(f"job directory not found: {self.path}")
+        out: dict[str, TrialMetrics] = {}
+        for trial in self._read_trials():
+            metrics = trial.metrics()
+            out[metrics.task_name] = metrics
+        return out
+
+    def meta(self) -> JobMeta | None:
+        """Job-level run configuration (models, effort, skill versions).
+
+        The first trial that reports a field fills it. Best-effort: a corrupt
+        ``result.json`` is skipped, and a missing job directory yields
+        ``None``.
+        """
+        if not self.path.is_dir():
+            return None
+        meta = JobMeta()
+        for trial in self._read_trials():
+            trial_meta = trial.meta()
+            if meta.agent_model is None:
+                meta.agent_model = trial_meta.agent_model
+            if meta.agent_effort is None:
+                meta.agent_effort = trial_meta.agent_effort
+            if not meta.skills:
+                meta.skills = trial_meta.skills
+            if meta.judge_model is None:
+                meta.judge_model = trial_meta.judge_model
+            if meta.judge_effort is None:
+                meta.judge_effort = trial_meta.judge_effort
+            if (
+                meta.agent_model is not None
+                and meta.agent_effort is not None
+                and meta.judge_model is not None
+                and meta.judge_effort is not None
+                and meta.skills
+            ):
+                break
+        return meta

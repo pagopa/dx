@@ -28,7 +28,7 @@ import json
 import sys
 from pathlib import Path
 
-from .compare import build_document, build_report, meta_from_job, metrics_from_job
+from .compare import build_document, build_report
 from .report import render_json, render_markdown
 from .convert.config import (
     DEFAULT_MODEL,
@@ -109,13 +109,13 @@ def cmd_compare(args: argparse.Namespace) -> int:
     """
     base_job = Job(Path(args.base).resolve())
     head_job = Job(Path(args.head).resolve())
-    report = build_report(metrics_from_job(base_job), metrics_from_job(head_job))
+    report = build_report(base_job.metrics(), head_job.metrics())
     document = build_document(
         args.base,
         args.head,
         report,
-        meta_from_job(base_job),
-        meta_from_job(head_job),
+        base_job.meta(),
+        head_job.meta(),
     )
     if args.format == "json":
         output = json.dumps(render_json(document), indent=2) + "\n"

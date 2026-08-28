@@ -3,10 +3,12 @@
 Each ``harbor run -c config.yaml`` writes its trials under ``<jobs_dir>/<run>``
 (default ``jobs/<timestamp>``): one subdirectory per trial with a
 ``result.json``. Jobs and trials are read through :mod:`harbor_mod.jobs`,
-which owns the trial-directory layout and the ``result.json`` schema
-(:meth:`~harbor_mod.jobs.Trial.metrics` and
-:meth:`~harbor_mod.jobs.Trial.meta`). This module joins two such jobs and
-reports, per task, the delta of the metrics the run produced:
+which owns the trial-directory layout and the ``result.json`` schema: a
+:class:`~harbor_mod.jobs.Job` reads its directory once and derives the
+per-task metrics (:meth:`~harbor_mod.jobs.Job.metrics`) and the job-level run
+configuration (:meth:`~harbor_mod.jobs.Job.meta`) from that one read. This
+module joins two such jobs and reports, per task, the delta of the metrics
+the run produced:
 
 - score: the verifier rewards (e.g. RewardKit criteria in ``verifier_result``)
 - tokens: agent input/cache/output tokens
@@ -45,7 +47,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from harbor_mod.jobs import Job, JobMeta, SkillVersion, TrialMetrics
+from harbor_mod.jobs import JobMeta, SkillVersion, TrialMetrics
 from harbor_mod.metrics import METRIC_SPECS, MetricSpec
 
 
@@ -170,57 +172,6 @@ def build_document(
         head_meta=head_meta,
         skill_diffs=skill_diffs,
     )
-
-
-def meta_from_job(job: Job) -> JobMeta | None:
-    """Extract job-level configuration (models, effort, skill versions).
-
-    Reads each trial through :meth:`harbor_mod.jobs.Trial.meta`; the first
-    trial that reports a field fills it. Returns ``None`` when the job
-    directory does not exist.
-    """
-    if not job.path.is_dir():
-        return None
-    meta = JobMeta()
-    for trial in job.iter_trials():
-        trial_meta = trial.meta()
-        if meta.agent_model is None:
-            meta.agent_model = trial_meta.agent_model
-        if meta.agent_effort is None:
-            meta.agent_effort = trial_meta.agent_effort
-        if not meta.skills:
-            meta.skills = trial_meta.skills
-        if meta.judge_model is None:
-            meta.judge_model = trial_meta.judge_model
-        if meta.judge_effort is None:
-            meta.judge_effort = trial_meta.judge_effort
-        if (
-            meta.agent_model is not None
-            and meta.agent_effort is not None
-            and meta.judge_model is not None
-            and meta.judge_effort is not None
-            and meta.skills
-        ):
-            break
-    return meta
-
-
-def metrics_from_job(job: Job) -> dict[str, TrialMetrics]:
-    """Load per-task metrics from a :class:`Job`.
-
-    Each trial contributes one entry keyed by ``task_name`` through
-    :meth:`harbor_mod.jobs.Trial.metrics` (which backfills missing values from
-    the trial's raw artifacts). With ``n_attempts > 1`` a task may appear more
-    than once: the last completed trial wins. Raises ``FileNotFoundError``
-    when the job directory does not exist.
-    """
-    if not job.path.is_dir():
-        raise FileNotFoundError(f"job directory not found: {job.path}")
-    out: dict[str, TrialMetrics] = {}
-    for trial in job.iter_trials():
-        metrics = trial.metrics()
-        out[metrics.task_name] = metrics
-    return out
 
 
 def metric_specs(

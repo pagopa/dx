@@ -51,7 +51,10 @@ _Avoid_: attempt, iteration
 
 **Job**:
 A benchmark run's output directory (`jobs/<run>`): a set of trials produced by
-one `harbor run -c config.yaml`.
+one `harbor run -c config.yaml`. The `jobs` module is the deep seam for
+reading one job: a `Job` reads its directory once into a cached trial list and
+derives the per-task metrics (`metrics()`) and the job-level run configuration
+(`meta()`) from that single read.
 _Avoid_: run, result set
 
 **Comparison report**:
