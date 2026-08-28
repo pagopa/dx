@@ -5,10 +5,6 @@ on:
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
-  # We handle Node.js setup with "pagopa/dx/.github/actions/node-setup@main" for now,
-  # which also configures the package manager cache and handles the package manager detection.
-  # It will be migrated later.
-  MISE_DISABLE_TOOLS: node
 
 jobs:
   gate:
