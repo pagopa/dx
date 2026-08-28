@@ -26,7 +26,7 @@ locals {
   # Events configuration
   consumers = { for hc in flatten([for h in var.eventhubs :
     [for c in h.consumers : {
-      hub  = replace(local.eventhub.name, "${var.environment.app_name}-evhns", h.name)
+      hub  = replace(local.eventhub.name, "-evhns-", "-${h.name}-")
       name = c
   }]]) : "${hc.hub}.${hc.name}" => hc }
 
