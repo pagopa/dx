@@ -85,13 +85,12 @@ const runDockerCommand = (mode, options, workspaceRoot, releaseVersion) => {
 		url: imageUrl
 	};
 	const dockerArgs = [
-		"build",
+		...mode === "push" ? ["buildx", "build"] : ["build"],
 		contextPath,
 		"--file",
-		dockerfilePath,
-		"--platform",
-		platform
+		dockerfilePath
 	];
+	if (mode === "push") dockerArgs.push("--platform", platform);
 	if (mode === "build") dockerArgs.push("--tag", require_docker_image.getProjectSlug(projectRoot));
 	for (const tag of publishTags) dockerArgs.push("--tag", `${imageName}:${tag}`);
 	for (const [key, value] of Object.entries(labels)) dockerArgs.push("--label", `org.opencontainers.image.${key}=${value}`);
