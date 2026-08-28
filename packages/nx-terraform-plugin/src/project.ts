@@ -16,6 +16,20 @@ import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
 
 const logger = getPackageLogger(["project"]);
 
+export interface TerraformTestCapabilities {
+  contract: boolean;
+  e2e: boolean;
+  integration: boolean;
+  unit: boolean;
+}
+
+const noTerraformTestCapabilities: TerraformTestCapabilities = {
+  contract: false,
+  e2e: false,
+  integration: false,
+  unit: false,
+};
+
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
 export const getProjectNameFromRoot = (root: string) =>
@@ -100,31 +114,69 @@ const getPublishTarget = (
   }
 };
 
-const getTestTarget = (initTargetName: string): TargetConfiguration => ({
-  // Fixed names keep each test layer isolated while exposing one Nx target.
-  cache: true,
-  command: `terraform test`,
-  configurations: {
-    e2e: {
-      args: [],
-      command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
-      inputs: ["default", "e2eTests"],
-    },
-    integration: {
-      args: ["-filter='tests/integration.tftest.hcl'"],
-      inputs: ["default", "integrationTests"],
-    },
-  },
-  dependsOn: [initTargetName],
-  inputs: ["default", "tests"],
-  options: {
-    args: [
-      "-filter='tests/unit.tftest.hcl'",
-      "-filter='tests/contract.tftest.hcl'",
-    ],
-    cwd: "{projectRoot}",
-  },
-});
+const getTestTargets = (
+  opts: TerraformPluginOptions,
+  cwd: string,
+  testCapabilities: TerraformTestCapabilities,
+): [string, TargetConfiguration][] => {
+  const targets: [string, TargetConfiguration][] = [];
+
+  if (testCapabilities.unit || testCapabilities.contract) {
+    targets.push([
+      opts.testTargetName,
+      {
+        cache: true,
+        command: `terraform test`,
+        dependsOn: [opts.initTargetName],
+        inputs: [
+          "default",
+          "{projectRoot}/tests/unit.tftest.hcl",
+          "{projectRoot}/tests/contract.tftest.hcl",
+        ],
+        options: {
+          args: [
+            "-filter='tests/unit.tftest.hcl'",
+            "-filter='tests/contract.tftest.hcl'",
+          ],
+          cwd,
+        },
+      },
+    ]);
+  }
+  if (testCapabilities.integration) {
+    targets.push([
+      opts.testIntegrationTargetName,
+      {
+        cache: true,
+        command: `terraform test`,
+        dependsOn: [opts.initTargetName],
+        inputs: [
+          "default",
+          "{projectRoot}/tests/integration.tftest.hcl",
+          "{projectRoot}/tests/setup/**/*.{tf,tfvars}",
+        ],
+        options: {
+          args: ["-filter='tests/integration.tftest.hcl'"],
+          cwd,
+        },
+      },
+    ]);
+  }
+  if (testCapabilities.e2e) {
+    targets.push([
+      opts.e2eTargetName,
+      {
+        cache: true,
+        command: `go test -v -timeout 1h ./tests`,
+        dependsOn: [opts.initTargetName],
+        inputs: ["default", "{projectRoot}/tests/*_test.go"],
+        options: { cwd },
+      },
+    ]);
+  }
+
+  return targets;
+};
 
 const getTargets = (
   opts: TerraformPluginOptions,
@@ -133,28 +185,19 @@ const getTargets = (
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
   publishManifest: ModulePublishManifest | undefined,
+  testCapabilities: TerraformTestCapabilities,
 ): Record<string, TargetConfiguration> => {
   const formatArgs = ["-list=true", "-recursive=true"];
 
   const cwd = "{projectRoot}";
-  const inputs = [
-    "default",
-    "examples",
-    "tests",
-    "integrationTests",
-    "e2eTests",
-  ];
 
-  // Shared targets for applications and libraries.
-  // To speed up the development loop, frequently used tasks like "validate"
-  // and "console" run independently of "init", while "test" depends on it.
   const targets: [string, TargetConfiguration][] = [
     [
       opts.initTargetName,
       {
         cache: true,
         command: `terraform init`,
-        inputs,
+        inputs: ["default"],
         options: {
           cwd,
         },
@@ -174,26 +217,28 @@ const getTargets = (
             args: [...formatArgs, "-check=true"],
           },
         },
-        inputs,
+        inputs: ["default"],
         options: {
           args: [...formatArgs, "-write=true"],
           cwd,
         },
       },
     ],
-    [opts.testTargetName, getTestTarget(opts.initTargetName)],
-    [
-      opts.validateTargetName,
-      {
-        cache: true,
-        command: `terraform validate`,
-        inputs,
-        options: {
-          cwd,
-        },
-      },
-    ],
   ];
+
+  targets.push(...getTestTargets(opts, cwd, testCapabilities));
+
+  targets.push([
+    opts.validateTargetName,
+    {
+      cache: true,
+      command: `terraform validate`,
+      inputs: ["default", "examples"],
+      options: {
+        cwd,
+      },
+    },
+  ]);
 
   if (hasRootTflintConfig) {
     targets.push([
@@ -202,7 +247,8 @@ const getTargets = (
         cache: true,
         command: `tflint`,
         inputs: [
-          ...inputs,
+          "default",
+          "examples",
           "{workspaceRoot}/.tflint.hcl",
           { env: "TFLINT_PLUGIN_DIR" },
         ],
@@ -320,6 +366,7 @@ export const getProject = (
   root: string,
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
+  testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
   const isPublishableLibrary =
@@ -331,6 +378,7 @@ export const getProject = (
     projectType,
     hasRootTflintConfig,
     publishManifest,
+    testCapabilities,
   );
   const environmentTag =
     projectType === "application"
@@ -345,16 +393,7 @@ export const getProject = (
     name: getProjectNameFromRoot(root),
     namedInputs: {
       default: ["{projectRoot}/*.{tf,tfvars}"],
-      e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
-      integrationTests: [
-        "{projectRoot}/tests/integration.tftest.hcl",
-        "{projectRoot}/tests/setup/*.tf",
-      ],
-      tests: [
-        "{projectRoot}/tests/unit.tftest.hcl",
-        "{projectRoot}/tests/contract.tftest.hcl",
-      ],
     },
     projectType,
     root,
