@@ -69,7 +69,7 @@ jobs:
           source_image="ghcr.io/$IMAGE_NAME:$RELEASE_VERSION"
           target_image="$ECR_REGISTRY/$IMAGE_NAME:$RELEASE_VERSION"
 
-          docker pull --platform linux/arm64 "$source_image"
+          docker pull --platform linux/amd64 "$source_image"
           docker tag "$source_image" "$target_image"
           docker push "$target_image"
 
