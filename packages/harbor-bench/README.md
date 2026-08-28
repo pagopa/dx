@@ -20,6 +20,11 @@ PagoPA Harbor extensions.
    configuration section (agent/judge models and effort, skill versions, git
    diff command) — see
    [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
+4. **`harbor-bench compare`** — one command for the workspace-vs-git workflow:
+   it runs the same eval set twice on one generated config (base skill and head
+   skill injected into two `harbor run` invocations) and writes the delta
+   report between the two job directories — see
+   [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
 
 The goal of `convert` is to avoid refactoring each `evals.json` into the
 per-task Harbor config files: `evals.json` stays the source of truth.
@@ -571,6 +576,44 @@ requests` and `steps` — and works retroactively on runs that predate the
   `verifier/usage.jsonl` (one line per call); `diff` aggregates it into the
   `verifier tokens` row. Runs generated before this shim (or without a judge
   token) show `—`.
+
+### One-command comparison: `harbor-bench compare`
+
+The two-step flow above is what `harbor-bench compare` automates: it converts
+the eval set once, runs the same config twice (base skill in the first
+`harbor run`, head skill in the second), and writes the delta report — all
+under one output directory `<runs-dir>/<run-id>/{base,head,comparison.md}`.
+
+```bash
+harbor-bench compare plugins/aiepdf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/foobar/plugins/aiepdf/skills/dr-blacksmith \
+  -t 'dr-blacksmith-*-use-case-*' --token $COPILOT_GITHUB_TOKEN
+```
+
+Each skill is a **local path** (a skill dir with `SKILL.md`, or a root whose
+immediate children are skill dirs) or a **git source**:
+`org/repo[@ref]`, or `https://github.com/org/repo/tree/<ref>/<subdir>` (the
+form `harbor run --skill` consumes). The base and head runs happen in sequence
+(base first, head second) and `harbor run`'s output is streamed straight to the
+terminal, so you see live progress for each run. Only the task-name filter
+differs from the manual flow: without `-t/--task-pattern`, `compare` derives
+`--task-glob`s from the two skill names (`<name>-*`), falling back to all
+generated tasks when no name is derivable.
+
+Flags:
+
+| Flag | Meaning |
+| --- | --- |
+| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable |
+| `--scan-root DIR` | evals.json scan root (default: `plugins`) |
+| `--out DIR` | convert output dir (default: `.harbor`) |
+| `--runs-dir DIR` | parent dir for the two job runs (default: `runs`) |
+| `--run-id ID` | stable run id (default: a fresh timestamp) |
+| `--task-glob GLOBS` | explicit task globs, space-separated; used only when `-t` is not given |
+| `--model MODEL` | Copilot model passed to the agent (default: `gpt-5.6-luna`) |
+| `--environment TYPE` | `docker` (default) or `apple-container` |
+| `--n-concurrent N` | `n_concurrent_trials` (default: `4`) |
+| `--token TOKEN` | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`) |
 
 ## Comparing with vs without skill (baseline)
 

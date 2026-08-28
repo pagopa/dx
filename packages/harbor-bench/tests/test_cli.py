@@ -10,12 +10,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import types
 from pathlib import Path
 
 import pytest
 import yaml
 
-from harbor_bench.cli import build_parser, cmd_diff, cmd_convert
+from harbor_bench.cli import build_parser, cmd_compare, cmd_diff, cmd_convert
+from harbor_bench.compare.run import CompareError
 
 from tests.conftest import CASE_ONE, write_evals
 
@@ -157,3 +159,113 @@ def test_diff_json_report_writes_file(tmp_path, capsys):
     doc = json.loads(out.read_text())
     assert doc["summary"]["head_tasks"] == 1
     assert ">> comparison report" in capsys.readouterr().out
+
+
+def compare_args(base: str, head: str, **overrides) -> argparse.Namespace:
+    base_args = dict(
+        base=base,
+        head=head,
+        task_patterns=[],
+        scan_root=None,
+        out=None,
+        runs_dir=None,
+        run_id=None,
+        environment="docker",
+        model="gpt-5.6-luna",
+        n_concurrent=4,
+        task_glob=None,
+        token=None,
+    )
+    base_args.update(overrides)
+    return argparse.Namespace(**base_args)
+
+
+def test_parser_exposes_compare_subcommand():
+    args = build_parser().parse_args(
+        [
+            "compare",
+            "-t",
+            "skill-a-*",
+            "-t",
+            "skill-b-*",
+            "plugins/aiepdf/skills/dr-blacksmith",
+            "pagopa/dx@main",
+        ]
+    )
+    assert args.base == "plugins/aiepdf/skills/dr-blacksmith"
+    assert args.head == "pagopa/dx@main"
+    assert args.task_patterns == ["skill-a-*", "skill-b-*"]
+
+
+def test_compare_returns_zero_and_prints_summary(tmp_path, monkeypatch, capsys):
+    run_dir = tmp_path / "runs" / "run-1"
+    result = types.SimpleNamespace(
+        run_dir=run_dir,
+        base_job=run_dir / "base",
+        head_job=run_dir / "head",
+        report=run_dir / "comparison.md",
+    )
+    monkeypatch.setattr("harbor_bench.cli.run_compare", lambda options: result)
+    assert cmd_compare(compare_args("base", "head")) == 0
+    out = capsys.readouterr().out
+    assert ">> done." in out
+    assert ">>   report: " in out
+
+
+def test_compare_maps_compare_error_to_stderr(tmp_path, monkeypatch, capsys):
+    def boom(options):
+        raise CompareError("no evals.json found")
+
+    monkeypatch.setattr("harbor_bench.cli.run_compare", boom)
+    assert cmd_compare(compare_args("base", "head")) == 1
+    assert "error: no evals.json found" in capsys.readouterr().err
+
+
+def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
+    # CLI flags are the only source of configuration: no env fallbacks.
+    seen: dict = {}
+    run_dir = tmp_path / "runs" / "run-1"
+    fake = types.SimpleNamespace(
+        run_dir=run_dir,
+        base_job=run_dir / "base",
+        head_job=run_dir / "head",
+        report=run_dir / "comparison.md",
+    )
+    def capture(options):
+        seen["options"] = options
+        return fake
+
+    monkeypatch.setattr("harbor_bench.cli.run_compare", capture)
+    args = build_parser().parse_args(
+        [
+            "compare",
+            "--scan-root",
+            str(tmp_path / "scans"),
+            "--out",
+            str(tmp_path / "harbor-out"),
+            "--runs-dir",
+            str(tmp_path / "run-parent"),
+            "--run-id",
+            "stable-id",
+            "--task-glob",
+            "skill-a-* skill-b-*",
+            "--model",
+            "gpt-5.6-luna",
+            "--n-concurrent",
+            "8",
+            "--token",
+            "tok-cli",
+            "base",
+            "head",
+        ]
+    )
+    assert cmd_compare(args) == 0
+    opts = seen["options"]
+    assert opts.scan_root == tmp_path / "scans"
+    assert opts.out == tmp_path / "harbor-out"
+    assert opts.runs_dir == tmp_path / "run-parent"
+    assert opts.run_id == "stable-id"
+    assert opts.task_globs == ("skill-a-*", "skill-b-*")
+    assert opts.n_concurrent == 8
+    assert opts.token == "tok-cli"
+

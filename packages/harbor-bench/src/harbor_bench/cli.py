@@ -7,6 +7,7 @@ Usage::
                        [--without-skill] [--model MODEL]
                        [--environment docker|apple-container]
     harbor-bench diff <job-base> <job-head> [--report out.md]
+    harbor-bench compare [-t PATTERN]... <base-skill> <head-skill>
 
 ``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
 ``plugins/**/skills/*/evals/`` by default), generates one Harbor task per eval
@@ -19,6 +20,11 @@ finds everything. Injected skills point at the raw skill directories: eval data
 ``diff`` reads two Harbor job directories (``jobs/<run>``) and prints a
 per-task delta report (score, tokens, cost, steps, duration) as Markdown
 (default) or JSON (``--format json``).
+
+``compare`` runs the same eval set twice — base skill and head skill injected
+into two ``harbor run`` invocations on the same config — and writes the delta
+report between the two job directories. The orchestration lives in
+:mod:`harbor_bench.compare.run`; this module is a thin adapter over it.
 """
 
 from __future__ import annotations
@@ -28,6 +34,12 @@ import json
 import sys
 from pathlib import Path
 
+from .compare.run import (
+    DEFAULT_RUNS_DIR,
+    CompareError,
+    CompareOptions,
+    run_compare,
+)
 from .diff import build_document, build_report
 from .report import render_json, render_markdown
 from .convert.config import (
@@ -131,6 +143,46 @@ def cmd_diff(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_compare(args: argparse.Namespace) -> int:
+    """Compare two skill versions on the same eval set (workspace vs git ref).
+
+    One ``harbor run`` per skill on the same generated config, run in sequence
+    (base first, head second) with Harbor's output streamed to the terminal,
+    then the delta report between the two job directories. The orchestration
+    lives in :func:`harbor_bench.compare.run.run_compare`; this function only
+    maps the parsed args into
+    :class:`~harbor_bench.compare.run.CompareOptions`, prints the result, and
+    maps exceptions to exit codes.
+    """
+    options = CompareOptions(
+        base_skill=args.base,
+        head_skill=args.head,
+        task_patterns=tuple(args.task_patterns),
+        scan_root=Path(args.scan_root) if args.scan_root else DEFAULT_SCAN_ROOT,
+        out=Path(args.out) if args.out else DEFAULT_OUT,
+        runs_dir=Path(args.runs_dir) if args.runs_dir else DEFAULT_RUNS_DIR,
+        run_id=args.run_id,
+        environment=args.environment,
+        model=args.model,
+        n_concurrent=args.n_concurrent,
+        task_globs=tuple(args.task_glob.split()) if args.task_glob else (),
+        token=args.token,
+    )
+    try:
+        result = run_compare(options)
+    except (CompareError, DiscoverError, WorkspaceError, ValueError, FileNotFoundError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    print()
+    print(">> done.")
+    print(f">>   base: {result.base_job}")
+    print(f">>   head: {result.head_job}")
+    print(f">>   report: {result.report}")
+    print(f">>   browse: harbor view {result.run_dir}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="harbor-bench",
@@ -199,6 +251,80 @@ def build_parser() -> argparse.ArgumentParser:
         help="write the report (in the --format) to this path instead of stdout",
     )
     cmp.set_defaults(func=cmd_diff)
+
+    cmp = sub.add_parser(
+        "compare",
+        help="compare two skill versions (workspace vs git ref) on the same eval set",
+        description=(
+            "Run the same eval set twice on one generated config — the base skill "
+            "injected into the first `harbor run`, the head skill into the second — "
+            "and write the delta report between the two job directories. Skills are "
+            "local paths (skill dir or root of skill dirs) or git sources "
+            "(org/repo[@ref], or https://github.com/org/repo/tree/<ref>/<subdir>)."
+        ),
+    )
+    cmp.add_argument("base", help="base skill: local path or git source")
+    cmp.add_argument("head", help="head skill: local path or git source")
+    cmp.add_argument(
+        "-t",
+        "--task-pattern",
+        action="append",
+        default=[],
+        dest="task_patterns",
+        metavar="PATTERN",
+        help="run only tasks whose name matches PATTERN (glob); repeatable",
+    )
+    cmp.add_argument(
+        "--scan-root",
+        default=str(DEFAULT_SCAN_ROOT),
+        help="scan root for evals.json discovery (default: plugins)",
+    )
+    cmp.add_argument(
+        "--out",
+        default=str(DEFAULT_OUT),
+        help="convert output dir (default: .harbor)",
+    )
+    cmp.add_argument(
+        "--runs-dir",
+        default=str(DEFAULT_RUNS_DIR),
+        help="parent dir for the two job runs (default: runs)",
+    )
+    cmp.add_argument(
+        "--run-id",
+        help="stable run id (default: a fresh timestamp)",
+    )
+    cmp.add_argument(
+        "--task-glob",
+        help=(
+            "explicit task glob(s) to filter the eval set (space-separated); "
+            "used only when -t/--task-pattern is not given"
+        ),
+    )
+    cmp.add_argument(
+        "--model",
+        default=DEFAULT_MODEL,
+        help=f"Copilot model passed to the agent (default: {DEFAULT_MODEL})",
+    )
+    cmp.add_argument(
+        "--environment",
+        default=DEFAULT_ENVIRONMENT_TYPE,
+        choices=SUPPORTED_ENVIRONMENT_TYPES,
+        help=(
+            "Harbor environment used to run the agent trials: 'docker' "
+            "(default) or 'apple-container'"
+        ),
+    )
+    cmp.add_argument(
+        "--n-concurrent",
+        type=int,
+        default=4,
+        help="n_concurrent_trials (default: 4)",
+    )
+    cmp.add_argument(
+        "--token",
+        help="GitHub token passed to the agent (--ae COPILOT_GITHUB_TOKEN=...)",
+    )
+    cmp.set_defaults(func=cmd_compare)
 
     return parser
 
