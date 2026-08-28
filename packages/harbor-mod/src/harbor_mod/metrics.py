@@ -154,3 +154,39 @@ def derivable_specs() -> tuple[MetricSpec, ...]:
     attribute fills when the file cannot report the number.
     """
     return tuple(spec for spec in METRIC_SPECS if spec.result_key is not None)
+
+
+def validate_metric_specs(
+    *,
+    trial_metric_fields: set[str] | None = None,
+    copilot_usage_fields: set[str] | None = None,
+) -> None:
+    """Raise when a registry key or usage attribute names no real field.
+
+    The registry is the single declaration of each metric's identity; the
+    reader's :class:`~harbor_mod.jobs.TrialMetrics` and the writer's
+    :class:`~harbor_mod.copilot_usage.CopilotUsage` re-express those names as
+    dataclass fields. Each consumer calls this once at import with the field
+    sets it knows, so a renamed field or a new metric fails at import instead
+    of surfacing as a ``TypeError`` or a silent ``None`` on a live trial.
+    Dynamic ``score.<key>`` specs (``source="reward"``) are added by
+    ``compare`` from a job's actual reward keys and are never checked against
+    either dataclass.
+    """
+    for spec in METRIC_SPECS:
+        if spec.source == "reward":
+            continue
+        if trial_metric_fields is not None and spec.key not in trial_metric_fields:
+            raise TypeError(
+                f"metric spec key {spec.key!r} has no TrialMetrics field "
+                "(add the field to jobs.TrialMetrics)"
+            )
+        if (
+            spec.usage_attr is not None
+            and copilot_usage_fields is not None
+            and spec.usage_attr not in copilot_usage_fields
+        ):
+            raise TypeError(
+                f"metric spec {spec.key!r} names usage attribute "
+                f"{spec.usage_attr!r}, which is not a CopilotUsage field"
+            )

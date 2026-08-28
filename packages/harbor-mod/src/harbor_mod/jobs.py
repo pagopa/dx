@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from harbor_mod.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
-from harbor_mod.metrics import MetricSpec, derivable_specs
+from harbor_mod.metrics import MetricSpec, derivable_specs, validate_metric_specs
 from harbor_mod.task_shape import (
     RESULT_JSON,
     REWARD_DETAILS_JSON,
@@ -544,3 +544,12 @@ class Job:
             ):
                 break
         return meta
+
+
+#: The reader is a consumer of the metric registry: fail at import when a
+#: registry key or usage attribute no longer names a real dataclass field,
+#: instead of a ``TypeError`` or a silent ``None`` when a live trial is read.
+validate_metric_specs(
+    trial_metric_fields=set(TrialMetrics.__dataclass_fields__),
+    copilot_usage_fields=set(CopilotUsage.__dataclass_fields__),
+)

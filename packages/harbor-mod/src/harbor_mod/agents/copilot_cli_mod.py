@@ -52,8 +52,8 @@ from pathlib import Path
 from harbor.agents.installed.copilot_cli import CopilotCli
 from harbor.models.agent.context import AgentContext
 
-from harbor_mod.copilot_usage import copilot_artifact_paths, extract_usage
-from harbor_mod.metrics import derivable_specs
+from harbor_mod.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
+from harbor_mod.metrics import derivable_specs, validate_metric_specs
 
 #: Subdirectories removed from every injected skill before it is exposed to the
 #: agent. ``evals/`` holds the eval cases + expected outputs (leak protection),
@@ -230,3 +230,10 @@ class CopilotCliMod(CopilotCli):
         metadata["cache_read_tokens"] = usage.cache_read_tokens
         metadata["cache_write_tokens"] = usage.cache_write_tokens
         context.metadata = metadata
+
+
+#: The agent writes usage metrics through the same registry the reader reads:
+#: fail at import when a usage attribute no longer names a real
+#: :class:`~harbor_mod.copilot_usage.CopilotUsage` field, so a registry drift
+#: never becomes a silent ``None`` backfill mid-trial.
+validate_metric_specs(copilot_usage_fields=set(CopilotUsage.__dataclass_fields__))

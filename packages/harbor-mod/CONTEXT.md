@@ -66,8 +66,12 @@ the run-configuration section. Its metrics are declared once in the metrics
 module's registry (`METRIC_SPECS`): each entry carries the derivation half
 (the `result.json` key and the `CopilotUsage` attribute `Trial` backfills
 from) and the reporting half (key, label, and total/mean aggregation), with
-verifier rewards added dynamically as `score.<key>` metrics. The rows, metric
-specs, aggregated summary, and run-configuration skill diffs are folded into
-one `ReportDocument` by `build_document`; the Markdown and JSON renderers are
-pure adapters over that document.
+verifier rewards added dynamically as `score.<key>` metrics. An import-time
+check (`validate_metric_specs`, wired into `jobs.py` and the agent) makes that
+"once" enforceable: every registry key must name a `TrialMetrics` field and
+every usage attribute a `CopilotUsage` field, so a drift fails at import, not
+on a live trial. The rows, metric specs, aggregated summary, and
+run-configuration skill diffs are folded into one `ReportDocument` by
+`build_document`; the Markdown and JSON renderers are pure adapters over that
+document.
 _Avoid_: diff, delta sheet
