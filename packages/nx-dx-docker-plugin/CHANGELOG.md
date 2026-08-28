@@ -1,3 +1,13 @@
+## 0.1.3 (2026-08-28)
+
+### 🩹 Fixes
+
+- Use a single platform for local Docker builds. ([#2091](https://github.com/pagopa/dx/pull/2091))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.1.2 (2026-07-28)
 
 ### 🩹 Fixes
