@@ -17,17 +17,19 @@ finds everything. Injected skills point at the raw skill directories: eval data
 :mod:`harbor_mod.convert.run`; this module is a thin adapter over it.
 
 ``compare`` reads two Harbor job directories (``jobs/<run>``) and prints a
-per-task delta report (score, tokens, cost, steps, duration).
+per-task delta report (score, tokens, cost, steps, duration) as Markdown
+(default) or JSON (``--format json``).
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
 from .compare import build_report, meta_from_job, metrics_from_job
-from .markdown_report import render_markdown
+from .report import render_json, render_markdown
 from .convert.config import (
     DEFAULT_MODEL,
     DEFAULT_ENVIRONMENT_TYPE,
@@ -99,21 +101,31 @@ def cmd_compare(args: argparse.Namespace) -> int:
 
     Each job is read through a single :class:`Job`, so each trial's
     ``result.json`` is parsed once and shared by the per-task metrics and the
-    job-level run configuration.
+    job-level run configuration. The report is rendered as Markdown
+    (``--format markdown``, default) or JSON (``--format json``).
     """
     base_job = Job(Path(args.base).resolve())
     head_job = Job(Path(args.head).resolve())
     report = build_report(metrics_from_job(base_job), metrics_from_job(head_job))
     base_meta = meta_from_job(base_job)
     head_meta = meta_from_job(head_job)
-    markdown = render_markdown(args.base, args.head, report, base_meta, head_meta)
+    if args.format == "json":
+        output = (
+            json.dumps(
+                render_json(args.base, args.head, report, base_meta, head_meta),
+                indent=2,
+            )
+            + "\n"
+        )
+    else:
+        output = render_markdown(args.base, args.head, report, base_meta, head_meta)
     if args.report:
         out = Path(args.report)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(markdown, encoding="utf-8")
+        out.write_text(output, encoding="utf-8")
         print(f">> comparison report: {out}")
     else:
-        print(markdown)
+        print(output)
     return 0
 
 
@@ -175,8 +187,14 @@ def build_parser() -> argparse.ArgumentParser:
     cmp.add_argument("base", help="base job directory (e.g. jobs/<run-a>)")
     cmp.add_argument("head", help="head job directory (e.g. jobs/<run-b>)")
     cmp.add_argument(
+        "--format",
+        choices=("markdown", "json"),
+        default="markdown",
+        help="report format (default: markdown)",
+    )
+    cmp.add_argument(
         "--report",
-        help="write the Markdown report to this path instead of stdout",
+        help="write the report (in the --format) to this path instead of stdout",
     )
     cmp.set_defaults(func=cmd_compare)
 

@@ -513,6 +513,15 @@ harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
 harbor-mod compare runs/skill-workspace runs/skill-main --report comparison.md
 ```
 
+The report is rendered as Markdown by default; pass `--format json` for a
+machine-readable document with the same numbers (per-task metrics keyed by the
+metric registry, the summary lines, and the run configuration), to stdout or
+`--report out.json`:
+
+```bash
+harbor-mod compare runs/skill-workspace runs/skill-main --format json --report comparison.json
+```
+
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
 two `--job-name` flags above give stable, human-readable paths so `compare` and
 `harbor view runs` always know where the runs live. The full run path is always

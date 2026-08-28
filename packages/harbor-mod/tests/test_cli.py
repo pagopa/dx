@@ -1,19 +1,21 @@
-"""Adapter tests for the ``harbor-mod convert`` CLI.
+"""Adapter tests for the ``harbor-mod`` CLI.
 
 Argparse wiring, exit codes, stderr error formatting, and host preflight
 ordering. The workflow invariants themselves are covered by
-``tests/test_convert_run.py`` through the plan/apply seam.
+``tests/test_convert_run.py`` through the plan/apply seam, and the report
+rendering by ``tests/test_compare.py``.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 
 import pytest
 import yaml
 
-from harbor_mod.cli import build_parser, cmd_convert
+from harbor_mod.cli import build_parser, cmd_compare, cmd_convert
 
 from tests.conftest import CASE_ONE, write_evals
 
@@ -98,3 +100,60 @@ def test_convert_prints_plan_error_to_stderr(tmp_path: Path, capsys):
     assert "duplicate task name" in capsys.readouterr().err
     assert not (out / "tasks").exists()
     assert not (out / "config.yaml").exists()
+
+
+def compare_args(base: Path, head: Path, **overrides) -> argparse.Namespace:
+    base_args = dict(base=str(base), head=str(head), format="markdown", report=None)
+    base_args.update(overrides)
+    return argparse.Namespace(**base_args)
+
+
+def write_result(job_dir: Path, task: str, quality: float) -> None:
+    trial = job_dir / task
+    trial.mkdir(parents=True, exist_ok=True)
+    (trial / "result.json").write_text(
+        json.dumps(
+            {
+                "task_name": task,
+                "verifier_result": {"rewards": {"quality": quality}},
+            }
+        )
+    )
+
+
+def test_compare_defaults_to_markdown(tmp_path, capsys):
+    base = tmp_path / "job-a"
+    head = tmp_path / "job-b"
+    write_result(base, "task-a", 0.8)
+    write_result(head, "task-a", 0.95)
+
+    assert cmd_compare(compare_args(base, head)) == 0
+    out = capsys.readouterr().out
+    assert "# Skill comparison" in out
+    assert "| metric | base | head | Δ |" in out
+
+
+def test_compare_json_prints_parseable_document(tmp_path, capsys):
+    base = tmp_path / "job-a"
+    head = tmp_path / "job-b"
+    write_result(base, "task-a", 0.8)
+    write_result(head, "task-a", 0.95)
+
+    assert cmd_compare(compare_args(base, head, format="json")) == 0
+    doc = json.loads(capsys.readouterr().out)
+    assert doc["base_job"] == str(base)
+    assert doc["tasks"][0]["task"] == "task-a"
+    assert doc["tasks"][0]["head"]["score.quality"] == 0.95
+
+
+def test_compare_json_report_writes_file(tmp_path, capsys):
+    base = tmp_path / "job-a"
+    head = tmp_path / "job-b"
+    write_result(base, "task-a", 0.8)
+    write_result(head, "task-a", 0.95)
+
+    out = tmp_path / "out.json"
+    assert cmd_compare(compare_args(base, head, format="json", report=str(out))) == 0
+    doc = json.loads(out.read_text())
+    assert doc["summary"]["head_tasks"] == 1
+    assert ">> comparison report" in capsys.readouterr().out

@@ -1,14 +1,17 @@
-"""Render the Harbor Comparison report as Markdown.
+"""Render the Harbor Comparison report.
 
 The comparison data — the typed :class:`~harbor_mod.compare.Report` and
 :class:`~harbor_mod.compare.ReportSummary` values, the metric registry, and the
-join/aggregation in :mod:`harbor_mod.compare` — is renderer-agnostic. This
-module is the Markdown consumer of that data: the deep module behind the
-human-facing output of ``harbor-mod compare``. One function
-(:func:`render_markdown`) in, a complete report out. The number/delta
-formatting rules (:func:`_fmt`, :func:`_delta`), the run-configuration cells
+join/aggregation in :mod:`harbor_mod.compare` — is renderer-agnostic: the
+:class:`~harbor_mod.compare.ReportSummary` carries the numbers any consumer
+shares. This module is where that data becomes output. :func:`render_markdown`
+is the human-facing deep module behind ``harbor-mod compare`` — one function
+in, a complete report out — and :func:`render_json` emits the same numbers as a
+JSON document for machine consumers. The number/delta formatting rules
+(:func:`_fmt`, :func:`_delta`), the run-configuration cells
 (:func:`_render_run_config`), and the skill-reproduction ``git diff`` command
-(:func:`_skill_diff_command`) are implementation behind that interface.
+(:func:`_skill_diff_command`) are implementation behind the Markdown
+interface.
 """
 
 from __future__ import annotations
@@ -16,7 +19,7 @@ from __future__ import annotations
 from typing import Any
 
 from harbor_mod.compare import JobMeta, Report, metric_specs, summarize
-from harbor_mod.jobs import SkillVersion
+from harbor_mod.jobs import SkillVersion, TrialMetrics
 
 
 def _skill_diff_command(skill: SkillVersion) -> str | None:
@@ -185,3 +188,107 @@ def render_markdown(
     lines.append("")
 
     return "\n".join(lines)
+
+
+def _skill_dict(skill: SkillVersion) -> dict[str, Any]:
+    """One skill's version facts as a JSON-able dict."""
+    return {
+        "name": skill.name,
+        "kind": skill.kind,
+        "path": skill.path,
+        "repo": skill.repo,
+        "ref": skill.ref,
+        "rel_path": skill.rel_path,
+        "version": skill.version,
+    }
+
+
+def render_json(
+    base_job: str,
+    head_job: str,
+    report: Report,
+    base_meta: JobMeta | None = None,
+    head_meta: JobMeta | None = None,
+) -> dict[str, Any]:
+    """Render the comparison as a JSON document (a serializable dict).
+
+    Shares the same numbers as :func:`render_markdown`: the metric registry
+    supplies the per-task keys and the summary lines, so both formats are
+    derived from one declaration. The run configuration is always present
+    (with ``None`` fields when a side reports nothing), keeping the document
+    shape stable for consumers.
+    """
+    base_map = {r.task: r.base for r in report.rows if r.base}
+    head_map = {r.task: r.head for r in report.rows if r.head}
+    specs = metric_specs(base_map, head_map)
+    summary = summarize(report, specs)
+
+    def _agent(meta: JobMeta | None) -> dict[str, Any] | None:
+        if meta is None:
+            return None
+        return {"model": meta.agent_model, "effort": meta.agent_effort}
+
+    def _judge(meta: JobMeta | None) -> dict[str, Any] | None:
+        if meta is None:
+            return None
+        return {"model": meta.judge_model, "effort": meta.judge_effort}
+
+    def _skills(meta: JobMeta | None) -> list[dict[str, Any]]:
+        if meta is None or not meta.skills:
+            return []
+        return [_skill_dict(skill) for skill in meta.skills]
+
+    def _trial_side(metrics: TrialMetrics | None) -> dict[str, Any] | None:
+        if metrics is None:
+            return None
+        return {
+            **{spec.key: metrics.metric(spec.key) for spec in specs},
+            "passed": metrics.passed,
+        }
+
+    return {
+        "base_job": base_job,
+        "head_job": head_job,
+        "run_config": {
+            "agent": {"base": _agent(base_meta), "head": _agent(head_meta)},
+            "judge": {"base": _judge(base_meta), "head": _judge(head_meta)},
+            "skills": {"base": _skills(base_meta), "head": _skills(head_meta)},
+            "skill_diffs": [
+                {
+                    "run": run,
+                    "skill": skill.name,
+                    "version": skill.version,
+                    "command": command,
+                }
+                for meta, run in ((base_meta, base_job), (head_meta, head_job))
+                if meta is not None
+                for skill in meta.skills
+                if (command := _skill_diff_command(skill)) is not None
+            ],
+        },
+        "tasks": [
+            {
+                "task": row.task,
+                "base": _trial_side(row.base),
+                "head": _trial_side(row.head),
+            }
+            for row in report.rows
+        ],
+        "summary": {
+            "base_tasks": summary.base_tasks,
+            "head_tasks": summary.head_tasks,
+            "base_only": summary.base_only,
+            "head_only": summary.head_only,
+            "base_passed": summary.base_passed,
+            "head_passed": summary.head_passed,
+            "metrics": [
+                {
+                    "key": line.spec.key,
+                    "label": line.spec.display_label,
+                    "base": line.base,
+                    "head": line.head,
+                }
+                for line in summary.lines
+            ],
+        },
+    }

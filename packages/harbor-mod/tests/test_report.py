@@ -1,15 +1,16 @@
-"""Tests for the Markdown Comparison report renderer.
+"""Tests for the Comparison report renderer's formatting seam.
 
-The renderer's public interface is :func:`render_markdown`; the integration
-tests that assert on full report strings live in ``test_compare.py``. The
-formatting rules it is built on (``_fmt``/``_delta``) are an internal seam of
-this module: they are pinned directly here so the number/delta semantics are
-tested in isolation, not through fragile substrings of the whole document.
+The renderer's public interface is :func:`render_markdown` and
+:func:`render_json`; the integration tests that assert on full reports live in
+``test_compare.py``. The formatting rules the Markdown renderer is built on
+(``_fmt``/``_delta``) are an internal seam of this module: they are pinned
+directly here so the number/delta semantics are tested in isolation, not
+through fragile substrings of the whole document.
 """
 
 from __future__ import annotations
 
-from harbor_mod.markdown_report import _delta, _fmt
+from harbor_mod.report import _delta, _fmt
 
 
 def test_fmt_none_is_em_dash():

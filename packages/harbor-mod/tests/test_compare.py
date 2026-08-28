@@ -18,7 +18,7 @@ from harbor_mod.compare import (
     summarize,
 )
 from harbor_mod.jobs import Job
-from harbor_mod.markdown_report import render_markdown
+from harbor_mod.report import render_json, render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
 
@@ -572,3 +572,109 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     )
     assert "verifier tokens" in md
     assert "verifier duration (s)" in md
+
+def test_render_json_shares_report_numbers(tmp_path):
+    """render_json carries the same per-task and summary numbers as the report."""
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 0, 100))
+    _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
+
+    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+    doc = render_json("run-base", "run-head", report)
+
+    assert doc["base_job"] == "run-base"
+    assert doc["head_job"] == "run-head"
+    task = doc["tasks"][0]
+    assert task["task"] == "task-a"
+    assert task["base"]["score.quality"] == 0.8
+    assert task["head"]["score.quality"] == 0.95
+    assert task["base"]["input_tokens"] == 1000
+    assert task["head"]["input_tokens"] == 1100
+    assert task["base"]["passed"] is True
+    summary = doc["summary"]
+    assert summary["base_tasks"] == 1
+    assert summary["head_tasks"] == 1
+    by_key = {m["key"]: m for m in summary["metrics"]}
+    assert by_key["score.quality"]["base"] == 0.8
+    assert by_key["score.quality"]["head"] == 0.95
+    assert by_key["input_tokens"]["base"] == 1000
+    assert by_key["cost_usd"]["base"] is None
+    # The document survives a json.dumps round-trip with the numbers intact.
+    assert json.loads(json.dumps(doc)) == doc
+
+
+def test_render_json_one_sided_tasks_are_null(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-base-only", rewards={"quality": 0.8})
+    _write_trial(head, "task-head-only", rewards={"quality": 0.5})
+
+    doc = render_json(
+        "run-base",
+        "run-head",
+        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+    )
+    rows = {t["task"]: t for t in doc["tasks"]}
+    assert rows["task-base-only"]["head"] is None
+    assert rows["task-head-only"]["base"] is None
+    assert doc["summary"]["base_only"] == 1
+    assert doc["summary"]["head_only"] == 1
+
+
+def test_render_json_run_config_present_but_null_without_meta(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    _write_trial(base, "task-a")
+    doc = render_json(
+        "run-base",
+        "run-base",
+        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(base))),
+    )
+    assert doc["run_config"]["agent"]["base"] is None
+    assert doc["run_config"]["judge"]["head"] is None
+    assert doc["run_config"]["skills"]["base"] == []
+    assert doc["run_config"]["skill_diffs"] == []
+
+
+def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
+    import harbor_mod.jobs as jobs
+
+    home = tmp_path / "home"
+    monkeypatch.setattr(jobs, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
+    git_skill = str(home / ".cache" / "harbor" / "skills" / _GIT_SKILL)
+    job = _make_job(tmp_path, "run-a")
+    _write_meta_trial(
+        job,
+        "task-a",
+        agent_model="gpt-5.6-luna",
+        agent_effort="high",
+        skills=["/some/local/dr-blacksmith", git_skill],
+        judge_model="openai/gpt-5.6-luna",
+        judge_effort="medium",
+    )
+    meta = meta_from_job(Job(job))
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a")
+    _write_trial(head, "task-a")
+
+    doc = render_json(
+        "run-base",
+        "run-head",
+        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        base_meta=meta,
+        head_meta=meta,
+    )
+    rc = doc["run_config"]
+    assert rc["agent"]["base"]["model"] == "gpt-5.6-luna"
+    assert rc["agent"]["base"]["effort"] == "high"
+    assert rc["judge"]["head"]["model"] == "openai/gpt-5.6-luna"
+    assert rc["skills"]["base"][0]["name"] == "dr-blacksmith"
+    assert rc["skills"]["base"][0]["kind"] == "local"
+    assert rc["skills"]["base"][1]["kind"] == "git"
+    assert rc["skills"]["base"][1]["version"] == "(git: pagopa/dx@42a33a17)"
+    assert any(
+        d["command"].startswith("git -C ")
+        and "plugins/aiepdf/skills" in d["command"]
+        for d in rc["skill_diffs"]
+    )

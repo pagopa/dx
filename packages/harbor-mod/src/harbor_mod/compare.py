@@ -29,9 +29,9 @@ tokens come from ``verifier/reward-details.json`` → ``reward.usage`` (persiste
 by agent-mode judges; LLM judges in harbor-rewardkit 0.2.0 do not record it).
 
 This module is the data side of the comparison: reading, joining, and
-aggregating. The Markdown rendering of that data lives in
-:mod:`harbor_mod.markdown_report`, which consumes the typed values here and
-owns the number/delta formatting and the run-configuration cells.
+aggregating. The Markdown and JSON rendering of that data lives in
+:mod:`harbor_mod.report`, which consumes the typed values here and owns the
+number/delta formatting and the run-configuration cells.
 
 Use it to compare the same eval set run against two versions of a skill (e.g.
 the current workspace vs. a git ref loaded with ``harbor run --skill``).
