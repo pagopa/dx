@@ -1,3 +1,14 @@
+## 0.12.6 (2026-08-27)
+
+### 🩹 Fixes
+
+- Upgrade Go module dependencies. ([#2081](https://github.com/pagopa/dx/pull/2081))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
 ## 0.12.5 (2026-07-28)
 
 ### 🩹 Fixes
