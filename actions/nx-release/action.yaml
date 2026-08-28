@@ -164,6 +164,10 @@ runs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
+    - name: Set up QEMU for Docker builds
+      if: steps.release-mode.outputs.mode == 'create-pr' || steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+
     - name: Publish with Nx release
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       id: publish
