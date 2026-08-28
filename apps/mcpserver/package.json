@@ -5,7 +5,7 @@
   "nx": {
     "docker": {
       "repositoryName": "dx/mcp-server",
-      "platform": "linux/arm64"
+      "platform": "linux/amd64"
     }
   },
   "description": "An MCP server that supports developers using DX tools.",
