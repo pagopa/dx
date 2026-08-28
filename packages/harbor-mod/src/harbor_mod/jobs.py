@@ -150,6 +150,21 @@ class TrialMetrics:
     trial_name: str | None = None
 
 
+#: Metric derivation rows: ``(TrialMetrics field, result.json agent_result key,
+#: CopilotUsage attribute)``. A ``result.json`` value wins; the aggregated
+#: usage backfills when the file cannot report the number. One row is the whole
+#: contract for adding a usage-backed metric: the report field, the document
+#: key, and the artifact attribute are named in the same place.
+_METRIC_DERIVATIONS: tuple[tuple[str, str, str], ...] = (
+    ("input_tokens", "n_input_tokens", "input_tokens"),
+    ("cache_tokens", "n_cache_tokens", "cache_read_tokens"),
+    ("output_tokens", "n_output_tokens", "output_tokens"),
+    ("reasoning_tokens", "n_reasoning_tokens", "reasoning_tokens"),
+    ("n_requests", "n_requests", "n_requests"),
+    ("cost_usd", "cost_usd", "cost_usd"),
+)
+
+
 @dataclass
 class TrialFacts:
     """Raw facts read from one trial directory, from every artifact.
@@ -236,33 +251,22 @@ class Trial:
         agent_result = data.get("agent_result") or {}
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
+        # One precedence rule per usage-backed metric, declared once in
+        # _METRIC_DERIVATIONS: the result.json value wins, the usage backfill
+        # fills when the file cannot report the number.
+        derived = {
+            field: _first(
+                agent_result.get(doc_key),
+                self._usage_value(facts, usage_attr),
+            )
+            for field, doc_key, usage_attr in _METRIC_DERIVATIONS
+        }
         return TrialMetrics(
             task_name=self.task_name,
             trial_name=data.get("trial_name"),
             rewards=dict(rewards),
-            input_tokens=_first(
-                agent_result.get("n_input_tokens"),
-                self._usage_value(facts, "input_tokens"),
-            ),
-            cache_tokens=_first(
-                agent_result.get("n_cache_tokens"),
-                self._usage_value(facts, "cache_tokens"),
-            ),
-            output_tokens=_first(
-                agent_result.get("n_output_tokens"),
-                self._usage_value(facts, "output_tokens"),
-            ),
-            reasoning_tokens=_first(
-                agent_result.get("n_reasoning_tokens"),
-                self._usage_value(facts, "reasoning_tokens"),
-            ),
-            n_requests=_first(
-                agent_result.get("n_requests"), self._usage_value(facts, "n_requests")
-            ),
+            **derived,
             n_steps=_first(agent_result.get("n_steps"), facts.trajectory_steps),
-            cost_usd=_first(
-                agent_result.get("cost_usd"), self._usage_value(facts, "cost_usd")
-            ),
             verifier_tokens=self._verifier_tokens(facts),
             agent_duration_sec=_seconds(
                 agent_execution.get("started_at"),
@@ -386,18 +390,20 @@ class Trial:
         return int(total) if total else None
 
     @staticmethod
-    def _usage_value(facts: TrialFacts, field: str) -> Any:
+    def _usage_value(facts: TrialFacts, attr: str) -> Any:
         """One backfill value from the aggregated Copilot usage.
 
-        ``n_requests`` reports a zero count as absent (matching the prior
-        ``n_requests or None`` semantics); every other field passes through.
-        Returns ``None`` when the trial recorded no usage.
+        ``attr`` is a :class:`CopilotUsage` attribute named by the
+        :data:`_METRIC_DERIVATIONS` row. ``n_requests`` reports a zero count as
+        absent (matching the prior ``n_requests or None`` semantics); every
+        other attribute passes through. Returns ``None`` when the trial
+        recorded no usage.
         """
         usage = facts.usage
         if usage is None:
             return None
-        value = getattr(usage, field)
-        if field == "n_requests":
+        value = getattr(usage, attr)
+        if attr == "n_requests":
             return value or None
         return value
 

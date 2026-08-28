@@ -52,11 +52,6 @@ class CopilotUsage:
     extras: dict = field(default_factory=dict)
 
     @property
-    def cache_tokens(self) -> int | None:
-        """Tokens served from cache (``cache_read``); ``None`` when unknown."""
-        return self.cache_read_tokens
-
-    @property
     def has_data(self) -> bool:
         """True when at least one metric was actually measured."""
         return any(
@@ -182,9 +177,23 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> CopilotUsage | None:
     )
 
 
-def extract_trial_usage(trial_dir: Path) -> CopilotUsage | None:
-    """Best-effort usage for a trial directory: session DB first, JSONL fallback."""
-    usage = extract_usage_from_session_db(trial_dir / "agent" / "copilot" / "session-store.db")
+def extract_usage(db_path: Path, jsonl_path: Path) -> CopilotUsage | None:
+    """Best-effort usage across two artifact locations: session DB first, JSONL fallback.
+
+    The one precedence decision shared by every consumer: the session database
+    (``assistant_usage_events``) is authoritative when it holds measured data;
+    otherwise the raw JSONL stream is aggregated. Each caller passes its own
+    artifact paths (the agent's logs layout and the report's job layout differ).
+    """
+    usage = extract_usage_from_session_db(db_path)
     if usage is not None and usage.has_data:
         return usage
-    return extract_usage_from_jsonl(trial_dir / "agent" / "copilot-cli.jsonl")
+    return extract_usage_from_jsonl(jsonl_path)
+
+
+def extract_trial_usage(trial_dir: Path) -> CopilotUsage | None:
+    """Best-effort usage for a trial directory: session DB first, JSONL fallback."""
+    return extract_usage(
+        trial_dir / "agent" / "copilot" / "session-store.db",
+        trial_dir / "agent" / "copilot-cli.jsonl",
+    )

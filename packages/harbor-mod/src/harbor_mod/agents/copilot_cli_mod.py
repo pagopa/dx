@@ -52,7 +52,7 @@ from pathlib import Path
 from harbor.agents.installed.copilot_cli import CopilotCli
 from harbor.models.agent.context import AgentContext
 
-from harbor_mod.copilot_usage import extract_usage_from_session_db
+from harbor_mod.copilot_usage import extract_usage
 
 #: Subdirectories removed from every injected skill before it is exposed to the
 #: agent. ``evals/`` holds the eval cases + expected outputs (leak protection),
@@ -191,7 +191,7 @@ class CopilotCliMod(CopilotCli):
         await super().setup(environment)
 
     def populate_context_post_run(self, context: AgentContext) -> None:
-        """Base post-run parsing, then backfill usage from the session DB.
+        """Base post-run parsing, then backfill usage from the trial artifacts.
 
         The base parser derives token counts from the JSONL stream, which for
         GPT models reports only ``outputTokens`` — input/cache tokens and cost
@@ -199,21 +199,24 @@ class CopilotCliMod(CopilotCli):
         (``copilot/session-store.db``, preserved next to the logs by the base
         ``_save_session_state``) records per-request input/cache/reasoning token
         counts and a metered cost (``total_nano_aiu``); when available we
-        overwrite the trajectory numbers with those authoritative aggregates.
-        Extra per-request metrics (request count, reasoning tokens, cache write)
-        are surfaced under ``context.metadata`` for drill-down.
+        overwrite the trajectory numbers with those authoritative aggregates,
+        falling back to the raw JSONL stream (the same precedence
+        :mod:`harbor_mod.jobs` uses to read a trial). Extra per-request metrics
+        (request count, reasoning tokens, cache write) are surfaced under
+        ``context.metadata`` for drill-down.
         """
         super().populate_context_post_run(context)
 
-        usage = extract_usage_from_session_db(
-            Path(self.logs_dir) / "copilot" / "session-store.db"
+        usage = extract_usage(
+            Path(self.logs_dir) / "copilot" / "session-store.db",
+            Path(self.logs_dir) / "copilot-cli.jsonl",
         )
         if usage is None or not usage.has_data:
             return
 
         for attr, value in (
             ("n_input_tokens", usage.input_tokens),
-            ("n_cache_tokens", usage.cache_tokens),
+            ("n_cache_tokens", usage.cache_read_tokens),
             ("n_output_tokens", usage.output_tokens),
             ("cost_usd", usage.cost_usd),
         ):

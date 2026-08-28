@@ -28,7 +28,7 @@ import json
 import sys
 from pathlib import Path
 
-from .compare import build_report, meta_from_job, metrics_from_job
+from .compare import build_document, build_report, meta_from_job, metrics_from_job
 from .report import render_json, render_markdown
 from .convert.config import (
     DEFAULT_MODEL,
@@ -101,24 +101,26 @@ def cmd_compare(args: argparse.Namespace) -> int:
 
     Each job is read through a single :class:`Job`, so each trial's
     ``result.json`` is parsed once and shared by the per-task metrics and the
-    job-level run configuration. The report is rendered as Markdown
-    (``--format markdown``, default) or JSON (``--format json``).
+    job-level run configuration. The joined report and both job metadata are
+    folded into one :class:`~harbor_mod.compare.ReportDocument` by
+    :func:`build_document`; the renderers only format it. The report is
+    rendered as Markdown (``--format markdown``, default) or JSON
+    (``--format json``).
     """
     base_job = Job(Path(args.base).resolve())
     head_job = Job(Path(args.head).resolve())
     report = build_report(metrics_from_job(base_job), metrics_from_job(head_job))
-    base_meta = meta_from_job(base_job)
-    head_meta = meta_from_job(head_job)
+    document = build_document(
+        args.base,
+        args.head,
+        report,
+        meta_from_job(base_job),
+        meta_from_job(head_job),
+    )
     if args.format == "json":
-        output = (
-            json.dumps(
-                render_json(args.base, args.head, report, base_meta, head_meta),
-                indent=2,
-            )
-            + "\n"
-        )
+        output = json.dumps(render_json(document), indent=2) + "\n"
     else:
-        output = render_markdown(args.base, args.head, report, base_meta, head_meta)
+        output = render_markdown(document)
     if args.report:
         out = Path(args.report)
         out.parent.mkdir(parents=True, exist_ok=True)

@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from harbor_mod.copilot_usage import (
-    CopilotUsage,
     extract_trial_usage,
+    extract_usage,
     extract_usage_from_jsonl,
     extract_usage_from_session_db,
 )
@@ -102,7 +102,25 @@ def test_extract_trial_usage_none_without_artifacts(tmp_path):
     assert extract_trial_usage(trial) is None
 
 
-def test_copilot_usage_cache_tokens_is_cache_read():
-    usage = CopilotUsage(cache_read_tokens=100_421, cache_write_tokens=35_187)
-    assert usage.cache_tokens == 100_421
-    assert CopilotUsage().cache_tokens is None
+def test_extract_usage_prefers_session_db(tmp_path):
+    db = tmp_path / "session-store.db"
+    write_session_db(db, rows=[DEFAULT_USAGE_ROW])
+    jsonl = tmp_path / "copilot-cli.jsonl"
+    write_copilot_jsonl(jsonl, output_tokens=[41])
+    usage = extract_usage(db, jsonl)
+    assert usage is not None
+    assert usage.source == "session-store.db"
+    assert usage.input_tokens == 20_474
+
+
+def test_extract_usage_falls_back_to_jsonl(tmp_path):
+    jsonl = tmp_path / "copilot-cli.jsonl"
+    write_copilot_jsonl(jsonl, output_tokens=[41])
+    usage = extract_usage(tmp_path / "nope.db", jsonl)
+    assert usage is not None
+    assert usage.source == "copilot-cli.jsonl"
+    assert usage.cost_usd == 1.665217
+
+
+def test_extract_usage_none_without_artifacts(tmp_path):
+    assert extract_usage(tmp_path / "nope.db", tmp_path / "nope.jsonl") is None

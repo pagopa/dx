@@ -59,5 +59,8 @@ The per-task delta report produced by `harbor-mod compare` from two jobs: a
 typed `Report` of `TrialComparison` rows (one per task, base/head side), plus
 the run-configuration section. Its metrics are declared once in the compare
 metric registry (key, label, and total/mean aggregation), with verifier rewards
-added dynamically as `score.<key>` metrics.
+added dynamically as `score.<key>` metrics. The rows, metric specs, aggregated
+summary, and run-configuration skill diffs are folded into one
+`ReportDocument` by `build_document`; the Markdown and JSON renderers are pure
+adapters over that document.
 _Avoid_: diff, delta sheet

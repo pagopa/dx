@@ -11,6 +11,7 @@ from harbor_mod.compare import (
     MetricSpec,
     Report,
     TrialComparison,
+    build_document,
     build_report,
     meta_from_job,
     metric_specs,
@@ -199,6 +200,57 @@ def _specs_for(report: Report) -> list[MetricSpec]:
     return metric_specs(base_map, head_map)
 
 
+def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypatch):
+    """The document concentrates the compute the renderers used to redo.
+
+    Specs (static registry + reward keys), the aggregated summary, and the
+    git-diff selection are all decided by build_document, so the renderers are
+    pure adapters over one value.
+    """
+    import harbor_mod.jobs as jobs
+
+    home = tmp_path / "home"
+    monkeypatch.setattr(jobs, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
+    git_skill = str(home / ".cache" / "harbor" / "skills" / _GIT_SKILL)
+    job = _make_job(tmp_path, "run-a")
+    _write_meta_trial(
+        job,
+        "task-meta",
+        agent_model="gpt-5.6-luna",
+        agent_effort="high",
+        skills=["/some/local/dr-blacksmith", git_skill],
+        judge_model="openai/gpt-5.6-luna",
+        judge_effort="medium",
+    )
+    meta = meta_from_job(Job(job))
+
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 200, 300))
+    _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 250, 320))
+
+    document = build_document(
+        "run-base",
+        "run-head",
+        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        base_meta=meta,
+        head_meta=meta,
+    )
+    assert [s.key for s in document.specs][:1] == ["score.quality"]
+    assert "input_tokens" in [s.key for s in document.specs]
+    assert document.summary.head_tasks == 1
+    assert document.summary.base_passed == 1
+    # both sides carry the same git-loaded skill, so each produces a diff row
+    assert len(document.skill_diffs) == 2
+    assert document.skill_diffs[0].command.startswith("git -C ")
+    # The renderers derive nothing: they only format the document.
+    md = render_markdown(document)
+    jdoc = render_json(document)
+    assert "score.quality" in md
+    assert jdoc["tasks"][0]["head"]["score.quality"] == 0.95
+    assert jdoc["summary"]["head_tasks"] == 1
+
+
 def test_summarize_aggregates_numbers(tmp_path):
     base = _make_job(tmp_path, "run-base")
     head = _make_job(tmp_path, "run-head")
@@ -317,7 +369,11 @@ def test_metric_registry_drives_summary_aggregation(tmp_path, monkeypatch):
     _write_trial(head, "task-a", tokens=(1100, 50, 120), cost=0.8)
 
     md = render_markdown(
-        "run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        )
     )
     assert "cost (USD): mean" in md
     assert "cost (USD): total" not in md
@@ -329,7 +385,13 @@ def test_render_markdown_includes_deltas(tmp_path):
     _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 0, 100))
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
 
-    md = render_markdown("run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))))
+    md = render_markdown(
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        )
+    )
     assert "# Skill comparison: `run-base` → `run-head`" in md
     assert "### task-a" in md
     assert "score.quality" in md
@@ -409,7 +471,13 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
     _write_trial(head, "task-a", tokens=(55664, 31087, 4870), cost=0.724569)
     _write_artifacts(head / "task-a", steps=9)
 
-    md = render_markdown("run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))))
+    md = render_markdown(
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        )
+    )
     assert "reasoning tokens" in md
     assert "model requests" in md
     assert "steps" in md
@@ -554,11 +622,13 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     _write_trial(head, "task-a")
 
     md = render_markdown(
-        "run-base",
-        "run-head",
-        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
-        base_meta=meta,
-        head_meta=meta,
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            base_meta=meta,
+            head_meta=meta,
+        )
     )
     assert "## Run configuration" in md
     assert "agent model" in md
@@ -581,7 +651,13 @@ def test_render_json_shares_report_numbers(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
 
     report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
-    doc = render_json("run-base", "run-head", report)
+    doc = render_json(
+        build_document(
+            "run-base",
+            "run-head",
+            report,
+        )
+    )
 
     assert doc["base_job"] == "run-base"
     assert doc["head_job"] == "run-head"
@@ -611,9 +687,11 @@ def test_render_json_one_sided_tasks_are_null(tmp_path):
     _write_trial(head, "task-head-only", rewards={"quality": 0.5})
 
     doc = render_json(
-        "run-base",
-        "run-head",
-        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+        )
     )
     rows = {t["task"]: t for t in doc["tasks"]}
     assert rows["task-base-only"]["head"] is None
@@ -626,9 +704,11 @@ def test_render_json_run_config_present_but_null_without_meta(tmp_path):
     base = _make_job(tmp_path, "run-base")
     _write_trial(base, "task-a")
     doc = render_json(
-        "run-base",
-        "run-base",
-        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(base))),
+        build_document(
+            "run-base",
+            "run-base",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(base))),
+        )
     )
     assert doc["run_config"]["agent"]["base"] is None
     assert doc["run_config"]["judge"]["head"] is None
@@ -659,11 +739,13 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
     _write_trial(head, "task-a")
 
     doc = render_json(
-        "run-base",
-        "run-head",
-        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
-        base_meta=meta,
-        head_meta=meta,
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
+            base_meta=meta,
+            head_meta=meta,
+        )
     )
     rc = doc["run_config"]
     assert rc["agent"]["base"]["model"] == "gpt-5.6-luna"

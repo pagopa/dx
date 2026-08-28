@@ -1,40 +1,21 @@
 """Render the Harbor Comparison report.
 
-The comparison data — the typed :class:`~harbor_mod.compare.Report` and
-:class:`~harbor_mod.compare.ReportSummary` values, the metric registry, and the
-join/aggregation in :mod:`harbor_mod.compare` — is renderer-agnostic: the
-:class:`~harbor_mod.compare.ReportSummary` carries the numbers any consumer
-shares. This module is where that data becomes output. :func:`render_markdown`
-is the human-facing deep module behind ``harbor-mod compare`` — one function
-in, a complete report out — and :func:`render_json` emits the same numbers as a
-JSON document for machine consumers. The number/delta formatting rules
-(:func:`_fmt`, :func:`_delta`), the run-configuration cells
-(:func:`_render_run_config`), and the skill-reproduction ``git diff`` command
-(:func:`_skill_diff_command`) are implementation behind the Markdown
-interface.
+The comparison data — the complete :class:`~harbor_mod.compare.ReportDocument`
+(rows, metric specs, aggregated summary, run-configuration cells), built once
+by :func:`~harbor_mod.compare.build_document` — is renderer-agnostic: every
+consumer shares the same numbers. This module is where that document becomes
+output. :func:`render_markdown` and :func:`render_json` are pure adapters over
+the document — they only format, never compute. The number/delta formatting
+rules (:func:`_fmt`, :func:`_delta`) and the run-configuration table
+(:func:`_render_run_config`) are implementation behind the adapters.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from harbor_mod.compare import JobMeta, Report, metric_specs, summarize
+from harbor_mod.compare import JobMeta, ReportDocument
 from harbor_mod.jobs import SkillVersion, TrialMetrics
-
-
-def _skill_diff_command(skill: SkillVersion) -> str | None:
-    """A ready-to-run ``git diff`` between the remote skill version and the local checkout.
-
-    Compares the working tree (the locally tested skill) against the git ref the
-    remote run loaded (``pagopa/dx@<sha>``), restricted to the skill path. Runs
-    from anywhere inside the repo thanks to the ``rev-parse`` substitution.
-    """
-    if skill.kind != "git" or not skill.ref or not skill.rel_path:
-        return None
-    return (
-        f'git -C "$(git rev-parse --show-toplevel)" diff {skill.ref} '
-        f"-- {skill.rel_path}"
-    )
 
 
 def _fmt(value: Any) -> str:
@@ -72,14 +53,9 @@ def _delta(base: Any, head: Any) -> str:
     return "—"
 
 
-def _render_run_config(
-    base_job: str,
-    head_job: str,
-    base_meta: JobMeta | None,
-    head_meta: JobMeta | None,
-) -> list[str]:
+def _render_run_config(document: ReportDocument) -> list[str]:
     """Render the job-level run configuration section (models, skills, diff)."""
-    if base_meta is None and head_meta is None:
+    if document.base_meta is None and document.head_meta is None:
         return []
 
     def _model_cell(meta: JobMeta | None) -> str:
@@ -100,64 +76,57 @@ def _render_run_config(
         return "<br>".join(f"{s.name} {s.version}" for s in meta.skills)
 
     lines = ["## Run configuration", ""]
-    lines.append(f"| | {base_job} | {head_job} |")
+    lines.append(f"| | {document.base_job} | {document.head_job} |")
     lines.append("|---|---|---|")
-    lines.append(f"| agent model | {_model_cell(base_meta)} | {_model_cell(head_meta)} |")
-    lines.append(f"| judge model | {_judge_cell(base_meta)} | {_judge_cell(head_meta)} |")
-    lines.append(f"| skills | {_skills(base_meta)} | {_skills(head_meta)} |")
+    lines.append(
+        f"| agent model | {_model_cell(document.base_meta)} | {_model_cell(document.head_meta)} |"
+    )
+    lines.append(
+        f"| judge model | {_judge_cell(document.base_meta)} | {_judge_cell(document.head_meta)} |"
+    )
+    lines.append(
+        f"| skills | {_skills(document.base_meta)} | {_skills(document.head_meta)} |"
+    )
     lines.append("")
 
-    git_cmds = [
-        (skill, run)
-        for meta, run in ((base_meta, base_job), (head_meta, head_job))
-        if meta is not None
-        for skill in meta.skills
-        if _skill_diff_command(skill) is not None
-    ]
-    if git_cmds:
+    if document.skill_diffs:
         lines.append("Skill diff (local working tree vs. git-loaded version):")
         lines.append("")
         lines.append("```bash")
-        for skill, run in git_cmds:
-            cmd = _skill_diff_command(skill)
-            lines.append(f"# {run} · {skill.name} {skill.version}")
-            lines.append(cmd or "")
+        for diff in document.skill_diffs:
+            lines.append(f"# {diff.run} · {diff.skill.name} {diff.skill.version}")
+            lines.append(diff.command)
         lines.append("```")
         lines.append("")
     return lines
 
 
-def render_markdown(
-    base_job: str,
-    head_job: str,
-    report: Report,
-    base_meta: JobMeta | None = None,
-    head_meta: JobMeta | None = None,
-) -> str:
-    """Render the comparison as a Markdown report."""
-    base_map = {r.task: r.base for r in report.rows if r.base}
-    head_map = {r.task: r.head for r in report.rows if r.head}
-    specs = metric_specs(base_map, head_map)
+def render_markdown(document: ReportDocument) -> str:
+    """Render a report document as a Markdown report.
 
+    Pure adapter: everything rendered (the metric specs, the summary numbers,
+    the run-configuration skill diffs) was computed once by
+    :func:`~harbor_mod.compare.build_document`.
+    """
     lines = [
-        f"# Skill comparison: `{base_job}` → `{head_job}`",
+        f"# Skill comparison: `{document.base_job}` → `{document.head_job}`",
         "",
         "Delta is **head − base**. ",
         "",
     ]
-    lines.extend(_render_run_config(base_job, head_job, base_meta, head_meta))
+    lines.extend(_render_run_config(document))
 
     # --- Per-task tables -------------------------------------------------
     lines.append("## Per-task delta")
     lines.append("")
-    for row in report.rows:
+    for row in document.rows:
         task = row.task
         base, head = row.base, row.head
         lines.append(f"### {task}")
         lines.append("")
         lines.append("| metric | base | head | Δ |")
         lines.append("|---|---|---|---|")
-        for spec in specs:
+        for spec in document.specs:
             lines.append(
                 f"| {spec.display_label} | {_fmt(spec.read(base)) if base else '—'} | "
                 f"{_fmt(spec.read(head)) if head else '—'} | "
@@ -166,7 +135,7 @@ def render_markdown(
         lines.append("")
 
     # --- Summary ---------------------------------------------------------
-    summary = summarize(report, specs)
+    summary = document.summary
     lines.append("## Summary")
     lines.append("")
     lines.append(
@@ -203,26 +172,15 @@ def _skill_dict(skill: SkillVersion) -> dict[str, Any]:
     }
 
 
-def render_json(
-    base_job: str,
-    head_job: str,
-    report: Report,
-    base_meta: JobMeta | None = None,
-    head_meta: JobMeta | None = None,
-) -> dict[str, Any]:
-    """Render the comparison as a JSON document (a serializable dict).
+def render_json(document: ReportDocument) -> dict[str, Any]:
+    """Render a report document as a JSON document (a serializable dict).
 
-    Shares the same numbers as :func:`render_markdown`: the metric registry
-    supplies the per-task keys and the summary lines, so both formats are
-    derived from one declaration. The run configuration is always present
-    (with ``None`` fields when a side reports nothing), keeping the document
-    shape stable for consumers.
+    Pure adapter over a :class:`~harbor_mod.compare.ReportDocument`: the
+    metric registry supplies the per-task keys and the summary lines, so the
+    document is derived from one declaration. The run configuration is always
+    present (with ``None`` fields when a side reports nothing), keeping the
+    document shape stable for consumers.
     """
-    base_map = {r.task: r.base for r in report.rows if r.base}
-    head_map = {r.task: r.head for r in report.rows if r.head}
-    specs = metric_specs(base_map, head_map)
-    summary = summarize(report, specs)
-
     def _agent(meta: JobMeta | None) -> dict[str, Any] | None:
         if meta is None:
             return None
@@ -242,28 +200,25 @@ def render_json(
         if metrics is None:
             return None
         return {
-            **{spec.key: spec.read(metrics) for spec in specs},
+            **{spec.key: spec.read(metrics) for spec in document.specs},
             "passed": metrics.passed,
         }
 
     return {
-        "base_job": base_job,
-        "head_job": head_job,
+        "base_job": document.base_job,
+        "head_job": document.head_job,
         "run_config": {
-            "agent": {"base": _agent(base_meta), "head": _agent(head_meta)},
-            "judge": {"base": _judge(base_meta), "head": _judge(head_meta)},
-            "skills": {"base": _skills(base_meta), "head": _skills(head_meta)},
+            "agent": {"base": _agent(document.base_meta), "head": _agent(document.head_meta)},
+            "judge": {"base": _judge(document.base_meta), "head": _judge(document.head_meta)},
+            "skills": {"base": _skills(document.base_meta), "head": _skills(document.head_meta)},
             "skill_diffs": [
                 {
-                    "run": run,
-                    "skill": skill.name,
-                    "version": skill.version,
-                    "command": command,
+                    "run": diff.run,
+                    "skill": diff.skill.name,
+                    "version": diff.skill.version,
+                    "command": diff.command,
                 }
-                for meta, run in ((base_meta, base_job), (head_meta, head_job))
-                if meta is not None
-                for skill in meta.skills
-                if (command := _skill_diff_command(skill)) is not None
+                for diff in document.skill_diffs
             ],
         },
         "tasks": [
@@ -272,15 +227,15 @@ def render_json(
                 "base": _trial_side(row.base),
                 "head": _trial_side(row.head),
             }
-            for row in report.rows
+            for row in document.rows
         ],
         "summary": {
-            "base_tasks": summary.base_tasks,
-            "head_tasks": summary.head_tasks,
-            "base_only": summary.base_only,
-            "head_only": summary.head_only,
-            "base_passed": summary.base_passed,
-            "head_passed": summary.head_passed,
+            "base_tasks": document.summary.base_tasks,
+            "head_tasks": document.summary.head_tasks,
+            "base_only": document.summary.base_only,
+            "head_only": document.summary.head_only,
+            "base_passed": document.summary.base_passed,
+            "head_passed": document.summary.head_passed,
             "metrics": [
                 {
                     "key": line.spec.key,
@@ -288,7 +243,7 @@ def render_json(
                     "base": line.base,
                     "head": line.head,
                 }
-                for line in summary.lines
+                for line in document.summary.lines
             ],
         },
     }

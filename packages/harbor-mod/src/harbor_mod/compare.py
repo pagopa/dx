@@ -29,7 +29,10 @@ tokens come from ``verifier/reward-details.json`` → ``reward.usage`` (persiste
 by agent-mode judges; LLM judges in harbor-rewardkit 0.2.0 do not record it).
 
 This module is the data side of the comparison: reading, joining, and
-aggregating. The Markdown and JSON rendering of that data lives in
+aggregating. :func:`build_document` turns a joined :class:`Report` and the
+job-level metadata into one complete :class:`ReportDocument` (rows, metric
+specs, summary, run-configuration skill diffs), so the compute happens exactly
+once. The Markdown and JSON rendering of that document lives in
 :mod:`harbor_mod.report`, which consumes the typed values here and owns the
 number/delta formatting and the run-configuration cells.
 
@@ -42,7 +45,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from harbor_mod.jobs import Job, JobMeta, TrialMetrics
+from harbor_mod.jobs import Job, JobMeta, SkillVersion, TrialMetrics
 
 
 @dataclass(frozen=True)
@@ -159,6 +162,86 @@ class ReportSummary:
     base_passed: int
     head_passed: int
     lines: tuple[SummaryLine, ...] = ()
+
+
+@dataclass(frozen=True)
+class SkillDiff:
+    """A ready-to-run ``git diff`` between a git-loaded skill and the local checkout."""
+
+    run: str
+    skill: SkillVersion
+    command: str
+
+
+def _skill_diff_command(skill: SkillVersion) -> str | None:
+    """A ready-to-run ``git diff`` between the remote skill version and the local checkout.
+
+    Compares the working tree (the locally tested skill) against the git ref the
+    remote run loaded (``pagopa/dx@<sha>``), restricted to the skill path. Runs
+    from anywhere inside the repo thanks to the ``rev-parse`` substitution.
+    """
+    if skill.kind != "git" or not skill.ref or not skill.rel_path:
+        return None
+    return (
+        f'git -C "$(git rev-parse --show-toplevel)" diff {skill.ref} '
+        f"-- {skill.rel_path}"
+    )
+
+
+@dataclass(frozen=True)
+class ReportDocument:
+    """A complete two-job comparison: rows, metric specs, summary, run config.
+
+    Built once by :func:`build_document`; every renderer (Markdown, JSON, …) is
+    a pure adapter over this value, so the metric specs, the aggregated summary,
+    and the run-configuration git-diff selection are decided exactly once
+    instead of once per renderer.
+    """
+
+    base_job: str
+    head_job: str
+    rows: tuple[TrialComparison, ...]
+    specs: tuple[MetricSpec, ...]
+    summary: ReportSummary
+    base_meta: JobMeta | None = None
+    head_meta: JobMeta | None = None
+    skill_diffs: tuple[SkillDiff, ...] = ()
+
+
+def build_document(
+    base_job: str,
+    head_job: str,
+    report: Report,
+    base_meta: JobMeta | None = None,
+    head_meta: JobMeta | None = None,
+) -> ReportDocument:
+    """Join a report and its job-level metadata into one complete document.
+
+    Computes the metric specs (static registry plus the union of reward keys),
+    the aggregated summary, and the run-configuration git-diff selection once.
+    Renderers consume this value and only format it.
+    """
+    base_map = {r.task: r.base for r in report.rows if r.base}
+    head_map = {r.task: r.head for r in report.rows if r.head}
+    specs = metric_specs(base_map, head_map)
+    summary = summarize(report, specs)
+    skill_diffs = tuple(
+        SkillDiff(run=run, skill=skill, command=command)
+        for meta, run in ((base_meta, base_job), (head_meta, head_job))
+        if meta is not None
+        for skill in meta.skills
+        if (command := _skill_diff_command(skill)) is not None
+    )
+    return ReportDocument(
+        base_job=base_job,
+        head_job=head_job,
+        rows=report.rows,
+        specs=tuple(specs),
+        summary=summary,
+        base_meta=base_meta,
+        head_meta=head_meta,
+        skill_diffs=skill_diffs,
+    )
 
 
 def meta_from_job(job: Job) -> JobMeta | None:
