@@ -1,3 +1,14 @@
+## 0.2.13 (2026-08-28)
+
+### 🩹 Fixes
+
+- Align the MCP server container image with the AMD64 Lambda architecture ([#2099](https://github.com/pagopa/dx/pull/2099))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
 ## 0.2.12 (2026-07-28)
 
 ### 🩹 Fixes
