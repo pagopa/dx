@@ -26,7 +26,8 @@ import argparse
 import sys
 from pathlib import Path
 
-from .compare import build_report, meta_from_job, metrics_from_job, render_markdown
+from .compare import build_report, meta_from_job, metrics_from_job
+from .markdown_report import render_markdown
 from .convert.config import (
     DEFAULT_MODEL,
     DEFAULT_ENVIRONMENT_TYPE,

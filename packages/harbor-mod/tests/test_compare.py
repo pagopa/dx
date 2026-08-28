@@ -12,15 +12,13 @@ from harbor_mod.compare import (
     Report,
     TrialComparison,
     build_report,
-    load_job,
-    load_job_meta,
     meta_from_job,
     metric_specs,
     metrics_from_job,
-    render_markdown,
     summarize,
 )
 from harbor_mod.jobs import Job
+from harbor_mod.markdown_report import render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
 
@@ -74,7 +72,7 @@ def _make_job(tmp_path: Path, name: str) -> Path:
     return job
 
 
-def test_load_job_parses_metrics(tmp_path):
+def test_metrics_from_job_parses_metrics(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(
         job,
@@ -83,7 +81,7 @@ def test_load_job_parses_metrics(tmp_path):
         tokens=(1000, 200, 300),
         cost=0.05,
     )
-    metrics = load_job(job)
+    metrics = metrics_from_job(Job(job))
     assert list(metrics) == ["skill-task-1"]
     m = metrics["skill-task-1"]
     assert m.rewards == {"quality": 0.9, "pass": 1}
@@ -96,15 +94,15 @@ def test_load_job_parses_metrics(tmp_path):
     assert m.passed is True
 
 
-def test_load_job_marks_exception_as_failed(tmp_path):
+def test_metrics_from_job_marks_exception_as_failed(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "skill-task-1", exception=True)
-    assert load_job(job)["skill-task-1"].passed is False
+    assert metrics_from_job(Job(job))["skill-task-1"].passed is False
 
 
-def test_load_job_missing_dir_raises(tmp_path):
+def test_metrics_from_job_missing_dir_raises(tmp_path):
     with pytest.raises(FileNotFoundError):
-        load_job(tmp_path / "nope")
+        metrics_from_job(Job(tmp_path / "nope"))
 
 
 def test_job_seam_serves_metrics_and_meta(tmp_path):
@@ -208,7 +206,7 @@ def test_summarize_aggregates_numbers(tmp_path):
     _write_trial(base, "task-b", rewards={"quality": 0.6}, tokens=(2000, 100, 200), cost=0.3)
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120), cost=0.8)
 
-    report = build_report(load_job(base), load_job(head))
+    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
     summary = summarize(report, _specs_for(report))
 
     assert summary.base_tasks == 2
@@ -250,7 +248,7 @@ def test_build_report_joins_by_task_and_computes_delta(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
     _write_trial(head, "task-only-head", rewards={"quality": 0.5})
 
-    report = build_report(load_job(base), load_job(head))
+    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
     rows = {r.task: r for r in report.rows}
     assert set(rows) == {"task-a", "task-only-head"}
     assert rows["task-a"].base is not None and rows["task-a"].head is not None
@@ -265,7 +263,7 @@ def test_report_rows_are_typed_trial_comparisons(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95})
     _write_trial(head, "task-only-head", rewards={"quality": 0.5})
 
-    report = build_report(load_job(base), load_job(head))
+    report = build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
     assert isinstance(report, Report)
     assert len(report.rows) == 2
     task_a = next(r for r in report.rows if r.task == "task-a")
@@ -281,7 +279,7 @@ def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
     _write_trial(base, "task-a", rewards={"quality": 0.8, "pass": 1}, tokens=(1, 2, 3))
     _write_trial(head, "task-a", rewards={"quality": 0.9, "pass": 1}, tokens=(1, 2, 3))
 
-    specs = metric_specs(load_job(base), load_job(head))
+    specs = metric_specs(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
     assert [s.key for s in specs] == [
         "score.pass",
         "score.quality",
@@ -319,7 +317,7 @@ def test_metric_registry_drives_summary_aggregation(tmp_path, monkeypatch):
     _write_trial(head, "task-a", tokens=(1100, 50, 120), cost=0.8)
 
     md = render_markdown(
-        "run-base", "run-head", build_report(load_job(base), load_job(head))
+        "run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head)))
     )
     assert "cost (USD): mean" in md
     assert "cost (USD): total" not in md
@@ -331,7 +329,7 @@ def test_render_markdown_includes_deltas(tmp_path):
     _write_trial(base, "task-a", rewards={"quality": 0.8}, tokens=(1000, 0, 100))
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
 
-    md = render_markdown("run-base", "run-head", build_report(load_job(base), load_job(head)))
+    md = render_markdown("run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))))
     assert "# Skill comparison: `run-base` → `run-head`" in md
     assert "### task-a" in md
     assert "score.quality" in md
@@ -368,7 +366,7 @@ def _write_artifacts(
         )
 
 
-def test_load_job_backfills_missing_tokens_from_session_db(tmp_path):
+def test_metrics_from_job_backfills_missing_tokens_from_session_db(tmp_path):
     """GPT runs leave input/cache/cost unset; the session DB fills them."""
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, 4870), cost=None)
@@ -376,7 +374,7 @@ def test_load_job_backfills_missing_tokens_from_session_db(tmp_path):
         job / "task-a",
         session_db_rows=[DEFAULT_USAGE_ROW, (35_190, 31_087, 4_100, 359, 290, 207_814_000)],
     )
-    m = load_job(job)["task-a"]
+    m = metrics_from_job(Job(job))["task-a"]
     assert m.input_tokens == 55_664
     assert m.cache_tokens == 31_087
     assert m.output_tokens == 4870  # already reported, left untouched
@@ -385,21 +383,21 @@ def test_load_job_backfills_missing_tokens_from_session_db(tmp_path):
     assert m.reasoning_tokens == 310
 
 
-def test_load_job_falls_back_to_jsonl_without_session_db(tmp_path):
+def test_metrics_from_job_falls_back_to_jsonl_without_session_db(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, None), cost=None)
     _write_artifacts(job / "task-a", jsonl_output_tokens=[41, 196], jsonl_nano_aiu=1_665_217_000)
-    m = load_job(job)["task-a"]
+    m = metrics_from_job(Job(job))["task-a"]
     assert m.output_tokens == 237
     assert m.cost_usd == 1.665217
     assert m.input_tokens is None  # not present in the JSONL stream
 
 
-def test_load_job_reads_steps_from_trajectory(tmp_path):
+def test_metrics_from_job_reads_steps_from_trajectory(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(1000, 200, 300), cost=0.05)
     _write_artifacts(job / "task-a", steps=7)
-    m = load_job(job)["task-a"]
+    m = metrics_from_job(Job(job))["task-a"]
     assert m.n_steps == 7
 
 
@@ -411,7 +409,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
     _write_trial(head, "task-a", tokens=(55664, 31087, 4870), cost=0.724569)
     _write_artifacts(head / "task-a", steps=9)
 
-    md = render_markdown("run-base", "run-head", build_report(load_job(base), load_job(head)))
+    md = render_markdown("run-base", "run-head", build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))))
     assert "reasoning tokens" in md
     assert "model requests" in md
     assert "steps" in md
@@ -422,7 +420,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
 VERIFIER_TIMES = ("2026-08-27T10:05:00+00:00", "2026-08-27T10:06:30+00:00")
 
 
-def test_load_job_parses_verifier_duration_and_tokens(tmp_path):
+def test_metrics_from_job_parses_verifier_duration_and_tokens(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", verifier=VERIFIER_TIMES)
     vdir = job / "task-a" / "verifier"
@@ -434,12 +432,12 @@ def test_load_job_parses_verifier_duration_and_tokens(tmp_path):
         + json.dumps({"usage": {"prompt_tokens": 300, "completion_tokens": 20}})
         + "\n"
     )
-    m = load_job(job)["task-a"]
+    m = metrics_from_job(Job(job))["task-a"]
     assert m.verifier_duration_sec == 90.0
     assert m.verifier_tokens == 1600  # (1200 + 80) + (300 + 20)
 
 
-def test_load_job_verifier_tokens_from_reward_details(tmp_path):
+def test_metrics_from_job_verifier_tokens_from_reward_details(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a")
     vdir = job / "task-a" / "verifier"
@@ -447,13 +445,13 @@ def test_load_job_verifier_tokens_from_reward_details(tmp_path):
     (vdir / "reward-details.json").write_text(
         json.dumps({"reward": {"usage": {"input_tokens": 1000, "output_tokens": 200}}})
     )
-    assert load_job(job)["task-a"].verifier_tokens == 1200
+    assert metrics_from_job(Job(job))["task-a"].verifier_tokens == 1200
 
 
-def test_load_job_verifier_tokens_none_without_usage(tmp_path):
+def test_metrics_from_job_verifier_tokens_none_without_usage(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", verifier=VERIFIER_TIMES)
-    assert load_job(job)["task-a"].verifier_tokens is None
+    assert metrics_from_job(Job(job))["task-a"].verifier_tokens is None
 
 
 def _write_meta_trial(
@@ -502,7 +500,7 @@ _GIT_SKILL = (
 )
 
 
-def test_load_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
+def test_meta_from_job_models_and_skill_versions(tmp_path, monkeypatch):
     import harbor_mod.jobs as jobs
 
     home = tmp_path / "home"
@@ -518,7 +516,7 @@ def test_load_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = load_job_meta(job)
+    meta = meta_from_job(Job(job))
     assert meta.agent_model == "gpt-5.6-luna"
     assert meta.agent_effort == "high"
     assert meta.judge_model == "openai/gpt-5.6-luna"
@@ -549,7 +547,7 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
         judge_model="openai/gpt-5.6-luna",
         judge_effort="medium",
     )
-    meta = load_job_meta(job)
+    meta = meta_from_job(Job(job))
     base = _make_job(tmp_path, "run-base")
     head = _make_job(tmp_path, "run-head")
     _write_trial(base, "task-a")
@@ -558,7 +556,7 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     md = render_markdown(
         "run-base",
         "run-head",
-        build_report(load_job(base), load_job(head)),
+        build_report(metrics_from_job(Job(base)), metrics_from_job(Job(head))),
         base_meta=meta,
         head_meta=meta,
     )
