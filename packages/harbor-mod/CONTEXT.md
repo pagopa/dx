@@ -44,9 +44,11 @@ _Avoid_: grader, scorer
 **Trial**:
 One agent run within a job: one subdirectory holding a `result.json` and the
 collected artifacts. The `jobs` module encapsulates the trial-directory layout
-and the `result.json` schema: a `Trial` loads its artifacts once into a
-`TrialFacts` value and exposes typed `metrics()` and `meta()` accessors
-rather than the raw dict.
+and the `result.json` schema via a single `TrialArtifacts` value (the one owner
+of every artifact location): a `Trial` loads its artifacts once into a
+`TrialFacts` value and exposes typed `metrics()` and `meta()` accessors rather
+than the raw dict. `copilot_usage` is a pure adapter: it aggregates whatever
+two files it is handed and never sees a trial path.
 _Avoid_: attempt, iteration
 
 **Job**:

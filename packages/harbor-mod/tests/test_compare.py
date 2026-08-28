@@ -163,6 +163,55 @@ def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatc
     assert calls == 2  # one parse per trial, shared by both derivations
 
 
+def test_trial_artifacts_owns_the_trial_layout(tmp_path):
+    """The trial-directory layout lives in one value, resolved from the root."""
+    from harbor_mod.jobs import TrialArtifacts
+
+    trial_dir = tmp_path / "task-1"
+    artifacts = TrialArtifacts.for_trial(trial_dir)
+    assert artifacts.result == trial_dir / "result.json"
+    assert artifacts.trajectory == trial_dir / "agent" / "trajectory.json"
+    assert artifacts.verifier_usage == trial_dir / "verifier" / "usage.jsonl"
+    assert artifacts.reward_details == trial_dir / "verifier" / "reward-details.json"
+    assert artifacts.copilot_session_db == trial_dir / "agent" / "copilot" / "session-store.db"
+    assert artifacts.copilot_cli_jsonl == trial_dir / "agent" / "copilot-cli.jsonl"
+
+
+def test_job_metrics_uses_agent_persisted_metadata(tmp_path):
+    """The mod agent's persisted values win; artifacts only backfill the rest.
+
+    The agent writes n_requests/n_reasoning_tokens under
+    agent_result.metadata (see CopilotCliMod.populate_context_post_run), so a
+    trial produced by the mod agent is read from result.json without touching
+    the artifacts. The artifacts backfill only what the file cannot report.
+    """
+    job = _make_job(tmp_path, "run-a")
+    trial = job / "task-a"
+    trial.mkdir(parents=True, exist_ok=True)
+    data = {
+        "task_name": "task-a",
+        "trial_name": "task-a__abc1234",
+        "agent_result": {
+            "metadata": {
+                "n_requests": 4,
+                "n_reasoning_tokens": 120,
+            }
+        },
+    }
+    (trial / "result.json").write_text(json.dumps(data))
+    # artifacts that would claim different numbers, but must NOT win for the
+    # persisted fields; they only backfill the ones result.json cannot report.
+    write_session_db(
+        trial / "agent" / "copilot" / "session-store.db",
+        rows=[(20_474, 7_000, 20_471, 41, 20, 516_755_000)],
+    )
+    m = Job(job).metrics()["task-a"]
+    assert m.n_requests == 4  # persisted metadata beats the DB's 1
+    assert m.reasoning_tokens == 120  # persisted metadata beats the DB's 20
+    assert m.input_tokens == 20_474  # not persisted; backfilled from the DB
+    assert m.cache_tokens == 7_000  # not persisted; backfilled from the DB
+
+
 def test_trial_task_name_falls_back_to_dir_name(tmp_path):
     job = _make_job(tmp_path, "run-a")
     trial_dir = job / "nameless"

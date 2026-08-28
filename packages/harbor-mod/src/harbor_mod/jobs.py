@@ -22,8 +22,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
-from harbor_mod.copilot_usage import CopilotUsage, extract_trial_usage
-from harbor_mod.metrics import derivable_specs
+from harbor_mod.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
+from harbor_mod.metrics import MetricSpec, derivable_specs
 
 JSON = dict[str, Any]
 
@@ -170,6 +170,43 @@ class TrialFacts:
     trajectory_steps: int | None = None
 
 
+@dataclass(frozen=True)
+class TrialArtifacts:
+    """Every artifact location of one trial directory, resolved from its root.
+
+    The one owner of the trial-directory layout: ``result.json``, the ATIF
+    trajectory, the verifier usage/reward files, and the Copilot session
+    artifacts (session DB + JSONL stream). :class:`Trial` reads every file
+    through this value, so the layout lives in exactly one place and
+    :mod:`harbor_mod.copilot_usage` never sees a trial path (it aggregates
+    whatever two files it is handed).
+    """
+
+    result: Path
+    trajectory: Path
+    verifier_usage: Path
+    reward_details: Path
+    copilot_session_db: Path
+    copilot_cli_jsonl: Path
+
+    @classmethod
+    def for_trial(cls, trial_dir: Path) -> "TrialArtifacts":
+        """Resolve the six artifact locations under one trial directory."""
+        session_db, cli_jsonl = copilot_artifact_paths(trial_dir / "agent")
+        return cls(
+            result=trial_dir / "result.json",
+            trajectory=trial_dir / "agent" / "trajectory.json",
+            verifier_usage=trial_dir / "verifier" / "usage.jsonl",
+            reward_details=trial_dir / "verifier" / "reward-details.json",
+            copilot_session_db=session_db,
+            copilot_cli_jsonl=cli_jsonl,
+        )
+
+    def usage(self) -> CopilotUsage | None:
+        """Aggregated Copilot usage for this trial (session DB, JSONL fallback)."""
+        return extract_usage(self.copilot_session_db, self.copilot_cli_jsonl)
+
+
 class Trial:
     """One trial subdirectory: ``result.json`` plus the collected artifacts.
 
@@ -185,6 +222,7 @@ class Trial:
 
     def __init__(self, path: Path) -> None:
         self.path = path
+        self._artifacts = TrialArtifacts.for_trial(path)
         self._facts: TrialFacts | None = None
         self._data_exc: Exception | None = None
 
@@ -195,19 +233,20 @@ class Trial:
         shapes: ``result.json`` (a corrupt file is remembered as ``_data_exc``
         so ``metrics()`` can raise on demand), the Copilot session DB/JSONL
         usage, ``verifier/usage.jsonl``, ``verifier/reward-details.json``, and
-        the ATIF trajectory.
+        the ATIF trajectory. All artifact locations come from
+        :attr:`_artifacts` (:class:`TrialArtifacts` owns the layout).
         """
         if self._facts is None:
             data = None
             try:
                 data = json.loads(
-                    (self.path / "result.json").read_text(encoding="utf-8")
+                    self._artifacts.result.read_text(encoding="utf-8")
                 )
             except (OSError, json.JSONDecodeError) as exc:
                 self._data_exc = exc
             self._facts = TrialFacts(
                 data=data,
-                usage=extract_trial_usage(self.path),
+                usage=self._artifacts.usage(),
                 verifier_usage_total=self._verifier_usage_total(),
                 reward_details=self._reward_details(),
                 trajectory_steps=self._trajectory_steps(),
@@ -238,11 +277,12 @@ class Trial:
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
         # One precedence rule per usage-backed metric, declared once in the
-        # metric registry (result_key/usage_attr): the result.json value wins,
-        # the usage backfill fills when the file cannot report the number.
+        # metric registry (result_key/usage_attr): the mod agent's persisted
+        # value wins (top-level agent_result field, then metadata), and the
+        # artifact backfill fills when the file cannot report the number.
         derived = {
             spec.key: _first(
-                agent_result.get(spec.result_key),
+                self._reported_value(agent_result, spec),
                 self._usage_value(facts, spec.usage_attr),
             )
             for spec in derivable_specs()
@@ -306,7 +346,7 @@ class Trial:
         or recorded no usage; the reward-details fallback is applied by
         :meth:`_verifier_tokens`.
         """
-        usage_file = self.path / "verifier" / "usage.jsonl"
+        usage_file = self._artifacts.verifier_usage
         if not usage_file.is_file():
             return None
         total = 0
@@ -334,7 +374,7 @@ class Trial:
         Both verifier-token counts and the judge model/effort metadata are read
         from this one file; this method is the only place that knows its shape.
         """
-        details = self.path / "verifier" / "reward-details.json"
+        details = self._artifacts.reward_details
         if not details.is_file():
             return None
         try:
@@ -347,7 +387,7 @@ class Trial:
 
     def _trajectory_steps(self) -> int | None:
         """Read ``final_metrics.total_steps`` from the ATIF trajectory file."""
-        path = self.path / "agent" / "trajectory.json"
+        path = self._artifacts.trajectory
         if not path.is_file():
             return None
         try:
@@ -374,6 +414,23 @@ class Trial:
             return None
         total = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
         return int(total) if total else None
+
+    @staticmethod
+    def _reported_value(agent_result: JSON, spec: MetricSpec) -> Any:
+        """The value the mod agent persisted for ``spec``, or ``None``.
+
+        The agent writes each usage-backed metric under its registry
+        ``result_key``: as a top-level ``agent_result`` field where
+        :class:`~harbor.models.agent.context.AgentContext` has the attribute
+        (input/cache/output tokens, cost), otherwise under
+        ``agent_result.metadata`` (request/reasoning counts). Reading the
+        persisted value first is what makes the artifact backfill a true
+        fallback for runs the mod agent did not produce.
+        """
+        value = agent_result.get(spec.result_key)
+        if value is not None:
+            return value
+        return (agent_result.get("metadata") or {}).get(spec.result_key)
 
     @staticmethod
     def _usage_value(facts: TrialFacts, attr: str) -> Any:

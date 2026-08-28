@@ -177,6 +177,17 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> CopilotUsage | None:
     )
 
 
+def copilot_artifact_paths(root: Path) -> tuple[Path, Path]:
+    """The two Copilot artifact paths under ``root`` (session DB, JSONL).
+
+    Both the agent (its ``logs_dir``) and a saved trial (its ``agent/`` dir)
+    keep the Copilot CLI artifacts at the same two relative locations; this
+    is the one place that names them. Each caller passes its own root (the
+    agent's logs layout and the trial layout differ).
+    """
+    return root / "copilot" / "session-store.db", root / "copilot-cli.jsonl"
+
+
 def extract_usage(db_path: Path, jsonl_path: Path) -> CopilotUsage | None:
     """Best-effort usage across two artifact locations: session DB first, JSONL fallback.
 
@@ -189,11 +200,3 @@ def extract_usage(db_path: Path, jsonl_path: Path) -> CopilotUsage | None:
     if usage is not None and usage.has_data:
         return usage
     return extract_usage_from_jsonl(jsonl_path)
-
-
-def extract_trial_usage(trial_dir: Path) -> CopilotUsage | None:
-    """Best-effort usage for a trial directory: session DB first, JSONL fallback."""
-    return extract_usage(
-        trial_dir / "agent" / "copilot" / "session-store.db",
-        trial_dir / "agent" / "copilot-cli.jsonl",
-    )

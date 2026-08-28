@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from harbor_mod.copilot_usage import (
-    extract_trial_usage,
+    copilot_artifact_paths,
     extract_usage,
     extract_usage_from_jsonl,
     extract_usage_from_session_db,
@@ -77,29 +79,10 @@ def test_extract_from_missing_jsonl_returns_none(tmp_path):
     assert extract_usage_from_jsonl(tmp_path / "nope.jsonl") is None
 
 
-def test_extract_trial_usage_prefers_session_db(tmp_path):
-    trial = tmp_path / "task-1"
-    write_session_db(trial / "agent" / "copilot" / "session-store.db", rows=[DEFAULT_USAGE_ROW])
-    write_copilot_jsonl(trial / "agent" / "copilot-cli.jsonl", output_tokens=[41])
-    usage = extract_trial_usage(trial)
-    assert usage is not None
-    assert usage.source == "session-store.db"
-    assert usage.input_tokens == 20_474
-
-
-def test_extract_trial_usage_falls_back_to_jsonl(tmp_path):
-    trial = tmp_path / "task-1"
-    write_copilot_jsonl(trial / "agent" / "copilot-cli.jsonl", output_tokens=[41])
-    usage = extract_trial_usage(trial)
-    assert usage is not None
-    assert usage.source == "copilot-cli.jsonl"
-    assert usage.cost_usd == 1.665217
-
-
-def test_extract_trial_usage_none_without_artifacts(tmp_path):
-    trial = tmp_path / "task-1"
-    trial.mkdir(parents=True, exist_ok=True)
-    assert extract_trial_usage(trial) is None
+def test_copilot_artifact_paths_relative_to_root():
+    db, jsonl = copilot_artifact_paths(Path("/trial/agent"))
+    assert db == Path("/trial/agent/copilot/session-store.db")
+    assert jsonl == Path("/trial/agent/copilot-cli.jsonl")
 
 
 def test_extract_usage_prefers_session_db(tmp_path):
