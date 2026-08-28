@@ -1,27 +1,43 @@
 resource "azurerm_resource_group" "example" {
-  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = provider::dx::resource_name(merge(local.environment, { resource_type = "resource_group" }))
   location = local.environment.location
 }
 
+data "azurerm_virtual_network" "vnet" {
+  name                = local.virtual_network.name
+  resource_group_name = local.virtual_network.resource_group_name
+}
+
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "pep",
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "pep",
+    domain        = ""
     resource_type = "subnet"
   }))
   virtual_network_name = local.virtual_network.name
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
-resource "azurerm_subnet" "example" {
-  name                 = "example-subnet"
+resource "dx_available_subnet_cidr" "allowed" {
+  virtual_network_id = data.azurerm_virtual_network.vnet.id
+  prefix_length      = 29
+}
+
+resource "azurerm_subnet" "allowed" {
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "allowed",
+    resource_type = "subnet"
+  }))
   virtual_network_name = local.virtual_network.name
   resource_group_name  = local.virtual_network.resource_group_name
-  address_prefixes     = ["10.0.1.0/24"]
+  address_prefixes     = [dx_available_subnet_cidr.allowed.cidr_block]
+
+  service_endpoints = ["Microsoft.EventHub"]
 }
 
 module "azure_event_hub" {
   source  = "pagopa-dx/azure-event-hub/azurerm"
-  version = "~> 0.1"
+  version = "~> 1.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -31,7 +47,7 @@ module "azure_event_hub" {
   private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   allowed_sources = {
-    subnet_ids = [azurerm_subnet.example.id]
+    subnet_ids = [azurerm_subnet.allowed.id]
     ips        = []
   }
 
