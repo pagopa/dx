@@ -53,10 +53,13 @@ class MetricSpec:
     ``"score"`` for verifier rewards (mean), ``"total"`` for summed metrics
     (tokens, requests, steps, cost), ``"mean"`` for averaged metrics
     (durations). ``integer`` marks ``"total"`` metrics whose values are whole
-    counts (tokens, steps, requests), so their sum is reported as an int. The
-    :data:`_METRICS` registry below is the single place a new metric is
-    declared: the per-task table, the column label, and the summary line all
-    follow from one entry. ``passed`` is a trial-level flag and is reported
+    counts (tokens, steps, requests), so their sum is reported as an int.
+    ``source`` names where the value is read from a :class:`TrialMetrics`:
+    ``"reward"`` for a verifier reward (keyed by ``key``, its ``score.<k>``
+    document name) or ``"field"`` for a direct attribute. The :data:`_METRICS`
+    registry below is the single place a new metric is declared: the per-task
+    table, the column label, the summary line, and the value read all follow
+    from one entry. ``passed`` is a trial-level flag and is reported
     separately, not as a metric.
     """
 
@@ -64,6 +67,13 @@ class MetricSpec:
     kind: str = "mean"
     label: str | None = None
     integer: bool = False
+    source: str = "field"  # "field" | "reward"
+
+    def read(self, metrics: TrialMetrics) -> Any:
+        """The value of this metric for one trial, or ``None`` when absent."""
+        if self.source == "reward":
+            return metrics.rewards.get(self.key.removeprefix("score."))
+        return getattr(metrics, self.key)
 
     @property
     def display_label(self) -> str:
@@ -207,16 +217,19 @@ def metric_specs(
 ) -> list[MetricSpec]:
     """All metrics to report: dynamic score specs first, then the registry.
 
-    Score specs come from the union of reward keys across both jobs (labeled by
-    their ``score.<key>`` name); the static registry supplies the ordered,
-    labeled non-score metrics. Declaring a metric once in the registry — or a
-    reward key simply appearing in a job — is all it takes for the per-task
-    table and the summary to pick it up.
+    Score specs come from the union of reward keys across both jobs (keyed by
+    their ``score.<key>`` document name and read from the rewards via
+    ``source="reward"``); the static registry supplies the ordered, labeled
+    non-score metrics. Declaring a metric once in the registry — or a reward
+    key simply appearing in a job — is all it takes for the per-task table and
+    the summary to pick it up.
     """
     reward_keys = sorted(
         {key for m in (*base.values(), *head.values()) for key in m.rewards}
     )
-    return [MetricSpec(f"score.{key}", "score") for key in reward_keys] + list(_METRICS)
+    return [
+        MetricSpec(f"score.{key}", "score", source="reward") for key in reward_keys
+    ] + list(_METRICS)
 
 
 def build_report(
@@ -247,8 +260,8 @@ def summarize(report: Report, specs: list[MetricSpec]) -> ReportSummary:
     base_metrics = [r.base for r in report.rows if r.base]
     head_metrics = [r.head for r in report.rows if r.head]
 
-    def _values(metrics: list[TrialMetrics], key: str) -> list[Any]:
-        return [m.metric(key) for m in metrics if m.metric(key) is not None]
+    def _values(metrics: list[TrialMetrics], spec: MetricSpec) -> list[Any]:
+        return [value for m in metrics if (value := spec.read(m)) is not None]
 
     return ReportSummary(
         base_tasks=len(base_metrics),
@@ -260,8 +273,8 @@ def summarize(report: Report, specs: list[MetricSpec]) -> ReportSummary:
         lines=tuple(
             SummaryLine(
                 spec=spec,
-                base=spec.aggregate(_values(base_metrics, spec.key)),
-                head=spec.aggregate(_values(head_metrics, spec.key)),
+                base=spec.aggregate(_values(base_metrics, spec)),
+                head=spec.aggregate(_values(head_metrics, spec)),
             )
             for spec in specs
         ),

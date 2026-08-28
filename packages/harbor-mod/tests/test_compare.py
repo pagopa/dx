@@ -168,7 +168,7 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     assert metrics.agent_duration_sec == 300.0
     assert metrics.total_duration_sec == 420.0
     assert metrics.passed is True
-    assert metrics.metric("score.quality") == 0.9
+    assert metrics.rewards["quality"] == 0.9
 
     meta = by_task["task-b"].meta()
     assert meta.agent_model == "gpt-5.6-luna"

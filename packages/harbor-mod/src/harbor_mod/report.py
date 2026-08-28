@@ -159,9 +159,9 @@ def render_markdown(
         lines.append("|---|---|---|---|")
         for spec in specs:
             lines.append(
-                f"| {spec.display_label} | {_fmt(base.metric(spec.key)) if base else '—'} | "
-                f"{_fmt(head.metric(spec.key)) if head else '—'} | "
-                f"{_delta(base.metric(spec.key) if base else None, head.metric(spec.key) if head else None)} |"
+                f"| {spec.display_label} | {_fmt(spec.read(base)) if base else '—'} | "
+                f"{_fmt(spec.read(head)) if head else '—'} | "
+                f"{_delta(spec.read(base) if base else None, spec.read(head) if head else None)} |"
             )
         lines.append("")
 
@@ -242,7 +242,7 @@ def render_json(
         if metrics is None:
             return None
         return {
-            **{spec.key: metrics.metric(spec.key) for spec in specs},
+            **{spec.key: spec.read(metrics) for spec in specs},
             "passed": metrics.passed,
         }
 
