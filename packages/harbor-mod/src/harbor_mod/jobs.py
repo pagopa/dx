@@ -152,10 +152,11 @@ class Trial:
 
     The trial-directory layout — where each artifact lives and how it is read —
     and the meaning of its ``result.json`` fields are both encapsulated here.
-    :meth:`metrics` and :meth:`meta` are the typed interface; a scan of a job
-    reads each trial once. ``result.json`` is parsed lazily and cached; a
-    corrupt/unreadable file raises on first access, exactly as a direct read
-    would.
+    :meth:`metrics` and :meth:`meta` are the typed interface (plus
+    :attr:`task_name`, the key the report joins on); a scan of a job reads each
+    trial once. The per-artifact readers are private internals of those two
+    accessors. ``result.json`` is parsed lazily and cached; a corrupt/unreadable
+    file raises on first access, exactly as a direct read would.
     """
 
     def __init__(self, path: Path) -> None:
@@ -198,7 +199,7 @@ class Trial:
             cache_tokens=agent_result.get("n_cache_tokens"),
             output_tokens=agent_result.get("n_output_tokens"),
             cost_usd=agent_result.get("cost_usd"),
-            verifier_tokens=self.verifier_tokens(),
+            verifier_tokens=self._verifier_tokens(),
             agent_duration_sec=_seconds(
                 agent_execution.get("started_at"),
                 agent_execution.get("finished_at"),
@@ -239,7 +240,7 @@ class Trial:
 
     def _load_judge_meta(self, meta: JobMeta) -> None:
         """Fill judge model/effort from this trial's reward-details.json."""
-        reward = self.reward_details()
+        reward = self._reward_details()
         if reward is None:
             return
         judge = reward.get("judge") or {}
@@ -255,7 +256,7 @@ class Trial:
         replaced, and the trajectory file supplies the step count.
         """
         if metrics.n_steps is None:
-            metrics.n_steps = self.trajectory_steps()
+            metrics.n_steps = self._trajectory_steps()
 
         has_all_tokens = all(
             value is not None
@@ -271,7 +272,7 @@ class Trial:
         if has_all_tokens:
             return
 
-        usage = self.usage()
+        usage = self._usage()
         if usage is None:
             return
         if metrics.input_tokens is None:
@@ -287,7 +288,7 @@ class Trial:
         if metrics.cost_usd is None:
             metrics.cost_usd = usage.cost_usd
 
-    def reward_details(self) -> JSON | None:
+    def _reward_details(self) -> JSON | None:
         """The ``reward`` dict from ``verifier/reward-details.json``, or ``None``.
 
         Both verifier-token counts and the judge model/effort metadata are read
@@ -304,7 +305,7 @@ class Trial:
             return None
         return reward
 
-    def verifier_tokens(self) -> int | None:
+    def _verifier_tokens(self) -> int | None:
         """Total verifier (judge) tokens for the trial.
 
         Prefers ``verifier/usage.jsonl`` — one line per judge LLM call, written
@@ -335,7 +336,7 @@ class Trial:
             if saw:
                 return total
 
-        reward = self.reward_details()
+        reward = self._reward_details()
         if reward is None:
             return None
         usage = reward.get("usage")
@@ -344,7 +345,7 @@ class Trial:
         total = (usage.get("input_tokens") or 0) + (usage.get("output_tokens") or 0)
         return int(total) if total else None
 
-    def trajectory_steps(self) -> int | None:
+    def _trajectory_steps(self) -> int | None:
         """Read ``final_metrics.total_steps`` from the ATIF trajectory file."""
         path = self.path / "agent" / "trajectory.json"
         if not path.is_file():
@@ -355,7 +356,7 @@ class Trial:
             return None
         return (trajectory.get("final_metrics") or {}).get("total_steps")
 
-    def usage(self) -> CopilotUsage | None:
+    def _usage(self) -> CopilotUsage | None:
         """Aggregated token/cost usage from the trial artifacts (DB, then JSONL)."""
         return extract_trial_usage(self.path)
 
