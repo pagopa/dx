@@ -74,5 +74,5 @@ tsconfig.*.tsbuildinfo
 .nx/migrate-runs
 .tflint.d/
 
-# harbor-mod generated eval tasks
+# harbor-bench generated eval tasks
 .harbor/

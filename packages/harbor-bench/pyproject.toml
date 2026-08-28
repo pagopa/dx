@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "harbor-bench"
+version = "0.1.0"
+description = "PagoPA Harbor extensions: custom Copilot CLI agent + runtime converter from evals.json to Harbor tasks."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "harbor==0.22.0",
+  "tomli-w>=1.0",
+  "pydantic>=2.7",
+  "PyYAML>=6.0",
+]
+classifiers = ["Private :: Do Not Upload"]
+
+[project.scripts]
+harbor-bench = "harbor_bench.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+harbor_bench = ["templates/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
