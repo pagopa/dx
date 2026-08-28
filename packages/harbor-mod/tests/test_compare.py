@@ -140,6 +140,61 @@ def test_trial_task_name_falls_back_to_dir_name(tmp_path):
     assert trial.task_name == "nameless"
 
 
+def test_trial_metrics_and_meta_typed_interface(tmp_path):
+    """The Trial seam exposes typed accessors, not the raw result.json dict."""
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(
+        job,
+        "task-a",
+        rewards={"quality": 0.9, "pass": 1},
+        tokens=(1000, 200, 300),
+        cost=0.05,
+    )
+    _write_meta_trial(
+        job,
+        "task-b",
+        agent_model="gpt-5.6-luna",
+        agent_effort="high",
+        skills=["/some/local/dr-blacksmith"],
+        judge_model="openai/gpt-5.6-luna",
+        judge_effort="medium",
+    )
+    by_task = {trial.task_name: trial for trial in Job(job).iter_trials()}
+
+    metrics = by_task["task-a"].metrics()
+    assert metrics.rewards == {"quality": 0.9, "pass": 1}
+    assert metrics.input_tokens == 1000
+    assert metrics.cache_tokens == 200
+    assert metrics.output_tokens == 300
+    assert metrics.cost_usd == 0.05
+    assert metrics.agent_duration_sec == 300.0
+    assert metrics.total_duration_sec == 420.0
+    assert metrics.passed is True
+    assert metrics.metric("score.quality") == 0.9
+
+    meta = by_task["task-b"].meta()
+    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_effort == "high"
+    assert meta.judge_model == "openai/gpt-5.6-luna"
+    assert meta.judge_effort == "medium"
+    assert meta.skills and meta.skills[0].name == "dr-blacksmith"
+
+
+def test_trial_metrics_raise_and_meta_tolerate_corrupt_result(tmp_path):
+    """metrics() is a hard read; meta() is best-effort over a bad result.json."""
+    job = _make_job(tmp_path, "run-a")
+    trial_dir = job / "task-a"
+    trial_dir.mkdir(parents=True, exist_ok=True)
+    (trial_dir / "result.json").write_text("{not json")
+
+    trial = next(Job(job).iter_trials())
+    with pytest.raises(json.JSONDecodeError):
+        trial.metrics()
+    meta = trial.meta()
+    assert meta is not None
+    assert meta.agent_model is None
+
+
 def _specs_for(report: Report) -> list[MetricSpec]:
     base_map = {r.task: r.base for r in report.rows if r.base}
     head_map = {r.task: r.head for r in report.rows if r.head}
@@ -448,10 +503,10 @@ _GIT_SKILL = (
 
 
 def test_load_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
-    import harbor_mod.compare as cmp
+    import harbor_mod.jobs as jobs
 
     home = tmp_path / "home"
-    monkeypatch.setattr(cmp, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
+    monkeypatch.setattr(jobs, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
     git_skill = str(home / ".cache" / "harbor" / "skills" / _GIT_SKILL)
     job = _make_job(tmp_path, "run-a")
     _write_meta_trial(
@@ -479,10 +534,10 @@ def test_load_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
 
 
 def test_render_markdown_run_config_section(tmp_path, monkeypatch):
-    import harbor_mod.compare as cmp
+    import harbor_mod.jobs as jobs
 
     home = tmp_path / "home"
-    monkeypatch.setattr(cmp, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
+    monkeypatch.setattr(jobs, "_GIT_CACHE_PREFIX", home / ".cache" / "harbor" / "skills")
     git_skill = str(home / ".cache" / "harbor" / "skills" / _GIT_SKILL)
     job = _make_job(tmp_path, "run-a")
     _write_meta_trial(

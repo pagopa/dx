@@ -2,8 +2,11 @@
 
 Each ``harbor run -c config.yaml`` writes its trials under ``<jobs_dir>/<run>``
 (default ``jobs/<timestamp>``): one subdirectory per trial with a
-``result.json``. This module reads two such job directories and reports, per
-task, the delta of the metrics the run produced:
+``result.json``. Jobs and trials are read through :mod:`harbor_mod.jobs`,
+which owns the trial-directory layout and the ``result.json`` schema
+(:meth:`~harbor_mod.jobs.Trial.metrics` and
+:meth:`~harbor_mod.jobs.Trial.meta`). This module joins two such jobs and
+reports, per task, the delta of the metrics the run produced:
 
 - score: the verifier rewards (e.g. RewardKit criteria in ``verifier_result``)
 - tokens: agent input/cache/output tokens
@@ -31,13 +34,11 @@ the current workspace vs. a git ref loaded with ``harbor run --skill``).
 
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass, field
-from datetime import datetime
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from harbor_mod.jobs import Job, Trial
+from harbor_mod.jobs import Job, JobMeta, SkillVersion, TrialMetrics
 
 
 @dataclass(frozen=True)
@@ -103,64 +104,6 @@ _METRICS: tuple[MetricSpec, ...] = (
 )
 
 
-@dataclass
-class TrialMetrics:
-    """Metrics extracted from one trial ``result.json``."""
-
-    task_name: str
-    rewards: dict[str, float | int]
-    input_tokens: int | None = None
-    cache_tokens: int | None = None
-    output_tokens: int | None = None
-    reasoning_tokens: int | None = None
-    n_requests: int | None = None
-    n_steps: int | None = None
-    cost_usd: float | None = None
-    verifier_tokens: int | None = None
-    agent_duration_sec: float | None = None
-    total_duration_sec: float | None = None
-    verifier_duration_sec: float | None = None
-    passed: bool = True
-    trial_name: str | None = None
-
-    def metric(self, name: str) -> Any:
-        """Return a metric by name (reward keys are accessed as ``score.<key>``)."""
-        if name.startswith("score."):
-            return self.rewards.get(name[len("score.") :])
-        return getattr(self, name)
-
-
-@dataclass
-class SkillVersion:
-    """How a skill was sourced in a job run (local workspace or git cache)."""
-
-    name: str
-    kind: str  # "local" | "git"
-    path: str
-    repo: str | None = None
-    ref: str | None = None
-    rel_path: str | None = None
-
-    @property
-    def version(self) -> str:
-        """Human-readable version: ``(local)`` or ``(git: <repo>@<sha>)``."""
-        if self.kind == "git":
-            short = self.ref[:8] if self.ref else "?"
-            return f"(git: {self.repo}@{short})"
-        return "(local)"
-
-
-@dataclass
-class JobMeta:
-    """Job-level configuration extracted from a job directory."""
-
-    agent_model: str | None = None
-    agent_effort: str | None = None
-    judge_model: str | None = None
-    judge_effort: str | None = None
-    skills: list[SkillVersion] = field(default_factory=list)
-
-
 @dataclass(frozen=True)
 class TrialComparison:
     """One task's metrics from both jobs; either side may be absent."""
@@ -204,52 +147,6 @@ class ReportSummary:
     lines: tuple[SummaryLine, ...] = ()
 
 
-def _parse_timestamp(value: str | None) -> datetime | None:
-    if not value:
-        return None
-    try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00"))
-    except ValueError:
-        return None
-
-
-def _seconds(start: str | None, end: str | None) -> float | None:
-    started = _parse_timestamp(start)
-    finished = _parse_timestamp(end)
-    if started is None or finished is None:
-        return None
-    return max(0.0, (finished - started).total_seconds())
-
-
-#: Root of Harbor's git-skill cache: ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``.
-_GIT_CACHE_PREFIX = Path.home() / ".cache" / "harbor" / "skills"
-
-
-def _describe_skill(path_str: str) -> SkillVersion:
-    """Classify a skill path as a local workspace skill or a git-cached one.
-
-    Harbor stores ``--skill <url>@<ref>`` checkouts under
-    ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``; the commit
-    SHA in the path is the tested git version. Everything else is local.
-    """
-    try:
-        rel = Path(path_str).resolve().relative_to(_GIT_CACHE_PREFIX.resolve())
-    except ValueError:
-        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
-    parts = rel.parts
-    if len(parts) < 4:
-        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
-    rel_path = "/".join(parts[4:])
-    return SkillVersion(
-        name=rel_path or parts[-1],
-        kind="git",
-        path=path_str,
-        repo=f"{parts[1]}/{parts[2]}",
-        ref=parts[3],
-        rel_path=rel_path,
-    )
-
-
 def _skill_diff_command(skill: SkillVersion) -> str | None:
     """A ready-to-run ``git diff`` between the remote skill version and the local checkout.
 
@@ -265,44 +162,28 @@ def _skill_diff_command(skill: SkillVersion) -> str | None:
     )
 
 
-def _load_judge_meta(meta: JobMeta, trial: Trial) -> None:
-    """Fill judge model/effort from the trial's reward-details.json when still unknown."""
-    if meta.judge_model is not None and meta.judge_effort is not None:
-        return
-    reward = trial.reward_details()
-    if reward is None:
-        return
-    judge = reward.get("judge") or {}
-    meta.judge_model = meta.judge_model or judge.get("model")
-    meta.judge_effort = meta.judge_effort or judge.get("reasoning_effort")
-
-
 def meta_from_job(job: Job) -> JobMeta | None:
     """Extract job-level configuration (models, effort, skill versions).
 
-    Reads the first trial's ``result.json`` ``config.agent`` for the session
-    model/effort and skill list, and the verifier ``reward-details.json`` for the
-    grading (judge) model/effort. Trials with an unreadable ``result.json`` are
-    skipped. Returns ``None`` when the job directory does not exist.
+    Reads each trial through :meth:`harbor_mod.jobs.Trial.meta`; the first
+    trial that reports a field fills it. Returns ``None`` when the job
+    directory does not exist.
     """
     if not job.path.is_dir():
         return None
     meta = JobMeta()
     for trial in job.iter_trials():
-        try:
-            data = trial.data
-        except (OSError, json.JSONDecodeError):
-            continue
-        agent = (data.get("config") or {}).get("agent") or {}
+        trial_meta = trial.meta()
         if meta.agent_model is None:
-            meta.agent_model = agent.get("model_name") or (
-                (data.get("agent_info") or {}).get("model_info") or {}
-            ).get("name")
+            meta.agent_model = trial_meta.agent_model
         if meta.agent_effort is None:
-            meta.agent_effort = (agent.get("kwargs") or {}).get("reasoning_effort")
+            meta.agent_effort = trial_meta.agent_effort
         if not meta.skills:
-            meta.skills = [_describe_skill(path) for path in agent.get("skills") or []]
-        _load_judge_meta(meta, trial)
+            meta.skills = trial_meta.skills
+        if meta.judge_model is None:
+            meta.judge_model = trial_meta.judge_model
+        if meta.judge_effort is None:
+            meta.judge_effort = trial_meta.judge_effort
         if (
             meta.agent_model is not None
             and meta.agent_effort is not None
@@ -314,89 +195,20 @@ def meta_from_job(job: Job) -> JobMeta | None:
     return meta
 
 
-def _backfill_from_artifacts(metrics: TrialMetrics, trial: Trial) -> None:
-    """Fill metrics ``result.json`` could not report from raw trial artifacts.
-
-    GPT runs leave input/cache tokens and cost unset in ``agent_result``; the
-    trial's session database and JSONL stream carry the authoritative numbers
-    (see :mod:`harbor_mod.copilot_usage`). Only missing values are replaced, and
-    the trajectory file supplies the step count.
-    """
-    if metrics.n_steps is None:
-        metrics.n_steps = trial.trajectory_steps()
-
-    has_all_tokens = all(
-        value is not None
-        for value in (
-            metrics.input_tokens,
-            metrics.cache_tokens,
-            metrics.output_tokens,
-            metrics.cost_usd,
-            metrics.n_requests,
-            metrics.reasoning_tokens,
-        )
-    )
-    if has_all_tokens:
-        return
-
-    usage = trial.usage()
-    if usage is None:
-        return
-    if metrics.input_tokens is None:
-        metrics.input_tokens = usage.input_tokens
-    if metrics.cache_tokens is None:
-        metrics.cache_tokens = usage.cache_tokens
-    if metrics.output_tokens is None:
-        metrics.output_tokens = usage.output_tokens
-    if metrics.reasoning_tokens is None:
-        metrics.reasoning_tokens = usage.reasoning_tokens
-    if metrics.n_requests is None:
-        metrics.n_requests = usage.n_requests or None
-    if metrics.cost_usd is None:
-        metrics.cost_usd = usage.cost_usd
-
-
 def metrics_from_job(job: Job) -> dict[str, TrialMetrics]:
     """Load per-task metrics from a :class:`Job`.
 
-    Each trial subdirectory contributes one entry keyed by ``task_name``. With
-    ``n_attempts > 1`` a task may appear more than once: the last completed
-    trial wins. Missing token/cost/step metrics are backfilled from the trial's
-    raw artifacts (see :func:`_backfill_from_artifacts`). Raises
-    ``FileNotFoundError`` when the job directory does not exist.
+    Each trial contributes one entry keyed by ``task_name`` through
+    :meth:`harbor_mod.jobs.Trial.metrics` (which backfills missing values from
+    the trial's raw artifacts). With ``n_attempts > 1`` a task may appear more
+    than once: the last completed trial wins. Raises ``FileNotFoundError``
+    when the job directory does not exist.
     """
     if not job.path.is_dir():
         raise FileNotFoundError(f"job directory not found: {job.path}")
     out: dict[str, TrialMetrics] = {}
     for trial in job.iter_trials():
-        data = trial.data
-        agent_result = data.get("agent_result") or {}
-        rewards = (data.get("verifier_result") or {}).get("rewards") or {}
-        agent_execution = data.get("agent_execution") or {}
-        metrics = TrialMetrics(
-            task_name=trial.task_name,
-            trial_name=data.get("trial_name"),
-            rewards=dict(rewards),
-            input_tokens=agent_result.get("n_input_tokens"),
-            cache_tokens=agent_result.get("n_cache_tokens"),
-            output_tokens=agent_result.get("n_output_tokens"),
-            cost_usd=agent_result.get("cost_usd"),
-            verifier_tokens=trial.verifier_tokens(),
-            agent_duration_sec=_seconds(
-                agent_execution.get("started_at"),
-                agent_execution.get("finished_at"),
-            ),
-            total_duration_sec=_seconds(
-                data.get("started_at"),
-                data.get("finished_at"),
-            ),
-            verifier_duration_sec=_seconds(
-                (data.get("verifier") or {}).get("started_at"),
-                (data.get("verifier") or {}).get("finished_at"),
-            ),
-            passed=data.get("exception_info") is None,
-        )
-        _backfill_from_artifacts(metrics, trial)
+        metrics = trial.metrics()
         out[metrics.task_name] = metrics
     return out
 
@@ -408,7 +220,7 @@ def load_job(job_dir: Path) -> dict[str, TrialMetrics]:
     keyed by ``task_name``. With ``n_attempts > 1`` a task may appear more than
     once: the last completed trial wins. Missing token/cost/step metrics are
     backfilled from the trial's raw artifacts (see
-    :func:`_backfill_from_artifacts`).
+    :meth:`harbor_mod.jobs.Trial.metrics`).
     """
     return metrics_from_job(Job(job_dir))
 

@@ -43,7 +43,9 @@ _Avoid_: grader, scorer
 
 **Trial**:
 One agent run within a job: one subdirectory holding a `result.json` and the
-collected artifacts.
+collected artifacts. The `jobs` module encapsulates the trial-directory layout
+and the `result.json` schema, exposing typed `metrics()` and `meta()` accessors
+rather than the raw dict.
 _Avoid_: attempt, iteration
 
 **Job**:

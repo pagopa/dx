@@ -6,15 +6,19 @@ subdirectory per trial holding a ``result.json`` plus collected artifacts
 ``agent/copilot-cli.jsonl``, ``verifier/reward-details.json``,
 ``verifier/usage.jsonl``).
 
-This module owns that trial-directory layout. :class:`Trial` encapsulates one
-trial subdirectory and lazily reads its files; :class:`Job` iterates the
-trials of one job directory. ``compare`` turns what this module reads into a
-delta report; nothing here knows about reporting.
+This module owns the trial-directory layout *and* the meaning of its files:
+:class:`Trial` encapsulates one trial subdirectory, lazily reads its
+``result.json``, and exposes typed accessors (``metrics()``, ``meta()``)
+instead of the raw dict. :class:`Job` iterates the trials of one job
+directory. ``compare`` turns what this module reads into a delta report;
+nothing here knows about reporting.
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -33,14 +37,125 @@ def _normalize_usage(usage: dict[str, Any]) -> tuple[int, int]:
         return 0, 0
 
 
+def _parse_timestamp(value: str | None) -> datetime | None:
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+
+
+def _seconds(start: str | None, end: str | None) -> float | None:
+    started = _parse_timestamp(start)
+    finished = _parse_timestamp(end)
+    if started is None or finished is None:
+        return None
+    return max(0.0, (finished - started).total_seconds())
+
+
+#: Root of Harbor's git-skill cache: ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``.
+_GIT_CACHE_PREFIX = Path.home() / ".cache" / "harbor" / "skills"
+
+
+def _describe_skill(path_str: str) -> SkillVersion:
+    """Classify a skill path as a local workspace skill or a git-cached one.
+
+    Harbor stores ``--skill <url>@<ref>`` checkouts under
+    ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``; the commit
+    SHA in the path is the tested git version. Everything else is local.
+    """
+    try:
+        rel = Path(path_str).resolve().relative_to(_GIT_CACHE_PREFIX.resolve())
+    except ValueError:
+        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
+    parts = rel.parts
+    if len(parts) < 4:
+        return SkillVersion(name=Path(path_str).name, kind="local", path=path_str)
+    rel_path = "/".join(parts[4:])
+    return SkillVersion(
+        name=rel_path or parts[-1],
+        kind="git",
+        path=path_str,
+        repo=f"{parts[1]}/{parts[2]}",
+        ref=parts[3],
+        rel_path=rel_path,
+    )
+
+
+@dataclass
+class SkillVersion:
+    """How a skill was sourced in a job run (local workspace or git cache)."""
+
+    name: str
+    kind: str  # "local" | "git"
+    path: str
+    repo: str | None = None
+    ref: str | None = None
+    rel_path: str | None = None
+
+    @property
+    def version(self) -> str:
+        """Human-readable version: ``(local)`` or ``(git: <repo>@<sha>)``."""
+        if self.kind == "git":
+            short = self.ref[:8] if self.ref else "?"
+            return f"(git: {self.repo}@{short})"
+        return "(local)"
+
+
+@dataclass
+class JobMeta:
+    """Job-level configuration extracted from a job directory."""
+
+    agent_model: str | None = None
+    agent_effort: str | None = None
+    judge_model: str | None = None
+    judge_effort: str | None = None
+    skills: list[SkillVersion] = field(default_factory=list)
+
+
+@dataclass
+class TrialMetrics:
+    """Metrics extracted from one trial ``result.json``.
+
+    ``rewards`` carries the verifier rewards keyed by criterion; the other
+    fields mirror the reportable metrics. ``metric(name)`` looks up a reward
+    key as ``score.<key>`` or a field directly, so the report's metric
+    registry can read either kind through one accessor.
+    """
+
+    task_name: str
+    rewards: dict[str, float | int]
+    input_tokens: int | None = None
+    cache_tokens: int | None = None
+    output_tokens: int | None = None
+    reasoning_tokens: int | None = None
+    n_requests: int | None = None
+    n_steps: int | None = None
+    cost_usd: float | None = None
+    verifier_tokens: int | None = None
+    agent_duration_sec: float | None = None
+    total_duration_sec: float | None = None
+    verifier_duration_sec: float | None = None
+    passed: bool = True
+    trial_name: str | None = None
+
+    def metric(self, name: str) -> Any:
+        """Return a metric by name (reward keys are accessed as ``score.<key>``)."""
+        if name.startswith("score."):
+            return self.rewards.get(name[len("score.") :])
+        return getattr(self, name)
+
+
 class Trial:
     """One trial subdirectory: ``result.json`` plus the collected artifacts.
 
-    The trial-directory layout is encapsulated here — where each artifact
-    lives and how it is read — so a scan of a job reads each trial once and no
-    other module needs to know the layout. ``result.json`` is parsed lazily
-    and cached; a corrupt/unreadable file raises on first access, exactly as a
-    direct read would.
+    The trial-directory layout — where each artifact lives and how it is read —
+    and the meaning of its ``result.json`` fields are both encapsulated here.
+    :meth:`metrics` and :meth:`meta` are the typed interface; a scan of a job
+    reads each trial once. ``result.json`` is parsed lazily and cached; a
+    corrupt/unreadable file raises on first access, exactly as a direct read
+    would.
     """
 
     def __init__(self, path: Path) -> None:
@@ -48,8 +163,7 @@ class Trial:
         self._data: JSON | None = None
         self._data_loaded = False
 
-    @property
-    def data(self) -> JSON:
+    def _read_data(self) -> JSON | None:
         """Parsed ``result.json`` (lazily read and cached)."""
         if not self._data_loaded:
             self._data = json.loads(
@@ -61,7 +175,117 @@ class Trial:
     @property
     def task_name(self) -> str:
         """The task this trial belongs to (``result.json`` ``task_name``)."""
-        return (self.data or {}).get("task_name") or self.path.name
+        return (self._read_data() or {}).get("task_name") or self.path.name
+
+    def metrics(self) -> TrialMetrics:
+        """The typed metrics for this trial: ``result.json`` + artifact backfill.
+
+        Reads the reward, token, cost, duration, and pass/fail numbers out of
+        ``result.json`` and backfills the values the file cannot report (steps,
+        GPT token/cost) from the trial's raw artifacts. Raises on a
+        corrupt/unreadable ``result.json`` — the report treats a broken trial
+        as a hard failure.
+        """
+        data = self._read_data() or {}
+        agent_result = data.get("agent_result") or {}
+        rewards = (data.get("verifier_result") or {}).get("rewards") or {}
+        agent_execution = data.get("agent_execution") or {}
+        metrics = TrialMetrics(
+            task_name=self.task_name,
+            trial_name=data.get("trial_name"),
+            rewards=dict(rewards),
+            input_tokens=agent_result.get("n_input_tokens"),
+            cache_tokens=agent_result.get("n_cache_tokens"),
+            output_tokens=agent_result.get("n_output_tokens"),
+            cost_usd=agent_result.get("cost_usd"),
+            verifier_tokens=self.verifier_tokens(),
+            agent_duration_sec=_seconds(
+                agent_execution.get("started_at"),
+                agent_execution.get("finished_at"),
+            ),
+            total_duration_sec=_seconds(
+                data.get("started_at"),
+                data.get("finished_at"),
+            ),
+            verifier_duration_sec=_seconds(
+                (data.get("verifier") or {}).get("started_at"),
+                (data.get("verifier") or {}).get("finished_at"),
+            ),
+            passed=data.get("exception_info") is None,
+        )
+        self._backfill(metrics)
+        return metrics
+
+    def meta(self) -> JobMeta:
+        """Run-configuration facts readable from this trial (models, skills).
+
+        Best-effort: a corrupt/unreadable ``result.json`` yields an empty
+        :class:`JobMeta` instead of raising, so the job-level reader can skip
+        bad trials and keep filling fields from the next one.
+        """
+        meta = JobMeta()
+        try:
+            data = self._read_data() or {}
+        except (OSError, json.JSONDecodeError):
+            return meta
+        agent = (data.get("config") or {}).get("agent") or {}
+        meta.agent_model = agent.get("model_name") or (
+            (data.get("agent_info") or {}).get("model_info") or {}
+        ).get("name")
+        meta.agent_effort = (agent.get("kwargs") or {}).get("reasoning_effort")
+        meta.skills = [_describe_skill(path) for path in agent.get("skills") or []]
+        self._load_judge_meta(meta)
+        return meta
+
+    def _load_judge_meta(self, meta: JobMeta) -> None:
+        """Fill judge model/effort from this trial's reward-details.json."""
+        reward = self.reward_details()
+        if reward is None:
+            return
+        judge = reward.get("judge") or {}
+        meta.judge_model = judge.get("model")
+        meta.judge_effort = judge.get("reasoning_effort")
+
+    def _backfill(self, metrics: TrialMetrics) -> None:
+        """Fill metrics ``result.json`` could not report from raw artifacts.
+
+        GPT runs leave input/cache tokens and cost unset in ``agent_result``;
+        the trial's session database and JSONL stream carry the authoritative
+        numbers (see :mod:`harbor_mod.copilot_usage`). Only missing values are
+        replaced, and the trajectory file supplies the step count.
+        """
+        if metrics.n_steps is None:
+            metrics.n_steps = self.trajectory_steps()
+
+        has_all_tokens = all(
+            value is not None
+            for value in (
+                metrics.input_tokens,
+                metrics.cache_tokens,
+                metrics.output_tokens,
+                metrics.cost_usd,
+                metrics.n_requests,
+                metrics.reasoning_tokens,
+            )
+        )
+        if has_all_tokens:
+            return
+
+        usage = self.usage()
+        if usage is None:
+            return
+        if metrics.input_tokens is None:
+            metrics.input_tokens = usage.input_tokens
+        if metrics.cache_tokens is None:
+            metrics.cache_tokens = usage.cache_tokens
+        if metrics.output_tokens is None:
+            metrics.output_tokens = usage.output_tokens
+        if metrics.reasoning_tokens is None:
+            metrics.reasoning_tokens = usage.reasoning_tokens
+        if metrics.n_requests is None:
+            metrics.n_requests = usage.n_requests or None
+        if metrics.cost_usd is None:
+            metrics.cost_usd = usage.cost_usd
 
     def reward_details(self) -> JSON | None:
         """The ``reward`` dict from ``verifier/reward-details.json``, or ``None``.
