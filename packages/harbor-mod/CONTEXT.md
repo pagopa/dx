@@ -57,10 +57,12 @@ _Avoid_: run, result set
 **Comparison report**:
 The per-task delta report produced by `harbor-mod compare` from two jobs: a
 typed `Report` of `TrialComparison` rows (one per task, base/head side), plus
-the run-configuration section. Its metrics are declared once in the compare
-metric registry (key, label, and total/mean aggregation), with verifier rewards
-added dynamically as `score.<key>` metrics. The rows, metric specs, aggregated
-summary, and run-configuration skill diffs are folded into one
-`ReportDocument` by `build_document`; the Markdown and JSON renderers are pure
-adapters over that document.
+the run-configuration section. Its metrics are declared once in the metrics
+module's registry (`METRIC_SPECS`): each entry carries the derivation half
+(the `result.json` key and the `CopilotUsage` attribute `Trial` backfills
+from) and the reporting half (key, label, and total/mean aggregation), with
+verifier rewards added dynamically as `score.<key>` metrics. The rows, metric
+specs, aggregated summary, and run-configuration skill diffs are folded into
+one `ReportDocument` by `build_document`; the Markdown and JSON renderers are
+pure adapters over that document.
 _Avoid_: diff, delta sheet

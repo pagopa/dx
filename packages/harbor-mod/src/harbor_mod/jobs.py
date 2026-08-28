@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Iterator
 
 from harbor_mod.copilot_usage import CopilotUsage, extract_trial_usage
+from harbor_mod.metrics import derivable_specs
 
 JSON = dict[str, Any]
 
@@ -127,9 +128,9 @@ class TrialMetrics:
     """Metrics extracted from one trial ``result.json``.
 
     ``rewards`` carries the verifier rewards keyed by criterion; the other
-    fields mirror the reportable metrics. Values are read by the
-    comparison-report metric registry through its
-    :class:`~harbor_mod.compare.MetricSpec` (a reward key or a field), never
+    fields mirror the reportable metrics. Values are read by the metric
+    registry (:data:`harbor_mod.metrics.METRIC_SPECS`) through its
+    :class:`~harbor_mod.metrics.MetricSpec` (a reward key or a field), never
     through a ``score.``-prefixed string accessor here.
     """
 
@@ -148,21 +149,6 @@ class TrialMetrics:
     verifier_duration_sec: float | None = None
     passed: bool = True
     trial_name: str | None = None
-
-
-#: Metric derivation rows: ``(TrialMetrics field, result.json agent_result key,
-#: CopilotUsage attribute)``. A ``result.json`` value wins; the aggregated
-#: usage backfills when the file cannot report the number. One row is the whole
-#: contract for adding a usage-backed metric: the report field, the document
-#: key, and the artifact attribute are named in the same place.
-_METRIC_DERIVATIONS: tuple[tuple[str, str, str], ...] = (
-    ("input_tokens", "n_input_tokens", "input_tokens"),
-    ("cache_tokens", "n_cache_tokens", "cache_read_tokens"),
-    ("output_tokens", "n_output_tokens", "output_tokens"),
-    ("reasoning_tokens", "n_reasoning_tokens", "reasoning_tokens"),
-    ("n_requests", "n_requests", "n_requests"),
-    ("cost_usd", "cost_usd", "cost_usd"),
-)
 
 
 @dataclass
@@ -251,15 +237,15 @@ class Trial:
         agent_result = data.get("agent_result") or {}
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
-        # One precedence rule per usage-backed metric, declared once in
-        # _METRIC_DERIVATIONS: the result.json value wins, the usage backfill
-        # fills when the file cannot report the number.
+        # One precedence rule per usage-backed metric, declared once in the
+        # metric registry (result_key/usage_attr): the result.json value wins,
+        # the usage backfill fills when the file cannot report the number.
         derived = {
-            field: _first(
-                agent_result.get(doc_key),
-                self._usage_value(facts, usage_attr),
+            spec.key: _first(
+                agent_result.get(spec.result_key),
+                self._usage_value(facts, spec.usage_attr),
             )
-            for field, doc_key, usage_attr in _METRIC_DERIVATIONS
+            for spec in derivable_specs()
         }
         return TrialMetrics(
             task_name=self.task_name,
@@ -393,8 +379,8 @@ class Trial:
     def _usage_value(facts: TrialFacts, attr: str) -> Any:
         """One backfill value from the aggregated Copilot usage.
 
-        ``attr`` is a :class:`CopilotUsage` attribute named by the
-        :data:`_METRIC_DERIVATIONS` row. ``n_requests`` reports a zero count as
+        ``attr`` is a :class:`CopilotUsage` attribute named by the metric
+        registry's ``usage_attr``. ``n_requests`` reports a zero count as
         absent (matching the prior ``n_requests or None`` semantics); every
         other attribute passes through. Returns ``None`` when the trial
         recorded no usage.

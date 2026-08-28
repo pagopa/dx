@@ -46,79 +46,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from harbor_mod.jobs import Job, JobMeta, SkillVersion, TrialMetrics
-
-
-@dataclass(frozen=True)
-class MetricSpec:
-    """One reportable metric: its key, display label, and summary aggregation.
-
-    ``kind`` selects how the summary aggregates the metric across tasks:
-    ``"score"`` for verifier rewards (mean), ``"total"`` for summed metrics
-    (tokens, requests, steps, cost), ``"mean"`` for averaged metrics
-    (durations). ``integer`` marks ``"total"`` metrics whose values are whole
-    counts (tokens, steps, requests), so their sum is reported as an int.
-    ``source`` names where the value is read from a :class:`TrialMetrics`:
-    ``"reward"`` for a verifier reward (keyed by ``key``, its ``score.<k>``
-    document name) or ``"field"`` for a direct attribute. The :data:`_METRICS`
-    registry below is the single place a new metric is declared: the per-task
-    table, the column label, the summary line, and the value read all follow
-    from one entry. ``passed`` is a trial-level flag and is reported
-    separately, not as a metric.
-    """
-
-    key: str
-    kind: str = "mean"
-    label: str | None = None
-    integer: bool = False
-    source: str = "field"  # "field" | "reward"
-
-    def read(self, metrics: TrialMetrics) -> Any:
-        """The value of this metric for one trial, or ``None`` when absent."""
-        if self.source == "reward":
-            return metrics.rewards.get(self.key.removeprefix("score."))
-        return getattr(metrics, self.key)
-
-    @property
-    def display_label(self) -> str:
-        return self.label or self.key
-
-    @property
-    def summary_word(self) -> str:
-        """Summary aggregation word: ``"mean"`` for score/mean, ``"total"`` for totals."""
-        return "total" if self.kind == "total" else "mean"
-
-    def aggregate(self, values: list[Any]) -> int | float | None:
-        """Aggregate one metric's per-task values for the summary line.
-
-        ``"total"`` metrics are summed (as an int when ``integer``); ``"score"``
-        and ``"mean"`` metrics are averaged. Returns ``None`` when no task
-        reported a value for the metric.
-        """
-        if not values:
-            return None
-        if self.kind == "total":
-            total = sum(values)
-            return int(total) if self.integer else total
-        return sum(values) / len(values)
-
-
-#: Trial metrics reported per task, in display order. Verifier reward metrics
-#: are added dynamically from each job's reward keys (see :func:`metric_specs`);
-#: this registry declares the rest. ``cost_usd`` and the durations are floats;
-#: token counts and step/request counts are ints.
-_METRICS: tuple[MetricSpec, ...] = (
-    MetricSpec("input_tokens", "total", "input tokens", integer=True),
-    MetricSpec("cache_tokens", "total", "cache tokens", integer=True),
-    MetricSpec("output_tokens", "total", "output tokens", integer=True),
-    MetricSpec("reasoning_tokens", "total", "reasoning tokens", integer=True),
-    MetricSpec("n_requests", "total", "model requests", integer=True),
-    MetricSpec("n_steps", "total", "steps", integer=True),
-    MetricSpec("cost_usd", "total", "cost (USD)"),
-    MetricSpec("verifier_tokens", "total", "verifier tokens", integer=True),
-    MetricSpec("agent_duration_sec", "mean", "agent duration (s)"),
-    MetricSpec("total_duration_sec", "mean", "total duration (s)"),
-    MetricSpec("verifier_duration_sec", "mean", "verifier duration (s)"),
-)
+from harbor_mod.metrics import METRIC_SPECS, MetricSpec
 
 
 @dataclass(frozen=True)
@@ -302,17 +230,17 @@ def metric_specs(
 
     Score specs come from the union of reward keys across both jobs (keyed by
     their ``score.<key>`` document name and read from the rewards via
-    ``source="reward"``); the static registry supplies the ordered, labeled
-    non-score metrics. Declaring a metric once in the registry — or a reward
-    key simply appearing in a job — is all it takes for the per-task table and
-    the summary to pick it up.
+    ``source="reward"``); :data:`harbor_mod.metrics.METRIC_SPECS` supplies the
+    ordered, labeled non-score metrics. Declaring a metric once in the
+    registry — or a reward key simply appearing in a job — is all it takes for
+    the per-task table and the summary to pick it up.
     """
     reward_keys = sorted(
         {key for m in (*base.values(), *head.values()) for key in m.rewards}
     )
     return [
         MetricSpec(f"score.{key}", "score", source="reward") for key in reward_keys
-    ] + list(_METRICS)
+    ] + list(METRIC_SPECS)
 
 
 def build_report(

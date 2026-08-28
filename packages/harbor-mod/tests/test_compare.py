@@ -351,16 +351,42 @@ def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
     assert specs[0].display_label == "score.pass"
 
 
+def test_metric_registry_owns_derivation_and_reporting():
+    """One registry carries both halves: what jobs backfills and what is reported."""
+    from harbor_mod.metrics import METRIC_SPECS, derivable_specs
+
+    by_key = {spec.key: spec for spec in METRIC_SPECS}
+    # derivation half: result.json key wins, usage attribute backfills
+    assert by_key["input_tokens"].result_key == "n_input_tokens"
+    assert by_key["input_tokens"].usage_attr == "input_tokens"
+    assert by_key["cache_tokens"].usage_attr == "cache_read_tokens"
+    assert by_key["cost_usd"].result_key == "cost_usd"
+    assert [s.key for s in derivable_specs()] == [
+        "input_tokens",
+        "cache_tokens",
+        "output_tokens",
+        "reasoning_tokens",
+        "n_requests",
+        "cost_usd",
+    ]
+    # reporting half: kind/label/int unchanged by the derivation move
+    assert by_key["cost_usd"].kind == "total"
+    assert by_key["cost_usd"].integer is False
+    assert by_key["agent_duration_sec"].kind == "mean"
+    assert by_key["n_steps"].integer is True
+    assert by_key["n_steps"].result_key is None
+
+
 def test_metric_registry_drives_summary_aggregation(tmp_path, monkeypatch):
     """The registry, not a hardcoded list, decides total vs mean in the summary."""
     import harbor_mod.compare as cmp
 
     monkeypatch.setattr(
         cmp,
-        "_METRICS",
+        "METRIC_SPECS",
         tuple(
             cmp.MetricSpec(s.key, "mean", s.label) if s.key == "cost_usd" else s
-            for s in cmp._METRICS
+            for s in cmp.METRIC_SPECS
         ),
     )
     base = _make_job(tmp_path, "run-base")
