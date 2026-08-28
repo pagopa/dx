@@ -12,6 +12,7 @@ import tomli_w
 
 from .schema import EvalCase, HarborMeta, ResolvedEvalPaths
 from .workspace import WorkspaceError, compose_workspace
+from harbor_mod.task_shape import HARBOR_ARTIFACTS, JUDGE_BRIDGE_ENV, render_template
 
 TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 
@@ -27,17 +28,10 @@ DEFAULT_TASK_TOML: dict = {
     "verifier": {
         "timeout_sec": 600.0,
         "collect": [],
-        # LLM judge bridge: route GitHub Copilot through LiteLLM's `openai`
-        # provider (OpenAI-compatible endpoint) so the judge can run headless
-        # with COPILOT_GITHUB_TOKEN as the key. gpt-5.x models are
-        # Responses-API-only, so LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES
-        # sends all openai/* judge calls to https://api.githubcopilot.com/responses.
-        "env": {
-            "OPENAI_API_BASE": "https://api.githubcopilot.com",
-            "OPENAI_API_KEY": "${COPILOT_GITHUB_TOKEN}",
-            "LITELLM_DROP_PARAMS": "true",
-            "LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES": "true",
-        },
+        # LLM judge bridge (see task_shape.JUDGE_BRIDGE_ENV): route GitHub
+        # Copilot through LiteLLM's `openai` provider so the judge can run
+        # headless with COPILOT_GITHUB_TOKEN as the key.
+        "env": dict(JUDGE_BRIDGE_ENV),
     },
     "agent": {"timeout_sec": 900.0},
     "environment": {
@@ -119,9 +113,10 @@ def _write_with_override(
         if overrides and target in overrides
         else default
     )
-    for key, value in placeholders.items():
-        text = text.replace("{{" + key + "}}", value)
-    dst.write_text(text)
+    # The task-shape paths are always substituted (render_template), plus the
+    # per-file placeholders, so neither the generated default nor a custom
+    # override ever needs to hardcode an artifact location.
+    dst.write_text(render_template(text, **placeholders))
 
 
 def build_quality_toml(case: EvalCase, judge_model: str) -> str:
@@ -132,9 +127,10 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
     criteria translate the agentskills.io rubric (``expected_output`` +
     ``expectations``) into binary RewardKit criteria, one per assertion.
     """
-    header = (
-        TEMPLATES / "quality-header.toml"
-    ).read_text().replace("{{JUDGE_MODEL}}", judge_model)
+    header = render_template(
+        (TEMPLATES / "quality-header.toml").read_text(),
+        JUDGE_MODEL=judge_model,
+    )
 
     criteria: list[dict] = [
         {
@@ -210,16 +206,7 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     verifier_mode = harbor.verifier_mode
     if verifier_mode == "separate":
         task_toml["verifier"]["environment_mode"] = "separate"
-        task_toml["artifacts"] = list(harbor.artifacts) or [
-            # Object form: skip the git baseline (seeded by the Dockerfile's
-            # `git init` commit) so the collected workspace snapshot stays lean;
-            # the judge reads the workspace packet, never the repo metadata.
-            {"source": "/workspace", "exclude": [".git"]},
-            "/logs/agent/copilot-cli.jsonl",
-            # ATIF trajectory (written by the copilot-cli agent after the run);
-            # RewardKit [judge].atif-trajectory points here for process criteria.
-            "/logs/agent/trajectory.json",
-        ]
+        task_toml["artifacts"] = list(harbor.artifacts) or list(HARBOR_ARTIFACTS)
     else:
         task_toml["verifier"].pop("environment_mode", None)
         task_toml["artifacts"] = []
@@ -265,9 +252,8 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
         target="environment/Dockerfile",
         dst=env_dir / "Dockerfile",
         overrides=overrides,
-        default=(TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE)
-        .read_text()
-        .format(base_image=harbor.base_image),
+        default=(TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE).read_text(),
+        BASE_IMAGE=harbor.base_image,
     )
     _write_with_override(
         target=".dockerignore",

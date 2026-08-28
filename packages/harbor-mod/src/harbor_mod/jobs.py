@@ -24,6 +24,13 @@ from typing import Any, Iterator
 
 from harbor_mod.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
 from harbor_mod.metrics import MetricSpec, derivable_specs
+from harbor_mod.task_shape import (
+    RESULT_JSON,
+    REWARD_DETAILS_JSON,
+    TRAJECTORY_JSON,
+    VERIFIER_USAGE_JSONL,
+    trial_relative,
+)
 
 JSON = dict[str, Any]
 
@@ -191,13 +198,19 @@ class TrialArtifacts:
 
     @classmethod
     def for_trial(cls, trial_dir: Path) -> "TrialArtifacts":
-        """Resolve the six artifact locations under one trial directory."""
+        """Resolve the six artifact locations under one trial directory.
+
+        The reader-side layout is derived from the container artifact paths
+        declared in :mod:`harbor_mod.task_shape` (Harbor drops the ``/logs``
+        prefix when re-materializing collected artifacts), so the writer's
+        ``task.toml`` ``[artifacts]`` and this reader can never drift apart.
+        """
         session_db, cli_jsonl = copilot_artifact_paths(trial_dir / "agent")
         return cls(
-            result=trial_dir / "result.json",
-            trajectory=trial_dir / "agent" / "trajectory.json",
-            verifier_usage=trial_dir / "verifier" / "usage.jsonl",
-            reward_details=trial_dir / "verifier" / "reward-details.json",
+            result=trial_dir / RESULT_JSON,
+            trajectory=trial_dir / trial_relative(TRAJECTORY_JSON),
+            verifier_usage=trial_dir / trial_relative(VERIFIER_USAGE_JSONL),
+            reward_details=trial_dir / trial_relative(REWARD_DETAILS_JSON),
             copilot_session_db=session_db,
             copilot_cli_jsonl=cli_jsonl,
         )
@@ -481,7 +494,7 @@ class Job:
         if not self.path.is_dir():
             return
         for entry in sorted(p for p in self.path.iterdir() if p.is_dir()):
-            if (entry / "result.json").is_file():
+            if (entry / RESULT_JSON).is_file():
                 yield Trial(entry)
 
     def metrics(self) -> dict[str, TrialMetrics]:

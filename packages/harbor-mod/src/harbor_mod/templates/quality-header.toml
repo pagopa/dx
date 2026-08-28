@@ -13,8 +13,8 @@
 #        instead (verified working).
 [judge]
 judge = "{{JUDGE_MODEL}}"
-files = ["/logs/artifacts/workspace-packet.md"]
-atif-trajectory = "/logs/agent/trajectory.json"
+files = ["{{WORKSPACE_PACKET_MD}}"]
+atif-trajectory = "{{TRAJECTORY_JSON}}"
 
 [scoring]
 # threshold=0.8 mirrors the total-score gate (>= 80%). It does NOT reproduce

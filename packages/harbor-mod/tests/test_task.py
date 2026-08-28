@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from harbor_mod import task_shape
 from harbor_mod.convert.discover import load_evals_file
 from harbor_mod.convert.schema import resolve_eval_paths
 from harbor_mod.convert.task import (
@@ -95,18 +96,17 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     toml = tomllib.loads((task_root / "task.toml").read_text())
     assert toml["task"]["name"].startswith("pagopa/")
     assert (task_root / "environment" / "core.txt").read_text() == "core"
-    assert toml["verifier"]["env"]["OPENAI_API_BASE"] == "https://api.githubcopilot.com"
+    assert toml["verifier"]["env"] == task_shape.JUDGE_BRIDGE_ENV
     # separate verifier env (default): dedicated container, artifacts declared
     assert toml["verifier"]["environment_mode"] == "separate"
-    assert {"source": "/workspace", "exclude": [".git"]} in toml["artifacts"]
-    assert "/logs/agent/copilot-cli.jsonl" in toml["artifacts"]
-    assert "/logs/agent/trajectory.json" in toml["artifacts"]
+    # the writer emits exactly the artifacts the reader (jobs) consumes
+    assert toml["artifacts"] == list(task_shape.HARBOR_ARTIFACTS)
     # verifier image Dockerfile built from tests/
     assert (task_root / "tests" / "Dockerfile").is_file()
 
     quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
     assert quality["judge"]["judge"] == "openai/gpt-5.6-luna"
-    assert quality["judge"]["files"] == ["/logs/artifacts/workspace-packet.md"]
+    assert quality["judge"]["files"] == [task_shape.WORKSPACE_PACKET_MD]
     # expected_output + expectations -> one binary criterion each
     descriptions = [c["description"] for c in quality["criterion"]]
     assert len(descriptions) == 2
@@ -203,7 +203,9 @@ def test_generated_dockerfile_bakes_copilot_cli(skill: Path, tmp_path: Path):
     assert 'export PATH="$HOME/.local/bin:$PATH"' in dockerfile
     assert "copilot --version" in dockerfile
     # baked before the workspace COPY so the layer survives workspace changes
-    assert dockerfile.index("copilot-install") < dockerfile.index("COPY . /workspace/")
+    assert dockerfile.index("copilot-install") < dockerfile.index(
+        f"COPY . {task_shape.WORKSPACE_DIR}/"
+    )
 
 
 def test_generated_dockerfile_deterministic_git_baseline(

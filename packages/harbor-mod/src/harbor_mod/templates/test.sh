@@ -3,17 +3,17 @@
 #
 # Runs in a SEPARATE verifier container that never sees the agent's injected
 # skills, workspace, or agent logs. Harbor transfers only the task-level
-# `artifacts` (here: /workspace + /logs/agent/copilot-cli.jsonl +
-# /logs/agent/trajectory.json) re-materialized at their original paths, plus
-# /logs/artifacts/; /logs/verifier/ is mounted for the reward.
+# `artifacts` (here: {{WORKSPACE_DIR}} + {{COPILOT_CLI_JSONL}} +
+# {{TRAJECTORY_JSON}}) re-materialized at their original paths, plus
+# {{ARTIFACT_DIR}}/; {{VERIFIER_LOG_DIR}}/ is mounted for the reward.
 set -uo pipefail
 
-# --- F1: skill load + invoke proof (agent trajectory under /logs/agent) ----------
+# --- F1: skill load + invoke proof (agent trajectory under {{AGENT_LOG_DIR}}) ----------
 # Enforced unless SKILL_EVAL_ENFORCE_SKILL_USE=false (e.g. without-skill jobs).
 SKILL_OK=1
 TRANSCRIPT=""
-if [ -d /logs/agent ]; then
-  TRANSCRIPT=$(find /logs/agent -type f -name '*.jsonl' 2>/dev/null | head -n 1)
+if [ -d {{AGENT_LOG_DIR}} ]; then
+  TRANSCRIPT=$(find {{AGENT_LOG_DIR}} -type f -name '*.jsonl' 2>/dev/null | head -n 1)
 fi
 if [ "${SKILL_EVAL_ENFORCE_SKILL_USE:-true}" = "true" ]; then
   SKILL_NAME="${SKILL_EVAL_SKILL_NAME:-{{SKILL_NAME}}}"
@@ -48,19 +48,19 @@ if [ -n "$JUDGE_TOKEN" ]; then
     export PATH="$HOME/.local/bin:$PATH"
   fi
   # Recursive workspace packet: RewardKit [judge].files does not recurse
-  # directories, so concat the produced files (transferred artifact /workspace)
-  # into one markdown the judge reads; the ATIF trajectory (/logs/agent) lets
+  # directories, so concat the produced files (transferred artifact {{WORKSPACE_DIR}})
+  # into one markdown the judge reads; the ATIF trajectory ({{AGENT_LOG_DIR}}) lets
   # the judge see tool calls for process-based criteria.
-  mkdir -p /logs/artifacts
+  mkdir -p {{ARTIFACT_DIR}}
   {
-    for f in $(find /workspace -type f -not -path '*/.agents/*' -not -path '*/.git/*' | sort); do
+    for f in $(find {{WORKSPACE_DIR}} -type f -not -path '*/.agents/*' -not -path '*/.git/*' | sort); do
       printf '
 --- %s ---
 
 ' "$f"
       cat "$f"
     done
-  } > /logs/artifacts/workspace-packet.md 2>/dev/null || true
+  } > {{WORKSPACE_PACKET_MD}} 2>/dev/null || true
 
   # Record per-call judge token usage: harbor-rewardkit 0.2.0 discards the LLM
   # response usage, so a `sitecustomize` shim patches `litellm.acompletion` to
@@ -68,7 +68,7 @@ if [ -n "$JUDGE_TOKEN" ]; then
   # `harbor-mod compare`). The patch is inert if litellm is unavailable.
   cat > /tmp/sitecustomize.py << 'PYEOF'
 import json, os
-USAGE_FILE = os.environ.get("JUDGE_USAGE_FILE", "/logs/verifier/usage.jsonl")
+USAGE_FILE = os.environ.get("JUDGE_USAGE_FILE", "{{VERIFIER_USAGE_JSONL}}")
 try:
     import litellm
     _original = litellm.acompletion
@@ -92,16 +92,16 @@ PYEOF
   export PYTHONPATH="/tmp:${PYTHONPATH:-}"
 
   uvx --from harbor-rewardkit==0.2.0 rewardkit /tests \
-    --workspace /workspace \
-    --output /logs/verifier/reward.json \
+    --workspace {{WORKSPACE_DIR}} \
+    --output {{REWARD_JSON}} \
     || true
 
   # Harbor reads reward.json by default and falls back to reward.txt. Only
   # write the text fallback when RewardKit produced no usable reward.json.
-  if [ ! -s /logs/verifier/reward.json ]; then
-    rm -f /logs/verifier/reward.json
-    echo 0 > /logs/verifier/reward.txt
+  if [ ! -s {{REWARD_JSON}} ]; then
+    rm -f {{REWARD_JSON}}
+    echo 0 > {{REWARD_TXT}}
   fi
 else
-  echo 1 > /logs/verifier/reward.txt
+  echo 1 > {{REWARD_TXT}}
 fi

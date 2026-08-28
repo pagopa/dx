@@ -29,6 +29,8 @@ import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from harbor_mod.task_shape import COPILOT_CLI_JSONL_REL, COPILOT_SESSION_DB_REL
+
 
 @dataclass
 class CopilotUsage:
@@ -181,11 +183,12 @@ def copilot_artifact_paths(root: Path) -> tuple[Path, Path]:
     """The two Copilot artifact paths under ``root`` (session DB, JSONL).
 
     Both the agent (its ``logs_dir``) and a saved trial (its ``agent/`` dir)
-    keep the Copilot CLI artifacts at the same two relative locations; this
-    is the one place that names them. Each caller passes its own root (the
-    agent's logs layout and the trial layout differ).
+    keep the Copilot CLI artifacts at the same two relative locations (the
+    agent-log-dir coordinates declared in :mod:`harbor_mod.task_shape`);
+    each caller passes its own root (the agent's logs layout and the trial
+    layout differ).
     """
-    return root / "copilot" / "session-store.db", root / "copilot-cli.jsonl"
+    return root / COPILOT_SESSION_DB_REL, root / COPILOT_CLI_JSONL_REL
 
 
 def extract_usage(db_path: Path, jsonl_path: Path) -> CopilotUsage | None:

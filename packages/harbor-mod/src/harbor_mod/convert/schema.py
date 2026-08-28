@@ -14,19 +14,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-# Destination paths (relative to the generated task root) that can be
-# overridden with a custom file from the skill dir.
-OVERRIDABLE_TARGETS = frozenset(
-    {
-        "task.toml",
-        "environment/Dockerfile",
-        ".dockerignore",
-        "tests/test.sh",
-        "tests/quality.toml",
-        "tests/Dockerfile",  # verifier image (separate mode only)
-        "solution/solve.sh",
-    }
-)
+from harbor_mod.task_shape import OVERRIDABLE_TARGETS
 
 
 def _assert_safe_rel(path: str) -> None:
