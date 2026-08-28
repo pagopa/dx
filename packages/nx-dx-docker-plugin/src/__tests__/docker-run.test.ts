@@ -78,12 +78,15 @@ describe("runDockerCommand", () => {
         ".",
         "--file",
         "apps/my-app/Dockerfile",
+        "--platform",
+        "linux/amd64",
         "--tag",
         "apps-my-app",
         "--tag",
         "ghcr.io/pagopa/dx/my-app:dev",
       ]),
     );
+    expect(args).not.toContain("linux/amd64,linux/arm64");
     expect(args).not.toContain("--push");
     expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
   });
