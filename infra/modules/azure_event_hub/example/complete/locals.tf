@@ -4,25 +4,19 @@ locals {
     env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
-    app_name        = "test"
+    app_name        = "eh"
     instance_number = "01"
   }
 
-  naming_config = {
-    prefix          = local.environment.prefix,
-    environment     = local.environment.env_short,
-    location        = local.environment.location
-    name            = local.environment.app_name,
-    instance_number = tonumber(local.environment.instance_number),
-  }
-
   virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "common",
+    name = provider::dx::resource_name(merge(local.environment, {
+      app_name      = "common",
+      domain        = ""
       resource_type = "virtual_network"
     }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "network",
+    resource_group_name = provider::dx::resource_name(merge(local.environment, {
+      app_name      = "network",
+      domain        = ""
       resource_type = "resource_group"
     }))
   }
