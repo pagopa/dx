@@ -106,9 +106,10 @@ the local, untagged image produced by that target. This preserves the standard
 `nx run <project>:docker:run -- --port 3000:3000` workflow without activating
 Nx's experimental Docker release versioning.
 
-Local `docker:build` targets use the first configured platform so the result
-can be loaded into Docker's local image store. `docker:push` targets preserve
-all configured platforms and publish the resulting multi-platform image.
+Local `docker:build` targets always leave `--platform` unset, so Docker uses the
+host's native architecture and the image remains loadable into the local image store.
+`docker:push` targets use Docker Buildx with all configured platforms and publish the
+resulting multi-platform image.
 
 ### Nx Release Behavior
 

@@ -78,17 +78,27 @@ describe("runDockerCommand", () => {
         ".",
         "--file",
         "apps/my-app/Dockerfile",
-        "--platform",
-        "linux/amd64",
         "--tag",
         "apps-my-app",
         "--tag",
         "ghcr.io/pagopa/dx/my-app:dev",
       ]),
     );
+    expect(args).not.toContain("--platform");
     expect(args).not.toContain("linux/amd64,linux/arm64");
     expect(args).not.toContain("--push");
     expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
+  });
+
+  it("keeps the host default for platform-specific local builds", () => {
+    runDockerCommand(
+      "build",
+      { ...baseOptions, platform: "linux/arm64" },
+      "/workspace",
+    );
+
+    const [, args] = childProcessMocks.spawnSync.mock.calls[0];
+    expect(args).not.toContain("--platform");
   });
 
   it("uses context and Dockerfile paths configured for a project", () => {
@@ -126,9 +136,13 @@ describe("runDockerCommand", () => {
     const result = runDockerCommand("push", baseOptions, "/workspace");
 
     expect(result).toEqual({ success: true });
-    const [, args] = childProcessMocks.spawnSync.mock.calls[0];
+    const [command, args] = childProcessMocks.spawnSync.mock.calls[0];
+    expect(command).toBe("docker");
+    expect(args).toEqual(expect.arrayContaining(["buildx", "build"]));
     expect(args).toEqual(
       expect.arrayContaining([
+        "--platform",
+        "linux/amd64,linux/arm64",
         "--tag",
         "ghcr.io/pagopa/dx/my-app:main",
         "--tag",

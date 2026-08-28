@@ -113,19 +113,19 @@ export const runDockerCommand = (
     url: imageUrl,
   };
 
-  // A local Docker image store cannot load a multi-platform image. Keep the
-  // first configured platform for local builds while preserving the complete
-  // platform list for registry pushes.
-  const buildPlatform =
-    mode === "build" ? platform.split(",")[0].trim() : platform;
+  // Local validation builds use the host architecture so the resulting image
+  // remains loadable in Docker's local image store. Platform-specific images
+  // are built by Buildx only when publishing to a registry.
   const dockerArgs = [
-    "build",
+    ...(mode === "push" ? ["buildx", "build"] : ["build"]),
     contextPath,
     "--file",
     dockerfilePath,
-    "--platform",
-    buildPlatform,
   ];
+
+  if (mode === "push") {
+    dockerArgs.push("--platform", platform);
+  }
 
   if (mode === "build") {
     // Untagged local alias consumed by this plugin's `docker:run` target.
