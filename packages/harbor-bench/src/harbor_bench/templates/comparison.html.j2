@@ -1,0 +1,395 @@
+{%- macro skill_link(skill) -%}
+{% if skill.source_url -%}
+<a class="source-link" href="{{ skill.source_url }}" title="Open {{ skill.name }} source" target="_blank" rel="noreferrer">{{ skill.name }}</a>
+{%- else -%}
+{{ skill.name }}
+{%- endif -%}
+{%- endmacro -%}
+{%- macro metric_card(card) -%}
+<article class="metric-card">
+  <div class="metric-card-heading">
+    <div>
+      <span class="metric-group">{{ card.group }}</span>
+      <h3>{{ card.label }}</h3>
+    </div>
+    <span class="delta {{ card.direction }}">{{ card.delta }}</span>
+  </div>
+  <div class="metric-values">
+    <div>
+      <span class="metric-side">Base</span>
+      <strong>{{ card.base }}</strong>
+    </div>
+    <div class="metric-arrow" aria-hidden="true">→</div>
+    <div class="metric-head-value">
+      <span class="metric-side">Head</span>
+      <strong>{{ card.head }}</strong>
+    </div>
+  </div>
+  <div class="comparison-bars" aria-label="Base and head comparison">
+    <div class="bar-row">
+      <span>Base</span>
+      <div class="bar-track"><span class="bar base-bar" style="width: {{ card.base_width }}%"></span></div>
+    </div>
+    <div class="bar-row">
+      <span>Head</span>
+      <div class="bar-track"><span class="bar head-bar" style="width: {{ card.head_width }}%"></span></div>
+    </div>
+  </div>
+</article>
+{%- endmacro -%}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skill comparison · {{ base_job_label }} → {{ head_job_label }}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172033;
+      --muted: #64748b;
+      --line: #e4e9f2;
+      --surface: #ffffff;
+      --surface-soft: #f7f9fc;
+      --brand: #5b5bd6;
+      --brand-dark: #38389c;
+      --base: #94a3b8;
+      --positive: #0f9f75;
+      --positive-soft: #e7f8f1;
+      --negative: #d34c67;
+      --negative-soft: #fff0f3;
+      --neutral: #6d5bd0;
+      --shadow: 0 18px 45px rgba(31, 48, 85, .09);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #f2f5fa;
+      font: 15px/1.55 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .page { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      color: #fff;
+      padding: 38px 42px;
+      border-radius: 26px;
+      background: linear-gradient(120deg, #272760 0%, #4a47a8 54%, #7781e8 100%);
+      box-shadow: 0 22px 55px rgba(50, 48, 130, .27);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 310px;
+      height: 310px;
+      right: -95px;
+      top: -145px;
+      border: 42px solid rgba(255,255,255,.08);
+      border-radius: 50%;
+    }
+    .eyebrow { position: relative; z-index: 1; letter-spacing: .14em; font-size: 11px; font-weight: 800; opacity: .72; }
+    h1, h2, h3, p { margin-top: 0; }
+    .hero h1 { position: relative; z-index: 1; max-width: 700px; margin: 10px 0 8px; font-size: clamp(28px, 4vw, 44px); line-height: 1.08; letter-spacing: -.035em; }
+    .hero-subtitle { position: relative; z-index: 1; margin-bottom: 24px; color: rgba(255,255,255,.78); }
+    .hero-subtitle code { color: #fff; font-size: .92em; }
+    .source-link { color: inherit; text-decoration: underline; text-decoration-color: currentColor; text-underline-offset: 3px; }
+    .source-link:hover { opacity: .78; }
+    .run-label.source-link { text-decoration: none; }
+    .verdict {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 14px;
+      padding: 9px 14px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,.13);
+      font-weight: 750;
+    }
+    .verdict::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #b7f4dc; }
+    .verdict.negative::before { background: #ffc0cc; }
+    .verdict.mixed::before, .verdict.neutral::before { background: #ffe29d; }
+    .hero-note { position: relative; z-index: 1; max-width: 780px; margin: 0; color: rgba(255,255,255,.72); font-size: 13px; }
+    .section { margin-top: 30px; }
+    .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
+    .section-heading h2 { margin-bottom: 2px; font-size: 21px; letter-spacing: -.02em; }
+    .section-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-top: 20px; }
+    .kpi, .metric-card, .run-card, .task-card, .outcome-panel, .technical-details {
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .kpi { min-height: 126px; padding: 19px; border-radius: 17px; }
+    .kpi-label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .kpi-value { display: block; margin: 8px 0 2px; font-size: 29px; line-height: 1.1; letter-spacing: -.035em; }
+    .kpi-sub { color: var(--muted); font-size: 12px; }
+    .kpi-sub strong { color: var(--ink); }
+    .delta { display: inline-flex; align-items: center; justify-content: center; min-height: 23px; padding: 2px 8px; border-radius: 999px; background: #eef1f6; color: var(--muted); font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .delta.positive { background: var(--positive-soft); color: var(--positive); }
+    .delta.negative { background: var(--negative-soft); color: var(--negative); }
+    .delta.neutral { background: #f0effb; color: var(--neutral); }
+    .outcome-panel { padding: 20px; border-radius: 19px; }
+    .outcome-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; color: var(--muted); font-size: 12px; }
+    .outcome-summary strong { color: var(--ink); font-size: 14px; }
+    .outcome-bar { display: flex; overflow: hidden; height: 13px; margin: 16px 0 12px; border-radius: 999px; background: #edf1f6; }
+    .outcome-segment { min-width: 3px; transition: width .2s ease; }
+    .outcome-segment.improved, .legend-dot.improved { background: var(--positive); }
+    .outcome-segment.regressed, .legend-dot.regressed { background: var(--negative); }
+    .outcome-segment.unchanged, .legend-dot.unchanged { background: #9aa7ba; }
+    .outcome-segment.incomplete, .legend-dot.incomplete { background: #d97706; }
+    .outcome-segment.new, .legend-dot.new { background: var(--brand); }
+    .outcome-segment.removed, .legend-dot.removed { background: #e1a44e; }
+    .outcome-legend { display: flex; flex-wrap: wrap; gap: 10px 19px; color: var(--muted); font-size: 12px; }
+    .outcome-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+    .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+    .signals-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .metric-card { padding: 18px; border-radius: 17px; }
+    .metric-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+    .metric-group { display: block; margin-bottom: 3px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .metric-card h3 { margin: 0; font-size: 14px; }
+    .metric-values { display: flex; align-items: end; gap: 12px; margin: 17px 0 15px; }
+    .metric-values strong { display: block; margin-top: 2px; font-size: 24px; letter-spacing: -.035em; }
+    .metric-side { color: var(--muted); font-size: 11px; }
+    .metric-arrow { padding-bottom: 4px; color: #b5bfce; }
+    .metric-head-value strong { color: var(--brand-dark); }
+    .comparison-bars { display: grid; gap: 7px; }
+    .bar-row { display: grid; grid-template-columns: 32px 1fr; align-items: center; gap: 8px; color: var(--muted); font-size: 10px; }
+    .bar-track { height: 7px; overflow: hidden; border-radius: 999px; background: #edf1f6; }
+    .bar { display: block; height: 100%; min-width: 2px; border-radius: inherit; }
+    .base-bar { background: var(--base); }
+    .head-bar { background: linear-gradient(90deg, #6765de, #8e8cf0); }
+    .run-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .run-card { padding: 19px; border-radius: 17px; }
+    .run-card-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; }
+    .run-card-heading code { overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .run-label { padding: 4px 8px; border-radius: 7px; color: #fff; font-size: 11px; font-weight: 800; text-transform: uppercase; }
+    .run-label.base { background: #8795aa; }
+    .run-label.head { background: var(--brand); }
+    .run-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 0 0 17px; }
+    .run-facts div { min-width: 0; }
+    .run-facts dt, .run-fact-label { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .run-facts dd { overflow: hidden; margin: 2px 0 0; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+    .skill-list { padding-top: 13px; border-top: 1px solid var(--line); }
+    .skill-list ul { margin: 7px 0 0; padding-left: 18px; color: var(--ink); font-size: 12px; }
+    .skill-list li + li { margin-top: 4px; }
+    .skill-list li span { color: var(--muted); }
+    .technical-details { margin-top: 13px; padding: 15px 18px; border-radius: 14px; box-shadow: none; }
+    .technical-details summary { cursor: pointer; color: var(--muted); font-size: 12px; font-weight: 700; }
+    .diff-list { display: grid; gap: 9px; margin: 13px 0 0; padding-left: 18px; font-size: 12px; }
+    .diff-list span { color: var(--muted); }
+    .diff-list code { display: block; overflow: auto; margin-top: 4px; padding: 7px 9px; border-radius: 7px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
+    .task-list { display: grid; gap: 10px; }
+    .task-card { overflow: hidden; border-radius: 15px; box-shadow: 0 7px 22px rgba(31,48,85,.05); }
+    .task-card summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 15px 17px; cursor: pointer; list-style: none; }
+    .task-card summary::-webkit-details-marker { display: none; }
+    .task-card summary::after { content: "+"; flex: 0 0 auto; color: var(--muted); font-size: 20px; font-weight: 300; }
+    .task-card[open] summary::after { content: "−"; }
+    .task-summary-main, .task-summary-score { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .task-summary-score { margin-left: auto; color: var(--muted); font-size: 12px; }
+    .task-name { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+    .status-badge { flex: 0 0 auto; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .status-badge.improved { background: var(--positive-soft); color: var(--positive); }
+    .status-badge.regressed { background: var(--negative-soft); color: var(--negative); }
+    .status-badge.unchanged { background: #eef1f6; color: var(--muted); }
+    .status-badge.incomplete { background: #fff5e6; color: #a5691d; }
+    .status-badge.new { background: #eeedff; color: var(--brand-dark); }
+    .status-badge.removed { background: #fff5e6; color: #a5691d; }
+    .task-card-body { padding: 0 17px 17px; }
+    .task-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .task-table th, .task-table td { padding: 9px 8px; border-top: 1px solid var(--line); text-align: right; }
+    .task-table th:first-child, .task-table td:first-child { text-align: left; }
+    .task-table thead th { color: var(--muted); font-size: 10px; font-weight: 750; text-transform: uppercase; }
+    .task-table tbody tr:nth-child(even) { background: var(--surface-soft); }
+    .task-table tbody tr:hover { background: #f0f2ff; }
+    .task-table tbody th { font-weight: 600; }
+    .task-table td.positive { color: var(--positive); font-weight: 700; }
+    .task-table td.negative { color: var(--negative); font-weight: 700; }
+    .empty-state { padding: 28px; border: 1px dashed #cbd5e1; border-radius: 15px; color: var(--muted); text-align: center; }
+    footer { margin-top: 30px; color: var(--muted); font-size: 11px; text-align: center; }
+    @media (max-width: 850px) {
+      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric-grid, .signals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 620px) {
+      .page { padding: 14px 12px 40px; }
+      .hero { padding: 28px 23px; border-radius: 19px; }
+      .kpi-grid, .metric-grid, .run-grid { grid-template-columns: 1fr; }
+      .section-heading { align-items: start; flex-direction: column; }
+      .task-card summary { align-items: start; flex-wrap: wrap; }
+      .task-summary-score { width: 100%; margin-left: 0; }
+      .task-card summary::after { position: absolute; right: 17px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div class="eyebrow">HARBOR BENCH · SKILL EVALUATION</div>
+      <h1>Which skill performed better?</h1>
+      <p class="hero-subtitle">Base <code>{{ base_job_label }}</code> <span aria-hidden="true">→</span> Head <code>{{ head_job_label }}</code></p>
+      <div class="verdict {{ verdict_kind }}">
+        {{ verdict }}
+      </div>
+      <p class="hero-note">This report compares only tasks present in both runs when calculating the headline verdict and key signals. Green highlights better scores and success outcomes; for execution signals, lower cost, time, and activity are treated as favorable. New and removed tasks remain visible below without influencing the verdict.</p>
+    </header>
+
+    <section class="kpi-grid" aria-label="At a glance">
+      <article class="kpi">
+        <span class="kpi-label">{{ score.label }}</span>
+        <strong class="kpi-value">{{ score.head }}</strong>
+        <span class="kpi-sub">Base {{ score.base }} · <span class="delta {{ score.direction }}">{{ score.delta }}</span></span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Successful tasks</span>
+        <strong class="kpi-value">{{ comparable.head_passed }} / {{ comparable.evaluated_tasks }}</strong>
+        <span class="kpi-sub">Base {{ comparable.base_passed }} / {{ comparable.evaluated_tasks }} · <strong>{{ comparable.head_rate }}</strong> success rate</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Tasks compared</span>
+        <strong class="kpi-value">{{ comparable.tasks }}</strong>
+        <span class="kpi-sub">{{ population.base_only }} only in base · {{ population.head_only }} only in head</span>
+      </article>
+      <article class="kpi">
+        <span class="kpi-label">Success rate</span>
+        <strong class="kpi-value">{{ comparable.head_rate }}</strong>
+        <span class="kpi-sub">Base {{ comparable.base_rate }} · <span class="delta {{ comparable.pass_rate_direction }}">{{ comparable.pass_rate_delta }}</span></span>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><h2>What changed between Base and Head?</h2><p>Each task is classified once: Improved or Regressed when its pass status or primary score moves; Unchanged when neither changes; New when it appears only in Head, or Only in base when it appears only there.</p></div>
+      </div>
+      <div class="outcome-panel">
+        <div class="outcome-summary">
+          <strong>{{ comparable.tasks }} comparable task(s)</strong>
+          <span>{{ population.base_only }} only in base · {{ population.head_only }} only in head</span>
+        </div>
+        <div class="outcome-bar" aria-label="Task outcome distribution">
+          {% if outcome_segments %}
+          {% for segment in outcome_segments %}<span class="outcome-segment {{ segment.key }}" style="width: {{ segment.width }}%" title="{{ segment.count }} {{ segment.key }}"></span>{% endfor %}
+          {% else %}
+          <span class="outcome-segment unchanged" style="width: 100%"></span>
+          {% endif %}
+        </div>
+        <div class="outcome-legend">
+          {% if outcome_legend %}
+          {% for item in outcome_legend %}
+          <span><i class="legend-dot {{ item.key }}"></i>
+            {% if item.key == "removed" %}Only in base
+            {% else %}{{ item.label }}{% endif %}
+            <strong>{{ item.count }}</strong>
+          </span>
+          {% endfor %}
+          {% else %}
+          <span>No task outcomes available</span>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><h2>Key signals</h2><p><strong>Key score signals</strong> show outcome quality; <strong>Execution signals</strong> show the resources used to produce it.</p></div>
+      </div>
+      <div class="metric-grid signals-grid">
+        {% if score_cards or signal_cards %}
+        {% for card in score_cards %}{{ metric_card(card) }}{% endfor %}
+        {% for card in signal_cards %}{{ metric_card(card) }}{% endfor %}
+        {% else %}
+        <div class="empty-state">No execution metrics were recorded.</div>
+        {% endif %}
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><h2>How the runs were configured</h2><p>Both sides should be read with their agent and judge setup in mind.</p></div>
+      </div>
+      <div class="run-grid">
+        {% for run in run_cards %}
+        <article class="run-card">
+          <div class="run-card-heading">
+            <span class="run-label {{ run.kind }}">{{ run.label }}</span>
+            <code title="{{ run.job }}">{{ run.job_label }}</code>
+          </div>
+          <dl class="run-facts">
+            <div><dt>Agent</dt><dd>{{ run.agent }}</dd></div>
+            <div><dt>Judge</dt><dd>{{ run.judge }}</dd></div>
+          </dl>
+          <div class="skill-list">
+            <span class="run-fact-label">Skills</span>
+            <ul>
+              {% for skill in run.skills %}<li>{{ skill_link(skill) }} <span>{{ skill.version }}</span></li>{% else %}<li>Not recorded</li>{% endfor %}
+            </ul>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% if skill_diffs %}
+      <details class="technical-details">
+        <summary>Technical details: skill version diffs</summary>
+        <ul class="diff-list">
+          {% for diff in skill_diffs %}
+          <li>
+            <strong>{{ diff.name }}</strong>
+            <span>{{ diff.version }}</span>
+            <code>{{ diff.command }}</code>
+          </li>
+          {% endfor %}
+        </ul>
+      </details>
+      {% endif %}
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <div><h2>Task-by-task details</h2><p>{{ tasks|length }} task(s) · Open one to inspect every recorded signal.</p></div>
+      </div>
+      <div class="task-list">
+        {% for task in tasks %}
+        <details class="task-card">
+          <summary>
+            <span class="task-summary-main">
+              <span class="status-badge {{ task.outcome }}">
+                {% if task.outcome == "removed" %}Only in base
+                {% else %}{{ task.outcome_label }}{% endif %}
+              </span>
+              <span class="task-name">{{ task.name }}</span>
+            </span>
+            <span class="task-summary-score">
+              <span>{{ task.score_label }}: Base {{ task.base_score }} → Head {{ task.head_score }}</span>
+              <span class="delta {{ task.score_direction }}">{{ task.score_delta }}</span>
+            </span>
+          </summary>
+          <div class="task-card-body">
+            <table class="task-table">
+              <thead><tr><th scope="col">Signal</th><th scope="col">Base</th><th scope="col">Head</th><th scope="col">Change</th></tr></thead>
+              <tbody>
+                {% for metric in task.metrics %}
+                <tr>
+                  <th scope="row">{{ metric.label }}</th>
+                  <td>{{ metric.base }}</td>
+                  <td>{{ metric.head }}</td>
+                  <td class="{{ metric.direction }}">{{ metric.delta }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </details>
+        {% else %}
+        <div class="empty-state">No completed task results were found in either job.</div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <footer>Generated by <code>harbor-bench diff --format html</code> · Delta is Head − Base.</footer>
+  </main>
+</body>
+</html>

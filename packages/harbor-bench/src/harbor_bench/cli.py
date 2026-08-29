@@ -6,8 +6,10 @@ Usage::
     harbor-bench convert [--evals PATH ...] [--out DIR] [--config-out FILE]
                        [--without-skill] [--model MODEL]
                        [--environment docker|apple-container]
-    harbor-bench diff <job-base> <job-head> [--report out.md]
-    harbor-bench compare [-t PATTERN]... <base-skill> <head-skill>
+    harbor-bench diff <job-base> <job-head> [--format markdown|html|json]
+                       [--report out]
+    harbor-bench compare [-t PATTERN]... [--format markdown|html|json]
+                         <base-skill> <head-skill>
 
 ``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
 ``plugins/**/skills/*/evals/`` by default), generates one Harbor task per eval
@@ -19,7 +21,8 @@ finds everything. Injected skills point at the raw skill directories: eval data
 
 ``diff`` reads two Harbor job directories (``jobs/<run>``) and prints a
 per-task delta report (score, tokens, cost, steps, duration) as Markdown
-(default) or JSON (``--format json``).
+(default), a self-contained HTML report (``--format html``), or JSON
+(``--format json``).
 
 ``compare`` runs the same eval set twice — base skill and head skill injected
 into two ``harbor run`` invocations on the same config — and writes the delta
@@ -30,7 +33,6 @@ report between the two job directories. The orchestration lives in
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -41,7 +43,7 @@ from .compare.run import (
     run_compare,
 )
 from .diff import build_document, build_report
-from .report import render_json, render_markdown
+from .report import render_report
 from .convert.config import (
     DEFAULT_MODEL,
     DEFAULT_ENVIRONMENT_TYPE,
@@ -116,8 +118,8 @@ def cmd_diff(args: argparse.Namespace) -> int:
     job-level run configuration. The joined report and both job metadata are
     folded into one :class:`~harbor_bench.diff.ReportDocument` by
     :func:`build_document`; the renderers only format it. The report is
-    rendered as Markdown (``--format markdown``, default) or JSON
-    (``--format json``).
+    rendered as Markdown (``--format markdown``, default), a
+    self-contained HTML report (``--format html``), or JSON (``--format json``).
     """
     base_job = Job(Path(args.base).resolve())
     head_job = Job(Path(args.head).resolve())
@@ -129,10 +131,7 @@ def cmd_diff(args: argparse.Namespace) -> int:
         base_job.meta(),
         head_job.meta(),
     )
-    if args.format == "json":
-        output = json.dumps(render_json(document), indent=2) + "\n"
-    else:
-        output = render_markdown(document)
+    output = render_report(document, args.format)
     if args.report:
         out = Path(args.report)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -167,6 +166,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
         n_concurrent=args.n_concurrent,
         task_globs=tuple(args.task_glob.split()) if args.task_glob else (),
         token=args.token,
+        report_format=args.format,
     )
     try:
         result = run_compare(options)
@@ -242,9 +242,9 @@ def build_parser() -> argparse.ArgumentParser:
     cmp.add_argument("head", help="head job directory (e.g. jobs/<run-b>)")
     cmp.add_argument(
         "--format",
-        choices=("markdown", "json"),
+        choices=("markdown", "html", "json"),
         default="markdown",
-        help="report format (default: markdown)",
+        help="report format: markdown, html, or json (default: markdown)",
     )
     cmp.add_argument(
         "--report",
@@ -319,6 +319,12 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=4,
         help="n_concurrent_trials (default: 4)",
+    )
+    cmp.add_argument(
+        "--format",
+        choices=("markdown", "html", "json"),
+        default="markdown",
+        help="comparison report format (default: markdown)",
     )
     cmp.add_argument(
         "--token",

@@ -7,4 +7,8 @@
   ready-to-run ``config.yaml``
 """
 
-__version__ = "0.1.0"
+from __future__ import annotations
+
+from importlib.metadata import version as distribution_version
+
+__version__ = distribution_version("harbor-bench")

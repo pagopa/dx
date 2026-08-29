@@ -18,7 +18,8 @@ PagoPA Harbor extensions.
 3. **`harbor-bench diff`** — reads two Harbor job directories and prints a
    per-task delta report (score, tokens, cost, steps, duration), plus a run
    configuration section (agent/judge models and effort, skill versions, git
-   diff command) — see
+   diff command). It can also produce a self-contained visual HTML report for
+   sharing with less technical users — see
    [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
 4. **`harbor-bench compare`** — one command for the workspace-vs-git workflow:
    it runs the same eval set twice on one generated config (base skill and head
@@ -519,13 +520,34 @@ harbor-bench diff runs/skill-workspace runs/skill-main --report comparison.md
 ```
 
 The report is rendered as Markdown by default; pass `--format json` for a
-machine-readable document with the same numbers (per-task metrics keyed by the
-metric registry, the summary lines, and the run configuration), to stdout or
+machine-readable document. Its `comparison` object is calculated only from
+tasks present in both runs, while `summary` contains whole-job totals; each
+metric records its population explicitly. Per-task metrics remain keyed by the
+metric registry, and run configuration is included. Write it to stdout or
 `--report out.json`:
 
 ```bash
 harbor-bench diff runs/skill-workspace runs/skill-main --format json --report comparison.json
 ```
+
+For a browser-friendly report, pass `--format html`. The generated file is
+self-contained, so it can be opened locally or attached to a review without a
+web server or additional assets:
+
+```bash
+harbor-bench diff runs/skill-workspace runs/skill-main \
+  --format html \
+  --report comparison.html
+open comparison.html
+```
+
+The HTML report presents a plain-language verdict, headline score and
+success-rate changes, task outcome counts, visual metric bars, and expandable
+technical details for each task. Headline comparisons use only tasks present
+in both runs, so newly added or removed tasks remain visible without skewing
+the verdict. Interrupted Harbor trials that have a `trial.log` but no
+`result.json` are shown as `Incomplete` instead of disappearing from the
+report. Markdown remains the default for terminal and source-control workflows.
 
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
 two `--job-name` flags above give stable, human-readable paths so `diff` and
@@ -582,12 +604,16 @@ requests` and `steps` — and works retroactively on runs that predate the
 The two-step flow above is what `harbor-bench compare` automates: it converts
 the eval set once, runs the same config twice (base skill in the first
 `harbor run`, head skill in the second), and writes the delta report — all
-under one output directory `<runs-dir>/<run-id>/{base,head,comparison.md}`.
+under one output directory. The report is `comparison.md` by default; pass
+`--format html` or `--format json` to produce `comparison.html` or
+`comparison.json`.
 
 ```bash
 harbor-bench compare plugins/aiepdf/skills/dr-blacksmith \
   https://github.com/pagopa/dx/tree/foobar/plugins/aiepdf/skills/dr-blacksmith \
-  -t 'dr-blacksmith-*-use-case-*' --token $COPILOT_GITHUB_TOKEN
+  -t 'dr-blacksmith-*-use-case-*' \
+  --format html \
+  --token $COPILOT_GITHUB_TOKEN
 ```
 
 Each skill is a **local path** (a skill dir with `SKILL.md`, or a root whose
@@ -613,6 +639,7 @@ Flags:
 | `--model MODEL` | Copilot model passed to the agent (default: `gpt-5.6-luna`) |
 | `--environment TYPE` | `docker` (default) or `apple-container` |
 | `--n-concurrent N` | `n_concurrent_trials` (default: `4`) |
+| `--format FORMAT` | report format: `markdown` (default), `html`, or `json` |
 | `--token TOKEN` | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`) |
 
 ## Comparing with vs without skill (baseline)

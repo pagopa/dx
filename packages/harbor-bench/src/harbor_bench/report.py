@@ -1,249 +1,267 @@
-"""Render the Harbor Comparison report.
-
-The comparison data — the complete :class:`~harbor_bench.diff.ReportDocument`
-(rows, metric specs, aggregated summary, run-configuration cells), built once
-by :func:`~harbor_bench.diff.build_document` — is renderer-agnostic: every
-consumer shares the same numbers. This module is where that document becomes
-output. :func:`render_markdown` and :func:`render_json` are pure adapters over
-the document — they only format, never compute. The number/delta formatting
-rules (:func:`_fmt`, :func:`_delta`) and the run-configuration table
-(:func:`_render_run_config`) are implementation behind the adapters.
-"""
+"""Render Harbor comparison reports through one text interface."""
 
 from __future__ import annotations
 
-from typing import Any
+import json
+from typing import Any, Literal
 
-from harbor_bench.diff import JobMeta, ReportDocument
-from harbor_bench.jobs import SkillVersion, TrialMetrics
+from harbor_bench.comparison_presentation import (
+    ComparisonPresentation,
+    MetricPresentation,
+    RunPresentation,
+    TaskSidePresentation,
+    build_presentation,
+)
+from harbor_bench.diff import ReportDocument
 
-
-def _fmt(value: Any) -> str:
-    if value is None:
-        return "—"
-    if isinstance(value, bool):
-        return "pass" if value else "FAIL"
-    if isinstance(value, float):
-        if abs(value) < 1:
-            return f"{value:.3f}"
-        return f"{value:,.2f}"
-    if isinstance(value, int):
-        return f"{value:,}"
-    return str(value)
+ReportFormat = Literal["markdown", "html", "json"]
 
 
-def _delta(base: Any, head: Any) -> str:
-    """Delta string (head - base); for booleans show the transition."""
-    if base is None and head is None:
-        return "—"
-    if base is None:
-        return f"(new) {_fmt(head)}"
-    if head is None:
-        return f"(only base) {_fmt(base)}"
-    if isinstance(base, bool) or isinstance(head, bool):
-        if base == head:
-            return _fmt(base)
-        return f"{_fmt(base)} → {_fmt(head)}"
-    if isinstance(base, float) or isinstance(head, float):
-        diff = (head or 0.0) - (base or 0.0)
-        return f"{diff:+,.3f}" if abs(diff) < 1 else f"{diff:+,.2f}"
-    if isinstance(base, int) or isinstance(head, int):
-        diff = (head or 0) - (base or 0)
-        return f"{diff:+,}"
-    return "—"
-
-
-def _render_run_config(document: ReportDocument) -> list[str]:
-    """Render the job-level run configuration section (models, skills, diff)."""
-    if document.base_meta is None and document.head_meta is None:
+def _render_run_config(presentation: ComparisonPresentation) -> list[str]:
+    if not any(run.meta_present for run in presentation.run_cards):
         return []
 
-    def _model_cell(meta: JobMeta | None) -> str:
-        if meta is None or meta.agent_model is None:
+    base, head = presentation.run_cards
+
+    def _skills(run: RunPresentation) -> str:
+        if not run.skills:
             return "—"
-        effort = f" (effort: {meta.agent_effort})" if meta.agent_effort else ""
-        return f"{meta.agent_model}{effort}"
+        return "<br>".join(f"{skill.name} {skill.version}" for skill in run.skills)
 
-    def _judge_cell(meta: JobMeta | None) -> str:
-        if meta is None or meta.judge_model is None:
-            return "—"
-        effort = f" (effort: {meta.judge_effort})" if meta.judge_effort else ""
-        return f"{meta.judge_model}{effort}"
-
-    def _skills(meta: JobMeta | None) -> str:
-        if meta is None or not meta.skills:
-            return "—"
-        return "<br>".join(f"{s.name} {s.version}" for s in meta.skills)
-
-    lines = ["## Run configuration", ""]
-    lines.append(f"| | {document.base_job} | {document.head_job} |")
-    lines.append("|---|---|---|")
-    lines.append(
-        f"| agent model | {_model_cell(document.base_meta)} | {_model_cell(document.head_meta)} |"
-    )
-    lines.append(
-        f"| judge model | {_judge_cell(document.base_meta)} | {_judge_cell(document.head_meta)} |"
-    )
-    lines.append(
-        f"| skills | {_skills(document.base_meta)} | {_skills(document.head_meta)} |"
-    )
-    lines.append("")
-
-    if document.skill_diffs:
-        lines.append("Skill diff (local working tree vs. git-loaded version):")
-        lines.append("")
-        lines.append("```bash")
-        for diff in document.skill_diffs:
-            lines.append(f"# {diff.run} · {diff.skill.name} {diff.skill.version}")
+    lines = [
+        "## Run configuration",
+        "",
+        f"| | {presentation.base_job} | {presentation.head_job} |",
+        "|---|---|---|",
+        f"| agent model | {base.agent} | {head.agent} |",
+        f"| judge model | {base.judge} | {head.judge} |",
+        f"| skills | {_skills(base)} | {_skills(head)} |",
+        "",
+    ]
+    if presentation.skill_diffs:
+        lines.extend(
+            [
+                "Skill diff (local working tree vs. git-loaded version):",
+                "",
+                "```bash",
+            ]
+        )
+        for diff in presentation.skill_diffs:
+            lines.append(f"# {diff.run} · {diff.name} {diff.version}")
             lines.append(diff.command)
-        lines.append("```")
-        lines.append("")
+        lines.extend(["```", ""])
     return lines
 
 
 def render_markdown(document: ReportDocument) -> str:
-    """Render a report document as a Markdown report.
-
-    Pure adapter: everything rendered (the metric specs, the summary numbers,
-    the run-configuration skill diffs) was computed once by
-    :func:`~harbor_bench.diff.build_document`.
-    """
+    """Render the shared presentation as Markdown."""
+    presentation = build_presentation(document)
     lines = [
-        f"# Skill comparison: `{document.base_job}` → `{document.head_job}`",
+        f"# Skill comparison: `{presentation.base_job}` → `{presentation.head_job}`",
         "",
-        "Delta is **head − base**. ",
+        "Delta is **head − base**.",
         "",
     ]
-    lines.extend(_render_run_config(document))
-
-    # --- Per-task tables -------------------------------------------------
-    lines.append("## Per-task delta")
-    lines.append("")
-    for row in document.rows:
-        task = row.task
-        base, head = row.base, row.head
-        lines.append(f"### {task}")
-        lines.append("")
-        lines.append("| metric | base | head | Δ |")
-        lines.append("|---|---|---|---|")
-        for spec in document.specs:
+    lines.extend(_render_run_config(presentation))
+    lines.extend(
+        [
+            "## Comparable-task result",
+            "",
+            f"- verdict: **{presentation.verdict}**",
+            f"- tasks compared: {presentation.comparable.tasks}",
+            f"- completed task pairs: {presentation.comparable.evaluated_tasks}",
+            f"- {presentation.score.label}: {presentation.score.base} → "
+            f"{presentation.score.head} ({presentation.score.delta})",
+            f"- passed trials: {presentation.comparable.base_passed}/"
+            f"{presentation.comparable.evaluated_tasks} → "
+            f"{presentation.comparable.head_passed}/"
+            f"{presentation.comparable.evaluated_tasks}",
+            "",
+            "## Per-task delta",
+            "",
+        ]
+    )
+    for task in presentation.tasks:
+        lines.extend(
+            [
+                f"### {task.name} ({task.outcome_label})",
+                "",
+                "| metric | base | head | Δ |",
+                "|---|---|---|---|",
+            ]
+        )
+        for metric in task.metrics:
             lines.append(
-                f"| {spec.display_label} | {_fmt(spec.read(base)) if base else '—'} | "
-                f"{_fmt(spec.read(head)) if head else '—'} | "
-                f"{_delta(spec.read(base) if base else None, spec.read(head) if head else None)} |"
+                f"| {metric.label} | {metric.base} | {metric.head} | "
+                f"{metric.delta} |"
             )
         lines.append("")
 
-    # --- Summary ---------------------------------------------------------
-    summary = document.summary
-    lines.append("## Summary")
-    lines.append("")
-    lines.append(
-        f"- tasks in base: {summary.base_tasks}; in head: {summary.head_tasks}"
+    population = presentation.population
+    lines.extend(
+        [
+            "## Whole-job summary",
+            "",
+            f"- tasks in base: {population.base_tasks}; "
+            f"in head: {population.head_tasks}",
+            f"- tasks only in base: {population.base_only}; "
+            f"only in head: {population.head_only}",
+        ]
     )
-    lines.append(
-        f"- tasks only in base: {summary.base_only}; "
-        f"only in head: {summary.head_only}"
-    )
-    for line in summary.lines:
+    for metric in presentation.summary_metrics:
         lines.append(
-            f"- {line.spec.display_label}: {line.spec.summary_word} "
-            f"{_fmt(line.base)} → {_fmt(line.head)}"
+            f"- {metric.label}: {metric.summary_word} "
+            f"{metric.base} → {metric.head}"
         )
-    lines.append(
-        f"- passed trials: {summary.base_passed}/{summary.base_tasks} → "
-        f"{summary.head_passed}/{summary.head_tasks}"
+    lines.extend(
+        [
+            f"- passed trials: {population.base_passed}/{population.base_tasks} → "
+            f"{population.head_passed}/{population.head_tasks}",
+            "",
+        ]
     )
-    lines.append("")
-
     return "\n".join(lines)
 
 
-def _skill_dict(skill: SkillVersion) -> dict[str, Any]:
-    """One skill's version facts as a JSON-able dict."""
+def _metric_dict(
+    metric: MetricPresentation,
+    population: str,
+) -> dict[str, Any]:
     return {
-        "name": skill.name,
-        "kind": skill.kind,
-        "path": skill.path,
-        "repo": skill.repo,
-        "ref": skill.ref,
-        "rel_path": skill.rel_path,
-        "version": skill.version,
+        "key": metric.key,
+        "label": metric.label,
+        "population": population,
+        "base": metric.base_value,
+        "head": metric.head_value,
+        "delta": metric.delta,
+        "direction": metric.direction,
     }
 
 
-def render_json(document: ReportDocument) -> dict[str, Any]:
-    """Render a report document as a JSON document (a serializable dict).
-
-    Pure adapter over a :class:`~harbor_bench.diff.ReportDocument`: the
-    metric registry supplies the per-task keys and the summary lines, so the
-    document is derived from one declaration. The run configuration is always
-    present (with ``None`` fields when a side reports nothing), keeping the
-    document shape stable for consumers.
-    """
-    def _agent(meta: JobMeta | None) -> dict[str, Any] | None:
-        if meta is None:
-            return None
-        return {"model": meta.agent_model, "effort": meta.agent_effort}
-
-    def _judge(meta: JobMeta | None) -> dict[str, Any] | None:
-        if meta is None:
-            return None
-        return {"model": meta.judge_model, "effort": meta.judge_effort}
-
-    def _skills(meta: JobMeta | None) -> list[dict[str, Any]]:
-        if meta is None or not meta.skills:
-            return []
-        return [_skill_dict(skill) for skill in meta.skills]
-
-    def _trial_side(metrics: TrialMetrics | None) -> dict[str, Any] | None:
-        if metrics is None:
-            return None
-        return {
-            **{spec.key: spec.read(metrics) for spec in document.specs},
-            "passed": metrics.passed,
-        }
-
+def _side_dict(side: TaskSidePresentation | None) -> dict[str, Any] | None:
+    if side is None:
+        return None
     return {
-        "base_job": document.base_job,
-        "head_job": document.head_job,
+        **side.values,
+        "passed": side.passed,
+        "status": side.status,
+    }
+
+
+def render_json(document: ReportDocument) -> str:
+    """Render the shared presentation as formatted JSON text."""
+    presentation = build_presentation(document)
+    base_run, head_run = presentation.run_cards
+
+    def _run_dict(run: RunPresentation) -> dict[str, Any]:
+        return {"model": run.agent_model, "effort": run.agent_effort}
+
+    def _judge_dict(run: RunPresentation) -> dict[str, Any]:
+        return {"model": run.judge_model, "effort": run.judge_effort}
+
+    def _skills(run: RunPresentation) -> list[dict[str, Any]]:
+        return [
+            {
+                "name": skill.name,
+                "kind": skill.kind,
+                "path": skill.path,
+                "repo": skill.repo,
+                "ref": skill.ref,
+                "rel_path": skill.rel_path,
+                "version": skill.version,
+                "source_url": skill.source_url,
+            }
+            for skill in run.skills
+        ]
+
+    value = {
+        "base_job": presentation.base_job,
+        "head_job": presentation.head_job,
         "run_config": {
-            "agent": {"base": _agent(document.base_meta), "head": _agent(document.head_meta)},
-            "judge": {"base": _judge(document.base_meta), "head": _judge(document.head_meta)},
-            "skills": {"base": _skills(document.base_meta), "head": _skills(document.head_meta)},
+            "agent": {
+                "base": _run_dict(base_run) if base_run.meta_present else None,
+                "head": _run_dict(head_run) if head_run.meta_present else None,
+            },
+            "judge": {
+                "base": _judge_dict(base_run) if base_run.meta_present else None,
+                "head": _judge_dict(head_run) if head_run.meta_present else None,
+            },
+            "skills": {
+                "base": _skills(base_run),
+                "head": _skills(head_run),
+            },
             "skill_diffs": [
                 {
                     "run": diff.run,
-                    "skill": diff.skill.name,
-                    "version": diff.skill.version,
+                    "skill": diff.name,
+                    "version": diff.version,
                     "command": diff.command,
                 }
-                for diff in document.skill_diffs
+                for diff in presentation.skill_diffs
             ],
+        },
+        "comparison": {
+            "verdict": presentation.verdict,
+            "comparable_tasks": presentation.comparable.tasks,
+            "completed_task_pairs": presentation.comparable.evaluated_tasks,
+            "base_passed": presentation.comparable.base_passed,
+            "head_passed": presentation.comparable.head_passed,
+            "base_success_rate": presentation.comparable.base_rate_value,
+            "head_success_rate": presentation.comparable.head_rate_value,
+            "primary_metric": _metric_dict(
+                presentation.score,
+                "comparable_tasks",
+            ),
+            "metrics": [
+                _metric_dict(metric, "comparable_tasks")
+                for metric in presentation.comparison_metrics
+            ],
+            "outcomes": {
+                outcome.key: outcome.count
+                for outcome in presentation.outcomes
+            },
         },
         "tasks": [
             {
-                "task": row.task,
-                "base": _trial_side(row.base),
-                "head": _trial_side(row.head),
+                "task": task.name,
+                "outcome": task.outcome,
+                "base": _side_dict(task.base_side),
+                "head": _side_dict(task.head_side),
             }
-            for row in document.rows
+            for task in presentation.tasks
         ],
         "summary": {
-            "base_tasks": document.summary.base_tasks,
-            "head_tasks": document.summary.head_tasks,
-            "base_only": document.summary.base_only,
-            "head_only": document.summary.head_only,
-            "base_passed": document.summary.base_passed,
-            "head_passed": document.summary.head_passed,
+            "base_tasks": presentation.population.base_tasks,
+            "head_tasks": presentation.population.head_tasks,
+            "base_only": presentation.population.base_only,
+            "head_only": presentation.population.head_only,
+            "base_passed": presentation.population.base_passed,
+            "head_passed": presentation.population.head_passed,
             "metrics": [
-                {
-                    "key": line.spec.key,
-                    "label": line.spec.display_label,
-                    "base": line.base,
-                    "head": line.head,
-                }
-                for line in document.summary.lines
+                _metric_dict(metric, "whole_job")
+                for metric in presentation.summary_metrics
             ],
         },
     }
+    return json.dumps(value, indent=2) + "\n"
+
+
+def render_html(document: ReportDocument) -> str:
+    """Render HTML without loading Jinja for other formats."""
+    from harbor_bench.html_report import render_html as render_html_adapter
+
+    return render_html_adapter(document)
+
+
+def render_report(
+    document: ReportDocument,
+    output_format: ReportFormat,
+) -> str:
+    """Render a report as text, hiding adapter-specific serialization."""
+    if output_format == "markdown":
+        return render_markdown(document)
+    if output_format == "html":
+        return render_html(document)
+    if output_format == "json":
+        return render_json(document)
+    raise ValueError(f"unsupported report format: {output_format}")

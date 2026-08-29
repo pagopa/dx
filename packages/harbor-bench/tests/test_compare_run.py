@@ -62,6 +62,7 @@ def options(tmp_path: Path, **overrides) -> CompareOptions:
         task_globs=(),
         token=None,
         harbor="harbor",
+        report_format="markdown",
     )
     base.update(overrides)
     return CompareOptions(**base)
@@ -261,6 +262,56 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     captured = capsys.readouterr().out
     assert ">> found 1 evals.json" in captured
     assert ">> task filter: base-skill-* head-skill-*" in captured
+
+
+def test_run_compare_writes_selected_report_format(
+    tmp_path: Path,
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli",
+        lambda harbor: None,
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment",
+        lambda environment: None,
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text(
+            "datasets:\n  - path: tasks\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.plan_run",
+        lambda opts: FakePlan(),
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.apply_run",
+        fake_apply_run,
+    )
+
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run._run_job",
+        fake_run_job,
+    )
+
+    result = run_compare(options(tmp_path, report_format="html"))
+
+    assert result.report.name == "comparison.html"
+    assert result.report.read_text().startswith("<!doctype html>")
 
 
 def test_run_compare_sequential_uses_one_run_per_job(tmp_path: Path, monkeypatch):

@@ -73,6 +73,20 @@ check (`validate_metric_specs`, wired into `jobs.py` and the agent) makes that
 every usage attribute a `CopilotUsage` field, so a drift fails at import, not
 on a live trial. The rows, metric specs, aggregated summary, and
 run-configuration skill diffs are folded into one `ReportDocument` by
-`build_document`; the Markdown and JSON renderers are pure adapters over that
-document.
+`build_document`. The `comparison_presentation` module is the report's
+interpretation seam: it computes comparable-task-only verdicts and metrics,
+task outcomes, display values, and per-skill source associations once. The
+Markdown, HTML, and JSON adapters serialize that shared presentation through
+the `render_report` interface. Whole-job totals remain separate from
+comparable-task statistics, so added or removed tasks cannot skew the verdict.
+Harbor trial directories with a `trial.log` but no `result.json` are retained
+as `incomplete` results; their attempt suffix is removed before joining the two
+jobs, so interrupted runs remain visible instead of producing an empty report.
 _Avoid_: delta sheet
+
+**Package version**:
+The release version lives in `pyproject.toml` at `[project].version`. The Nx
+Python plugin owns version increments; `project.json` does not duplicate or
+override that behavior. At runtime, `harbor_bench.__version__` reads the
+installed Python distribution metadata.
+_Avoid_: duplicate version

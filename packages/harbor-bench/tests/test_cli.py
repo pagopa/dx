@@ -48,6 +48,11 @@ def test_parser_rejects_unknown_environment():
         build_parser().parse_args(["convert", "--environment", "podman"])
 
 
+def test_parser_accepts_html_diff_format():
+    args = build_parser().parse_args(["diff", "base", "head", "--format", "html"])
+    assert args.format == "html"
+
+
 def test_convert_success_returns_zero(tmp_path: Path):
     skill = tmp_path / "skill"
     evals_path = write_evals(skill)
@@ -161,6 +166,41 @@ def test_diff_json_report_writes_file(tmp_path, capsys):
     assert ">> comparison report" in capsys.readouterr().out
 
 
+def test_diff_html_report_writes_self_contained_file(tmp_path, capsys):
+    base = tmp_path / "job-a"
+    head = tmp_path / "job-b"
+    write_result(base, "task-a", 0.8)
+    write_result(head, "task-a", 0.95)
+
+    out = tmp_path / "out.html"
+    assert cmd_diff(diff_args(base, head, format="html", report=str(out))) == 0
+    html = out.read_text()
+    assert html.startswith("<!doctype html>")
+    assert "<style>" in html
+    assert "task-a" in html
+    assert ">> comparison report" in capsys.readouterr().out
+
+
+def test_diff_html_report_includes_incomplete_trials(tmp_path, capsys):
+    base = tmp_path / "job-a"
+    head = tmp_path / "job-b"
+    base_trial = base / "task-a__base123"
+    head_trial = head / "task-a__head456"
+    base_trial.mkdir(parents=True)
+    head_trial.mkdir(parents=True)
+    (base_trial / "trial.log").write_text("interrupted", encoding="utf-8")
+    (head_trial / "trial.log").write_text("interrupted", encoding="utf-8")
+
+    out = tmp_path / "out.html"
+    assert cmd_diff(diff_args(base, head, format="html", report=str(out))) == 0
+    html = out.read_text()
+
+    assert "task-a" in html
+    assert "Incomplete" in html
+    assert "No completed comparable results" in html
+    assert ">> comparison report" in capsys.readouterr().out
+
+
 def compare_args(base: str, head: str, **overrides) -> argparse.Namespace:
     base_args = dict(
         base=base,
@@ -175,6 +215,7 @@ def compare_args(base: str, head: str, **overrides) -> argparse.Namespace:
         n_concurrent=4,
         task_glob=None,
         token=None,
+        format="markdown",
     )
     base_args.update(overrides)
     return argparse.Namespace(**base_args)
@@ -253,6 +294,8 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
             "gpt-5.6-luna",
             "--n-concurrent",
             "8",
+            "--format",
+            "json",
             "--token",
             "tok-cli",
             "base",
@@ -267,5 +310,5 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
     assert opts.run_id == "stable-id"
     assert opts.task_globs == ("skill-a-*", "skill-b-*")
     assert opts.n_concurrent == 8
+    assert opts.report_format == "json"
     assert opts.token == "tok-cli"
-

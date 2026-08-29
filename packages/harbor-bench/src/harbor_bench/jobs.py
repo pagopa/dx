@@ -10,8 +10,9 @@ This module owns the trial-directory layout *and* the meaning of its files:
 :class:`Trial` encapsulates one trial subdirectory, loads every artifact once
 into a :class:`TrialFacts` value, and exposes typed accessors (``metrics()``,
 ``meta()``) that are pure derivations from it instead of the raw dict.
-:class:`Job` iterates the trials of one job directory. ``diff`` turns what
-this module reads into a delta report; nothing here knows about reporting.
+:class:`Job` iterates completed and interrupted trials of one job directory.
+``diff`` turns what this module reads into a delta report; nothing here knows
+about reporting.
 """
 
 from __future__ import annotations
@@ -20,7 +21,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any, Iterator, Literal
 
 from harbor_bench.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
 from harbor_bench.metrics import MetricSpec, derivable_specs, validate_metric_specs
@@ -33,6 +34,7 @@ from harbor_bench.task_shape import (
 )
 
 JSON = dict[str, Any]
+TrialStatus = Literal["completed", "error", "incomplete"]
 
 
 def _normalize_usage(usage: dict[str, Any]) -> tuple[int, int]:
@@ -68,6 +70,12 @@ def _seconds(start: str | None, end: str | None) -> float | None:
     if started is None or finished is None:
         return None
     return max(0.0, (finished - started).total_seconds())
+
+
+def _task_name_from_trial_dir(path: Path) -> str:
+    """Remove Harbor's ``__<attempt-id>`` suffix from a trial directory."""
+    task_name, separator, attempt_id = path.name.rpartition("__")
+    return task_name if separator and task_name and attempt_id else path.name
 
 
 #: Root of Harbor's git-skill cache: ``~/.cache/harbor/skills/<host>/<org>/<repo>/<sha>/<rel_path>``.
@@ -134,8 +142,9 @@ class JobMeta:
 class TrialMetrics:
     """Metrics extracted from one trial ``result.json``.
 
-    ``rewards`` carries the verifier rewards keyed by criterion; the other
-    fields mirror the reportable metrics. Values are read by the metric
+    ``rewards`` carries the verifier rewards keyed by criterion; ``status``
+    distinguishes completed, errored, and interrupted trials; the other fields
+    mirror the reportable metrics. Values are read by the metric
     registry (:data:`harbor_bench.metrics.METRIC_SPECS`) through its
     :class:`~harbor_bench.metrics.MetricSpec` (a reward key or a field), never
     through a ``score.``-prefixed string accessor here.
@@ -156,6 +165,7 @@ class TrialMetrics:
     verifier_duration_sec: float | None = None
     passed: bool = True
     trial_name: str | None = None
+    status: TrialStatus = "completed"
 
 
 @dataclass
@@ -228,9 +238,10 @@ class Trial:
     :meth:`_read_facts` loads every artifact once into a :class:`TrialFacts`
     value; :meth:`metrics` and :meth:`meta` (plus :attr:`task_name`, the key
     the report joins on) are pure derivations from it. ``result.json`` is
-    parsed lazily; a corrupt/unreadable file makes :meth:`metrics` raise on
-    first access while :meth:`meta` tolerates it and yields an empty
-    :class:`JobMeta`.
+    parsed lazily. A missing file represents an interrupted trial and produces
+    incomplete metrics; a corrupt or otherwise unreadable file makes
+    :meth:`metrics` raise on first access while :meth:`meta` tolerates it and
+    yields an empty :class:`JobMeta`.
     """
 
     def __init__(self, path: Path) -> None:
@@ -269,19 +280,36 @@ class Trial:
     @property
     def task_name(self) -> str:
         """The task this trial belongs to (``result.json`` ``task_name``)."""
-        return (self._read_facts().data or {}).get("task_name") or self.path.name
+        return (self._read_facts().data or {}).get(
+            "task_name"
+        ) or _task_name_from_trial_dir(self.path)
 
     def metrics(self) -> TrialMetrics:
         """The typed metrics for this trial, derived from the trial facts.
 
         Reads the reward, token, cost, duration, and pass/fail numbers out of
         ``result.json`` and backfills the values the file cannot report (steps,
-        GPT token/cost) from the trial's raw artifacts. Raises on a
-        corrupt/unreadable ``result.json`` — the report treats a broken trial
-        as a hard failure.
+        GPT token/cost) from the trial's raw artifacts. A missing
+        ``result.json`` produces an incomplete result with any available
+        artifact metrics. Corrupt or otherwise unreadable files raise — the
+        report treats those as hard failures.
         """
         facts = self._read_facts()
         if facts.data is None:
+            if isinstance(self._data_exc, FileNotFoundError):
+                return TrialMetrics(
+                    task_name=self.task_name,
+                    trial_name=self.path.name,
+                    rewards={},
+                    **{
+                        spec.key: self._usage_value(facts, spec.usage_attr)
+                        for spec in derivable_specs()
+                    },
+                    n_steps=facts.trajectory_steps,
+                    verifier_tokens=self._verifier_tokens(facts),
+                    passed=False,
+                    status="incomplete",
+                )
             if self._data_exc is not None:
                 raise self._data_exc
             raise RuntimeError(f"unreadable result.json: {self.path}")
@@ -320,6 +348,7 @@ class Trial:
                 (data.get("verifier") or {}).get("finished_at"),
             ),
             passed=data.get("exception_info") is None,
+            status="error" if data.get("exception_info") is not None else "completed",
         )
 
     def meta(self) -> JobMeta:
@@ -482,19 +511,20 @@ class Job:
         """Load the ordered trial list once; cached for later derivations.
 
         Each :class:`Trial` parses its own ``result.json`` lazily (cached on
-        the trial), so :meth:`metrics` and :meth:`meta` sharing this list is
-        what makes the whole job a single read.
+        the trial), or records that Harbor stopped after creating
+        ``trial.log``. Sharing this list between :meth:`metrics` and
+        :meth:`meta` makes the whole job a single read.
         """
         if self._trials is None:
             self._trials = tuple(self.iter_trials())
         return self._trials
 
     def iter_trials(self) -> Iterator[Trial]:
-        """Yield each trial subdirectory (sorted, deterministic)."""
+        """Yield completed and interrupted trial directories deterministically."""
         if not self.path.is_dir():
             return
         for entry in sorted(p for p in self.path.iterdir() if p.is_dir()):
-            if (entry / RESULT_JSON).is_file():
+            if (entry / RESULT_JSON).is_file() or (entry / "trial.log").is_file():
                 yield Trial(entry)
 
     def metrics(self) -> dict[str, TrialMetrics]:

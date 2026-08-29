@@ -16,8 +16,8 @@ from harbor_bench.diff import (
     metric_specs,
     summarize,
 )
-from harbor_bench.jobs import Job
-from harbor_bench.report import render_json, render_markdown
+from harbor_bench.jobs import Job, JobMeta, SkillVersion
+from harbor_bench.report import render_html, render_json, render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
 
@@ -327,7 +327,7 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     assert document.skill_diffs[0].command.startswith("git -C ")
     # The renderers derive nothing: they only format the document.
     md = render_markdown(document)
-    jdoc = render_json(document)
+    jdoc = json.loads(render_json(document))
     assert "score.quality" in md
     assert jdoc["tasks"][0]["head"]["score.quality"] == 0.95
     assert jdoc["summary"]["head_tasks"] == 1
@@ -508,6 +508,105 @@ def test_render_markdown_includes_deltas(tmp_path):
     assert "+0.150" in md or "+0.15" in md  # quality delta
     assert "+100" in md  # input token delta
     assert "passed trials" in md
+
+
+def test_render_html_is_visual_and_self_contained(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-improved", rewards={"quality": 0.8}, cost=1.0)
+    _write_trial(base, "task-regressed", rewards={"quality": 0.9})
+    _write_trial(base, "task-unchanged", rewards={"quality": 0.7})
+    _write_trial(base, "task-<unsafe>", rewards={"quality": 0.6})
+    _write_trial(head, "task-improved", rewards={"quality": 0.95}, cost=0.5)
+    _write_trial(head, "task-regressed", rewards={"quality": 0.6})
+    _write_trial(head, "task-unchanged", rewards={"quality": 0.7})
+    _write_trial(head, "task-new", rewards={"quality": 0.8})
+
+    html = render_html(
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(Job(base).metrics(), Job(head).metrics()),
+        )
+    )
+
+    assert html.startswith("<!doctype html>")
+    assert "<style>" in html
+    assert "<script>" not in html
+    assert "Which skill performed better?" in html
+    assert "Key score signals" in html
+    assert "Execution signals" in html
+    assert "signals-grid" in html
+    assert "Filter tasks" not in html
+    assert "Improved" in html
+    assert "Regressed" in html
+    assert "Only in" in html
+    assert '<h3>cost (USD)</h3>' in html
+    assert '<span class="delta positive">-0.500</span>' in html
+    assert "task-<unsafe>" not in html
+    assert "task-improved" in html
+    assert ".task-table tbody tr:nth-child(even)" in html
+
+
+def test_render_html_links_each_git_skill_without_local_file_urls(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    head = _make_job(tmp_path, "run-head")
+    _write_trial(base, "task-a", rewards={"quality": 0.8})
+    _write_trial(head, "task-a", rewards={"quality": 0.9})
+
+    local_skill = tmp_path / "skills" / "base" / "dr-blacksmith"
+    local_skill.mkdir(parents=True)
+    base_meta = JobMeta(
+        skills=[
+            SkillVersion(
+                name="dr-blacksmith",
+                kind="local",
+                path=str(local_skill),
+            ),
+            SkillVersion(
+                name="unrelated",
+                kind="git",
+                path="/cached/unrelated",
+                repo="pagopa/dx",
+                ref="base-ref",
+                rel_path="plugins/example/skills/unrelated",
+            ),
+        ]
+    )
+    head_meta = JobMeta(
+        skills=[
+            SkillVersion(
+                name="dr-blacksmith",
+                kind="git",
+                path="/cached/dr-blacksmith",
+                repo="pagopa/dx",
+                ref="foobar",
+                rel_path="plugins/aiepdf/skills/dr-blacksmith",
+            )
+        ]
+    )
+
+    html = render_html(
+        build_document(
+            "run-base",
+            "run-head",
+            build_report(Job(base).metrics(), Job(head).metrics()),
+            base_meta=base_meta,
+            head_meta=head_meta,
+        )
+    )
+
+    assert "file://" not in html
+    assert (
+        'href="https://github.com/pagopa/dx/tree/foobar/'
+        "plugins/aiepdf/skills/dr-blacksmith"
+        '"' in html
+    )
+    assert (
+        'href="https://github.com/pagopa/dx/tree/base-ref/'
+        "plugins/example/skills/unrelated"
+        '"' in html
+    )
 
 
 def _write_artifacts(
@@ -759,13 +858,13 @@ def test_render_json_shares_report_numbers(tmp_path):
     _write_trial(head, "task-a", rewards={"quality": 0.95}, tokens=(1100, 50, 120))
 
     report = build_report(Job(base).metrics(), Job(head).metrics())
-    doc = render_json(
+    doc = json.loads(render_json(
         build_document(
             "run-base",
             "run-head",
             report,
         )
-    )
+    ))
 
     assert doc["base_job"] == "run-base"
     assert doc["head_job"] == "run-head"
@@ -784,7 +883,6 @@ def test_render_json_shares_report_numbers(tmp_path):
     assert by_key["score.quality"]["head"] == 0.95
     assert by_key["input_tokens"]["base"] == 1000
     assert by_key["cost_usd"]["base"] is None
-    # The document survives a json.dumps round-trip with the numbers intact.
     assert json.loads(json.dumps(doc)) == doc
 
 
@@ -794,13 +892,13 @@ def test_render_json_one_sided_tasks_are_null(tmp_path):
     _write_trial(base, "task-base-only", rewards={"quality": 0.8})
     _write_trial(head, "task-head-only", rewards={"quality": 0.5})
 
-    doc = render_json(
+    doc = json.loads(render_json(
         build_document(
             "run-base",
             "run-head",
             build_report(Job(base).metrics(), Job(head).metrics()),
         )
-    )
+    ))
     rows = {t["task"]: t for t in doc["tasks"]}
     assert rows["task-base-only"]["head"] is None
     assert rows["task-head-only"]["base"] is None
@@ -811,17 +909,42 @@ def test_render_json_one_sided_tasks_are_null(tmp_path):
 def test_render_json_run_config_present_but_null_without_meta(tmp_path):
     base = _make_job(tmp_path, "run-base")
     _write_trial(base, "task-a")
-    doc = render_json(
+    doc = json.loads(render_json(
         build_document(
             "run-base",
             "run-base",
             build_report(Job(base).metrics(), Job(base).metrics()),
         )
-    )
+    ))
     assert doc["run_config"]["agent"]["base"] is None
     assert doc["run_config"]["judge"]["head"] is None
     assert doc["run_config"]["skills"]["base"] == []
     assert doc["run_config"]["skill_diffs"] == []
+
+
+def test_render_json_run_config_keeps_stable_fields_with_empty_meta(tmp_path):
+    base = _make_job(tmp_path, "run-base")
+    _write_trial(base, "task-a")
+    doc = json.loads(
+        render_json(
+            build_document(
+                "run-base",
+                "run-base",
+                build_report(Job(base).metrics(), Job(base).metrics()),
+                base_meta=JobMeta(),
+                head_meta=JobMeta(agent_effort="high"),
+            )
+        )
+    )
+
+    assert doc["run_config"]["agent"]["base"] == {
+        "model": None,
+        "effort": None,
+    }
+    assert doc["run_config"]["agent"]["head"] == {
+        "model": None,
+        "effort": "high",
+    }
 
 
 def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
@@ -846,7 +969,7 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
     _write_trial(base, "task-a")
     _write_trial(head, "task-a")
 
-    doc = render_json(
+    doc = json.loads(render_json(
         build_document(
             "run-base",
             "run-head",
@@ -854,7 +977,7 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
             base_meta=meta,
             head_meta=meta,
         )
-    )
+    ))
     rc = doc["run_config"]
     assert rc["agent"]["base"]["model"] == "gpt-5.6-luna"
     assert rc["agent"]["base"]["effort"] == "high"

@@ -12,8 +12,8 @@ The workflow lives behind one entry point:
     reusing the convert seam (``plan_run``/``apply_run``), narrows the eval set
     to the skill under test, runs ``harbor run`` twice in sequence (base then
     head, output streamed to the terminal), and diffs the two jobs by reusing
-    the diff seam (``build_report``/``build_document`` + the Markdown
-    renderer).
+    the diff seam (``build_report``/``build_document`` + the selected report
+    adapter).
 
 The CLI is a thin adapter over this seam: it parses args and env overrides into
 :class:`CompareOptions`, prints from the returned result, and maps exceptions
@@ -47,7 +47,7 @@ from harbor_bench.convert.run import (
 )
 from harbor_bench.diff import build_document, build_report
 from harbor_bench.jobs import Job
-from harbor_bench.report import render_markdown
+from harbor_bench.report import ReportFormat, render_report
 
 from .sources import SkillSource, derive_globs, parse_skill
 
@@ -56,6 +56,11 @@ DEFAULT_RUNS_DIR = Path("runs")
 
 #: The two job labels within a run directory (base first, head second).
 JOB_LABELS = ("base", "head")
+REPORT_EXTENSIONS = {
+    "markdown": "md",
+    "html": "html",
+    "json": "json",
+}
 
 
 class CompareError(ValueError):
@@ -83,7 +88,8 @@ class CompareOptions:
     Defaults mirror the ``harbor-bench compare`` CLI defaults. ``task_globs``
     carries the ``--task-glob`` value (used only when ``task_patterns`` is
     empty) and ``token`` the ``--token`` value (passed to the agent as
-    ``--ae COPILOT_GITHUB_TOKEN=...``).
+    ``--ae COPILOT_GITHUB_TOKEN=...``). ``report_format`` selects the adapter
+    and resulting ``comparison.<ext>`` file.
     """
 
     base_skill: str
@@ -99,6 +105,7 @@ class CompareOptions:
     task_globs: tuple[str, ...] = ()
     token: str | None = None
     harbor: str = "harbor"
+    report_format: ReportFormat = "markdown"
 
 
 @dataclass(frozen=True)
@@ -196,7 +203,12 @@ def _run_job(
         raise HarborRunError(label, result.returncode)
 
 
-def _write_report(base_job: Path, head_job: Path, report_path: Path) -> None:
+def _write_report(
+    base_job: Path,
+    head_job: Path,
+    report_path: Path,
+    report_format: ReportFormat,
+) -> None:
     """Delta report between two job directories (reuses the diff seam)."""
     base = Job(base_job)
     head = Job(head_job)
@@ -204,7 +216,10 @@ def _write_report(base_job: Path, head_job: Path, report_path: Path) -> None:
     document = build_document(
         str(base_job), str(head_job), report, base.meta(), head.meta()
     )
-    report_path.write_text(render_markdown(document), encoding="utf-8")
+    report_path.write_text(
+        render_report(document, report_format),
+        encoding="utf-8",
+    )
 
 
 def run_compare(options: CompareOptions) -> CompareResult:
@@ -226,6 +241,8 @@ def run_compare(options: CompareOptions) -> CompareResult:
         )
     if error := check_host_environment(opts.environment):
         raise CompareError(error)
+    if opts.report_format not in REPORT_EXTENSIONS:
+        raise ValueError(f"unsupported report format: {opts.report_format}")
 
     base = parse_skill(opts.base_skill, Path.cwd())
     head = parse_skill(opts.head_skill, Path.cwd())
@@ -274,8 +291,13 @@ def run_compare(options: CompareOptions) -> CompareResult:
         _run_job(opts.harbor, run_config, run_dir, label, skill, opts.token)
 
     # 4. delta report (reuses the diff seam)
-    report_path = run_dir / "comparison.md"
-    _write_report(base_job, head_job, report_path)
+    report_path = run_dir / f"comparison.{REPORT_EXTENSIONS[opts.report_format]}"
+    _write_report(
+        base_job,
+        head_job,
+        report_path,
+        opts.report_format,
+    )
     _log(f"comparison report: {report_path}")
 
     return CompareResult(

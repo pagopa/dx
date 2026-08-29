@@ -75,3 +75,26 @@ def test_reward_source_specs_skip_the_key_check(monkeypatch):
     )
     # Would raise if the dynamic score key were validated against either set.
     validate_metric_specs(trial_metric_fields=set(), copilot_usage_fields=set())
+
+
+def test_metric_registry_declares_comparison_semantics():
+    by_key = {spec.key: spec for spec in METRIC_SPECS}
+
+    assert by_key["cost_usd"].preference == "lower"
+    assert by_key["cost_usd"].headline_group == "Execution signals"
+    assert by_key["cache_tokens"].preference == "neutral"
+    assert by_key["verifier_tokens"].preference == "neutral"
+
+
+def test_unknown_metric_preference_raises(monkeypatch):
+    import harbor_bench.metrics as metrics_mod
+
+    monkeypatch.setattr(
+        metrics_mod,
+        "METRIC_SPECS",
+        (MetricSpec("input_tokens", preference="sideways"),),
+    )
+    with pytest.raises(TypeError, match="unsupported preference"):
+        validate_metric_specs(
+            trial_metric_fields=set(TrialMetrics.__dataclass_fields__),
+        )

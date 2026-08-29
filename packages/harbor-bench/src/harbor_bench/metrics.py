@@ -39,8 +39,10 @@ class MetricSpec:
     sum is reported as an int. ``source`` names where the value is read from a
     :class:`~harbor_bench.jobs.TrialMetrics`: ``"reward"`` for a verifier reward
     (keyed by ``key``, its ``score.<k>`` document name) or ``"field"`` for a
-    direct attribute. ``passed`` is a trial-level flag and is reported
-    separately, not as a metric.
+    direct attribute. ``preference`` tells the comparison presentation whether
+    higher, lower, or neither direction is favorable. ``headline_group`` opts a
+    metric into the compact HTML signal cards. ``passed`` is a trial-level flag
+    and is reported separately, not as a metric.
     """
 
     key: str
@@ -50,6 +52,8 @@ class MetricSpec:
     source: str = "field"  # "field" | "reward"
     result_key: str | None = None
     usage_attr: str | None = None
+    preference: str = "higher"  # "higher" | "lower" | "neutral"
+    headline_group: str | None = None
 
     def read(self, metrics: TrialMetrics) -> Any:
         """The value of this metric for one trial, or ``None`` when absent."""
@@ -98,6 +102,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         integer=True,
         result_key="n_input_tokens",
         usage_attr="input_tokens",
+        preference="lower",
     ),
     MetricSpec(
         "cache_tokens",
@@ -106,6 +111,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         integer=True,
         result_key="n_cache_tokens",
         usage_attr="cache_read_tokens",
+        preference="neutral",
     ),
     MetricSpec(
         "output_tokens",
@@ -114,6 +120,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         integer=True,
         result_key="n_output_tokens",
         usage_attr="output_tokens",
+        preference="lower",
     ),
     MetricSpec(
         "reasoning_tokens",
@@ -122,6 +129,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         integer=True,
         result_key="n_reasoning_tokens",
         usage_attr="reasoning_tokens",
+        preference="lower",
     ),
     MetricSpec(
         "n_requests",
@@ -130,19 +138,51 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         integer=True,
         result_key="n_requests",
         usage_attr="n_requests",
+        preference="lower",
     ),
-    MetricSpec("n_steps", "total", "steps", integer=True),
+    MetricSpec(
+        "n_steps",
+        "total",
+        "steps",
+        integer=True,
+        preference="lower",
+        headline_group="Execution signals",
+    ),
     MetricSpec(
         "cost_usd",
         "total",
         "cost (USD)",
         result_key="cost_usd",
         usage_attr="cost_usd",
+        preference="lower",
+        headline_group="Execution signals",
     ),
-    MetricSpec("verifier_tokens", "total", "verifier tokens", integer=True),
-    MetricSpec("agent_duration_sec", "mean", "agent duration (s)"),
-    MetricSpec("total_duration_sec", "mean", "total duration (s)"),
-    MetricSpec("verifier_duration_sec", "mean", "verifier duration (s)"),
+    MetricSpec(
+        "verifier_tokens",
+        "total",
+        "verifier tokens",
+        integer=True,
+        preference="neutral",
+    ),
+    MetricSpec(
+        "agent_duration_sec",
+        "mean",
+        "agent duration (s)",
+        preference="lower",
+    ),
+    MetricSpec(
+        "total_duration_sec",
+        "mean",
+        "total duration (s)",
+        preference="lower",
+        headline_group="Execution signals",
+    ),
+    MetricSpec(
+        "verifier_duration_sec",
+        "mean",
+        "verifier duration (s)",
+        preference="neutral",
+    ),
 )
 
 
@@ -174,6 +214,11 @@ def validate_metric_specs(
     either dataclass.
     """
     for spec in METRIC_SPECS:
+        if spec.preference not in {"higher", "lower", "neutral"}:
+            raise TypeError(
+                f"metric spec {spec.key!r} has unsupported preference "
+                f"{spec.preference!r}"
+            )
         if spec.source == "reward":
             continue
         if trial_metric_fields is not None and spec.key not in trial_metric_fields:

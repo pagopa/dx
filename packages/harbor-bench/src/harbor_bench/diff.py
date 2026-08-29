@@ -33,10 +33,10 @@ by agent-mode judges; LLM judges in harbor-rewardkit 0.2.0 do not record it).
 This module is the data side of the comparison: reading, joining, and
 aggregating. :func:`build_document` turns a joined :class:`Report` and the
 job-level metadata into one complete :class:`ReportDocument` (rows, metric
-specs, summary, run-configuration skill diffs), so the compute happens exactly
-once. The Markdown and JSON rendering of that document lives in
-:mod:`harbor_bench.report`, which consumes the typed values here and owns the
-number/delta formatting and the run-configuration cells.
+specs, summary, run-configuration skill diffs). The renderer-neutral
+presentation in :mod:`harbor_bench.comparison_presentation` interprets that
+document once for the Markdown, HTML, and JSON adapters in
+:mod:`harbor_bench.report`.
 
 Use it to diff the same eval set run against two versions of a skill (e.g.
 the current workspace vs. a git ref loaded with ``harbor run --skill``).
@@ -122,10 +122,9 @@ def _skill_diff_command(skill: SkillVersion) -> str | None:
 class ReportDocument:
     """A complete two-job comparison: rows, metric specs, summary, run config.
 
-    Built once by :func:`build_document`; every renderer (Markdown, JSON, …) is
-    a pure adapter over this value, so the metric specs, the aggregated summary,
-    and the run-configuration git-diff selection are decided exactly once
-    instead of once per renderer.
+    Built once by :func:`build_document`; the presentation module adds
+    comparable-task semantics once before the Markdown, HTML, and JSON
+    adapters serialize it.
     """
 
     base_job: str
