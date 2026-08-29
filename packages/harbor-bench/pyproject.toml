@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=68"]
+# Prevent unreviewed build-backend upgrades from entering the trusted build path.
+requires = ["setuptools==80.9.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -16,6 +17,16 @@ dependencies = [
   "PyYAML>=6.0",
 ]
 classifiers = ["Private :: Do Not Upload"]
+
+[tool.uv]
+# Quarantine newly uploaded distributions to leave time for ecosystem review.
+exclude-newer = "7 days"
+# Stop at the first index containing a package to prevent dependency confusion.
+index-strategy = "first-index"
+# Reject third-party source distributions instead of executing their build code.
+no-build = true
+# Make the trusted local project the sole source-build exception to no-build.
+no-binary-package = ["harbor-bench"]
 
 [project.scripts]
 harbor-bench = "harbor_bench.cli:main"
