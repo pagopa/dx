@@ -113,13 +113,18 @@ export const runDockerCommand = (
     url: imageUrl,
   };
 
+  // A local Docker image store cannot load a multi-platform image. Keep the
+  // first configured platform for local builds while preserving the complete
+  // platform list for registry pushes.
+  const buildPlatform =
+    mode === "build" ? platform.split(",")[0].trim() : platform;
   const dockerArgs = [
     "build",
     contextPath,
     "--file",
     dockerfilePath,
     "--platform",
-    platform,
+    buildPlatform,
   ];
 
   if (mode === "build") {

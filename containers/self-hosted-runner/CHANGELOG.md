@@ -1,3 +1,13 @@
+## 0.0.8 (2026-08-27)
+
+### 🩹 Fixes
+
+- Install libatomic in the runner image for pnpm compatibility. ([#2092](https://github.com/pagopa/dx/pull/2092))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.0.7 (2026-08-26)
 
 ### 🩹 Fixes

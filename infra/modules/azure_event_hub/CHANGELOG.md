@@ -1,3 +1,15 @@
+## 1.0.2 (2026-08-28)
+
+### 🩹 Fixes
+
+- Fix consumers hub name generation when app_name is non-empty ([#2096](https://github.com/pagopa/dx/pull/2096))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Krusty93
+- Mirco Civolani
+
 ## 1.0.1 (2026-08-26)
 
 ### 🩹 Fixes
