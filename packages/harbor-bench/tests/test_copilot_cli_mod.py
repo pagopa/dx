@@ -164,7 +164,7 @@ def test_populate_context_post_run_backfills_usage_from_session_db(tmp_path):
     assert context.n_input_tokens == 35_190
     assert context.n_cache_tokens == 31_087
     assert context.n_output_tokens == 359  # DB is authoritative
-    assert context.cost_usd == 0.207814
+    assert context.cost_usd == 0.00207814
     assert context.metadata["n_requests"] == 1
     assert context.metadata["n_reasoning_tokens"] == 290
     assert context.metadata["cache_read_tokens"] == 31_087

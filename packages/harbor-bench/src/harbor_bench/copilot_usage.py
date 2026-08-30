@@ -14,7 +14,7 @@ for GPT runs. The authoritative source for those numbers is the Copilot CLI's
 own session database (``copilot/session-store.db``): its
 ``assistant_usage_events`` table records one row per model request with input,
 cache-read, cache-write, output and reasoning token counts plus a
-``total_nano_aiu`` metering value that equals the request cost in nano-USD.
+``total_nano_aiu`` metering value that reports the request cost in nano-AIU.
 Harbor preserves that database next to the JSONL stream
 (``_save_session_state``), so both are available post-run.
 
@@ -31,16 +31,24 @@ from pathlib import Path
 
 from harbor_bench.task_shape import COPILOT_CLI_JSONL_REL, COPILOT_SESSION_DB_REL
 
+NANO_AIU_PER_AI_CREDIT = 1_000_000_000
+USD_PER_AI_CREDIT = 0.01
+
+
+def _nano_aiu_to_usd(value: int | float) -> float:
+    """Convert Copilot's nano-AIU metering value to USD."""
+    return value / NANO_AIU_PER_AI_CREDIT * USD_PER_AI_CREDIT
+
 
 @dataclass
 class CopilotUsage:
     """Aggregated token/cost usage for one Copilot CLI session.
 
     ``input_tokens`` includes cached tokens (matching the ``assistant_usage_events``
-    semantics and AgentContext's "input including cache"). ``cost_usd`` is derived
-    from ``total_nano_aiu``, Copilot's metering value equal to the request cost in
-    nano-USD. Fields that are unknown stay ``None`` so callers can distinguish
-    "absent" from a measured zero.
+    semantics and AgentContext's "input including cache"). ``cost_usd`` converts
+    ``total_nano_aiu`` from nano-AIU to USD using Copilot's AI credit price.
+    Fields that are unknown stay ``None`` so callers can distinguish "absent"
+    from a measured zero.
     """
 
     input_tokens: int | None = None
@@ -125,7 +133,7 @@ def extract_usage_from_session_db(db_path: Path) -> CopilotUsage | None:
         cache_write_tokens=int(cache_write) or None,
         output_tokens=int(output) or None,
         reasoning_tokens=int(reasoning) or None,
-        cost_usd=(nano_aiu / 1e9) if nano_aiu else None,
+        cost_usd=_nano_aiu_to_usd(nano_aiu) if nano_aiu else None,
         n_requests=int(n),
         source="session-store.db",
     )
@@ -173,7 +181,7 @@ def extract_usage_from_jsonl(jsonl_path: Path) -> CopilotUsage | None:
         return None
     return CopilotUsage(
         output_tokens=output_tokens or None,
-        cost_usd=(total_nano_aiu / 1e9) if total_nano_aiu else None,
+        cost_usd=_nano_aiu_to_usd(total_nano_aiu) if total_nano_aiu else None,
         n_requests=n_requests,
         source="copilot-cli.jsonl",
     )

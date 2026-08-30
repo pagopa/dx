@@ -587,9 +587,10 @@ Notes:
   backfills them from the trial's raw artifacts when present:
   `agent/copilot/session-store.db` (authoritative per-request usage: input,
   cache read/write, output, reasoning tokens, cost metered via
-  `total_nano_aiu`), falling back to `agent/copilot-cli.jsonl` (cost from the
-  `session.usage_checkpoint` event). Step count comes from
-  `agent/trajectory.json`. So the report also shows `reasoning tokens`, `model
+  `total_nano_aiu` and converted from nano-AIU to USD), falling back to
+  `agent/copilot-cli.jsonl` (cost from the `session.usage_checkpoint` event).
+  One billion nano-AIU equals one AI credit, and one AI credit is $0.01 USD.
+  Step count comes from `agent/trajectory.json`. So the report also shows `reasoning tokens`, `model
 requests` and `steps` — and works retroactively on runs that predate the
   backfill.
 - **Verifier tokens**: `harbor-rewardkit` 0.2.0 LLM judges do not persist token

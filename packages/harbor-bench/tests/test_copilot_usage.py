@@ -30,7 +30,7 @@ def test_extract_from_session_db_aggregates(tmp_path):
     assert usage.cache_write_tokens == 24_571
     assert usage.output_tokens == 400
     assert usage.reasoning_tokens == 310
-    assert usage.cost_usd == 0.724569  # (516755000 + 207814000) / 1e9
+    assert usage.cost_usd == 0.00724569  # nano-AIU / 1e9 AIU per credit * $0.01
     assert usage.n_requests == 2
     assert usage.source == "session-store.db"
     assert usage.has_data
@@ -69,7 +69,7 @@ def test_extract_from_jsonl_fallback(tmp_path):
     usage = extract_usage_from_jsonl(jsonl)
     assert usage is not None
     assert usage.output_tokens == 237
-    assert usage.cost_usd == 1.665217
+    assert usage.cost_usd == 0.01665217
     assert usage.n_requests == 1
     assert usage.input_tokens is None  # not present in the stream
     assert usage.source == "copilot-cli.jsonl"
@@ -102,7 +102,7 @@ def test_extract_usage_falls_back_to_jsonl(tmp_path):
     usage = extract_usage(tmp_path / "nope.db", jsonl)
     assert usage is not None
     assert usage.source == "copilot-cli.jsonl"
-    assert usage.cost_usd == 1.665217
+    assert usage.cost_usd == 0.01665217
 
 
 def test_extract_usage_none_without_artifacts(tmp_path):

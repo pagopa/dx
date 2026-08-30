@@ -647,7 +647,7 @@ def test_job_metrics_backfills_missing_tokens_from_session_db(tmp_path):
     assert m.input_tokens == 55_664
     assert m.cache_tokens == 31_087
     assert m.output_tokens == 4870  # already reported, left untouched
-    assert m.cost_usd == 0.724569
+    assert m.cost_usd == 0.00724569
     assert m.n_requests == 2
     assert m.reasoning_tokens == 310
 
@@ -658,7 +658,7 @@ def test_job_metrics_falls_back_to_jsonl_without_session_db(tmp_path):
     _write_artifacts(job / "task-a", jsonl_output_tokens=[41, 196], jsonl_nano_aiu=1_665_217_000)
     m = Job(job).metrics()["task-a"]
     assert m.output_tokens == 237
-    assert m.cost_usd == 1.665217
+    assert m.cost_usd == 0.01665217
     assert m.input_tokens is None  # not present in the JSONL stream
 
 
@@ -675,7 +675,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
     head = _make_job(tmp_path, "run-head")
     _write_trial(base, "task-a", tokens=(None, None, 237), cost=None)
     _write_artifacts(base / "task-a", jsonl_output_tokens=[41, 196], steps=7)
-    _write_trial(head, "task-a", tokens=(55664, 31087, 4870), cost=0.724569)
+    _write_trial(head, "task-a", tokens=(55664, 31087, 4870), cost=0.00724569)
     _write_artifacts(head / "task-a", steps=9)
 
     md = render_markdown(
@@ -688,7 +688,7 @@ def test_render_markdown_includes_usage_metrics(tmp_path):
     assert "reasoning tokens" in md
     assert "model requests" in md
     assert "steps" in md
-    assert "1.67" in md  # jsonl-derived cost in the base row ($1.665217 rounded)
+    assert "0.017" in md  # JSONL-derived cost in the base row ($0.01665217 rounded)
     assert "+2" in md  # steps delta (9 - 7)
 
 
