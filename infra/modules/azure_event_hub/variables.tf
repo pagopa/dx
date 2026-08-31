@@ -105,8 +105,9 @@ variable "metric_alerts" {
     description = string
     operator    = string # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]
     threshold   = number
-    frequency   = string # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H
-    window_size = string # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.
+    frequency     = string       # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H
+    window_size   = string       # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.
+    auto_mitigate = optional(bool, false) # preserves existing behaviour; opt-in to true to enable auto-resolution
   }))
   default = {}
 }
