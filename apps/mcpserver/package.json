@@ -25,14 +25,14 @@
     "dx": "./dist/cli.js"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1095.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1117.0",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/s3-request-presigner": "^3.1095.0",
+    "@aws-sdk/s3-request-presigner": "^3.1117.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "catalog:",
     "@pagopa/azure-tracing": "workspace:^",
-    "axios": "^1.18.1",
+    "axios": "^1.19.0",
     "zod": "catalog:"
   },
   "devDependencies": {

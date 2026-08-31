@@ -34,7 +34,7 @@
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
-    "@types/pg": "^8.20.0",
+    "@types/pg": "^8.20.4",
     "drizzle-kit": "^0.31.10",
     "eslint": "catalog:",
     "prettier": "catalog:",
