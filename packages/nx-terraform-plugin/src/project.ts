@@ -169,7 +169,15 @@ const getTestTargets = (
         cache: true,
         command: `go test -v -timeout 1h ./tests`,
         dependsOn: [opts.initTargetName],
-        inputs: ["default", "{projectRoot}/tests/*_test.go"],
+        inputs: [
+          "default",
+          "examples",
+          "{workspaceRoot}/go.work",
+          "{workspaceRoot}/go.work.sum",
+          "{projectRoot}/tests/**/*.go",
+          "{projectRoot}/tests/**/*.{mod,sum}",
+          "{projectRoot}/tests/apps/**/*",
+        ],
         options: { cwd },
       },
     ]);
