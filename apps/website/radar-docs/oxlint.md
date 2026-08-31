@@ -1,6 +1,6 @@
 ---
 title: "Oxlint"
-ring: assess
+ring: trial
 tags: [typescript, dx, tool]
 ---
 
@@ -32,4 +32,4 @@ remain the current adopt choice until this evaluation is complete.
 
 ## Reference of usage in our organization
 
-https://github.com/search?q=org%3Apagopa+oxlint&type=code
+https://github.com/search?q=org%3Apagopa+oxlint&type=pullrequests
