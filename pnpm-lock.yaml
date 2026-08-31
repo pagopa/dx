@@ -62,9 +62,6 @@ catalogs:
     execa:
       specifier: ^9.6.1
       version: 9.6.1
-    js-yaml:
-      specifier: ^4.3.0
-      version: 4.3.0
     neverthrow:
       specifier: ^8.2.0
       version: 8.2.0
@@ -257,7 +254,7 @@ importers:
         version: 22.0.1
       js-yaml:
         specifier: 'catalog:'
-        version: 4.3.0
+        version: 4.3.1
       zod:
         specifier: 'catalog:'
         version: 4.4.3
@@ -744,7 +741,7 @@ importers:
         version: 0.45.2(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.1)(@types/pg@8.20.0)(gel@2.2.0(supports-color@8.1.1))(mysql2@3.15.3)(pg@8.22.0)(postgres@3.4.7)
       js-yaml:
         specifier: 'catalog:'
-        version: 4.3.0
+        version: 4.3.1
       octokit:
         specifier: ^5.0.5
         version: 5.0.5
@@ -854,7 +851,7 @@ importers:
         version: 14.0.3
       js-yaml:
         specifier: 'catalog:'
-        version: 4.3.0
+        version: 4.3.1
       tmp:
         specifier: ^0.2.7
         version: 0.2.7
@@ -1310,7 +1307,7 @@ importers:
         version: 0.6.5
       js-yaml:
         specifier: 'catalog:'
-        version: 4.3.0
+        version: 4.3.1
       p-limit:
         specifier: ^7.3.1
         version: 7.3.1
@@ -10610,6 +10607,10 @@ packages:
     resolution: {integrity: sha512-1td788aAnnZ5qs7V2QIRl1owjtYpbKt749Y3xauqQgwIIGF/xXWz1wMTEBx5O3LK3lXLVuqXPdPxj2BoFHaW9Q==}
     hasBin: true
 
+  js-yaml@4.3.1:
+    resolution: {integrity: sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==}
+    hasBin: true
+
   jsesc@3.1.0:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
     engines: {node: '>=6'}
@@ -14430,7 +14431,7 @@ snapshots:
   '@apidevtools/json-schema-ref-parser@14.0.1':
     dependencies:
       '@types/json-schema': 7.0.15
-      js-yaml: 4.3.0
+      js-yaml: 4.3.1
 
   '@apidevtools/openapi-schemas@2.1.0': {}
 
@@ -26357,6 +26358,10 @@ snapshots:
       esprima: 4.0.1
 
   js-yaml@4.3.0:
+    dependencies:
+      argparse: 2.0.1
+
+  js-yaml@4.3.1:
     dependencies:
       argparse: 2.0.1
 
