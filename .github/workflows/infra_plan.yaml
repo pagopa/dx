@@ -244,6 +244,39 @@ jobs:
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
+      - name: Check Terraform version support
+        id: check-support
+        env:
+          TERRAFORM_VERSION: ${{ needs.get-terraform-version.outputs.terraform_version }}
+        run: |
+          IFS='.' read -r major minor patch <<< "$TERRAFORM_VERSION"
+          if (( major < 1 || (major == 1 && minor < 15) )); then
+            echo "unsupported=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "unsupported=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write Terraform version warning
+        if: ${{ steps.check-support.outputs.unsupported == 'true' }}
+        env:
+          TERRAFORM_VERSION: ${{ needs.get-terraform-version.outputs.terraform_version }}
+        run: |
+          cat > terraform-version-warning.md <<EOF
+          ## ⚠️ Terraform version support
+
+          Terraform \`${TERRAFORM_VERSION}\` is deprecated in DX. Official support ends on September 30, 2026.
+
+          Upgrade by updating the Terraform version in the root \`.terraform-version\` file to \`1.15.0\` or newer. See the [DX tooling lifecycle](https://dx.pagopa.it/docs/tooling-lifecycle).
+          EOF
+          cat terraform-version-warning.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Post Terraform version warning on PR
+        if: ${{ steps.check-support.outputs.unsupported == 'true' && github.event_name == 'pull_request' && matrix.dir == fromJSON(needs.detect-projects.outputs.matrix)[0] }}
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body-file: terraform-version-warning.md
+          search-pattern: "Terraform version support"
+
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
