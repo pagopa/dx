@@ -48,7 +48,7 @@ jobs:
         name: Checkout
 
       - name: Docker Build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         with:
           dockerfile_path: ${{ inputs.dockerfile_path }}
           dockerfile_context: ${{ inputs.dockerfile_context }}
@@ -130,7 +130,7 @@ jobs:
       - name: Post Linter Results on PR
         id: comment
         if: always() && github.event_name == 'pull_request'
-        uses: pagopa/dx/actions/pr-comment@main
+        uses: pagopa/dx/actions/pr-comment@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         with:
           comment-body-file: ./hadolint-comment.md
           search-pattern: "Dockerfile Linter"

@@ -67,10 +67,10 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
     name: Check terraform registry modules hashes
     needs: [get-terraform-version]
     secrets: inherit
@@ -125,7 +125,7 @@ jobs:
           done <<< "$ENV_VARS"
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
 
       - name: Terraform Setup
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
@@ -147,7 +147,7 @@ jobs:
             | grep -v "hidden-link:"
 
       - name: Upload Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-upload@main
+        uses: pagopa/dx/actions/terraform-plan-upload@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -176,7 +176,7 @@ jobs:
           persist-credentials: false
 
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-download@main
+        uses: pagopa/dx/actions/terraform-plan-download@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         env:
           ARTIFACT_ENC_KEY: ${{ secrets.ARTIFACT_ENC_KEY }}
         with:
@@ -185,7 +185,7 @@ jobs:
           artifact-name: ${{ needs.tf_plan.outputs.artifact_name }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
 
       - name: Terraform Setup
         uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1

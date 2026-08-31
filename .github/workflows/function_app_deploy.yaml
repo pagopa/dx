@@ -78,7 +78,7 @@ jobs:
         run: npx turbo prune --scope "$WORKSPACE"
 
       - name: Node Setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         with:
           working_dir: ./out
 
@@ -109,7 +109,7 @@ jobs:
         working-directory: ./out/apps/${{ env.WORKSPACE }}
 
       - name: Upload Artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
           file_path: ${{ steps.make-function-app-artifact.outputs.artifact-path }}
@@ -135,12 +135,12 @@ jobs:
 
     steps:
       - name: Download Artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
         with:
           bundle_name: ${{ env.BUNDLE_NAME }}
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@7ccf7cd484f00166278fe2b49fdbc2e925f8f1cb # main
 
       - name: Check if the custom warm-up is configured
         run: |
