@@ -12,7 +12,7 @@ resource "aws_lambda_function" "server" {
 
   timeout       = 29
   memory_size   = 256
-  architectures = ["arm64"]
+  architectures = ["x86_64"]
   role          = aws_iam_role.server.arn
 
   environment {
