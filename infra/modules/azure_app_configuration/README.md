@@ -33,7 +33,7 @@ For examples of how to use this module, refer to the [examples](https://github.c
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_pagopa-dx"></a> [pagopa-dx](#requirement\_pagopa-dx) | ~> 0.12 |
 
