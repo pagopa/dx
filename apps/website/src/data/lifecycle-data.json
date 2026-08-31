@@ -44,10 +44,16 @@
       "vendorLifecycleUrl": "https://endoflife.date/terraform",
       "versions": [
         {
+          "version": "1.16.x",
+          "status": "active",
+          "supportedSince": "2026-09-01",
+          "notes": "Current stable, used in DX modules"
+        },
+        {
           "version": "1.15.x",
           "status": "active",
           "supportedSince": "2025-04-01",
-          "notes": "Current stable, used in DX modules and pipelines"
+          "notes": "Supported — minimum required by most DX modules"
         },
         {
           "version": "1.14.x",
