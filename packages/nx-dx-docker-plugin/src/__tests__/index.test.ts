@@ -132,4 +132,44 @@ describe("createDockerReleaseNodes", () => {
       },
     );
   });
+
+  it("infers the Docker release publisher without duplicating build options", () => {
+    vi.mocked(readJsonFile).mockReturnValue({
+      release: {
+        docker: {
+          repositoryName: "pagopa/my-app",
+        },
+      },
+    });
+
+    const nodes = createDockerReleaseNodes(
+      "apps/my-app",
+      {
+        buildTargetName: "docker:build",
+        defaultBranch: "main",
+        imageAuthors: "PagoPA",
+        imageNamePrefix: "pagopa/dx",
+        imageUrl: "https://github.com/pagopa/dx",
+        platform: "linux/amd64",
+        pushTargetName: "docker:push",
+        registry: "ghcr.io",
+      },
+      {
+        workspaceRoot: "/workspace",
+      },
+    );
+
+    expect(
+      nodes.projects["apps/my-app"].targets?.["nx-release-publish"],
+    ).toMatchObject({
+      continuous: false,
+      executor: "@pagopa/nx-dx-docker-plugin:release-publish",
+      metadata: {
+        technologies: ["container-image"],
+      },
+    });
+    expect(
+      nodes.projects["apps/my-app"].targets?.["nx-release-publish"]?.options,
+    ).toBeUndefined();
+  });
 });

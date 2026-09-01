@@ -133,24 +133,26 @@ The plugin preserves unrelated build arguments already defined on the inferred t
 
 ## Workspace Release Composition
 
-For package projects, set `nx.release.docker.repositoryName` in `package.json`.
-Nx also infers the JavaScript `nx-release-publish` target for these projects, so
-add a minimal `project.json` override to select the Docker publisher:
+For an application released only as a Docker image, configure its Docker release
+repository and mark its `package.json` as private. This prevents Nx from
+inferring the JavaScript publisher:
 
 ```json
 {
-  "targets": {
-    "nx-release-publish": {
-      "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+  "private": true,
+  "release": {
+    "docker": {
+      "repositoryName": "acme/dockerapp"
     }
   }
 }
 ```
 
 The Docker publisher reuses the resolved `docker:build` options. Do not repeat
-the image name, build context, Dockerfile, platform, or OCI metadata in the
-release target. Docker-only projects declare the repository and version in
-`project.json` metadata, as shown below.
+the image name, build context, Dockerfile, platform, or OCI metadata. Projects
+that publish both an npm package and a Docker image should publish the image from
+a release-tag workflow. Docker-only projects declare the repository and version
+in `project.json` metadata, as shown below.
 
 ## Build Context Resolution
 
@@ -202,9 +204,9 @@ The package provides one executor:
 
 - `@pagopa/nx-dx-docker-plugin:release-publish`
 
-For Docker-only projects, this executor is reached through the inferred
-`nx-release-publish` target. Package projects must override Nx's inferred
-JavaScript publisher as shown in [Workspace Release Composition](#workspace-release-composition).
+The executor is reached through the inferred `nx-release-publish` target. For a
+project with a `package.json`, set `"private": true` when Docker is its only
+release artifact, as shown in [Workspace Release Composition](#workspace-release-composition).
 
 Its behavior is:
 
@@ -233,6 +235,7 @@ Package projects can configure Docker release publishing in `package.json`:
 ```json
 {
   "name": "dockerapp",
+  "private": true,
   "description": "Example Docker application",
   "repository": {
     "url": "https://github.com/acme/example-monorepo"
@@ -240,19 +243,17 @@ Package projects can configure Docker release publishing in `package.json`:
   "nx": {
     "docker": {
       "repositoryName": "acme/dockerapp"
-    },
-    "release": {
-      "docker": {
-        "repositoryName": "acme/dockerapp"
-      }
+    }
+  },
+  "release": {
+    "docker": {
+      "repositoryName": "acme/dockerapp"
     }
   }
 }
 ```
 
-They also need the `project.json` target override shown in [Workspace Release
-Composition](#workspace-release-composition). Docker-only projects use
-`project.json` instead:
+Docker-only projects use `project.json` instead:
 
 ```json
 {
