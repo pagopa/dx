@@ -8,10 +8,6 @@
     "aws_core_values": {
       "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
       "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
-    },
-    "automation_cd_common_key_vault_certificates": {
-      "hash": "4b05c2a48659f272b3c88c4ce846de09870a45e996fbabd1036e36f412112040",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/2.1.0"
     }
   }
 }
