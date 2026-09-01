@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-dx-docker-plugin",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Nx plugin generating Docker build/push/package targets, feature-matching docker/metadata-action.",
   "repository": {
     "type": "git",

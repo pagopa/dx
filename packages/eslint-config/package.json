@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/eslint-config",
   "type": "module",
-  "version": "6.2.2",
+  "version": "6.2.3",
   "main": "index.js",
   "exports": {
     ".": "./index.js",
@@ -18,12 +18,12 @@
     "jest.js"
   ],
   "dependencies": {
-    "@vitest/eslint-plugin": "^1.6.24",
+    "@vitest/eslint-plugin": "^1.6.26",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-perfectionist": "^5.10.0",
+    "eslint-plugin-perfectionist": "^5.10.1",
     "eslint-plugin-prettier": "^5.5.6",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.65.0"
+    "typescript-eslint": "^8.66.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

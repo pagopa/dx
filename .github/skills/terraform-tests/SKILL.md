@@ -54,8 +54,8 @@ Tests are run using NX commands:
 
 ```bash
 nx run <module-name>:test
-nx run <module-name>:test:integration
-nx run <module-name>:test:e2e
+nx run <module-name>:test-integration
+nx run <module-name>:e2e
 ```
 
 **Important**: After modifying unit and contract tests, **always execute them** to verify they pass. Integration and E2E tests are slow and should not be run during development, only in CI/CD.
@@ -168,7 +168,8 @@ When a module has legacy tests (single file, no modern structure):
 - **Module README**: Do not create (only create tests/README.md)
 - **Mocking**: Use mock_provider for unit and contract tests
 - **Setup folder**: ONLY for integration tests (E2E uses examples/fixtures.tf)
-- **Test execution**: `nx run <module-name>:test:<layer>`
+- **Test execution**: Use `test` for unit/contract, `test-integration` for
+  integration, and `e2e` for end-to-end tests
 - **Follow examples**: azure_app_configuration and azure_cosmos_account modules
 - **Test naming**: `module_name_feature_being_tested` pattern
 - **Domain naming**: Use "int" (not "integration") and "e2e" for Azure length limits

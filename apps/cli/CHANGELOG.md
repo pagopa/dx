@@ -1,3 +1,19 @@
+## 0.27.3 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+- Updated @pagopa/dx-savemoney to 0.6.4
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.27.2 (2026-08-26)
 
 ### 🩹 Fixes

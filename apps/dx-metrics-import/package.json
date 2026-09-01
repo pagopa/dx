@@ -1,6 +1,6 @@
 {
   "name": "dx-metrics-import",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": true,
   "type": "module",
   "nx": {
@@ -35,7 +35,7 @@
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "esbuild": "^0.28.1",
+    "esbuild": "^0.28.2",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "tsx": "catalog:",

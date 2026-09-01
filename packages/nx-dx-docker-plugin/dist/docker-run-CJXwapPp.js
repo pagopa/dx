@@ -90,7 +90,7 @@ const runDockerCommand = (mode, options, workspaceRoot, releaseVersion) => {
 		"--file",
 		dockerfilePath,
 		"--platform",
-		platform
+		mode === "build" ? platform.split(",")[0].trim() : platform
 	];
 	if (mode === "build") dockerArgs.push("--tag", require_docker_image.getProjectSlug(projectRoot));
 	for (const tag of publishTags) dockerArgs.push("--tag", `${imageName}:${tag}`);

@@ -56,6 +56,13 @@ const readModulePublishManifest = async (moduleRoot) => {
 //#endregion
 //#region src/project.ts
 const logger = getPackageLogger(["project"]);
+const noTerraformTestCapabilities = {
+	contract: false,
+	e2e: false,
+	integration: false,
+	unit: false
+};
+const getTargetName = (opts, targetSuffix) => opts.targetNamePrefix === "" ? targetSuffix : `${opts.targetNamePrefix}-${targetSuffix}`;
 const getProjectNameFromRoot = (root) => root.split(path.sep).reduce((acc, part, currentIndex, array) => {
 	if (array.length > 1 && currentIndex === 0) return acc;
 	if (part === "_modules") return [...acc, "modules"];
@@ -78,7 +85,7 @@ const getEnvironmentTag = (root, additionalEnvironments) => {
 const getPublishTarget = (opts, root, publishManifest) => {
 	try {
 		const publishOptions = mergePublishOptions(opts.publish, publishManifest);
-		return [opts.publishTargetName, {
+		return ["nx-release-publish", {
 			cache: false,
 			executor: "@pagopa/nx-terraform-plugin:publish",
 			options: {
@@ -100,68 +107,83 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		throw error;
 	}
 };
-const getTestTarget = (initTargetName) => ({
-	cache: true,
-	command: `terraform test`,
-	configurations: {
-		e2e: {
-			args: [],
-			command: `if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi`,
-			inputs: ["default", "e2eTests"]
-		},
-		integration: {
-			args: ["-filter='tests/integration.tftest.hcl'"],
-			inputs: ["default", "integrationTests"]
+const getTestTargets = (opts, cwd, testCapabilities) => {
+	const targets = [];
+	const initTargetName = getTargetName(opts, "init");
+	if (testCapabilities.unit || testCapabilities.contract) targets.push([getTargetName(opts, "test"), {
+		cache: true,
+		command: `terraform test`,
+		dependsOn: [initTargetName],
+		inputs: [
+			"default",
+			"{projectRoot}/tests/unit.tftest.hcl",
+			"{projectRoot}/tests/contract.tftest.hcl"
+		],
+		options: {
+			args: ["-filter='tests/unit.tftest.hcl'", "-filter='tests/contract.tftest.hcl'"],
+			cwd
 		}
-	},
-	dependsOn: [initTargetName],
-	inputs: ["default", "tests"],
-	options: {
-		args: ["-filter='tests/unit.tftest.hcl'", "-filter='tests/contract.tftest.hcl'"],
-		cwd: "{projectRoot}"
-	}
-});
-const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest) => {
+	}]);
+	if (testCapabilities.integration) targets.push([getTargetName(opts, "test-integration"), {
+		cache: true,
+		command: `terraform test`,
+		dependsOn: [initTargetName],
+		inputs: [
+			"default",
+			"{projectRoot}/tests/integration.tftest.hcl",
+			"{projectRoot}/tests/setup/**/*.{tf,tfvars}"
+		],
+		options: {
+			args: ["-filter='tests/integration.tftest.hcl'"],
+			cwd
+		}
+	}]);
+	if (testCapabilities.e2e) targets.push([getTargetName(opts, "e2e"), {
+		cache: true,
+		command: `go test -v -timeout 1h ./tests`,
+		dependsOn: [initTargetName],
+		inputs: [
+			"default",
+			"{projectRoot}/tests/**/*",
+			"{projectRoot}/examples/**/*"
+		],
+		options: { cwd }
+	}]);
+	return targets;
+};
+const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
-	const inputs = [
-		"default",
-		"examples",
-		"tests",
-		"integrationTests",
-		"e2eTests"
-	];
-	const targets = [
-		[opts.initTargetName, {
-			cache: true,
-			command: `terraform init`,
-			inputs,
-			options: { cwd },
-			outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
-		}],
-		[opts.formatTargetName, {
-			cache: true,
-			command: `terraform fmt`,
-			configurations: { ci: { args: [...formatArgs, "-check=true"] } },
-			inputs,
-			options: {
-				args: [...formatArgs, "-write=true"],
-				cwd
-			}
-		}],
-		[opts.testTargetName, getTestTarget(opts.initTargetName)],
-		[opts.validateTargetName, {
-			cache: true,
-			command: `terraform validate`,
-			inputs,
-			options: { cwd }
-		}]
-	];
-	if (hasRootTflintConfig) targets.push([opts.lintTargetName, {
+	const initTargetName = getTargetName(opts, "init");
+	const targets = [[initTargetName, {
+		cache: true,
+		command: `terraform init`,
+		inputs: ["default"],
+		options: { cwd },
+		outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
+	}], [getTargetName(opts, "fmt"), {
+		cache: true,
+		command: `terraform fmt`,
+		configurations: { ci: { args: [...formatArgs, "-check=true"] } },
+		inputs: ["default"],
+		options: {
+			args: [...formatArgs, "-write=true"],
+			cwd
+		}
+	}]];
+	targets.push(...getTestTargets(opts, cwd, testCapabilities));
+	targets.push([getTargetName(opts, "validate"), {
+		cache: true,
+		command: `terraform validate`,
+		inputs: ["default", "examples"],
+		options: { cwd }
+	}]);
+	if (hasRootTflintConfig) targets.push([getTargetName(opts, "lint"), {
 		cache: true,
 		command: `tflint`,
 		inputs: [
-			...inputs,
+			"default",
+			"examples",
 			"{workspaceRoot}/.tflint.hcl",
 			{ env: "TFLINT_PLUGIN_DIR" }
 		],
@@ -171,7 +193,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		}
 	}]);
 	if (projectType === "library") {
-		targets.push([opts.docsTargetName, {
+		targets.push([getTargetName(opts, "docs"), {
 			cache: true,
 			command: `terraform-docs markdown table`,
 			inputs: ["default", "{projectRoot}/README.md"],
@@ -195,27 +217,27 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			if (publishTarget) targets.push(publishTarget);
 		}
 	}
-	targets.push([opts.consoleTargetName, {
+	targets.push([getTargetName(opts, "console"), {
 		cache: false,
 		command: `terraform console`,
 		options: {
 			cwd,
 			tty: true
 		}
-	}], [opts.outputTargetName, {
+	}], [getTargetName(opts, "output"), {
 		cache: false,
 		command: `terraform output`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		options: { cwd }
 	}]);
-	if (projectType === "application") targets.push([opts.planTargetName, {
+	if (projectType === "application") targets.push([getTargetName(opts, "plan"), {
 		cache: false,
 		configurations: { ci: {
 			refresh: true,
 			report: true,
 			verbose: false
 		} },
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		executor: "@pagopa/nx-terraform-plugin:plan",
 		options: {
 			projectRoot: "{projectRoot}",
@@ -223,10 +245,10 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			report: false,
 			verbose: true
 		}
-	}], [opts.applyTargetName, {
+	}], [getTargetName(opts, "apply"), {
 		cache: false,
 		command: `terraform apply`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		options: {
 			cwd,
 			tty: true
@@ -234,10 +256,10 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	}]);
 	return Object.fromEntries(targets);
 };
-const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publishManifest = void 0) => {
+const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publishManifest = void 0, testCapabilities = noTerraformTestCapabilities) => {
 	const projectType = getProjectType(root);
 	const isPublishableLibrary = projectType === "library" && publishManifest !== void 0;
-	const targets = getTargets(opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest);
+	const targets = getTargets(opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities);
 	const environmentTag = projectType === "application" ? getEnvironmentTag(root, opts.additionalEnvironments) : void 0;
 	const tags = ["terraform", ...environmentTag ? [environmentTag] : []];
 	if (isPublishableLibrary) tags.push("terraform:public");
@@ -245,10 +267,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 		name: getProjectNameFromRoot(root),
 		namedInputs: {
 			default: ["{projectRoot}/*.{tf,tfvars}"],
-			e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
-			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
-			integrationTests: ["{projectRoot}/tests/integration.tftest.hcl", "{projectRoot}/tests/setup/*.tf"],
-			tests: ["{projectRoot}/tests/unit.tftest.hcl", "{projectRoot}/tests/contract.tftest.hcl"]
+			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"]
 		},
 		projectType,
 		root,
@@ -298,7 +317,6 @@ const getStaticDependenciesFromFile = async (file) => {
 
 //#endregion
 //#region src/options.ts
-const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, { message: "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes" });
 const environmentNameSchema = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, { message: "Environment names must start with a lowercase letter or number and contain only lowercase letters, numbers, underscores, or dashes" });
 const publishOptionsSchema = z.object({
 	github: pluginPublishOptionsSchema.shape.github,
@@ -306,33 +324,13 @@ const publishOptionsSchema = z.object({
 });
 const terraformPluginOptionsSchema = z.object({
 	additionalEnvironments: z.array(environmentNameSchema),
-	applyTargetName: targetNameSchema,
-	consoleTargetName: targetNameSchema,
-	docsTargetName: targetNameSchema,
-	formatTargetName: targetNameSchema,
-	initTargetName: targetNameSchema,
-	lintTargetName: targetNameSchema,
-	outputTargetName: targetNameSchema,
-	planTargetName: targetNameSchema,
 	publish: publishOptionsSchema,
-	publishTargetName: targetNameSchema,
-	testTargetName: targetNameSchema,
-	validateTargetName: targetNameSchema
+	targetNamePrefix: z.string()
 });
 const defaultOptions = {
 	additionalEnvironments: [],
-	applyTargetName: "apply",
-	consoleTargetName: "console",
-	docsTargetName: "docs",
-	formatTargetName: "fmt",
-	initTargetName: "init",
-	lintTargetName: "lint",
-	outputTargetName: "output",
-	planTargetName: "plan",
 	publish: { mode: "github" },
-	publishTargetName: "nx-release-publish",
-	testTargetName: "test",
-	validateTargetName: "validate"
+	targetNamePrefix: ""
 };
 const parseOptions = (options) => {
 	const parseResult = terraformPluginOptionsSchema.partial().safeParse(options ?? {});
@@ -342,7 +340,7 @@ const parseOptions = (options) => {
 		}).join("; ");
 		throw new Error(`Invalid Terraform plugin options: ${validationErrors}`);
 	}
-	const opts = {
+	return {
 		...defaultOptions,
 		...parseResult.data,
 		publish: {
@@ -354,14 +352,6 @@ const parseOptions = (options) => {
 			} } : {}
 		}
 	};
-	const seen = /* @__PURE__ */ new Map();
-	const targetNames = Object.entries(opts).filter((entry) => entry[0].endsWith("TargetName"));
-	for (const [key, value] of targetNames) {
-		const existing = seen.get(value);
-		if (existing) throw new Error(`Invalid Terraform plugin options: Target name "${value}" is duplicated for keys "${existing}" and "${key}"`);
-		seen.set(value, key);
-	}
-	return opts;
 };
 
 //#endregion
@@ -380,6 +370,17 @@ const ignoreModules = [
 	"example"
 ];
 const moduleManifestFileName = "module.json";
+const testCapabilityByFileName = {
+	"contract.tftest.hcl": "contract",
+	"integration.tftest.hcl": "integration",
+	"unit.tftest.hcl": "unit"
+};
+const emptyTestCapabilities = () => ({
+	contract: false,
+	e2e: false,
+	integration: false,
+	unit: false
+});
 const isIgnoredRoot = (root) => {
 	const rootSegments = new Set(root.split(path.sep));
 	return ignoreModules.some((module) => rootSegments.has(module));
@@ -396,18 +397,38 @@ const fileExists = async (filePath) => {
 const getDiscoveryState = (configFiles) => {
 	const terraformConfigFiles = [];
 	const moduleManifestRoots = /* @__PURE__ */ new Set();
+	const testConfigFiles = [];
+	const testCapabilitiesByRoot = /* @__PURE__ */ new Map();
 	for (const configFile of configFiles) {
 		const root = path.dirname(configFile);
+		const fileName = path.basename(configFile);
+		if (path.basename(root) === "tests") {
+			testConfigFiles.push(configFile);
+			continue;
+		}
 		if (isIgnoredRoot(root)) continue;
-		if (path.basename(configFile) === moduleManifestFileName) {
+		if (fileName === moduleManifestFileName) {
 			moduleManifestRoots.add(root);
 			continue;
 		}
 		terraformConfigFiles.push(configFile);
 	}
+	const terraformRoots = new Set(terraformConfigFiles.map(path.dirname));
+	for (const testConfigFile of testConfigFiles) {
+		const testsRoot = path.dirname(testConfigFile);
+		const projectRoot = path.dirname(testsRoot);
+		if (!terraformRoots.has(projectRoot)) continue;
+		const fileName = path.basename(testConfigFile);
+		const capability = testCapabilityByFileName[fileName] ?? (fileName.endsWith("_test.go") ? "e2e" : void 0);
+		if (capability === void 0) continue;
+		const capabilities = testCapabilitiesByRoot.get(projectRoot) ?? emptyTestCapabilities();
+		capabilities[capability] = true;
+		testCapabilitiesByRoot.set(projectRoot, capabilities);
+	}
 	return {
 		moduleManifestRoots,
-		terraformConfigFiles
+		terraformConfigFiles,
+		testCapabilitiesByRoot
 	};
 };
 const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) => {
@@ -418,21 +439,22 @@ const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) 
 	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));
 };
 const getDiscoveryStateWithValidation = async (configFiles, workspaceRoot) => {
-	const { moduleManifestRoots, terraformConfigFiles } = getDiscoveryState(configFiles);
+	const { moduleManifestRoots, terraformConfigFiles, testCapabilitiesByRoot } = getDiscoveryState(configFiles);
 	return {
 		publishableManifestByRoot: await getPublishableManifestByRoot(Array.from(moduleManifestRoots), workspaceRoot),
-		terraformConfigFiles
+		terraformConfigFiles,
+		testCapabilitiesByRoot
 	};
 };
-const createNodesV2 = ["**/{*.tf,module.json}", async (configFiles, options, context) => {
+const createNodesV2 = ["**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}", async (configFiles, options, context) => {
 	await configureLogger();
 	const opts = parseOptions(options);
 	const hasRootTflintConfig = await fileExists(path.join(context.workspaceRoot, ".tflint.hcl"));
-	const { publishableManifestByRoot, terraformConfigFiles } = await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
+	const { publishableManifestByRoot, terraformConfigFiles, testCapabilitiesByRoot } = await getDiscoveryStateWithValidation(configFiles, context.workspaceRoot);
 	return createNodesFromFiles((configFile) => {
 		const root = path.dirname(configFile);
 		if (isIgnoredRoot(root)) return { projects: {} };
-		return { projects: { [root]: getProject(opts, context.workspaceRoot, root, hasRootTflintConfig, publishableManifestByRoot.get(root)) } };
+		return { projects: { [root]: getProject(opts, context.workspaceRoot, root, hasRootTflintConfig, publishableManifestByRoot.get(root), testCapabilitiesByRoot.get(root)) } };
 	}, terraformConfigFiles, options, context);
 }];
 const createDependencies = async (opts, ctx) => {
