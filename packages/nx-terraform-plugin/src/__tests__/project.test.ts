@@ -24,18 +24,7 @@ afterEach(() => {
 const defaultOptions = parseOptions(undefined);
 const customOptions = parseOptions({
   additionalEnvironments: [],
-  applyTargetName: "terraform-apply",
-  consoleTargetName: "terraform-console",
-  docsTargetName: "docs",
-  e2eTargetName: "terraform-e2e",
-  formatTargetName: "terraform-format",
-  initTargetName: "terraform-init",
-  lintTargetName: "terraform-lint",
-  outputTargetName: "terraform-output",
-  planTargetName: "terraform-plan",
-  testIntegrationTargetName: "terraform-test-integration",
-  testTargetName: "terraform-test",
-  validateTargetName: "terraform-validate",
+  targetNamePrefix: "tf",
 });
 
 const expectedNamedInputs = {
@@ -100,10 +89,10 @@ const getExpectedLintTarget = () => ({
   },
 });
 
-const getExpectedTestTarget = () => ({
+const getExpectedTestTarget = (initTargetName = "init") => ({
   cache: true,
   command: "terraform test",
-  dependsOn: ["init"],
+  dependsOn: [initTargetName],
   inputs: [
     "default",
     "{projectRoot}/tests/unit.tftest.hcl",
@@ -118,10 +107,10 @@ const getExpectedTestTarget = () => ({
   },
 });
 
-const getExpectedIntegrationTestTarget = () => ({
+const getExpectedIntegrationTestTarget = (initTargetName = "init") => ({
   cache: true,
   command: "terraform test",
-  dependsOn: ["init"],
+  dependsOn: [initTargetName],
   inputs: [
     "default",
     "{projectRoot}/tests/integration.tftest.hcl",
@@ -133,10 +122,10 @@ const getExpectedIntegrationTestTarget = () => ({
   },
 });
 
-const getExpectedE2eTarget = () => ({
+const getExpectedE2eTarget = (initTargetName = "init") => ({
   cache: true,
   command: "go test -v -timeout 1h ./tests",
-  dependsOn: ["init"],
+  dependsOn: [initTargetName],
   inputs: [
     "default",
     "{projectRoot}/tests/**/*",
@@ -703,25 +692,56 @@ describe("getProject libraries", () => {
   });
 });
 
-describe("getProject custom target names", () => {
-  describe("when custom target names are configured", () => {
-    it("produces the same target implementations under different names", () => {
-      const root = path.join("infra", "modules", "shared_stack");
-      const defaultTargets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true),
-      );
-      const customTargets = getTargetsOrThrow(
-        getProject(customOptions, root, true),
-      );
+describe("getProject prefixed target names", () => {
+  it("prefixes configurable target names and their dependencies", () => {
+    const root = path.join("infra", "resources", "prod", "shared_stack");
+    const defaultTargets = getTargetsOrThrow(
+      getProject(defaultOptions, root, true),
+    );
+    const customTargets = getTargetsOrThrow(
+      getProject(customOptions, root, true),
+    );
 
-      expect(Object.keys(defaultTargets)).not.toEqual(
-        Object.keys(customTargets),
-      );
+    expect(Object.keys(defaultTargets)).not.toEqual(Object.keys(customTargets));
+    expect(Object.keys(customTargets)).toEqual([
+      "tf-init",
+      "tf-fmt",
+      "tf-test",
+      "tf-test-integration",
+      "tf-e2e",
+      "tf-validate",
+      "tf-lint",
+      "tf-console",
+      "tf-output",
+      "tf-plan",
+      "tf-apply",
+    ]);
 
-      expect(stripDependsOn(defaultTargets)).toEqual(
-        stripDependsOn(customTargets),
-      );
-    });
+    expect(stripDependsOn(defaultTargets)).toEqual(
+      stripDependsOn(customTargets),
+    );
+
+    expect(customTargets["tf-test"]).toEqual(getExpectedTestTarget("tf-init"));
+    expect(customTargets["tf-test-integration"]).toEqual(
+      getExpectedIntegrationTestTarget("tf-init"),
+    );
+    expect(customTargets["tf-e2e"]).toEqual(getExpectedE2eTarget("tf-init"));
+    expect(customTargets["tf-output"]?.dependsOn).toEqual(["tf-init"]);
+    expect(customTargets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
+    expect(customTargets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
+  });
+
+  it("keeps nx-release-publish unprefixed", () => {
+    const root = path.join("infra", "modules", "shared_stack");
+    const targets = getTargetsOrThrow(
+      getProject(customOptions, root, true, publishManifestWithOwner),
+    );
+
+    expect(targets["tf-docs"]).toEqual(getExpectedDocsTarget());
+    expect(targets["nx-release-publish"]).toEqual(
+      getExpectedPublishTarget("pagopa-dx", false),
+    );
+    expect(targets["tf-nx-release-publish"]).toBeUndefined();
   });
 });
 

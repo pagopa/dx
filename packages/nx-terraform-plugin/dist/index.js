@@ -62,6 +62,7 @@ const noTerraformTestCapabilities = {
 	integration: false,
 	unit: false
 };
+const getTargetName = (opts, targetSuffix) => opts.targetNamePrefix === "" ? targetSuffix : `${opts.targetNamePrefix}-${targetSuffix}`;
 const getProjectNameFromRoot = (root) => root.split(path.sep).reduce((acc, part, currentIndex, array) => {
 	if (array.length > 1 && currentIndex === 0) return acc;
 	if (part === "_modules") return [...acc, "modules"];
@@ -84,7 +85,7 @@ const getEnvironmentTag = (root, additionalEnvironments) => {
 const getPublishTarget = (opts, root, publishManifest) => {
 	try {
 		const publishOptions = mergePublishOptions(opts.publish, publishManifest);
-		return [opts.publishTargetName, {
+		return ["nx-release-publish", {
 			cache: false,
 			executor: "@pagopa/nx-terraform-plugin:publish",
 			options: {
@@ -108,10 +109,11 @@ const getPublishTarget = (opts, root, publishManifest) => {
 };
 const getTestTargets = (opts, cwd, testCapabilities) => {
 	const targets = [];
-	if (testCapabilities.unit || testCapabilities.contract) targets.push([opts.testTargetName, {
+	const initTargetName = getTargetName(opts, "init");
+	if (testCapabilities.unit || testCapabilities.contract) targets.push([getTargetName(opts, "test"), {
 		cache: true,
 		command: `terraform test`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		inputs: [
 			"default",
 			"{projectRoot}/tests/unit.tftest.hcl",
@@ -122,10 +124,10 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 			cwd
 		}
 	}]);
-	if (testCapabilities.integration) targets.push([opts.testIntegrationTargetName, {
+	if (testCapabilities.integration) targets.push([getTargetName(opts, "test-integration"), {
 		cache: true,
 		command: `terraform test`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		inputs: [
 			"default",
 			"{projectRoot}/tests/integration.tftest.hcl",
@@ -136,10 +138,10 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 			cwd
 		}
 	}]);
-	if (testCapabilities.e2e) targets.push([opts.e2eTargetName, {
+	if (testCapabilities.e2e) targets.push([getTargetName(opts, "e2e"), {
 		cache: true,
 		command: `go test -v -timeout 1h ./tests`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		inputs: [
 			"default",
 			"{projectRoot}/tests/**/*",
@@ -152,13 +154,14 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
-	const targets = [[opts.initTargetName, {
+	const initTargetName = getTargetName(opts, "init");
+	const targets = [[initTargetName, {
 		cache: true,
 		command: `terraform init`,
 		inputs: ["default"],
 		options: { cwd },
 		outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
-	}], [opts.formatTargetName, {
+	}], [getTargetName(opts, "fmt"), {
 		cache: true,
 		command: `terraform fmt`,
 		configurations: { ci: { args: [...formatArgs, "-check=true"] } },
@@ -169,13 +172,13 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		}
 	}]];
 	targets.push(...getTestTargets(opts, cwd, testCapabilities));
-	targets.push([opts.validateTargetName, {
+	targets.push([getTargetName(opts, "validate"), {
 		cache: true,
 		command: `terraform validate`,
 		inputs: ["default", "examples"],
 		options: { cwd }
 	}]);
-	if (hasRootTflintConfig) targets.push([opts.lintTargetName, {
+	if (hasRootTflintConfig) targets.push([getTargetName(opts, "lint"), {
 		cache: true,
 		command: `tflint`,
 		inputs: [
@@ -190,7 +193,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		}
 	}]);
 	if (projectType === "library") {
-		targets.push([opts.docsTargetName, {
+		targets.push([getTargetName(opts, "docs"), {
 			cache: true,
 			command: `terraform-docs markdown table`,
 			inputs: ["default", "{projectRoot}/README.md"],
@@ -214,27 +217,27 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			if (publishTarget) targets.push(publishTarget);
 		}
 	}
-	targets.push([opts.consoleTargetName, {
+	targets.push([getTargetName(opts, "console"), {
 		cache: false,
 		command: `terraform console`,
 		options: {
 			cwd,
 			tty: true
 		}
-	}], [opts.outputTargetName, {
+	}], [getTargetName(opts, "output"), {
 		cache: false,
 		command: `terraform output`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		options: { cwd }
 	}]);
-	if (projectType === "application") targets.push([opts.planTargetName, {
+	if (projectType === "application") targets.push([getTargetName(opts, "plan"), {
 		cache: false,
 		configurations: { ci: {
 			refresh: true,
 			report: true,
 			verbose: false
 		} },
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		executor: "@pagopa/nx-terraform-plugin:plan",
 		options: {
 			projectRoot: "{projectRoot}",
@@ -242,10 +245,10 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			report: false,
 			verbose: true
 		}
-	}], [opts.applyTargetName, {
+	}], [getTargetName(opts, "apply"), {
 		cache: false,
 		command: `terraform apply`,
-		dependsOn: [opts.initTargetName],
+		dependsOn: [initTargetName],
 		options: {
 			cwd,
 			tty: true
@@ -314,7 +317,6 @@ const getStaticDependenciesFromFile = async (file) => {
 
 //#endregion
 //#region src/options.ts
-const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, { message: "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes" });
 const environmentNameSchema = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, { message: "Environment names must start with a lowercase letter or number and contain only lowercase letters, numbers, underscores, or dashes" });
 const publishOptionsSchema = z.object({
 	github: pluginPublishOptionsSchema.shape.github,
@@ -322,37 +324,13 @@ const publishOptionsSchema = z.object({
 });
 const terraformPluginOptionsSchema = z.object({
 	additionalEnvironments: z.array(environmentNameSchema),
-	applyTargetName: targetNameSchema,
-	consoleTargetName: targetNameSchema,
-	docsTargetName: targetNameSchema,
-	e2eTargetName: targetNameSchema,
-	formatTargetName: targetNameSchema,
-	initTargetName: targetNameSchema,
-	lintTargetName: targetNameSchema,
-	outputTargetName: targetNameSchema,
-	planTargetName: targetNameSchema,
 	publish: publishOptionsSchema,
-	publishTargetName: targetNameSchema,
-	testIntegrationTargetName: targetNameSchema,
-	testTargetName: targetNameSchema,
-	validateTargetName: targetNameSchema
+	targetNamePrefix: z.string()
 });
 const defaultOptions = {
 	additionalEnvironments: [],
-	applyTargetName: "apply",
-	consoleTargetName: "console",
-	docsTargetName: "docs",
-	e2eTargetName: "e2e",
-	formatTargetName: "fmt",
-	initTargetName: "init",
-	lintTargetName: "lint",
-	outputTargetName: "output",
-	planTargetName: "plan",
 	publish: { mode: "github" },
-	publishTargetName: "nx-release-publish",
-	testIntegrationTargetName: "test-integration",
-	testTargetName: "test",
-	validateTargetName: "validate"
+	targetNamePrefix: ""
 };
 const parseOptions = (options) => {
 	const parseResult = terraformPluginOptionsSchema.partial().safeParse(options ?? {});
@@ -362,7 +340,7 @@ const parseOptions = (options) => {
 		}).join("; ");
 		throw new Error(`Invalid Terraform plugin options: ${validationErrors}`);
 	}
-	const opts = {
+	return {
 		...defaultOptions,
 		...parseResult.data,
 		publish: {
@@ -374,14 +352,6 @@ const parseOptions = (options) => {
 			} } : {}
 		}
 	};
-	const seen = /* @__PURE__ */ new Map();
-	const targetNames = Object.entries(opts).filter((entry) => entry[0].endsWith("TargetName"));
-	for (const [key, value] of targetNames) {
-		const existing = seen.get(value);
-		if (existing) throw new Error(`Invalid Terraform plugin options: Target name "${value}" is duplicated for keys "${existing}" and "${key}"`);
-		seen.set(value, key);
-	}
-	return opts;
 };
 
 //#endregion

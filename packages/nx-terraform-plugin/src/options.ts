@@ -2,11 +2,6 @@ import { z } from "zod/v4";
 
 import { pluginPublishOptionsSchema } from "./publish-options.ts";
 
-const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
-  message:
-    "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
-});
-
 const environmentNameSchema = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, {
   message:
     "Environment names must start with a lowercase letter or number and contain only lowercase letters, numbers, underscores, or dashes",
@@ -21,20 +16,8 @@ export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
 const terraformPluginOptionsSchema = z.object({
   additionalEnvironments: z.array(environmentNameSchema),
-  applyTargetName: targetNameSchema,
-  consoleTargetName: targetNameSchema,
-  docsTargetName: targetNameSchema,
-  e2eTargetName: targetNameSchema,
-  formatTargetName: targetNameSchema,
-  initTargetName: targetNameSchema,
-  lintTargetName: targetNameSchema,
-  outputTargetName: targetNameSchema,
-  planTargetName: targetNameSchema,
   publish: publishOptionsSchema,
-  publishTargetName: targetNameSchema,
-  testIntegrationTargetName: targetNameSchema,
-  testTargetName: targetNameSchema,
-  validateTargetName: targetNameSchema,
+  targetNamePrefix: z.string(),
 });
 
 export type TerraformPluginOptions = z.infer<
@@ -43,22 +26,10 @@ export type TerraformPluginOptions = z.infer<
 
 const defaultOptions: TerraformPluginOptions = {
   additionalEnvironments: [],
-  applyTargetName: "apply",
-  consoleTargetName: "console",
-  docsTargetName: "docs",
-  e2eTargetName: "e2e",
-  formatTargetName: "fmt",
-  initTargetName: "init",
-  lintTargetName: "lint",
-  outputTargetName: "output",
-  planTargetName: "plan",
   publish: {
     mode: "github",
   },
-  publishTargetName: "nx-release-publish",
-  testIntegrationTargetName: "test-integration",
-  testTargetName: "test",
-  validateTargetName: "validate",
+  targetNamePrefix: "",
 };
 
 export const parseOptions = (
@@ -92,19 +63,5 @@ export const parseOptions = (
         : {}),
     },
   };
-  // Check uniqueness of target names
-  const seen = new Map<string, string>();
-  const targetNames = Object.entries(opts).filter(
-    (entry): entry is [string, string] => entry[0].endsWith("TargetName"),
-  );
-  for (const [key, value] of targetNames) {
-    const existing = seen.get(value);
-    if (existing) {
-      throw new Error(
-        `Invalid Terraform plugin options: Target name "${value}" is duplicated for keys "${existing}" and "${key}"`,
-      );
-    }
-    seen.set(value, key);
-  }
   return opts;
 };
