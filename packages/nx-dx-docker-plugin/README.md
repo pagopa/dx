@@ -242,7 +242,7 @@ Package projects can configure Docker release publishing in `package.json`:
   },
   "nx": {
     "docker": {
-      "repositoryName": "acme/dockerapp"
+      "platform": "linux/amd64"
     }
   },
   "release": {

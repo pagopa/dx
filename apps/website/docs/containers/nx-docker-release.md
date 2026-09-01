@@ -110,13 +110,12 @@ are retained: `@team-a/api` becomes `team-a-api` and `@team-b/api` becomes
 `team-b-api`. Projects with the same unscoped name therefore publish to distinct
 repositories.
 
-Use `nx.docker` for project-specific Docker build and push settings:
+Use `nx.docker` for project-specific Docker build and push layout settings:
 
 ```json
 {
   "nx": {
     "docker": {
-      "repositoryName": "pagopa/my-image-name",
       "contextPath": ".",
       "dockerfilePath": "apps/my-app/Dockerfile",
       "platform": "linux/amd64"
@@ -125,13 +124,14 @@ Use `nx.docker` for project-specific Docker build and push settings:
 }
 ```
 
-`repositoryName` pins the image repository; `contextPath` and `dockerfilePath`
-are workspace-relative; `platform` is passed directly to
-`docker buildx --platform`. All four values are optional.
+`contextPath` and `dockerfilePath` are workspace-relative; `platform` is passed
+directly to `docker buildx --platform`. All three values are optional.
 
 `release.docker.repositoryName` enables Docker release publishing for the
-project. If an application is released only as a Docker image, mark its
-`package.json` as private to prevent Nx from inferring the JavaScript publisher:
+project and is also used as the build/push image repository unless
+`nx.docker.repositoryName` overrides it. If an application is released only as a
+Docker image, mark its `package.json` as private to prevent Nx from inferring
+the JavaScript publisher:
 
 ```json
 {
@@ -147,8 +147,7 @@ project. If an application is released only as a Docker image, mark its
 The plugin automatically supplies the image name, build context, Dockerfile,
 platform, and OCI metadata to its inferred publisher; do not declare a separate
 release target. Projects that publish both an npm package and a Docker image
-should configure `nx.docker.repositoryName` and publish the image from a
-release-tag workflow.
+should publish the image from a release-tag workflow.
 
 ### Container-only projects
 
