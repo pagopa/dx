@@ -9,6 +9,7 @@ describe("parseOptions", () => {
       applyTargetName: "apply",
       consoleTargetName: "console",
       docsTargetName: "docs",
+      e2eTargetName: "e2e",
       formatTargetName: "fmt",
       initTargetName: "init",
       lintTargetName: "lint",
@@ -18,6 +19,7 @@ describe("parseOptions", () => {
         mode: "github",
       },
       publishTargetName: "nx-release-publish",
+      testIntegrationTargetName: "test-integration",
       testTargetName: "test",
       validateTargetName: "validate",
     });
@@ -85,14 +87,24 @@ describe("parseOptions", () => {
         applyTargetName: "plan",
         consoleTargetName: "console",
         docsTargetName: "docs",
+        e2eTargetName: "e2e",
         formatTargetName: "fmt",
         initTargetName: "init",
         lintTargetName: "lint",
         outputTargetName: "output",
         planTargetName: "plan",
+        testIntegrationTargetName: "test-integration",
         testTargetName: "test",
         validateTargetName: "validate",
       }),
     ).toThrow('Target name "plan" is duplicated');
+  });
+
+  it("rejects duplicate integration and E2E target names", () => {
+    expect(() =>
+      parseOptions({
+        e2eTargetName: "test-integration",
+      }),
+    ).toThrow('Target name "test-integration" is duplicated');
   });
 });

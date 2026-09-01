@@ -6,24 +6,26 @@ applying, documentation, and module publishing.
 
 ## Terraform Test Conventions
 
-The inferred `test` target separates Terraform tests into layers by using
-fixed file names under each project's `tests` directory.
+The plugin infers independent test targets from fixed file names under each
+project's `tests` directory.
 
-| Test layer  | Expected files                      | Nx command                             |
-| ----------- | ----------------------------------- | -------------------------------------- |
-| Unit        | `tests/unit.tftest.hcl`             | `nx run <project>:tf-test`             |
-| Contract    | `tests/contract.tftest.hcl`         | `nx run <project>:tf-test`             |
-| Integration | `tests/integration.tftest.hcl`      | `nx run <project>:tf-test:integration` |
-| End-to-end  | Go test files matching `tests/*.go` | `nx run <project>:tf-test:e2e`         |
+| Test layer  | Expected files                           | Nx command                          |
+| ----------- | ---------------------------------------- | ----------------------------------- |
+| Unit        | `tests/unit.tftest.hcl`                  | `nx run <project>:test`             |
+| Contract    | `tests/contract.tftest.hcl`              | `nx run <project>:test`             |
+| Integration | `tests/integration.tftest.hcl`           | `nx run <project>:test-integration` |
+| End-to-end  | Go test files matching `tests/*_test.go` | `nx run <project>:e2e`              |
 
-The default target runs the unit and contract files together. The `integration`
-configuration runs only `integration.tftest.hcl`, while the `e2e`
-configuration runs `go test` when the `tests` directory contains Go test
-files.
+The `test` target runs the unit and contract files that are present. Each target
+is inferred only when its expected test file exists, so Nx commands such as
+`run-many --target e2e` select only projects with that test layer.
 
-Integration and end-to-end tests can share Terraform setup files from
-`tests/setup/*.tf`. These files are included in the corresponding Nx cache
+Integration tests can share Terraform setup files from `tests/setup/`. These
+files are included in the integration target's Nx cache inputs. E2E tests
+deploy the module's `examples/` and use the applications under `tests/apps/`;
+all files under `tests/` and `examples/` are included in the E2E target's cache
 inputs.
 
-All inferred test configurations depend on the plugin's Terraform initialization
-target, which is `init` by default.
+All inferred test targets depend on the plugin's Terraform initialization
+target, which is `init` by default. Their names can be customized with
+`testTargetName`, `testIntegrationTargetName`, and `e2eTargetName`.
