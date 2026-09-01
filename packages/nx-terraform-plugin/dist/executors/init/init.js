@@ -35,7 +35,7 @@ const runExecutor = async (options) => {
 		});
 	} catch (error) {
 		logger.error("Terraform init failed", {
-			error,
+			error: error instanceof Error ? error.message : String(error),
 			path: projectRoot
 		});
 		return { success: false };

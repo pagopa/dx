@@ -127,7 +127,7 @@ describe("Init Executor", () => {
 
     expect(output.success).toBe(false);
     expect(loggerMocks.error).toHaveBeenCalledWith("Terraform init failed", {
-      error,
+      error: "terraform init failed",
       path: "infra/example",
     });
   });
