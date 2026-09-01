@@ -54,3 +54,48 @@ target suffix. For example, `"tf"` produces `tf-init`, `tf-fmt`, `tf-test`,
 `tf-test-integration`, and `tf-apply`; dependencies use the matching `tf-init`
 target. The default target name prefix is `""`, which preserves the standard
 target names.
+
+## Terraform Module Locking
+
+The inferred `init` target runs `terraform init` and then records the content of
+downloaded Terraform Registry modules in `tfmodules.lock.json`.
+
+The lock uses version 2 of the format:
+
+```json
+{
+  "lockFileVersion": 2,
+  "modules": {
+    "module_name": {
+      "hash": "...",
+      "source": "https://registry.terraform.io/modules/..."
+    }
+  }
+}
+```
+
+Version 2 contains only module hashes and Registry sources. A normal
+initialization migrates older lock formats at runtime; frozen CI rejects them
+until the migration has been written.
+
+```sh
+nx run <project>:init
+```
+
+By default, initialization updates the module lock when downloaded content
+changes. Use the `ci` configuration to freeze the lock:
+
+```sh
+nx run <project>:init -c ci
+nx run <project>:plan -c ci
+nx run <project>:apply -c ci
+```
+
+Frozen initialization does not modify `tfmodules.lock.json`; it fails when the
+generated lock differs from the committed file. Targets that depend on `init`,
+including `plan` and `apply`, inherit the requested `ci` configuration and stop
+before execution when the module lock is stale.
+
+The `init` target is intentionally not cached. This ensures that
+`terraform init` and frozen-lock verification cannot be skipped by an Nx cache
+hit.

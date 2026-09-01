@@ -156,11 +156,16 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	const cwd = "{projectRoot}";
 	const initTargetName = getTargetName(opts, "init");
 	const targets = [[initTargetName, {
-		cache: true,
-		command: `terraform init`,
+		cache: false,
+		configurations: { ci: { frozenLockfile: true } },
+		executor: "@pagopa/nx-terraform-plugin:init",
 		inputs: ["default"],
-		options: { cwd },
-		outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
+		options: { projectRoot: "{projectRoot}" },
+		outputs: [
+			"{projectRoot}/.terraform",
+			"{projectRoot}/.terraform.lock.hcl",
+			"{projectRoot}/tfmodules.lock.json"
+		]
 	}], [getTargetName(opts, "fmt"), {
 		cache: true,
 		command: `terraform fmt`,

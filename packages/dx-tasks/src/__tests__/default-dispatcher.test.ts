@@ -7,6 +7,10 @@ const { mockRunCommand } = vi.hoisted(() => ({
   mockRunCommand: vi.fn(),
 }));
 
+const moduleLockMocks = vi.hoisted(() => ({
+  compareModuleLock: vi.fn(),
+}));
+
 const { octokitMock } = vi.hoisted(() => ({
   octokitMock: {
     constructor: vi.fn(),
@@ -25,6 +29,10 @@ const { octokitMock } = vi.hoisted(() => ({
 
 vi.mock("../run-command.ts", () => ({
   runCommand: mockRunCommand,
+}));
+
+vi.mock("../terraform/module-lock.ts", () => ({
+  compareModuleLock: moduleLockMocks.compareModuleLock,
 }));
 
 vi.mock("octokit", () => ({
@@ -50,6 +58,7 @@ describe("createDefaultTaskDispatcher", () => {
   beforeEach(() => {
     originalCwd = process.cwd();
     mockRunCommand.mockReset();
+    moduleLockMocks.compareModuleLock.mockReset();
     octokitMock.constructor.mockReset();
     octokitMock.instance.rest.issues.createComment.mockReset();
     octokitMock.instance.rest.issues.deleteComment.mockReset();
@@ -80,6 +89,7 @@ describe("createDefaultTaskDispatcher", () => {
       stderr: "",
       stdout: "No changes.",
     });
+
     const dispatcher = createDefaultTaskDispatcher();
 
     await dispatcher.dispatchTask("terraformPlan", {
@@ -113,6 +123,37 @@ describe("createDefaultTaskDispatcher", () => {
   "planOutput": "No changes.",
   "success": true
 }`);
+  });
+
+  it("registers terraformInit and dispatches its decoded payload", async () => {
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: "",
+      stdout: "Terraform initialized.",
+    });
+    moduleLockMocks.compareModuleLock.mockResolvedValue({
+      changes: [],
+      content: "{}\n",
+      isDifferent: false,
+      path: "/tmp/module/tfmodules.lock.json",
+    });
+    const dispatcher = createDefaultTaskDispatcher();
+
+    await dispatcher.dispatchTask("terraformInit", {
+      frozenLockfile: true,
+      modulePath: "/tmp/module",
+    });
+
+    expect(mockRunCommand).toHaveBeenCalledWith(
+      "terraform",
+      ["init", "-get=true"],
+      "/tmp/module",
+      {},
+    );
+    expect(moduleLockMocks.compareModuleLock).toHaveBeenCalledWith(
+      "/tmp/module",
+    );
   });
 
   it("registers prComment and returns the created comment metadata", async () => {

@@ -206,15 +206,21 @@ const getTargets = (
     [
       initTargetName,
       {
-        cache: true,
-        command: `terraform init`,
+        cache: false,
+        configurations: {
+          ci: {
+            frozenLockfile: true,
+          },
+        },
+        executor: "@pagopa/nx-terraform-plugin:init",
         inputs: ["default"],
         options: {
-          cwd,
+          projectRoot: "{projectRoot}",
         },
         outputs: [
           "{projectRoot}/.terraform",
           "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/tfmodules.lock.json",
         ],
       },
     ],
