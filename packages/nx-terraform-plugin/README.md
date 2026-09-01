@@ -2,7 +2,21 @@
 
 `@pagopa/nx-terraform-plugin` is an Nx plugin that discovers Terraform
 configurations and infers targets for formatting, testing, validation, planning,
-applying, documentation, and module publishing.
+applying, security scanning, documentation, and module publishing.
+
+## Trivy
+
+The inferred `trivy` target scans each Terraform project with the workspace
+`trivy.yml` configuration:
+
+```sh
+nx run <project>:trivy
+```
+
+The target runs from the workspace root so shared paths such as `.trivyignore`
+and `.trivy/checks/terraform` resolve consistently. Its Nx cache inputs include
+the Terraform sources, the Trivy configuration, the ignore file, and custom
+checks.
 
 ## Terraform Test Conventions
 

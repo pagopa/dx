@@ -169,6 +169,24 @@ const getInitTarget = (projectType, initTargetName, cwd) => [initTargetName, pro
 	options: { cwd },
 	outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
 }];
+const getTrivyTarget = (workspaceRoot, root) => ({
+	cache: true,
+	command: "trivy config",
+	inputs: [
+		"{projectRoot}/**/*.{tf,tfvars}",
+		"{workspaceRoot}/trivy.yml",
+		"{workspaceRoot}/.trivyignore",
+		"{workspaceRoot}/.trivy/checks/terraform/**/*"
+	],
+	options: {
+		args: [
+			"--config",
+			path.resolve(workspaceRoot, "trivy.yml"),
+			root
+		],
+		cwd: "{workspaceRoot}"
+	}
+});
 const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
@@ -190,6 +208,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		inputs: ["default", "examples"],
 		options: { cwd }
 	}]);
+	targets.push([getTargetName(opts, "trivy"), getTrivyTarget(workspaceRoot, root)]);
 	if (hasRootTflintConfig) targets.push([getTargetName(opts, "lint"), {
 		cache: true,
 		command: `tflint`,
