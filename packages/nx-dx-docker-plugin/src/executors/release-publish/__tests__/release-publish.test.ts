@@ -26,6 +26,19 @@ import {
 } from "../release-publish.ts";
 
 const createContext = (): DockerPublishExecutorContext => ({
+  projectName: "@pagopa/example",
+  projectsConfigurations: {
+    projects: {
+      "@pagopa/example": {
+        root: "apps/sample",
+        targets: {
+          "docker:build": {
+            options: createOptions(),
+          },
+        },
+      },
+    },
+  },
   root: "/workspace",
 });
 
@@ -58,9 +71,9 @@ describe("release-publish executor", () => {
   });
 
   it("builds and pushes tags derived from the released package version", async () => {
-    await expect(
-      releasePublishExecutor(createOptions(), createContext()),
-    ).resolves.toEqual({ success: true });
+    await expect(releasePublishExecutor({}, createContext())).resolves.toEqual({
+      success: true,
+    });
 
     expect(fsMocks.readFile).toHaveBeenCalledWith(
       "/workspace/apps/sample/package.json",
@@ -81,9 +94,9 @@ describe("release-publish executor", () => {
   it("does not invoke Docker in dry run mode", async () => {
     process.env.NX_DRY_RUN = "true";
 
-    await expect(
-      releasePublishExecutor(createOptions(), createContext()),
-    ).resolves.toEqual({ success: true });
+    await expect(releasePublishExecutor({}, createContext())).resolves.toEqual({
+      success: true,
+    });
 
     expect(dockerRunMocks.runDockerCommand).not.toHaveBeenCalled();
   });
@@ -95,9 +108,9 @@ describe("release-publish executor", () => {
       )
       .mockResolvedValueOnce('{"metadata":{"version":"0.0.2"}}');
 
-    await expect(
-      releasePublishExecutor(createOptions(), createContext()),
-    ).resolves.toEqual({ success: true });
+    await expect(releasePublishExecutor({}, createContext())).resolves.toEqual({
+      success: true,
+    });
 
     expect(fsMocks.readFile).toHaveBeenNthCalledWith(
       1,
@@ -120,9 +133,7 @@ describe("release-publish executor", () => {
   it("rejects a package without a release version", async () => {
     fsMocks.readFile.mockResolvedValue("{}");
 
-    await expect(
-      releasePublishExecutor(createOptions(), createContext()),
-    ).rejects.toThrow(
+    await expect(releasePublishExecutor({}, createContext())).rejects.toThrow(
       "Could not read a version from /workspace/apps/sample/package.json.",
     );
   });
@@ -138,9 +149,12 @@ describe("release-publish executor", () => {
     expect(dockerRunMocks.runDockerCommand).not.toHaveBeenCalled();
   });
 
-  it("rejects invalid executor options", async () => {
-    await expect(
-      releasePublishExecutor({ projectRoot: "apps/sample" }, createContext()),
-    ).rejects.toThrow("Invalid Docker publish executor options.");
+  it("rejects when the project has no inferred Docker build options", async () => {
+    const context = createContext();
+    context.projectsConfigurations.projects["@pagopa/example"].targets = {};
+
+    await expect(releasePublishExecutor({}, context)).rejects.toThrow(
+      "Could not resolve Docker build options for '@pagopa/example'.",
+    );
   });
 });

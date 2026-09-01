@@ -2,59 +2,12 @@
   "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "Release publish executor",
-  "description": "Builds and pushes this release's Docker image from the version in package.json or project.json metadata.version, plus major/major.minor/latest alias tags. It requires no temporary files from the versioning run.",
+  "description": "Builds and pushes this release's Docker image from the inferred docker:build target, plus major/major.minor/latest alias tags.",
   "type": "object",
   "properties": {
-    "projectRoot": {
-      "description": "Project root containing the Dockerfile",
-      "type": "string"
-    },
-    "contextPath": {
-      "description": "Workspace-relative Docker build context",
-      "type": "string"
-    },
-    "defaultBranch": {
-      "description": "Default branch used by regular Docker targets",
-      "type": "string"
-    },
-    "dockerfilePath": {
-      "description": "Workspace-relative Dockerfile path",
-      "type": "string"
-    },
-    "imageAuthors": {
-      "description": "OCI image authors label",
-      "type": "string"
-    },
-    "imageName": {
-      "description": "Fully qualified Docker repository name",
-      "type": "string"
-    },
-    "imageUrl": {
-      "description": "OCI source and URL label",
-      "type": "string"
-    },
-    "platform": {
-      "description": "Docker target platforms",
-      "type": "string"
-    },
-    "projectDisplayName": {
-      "description": "Package name used for tags and OCI labels",
-      "type": "string"
-    },
     "dryRun": {
       "description": "Log the release image tags without building or pushing",
       "type": "boolean"
     }
-  },
-  "required": [
-    "contextPath",
-    "defaultBranch",
-    "dockerfilePath",
-    "imageAuthors",
-    "imageName",
-    "imageUrl",
-    "platform",
-    "projectDisplayName",
-    "projectRoot"
-  ]
+  }
 }
