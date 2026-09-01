@@ -1,3 +1,18 @@
+## 0.5.14 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.7
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.13 (2026-07-28)
 
 ### 🩹 Fixes
