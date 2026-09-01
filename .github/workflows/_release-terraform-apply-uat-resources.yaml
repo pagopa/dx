@@ -1,0 +1,22 @@
+name: Terraform apply on uat resources
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/resources/uat/**"
+      - "infra/resources/_modules/**"
+      - ".github/workflows/_release-terraform-apply-uat-resources.yaml"
+jobs:
+  uat_itn_common_deploy:
+    uses: $/.github/workflows/infra_apply.yaml
+    name: Uat - Deploy
+    secrets: inherit
+    with:
+      environment: uat
+      base_path: "infra/resources/"
+      override_github_environment: infra-uat
+      use_labels: true
+      use_private_agent: true
