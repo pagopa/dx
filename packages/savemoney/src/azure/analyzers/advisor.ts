@@ -153,6 +153,18 @@ function addToSubGroups(
   }
 }
 
+/**
+ * Namespaced canonical identity of an Advisor recommendation. Combined with the
+ * resource ID it is the deduplication key that lets the same problem reported
+ * by another source collapse onto this finding. Left unset when Advisor does
+ * not report a type ID, so unrelated recommendations are never merged.
+ */
+function advisorRecommendationId(
+  recommendationTypeId: string | undefined,
+): string | undefined {
+  return recommendationTypeId ? `advisor.${recommendationTypeId}` : undefined;
+}
+
 function buildResourceFinding(
   rec: RecommendationInfo,
   savings: undefined | { amount: number; currency: string },
@@ -168,6 +180,7 @@ function buildResourceFinding(
     code: `advisor.${rec.recommendationTypeId ?? "unknown"}`,
     estimatedMonthlySavings: savings,
     reason: enrichReason(problem, props),
+    recommendationId: advisorRecommendationId(rec.recommendationTypeId),
     recommendedAction: rec.shortDescription?.solution,
     resourceId: rawResourceId,
     severity: mapImpact(rec.impact),
@@ -202,6 +215,7 @@ function createSubGroup(
       category: "cost",
       code: `advisor.${typeKey}`,
       reason,
+      recommendationId: advisorRecommendationId(rec.recommendationTypeId),
       recommendedAction: rec.shortDescription?.solution,
       resourceId,
       severity: mapImpact(rec.impact),

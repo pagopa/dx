@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Allows to easily create an Azure FrontDoor CDN",
   "provider": "azurerm",
-  "version": "1.0.1"
+  "version": "2.0.0"
 }

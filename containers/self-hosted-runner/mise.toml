@@ -1,5 +1,16 @@
 [tools]
 "conda:zip" = "3.0"
+aws-cli = { version = "2", symlink_bins = "true", depends = ["uv"] }
+azure-cli = { version = "2", uvx_args = "--prerelease=allow" }
+uv = "latest"
 
 [settings]
 minimum_release_age = "7d"
+idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
+
+[deps.tflint]
+sources = [".tflint.hcl"]
+outputs = [".tflint.d/plugins"]
+run = "tflint --init"
+
+[deps.pnpm]
