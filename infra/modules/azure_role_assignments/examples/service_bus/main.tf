@@ -3,6 +3,12 @@ resource "azurerm_resource_group" "example" {
   location = "Italy North"
 }
 
+data "azurerm_subnet" "pep" {
+  name                 = "${local.project}-pep-snet-01"
+  virtual_network_name = "${local.project}-common-vnet-01"
+  resource_group_name  = "${local.project}-network-rg-01"
+}
+
 module "app_service_exposed" {
   source  = "pagopa-dx/azure-function-app-exposed/azurerm"
   version = "~> 5.0"
@@ -25,7 +31,8 @@ module "service_bus" {
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
-  allowed_ips = ["127.0.0.1/31"]
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = "${local.project}-network-rg-01"
 
   tags = local.tags
 }
@@ -61,7 +68,7 @@ module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 4.0"
 
-  principal_id    = module.app_service_exposed.app_service.app_service.principal_id
+  principal_id    = module.app_service_exposed.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
 
   service_bus = [
