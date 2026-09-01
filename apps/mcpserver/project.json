@@ -1,0 +1,7 @@
+{
+  "targets": {
+    "nx-release-publish": {
+      "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+    }
+  }
+}

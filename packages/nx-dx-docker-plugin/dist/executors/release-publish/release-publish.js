@@ -6,7 +6,7 @@ let node_path = require("node:path");
 let node_fs_promises = require("node:fs/promises");
 
 //#region src/executors/release-publish/schema.ts
-const releasePublishSchema = require_docker_run.dockerRunOptionsSchema.extend({ dryRun: zod_v4.z.boolean().optional() });
+const releasePublishSchema = zod_v4.z.object({ dryRun: zod_v4.z.boolean().optional() });
 
 //#endregion
 //#region src/executors/release-publish/release-publish.ts
@@ -42,18 +42,26 @@ const readReleasedVersion = async (workspaceRoot, projectRoot) => {
 		version: parseResult.data.metadata.version
 	};
 };
+const getDockerRunOptions = (context) => {
+	const project = context.projectsConfigurations.projects[context.projectName];
+	if (!project) throw new Error(`Could not find project '${context.projectName}' in the Nx project graph.`);
+	const parseResult = require_docker_run.dockerRunOptionsSchema.safeParse(project.targets?.["docker:build"]?.options);
+	if (!parseResult.success) throw new Error(`Could not resolve Docker build options for '${context.projectName}'.`, { cause: parseResult.error });
+	return parseResult.data;
+};
 const releasePublishExecutor = async (rawOptions, context) => {
 	const parseResult = releasePublishSchema.safeParse(rawOptions);
 	if (!parseResult.success) throw new Error("Invalid Docker publish executor options.", { cause: parseResult.error });
 	const options = parseResult.data;
-	const release = await readReleasedVersion(context.root, options.projectRoot);
-	const releaseTags = require_docker_image.computeReleaseTags(options.projectDisplayName, release.version);
+	const dockerRunOptions = getDockerRunOptions(context);
+	const release = await readReleasedVersion(context.root, dockerRunOptions.projectRoot);
+	const releaseTags = require_docker_image.computeReleaseTags(dockerRunOptions.projectDisplayName, release.version);
 	if (releaseTags.length === 0) throw new Error(`Version '${release.version}' in ${release.sourcePath} is not Docker-compatible semantic version.`);
 	if (process.env.NX_DRY_RUN === "true" || options.dryRun === true) {
-		console.info(`Dry run enabled: would build and push '${options.imageName}' with tags ${releaseTags.join(", ")}.`);
+		console.info(`Dry run enabled: would build and push '${dockerRunOptions.imageName}' with tags ${releaseTags.join(", ")}.`);
 		return { success: true };
 	}
-	return require_docker_run.runDockerCommand("push", options, context.root, release.version);
+	return require_docker_run.runDockerCommand("push", dockerRunOptions, context.root, release.version);
 };
 
 //#endregion
