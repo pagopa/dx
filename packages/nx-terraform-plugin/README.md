@@ -27,5 +27,30 @@ all files under `tests/` and `examples/` are included in the E2E target's cache
 inputs.
 
 All inferred test targets depend on the plugin's Terraform initialization
-target, which is `init` by default. Their names can be customized with
-`testTargetName`, `testIntegrationTargetName`, and `e2eTargetName`.
+target, which is `init` by default.
+
+## Target name prefix
+
+The plugin uses fixed target suffixes for Terraform commands. Configure
+`targetNamePrefix` to prepend the same value to each target that was previously
+customizable:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "@pagopa/nx-terraform-plugin",
+      "include": ["infra/**"],
+      "options": {
+        "targetNamePrefix": "tf"
+      }
+    }
+  ]
+}
+```
+
+The plugin inserts a hyphen between a nonempty target name prefix and each
+target suffix. For example, `"tf"` produces `tf-init`, `tf-fmt`, `tf-test`,
+`tf-test-integration`, and `tf-apply`; dependencies use the matching `tf-init`
+target. The default target name prefix is `""`, which preserves the standard
+target names.

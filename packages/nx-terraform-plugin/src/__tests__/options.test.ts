@@ -3,25 +3,36 @@ import { describe, expect, it } from "vitest";
 import { parseOptions } from "../options.ts";
 
 describe("parseOptions", () => {
-  it("returns default target names when options are undefined", () => {
+  it("returns default options when options are undefined", () => {
     expect(parseOptions(undefined)).toEqual({
       additionalEnvironments: [],
-      applyTargetName: "apply",
-      consoleTargetName: "console",
-      docsTargetName: "docs",
-      e2eTargetName: "e2e",
-      formatTargetName: "fmt",
-      initTargetName: "init",
-      lintTargetName: "lint",
-      outputTargetName: "output",
-      planTargetName: "plan",
       publish: {
         mode: "github",
       },
-      publishTargetName: "nx-release-publish",
-      testIntegrationTargetName: "test-integration",
-      testTargetName: "test",
-      validateTargetName: "validate",
+      targetNamePrefix: "",
+    });
+  });
+
+  it("accepts a target-name prefix", () => {
+    expect(parseOptions({ targetNamePrefix: "tf" }).targetNamePrefix).toBe(
+      "tf",
+    );
+  });
+
+  it("ignores legacy target-name options", () => {
+    const options = {
+      initTargetName: "legacy-init",
+      prefix: "legacy-",
+      publishTargetName: "legacy-publish",
+      targetNamePrefix: "tf",
+    };
+
+    expect(parseOptions(options)).toEqual({
+      additionalEnvironments: [],
+      publish: {
+        mode: "github",
+      },
+      targetNamePrefix: "tf",
     });
   });
 
@@ -79,32 +90,5 @@ describe("parseOptions", () => {
         },
       }),
     ).toThrow("publish.github.owner");
-  });
-
-  it("rejects duplicate target names", () => {
-    expect(() =>
-      parseOptions({
-        applyTargetName: "plan",
-        consoleTargetName: "console",
-        docsTargetName: "docs",
-        e2eTargetName: "e2e",
-        formatTargetName: "fmt",
-        initTargetName: "init",
-        lintTargetName: "lint",
-        outputTargetName: "output",
-        planTargetName: "plan",
-        testIntegrationTargetName: "test-integration",
-        testTargetName: "test",
-        validateTargetName: "validate",
-      }),
-    ).toThrow('Target name "plan" is duplicated');
-  });
-
-  it("rejects duplicate integration and E2E target names", () => {
-    expect(() =>
-      parseOptions({
-        e2eTargetName: "test-integration",
-      }),
-    ).toThrow('Target name "test-integration" is duplicated');
   });
 });
