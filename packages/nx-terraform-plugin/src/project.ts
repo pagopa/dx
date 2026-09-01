@@ -30,6 +30,11 @@ const noTerraformTestCapabilities: TerraformTestCapabilities = {
   unit: false,
 };
 
+const getTargetName = (opts: TerraformPluginOptions, targetSuffix: string) =>
+  opts.targetNamePrefix === ""
+    ? targetSuffix
+    : `${opts.targetNamePrefix}-${targetSuffix}`;
+
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
 export const getProjectNameFromRoot = (root: string) =>
@@ -86,7 +91,7 @@ const getPublishTarget = (
   try {
     const publishOptions = mergePublishOptions(opts.publish, publishManifest);
     return [
-      opts.publishTargetName,
+      "nx-release-publish",
       {
         cache: false,
         executor: "@pagopa/nx-terraform-plugin:publish",
@@ -120,14 +125,15 @@ const getTestTargets = (
   testCapabilities: TerraformTestCapabilities,
 ): [string, TargetConfiguration][] => {
   const targets: [string, TargetConfiguration][] = [];
+  const initTargetName = getTargetName(opts, "init");
 
   if (testCapabilities.unit || testCapabilities.contract) {
     targets.push([
-      opts.testTargetName,
+      getTargetName(opts, "test"),
       {
         cache: true,
         command: `terraform test`,
-        dependsOn: [opts.initTargetName],
+        dependsOn: [initTargetName],
         inputs: [
           "default",
           "{projectRoot}/tests/unit.tftest.hcl",
@@ -145,11 +151,11 @@ const getTestTargets = (
   }
   if (testCapabilities.integration) {
     targets.push([
-      opts.testIntegrationTargetName,
+      getTargetName(opts, "test-integration"),
       {
         cache: true,
         command: `terraform test`,
-        dependsOn: [opts.initTargetName],
+        dependsOn: [initTargetName],
         inputs: [
           "default",
           "{projectRoot}/tests/integration.tftest.hcl",
@@ -164,11 +170,11 @@ const getTestTargets = (
   }
   if (testCapabilities.e2e) {
     targets.push([
-      opts.e2eTargetName,
+      getTargetName(opts, "e2e"),
       {
         cache: true,
         command: `go test -v -timeout 1h ./tests`,
-        dependsOn: [opts.initTargetName],
+        dependsOn: [initTargetName],
         inputs: [
           "default",
           "{projectRoot}/tests/**/*",
@@ -194,10 +200,11 @@ const getTargets = (
   const formatArgs = ["-list=true", "-recursive=true"];
 
   const cwd = "{projectRoot}";
+  const initTargetName = getTargetName(opts, "init");
 
   const targets: [string, TargetConfiguration][] = [
     [
-      opts.initTargetName,
+      initTargetName,
       {
         cache: true,
         command: `terraform init`,
@@ -212,7 +219,7 @@ const getTargets = (
       },
     ],
     [
-      opts.formatTargetName,
+      getTargetName(opts, "fmt"),
       {
         cache: true,
         command: `terraform fmt`,
@@ -233,7 +240,7 @@ const getTargets = (
   targets.push(...getTestTargets(opts, cwd, testCapabilities));
 
   targets.push([
-    opts.validateTargetName,
+    getTargetName(opts, "validate"),
     {
       cache: true,
       command: `terraform validate`,
@@ -246,7 +253,7 @@ const getTargets = (
 
   if (hasRootTflintConfig) {
     targets.push([
-      opts.lintTargetName,
+      getTargetName(opts, "lint"),
       {
         cache: true,
         command: `tflint`,
@@ -268,7 +275,7 @@ const getTargets = (
 
   if (projectType === "library") {
     targets.push([
-      opts.docsTargetName,
+      getTargetName(opts, "docs"),
       {
         cache: true,
         command: `terraform-docs markdown table`,
@@ -300,7 +307,7 @@ const getTargets = (
 
   targets.push(
     [
-      opts.consoleTargetName,
+      getTargetName(opts, "console"),
       {
         cache: false,
         command: `terraform console`,
@@ -311,11 +318,11 @@ const getTargets = (
       },
     ],
     [
-      opts.outputTargetName,
+      getTargetName(opts, "output"),
       {
         cache: false,
         command: `terraform output`,
-        dependsOn: [opts.initTargetName],
+        dependsOn: [initTargetName],
         options: {
           cwd,
         },
@@ -326,7 +333,7 @@ const getTargets = (
   if (projectType === "application") {
     targets.push(
       [
-        opts.planTargetName,
+        getTargetName(opts, "plan"),
         {
           cache: false,
           configurations: {
@@ -336,7 +343,7 @@ const getTargets = (
               verbose: false,
             },
           },
-          dependsOn: [opts.initTargetName],
+          dependsOn: [initTargetName],
           executor: "@pagopa/nx-terraform-plugin:plan",
           options: {
             projectRoot: "{projectRoot}",
@@ -347,11 +354,11 @@ const getTargets = (
         },
       ],
       [
-        opts.applyTargetName,
+        getTargetName(opts, "apply"),
         {
           cache: false,
           command: `terraform apply`,
-          dependsOn: [opts.initTargetName],
+          dependsOn: [initTargetName],
           options: {
             cwd,
             tty: true,
