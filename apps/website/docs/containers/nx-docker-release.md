@@ -144,8 +144,8 @@ project. If an application is released only as a Docker image, mark its
 }
 ```
 
-The publisher reuses the fully resolved `docker:build` options, so do not repeat
-the image name, build context, Dockerfile, platform, or OCI metadata in a
+The plugin automatically supplies the image name, build context, Dockerfile,
+platform, and OCI metadata to its inferred publisher; do not declare a separate
 release target. Projects that publish both an npm package and a Docker image
 should configure `nx.docker.repositoryName` and publish the image from a
 release-tag workflow.

@@ -4,20 +4,10 @@ import { join } from "node:path";
 import { z } from "zod/v4";
 
 import { computeReleaseTags } from "../../docker-image.ts";
-import { dockerRunOptionsSchema, runDockerCommand } from "../../docker-run.ts";
+import { runDockerCommand } from "../../docker-run.ts";
 import { releasePublishSchema } from "./schema.ts";
 
 export interface DockerPublishExecutorContext {
-  projectName: string;
-  projectsConfigurations: {
-    projects: Record<
-      string,
-      {
-        root: string;
-        targets?: Record<string, { options?: unknown }>;
-      }
-    >;
-  };
   root: string;
 }
 
@@ -86,27 +76,6 @@ const readReleasedVersion = async (
   };
 };
 
-const getDockerRunOptions = (context: DockerPublishExecutorContext) => {
-  const project = context.projectsConfigurations.projects[context.projectName];
-  if (!project) {
-    throw new Error(
-      `Could not find project '${context.projectName}' in the Nx project graph.`,
-    );
-  }
-
-  const parseResult = dockerRunOptionsSchema.safeParse(
-    project.targets?.["docker:build"]?.options,
-  );
-  if (!parseResult.success) {
-    throw new Error(
-      `Could not resolve Docker build options for '${context.projectName}'.`,
-      { cause: parseResult.error },
-    );
-  }
-
-  return parseResult.data;
-};
-
 export const releasePublishExecutor = async (
   rawOptions: unknown,
   context: DockerPublishExecutorContext,
@@ -120,13 +89,9 @@ export const releasePublishExecutor = async (
   }
 
   const options = parseResult.data;
-  const dockerRunOptions = getDockerRunOptions(context);
-  const release = await readReleasedVersion(
-    context.root,
-    dockerRunOptions.projectRoot,
-  );
+  const release = await readReleasedVersion(context.root, options.projectRoot);
   const releaseTags = computeReleaseTags(
-    dockerRunOptions.projectDisplayName,
+    options.projectDisplayName,
     release.version,
   );
   if (releaseTags.length === 0) {
@@ -140,17 +105,12 @@ export const releasePublishExecutor = async (
 
   if (dryRun) {
     console.info(
-      `Dry run enabled: would build and push '${dockerRunOptions.imageName}' with tags ${releaseTags.join(", ")}.`,
+      `Dry run enabled: would build and push '${options.imageName}' with tags ${releaseTags.join(", ")}.`,
     );
     return { success: true };
   }
 
-  return runDockerCommand(
-    "push",
-    dockerRunOptions,
-    context.root,
-    release.version,
-  );
+  return runDockerCommand("push", options, context.root, release.version);
 };
 
 export default releasePublishExecutor;

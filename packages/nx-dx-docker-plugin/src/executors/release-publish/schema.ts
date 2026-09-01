@@ -1,6 +1,8 @@
 import { z } from "zod/v4";
 
-export const releasePublishSchema = z.object({
+import { dockerRunOptionsSchema } from "../../docker-run.ts";
+
+export const releasePublishSchema = dockerRunOptionsSchema.extend({
   dryRun: z.boolean().optional(),
 });
 
