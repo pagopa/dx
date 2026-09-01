@@ -24,42 +24,58 @@ vi.mock("@logtape/logtape", () => ({
   getLogger: logtapeMocks.getLogger,
 }));
 
-import { createNodesV2, getDiscoveryStateWithValidation } from "../index.ts";
+import {
+  createNodesV2,
+  getDiscoveryState,
+  getDiscoveryStateWithValidation,
+} from "../index.ts";
 import { parseOptions } from "../options.ts";
 
 describe("createNodesV2", () => {
-  it("discovers both terraform and module manifests", () => {
-    expect(createNodesV2[0]).toBe("**/{*.tf,module.json}");
+  it("discovers terraform, module manifests, and supported test files", () => {
+    expect(createNodesV2[0]).toBe(
+      "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}",
+    );
   });
 });
 
-describe("getDiscoveryStateWithValidation", () => {
-  const createWorkspaceRoot = async () => {
-    const workspaceRoot = await fs.mkdtemp(
-      path.join(os.tmpdir(), "nx-tf-plugin-"),
-    );
-    onTestFinished(async () => {
-      await fs.rm(workspaceRoot, { force: true, recursive: true });
-    });
-    return workspaceRoot;
-  };
-
-  afterEach(() => {
-    vi.clearAllMocks();
+const createWorkspaceRoot = async () => {
+  const workspaceRoot = await fs.mkdtemp(
+    path.join(os.tmpdir(), "nx-tf-plugin-"),
+  );
+  onTestFinished(async () => {
+    await fs.rm(workspaceRoot, { force: true, recursive: true });
   });
+  return workspaceRoot;
+};
 
-  it("collects only validated publishable roots and ignores test/example roots", async () => {
+afterEach(() => {
+  vi.clearAllMocks();
+});
+
+describe("getDiscoveryStateWithValidation", () => {
+  it("collects test capabilities and only validated publishable roots", async () => {
     const workspaceRoot = await createWorkspaceRoot();
 
     const configFiles = [
       path.join("infra", "_modules", "good-module", "main.tf"),
       path.join("infra", "_modules", "good-module", "module.json"),
+      path.join("infra", "_modules", "good-module", "tests", "unit.tftest.hcl"),
+      path.join(
+        "infra",
+        "_modules",
+        "good-module",
+        "tests",
+        "integration.tftest.hcl",
+      ),
+      path.join("infra", "_modules", "good-module", "tests", "e2e_test.go"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
       path.join("infra", "_modules", "invalid-module", "module.json"),
       path.join("infra", "_modules", "invalid-module-two", "module.json"),
       path.join("infra", "_modules", "example", "module.json"),
       path.join("infra", "_modules", "tests", "main.tf"),
       path.join("infra", "resources", "prod", "main.tf"),
+      path.join("packages", "web", "tests", "e2e_test.go"),
     ];
 
     await fs.mkdir(
@@ -132,6 +148,19 @@ describe("getDiscoveryStateWithValidation", () => {
       path.join("infra", "_modules", "good-module"),
     ]);
     expect(
+      result.testCapabilitiesByRoot.get(
+        path.join("infra", "_modules", "good-module"),
+      ),
+    ).toEqual({
+      contract: false,
+      e2e: true,
+      integration: true,
+      unit: true,
+    });
+    expect(
+      result.testCapabilitiesByRoot.has(path.join("packages", "web")),
+    ).toBe(false);
+    expect(
       result.publishableManifestByRoot.get(
         path.join("infra", "_modules", "good-module"),
       ),
@@ -175,7 +204,20 @@ describe("getDiscoveryStateWithValidation", () => {
     );
   });
 
-  it("warns and skips publish target inference when merged publish options are invalid", async () => {
+  it("ignores Go helpers that are not test files", () => {
+    const moduleRoot = path.join("infra", "_modules", "go-helper-only");
+
+    const result = getDiscoveryState([
+      path.join(moduleRoot, "main.tf"),
+      path.join(moduleRoot, "tests", "helpers.go"),
+    ]);
+
+    expect(result.testCapabilitiesByRoot.has(moduleRoot)).toBe(false);
+  });
+});
+
+describe("createNodesV2 publish inference", () => {
+  it("warns and skips the publish target when merged options are invalid", async () => {
     const workspaceRoot = await createWorkspaceRoot();
 
     const moduleRoot = path.join("infra", "_modules", "missing-owner");

@@ -24,6 +24,7 @@ const terraformPluginOptionsSchema = z.object({
   applyTargetName: targetNameSchema,
   consoleTargetName: targetNameSchema,
   docsTargetName: targetNameSchema,
+  e2eTargetName: targetNameSchema,
   formatTargetName: targetNameSchema,
   initTargetName: targetNameSchema,
   lintTargetName: targetNameSchema,
@@ -31,6 +32,7 @@ const terraformPluginOptionsSchema = z.object({
   planTargetName: targetNameSchema,
   publish: publishOptionsSchema,
   publishTargetName: targetNameSchema,
+  testIntegrationTargetName: targetNameSchema,
   testTargetName: targetNameSchema,
   validateTargetName: targetNameSchema,
 });
@@ -44,6 +46,7 @@ const defaultOptions: TerraformPluginOptions = {
   applyTargetName: "apply",
   consoleTargetName: "console",
   docsTargetName: "docs",
+  e2eTargetName: "e2e",
   formatTargetName: "fmt",
   initTargetName: "init",
   lintTargetName: "lint",
@@ -53,6 +56,7 @@ const defaultOptions: TerraformPluginOptions = {
     mode: "github",
   },
   publishTargetName: "nx-release-publish",
+  testIntegrationTargetName: "test-integration",
   testTargetName: "test",
   validateTargetName: "validate",
 };

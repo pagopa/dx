@@ -12,14 +12,14 @@ From the module directory:
 
 ```bash
 nx test
-nx test -c e2e
+nx e2e
 ```
 
 From the workspace root:
 
 ```bash
 nx run azure_merge_roles:test
-nx run azure_merge_roles:test:e2e
+nx run azure_merge_roles:e2e
 ```
 
 ## Notes
