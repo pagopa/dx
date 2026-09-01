@@ -2,10 +2,10 @@
 
 `@pagopa/nx-dx-docker-plugin` is an Nx plugin that infers Docker targets with workspace-wide Docker conventions.
 
-It provides the Docker target inference with:
+It provides Docker target inference with:
 
-- automatic Docker build context selection
-- automatic `--file` resolution relative to the selected build context
+- a monorepo-root Docker build context by default
+- a project-local Dockerfile by default
 - automatic OCI image labels
 - passthrough metadata tags and labels attached to the inferred Docker build target
 - a custom `nx-release-publish` executor that publishes the release image and its semver aliases
@@ -133,24 +133,36 @@ The plugin preserves unrelated build arguments already defined on the inferred t
 
 ## Workspace Release Composition
 
-For package projects, set `nx.release.docker.repositoryName` or
-`release.docker.repositoryName` in `package.json`. The plugin then replaces
-Nx's publish target with its Docker publisher. Docker-only projects declare the
-repository and version in `project.json` metadata, as shown below.
+For package projects, set `nx.release.docker.repositoryName` in `package.json`.
+Nx also infers the JavaScript `nx-release-publish` target for these projects, so
+add a minimal `project.json` override to select the Docker publisher:
+
+```json
+{
+  "targets": {
+    "nx-release-publish": {
+      "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+    }
+  }
+}
+```
+
+The Docker publisher reuses the resolved `docker:build` options. Do not repeat
+the image name, build context, Dockerfile, platform, or OCI metadata in the
+release target. Docker-only projects declare the repository and version in
+`project.json` metadata, as shown below.
 
 ## Build Context Resolution
 
-The plugin inspects the Dockerfile to choose the narrowest valid build context.
+The plugin defaults to the RFC-DX-076 Option 4 layout:
 
-It parses local `COPY` and `ADD` instructions in both shell form and JSON-array form, then:
+- the Dockerfile is `{projectRoot}/Dockerfile`
+- the Docker build context is the monorepo root (`.`)
+- application install, build, and packaging execute inside Docker build stages
+- the final Docker stage copies only the runtime payload
 
-- ignores `ADD` sources that point to remote URLs
-- ignores stage-to-stage copies declared with `--from`
-- collects candidate contexts from directories under the project root and from ancestor directories up to the workspace root
-- keeps only the contexts that can resolve every local source path referenced by the Dockerfile
-- selects the deepest valid context so Docker sends the smallest practical build context
-
-If the Dockerfile does not reference any local `COPY` or `ADD` sources, the project root is used as the build context.
+Set `nx.docker.contextPath` or `nx.docker.dockerfilePath` only when a project
+needs a different layout. Both paths are workspace-relative.
 
 ## Automatic OCI Labels
 
@@ -190,12 +202,14 @@ The package provides one executor:
 
 - `@pagopa/nx-dx-docker-plugin:release-publish`
 
-This executor is reached through the inferred `nx-release-publish` target.
+For Docker-only projects, this executor is reached through the inferred
+`nx-release-publish` target. Package projects must override Nx's inferred
+JavaScript publisher as shown in [Workspace Release Composition](#workspace-release-composition).
 
 Its behavior is:
 
 1. read the released version from the project's `package.json`, or from
-  `project.json` `metadata.version` for Docker-only projects
+   `project.json` `metadata.version` for Docker-only projects
 2. compute the immutable version, major/minor, and `latest` tags
 3. in dry-run mode, print the tags that would be published and stop
 4. otherwise rebuild the image with Buildx and push every release tag
@@ -223,15 +237,22 @@ Package projects can configure Docker release publishing in `package.json`:
   "repository": {
     "url": "https://github.com/acme/example-monorepo"
   },
-  "release": {
+  "nx": {
     "docker": {
       "repositoryName": "acme/dockerapp"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "acme/dockerapp"
+      }
     }
   }
 }
 ```
 
-Docker-only projects use `project.json` instead:
+They also need the `project.json` target override shown in [Workspace Release
+Composition](#workspace-release-composition). Docker-only projects use
+`project.json` instead:
 
 ```json
 {
