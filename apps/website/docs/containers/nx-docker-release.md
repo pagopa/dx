@@ -129,9 +129,11 @@ directly to `docker buildx --platform`. All three values are optional.
 
 `release.docker.repositoryName` enables Docker release publishing for the
 project and is also used as the build/push image repository unless
-`nx.docker.repositoryName` overrides it. If an application is released only as a
-Docker image, mark its `package.json` as private to prevent Nx from inferring
-the JavaScript publisher:
+`nx.docker.repositoryName` overrides it. For example, use
+`nx.docker.repositoryName: "pagopa/my-build-image"` when normal Docker builds
+must use a repository different from the release image. If an application is
+released only as a Docker image, mark its `package.json` as private to prevent
+Nx from inferring the JavaScript publisher:
 
 ```json
 {
@@ -149,10 +151,10 @@ platform, and OCI metadata to its inferred publisher; do not declare a separate
 release target. Projects that publish both an npm package and a Docker image
 should publish the image from a release-tag workflow.
 
-### Container-only projects
+### Projects without a package manifest
 
-For a Docker-only project without `package.json`, keep its durable release
-version in `project.json` and use the plugin's VersionActions implementation:
+For a project without a `package.json`, keep its durable release version in
+`project.json` and use the plugin's VersionActions implementation:
 
 ```json
 {

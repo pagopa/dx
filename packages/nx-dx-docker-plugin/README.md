@@ -151,12 +151,13 @@ inferring the JavaScript publisher:
 The plugin supplies the image name, build context, Dockerfile, platform, and OCI
 metadata to its inferred publisher automatically; do not declare a separate
 release target. Projects that publish both an npm package and a Docker image
-should publish the image from a release-tag workflow. Docker-only projects
-declare the repository and version in `project.json` metadata, as shown below.
+should publish the image from a release-tag workflow. Projects without a
+`package.json` declare the repository and version in `project.json` metadata, as
+shown below.
 
 ## Build Context Resolution
 
-The plugin defaults to the RFC-DX-076 Option 4 layout:
+The plugin defaults to a monorepo Docker build layout:
 
 - the Dockerfile is `{projectRoot}/Dockerfile`
 - the Docker build context is the monorepo root (`.`)
@@ -211,7 +212,7 @@ release artifact, as shown in [Workspace Release Composition](#workspace-release
 Its behavior is:
 
 1. read the released version from the project's `package.json`, or from
-   `project.json` `metadata.version` for Docker-only projects
+   `project.json` `metadata.version` for projects without a `package.json`
 2. compute the immutable version, major/minor, and `latest` tags
 3. in dry-run mode, print the tags that would be published and stop
 4. otherwise rebuild the image with Buildx and push every release tag
@@ -253,7 +254,7 @@ Package projects can configure Docker release publishing in `package.json`:
 }
 ```
 
-Docker-only projects use `project.json` instead:
+Projects without a `package.json` use `project.json` instead:
 
 ```json
 {
