@@ -1,7 +1,7 @@
 /**
  * Tests for the AZQR ingestion module.
  *
- * Cover the behaviours CES-2192 requires:
+ * Cover:
  * 1. `parseAzqrReport` validates the JSON shape (accept valid, reject invalid).
  * 2. `isAzqrReportMasked` detects AZQR's default subscription-ID masking.
  * 3. `classifyAzqrRow` / `azqrImpactedToFindings` promote billable waste as
@@ -234,5 +234,49 @@ describe("azqrImpactedToFindings", () => {
       ],
     });
     expect(azqrImpactedToFindings(report)[0].severity).toBe("low");
+  });
+
+  it("gives orphaned resources the shared cross-source recommendation id", () => {
+    const report = parseAzqrReport({
+      impacted: [
+        orphanRow("Microsoft.Compute/disks", {
+          recommendation: "Managed Disks not attached",
+          recommendationId: "orphan-disk",
+        }),
+      ],
+    });
+
+    expect(azqrImpactedToFindings(report)[0].recommendationId).toBe(
+      "orphan.microsoft.compute/disks",
+    );
+  });
+
+  it("namespaces the native recommendation id of non-orphan rows", () => {
+    const report = parseAzqrReport({
+      impacted: [
+        impactedRow({
+          category: "Cost",
+          recommendationId: "aprl-1234",
+          resourceType: "microsoft.compute/disks",
+        }),
+      ],
+    });
+
+    expect(azqrImpactedToFindings(report)[0].recommendationId).toBe(
+      "azqr.aprl-1234",
+    );
+  });
+
+  it("leaves the recommendation id unset when the row carries none", () => {
+    const report = parseAzqrReport({
+      impacted: [
+        impactedRow({
+          category: "Cost",
+          resourceType: "microsoft.compute/disks",
+        }),
+      ],
+    });
+
+    expect(azqrImpactedToFindings(report)[0].recommendationId).toBeUndefined();
   });
 });
