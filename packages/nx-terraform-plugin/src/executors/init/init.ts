@@ -26,21 +26,11 @@ const runExecutor: PromiseExecutor<InitExecutorInput> = async (options) => {
 
   const { args, frozenLockfile, projectRoot } = parseResult.data;
   const dispatcher = createDefaultTaskDispatcher();
-  try {
-    await dispatcher.dispatchTask("terraformInit", {
-      args,
-      frozenLockfile,
-      modulePath: projectRoot,
-    });
-  } catch (error) {
-    logger.error("Terraform init failed", {
-      error: error instanceof Error ? error.message : String(error),
-      path: projectRoot,
-    });
-    return {
-      success: false,
-    };
-  }
+  await dispatcher.dispatchTask("terraformInit", {
+    args,
+    frozenLockfile,
+    modulePath: projectRoot,
+  });
 
   return {
     success: true,
