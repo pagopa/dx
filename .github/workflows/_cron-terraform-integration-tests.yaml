@@ -20,7 +20,7 @@ jobs:
   terraform-integration-test:
     name: Run Terraform Integration Tests
     runs-on: ubuntu-latest
-    environment: automation-dev-cd
+    environment: automation-uat-cd
     permissions:
       id-token: write
       contents: read
