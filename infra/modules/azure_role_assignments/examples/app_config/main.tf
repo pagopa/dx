@@ -13,7 +13,7 @@ module "test_app" {
     app_name = "roles"
   })
 
-  resource_group_name = azurerm_resource_group.example.name
+  resource_group_name = azurerm_resource_group.roles.name
   health_check_path   = "/api/v1/info"
   node_version        = 22
 
@@ -27,7 +27,7 @@ module "test_app" {
 
 resource "azurerm_app_configuration" "this" {
   name                = "dx-d-itn-modules-role-appconfig-01"
-  resource_group_name = azurerm_resource_group.example.name
+  resource_group_name = azurerm_resource_group.roles.name
   location            = local.environment.location
 
   local_auth_enabled       = false
@@ -41,7 +41,7 @@ module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
   version = "~> 4.0"
 
-  principal_id    = module.test_app.app_service.app_service.principal_id
+  principal_id    = module.test_app.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
 
   app_config = [

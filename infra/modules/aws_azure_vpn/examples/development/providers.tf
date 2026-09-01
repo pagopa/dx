@@ -35,7 +35,7 @@ provider "azurerm" {
 }
 
 provider "aws" {
-  region = var.aws.region
+  region = local.aws_environment.region
   default_tags {
     tags = local.tags
   }
