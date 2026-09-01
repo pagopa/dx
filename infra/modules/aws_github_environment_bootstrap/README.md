@@ -369,7 +369,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-codebuild/aws | ~> 1.0 |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-codebuild/aws | ~> 2.0 |
 
 ## Resources
 

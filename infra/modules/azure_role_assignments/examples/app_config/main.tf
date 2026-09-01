@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "roles" {
 
 module "test_app" {
   source  = "pagopa-dx/azure-function-app-exposed/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment = merge(local.naming_config, {
     app_name = "roles"
@@ -15,7 +15,7 @@ module "test_app" {
 
   resource_group_name = azurerm_resource_group.example.name
   health_check_path   = "/api/v1/info"
-  node_version        = 20
+  node_version        = 22
 
   size = "P0v3"
 
@@ -39,7 +39,7 @@ resource "azurerm_app_configuration" "this" {
 
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.3"
+  version = "~> 4.0"
 
   principal_id    = module.test_app.app_service.app_service.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id

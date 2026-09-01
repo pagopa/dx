@@ -1,6 +1,6 @@
 module "core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 2.3"
+  version = "~> 6.0"
 
   test_enabled = true # set to false if you want to create all resources
 

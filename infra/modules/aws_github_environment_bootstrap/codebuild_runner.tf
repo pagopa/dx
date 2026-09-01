@@ -1,6 +1,6 @@
 module "github_runner" {
   source  = "pagopa-dx/github-selfhosted-runner-on-codebuild/aws"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   environment = var.environment
   tier        = var.github_private_runner.tier

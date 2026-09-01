@@ -435,7 +435,7 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 1.0 |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
 
 ## Resources
 

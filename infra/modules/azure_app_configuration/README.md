@@ -41,7 +41,7 @@ For examples of how to use this module, refer to the [examples](https://github.c
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_appconfig_team_roles"></a> [appconfig\_team\_roles](#module\_appconfig\_team\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.3 |
+| <a name="module_appconfig_team_roles"></a> [appconfig\_team\_roles](#module\_appconfig\_team\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 4.0 |
 
 ## Resources
 
