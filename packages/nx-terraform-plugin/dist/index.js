@@ -142,12 +142,8 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 		dependsOn: [opts.initTargetName],
 		inputs: [
 			"default",
-			"examples",
-			"{workspaceRoot}/go.work",
-			"{workspaceRoot}/go.work.sum",
-			"{projectRoot}/tests/**/*.go",
-			"{projectRoot}/tests/**/*.{mod,sum}",
-			"{projectRoot}/tests/apps/**/*"
+			"{projectRoot}/tests/**/*",
+			"{projectRoot}/examples/**/*"
 		],
 		options: { cwd }
 	}]);

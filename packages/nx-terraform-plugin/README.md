@@ -23,7 +23,8 @@ is inferred only when its expected test file exists, so Nx commands such as
 Integration tests can share Terraform setup files from `tests/setup/`. These
 files are included in the integration target's Nx cache inputs. E2E tests
 deploy the module's `examples/` and use the applications under `tests/apps/`;
-these files are included in the E2E target's cache inputs.
+all files under `tests/` and `examples/` are included in the E2E target's cache
+inputs.
 
 All inferred test targets depend on the plugin's Terraform initialization
 target, which is `init` by default. Their names can be customized with

@@ -139,12 +139,8 @@ const getExpectedE2eTarget = () => ({
   dependsOn: ["init"],
   inputs: [
     "default",
-    "examples",
-    "{workspaceRoot}/go.work",
-    "{workspaceRoot}/go.work.sum",
-    "{projectRoot}/tests/**/*.go",
-    "{projectRoot}/tests/**/*.{mod,sum}",
-    "{projectRoot}/tests/apps/**/*",
+    "{projectRoot}/tests/**/*",
+    "{projectRoot}/examples/**/*",
   ],
   options: {
     cwd: "{projectRoot}",
