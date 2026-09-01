@@ -57,8 +57,10 @@ target names.
 
 ## Terraform Module Locking
 
-The inferred `init` target runs `terraform init` and then records the content of
-downloaded Terraform Registry modules in `tfmodules.lock.json`.
+Application projects use a lock-aware `init` target that runs `terraform init`
+and records the content of downloaded Terraform Registry modules in
+`tfmodules.lock.json`. Library projects keep plain Terraform initialization and
+do not generate module lockfiles.
 
 The lock uses version 2 of the format:
 

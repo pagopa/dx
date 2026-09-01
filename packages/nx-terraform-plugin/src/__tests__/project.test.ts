@@ -745,6 +745,26 @@ describe("getProject libraries", () => {
   });
 });
 
+describe("library initialization", () => {
+  it("uses plain Terraform initialization without module locking", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+    expect(targets["init"]).toEqual({
+      cache: true,
+      command: "terraform init",
+      inputs: ["default"],
+      options: {
+        cwd: "{projectRoot}",
+      },
+      outputs: [
+        "{projectRoot}/.terraform",
+        "{projectRoot}/.terraform.lock.hcl",
+      ],
+    });
+  });
+});
+
 describe("getProject prefixed target names", () => {
   it("prefixes configurable target names and their dependencies", () => {
     const root = path.join("infra", "resources", "prod", "shared_stack");

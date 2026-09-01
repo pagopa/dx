@@ -188,24 +188,14 @@ const getTestTargets = (
   return targets;
 };
 
-const getTargets = (
-  opts: TerraformPluginOptions,
-  workspaceRoot: string,
-  root: string,
+const getInitTarget = (
   projectType: ProjectType,
-  hasRootTflintConfig: boolean,
-  publishManifest: ModulePublishManifest | undefined,
-  testCapabilities: TerraformTestCapabilities,
-): Record<string, TargetConfiguration> => {
-  const formatArgs = ["-list=true", "-recursive=true"];
-
-  const cwd = "{projectRoot}";
-  const initTargetName = getTargetName(opts, "init");
-
-  const targets: [string, TargetConfiguration][] = [
-    [
-      initTargetName,
-      {
+  initTargetName: string,
+  cwd: string,
+): [string, TargetConfiguration] => [
+  initTargetName,
+  projectType === "application"
+    ? {
         cache: false,
         configurations: {
           ci: {
@@ -222,8 +212,37 @@ const getTargets = (
           "{projectRoot}/.terraform.lock.hcl",
           "{projectRoot}/tfmodules.lock.json",
         ],
+      }
+    : {
+        cache: true,
+        command: `terraform init`,
+        inputs: ["default"],
+        options: {
+          cwd,
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+        ],
       },
-    ],
+];
+
+const getTargets = (
+  opts: TerraformPluginOptions,
+  workspaceRoot: string,
+  root: string,
+  projectType: ProjectType,
+  hasRootTflintConfig: boolean,
+  publishManifest: ModulePublishManifest | undefined,
+  testCapabilities: TerraformTestCapabilities,
+): Record<string, TargetConfiguration> => {
+  const formatArgs = ["-list=true", "-recursive=true"];
+
+  const cwd = "{projectRoot}";
+  const initTargetName = getTargetName(opts, "init");
+
+  const targets: [string, TargetConfiguration][] = [
+    getInitTarget(projectType, initTargetName, cwd),
     [
       getTargetName(opts, "fmt"),
       {
