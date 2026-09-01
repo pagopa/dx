@@ -129,12 +129,27 @@ Use `nx.docker` for project-specific Docker build and push settings:
 are workspace-relative; `platform` is passed directly to
 `docker buildx --platform`. All four values are optional.
 
-`nx.release.docker.repositoryName` has a separate Nx Release meaning: it
-replaces the project's `nx-release-publish` target with Docker publishing. Use
-it only for projects that publish Docker images through Nx Release and do not
-need the default npm publisher. Projects that publish both an npm package and a
-Docker image should configure `nx.docker.repositoryName` and publish the image
-from a release-tag workflow.
+`nx.release.docker.repositoryName` has a separate Nx Release meaning: it enables
+Docker release publishing for the project. For a project with a `package.json`,
+Nx also infers its JavaScript `nx-release-publish` target; add a minimal
+`project.json` override to select the DX Docker publisher:
+
+```json
+{
+  "targets": {
+    "nx-release-publish": {
+      "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+    }
+  }
+}
+```
+
+The publisher reuses the fully resolved `docker:build` options, so do not repeat
+the image name, build context, Dockerfile, platform, or OCI metadata in this
+target. Use this setup only for projects that publish Docker images through Nx
+Release and do not need the default npm publisher. Projects that publish both an
+npm package and a Docker image should configure `nx.docker.repositoryName` and
+publish the image from a release-tag workflow.
 
 ### Container-only projects
 
