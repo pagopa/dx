@@ -10,7 +10,7 @@ terraform {
 
 module "azure_app_service" {
   source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment         = var.environment
   use_case            = "default"
