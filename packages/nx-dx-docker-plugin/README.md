@@ -148,11 +148,11 @@ inferring the JavaScript publisher:
 }
 ```
 
-The Docker publisher reuses the resolved `docker:build` options. Do not repeat
-the image name, build context, Dockerfile, platform, or OCI metadata. Projects
-that publish both an npm package and a Docker image should publish the image from
-a release-tag workflow. Docker-only projects declare the repository and version
-in `project.json` metadata, as shown below.
+The plugin supplies the image name, build context, Dockerfile, platform, and OCI
+metadata to its inferred publisher automatically; do not declare a separate
+release target. Projects that publish both an npm package and a Docker image
+should publish the image from a release-tag workflow. Docker-only projects
+declare the repository and version in `project.json` metadata, as shown below.
 
 ## Build Context Resolution
 
