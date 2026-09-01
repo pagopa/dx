@@ -3,18 +3,24 @@
  *
  * SaveMoney observes the same subscription through three lenses: the custom
  * live-scan analyzers, Azure Advisor, and an optional AZQR report. They
- * overlap — an unattached disk is waste no matter who reports it — so without
- * deduplication the same resource could appear several times in the output,
- * once per source.
+ * overlap — an unattached disk is waste no matter who reports it — so the
+ * same resource could otherwise appear several times in the output, once per
+ * source. This also folds duplicate sentences emitted by the custom analyzers
+ * themselves (e.g. the same resource triggering the same "Very low CPU usage"
+ * template twice), since the matching below is source-agnostic.
  *
  * Findings are unified on the `resourceId + recommendationId` key. Sources
  * normalise `recommendationId` onto a shared vocabulary whenever one exists:
  * orphaned resources use {@link orphanRecommendationId} regardless of who
  * detected them, which is what lets an AZQR `AOR` row collapse onto the
- * Advisor or custom finding for the same resource. The surviving finding is the
- * one carrying the monetary estimate (only Advisor and the pricing-enriched
- * custom analyzers have one — AZQR reports no amounts at all), annotated with
- * the corroborating source so the extra provenance is not lost.
+ * Advisor or custom finding for the same resource. Custom analyzer sentences
+ * with a known template get a stable `custom.<id>` identity from
+ * `finding-code.ts`; sentences with no known template keep
+ * `code: "custom.unknown"` and no `recommendationId`, so they are never
+ * collapsed on guesswork. The surviving finding is the one carrying the
+ * monetary estimate (only Advisor and the pricing-enriched custom analyzers
+ * have one — AZQR reports no amounts at all), annotated with the
+ * corroborating source so the extra provenance is not lost.
  */
 
 import type { Finding, FindingSource } from "../finding.js";
@@ -117,9 +123,9 @@ function corroborationNote(
  *    an Advisor right-sizing recommendation) is a different problem and is
  *    never absorbed this way.
  *
- * Findings without a `recommendationId` never match: sources that cannot
- * identify their recommendations (today the sentence-level custom findings)
- * must not be collapsed on guesswork.
+ * Findings without a `recommendationId` never match: sentences whose text
+ * matches no known template (still `code: "custom.unknown"`, see
+ * `finding-code.ts`) must not be collapsed on guesswork.
  */
 function findDuplicateFinding(
   incoming: Finding,
