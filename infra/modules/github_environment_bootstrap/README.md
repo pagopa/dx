@@ -165,6 +165,7 @@ No modules.
 | [github_repository_environment_deployment_policy.infra_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.opex_cd_branch](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
 | [github_repository_environment_deployment_policy.opex_cd_tag](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment_deployment_policy) | resource |
+| [github_repository_vulnerability_alerts.repository](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_vulnerability_alerts) | resource |
 | [null_resource.workflow_permissions](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
 | [github_organization_teams.all](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/organization_teams) | data source |
 
