@@ -1,3 +1,15 @@
+## 0.0.9 (2026-09-01)
+
+### 🚀 Features
+
+- - Add `aws-cli` and `az-cli`, since the official CSP actions doesn't ship with their binnary ([#2088](https://github.com/pagopa/dx/pull/2088))
+  - Add `jq`, which is required by our workflows scripts
+  - Configure `tflint` and `pnpm` as `mise deps` backends
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.0.8 (2026-08-27)
 
 ### 🩹 Fixes

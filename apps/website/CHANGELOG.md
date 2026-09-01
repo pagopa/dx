@@ -1,3 +1,27 @@
+## 0.22.3 (2026-09-01)
+
+### 🚀 Features
+
+- Add oxfmt and oxlint to technology radar ([#2106](https://github.com/pagopa/dx/pull/2106))
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Fix link to tooling lifecycle ([#2107](https://github.com/pagopa/dx/pull/2107))
+- Mark Terraform 1.14.x as deprecated with EOL on September 30, 2026 ([#2108](https://github.com/pagopa/dx/pull/2108))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+- Marco Comi @kin0992
+
 ## 0.22.2 (2026-07-28)
 
 ### 🩹 Fixes

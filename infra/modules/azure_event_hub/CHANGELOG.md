@@ -1,3 +1,18 @@
+# 2.0.0 (2026-09-01)
+
+### 🚀 Features
+
+- Add optional `auto_mitigate` field to `metric_alerts` variable (defaults to `false` for backward compatibility). ([#2110](https://github.com/pagopa/dx/pull/2110))
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mirco Civolani
+
 ## 1.0.2 (2026-08-28)
 
 ### 🩹 Fixes
