@@ -10,6 +10,6 @@ export const initExecutorSchema = z.object({
   projectRoot: z.string().min(1),
 });
 
-export type InitExecutorInput = Partial<InitExecutorSchema>;
+export type InitExecutorInput = z.input<typeof initExecutorSchema>;
 
 export type InitExecutorSchema = z.infer<typeof initExecutorSchema>;

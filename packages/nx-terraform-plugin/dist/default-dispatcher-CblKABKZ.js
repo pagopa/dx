@@ -358,7 +358,8 @@ const getRegistryModules = async (projectRoot) => {
 };
 const generateModuleLockEntry = async (modulesRoot, module) => {
 	const modulePath = path.resolve(modulesRoot, module.Key);
-	if (!modulePath.startsWith(`${modulesRoot}${path.sep}`)) throw new Error(`Invalid Terraform module key outside the module cache: ${module.Key}`);
+	const relativeModulePath = path.relative(modulesRoot, modulePath);
+	if (relativeModulePath === "" || relativeModulePath === ".." || relativeModulePath.startsWith(`..${path.sep}`) || path.isAbsolute(relativeModulePath)) throw new Error(`Invalid Terraform module key outside the module cache: ${module.Key}`);
 	const hash = await calculateModuleHash(modulePath);
 	const source = getRegistryModuleSource(module.Source, module.Version);
 	return [module.Key, {
@@ -445,6 +446,18 @@ const disablesModuleDownloads = (args) => args.some((argument, index) => {
 	const inlineValue = /^--?get=(.+)$/i.exec(argument)?.[1];
 	return inlineValue !== void 0 && isTerraformFalse(inlineValue) || /^--?get$/i.test(argument) && args[index + 1] !== void 0 && isTerraformFalse(args[index + 1]);
 });
+const normalizeTerraformInitArguments = (args) => {
+	const normalizedArguments = [];
+	for (let index = 0; index < args.length; index += 1) {
+		if (/^--?get=/i.test(args[index])) continue;
+		if (/^--?get$/i.test(args[index])) {
+			if (args[index + 1] !== void 0 && !args[index + 1].startsWith("-")) index += 1;
+			continue;
+		}
+		normalizedArguments.push(args[index]);
+	}
+	return normalizedArguments;
+};
 const terraformInitPayloadShape = {
 	args: z$1._default(z$1.array(z$1.string()).check(z$1.refine((args) => !disablesModuleDownloads(args), incompatibleGetArgumentError)), []),
 	frozenLockfile: z$1._default(z$1.boolean(), false),
@@ -465,7 +478,7 @@ async function terraformInit({ args = [], frozenLockfile = false, modulePath }) 
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
 	const result = await runCommand("terraform", [
 		"init",
-		...args,
+		...normalizeTerraformInitArguments(args),
 		"-get=true"
 	], modulePath, {});
 	printTerraformOutput(result);

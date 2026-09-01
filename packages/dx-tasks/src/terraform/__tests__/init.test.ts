@@ -99,6 +99,34 @@ describe("terraformInit", () => {
     );
   });
 
+  it("normalizes module download arguments before initialization", async () => {
+    await terraformInit({
+      args: ["-get=true", "--get", "true", "-backend=false"],
+      modulePath: "infra/example",
+    });
+
+    expect(commandMocks.runCommand).toHaveBeenCalledExactlyOnceWith(
+      "terraform",
+      ["init", "-backend=false", "-get=true"],
+      "infra/example",
+      {},
+    );
+  });
+
+  it("preserves flags after a valueless get argument", async () => {
+    await terraformInit({
+      args: ["-get", "-backend=false", "--get=true"],
+      modulePath: "infra/example",
+    });
+
+    expect(commandMocks.runCommand).toHaveBeenCalledExactlyOnceWith(
+      "terraform",
+      ["init", "-backend=false", "-get=true"],
+      "infra/example",
+      {},
+    );
+  });
+
   it("fails frozen initialization without modifying a stale lock", async () => {
     await expect(
       terraformInit({

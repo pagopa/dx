@@ -1,4 +1,4 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-DFx7wo7F.js";
+import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-CblKABKZ.js";
 import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
 import { z } from "zod/v4";
 
@@ -26,11 +26,20 @@ const runExecutor = async (options) => {
 		return { success: false };
 	}
 	const { args, frozenLockfile, projectRoot } = parseResult.data;
-	await createDefaultTaskDispatcher().dispatchTask("terraformInit", {
-		args,
-		frozenLockfile,
-		modulePath: projectRoot
-	});
+	const dispatcher = createDefaultTaskDispatcher();
+	try {
+		await dispatcher.dispatchTask("terraformInit", {
+			args,
+			frozenLockfile,
+			modulePath: projectRoot
+		});
+	} catch (error) {
+		logger.error("Terraform init failed", {
+			error,
+			path: projectRoot
+		});
+		return { success: false };
+	}
 	return { success: true };
 };
 

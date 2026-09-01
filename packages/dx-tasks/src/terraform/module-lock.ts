@@ -185,7 +185,13 @@ const generateModuleLockEntry = async (
   const modulePath = path.resolve(modulesRoot, module.Key);
   // Terraform metadata is external input, so prevent a module key from
   // escaping the cache before hashing files.
-  if (!modulePath.startsWith(`${modulesRoot}${path.sep}`)) {
+  const relativeModulePath = path.relative(modulesRoot, modulePath);
+  if (
+    relativeModulePath === "" ||
+    relativeModulePath === ".." ||
+    relativeModulePath.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relativeModulePath)
+  ) {
     throw new Error(
       `Invalid Terraform module key outside the module cache: ${module.Key}`,
     );

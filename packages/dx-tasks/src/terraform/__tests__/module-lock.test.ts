@@ -166,13 +166,42 @@ describe("generateModuleLock", () => {
     const projectRoot = await createProjectRoot();
     await writeMetadata(projectRoot, [
       {
-        Key: "../outside",
+        Key: "nested/../../outside",
         Source: "registry.terraform.io/pagopa-dx/example/azurerm",
       },
     ]);
 
     await expect(generateModuleLock(projectRoot)).rejects.toThrow(
-      "Invalid Terraform module key outside the module cache: ../outside",
+      "Invalid Terraform module key outside the module cache: nested/../../outside",
+    );
+  });
+
+  it("rejects module keys that resolve to the module cache itself", async () => {
+    const projectRoot = await createProjectRoot();
+    await writeMetadata(projectRoot, [
+      {
+        Key: "nested/..",
+        Source: "registry.terraform.io/pagopa-dx/example/azurerm",
+      },
+    ]);
+
+    await expect(generateModuleLock(projectRoot)).rejects.toThrow(
+      "Invalid Terraform module key outside the module cache: nested/..",
+    );
+  });
+
+  it("allows module keys that only start with a parent directory prefix", async () => {
+    const projectRoot = await createProjectRoot();
+    await writeMetadata(projectRoot, [
+      {
+        Key: "..module",
+        Source: "registry.terraform.io/pagopa-dx/example/azurerm",
+      },
+    ]);
+    await writeModule(projectRoot, "..module");
+
+    await expect(generateModuleLock(projectRoot)).resolves.toHaveProperty(
+      "..module",
     );
   });
 

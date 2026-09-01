@@ -102,15 +102,33 @@ describe("Init Executor", () => {
   });
 
   it("fails validation before creating the dispatcher", async () => {
-    const output = await executor({}, baseContext);
+    const output = await executor({ projectRoot: "" }, baseContext);
 
     expect(output.success).toBe(false);
     expect(dispatcherMocks.createDefaultTaskDispatcher).not.toHaveBeenCalled();
     expect(loggerMocks.error).toHaveBeenCalledWith(
       "Invalid init options",
       expect.objectContaining({
-        path: "init options",
+        path: "",
       }),
     );
+  });
+
+  it("returns failure when terraform init dispatch fails", async () => {
+    const error = new Error("terraform init failed");
+    dispatcherMocks.dispatchTask.mockRejectedValueOnce(error);
+
+    const output = await executor(
+      {
+        projectRoot: "infra/example",
+      },
+      baseContext,
+    );
+
+    expect(output.success).toBe(false);
+    expect(loggerMocks.error).toHaveBeenCalledWith("Terraform init failed", {
+      error,
+      path: "infra/example",
+    });
   });
 });

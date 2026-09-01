@@ -26,6 +26,23 @@ const disablesModuleDownloads = (args: readonly string[]): boolean =>
     );
   });
 
+const normalizeTerraformInitArguments = (args: readonly string[]): string[] => {
+  const normalizedArguments: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (/^--?get=/i.test(args[index])) {
+      continue;
+    }
+    if (/^--?get$/i.test(args[index])) {
+      if (args[index + 1] !== undefined && !args[index + 1].startsWith("-")) {
+        index += 1;
+      }
+      continue;
+    }
+    normalizedArguments.push(args[index]);
+  }
+  return normalizedArguments;
+};
+
 const terraformInitArgumentsSchema = z._default(
   z
     .array(z.string())
@@ -94,7 +111,7 @@ export async function terraformInit({
   // The lock must describe the module cache produced by this initialization.
   const result = await runCommand(
     "terraform",
-    ["init", ...args, "-get=true"],
+    ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
     modulePath,
     {},
   );
