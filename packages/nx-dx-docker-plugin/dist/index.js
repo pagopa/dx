@@ -174,12 +174,12 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		options: { cwd: projectRoot }
 	};
 	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
+		continuous: false,
 		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
 			technologies: ["container-image"]
-		},
-		options: { ...dockerRunOptions }
+		}
 	};
 	return { projects: { [projectRoot]: {
 		root: projectRoot,
