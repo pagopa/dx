@@ -197,7 +197,6 @@ jobs:
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       # The working directory comes from the matrix; available in ${{ steps.directory.outputs.dir }}
@@ -211,6 +210,11 @@ jobs:
 
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         name: Checkout
+        with:
+          # Do not attach GITHUB_TOKEN to git; terraform init clones public
+          # registry modules from github.com/pagopa-dx and a repo-scoped token
+          # makes GitHub reject those requests instead of allowing anonymous access.
+          persist-credentials: false
 
       - name: Set Environment Variables
         if: ${{ inputs.env_vars }}
