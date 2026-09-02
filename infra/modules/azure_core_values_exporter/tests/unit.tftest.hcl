@@ -44,7 +44,7 @@ override_data {
           common_key_vault               = { name = "kv-common", id = "kv-common-id", resource_group_name = "rg-common" }
           common_log_analytics_workspace = { id = "law-id", name = "law-common", workspace_id = "workspace-id" }
           application_insights = {
-            id                                 = "appi-id", name = "dx-d-itn-common-appi-01", instrumentation_key_kv_secret_id = "secret-id",
+            id                                 = "appi-id", name = "dx-u-itn-common-appi-01", instrumentation_key_kv_secret_id = "secret-id",
             instrumentation_key_kv_secret_name = "appi-key", resource_group_name = "rg-common"
           }
         }
@@ -62,7 +62,7 @@ run "core_values_exporter_reads_azurerm_state" {
   }
 
   assert {
-    condition     = output.application_insights.name == "dx-d-itn-common-appi-01"
+    condition     = output.application_insights.name == "dx-u-itn-common-appi-01"
     error_message = "Exporter outputs must be derived from the mocked core state."
   }
 }

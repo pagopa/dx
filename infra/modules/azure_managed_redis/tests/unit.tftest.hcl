@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "cache"
@@ -11,7 +11,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_managed_redis/tests"
     ManagementTeam = "Developer Experience"
@@ -21,7 +21,7 @@ variables {
 
   resource_group_name = "rg-test"
 
-  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
+  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
   private_dns_zone_resource_group_name = null
 
   use_case          = "default"
@@ -44,7 +44,7 @@ mock_provider "azurerm" {
   }
   mock_data "azurerm_private_dns_zone" {
     defaults = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
     }
   }
 }
@@ -53,7 +53,7 @@ run "managed_redis_default_use_case" {
   command = plan
 
   assert {
-    condition     = azurerm_managed_redis.this.name == "dx-d-itn-modules-cache-amr-01"
+    condition     = azurerm_managed_redis.this.name == "dx-u-itn-modules-cache-amr-01"
     error_message = "Managed Redis name must use the amr suffix"
   }
 
@@ -187,7 +187,7 @@ run "managed_redis_private_endpoint" {
   command = plan
 
   assert {
-    condition     = azurerm_private_endpoint.redis[0].name == "dx-d-itn-modules-cache-amr-pep-01"
+    condition     = azurerm_private_endpoint.redis[0].name == "dx-u-itn-modules-cache-amr-pep-01"
     error_message = "Private endpoint name must use the managed_redis_private_endpoint type (amr-pep suffix)"
   }
 

@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     instance_number = "01"
   }
@@ -9,7 +9,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/github_selfhosted_runner_on_container_app_jobs/tests"
     ManagementTeam = "Developer Experience"
@@ -210,8 +210,8 @@ run "github_runner_labels_enabled" {
   }
 
   assert {
-    condition     = azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["labels"] == "dev"
-    error_message = "Default label for env_short=d must be dev"
+    condition     = azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["labels"] == "uat"
+    error_message = "Default label for env_short=u must be uat"
   }
 }
 

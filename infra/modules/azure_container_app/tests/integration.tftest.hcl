@@ -11,7 +11,7 @@ provider "dx" {}
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "int"
     app_name        = "def"
@@ -21,7 +21,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_container_app/tests"
     ManagementTeam = "Developer Experience"
@@ -101,7 +101,7 @@ run "apply_development" {
   command = apply
 
   variables {
-    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.development, app_name = "dev" })
+    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.development, app_name = "uat" })
     tags                         = var.tags
     use_case                     = "development"
     resource_group_name          = run.setup.resource_group_name
