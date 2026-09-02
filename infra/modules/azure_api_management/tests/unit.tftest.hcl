@@ -123,6 +123,15 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
+      length(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values) == 1 &&
+      contains(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values, "5xx")
+    )
+    error_message = "Failed request alerts must exclude unauthorized response codes."
+  }
+
+  assert {
     condition     = azurerm_monitor_metric_alert.this["cpu_percent_gateway"].criteria[0].metric_name == "CpuPercent_Gateway"
     error_message = "StandardV2 APIM must use CpuPercent_Gateway instead of the unsupported Capacity metric."
   }

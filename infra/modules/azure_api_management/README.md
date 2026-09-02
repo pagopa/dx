@@ -40,8 +40,10 @@ alerts plus the classic `Capacity` alert at 80%. The `Capacity` metric is not
 used for `StandardV2`, where Azure reports an unsupported value of zero.
 
 The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
-`UnauthorizedRequests` metrics are not used. Success, failure, and unauthorized
-traffic is filtered on dimensions of the supported `Requests` metric.
+`UnauthorizedRequests` metrics are not used. Success, server-side failure
+(`5xx`), and unauthorized traffic is filtered on dimensions of the supported
+`Requests` metric. The `development` use case keeps alerts disabled, including
+when `metric_alerts` is provided.
 
 Pass `metric_alerts = {}` to disable the defaults, or pass a custom map with the
 same input shape to replace them. Alerts can be routed to an Azure Monitor

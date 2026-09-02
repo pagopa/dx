@@ -96,7 +96,7 @@ locals {
       }]
     }
     failed_requests = {
-      description      = "The number of failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
+      description      = "The number of server-side failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
       frequency        = "PT5M"
       window_size      = "PT5M"
       severity         = 2
@@ -107,7 +107,7 @@ locals {
         dimension = [{
           name     = "GatewayResponseCodeCategory"
           operator = "Include"
-          values   = ["4xx", "5xx"]
+          values   = ["5xx"]
         }]
         metric_name            = "Requests"
         metric_namespace       = local.metric_namespace
