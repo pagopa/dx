@@ -20,12 +20,12 @@ run "core_is_correct_plan" {
     tags = {
       CostCenter     = "TS000 - Tecnologia e Servizi"
       CreatedBy      = "Terraform"
-      Environment    = "Dev"
+      Environment    = "Uat"
       Owner          = "DevEx"
       Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
       ManagementTeam = "Developer Experience"
       Test           = "true"
-      TestName       = "Create DEV environment for test"
+      TestName       = "Create UAT environment for test"
     }
 
     virtual_network_cidr = "10.50.0.0/16"
@@ -46,17 +46,17 @@ run "core_is_correct_plan" {
   }
 
   assert {
-    condition     = module.network.vnet.name == "dx-d-itn-common-vnet-${run.setup_tests.environment.instance_number}"
+    condition     = module.network.vnet.name == "dx-u-itn-common-vnet-${run.setup_tests.environment.instance_number}"
     error_message = "VNet name is not correct"
   }
 
   assert {
-    condition     = module.network.pep_snet.name == "dx-d-itn-pep-snet-${run.setup_tests.environment.instance_number}"
+    condition     = module.network.pep_snet.name == "dx-u-itn-pep-snet-${run.setup_tests.environment.instance_number}"
     error_message = "Pep subnet name is not correct"
   }
 
   assert {
-    condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-d-itn-ng-${run.setup_tests.environment.instance_number}"
+    condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-u-itn-ng-${run.setup_tests.environment.instance_number}"
     error_message = "The NAT Gateway name configuration must be correct"
   }
 

@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "caetest"
@@ -11,7 +11,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_container_app_environment/tests"
     ManagementTeam = "Developer Experience"
@@ -25,7 +25,7 @@ variables {
   use_case = "default"
 
   networking = {
-    virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+    virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01"
     private_dns_zone_resource_group_name = null
     public_network_access_enabled        = false
   }
@@ -37,7 +37,7 @@ mock_provider "dx" {}
 override_data {
   target = data.azurerm_private_dns_zone.this
   values = {
-    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.italynorth.azurecontainerapps.io"
+    id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.italynorth.azurecontainerapps.io"
     name = "privatelink.italynorth.azurecontainerapps.io"
   }
 }
@@ -45,8 +45,8 @@ override_data {
 override_resource {
   target = dx_available_subnet_cidr.cae_subnet
   values = {
-    id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/23/10.50.100.0_23"
-    virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+    id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01/23/10.50.100.0_23"
+    virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01"
     prefix_length      = 23
     cidr_block         = "10.50.100.0/23"
   }
@@ -83,7 +83,7 @@ run "azure_container_app_environment_valid_public_config" {
 
   variables {
     networking = {
-      virtual_network_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+      virtual_network_id            = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01"
       public_network_access_enabled = true
     }
   }
@@ -115,7 +115,7 @@ run "azure_container_app_environment_custom_dns_zone_rg" {
 
   variables {
     networking = {
-      virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+      virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01"
       private_dns_zone_resource_group_name = "rg-custom-dns"
     }
   }
@@ -150,8 +150,8 @@ run "azure_container_app_environment_development_use_case" {
   override_resource {
     target = dx_available_subnet_cidr.cae_subnet
     values = {
-      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01/27/10.50.100.0_27"
-      virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-d-itn-integration-vnet-01"
+      id                 = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01/27/10.50.100.0_27"
+      virtual_network_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-integration-rg-01/providers/Microsoft.Network/virtualNetworks/dx-u-itn-integration-vnet-01"
       prefix_length      = 27
       cidr_block         = "10.50.100.0/27"
     }
