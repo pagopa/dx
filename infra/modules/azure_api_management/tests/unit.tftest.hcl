@@ -149,6 +149,17 @@ run "azure_api_management_cost_optimized_defaults" {
 
   assert {
     condition = (
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000 &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 9500 &&
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 100 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 50 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500
+    )
+    error_message = "StandardV2 default alerts must use the documented ticket baseline thresholds."
+  }
+
+  assert {
+    condition = (
       azurerm_monitor_metric_alert.this["total_requests"].enabled &&
       one(azurerm_monitor_metric_alert.this["total_requests"].action).action_group_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
     )
@@ -225,6 +236,18 @@ run "azure_api_management_high_load_autoscale_defaults" {
   assert {
     condition     = azurerm_monitor_metric_alert.this["capacity"].criteria[0].metric_name == "Capacity"
     error_message = "Premium APIM must use the Capacity metric."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000 &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 9500 &&
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 100 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 50 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500 &&
+      azurerm_monitor_metric_alert.this["capacity"].criteria[0].threshold == 80
+    )
+    error_message = "Premium default alerts must use the documented ticket baseline thresholds."
   }
 }
 

@@ -39,6 +39,20 @@ For `high_load` (`Premium_2`), the module enables the same request and duration
 alerts plus the classic `Capacity` alert at 80%. The `Capacity` metric is not
 used for `StandardV2`, where Azure reports an unsupported value of zero.
 
+The default threshold map is selected by `use_case`/SKU:
+
+| Use case | SKU | Requests total/success/5xx/unauthorized | Duration | Capacity | Gateway CPU/memory |
+|----------|-----|------------------------------------------|----------|----------|--------------------|
+| `development` | `Developer_1` | 10000/9500/100/50 (unused) | 500 ms (unused) | 80% (unused) | 80%/80% (unused) |
+| `cost_optimized` | `StandardV2_1` | 10000/9500/100/50 | 500 ms | N/A | 80%/80% |
+| `high_load` | `Premium_2` | 10000/9500/100/50 | 500 ms | 80% | N/A |
+
+Traffic and duration thresholds are workload-specific and cannot be inferred
+from an APIM SKU alone, so the ticket values are retained as the explicit
+baseline for both production use cases. CPU, memory, and classic Premium
+capacity use the ticket's 80% baseline. The development row is kept explicit
+for mapping completeness, but its alerts remain disabled.
+
 The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
 `UnauthorizedRequests` metrics are not used. Success, server-side failure
 (`5xx`), and unauthorized traffic is filtered on dimensions of the supported

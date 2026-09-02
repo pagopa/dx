@@ -56,92 +56,130 @@ locals {
 
   metric_namespace = "Microsoft.ApiManagement/service"
 
+  alert_thresholds = {
+    development = {
+      sku                    = "Developer_1"
+      total_requests         = 10000
+      successful_requests    = 9500
+      failed_requests        = 100
+      unauthorized_requests  = 50
+      duration               = 500
+      capacity               = 80
+      cpu_percent_gateway    = 80
+      memory_percent_gateway = 80
+    }
+    cost_optimized = {
+      sku                    = "StandardV2_1"
+      total_requests         = 10000
+      successful_requests    = 9500
+      failed_requests        = 100
+      unauthorized_requests  = 50
+      duration               = 500
+      capacity               = null
+      cpu_percent_gateway    = 80
+      memory_percent_gateway = 80
+    }
+    high_load = {
+      sku                    = "Premium_2"
+      total_requests         = 10000
+      successful_requests    = 9500
+      failed_requests        = 100
+      unauthorized_requests  = 50
+      duration               = 500
+      capacity               = 80
+      cpu_percent_gateway    = null
+      memory_percent_gateway = null
+    }
+  }
+
   request_metric_alerts = {
-    total_requests = {
-      description      = "The total number of gateway requests is above the expected threshold. Monitor traffic and scale appropriately."
-      frequency        = "PT5M"
-      window_size      = "PT5M"
-      severity         = 2
-      auto_mitigate    = false
-      dynamic_criteria = []
-      criteria = [{
-        aggregation            = "Total"
-        dimension              = []
-        metric_name            = "Requests"
-        metric_namespace       = local.metric_namespace
-        operator               = "GreaterThan"
-        skip_metric_validation = false
-        threshold              = 10000
-      }]
-    }
-    successful_requests = {
-      description      = "The number of successful gateway requests is above the expected threshold. Ensure the success rate aligns with traffic volume."
-      frequency        = "PT5M"
-      window_size      = "PT5M"
-      severity         = 2
-      auto_mitigate    = false
-      dynamic_criteria = []
-      criteria = [{
-        aggregation = "Total"
-        dimension = [{
-          name     = "GatewayResponseCodeCategory"
-          operator = "Include"
-          values   = ["2xx", "3xx"]
+    for use_case, thresholds in local.alert_thresholds : use_case => {
+      total_requests = {
+        description      = "The total number of gateway requests is above the expected threshold. Monitor traffic and scale appropriately."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Total"
+          dimension              = []
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.total_requests
         }]
-        metric_name            = "Requests"
-        metric_namespace       = local.metric_namespace
-        operator               = "GreaterThan"
-        skip_metric_validation = false
-        threshold              = 9500
-      }]
-    }
-    failed_requests = {
-      description      = "The number of server-side failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
-      frequency        = "PT5M"
-      window_size      = "PT5M"
-      severity         = 2
-      auto_mitigate    = false
-      dynamic_criteria = []
-      criteria = [{
-        aggregation = "Total"
-        dimension = [{
-          name     = "GatewayResponseCodeCategory"
-          operator = "Include"
-          values   = ["5xx"]
+      }
+      successful_requests = {
+        description      = "The number of successful gateway requests is above the expected threshold. Ensure the success rate aligns with traffic volume."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCodeCategory"
+            operator = "Include"
+            values   = ["2xx", "3xx"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.successful_requests
         }]
-        metric_name            = "Requests"
-        metric_namespace       = local.metric_namespace
-        operator               = "GreaterThan"
-        skip_metric_validation = false
-        threshold              = 100
-      }]
-    }
-    unauthorized_requests = {
-      description      = "The number of unauthorized gateway requests is above the expected threshold. Check authentication policies and tokens."
-      frequency        = "PT5M"
-      window_size      = "PT5M"
-      severity         = 2
-      auto_mitigate    = false
-      dynamic_criteria = []
-      criteria = [{
-        aggregation = "Total"
-        dimension = [{
-          name     = "GatewayResponseCode"
-          operator = "Include"
-          values   = ["401", "403"]
+      }
+      failed_requests = {
+        description      = "The number of server-side failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCodeCategory"
+            operator = "Include"
+            values   = ["5xx"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.failed_requests
         }]
-        metric_name            = "Requests"
-        metric_namespace       = local.metric_namespace
-        operator               = "GreaterThan"
-        skip_metric_validation = false
-        threshold              = 50
-      }]
+      }
+      unauthorized_requests = {
+        description      = "The number of unauthorized gateway requests is above the expected threshold. Check authentication policies and tokens."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCode"
+            operator = "Include"
+            values   = ["401", "403"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.unauthorized_requests
+        }]
+      }
     }
   }
 
   default_metric_alerts = {
     development = {}
-    cost_optimized = merge(local.request_metric_alerts, {
+    cost_optimized = merge(local.request_metric_alerts.cost_optimized, {
       response_time = {
         description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
         frequency        = "PT5M"
@@ -156,7 +194,7 @@ locals {
           metric_namespace       = local.metric_namespace
           operator               = "GreaterThan"
           skip_metric_validation = false
-          threshold              = 500
+          threshold              = local.alert_thresholds.cost_optimized.duration
         }]
       }
       cpu_percent_gateway = {
@@ -173,7 +211,7 @@ locals {
           metric_namespace       = local.metric_namespace
           operator               = "GreaterThan"
           skip_metric_validation = false
-          threshold              = 80
+          threshold              = local.alert_thresholds.cost_optimized.cpu_percent_gateway
         }]
       }
       memory_percent_gateway = {
@@ -190,11 +228,11 @@ locals {
           metric_namespace       = local.metric_namespace
           operator               = "GreaterThan"
           skip_metric_validation = false
-          threshold              = 80
+          threshold              = local.alert_thresholds.cost_optimized.memory_percent_gateway
         }]
       }
     })
-    high_load = merge(local.request_metric_alerts, {
+    high_load = merge(local.request_metric_alerts.high_load, {
       response_time = {
         description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
         frequency        = "PT5M"
@@ -209,7 +247,7 @@ locals {
           metric_namespace       = local.metric_namespace
           operator               = "GreaterThan"
           skip_metric_validation = false
-          threshold              = 500
+          threshold              = local.alert_thresholds.high_load.duration
         }]
       }
       capacity = {
@@ -226,7 +264,7 @@ locals {
           metric_namespace       = local.metric_namespace
           operator               = "GreaterThan"
           skip_metric_validation = false
-          threshold              = 80
+          threshold              = local.alert_thresholds.high_load.capacity
         }]
       }
     })
