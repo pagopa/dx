@@ -80,21 +80,6 @@ JUDGE_BRIDGE_ENV: dict = {
     "LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES": "true",
 }
 
-#: Destination paths (relative to the generated task root) that can be
-#: overridden with a custom file from the skill dir.
-OVERRIDABLE_TARGETS = frozenset(
-    {
-        "task.toml",
-        "environment/Dockerfile",
-        ".dockerignore",
-        "tests/test.sh",
-        "tests/quality.toml",
-        "tests/Dockerfile",  # verifier image (separate mode only)
-        "solution/solve.sh",
-    }
-)
-
-
 def trial_relative(container_path: str) -> str:
     """The trial-directory relative path of a container artifact path.
 

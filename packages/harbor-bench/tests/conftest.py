@@ -19,7 +19,6 @@ CASE_ONE = {
     "expected_output": "the thing done",
     "expectations": ["inspects repo"],
     "files": [],
-    "overlays": [],
 }
 CASE_TWO = {
     "id": 2,
@@ -28,7 +27,6 @@ CASE_TWO = {
     "expected_output": "the other thing done",
     "expectations": [],
     "files": [],
-    "overlays": [],
 }
 
 
@@ -36,15 +34,12 @@ def write_evals(
     skill: Path,
     *,
     skill_name: str = "test-skill",
-    harbor: dict | None = None,
     cases: list[dict] | None = None,
 ) -> Path:
     """Create a skill dir with an evals.json and return its path."""
     (skill / "evals").mkdir(parents=True, exist_ok=True)
     (skill / "SKILL.md").write_text("# Test")
     data: dict = {"skill_name": skill_name, "evals": cases or [CASE_ONE]}
-    if harbor is not None:
-        data["harbor"] = harbor
     path = skill / "evals" / "evals.json"
     path.write_text(json.dumps(data))
     return path

@@ -6,9 +6,9 @@ PagoPA Harbor extensions.
    arbitrary `--ak key=value` kwargs verbatim to the Copilot CLI
    (`--kebab-case value`), covering `--max-ai-credits`, `--enable-memory`,
    `--model`, etc. It also fixes skill injection (copies to
-   `~/.copilot/skills/`, where Copilot discovers them) and strips eval data
-   from injected skills **inside the agent container** during `setup()`, so a
-   git-loaded skill (which ships `evals/`) never leaks the answers to the agent.
+   `~/.copilot/skills/`, where Copilot discovers them). Harbor uploads injected
+   skills as-is; see [Skill eval data and git sources](#skill-eval-data-and-git-sources)
+   for the resulting visibility of eval data in the agent container.
 2. **`harbor-bench convert`** — a runtime converter that reads the agentskills.io
    `evals/evals.json` files in the plugins and generates **on the fly** the
    Harbor task structures (task.toml, instruction.md, environment/Dockerfile +
@@ -78,8 +78,7 @@ harbor-bench convert --scan-root plugins --out .harbor \
 ```
 
 The injected skills point at the **raw workspace skill directories** (`convert`
-no longer stages or copies them): eval data is stripped at runtime, inside the
-agent container, by `CopilotCliMod.setup()` — see
+no longer stages or copies them). Harbor uploads these directories as-is — see
 [Skill eval data and git sources](#skill-eval-data-and-git-sources).
 
 ### Apple Container
@@ -119,30 +118,24 @@ Requirements and caveats:
 
 ### Reusing the environment image (faster startup)
 
-By default **every trial builds the environment image from scratch and deletes
-it afterwards**: `environment.delete` defaults to `true`, the generated configs
-do not set a `docker_image`, so each `harbor run` pays a full `container build`
-before the agent starts. The build itself is cheap — the `container` CLI caches
-layers, so with an unchanged task `environment/` it is a ~0.4s cache hit. The
-historical ~40s setup cost came mostly from the **Copilot CLI install**
+By default **every trial builds the environment image from scratch**, while the
+generated config sets `environment.delete: false` so the environment remains
+available afterwards. The generated config does not set a `docker_image`, so
+each `harbor run` still pays a `container build` before the agent starts. The
+build itself is cheap — the `container` CLI caches layers, so with an unchanged
+task `environment/` it is a ~0.4s cache hit. The historical ~40s setup cost
+came mostly from the **Copilot CLI install**
 (`curl -fsSL https://gh.io/copilot-install | bash`) inside the fresh container;
 the generated `environment/Dockerfile` now bakes the CLI into the image and
 `CopilotCliMod` skips the reinstall when `copilot` is already on PATH, so that
 step is a no-op for regenerated tasks.
 
-**1. Keep the image between runs (`delete: false`)** — add to `config.yaml`:
+The generated `delete: false` keeps the container and image between runs.
+Subsequent runs still issue a `container build` but reuse cached layers instead
+of starting cold. Combine this with a prebuilt image (below) to skip the build
+entirely.
 
-```yaml
-environment:
-  type: apple-container
-  delete: false
-```
-
-The container and image survive the run. Subsequent runs still issue a
-`container build` but reuse cached layers instead of starting cold. Combine
-with a prebuilt image (below) to skip the build entirely.
-
-**2. Prebuild once and reference it (`docker_image`)** — point the task at an
+**Prebuild once and reference it (`docker_image`)** — point the task at an
 image that already exists locally, so Harbor skips the build and never deletes
 it. Two flavors, both set `docker_image` in the task's `task.toml`:
 
@@ -242,24 +235,18 @@ kwargs (`max_ai_credits`, ...) follow the `--ak` contract.
 
 ### Kwarg sources and precedence
 
-Agent kwargs come from three sources, merged in this precedence order (later
+Agent kwargs come from two sources, merged in this precedence order (later
 wins):
 
 1. **`DEFAULT_AGENT_KWARGS`** (`reasoning_effort: high`) — the built-in default.
-2. **`harbor.kwargs`** declared in each skill's `evals.json` (suite-wide).
-3. **`--ak KEY=VALUE`** at convert time — overrides both.
+2. **`--ak KEY=VALUE`** at convert time — overrides the default.
 
 ```python
-final = {**DEFAULT_AGENT_KWARGS, **merged_harbor_kwargs, **cli_kwargs}
+final = {**DEFAULT_AGENT_KWARGS, **cli_kwargs}
 ```
 
-Because all suites emitted into a single `config.yaml` share one agent, the
-declared `harbor.kwargs` must be **compatible across skills**: the same key may
-only appear with the same value. `convert` fails before writing anything with a
-diagnostic listing the conflicting skills and keys (e.g.
-`reasoning_effort: 'high' (skill-a) vs 'low' (skill-b)`) instead of silently
-picking one. Use `--ak` to override a conflicting key when you need a
-per-run value.
+All suites emitted into a single `config.yaml` share the same default and the
+same convert-time `--ak` values.
 
 ### Kwarg naming: underscores become dashes
 
@@ -305,23 +292,14 @@ harbor run --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod \
   --model gpt-5.6-luna --ak reasoning_effort=high ...
 ```
 
-## Enriched evals.json schema
+## evals.json schema
 
-The base format is the agentskills.io `evals/evals.json`. The optional `harbor`
-block adds conversion metadata; `kwargs` follows the `--ak`/`AgentConfig.kwargs`
-contract and is passed verbatim:
+`evals/evals.json` is the unmodified agentskills.io document. It contains the
+skill name and eval cases only:
 
-```jsonc
+```json
 {
   "skill_name": "generate-backend-tests",
-  "harbor": {
-    "base_image": "ubuntu:24.04", // glibc required
-    "judge_model": "openai/gpt-5.6-luna", // Responses-capable model
-    "timeout_sec": 900,
-    "workspace_dir": "harbor/workspace", // per-skill fixture base layer
-    "prepare_script": "harbor/prepare.sh", // optional build-time setup hook
-    "kwargs": { "reasoning_effort": "high", "max_ai_credits": 30 },
-  },
   "evals": [
     {
       "id": 1,
@@ -329,48 +307,39 @@ contract and is passed verbatim:
       "prompt": "...",
       "expected_output": "...",
       "expectations": ["..."],
-      "files": ["fixtures/seed.csv"], // per-eval files (rel. to skill dir)
-      "overlays": ["fixtures/overlay-a"], // per-eval overlay dirs
-      "harbor": {
-        // per-eval override of the build-time setup hook
-        "prepare_script": "harbor/cases/case1-prepare.sh",
-      },
-    },
-  ],
+      "files": ["fixtures/seed.csv"]
+    }
+  ]
 }
 ```
 
-`harbor.kwargs` follows the `--ak`/`AgentConfig.kwargs` contract and is passed
-verbatim. Suites emitted into the same config must declare **compatible**
-kwargs (see [Kwarg sources and precedence](#kwarg-sources-and-precedence)): a
-key declared with different values across skills fails the conversion with a
-diagnostic. `convert` embeds the eval ID in every task directory and Harbor
-task name (`<skill>-<id>-<name>`), so re-running `convert` produces exactly the
-tasks represented by the current evals, removes stale tasks, and never
-overwrites job results or the generated config.
+`convert` embeds the eval ID in every task directory and Harbor task name
+(`<skill>-<id>-<name>`), so re-running `convert` produces exactly the tasks
+represented by the current evals, removes stale tasks, and never overwrites job
+results or the generated config. Conversion defaults such as the base image,
+judge model, timeouts, separate verifier, and artifact list live in code.
 
-Layer order: `workspace_dir` → `overlays` → `files`; path collisions between
-layers are rejected.
+The workspace fixture has two layers: the optional `harbor/workspace/` directory
+and the per-eval `files` entries. Path collisions between layers are rejected.
+Other files under `harbor/` are ignored.
 
 ## Build-time setup hook (`prepare.sh`)
 
 The generated `environment/Dockerfile` can run a **prepare.sh** at image build
 time to install extra tooling or seed the workspace **before the agent runs**
 (and before the git baseline commit, so prepared files are part of the agent's
-starting repo). The script lives in the skill dir and is copied into the
-workspace as `prepare.sh`; the Dockerfile runs it if present:
+starting repo). Place a suite-wide script at `harbor/prepare.sh` or a
+case-specific script at `harbor/<task-key>/prepare.sh`; the case-specific
+script wins. `<task-key>` is the non-empty eval name, or the eval ID when the
+case has no name. The selected script is copied into the workspace as
+`prepare.sh`; a fixture with that name is rejected rather than silently
+overwritten:
 
 ```sh
 RUN if [ -f /workspace/prepare.sh ]; then \
         bash /workspace/prepare.sh; \
     fi
 ```
-
-Point to it with `harbor.prepare_script` (suite-wide) or
-`evals[].harbor.prepare_script` (single eval — wins over the suite). Paths are
-relative to the skill dir (recommended: under `harbor/`, which is excluded from
-the staged skill). A configured `prepare_script` colliding with a fixture
-`prepare.sh` is rejected rather than silently overwritten.
 
 ### Deterministic git baseline
 
@@ -380,53 +349,6 @@ agent can diff its own edits. The commit uses a fixed repository-local identity
 image's global git config is never touched — and image construction **fails
 visibly** when `git init` or the baseline commit fails (no `|| true`), so every
 environment starts from a valid baseline and a clean worktree.
-
-## Configuration file overrides
-
-`convert` generates every task config file from a template; the `overrides`
-map replaces a generated file with a custom one, either for the whole suite
-(`harbor.overrides`) or for a single eval (`evals[].harbor.overrides`). Per-eval
-wins over suite; precedence is **per-eval > suite > template**.
-
-Keys are destination paths in the generated task; values are paths relative to
-the skill dir (recommended: under `harbor/`, which is excluded from the staged
-skill):
-
-```jsonc
-{
-  "skill_name": "generate-backend-tests",
-  "harbor": {
-    "overrides": { "tests/quality.toml": "harbor/quality.toml" }, // suite-wide
-  },
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "...",
-      "expected_output": "...",
-      "harbor": {
-        "overrides": {
-          "task.toml": "harbor/cases/case1.toml", // full replace of task.toml
-          "environment/Dockerfile": "harbor/cases/case1.Dockerfile",
-        },
-      },
-    },
-  ],
-}
-```
-
-Overridable targets: `task.toml`, `environment/Dockerfile`, `.dockerignore`,
-`tests/test.sh`, `tests/quality.toml`, `tests/Dockerfile` (separate verifier
-mode), `solution/solve.sh`.
-
-An overridden file replaces the generated one **verbatim**; `{{KEY}}`
-placeholders are still substituted when present:
-`{{TASK_NAME}}`, `{{TASK_DESCRIPTION}}`, `{{TASK_VERSION}}` in `task.toml`,
-`{{SKILL_NAME}}` in `test.sh`, `{{JUDGE_MODEL}}` in `quality.toml`.
-
-> `task.toml` is replaced wholesale (full replace): the converter no longer
-> injects `[task] name/description/version`, `[verifier]` env, or `artifacts`.
-> Your file must be a valid Harbor task.toml (schema 1.4); use the placeholders
-> above to keep the per-case identity.
 
 ## RewardKit LLM judge
 
@@ -447,7 +369,7 @@ proof) and, when a judge token is available, invokes
 
 ## Separate verifier environment
 
-By default the verifier runs in a **dedicated container**
+The verifier always runs in a **dedicated container**
 (`[verifier] environment_mode = "separate"`), so it can never access the skills
 injected into the agent or the agent's runtime state. Harbor transfers to the
 verifier only what is declared in the task-level `artifacts` list:
@@ -461,9 +383,8 @@ artifacts = [
 ```
 
 The verifier image is built from the generated `tests/Dockerfile` (ubuntu +
-uv + python; `tests/` is NOT uploaded at runtime). Override per skill/eval in
-evals.json with `"harbor": { "verifier_mode": "shared", "artifacts": [...] }`
-to fall back to the shared verifier (same container as the agent).
+uv + python; `tests/` is NOT uploaded at runtime). The converter always emits
+this separate-verifier setup and the generated artifact list.
 
 ## Skill eval data and git sources
 
@@ -474,24 +395,11 @@ checkout may include `evals/`; when it is loaded from a git source
 (`--skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills`), the
 downloaded skill always ships `evals/` together with the harness material.
 
-If the agent under evaluation can read `evals/evals.json`, it can reproduce the
-expected outputs and game the judge, so `CopilotCliMod` strips it **inside the
-container** during `setup()`:
-
-- Harbor uploads each injected skill to `/harbor/skills/<name>` (whatever the
-  source: workspace path or git cache).
-- `CopilotCliMod.setup()` deletes `evals/`, `harbor/`, `.git` and `__pycache__`
-  from every skill under `/harbor/skills` **as root** (see
-  `_build_strip_skills_command()`), before the base setup copies them into
-  `~/.copilot/skills/`.
-
-This works identically for local and git-loaded skills, which is why `convert`
-does not need to stage/copy skills on the host anymore.
-
-> The container has no Python and Harbor's `environment.exec` always runs
-> `bash -c`, so the strip is a shell command. It is injection-safe: the skills
-> dir is `shlex`-quoted, the removed names come from a fixed constant, and the
-> glob `$skills_dir/*/` can never escape the skills root.
+Harbor uploads each injected skill to `/harbor/skills/<name>` as-is, regardless
+of whether it came from the local workspace or a git source. Consequently,
+`evals/evals.json` and the `harbor/` layout remain readable to the agent; an
+upload-exclude feature or an explicit request to remove eval data would be
+needed to restore that protection.
 
 ## Comparing skill versions (workspace vs git)
 
@@ -500,8 +408,8 @@ The eval set is always the current workspace (`convert` generates tasks from
 against the same tasks, inject the skills from a git ref with `--skill`: Harbor
 sparse-checks-out only the skills subdir into a per-SHA cache
 (`~/.cache/harbor/skills/…`), resolves them by name (last-wins), and the
-in-container strip applies exactly as for the workspace flow. No worktree or
-full-branch staging is needed.
+same raw skill directory is uploaded exactly as for the workspace flow. No
+worktree or full-branch staging is needed.
 
 ```bash
 # 1. Baseline: current workspace skills (named job, stable path)
@@ -678,8 +586,8 @@ the skills row shows `—` for the baseline job.
 - Base image must be **glibc** (ubuntu/debian), never Alpine — the Copilot CLI
   binary is a Node SEA for glibc.
 - Pin `harbor==0.22.0` — the Harbor API is under fast weekly evolution.
-- Eval data (`evals/`, `harbor/`, `.git`) is removed **inside the agent
-  container** at setup time; Harbor uploads the skill dir as-is, so a
-  git-loaded `--skill` checkout that ships `evals/` is stripped before the
-  agent sees it.
+- Eval data (`evals/`, `harbor/`, `.git`) remains visible inside the agent
+  container because Harbor uploads the skill dir as-is. This residual
+  visibility risk is accepted until Harbor provides an upload-exclude feature
+  or the benchmark explicitly changes its data-handling contract.
 - CI needs `-y` to auto-confirm host env passthrough.

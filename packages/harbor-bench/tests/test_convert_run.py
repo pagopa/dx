@@ -102,20 +102,6 @@ def test_duplicate_task_name_across_files_raises(tmp_path: Path):
     assert not (tmp_path / "out").exists()
 
 
-def test_conflicting_kwargs_raise_before_writing(tmp_path: Path):
-    a = tmp_path / "a"
-    b = tmp_path / "b"
-    evals_a = write_evals(
-        a, skill_name="skill-a", harbor={"kwargs": {"reasoning_effort": "high"}}
-    )
-    evals_b = write_evals(
-        b, skill_name="skill-b", harbor={"kwargs": {"reasoning_effort": "low"}}
-    )
-    with pytest.raises(ValueError, match="conflicting harbor.kwargs"):
-        plan_run(make_options(tmp_path / "out", [evals_a, evals_b]))
-    assert not (tmp_path / "out").exists()
-
-
 def test_missing_fixture_fails_plan_and_preserves_last_complete_task(tmp_path: Path):
     skill = tmp_path / "skill"
     (skill / "fixtures").mkdir(parents=True)
@@ -161,7 +147,6 @@ def test_apply_failure_preserves_completed_tasks(tmp_path: Path):
     (skill / "fixtures" / "collide.txt").write_text("file-layer")
     evals_path = write_evals(
         skill,
-        harbor={"workspace_dir": "harbor/workspace"},
         cases=[CASE_ONE, {**CASE_TWO, "files": ["fixtures/collide.txt"]}],
     )
     out = tmp_path / "out"
@@ -196,9 +181,7 @@ def test_reapply_removes_stale_fixture_files(tmp_path: Path):
     (skill / "harbor" / "workspace").mkdir(parents=True)
     (skill / "harbor" / "workspace" / "seed.txt").write_text("seed")
     (skill / "harbor" / "workspace" / "obsolete.txt").write_text("old")
-    evals_path = write_evals(
-        skill, harbor={"workspace_dir": "harbor/workspace"}, cases=[CASE_ONE]
-    )
+    evals_path = write_evals(skill, cases=[CASE_ONE])
     out = tmp_path / "out"
     plan_and_apply(out, [evals_path])
     env = out / "tasks" / "test-skill-1-case-one" / "environment"
@@ -210,19 +193,17 @@ def test_reapply_removes_stale_fixture_files(tmp_path: Path):
     assert (env / "seed.txt").is_file()
 
 
-def test_declared_kwargs_land_in_config_and_options_override(tmp_path: Path):
+def test_cli_kwargs_land_in_config_and_override_defaults(tmp_path: Path):
     skill = tmp_path / "skill"
-    evals_path = write_evals(skill, harbor={"kwargs": {"max_ai_credits": 30}})
+    evals_path = write_evals(skill)
     out = tmp_path / "out"
-    plan_and_apply(out, [evals_path])
+    plan_and_apply(
+        out,
+        [evals_path],
+        agent_kwargs={"max_ai_credits": 50, "reasoning_effort": "low"},
+    )
     kwargs = load_config(out)["agents"][0]["kwargs"]
-    assert kwargs == {"reasoning_effort": "high", "max_ai_credits": 30}
-
-    # options.agent_kwargs wins over the declared value
-    plan_and_apply(out, [evals_path], agent_kwargs={"max_ai_credits": 50})
-    kwargs = load_config(out)["agents"][0]["kwargs"]
-    assert kwargs["max_ai_credits"] == 50
-    assert kwargs["reasoning_effort"] == "high"
+    assert kwargs == {"max_ai_credits": 50, "reasoning_effort": "low"}
 
 
 def test_apply_is_deterministic_across_runs(tmp_path: Path):
@@ -241,11 +222,14 @@ def test_environment_option_lands_in_config(tmp_path: Path):
     evals_path = write_evals(skill)
     out = tmp_path / "out"
     plan_and_apply(out, [evals_path])
-    assert load_config(out)["environment"] == {"type": "docker"}
+    assert load_config(out)["environment"] == {"type": "docker", "delete": False}
 
     out2 = tmp_path / "out2"
     plan_and_apply(out2, [evals_path], environment="apple-container")
-    assert load_config(out2)["environment"] == {"type": "apple-container"}
+    assert load_config(out2)["environment"] == {
+        "type": "apple-container",
+        "delete": False,
+    }
 
 
 # --- host preflight ------------------------------------------------------

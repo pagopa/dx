@@ -93,7 +93,10 @@ def test_convert_apple_container_environment(tmp_path: Path, monkeypatch):
         )
         == 0
     )
-    assert load_config(out)["environment"] == {"type": "apple-container"}
+    assert load_config(out)["environment"] == {
+        "type": "apple-container",
+        "delete": False,
+    }
 
 
 def test_convert_prints_plan_error_to_stderr(tmp_path: Path, capsys):

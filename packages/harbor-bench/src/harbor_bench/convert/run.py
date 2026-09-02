@@ -5,9 +5,9 @@ two small interfaces:
 
 ``plan_run(options) -> RunPlan``
     Normalizes options, discovers and loads every evals.json, validates the
-    entire input set (task-name collisions, conflicting agent kwargs, fixture
-    existence), and resolves each eval case's fixtures once. A plan never
-    writes: plan-time failures leave the output directory untouched.
+    entire input set (task-name collisions, fixture existence), and resolves
+    each eval case's fixtures once. A plan never writes: plan-time failures
+    leave the output directory untouched.
 
 ``apply_run(plan) -> RunResult``
     Executes a plan: generates each task atomically, removes stale task
@@ -32,10 +32,10 @@ from .config import (
     DEFAULT_MODEL,
     SUPPORTED_ENVIRONMENT_TYPES,
     build_config,
-    collect_declared_kwargs,
     write_config,
 )
 from .discover import DiscoverError, find_evals_files, load_evals_file
+from .layout import discover_workspace_dir
 from .schema import EvalsFile, resolve_eval_paths
 from .task import TaskSpec, generate_task_atomic, task_dir_name
 
@@ -78,7 +78,6 @@ class RunPlan:
     options: ConvertOptions
     tasks: tuple[TaskSpec, ...]
     skill_dirs: tuple[Path, ...]
-    declared_kwargs: dict
     config_out: Path
     sources: tuple[tuple[str, Path, Path], ...]  # (skill_name, evals_path, skill_dir)
 
@@ -139,9 +138,9 @@ def _normalize_options(options: ConvertOptions) -> ConvertOptions:
 def plan_run(options: ConvertOptions) -> RunPlan:
     """Discover, load, validate, and resolve a full run. Never writes.
 
-    Raises ``DiscoverError``, ``TaskNameCollision``, or ``ValueError`` (a
-    conflicting agent kwarg, an unsafe/missing fixture, an unsupported
-    environment) when the input set is not runnable; nothing is written.
+    Raises ``DiscoverError``, ``TaskNameCollision``, or ``ValueError`` (an
+    unsafe/missing fixture or unsupported environment) when the input set is
+    not runnable; nothing is written.
     """
     opts = _normalize_options(options)
     if opts.environment not in SUPPORTED_ENVIRONMENT_TYPES:
@@ -165,10 +164,6 @@ def plan_run(options: ConvertOptions) -> RunPlan:
         evals, skill_dir = load_evals_file(evals_path)
         loaded.append((evals_path, evals, skill_dir))
 
-    declared_kwargs = collect_declared_kwargs(
-        [(evals.skill_name, evals.harbor.kwargs) for _, evals, _ in loaded]
-    )
-
     env_overrides = (
         {"verifier": {"env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}}}
         if opts.without_skill
@@ -179,9 +174,7 @@ def plan_run(options: ConvertOptions) -> RunPlan:
     seen: dict[str, str] = {}
     for evals_path, evals, skill_dir in loaded:
         resolved = resolve_eval_paths(evals, skill_dir)
-        workspace_dir = None
-        if evals.harbor.workspace_dir:
-            workspace_dir = (skill_dir / evals.harbor.workspace_dir).resolve()
+        workspace_dir = discover_workspace_dir(skill_dir)
         for case in evals.evals:
             dir_name = task_dir_name(evals.skill_name, case.id, case.name)
             source = f"{evals.skill_name} eval {case.id} ({evals_path})"
@@ -195,7 +188,6 @@ def plan_run(options: ConvertOptions) -> RunPlan:
                     task_dir=dir_name,
                     skill_name=evals.skill_name,
                     case=case,
-                    harbor=evals.harbor,
                     paths=resolved[case.id],
                     workspace_dir=workspace_dir,
                     env_overrides=env_overrides,
@@ -206,7 +198,6 @@ def plan_run(options: ConvertOptions) -> RunPlan:
         options=opts,
         tasks=tuple(tasks),
         skill_dirs=tuple(skill_dir for _, _, skill_dir in loaded),
-        declared_kwargs=declared_kwargs,
         config_out=config_out,
         sources=tuple(
             (evals.skill_name, evals_path, skill_dir)
@@ -241,7 +232,6 @@ def apply_run(plan: RunPlan) -> RunResult:
         tasks_dir=tasks_dir,
         skill_dirs=list(plan.skill_dirs),
         kwargs=opts.agent_kwargs,
-        declared_kwargs=plan.declared_kwargs,
         without_skill=opts.without_skill,
         model=opts.model,
         jobs_dir=opts.jobs_dir,

@@ -67,15 +67,3 @@ def test_render_template_substitutes_shape_and_extra():
     )
     # unknown placeholders are left untouched
     assert task_shape.render_template("{{UNKNOWN}}") == "{{UNKNOWN}}"
-
-
-def test_override_targets_are_task_file_inventory():
-    assert task_shape.OVERRIDABLE_TARGETS == {
-        "task.toml",
-        "environment/Dockerfile",
-        ".dockerignore",
-        "tests/test.sh",
-        "tests/quality.toml",
-        "tests/Dockerfile",
-        "solution/solve.sh",
-    }

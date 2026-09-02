@@ -5,12 +5,13 @@ from __future__ import annotations
 import os
 import re
 import shutil
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
 import tomli_w
 
-from .schema import EvalCase, HarborMeta, ResolvedEvalPaths
+from .schema import EvalCase, ResolvedEvalPaths
 from .workspace import WorkspaceError, compose_workspace
 from harbor_bench.task_shape import HARBOR_ARTIFACTS, JUDGE_BRIDGE_ENV, render_template
 
@@ -21,7 +22,11 @@ TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 #: the ``environment/Dockerfile`` inside every generated task.
 ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 
-# schema 1.4 task.toml skeleton; skill defaults / overrides are merged in.
+# Defaults formerly configurable through evals.json Harbor metadata.
+DEFAULT_BASE_IMAGE = "ubuntu:24.04"
+DEFAULT_JUDGE_MODEL = "openai/gpt-5.6-luna"
+
+# schema 1.4 task.toml skeleton; converter defaults are merged in.
 DEFAULT_TASK_TOML: dict = {
     "schema_version": "1.4",
     "artifacts": [],
@@ -49,9 +54,9 @@ DEFAULT_TASK_TOML: dict = {
 class TaskSpec:
     """The fully-resolved description of one Harbor task to generate.
 
-    Value-based: carries the resolved eval case, the suite metadata, the
-    precomputed directory name, and the resolved fixture paths — everything
-    generation needs, with no lookups and no reference back into an evals file.
+    Value-based: carries the resolved eval case, the precomputed directory
+    name, and the resolved fixture paths — everything generation needs, with no
+    lookups and no reference back into an evals file.
     The write destination (``task_root``) is deliberately NOT part of the spec:
     the spec is the *what*, ``task_root`` is the *where*.
     """
@@ -59,7 +64,6 @@ class TaskSpec:
     task_dir: str
     skill_name: str
     case: EvalCase
-    harbor: HarborMeta
     paths: ResolvedEvalPaths
     workspace_dir: Path | None = None
     env_overrides: dict | None = None
@@ -85,38 +89,13 @@ def task_name(task_dir: str) -> str:
 
 
 def _deep_merge(base: dict, override: dict) -> dict:
-    out = dict(base)
+    out = deepcopy(base)
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(out.get(key), dict):
             out[key] = _deep_merge(out[key], value)
         else:
             out[key] = value
     return out
-
-
-def _write_with_override(
-    *,
-    target: str,
-    dst: Path,
-    overrides: dict[str, Path] | None,
-    default: str,
-    **placeholders: str,
-) -> None:
-    """Write ``dst``: the user override for ``target`` when present, otherwise
-    the generated ``default``.
-
-    ``{{KEY}}`` placeholders are substituted in both the override content and
-    the default, so a custom file can still reference per-case values.
-    """
-    text = (
-        overrides[target].read_text()
-        if overrides and target in overrides
-        else default
-    )
-    # The task-shape paths are always substituted (render_template), plus the
-    # per-file placeholders, so neither the generated default nor a custom
-    # override ever needs to hardcode an artifact location.
-    dst.write_text(render_template(text, **placeholders))
 
 
 def build_quality_toml(case: EvalCase, judge_model: str) -> str:
@@ -152,42 +131,18 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
 def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     """Write a full Harbor task tree at ``task_root`` from a :class:`TaskSpec`.
 
-    ``spec.paths["overrides"]`` maps a destination path (relative to the task
-    root, see ``OVERRIDABLE_TARGETS``) to an absolute source file in the skill
-    dir. An overridden destination replaces the generated file verbatim (with
-    ``{{KEY}}`` placeholder substitution); ``task.toml`` is replaced wholesale.
-
     ``spec.paths["prepare_script"]`` (when set) is a build-time setup script
-    from the skill dir: it is copied into the workspace as ``prepare.sh`` and
-    the generated ``environment/Dockerfile`` runs it after ``COPY . /workspace/``,
-    before the git baseline. Per-eval ``prepare_script`` wins over the
-    suite-level one (see ``resolve_eval_paths``).
+    from the skill's on-disk ``harbor/`` layout. It is copied into the
+    workspace as ``prepare.sh`` and the generated ``environment/Dockerfile``
+    runs it after ``COPY . /workspace/``, before the git baseline.
 
     Returns the list of created fixture paths (workspace files).
     """
     case = spec.case
-    harbor = spec.harbor
     env_overrides = spec.env_overrides
-    overrides = spec.paths["overrides"]
 
     task_root.mkdir(parents=True, exist_ok=True)
-    # skeleton with harbor timeout defaults, THEN user overrides win
-    task_toml = _deep_merge(
-        DEFAULT_TASK_TOML,
-        {
-            "agent": {
-                "timeout_sec": max(
-                    DEFAULT_TASK_TOML["agent"]["timeout_sec"], harbor.timeout_sec
-                )
-            },
-            "verifier": {
-                "timeout_sec": max(
-                    DEFAULT_TASK_TOML["verifier"]["timeout_sec"], harbor.timeout_sec
-                )
-            },
-        },
-    )
-    task_toml = _deep_merge(task_toml, env_overrides or {})
+    task_toml = _deep_merge(DEFAULT_TASK_TOML, env_overrides or {})
     task_toml.setdefault("task", {})
     task_toml["task"]["name"] = task_name(spec.task_dir)
     task_toml["task"]["description"] = case.expected_output.strip()[:200]
@@ -200,31 +155,12 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     )
     task_toml["metadata"].setdefault("estimated_duration_sec", 900)
 
-    # Separate verifier env: the verifier runs in a dedicated container that
-    # never receives the agent's injected skills. Harbor transfers only the
-    # declared artifacts (workspace + agent trajectory) at their paths.
-    verifier_mode = harbor.verifier_mode
-    if verifier_mode == "separate":
-        task_toml["verifier"]["environment_mode"] = "separate"
-        task_toml["artifacts"] = list(harbor.artifacts) or list(HARBOR_ARTIFACTS)
-    else:
-        task_toml["verifier"].pop("environment_mode", None)
-        task_toml["artifacts"] = []
+    # The verifier always runs separately and receives the artifacts consumed
+    # by the report readers.
+    task_toml["verifier"]["environment_mode"] = "separate"
+    task_toml["artifacts"] = list(HARBOR_ARTIFACTS)
 
-    if overrides and "task.toml" in overrides:
-        # Full replace: the user's task.toml wins wholesale; per-case values
-        # are available as {{TASK_NAME}}/{{TASK_DESCRIPTION}}/{{TASK_VERSION}}.
-        _write_with_override(
-            target="task.toml",
-            dst=task_root / "task.toml",
-            overrides=overrides,
-            default=tomli_w.dumps(task_toml),
-            TASK_NAME=task_toml["task"]["name"],
-            TASK_DESCRIPTION=task_toml["task"]["description"],
-            TASK_VERSION=task_toml["task"]["version"],
-        )
-    else:
-        (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
+    (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
 
     (task_root / "instruction.md").write_text(case.prompt.strip() + "\n")
 
@@ -233,7 +169,6 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     created = compose_workspace(
         env_dir,
         workspace_dir=spec.workspace_dir,
-        overlays=spec.paths["overlays"],
         files=spec.paths["files"],
     )
     prepare_script = spec.paths["prepare_script"]
@@ -248,56 +183,40 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
             )
         shutil.copy2(prepare_script, prepare_dst)
         created.append("prepare.sh")
-    _write_with_override(
-        target="environment/Dockerfile",
-        dst=env_dir / "Dockerfile",
-        overrides=overrides,
-        default=(TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE).read_text(),
-        BASE_IMAGE=harbor.base_image,
+    (env_dir / "Dockerfile").write_text(
+        render_template(
+            (TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE).read_text(),
+            BASE_IMAGE=DEFAULT_BASE_IMAGE,
+        )
     )
-    _write_with_override(
-        target=".dockerignore",
-        dst=env_dir / ".dockerignore",
-        overrides=overrides,
-        default=(TEMPLATES / "dockerignore").read_text(),
+    (env_dir / ".dockerignore").write_text(
+        render_template((TEMPLATES / "dockerignore").read_text())
     )
 
     # tests/ = verifier + RewardKit judge config
     tests_dir = task_root / "tests"
     tests_dir.mkdir(parents=True, exist_ok=True)
-    _write_with_override(
-        target="tests/test.sh",
-        dst=tests_dir / "test.sh",
-        overrides=overrides,
-        default=(TEMPLATES / "test.sh").read_text(),
-        SKILL_NAME=spec.skill_name,
+    (tests_dir / "test.sh").write_text(
+        render_template(
+            (TEMPLATES / "test.sh").read_text(),
+            SKILL_NAME=spec.skill_name,
+        )
     )
     # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
-    _write_with_override(
-        target="tests/quality.toml",
-        dst=tests_dir / "quality.toml",
-        overrides=overrides,
-        default=build_quality_toml(case, harbor.judge_model),
-        JUDGE_MODEL=harbor.judge_model,
+    (tests_dir / "quality.toml").write_text(
+        build_quality_toml(case, DEFAULT_JUDGE_MODEL)
     )
-    if verifier_mode == "separate":
-        # Separate verifier image: Harbor builds the verifier container from
-        # this Dockerfile; tests/ is NOT uploaded at runtime.
-        _write_with_override(
-            target="tests/Dockerfile",
-            dst=tests_dir / "Dockerfile",
-            overrides=overrides,
-            default=(TEMPLATES / "verifier-Dockerfile").read_text(),
-        )
+    # Separate verifier image: Harbor builds the verifier container from this
+    # Dockerfile; tests/ is NOT uploaded at runtime.
+    (tests_dir / "Dockerfile").write_text(
+        render_template((TEMPLATES / "verifier-Dockerfile").read_text())
+    )
 
     # solution/ = oracle stub
     solution_dir = task_root / "solution"
     solution_dir.mkdir(parents=True, exist_ok=True)
-    _write_with_override(
-        target="solution/solve.sh",
-        dst=solution_dir / "solve.sh",
-        overrides=overrides,
-        default=(TEMPLATES / "solve.sh").read_text(),
+    (solution_dir / "solve.sh").write_text(
+        render_template((TEMPLATES / "solve.sh").read_text())
     )
 
     return created

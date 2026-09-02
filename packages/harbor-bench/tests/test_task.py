@@ -35,10 +35,6 @@ def skill(tmp_path: Path) -> Path:
         _json.dumps(
             {
                 "skill_name": "test-skill",
-                "harbor": {
-                    "workspace_dir": "harbor/workspace",
-                    "kwargs": {"max_ai_credits": 30},
-                },
                 "evals": [
                     {
                         "id": 1,
@@ -71,7 +67,6 @@ def make_spec(
         task_dir=task_dir_name(evals.skill_name, case.id, case.name),
         skill_name=evals.skill_name,
         case=case,
-        harbor=evals.harbor,
         paths=paths if paths is not None else resolved[case_id],
         workspace_dir=workspace_dir,
         env_overrides=env_overrides,
@@ -113,34 +108,6 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert "the thing done" in descriptions[0]
     assert descriptions[1] == "inspects repo"
     assert all(c["type"] == "binary" for c in quality["criterion"])
-
-
-def test_shared_verifier_mode_omits_separation(skill: Path, tmp_path: Path):
-    import json as _json
-
-    skill_dir = skill
-    (skill_dir / "evals" / "evals.json").write_text(
-        _json.dumps(
-            {
-                "skill_name": "test-skill",
-                "harbor": {"verifier_mode": "shared"},
-                "evals": [
-                    {
-                        "id": 1,
-                        "prompt": "do the thing",
-                        "expected_output": "the thing done",
-                        "expectations": [],
-                    }
-                ],
-            }
-        )
-    )
-    task_root = tmp_path / "shared-task"
-    generate_task(make_spec(skill_dir), task_root)
-    toml = tomllib.loads((task_root / "task.toml").read_text())
-    assert "environment_mode" not in toml["verifier"]
-    assert toml["artifacts"] == []
-    assert not (task_root / "tests" / "Dockerfile").exists()
 
 
 def test_generate_task_empty_workspace(skill: Path, tmp_path: Path):
@@ -227,9 +194,7 @@ def test_generated_dockerfile_deterministic_git_baseline(
     assert last_run.index("git init") < last_run.index("git commit")
 
 
-def _write_evals(
-    skill: Path, *, harbor: dict | None = None, cases: list[dict] | None = None
-) -> None:
+def _write_evals(skill: Path, *, cases: list[dict] | None = None) -> None:
     import json as _json
 
     data: dict = {
@@ -246,8 +211,6 @@ def _write_evals(
             }
         ],
     }
-    if harbor is not None:
-        data["harbor"] = harbor
     (skill / "evals" / "evals.json").write_text(_json.dumps(data))
 
 
@@ -255,101 +218,28 @@ def _generate(skill: Path, task_root: Path) -> None:
     generate_task(make_spec(skill), task_root)
 
 
-def test_config_file_overrides(skill: Path, tmp_path: Path):
-    skill_dir = skill
-    (skill_dir / "harbor").mkdir(exist_ok=True)
-    (skill_dir / "harbor" / "quality-suite.toml").write_text("suite quality\n")
-    (skill_dir / "harbor" / "quality-case.toml").write_text("case quality\n")
-    (skill_dir / "harbor" / "test.sh").write_text(
-        "#!/bin/sh\necho custom {{SKILL_NAME}}\n"
+def test_leftover_harbor_files_do_not_override_generated_files(
+    skill: Path, tmp_path: Path
+):
+    (skill / "harbor" / "task.toml").write_text(
+        '[task]\nname = "leftover-task"\n'
     )
-    (skill_dir / "harbor" / "Dockerfile").write_text("FROM custom:latest\n")
-    _write_evals(
-        skill_dir,
-        harbor={"overrides": {"tests/quality.toml": "harbor/quality-suite.toml"}},
-        cases=[
-            {
-                "id": 1,
-                "name": "case-one",
-                "prompt": "do the thing",
-                "expected_output": "the thing done",
-                "expectations": ["inspects repo"],
-                "files": [],
-                "harbor": {
-                    "overrides": {
-                        "tests/quality.toml": "harbor/quality-case.toml",
-                        "tests/test.sh": "harbor/test.sh",
-                        "environment/Dockerfile": "harbor/Dockerfile",
-                    }
-                },
-            }
-        ],
-    )
+    (skill / "harbor" / "quality.toml").write_text("leftover quality\n")
+
     task_root = tmp_path / "task"
-    _generate(skill_dir, task_root)
-
-    # per-eval override wins over the suite-level one
-    assert (task_root / "tests" / "quality.toml").read_text() == "case quality\n"
-    # verbatim Dockerfile, placeholder-substituted test.sh
-    assert (task_root / "environment" / "Dockerfile").read_text() == (
-        "FROM custom:latest\n"
-    )
-    assert (
-        (task_root / "tests" / "test.sh").read_text()
-        == "#!/bin/sh\necho custom test-skill\n"
-    )
-    # non-overridden files still generated from templates
-    toml = tomllib.loads((task_root / "task.toml").read_text())
-    assert toml["task"]["name"].startswith("pagopa/")
-
-
-def test_task_toml_override_full_replace(skill: Path, tmp_path: Path):
-    skill_dir = skill
-    (skill_dir / "harbor").mkdir(exist_ok=True)
-    (skill_dir / "harbor" / "task.toml").write_text(
-        'schema_version = "1.4"\n'
-        "[task]\n"
-        'name = "{{TASK_NAME}}"\n'
-        'description = "{{TASK_DESCRIPTION}}"\n'
-        'version = "{{TASK_VERSION}}"\n'
-        "[agent]\n"
-        "timeout_sec = 123.0\n"
-    )
-    _write_evals(
-        skill_dir,
-        harbor={"overrides": {"task.toml": "harbor/task.toml"}},
-        cases=[
-            {
-                "id": 1,
-                "name": "case-one",
-                "prompt": "do the thing",
-                "expected_output": "the thing done",
-                "expectations": ["inspects repo"],
-                "files": [],
-            }
-        ],
-    )
-    task_root = tmp_path / "task"
-    _generate(skill_dir, task_root)
+    _generate(skill, task_root)
 
     toml = tomllib.loads((task_root / "task.toml").read_text())
     assert toml["task"]["name"] == "pagopa/test-skill-1-case-one"
-    assert toml["task"]["description"] == "the thing done"
-    assert toml["task"]["version"] == "1.0.0"
-    assert toml["agent"]["timeout_sec"] == 123.0
-    # full replace: no auto-generated verifier env leaked in
-    assert "verifier" not in toml
+    assert toml["agent"]["timeout_sec"] == 900.0
+    assert "leftover-task" not in (task_root / "task.toml").read_text()
+    assert "leftover quality" not in (task_root / "tests" / "quality.toml").read_text()
 
 
 def test_prepare_script_copied_into_workspace(skill: Path, tmp_path: Path):
     skill_dir = skill
-    (skill_dir / "harbor").mkdir(exist_ok=True)
     (skill_dir / "harbor" / "prepare.sh").write_text(
         "#!/bin/sh\necho prepared > /workspace/status.txt\n"
-    )
-    _write_evals(
-        skill_dir,
-        harbor={"prepare_script": "harbor/prepare.sh"},
     )
     task_root = tmp_path / "task"
     _generate(skill_dir, task_root)
@@ -365,24 +255,9 @@ def test_prepare_script_copied_into_workspace(skill: Path, tmp_path: Path):
 
 def test_prepare_script_per_eval_override(skill: Path, tmp_path: Path):
     skill_dir = skill
-    (skill_dir / "harbor").mkdir(exist_ok=True)
     (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
-    (skill_dir / "harbor" / "case-prepare.sh").write_text("case prepare")
-    _write_evals(
-        skill_dir,
-        harbor={"prepare_script": "harbor/prepare.sh"},
-        cases=[
-            {
-                "id": 1,
-                "name": "case-one",
-                "prompt": "do the thing",
-                "expected_output": "the thing done",
-                "expectations": ["inspects repo"],
-                "files": [],
-                "harbor": {"prepare_script": "harbor/case-prepare.sh"},
-            }
-        ],
-    )
+    (skill_dir / "harbor" / "case-one").mkdir()
+    (skill_dir / "harbor" / "case-one" / "prepare.sh").write_text("case prepare")
     task_root = tmp_path / "task"
     _generate(skill_dir, task_root)
     assert (task_root / "environment" / "prepare.sh").read_text() == "case prepare"
@@ -393,10 +268,6 @@ def test_prepare_script_collision_rejected(skill: Path, tmp_path: Path):
     # a fixture layer already ships prepare.sh
     (skill_dir / "harbor" / "workspace" / "prepare.sh").write_text("fixture")
     (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
-    _write_evals(
-        skill_dir,
-        harbor={"prepare_script": "harbor/prepare.sh"},
-    )
     task_root = tmp_path / "task"
     with pytest.raises(WorkspaceError, match="prepare.sh"):
         generate_task(

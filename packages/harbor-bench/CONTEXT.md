@@ -13,7 +13,7 @@ _Avoid_: plugin
 
 **Eval case**:
 One test case in `evals.json`: a prompt, an expected output, and optional
-expectations, fixtures, and overlays.
+expectations and fixtures.
 _Avoid_: eval, test, benchmark case
 
 **Task**:
@@ -22,14 +22,17 @@ A runnable Harbor task directory generated for one eval case (`task.toml`,
 _Avoid_: job, run
 
 **Fixture**:
-A workspace file staged for the agent from the skill dir, via one of three
-layers: base workspace, overlay directory, or single file.
+A workspace file staged for the agent from the skill dir, via the optional
+`harbor/workspace/` base directory and the eval case's individual `files`.
 _Avoid_: file, asset
 
-**Suite metadata**:
-The `harbor` block of `evals.json`: base image, judge model, timeouts, verifier
-mode, artifacts, and overrides.
-_Avoid_: config, harbor block
+**Harbor layout**:
+The optional on-disk controls under a skill's `harbor/` directory:
+`workspace/` supplies the base fixture layer, `prepare.sh` applies to every
+case, and `harbor/<task-key>/prepare.sh` applies to one case. Converter defaults
+own the generated image, task, verifier, and config settings; other files under
+`harbor/` are ignored.
+_Avoid_: configuration file, metadata block
 
 **Agent**:
 The Copilot CLI session under evaluation. The custom `CopilotCliMod` agent is

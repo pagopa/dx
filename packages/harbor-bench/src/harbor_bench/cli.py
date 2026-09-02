@@ -14,10 +14,9 @@ Usage::
 ``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
 ``plugins/**/skills/*/evals/`` by default), generates one Harbor task per eval
 case, and emits a ready-to-run ``config.yaml`` so ``harbor run -c config.yaml``
-finds everything. Injected skills point at the raw skill directories: eval data
-(``evals/`` etc.) is stripped *inside the agent container* at runtime by
-``CopilotCliMod.setup()``, never on the host. The workflow itself lives in
-:mod:`harbor_bench.convert.run`; this module is a thin adapter over it.
+finds everything. Injected skills point at the raw skill directories and Harbor
+uploads them as-is. The workflow itself lives in :mod:`harbor_bench.convert.run`;
+this module is a thin adapter over it.
 
 ``diff`` reads two Harbor job directories (``jobs/<run>``) and prints a
 per-task delta report (score, tokens, cost, steps, duration) as Markdown
