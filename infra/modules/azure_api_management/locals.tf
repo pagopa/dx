@@ -54,6 +54,186 @@ locals {
 
   use_case_features = local.use_cases[var.use_case]
 
+  metric_namespace = "Microsoft.ApiManagement/service"
+
+  request_metric_alerts = {
+    total_requests = {
+      description      = "The total number of gateway requests is above the expected threshold. Monitor traffic and scale appropriately."
+      frequency        = "PT5M"
+      window_size      = "PT5M"
+      severity         = 2
+      auto_mitigate    = false
+      dynamic_criteria = []
+      criteria = [{
+        aggregation            = "Total"
+        dimension              = []
+        metric_name            = "Requests"
+        metric_namespace       = local.metric_namespace
+        operator               = "GreaterThan"
+        skip_metric_validation = false
+        threshold              = 10000
+      }]
+    }
+    successful_requests = {
+      description      = "The number of successful gateway requests is above the expected threshold. Ensure the success rate aligns with traffic volume."
+      frequency        = "PT5M"
+      window_size      = "PT5M"
+      severity         = 2
+      auto_mitigate    = false
+      dynamic_criteria = []
+      criteria = [{
+        aggregation = "Total"
+        dimension = [{
+          name     = "GatewayResponseCodeCategory"
+          operator = "Include"
+          values   = ["2xx", "3xx"]
+        }]
+        metric_name            = "Requests"
+        metric_namespace       = local.metric_namespace
+        operator               = "GreaterThan"
+        skip_metric_validation = false
+        threshold              = 9500
+      }]
+    }
+    failed_requests = {
+      description      = "The number of failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
+      frequency        = "PT5M"
+      window_size      = "PT5M"
+      severity         = 2
+      auto_mitigate    = false
+      dynamic_criteria = []
+      criteria = [{
+        aggregation = "Total"
+        dimension = [{
+          name     = "GatewayResponseCodeCategory"
+          operator = "Include"
+          values   = ["4xx", "5xx"]
+        }]
+        metric_name            = "Requests"
+        metric_namespace       = local.metric_namespace
+        operator               = "GreaterThan"
+        skip_metric_validation = false
+        threshold              = 100
+      }]
+    }
+    unauthorized_requests = {
+      description      = "The number of unauthorized gateway requests is above the expected threshold. Check authentication policies and tokens."
+      frequency        = "PT5M"
+      window_size      = "PT5M"
+      severity         = 2
+      auto_mitigate    = false
+      dynamic_criteria = []
+      criteria = [{
+        aggregation = "Total"
+        dimension = [{
+          name     = "GatewayResponseCode"
+          operator = "Include"
+          values   = ["401", "403", "429"]
+        }]
+        metric_name            = "Requests"
+        metric_namespace       = local.metric_namespace
+        operator               = "GreaterThan"
+        skip_metric_validation = false
+        threshold              = 50
+      }]
+    }
+  }
+
+  default_metric_alerts = {
+    development = {}
+    cost_optimized = merge(local.request_metric_alerts, {
+      response_time = {
+        description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Duration"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 500
+        }]
+      }
+      cpu_percent_gateway = {
+        description      = "The average gateway CPU utilization is above the expected threshold. Consider scaling the API Management service."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "CpuPercent_Gateway"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 80
+        }]
+      }
+      memory_percent_gateway = {
+        description      = "The average gateway memory utilization is above the expected threshold. Consider scaling the API Management service."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "MemoryPercent_Gateway"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 80
+        }]
+      }
+    })
+    high_load = merge(local.request_metric_alerts, {
+      response_time = {
+        description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Duration"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 500
+        }]
+      }
+      capacity = {
+        description      = "The average API Management capacity is above the expected threshold. Consider scaling or upgrading the tier."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Capacity"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 80
+        }]
+      }
+    })
+  }
+
+  metric_alerts = var.metric_alerts != null ? var.metric_alerts : local.default_metric_alerts[var.use_case]
+
   virtual_network_type                  = var.virtual_network_type_internal != null ? (var.virtual_network_type_internal ? "Internal" : "None") : local.use_case_features.virtual_network_type
   virtual_network_configuration_enabled = local.virtual_network_type == "Internal" || var.use_case == "cost_optimized" ? true : false
   public_network                        = var.enable_public_network_access

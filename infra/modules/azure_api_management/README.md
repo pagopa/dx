@@ -15,17 +15,37 @@ This module deploys an Azure API Management instance with optional configuration
 - **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
 - **Management Lock**: Prevent accidental deletion of the API Management instance.
 - **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
-- **Metric Alerts**: Set up alerts for monitoring API Management metrics.
+- **Metric Alerts**: Create supported default alerts per API Management SKU, with explicit overrides available.
 
 ## Use Cases and Configurations
 
 | Use case         | Description                                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts |
 | ---------------- | ----------------------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------- |
-| `development`    | For development and testing purposes.           | None | Limited          | No          | No               | Disabled      |
-| `cost_optimized` | The default use case, for production workloads. | Yes  | Moderate         | No          | No               | Enabled       |
-| `high_load`      | Designed for large-scale production workloads.  | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Enabled       |
+| `development`    | For development and testing purposes.           | None | Limited          | No           | No               | Disabled by default |
+| `cost_optimized` | The default use case, for production workloads. | Yes  | Moderate         | No           | No               | StandardV2 alerts |
+| `high_load`      | Designed for large-scale production workloads.  | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Premium alerts |
 
 ## Monitoring
+
+### Default metric alerts
+
+For `cost_optimized` (`StandardV2_1`), the module enables five-minute alerts for
+`Requests` (total, successful, failed, and unauthorized requests), `Duration`,
+`CpuPercent_Gateway`, and `MemoryPercent_Gateway`. The request thresholds are
+10000, 9500, 100, and 50 respectively; duration and gateway resource thresholds
+are 500 ms and 80%.
+
+For `high_load` (`Premium_2`), the module enables the same request and duration
+alerts plus the classic `Capacity` alert at 80%. The `Capacity` metric is not
+used for `StandardV2`, where Azure reports an unsupported value of zero.
+
+The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
+`UnauthorizedRequests` metrics are not used. Success, failure, and unauthorized
+traffic is filtered on dimensions of the supported `Requests` metric.
+
+Pass `metric_alerts = {}` to disable the defaults, or pass a custom map with the
+same input shape to replace them. Alerts can be routed to an Azure Monitor
+Action Group with `action_group_id`.
 
 Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
@@ -101,7 +121,7 @@ No modules.
 | <a name="input_key_vault_id"></a> [key\_vault\_id](#input\_key\_vault\_id) | The ID of the Key Vault. | `string` | `null` | no |
 | <a name="input_lock_enable"></a> [lock\_enable](#input\_lock\_enable) | Specifies whether to apply a lock to prevent accidental deletions. | `bool` | `false` | no |
 | <a name="input_management_logger_application_insight_enabled"></a> [management\_logger\_application\_insight\_enabled](#input\_management\_logger\_application\_insight\_enabled) | Specifies whether to enable the management logger application insight block. | `bool` | `true` | no |
-| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Map of name = criteria objects | <pre>map(object({<br/>    description = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H<br/>    frequency = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.<br/>    window_size = string<br/>    # Possible values are 0, 1, 2, 3.<br/>    severity = number<br/>    # Possible values are true, false<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name      = string<br/>        metric_namespace = string<br/>        # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation       = string<br/>        alert_sensitivity = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `{}` | no |
+| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use\_case; pass an explicit empty map to disable alerts or a custom map to override the defaults. | <pre>map(object({<br/>    description = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M and PT1H<br/>    frequency = string<br/>    # Possible values are PT1M, PT5M, PT15M, PT30M, PT1H, PT6H, PT12H and P1D.<br/>    window_size = string<br/>    # Possible values are 0, 1, 2, 3.<br/>    severity = number<br/>    # Possible values are true, false<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name      = string<br/>        metric_namespace = string<br/>        # criteria.0.operator to be one of [Equals NotEquals GreaterThan GreaterThanOrEqual LessThan LessThanOrEqual]<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        # criteria.*.aggregation to be one of [Average Count Minimum Maximum Total]<br/>        aggregation       = string<br/>        alert_sensitivity = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `null` | no |
 | <a name="input_monitoring"></a> [monitoring](#input\_monitoring) | Enable collecting resources to send to Azure Monitor into AzureDiagnostics table | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = string<br/><br/>    logs = optional(object({<br/>      enabled    = bool<br/>      groups     = optional(list(string), [])<br/>      categories = optional(list(string), [])<br/>    }), { enabled = false, groups = [], categories = [] })<br/><br/>    metrics = optional(object({<br/>      enabled = bool<br/>    }), { enabled = false })<br/><br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_notification_sender_email"></a> [notification\_sender\_email](#input\_notification\_sender\_email) | The email address from which notifications will be sent. | `string` | `null` | no |
 | <a name="input_private_dns_zone_ids"></a> [private\_dns\_zone\_ids](#input\_private\_dns\_zone\_ids) | Override IDs for private DNS zones. If not provided, zones will be looked up in "private\_dns\_zone\_resource\_group\_name". Use this to reference DNS zones in different subscriptions. | <pre>object({<br/>    azure_api_net             = optional(string)<br/>    management_azure_api_net  = optional(string)<br/>    scm_azure_api_net         = optional(string)<br/>    privatelink_azure_api_net = optional(string)<br/>  })</pre> | `null` | no |

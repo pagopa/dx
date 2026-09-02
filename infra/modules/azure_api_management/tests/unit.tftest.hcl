@@ -23,6 +23,7 @@ variables {
   }
 }
 
+
 mock_provider "azurerm" {}
 mock_provider "dx" {}
 
@@ -74,6 +75,7 @@ run "azure_api_management_cost_optimized_defaults" {
       sampling_percentage = 50
       verbosity           = "error"
     }
+    action_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
   }
 
   assert {
@@ -104,6 +106,33 @@ run "azure_api_management_cost_optimized_defaults" {
   assert {
     condition     = azurerm_api_management.this.virtual_network_type == "External"
     error_message = "Cost-optimized APIM must use an external virtual network."
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 7
+    error_message = "StandardV2 APIM must create the supported request, duration, CPU, and memory alerts by default."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].metric_name == "Requests" &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
+      contains(azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].values, "2xx")
+    )
+    error_message = "Successful request alerts must use the supported Requests metric and response-code dimensions."
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.this["cpu_percent_gateway"].criteria[0].metric_name == "CpuPercent_Gateway"
+    error_message = "StandardV2 APIM must use CpuPercent_Gateway instead of the unsupported Capacity metric."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["total_requests"].enabled &&
+      one(azurerm_monitor_metric_alert.this["total_requests"].action).action_group_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
+    )
+    error_message = "Default alerts must remain enabled and route to the configured Action Group."
   }
 }
 
@@ -166,6 +195,42 @@ run "azure_api_management_high_load_autoscale_defaults" {
   assert {
     condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].rule[0].scale_action[0].value == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].rule[1].scale_action[0].value == 2
     error_message = "High-load autoscale rule values must be multiples of the two availability zones."
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 6
+    error_message = "Premium APIM must create the supported request, duration, and capacity alerts by default."
+  }
+
+  assert {
+    condition     = azurerm_monitor_metric_alert.this["capacity"].criteria[0].metric_name == "Capacity"
+    error_message = "Premium APIM must use the Capacity metric."
+  }
+}
+
+run "azure_api_management_explicitly_disables_default_alerts" {
+  command = plan
+
+  variables {
+    metric_alerts = {}
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "An explicit empty metric_alerts map must disable default alerts."
+  }
+}
+
+run "azure_api_management_development_has_no_default_alerts" {
+  command = plan
+
+  variables {
+    use_case = "development"
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.sku_name == "Developer_1" && length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "Developer APIM must not create metric alerts by default."
   }
 }
 
