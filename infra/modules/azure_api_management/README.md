@@ -21,23 +21,24 @@ This module deploys an Azure API Management instance with optional configuration
 
 | Use case         | Description                                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts |
 | ---------------- | ----------------------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------- |
-| `development`    | For development and testing purposes.           | None | Limited          | No           | No               | Disabled by default |
-| `cost_optimized` | The default use case, for production workloads. | Yes  | Moderate         | No           | No               | StandardV2 alerts |
-| `high_load`      | Designed for large-scale production workloads.  | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Premium alerts |
+| `development`    | Development and testing.           | None | Limited          | No  | No           | Disabled by default |
+| `cost_optimized` | Production workloads.              | Yes  | Moderate         | No  | No           | StandardV2 alerts |
+| `high_load`      | High-load production workloads.    | Yes  | High (Autoscale) | Yes | `["1", "2"]` | Premium alerts |
 
 ## Monitoring
 
 ### Default metric alerts
 
-For `cost_optimized` (`StandardV2_1`), the module enables five-minute alerts for
-`Requests` (total, successful, failed, and unauthorized requests), `Duration`,
-`CpuPercent_Gateway`, and `MemoryPercent_Gateway`. The request thresholds are
-10000, 9500, 100, and 50 respectively; duration and gateway resource thresholds
-are 500 ms and 80%.
+For `cost_optimized` (`StandardV2_1`), the module creates five-minute alerts
+for `Requests` (total, successful, failed, and unauthorized requests),
+`Duration`, `CpuPercent_Gateway`, and `MemoryPercent_Gateway`. The thresholds
+are 10000, 9500, 100, and 50 for the request alerts, 500 ms for `Duration`,
+and 80% for gateway CPU and memory.
 
-For `high_load` (`Premium_2`), the module enables the same request and duration
-alerts plus the classic `Capacity` alert at 80%. The `Capacity` metric is not
-used for `StandardV2`, where Azure reports an unsupported value of zero.
+For `high_load` (`Premium_2`), the module creates five-minute alerts for
+`Requests`, `Duration`, and classic-tier `Capacity`. The thresholds are 20000,
+19000, 200, and 100 for the request alerts, 500 ms for `Duration`, and 80% for
+`Capacity`. `Capacity` is not used for `StandardV2`.
 
 The default threshold map is selected by `use_case`/SKU:
 
@@ -47,27 +48,22 @@ The default threshold map is selected by `use_case`/SKU:
 | `cost_optimized` | `StandardV2_1` | 10000/9500/100/50 | 500 ms | N/A | 80%/80% |
 | `high_load` | `Premium_2` | 20000/19000/200/100 | 500 ms | 80% | N/A |
 
-Traffic and duration thresholds are workload-specific and cannot be inferred
-from an APIM SKU alone. `cost_optimized` retains the ticket values as its
-explicit baseline; `high_load` doubles the four traffic thresholds to reflect
-the two-unit `Premium_2` profile, while retaining the ticket's duration and
-resource baselines. These are operational starting points, not Azure service
-limits, and should be tuned to the workload. CPU, memory, and classic Premium
-capacity use the ticket's 80% baseline. The development row is kept explicit
-for mapping completeness, but its alerts remain disabled.
+The `high_load` profile uses two times the four request thresholds defined for
+`cost_optimized`. Duration, CPU, memory, and Capacity use the thresholds shown
+in the table. The `development` profile has no default metric alerts.
 
 The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
-`UnauthorizedRequests` metrics are not used. Success, server-side failure
-(`5xx`), and unauthorized traffic is filtered on dimensions of the supported
-`Requests` metric; unauthorized traffic covers only `401` and `403` responses,
-while `429` (Too Many Requests) is intentionally not included. The ticket does
-not require a separate throttling alert, so no additional default alert is
-created. The `development` use case keeps alerts disabled, including when
-`metric_alerts` is provided.
+`UnauthorizedRequests` metrics are not used. Success and server-side failure
+(`5xx`) are filtered with the `GatewayResponseCodeCategory` dimension of
+`Requests`. Unauthorized traffic is filtered with the `GatewayResponseCode`
+dimension and includes only `401` and `403`; `429` (Too Many Requests) is
+excluded. No default throttling alert is created. The `development` use case
+keeps alerts disabled, including when `metric_alerts` is provided.
 
-Pass `metric_alerts = {}` to disable the defaults, or pass a custom map with the
-same input shape to replace them. Alerts can be routed to an Azure Monitor
-Action Group with `action_group_id`.
+Set `metric_alerts = null` or omit the argument to use the defaults. Set
+`metric_alerts = {}` to disable all metric alerts. A non-empty custom map
+replaces the defaults. Alerts are routed to an Azure Monitor Action Group when
+`action_group_id` is set.
 
 Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
