@@ -10,6 +10,7 @@ Any path collision between layers is an error (never silently overwrite).
 from __future__ import annotations
 
 import shutil
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -57,7 +58,7 @@ def compose_workspace(
     env_dir: Path,
     *,
     workspace_dir: Path | None = None,
-    files: list[Path] = (),
+    files: Sequence[Path] = (),
 ) -> list[str]:
     """Copy the fixture layers into ``env_dir`` and return created relative paths.
 

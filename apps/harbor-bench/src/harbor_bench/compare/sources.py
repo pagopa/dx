@@ -73,11 +73,22 @@ def _git_name(value: str) -> str | None:
 
 
 def _validate_local_path(path: Path, value: str) -> None:
-    """Raise when ``path`` is neither a skill dir nor a root of skill dirs."""
+    """Raise when ``path`` is neither a skill dir nor a root of skill dirs.
+
+    A skill dir contains ``SKILL.md``; a root of skill dirs has at least one
+    child directory, each containing ``SKILL.md``. Anything else — an empty
+    directory, files-only content, or a child directory without ``SKILL.md`` —
+    is rejected.
+    """
     if (path / "SKILL.md").is_file():
         return
-    for child in path.iterdir():
-        if child.is_dir() and not (child / "SKILL.md").is_file():
+    child_dirs = [child for child in path.iterdir() if child.is_dir()]
+    if not child_dirs:
+        raise ValueError(
+            f"not a skill dir (SKILL.md) nor a root of skill dirs: {value}"
+        )
+    for child in child_dirs:
+        if not (child / "SKILL.md").is_file():
             raise ValueError(
                 f"not a skill dir (SKILL.md) nor a root of skill dirs: {value}"
             )

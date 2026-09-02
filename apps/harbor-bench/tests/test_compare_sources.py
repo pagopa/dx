@@ -123,6 +123,21 @@ def test_parse_local_root_with_non_skill_child_raises(tmp_path: Path):
         parse_skill(str(path), tmp_path)
 
 
+def test_parse_local_empty_dir_raises(tmp_path: Path):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    with pytest.raises(ValueError, match="not a skill dir"):
+        parse_skill(str(empty), tmp_path)
+
+
+def test_parse_local_files_only_dir_raises(tmp_path: Path):
+    files_only = tmp_path / "files-only"
+    files_only.mkdir()
+    (files_only / "README.md").write_text("not a skill root", encoding="utf-8")
+    with pytest.raises(ValueError, match="not a skill dir"):
+        parse_skill(str(files_only), tmp_path)
+
+
 # --- validate_git_source -------------------------------------------------
 
 
