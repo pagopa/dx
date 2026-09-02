@@ -78,3 +78,12 @@ tsconfig.*.tsbuildinfo
 
 # harbor-bench generated eval tasks
 .harbor/
+
+# python excludes
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
