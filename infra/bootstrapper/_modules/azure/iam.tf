@@ -58,7 +58,7 @@ resource "azurerm_role_assignment" "storage_blob_contributor_to_admins" {
 }
 
 resource "azurerm_role_assignment" "contributor" {
-  count                = var.environment.env_short == "d" ? 1 : 0
+  count                = var.environment.env_short == "d" || var.environment.env_short == "u" ? 1 : 0
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
   principal_id         = module.bootstrap.identities.infra.ci.principal_id
