@@ -5,6 +5,7 @@ on:
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
+  PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
 
 jobs:
   gate:
@@ -53,7 +54,9 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -86,11 +89,16 @@ jobs:
         with:
           experimental: true
 
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
       - name: Install dependencies
         run: mise deps
@@ -136,7 +144,9 @@ jobs:
           filter: tree:0
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -252,12 +262,17 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
       # so we handle it manually.
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
