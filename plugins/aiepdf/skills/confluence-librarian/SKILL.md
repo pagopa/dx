@@ -52,12 +52,16 @@ claim to have published content that was not read.
 3. **Read and validate the source.** Preserve the complete heading hierarchy,
    tables, lists, links, code blocks, stable HTML-comment IDs, table IDs,
    statuses, `N/A` reasons, open questions, and source references. Identify
-   unsupported constructs before writing.
+   unsupported constructs before writing. Treat markdown soft-wraps as
+   presentation-only formatting: when the source is wrapped for readability,
+   collapse soft-wrapped lines before comparing or publishing content so they do
+   not become accidental paragraphs, bullets, or content changes.
 4. **Prepare the representation.** Convert the source into the format
    supported by the authenticated Confluence integration. Translate only
    human-facing prose, headings, labels, and values when requested. Keep
    stable IDs, machine-facing status values, entity IDs, URLs, API operation
-   names, and code unchanged.
+   names, and code unchanged. Ignore markdown soft-wraps in the source; do not
+   reproduce them as hard line breaks or blank paragraphs in Confluence.
 5. **Show the irreversible action.** State the operation, page title, space,
    parent, language, and source path before creating or updating the page.
 6. **Publish through the authenticated integration.** Use the available
@@ -110,6 +114,9 @@ Source: <document path or artifact>
   comments, local IDs, links, or page metadata.
 - Use the authenticated integration's native document representation when
   available. Never store credentials in the skill or generated document.
+- Ignore markdown soft-wraps in the source. Wrapped lines are formatting-only
+  and must be normalized before import; they must not become new paragraphs,
+  bullets, or hard breaks in Confluence.
 - Markdown front matter is not native Confluence metadata. When publishing a
   Markdown document, render its front-matter values as a Confluence metadata
   table, and verify that stable IDs and lifecycle status remain visible after
