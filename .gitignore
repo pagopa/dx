@@ -45,6 +45,8 @@ dist
 .env
 node_modules
 .turbo
+.venv/
+.uv-cache/
 
 # vitest
 coverage

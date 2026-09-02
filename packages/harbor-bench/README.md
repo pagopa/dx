@@ -35,23 +35,24 @@ per-task Harbor config files: `evals.json` stays the source of truth.
 The agent code runs host-side inside the `harbor` process, so `harbor-bench` must
 be importable from that same Python environment. Two supported workflows:
 
-**A. uv tool (recommended):**
+**A. uv tool:**
 
 ```bash
 uv tool install harbor==0.22.0 --with 'harbor-bench @ ./packages/harbor-bench'
 ```
 
-**B. Project venv:**
+**B. Repository workspace (recommended for development):**
 
 ```bash
-cd packages/harbor-bench && uv sync
-source .venv/bin/activate
+mise run install
+harbor-bench --help
 ```
 
-`uv sync` installs `harbor-bench` and its deps (`harbor==0.22.0`) into the
-package `.venv`, so `harbor-bench` and `harbor` are both on `PATH` while the venv
-is active. The `convert` command only needs this venv; add `--extra test` to
-also install pytest for the test suite.
+`mise run install` installs every uv workspace package and its dependencies into
+the root `.venv`. With mise shell integration enabled, the venv is automatically
+added to `PATH`, so `harbor-bench` and `harbor` can be invoked directly without
+`source .venv/bin/activate` or `uv run`. The `convert` command only needs the
+default dependencies; add `--extra test` when running the test suite.
 
 ## Workflow
 

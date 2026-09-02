@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "packages/harbor-bench",
-        "command": "uv run --frozen --extra test pytest tests"
+        "command": "uv run --frozen --package harbor-bench --extra test pytest tests"
       }
     }
   }
