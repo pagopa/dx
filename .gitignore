@@ -45,8 +45,6 @@ dist
 .env
 node_modules
 .turbo
-.venv/
-.uv-cache/
 
 # vitest
 coverage
@@ -81,6 +79,7 @@ tsconfig.*.tsbuildinfo
 
 # python excludes
 .venv/
+.uv-cache/
 __pycache__/
 *.pyc
 *.pyo
