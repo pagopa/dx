@@ -398,7 +398,9 @@ describe("getProject applications", () => {
       expect(targets["apply"]?.dependsOn).toEqual(["init"]);
     });
   });
+});
 
+describe("getProject application initialization and tags", () => {
   describe("inferred init target", () => {
     it("initializes Terraform through the lock-aware executor", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
