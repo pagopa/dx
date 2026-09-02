@@ -6,6 +6,7 @@ on:
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
   PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
+  MISE_ENV: ""
 
 jobs:
   gate:
