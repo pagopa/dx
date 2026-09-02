@@ -33,35 +33,30 @@ per-task Harbor config files: `evals.json` stays the source of truth.
 ## Install
 
 The agent code runs host-side inside the `harbor` process, so `harbor-bench` must
-be importable from that same Python environment. Two supported workflows:
-
-**A. uv tool:**
-
-```bash
-uv tool install harbor==0.22.0 --with 'harbor-bench @ ./packages/harbor-bench'
-```
-
-**B. Repository workspace (recommended for development):**
+be importable from that same Python environment. Install the workspace
+dependencies and invoke the CLI through `uv run`:
 
 ```bash
 mise run install
-harbor-bench --help
+uv run --package harbor-bench harbor-bench --help
 ```
 
-`mise run install` installs every uv workspace package and its dependencies into
-the root `.venv`. With mise shell integration enabled, the venv is automatically
-added to `PATH`, so `harbor-bench` and `harbor` can be invoked directly without
-`source .venv/bin/activate` or `uv run`. The `convert` command only needs the
-default dependencies; add `--extra test` when running the test suite.
+`mise run install` runs `uv sync --all-packages`; `uv run` then selects the
+`harbor-bench` workspace member, synchronizes its environment when needed, and
+executes the CLI without requiring `source .venv/bin/activate`. The `convert`
+command only needs the default dependencies; add `--extra test` when running
+the test suite.
 
 ## Workflow
 
 ```bash
 # 1. convert evals.json -> Harbor tasks + config.yaml
-harbor-bench convert --scan-root plugins --out .harbor --config-out .harbor/config.yaml
+uv run --package harbor-bench harbor-bench convert \
+  --scan-root plugins --out .harbor --config-out .harbor/config.yaml
 
 # 2. run the eval
-harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
+uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 ```
 
 `--without-skill` omits the injected skills (baseline comparison). Agent kwargs
@@ -74,7 +69,8 @@ run the eval with Apple Container instead (see
 `[environment].type` in the config flips:
 
 ```bash
-harbor-bench convert --scan-root plugins --out .harbor \
+uv run --package harbor-bench harbor-bench convert \
+  --scan-root plugins --out .harbor \
   --config-out .harbor/config.yaml --environment apple-container
 ```
 
@@ -86,8 +82,9 @@ no longer stages or copies them). Harbor uploads these directories as-is — see
 
 Harbor 0.22.0 ships an `AppleContainerEnvironment` (`EnvironmentType`
 `apple-container`) that runs the same OCI images / Dockerfiles through Apple's
-`container` CLI instead of a Docker daemon. `harbor-bench convert --environment
-apple-container` only rewrites `[environment].type` in the generated
+`container` CLI instead of a Docker daemon. `uv run --package harbor-bench
+harbor-bench convert --environment apple-container` only rewrites
+`[environment].type` in the generated
 `config.yaml`; the task Dockerfiles (agent `environment/Dockerfile` and, in
 separate-verifier mode, `tests/Dockerfile`) are consumed unchanged, and the
 verifier reuses the same environment type automatically.
@@ -272,7 +269,8 @@ name to its kwarg.
 `config.yaml` embeds your values:
 
 ```bash
-harbor-bench convert --model claude-sonnet-4 --ak reasoning_effort=low \
+uv run --package harbor-bench harbor-bench convert \
+  --model claude-sonnet-4 --ak reasoning_effort=low \
   --scan-root plugins --out .harbor --config-out .harbor/config.yaml
 ```
 
@@ -289,7 +287,8 @@ flags mode options`).
 config file, pass them directly to `harbor run`:
 
 ```bash
-harbor run --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod \
+uv run --package harbor-bench harbor \
+  --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod \
   --model gpt-5.6-luna --ak reasoning_effort=high ...
 ```
 
@@ -414,18 +413,22 @@ worktree or full-branch staging is needed.
 
 ```bash
 # 1. Baseline: current workspace skills (named job, stable path)
-harbor-bench convert --scan-root plugins --out .harbor --config-out .harbor/config.yaml
-harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+uv run --package harbor-bench harbor-bench convert \
+  --scan-root plugins --out .harbor --config-out .harbor/config.yaml
+uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name skill-workspace
 
 # 2. Same config, skills from git (e.g. main) — pass one URL per plugin to compare
-harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name skill-main \
   --skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills \
   --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills
 
 # 3. Delta report (score, tokens, cost, duration)
-harbor-bench diff runs/skill-workspace runs/skill-main --report comparison.md
+uv run --package harbor-bench harbor-bench diff \
+  runs/skill-workspace runs/skill-main --report comparison.md
 ```
 
 The report is rendered as Markdown by default; pass `--format json` for a
@@ -436,7 +439,9 @@ metric registry, and run configuration is included. Write it to stdout or
 `--report out.json`:
 
 ```bash
-harbor-bench diff runs/skill-workspace runs/skill-main --format json --report comparison.json
+uv run --package harbor-bench harbor-bench diff \
+  runs/skill-workspace runs/skill-main \
+  --format json --report comparison.json
 ```
 
 For a browser-friendly report, pass `--format html`. The generated file is
@@ -444,7 +449,8 @@ self-contained, so it can be opened locally or attached to a review without a
 web server or additional assets:
 
 ```bash
-harbor-bench diff runs/skill-workspace runs/skill-main \
+uv run --package harbor-bench harbor-bench diff \
+  runs/skill-workspace runs/skill-main \
   --format html \
   --report comparison.html
 open comparison.html
@@ -519,7 +525,8 @@ under one output directory. The report is `comparison.md` by default; pass
 `comparison.json`.
 
 ```bash
-harbor-bench compare plugins/aiepdf/skills/dr-blacksmith \
+uv run --package harbor-bench harbor-bench compare \
+  plugins/aiepdf/skills/dr-blacksmith \
   https://github.com/pagopa/dx/tree/foobar/plugins/aiepdf/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-use-case-*' \
   --format html \
@@ -563,19 +570,24 @@ with distinct names, then diff them with `diff`:
 
 ```bash
 # 1. Configs: with skills (default) and without (baseline)
-harbor-bench convert --scan-root plugins --out .harbor \
+uv run --package harbor-bench harbor-bench convert \
+  --scan-root plugins --out .harbor \
   --config-out .harbor/config.yaml
-harbor-bench convert --scan-root plugins --out .harbor-baseline \
+uv run --package harbor-bench harbor-bench convert \
+  --scan-root plugins --out .harbor-baseline \
   --config-out .harbor-baseline/config.yaml --without-skill
 
 # 2. Run both (distinct job names — same name with a different config errors)
-harbor run -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name with-skill
-harbor run -c .harbor-baseline/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
+uv run --package harbor-bench harbor run \
+  -c .harbor-baseline/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name without-skill
 
 # 3. Delta report: with-skill − without-skill (score, tokens, cost, duration)
-harbor-bench diff runs/without-skill runs/with-skill --report comparison.md
+uv run --package harbor-bench harbor-bench diff \
+  runs/without-skill runs/with-skill --report comparison.md
 ```
 
 Keep the two configs otherwise identical (same `--model`, same `--ak`) so the

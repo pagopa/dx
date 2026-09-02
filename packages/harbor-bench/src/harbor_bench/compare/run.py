@@ -127,7 +127,10 @@ def check_harbor_cli(harbor: str) -> str | None:
     """Return an error message when the ``harbor`` CLI is not on PATH."""
     if shutil.which(harbor) is not None:
         return None
-    return f"'{harbor}' CLI not found on PATH (install with: uv tool install harbor)"
+    return (
+        f"'{harbor}' CLI not found on PATH "
+        "(run with: uv run --package harbor-bench harbor)"
+    )
 
 
 def _normalize_options(options: CompareOptions) -> CompareOptions:

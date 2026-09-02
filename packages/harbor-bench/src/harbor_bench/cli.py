@@ -105,7 +105,11 @@ def cmd_convert(args: argparse.Namespace) -> int:
     print(f">> environment: {options.environment}")
     if options.without_skill:
         print(">> without-skill: agent skills omitted (baseline comparison)")
-    print(">> run:   harbor run -c %s -y --ae COPILOT_GITHUB_TOKEN=..." % result.config_written)
+    print(
+        ">> run:   uv run --package harbor-bench harbor run -c %s "
+        "-y --ae COPILOT_GITHUB_TOKEN=..."
+        % result.config_written
+    )
     return 0
 
 
@@ -178,7 +182,9 @@ def cmd_compare(args: argparse.Namespace) -> int:
     print(f">>   base: {result.base_job}")
     print(f">>   head: {result.head_job}")
     print(f">>   report: {result.report}")
-    print(f">>   browse: harbor view {result.run_dir}")
+    print(
+        f">>   browse: uv run --package harbor-bench harbor view {result.run_dir}"
+    )
     return 0
 
 

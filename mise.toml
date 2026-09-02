@@ -21,7 +21,6 @@ uv = "latest"
 
 [env]
 TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
-_.python.venv = { path = ".venv", create = true }
 
 [tasks]
 install = "uv sync --all-packages"

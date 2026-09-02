@@ -21,7 +21,8 @@ reused/prebuilt image (see the README) makes that step a no-op.
 
 Load it with::
 
-    harbor run ... --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod
+    uv run --package harbor-bench harbor ... \
+      --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod
 
 or reference it in a job ``config.yaml``::
 
@@ -30,9 +31,9 @@ or reference it in a job ``config.yaml``::
         kwargs:
           max_ai_credits: 30
 
-The agent code runs host-side: install this package into the Python environment
-that runs ``harbor`` (``uv tool install harbor --with 'harbor-bench @ ...'`` or
-``PYTHONPATH=<src>``).
+The agent code runs host-side: execute ``harbor`` through the workspace
+environment (``uv run --package harbor-bench harbor``) or set
+``PYTHONPATH=<src>``.
 """
 
 from __future__ import annotations
