@@ -14,7 +14,7 @@ resource "azurerm_user_assigned_identity" "integration_tests" {
 resource "azurerm_federated_identity_credential" "infra_cd_integration_tests" {
   count = var.environment.env_short == "u" ? 1 : 0
 
-  name      = "dx-environment-infra-dev-integration-tests"
+  name      = "dx-environment-infra-uat-integration-tests"
   audience  = ["api://AzureADTokenExchange"]
   issuer    = "https://token.actions.githubusercontent.com"
   parent_id = azurerm_user_assigned_identity.integration_tests[0].id
