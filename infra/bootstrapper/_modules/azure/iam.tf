@@ -7,7 +7,7 @@ resource "azurerm_role_assignment" "user_access_administrator" {
 
 module "roles_ci" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
+  version = "~> 4.0"
 
   principal_id    = module.bootstrap.identities.infra.ci.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
@@ -26,7 +26,7 @@ module "roles_ci" {
 
 module "roles_cd" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
+  version = "~> 4.0"
 
   principal_id    = module.bootstrap.identities.infra.cd.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
@@ -71,7 +71,7 @@ resource "azurerm_role_assignment" "static_web_apps_list_secrets" {
 }
 
 resource "azurerm_role_assignment" "integration_test_subscription_owner" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count = var.environment.env_short == "u" ? 1 : 0
 
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Owner"
@@ -80,7 +80,7 @@ resource "azurerm_role_assignment" "integration_test_subscription_owner" {
 }
 
 resource "azurerm_role_assignment" "integration_test_subscription_administrator" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count = var.environment.env_short == "u" ? 1 : 0
 
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "User Access Administrator"
@@ -89,7 +89,7 @@ resource "azurerm_role_assignment" "integration_test_subscription_administrator"
 }
 
 resource "azurerm_role_assignment" "integration_test_tfstate_data_contributor" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count = var.environment.env_short == "u" ? 1 : 0
 
   scope                = local.tf_storage_account_id
   role_definition_name = "Storage Blob Data Contributor"
