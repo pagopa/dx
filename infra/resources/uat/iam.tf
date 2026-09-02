@@ -7,7 +7,7 @@ resource "azurerm_role_assignment" "infra_cd_key_vault_crypto" {
 
 module "automation_cd_common_key_vault_certificates" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   principal_id    = data.azurerm_user_assigned_identity.automation_cd.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
