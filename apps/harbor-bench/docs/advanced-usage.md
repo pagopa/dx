@@ -476,7 +476,7 @@ under one output directory. The report is `comparison.md` by default; pass
 ```bash
 uv run --package harbor-bench harbor-bench compare \
   plugins/aiepdf/skills/dr-blacksmith \
-  https://github.com/pagopa/dx/tree/foobar/plugins/aiepdf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-use-case-*' \
   --format html \
   --token $COPILOT_GITHUB_TOKEN

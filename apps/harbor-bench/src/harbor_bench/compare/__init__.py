@@ -8,13 +8,20 @@ from .run import (
     check_harbor_cli,
     run_compare,
 )
-from .sources import SkillSource, derive_globs, is_git_source, parse_skill
+from .sources import (
+    SkillSource,
+    derive_globs,
+    is_git_source,
+    parse_skill,
+    validate_git_source,
+)
 
 __all__ = [
     "SkillSource",
     "derive_globs",
     "is_git_source",
     "parse_skill",
+    "validate_git_source",
     "CompareError",
     "CompareOptions",
     "CompareResult",

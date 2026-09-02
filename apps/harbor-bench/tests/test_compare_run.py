@@ -214,6 +214,109 @@ def test_run_compare_requires_evals(tmp_path: Path, monkeypatch):
         run_compare(options(tmp_path))
 
 
+def test_run_compare_preflights_invalid_head_git_source(
+    tmp_path: Path, monkeypatch
+):
+    """An unresolvable git head fails before any convert/run work happens."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+
+    def fail_git(source):
+        if source.kind == "git":
+            return "No matching ref 'foobar' found in https://github.com/pagopa/dx"
+        return None
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.validate_git_source", fail_git
+    )
+
+    def should_not_plan(opts):
+        raise AssertionError("convert must not run before source preflight")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", should_not_plan)
+
+    git_head = (
+        "https://github.com/pagopa/dx/tree/foobar/"
+        "plugins/aiepdf/skills/dr-blacksmith"
+    )
+    with pytest.raises(CompareError, match=r"\[head\] invalid skill source"):
+        run_compare(options(tmp_path, head_skill=git_head))
+
+
+def test_run_compare_preflights_invalid_base_git_source(
+    tmp_path: Path, monkeypatch
+):
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+
+    def fail_git(source):
+        return "repository not found" if source.kind == "git" else None
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.validate_git_source", fail_git
+    )
+    git_base = (
+        "https://github.com/pagopa/dx/tree/foobar/"
+        "plugins/aiepdf/skills/dr-blacksmith"
+    )
+    with pytest.raises(CompareError, match=r"\[base\] invalid skill source"):
+        run_compare(options(tmp_path, base_skill=git_base))
+
+
+def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
+    """A resolvable git source passes the preflight and reaches the flow."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.validate_git_source", lambda source: None
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text(
+            "datasets:\n  - path: tasks\n",
+            encoding="utf-8",
+        )
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
+    monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
+
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
+
+    git_head = (
+        "https://github.com/pagopa/dx/tree/main/"
+        "plugins/aiepdf/skills/dr-blacksmith"
+    )
+    result = run_compare(options(tmp_path, head_skill=git_head))
+
+    assert result.base_job == tmp_path / "runs" / "run-1" / "base"
+    assert result.head_job == tmp_path / "runs" / "run-1" / "head"
+    assert result.report.is_file()
+
+
 def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     monkeypatch.setattr(
         "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None

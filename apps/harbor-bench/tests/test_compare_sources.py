@@ -16,6 +16,7 @@ from harbor_bench.compare.sources import (
     derive_globs,
     is_git_source,
     parse_skill,
+    validate_git_source,
 )
 
 
@@ -120,6 +121,93 @@ def test_parse_local_root_with_non_skill_child_raises(tmp_path: Path):
     (path / "skill-b" / "SKILL.md").unlink()
     with pytest.raises(ValueError, match="not a skill dir"):
         parse_skill(str(path), tmp_path)
+
+
+# --- validate_git_source -------------------------------------------------
+
+
+GIT_URL = (
+    "https://github.com/pagopa/dx/tree/foobar/"
+    "plugins/aiepdf/skills/dr-blacksmith"
+)
+
+
+def test_validate_git_source_skips_local(tmp_path: Path):
+    path = make_skill_dir(tmp_path, "dr-blacksmith")
+    source = parse_skill(str(path), tmp_path)
+    assert source.kind == "local"
+    assert validate_git_source(source) is None
+
+
+def test_validate_git_source_ok_when_resolved_to_skill_dir(
+    tmp_path: Path, monkeypatch
+):
+    skill = make_skill_dir(tmp_path, "dr-blacksmith")
+    source = parse_skill(GIT_URL, tmp_path)
+    monkeypatch.setattr(
+        "harbor.skills.resolve_skill_sources", lambda values: [skill]
+    )
+    assert validate_git_source(source) is None
+
+
+def test_validate_git_source_ok_when_resolved_to_root_of_skill_dirs(
+    tmp_path: Path, monkeypatch
+):
+    root = make_skill_dir(tmp_path, "skills", "skill-a", "skill-b")
+    source = parse_skill(GIT_URL, tmp_path)
+    monkeypatch.setattr(
+        "harbor.skills.resolve_skill_sources", lambda values: [root]
+    )
+    assert validate_git_source(source) is None
+
+
+def test_validate_git_source_reports_unresolvable_ref(
+    tmp_path: Path, monkeypatch
+):
+    def fail_resolve(values):
+        raise RuntimeError(
+            f"No matching ref 'foobar' found in https://github.com/pagopa/dx"
+        )
+
+    source = parse_skill(GIT_URL, tmp_path)
+    monkeypatch.setattr("harbor.skills.resolve_skill_sources", fail_resolve)
+    assert validate_git_source(source) is not None
+
+
+def test_validate_git_source_reports_missing_repo(tmp_path: Path, monkeypatch):
+    def fail_resolve(values):
+        raise RuntimeError("Failed to resolve git ref: repository not found")
+
+    source = parse_skill(GIT_URL, tmp_path)
+    monkeypatch.setattr("harbor.skills.resolve_skill_sources", fail_resolve)
+    error = validate_git_source(source)
+    assert error is not None and "repository not found" in error
+
+
+def test_validate_git_source_reports_missing_resolved_path(
+    tmp_path: Path, monkeypatch
+):
+    source = parse_skill(GIT_URL, tmp_path)
+    missing = tmp_path / "cache" / "dr-blacksmith"
+    monkeypatch.setattr(
+        "harbor.skills.resolve_skill_sources", lambda values: [missing]
+    )
+    error = validate_git_source(source)
+    assert error is not None and "does not exist" in error
+
+
+def test_validate_git_source_reports_non_skill_dir(
+    tmp_path: Path, monkeypatch
+):
+    source = parse_skill(GIT_URL, tmp_path)
+    bad_dir = tmp_path / "resolved"
+    bad_dir.mkdir()
+    (bad_dir / "README.md").write_text("not a skill", encoding="utf-8")
+    monkeypatch.setattr(
+        "harbor.skills.resolve_skill_sources", lambda values: [bad_dir]
+    )
+    error = validate_git_source(source)
+    assert error is not None and "must be a skill directory" in error
 
 
 # --- derive_globs --------------------------------------------------------

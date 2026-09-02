@@ -265,7 +265,11 @@ def build_parser() -> argparse.ArgumentParser:
             "injected into the first `harbor run`, the head skill into the second — "
             "and write the delta report between the two job directories. Skills are "
             "local paths (skill dir or root of skill dirs) or git sources "
-            "(org/repo[@ref], or https://github.com/org/repo/tree/<ref>/<subdir>)."
+            "(org/repo[@ref], or https://github.com/org/repo/tree/<ref>/<subdir>). "
+            "Both references are validated up front: a local path must exist and be "
+            "a skill dir or root of skill dirs, and a git source must resolve to a "
+            "real repo/ref whose subdir contains the skill — an invalid reference "
+            "fails immediately instead of after the first run."
         ),
     )
     cmp.add_argument("base", help="base skill: local path or git source")

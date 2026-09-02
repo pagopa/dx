@@ -9,7 +9,10 @@ verbatim, a local path is resolved and validated up front.
 This module is the single place that decides what a skill argument means.
 :func:`parse_skill` returns a typed :class:`SkillSource` carrying the reference
 to hand to ``harbor run --skill`` and the skill name used to narrow the eval
-set (:func:`derive_globs`). Nothing here knows about running or reporting.
+set (:func:`derive_globs`). Local paths are validated up front; git sources are
+only validated once :func:`validate_git_source` resolves them against the
+remote (a ``compare`` preflight). Nothing here knows about running or
+reporting.
 """
 
 from __future__ import annotations
@@ -78,6 +81,40 @@ def _validate_local_path(path: Path, value: str) -> None:
             raise ValueError(
                 f"not a skill dir (SKILL.md) nor a root of skill dirs: {value}"
             )
+
+
+def validate_git_source(source: SkillSource) -> str | None:
+    """Error message when a ``git`` source cannot be resolved to real skills.
+
+    :func:`parse_skill` only recognizes a git source syntactically — the repo,
+    the ref, and the skill path under it are unchecked until ``harbor run``
+    reaches the source. ``harbor-bench compare`` runs the base job before the
+    head one, so an invalid head source would only fail *after* the whole base
+    run. This preflight resolves the source with Harbor's own git resolver
+    (ref looked up via ``git ls-remote``, commit sparse-checked-out into
+    Harbor's skill cache) and validates the resolved directories with Harbor's
+    own skill-dir check — the exact steps ``harbor run --skill`` will run. Any
+    failure returns an error message; ``None`` means the source is ready to
+    run. The cache is keyed by commit SHA, so the fetch is reused when
+    ``harbor run`` starts — nothing is downloaded twice.
+    """
+    if source.kind != "git":
+        return None
+    try:
+        # Lazy import: harbor's git resolver is only needed for git sources.
+        from harbor import skills as harbor_skills
+    except ImportError as exc:
+        return f"cannot validate git source {source.reference!r}: {exc}"
+    try:
+        resolved = harbor_skills.resolve_skill_sources([source.reference])
+    except (FileNotFoundError, RuntimeError, ValueError) as exc:
+        return str(exc)
+    for path in resolved:
+        try:
+            harbor_skills._find_skill_dirs(path)
+        except (FileNotFoundError, ValueError) as exc:
+            return str(exc)
+    return None
 
 
 def parse_skill(value: str, cwd: Path) -> SkillSource:

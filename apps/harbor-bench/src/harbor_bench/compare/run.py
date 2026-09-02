@@ -49,7 +49,12 @@ from harbor_bench.diff import build_document, build_report
 from harbor_bench.jobs import Job
 from harbor_bench.report import ReportFormat, render_report
 
-from .sources import SkillSource, derive_globs, parse_skill
+from .sources import (
+    SkillSource,
+    derive_globs,
+    parse_skill,
+    validate_git_source,
+)
 
 #: Parent dir for the two job runs (``--runs-dir``).
 DEFAULT_RUNS_DIR = Path("runs")
@@ -229,7 +234,10 @@ def run_compare(options: CompareOptions) -> CompareResult:
     """Run the full comparison workflow.
 
     Preflight — harbor CLI present, host can run the environment, both skills
-    resolve, evals found — happens before anything is written. Raises
+    resolve (local paths validated, git sources resolved to real skills via
+    :func:`validate_git_source`), evals found — happens before anything is
+    written, so an invalid base/head reference fails immediately instead of
+    after the first ``harbor run``. Raises
     ``CompareError``/``ValueError``/``DiscoverError``/``WorkspaceError`` on
     failure; the CLI maps them to exit codes.
     """
@@ -249,6 +257,12 @@ def run_compare(options: CompareOptions) -> CompareResult:
 
     base = parse_skill(opts.base_skill, Path.cwd())
     head = parse_skill(opts.head_skill, Path.cwd())
+
+    # Fail fast before any conversion or run: git references must resolve to
+    # real skills. Local paths were already validated by parse_skill above.
+    for label, skill in (("base", base), ("head", head)):
+        if error := validate_git_source(skill):
+            raise CompareError(f"[{label}] invalid skill source: {error}")
 
     evals_paths = find_evals_files(opts.scan_root)
     if not evals_paths:
