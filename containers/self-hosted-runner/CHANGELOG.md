@@ -1,3 +1,14 @@
+## 0.0.10 (2026-09-02)
+
+### 🩹 Fixes
+
+- Split runner tool provisioning into a runner-only mise config. ([#2133](https://github.com/pagopa/dx/pull/2133))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Luca Cavallaro
+
 ## 0.0.9 (2026-09-01)
 
 ### 🚀 Features

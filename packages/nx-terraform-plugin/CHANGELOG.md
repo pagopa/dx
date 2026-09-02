@@ -1,3 +1,21 @@
+## 0.5.6 (2026-09-02)
+
+### 🚀 Features
+
+- Add shared Terraform initialization with version 2 Registry module content locking ([#2118](https://github.com/pagopa/dx/pull/2118))
+- Simplify Terraform target configuration with a shared prefix. Remove individual ([#2115](https://github.com/pagopa/dx/pull/2115))
+  target-name overrides and set `targetNamePrefix` to their common stem; the
+  plugin joins it to task names with a hyphen. `nx-release-publish` remains fixed.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.5
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Luca Cavallaro
+
 ## 0.5.5 (2026-09-01)
 
 ### 🧱 Updated Dependencies
