@@ -41,8 +41,11 @@ RUN curl --fail --location --retry 5 --retry-all-errors --connect-timeout 30 \
 # === Final Stage ===
 FROM mise AS final
 
+ENV MISE_ENV=runner
+
 COPY entrypoint.sh /entrypoint.sh
 COPY --chown=runner:runner mise.toml /home/runner/mise.toml
+COPY --chown=runner:runner mise.runner.toml /home/runner/mise.runner.toml
 RUN chmod +x /entrypoint.sh
 
 USER runner
@@ -50,7 +53,8 @@ USER runner
 RUN set -eux; \
     cd /home/runner; \
     mise trust mise.toml; \
-    mise install; \
+    MISE_ENV=runner mise trust mise.runner.toml; \
+    MISE_ENV=runner mise install; \
     mise ls --current
 
 RUN set -eux; \
