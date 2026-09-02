@@ -1,0 +1,5 @@
+[tools]
+"conda:zip" = "3.0"
+aws-cli = { version = "2", symlink_bins = "true", depends = ["uv"] }
+azure-cli = { version = "2", uvx_args = "--prerelease=allow" }
+uv = "latest"
