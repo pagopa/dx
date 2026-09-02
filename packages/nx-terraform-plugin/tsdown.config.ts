@@ -9,6 +9,7 @@ export default defineConfig({
   },
   dts: false,
   entry: {
+    "executors/init/init": "src/executors/init/init.ts",
     "executors/plan/plan": "src/executors/plan/plan.ts",
     "executors/publish/publish": "src/executors/publish/publish.ts",
     index: "src/index.ts",

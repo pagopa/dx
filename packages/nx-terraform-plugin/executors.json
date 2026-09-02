@@ -1,5 +1,10 @@
 {
   "executors": {
+    "init": {
+      "implementation": "./dist/executors/init/init.js",
+      "schema": "./src/executors/init/schema.json",
+      "description": "Initialize Terraform and lock Registry modules"
+    },
     "publish": {
       "implementation": "./dist/executors/publish/publish.js",
       "schema": "./src/executors/publish/schema.json",
