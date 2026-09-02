@@ -127,7 +127,6 @@ jobs:
               [
                 .[].environments[]
                 | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
-                | select(.name | contains("uat") | not)
                 | {
                     "github-environment": .name,
                     "env-name": (.name | split("-")[1])
