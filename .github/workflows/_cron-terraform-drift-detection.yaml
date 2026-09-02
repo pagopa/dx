@@ -18,3 +18,16 @@ jobs:
       environment: "prod"
       override_github_environment: "infra-prod"
       base_path: "infra/resources"
+
+  drift_detection_uat:
+    uses: $/.github/workflows/infra_drift_detection.yml
+    name: Drift Detection - UAT
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    secrets: inherit
+    with:
+      environment: "uat"
+      override_github_environment: "infra-uat"
+      base_path: "infra/resources"
