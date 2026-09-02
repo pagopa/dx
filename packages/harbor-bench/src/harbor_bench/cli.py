@@ -6,8 +6,8 @@ Usage::
     harbor-bench convert [--evals PATH ...] [--out DIR] [--config-out FILE]
                        [--without-skill] [--model MODEL]
                        [--environment docker|apple-container]
-    harbor-bench diff <job-base> <job-head> [--format markdown|html|json]
-                       [--report out]
+    harbor-bench report <job-base> <job-head> [--format markdown|html|json]
+                         [--report out]
     harbor-bench compare [-t PATTERN]... [--format markdown|html|json]
                          <base-skill> <head-skill>
 
@@ -18,7 +18,7 @@ finds everything. Injected skills point at the raw skill directories and Harbor
 uploads them as-is. The workflow itself lives in :mod:`harbor_bench.convert.run`;
 this module is a thin adapter over it.
 
-``diff`` reads two Harbor job directories (``jobs/<run>``) and prints a
+``report`` reads two Harbor job directories (``jobs/<run>``) and prints a
 per-task delta report (score, tokens, cost, steps, duration) as Markdown
 (default), a self-contained HTML report (``--format html``), or JSON
 (``--format json``).
@@ -113,8 +113,8 @@ def cmd_convert(args: argparse.Namespace) -> int:
     return 0
 
 
-def cmd_diff(args: argparse.Namespace) -> int:
-    """Diff two Harbor job directories and emit a delta report.
+def cmd_report(args: argparse.Namespace) -> int:
+    """Report the delta between two Harbor job directories.
 
     Each job is read through a single :class:`Job`, so each trial's
     ``result.json`` is parsed once and shared by the per-task metrics and the
@@ -239,23 +239,23 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--n-concurrent", type=int, default=4, help="n_concurrent_trials")
     conv.set_defaults(func=cmd_convert)
 
-    cmp = sub.add_parser(
-        "diff",
-        help="diff two Harbor job directories and print a delta report",
+    report_cmd = sub.add_parser(
+        "report",
+        help="report the delta between two Harbor job directories",
     )
-    cmp.add_argument("base", help="base job directory (e.g. jobs/<run-a>)")
-    cmp.add_argument("head", help="head job directory (e.g. jobs/<run-b>)")
-    cmp.add_argument(
+    report_cmd.add_argument("base", help="base job directory (e.g. jobs/<run-a>)")
+    report_cmd.add_argument("head", help="head job directory (e.g. jobs/<run-b>)")
+    report_cmd.add_argument(
         "--format",
         choices=("markdown", "html", "json"),
         default="markdown",
         help="report format: markdown, html, or json (default: markdown)",
     )
-    cmp.add_argument(
+    report_cmd.add_argument(
         "--report",
         help="write the report (in the --format) to this path instead of stdout",
     )
-    cmp.set_defaults(func=cmd_diff)
+    report_cmd.set_defaults(func=cmd_report)
 
     cmp = sub.add_parser(
         "compare",

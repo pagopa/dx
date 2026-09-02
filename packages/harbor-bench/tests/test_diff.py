@@ -1,4 +1,4 @@
-"""Tests for the two-job comparison report (harbor-bench diff)."""
+"""Tests for the two-job comparison report (harbor-bench report)."""
 
 from __future__ import annotations
 

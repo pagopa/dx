@@ -15,7 +15,7 @@ PagoPA Harbor extensions.
    fixtures, tests/test.sh + RewardKit `tests/quality.toml` judge config,
    solution/solve.sh) plus a ready-to-run `config.yaml`, so
    `harbor run -c config.yaml` finds everything.
-3. **`harbor-bench diff`** — reads two Harbor job directories and prints a
+3. **`harbor-bench report`** — reads two Harbor job directories and prints a
    per-task delta report (score, tokens, cost, steps, duration), plus a run
    configuration section (agent/judge models and effort, skill versions, git
    diff command). It can also produce a self-contained visual HTML report for
@@ -427,7 +427,7 @@ uv run --package harbor-bench harbor run \
   --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills
 
 # 3. Delta report (score, tokens, cost, duration)
-uv run --package harbor-bench harbor-bench diff \
+uv run --package harbor-bench harbor-bench report \
   runs/skill-workspace runs/skill-main --report comparison.md
 ```
 
@@ -439,7 +439,7 @@ metric registry, and run configuration is included. Write it to stdout or
 `--report out.json`:
 
 ```bash
-uv run --package harbor-bench harbor-bench diff \
+uv run --package harbor-bench harbor-bench report \
   runs/skill-workspace runs/skill-main \
   --format json --report comparison.json
 ```
@@ -449,7 +449,7 @@ self-contained, so it can be opened locally or attached to a review without a
 web server or additional assets:
 
 ```bash
-uv run --package harbor-bench harbor-bench diff \
+uv run --package harbor-bench harbor-bench report \
   runs/skill-workspace runs/skill-main \
   --format html \
   --report comparison.html
@@ -465,8 +465,8 @@ the verdict. Interrupted Harbor trials that have a `trial.log` but no
 report. Markdown remains the default for terminal and source-control workflows.
 
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
-two `--job-name` flags above give stable, human-readable paths so `diff` and
-`harbor view runs` always know where the runs live. The full run path is always
+two `--job-name` flags above give stable, human-readable paths so the `report`
+command and `harbor view` always know where the runs live. The full run path is always
 `<jobs-dir>/<job-name>/`.
 
 Notes:
@@ -483,7 +483,7 @@ Notes:
   the same name. Pass **every** plugin you want to compare; plugins not passed
   keep the workspace version. (Git URLs must point at the skills root, e.g.
   `plugins/aiepdf/skills`, whose immediate children contain `SKILL.md`.)
-- **Delta semantics**: `harbor-bench diff <base> <head>` reports
+- **Delta semantics**: `harbor-bench report <base> <head>` reports
   `head − base`. Each task's `result.json` contributes the verifier rewards
   (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent,
   total and verifier duration, verifier (judge) tokens, and pass/fail. Missing
@@ -498,7 +498,7 @@ Notes:
   git ref:
   `git -C "$(git rev-parse --show-toplevel)" diff <sha> -- <skill path>`.
 - **Token/cost backfill**: GPT runs leave input/cache tokens and cost unset in
-  `result.json` (the JSONL stream reports only output tokens). `diff`
+  `result.json` (the JSONL stream reports only output tokens). `report`
   backfills them from the trial's raw artifacts when present:
   `agent/copilot/session-store.db` (authoritative per-request usage: input,
   cache read/write, output, reasoning tokens, cost metered via
@@ -511,7 +511,7 @@ requests` and `steps` — and works retroactively on runs that predate the
 - **Verifier tokens**: `harbor-rewardkit` 0.2.0 LLM judges do not persist token
   usage. The generated `tests/test.sh` installs a `sitecustomize` shim that
   patches `litellm.acompletion` and tees each judge call's usage into
-  `verifier/usage.jsonl` (one line per call); `diff` aggregates it into the
+  `verifier/usage.jsonl` (one line per call); `report` aggregates it into the
   `verifier tokens` row. Runs generated before this shim (or without a judge
   token) show `—`.
 
@@ -566,7 +566,7 @@ once with the injected skills and once without (`--without-skill` omits the
 skills from the agent config **and** disables the `SKILL_EVAL_ENFORCE_SKILL_USE`
 gate in the verifier, so cases are not marked as failed just because the agent
 did not invoke a skill). Generate a dedicated baseline config, run both jobs
-with distinct names, then diff them with `diff`:
+with distinct names, then generate a report with `report`:
 
 ```bash
 # 1. Configs: with skills (default) and without (baseline)
@@ -586,7 +586,7 @@ uv run --package harbor-bench harbor run \
   --jobs-dir runs --job-name without-skill
 
 # 3. Delta report: with-skill − without-skill (score, tokens, cost, duration)
-uv run --package harbor-bench harbor-bench diff \
+uv run --package harbor-bench harbor-bench report \
   runs/without-skill runs/with-skill --report comparison.md
 ```
 

@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from harbor_bench.cli import build_parser, cmd_compare, cmd_diff, cmd_convert
+from harbor_bench.cli import build_parser, cmd_compare, cmd_report, cmd_convert
 from harbor_bench.compare.run import CompareError
 
 from tests.conftest import CASE_ONE, write_evals
@@ -48,9 +48,14 @@ def test_parser_rejects_unknown_environment():
         build_parser().parse_args(["convert", "--environment", "podman"])
 
 
-def test_parser_accepts_html_diff_format():
-    args = build_parser().parse_args(["diff", "base", "head", "--format", "html"])
+def test_parser_accepts_html_report_format():
+    args = build_parser().parse_args(["report", "base", "head", "--format", "html"])
     assert args.format == "html"
+
+
+def test_parser_rejects_renamed_diff_subcommand():
+    with pytest.raises(SystemExit):
+        build_parser().parse_args(["diff", "base", "head"])
 
 
 def test_convert_success_returns_zero(tmp_path: Path):
@@ -112,7 +117,7 @@ def test_convert_prints_plan_error_to_stderr(tmp_path: Path, capsys):
     assert not (out / "config.yaml").exists()
 
 
-def diff_args(base: Path, head: Path, **overrides) -> argparse.Namespace:
+def report_args(base: Path, head: Path, **overrides) -> argparse.Namespace:
     base_args = dict(base=str(base), head=str(head), format="markdown", report=None)
     base_args.update(overrides)
     return argparse.Namespace(**base_args)
@@ -131,52 +136,52 @@ def write_result(job_dir: Path, task: str, quality: float) -> None:
     )
 
 
-def test_diff_defaults_to_markdown(tmp_path, capsys):
+def test_report_defaults_to_markdown(tmp_path, capsys):
     base = tmp_path / "job-a"
     head = tmp_path / "job-b"
     write_result(base, "task-a", 0.8)
     write_result(head, "task-a", 0.95)
 
-    assert cmd_diff(diff_args(base, head)) == 0
+    assert cmd_report(report_args(base, head)) == 0
     out = capsys.readouterr().out
     assert "# Skill comparison" in out
     assert "| metric | base | head | Δ |" in out
 
 
-def test_diff_json_prints_parseable_document(tmp_path, capsys):
+def test_report_json_prints_parseable_document(tmp_path, capsys):
     base = tmp_path / "job-a"
     head = tmp_path / "job-b"
     write_result(base, "task-a", 0.8)
     write_result(head, "task-a", 0.95)
 
-    assert cmd_diff(diff_args(base, head, format="json")) == 0
+    assert cmd_report(report_args(base, head, format="json")) == 0
     doc = json.loads(capsys.readouterr().out)
     assert doc["base_job"] == str(base)
     assert doc["tasks"][0]["task"] == "task-a"
     assert doc["tasks"][0]["head"]["score.quality"] == 0.95
 
 
-def test_diff_json_report_writes_file(tmp_path, capsys):
+def test_report_json_report_writes_file(tmp_path, capsys):
     base = tmp_path / "job-a"
     head = tmp_path / "job-b"
     write_result(base, "task-a", 0.8)
     write_result(head, "task-a", 0.95)
 
     out = tmp_path / "out.json"
-    assert cmd_diff(diff_args(base, head, format="json", report=str(out))) == 0
+    assert cmd_report(report_args(base, head, format="json", report=str(out))) == 0
     doc = json.loads(out.read_text())
     assert doc["summary"]["head_tasks"] == 1
     assert ">> comparison report" in capsys.readouterr().out
 
 
-def test_diff_html_report_writes_self_contained_file(tmp_path, capsys):
+def test_report_html_report_writes_self_contained_file(tmp_path, capsys):
     base = tmp_path / "job-a"
     head = tmp_path / "job-b"
     write_result(base, "task-a", 0.8)
     write_result(head, "task-a", 0.95)
 
     out = tmp_path / "out.html"
-    assert cmd_diff(diff_args(base, head, format="html", report=str(out))) == 0
+    assert cmd_report(report_args(base, head, format="html", report=str(out))) == 0
     html = out.read_text()
     assert html.startswith("<!doctype html>")
     assert "<style>" in html
@@ -184,7 +189,7 @@ def test_diff_html_report_writes_self_contained_file(tmp_path, capsys):
     assert ">> comparison report" in capsys.readouterr().out
 
 
-def test_diff_html_report_includes_incomplete_trials(tmp_path, capsys):
+def test_report_html_report_includes_incomplete_trials(tmp_path, capsys):
     base = tmp_path / "job-a"
     head = tmp_path / "job-b"
     base_trial = base / "task-a__base123"
@@ -195,7 +200,7 @@ def test_diff_html_report_includes_incomplete_trials(tmp_path, capsys):
     (head_trial / "trial.log").write_text("interrupted", encoding="utf-8")
 
     out = tmp_path / "out.html"
-    assert cmd_diff(diff_args(base, head, format="html", report=str(out))) == 0
+    assert cmd_report(report_args(base, head, format="html", report=str(out))) == 0
     html = out.read_text()
 
     assert "task-a" in html

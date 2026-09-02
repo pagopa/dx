@@ -65,7 +65,7 @@ if [ -n "$JUDGE_TOKEN" ]; then
   # Record per-call judge token usage: harbor-rewardkit 0.2.0 discards the LLM
   # response usage, so a `sitecustomize` shim patches `litellm.acompletion` to
   # tee each response's usage into /logs/verifier/usage.jsonl (aggregated by
-  # `harbor-bench diff`). The patch is inert if litellm is unavailable.
+  # `harbor-bench report`). The patch is inert if litellm is unavailable.
   cat > /tmp/sitecustomize.py << 'PYEOF'
 import json, os
 USAGE_FILE = os.environ.get("JUDGE_USAGE_FILE", "{{VERIFIER_USAGE_JSONL}}")

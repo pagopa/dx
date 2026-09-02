@@ -63,7 +63,7 @@ derives the per-task metrics (`metrics()`) and the job-level run configuration
 _Avoid_: run, result set
 
 **Comparison report**:
-The per-task delta report produced by the `harbor-bench diff` command from two
+The per-task delta report produced by the `harbor-bench report` command from two
 jobs: a
 typed `Report` of `TrialComparison` rows (one per task, base/head side), plus
 the run-configuration section. Its metrics are declared once in the metrics
