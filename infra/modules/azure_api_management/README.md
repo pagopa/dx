@@ -42,8 +42,11 @@ used for `StandardV2`, where Azure reports an unsupported value of zero.
 The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
 `UnauthorizedRequests` metrics are not used. Success, server-side failure
 (`5xx`), and unauthorized traffic is filtered on dimensions of the supported
-`Requests` metric. The `development` use case keeps alerts disabled, including
-when `metric_alerts` is provided.
+`Requests` metric; unauthorized traffic covers only `401` and `403` responses,
+while `429` (Too Many Requests) is intentionally not included. The ticket does
+not require a separate throttling alert, so no additional default alert is
+created. The `development` use case keeps alerts disabled, including when
+`metric_alerts` is provided.
 
 Pass `metric_alerts = {}` to disable the defaults, or pass a custom map with the
 same input shape to replace them. Alerts can be routed to an Azure Monitor

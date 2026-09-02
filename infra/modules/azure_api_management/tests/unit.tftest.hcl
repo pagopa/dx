@@ -132,6 +132,17 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].name == "GatewayResponseCode" &&
+      length(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values) == 2 &&
+      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "401") &&
+      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "403") &&
+      !contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "429")
+    )
+    error_message = "Unauthorized request alerts must include only 401 and 403 response codes."
+  }
+
+  assert {
     condition     = azurerm_monitor_metric_alert.this["cpu_percent_gateway"].criteria[0].metric_name == "CpuPercent_Gateway"
     error_message = "StandardV2 APIM must use CpuPercent_Gateway instead of the unsupported Capacity metric."
   }

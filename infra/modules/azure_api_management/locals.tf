@@ -128,7 +128,7 @@ locals {
         dimension = [{
           name     = "GatewayResponseCode"
           operator = "Include"
-          values   = ["401", "403", "429"]
+          values   = ["401", "403"]
         }]
         metric_name            = "Requests"
         metric_namespace       = local.metric_namespace
