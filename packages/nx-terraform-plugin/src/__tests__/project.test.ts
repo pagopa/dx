@@ -299,6 +299,7 @@ describe("getProject applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
+      expect(targets["init"]?.cache).toBe(false);
       expect(targets["console"]?.cache).toBe(false);
       expect(targets["output"]?.cache).toBe(false);
       expect(targets["plan"]?.cache).toBe(false);
@@ -309,7 +310,6 @@ describe("getProject applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
-      expect(targets["init"]?.cache).toBe(true);
       expect(targets["fmt"]?.cache).toBe(true);
       expect(targets["test"]?.cache).toBe(true);
       expect(targets["test-integration"]?.cache).toBe(true);
@@ -359,7 +359,6 @@ describe("getProject applications", () => {
       expect(targets["docs"]).toBeUndefined();
       expect(targets["nx-release-publish"]).toBeUndefined();
     });
-
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
@@ -371,6 +370,60 @@ describe("getProject applications", () => {
       expect(targets["e2e"]).toEqual(getExpectedE2eTarget());
       expect(targets["plan"]?.dependsOn).toEqual(["init"]);
       expect(targets["apply"]?.dependsOn).toEqual(["init"]);
+    });
+  });
+
+  describe("inferred init target", () => {
+    it("initializes Terraform through the lock-aware executor", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["init"]).toEqual({
+        cache: false,
+        configurations: {
+          ci: {
+            frozenLockfile: true,
+          },
+        },
+        executor: "@pagopa/nx-terraform-plugin:init",
+        inputs: ["default"],
+        options: {
+          projectRoot: "{projectRoot}",
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/tfmodules.lock.json",
+        ],
+      });
+    });
+
+    it("uses frozen initialization for CI plan and apply dependencies", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["init"]?.configurations).toEqual({
+        ci: {
+          frozenLockfile: true,
+        },
+      });
+      expect(targets["plan"]).toEqual(
+        expect.objectContaining({
+          configurations: {
+            ci: {
+              refresh: true,
+              report: true,
+              verbose: false,
+            },
+          },
+          dependsOn: ["init"],
+        }),
+      );
+      expect(targets["apply"]).toEqual(
+        expect.objectContaining({
+          dependsOn: ["init"],
+        }),
+      );
     });
   });
 
@@ -688,6 +741,26 @@ describe("getProject libraries", () => {
 
       vi.doUnmock("../publish-options.ts");
       vi.resetModules();
+    });
+  });
+});
+
+describe("library initialization", () => {
+  it("uses plain Terraform initialization without module locking", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+    expect(targets["init"]).toEqual({
+      cache: true,
+      command: "terraform init",
+      inputs: ["default"],
+      options: {
+        cwd: "{projectRoot}",
+      },
+      outputs: [
+        "{projectRoot}/.terraform",
+        "{projectRoot}/.terraform.lock.hcl",
+      ],
     });
   });
 });

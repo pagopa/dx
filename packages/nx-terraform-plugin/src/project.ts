@@ -188,6 +188,45 @@ const getTestTargets = (
   return targets;
 };
 
+const getInitTarget = (
+  projectType: ProjectType,
+  initTargetName: string,
+  cwd: string,
+): [string, TargetConfiguration] => [
+  initTargetName,
+  projectType === "application"
+    ? {
+        cache: false,
+        configurations: {
+          ci: {
+            frozenLockfile: true,
+          },
+        },
+        executor: "@pagopa/nx-terraform-plugin:init",
+        inputs: ["default"],
+        options: {
+          projectRoot: "{projectRoot}",
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/tfmodules.lock.json",
+        ],
+      }
+    : {
+        cache: true,
+        command: `terraform init`,
+        inputs: ["default"],
+        options: {
+          cwd,
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+        ],
+      },
+];
+
 const getTargets = (
   opts: TerraformPluginOptions,
   workspaceRoot: string,
@@ -203,21 +242,7 @@ const getTargets = (
   const initTargetName = getTargetName(opts, "init");
 
   const targets: [string, TargetConfiguration][] = [
-    [
-      initTargetName,
-      {
-        cache: true,
-        command: `terraform init`,
-        inputs: ["default"],
-        options: {
-          cwd,
-        },
-        outputs: [
-          "{projectRoot}/.terraform",
-          "{projectRoot}/.terraform.lock.hcl",
-        ],
-      },
-    ],
+    getInitTarget(projectType, initTargetName, cwd),
     [
       getTargetName(opts, "fmt"),
       {
