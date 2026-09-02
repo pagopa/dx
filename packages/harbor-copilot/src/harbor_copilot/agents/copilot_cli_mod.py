@@ -21,13 +21,13 @@ reused/prebuilt image (see the README) makes that step a no-op.
 
 Load it with::
 
-    uv run --package harbor-bench harbor ... \
-      --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod
+    uv run --package harbor-bench harbor ... \\
+      --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
 
 or reference it in a job ``config.yaml``::
 
     agents:
-      - import_path: harbor_bench.agents.copilot_cli_mod:CopilotCliMod
+      - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
         kwargs:
           max_ai_credits: 30
 
@@ -44,8 +44,14 @@ from pathlib import Path
 from harbor.agents.installed.copilot_cli import CopilotCli
 from harbor.models.agent.context import AgentContext
 
-from harbor_bench.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
-from harbor_bench.metrics import derivable_specs, validate_metric_specs
+from harbor_copilot.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
+from harbor_copilot.metrics import derivable_specs, validate_metric_specs
+
+#: The module reference ``harbor-bench`` writes into the generated
+#: ``config.yaml`` ``agents[].import_path``. Kept next to the class so a rename
+#: fails loudly at import of :func:`~harbor_bench.convert.config.build_config`,
+#: which imports this constant.
+AGENT_IMPORT_PATH = "harbor_copilot.agents.copilot_cli_mod:CopilotCliMod"
 
 
 class CopilotCliMod(CopilotCli):
@@ -184,6 +190,6 @@ class CopilotCliMod(CopilotCli):
 
 #: The agent writes usage metrics through the same registry the reader reads:
 #: fail at import when a usage attribute no longer names a real
-#: :class:`~harbor_bench.copilot_usage.CopilotUsage` field, so a registry drift
+#: :class:`~harbor_copilot.copilot_usage.CopilotUsage` field, so a registry drift
 #: never becomes a silent ``None`` backfill mid-trial.
 validate_metric_specs(copilot_usage_fields=set(CopilotUsage.__dataclass_fields__))

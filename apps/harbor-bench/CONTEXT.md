@@ -4,6 +4,13 @@ harbor-bench turns a skill's evals (`evals.json`) into runnable Harbor benchmark
 tasks, runs a Copilot CLI agent on them, and compares trial metrics across
 benchmark runs.
 
+The implementation is split across two uv workspace members: **this app** —
+`apps/harbor-bench` (`harbor_bench`), which owns the CLI, the convert/compare
+commands, and the job-reading/report stack — and **`packages/harbor-copilot`**
+(`harbor_copilot`), which owns the `CopilotCliMod` agent plus the shared metric
+registry and Copilot usage parser the agent writes and this app reads back.
+Cross-package imports go one way only: `harbor_bench` → `harbor_copilot`.
+
 ## Language
 
 **Skill**:
@@ -88,8 +95,10 @@ jobs, so interrupted runs remain visible instead of producing an empty report.
 _Avoid_: delta sheet
 
 **Package version**:
-The release version lives in `pyproject.toml` at `[project].version`. The Nx
-Python plugin owns version increments; `project.json` does not duplicate or
-override that behavior. At runtime, `harbor_bench.__version__` reads the
-installed Python distribution metadata.
+The release version lives in each member's `pyproject.toml` at
+`[project].version` (`harbor-bench` in `apps/`, `harbor-copilot` in
+`packages/`). The Nx Python plugin owns version increments; `project.json`
+does not duplicate or override that behavior. At runtime,
+`harbor_bench.__version__` / `harbor_copilot.__version__` read the installed
+Python distribution metadata.
 _Avoid_: duplicate version

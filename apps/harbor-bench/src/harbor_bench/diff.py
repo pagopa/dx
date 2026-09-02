@@ -48,7 +48,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from harbor_bench.jobs import JobMeta, SkillVersion, TrialMetrics
-from harbor_bench.metrics import METRIC_SPECS, MetricSpec
+from harbor_copilot.metrics import METRIC_SPECS, MetricSpec
 
 
 @dataclass(frozen=True)

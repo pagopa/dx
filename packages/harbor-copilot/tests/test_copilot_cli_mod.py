@@ -8,8 +8,8 @@ from pathlib import Path
 
 from harbor.models.agent.context import AgentContext
 
-from harbor_bench.agents import CopilotCliMod
-from harbor_bench.agents.copilot_cli_mod import CopilotCli
+from harbor_copilot.agents import CopilotCliMod
+from harbor_copilot.agents.copilot_cli_mod import CopilotCli
 
 from tests.conftest import write_session_db
 

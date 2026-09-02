@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from harbor_bench.copilot_usage import (
+from harbor_copilot.copilot_usage import (
     copilot_artifact_paths,
     extract_usage,
     extract_usage_from_jsonl,

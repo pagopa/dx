@@ -6,6 +6,8 @@ from pathlib import Path
 
 import yaml
 
+from harbor_copilot.agents.copilot_cli_mod import AGENT_IMPORT_PATH
+
 #: Default Copilot model used to run the agent tasks. Overridable at convert
 #: time with ``harbor-bench convert --model ...``.
 DEFAULT_MODEL = "gpt-5.6-luna"
@@ -55,7 +57,7 @@ def build_config(
         )
 
     agent: dict = {
-        "import_path": "harbor_bench.agents.copilot_cli_mod:CopilotCliMod",
+        "import_path": AGENT_IMPORT_PATH,
     }
     if not without_skill and skill_dirs:
         agent["skills"] = [str(d) for d in skill_dirs]

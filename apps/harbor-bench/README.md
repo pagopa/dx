@@ -1,27 +1,39 @@
 # harbor-bench
 
-PagoPA Harbor extensions.
+PagoPA Harbor CLI for skill benchmarks. The code lives in two workspace
+members:
 
-1. **Custom Copilot CLI agent** — `harbor_bench.agents.CopilotCliMod` forwards
-   arbitrary `--ak key=value` kwargs verbatim to the Copilot CLI
-   (`--kebab-case value`), covering `--max-ai-credits`, `--enable-memory`,
-   `--model`, etc. It also fixes skill injection (copies to
-   `~/.copilot/skills/`, where Copilot discovers them). Harbor uploads injected
-   skills as-is; see [Skill eval data and git sources](#skill-eval-data-and-git-sources)
-   for the resulting visibility of eval data in the agent container.
-2. **`harbor-bench convert`** — a runtime converter that reads the agentskills.io
+1. **`apps/harbor-bench`** (this package) — the CLI (`convert`, `report`,
+   `compare`) that turns a skill's `evals/evals.json` into runnable Harbor
+   tasks, reads job directories back, and compares trial metrics across runs.
+2. **`packages/harbor-copilot`** — the custom Copilot CLI agent
+   (`harbor_copilot.agents.CopilotCliMod`) that Harbor imports at runtime,
+   plus the shared metric registry/usage contract. This app depends on it, so
+   the generated config's agent `import_path` resolves from the same
+   environment that runs `harbor`.
+
+Commands:
+
+1. **`harbor-bench convert`** — a runtime converter that reads the agentskills.io
    `evals/evals.json` files in the plugins and generates **on the fly** the
    Harbor task structures (task.toml, instruction.md, environment/Dockerfile +
    fixtures, tests/test.sh + RewardKit `tests/quality.toml` judge config,
    solution/solve.sh) plus a ready-to-run `config.yaml`, so
-   `harbor run -c config.yaml` finds everything.
-3. **`harbor-bench report`** — reads two Harbor job directories and prints a
+   `harbor run -c config.yaml` finds everything. The emitted config references
+   the custom agent (`harbor_copilot.agents.copilot_cli_mod:CopilotCliMod`),
+   which forwards arbitrary `--ak key=value` kwargs verbatim to the Copilot CLI
+   (`--kebab-case value`), covering `--max-ai-credits`, `--enable-memory`,
+   `--model`, etc., and fixes skill injection (copies to `~/.copilot/skills/`,
+   where Copilot discovers them). Harbor uploads injected skills as-is; see
+   [Skill eval data and git sources](#skill-eval-data-and-git-sources) for the
+   resulting visibility of eval data in the agent container.
+2. **`harbor-bench report`** — reads two Harbor job directories and prints a
    per-task delta report (score, tokens, cost, steps, duration), plus a run
    configuration section (agent/judge models and effort, skill versions, git
    diff command). It can also produce a self-contained visual HTML report for
    sharing with less technical users — see
    [Comparing skill versions](#comparing-skill-versions-workspace-vs-git).
-4. **`harbor-bench compare`** — one command for the workspace-vs-git workflow:
+3. **`harbor-bench compare`** — one command for the workspace-vs-git workflow:
    it runs the same eval set twice on one generated config (base skill and head
    skill injected into two `harbor run` invocations) and writes the delta
    report between the two job directories — see
@@ -32,9 +44,10 @@ per-task Harbor config files: `evals.json` stays the source of truth.
 
 ## Install
 
-The agent code runs host-side inside the `harbor` process, so `harbor-bench` must
-be importable from that same Python environment. Install the workspace
-dependencies and invoke the CLI through `uv run`:
+The agent code runs host-side inside the `harbor` process, so `harbor-copilot`
+must be importable from that same Python environment. `harbor-bench` depends on
+`harbor-copilot`, so a single `uv run --package harbor-bench ...` installs both.
+Install the workspace dependencies and invoke the CLI through `uv run`:
 
 ```bash
 mise run install
@@ -219,7 +232,7 @@ so the emitted agent entry looks like:
 
 ```yaml
 agents:
-  - import_path: harbor_bench.agents.copilot_cli_mod:CopilotCliMod
+  - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
     model_name: gpt-5.6-luna # -> copilot --model=gpt-5.6-luna
     kwargs:
       reasoning_effort: high # -> copilot --effort high
@@ -288,7 +301,7 @@ config file, pass them directly to `harbor run`:
 
 ```bash
 uv run --package harbor-bench harbor \
-  --agent harbor_bench.agents.copilot_cli_mod:CopilotCliMod \
+  --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod \
   --model gpt-5.6-luna --ak reasoning_effort=high ...
 ```
 

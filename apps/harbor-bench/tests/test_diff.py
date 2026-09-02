@@ -435,7 +435,7 @@ def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
 
 def test_metric_registry_owns_derivation_and_reporting():
     """One registry carries both halves: what jobs backfills and what is reported."""
-    from harbor_bench.metrics import METRIC_SPECS, derivable_specs
+    from harbor_copilot.metrics import METRIC_SPECS, derivable_specs
 
     by_key = {spec.key: spec for spec in METRIC_SPECS}
     # derivation half: result.json key wins, usage attribute backfills

@@ -29,7 +29,13 @@ import sqlite3
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from harbor_bench.task_shape import COPILOT_CLI_JSONL_REL, COPILOT_SESSION_DB_REL
+#: The two Copilot CLI artifacts, relative to an agent log dir. The same two
+#: relative names hold whether the log dir is a container's ``/logs/agent`` or a
+#: trial's ``agent/``. Declared here (the agent-side owner of the Copilot
+#: artifacts); the harbor-bench app imports them to derive the full container
+#: paths and template placeholders.
+COPILOT_SESSION_DB_REL = "copilot/session-store.db"
+COPILOT_CLI_JSONL_REL = "copilot-cli.jsonl"
 
 NANO_AIU_PER_AI_CREDIT = 1_000_000_000
 USD_PER_AI_CREDIT = 0.01
@@ -192,7 +198,7 @@ def copilot_artifact_paths(root: Path) -> tuple[Path, Path]:
 
     Both the agent (its ``logs_dir``) and a saved trial (its ``agent/`` dir)
     keep the Copilot CLI artifacts at the same two relative locations (the
-    agent-log-dir coordinates declared in :mod:`harbor_bench.task_shape`);
+    agent-log-dir coordinates declared in this module);
     each caller passes its own root (the agent's logs layout and the trial
     layout differ).
     """

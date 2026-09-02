@@ -23,8 +23,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Literal
 
-from harbor_bench.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
-from harbor_bench.metrics import MetricSpec, derivable_specs, validate_metric_specs
+from harbor_copilot.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
+from harbor_copilot.metrics import MetricSpec, derivable_specs, validate_metric_specs
 from harbor_bench.task_shape import (
     RESULT_JSON,
     REWARD_DETAILS_JSON,

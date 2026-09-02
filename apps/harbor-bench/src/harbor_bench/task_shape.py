@@ -19,6 +19,12 @@ silently yielding ``None``.
 
 from __future__ import annotations
 
+#: The two Copilot CLI artifact relative names are owned by the agent-side
+#: package (they describe what a Copilot CLI session writes under its log
+#: dir); re-exported here so the full container paths and template
+#: placeholders below stay derived from a single declaration.
+from harbor_copilot.copilot_usage import COPILOT_CLI_JSONL_REL, COPILOT_SESSION_DB_REL
+
 #: The prefix Harbor drops when re-materializing collected artifacts under each
 #: trial subdirectory: ``/logs/agent/copilot-cli.jsonl`` lands at
 #: ``agent/copilot-cli.jsonl``. ``result.json`` is written by Harbor itself at
@@ -38,12 +44,6 @@ WORKSPACE_ARTIFACT: dict = {"source": WORKSPACE_DIR, "exclude": [".git"]}
 AGENT_LOG_DIR = "/logs/agent"
 VERIFIER_LOG_DIR = "/logs/verifier"
 ARTIFACT_DIR = "/logs/artifacts"
-
-#: The two Copilot artifacts, relative to the agent log dir. The same two
-#: relative names hold whether the log dir is the container's ``/logs/agent``
-#: or a trial's ``agent/``.
-COPILOT_SESSION_DB_REL = "copilot/session-store.db"
-COPILOT_CLI_JSONL_REL = "copilot-cli.jsonl"
 
 COPILOT_SESSION_DB = f"{AGENT_LOG_DIR}/{COPILOT_SESSION_DB_REL}"
 COPILOT_CLI_JSONL = f"{AGENT_LOG_DIR}/{COPILOT_CLI_JSONL_REL}"

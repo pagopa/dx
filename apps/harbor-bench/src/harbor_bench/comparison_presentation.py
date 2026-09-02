@@ -8,7 +8,7 @@ from urllib.parse import quote
 
 from harbor_bench.diff import JobMeta, ReportDocument, TrialComparison
 from harbor_bench.jobs import SkillVersion, TrialMetrics
-from harbor_bench.metrics import MetricSpec
+from harbor_copilot.metrics import MetricSpec
 
 
 @dataclass(frozen=True)

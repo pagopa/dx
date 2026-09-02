@@ -9,6 +9,7 @@ exclude-newer-span = "P7D"
 [manifest]
 members = [
     "harbor-bench",
+    "harbor-copilot",
 ]
 
 [[package]]
@@ -751,9 +752,10 @@ wheels = [
 [[package]]
 name = "harbor-bench"
 version = "0.1.0"
-source = { editable = "packages/harbor-bench" }
+source = { editable = "apps/harbor-bench" }
 dependencies = [
     { name = "harbor" },
+    { name = "harbor-copilot" },
     { name = "jinja2" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -768,11 +770,32 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "harbor", specifier = "==0.22.0" },
+    { name = "harbor-copilot", editable = "packages/harbor-copilot" },
     { name = "jinja2", specifier = ">=3.1" },
     { name = "pydantic", specifier = ">=2.7" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
     { name = "pyyaml", specifier = ">=6.0" },
     { name = "tomli-w", specifier = ">=1.0" },
+]
+provides-extras = ["test"]
+
+[[package]]
+name = "harbor-copilot"
+version = "0.1.0"
+source = { editable = "packages/harbor-copilot" }
+dependencies = [
+    { name = "harbor" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "harbor", specifier = "==0.22.0" },
+    { name = "pytest", marker = "extra == 'test'", specifier = ">=8" },
 ]
 provides-extras = ["test"]
 

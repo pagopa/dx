@@ -3,25 +3,28 @@
 A metric's identity is one :class:`MetricSpec`. The derivation half
 (``result_key``, ``usage_attr``) names where the value comes from: a
 ``result.json`` ``agent_result`` key whose value wins, and the aggregated
-:class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills when
-the file cannot report the number. The reporting half (``kind``, ``label``,
-``integer``) names how the value is aggregated and displayed.
+:class:`~harbor_copilot.copilot_usage.CopilotUsage` attribute that backfills
+when the file cannot report the number. The reporting half (``kind``,
+``label``, ``integer``) names how the value is aggregated and displayed.
 
-:data:`METRIC_SPECS` declares the static metrics once. ``Trial.metrics`` reads
-the derivation half to build a :class:`~harbor_bench.jobs.TrialMetrics`;
-``diff`` and the renderers read the reporting half for the per-task table
-and the summary. Verifier reward metrics are the exception: only a job's
-actual rewards know their keys, so ``diff`` adds them dynamically as
-``score.<key>`` specs instead of declaring them here.
+:data:`METRIC_SPECS` declares the static metrics once. The app-side reader
+(``harbor_bench.jobs.Trial.metrics``) reads the derivation half to build a
+``TrialMetrics``; ``diff`` and the renderers read the reporting half for the
+per-task table and the summary. Verifier reward metrics are the exception:
+only a job's actual rewards know their keys, so ``diff`` adds them dynamically
+as ``score.<key>`` specs instead of declaring them here.
+
+The registry is the single declaration shared by the agent (writer) and the
+bench reader: the agent imports this module to backfill an ``AgentContext``,
+``harbor_bench.jobs`` imports it to read a trial back. Neither side imports
+the other — the reader passes its ``TrialMetrics`` field set into
+:func:`validate_metric_specs` at import.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:
-    from harbor_bench.jobs import TrialMetrics
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -30,19 +33,20 @@ class MetricSpec:
 
     ``result_key`` and ``usage_attr`` are the derivation half: the
     ``result.json`` ``agent_result`` key whose value wins, and the
-    :class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills
+    :class:`~harbor_copilot.copilot_usage.CopilotUsage` attribute that backfills
     when the file cannot report the number. ``kind`` selects how the summary
     aggregates the metric across tasks: ``"score"`` for verifier rewards
     (mean), ``"total"`` for summed metrics (tokens, requests, steps, cost),
     ``"mean"`` for averaged metrics (durations). ``integer`` marks ``"total"``
     metrics whose values are whole counts (tokens, steps, requests), so their
     sum is reported as an int. ``source`` names where the value is read from a
-    :class:`~harbor_bench.jobs.TrialMetrics`: ``"reward"`` for a verifier reward
-    (keyed by ``key``, its ``score.<k>`` document name) or ``"field"`` for a
-    direct attribute. ``preference`` tells the comparison presentation whether
-    higher, lower, or neither direction is favorable. ``headline_group`` opts a
-    metric into the compact HTML signal cards. ``passed`` is a trial-level flag
-    and is reported separately, not as a metric.
+    trial-metrics value object (``harbor_bench.jobs.TrialMetrics`` in the
+    bench app): ``"reward"`` for a verifier reward (keyed by ``key``, its
+    ``score.<k>`` document name) or ``"field"`` for a direct attribute.
+    ``preference`` tells the comparison presentation whether higher, lower,
+    or neither direction is favorable. ``headline_group`` opts a metric into
+    the compact HTML signal cards. ``passed`` is a trial-level flag and is
+    reported separately, not as a metric.
     """
 
     key: str
@@ -55,7 +59,7 @@ class MetricSpec:
     preference: str = "higher"  # "higher" | "lower" | "neutral"
     headline_group: str | None = None
 
-    def read(self, metrics: TrialMetrics) -> Any:
+    def read(self, metrics: Any) -> Any:
         """The value of this metric for one trial, or ``None`` when absent."""
         if self.source == "reward":
             return metrics.rewards.get(self.key.removeprefix("score."))
@@ -189,9 +193,9 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
 def derivable_specs() -> tuple[MetricSpec, ...]:
     """The registry specs with a derivation (``result_key`` set), in order.
 
-    These are the metrics :meth:`harbor_bench.jobs.Trial.metrics` backfills from
-    the trial's artifacts: a ``result.json`` value wins, the aggregated usage
-    attribute fills when the file cannot report the number.
+    These are the metrics the bench reader (``harbor_bench.jobs.Trial``)
+    backfills from the trial's artifacts: a ``result.json`` value wins, the
+    aggregated usage attribute fills when the file cannot report the number.
     """
     return tuple(spec for spec in METRIC_SPECS if spec.result_key is not None)
 
@@ -204,12 +208,12 @@ def validate_metric_specs(
     """Raise when a registry key or usage attribute names no real field.
 
     The registry is the single declaration of each metric's identity; the
-    reader's :class:`~harbor_bench.jobs.TrialMetrics` and the writer's
-    :class:`~harbor_bench.copilot_usage.CopilotUsage` re-express those names as
-    dataclass fields. Each consumer calls this once at import with the field
-    sets it knows, so a renamed field or a new metric fails at import instead
-    of surfacing as a ``TypeError`` or a silent ``None`` on a live trial.
-    Dynamic ``score.<key>`` specs (``source="reward"``) are added by
+    reader's ``TrialMetrics`` (in the harbor-bench app) and the writer's
+    :class:`~harbor_copilot.copilot_usage.CopilotUsage` re-express those names
+    as dataclass fields. Each consumer calls this once at import with the
+    field sets it knows, so a renamed field or a new metric fails at import
+    instead of surfacing as a ``TypeError`` or a silent ``None`` on a live
+    trial. Dynamic ``score.<key>`` specs (``source="reward"``) are added by
     ``diff`` from a job's actual reward keys and are never checked against
     either dataclass.
     """
