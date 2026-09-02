@@ -1,3 +1,36 @@
+## 0.6.5 (2026-09-02)
+
+### 🩹 Fixes
+
+- Deduplicate findings across sources and separate governance from cost. ([#2026](https://github.com/pagopa/dx/pull/2026))
+
+  Findings are now unified on a `resourceId + recommendationId` key: the new
+  optional `Finding.recommendationId` normalises each source's native identifier
+  onto a shared vocabulary (`orphan.<resourceType>` for orphaned resources,
+  `advisor.<recommendationTypeId>` for Azure Advisor, `azqr.<recommendationId>`
+  for the remaining AZQR rows). When an AZQR row collides with a finding already
+  reported by the live scan or by Azure Advisor for the same resource, the row is
+  dropped and the surviving finding keeps the highest severity and the only
+  available monetary estimate, gaining a note that records the corroborating
+  source. Findings without a `recommendationId` are never collapsed.
+
+  Governance and diagnostic observations from the custom analyzers — missing
+  tags, a resource outside the preferred location, an unsupported resource type,
+  a failed detail lookup — are reported as `operationalExcellence` instead of
+  `cost`, so the `cost` category means billable waste only. The direct Azure
+  Advisor Cost query is unchanged: it remains the source of per-finding
+  `estimatedMonthlySavings`.
+
+- Extend cross-source finding deduplication to custom analyzer sentences. ([#2033](https://github.com/pagopa/dx/pull/2033))
+
+  The per-resource analyzers already split their concatenated `reason` string into one `Finding` per sentence, but every sentence shared the generic `code: "custom.unknown"` and had no `recommendationId`, so two custom findings describing the same problem on the same resource were never collapsed.
+
+  Sentences that match a known template now get a stable, per-sentence `custom.<id>` identity (e.g. `custom.disk.unattached`, `custom.low-cpu-usage`), following the same convention as `advisor.<id>`/`azqr.<id>`. This lets the existing (already source-agnostic) `foldDuplicateFinding` collapse duplicate custom findings, not just cross-source ones. Sentences with no known template are unaffected: they keep `code: "custom.unknown"` and no `recommendationId`, and are never collapsed on guesswork.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.4 (2026-09-01)
 
 ### 🧱 Updated Dependencies

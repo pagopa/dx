@@ -1,3 +1,13 @@
+## 6.0.1 (2026-09-02)
+
+### 🩹 Fixes
+
+- Replace deprecated properties ([#2114](https://github.com/pagopa/dx/pull/2114))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 6.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes
