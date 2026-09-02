@@ -45,11 +45,14 @@ The default threshold map is selected by `use_case`/SKU:
 |----------|-----|------------------------------------------|----------|----------|--------------------|
 | `development` | `Developer_1` | 10000/9500/100/50 (unused) | 500 ms (unused) | 80% (unused) | 80%/80% (unused) |
 | `cost_optimized` | `StandardV2_1` | 10000/9500/100/50 | 500 ms | N/A | 80%/80% |
-| `high_load` | `Premium_2` | 10000/9500/100/50 | 500 ms | 80% | N/A |
+| `high_load` | `Premium_2` | 20000/19000/200/100 | 500 ms | 80% | N/A |
 
 Traffic and duration thresholds are workload-specific and cannot be inferred
-from an APIM SKU alone, so the ticket values are retained as the explicit
-baseline for both production use cases. CPU, memory, and classic Premium
+from an APIM SKU alone. `cost_optimized` retains the ticket values as its
+explicit baseline; `high_load` doubles the four traffic thresholds to reflect
+the two-unit `Premium_2` profile, while retaining the ticket's duration and
+resource baselines. These are operational starting points, not Azure service
+limits, and should be tuned to the workload. CPU, memory, and classic Premium
 capacity use the ticket's 80% baseline. The development row is kept explicit
 for mapping completeness, but its alerts remain disabled.
 

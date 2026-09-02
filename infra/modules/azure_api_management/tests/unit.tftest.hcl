@@ -240,14 +240,14 @@ run "azure_api_management_high_load_autoscale_defaults" {
 
   assert {
     condition = (
-      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000 &&
-      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 9500 &&
-      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 100 &&
-      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 50 &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 20000 &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 19000 &&
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 200 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 100 &&
       azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500 &&
       azurerm_monitor_metric_alert.this["capacity"].criteria[0].threshold == 80
     )
-    error_message = "Premium default alerts must use the documented ticket baseline thresholds."
+    error_message = "Premium default alerts must use the documented two-unit operational thresholds."
   }
 }
 

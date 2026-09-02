@@ -81,10 +81,10 @@ locals {
     }
     high_load = {
       sku                    = "Premium_2"
-      total_requests         = 10000
-      successful_requests    = 9500
-      failed_requests        = 100
-      unauthorized_requests  = 50
+      total_requests         = 20000
+      successful_requests    = 19000
+      failed_requests        = 200
+      unauthorized_requests  = 100
       duration               = 500
       capacity               = 80
       cpu_percent_gateway    = null
