@@ -228,6 +228,8 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ steps.directory.outputs.dir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           terraform init -input=false
 
@@ -355,6 +357,8 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ matrix.dir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           terraform init -input=false
 
