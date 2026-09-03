@@ -157,7 +157,7 @@ jobs:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [gate, get-terraform-version, detect-projects]
-    if: ${{ github.repository != 'pagopa/dx' && needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit
     strategy:
       fail-fast: false
@@ -172,7 +172,7 @@ jobs:
   tf_plan:
     name: "Terraform Plan"
     needs: [gate, get-terraform-version, tf-modules-check, detect-projects]
-    if: ${{ !cancelled() && needs.gate.outputs.run == 'true' && needs.get-terraform-version.result == 'success' && needs.detect-projects.result == 'success' && (needs.tf-modules-check.result == 'success' || needs.tf-modules-check.result == 'skipped') && needs.detect-projects.outputs.matrix != '[]' }}
+    if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     strategy:
       fail-fast: false
       matrix:
