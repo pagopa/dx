@@ -1,7 +1,0 @@
-{
-  "name": "azure_managed_redis",
-  "version": "1.0.0",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Provisions Azure Managed Redis with DX-oriented defaults, networking, and observability"
-}
