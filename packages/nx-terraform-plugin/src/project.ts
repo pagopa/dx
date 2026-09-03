@@ -227,6 +227,24 @@ const getInitTarget = (
       },
 ];
 
+const getTrivyTarget = (
+  workspaceRoot: string,
+  root: string,
+): TargetConfiguration => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: ["--config", path.resolve(workspaceRoot, "trivy.yml"), root],
+    cwd: "{workspaceRoot}",
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   workspaceRoot: string,
@@ -274,6 +292,11 @@ const getTargets = (
         cwd,
       },
     },
+  ]);
+
+  targets.push([
+    getTargetName(opts, "trivy"),
+    getTrivyTarget(workspaceRoot, root),
   ]);
 
   if (hasRootTflintConfig) {
