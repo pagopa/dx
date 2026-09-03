@@ -42,6 +42,7 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: $\{{ secrets.ROLE_ARN }}
       AWS_REGION: $\{{ secrets.AWS_REGION }}
+      GITHUB_TOKEN: $\{{ secrets.GITHUB_TOKEN }}
       TF_IN_AUTOMATION: true
 
     steps:
@@ -56,12 +57,7 @@ jobs:
         uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
-        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
-        env:
-          GH_APP_CLIENT_ID: $\{{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: $\{{ secrets.GH_APP_KEY }}
-          GH_APP_INSTALLATION_ID: $\{{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -84,8 +80,6 @@ jobs:
       - name: Terraform Plan
         id: plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
-        env:
-          GITHUB_TOKEN: $\{{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: infra/bootstrapper/{{@root.env.name}}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY

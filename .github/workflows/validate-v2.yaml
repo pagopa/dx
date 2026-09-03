@@ -251,6 +251,9 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -269,12 +272,7 @@ jobs:
           experimental: true
 
       - name: Cloud Login
-        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
@@ -362,7 +360,6 @@ jobs:
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         with:
           command: pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
-          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Terraform plan report

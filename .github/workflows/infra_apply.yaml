@@ -134,7 +134,7 @@ jobs:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
     needs: [get-terraform-version, detect-projects]
-    if: ${{ github.repository != 'pagopa/dx' && needs.detect-projects.outputs.matrix != '[]' }}
+    if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit
     strategy:
       fail-fast: false
@@ -160,7 +160,7 @@ jobs:
       inputs.environment) || inputs.use_private_agent && 'self-hosted' ||
       'ubuntu-latest' }}
     needs: [get-terraform-version, tf-modules-check, detect-projects]
-    if: ${{ !cancelled() && needs.get-terraform-version.result == 'success' && needs.detect-projects.result == 'success' && (needs.tf-modules-check.result == 'success' || needs.tf-modules-check.result == 'skipped') && needs.detect-projects.outputs.matrix != '[]' }}
+    if: ${{ needs.detect-projects.outputs.matrix != '[]' }}
     environment:
       name: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
       deployment: false
@@ -218,12 +218,7 @@ jobs:
           done <<< "$ENV_VARS"
 
       - name: Cloud Login
-        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -240,8 +235,6 @@ jobs:
 
       - name: Terraform Plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
-        env:
-          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -303,6 +296,7 @@ jobs:
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tf-outcome-${{ github.sha }}
 
     steps:
@@ -322,12 +316,7 @@ jobs:
         uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
-        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -381,8 +370,6 @@ jobs:
 
       - name: Terraform Apply
         uses: pagopa/dx/actions/sanitize-terraform-apply@main
-        env:
-          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}
