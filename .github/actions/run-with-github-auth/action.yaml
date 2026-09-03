@@ -32,9 +32,8 @@ runs:
         set -euo pipefail
 
         if [ -n "$GIT_CREDENTIAL" ]; then
-          # Pass config to Git subprocesses (e.g. Terraform module clones)
-          # without persisting it. Scope is github.com so the token works for
-          # any public repository, not only pagopa-dx.
+          # Pass config to Git subprocesses (e.g. terraform init) without persisting it. 
+          # Scope is github.com so the token works for any public repository.
           export GIT_CONFIG_COUNT=3
           export GIT_CONFIG_KEY_0=http.https://github.com/.proactiveAuth
           export GIT_CONFIG_VALUE_0=basic
@@ -47,10 +46,10 @@ runs:
           # handles the RFC 9110 401 -> retry path on older clients.
           GIT_VERSION=$(git --version | sed -E 's/git version ([0-9]+)\.([0-9]+).*/\1.\2/')
           if [ "$(printf '%s\n' "2.44" "$GIT_VERSION" | sort -V | head -1)" != "2.44" ]; then
-            echo "::warning::Git $GIT_VERSION does not support http.proactiveAuth (needs >= 2.44). The credential helper still authenticates module clones after a 401."
+            echo "::warning::Git $GIT_VERSION does not support http.proactiveAuth (needs >= 2.44). The credential helper still authenticates after a 401."
           fi
         else
-          echo "::warning::No GitHub token provided. Git clones of Terraform modules will proceed anonymously."
+          echo "::warning::No GitHub token provided. Git clones of any public repository will proceed anonymously and may be throttled."
         fi
 
         exec bash -euo pipefail -c "$AUTHENTICATED_COMMAND"
