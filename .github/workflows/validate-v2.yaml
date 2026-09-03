@@ -321,20 +321,23 @@ jobs:
           fi
 
       - name: Run Terraform plan on affected environment projects
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
         env:
           ENV_NAME: ${{ matrix.target.env-name }}
           GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
-        run: |
-          if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-            EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
-          elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            EXCLUDE="*,!bootstrapper-${ENV_NAME}"
-          else
-            EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
-          fi
-          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
-            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+        with:
+          command: |
+            if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
+              EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
+            elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
+              EXCLUDE="*,!bootstrapper-${ENV_NAME}"
+            else
+              EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
+            fi
+            pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
+              pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}

@@ -1,21 +1,26 @@
-name: "Terraform Init"
-description: "Initialize Terraform with authenticated GitHub module downloads"
+name: "Run with GitHub Authentication"
+description: "Run a command with authenticated GitHub access for nested Git clones"
 
 inputs:
+  command:
+    description: "Command that requires authenticated GitHub access"
+    required: true
   github_token:
     description: "Workflow token used when a GitHub App token is not available"
     required: true
   working_directory:
-    description: "Directory containing the Terraform configuration"
-    required: true
+    description: "Directory where the command runs"
+    required: false
+    default: "."
 
 runs:
   using: "composite"
 
   steps:
-    - name: Terraform Init
+    - name: Run authenticated command
       shell: bash
       env:
+        AUTHENTICATED_COMMAND: ${{ inputs.command }}
         # Keep the fallback token scoped to this step. The helper expands it
         # only when Git requests credentials, so it is never written to config.
         TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_token }}
@@ -35,4 +40,4 @@ runs:
           !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
           "password=${GITHUB_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
       working-directory: ${{ inputs.working_directory }}
-      run: terraform init -input=false
+      run: bash -euo pipefail -c "$AUTHENTICATED_COMMAND"

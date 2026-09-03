@@ -278,8 +278,9 @@ jobs:
           search-pattern: "Terraform version support"
 
       - name: Terraform Init
-        uses: pagopa/dx/.github/actions/terraform-init@main
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
+          command: terraform init -input=false
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ steps.directory.outputs.dir }}
 
