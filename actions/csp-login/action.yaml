@@ -1,19 +1,10 @@
 name: "Cloud Service Provider Login"
 description: "Login to Azure, AWS, or GitHub based on available credentials"
 
-inputs:
-  create_github_modules_token:
-    description: "Create a read-only token for Terraform modules hosted by pagopa-dx"
-    required: false
-    default: "false"
-
 outputs:
   github_app_token:
     description: "GitHub App installation token, or an empty value when GitHub login is not configured"
     value: ${{ steps.github-app-token.outputs.token }}
-  github_modules_token:
-    description: "Read-only GitHub App token scoped to repositories in the pagopa-dx installation"
-    value: ${{ steps.github-modules-token.outputs.token }}
 
 runs:
   using: "composite"
@@ -45,31 +36,10 @@ runs:
     - name: GitHub Login
       if: env.GH_APP_CLIENT_ID && env.GH_APP_KEY && env.GH_APP_INSTALLATION_ID
       id: github-app-token
-      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
-      with:
-        client-id: ${{ env.GH_APP_CLIENT_ID }}
-        private-key: ${{ env.GH_APP_KEY }}
-
-    - name: Check GitHub module credentials
-      if: inputs.create_github_modules_token == 'true'
-      shell: bash
-      run: |
-        if [ -z "$GH_APP_CLIENT_ID" ] || [ -z "$GH_APP_KEY" ]; then
-          echo "::error::GH_APP_CLIENT_ID and GH_APP_KEY are required to authenticate Terraform module downloads."
-          exit 1
-        fi
-
-    # The job GITHUB_TOKEN and the default App token are scoped to the caller.
-    # Mint a separate token from the App installation that owns the modules.
-    - name: Create Terraform module token
-      if: inputs.create_github_modules_token == 'true'
-      id: github-modules-token
       uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
       with:
         client-id: ${{ env.GH_APP_CLIENT_ID }}
         private-key: ${{ env.GH_APP_KEY }}
-        owner: pagopa-dx
-        permission-contents: read
 
     - name: Verify GitHub App installation
       if: env.GH_APP_CLIENT_ID && env.GH_APP_KEY && env.GH_APP_INSTALLATION_ID

@@ -9,12 +9,10 @@ inputs:
     description: "GitHub App token exposed to the wrapped command for API or provider access"
     required: false
     default: ""
-  github_modules_token:
-    description: "Read-only GitHub App token scoped to the pagopa-dx module repositories"
-    required: true
   github_token:
-    description: "Caller repository token used only as the wrapped command fallback"
-    required: true
+    description: "Caller repository token used as the Git credential for module clones and as the wrapped command fallback"
+    required: false
+    default: ""
   working_directory:
     description: "Directory where the command runs"
     required: false
@@ -28,24 +26,38 @@ runs:
       shell: bash
       env:
         AUTHENTICATED_COMMAND: ${{ inputs.command }}
-        # Keep both tokens scoped to this step. The caller token is suitable for
-        # API access to its repository, but not for cross-repository module clones.
+        # Keep tokens scoped to this step. The caller token also authenticates
+        # downloads from any public GitHub repository.
         GITHUB_TOKEN: ${{ inputs.github_app_token || inputs.github_token }}
-        TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_modules_token }}
-        # Keep credentials redacted if caller-provided env_vars enable Git tracing.
-        GIT_TRACE_REDACT: 1
-        # Pass config to Terraform's Git subprocesses without persisting it.
-        GIT_CONFIG_COUNT: 3
-        # Authenticate only pagopa-dx module clones. Other public GitHub sources
-        # remain anonymous instead of receiving a token that cannot authorize them.
-        GIT_CONFIG_KEY_0: http.https://github.com/pagopa-dx/.proactiveAuth
-        GIT_CONFIG_VALUE_0: basic
-        GIT_CONFIG_KEY_1: credential.https://github.com/pagopa-dx.helper
-        GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
-        GIT_CONFIG_KEY_2: credential.https://github.com/pagopa-dx.helper
-        # Expand the read-only module token only when Git requests credentials.
-        GIT_CONFIG_VALUE_2: >-
-          !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
-          "password=$TERRAFORM_GITHUB_TOKEN"; }; f
+        GIT_CREDENTIAL: ${{ inputs.github_token }}
+        # Fail loudly instead of hanging on an interactive credential prompt.
+        GIT_TERMINAL_PROMPT: "0"
+        # Keep credentials redacted from Git traces.
+        GIT_TRACE_REDACT: "1"
       working-directory: ${{ inputs.working_directory }}
-      run: bash -euo pipefail -c "$AUTHENTICATED_COMMAND"
+      run: |
+        set -euo pipefail
+
+        if [ -n "$GIT_CREDENTIAL" ]; then
+          # Pass config to Git subprocesses (e.g. Terraform module clones)
+          # without persisting it. Scope is github.com so the token works for
+          # any public repository, not only pagopa-dx.
+          export GIT_CONFIG_COUNT=3
+          export GIT_CONFIG_KEY_0=http.https://github.com/.proactiveAuth
+          export GIT_CONFIG_VALUE_0=basic
+          export GIT_CONFIG_KEY_1=credential.https://github.com/.helper
+          export GIT_CONFIG_VALUE_1= # Reset inherited credential helpers.
+          export GIT_CONFIG_KEY_2=credential.https://github.com/.helper
+          export GIT_CONFIG_VALUE_2='!f() { test "$1" = get && printf "%s\n" "username=x-access-token" "password=$GIT_CREDENTIAL"; }; f'
+
+          # proactiveAuth needs Git >= 2.44; the credential helper alone still
+          # handles the RFC 9110 401 -> retry path on older clients.
+          GIT_VERSION=$(git --version | sed -E 's/git version ([0-9]+)\.([0-9]+).*/\1.\2/')
+          if [ "$(printf '%s\n' "2.44" "$GIT_VERSION" | sort -V | head -1)" != "2.44" ]; then
+            echo "::warning::Git $GIT_VERSION does not support http.proactiveAuth (needs >= 2.44). The credential helper still authenticates module clones after a 401."
+          fi
+        else
+          echo "::warning::No GitHub token provided. Git clones of Terraform modules will proceed anonymously."
+        fi
+
+        exec bash -euo pipefail -c "$AUTHENTICATED_COMMAND"

@@ -1,6 +1,6 @@
 # Cloud Login Action
 
-This GitHub Action automatically detects and logs into the appropriate cloud provider (Azure or AWS) based on available environment variables.
+This GitHub Action automatically detects and logs into the appropriate cloud provider (Azure, AWS, or GitHub) based on available environment variables.
 
 ## Usage
 
@@ -42,20 +42,12 @@ If neither Azure nor AWS credentials are available, the action fails.
 - `GH_APP_KEY`: GitHub App private key
 - `GH_APP_INSTALLATION_ID`: Expected GitHub App installation ID
 
-## Inputs
-
-- `create_github_modules_token`: when set to `"true"`, creates a separate
-  read-only token from the GitHub App installation in `pagopa-dx`.
-
 ## Outputs
 
 - `github_app_token`: GitHub App installation token. The output is empty when
   GitHub login is not configured and is masked in workflow logs.
-- `github_modules_token`: read-only installation token for repositories owned
-  by `pagopa-dx`. It is created only when `create_github_modules_token` is
-  `true` and is masked in workflow logs.
 
-The tokens are not exported as a job-wide `GITHUB_TOKEN`. Pass each output
+The token is not exported as a job-wide `GITHUB_TOKEN`. Pass the output
 explicitly only to steps that require it:
 
 ```yaml
@@ -69,25 +61,11 @@ explicitly only to steps that require it:
   run: gh api user
 ```
 
-The automatic workflow `GITHUB_TOKEN` is scoped to the repository that started
-the workflow, so it cannot authenticate Git downloads from the separate
-`pagopa-dx` organization. Terraform workflows that download DX Registry modules
-must request the dedicated token:
-
-```yaml
-- name: Cloud Login
-  id: cloud-login
-  uses: pagopa/dx/actions/csp-login@main
-  env:
-    GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-    GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-    GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-  with:
-    create_github_modules_token: "true"
-```
-
-The GitHub App identified by `GH_APP_CLIENT_ID` and `GH_APP_KEY` must be
-installed in `pagopa-dx` with read access to the module repositories.
+Terraform module downloads do not require this action or any extra secret: the
+[run-with-github-auth](../../.github/actions/run-with-github-auth/action.yaml)
+composite action uses the automatic workflow `GITHUB_TOKEN` as the Git
+credential, which GitHub accepts as authenticated traffic even when cloning
+public repositories owned by other organizations.
 
 ## Example Usage
 
@@ -120,14 +98,11 @@ jobs:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-        with:
-          create_github_modules_token: "true"
 
       - name: Terraform Init
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init
-          github_modules_token: ${{ steps.cloud-login.outputs.github_modules_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Terraform Apply

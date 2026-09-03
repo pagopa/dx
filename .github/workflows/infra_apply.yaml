@@ -224,8 +224,6 @@ jobs:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-        with:
-          create_github_modules_token: "true"
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -237,7 +235,6 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
-          github_modules_token: ${{ steps.cloud-login.outputs.github_modules_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ steps.directory.outputs.dir }}
 
@@ -331,8 +328,6 @@ jobs:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-        with:
-          create_github_modules_token: "true"
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -375,7 +370,6 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
-          github_modules_token: ${{ steps.cloud-login.outputs.github_modules_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ matrix.dir }}
 
