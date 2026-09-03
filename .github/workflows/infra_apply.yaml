@@ -198,10 +198,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         name: Checkout
 
-      - name: Configure proactive GitHub authentication
-        shell: bash
-        run: git config --global http.proactiveAuth true
-
       - name: Set Environment Variables
         if: ${{ inputs.env_vars }}
         env:
@@ -232,6 +228,14 @@ jobs:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
       - name: Terraform Init
+        env:
+          GIT_CONFIG_COUNT: 3
+          GIT_CONFIG_KEY_0: http.https://github.com/.proactiveAuth
+          GIT_CONFIG_VALUE_0: basic
+          GIT_CONFIG_KEY_1: credential.https://github.com.helper
+          GIT_CONFIG_VALUE_1: ""
+          GIT_CONFIG_KEY_2: credential.https://github.com.helper
+          GIT_CONFIG_VALUE_2: '!f() { test "$1" = get && printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN"; }; f'
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init -input=false
@@ -306,10 +310,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         name: Checkout
 
-      - name: Configure proactive GitHub authentication
-        shell: bash
-        run: git config --global http.proactiveAuth true
-
       - name: Set artifact name
         id: artifact
         env:
@@ -363,6 +363,14 @@ jobs:
           aws-region: ${{ steps.plan_outputs.outputs.aws_region }}
 
       - name: Terraform Init
+        env:
+          GIT_CONFIG_COUNT: 3
+          GIT_CONFIG_KEY_0: http.https://github.com/.proactiveAuth
+          GIT_CONFIG_VALUE_0: basic
+          GIT_CONFIG_KEY_1: credential.https://github.com.helper
+          GIT_CONFIG_VALUE_1: ""
+          GIT_CONFIG_KEY_2: credential.https://github.com.helper
+          GIT_CONFIG_VALUE_2: '!f() { test "$1" = get && printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN"; }; f'
         working-directory: ${{ matrix.dir }}
         run: |
           terraform init -input=false
