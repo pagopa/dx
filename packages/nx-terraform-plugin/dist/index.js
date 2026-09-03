@@ -293,7 +293,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 	const config = {
 		name: getProjectNameFromRoot(root),
 		namedInputs: {
-			default: ["{projectRoot}/*.{tf,tfvars}"],
+			default: ["{projectRoot}/**/*.{tf,tfvars}"],
 			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"]
 		},
 		projectType,
@@ -311,28 +311,31 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 
 //#endregion
 //#region src/hcl.ts
-function getStaticDependencies(file, fileContent) {
+function getStaticDependencies(file, fileContent, resolveProjectName = getProjectNameFromRoot) {
 	const dependencies = [];
 	const moduleRegex = /module\s+"([^"]+)"\s*{[^}]*source\s*=\s*"([^"]+)"/g;
 	let match;
 	while ((match = moduleRegex.exec(fileContent)) !== null) {
 		const [, , moduleSource] = match;
-		if (moduleSource.startsWith(".")) dependencies.push({
-			source: file.project,
-			sourceFile: file.fileName,
-			target: getProjectNameFromRoot(path.join(path.dirname(file.fileName), moduleSource)),
-			type: DependencyType.static
-		});
+		if (moduleSource.startsWith(".")) {
+			const moduleRoot = path.join(path.dirname(file.fileName), moduleSource);
+			dependencies.push({
+				source: file.project,
+				sourceFile: file.fileName,
+				target: resolveProjectName(moduleRoot),
+				type: DependencyType.static
+			});
+		}
 	}
 	return dependencies;
 }
 
 //#endregion
 //#region src/fs.ts
-const getStaticDependenciesFromFile = async (file) => {
+const getStaticDependenciesFromFile = async (file, resolveProjectName = getProjectNameFromRoot) => {
 	const logger = getPackageLogger(["fs"]);
 	try {
-		return getStaticDependencies(file, await fs.readFile(file.fileName, "utf-8"));
+		return getStaticDependencies(file, await fs.readFile(file.fileName, "utf-8"), resolveProjectName);
 	} catch (error) {
 		logger.error("Error reading file {fileName}", {
 			error,
@@ -391,6 +394,7 @@ const getTerraformProjectFiles = (projectFileMap) => Object.entries(projectFileM
 //#endregion
 //#region src/index.ts
 const ignoreModules = [
+	"_modules",
 	"tests",
 	"_tests",
 	"examples",
@@ -411,6 +415,20 @@ const emptyTestCapabilities = () => ({
 const isIgnoredRoot = (root) => {
 	const rootSegments = new Set(root.split(path.sep));
 	return ignoreModules.some((module) => rootSegments.has(module));
+};
+const isPathWithinRoot = (root, candidatePath) => {
+	const relativePath = path.relative(root, candidatePath);
+	return relativePath === "" || relativePath !== ".." && !relativePath.startsWith(`..${path.sep}`) && !path.isAbsolute(relativePath);
+};
+const getTerraformProjectNameResolver = (projects, workspaceRoot) => {
+	const terraformProjectRoots = Object.entries(projects).filter(([, project]) => project.tags?.includes("terraform")).map(([name, project]) => ({
+		name,
+		root: path.resolve(workspaceRoot, project.root)
+	})).sort((first, second) => second.root.length - first.root.length);
+	return (moduleRoot) => {
+		const absoluteModuleRoot = path.resolve(workspaceRoot, moduleRoot);
+		return terraformProjectRoots.find(({ root }) => isPathWithinRoot(root, absoluteModuleRoot))?.name ?? getProjectNameFromRoot(moduleRoot);
+	};
 };
 const fileExists = async (filePath) => {
 	try {
@@ -444,7 +462,7 @@ const getDiscoveryState = (configFiles) => {
 	for (const testConfigFile of testConfigFiles) {
 		const testsRoot = path.dirname(testConfigFile);
 		const projectRoot = path.dirname(testsRoot);
-		if (!terraformRoots.has(projectRoot)) continue;
+		if (!terraformRoots.has(projectRoot) || isIgnoredRoot(projectRoot)) continue;
 		const fileName = path.basename(testConfigFile);
 		const capability = testCapabilityByFileName[fileName] ?? (fileName.endsWith("_test.go") ? "e2e" : void 0);
 		if (capability === void 0) continue;
@@ -460,7 +478,7 @@ const getDiscoveryState = (configFiles) => {
 };
 const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) => {
 	const validationResults = await Promise.all(moduleManifestRoots.map(async (root) => {
-		const manifest = await readModulePublishManifest(path.join(workspaceRoot, root));
+		const manifest = await readModulePublishManifest(path.resolve(workspaceRoot, root));
 		return manifest ? [root, manifest] : null;
 	}));
 	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));
@@ -485,8 +503,9 @@ const createNodesV2 = ["**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}
 	}, terraformConfigFiles, options, context);
 }];
 const createDependencies = async (opts, ctx) => {
+	const resolveProjectName = getTerraformProjectNameResolver(ctx.projects, ctx.workspaceRoot);
 	const filesToProcess = getTerraformProjectFiles(ctx.filesToProcess.projectFileMap);
-	return (await Promise.all(filesToProcess.map(getStaticDependenciesFromFile))).flat();
+	return (await Promise.all(filesToProcess.map((file) => getStaticDependenciesFromFile(file, resolveProjectName)))).flat().filter(({ source, target }) => source !== target && ctx.projects[target] !== void 0);
 };
 
 //#endregion

@@ -2,6 +2,7 @@ import {
   CreateDependencies,
   createNodesFromFiles,
   CreateNodesV2,
+  ProjectConfiguration,
 } from "@nx/devkit";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -12,9 +13,13 @@ import { configureLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
-import { getProject, TerraformTestCapabilities } from "./project.ts";
+import {
+  getProject,
+  getProjectNameFromRoot,
+  TerraformTestCapabilities,
+} from "./project.ts";
 
-const ignoreModules = ["tests", "_tests", "examples", "example"];
+const ignoreModules = ["_modules", "tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
 const testCapabilityByFileName: Record<
   string,
@@ -34,6 +39,38 @@ const emptyTestCapabilities = (): TerraformTestCapabilities => ({
 const isIgnoredRoot = (root: string) => {
   const rootSegments = new Set(root.split(path.sep));
   return ignoreModules.some((module) => rootSegments.has(module));
+};
+
+const isPathWithinRoot = (root: string, candidatePath: string) => {
+  const relativePath = path.relative(root, candidatePath);
+  return (
+    relativePath === "" ||
+    (relativePath !== ".." &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath))
+  );
+};
+
+const getTerraformProjectNameResolver = (
+  projects: Record<string, ProjectConfiguration>,
+  workspaceRoot: string,
+) => {
+  const terraformProjectRoots = Object.entries(projects)
+    .filter(([, project]) => project.tags?.includes("terraform"))
+    .map(([name, project]) => ({
+      name,
+      root: path.resolve(workspaceRoot, project.root),
+    }))
+    .sort((first, second) => second.root.length - first.root.length);
+
+  return (moduleRoot: string) => {
+    const absoluteModuleRoot = path.resolve(workspaceRoot, moduleRoot);
+    return (
+      terraformProjectRoots.find(({ root }) =>
+        isPathWithinRoot(root, absoluteModuleRoot),
+      )?.name ?? getProjectNameFromRoot(moduleRoot)
+    );
+  };
 };
 
 const fileExists = async (filePath: string) => {
@@ -77,10 +114,11 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
   }
 
   const terraformRoots = new Set(terraformConfigFiles.map(path.dirname));
+
   for (const testConfigFile of testConfigFiles) {
     const testsRoot = path.dirname(testConfigFile);
     const projectRoot = path.dirname(testsRoot);
-    if (!terraformRoots.has(projectRoot)) {
+    if (!terraformRoots.has(projectRoot) || isIgnoredRoot(projectRoot)) {
       continue;
     }
 
@@ -111,7 +149,7 @@ export const getPublishableManifestByRoot = async (
 ): Promise<Map<string, ModulePublishManifest>> => {
   const validationResults = await Promise.all(
     moduleManifestRoots.map(async (root) => {
-      const absoluteRoot = path.join(workspaceRoot, root);
+      const absoluteRoot = path.resolve(workspaceRoot, root);
       const manifest = await readModulePublishManifest(absoluteRoot);
       return manifest ? [root, manifest] : null;
     }),
@@ -192,13 +230,24 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
 export const createDependencies: CreateDependencies<
   TerraformPluginOptions
 > = async (opts, ctx) => {
+  const resolveProjectName = getTerraformProjectNameResolver(
+    ctx.projects,
+    ctx.workspaceRoot,
+  );
   const filesToProcess = getTerraformProjectFiles(
     // Get from Nx only changed Terraform files, then derive static project-graph
     // dependencies from Terraform module source references in those files.
     ctx.filesToProcess.projectFileMap,
   );
   const dependencies = await Promise.all(
-    filesToProcess.map(getStaticDependenciesFromFile),
+    filesToProcess.map((file) =>
+      getStaticDependenciesFromFile(file, resolveProjectName),
+    ),
   );
-  return dependencies.flat();
+  return dependencies
+    .flat()
+    .filter(
+      ({ source, target }) =>
+        source !== target && ctx.projects[target] !== undefined,
+    );
 };

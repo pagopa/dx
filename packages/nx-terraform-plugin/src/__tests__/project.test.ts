@@ -28,7 +28,7 @@ const customOptions = parseOptions({
 });
 
 const expectedNamedInputs = {
-  default: ["{projectRoot}/*.{tf,tfvars}"],
+  default: ["{projectRoot}/**/*.{tf,tfvars}"],
   examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
 };
 

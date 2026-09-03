@@ -451,7 +451,7 @@ export const getProject = (
   const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
-      default: ["{projectRoot}/*.{tf,tfvars}"],
+      default: ["{projectRoot}/**/*.{tf,tfvars}"],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
     },
     projectType,

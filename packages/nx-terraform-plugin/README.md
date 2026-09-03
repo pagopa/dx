@@ -3,6 +3,8 @@
 `@pagopa/nx-terraform-plugin` is an Nx plugin that discovers Terraform
 configurations and infers targets for formatting, testing, validation, planning,
 applying, security scanning, documentation, and module publishing.
+Terraform directories inside an `_modules` directory are excluded from project
+inference; other nested Terraform directories remain discoverable.
 
 ## Trivy
 
