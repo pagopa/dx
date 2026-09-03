@@ -213,7 +213,7 @@ This variable was introduced as a temporary workaround to prevent storage accoun
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -225,7 +225,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_key_vault_access_policy.keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_key_vault_key.key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) | resource |
 | [azurerm_monitor_diagnostic_setting.blob_service](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -259,7 +259,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'. | `string` | `"Hot"` | no |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | ID of the Action Group for alerts. Required for tier 'l'. | `string` | `null` | no |
 | <a name="input_audit_retention_days"></a> [audit\_retention\_days](#input\_audit\_retention\_days) | Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year). | `number` | `365` | no |
@@ -286,7 +286,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Storage Account. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Storage Account. |
 | <a name="output_primary_blob_endpoint"></a> [primary\_blob\_endpoint](#output\_primary\_blob\_endpoint) | The primary blob endpoint of the Azure Storage Account. |

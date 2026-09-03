@@ -32,7 +32,7 @@ For examples of how to use this module, refer to the [examples](https://github.c
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_pagopa-dx"></a> [pagopa-dx](#requirement\_pagopa-dx) | ~> 0.12 |
@@ -40,13 +40,13 @@ For examples of how to use this module, refer to the [examples](https://github.c
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_appconfig_team_roles"></a> [appconfig\_team\_roles](#module\_appconfig\_team\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 1.3 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_app_configuration.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/app_configuration) | resource |
 | [azurerm_monitor_diagnostic_setting.app_configuration](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
 | [azurerm_private_endpoint.app_config](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
@@ -57,7 +57,7 @@ For examples of how to use this module, refer to the [examples](https://github.c
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_authorized_teams"></a> [authorized\_teams](#input\_authorized\_teams) | Object containing lists of principal IDs (Azure AD object IDs) of product teams to be granted read or write permissions on the App Configuration. These represent the teams within the organization that need access to this resource." | <pre>object({<br/>    writers = optional(list(string), []),<br/>    readers = optional(list(string), [])<br/>  })</pre> | <pre>{<br/>  "readers": [],<br/>  "writers": []<br/>}</pre> | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for App Configuration logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
@@ -74,7 +74,7 @@ For examples of how to use this module, refer to the [examples](https://github.c
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The service endpoint URL |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Cosmos DB account. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Cosmos DB account. |

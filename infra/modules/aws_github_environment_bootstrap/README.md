@@ -359,7 +359,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.0 |
@@ -368,13 +368,13 @@ resource "aws_iam_policy" "custom_app_policy" {
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-codebuild/aws | ~> 1.0 |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_iam_policy.ecr_push_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_policy.ro_ecs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.app_cd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
@@ -405,7 +405,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for the GitHub self-hosted runner, including tier, code connection ARN, personal access token, environment variables, and secrets. Either codeconnection\_arn or personal\_access\_token must be set, but not both. | <pre>object({<br/>    tier               = optional(string, "m")<br/>    codeconnection_arn = optional(string, null)<br/>    personal_access_token = optional(object({<br/>      ssm_parameter_name = optional(string, null)<br/>      value              = optional(string, null)<br/>    }), null)<br/>    env_variables = optional(map(string), {})<br/>    secrets = map(object({<br/>      ssm_parameter_name   = optional(string, null)<br/>      secrets_manager_name = optional(string, null)<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_oidc_provider_arn"></a> [oidc\_provider\_arn](#input\_oidc\_provider\_arn) | The ARN of the OIDC provider for GitHub Actions. | `string` | n/a | yes |
@@ -416,7 +416,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including security group and IAM role. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the IAM roles for app, infra, including ARNs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | Details of the GitHub repository. |

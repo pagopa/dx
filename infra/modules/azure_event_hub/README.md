@@ -63,7 +63,7 @@ This example is illustrative.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -75,7 +75,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_eventhub.events](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub) | resource |
 | [azurerm_eventhub_authorization_rule.authorization_rule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub_authorization_rule) | resource |
 | [azurerm_eventhub_consumer_group.consumer_group](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/eventhub_consumer_group) | resource |
@@ -88,7 +88,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | The ID of the Action Group to invoke when an alert is triggered for the Event Hub. | `string` | `null` | no |
 | <a name="input_allowed_sources"></a> [allowed\_sources](#input\_allowed\_sources) | Lists of allowed sources for accessing the Event Hub, including subnet IDs and IP address ranges. | <pre>object({<br/>    subnet_ids = optional(list(string), [])<br/>    ips        = optional(list(string), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for Event Hub logs and metrics. When enabled, sends diagnostics to Log Analytics workspace and/or Storage Account. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
@@ -104,7 +104,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_hub_ids"></a> [hub\_ids](#output\_hub\_ids) | A map containing the names of Event Hubs as keys and their corresponding IDs as values. |
 | <a name="output_key_ids"></a> [key\_ids](#output\_key\_ids) | A list of IDs for the keys associated with the Event Hub. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Event Hub Namespace. |
