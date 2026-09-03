@@ -68,11 +68,109 @@ jobs:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
 
-  static-review:
-    name: Static Review
-    runs-on: ubuntu-24.04
+  assess-affected-projects:
+    name: Affected Projects Assessment
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      affected-projects: ${{ steps.detect.outputs.affected-projects }}
+      environments: ${{ steps.detect.outputs.environments }}
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
+
+      - name: Set base and head SHAs for affected commands
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      # Avoid querying GitHub environments when the change does not affect any
+      # Nx project, and let downstream jobs short circuit cleanly.
+      - name: Assess affected projects and environments
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          affected_projects="$(pnpm nx show projects --affected --json)"
+          if ! jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+            echo "affected-projects=false" >> "$GITHUB_OUTPUT"
+            echo "environments=[]" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "affected-projects=true" >> "$GITHUB_OUTPUT"
+
+          # GitHub environments named `infra-<env>-ci` or
+          # `bootstrapper-<env>-cd` define which credentials and runner labels
+          # are used for Terraform plans.
+          candidate_environments="$(
+            gh api \
+              --paginate \
+              --slurp \
+              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+              jq --compact-output '
+              [
+                .[].environments[]
+                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
+                | select(.name | contains("uat") | not)
+                | {
+                    "github-environment": .name,
+                    "env-name": (.name | split("-")[1])
+                  }
+              ]
+            '
+          )"
+
+          affected_environments=()
+          while IFS= read -r environment; do
+            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+
+            # Keep Terraform apps and exclude those not tagged for this environment.
+            affected_projects="$(
+              pnpm nx show projects \
+                --affected \
+                --type=app \
+                --projects=tag:terraform \
+                --exclude="!tag:env:$env_name" \
+                --json
+            )"
+
+            if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+              affected_environments+=("$environment")
+            fi
+          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+          if [ "${#affected_environments[@]}" -eq 0 ]; then
+            environments='[]'
+          else
+            environments="$(
+              printf '%s\n' "${affected_environments[@]}" |
+                jq --slurp --compact-output '.'
+            )"
+          fi
+
+          printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
+
+  code-review:
+    name: No environment
+    runs-on: ubuntu-24.04
+    needs: [gate, assess-affected-projects]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.assess-affected-projects.outputs.affected-projects == 'true' }}
     permissions:
       actions: read
       contents: read
@@ -121,104 +219,17 @@ jobs:
 
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
-      # Their static checks (lint, test) run in the "infra-review" job.
+      # Their static checks (lint, test) run in the
+      # "code-review-with-environment" job.
       - name: Run code quality checks on affected projects
         run: |
-            EXCLUDE=$(nx show projects --affected --type=app --sep=, -p=tag:terraform)
-            nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          EXCLUDE=$(nx show projects --affected --type=app --sep=, -p=tag:terraform)
+          nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
 
-  get-environments:
-    name: Get GitHub Environments for Infrastructure
-    needs: gate
-    if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
-    outputs:
-      environments: ${{ steps.detect.outputs.environments }}
-    permissions:
-      actions: read
-      contents: read
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          filter: tree:0
-
-      - name: Setup Node.js
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-        with:
-          install_args: "node pnpm"
-
-      - name: Set base and head SHAs for affected commands
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
-
-      # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-cd`
-      # define which credentials and runner labels are used for Terraform plans.
-      - name: Get GitHub Environments
-        id: detect
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          # Fetch all matching GitHub environments and build the candidate matrix.
-          candidate_environments="$(
-            gh api \
-              --paginate \
-              --slurp \
-              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
-              jq --compact-output '
-              [
-                .[].environments[]
-                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
-                | select(.name | contains("uat") | not)
-                | {
-                    "github-environment": .name,
-                    "env-name": (.name | split("-")[1])
-                  }
-              ]
-            '
-          )"
-
-          # jq emits one compact JSON object per line for the Bash loop to process.
-          affected_environments=()
-          while IFS= read -r environment; do
-            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
-
-            # Keep Terraform apps and exclude those not tagged for this environment.
-            affected_projects="$(
-              pnpm nx show projects \
-                --affected \
-                --type=app \
-                --projects=tag:terraform \
-                --exclude="!tag:env:$env_name" \
-                --json
-            )"
-
-            if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
-              affected_environments+=("$environment")
-            fi
-          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
-
-          # Rebuild the retained objects as the JSON array expected by the matrix.
-          if [ "${#affected_environments[@]}" -eq 0 ]; then
-            environments='[]'
-          else
-            environments="$(
-              printf '%s\n' "${affected_environments[@]}" |
-                jq --slurp --compact-output '.'
-            )"
-          fi
-
-          printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
-
-  infra-review:
-    name: Infrastructure Review (${{ matrix.target.github-environment }})
-    needs: get-environments
-    if: ${{ needs.get-environments.outputs.environments != '[]' }}
+  code-review-with-environment:
+    name: ${{ matrix.target.github-environment }}
+    needs: assess-affected-projects
+    if: ${{ needs.assess-affected-projects.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment:
       name: ${{ matrix.target.github-environment }}
@@ -226,7 +237,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.get-environments.outputs.environments) }}
+        target: ${{ fromJSON(needs.assess-affected-projects.outputs.environments) }}
     permissions:
       actions: read
       contents: read
@@ -351,7 +362,7 @@ jobs:
 
   report:
     name: Report
-    needs: infra-review
+    needs: code-review-with-environment
     if: ${{ always() && github.event_name == 'pull_request' }}
     runs-on: ubuntu-24.04
     permissions:
