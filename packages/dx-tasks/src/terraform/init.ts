@@ -4,8 +4,6 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as z from "zod/mini";
 
-import type { ProcessResult } from "../run-command.ts";
-
 import { runCommand } from "../run-command.ts";
 import { compareModuleLock } from "./module-lock.ts";
 
@@ -75,29 +73,6 @@ export interface TerraformInitPayload {
   modulePath: string;
 }
 
-const printTerraformOutput = (result: ProcessResult): void => {
-  if (result.stdout.length > 0) {
-    console.log(result.stdout);
-  }
-  if (result.stderr.length > 0) {
-    console.error(result.stderr);
-  }
-};
-
-const getTerraformFailureMessage = (
-  operation: string,
-  result: ProcessResult,
-): string => {
-  const termination =
-    result.signal === null
-      ? `exit code ${result.exitCode}`
-      : `signal ${result.signal}`;
-  const details = [result.stderr.trim(), result.stdout.trim()]
-    .filter((output) => output.length > 0)
-    .join("\n");
-  return `terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`;
-};
-
 const getLockChangeSummary = (
   changes: readonly { key: string; status: string }[],
   formatVersion: 1 | 2,
@@ -108,35 +83,29 @@ const getLockChangeSummary = (
       ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ")
       : "no module hash changes";
 
-const replaceFileAtomically = async (
-  filePath: string,
-  content: string,
-  temporaryDirectoryPrefix: string,
-): Promise<void> => {
-  const temporaryDirectory = await fs.mkdtemp(
-    path.join(path.dirname(filePath), temporaryDirectoryPrefix),
-  );
-  const temporaryPath = path.join(temporaryDirectory, path.basename(filePath));
-  try {
-    await fs.writeFile(temporaryPath, content, {
-      encoding: "utf8",
-      flag: "wx",
-    });
-    await fs.rename(temporaryPath, filePath);
-  } finally {
-    await fs.rm(temporaryDirectory, { force: true, recursive: true });
-  }
-};
-
 const runTerraformCommand = async (
   operation: string,
   args: string[],
   modulePath: string,
 ): Promise<void> => {
   const result = await runCommand("terraform", args, modulePath, {});
-  printTerraformOutput(result);
+  if (result.stdout.length > 0) {
+    console.log(result.stdout);
+  }
+  if (result.stderr.length > 0) {
+    console.error(result.stderr);
+  }
   if (result.exitCode !== 0) {
-    throw new Error(getTerraformFailureMessage(operation, result));
+    const termination =
+      result.signal === null
+        ? `exit code ${result.exitCode}`
+        : `signal ${result.signal}`;
+    const details = [result.stderr.trim(), result.stdout.trim()]
+      .filter((output) => output.length > 0)
+      .join("\n");
+    throw new Error(
+      `terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`,
+    );
   }
 };
 
@@ -180,11 +149,19 @@ export async function terraformInit({
 
   // Developer runs refresh the lock only after Terraform has initialized successfully.
   if (comparison.isDifferent) {
-    await replaceFileAtomically(
-      comparison.path,
-      comparison.content,
-      ".tfmodules-lock-",
+    const temporaryDirectory = await fs.mkdtemp(
+      path.join(path.dirname(comparison.path), ".tfmodules-lock-"),
     );
+    const temporaryPath = path.join(temporaryDirectory, "tfmodules.lock.json");
+    try {
+      await fs.writeFile(temporaryPath, comparison.content, {
+        encoding: "utf8",
+        flag: "wx",
+      });
+      await fs.rename(temporaryPath, comparison.path);
+    } finally {
+      await fs.rm(temporaryDirectory, { force: true, recursive: true });
+    }
     console.log(`Updated Terraform module lock at ${comparison.path}`);
   }
 }

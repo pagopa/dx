@@ -470,36 +470,16 @@ const terraformInitPayloadShape = {
 	modulePath: z$1.string().check(z$1.minLength(1))
 };
 const payloadSchema$1 = z$1.object(terraformInitPayloadShape);
-const printTerraformOutput = (result) => {
-	if (result.stdout.length > 0) console.log(result.stdout);
-	if (result.stderr.length > 0) console.error(result.stderr);
-};
-const getTerraformFailureMessage = (operation, result) => {
-	const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
-	const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
-	return `terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`;
-};
 const getLockChangeSummary = (changes, formatVersion) => formatVersion === 1 ? "legacy module lock format (version 1)" : changes.length > 0 ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ") : "no module hash changes";
-const replaceFileAtomically = async (filePath, content, temporaryDirectoryPrefix) => {
-	const temporaryDirectory = await fs.mkdtemp(path.join(path.dirname(filePath), temporaryDirectoryPrefix));
-	const temporaryPath = path.join(temporaryDirectory, path.basename(filePath));
-	try {
-		await fs.writeFile(temporaryPath, content, {
-			encoding: "utf8",
-			flag: "wx"
-		});
-		await fs.rename(temporaryPath, filePath);
-	} finally {
-		await fs.rm(temporaryDirectory, {
-			force: true,
-			recursive: true
-		});
-	}
-};
 const runTerraformCommand = async (operation, args, modulePath) => {
 	const result = await runCommand("terraform", args, modulePath, {});
-	printTerraformOutput(result);
-	if (result.exitCode !== 0) throw new Error(getTerraformFailureMessage(operation, result));
+	if (result.stdout.length > 0) console.log(result.stdout);
+	if (result.stderr.length > 0) console.error(result.stderr);
+	if (result.exitCode !== 0) {
+		const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
+		const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
+		throw new Error(`terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`);
+	}
 };
 async function terraformInit({ args = [], frozenLockfile = false, modulePath }) {
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
@@ -520,7 +500,20 @@ async function terraformInit({ args = [], frozenLockfile = false, modulePath }) 
 	}
 	if (frozenLockfile) return;
 	if (comparison.isDifferent) {
-		await replaceFileAtomically(comparison.path, comparison.content, ".tfmodules-lock-");
+		const temporaryDirectory = await fs.mkdtemp(path.join(path.dirname(comparison.path), ".tfmodules-lock-"));
+		const temporaryPath = path.join(temporaryDirectory, "tfmodules.lock.json");
+		try {
+			await fs.writeFile(temporaryPath, comparison.content, {
+				encoding: "utf8",
+				flag: "wx"
+			});
+			await fs.rename(temporaryPath, comparison.path);
+		} finally {
+			await fs.rm(temporaryDirectory, {
+				force: true,
+				recursive: true
+			});
+		}
 		console.log(`Updated Terraform module lock at ${comparison.path}`);
 	}
 }
