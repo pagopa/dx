@@ -1,0 +1,38 @@
+name: "Terraform Init"
+description: "Initialize Terraform with authenticated GitHub module downloads"
+
+inputs:
+  github_token:
+    description: "Workflow token used when a GitHub App token is not available"
+    required: true
+  working_directory:
+    description: "Directory containing the Terraform configuration"
+    required: true
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Terraform Init
+      shell: bash
+      env:
+        # Keep the fallback token scoped to this step. The helper expands it
+        # only when Git requests credentials, so it is never written to config.
+        TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_token }}
+        # Keep credentials redacted if caller-provided env_vars enable Git tracing.
+        GIT_TRACE_REDACT: 1
+        # Pass config to Terraform's Git subprocesses without persisting it.
+        GIT_CONFIG_COUNT: 3
+        # Authenticate the first GitHub request instead of waiting for a 401.
+        GIT_CONFIG_KEY_0: http.https://github.com/.proactiveAuth
+        GIT_CONFIG_VALUE_0: basic
+        GIT_CONFIG_KEY_1: credential.https://github.com.helper
+        GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
+        GIT_CONFIG_KEY_2: credential.https://github.com.helper
+        # Prefer the GitHub App token exported by csp-login, with the
+        # step-scoped workflow token as a fallback.
+        GIT_CONFIG_VALUE_2: >-
+          !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
+          "password=${GITHUB_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
+      working-directory: ${{ inputs.working_directory }}
+      run: terraform init -input=false
