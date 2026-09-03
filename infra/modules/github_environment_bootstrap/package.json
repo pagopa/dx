@@ -1,7 +1,0 @@
-{
-  "name": "github_environment_bootstrap",
-  "version": "2.0.0",
-  "private": true,
-  "provider": "github",
-  "description": "Create and configure a new GitHub repository"
-}
