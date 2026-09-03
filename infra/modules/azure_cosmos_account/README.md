@@ -36,7 +36,7 @@ For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_pagopa-dx"></a> [pagopa-dx](#requirement\_pagopa-dx) | ~> 0.12 |
@@ -48,7 +48,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_cosmosdb_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_account) | resource |
 | [azurerm_cosmosdb_sql_role_assignment.principal_role_assignments](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cosmosdb_sql_role_assignment) | resource |
 | [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -59,7 +59,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alerts"></a> [alerts](#input\_alerts) | Alerts configuration for Cosmos DB account. | <pre>object({<br/>    enabled         = bool<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      provisioned_throughput_exceeded = optional(number, null)<br/>    }), {})<br/>  })</pre> | <pre>{<br/>  "enabled": true<br/>}</pre> | no |
 | <a name="input_authorized_teams"></a> [authorized\_teams](#input\_authorized\_teams) | Object containing lists of principal IDs (Azure AD object IDs) of product teams to be granted read or write permissions on the Cosmos DB account. These represent the teams within the organization that need access to this resource. | <pre>object({<br/>    writers = optional(list(string), []),<br/>    readers = optional(list(string), [])<br/>  })</pre> | <pre>{<br/>  "readers": [],<br/>  "writers": []<br/>}</pre> | no |
 | <a name="input_consistency_policy"></a> [consistency\_policy](#input\_consistency\_policy) | Defines the consistency policy for CosmosDB. Use 'consistency\_preset' for predefined configurations, or set it to 'custom' for manual configuration. Presets include: 'default' (Session consistency), 'high\_consistency' (Strong), 'high\_performance' (Eventual), and 'balanced\_staleness' (BoundedStaleness). For custom configuration, specify 'consistency\_level' and, if using BoundedStaleness, 'max\_interval\_in\_seconds' and 'max\_staleness\_prefix'. Refer to https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels for more details. | <pre>object({<br/>    consistency_preset      = optional(string)<br/>    consistency_level       = optional(string, "Preset")<br/>    max_interval_in_seconds = optional(number, 0)<br/>    max_staleness_prefix    = optional(number, 0)<br/>  })</pre> | n/a | yes |
@@ -78,7 +78,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the Cosmos DB Account. |
 | <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The primary endpoint URL of the Azure Cosmos DB account. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Cosmos DB account. |
