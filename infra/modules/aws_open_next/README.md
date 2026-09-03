@@ -93,14 +93,14 @@ When `enable_alarms` is set to `true`, the module creates CloudWatch alarms for:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_assets"></a> [assets](#module\_assets) | ./modules/assets | n/a |
 | <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | ./modules/cloudfront | n/a |
 | <a name="module_common"></a> [common](#module\_common) | ./modules/common | n/a |
@@ -116,7 +116,7 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alarms_actions"></a> [alarms\_actions](#input\_alarms\_actions) | List of actions to perform when an alarm is triggered. This can include SNS topics, Lambda functions, etc. If empty, no actions will be performed. | `list(string)` | `[]` | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration. If not provided, the cloudfront default domain will be used. If the DNS zone is managed by AWS, the hosted\_zone\_id must be provided to create the Route53 record. | <pre>object({<br/>    domain_name         = string<br/>    acm_certificate_arn = string<br/>    hosted_zone_id      = optional(string, null)<br/>  })</pre> | `null` | no |
 | <a name="input_custom_headers"></a> [custom\_headers](#input\_custom\_headers) | Custom headers to be added to the CloudFront distribution. | <pre>list(object({<br/>    header   = string<br/>    value    = string<br/>    override = optional(bool)<br/>  }))</pre> | `[]` | no |
@@ -130,7 +130,7 @@ No resources.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_assets"></a> [assets](#output\_assets) | The assets bucket. |
 | <a name="output_cloudfront"></a> [cloudfront](#output\_cloudfront) | The CloudFront distribution. |
 | <a name="output_common"></a> [common](#output\_common) | The common resources module. |

@@ -150,7 +150,7 @@ Integration and end-to-end test layers are tracked as follow-ups under [CES-1909
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.23 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -162,7 +162,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_managed_redis.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_redis) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -173,7 +173,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and derive short location names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required when use\_case is 'default'. | `string` | `null` | no |
@@ -187,7 +187,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The full endpoint (hostname:port) of the Azure Managed Redis instance. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Managed Redis instance. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Managed Redis instance. |
