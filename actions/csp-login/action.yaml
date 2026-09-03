@@ -1,5 +1,10 @@
 name: "Cloud Service Provider Login"
-description: "Login to cloud provider (Azure or AWS) based on available secrets"
+description: "Login to Azure, AWS, or GitHub based on available credentials"
+
+outputs:
+  github_app_token:
+    description: "GitHub App installation token, or an empty value when GitHub login is not configured"
+    value: ${{ steps.github-app-token.outputs.token }}
 
 runs:
   using: "composite"
@@ -51,8 +56,6 @@ runs:
 
     - name: Export Logged CSP
       shell: bash
-      env:
-        GH_APP_TOKEN: ${{ steps.github-app-token.outputs.token }}
       run: |
         csp_list=()
         if [ -n "$ROLE_ARN" ]; then
@@ -64,7 +67,5 @@ runs:
         if [ -n "$GH_APP_CLIENT_ID" ] && [ -n "$GH_APP_KEY" ] && [ -n "$GH_APP_INSTALLATION_ID" ]; then
           csp_list+=("github")
         fi
-
         csp_list_joined=$(IFS=,; echo "${csp_list[*]}")
         echo "CSP_LIST=$csp_list_joined" >> "$GITHUB_ENV"
-        echo "GITHUB_TOKEN=$GH_APP_TOKEN" >> "$GITHUB_ENV"
