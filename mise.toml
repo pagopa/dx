@@ -15,7 +15,7 @@ ripgrep = "latest"
 shellcheck = "0.11"
 terraform-docs = "0.24"
 tflint = "0.63"
-trivy = "0.71"
+trivy = "0.74"
 uv = "latest"
 
 [env]
