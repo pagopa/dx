@@ -6,6 +6,7 @@ on:
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
   PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
+  MISE_ENV: ""
 
 jobs:
   gate:
@@ -123,8 +124,8 @@ jobs:
       # Their static checks (lint, test) run in the "infra-review" job.
       - name: Run code quality checks on affected projects
         run: |
-            EXCLUDE=$(nx show projects --affected --type=app --projects=tag:terraform --sep=,)
-            nx affected --exclude=$EXCLUDE --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci
+            EXCLUDE=$(nx show projects --affected --type=app --sep=, -p=tag:terraform)
+            nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
 
   get-environments:
     name: Get GitHub Environments for Infrastructure
@@ -332,7 +333,7 @@ jobs:
           else
             EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
           fi
-          pnpm nx affected -t lint,test -c ci --exclude="$EXCLUDE" && \
+          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
             pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
 
       - name: Upload Terraform plan report

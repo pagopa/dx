@@ -124,7 +124,7 @@ hierarchy.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 
@@ -135,14 +135,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_role_definition.merged](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.source](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions. | `list(string)` | `[]` | no |
 | <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents. | `list(string)` | `[]` | no |
 | <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
@@ -153,7 +153,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_custom_role_id"></a> [custom\_role\_id](#output\_custom\_role\_id) | ID of the newly created custom role definition |
 | <a name="output_custom_role_name"></a> [custom\_role\_name](#output\_custom\_role\_name) | Display name of the newly created custom role definition |
 <!-- END_TF_DOCS -->

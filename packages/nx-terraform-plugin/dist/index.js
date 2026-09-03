@@ -169,6 +169,24 @@ const getInitTarget = (projectType, initTargetName, cwd) => [initTargetName, pro
 	options: { cwd },
 	outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
 }];
+const getTrivyTarget = (workspaceRoot, root) => ({
+	cache: true,
+	command: "trivy config",
+	inputs: [
+		"{projectRoot}/**/*.{tf,tfvars}",
+		"{workspaceRoot}/trivy.yml",
+		"{workspaceRoot}/.trivyignore",
+		"{workspaceRoot}/.trivy/checks/terraform/**/*"
+	],
+	options: {
+		args: [
+			"--config",
+			path.resolve(workspaceRoot, "trivy.yml"),
+			root
+		],
+		cwd: "{workspaceRoot}"
+	}
+});
 const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
@@ -187,9 +205,11 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	targets.push([getTargetName(opts, "validate"), {
 		cache: true,
 		command: `terraform validate`,
+		dependsOn: [initTargetName],
 		inputs: ["default", "examples"],
 		options: { cwd }
 	}]);
+	targets.push([getTargetName(opts, "trivy"), getTrivyTarget(workspaceRoot, root)]);
 	if (hasRootTflintConfig) targets.push([getTargetName(opts, "lint"), {
 		cache: true,
 		command: `tflint`,
@@ -207,20 +227,15 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	if (projectType === "library") {
 		targets.push([getTargetName(opts, "docs"), {
 			cache: true,
-			command: `terraform-docs markdown table`,
+			command: `terraform-docs markdown table .`,
+			configurations: { ci: { "output-check": true } },
 			inputs: ["default", "{projectRoot}/README.md"],
 			options: {
-				args: [
-					"--output-file",
-					"README.md",
-					"--output-mode",
-					"inject",
-					"--hide",
-					"providers",
-					"--lockfile=false",
-					"."
-				],
-				cwd
+				cwd,
+				hide: "providers",
+				lockfile: false,
+				"output-file": "README.md",
+				"output-mode": "inject"
 			},
 			outputs: ["{projectRoot}/README.md"]
 		}]);
