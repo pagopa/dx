@@ -90,7 +90,7 @@ After that, submit a new _Pull Request_ to update the variable to `false` and ap
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -102,7 +102,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management) | resource |
 | [azurerm_api_management_certificate.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_certificate) | resource |
 | [azurerm_api_management_diagnostic.applicationinsights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_diagnostic) | resource |
@@ -128,7 +128,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | The ID of the custom string properties Action Group to include with the post webhook operation. | `string` | `null` | no |
 | <a name="input_application_insights"></a> [application\_insights](#input\_application\_insights) | Application Insights integration. The connection string used to push data; the id of the AI resource (optional); the sampling percentage (a value between 0 and 100) and the verbosity level (verbose, information, error). | <pre>object({<br/>    enabled             = bool<br/>    connection_string   = string<br/>    id                  = optional(string, null)<br/>    sampling_percentage = number<br/>    verbosity           = string<br/>  })</pre> | <pre>{<br/>  "connection_string": null,<br/>  "enabled": false,<br/>  "id": null,<br/>  "sampling_percentage": 0,<br/>  "verbosity": "error"<br/>}</pre> | no |
 | <a name="input_autoscale"></a> [autoscale](#input\_autoscale) | Configuration for autoscaling rules on capacity metrics. | <pre>object(<br/>    {<br/>      default_instances             = optional(number)<br/>      minimum_instances             = optional(number)<br/>      maximum_instances             = optional(number)<br/>      scale_out_capacity_percentage = optional(number)<br/>      scale_out_time_window         = optional(string)<br/>      scale_out_value               = optional(string)<br/>      scale_out_cooldown            = optional(string)<br/>      scale_in_capacity_percentage  = optional(number)<br/>      scale_in_time_window          = optional(string)<br/>      scale_in_value                = optional(string)<br/>      scale_in_cooldown             = optional(string)<br/>    }<br/>  )</pre> | `null` | no |
@@ -159,7 +159,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_gateway_hostname"></a> [gateway\_hostname](#output\_gateway\_hostname) | The hostname of the Azure API Management gateway. |
 | <a name="output_gateway_url"></a> [gateway\_url](#output\_gateway\_url) | The URL of the Azure API Management gateway. |
 | <a name="output_id"></a> [id](#output\_id) | The resource ID of the Azure API Management instance. |

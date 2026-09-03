@@ -7,11 +7,12 @@ This is a Dockerfile for building a self-hosted GitHub runner provided by DX. Th
 - **Up‑to‑date GitHub runner** – based on the official `ghcr.io/actions/runner:<version>` image.
 - **mise**: Installs repository-specific development tools declared in
   `mise.toml`.
-- **Pre-installed tool baseline** – Provides a baseline of common tools required by GitHub actions.
-  Repository configurations can extend or override the
-  baseline. The mise shims expose installed tools directly on `PATH`. Language
-  runtimes and Terraform remain managed by their official workflow setup
-  actions.
+- **Pre-installed tool baseline** – Repository configuration merges from
+  `mise.toml`; the runner-only baseline lives in `mise.runner.toml` and is
+  applied during the Docker build. Repository configurations can extend or
+  override the baseline, and the `mise` shims expose installed tools directly
+  on `PATH`. Language runtimes and Terraform remain managed by their official
+  workflow setup actions.
 - **Setup action runtime policy** – disables Go, Node.js, pnpm, Python, and
   Terraform in mise by default, reserving those runtimes for workflow setup
   actions.

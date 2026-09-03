@@ -227,6 +227,24 @@ const getInitTarget = (
       },
 ];
 
+const getTrivyTarget = (
+  workspaceRoot: string,
+  root: string,
+): TargetConfiguration => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: ["--config", path.resolve(workspaceRoot, "trivy.yml"), root],
+    cwd: "{workspaceRoot}",
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   workspaceRoot: string,
@@ -276,6 +294,11 @@ const getTargets = (
     },
   ]);
 
+  targets.push([
+    getTargetName(opts, "trivy"),
+    getTrivyTarget(workspaceRoot, root),
+  ]);
+
   if (hasRootTflintConfig) {
     targets.push([
       getTargetName(opts, "lint"),
@@ -303,20 +326,19 @@ const getTargets = (
       getTargetName(opts, "docs"),
       {
         cache: true,
-        command: `terraform-docs markdown table`,
+        command: `terraform-docs markdown table .`,
+        configurations: {
+          ci: {
+            "output-check": true,
+          },
+        },
         inputs: ["default", "{projectRoot}/README.md"],
         options: {
-          args: [
-            "--output-file",
-            "README.md",
-            "--output-mode",
-            "inject",
-            "--hide",
-            "providers",
-            "--lockfile=false",
-            ".",
-          ],
           cwd,
+          hide: "providers",
+          lockfile: false,
+          "output-file": "README.md",
+          "output-mode": "inject",
         },
         outputs: ["{projectRoot}/README.md"],
       },

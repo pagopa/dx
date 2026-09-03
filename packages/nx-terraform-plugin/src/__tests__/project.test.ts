@@ -138,22 +138,36 @@ const getExpectedE2eTarget = (initTargetName = "init") => ({
 
 const getExpectedDocsTarget = () => ({
   cache: true,
-  command: "terraform-docs markdown table",
+  command: "terraform-docs markdown table .",
+  configurations: {
+    ci: {
+      "output-check": true,
+    },
+  },
   inputs: ["default", "{projectRoot}/README.md"],
   options: {
-    args: [
-      "--output-file",
-      "README.md",
-      "--output-mode",
-      "inject",
-      "--hide",
-      "providers",
-      "--lockfile=false",
-      ".",
-    ],
     cwd: "{projectRoot}",
+    hide: "providers",
+    lockfile: false,
+    "output-file": "README.md",
+    "output-mode": "inject",
   },
   outputs: ["{projectRoot}/README.md"],
+});
+
+const getExpectedTrivyTarget = (root: string) => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: ["--config", path.join(workspaceRoot, "trivy.yml"), root],
+    cwd: "{workspaceRoot}",
+  },
 });
 
 const getExpectedPublishTarget = (
@@ -288,6 +302,7 @@ describe("getProject applications", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "console",
         "output",
         "plan",
@@ -315,6 +330,14 @@ describe("getProject applications", () => {
       expect(targets["test-integration"]?.cache).toBe(true);
       expect(targets["e2e"]?.cache).toBe(true);
       expect(targets["validate"]?.cache).toBe(true);
+      expect(targets["trivy"]?.cache).toBe(true);
+    });
+
+    it("adds the workspace-configured Trivy scan", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets.trivy).toEqual(getExpectedTrivyTarget(root));
     });
 
     it("adds tflint when the root tflint config exists", () => {
@@ -328,6 +351,7 @@ describe("getProject applications", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "lint",
         "console",
         "output",
@@ -350,6 +374,7 @@ describe("getProject applications", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "lint",
         "console",
         "output",
@@ -372,7 +397,9 @@ describe("getProject applications", () => {
       expect(targets["apply"]?.dependsOn).toEqual(["init"]);
     });
   });
+});
 
+describe("getProject application initialization and tags", () => {
   describe("inferred init target", () => {
     it("initializes Terraform through the lock-aware executor", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
@@ -568,6 +595,7 @@ describe("getProject libraries", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "docs",
         "console",
         "output",
@@ -603,6 +631,7 @@ describe("getProject libraries", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "lint",
         "docs",
         "console",
@@ -622,6 +651,7 @@ describe("getProject libraries", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "docs",
         "console",
         "output",
@@ -646,6 +676,7 @@ describe("getProject libraries", () => {
         "test-integration",
         "e2e",
         "validate",
+        "trivy",
         "lint",
         "docs",
         "nx-release-publish",
@@ -783,6 +814,7 @@ describe("getProject prefixed target names", () => {
       "tf-test-integration",
       "tf-e2e",
       "tf-validate",
+      "tf-trivy",
       "tf-lint",
       "tf-console",
       "tf-output",

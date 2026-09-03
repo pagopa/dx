@@ -1,3 +1,14 @@
+## 0.2.5 (2026-09-02)
+
+### 🚀 Features
+
+- Add shared Terraform initialization with version 2 Registry module content locking ([#2118](https://github.com/pagopa/dx/pull/2118))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Luca Cavallaro
+
 ## 0.2.4 (2026-09-01)
 
 ### 🧱 Updated Dependencies
