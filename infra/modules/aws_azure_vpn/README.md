@@ -109,7 +109,7 @@ Before using this module, ensure you have:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.0 |
@@ -123,7 +123,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_cloudwatch_log_group.resolver_query_logs](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
 | [aws_customer_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/customer_gateway) | resource |
 | [aws_iam_instance_profile.coredns](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_instance_profile) | resource |
@@ -167,7 +167,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_aws"></a> [aws](#input\_aws) | AWS configuration object containing all required AWS-side settings. Includes the target VPC details, networking configuration, and DNS zones for cross-cloud resolution. <br/>The region must be supported (eu-west-1, eu-south-1). Route table IDs will be updated with VPN routes. Private subnets are used for DNS resolver endpoints. <br/>DNS zones listed here will be forwarded to Azure for resolution. | <pre>object({<br/>    region               = string<br/>    vpc_id               = string<br/>    vpc_cidr             = string<br/>    route_table_ids      = list(string)<br/>    private_subnet_ids   = list(string)<br/>    private_subnet_cidrs = list(string)<br/>    asn                  = optional(number, 65000)<br/>    private_dns_zones    = optional(list(string), [])<br/>  })</pre> | n/a | yes |
 | <a name="input_azure"></a> [azure](#input\_azure) | Azure configuration object containing all required Azure-side settings. Includes the target Virtual Network details, resource group, and VPN gateway configuration. <br/>The vpn\_snet\_id must point to a GatewaySubnet (minimum /27). If vpn.virtual\_network\_gateway\_id is null, a new VPN gateway will be created. <br/>The dns\_forwarder\_ip should point to your Azure DNS forwarder for cross-cloud DNS resolution. Private DNS zones listed here will be forwarded to AWS for resolution. | <pre>object({<br/>    resource_group_name = string<br/>    location            = string<br/>    vnet_id             = string<br/>    vnet_name           = string<br/>    vnet_cidr           = string<br/>    dns_forwarder_ip    = string<br/>    asn                 = optional(number, 64512)<br/>    vpn = optional(object({ # If not provided, a new Virtual Network Gateway will be created<br/>      virtual_network_gateway_id = string<br/>      public_ips                 = list(string)<br/>    }), { virtual_network_gateway_id = null, public_ips = [] })<br/>    private_dns_zones = list(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
@@ -177,7 +177,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_aws_customer_gateways"></a> [aws\_customer\_gateways](#output\_aws\_customer\_gateways) | AWS Customer Gateway details |
 | <a name="output_aws_vpn_connections"></a> [aws\_vpn\_connections](#output\_aws\_vpn\_connections) | AWS VPN Connection details |
 | <a name="output_aws_vpn_gateway"></a> [aws\_vpn\_gateway](#output\_aws\_vpn\_gateway) | AWS VPN Gateway details |

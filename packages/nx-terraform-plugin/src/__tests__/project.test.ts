@@ -138,20 +138,19 @@ const getExpectedE2eTarget = (initTargetName = "init") => ({
 
 const getExpectedDocsTarget = () => ({
   cache: true,
-  command: "terraform-docs markdown table",
+  command: "terraform-docs markdown table .",
+  configurations: {
+    ci: {
+      "output-check": true,
+    },
+  },
   inputs: ["default", "{projectRoot}/README.md"],
   options: {
-    args: [
-      "--output-file",
-      "README.md",
-      "--output-mode",
-      "inject",
-      "--hide",
-      "providers",
-      "--lockfile=false",
-      ".",
-    ],
     cwd: "{projectRoot}",
+    hide: "providers",
+    lockfile: false,
+    "output-file": "README.md",
+    "output-mode": "inject",
   },
   outputs: ["{projectRoot}/README.md"],
 });

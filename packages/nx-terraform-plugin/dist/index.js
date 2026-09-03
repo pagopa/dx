@@ -226,20 +226,15 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	if (projectType === "library") {
 		targets.push([getTargetName(opts, "docs"), {
 			cache: true,
-			command: `terraform-docs markdown table`,
+			command: `terraform-docs markdown table .`,
+			configurations: { ci: { "output-check": true } },
 			inputs: ["default", "{projectRoot}/README.md"],
 			options: {
-				args: [
-					"--output-file",
-					"README.md",
-					"--output-mode",
-					"inject",
-					"--hide",
-					"providers",
-					"--lockfile=false",
-					"."
-				],
-				cwd
+				cwd,
+				hide: "providers",
+				lockfile: false,
+				"output-file": "README.md",
+				"output-mode": "inject"
 			},
 			outputs: ["{projectRoot}/README.md"]
 		}]);
