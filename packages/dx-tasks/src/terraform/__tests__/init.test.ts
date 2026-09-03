@@ -11,7 +11,6 @@ const commandMocks = vi.hoisted(() => ({
 
 const fsMocks = vi.hoisted(() => ({
   mkdtemp: vi.fn(async (prefix: string) => `${prefix}random`),
-  readFile: vi.fn(async () => "provider lock"),
   rename: vi.fn(async () => {}),
   rm: vi.fn(async () => {}),
   writeFile: vi.fn(async () => {}),
@@ -225,41 +224,23 @@ describe("terraformInit", () => {
 describe("Terraform provider locking", () => {
   beforeEach(setupMocks);
 
-  it("restores a stale lock atomically in frozen mode", async () => {
-    fsMocks.readFile
-      .mockResolvedValueOnce("provider lock")
-      .mockResolvedValueOnce("updated provider lock");
+  it("skips provider locking in frozen mode", async () => {
+    lockMocks.compareModuleLock.mockResolvedValue({
+      ...comparison,
+      changes: [],
+      isDifferent: false,
+    });
 
-    await expect(
-      terraformInit({
-        frozenLockfile: true,
-        modulePath: "infra/example",
-      }),
-    ).rejects.toThrow(
-      "Terraform provider lock is frozen and out of date at infra/example/.terraform.lock.hcl",
-    );
-    const temporaryLockPath = path.join(
-      "infra/example/.terraform-lock-random",
-      ".terraform.lock.hcl",
-    );
-    expect(fsMocks.writeFile).toHaveBeenCalledExactlyOnceWith(
-      temporaryLockPath,
-      "provider lock",
-      {
-        encoding: "utf8",
-        flag: "wx",
-      },
-    );
-    expect(fsMocks.rename).toHaveBeenCalledExactlyOnceWith(
-      temporaryLockPath,
-      "infra/example/.terraform.lock.hcl",
-    );
-    expect(fsMocks.rm).toHaveBeenCalledExactlyOnceWith(
-      "infra/example/.terraform-lock-random",
-      {
-        force: true,
-        recursive: true,
-      },
+    await terraformInit({
+      frozenLockfile: true,
+      modulePath: "infra/example",
+    });
+
+    expect(commandMocks.runCommand).toHaveBeenCalledExactlyOnceWith(
+      "terraform",
+      ["init", "-get=true"],
+      "infra/example",
+      {},
     );
   });
 
@@ -285,49 +266,5 @@ describe("Terraform provider locking", () => {
     );
     expect(commandMocks.runCommand).toHaveBeenCalledTimes(2);
     expect(lockMocks.compareModuleLock).not.toHaveBeenCalled();
-  });
-
-  it("restores the provider lock when the lock command cannot run", async () => {
-    commandMocks.runCommand
-      .mockResolvedValueOnce({
-        exitCode: 0,
-        signal: null,
-        stderr: "",
-        stdout: "Terraform initialized.",
-      })
-      .mockRejectedValueOnce(new Error("terraform unavailable"));
-
-    await expect(
-      terraformInit({
-        frozenLockfile: true,
-        modulePath: "infra/example",
-      }),
-    ).rejects.toThrow("terraform unavailable");
-    expect(fsMocks.rename).toHaveBeenCalledExactlyOnceWith(
-      path.join("infra/example/.terraform-lock-random", ".terraform.lock.hcl"),
-      "infra/example/.terraform.lock.hcl",
-    );
-    expect(lockMocks.compareModuleLock).not.toHaveBeenCalled();
-  });
-
-  it("removes a generated provider lock when a frozen lock was missing", async () => {
-    fsMocks.readFile
-      .mockRejectedValueOnce(
-        Object.assign(new Error("missing"), { code: "ENOENT" }),
-      )
-      .mockResolvedValueOnce("generated provider lock");
-
-    await expect(
-      terraformInit({
-        frozenLockfile: true,
-        modulePath: "infra/example",
-      }),
-    ).rejects.toThrow(
-      "Terraform provider lock is frozen and out of date at infra/example/.terraform.lock.hcl",
-    );
-    expect(fsMocks.rm).toHaveBeenCalledExactlyOnceWith(
-      "infra/example/.terraform.lock.hcl",
-      { force: true },
-    );
   });
 });

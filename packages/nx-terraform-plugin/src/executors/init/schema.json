@@ -18,7 +18,7 @@
       "default": []
     },
     "frozenLockfile": {
-      "description": "Fail instead of updating provider or module lock files when dependencies differ",
+      "description": "Skip provider lock generation and fail instead of updating tfmodules.lock.json when downloaded modules differ",
       "type": "boolean",
       "default": false
     }

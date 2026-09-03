@@ -17,7 +17,6 @@ const providerLockPlatforms = [
   "-platform=darwin_arm64",
   "-platform=linux_amd64",
 ];
-const providerLockFileName = ".terraform.lock.hcl";
 
 const isTerraformFalse = (value: string): boolean =>
   /^(?:0|f(?:alse)?)$/i.test(value);
@@ -109,28 +108,6 @@ const getLockChangeSummary = (
       ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ")
       : "no module hash changes";
 
-const isFileNotFoundError = (error: unknown): boolean =>
-  typeof error === "object" &&
-  error !== null &&
-  "code" in error &&
-  error.code === "ENOENT";
-
-const readProviderLock = async (
-  modulePath: string,
-): Promise<string | undefined> => {
-  try {
-    return await fs.readFile(
-      path.join(modulePath, providerLockFileName),
-      "utf8",
-    );
-  } catch (error) {
-    if (isFileNotFoundError(error)) {
-      return undefined;
-    }
-    throw error;
-  }
-};
-
 const replaceFileAtomically = async (
   filePath: string,
   content: string,
@@ -149,18 +126,6 @@ const replaceFileAtomically = async (
   } finally {
     await fs.rm(temporaryDirectory, { force: true, recursive: true });
   }
-};
-
-const restoreProviderLock = async (
-  modulePath: string,
-  content: string | undefined,
-): Promise<void> => {
-  const lockPath = path.join(modulePath, providerLockFileName);
-  if (content === undefined) {
-    await fs.rm(lockPath, { force: true });
-    return;
-  }
-  await replaceFileAtomically(lockPath, content, ".terraform-lock-");
 };
 
 const runTerraformCommand = async (
@@ -184,35 +149,18 @@ export async function terraformInit({
     throw new Error(incompatibleGetArgumentError);
   }
 
-  const previousProviderLock = frozenLockfile
-    ? await readProviderLock(modulePath)
-    : undefined;
-  let providerLockVerified = !frozenLockfile;
-  try {
-    // The lock must describe the module cache produced by this initialization.
-    await runTerraformCommand(
-      "init",
-      ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
-      modulePath,
-    );
+  // The lock must describe the module cache produced by this initialization.
+  await runTerraformCommand(
+    "init",
+    ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
+    modulePath,
+  );
+  if (!frozenLockfile) {
     await runTerraformCommand(
       "providers lock",
       ["providers", "lock", ...providerLockPlatforms],
       modulePath,
     );
-    if (frozenLockfile) {
-      const currentProviderLock = await readProviderLock(modulePath);
-      if (currentProviderLock !== previousProviderLock) {
-        throw new Error(
-          `Terraform provider lock is frozen and out of date at ${path.join(modulePath, providerLockFileName)}`,
-        );
-      }
-      providerLockVerified = true;
-    }
-  } finally {
-    if (!providerLockVerified) {
-      await restoreProviderLock(modulePath, previousProviderLock);
-    }
   }
 
   const comparison = await compareModuleLock(modulePath);
