@@ -2,7 +2,7 @@
 acli = "latest"
 act = "latest"
 aws-cli = { version = "2.36", symlink_bins = "true" }
-azure-cli = { version = "2.87", uvx_args = "--prerelease=allow" }
+azure-cli = { version = "2.87", uvx_args = "--prerelease=allow", depends = ["uv"] }
 copilot = "latest"
 github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
 go = "1.26"
@@ -26,6 +26,7 @@ idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
 minimum_release_age = "7d"
 minimum_release_age_excludes = ["copilot", "github-cli"]
 experimental = true
+lockfile = true
 
 [deps.tflint]
 sources = [".tflint.hcl"]

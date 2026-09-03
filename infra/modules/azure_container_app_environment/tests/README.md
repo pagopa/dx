@@ -20,7 +20,7 @@ Run: `nx run azure_container_app_environment:test`
 
 Provision real Azure resources to test module behavior in isolation.
 
-Run: `nx run azure_container_app_environment:test:integration`
+Run: `nx run azure_container_app_environment:test-integration`
 
 **Note**: Integration tests provision real Azure resources and may incur costs.
 
@@ -29,6 +29,7 @@ Run: `nx run azure_container_app_environment:test:integration`
 ### Private mode (default)
 
 Verifies that when `public_network_access_enabled = false`:
+
 - Internal load balancer is enabled
 - A private endpoint is created
 - Diagnostic settings target the configured Log Analytics workspace
@@ -38,6 +39,7 @@ Verifies that when `public_network_access_enabled = false`:
 ### Public mode
 
 Verifies that when `public_network_access_enabled = true`:
+
 - Internal load balancer is disabled
 - No private endpoint is created
 

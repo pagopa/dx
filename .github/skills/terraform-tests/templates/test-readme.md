@@ -20,7 +20,7 @@ Run: `nx run <module-name>:test`
 
 Provision real Azure resources to test module behavior in isolation.
 
-Run: `nx run <module-name>:test:integration`
+Run: `nx run <module-name>:test-integration`
 
 **Note**: Integration tests provision real Azure resources and may incur costs.
 
@@ -28,7 +28,7 @@ Run: `nx run <module-name>:test:integration`
 
 Deploy complete scenarios with workloads to verify end-to-end functionality.
 
-Run: `nx run <module-name>:test:e2e`
+Run: `nx run <module-name>:e2e`
 
 **Note**: E2E tests deploy full infrastructure and workloads, taking longer to complete.
 

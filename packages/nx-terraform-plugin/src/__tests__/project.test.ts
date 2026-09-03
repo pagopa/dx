@@ -24,30 +24,12 @@ afterEach(() => {
 const defaultOptions = parseOptions(undefined);
 const customOptions = parseOptions({
   additionalEnvironments: [],
-  applyTargetName: "terraform-apply",
-  consoleTargetName: "terraform-console",
-  docsTargetName: "docs",
-  formatTargetName: "terraform-format",
-  initTargetName: "terraform-init",
-  lintTargetName: "terraform-lint",
-  outputTargetName: "terraform-output",
-  planTargetName: "terraform-plan",
-  testTargetName: "terraform-test",
-  validateTargetName: "terraform-validate",
+  targetNamePrefix: "tf",
 });
 
 const expectedNamedInputs = {
   default: ["{projectRoot}/*.{tf,tfvars}"],
-  e2eTests: ["{projectRoot}/tests/*.go", "{projectRoot}/tests/setup/*.tf"],
   examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
-  integrationTests: [
-    "{projectRoot}/tests/integration.tftest.hcl",
-    "{projectRoot}/tests/setup/*.tf",
-  ],
-  tests: [
-    "{projectRoot}/tests/unit.tftest.hcl",
-    "{projectRoot}/tests/contract.tftest.hcl",
-  ],
 };
 
 const publishManifest = {
@@ -64,6 +46,12 @@ const publishManifestWithOwner = {
 };
 
 const workspaceRoot = "/workspace";
+const allTestCapabilities = {
+  contract: true,
+  e2e: true,
+  integration: true,
+  unit: true,
+};
 
 const getProject = (
   opts: typeof defaultOptions,
@@ -73,6 +61,7 @@ const getProject = (
     | typeof publishManifest
     | typeof publishManifestWithOwner
     | undefined = undefined,
+  testCapabilities = allTestCapabilities,
 ) =>
   getProjectDefinition(
     opts,
@@ -80,6 +69,7 @@ const getProject = (
     root,
     hasRootTflintConfig,
     manifest,
+    testCapabilities,
   );
 
 const getExpectedLintTarget = () => ({
@@ -88,9 +78,6 @@ const getExpectedLintTarget = () => ({
   inputs: [
     "default",
     "examples",
-    "tests",
-    "integrationTests",
-    "e2eTests",
     "{workspaceRoot}/.tflint.hcl",
     { env: "TFLINT_PLUGIN_DIR" },
   ],
@@ -102,28 +89,49 @@ const getExpectedLintTarget = () => ({
   },
 });
 
-const getExpectedTestTarget = () => ({
+const getExpectedTestTarget = (initTargetName = "init") => ({
   cache: true,
   command: "terraform test",
-  configurations: {
-    e2e: {
-      args: [],
-      command:
-        "if ls tests/*.go >/dev/null 2>&1; then go test -v -timeout 1h ./tests; fi",
-      inputs: ["default", "e2eTests"],
-    },
-    integration: {
-      args: ["-filter='tests/integration.tftest.hcl'"],
-      inputs: ["default", "integrationTests"],
-    },
-  },
-  dependsOn: ["init"],
-  inputs: ["default", "tests"],
+  dependsOn: [initTargetName],
+  inputs: [
+    "default",
+    "{projectRoot}/tests/unit.tftest.hcl",
+    "{projectRoot}/tests/contract.tftest.hcl",
+  ],
   options: {
     args: [
       "-filter='tests/unit.tftest.hcl'",
       "-filter='tests/contract.tftest.hcl'",
     ],
+    cwd: "{projectRoot}",
+  },
+});
+
+const getExpectedIntegrationTestTarget = (initTargetName = "init") => ({
+  cache: true,
+  command: "terraform test",
+  dependsOn: [initTargetName],
+  inputs: [
+    "default",
+    "{projectRoot}/tests/integration.tftest.hcl",
+    "{projectRoot}/tests/setup/**/*.{tf,tfvars}",
+  ],
+  options: {
+    args: ["-filter='tests/integration.tftest.hcl'"],
+    cwd: "{projectRoot}",
+  },
+});
+
+const getExpectedE2eTarget = (initTargetName = "init") => ({
+  cache: true,
+  command: "go test -v -timeout 1h ./tests",
+  dependsOn: [initTargetName],
+  inputs: [
+    "default",
+    "{projectRoot}/tests/**/*",
+    "{projectRoot}/examples/**/*",
+  ],
+  options: {
     cwd: "{projectRoot}",
   },
 });
@@ -146,6 +154,21 @@ const getExpectedDocsTarget = () => ({
     cwd: "{projectRoot}",
   },
   outputs: ["{projectRoot}/README.md"],
+});
+
+const getExpectedTrivyTarget = (root: string) => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: ["--config", path.join(workspaceRoot, "trivy.yml"), root],
+    cwd: "{workspaceRoot}",
+  },
 });
 
 const getExpectedPublishTarget = (
@@ -277,7 +300,10 @@ describe("getProject applications", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "console",
         "output",
         "plan",
@@ -289,6 +315,7 @@ describe("getProject applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
+      expect(targets["init"]?.cache).toBe(false);
       expect(targets["console"]?.cache).toBe(false);
       expect(targets["output"]?.cache).toBe(false);
       expect(targets["plan"]?.cache).toBe(false);
@@ -299,10 +326,19 @@ describe("getProject applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
-      expect(targets["init"]?.cache).toBe(true);
       expect(targets["fmt"]?.cache).toBe(true);
       expect(targets["test"]?.cache).toBe(true);
+      expect(targets["test-integration"]?.cache).toBe(true);
+      expect(targets["e2e"]?.cache).toBe(true);
       expect(targets["validate"]?.cache).toBe(true);
+      expect(targets["trivy"]?.cache).toBe(true);
+    });
+
+    it("adds the workspace-configured Trivy scan", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets.trivy).toEqual(getExpectedTrivyTarget(root));
     });
 
     it("adds tflint when the root tflint config exists", () => {
@@ -313,7 +349,10 @@ describe("getProject applications", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "lint",
         "console",
         "output",
@@ -333,7 +372,10 @@ describe("getProject applications", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "lint",
         "console",
         "output",
@@ -343,14 +385,73 @@ describe("getProject applications", () => {
       expect(targets["docs"]).toBeUndefined();
       expect(targets["nx-release-publish"]).toBeUndefined();
     });
-
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
       const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
       expect(targets["test"]).toEqual(getExpectedTestTarget());
+      expect(targets["test-integration"]).toEqual(
+        getExpectedIntegrationTestTarget(),
+      );
+      expect(targets["e2e"]).toEqual(getExpectedE2eTarget());
       expect(targets["plan"]?.dependsOn).toEqual(["init"]);
       expect(targets["apply"]?.dependsOn).toEqual(["init"]);
+    });
+  });
+});
+
+describe("getProject application initialization and tags", () => {
+  describe("inferred init target", () => {
+    it("initializes Terraform through the lock-aware executor", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["init"]).toEqual({
+        cache: false,
+        configurations: {
+          ci: {
+            frozenLockfile: true,
+          },
+        },
+        executor: "@pagopa/nx-terraform-plugin:init",
+        inputs: ["default"],
+        options: {
+          projectRoot: "{projectRoot}",
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/tfmodules.lock.json",
+        ],
+      });
+    });
+
+    it("uses frozen initialization for CI plan and apply dependencies", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const targets = getTargetsOrThrow(getProject(defaultOptions, root));
+
+      expect(targets["init"]?.configurations).toEqual({
+        ci: {
+          frozenLockfile: true,
+        },
+      });
+      expect(targets["plan"]).toEqual(
+        expect.objectContaining({
+          configurations: {
+            ci: {
+              refresh: true,
+              report: true,
+              verbose: false,
+            },
+          },
+          dependsOn: ["init"],
+        }),
+      );
+      expect(targets["apply"]).toEqual(
+        expect.objectContaining({
+          dependsOn: ["init"],
+        }),
+      );
     });
   });
 
@@ -397,6 +498,85 @@ describe("getProject applications", () => {
   });
 });
 
+describe("getProject test target inference", () => {
+  const root = path.join("infra", "modules", "network_stack");
+
+  it("does not infer test targets when the project has no supported tests", () => {
+    const targets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        contract: false,
+        e2e: false,
+        integration: false,
+        unit: false,
+      }),
+    );
+
+    expect(targets["test"]).toBeUndefined();
+    expect(targets["test-integration"]).toBeUndefined();
+    expect(targets["e2e"]).toBeUndefined();
+  });
+
+  it("infers test when unit or contract files are present", () => {
+    const unitTargets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        contract: false,
+        e2e: false,
+        integration: false,
+        unit: true,
+      }),
+    );
+    const contractTargets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        contract: true,
+        e2e: false,
+        integration: false,
+        unit: false,
+      }),
+    );
+
+    expect(unitTargets["test"]?.options?.args).toEqual([
+      "-filter='tests/unit.tftest.hcl'",
+      "-filter='tests/contract.tftest.hcl'",
+    ]);
+    expect(contractTargets["test"]?.options?.args).toEqual([
+      "-filter='tests/unit.tftest.hcl'",
+      "-filter='tests/contract.tftest.hcl'",
+    ]);
+  });
+
+  it("infers only test-integration for an integration test file", () => {
+    const targets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        contract: false,
+        e2e: false,
+        integration: true,
+        unit: false,
+      }),
+    );
+
+    expect(targets["test"]).toBeUndefined();
+    expect(targets["test-integration"]).toEqual(
+      getExpectedIntegrationTestTarget(),
+    );
+    expect(targets["e2e"]).toBeUndefined();
+  });
+
+  it("infers only e2e for direct Go test files", () => {
+    const targets = getTargetsOrThrow(
+      getProject(defaultOptions, root, false, undefined, {
+        contract: false,
+        e2e: true,
+        integration: false,
+        unit: false,
+      }),
+    );
+
+    expect(targets["test"]).toBeUndefined();
+    expect(targets["test-integration"]).toBeUndefined();
+    expect(targets["e2e"]).toEqual(getExpectedE2eTarget());
+  });
+});
+
 describe("getProject libraries", () => {
   describe("when the root is a library", () => {
     it("classifies a modules root as a library without plan and apply", () => {
@@ -413,7 +593,10 @@ describe("getProject libraries", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "docs",
         "console",
         "output",
@@ -446,7 +629,10 @@ describe("getProject libraries", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "lint",
         "docs",
         "console",
@@ -463,7 +649,10 @@ describe("getProject libraries", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "docs",
         "console",
         "output",
@@ -485,7 +674,10 @@ describe("getProject libraries", () => {
         "init",
         "fmt",
         "test",
+        "test-integration",
+        "e2e",
         "validate",
+        "trivy",
         "lint",
         "docs",
         "nx-release-publish",
@@ -585,25 +777,77 @@ describe("getProject libraries", () => {
   });
 });
 
-describe("getProject custom target names", () => {
-  describe("when custom target names are configured", () => {
-    it("produces the same target implementations under different names", () => {
-      const root = path.join("infra", "modules", "shared_stack");
-      const defaultTargets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true),
-      );
-      const customTargets = getTargetsOrThrow(
-        getProject(customOptions, root, true),
-      );
+describe("library initialization", () => {
+  it("uses plain Terraform initialization without module locking", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const targets = getTargetsOrThrow(getProject(defaultOptions, root));
 
-      expect(Object.keys(defaultTargets)).not.toEqual(
-        Object.keys(customTargets),
-      );
-
-      expect(stripDependsOn(defaultTargets)).toEqual(
-        stripDependsOn(customTargets),
-      );
+    expect(targets["init"]).toEqual({
+      cache: true,
+      command: "terraform init",
+      inputs: ["default"],
+      options: {
+        cwd: "{projectRoot}",
+      },
+      outputs: [
+        "{projectRoot}/.terraform",
+        "{projectRoot}/.terraform.lock.hcl",
+      ],
     });
+  });
+});
+
+describe("getProject prefixed target names", () => {
+  it("prefixes configurable target names and their dependencies", () => {
+    const root = path.join("infra", "resources", "prod", "shared_stack");
+    const defaultTargets = getTargetsOrThrow(
+      getProject(defaultOptions, root, true),
+    );
+    const customTargets = getTargetsOrThrow(
+      getProject(customOptions, root, true),
+    );
+
+    expect(Object.keys(defaultTargets)).not.toEqual(Object.keys(customTargets));
+    expect(Object.keys(customTargets)).toEqual([
+      "tf-init",
+      "tf-fmt",
+      "tf-test",
+      "tf-test-integration",
+      "tf-e2e",
+      "tf-validate",
+      "tf-trivy",
+      "tf-lint",
+      "tf-console",
+      "tf-output",
+      "tf-plan",
+      "tf-apply",
+    ]);
+
+    expect(stripDependsOn(defaultTargets)).toEqual(
+      stripDependsOn(customTargets),
+    );
+
+    expect(customTargets["tf-test"]).toEqual(getExpectedTestTarget("tf-init"));
+    expect(customTargets["tf-test-integration"]).toEqual(
+      getExpectedIntegrationTestTarget("tf-init"),
+    );
+    expect(customTargets["tf-e2e"]).toEqual(getExpectedE2eTarget("tf-init"));
+    expect(customTargets["tf-output"]?.dependsOn).toEqual(["tf-init"]);
+    expect(customTargets["tf-plan"]?.dependsOn).toEqual(["tf-init"]);
+    expect(customTargets["tf-apply"]?.dependsOn).toEqual(["tf-init"]);
+  });
+
+  it("keeps nx-release-publish unprefixed", () => {
+    const root = path.join("infra", "modules", "shared_stack");
+    const targets = getTargetsOrThrow(
+      getProject(customOptions, root, true, publishManifestWithOwner),
+    );
+
+    expect(targets["tf-docs"]).toEqual(getExpectedDocsTarget());
+    expect(targets["nx-release-publish"]).toEqual(
+      getExpectedPublishTarget("pagopa-dx", false),
+    );
+    expect(targets["tf-nx-release-publish"]).toBeUndefined();
   });
 });
 

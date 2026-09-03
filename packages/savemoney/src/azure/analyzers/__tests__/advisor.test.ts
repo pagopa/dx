@@ -365,3 +365,63 @@ describe("createAdvisorAnalyzer — filtering", () => {
     expect(findings[0].reason).toBe("Azure Advisor cost recommendation.");
   });
 });
+
+describe("createAdvisorAnalyzer — cross-source identity", () => {
+  it("namespaces the recommendation type id of resource-level findings", async () => {
+    const analyzer = createAdvisorAnalyzer({
+      build: () =>
+        makeFakeClient([
+          {
+            category: "Cost",
+            impact: "High",
+            recommendationTypeId: "right-size-vm",
+            resourceMetadata: { resourceId: RID1 },
+            shortDescription: { problem: "p" },
+          },
+        ]),
+    });
+
+    const findings = await analyzer.analyze(makeCtx());
+
+    expect(findings[0].recommendationId).toBe("advisor.right-size-vm");
+  });
+
+  it("namespaces the recommendation type id of subscription-level findings", async () => {
+    const SUB_URI = "/subscriptions/00000000-0000-0000-0000-000000000000";
+    const analyzer = createAdvisorAnalyzer({
+      build: () =>
+        makeFakeClient([
+          {
+            category: "Cost",
+            extendedProperties: { savingsAmount: "50", savingsCurrency: "EUR" },
+            impact: "High",
+            recommendationTypeId: "vm-ri",
+            resourceMetadata: { resourceId: SUB_URI },
+            shortDescription: { problem: "Buy VM reserved instance" },
+          },
+        ]),
+    });
+
+    const findings = await analyzer.analyze(makeCtx());
+
+    expect(findings[0].recommendationId).toBe("advisor.vm-ri");
+  });
+
+  it("leaves the recommendation id unset when Advisor reports no type", async () => {
+    const analyzer = createAdvisorAnalyzer({
+      build: () =>
+        makeFakeClient([
+          {
+            category: "Cost",
+            impact: "Low",
+            resourceMetadata: { resourceId: RID1 },
+            shortDescription: { problem: "p" },
+          },
+        ]),
+    });
+
+    const findings = await analyzer.analyze(makeCtx());
+
+    expect(findings[0].recommendationId).toBeUndefined();
+  });
+});

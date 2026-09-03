@@ -1,15 +1,6 @@
 repos:
   - repo: local
     hooks:
-      - id: lock_modules
-        name: Lock Terraform Registry modules
-        description: "Locks Terraform module versions and maintains hashes"
-        entry: infra/scripts/lock-modules.sh
-        language: script
-        files: '\.tf$'
-        exclude: ^.*/(provider|modules)(/.*)?$
-        pass_filenames: true
-        require_serial: true
       - id: terraform_providers_lock_staged
         name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
         entry: infra/scripts/terraform_lock_precommit.sh
@@ -23,7 +14,7 @@ repos:
         pass_filenames: false
         always_run: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.105.0
+    rev: v1.109.0
     hooks:
       - id: terraform_fmt
       - id: terraform_docs
@@ -48,11 +39,7 @@ repos:
         exclude: ^providers/.*|.*/examples?(/|$)
       - id: terraform_trivy
         args:
-          - --args=--skip-dirs="**/.terraform"
-          - --args=--skip-dirs="**/tests/apps/network_access"
+          - --args=--config=__GIT_WORKING_DIR__/trivy.yml
           - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
           - --args=--config-check=__GIT_WORKING_DIR__/.trivy/checks/terraform
-          - --args=--check-namespaces=user
-          - --args=--raw-config-scanners=terraform
-          - --args=--tf-exclude-downloaded-modules
           - --hook-config=--parallelism-limit=1

@@ -29,6 +29,13 @@ export type BaseConfig = {
 
 export type CostRisk = "high" | "low" | "medium";
 
+/** Cost risk ordering, from the most to the least severe. */
+export const COST_RISK_ORDER: Record<CostRisk, number> = {
+  high: 0,
+  low: 2,
+  medium: 1,
+};
+
 /**
  * Configurable thresholds used during resource analysis.
  * Derived from `ThresholdsSchema` — the schema is the single source of truth.
@@ -40,6 +47,15 @@ export type { Thresholds } from "./schema.js";
  * `ThresholdsSchema`, which applies all schema-defined defaults.
  */
 export const DEFAULT_THRESHOLDS = ThresholdsSchema.parse({});
+
+/**
+ * Returns the more severe of two cost risks. Used whenever two observations
+ * about the same resource (or the same problem seen by two sources) are
+ * combined, so severity never degrades silently.
+ */
+export function maxCostRisk(a: CostRisk, b: CostRisk): CostRisk {
+  return COST_RISK_ORDER[a] <= COST_RISK_ORDER[b] ? a : b;
+}
 
 /**
  * Merges analysis results, preserving existing reasons and combining suspectedUnused flags.

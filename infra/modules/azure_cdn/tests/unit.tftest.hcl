@@ -191,6 +191,11 @@ run "cdn_route_configuration" {
   }
 
   assert {
+    condition     = azurerm_cdn_frontdoor_route.this.cache[0].compression_enabled == true
+    error_message = "Route compression must be enabled"
+  }
+
+  assert {
     condition     = contains(azurerm_cdn_frontdoor_route.this.supported_protocols, "Http")
     error_message = "Route must support HTTP protocol"
   }
