@@ -98,10 +98,10 @@ until the migration has been written.
 nx run <project>:init
 ```
 
-By default, initialization updates the Terraform provider lock for Windows,
-macOS, and Linux, and updates the module lock when downloaded content changes.
-Use the `ci` configuration to skip provider lock generation and freeze the
-module lock:
+By default, initialization updates the Terraform provider lock for
+`windows_amd64`, `darwin_amd64`, `darwin_arm64`, and `linux_amd64`, and updates
+the module lock when downloaded content changes. Use the `ci` configuration to
+validate the provider lock without modifying it and freeze the module lock:
 
 ```sh
 nx run <project>:init -c ci
@@ -109,11 +109,12 @@ nx run <project>:plan -c ci
 nx run <project>:apply -c ci
 ```
 
-Frozen initialization relies on Terraform to validate `.terraform.lock.hcl`
-and does not modify `tfmodules.lock.json`; it fails when the generated module
-lock differs from the committed file. Targets that depend on `init`, including
-`plan` and `apply`, inherit the requested `ci` configuration and stop before
-execution when the module lock is stale.
+Frozen initialization passes Terraform's `-lockfile=readonly` option to validate
+`.terraform.lock.hcl` without modifying it. It also does not modify
+`tfmodules.lock.json`; it fails when the generated module lock differs from the
+committed file. Targets that depend on `init`, including `plan` and `apply`,
+inherit the requested `ci` configuration and stop before execution when either
+lock is invalid or stale.
 
 The `init` target is intentionally not cached. This ensures that
 `terraform init` and frozen-lock verification cannot be skipped by an Nx cache

@@ -238,7 +238,7 @@ describe("Terraform provider locking", () => {
 
     expect(commandMocks.runCommand).toHaveBeenCalledExactlyOnceWith(
       "terraform",
-      ["init", "-get=true"],
+      ["init", "-get=true", "-lockfile=readonly"],
       "infra/example",
       {},
     );

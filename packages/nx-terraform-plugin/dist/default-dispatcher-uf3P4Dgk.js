@@ -483,11 +483,13 @@ const runTerraformCommand = async (operation, args, modulePath) => {
 };
 async function terraformInit({ args = [], frozenLockfile = false, modulePath }) {
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
-	await runTerraformCommand("init", [
+	const initArguments = [
 		"init",
 		...normalizeTerraformInitArguments(args),
-		"-get=true"
-	], modulePath);
+		"-get=true",
+		...frozenLockfile ? ["-lockfile=readonly"] : []
+	];
+	await runTerraformCommand("init", initArguments, modulePath);
 	if (!frozenLockfile) await runTerraformCommand("providers lock", [
 		"providers",
 		"lock",

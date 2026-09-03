@@ -18,7 +18,7 @@
       "default": []
     },
     "frozenLockfile": {
-      "description": "Skip provider lock generation and fail instead of updating tfmodules.lock.json when downloaded modules differ",
+      "description": "Use Terraform's read-only provider lock validation and fail instead of updating tfmodules.lock.json when downloaded modules differ",
       "type": "boolean",
       "default": false
     }

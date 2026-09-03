@@ -118,12 +118,15 @@ export async function terraformInit({
     throw new Error(incompatibleGetArgumentError);
   }
 
-  // The lock must describe the module cache produced by this initialization.
-  await runTerraformCommand(
+  const initArguments = [
     "init",
-    ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
-    modulePath,
-  );
+    ...normalizeTerraformInitArguments(args),
+    "-get=true",
+    ...(frozenLockfile ? ["-lockfile=readonly"] : []),
+  ];
+
+  // The lock must describe the module cache produced by this initialization.
+  await runTerraformCommand("init", initArguments, modulePath);
   if (!frozenLockfile) {
     await runTerraformCommand(
       "providers lock",
