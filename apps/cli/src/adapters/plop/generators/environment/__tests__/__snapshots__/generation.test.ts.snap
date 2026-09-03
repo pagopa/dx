@@ -46,7 +46,6 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: \${{ secrets.ROLE_ARN }}
       AWS_REGION: \${{ secrets.AWS_REGION }}
-      GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
       TF_IN_AUTOMATION: true
 
     steps:
@@ -61,7 +60,14 @@ jobs:
         uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          GH_APP_CLIENT_ID: \${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: \${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: \${{ secrets.GH_APP_INSTALLATION_ID }}
+        with:
+          create_github_modules_token: "true"
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -69,9 +75,12 @@ jobs:
           terraform_version: \${{ steps.get-version.outputs.terraform_version }}
 
       - name: Terraform Init
-        working-directory: infra/bootstrapper/dev
-        run: |
-          terraform init -input=false
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
+        with:
+          command: terraform init -input=false
+          github_modules_token: \${{ steps.cloud-login.outputs.github_modules_token }}
+          github_token: \${{ secrets.GITHUB_TOKEN }}
+          working_directory: infra/bootstrapper/dev
 
       - name: Start Terraform Plan telemetry span
         uses: pagopa/dx/actions/log-telemetry-event@main
@@ -82,6 +91,8 @@ jobs:
       - name: Terraform Plan
         id: plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
+        env:
+          GITHUB_TOKEN: \${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: infra/bootstrapper/dev
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY

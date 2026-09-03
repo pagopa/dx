@@ -9,8 +9,11 @@ inputs:
     description: "GitHub App token exposed to the wrapped command for API or provider access"
     required: false
     default: ""
+  github_modules_token:
+    description: "Read-only GitHub App token scoped to the pagopa-dx module repositories"
+    required: true
   github_token:
-    description: "Workflow token used for GitHub module clones and as the command fallback"
+    description: "Caller repository token used only as the wrapped command fallback"
     required: true
   working_directory:
     description: "Directory where the command runs"
@@ -25,24 +28,22 @@ runs:
       shell: bash
       env:
         AUTHENTICATED_COMMAND: ${{ inputs.command }}
-        # Keep both tokens scoped to this step. The helper expands the workflow
-        # token only when Git requests credentials, so it is never written to config.
+        # Keep both tokens scoped to this step. The caller token is suitable for
+        # API access to its repository, but not for cross-repository module clones.
         GITHUB_TOKEN: ${{ inputs.github_app_token || inputs.github_token }}
-        # The workflow token can authenticate public module repositories, while
-        # the App token may be restricted to the consuming repository.
-        TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_token }}
+        TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_modules_token }}
         # Keep credentials redacted if caller-provided env_vars enable Git tracing.
         GIT_TRACE_REDACT: 1
         # Pass config to Terraform's Git subprocesses without persisting it.
         GIT_CONFIG_COUNT: 3
-        # Authenticate the first GitHub request instead of waiting for a 401.
-        GIT_CONFIG_KEY_0: http.https://github.com/.proactiveAuth
+        # Authenticate only pagopa-dx module clones. Other public GitHub sources
+        # remain anonymous instead of receiving a token that cannot authorize them.
+        GIT_CONFIG_KEY_0: http.https://github.com/pagopa-dx/.proactiveAuth
         GIT_CONFIG_VALUE_0: basic
-        GIT_CONFIG_KEY_1: credential.https://github.com.helper
+        GIT_CONFIG_KEY_1: credential.https://github.com/pagopa-dx.helper
         GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
-        GIT_CONFIG_KEY_2: credential.https://github.com.helper
-        # Use the workflow token for module clones independently from the token
-        # exposed to the wrapped command.
+        GIT_CONFIG_KEY_2: credential.https://github.com/pagopa-dx.helper
+        # Expand the read-only module token only when Git requests credentials.
         GIT_CONFIG_VALUE_2: >-
           !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
           "password=$TERRAFORM_GITHUB_TOKEN"; }; f

@@ -42,13 +42,21 @@ If neither Azure nor AWS credentials are available, the action fails.
 - `GH_APP_KEY`: GitHub App private key
 - `GH_APP_INSTALLATION_ID`: Expected GitHub App installation ID
 
+## Inputs
+
+- `create_github_modules_token`: when set to `"true"`, creates a separate
+  read-only token from the GitHub App installation in `pagopa-dx`.
+
 ## Outputs
 
 - `github_app_token`: GitHub App installation token. The output is empty when
   GitHub login is not configured and is masked in workflow logs.
+- `github_modules_token`: read-only installation token for repositories owned
+  by `pagopa-dx`. It is created only when `create_github_modules_token` is
+  `true` and is masked in workflow logs.
 
-The token is not exported as a job-wide `GITHUB_TOKEN`. Pass the output
-explicitly only to steps that require GitHub App access:
+The tokens are not exported as a job-wide `GITHUB_TOKEN`. Pass each output
+explicitly only to steps that require it:
 
 ```yaml
 - name: Cloud Login
@@ -60,6 +68,26 @@ explicitly only to steps that require GitHub App access:
     GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token }}
   run: gh api user
 ```
+
+The automatic workflow `GITHUB_TOKEN` is scoped to the repository that started
+the workflow, so it cannot authenticate Git downloads from the separate
+`pagopa-dx` organization. Terraform workflows that download DX Registry modules
+must request the dedicated token:
+
+```yaml
+- name: Cloud Login
+  id: cloud-login
+  uses: pagopa/dx/actions/csp-login@main
+  env:
+    GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+    GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+    GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+  with:
+    create_github_modules_token: "true"
+```
+
+The GitHub App identified by `GH_APP_CLIENT_ID` and `GH_APP_KEY` must be
+installed in `pagopa-dx` with read access to the module repositories.
 
 ## Example Usage
 
@@ -86,10 +114,21 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+        with:
+          create_github_modules_token: "true"
 
       - name: Terraform Init
-        run: terraform init
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
+        with:
+          command: terraform init
+          github_modules_token: ${{ steps.cloud-login.outputs.github_modules_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Terraform Apply
         run: terraform apply -auto-approve

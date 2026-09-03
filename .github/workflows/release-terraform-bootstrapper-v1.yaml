@@ -41,7 +41,14 @@ jobs:
         uses: pagopa/dx/.github/actions/get-terraform-version@main
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+        with:
+          create_github_modules_token: "true"
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
@@ -52,31 +59,14 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
+          github_modules_token: ${{ steps.cloud-login.outputs.github_modules_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: infra/bootstrapper/${{ inputs.environment }}
-
-      - name: Create GitHub App token
-        id: github-app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_KEY }}
-
-      - name: Verify GitHub App installation
-        env:
-          ACTUAL_INSTALLATION_ID: ${{ steps.github-app-token.outputs.installation-id }}
-          EXPECTED_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-        run: |
-          set -euo pipefail
-          if [ "$ACTUAL_INSTALLATION_ID" != "$EXPECTED_INSTALLATION_ID" ]; then
-            echo "::error::Resolved GitHub App installation ID does not match GH_APP_INSTALLATION_ID."
-            exit 1
-          fi
 
       - name: Terraform Apply
         working-directory: infra/bootstrapper/${{ inputs.environment }}
         env:
-          GITHUB_TOKEN: ${{ steps.github-app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token }}
         run: |
           set -o pipefail
           terraform apply -auto-approve -input=false
