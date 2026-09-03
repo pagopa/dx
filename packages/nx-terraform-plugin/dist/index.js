@@ -205,6 +205,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	targets.push([getTargetName(opts, "validate"), {
 		cache: true,
 		command: `terraform validate`,
+		dependsOn: [initTargetName],
 		inputs: ["default", "examples"],
 		options: { cwd }
 	}]);

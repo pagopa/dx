@@ -287,6 +287,7 @@ const getTargets = (
     {
       cache: true,
       command: `terraform validate`,
+      dependsOn: [initTargetName],
       inputs: ["default", "examples"],
       options: {
         cwd,
