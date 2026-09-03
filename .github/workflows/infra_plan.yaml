@@ -279,13 +279,22 @@ jobs:
 
       - name: Terraform Init
         env:
+          # Keep the fallback token scoped to this step. The helper expands it
+          # only when Git requests credentials, so it is never written to config.
+          TERRAFORM_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Pass config to Terraform's Git subprocesses without persisting it.
           GIT_CONFIG_COUNT: 3
+          # Authenticate the first GitHub request instead of waiting for a 401.
           GIT_CONFIG_KEY_0: http.https://github.com/.proactiveAuth
           GIT_CONFIG_VALUE_0: basic
           GIT_CONFIG_KEY_1: credential.https://github.com.helper
-          GIT_CONFIG_VALUE_1: ""
+          GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
           GIT_CONFIG_KEY_2: credential.https://github.com.helper
-          GIT_CONFIG_VALUE_2: '!f() { test "$1" = get && printf "%s\n" "username=x-access-token" "password=$GITHUB_TOKEN"; }; f'
+          # Prefer the GitHub App token exported by csp-login, with the
+          # step-scoped workflow token as a fallback.
+          GIT_CONFIG_VALUE_2: >-
+            !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
+            "password=${GITHUB_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init -input=false
