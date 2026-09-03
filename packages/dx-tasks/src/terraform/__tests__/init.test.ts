@@ -147,6 +147,24 @@ describe("terraformInit", () => {
     );
   });
 
+  it("fails frozen initialization when a module lock is stale", async () => {
+    await expect(
+      terraformInit({
+        frozenLockfile: true,
+        modulePath: "infra/example",
+      }),
+    ).rejects.toThrow(
+      "Terraform module lock is frozen and out of date at infra/example/tfmodules.lock.json: changed: example",
+    );
+    expect(commandMocks.runCommand).toHaveBeenCalledExactlyOnceWith(
+      "terraform",
+      ["init", "-get=true", "-lockfile=readonly"],
+      "infra/example",
+      {},
+    );
+    expect(fsMocks.writeFile).not.toHaveBeenCalled();
+  });
+
   it("fails frozen initialization when a legacy lock requires migration", async () => {
     lockMocks.compareModuleLock.mockResolvedValue({
       ...comparison,
