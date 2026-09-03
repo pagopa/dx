@@ -235,12 +235,13 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
-          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ steps.directory.outputs.dir }}
 
       - name: Terraform Plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
+        env:
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -302,7 +303,6 @@ jobs:
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       TFPLAN_FILE: tf-outcome-${{ github.sha }}
 
     steps:
@@ -370,7 +370,6 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
-          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ matrix.dir }}
 
@@ -382,6 +381,8 @@ jobs:
 
       - name: Terraform Apply
         uses: pagopa/dx/actions/sanitize-terraform-apply@main
+        env:
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}

@@ -47,6 +47,20 @@ If neither Azure nor AWS credentials are available, the action fails.
 - `github_app_token`: GitHub App installation token. The output is empty when
   GitHub login is not configured and is masked in workflow logs.
 
+The token is not exported as a job-wide `GITHUB_TOKEN`. Pass the output
+explicitly only to steps that require GitHub App access:
+
+```yaml
+- name: Cloud Login
+  id: cloud-login
+  uses: pagopa/dx/actions/csp-login@main
+
+- name: Run GitHub command
+  env:
+    GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token }}
+  run: gh api user
+```
+
 ## Example Usage
 
 ### Terraform workflows supporting both clouds

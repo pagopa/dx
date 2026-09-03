@@ -333,23 +333,33 @@ jobs:
             echo "$(date)" > "$MARKER_FILE"
           fi
 
-      - name: Run Terraform plan on affected environment projects
-        uses: pagopa/dx/.github/actions/run-with-github-auth@main
+      - name: Set Terraform project exclusions
+        id: terraform-project-filter
         env:
           ENV_NAME: ${{ matrix.target.env-name }}
           GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
+        run: |
+          if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
+            EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
+          elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
+            EXCLUDE="*,!bootstrapper-${ENV_NAME}"
+          else
+            EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
+          fi
+          echo "exclude=$EXCLUDE" >> "$GITHUB_OUTPUT"
+
+      - name: Run Terraform quality checks
+        env:
+          EXCLUDE: ${{ steps.terraform-project-filter.outputs.exclude }}
+        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE"
+
+      - name: Run Terraform plan on affected environment projects
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
+        env:
+          EXCLUDE: ${{ steps.terraform-project-filter.outputs.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         with:
-          command: |
-            if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-              EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
-            elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-              EXCLUDE="*,!bootstrapper-${ENV_NAME}"
-            else
-              EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
-            fi
-            pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
-              pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+          command: pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
           github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 

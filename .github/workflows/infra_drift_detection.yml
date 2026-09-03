@@ -62,7 +62,6 @@ jobs:
     env:
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       # Exit with error if SLACK_WEBHOOK_URL is not set
@@ -128,7 +127,6 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
-          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ steps.directory.outputs.dir }}
 
@@ -138,6 +136,8 @@ jobs:
       # This is because we want to post the plan output in the PR even if the plan fails
       - name: Terraform Plan
         id: plan
+        env:
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github_app_token || secrets.GITHUB_TOKEN }}
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           set -uo pipefail

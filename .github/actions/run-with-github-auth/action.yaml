@@ -6,11 +6,11 @@ inputs:
     description: "Command that requires authenticated GitHub access"
     required: true
   github_app_token:
-    description: "Preferred GitHub App installation token"
+    description: "GitHub App token exposed to the wrapped command for API or provider access"
     required: false
     default: ""
   github_token:
-    description: "Workflow token used when a GitHub App token is not available"
+    description: "Workflow token used for GitHub module clones and as the command fallback"
     required: true
   working_directory:
     description: "Directory where the command runs"
@@ -25,9 +25,11 @@ runs:
       shell: bash
       env:
         AUTHENTICATED_COMMAND: ${{ inputs.command }}
-        # Keep the fallback token scoped to this step. The helper expands it
-        # only when Git requests credentials, so it is never written to config.
-        GITHUB_APP_TOKEN: ${{ inputs.github_app_token }}
+        # Keep both tokens scoped to this step. The helper expands the workflow
+        # token only when Git requests credentials, so it is never written to config.
+        GITHUB_TOKEN: ${{ inputs.github_app_token || inputs.github_token }}
+        # The workflow token can authenticate public module repositories, while
+        # the App token may be restricted to the consuming repository.
         TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_token }}
         # Keep credentials redacted if caller-provided env_vars enable Git tracing.
         GIT_TRACE_REDACT: 1
@@ -39,10 +41,10 @@ runs:
         GIT_CONFIG_KEY_1: credential.https://github.com.helper
         GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
         GIT_CONFIG_KEY_2: credential.https://github.com.helper
-        # Prefer the explicitly provided GitHub App token, with the workflow
-        # token as a fallback.
+        # Use the workflow token for module clones independently from the token
+        # exposed to the wrapped command.
         GIT_CONFIG_VALUE_2: >-
           !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
-          "password=${GITHUB_APP_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
+          "password=$TERRAFORM_GITHUB_TOKEN"; }; f
       working-directory: ${{ inputs.working_directory }}
       run: bash -euo pipefail -c "$AUTHENTICATED_COMMAND"
