@@ -73,8 +73,9 @@ plugin:
 - defaults OCI authors to `PagoPA`
 - builds for `linux/amd64,linux/arm64`
 
-The optional `imageAuthors`, `imageNamePrefix`, and `imageUrl` settings shown
-above configure OCI metadata shared by every inferred target.
+The optional `imageAuthors`, `imageNamePrefix`, `imageUrl`, and
+`repositoryName` settings configure OCI metadata or the image repository
+shared by every inferred target.
 
 ## Generated targets
 
@@ -129,11 +130,22 @@ directly to `docker buildx --platform`. All three values are optional.
 
 `release.docker.repositoryName` enables Docker release publishing for the
 project and is also used as the build/push image repository unless
-`nx.docker.repositoryName` overrides it. For example, use
-`nx.docker.repositoryName: "pagopa/my-build-image"` when normal Docker builds
-must use a repository different from the release image. If an application is
-released only as a Docker image, mark its `package.json` as private to prevent
-Nx from inferring the JavaScript publisher:
+`nx.docker.repositoryName` overrides it. To override the repository used by
+normal Docker builds, add `repositoryName` inside the project's `nx.docker`
+configuration:
+
+```json
+{
+  "nx": {
+    "docker": {
+      "repositoryName": "pagopa/my-build-image"
+    }
+  }
+}
+```
+
+If an application is released only as a Docker image, mark its `package.json` as
+private to prevent Nx from inferring the JavaScript publisher:
 
 ```json
 {

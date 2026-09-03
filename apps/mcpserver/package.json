@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "nx": {
+    "tags": [
+      "public"
+    ],
     "docker": {
       "platform": "linux/amd64"
     }

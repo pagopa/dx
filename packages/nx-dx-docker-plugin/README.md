@@ -133,8 +133,8 @@ The plugin preserves unrelated build arguments already defined on the inferred t
 
 ## Workspace Release Composition
 
-For an application released only as a Docker image, configure its Docker release
-repository and mark its `package.json` as private. This prevents Nx from
+For a package project released only as a Docker image, configure its Docker
+release repository and mark its `package.json` as private. This prevents Nx from
 inferring the JavaScript publisher:
 
 ```json
@@ -150,14 +150,13 @@ inferring the JavaScript publisher:
 
 The plugin supplies the image name, build context, Dockerfile, platform, and OCI
 metadata to its inferred publisher automatically; do not declare a separate
-release target. Projects that publish both an npm package and a Docker image
-should publish the image from a release-tag workflow. Projects without a
-`package.json` declare the repository and version in `project.json` metadata, as
-shown below.
+release target. For projects that publish both an npm package and a Docker image,
+or projects without a `package.json`, see the [complete release guide](https://dx.pagopa.it/docs/containers/nx-docker-release).
 
-## Build Context Resolution
+## Default Docker Build Layout
 
-The plugin defaults to a monorepo Docker build layout:
+The plugin uses a monorepo Docker build layout: the Dockerfile stays in the
+project directory while the monorepo root is used as the build context.
 
 - the Dockerfile is `{projectRoot}/Dockerfile`
 - the Docker build context is the monorepo root (`.`)
