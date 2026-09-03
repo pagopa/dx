@@ -1,6 +1,6 @@
 module "azure" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 2.0"
+  version = "~> 6.0"
 
   environment = local.azure_environment
 
@@ -16,7 +16,7 @@ module "azure" {
 
 module "aws" {
   source  = "pagopa-dx/aws-core-infra/aws"
-  version = "~> 0.0"
+  version = "~> 2.0"
 
   environment       = local.aws_environment
   vpc_cidr          = local.aws.vpc_cidr

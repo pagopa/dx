@@ -18,7 +18,7 @@ resource "azurerm_monitor_action_group" "dx" {
 
 module "sbns" {
   source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
-  version = "~> 0.0"
+  version = "~> 2.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -42,7 +42,7 @@ resource "azurerm_servicebus_topic" "example" {
 
 module "sbns_alert" {
   source  = "pagopa-dx/azure-service-bus-alerts/azurerm"
-  version = "~> 0.1"
+  version = "~> 2.0"
 
   environment = local.environment
 

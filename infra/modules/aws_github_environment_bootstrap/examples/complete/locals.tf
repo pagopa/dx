@@ -8,6 +8,13 @@ locals {
     instance_number = "01"
   }
 
+  core_state = {
+    storage_account_name = "dx-d-itn-tfstate"
+    container_name       = "terraform-state"
+    resource_group_name  = "dx-d-itn-tfstate-rg-01"
+    key                  = "aws-core.tfstate"
+  }
+
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"

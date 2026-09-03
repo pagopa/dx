@@ -28,7 +28,7 @@ resource "azurerm_storage_account" "external" {
 
 module "azure_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 7.0"
 
   environment         = local.environment
   use_case            = "default"

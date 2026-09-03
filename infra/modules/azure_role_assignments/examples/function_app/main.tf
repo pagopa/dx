@@ -5,13 +5,13 @@ resource "azurerm_resource_group" "example" {
 
 module "function" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 7.0"
 
   environment = local.environment
 
   resource_group_name = azurerm_resource_group.example.name
   health_check_path   = "/api/v1/info"
-  node_version        = 18
+  node_version        = 22
 
   subnet_cidr                          = "10.50.246.0/24"
   subnet_pep_id                        = data.azurerm_subnet.private_endpoints_subnet.id
@@ -29,7 +29,7 @@ module "function" {
 
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.3"
+  version = "~> 4.0"
 
   principal_id    = module.function.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
