@@ -128,7 +128,7 @@ resource "github_repository_environment_deployment_policy" "release_branch" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.12 |
 
@@ -139,7 +139,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [github_actions_repository_permissions.repo](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_repository_permissions) | resource |
 | [github_branch.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch) | resource |
 | [github_branch_default.main](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/branch_default) | resource |
@@ -172,13 +172,13 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_repository"></a> [repository](#input\_repository) | GitHub Repository configuration with:<br/>- `name`, `description`, `topics`: repository metadata.<br/>- `default_branch_name`: the main integration branch (default: "main").<br/>- `reviewers_teams`: teams required to review and approve PRs.<br/>- `pull_request_bypassers`: users/teams allowed to merge without approval.<br/>- `*_cd_policy_branches`: enabled branches for continuous deployments.<br/>- `*_cd_policy_tags`: enabled tags for continuous deployments.<br/>- `jira_boards_ids`: linked Jira board identifiers.<br/>- `pages_enabled`, `has_issues`, `has_projects`, `has_downloads`, `homepage_url`: GitHub repository feature toggles.<br/>- `environments`: list of deployment environments (e.g., dev, prod). | <pre>object({<br/>    name                            = string<br/>    description                     = string<br/>    topics                          = list(string)<br/>    default_branch_name             = optional(string, "main")<br/>    reviewers_teams                 = list(string)<br/>    infra_cd_policy_branches        = optional(set(string), ["main"])<br/>    opex_cd_policy_branches         = optional(set(string), ["main"])<br/>    app_cd_policy_branches          = optional(set(string), ["main"])<br/>    bootstrapper_cd_policy_branches = optional(set(string), ["main"])<br/>    infra_cd_policy_tags            = optional(set(string), [])<br/>    opex_cd_policy_tags             = optional(set(string), [])<br/>    app_cd_policy_tags              = optional(set(string), [])<br/>    bootstrapper_cd_policy_tags     = optional(set(string), [])<br/>    jira_boards_ids                 = optional(list(string), [])<br/>    pages_enabled                   = optional(bool, false)<br/>    # The `has_downloads` property will be removed in the next major release. See https://github.com/orgs/community/discussions/102145#discussioncomment-8351756<br/>    has_downloads          = optional(bool, false)<br/>    has_issues             = optional(bool, false)<br/>    has_projects           = optional(bool, false)<br/>    homepage_url           = optional(string, null)<br/>    pull_request_bypassers = optional(list(string), [])<br/>    environments           = optional(list(string), ["prod"])<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the GitHub repository. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the GitHub repository. |
 <!-- END_TF_DOCS -->
