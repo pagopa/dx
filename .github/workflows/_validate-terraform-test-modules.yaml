@@ -74,10 +74,11 @@ jobs:
         uses: $/.github/actions/terraform-setup
 
       - name: Terraform Init
-        working-directory: infra/modules/${{ matrix.module }}
-        run: |
-          set -euo
-          terraform init -input=false
+        uses: $/.github/actions/run-with-github-auth
+        with:
+          command: terraform init -input=false
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: infra/modules/${{ matrix.module }}
 
       - name: Terraform Test
         working-directory: infra/modules/${{ matrix.module }}
