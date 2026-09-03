@@ -5,6 +5,10 @@ inputs:
   command:
     description: "Command that requires authenticated GitHub access"
     required: true
+  github_app_token:
+    description: "Preferred GitHub App installation token"
+    required: false
+    default: ""
   github_token:
     description: "Workflow token used when a GitHub App token is not available"
     required: true
@@ -23,6 +27,7 @@ runs:
         AUTHENTICATED_COMMAND: ${{ inputs.command }}
         # Keep the fallback token scoped to this step. The helper expands it
         # only when Git requests credentials, so it is never written to config.
+        GITHUB_APP_TOKEN: ${{ inputs.github_app_token }}
         TERRAFORM_GITHUB_TOKEN: ${{ inputs.github_token }}
         # Keep credentials redacted if caller-provided env_vars enable Git tracing.
         GIT_TRACE_REDACT: 1
@@ -34,10 +39,10 @@ runs:
         GIT_CONFIG_KEY_1: credential.https://github.com.helper
         GIT_CONFIG_VALUE_1: "" # Reset inherited credential helpers.
         GIT_CONFIG_KEY_2: credential.https://github.com.helper
-        # Prefer the GitHub App token exported by csp-login, with the
-        # step-scoped workflow token as a fallback.
+        # Prefer the explicitly provided GitHub App token, with the workflow
+        # token as a fallback.
         GIT_CONFIG_VALUE_2: >-
           !f() { test "$1" = get && printf "%s\n" "username=x-access-token"
-          "password=${GITHUB_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
+          "password=${GITHUB_APP_TOKEN:-$TERRAFORM_GITHUB_TOKEN}"; }; f
       working-directory: ${{ inputs.working_directory }}
       run: bash -euo pipefail -c "$AUTHENTICATED_COMMAND"

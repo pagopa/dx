@@ -218,6 +218,7 @@ jobs:
           done <<< "$ENV_VARS"
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
@@ -230,6 +231,7 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
+          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ steps.directory.outputs.dir }}
 
@@ -316,6 +318,7 @@ jobs:
         uses: pagopa/dx/actions/setup-telemetry@main
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
@@ -359,6 +362,7 @@ jobs:
         uses: pagopa/dx/.github/actions/run-with-github-auth@main
         with:
           command: terraform init -input=false
+          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
           working_directory: ${{ matrix.dir }}
 

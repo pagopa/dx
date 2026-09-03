@@ -272,6 +272,7 @@ jobs:
           experimental: true
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
 
       # Mise deps for pnpm only performs a global "pnpm install".
@@ -348,6 +349,7 @@ jobs:
             fi
             pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
               pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Terraform plan report

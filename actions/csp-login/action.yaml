@@ -1,6 +1,11 @@
 name: "Cloud Service Provider Login"
 description: "Login to cloud provider (Azure or AWS) based on available secrets"
 
+outputs:
+  github_app_token:
+    description: "GitHub App installation token, or an empty value when GitHub login is not configured"
+    value: ${{ steps.github-app-token.outputs.token }}
+
 runs:
   using: "composite"
 

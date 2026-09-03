@@ -113,6 +113,7 @@ jobs:
         name: Checkout
 
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
 
       - name: Terraform Setup
@@ -120,9 +121,12 @@ jobs:
         uses: pagopa/dx/.github/actions/terraform-setup@main
 
       - name: Terraform Init
-        working-directory: ${{ steps.directory.outputs.dir }}
-        run: |
-          terraform init -input=false
+        uses: pagopa/dx/.github/actions/run-with-github-auth@main
+        with:
+          command: terraform init -input=false
+          github_app_token: ${{ steps.cloud-login.outputs.github_app_token }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          working_directory: ${{ steps.directory.outputs.dir }}
 
       # Run Terraform Plan
       # The plan output is saved in a file and then processed to remove unnecessary lines
