@@ -317,7 +317,7 @@ const readableModuleLockSchema = z.union([moduleLockFileSchema.transform(({ modu
 	modules
 }))]);
 const hash = (content) => createHash("sha256").update(content).digest("hex");
-const isFileNotFoundError = (error) => typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+const isFileNotFoundError$1 = (error) => typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
 const parseAndValidateJson = (content, filePath, schema) => {
 	try {
 		return schema.parse(JSON.parse(content));
@@ -352,7 +352,7 @@ const getRegistryModules = async (projectRoot) => {
 		const content = await fs.readFile(metadataPath, "utf8");
 		metadata = parseAndValidateJson(content, metadataPath, modulesMetadataSchema);
 	} catch (error) {
-		if (!isFileNotFoundError(error)) throw error;
+		if (!isFileNotFoundError$1(error)) throw error;
 	}
 	return (metadata?.Modules ?? []).filter((module) => module.Key !== "" && module.Source.startsWith(registryPrefix));
 };
@@ -382,7 +382,7 @@ const readCurrentModuleLock = async (lockPath) => {
 		const content = await fs.readFile(lockPath, "utf8");
 		return parseAndValidateJson(content, lockPath, readableModuleLockSchema);
 	} catch (error) {
-		if (isFileNotFoundError(error)) return {
+		if (isFileNotFoundError$1(error)) return {
 			formatVersion: moduleLockFileVersion,
 			modules: {}
 		};
@@ -441,6 +441,13 @@ const compareModuleLock = async (projectRoot) => {
 //#region ../dx-tasks/src/terraform/init.ts
 /** This module initializes Terraform and enforces Registry module locks. */
 const incompatibleGetArgumentError = "The -get=false option is incompatible with Terraform module locking";
+const providerLockPlatforms = [
+	"-platform=windows_amd64",
+	"-platform=darwin_amd64",
+	"-platform=darwin_arm64",
+	"-platform=linux_amd64"
+];
+const providerLockFileName = ".terraform.lock.hcl";
 const isTerraformFalse = (value) => /^(?:0|f(?:alse)?)$/i.test(value);
 const disablesModuleDownloads = (args) => args.some((argument, index) => {
 	const inlineValue = /^--?get=(.+)$/i.exec(argument)?.[1];
@@ -468,21 +475,72 @@ const printTerraformOutput = (result) => {
 	if (result.stdout.length > 0) console.log(result.stdout);
 	if (result.stderr.length > 0) console.error(result.stderr);
 };
-const getInitFailureMessage = (result) => {
+const getTerraformFailureMessage = (operation, result) => {
 	const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
 	const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
-	return `terraform init failed with ${termination}${details ? `\n${details}` : ""}`;
+	return `terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`;
 };
 const getLockChangeSummary = (changes, formatVersion) => formatVersion === 1 ? "legacy module lock format (version 1)" : changes.length > 0 ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ") : "no module hash changes";
+const isFileNotFoundError = (error) => typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT";
+const readProviderLock = async (modulePath) => {
+	try {
+		return await fs.readFile(path.join(modulePath, providerLockFileName), "utf8");
+	} catch (error) {
+		if (isFileNotFoundError(error)) return;
+		throw error;
+	}
+};
+const replaceFileAtomically = async (filePath, content, temporaryDirectoryPrefix) => {
+	const temporaryDirectory = await fs.mkdtemp(path.join(path.dirname(filePath), temporaryDirectoryPrefix));
+	const temporaryPath = path.join(temporaryDirectory, path.basename(filePath));
+	try {
+		await fs.writeFile(temporaryPath, content, {
+			encoding: "utf8",
+			flag: "wx"
+		});
+		await fs.rename(temporaryPath, filePath);
+	} finally {
+		await fs.rm(temporaryDirectory, {
+			force: true,
+			recursive: true
+		});
+	}
+};
+const restoreProviderLock = async (modulePath, content) => {
+	const lockPath = path.join(modulePath, providerLockFileName);
+	if (content === void 0) {
+		await fs.rm(lockPath, { force: true });
+		return;
+	}
+	await replaceFileAtomically(lockPath, content, ".terraform-lock-");
+};
+const runTerraformCommand = async (operation, args, modulePath) => {
+	const result = await runCommand("terraform", args, modulePath, {});
+	printTerraformOutput(result);
+	if (result.exitCode !== 0) throw new Error(getTerraformFailureMessage(operation, result));
+};
 async function terraformInit({ args = [], frozenLockfile = false, modulePath }) {
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
-	const result = await runCommand("terraform", [
-		"init",
-		...normalizeTerraformInitArguments(args),
-		"-get=true"
-	], modulePath, {});
-	printTerraformOutput(result);
-	if (result.exitCode !== 0) throw new Error(getInitFailureMessage(result));
+	const previousProviderLock = frozenLockfile ? await readProviderLock(modulePath) : void 0;
+	let providerLockVerified = !frozenLockfile;
+	try {
+		await runTerraformCommand("init", [
+			"init",
+			...normalizeTerraformInitArguments(args),
+			"-get=true"
+		], modulePath);
+		await runTerraformCommand("providers lock", [
+			"providers",
+			"lock",
+			...providerLockPlatforms
+		], modulePath);
+		if (frozenLockfile) {
+			if (await readProviderLock(modulePath) !== previousProviderLock) throw new Error(`Terraform provider lock is frozen and out of date at ${path.join(modulePath, providerLockFileName)}`);
+			providerLockVerified = true;
+		}
+	} finally {
+		if (!providerLockVerified) await restoreProviderLock(modulePath, previousProviderLock);
+	}
 	const comparison = await compareModuleLock(modulePath);
 	if (frozenLockfile && comparison.isDifferent) {
 		const summary = getLockChangeSummary(comparison.changes, comparison.formatVersion);
@@ -490,20 +548,7 @@ async function terraformInit({ args = [], frozenLockfile = false, modulePath }) 
 	}
 	if (frozenLockfile) return;
 	if (comparison.isDifferent) {
-		const temporaryDirectory = await fs.mkdtemp(path.join(path.dirname(comparison.path), ".tfmodules-lock-"));
-		const temporaryPath = path.join(temporaryDirectory, "tfmodules.lock.json");
-		try {
-			await fs.writeFile(temporaryPath, comparison.content, {
-				encoding: "utf8",
-				flag: "wx"
-			});
-			await fs.rename(temporaryPath, comparison.path);
-		} finally {
-			await fs.rm(temporaryDirectory, {
-				force: true,
-				recursive: true
-			});
-		}
+		await replaceFileAtomically(comparison.path, comparison.content, ".tfmodules-lock-");
 		console.log(`Updated Terraform module lock at ${comparison.path}`);
 	}
 }
