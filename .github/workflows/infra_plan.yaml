@@ -282,6 +282,8 @@ jobs:
           # Keep the fallback token scoped to this step. The helper expands it
           # only when Git requests credentials, so it is never written to config.
           TERRAFORM_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Keep credentials redacted if caller-provided env_vars enable Git tracing.
+          GIT_TRACE_REDACT: 1
           # Pass config to Terraform's Git subprocesses without persisting it.
           GIT_CONFIG_COUNT: 3
           # Authenticate the first GitHub request instead of waiting for a 401.
