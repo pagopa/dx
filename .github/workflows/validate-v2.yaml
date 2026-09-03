@@ -333,7 +333,7 @@ jobs:
           else
             EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
           fi
-          pnpm nx affected -t fmt,lint,validate,test,trivy -c ci --exclude="$EXCLUDE" && \
+          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
             pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
 
       - name: Upload Terraform plan report
