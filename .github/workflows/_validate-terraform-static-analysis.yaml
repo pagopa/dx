@@ -21,4 +21,3 @@ jobs:
     secrets: inherit
     with:
       enable_modified_files_detection: true
-      # pre_commit_tf_tag: v1.109.0@sha256:4a089517e6eaabaa002a7afed72e3c0cdca17b5950ed2e000cf2b0e96a47980e

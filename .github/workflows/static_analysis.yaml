@@ -60,7 +60,7 @@ jobs:
       - name: Get pre-commit version from .pre-commit-config file
         id: get-pre-commit-version
         if: ${{ inputs.pre_commit_tf_tag == '' }}
-        uses: pagopa/dx/.github/actions/get-pre-commit-version@upgrade-pre-commit
+        uses: pagopa/dx/.github/actions/get-pre-commit-version@main
         with:
           default_version: "v1.109.0"
 
