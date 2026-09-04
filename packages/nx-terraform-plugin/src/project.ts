@@ -243,12 +243,7 @@ const getTrivyTarget = (
       // Trivy updates the checks bundle cache while scanning, so concurrent
       // projects must not share the same cache directory.
       "--cache-dir",
-      path.join(
-        workspaceRoot,
-        ".nx",
-        "trivy-cache",
-        getProjectNameFromRoot(root),
-      ),
+      path.join(workspaceRoot, "trivy-cache", getProjectNameFromRoot(root)),
       "--config",
       path.resolve(workspaceRoot, "trivy.yml"),
       root,

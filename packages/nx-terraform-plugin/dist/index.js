@@ -182,7 +182,7 @@ const getTrivyTarget = (workspaceRoot, root) => ({
 	options: {
 		args: [
 			"--cache-dir",
-			path.join(workspaceRoot, ".nx", "trivy-cache", getProjectNameFromRoot(root)),
+			path.join(workspaceRoot, "trivy-cache", getProjectNameFromRoot(root)),
 			"--config",
 			path.resolve(workspaceRoot, "trivy.yml"),
 			root

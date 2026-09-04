@@ -167,7 +167,7 @@ const getExpectedTrivyTarget = (root: string) => ({
   options: {
     args: [
       "--cache-dir",
-      path.join(workspaceRoot, ".nx", "trivy-cache", "resources-prod-my-stack"),
+      path.join(workspaceRoot, "trivy-cache", "resources-prod-my-stack"),
       "--config",
       path.join(workspaceRoot, "trivy.yml"),
       root,
