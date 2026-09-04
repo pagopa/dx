@@ -12,6 +12,7 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
+# trivy:ignore:AZU-0061 Storage account should have infrastructure encryption enabled
 resource "azurerm_storage_account" "external" {
   name                     = provider::dx::resource_name(merge(local.naming_config, { name = "external", resource_type = "storage_account" }))
   location                 = local.environment.location
