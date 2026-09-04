@@ -239,7 +239,20 @@ const getTrivyTarget = (
     "{workspaceRoot}/.trivy/checks/terraform/**/*",
   ],
   options: {
-    args: ["--config", path.resolve(workspaceRoot, "trivy.yml"), root],
+    args: [
+      // Trivy updates the checks bundle cache while scanning, so concurrent
+      // projects must not share the same cache directory.
+      "--cache-dir",
+      path.join(
+        workspaceRoot,
+        ".nx",
+        "trivy-cache",
+        getProjectNameFromRoot(root),
+      ),
+      "--config",
+      path.resolve(workspaceRoot, "trivy.yml"),
+      root,
+    ],
     cwd: "{workspaceRoot}",
   },
 });

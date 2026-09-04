@@ -165,7 +165,13 @@ const getExpectedTrivyTarget = (root: string) => ({
     "{workspaceRoot}/.trivy/checks/terraform/**/*",
   ],
   options: {
-    args: ["--config", path.join(workspaceRoot, "trivy.yml"), root],
+    args: [
+      "--cache-dir",
+      path.join(workspaceRoot, ".nx", "trivy-cache", "resources-prod-my-stack"),
+      "--config",
+      path.join(workspaceRoot, "trivy.yml"),
+      root,
+    ],
     cwd: "{workspaceRoot}",
   },
 });
