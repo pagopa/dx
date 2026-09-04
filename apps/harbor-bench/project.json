@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "harbor-bench",
+  "projectType": "application",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "apps/harbor-bench",
+        "command": "uv run --frozen --package harbor-bench --extra test pytest tests"
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# The root is a virtual project; package metadata lives in workspace members.
+[tool.uv.workspace]
+members = ["apps/harbor-bench", "packages/harbor-copilot"]
+
+[tool.uv]
+# Quarantine newly uploaded distributions to leave time for ecosystem review.
+exclude-newer = "7 days"
+# Stop at the first index containing a package to prevent dependency confusion.
+index-strategy = "first-index"
+# Reject third-party source distributions instead of executing their build code.
+no-build = true
+# Make the trusted local projects the sole source-build exceptions to no-build.
+no-binary-package = ["harbor-bench", "harbor-copilot"]

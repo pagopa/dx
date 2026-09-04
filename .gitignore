@@ -74,3 +74,16 @@ tsconfig.*.tsbuildinfo
 
 .nx/migrate-runs
 .tflint.d/
+
+# harbor-bench generated eval tasks
+.harbor/
+
+# python excludes
+.venv/
+.uv-cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.pytest_cache/
