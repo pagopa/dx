@@ -12,7 +12,11 @@ import { configureLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
-import { getProject, TerraformTestCapabilities } from "./project.ts";
+import {
+  getProject,
+  isTerraformLibraryRoot,
+  TerraformTestCapabilities,
+} from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
 const moduleManifestFileName = "module.json";
@@ -76,7 +80,11 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
     terraformConfigFiles.push(configFile);
   }
 
-  const terraformRoots = new Set(terraformConfigFiles.map(path.dirname));
+  const projectTerraformConfigFiles = terraformConfigFiles.filter((file) => {
+    const root = path.dirname(file);
+    return !isTerraformLibraryRoot(root) || moduleManifestRoots.has(root);
+  });
+  const terraformRoots = new Set(projectTerraformConfigFiles.map(path.dirname));
   for (const testConfigFile of testConfigFiles) {
     const testsRoot = path.dirname(testConfigFile);
     const projectRoot = path.dirname(testsRoot);
@@ -100,7 +108,7 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
 
   return {
     moduleManifestRoots,
-    terraformConfigFiles,
+    terraformConfigFiles: projectTerraformConfigFiles,
     testCapabilitiesByRoot,
   };
 };
