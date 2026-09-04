@@ -27,8 +27,8 @@ jobs:
       ARM_CLIENT_ID: ${{ secrets.INTEGRATION_ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.INTEGRATION_ARM_SUBSCRIPTION_ID }}
       DNS_ZONE: uat.dx.pagopa.it
-      DNS_ZONE_RESOURCE_GROUP: dx-d-itn-network-rg-01
-      KEY_VAULT_NAME: dx-d-itn-common-kv-01
+      DNS_ZONE_RESOURCE_GROUP: dx-u-itn-network-rg-01
+      KEY_VAULT_NAME: dx-u-itn-common-kv-01
       CSR_COMMON_NAME: renew-tls-test-${{ github.run_id }}-${{ github.run_attempt }}.uat.dx.pagopa.it
 
     steps:
