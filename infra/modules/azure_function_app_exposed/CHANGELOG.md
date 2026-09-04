@@ -1,3 +1,13 @@
+## 5.0.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Suppress azu-0061 Trivy warning ([#2151](https://github.com/pagopa/dx/pull/2151))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 5.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes

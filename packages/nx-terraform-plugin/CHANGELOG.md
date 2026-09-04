@@ -1,3 +1,14 @@
+## 0.5.8 (2026-09-04)
+
+### 🩹 Fixes
+
+- Isolate Trivy caches per Terraform project to support parallel scans. ([#2150](https://github.com/pagopa/dx/pull/2150))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.5.7 (2026-09-04)
 
 ### 🚀 Features
