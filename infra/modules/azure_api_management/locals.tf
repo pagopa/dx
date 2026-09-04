@@ -57,17 +57,6 @@ locals {
   metric_namespace = "Microsoft.ApiManagement/service"
 
   alert_thresholds = {
-    development = {
-      sku                    = "Developer_1"
-      total_requests         = 10000
-      successful_requests    = 9500
-      failed_requests        = 100
-      unauthorized_requests  = 50
-      duration               = 500
-      capacity               = 80
-      cpu_percent_gateway    = 80
-      memory_percent_gateway = 80
-    }
     cost_optimized = {
       sku                    = "StandardV2_1"
       total_requests         = 10000

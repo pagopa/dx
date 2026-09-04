@@ -337,7 +337,7 @@ variable "monitoring" {
 variable "metric_alerts" {
   default = null
 
-  description = "Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use_case; pass an explicit empty map to disable alerts or a custom map to override the defaults."
+  description = "Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use_case."
 
   type = map(object({
     description = string
