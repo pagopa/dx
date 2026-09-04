@@ -1,3 +1,13 @@
+## 3.0.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Replace deprecated property about repository security setting ([#2113](https://github.com/pagopa/dx/pull/2113))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 3.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes
