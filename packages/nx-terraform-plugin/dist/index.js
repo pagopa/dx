@@ -68,10 +68,11 @@ const getProjectNameFromRoot = (root) => root.split(path.sep).reduce((acc, part,
 	if (part === "_modules") return [...acc, "modules"];
 	return [...acc, part.replaceAll("_", "-")];
 }, []).join("-");
-const getProjectType = (root) => {
+const isTerraformLibraryRoot = (root) => {
 	const rootSegments = new Set(root.split(path.sep));
-	return rootSegments.has("modules") || rootSegments.has("_modules") ? "library" : "application";
+	return rootSegments.has("modules") || rootSegments.has("_modules");
 };
+const getProjectType = (root) => isTerraformLibraryRoot(root) ? "library" : "application";
 const defaultEnvironments = [
 	"prod",
 	"uat",
@@ -440,7 +441,11 @@ const getDiscoveryState = (configFiles) => {
 		}
 		terraformConfigFiles.push(configFile);
 	}
-	const terraformRoots = new Set(terraformConfigFiles.map(path.dirname));
+	const projectTerraformConfigFiles = terraformConfigFiles.filter((file) => {
+		const root = path.dirname(file);
+		return !isTerraformLibraryRoot(root) || moduleManifestRoots.has(root);
+	});
+	const terraformRoots = new Set(projectTerraformConfigFiles.map(path.dirname));
 	for (const testConfigFile of testConfigFiles) {
 		const testsRoot = path.dirname(testConfigFile);
 		const projectRoot = path.dirname(testsRoot);
@@ -454,7 +459,7 @@ const getDiscoveryState = (configFiles) => {
 	}
 	return {
 		moduleManifestRoots,
-		terraformConfigFiles,
+		terraformConfigFiles: projectTerraformConfigFiles,
 		testCapabilitiesByRoot
 	};
 };

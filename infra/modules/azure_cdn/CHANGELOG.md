@@ -1,3 +1,14 @@
+## 2.1.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Fix Azure Front Door compression configuration ([#2148](https://github.com/pagopa/dx/pull/2148))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
 ## 2.1.0 (2026-09-02)
 
 ### 🚀 Features

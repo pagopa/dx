@@ -1,3 +1,20 @@
+## 0.5.7 (2026-09-04)
+
+### 🚀 Features
+
+- Add `ci` configuration to `docs` target ([#2138](https://github.com/pagopa/dx/pull/2138))
+- Add an inferred Trivy target for Terraform projects. ([#2117](https://github.com/pagopa/dx/pull/2117))
+
+### 🩹 Fixes
+
+- Require module.json for inferred Terraform library projects ([#2147](https://github.com/pagopa/dx/pull/2147))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.5.6 (2026-09-02)
 
 ### 🚀 Features
