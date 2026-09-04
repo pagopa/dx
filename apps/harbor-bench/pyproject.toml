@@ -1,6 +1,6 @@
 [build-system]
 # Prevent unreviewed build-backend upgrades from entering the trusted build path.
-requires = ["setuptools==80.9.0"]
+requires = ["setuptools==83.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
