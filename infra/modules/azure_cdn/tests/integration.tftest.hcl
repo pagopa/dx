@@ -7,7 +7,7 @@ variables {
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "int"
     app_name        = "assets"
@@ -17,7 +17,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_cdn/tests"
     ManagementTeam = "Developer Experience"

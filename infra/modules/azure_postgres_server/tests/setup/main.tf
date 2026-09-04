@@ -23,7 +23,7 @@ locals {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
     ManagementTeam = "Developer Experience"
