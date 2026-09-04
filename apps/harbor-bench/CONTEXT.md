@@ -95,10 +95,11 @@ jobs, so interrupted runs remain visible instead of producing an empty report.
 _Avoid_: delta sheet
 
 **Package version**:
-The release version lives in each member's `pyproject.toml` at
-`[project].version` (`harbor-bench` in `apps/`, `harbor-copilot` in
-`packages/`). The Nx Python plugin owns version increments; `project.json`
-does not duplicate or override that behavior. At runtime,
-`harbor_bench.__version__` / `harbor_copilot.__version__` read the installed
-Python distribution metadata.
+The release version lives in a private `package.json` manifest at each member's
+root (`harbor-bench` in `apps/`, `harbor-copilot` in `packages/`), bumped by
+Nx Release like any other package — the same convention used by the Go
+providers (`providers/*`). It is decoupled from the Python distribution
+version in `pyproject.toml` (`[project].version`, still `0.1.0`), which
+releases do not touch. At runtime, `harbor_bench.__version__` /
+`harbor_copilot.__version__` read the installed Python distribution metadata.
 _Avoid_: duplicate version

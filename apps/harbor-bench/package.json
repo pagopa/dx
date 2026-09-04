@@ -1,0 +1,18 @@
+{
+  "name": "harbor-bench",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PagoPA Harbor CLI: convert evals.json to Harbor tasks, report and compare benchmark runs.",
+  "nx": {
+    "projectType": "application",
+    "targets": {
+      "test": {
+        "executor": "nx:run-commands",
+        "options": {
+          "cwd": "{projectRoot}",
+          "command": "uv run --frozen --package harbor-bench --extra test pytest tests"
+        }
+      }
+    }
+  }
+}
