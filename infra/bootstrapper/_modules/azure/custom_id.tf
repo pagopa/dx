@@ -1,5 +1,5 @@
 resource "azurerm_user_assigned_identity" "integration_tests" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count = var.environment.env_short == "u" ? 1 : 0
 
   resource_group_name = module.bootstrap.resource_group.name
   location            = module.bootstrap.resource_group.location
@@ -12,20 +12,11 @@ resource "azurerm_user_assigned_identity" "integration_tests" {
 }
 
 resource "azurerm_federated_identity_credential" "infra_cd_integration_tests" {
-  count = var.environment.env_short == "d" ? 1 : 0
+  count = var.environment.env_short == "u" ? 1 : 0
 
-  name      = "dx-environment-infra-dev-integration-tests"
+  name      = "dx-environment-infra-uat-integration-tests"
   audience  = ["api://AzureADTokenExchange"]
   issuer    = "https://token.actions.githubusercontent.com"
   parent_id = azurerm_user_assigned_identity.integration_tests[0].id
   subject   = "repo:pagopa/${var.repository.name}:environment:${github_actions_environment_secret.integration_tests_client_id[0].environment}"
 }
-
-resource "azurerm_federated_identity_credential" "automation_cd" {
-  name      = "dx-environment-infra-${local.env_long}-automation-${local.env_long}-cd"
-  audience  = ["api://AzureADTokenExchange"]
-  issuer    = "https://token.actions.githubusercontent.com"
-  parent_id = module.bootstrap.identities.infra.cd.id
-  subject   = "repo:pagopa/${var.repository.name}:environment:automation-${local.env_long}-cd"
-}
-
