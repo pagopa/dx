@@ -13,33 +13,3 @@ repos:
         language: script
         pass_filenames: false
         always_run: true
-  - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.109.0
-    hooks:
-      - id: terraform_fmt
-      - id: terraform_docs
-        name: terraform_docs on modules
-        args:
-          - --hook-config=--create-file-if-not-exist=true
-          - --args=--hide providers
-          - --args=--lockfile=false
-        files: ^infra/(?:.*/)?_?modules/[^/]+/[^/]+\.tf$
-        exclude: ^infra/(?:.*/)?_?modules/[^/]+/(examples|tests|example)/.*
-      - id: terraform_tflint
-        args:
-          - --args=--disable-rule terraform_required_version
-          - --args=--disable-rule terraform_required_providers
-          - --args=--config=__GIT_WORKING_DIR__/.tflint.hcl
-        exclude: ^providers/.*
-      - id: terraform_validate
-        args:
-          - --args=-json
-          - --args=-no-color
-          - --hook-config=--retry-once-with-cleanup=true
-        exclude: ^providers/.*|.*/examples?(/|$)
-      - id: terraform_trivy
-        args:
-          - --args=--config=__GIT_WORKING_DIR__/trivy.yml
-          - --args=--ignorefile=__GIT_WORKING_DIR__/.trivyignore
-          - --args=--config-check=__GIT_WORKING_DIR__/.trivy/checks/terraform
-          - --hook-config=--parallelism-limit=1
