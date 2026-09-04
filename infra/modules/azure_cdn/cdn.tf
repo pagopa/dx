@@ -80,6 +80,7 @@ resource "azurerm_cdn_frontdoor_route" "this" {
   cache {
     query_string_caching_behavior = "IgnoreQueryString"
     compression_enabled           = true
+    content_types_to_compress     = local.compression_content_types
   }
 }
 

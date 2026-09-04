@@ -196,6 +196,11 @@ run "cdn_route_configuration" {
   }
 
   assert {
+    condition     = toset(azurerm_cdn_frontdoor_route.this.cache[0].content_types_to_compress) == toset(local.compression_content_types)
+    error_message = "Route compression must use the supported content types"
+  }
+
+  assert {
     condition     = contains(azurerm_cdn_frontdoor_route.this.supported_protocols, "Http")
     error_message = "Route must support HTTP protocol"
   }
