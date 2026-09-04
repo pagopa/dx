@@ -1,14 +1,13 @@
 {
-  "automation_cd_common_key_vault_certificates": {
-    "hash": "4b05c2a48659f272b3c88c4ce846de09870a45e996fbabd1036e36f412112040",
-    "version": "2.1.0",
-    "name": "azure_role_assignments",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/2.1.0"
-  },
-  "azure_core_values": {
-    "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
-    "version": "2.0.0",
-    "name": "azure_core_values_exporter",
-    "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
+  "lockFileVersion": 2,
+  "modules": {
+    "automation_cd_common_key_vault_certificates": {
+      "hash": "1cc63195740ccf7963682106e66c22dc18d538895ba73cb36428d013cb16fe91",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.0"
+    },
+    "azure_core_values": {
+      "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
+    }
   }
 }
