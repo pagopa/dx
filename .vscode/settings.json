@@ -1,6 +1,7 @@
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
+  "python.terminal.activateEnvironment": false,
   "[terraform][terraform-test]": {
     "editor.defaultFormatter": "hashicorp.terraform"
   },

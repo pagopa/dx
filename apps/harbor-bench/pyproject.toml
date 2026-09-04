@@ -1,0 +1,38 @@
+[build-system]
+# Prevent unreviewed build-backend upgrades from entering the trusted build path.
+requires = ["setuptools==80.9.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "harbor-bench"
+version = "0.1.0"
+description = "PagoPA Harbor CLI: convert evals.json to Harbor tasks, report and compare benchmark runs."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+  "harbor==0.22.0",
+  "harbor-copilot>=0.1.0",
+  "jinja2>=3.1",
+  "tomli-w>=1.0",
+  "pydantic>=2.7",
+  "PyYAML>=6.0",
+]
+classifiers = ["Private :: Do Not Upload"]
+
+[project.scripts]
+harbor-bench = "harbor_bench.cli:main"
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.uv.sources]
+harbor-copilot = { workspace = true }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+harbor_bench = ["templates/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
