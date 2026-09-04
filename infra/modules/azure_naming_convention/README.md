@@ -40,7 +40,7 @@ This configuration will generate a resource name like `dx-d-itn-web-app-example-
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 
 ## Modules
@@ -54,13 +54,13 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_domain"></a> [domain](#output\_domain) | The domain segment used in the naming convention, derived from the environment's domain value or a default placeholder if not provided. |
 | <a name="output_env_name"></a> [env\_name](#output\_env\_name) | The full name of the environment, derived from the short name provided in the environment configuration. Example: 'dev' for 'd'. |
 | <a name="output_prefix"></a> [prefix](#output\_prefix) | The full prefix used in the naming convention for resources. It is composed of the environment prefix, environment short name, location short name, optionally the domain and app name. Example: 'dx-d-itn-[DOMAIN]-name'. |

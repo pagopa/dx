@@ -68,10 +68,11 @@ const getProjectNameFromRoot = (root) => root.split(path.sep).reduce((acc, part,
 	if (part === "_modules") return [...acc, "modules"];
 	return [...acc, part.replaceAll("_", "-")];
 }, []).join("-");
-const getProjectType = (root) => {
+const isTerraformLibraryRoot = (root) => {
 	const rootSegments = new Set(root.split(path.sep));
-	return rootSegments.has("modules") || rootSegments.has("_modules") ? "library" : "application";
+	return rootSegments.has("modules") || rootSegments.has("_modules");
 };
+const getProjectType = (root) => isTerraformLibraryRoot(root) ? "library" : "application";
 const defaultEnvironments = [
 	"prod",
 	"uat",
@@ -169,6 +170,24 @@ const getInitTarget = (projectType, initTargetName, cwd) => [initTargetName, pro
 	options: { cwd },
 	outputs: ["{projectRoot}/.terraform", "{projectRoot}/.terraform.lock.hcl"]
 }];
+const getTrivyTarget = (workspaceRoot, root) => ({
+	cache: true,
+	command: "trivy config",
+	inputs: [
+		"{projectRoot}/**/*.{tf,tfvars}",
+		"{workspaceRoot}/trivy.yml",
+		"{workspaceRoot}/.trivyignore",
+		"{workspaceRoot}/.trivy/checks/terraform/**/*"
+	],
+	options: {
+		args: [
+			"--config",
+			path.resolve(workspaceRoot, "trivy.yml"),
+			root
+		],
+		cwd: "{workspaceRoot}"
+	}
+});
 const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities) => {
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
@@ -187,9 +206,11 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	targets.push([getTargetName(opts, "validate"), {
 		cache: true,
 		command: `terraform validate`,
+		dependsOn: [initTargetName],
 		inputs: ["default", "examples"],
 		options: { cwd }
 	}]);
+	targets.push([getTargetName(opts, "trivy"), getTrivyTarget(workspaceRoot, root)]);
 	if (hasRootTflintConfig) targets.push([getTargetName(opts, "lint"), {
 		cache: true,
 		command: `tflint`,
@@ -207,20 +228,15 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	if (projectType === "library") {
 		targets.push([getTargetName(opts, "docs"), {
 			cache: true,
-			command: `terraform-docs markdown table`,
+			command: `terraform-docs markdown table .`,
+			configurations: { ci: { "output-check": true } },
 			inputs: ["default", "{projectRoot}/README.md"],
 			options: {
-				args: [
-					"--output-file",
-					"README.md",
-					"--output-mode",
-					"inject",
-					"--hide",
-					"providers",
-					"--lockfile=false",
-					"."
-				],
-				cwd
+				cwd,
+				hide: "providers",
+				lockfile: false,
+				"output-file": "README.md",
+				"output-mode": "inject"
 			},
 			outputs: ["{projectRoot}/README.md"]
 		}]);
@@ -425,7 +441,11 @@ const getDiscoveryState = (configFiles) => {
 		}
 		terraformConfigFiles.push(configFile);
 	}
-	const terraformRoots = new Set(terraformConfigFiles.map(path.dirname));
+	const projectTerraformConfigFiles = terraformConfigFiles.filter((file) => {
+		const root = path.dirname(file);
+		return !isTerraformLibraryRoot(root) || moduleManifestRoots.has(root);
+	});
+	const terraformRoots = new Set(projectTerraformConfigFiles.map(path.dirname));
 	for (const testConfigFile of testConfigFiles) {
 		const testsRoot = path.dirname(testConfigFile);
 		const projectRoot = path.dirname(testsRoot);
@@ -439,7 +459,7 @@ const getDiscoveryState = (configFiles) => {
 	}
 	return {
 		moduleManifestRoots,
-		terraformConfigFiles,
+		terraformConfigFiles: projectTerraformConfigFiles,
 		testCapabilitiesByRoot
 	};
 };

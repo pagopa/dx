@@ -132,7 +132,7 @@ Complete examples of how to use this module can be found in the [examples/basic]
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.15 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -144,7 +144,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_cdn_frontdoor_custom_domain.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain) | resource |
 | [azurerm_cdn_frontdoor_custom_domain_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain_association) | resource |
 | [azurerm_cdn_frontdoor_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_endpoint) | resource |
@@ -169,7 +169,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_custom_domains"></a> [custom\_domains](#input\_custom\_domains) | Map of custom domain configurations to associate with the CDN endpoint.<br/>If dns parameter is set, DNS records are created.<br/>If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used.<br/>To generate one in PagoPA context, please refer to the Confluence documentation. | <pre>list(object({<br/>    host_name = string<br/>    dns = optional(object({<br/>      zone_name                = string<br/>      zone_resource_group_name = string<br/>    }), { zone_name = null, zone_resource_group_name = null })<br/><br/>    custom_certificate = optional(object({<br/>      key_vault_certificate_versionless_id = string<br/>      key_vault_name                       = string<br/>      key_vault_resource_group_name        = string<br/>      key_vault_has_rbac_support           = optional(bool, true)<br/>    }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })<br/>  }))</pre> | `[]` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment configuration object for resource naming | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
@@ -184,7 +184,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the CDN FrontDoor Profile. |
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |

@@ -131,7 +131,7 @@ A complete usage example can be found in the [example/complete](https://github.c
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.9 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.70 |
@@ -145,7 +145,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azapi_resource.auth](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_resource.managed_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_update_resource.bind_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) | resource |
@@ -159,7 +159,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_acr_registry"></a> [acr\_registry](#input\_acr\_registry) | Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name. | `string` | `null` | no |
 | <a name="input_allow_access_from_environment_only"></a> [allow\_access\_from\_environment\_only](#input\_allow\_access\_from\_environment\_only) | If false (default), the Container App is accessible via public internet or within the VNet, depending on the Container App Environment configuration.<br/>If true, the Container App is accessible only from other apps on the same Container App Environment. | `bool` | `false` | no |
 | <a name="input_authentication"></a> [authentication](#input\_authentication) | Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client\_secret\_key\_vault\_id must be the versionless\_id of the KV secret; the module automatically adds it to the Container App secrets. | <pre>object({<br/>    azure_active_directory = object({<br/>      client_id                  = string<br/>      tenant_id                  = string<br/>      client_secret_key_vault_id = string<br/>    })<br/>  })</pre> | `null` | no |
@@ -181,7 +181,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_custom_domain"></a> [custom\_domain](#output\_custom\_domain) | Custom domain binding. Only populated if the 'custom\_domain' variable was provided. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Container App resource. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Container App resource. |

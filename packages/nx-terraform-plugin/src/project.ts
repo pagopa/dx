@@ -54,16 +54,15 @@ export const getProjectNameFromRoot = (root: string) =>
     )
     .join("-");
 
-// Modules contained in "modules" or "_modules" folder are reusable and should be
-// treated as libraries, while other Terraform configurations should be treated
-// as applications (assuming they are meant to be provisioned directly, rather than being
-// consumed by other configurations)
-const getProjectType = (root: string): ProjectType => {
+// Identifies roots that conventionally contain reusable Terraform modules.
+// Discovery additionally requires module.json before inferring these as projects.
+export const isTerraformLibraryRoot = (root: string): boolean => {
   const rootSegments = new Set(root.split(path.sep));
-  return rootSegments.has("modules") || rootSegments.has("_modules")
-    ? "library"
-    : "application";
+  return rootSegments.has("modules") || rootSegments.has("_modules");
 };
+
+const getProjectType = (root: string): ProjectType =>
+  isTerraformLibraryRoot(root) ? "library" : "application";
 
 const defaultEnvironments = ["prod", "uat", "dev"];
 
@@ -227,6 +226,24 @@ const getInitTarget = (
       },
 ];
 
+const getTrivyTarget = (
+  workspaceRoot: string,
+  root: string,
+): TargetConfiguration => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: ["--config", path.resolve(workspaceRoot, "trivy.yml"), root],
+    cwd: "{workspaceRoot}",
+  },
+});
+
 const getTargets = (
   opts: TerraformPluginOptions,
   workspaceRoot: string,
@@ -269,11 +286,17 @@ const getTargets = (
     {
       cache: true,
       command: `terraform validate`,
+      dependsOn: [initTargetName],
       inputs: ["default", "examples"],
       options: {
         cwd,
       },
     },
+  ]);
+
+  targets.push([
+    getTargetName(opts, "trivy"),
+    getTrivyTarget(workspaceRoot, root),
   ]);
 
   if (hasRootTflintConfig) {
@@ -303,20 +326,19 @@ const getTargets = (
       getTargetName(opts, "docs"),
       {
         cache: true,
-        command: `terraform-docs markdown table`,
+        command: `terraform-docs markdown table .`,
+        configurations: {
+          ci: {
+            "output-check": true,
+          },
+        },
         inputs: ["default", "{projectRoot}/README.md"],
         options: {
-          args: [
-            "--output-file",
-            "README.md",
-            "--output-mode",
-            "inject",
-            "--hide",
-            "providers",
-            "--lockfile=false",
-            ".",
-          ],
           cwd,
+          hide: "providers",
+          lockfile: false,
+          "output-file": "README.md",
+          "output-mode": "inject",
         },
         outputs: ["{projectRoot}/README.md"],
       },

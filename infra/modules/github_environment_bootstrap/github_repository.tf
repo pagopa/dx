@@ -23,8 +23,6 @@ resource "github_repository" "this" {
   has_discussions = false
   has_issues      = var.repository.has_issues
 
-  vulnerability_alerts = true
-
   archive_on_destroy  = true
   allow_update_branch = true
 
@@ -50,4 +48,9 @@ resource "github_repository_autolink_reference" "jira_board" {
   repository          = github_repository.this.name
   key_prefix          = format("%s-", each.value)
   target_url_template = "https://pagopa.atlassian.net/browse/${each.value}-<num>"
+}
+
+resource "github_repository_vulnerability_alerts" "repository" {
+  repository = github_repository.this.name
+  enabled    = true
 }

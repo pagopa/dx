@@ -87,14 +87,14 @@ This module supports both Redis flavors through two distinct inputs:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.60 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_apim"></a> [apim](#module\_apim) | ./modules/apim | n/a |
 | <a name="module_app_config"></a> [app\_config](#module\_app\_config) | ./modules/app_config | n/a |
 | <a name="module_cosmos"></a> [cosmos](#module\_cosmos) | ./modules/cosmos | n/a |
@@ -112,7 +112,7 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_apim"></a> [apim](#input\_apim) | List of role assignments for Azure API Management (APIM) instances.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the API Management instance<br/>- resource\_group\_name: Resource group containing the APIM instance<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_app_config"></a> [app\_config](#input\_app\_config) | List of role assignments for Azure App Configuration stores.<br/><br/>REQUIRED FIELDS:<br/>- name: Name of the App Configuration store<br/>- resource\_group\_name: Resource group containing the App Configuration store<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose | <pre>list(object({<br/>    name                = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_cosmos"></a> [cosmos](#input\_cosmos) | List of role assignments for Azure Cosmos DB accounts.<br/><br/>REQUIRED FIELDS:<br/>- account\_name: Name of the Cosmos DB account<br/>- resource\_group\_name: Resource group containing the account<br/>- role: Permission level - MUST be one of: "reader", "writer", "owner"<br/>- description: Human-readable description of the role assignment purpose<br/><br/>OPTIONAL FIELDS:<br/>- database: Database name (default: "*" for all databases)<br/>- collections: List of collection names (default: ["*"] for all collections) | <pre>list(object({<br/>    account_name        = string<br/>    resource_group_name = string<br/>    role                = string<br/>    description         = string<br/>    database            = optional(string, "*")<br/>    collections         = optional(list(string), ["*"])<br/>  }))</pre> | `[]` | no |

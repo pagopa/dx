@@ -48,7 +48,7 @@ module "core_values" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | >= 0.0.6, < 1.0.0 |
@@ -60,20 +60,20 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [terraform_remote_state.core](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 | [terraform_remote_state.core_azure](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/data-sources/remote_state) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_core_state"></a> [core\_state](#input\_core\_state) | Configuration for accessing the core Terraform state. Supports both S3 (AWS) and Azure Storage backends. | <pre>object({<br/>    key = string<br/><br/>    # S3 backend configuration (AWS)<br/>    bucket         = optional(string, null)<br/>    region         = optional(string, null)<br/>    dynamodb_table = optional(string, null)<br/><br/>    # Azure Storage backend configuration<br/>    storage_account_name = optional(string, null)<br/>    container_name       = optional(string, null)<br/>    resource_group_name  = optional(string, null)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_availability_zones"></a> [availability\_zones](#output\_availability\_zones) | List of availability zones used |
 | <a name="output_dynamodb_endpoint_id"></a> [dynamodb\_endpoint\_id](#output\_dynamodb\_endpoint\_id) | The ID of the DynamoDB VPC endpoint |
 | <a name="output_github_personal_access_token_ssm_parameter_name"></a> [github\_personal\_access\_token\_ssm\_parameter\_name](#output\_github\_personal\_access\_token\_ssm\_parameter\_name) | SSM parameter name for the GitHub personal access token |

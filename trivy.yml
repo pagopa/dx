@@ -1,0 +1,20 @@
+exit-code: 1
+ignorefile: .trivyignore
+quiet: true
+
+misconfiguration:
+  raw-config-scanners:
+    - terraform
+  terraform:
+    exclude-downloaded-modules: true
+
+rego:
+  check:
+    - .trivy/checks/terraform
+  namespaces:
+    - user
+
+scan:
+  skip-dirs:
+    - "**/.terraform"
+    - "**/tests/apps/network_access"
