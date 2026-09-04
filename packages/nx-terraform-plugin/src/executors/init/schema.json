@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "version": 2,
   "title": "Terraform init executor",
-  "description": "Initializes Terraform and locks downloaded Registry modules",
+  "description": "Initializes Terraform and locks providers and downloaded Registry modules",
   "type": "object",
   "properties": {
     "projectRoot": {
@@ -18,7 +18,7 @@
       "default": []
     },
     "frozenLockfile": {
-      "description": "Fail instead of updating tfmodules.lock.json when downloaded modules differ",
+      "description": "Use Terraform's read-only provider lock validation and fail instead of updating tfmodules.lock.json when downloaded modules differ",
       "type": "boolean",
       "default": false
     }
