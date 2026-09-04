@@ -14,8 +14,8 @@
       "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
     },
     "azure.bootstrap": {
-      "hash": "5a315a6b61726aa92326f7b72dce056e0b2fc36f0e1e0c9f51452d65f549eac3",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/6.0.0"
+      "hash": "3f0d407d19695f5e22cebd3765d3ae96d1b298c153574599bd4b97b8031d8a55",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/6.0.1"
     },
     "azure.bootstrap.github_runner": {
       "hash": "9e7ad257adb3eb09a4c5113dbca7a4642481388627a9aea45c3e27a58edac11f",
