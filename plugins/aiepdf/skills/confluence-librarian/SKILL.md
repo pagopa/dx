@@ -27,15 +27,15 @@ meaning merely to make publication easier.
 
 Accept the following from the calling skill or user:
 
-| Input            | Required    | Description                                                      |
-| ---------------- | ----------- | ---------------------------------------------------------------- |
-| Source document  | Yes         | Path or content of the prepared page/document artifact           |
-| Operation        | Yes         | Create a new page or update an existing page                     |
-| Title            | Yes         | Page title, inferred only when unambiguous                       |
-| Language         | Yes         | Visible page language; preserve machine-facing IDs               |
-| Space           | Yes         | Target Confluence space, inferred only when safe                 |
-| Parent page     | When needed | Parent page for hierarchical content such as a Use Case          |
-| Existing page ID | For updates | Page ID or URL when updating an existing page                    |
+| Input            | Required    | Description                                             |
+| ---------------- | ----------- | ------------------------------------------------------- |
+| Source document  | Yes         | Path or content of the prepared page/document artifact  |
+| Operation        | Yes         | Create a new page or update an existing page            |
+| Title            | Yes         | Page title, inferred only when unambiguous              |
+| Language         | Yes         | Visible page language; preserve machine-facing IDs      |
+| Space            | Yes         | Target Confluence space, inferred only when safe        |
+| Parent page      | When needed | Parent page for hierarchical content such as a Use Case |
+| Existing page ID | For updates | Page ID or URL when updating an existing page           |
 
 If the source document is not available, ask the user to provide it. Do not
 claim to have published content that was not read.
@@ -53,27 +53,32 @@ claim to have published content that was not read.
    tables, lists, links, code blocks, stable HTML-comment IDs, table IDs,
    statuses, `N/A` reasons, open questions, and source references. Identify
    unsupported constructs before writing. Treat markdown soft-wraps as
-   presentation-only formatting: when the source is wrapped for readability,
-   collapse soft-wrapped lines before comparing or publishing content so they do
-   not become accidental paragraphs, bullets, or content changes.
+   presentation-only formatting, never as content (collapse them in step 4).
 4. **Prepare the representation.** Convert the source into the format
-   supported by the authenticated Confluence integration. Translate only
-   human-facing prose, headings, labels, and values when requested. Keep
-   stable IDs, machine-facing status values, entity IDs, URLs, API operation
-   names, and code unchanged. Ignore markdown soft-wraps in the source; do not
-   reproduce them as hard line breaks or blank paragraphs in Confluence.
+   supported by the authenticated Confluence integration. For a Markdown
+   source, run the bundled normalizer so soft-wraps become deterministic
+   output: `python3 scripts/prepare_markdown.py --title "<page title>" <source>.md <prepared>.md`.
+   Resolve `scripts/` relative to this SKILL.md's own directory (the path
+   reported when this skill was loaded), never relative to your working
+   directory. Skip the script for HTML sources or already-normalized Markdown.
+   What the script keeps verbatim, and how to publish constructs such as
+   `<details>` and admonitions, is the rich-content rule under Structure rules.
+   When a language is requested, translate per the Translation rules.
 5. **Show the irreversible action.** State the operation, page title, space,
    parent, language, and source path before creating or updating the page.
 6. **Publish through the authenticated integration.** Use the available
    Confluence tool or API. For updates, preserve the current page's relevant
-   metadata and replace only the requested content.
+   metadata, replace only the requested content, and pass the `snapshotToken`.
 7. **Verify the result.** Retrieve or inspect the returned page identifier and
-   URL. Confirm that the operation succeeded and report the page URL. If the
-   integration reports an error, surface it rather than returning a
+   URL. Compare the stored body by content parity (see Structure rules), not
+   by byte equality, since Confluence normalizes Markdown cosmetics on import
+   and export. Confirm that the operation succeeded and report the page URL.
+   If the integration reports an error, surface it rather than returning a
    success-shaped response.
 8. **Preserve lifecycle state.** Publication alone must not change a source
    document's status such as `draft` or `review`. Change lifecycle state only
    when the user explicitly requests it and the domain skill permits it.
+
 ## Confirmation protocol
 
 Use this question when a prepared document is ready but publication has not
@@ -110,13 +115,40 @@ Source: <document path or artifact>
   starts with a Markdown H1 whose text exactly matches the page title, omit
   that H1 from the published body to avoid displaying the title twice. Keep
   later H1 headings and a leading H1 with different text unchanged.
-- For updates, fetch the existing page first when the operation could overwrite
-  comments, local IDs, links, or page metadata.
 - Use the authenticated integration's native document representation when
   available. Never store credentials in the skill or generated document.
-- Ignore markdown soft-wraps in the source. Wrapped lines are formatting-only
-  and must be normalized before import; they must not become new paragraphs,
-  bullets, or hard breaks in Confluence.
+- For updates, fetch the existing page first when the operation could overwrite
+  comments, local IDs, links, or page metadata. Fetching also returns the
+  `snapshotToken` that updates require; pass it with the update.
+- Confluence-only rich content has no plain-Markdown body form. Examples:
+  collapsible sections (`expand` / `<details>` "a comparsa"), callouts
+  (`info`, `note`, `tip`, `warning`, `error`, panels), `toc`, images, smart
+  links, inline comments. A full-body Markdown replace cannot carry them, so
+  **never delete or flatten them to make a Markdown push pass** — that is
+  content loss. Instead, when such constructs must survive:
+  - if the incoming source already states them (a `<details>`/`<summary>` block,
+    or an admonition like `> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`,
+    `> [!CAUTION]`), publish them as their Confluence macro equivalents
+    (collapsible `expand`; `info`/`tip`/`warning`/`error` callout) through a
+    route that supports macros — HTML body or granular `edits` — and verify
+    they survived, rather than pushing a body that would flatten them;
+  - if the existing page has such constructs and the incoming source does not
+    restate them, carry them forward or stop and ask the user — never silently
+    drop them, and never create a placeholder page or duplicate as a fallback.
+- Ignore markdown soft-wraps in the source; the bundled normalizer (in this
+  skill's `scripts/` directory) turns wrapped lines into one logical line per
+  paragraph/item so they do not become new paragraphs, bullets, or hard breaks
+  in Confluence. It deliberately keeps code fences, `<details>` blocks, HTML
+  comments, and admonition bodies (label and wrapped prose) verbatim; how to
+  publish constructs the script keeps verbatim is the rich-content rule above.
+- Verify by **content parity, not byte parity**: Confluence's own Markdown
+  round-trip re-normalizes cosmetics (table separators to `| --- |`, emphasis
+  delimiters, escaping, blockquote markers). Compare token streams ignoring
+  whitespace and structural `>` markers, or run the script's built-in
+  `--check`. `--check` detects lost or reordered tokens only; it does not
+  prove Markdown structure survived, so also confirm that tables, list-item
+  indentation, and blockquote nesting are intact in the prepared body.
+  Cosmetic deltas are expected and not a sync failure.
 - Markdown front matter is not native Confluence metadata. When publishing a
   Markdown document, render its front-matter values as a Confluence metadata
   table, and verify that stable IDs and lifecycle status remain visible after
