@@ -38,13 +38,13 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@1cc036402b482ed124316d03c93452afe95ac6fd # main
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@1cc036402b482ed124316d03c93452afe95ac6fd # main
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@1cc036402b482ed124316d03c93452afe95ac6fd # main
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 

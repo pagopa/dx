@@ -63,7 +63,7 @@ jobs:
         run: pnpm --filter . ci
 
       - name: Warn missing version plan coverage
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@1cc036402b482ed124316d03c93452afe95ac6fd # main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -272,7 +272,7 @@ jobs:
           experimental: true
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@1cc036402b482ed124316d03c93452afe95ac6fd # main
 
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
@@ -381,7 +381,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-task@main
+        uses: pagopa/dx/actions/run-dx-task@1cc036402b482ed124316d03c93452afe95ac6fd # main
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
