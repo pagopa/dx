@@ -12,7 +12,7 @@ import le_renew_ssl_certificate_generate_csr
 
 
 def main():
-    assert cryptography.__version__ == "48.0.1"
+    assert cryptography.__version__ == "50.0.0"
     assert jwt.__version__ == "2.13.0"
     assert le_create_acme_test_account.DEFAULT_DIRECTORY_URL.startswith("https://")
 
