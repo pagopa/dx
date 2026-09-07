@@ -43,33 +43,6 @@ module "roles_cd" {
   ]
 }
 
-resource "azurerm_role_assignment" "storage_blob_contributor" {
-  count                = var.environment.env_short == "d" ? 1 : 0
-  scope                = data.azurerm_resource_group.tfstate[0].id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = module.bootstrap.identities.infra.ci.principal_id
-}
-
-resource "azurerm_role_assignment" "storage_blob_contributor_to_admins" {
-  count                = var.environment.env_short == "d" ? 1 : 0
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "Storage Blob Data Contributor"
-  principal_id         = data.azuread_group.admins.object_id
-}
-
-resource "azurerm_role_assignment" "contributor" {
-  count                = var.environment.env_short == "u" ? 1 : 0
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "Contributor"
-  principal_id         = module.bootstrap.identities.infra.ci.principal_id
-}
-
-resource "azurerm_role_assignment" "static_web_apps_list_secrets" {
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "PagoPA Static Web Apps List Secrets"
-  principal_id         = module.bootstrap.identities.infra.ci.principal_id
-}
-
 resource "azurerm_role_assignment" "integration_test_subscription_owner" {
   count = var.environment.env_short == "u" ? 1 : 0
 
