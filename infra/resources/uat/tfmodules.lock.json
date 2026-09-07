@@ -1,0 +1,13 @@
+{
+  "lockFileVersion": 2,
+  "modules": {
+    "automation_cd_common_key_vault_certificates": {
+      "hash": "1cc63195740ccf7963682106e66c22dc18d538895ba73cb36428d013cb16fe91",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.0"
+    },
+    "azure_core_values": {
+      "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
+    }
+  }
+}

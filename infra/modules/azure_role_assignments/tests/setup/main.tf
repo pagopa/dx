@@ -34,7 +34,7 @@ locals {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_role_assignments/tests"
     ManagementTeam = "Developer Experience"
