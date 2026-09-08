@@ -11,6 +11,12 @@ document. Product, Engineering, Design, control functions, and delivery
 stakeholders use it to review feasibility, align system behavior and contracts,
 and guide implementation.
 
+## Shared glossary
+
+Before proceeding, read the shared plugin glossary at
+[`../../references/glossary.md`](../../references/glossary.md). Use its
+definitions to keep framework terminology consistent across plugin artifacts.
+
 ## When to use this skill
 
 Use this skill to:
