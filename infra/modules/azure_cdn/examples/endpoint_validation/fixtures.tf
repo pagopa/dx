@@ -21,7 +21,7 @@ data "azurerm_subnet" "pep" {
 # Create a storage account with static website enabled
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = local.environment
 
