@@ -465,7 +465,14 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 cur_depth = depth
                 if _is_fence(body):
                     # keep the whole quoted fence verbatim: consume same-depth
-                    # lines until the closing fence, preserving code indentation
+                    # lines until a fence that closes THIS opener (same char,
+                    # at least as long), preserving code indentation
+                    fence = FENCE_OPEN.match(body)
+                    ch = fence.group("fence")[0] if fence else "`"
+                    open_len = len(fence.group("fence")) if fence else 3
+                    closing = re.compile(
+                        r"^[ \t]*" + re.escape(ch) + "{" + str(open_len) + ",}[ \t]*$"
+                    )
                     prefix = "> " * depth
                     out.append(prefix + body)
                     i += 1
@@ -475,7 +482,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
                             break
                         out.append(prefix + nxt[1])
                         i += 1
-                        if _is_fence(nxt[1].strip()):
+                        if closing.match(nxt[1]):
                             break
                     continue
                 out.append(("> " * depth) + body)

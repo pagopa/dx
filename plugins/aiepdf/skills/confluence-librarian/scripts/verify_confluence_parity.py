@@ -273,8 +273,14 @@ def marker_status(stored: str, marker: str) -> str:
         escaped = m.start() > 0 and masked[m.start() - 1] == "\\"
         if not escaped and _marker_key(m.group(0)) == key:
             return "ok"
-    if key in html.unescape(masked).replace("\\", ""):
-        return "escaped"
+    # Not a genuine comment node: unescape the stored body and canonicalize
+    # whatever marker-shaped text it now shows, so an entity-escaped rendering
+    # that differs only in internal spacing (e.g. `&lt;!-- id:x --&gt;` for
+    # `<!-- id: x -->`) is still recognised as escaped visible text.
+    visible = html.unescape(masked).replace("\\", "")
+    for m in _MARKER_NODE.finditer(visible):
+        if _marker_key(m.group(0)) == key:
+            return "escaped"
     return "missing"
 
 

@@ -155,6 +155,13 @@ class NormalizeTest(unittest.TestCase):
             self.norm(src), "> ```\n>     def f():\n>         return 1\n> ```\n> after\n"
         )
 
+    def test_quoted_longer_fence_not_closed_by_shorter(self):
+        src = "> ````\n> ```\n> inner example\n> ````\n> after\n"
+        self.assertEqual(
+            self.norm(src),
+            "> ````\n> ```\n> inner example\n> ````\n> after\n",
+        )
+
     def test_admonition_kept_verbatim(self):
         src = "> [!NOTE]\n> This callout body\n> is wrapped here.\n"
         self.assertEqual(self.norm(src), "> [!NOTE]\n> This callout body\n> is wrapped here.\n")

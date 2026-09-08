@@ -118,6 +118,10 @@ class MarkerTest(unittest.TestCase):
         stored = "before <!-- id:x --> after"
         self.assertEqual(vp.marker_status(stored, self.MARKER), "ok")
 
+    def test_entity_escaped_marker_with_different_spacing_is_escaped(self):
+        stored = "rendered as visible text: &lt;!-- id:x --&gt;"
+        self.assertEqual(vp.marker_status(stored, self.MARKER), "escaped")
+
 
 class MarkerDiscoveryTest(unittest.TestCase):
     def test_find_markers_ignores_markers_inside_code(self):
@@ -161,6 +165,13 @@ class CliTest(unittest.TestCase):
     def test_escaped_marker_fails(self):
         expected = "Hello\n<!-- id: x -->\nworld\n"
         stored = "Hello\n&lt;!-- id: x --&gt;\nworld\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("ISSUE escaped comment marker", proc.stdout)
+
+    def test_escaped_marker_with_different_spacing_fails(self):
+        expected = "Hello\n<!-- id: x -->\nworld\n"
+        stored = "Hello\n&lt;!-- id:x --&gt;\nworld\n"
         proc = self._run(expected, stored)
         self.assertEqual(proc.returncode, 1)
         self.assertIn("ISSUE escaped comment marker", proc.stdout)
