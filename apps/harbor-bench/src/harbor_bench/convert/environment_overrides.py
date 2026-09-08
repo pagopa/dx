@@ -110,7 +110,7 @@ def _validate_environment(path: Path, value: object) -> dict:
         ):
             raise EnvironmentOverridesError(
                 f"{path.name}: [environment].env must be a table of strings "
-                "(e.g. ATLASSIAN_MCP_AUTH = \"${{ATLASSIAN_MCP_AUTH}}\")"
+                '(e.g. ATLASSIAN_MCP_AUTH = "${ATLASSIAN_MCP_AUTH}")'
             )
 
     return {k: v for k, v in value.items() if v is not None}
