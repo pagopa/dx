@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "example" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "example",
+    name          = "ca",
     resource_type = "resource_group"
   }))
   location = local.environment.location
@@ -28,7 +28,7 @@ data "azurerm_log_analytics_workspace" "common" {
 
 module "container_app_environment" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 2.0"
+  version = "~> 4.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -44,7 +44,7 @@ module "container_app_environment" {
 
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 5.0"
+  version = "~> 7.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
