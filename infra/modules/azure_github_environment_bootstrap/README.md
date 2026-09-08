@@ -140,17 +140,17 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 
 ### Summary Table
 
-| Variable                             | Type         | Required | Description                                            |
-| ------------------------------------ | ------------ | :------: | ------------------------------------------------------ |
-| `environment`                        | object       |    ✅    | Naming conventions and resource location configuration |
-| `entraid_groups`                     | object       |    ✅    | Azure Entra ID security groups for RBAC                |
-| `terraform_storage_account`          | object       |    ✅    | Storage account for Terraform state files              |
-| `repository`                         | object       |    ✅    | GitHub repository details                              |
-| `github_private_runner`              | object       |    ✅    | Self-hosted runner configuration                       |
-| `private_dns_zone_resource_group_id` | string       |    ✅    | Resource group with private DNS zones                  |
-| `opex_resource_group_id`             | string       |    ✅    | Resource group for Opex dashboards                     |
-| `tags`                               | map(string)  |    ✅    | Tags for all resources                                 |
-| `additional_resource_group_ids`      | set(string)  |    ❌    | Extra resource groups for role assignments             |
+| Variable                             | Type        | Required | Description                                            |
+| ------------------------------------ | ----------- | :------: | ------------------------------------------------------ |
+| `environment`                        | object      |    ✅    | Naming conventions and resource location configuration |
+| `entraid_groups`                     | object      |    ✅    | Azure Entra ID security groups for RBAC                |
+| `terraform_storage_account`          | object      |    ✅    | Storage account for Terraform state files              |
+| `repository`                         | object      |    ✅    | GitHub repository details                              |
+| `github_private_runner`              | object      |    ✅    | Self-hosted runner configuration                       |
+| `private_dns_zone_resource_group_id` | string      |    ✅    | Resource group with private DNS zones                  |
+| `opex_resource_group_id`             | string      |    ✅    | Resource group for Opex dashboards                     |
+| `tags`                               | map(string) |    ✅    | Tags for all resources                                 |
+| `additional_resource_group_ids`      | set(string) |    ❌    | Extra resource groups for role assignments             |
 
 ### Required Variables
 
@@ -435,7 +435,7 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 1.0 |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
 
 ## Resources
 

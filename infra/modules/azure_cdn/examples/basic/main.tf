@@ -19,7 +19,7 @@ data "azurerm_subnet" "pep" {
 
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = local.environment
 
@@ -59,7 +59,7 @@ data "azurerm_key_vault_certificate" "cert" {
 
 module "azure_cdn" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.4"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
