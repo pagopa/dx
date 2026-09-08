@@ -22,7 +22,8 @@
         "Preserves stable IDs and machine-facing status values exactly.",
         "Preserves headings, tables, links, and conditional N/A reasons.",
         "Translates human-facing prose without translating code, URLs, or operation names.",
-        "Omits a leading H1 when it exactly matches the Confluence page title, while preserving other headings."
+        "Omits a leading H1 when it exactly matches the Confluence page title, while preserving other headings.",
+        "A stable `<!-- id: ... -->` marker kept in the prepared representation may be dropped outright by Confluence on import (HTML comments are not representable on every write route); that platform limitation does not violate the ID rule. Only mangling it into visible or escaped text (`\\<!--`, `&lt;!--`) is a failure."
       ],
       "files": ["fixtures/architecture-guide.md"]
     },
@@ -51,7 +52,8 @@
         "Does NOT delete or flatten Confluence-only rich content (expand/collapsible sections, info/note/tip/warning/error callouts) to make a Markdown push pass; it preserves those nodes as macros or stops and asks the user.",
         "When the incoming source itself declares such constructs (e.g. a <details> block or an admonition), keeps them verbatim through preparation and publishes them via a macro-capable route.",
         "Passes the snapshotToken from the prior page fetch on the update.",
-        "Verifies by content parity (tokens, ignoring whitespace and structural '>' markers), accepting cosmetic Markdown re-normalization."
+        "Verifies by content parity (tokens, ignoring whitespace and structural '>' markers), accepting cosmetic Markdown re-normalization.",
+        "Content parity ignores stable HTML-comment markers that Confluence drops outright on import (a platform limitation — the marker must remain in the prepared representation). Only markers escaped into visible text (`\\<!--`, `&lt;!--`) count as a parity failure."
       ],
       "files": ["fixtures/design-review-softwrapped.md"]
     }

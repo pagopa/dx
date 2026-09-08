@@ -121,6 +121,9 @@ Everything beyond the quick start is documented in
 - [Authoring skills for the benchmark](docs/advanced-usage.md#authoring-skills-for-the-benchmark) —
   `evals.json`, workspace fixtures, `prepare.sh`, and how grading (RewardKit)
   and the verifier work.
+- [External MCP servers and secrets](docs/advanced-usage.md#external-mcp-servers-and-secrets-harborenvironmenttoml) —
+  running evals that drive a live authenticated service (e.g. Confluence via
+  the Atlassian MCP) with `harbor/environment.toml` + host-provided secrets.
 - [Skill eval data and git sources](docs/advanced-usage.md#skill-eval-data-and-git-sources) —
   eval-data visibility inside the agent container.
 - [Comparing skill versions (workspace vs git)](docs/advanced-usage.md#comparing-skill-versions-workspace-vs-git) —

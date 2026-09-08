@@ -36,7 +36,13 @@ _Avoid_: file, asset
 **Harbor layout**:
 The optional on-disk controls under a skill's `harbor/` directory:
 `workspace/` supplies the base fixture layer, `prepare.sh` applies to every
-case, and `harbor/<task-key>/prepare.sh` applies to one case. Converter defaults
+case, `harbor/<task-key>/prepare.sh` applies to one case,
+`harbor/<task-key>/instruction.append.md` carries per-case deterministic
+"user answers" appended after the eval prompt (for rubrics that assume an
+interactive user), and
+`environment.toml` carries skill-wide `[environment]` overrides (MCP servers,
+env-var templates, network policy) that `convert` deep-merges into every
+generated task of the skill. Converter defaults
 own the generated image, task, verifier, and config settings; other files under
 `harbor/` are ignored.
 _Avoid_: configuration file, metadata block

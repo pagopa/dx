@@ -64,17 +64,41 @@ claim to have published content that was not read.
    What the script keeps verbatim, and how to publish constructs such as
    `<details>` and admonitions, is the rich-content rule under Structure rules.
    When a language is requested, translate per the Translation rules.
+   **Order matters when the target copy does not exist yet** (for example
+   "create a fresh working copy of the seed page, then publish or update that
+   copy"): create the copy first and resolve its exact title, then prepare the
+   body against that copy — run the normalizer with `--title` set to the copy's
+   title (never the seed's), because the leading-H1 rule compares to the page
+   you will actually write. Do not prepare the body before the copy exists.
 5. **Show the irreversible action.** State the operation, page title, space,
    parent, language, and source path before creating or updating the page.
 6. **Publish through the authenticated integration.** Use the available
    Confluence tool or API. For updates, preserve the current page's relevant
    metadata, replace only the requested content, and pass the `snapshotToken`.
-7. **Verify the result.** Retrieve or inspect the returned page identifier and
-   URL. Compare the stored body by content parity (see Structure rules), not
-   by byte equality, since Confluence normalizes Markdown cosmetics on import
-   and export. Confirm that the operation succeeded and report the page URL.
-   If the integration reports an error, surface it rather than returning a
-   success-shaped response.
+   Publish the prepared representation from step 4 — pass that body, do not
+   re-type or hand-author the document as new HTML. Use a macro-capable route
+   only for constructs a Markdown body cannot carry (see the rich-content
+   rule), and keep the prepared content as the source of truth for those too.
+7. **Verify the result.** Retrieve the returned page identifier and URL and
+   save the stored body (Markdown representation) to a local file in one
+   fetch — do not re-read or inline the whole document into the conversation.
+   Then run this skill's deterministic parity check:
+   `python3 scripts/verify_confluence_parity.py <prepared>.md <stored>.md`.
+   It compares token streams ignoring whitespace, structural `>` markers,
+   HTML/XML tags, and stable comment markers that Confluence dropped outright,
+   treats cosmetic Markdown re-normalization as non-fatal, and fails only on
+   real content deltas or comment markers an import **escaped into visible
+   text** (`\<!--`/`&lt;!--`). Re-read **only** the regions the report flags
+   (or target them with a grep for stable IDs / `N/A` / macro nodes), fix
+   anything genuinely mangled through a comment-/macro-preserving route, and
+   re-run the check. Confluence does not support HTML comments on every write
+   route: when a stable `<!-- id: … -->` is dropped rather than mangled, that
+   is a platform limitation — keep the marker in the prepared representation,
+   note it, and do not loop trying to restore it. If the stored body came back
+   as HTML, re-save the Markdown export so the comparison stays meaningful.
+   Cosmetic deltas are expected, not a failure. Confirm that the operation
+   succeeded and report the page URL. If the integration reports an error,
+   surface it rather than returning a success-shaped response.
 8. **Preserve lifecycle state.** Publication alone must not change a source
    document's status such as `draft` or `review`. Change lifecycle state only
    when the user explicitly requests it and the domain skill permits it.
@@ -104,6 +128,15 @@ Source: <document path or artifact>
 ## Structure and traceability rules
 
 - Preserve every stable ID exactly. IDs are never translated or renumbered.
+- Stable `<!-- id: … -->` markers must stay **comments** in Confluence, not
+  visible or escaped text. A Markdown import can escape them (`\<!--`,
+  `&lt;!--`) or render them as a paragraph; after writing, fetch the stored
+  body and, whenever a marker was mangled into visible text, restore it once
+  through a representation that preserves HTML comments (storage body or
+  granular edit), then re-verify. Some Confluence write routes cannot retain
+  HTML comments at all: if the marker comes back **absent** (not mangled), keep
+  it in the prepared representation and accept the drop as a platform
+  limitation — never loop or fake success on it.
 - Preserve every source section, including conditional sections marked
   `N/A — <reason>`.
 - Preserve links to PRDs, RFCs, ADRs, Figma, Service Blueprints, APIs, events,
@@ -143,12 +176,17 @@ Source: <document path or artifact>
   publish constructs the script keeps verbatim is the rich-content rule above.
 - Verify by **content parity, not byte parity**: Confluence's own Markdown
   round-trip re-normalizes cosmetics (table separators to `| --- |`, emphasis
-  delimiters, escaping, blockquote markers). Compare token streams ignoring
-  whitespace and structural `>` markers, or run the script's built-in
-  `--check`. `--check` detects lost or reordered tokens only; it does not
-  prove Markdown structure survived, so also confirm that tables, list-item
-  indentation, and blockquote nesting are intact in the prepared body.
-  Cosmetic deltas are expected and not a sync failure.
+  delimiters, escaping, blockquote markers). Prefer the bundled deterministic
+  check `scripts/verify_confluence_parity.py <prepared>.md <stored>.md` over
+  reading the stored body yourself: save the fetched body to a file and let the
+  script compare token streams ignoring whitespace, structural `>` markers,
+  HTML/XML tags, and stable comment markers Confluence dropped outright, report
+  `PARITY_OK`/`PARITY_COSMETIC`/`PARITY_DIFF`, and print
+  only the first mismatched windows. Inspect structure (tables, list-item
+  indentation, blockquote nesting, macro nodes) only in the regions it flags.
+  The normalizer's own `--check` detects lost or reordered tokens on the
+  *prepared* file only and cannot compare against the stored page. Cosmetic
+  deltas are expected and are not a sync failure.
 - Markdown front matter is not native Confluence metadata. When publishing a
   Markdown document, render its front-matter values as a Confluence metadata
   table, and verify that stable IDs and lifecycle status remain visible after

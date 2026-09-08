@@ -35,9 +35,10 @@ from .config import (
     write_config,
 )
 from .discover import DiscoverError, find_evals_files, load_evals_file
-from .layout import discover_workspace_dir
+from .environment_overrides import load_environment_overrides
+from .layout import discover_environment_overrides, discover_workspace_dir
 from .schema import EvalsFile, resolve_eval_paths
-from .task import TaskSpec, generate_task_atomic, task_dir_name
+from .task import TaskSpec, deep_merge, generate_task_atomic, task_dir_name
 
 DEFAULT_OUT = Path(".harbor")
 DEFAULT_SCAN_ROOT = Path("plugins")
@@ -135,6 +136,17 @@ def _normalize_options(options: ConvertOptions) -> ConvertOptions:
     )
 
 
+def _load_skill_overrides(skill_dir: Path) -> dict:
+    """Parse the skill's ``harbor/environment.toml``; {} when it has none.
+
+    Plan-time validation: a malformed file raises before anything is written.
+    """
+    overrides_file = discover_environment_overrides(skill_dir)
+    if overrides_file is None:
+        return {}
+    return load_environment_overrides(overrides_file)
+
+
 def plan_run(options: ConvertOptions) -> RunPlan:
     """Discover, load, validate, and resolve a full run. Never writes.
 
@@ -175,6 +187,7 @@ def plan_run(options: ConvertOptions) -> RunPlan:
     for evals_path, evals, skill_dir in loaded:
         resolved = resolve_eval_paths(evals, skill_dir)
         workspace_dir = discover_workspace_dir(skill_dir)
+        skill_overrides = _load_skill_overrides(skill_dir)
         for case in evals.evals:
             dir_name = task_dir_name(evals.skill_name, case.id, case.name)
             source = f"{evals.skill_name} eval {case.id} ({evals_path})"
@@ -183,6 +196,10 @@ def plan_run(options: ConvertOptions) -> RunPlan:
                     f"duplicate task name {dir_name!r}: {seen[dir_name]} vs {source}"
                 )
             seen[dir_name] = source
+            # Merge precedence: converter defaults < skill harbor/environment.toml
+            # < run-level flags (e.g. --without-skill), so convert options stay
+            # authoritative over the skill's harness overrides.
+            task_overrides = deep_merge(skill_overrides, env_overrides or {})
             tasks.append(
                 TaskSpec(
                     task_dir=dir_name,
@@ -190,7 +207,7 @@ def plan_run(options: ConvertOptions) -> RunPlan:
                     case=case,
                     paths=resolved[case.id],
                     workspace_dir=workspace_dir,
-                    env_overrides=env_overrides,
+                    env_overrides=task_overrides or None,
                 )
             )
 
