@@ -110,6 +110,27 @@ class MarkerTest(unittest.TestCase):
     def test_dropped_marker_is_missing(self):
         self.assertEqual(vp.marker_status("nothing here", self.MARKER), "missing")
 
+    def test_code_export_of_fenced_marker_not_escaped(self):
+        stored = "<pre><code>&lt;!-- id: x --&gt;</code></pre>"
+        self.assertEqual(vp.marker_status(stored, self.MARKER), "missing")
+
+    def test_whitespace_variant_of_marker_is_ok(self):
+        stored = "before <!-- id:x --> after"
+        self.assertEqual(vp.marker_status(stored, self.MARKER), "ok")
+
+
+class MarkerDiscoveryTest(unittest.TestCase):
+    def test_find_markers_ignores_markers_inside_code(self):
+        self.assertEqual(vp.find_markers("```\n<!-- id: x -->\n```\n"), [])
+        self.assertEqual(
+            vp.find_markers("<p>a</p><pre><code>&lt;!-- id: x --&gt;</code></pre>"), []
+        )
+
+    def test_find_markers_returns_prose_node_not_whole_line(self):
+        self.assertEqual(
+            vp.find_markers("intro <!-- id: x --> tail\n"), ["<!-- id: x -->"]
+        )
+
 
 class CliTest(unittest.TestCase):
     def _run(self, expected: str, stored: str):
@@ -192,6 +213,14 @@ class CliTest(unittest.TestCase):
         proc = self._run(expected, stored)
         self.assertEqual(proc.returncode, 1)
         self.assertIn("unexpected/altered comment marker", proc.stdout)
+
+    def test_code_export_of_fenced_marker_is_parity_ok(self):
+        expected = "Sample:\n```\n<!-- id: x -->\n```\n"
+        stored = "<p>Sample:</p><pre><code>&lt;!-- id: x --&gt;</code></pre>\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_OK", proc.stdout)
+        self.assertNotIn("ISSUE", proc.stdout)
 
     def test_stable_marker_dropped_is_platform_note(self):
         expected = "a\n<!-- id: x -->\nb\n"

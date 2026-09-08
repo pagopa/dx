@@ -43,6 +43,14 @@ class NormalizeTest(unittest.TestCase):
         src = "## Section\n\n---\n"
         self.assertEqual(self.norm(src), "## Section\n\n---\n")
 
+    def test_indented_atx_heading_preserved(self):
+        src = "  ## Section\nbody text\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_indented_atx_heading_not_merged_into_paragraph(self):
+        src = "lead in\n   ### Deep section\nbody\n"
+        self.assertEqual(self.norm(src), "lead in\n   ### Deep section\nbody\n")
+
     def test_leading_pipe_table_preserved(self):
         src = "| a  | b |\n| -- | - |\n| 1  | 2 |\n"
         self.assertEqual(self.norm(src), src)
@@ -131,6 +139,20 @@ class NormalizeTest(unittest.TestCase):
         src = "> quote outer line\n> > nested line one\n> > nested line two\n"
         self.assertEqual(
             self.norm(src), "> quote outer line\n> > nested line one nested line two\n"
+        )
+
+    def test_quoted_list_items_stay_separate(self):
+        src = "> - first\n> - second\n"
+        self.assertEqual(self.norm(src), "> - first\n> - second\n")
+
+    def test_quoted_headings_stay_separate(self):
+        src = "> # one\n> # two\n"
+        self.assertEqual(self.norm(src), "> # one\n> # two\n")
+
+    def test_quoted_fenced_code_kept_verbatim(self):
+        src = "> ```\n>     def f():\n>         return 1\n> ```\n> after\n"
+        self.assertEqual(
+            self.norm(src), "> ```\n>     def f():\n>         return 1\n> ```\n> after\n"
         )
 
     def test_admonition_kept_verbatim(self):

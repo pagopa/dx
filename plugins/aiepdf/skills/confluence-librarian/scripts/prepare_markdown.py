@@ -71,7 +71,9 @@ FENCE_OPEN = re.compile(r"^(?P<indent>[ \t]*)(?P<fence>`{3,}|~{3,})")
 BLOCKQUOTE = re.compile(r"^[ \t]*> ?")
 TABLE_ROW = re.compile(r"^[ \t]*\|")
 TABLE_DELIM = re.compile(r"^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$")
-ATX_HEADING = re.compile(r"^#{1,6}[ \t]+")
+# An ATX heading: up to three leading spaces (the maximum CommonMark permits),
+# 1-6 '#', then a space or tab (so "#NotAH1" is ordinary text, not a heading).
+ATX_HEADING = re.compile(r"^ {0,3}#{1,6}[ \t]+")
 # A level-1 ATX heading: up to 3 leading spaces, a single '#', then a space or
 # tab (so "#Title" is ordinary text, not a heading). The optional closing '#'s
 # are stripped by _atx_h1_text, never by this matcher.
@@ -186,11 +188,21 @@ def _is_details(line: str) -> bool:
 
 
 def _split_quote(line: str) -> tuple[int, str] | None:
-    """Split a blockquote line into (marker depth, body); None if not a quote."""
+    """Split a blockquote line into (marker depth, body); None if not a quote.
+    The body has leading/trailing whitespace stripped for prose folding."""
+    parts = _split_quote_raw(line)
+    if parts is None:
+        return None
+    return parts[0], parts[1].strip()
+
+
+def _split_quote_raw(line: str) -> tuple[int, str] | None:
+    """Like ``_split_quote`` but keeps the body's leading whitespace, so code
+    content inside a quoted fence line survives verbatim."""
     m = re.match(r"^([ \t]*(?:>[ \t]?)+)(.*)$", line)
     if not m:
         return None
-    return m.group(1).count(">"), m.group(2).strip()
+    return m.group(1).count(">"), m.group(2).rstrip()
 
 
 def _is_table_delim(line: str) -> bool:
@@ -398,7 +410,24 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 or _is_details(line)
             )
 
-        for line in block:
+        def _body_starts_block(body: str) -> bool:
+            # A quoted body that itself opens a Markdown block (heading, rule,
+            # list item, fence, comment, collapsible) must stay a block of its
+            # own at this depth; folding it with neighbouring text would merge
+            # e.g. `> - a` and `> - b` into a single item.
+            return bool(
+                _is_heading(body)
+                or _is_hr(body)
+                or _is_list_marker(body)
+                or _is_fence(body)
+                or _is_html_comment(body)
+                or _is_details(body)
+            )
+
+        i = 0
+        n = len(block)
+        while i < n:
+            line = block[i]
             split = _split_quote(line)
             if split is None:
                 # non-quote line inside a quote block: plain text is a lazy
@@ -418,6 +447,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 else:
                     buf.append(line.strip())
                     qbrk.append(_hard_break(line))
+                i += 1
                 continue
             # a real quote marker line ends any pending top-level paragraph
             flush_top()
@@ -426,6 +456,30 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 # '>' alone separates paragraphs inside the quote
                 flush_run()
                 out.append(("> " * depth).rstrip())
+                i += 1
+                continue
+            if _body_starts_block(body):
+                # a body that opens its own block is emitted as its own line,
+                # never folded with the surrounding paragraph at this depth
+                flush_run()
+                cur_depth = depth
+                if _is_fence(body):
+                    # keep the whole quoted fence verbatim: consume same-depth
+                    # lines until the closing fence, preserving code indentation
+                    prefix = "> " * depth
+                    out.append(prefix + body)
+                    i += 1
+                    while i < n:
+                        nxt = _split_quote_raw(block[i])
+                        if nxt is None or nxt[0] != depth:
+                            break
+                        out.append(prefix + nxt[1])
+                        i += 1
+                        if _is_fence(nxt[1].strip()):
+                            break
+                    continue
+                out.append(("> " * depth) + body)
+                i += 1
                 continue
             if depth != cur_depth:
                 # a change of quote depth starts a (nested) quote line
@@ -433,6 +487,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 cur_depth = depth
             buf.append(body)
             qbrk.append(_hard_break(line))
+            i += 1
         flush_run()
         flush_top()
         # drop quote markers left over by a lone '>' at the very end

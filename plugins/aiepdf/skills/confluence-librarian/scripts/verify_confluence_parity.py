@@ -28,7 +28,7 @@ Semantics (mirror the skill's content-parity rule):
   element, where a literal comment is code content — because Confluence may
   drop such a marker on a write route (a platform limitation; the marker stays
   in the prepared representation). A marker that survives only as escaped
-  visible text (`\<!--`, `&lt;!-- … --&gt;`) is a failure, and so is an
+  visible text (`\\<!--`, `&lt;!-- … --&gt;`) is a failure, and so is an
   unexpected or altered stable marker found in the stored body. Any other HTML
   comment is ordinary content and a drop or change to it is a content diff.
 
@@ -53,14 +53,14 @@ import re
 import sys
 from pathlib import Path
 
-_STABLE_COMMENT = re.compile(r"<!--\s*id\s*:")
-# A genuine stable-comment marker block (`<!-- id: … -->`); stripped from BOTH
-# sides before the token comparison, because Confluence does not retain HTML
-# comments on every write route. Only these markers are ignored, and only where
-# they are real comments: code regions are stashed first, so a literal
-# `<!-- … -->` inside code stays content. Escaped forms (`\<!--`, `&lt;!--`)
-# do not match and stay visible as content, so mangled markers are reported.
+# A genuine stable-comment marker node (`<!-- id: … -->`); matched only where
+# it is a real prose comment (code regions are masked out first). It is
+# stripped from BOTH sides before the token comparison, because Confluence does
+# not retain HTML comments on every write route. Escaped forms (`\<!--`,
+# `&lt;!--`) are not genuine nodes and stay visible as content, so mangled
+# markers are reported. Other HTML comments are ordinary content.
 _STABLE_COMMENT_BLOCK = re.compile(r"<!--\s*id\s*:.*?-->", re.S)
+_MARKER_NODE = re.compile(r"<!--\s*id\s*:(?P<body>.*?)-->", re.S)
 # A fenced code block: content inside it is verbatim, so a line-leading '>'
 # there is code, not a blockquote marker.
 _FENCE = re.compile(r"^[ \t]*(?P<fence>`{3,}|~{3,})")
@@ -89,19 +89,14 @@ def _norm_newlines(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
-    """Reduce a body (prepared Markdown or a Confluence Markdown/HTML export) to
-    comparable content text. Fenced code blocks and HTML `<pre>`/`<code>`
-    elements are protected first: their text is kept verbatim (fence content
-    as-is, HTML code text entity-decoded so ``&lt;signature&gt;`` becomes
-    ``<signature>``) and never mistaken for storage markup. Stable comment
-    markers are then removed — only outside code, where they are real comments
-    rather than code content. Remaining prose lines drop line-leading
-    blockquote markers, strip structural HTML/XML tags, and finally decode HTML
-    entities — in that order, so a decoded tag inside prose text
-    (``&lt;b&gt;`` meant literally) is not stripped. With ``cosmetic=True`` the
-    prose path also drops a table row's single outer border pipes, so rows that
-    differ only in whether they carry the leading/trailing ``|`` still match."""
+def _stash_code(text: str) -> tuple[str, list[str]]:
+    """Replace code content with placeholders and return (masked_text, bodies).
+
+    Fenced code blocks keep their content as-is; HTML `<pre>`/`<code>` text is
+    entity-decoded (Confluence HTML escapes it) but never stripped as markup.
+    The masked text lets later passes treat code verbatim — never as storage
+    tags, blockquote markers, or stable-comment nodes.
+    """
     protected: list[str] = []
 
     def placeholder(content: str) -> str:
@@ -109,8 +104,6 @@ def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
         return f" \x00{len(protected) - 1}\x00 "
 
     def stash_fences(text: str) -> str:
-        """Pull fenced code blocks out of the prose path: their content is
-        verbatim and must never be tag-stripped, quote-marked, or decoded."""
         lines = text.split("\n")
         out: list[str] = []
         i = 0
@@ -139,9 +132,6 @@ def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
         return "\n".join(out)
 
     def stash_code_elements(text: str) -> str:
-        """Pull HTML ``<pre>``/``<code>`` regions out of the prose path. Their
-        text is code content: entity-decoded (Confluence HTML escapes it) but
-        never stripped as structural markup."""
         def repl(m: re.Match[str]) -> str:
             inner = m.group("pre") if m.group("pre") is not None else m.group("code")
             inner = _CODE_OPEN.sub("", inner)  # drop the wrapper tags themselves
@@ -149,8 +139,24 @@ def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
             return placeholder(inner)
         return _CODE_REGION.sub(repl, text)
 
-    text = stash_fences(text)
-    text = stash_code_elements(text)
+    text = stash_code_elements(stash_fences(text))
+    return text, protected
+
+
+def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
+    """Reduce a body (prepared Markdown or a Confluence Markdown/HTML export) to
+    comparable content text. Fenced code blocks and HTML `<pre>`/`<code>`
+    elements are protected first: their text is kept verbatim (fence content
+    as-is, HTML code text entity-decoded so ``&lt;signature&gt;`` becomes
+    ``<signature>``) and never mistaken for storage markup. Stable comment
+    markers are then removed — only outside code, where they are real comments
+    rather than code content. Remaining prose lines drop line-leading
+    blockquote markers, strip structural HTML/XML tags, and finally decode HTML
+    entities — in that order, so a decoded tag inside prose text
+    (``&lt;b&gt;`` meant literally) is not stripped. With ``cosmetic=True`` the
+    prose path also drops a table row's single outer border pipes, so rows that
+    differ only in whether they carry the leading/trailing ``|`` still match."""
+    text, protected = _stash_code(text)
     # stable comment markers are ignored on both sides (Confluence may drop
     # them); code regions are already stashed, so a marker-looking comment
     # inside code is never removed here. The retained marker set is compared
@@ -230,38 +236,44 @@ def is_cosmetic_only(expected: str, stored: str) -> bool:
     return _cosmetic_tokens(expected) == _cosmetic_tokens(stored)
 
 
-def find_markers(expected: str) -> list[str]:
-    out: list[str] = []
-    for line in expected.splitlines():
-        m = _STABLE_COMMENT.search(line)
-        if m:
-            out.append(line.strip())
-    return out
+def find_markers(text: str) -> list[str]:
+    """Stable-comment marker nodes (`<!-- id: … -->`) that are genuine prose
+    comments. Code regions (fenced blocks and HTML `<pre>`/`<code>` elements)
+    are masked out first, so comment-looking text inside code is never mistaken
+    for a marker; the comment node itself is returned, not its whole line."""
+    masked, _ = _stash_code(text)
+    return [m.group(0) for m in _MARKER_NODE.finditer(masked)]
 
 
 def _marker_key(marker: str) -> str:
-    """Canonical identity of a stable marker (runs of whitespace collapsed), so
+    """Canonical identity of a stable marker (internal whitespace collapsed), so
     a comment re-emitted with different internal spacing is not mistaken for a
     different marker."""
-    return re.sub(r"\s+", " ", marker.strip())
+    m = _MARKER_NODE.match(marker)
+    body = m.group("body") if m else marker
+    return "<!-- id: " + re.sub(r"\s+", " ", body).strip() + " -->"
 
 
 def marker_status(stored: str, marker: str) -> str:
     """Classify how a stable comment marker survived: ok/escaped/missing.
 
-    ``ok`` means the raw HTML comment node is still present. ``escaped`` means
-    the marker survived only as visible text — in any escaped rendering,
-    including fully HTML-escaped forms such as ``&lt;!-- id: x --&gt;``. When
-    neither the raw comment nor any decoded rendering of the marker is present
-    the marker is ``missing`` (Confluence dropped it, a platform limitation).
+    Code regions in ``stored`` are masked out first, so an HTML export that
+    escapes code content (``&lt;!-- id: x --&gt;`` inside ``<code>``) is not
+    mistaken for a marker mangled into visible text. ``ok`` means a genuine
+    (non-escaped) HTML comment node with the same canonical marker is still
+    present. ``escaped`` means the marker survives only as visible text — a
+    backslash- or entity-escaped rendering such as ``\\<!-- id: x -->`` or
+    ``&lt;!-- id: x --&gt;``. When neither form is present the marker is
+    ``missing`` (Confluence dropped it, a platform limitation).
     """
-    normalized = stored.replace("\u00a0", " ")
-    # ok: the marker still exists as a genuine HTML comment node. A backslash
-    # or entity-escaped copy also contains the literal marker text, so require
-    # it NOT to be escaped before classifying it as retained.
-    if re.search(r"(?<!\\)" + re.escape(marker), normalized):
-        return "ok"
-    if marker in html.unescape(normalized):
+    masked, _ = _stash_code(stored)
+    key = _marker_key(marker)
+    for m in _MARKER_NODE.finditer(masked):
+        # a backslash immediately before '<' means the marker is escaped text
+        escaped = m.start() > 0 and masked[m.start() - 1] == "\\"
+        if not escaped and _marker_key(m.group(0)) == key:
+            return "ok"
+    if key in html.unescape(masked).replace("\\", ""):
         return "escaped"
     return "missing"
 
