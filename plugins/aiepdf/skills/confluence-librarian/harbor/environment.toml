@@ -10,7 +10,7 @@
 # (no static token; an API token gets 403 "missing scope claim" on Confluence
 # tools). Obtain the credential once on the host:
 #
-#     npx -y -p mcp-remote@latest mcp-remote-client https://mcp.atlassian.com/v2/mcp
+#     npx -y -p mcp-remote@0.8.4 mcp-remote-client https://mcp.atlassian.com/v2/mcp
 #
 # which runs the browser authorization-code flow and stores refresh+access
 # tokens under ~/.mcp-auth (mcp-remote refreshes them automatically). Nothing is

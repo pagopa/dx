@@ -11,7 +11,9 @@ This script does exactly that normalization, deterministically:
 - normalizes line endings (CRLF/CR -> LF) and strips a UTF-8 BOM;
 - optionally drops a leading H1 whose text equals the page title
   (--title), so Confluence does not render the title twice;
-- collapses soft-wrapped prose into single lines per logical block;
+- collapses soft-wrapped prose into single lines per logical block, while
+  keeping explicit Markdown hard breaks (a line ending with two or more
+  spaces) as hard line breaks instead of folding them into the next line;
 - preserves fenced code blocks byte-for-byte;
 - preserves GFM tables (leading `|` optional): a header row containing `|`
   that is immediately followed by a delimiter row (`--- | ---`) is kept as
@@ -64,8 +66,13 @@ BLOCKQUOTE = re.compile(r"^[ \t]*> ?")
 TABLE_ROW = re.compile(r"^[ \t]*\|")
 TABLE_DELIM = re.compile(r"^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$")
 ATX_HEADING = re.compile(r"^#{1,6}[ \t]+")
+# A level-1 ATX heading: up to 3 leading spaces, a single '#', then a space or
+# tab (so "#Title" is ordinary text, not a heading). The optional closing '#'s
+# are stripped by _atx_h1_text, never by this matcher.
+ATX_H1 = re.compile(r"^ {0,3}#(?!#)[ \t]+(.*)$")
 LIST_MARKER = re.compile(r"^[ \t]*(?:[-+*]|\d{1,3}[.)])[ \t]+")
 THEMATIC_BREAK = re.compile(r"^[ \t]*(?:-[ \t]*){3,}$|^[ \t]*(?:\*[ \t]*){3,}$|^[ \t]*(?:_[ \t]*){3,}$")
+HARD_BREAK = re.compile(r" {2,}[ \t]*$")
 HTML_COMMENT_START = re.compile(r"^[ \t]*<!--")
 HTML_COMMENT_END = "-->"  # must appear on the same logical line or before a blank
 DETAILS_OPEN = re.compile(r"^[ \t]*<details\b", re.I)
@@ -94,6 +101,21 @@ def _is_quote(line: str) -> bool:
 
 def _is_heading(line: str) -> bool:
     return bool(ATX_HEADING.match(line))
+
+
+def _atx_h1_text(line: str) -> str | None:
+    """Semantic text of a level-1 ATX heading, or None if the line is not one.
+
+    Only a real level-1 ATX heading qualifies (``# Title``, ``# Title #``); a
+    ``#Title`` run of plain text or a deeper ``## Heading`` never does. A
+    trailing closing sequence of ``#``s preceded by whitespace is not content.
+    """
+    m = ATX_H1.match(line)
+    if not m:
+        return None
+    content = re.sub(r"[ \t]+#{1,}[ \t]*$", "", m.group(1))
+    content = content.strip()
+    return content or None
 
 
 def _is_list_marker(line: str) -> bool:
@@ -162,12 +184,31 @@ def _table_start(seg: list[str], i: int) -> bool:
     return False
 
 
-def _flush(buf: list[str] | None) -> str | None:
-    """Collapse the accumulated soft-wrapped lines of one item/paragraph."""
-    if buf is None:
-        return None
-    joined = " ".join(x.strip() for x in buf)
-    return joined if joined else None
+def _hard_break(line: str) -> bool:
+    """True when the physical line ends in an explicit Markdown hard break
+    (two or more trailing spaces before the newline)."""
+    return bool(HARD_BREAK.search(line))
+
+
+def _logical_lines(buf: list[str], breaks: list[bool]) -> list[str]:
+    """Collapse the buffered soft-wrapped lines of one item/paragraph into
+    logical lines. ``breaks[i]`` marks an explicit hard break after ``buf[i]``:
+    such a boundary closes the current logical line instead of folding the next
+    physical line onto it. Every closed logical line except the last keeps two
+    trailing spaces, so the hard break survives as Markdown syntax."""
+    lines: list[str] = []
+    cur: list[str] = []
+    for i, part in enumerate(buf):
+        cur.append(part)
+        if breaks[i]:
+            lines.append(" ".join(cur) + "  ")
+            cur = []
+    if cur:
+        lines.append(" ".join(cur))
+    if lines and breaks and breaks[-1]:
+        # a hard break after the very last line is meaningless
+        lines[-1] = lines[-1][:-2]
+    return lines
 
 
 def _split_top_level(text: str) -> list[list[str]]:
@@ -188,15 +229,15 @@ def _split_top_level(text: str) -> list[list[str]]:
         line = lines[i]
         if _is_fence(line):
             m = FENCE_OPEN.match(line)
-            fence = m.group("fence")[0]
+            fence = m.group("fence")[0] if m else "`"
+            open_len = len(m.group("fence")) if m else 3
+            closing = re.compile(rf"^[ \t]*{re.escape(fence)}{{{open_len},}}[ \t]*$")
             push()
             code: list[str] = [line]
             i += 1
-            closed = False
             while i < n:
                 code.append(lines[i])
-                if re.match(rf"^[ \t]*{re.escape(fence)}{{3,}}", lines[i]):
-                    closed = True
+                if closing.match(lines[i]):
                     i += 1
                     break
                 i += 1
@@ -247,13 +288,16 @@ def _process_plain_block(block: list[str]) -> list[str]:
             return out
         out: list[str] = []
         buf: list[str] = []
+        qbrk: list[bool] = []
         cur_depth = -1
 
         def flush_run() -> None:
             nonlocal buf
             if buf:
-                out.append("> " * cur_depth + " ".join(buf))
+                for text in _logical_lines(buf, qbrk):
+                    out.append("> " * cur_depth + text)
                 buf = []
+                qbrk.clear()
 
         for line in block:
             split = _split_quote(line)
@@ -274,6 +318,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 flush_run()
                 cur_depth = depth
             buf.append(body)
+            qbrk.append(_hard_break(line))
         flush_run()
         # drop quote markers left over by a lone '>' at the very end
         while out:
@@ -286,6 +331,8 @@ def _process_plain_block(block: list[str]) -> list[str]:
     out = []
     buf: list[str] | None = None
     buf_is_list = False
+    breaks: list[bool] = []
+    item_indent = ""
     # An indented paragraph block (after a blank line, no list marker) is a
     # loose list item's continuation paragraph. Keep its indentation instead
     # of stripping it, so it is not promoted to the top level.
@@ -297,13 +344,20 @@ def _process_plain_block(block: list[str]) -> list[str]:
     def emit():
         nonlocal buf, buf_is_list
         if buf is not None:
-            flushed = _flush(buf)
-            if flushed is not None:
-                if not buf_is_list and lead_indent:
+            logical = _logical_lines(buf, breaks)
+            for i, flushed in enumerate(logical):
+                if flushed is None:
+                    continue
+                if i > 0:
+                    # a hard break inside a list item or indented paragraph
+                    # starts a new physical line: keep it nested
+                    flushed = (item_indent if buf_is_list else lead_indent) + flushed
+                elif not buf_is_list and lead_indent:
                     flushed = lead_indent + flushed
                 out.append(flushed)
             buf = None
             buf_is_list = False
+            breaks.clear()
 
     for line in block:
         if _is_heading(line) or _is_hr(line):
@@ -312,15 +366,20 @@ def _process_plain_block(block: list[str]) -> list[str]:
             continue
         if _is_list_marker(line):
             emit()
-            buf = [line.rstrip()]
+            marker = LIST_MARKER.match(line)
+            buf = [line.strip()]
+            breaks = [_hard_break(line)]
             buf_is_list = True
+            item_indent = " " * len(marker.group(0)) if marker else ""
             continue
         # plain text: start a paragraph or continue the open item/paragraph
         if buf is None:
             buf = [line.strip()]
+            breaks = [_hard_break(line)]
             buf_is_list = False
         else:
             buf.append(line.strip())
+            breaks.append(_hard_break(line))
     emit()
     return out
 
@@ -335,7 +394,7 @@ def normalize(text: str, title: str | None = None) -> str:
         lines.pop()
     # optional: strip a leading H1 identical to the page title
     if title:
-        if lines and lines[0].lstrip().startswith("#") and lines[0].lstrip()[1:].strip() == title:
+        if lines and _atx_h1_text(lines[0]) == title:
             lines = lines[1:]
             while lines and not lines[0].strip():
                 lines.pop(0)
@@ -399,7 +458,7 @@ def check_equivalence(source: str, prepared: str, title: str | None) -> tuple[bo
     while src_lines and not src_lines[0].strip():
         src_lines.pop(0)
     if title:
-        if src_lines and src_lines[0].lstrip().startswith("#") and src_lines[0].lstrip()[1:].strip() == title:
+        if src_lines and _atx_h1_text(src_lines[0]) == title:
             src_lines = src_lines[1:]
     src_tokens = token_stream("\n".join(src_lines))
     dst_tokens = token_stream(prepared)

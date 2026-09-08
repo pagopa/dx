@@ -106,6 +106,40 @@ class NormalizeTest(unittest.TestCase):
         src = "\ufeffline one\r\nline two\r\n"
         self.assertEqual(self.norm(src), "line one line two\n")
 
+    def test_preserves_hard_breaks_in_paragraph(self):
+        src = "Line one  \nline two  \nline three\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_preserves_hard_break_inside_list_item(self):
+        src = "- item one  \n  item two\n- next\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_preserves_hard_break_inside_blockquote(self):
+        src = "> line one  \n> line two\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_soft_wrap_after_hard_break_still_collapses(self):
+        src = "a  \nb\nc\n"
+        # only the first newline is a hard break; b and c stay soft-wrapped
+        self.assertEqual(self.norm(src), "a  \nb c\n")
+
+    def test_plain_text_hash_prefix_not_dropped_as_h1(self):
+        # "#NotAH1" is ordinary Markdown text, not an H1
+        src = "#NotAH1\n\nBody text.\n"
+        self.assertEqual(self.norm(src, title="NotAH1"), src)
+
+    def test_closed_h1_equal_to_title_dropped(self):
+        src = "# Design Review #\n\nBody text.\n"
+        self.assertEqual(self.norm(src, title="Design Review"), "Body text.\n")
+
+    def test_keeps_deeper_heading_equal_to_title(self):
+        src = "## Design Review\n\nBody text.\n"
+        self.assertEqual(self.norm(src, title="Design Review"), src)
+
+    def test_longer_fence_not_closed_by_shorter_or_info_string(self):
+        src = "````\n```python\nsecond line\nthird line\n```\n````\n"
+        self.assertEqual(self.norm(src), src)
+
 
 class MainTest(unittest.TestCase):
     def test_mismatch_returns_1(self):

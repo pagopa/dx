@@ -22,13 +22,17 @@ For the MCP you need an OAuth session for your Atlassian user.
 Get it once with `mcp-remote` (needs a browser on the host, Node ≥ 20):
 
 ```sh
-npx -y -p mcp-remote@latest mcp-remote-client https://mcp.atlassian.com/v2/mcp
+npx -y -p mcp-remote@0.8.4 mcp-remote-client https://mcp.atlassian.com/v2/mcp
 ```
 
 Approve the Atlassian consent screen (it requests the
 `read/write:confluence:agent-interface` scopes). On success mcp-remote stores
 the refresh + access tokens under `~/.mcp-auth/`
 (`mcp-remote-v1/…_tokens.json`) and refreshes them automatically afterwards.
+
+The version is pinned (here and in `harbor/prepare.sh`) so identical benchmark
+commits build the same task image and use the same OAuth client; bump both
+together when you upgrade.
 
 ## 2. Requirements
 
@@ -66,10 +70,11 @@ export COPILOT_GITHUB_TOKEN="$(gh auth token)"
 export MCP_AUTH_B64="$(tar -C ~ -czf - .mcp-auth | base64 | tr -d '\n')"
 ```
 
-Create a run config that filters to this skill's tasks
-(`n_concurrent_trials: 1`) — for example by editing `.harbor/config.yaml`:
+Create a run config that filters to this skill's tasks and keeps concurrency at
+1 — for example by editing `.harbor/config.yaml`:
 
 ```yaml
+n_concurrent_trials: 1
 datasets:
   - path: /path/to/.harbor/tasks
     task_names:
@@ -80,19 +85,23 @@ Then:
 
 ```sh
 uv run --project apps/harbor-bench --package harbor-bench harbor run \
-  -c /path/to/config.yaml -y \
+  -c /path/to/config.yaml -y --ae COPILOT_GITHUB_TOKEN="$COPILOT_GITHUB_TOKEN" \
   --jobs-dir runs --job-name confluence-baseline
 ```
 
 Notes:
 
 - `-y` auto-confirms host env passthrough (needed for CI too).
+- `COPILOT_GITHUB_TOKEN` (exported above) authenticates the Copilot agent and
+  the LLM judge; pass it with `--ae`, the same way `harbor-bench` documents
+  manual runs.
 - `MCP_AUTH_B64` must be exported in the host environment: Harbor resolves the
   `[environment].env` template `${MCP_AUTH_B64}` at run time and injects it at
   **container level** (agent `--ae` env does not reach the MCP server process).
-- Each container rebuilds the `~/.mcp-auth` store in a temp dir from that env
-  var and runs `mcp-remote … --silent` — no secret is written to disk or into
-  the task config.
+- Each container rebuilds the `~/.mcp-auth` store from that env var into an
+  ephemeral temp dir that the MCP process owns and that disappears with the
+  container — nothing is written to the repo, the task config, or the host
+  (the archive only ever exists as an env var).
 - `--job-name` must change whenever the config/task changes (Harbor refuses to
   resume a job dir with a different config). Results land in `runs/<name>/`.
 

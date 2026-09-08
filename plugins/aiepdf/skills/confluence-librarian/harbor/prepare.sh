@@ -27,6 +27,8 @@ apt-get install -y nodejs
 rm -rf /var/lib/apt/lists/*
 
 # Bake the Atlassian MCP relay into the image; skip apt's bundled npm.
-npm install -g mcp-remote
+# Pinned so identical benchmark commits build identical images (the README's
+# host OAuth bootstrap command uses the same version — bump both together).
+npm install -g mcp-remote@0.8.4
 node --version
 command -v mcp-remote

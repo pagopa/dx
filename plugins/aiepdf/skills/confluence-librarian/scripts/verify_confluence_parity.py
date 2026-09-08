@@ -9,17 +9,20 @@ Run this AFTER publishing/updating, with the stored body saved to a local file
 
 Semantics (mirror the skill's content-parity rule):
 
-- compares token streams ignoring whitespace and structural blockquote '>'
-  markers (a line/paragraph that differs only in wrapping is equal);
-- treats HTML/XML tags as structural tokens on both sides (so the stored body
-  may come back as Markdown or HTML without cascading cosmetic noise);
+- compares token streams ignoring whitespace and structural markup that carries
+  no content: HTML/XML tags are dropped and entities decoded (so the stored
+  body may come back as Markdown or HTML), and blockquote '>' markers are
+  ignored only where Markdown treats them as structure — a line-leading marker
+  outside fenced code. A literal '>' that is real content (for example a
+  comparison in code) is never dropped;
 - does NOT treat emphasis delimiters, table separators, or other cosmetic
   Markdown re-normalization as a failure — such a delta is reported as
   `cosmetic-only` when the content tokens still align;
 - ignores stable HTML comment blocks on both sides (Confluence may drop them on
   a write route — that is a platform limitation, and the marker stays in the
   prepared representation) and fails only when a comment was **escaped into
-  visible text** (`\\<!--`, `&lt;!--`) or real content differs.
+  visible text** (`\\<!--`, `&lt;!-- … --&gt;`, in either half-escaped or fully
+  HTML-escaped form) or real content differs.
 
 Output is deliberately compact: a verdict line, then at most ``--max-context``
 mismatch windows (10 tokens either side), never the whole documents. Exit codes:
@@ -33,18 +36,27 @@ only in the regions this tool flags.
 from __future__ import annotations
 
 import argparse
+import html
 import re
 import sys
 from pathlib import Path
 
-_TAG_TOKEN = re.compile(r"^</?[a-zA-Z][^>]*>$")
-_ESCAPED_COMMENT = re.compile(r"\\<!--|&lt;!--")
 _STABLE_COMMENT = re.compile(r"<!--\s*id\s*:")
 # A genuine HTML comment block; stripped from BOTH sides before the token
 # comparison, because Confluence does not retain HTML comments on every write
 # route. Escaped forms (\\<!--, &lt;!--) do not match this and stay visible as
 # content, so mangled markers are still reported as a failure.
 _COMMENT_BLOCK = re.compile(r"<!--.*?-->", re.S)
+# A fenced code block: content inside it is verbatim, so a line-leading '>'
+# there is code, not a blockquote marker.
+_FENCE = re.compile(r"^[ \t]*(?P<fence>`{3,}|~{3,})")
+# A blockquote marker: '>' at the start of the line (up to 3 leading spaces),
+# each optionally followed by a space/tab. Only these are structural.
+_LEAD_BLOCKQUOTE = re.compile(r"^ {0,3}(?:>[ \t]?)+")
+# Structural HTML/XML tags (including self-closing and attribute-carrying ones).
+_HTML_TAG = re.compile(r"</?[a-zA-Z][^>]*>")
+# A Markdown table-delimiter cell (e.g. ---, :---:, |----|): cosmetic only.
+_DELIM_CELL = re.compile(r"\|?:?-+:?\|?")
 
 
 def _norm_newlines(text: str) -> str:
@@ -53,16 +65,37 @@ def _norm_newlines(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
+def _strip_structural(text: str) -> str:
+    """Reduce a body (prepared Markdown or a Confluence Markdown/HTML export) to
+    comparable content text: remove line-leading blockquote markers outside
+    fenced code, drop fenced-code markers (opening/closing lines, including any
+    info string) while keeping the code itself, decode HTML entities, and drop
+    structural HTML/XML tags."""
+    lines = text.split("\n")
+    out: list[str] = []
+    fence: tuple[str, int] | None = None
+    for raw in lines:
+        if fence is not None:
+            ch, n = fence
+            if re.match(r"^[ \t]*" + re.escape(ch) + "{" + str(n) + ",}[ \t]*$", raw):
+                fence = None
+                out.append("")
+                continue
+            out.append(raw)
+            continue
+        m = _FENCE.match(raw)
+        if m:
+            fence = (m.group("fence")[0], len(m.group("fence")))
+            out.append("")
+            continue
+        out.append(_LEAD_BLOCKQUOTE.sub("", raw))
+    text = html.unescape("\n".join(out)).replace("\u00a0", " ")
+    return "\n".join(_HTML_TAG.sub(" ", ln) for ln in text.split("\n"))
+
+
 def token_stream(text: str) -> list[str]:
-    """Non-whitespace tokens; drop structural '>' markers and HTML/XML tags."""
-    kept: list[str] = []
-    for token in text.split():
-        if token == ">":
-            continue
-        if _TAG_TOKEN.match(token):
-            continue
-        kept.append(token)
-    return kept
+    """Non-whitespace content tokens with structural markup removed."""
+    return _strip_structural(text).split()
 
 
 def first_delta(expected: list[str], stored: list[str]) -> int:
@@ -77,10 +110,11 @@ def is_cosmetic_only(expected: list[str], stored: list[str]) -> bool:
     def strip(tokens: list[str]) -> list[str]:
         out = []
         for token in tokens:
-            t = token
-            # drop ATX heading markers ('#', '##', ...)
-            if t and set(t) <= {"#"}:
+            # drop ATX heading markers ('#', '##', ...) and table-delimiter
+            # cells ('---', ':---:', '|----|'); neither is content
+            if (token and set(token) <= {"#"} and len(token) <= 6) or _DELIM_CELL.fullmatch(token):
                 continue
+            t = token
             # drop emphasis/literal markers and leading table '|'
             while t[:2] in ("**", "__", "``") or t[:1] in ("*", "_", "`", "|"):
                 t = t[1:]
@@ -102,12 +136,23 @@ def find_markers(expected: str) -> list[str]:
 
 
 def marker_status(stored: str, marker: str) -> str:
-    """Classify how a stable comment marker survived: ok/escaped/missing."""
-    if f"\\{marker}" in stored or marker.replace("<!--", "&lt;!--") in stored:
+    """Classify how a stable comment marker survived: ok/escaped/missing.
+
+    ``ok`` means the raw HTML comment node is still present. ``escaped`` means
+    the marker survived only as visible text — in any escaped rendering,
+    including fully HTML-escaped forms such as ``&lt;!-- id: x --&gt;``. When
+    neither the raw comment nor any decoded rendering of the marker is present
+    the marker is ``missing`` (Confluence dropped it, a platform limitation).
+    """
+    normalized = stored.replace("\u00a0", " ")
+    # ok: the marker still exists as a genuine HTML comment node. A backslash
+    # or entity-escaped copy also contains the literal marker text, so require
+    # it NOT to be escaped before classifying it as retained.
+    if re.search(r"(?<!\\)" + re.escape(marker), normalized):
+        return "ok"
+    if marker in html.unescape(normalized):
         return "escaped"
-    if marker not in stored.replace("\u00a0", " "):
-        return "missing"
-    return "ok"
+    return "missing"
 
 
 def main(argv: list[str] | None = None) -> int:
