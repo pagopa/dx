@@ -26,7 +26,9 @@ This script does exactly that normalization, deterministically:
   item instead of promoting them to the top level;
 - preserves blockquotes and their nesting: consecutive lines at the same
   quote depth are joined into one line, while a change of depth (`> > …`)
-  starts a nested quote line instead of being flattened into the parent;
+  starts a nested quote line instead of being flattened into the parent; a
+  lazy continuation (a plain line right after a quoted one, with no `>` of
+  its own) stays inside the quote, while a real block starter ends it;
 - keeps collapsible HTML blocks (`<details>`/`<summary>`) verbatim, so a
   section intended as an expandable "a comparsa" section on Confluence is not
   flattened by the soft-wrap pass;
@@ -324,13 +326,32 @@ def _process_plain_block(block: list[str]) -> list[str]:
                 buf = []
                 qbrk.clear()
 
+        def _interrupts_quote_paragraph(line: str) -> bool:
+            # A line that starts its own Markdown block (heading, rule, list,
+            # fence, comment, collapsible) cannot be a lazy quote continuation:
+            # it terminates the active quote paragraph and is emitted at the
+            # top level instead of being folded into the quote.
+            return bool(
+                _is_heading(line)
+                or _is_hr(line)
+                or _is_list_marker(line)
+                or _is_fence(line)
+                or _is_html_comment(line)
+                or _is_details(line)
+            )
+
         for line in block:
             split = _split_quote(line)
             if split is None:
-                # non-quote line inside a quote block (lazy continuation):
-                # treat as new content
-                flush_run()
-                out.append(line.rstrip())
+                # non-quote line inside a quote block: plain text is a lazy
+                # paragraph continuation and stays quoted at the current depth;
+                # a block starter ends the quote and is emitted on its own.
+                if cur_depth < 0 or _interrupts_quote_paragraph(line):
+                    flush_run()
+                    out.append(line.rstrip())
+                else:
+                    buf.append(line.strip())
+                    qbrk.append(_hard_break(line))
                 continue
             depth, body = split
             if not body:
@@ -358,6 +379,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
     buf_is_list = False
     breaks: list[bool] = []
     item_indent = ""
+    item_margin = ""
     # An indented paragraph block (after a blank line, no list marker) is a
     # loose list item's continuation paragraph. Keep its indentation instead
     # of stripping it, so it is not promoted to the top level.
@@ -377,6 +399,10 @@ def _process_plain_block(block: list[str]) -> list[str]:
                     # a hard break inside a list item or indented paragraph
                     # starts a new physical line: keep it nested
                     flushed = (item_indent if buf_is_list else lead_indent) + flushed
+                elif buf_is_list and item_margin:
+                    # a nested list item keeps the indentation of its marker,
+                    # so `- parent` + `  - child` stay a hierarchy
+                    flushed = item_margin + flushed
                 elif not buf_is_list and lead_indent:
                     flushed = lead_indent + flushed
                 out.append(flushed)
@@ -392,10 +418,13 @@ def _process_plain_block(block: list[str]) -> list[str]:
         if _is_list_marker(line):
             emit()
             marker = LIST_MARKER.match(line)
+            lead = re.match(r"[ \t]*", line)
+            margin = len(lead.group(0)) if lead else 0
             buf = [line.strip()]
             breaks = [_hard_break(line)]
             buf_is_list = True
             item_indent = " " * len(marker.group(0)) if marker else ""
+            item_margin = " " * margin
             continue
         # plain text: start a paragraph or continue the open item/paragraph
         if buf is None:

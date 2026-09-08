@@ -59,6 +59,24 @@ class TokenStreamTest(unittest.TestCase):
         expected = vp.token_stream("Intro:\n```\n<signature>\n```\n")
         self.assertEqual(expected, stored)
 
+    def test_html_pre_code_text_is_code_not_tags(self):
+        stored = vp.token_stream(
+            "<p>Sample:</p><pre><code>x-psp-signature: &lt;signature&gt;</code></pre>"
+        )
+        expected = vp.token_stream("Sample:\n```\nx-psp-signature: <signature>\n```")
+        self.assertEqual(expected, stored)
+
+    def test_multiline_html_pre_block_protected(self):
+        stored = vp.token_stream(
+            "<pre><code>if a &gt; b:\n    &lt;signature&gt;\n</code></pre>"
+        )
+        expected = vp.token_stream("```\nif a > b:\n    <signature>\n```")
+        self.assertEqual(expected, stored)
+
+    def test_inline_html_code_element_not_tag_stripped(self):
+        stored = vp.token_stream("<p>Use <code>__init__</code> now</p>")
+        self.assertIn("__init__", stored)
+
 
 class MarkerTest(unittest.TestCase):
     MARKER = "<!-- id: x -->"
@@ -135,6 +153,23 @@ class CliTest(unittest.TestCase):
         proc = self._run(expected, stored)
         self.assertEqual(proc.returncode, 0)
         self.assertIn("PARITY_OK", proc.stdout)
+
+    def test_html_exported_code_roundtrip_is_ok(self):
+        expected = "Sample:\n```\nx-psp-signature: <signature>\n```\n"
+        stored = (
+            "<p>Sample:</p><pre><code>x-psp-signature: "
+            "&lt;signature&gt;</code></pre>"
+        )
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_OK", proc.stdout)
+
+    def test_code_lost_from_html_export_is_a_diff(self):
+        expected = "```\n<signature>\n```\n"
+        stored = "<pre><code></code></pre>\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("PARITY_DIFF", proc.stdout)
 
 
 if __name__ == "__main__":

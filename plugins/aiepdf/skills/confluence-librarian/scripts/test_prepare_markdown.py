@@ -74,6 +74,22 @@ class NormalizeTest(unittest.TestCase):
         src = "2. step two\n\n   second para of step two.\n"
         self.assertEqual(self.norm(src), "2. step two\n\n   second para of step two.\n")
 
+    def test_nested_list_items_keep_indentation(self):
+        src = "- parent\n  - child\n- sibling\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_deeply_nested_list_keeps_hierarchy(self):
+        src = "- a\n  - b\n    - c\n- d\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_nested_list_after_blank_line_keeps_indentation(self):
+        src = "- parent\n\n  - child\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_nested_list_hard_break_item_keeps_hierarchy(self):
+        src = "- a  \n  - b\n- d\n"
+        self.assertEqual(self.norm(src), "- a\n  - b\n- d\n")
+
     def test_simple_blockquote_collapses_wraps(self):
         src = "> quoted line one\n> quoted line two\n"
         self.assertEqual(self.norm(src), "> quoted line one quoted line two\n")
@@ -83,6 +99,14 @@ class NormalizeTest(unittest.TestCase):
         self.assertEqual(
             self.norm(src), "> quoted line one\n>\n> second quote paragraph\n"
         )
+
+    def test_lazy_blockquote_continuation_stays_quoted(self):
+        src = "> quoted line\nlazy continuation text\n"
+        self.assertEqual(self.norm(src), "> quoted line lazy continuation text\n")
+
+    def test_block_starter_terminates_lazy_blockquote(self):
+        src = "> quoted line\n- item\n"
+        self.assertEqual(self.norm(src), "> quoted line\n- item\n")
 
     def test_nested_blockquote_stays_nested(self):
         src = "> quote outer line\n> > nested line one\n> > nested line two\n"

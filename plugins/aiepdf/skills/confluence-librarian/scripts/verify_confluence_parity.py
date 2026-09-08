@@ -13,10 +13,11 @@ Semantics (mirror the skill's content-parity rule):
   no content: HTML/XML tags are dropped and entities decoded on prose lines (so
   the stored body may come back as Markdown or HTML), and blockquote '>'
   markers are ignored only where Markdown treats them as structure — a
-  line-leading marker outside fenced code. Content inside a fenced code block
-  is compared verbatim (never tag-stripped or entity-decoded), and a literal
-  '>' that is real content (for example a comparison in code) is never
-  dropped;
+  line-leading marker outside fenced code. Content inside a fenced code block,
+  or inside an HTML `<pre>`/`<code>` element (where Confluence escapes code
+  text, e.g. `&lt;signature&gt;`), is compared verbatim — entity-decoded but
+  never tag-stripped — and a literal '>' that is real content (for example a
+  comparison in code) is never dropped;
 - does NOT treat emphasis delimiters, table separators, or other cosmetic
   Markdown re-normalization as a failure — such a delta is reported as
   `cosmetic-only` when the content tokens still align;
@@ -59,6 +60,16 @@ _LEAD_BLOCKQUOTE = re.compile(r"^ {0,3}(?:>[ \t]?)+")
 _HTML_TAG = re.compile(r"</?[a-zA-Z][^>]*>")
 # A Markdown table-delimiter cell (e.g. ---, :---:, |----|): cosmetic only.
 _DELIM_CELL = re.compile(r"\|?:?-+:?\|?")
+# Open/close tags of the HTML elements whose text is code (`<pre>`/`<code>`).
+_CODE_OPEN = re.compile(r"</?(?:pre|code)(?:\s[^>]*)?>", re.I)
+# An HTML `<pre>…</pre>` or `<code>…</code>` region. Confluence HTML exports
+# escape code text inside them (`<signature>` becomes `&lt;signature&gt;`), so
+# the text is code content: entity-decoded, never treated as structural tags.
+_CODE_REGION = re.compile(
+    r"<pre(?:\s[^>]*)?>(?P<pre>.*?)</pre>"
+    r"|<code(?:\s[^>]*)?>(?P<code>.*?)</code>",
+    re.I | re.S,
+)
 
 
 def _norm_newlines(text: str) -> str:
@@ -69,34 +80,74 @@ def _norm_newlines(text: str) -> str:
 
 def _strip_structural(text: str) -> str:
     """Reduce a body (prepared Markdown or a Confluence Markdown/HTML export) to
-    comparable content text: remove line-leading blockquote markers outside
-    fenced code, drop fenced-code markers (opening/closing lines, including any
-    info string) while keeping the code itself, decode HTML entities, and drop
-    structural HTML/XML tags. Entity decoding and tag stripping apply to prose
-    lines only: content inside a fenced code block is kept verbatim, so a
-    literal ``<signature>`` or ``&lt;signature&gt;`` in code is never mistaken
-    for storage markup."""
-    lines = text.split("\n")
-    out: list[str] = []
-    fence: tuple[str, int] | None = None
-    for raw in lines:
-        if fence is not None:
-            ch, n = fence
-            if re.match(r"^[ \t]*" + re.escape(ch) + "{" + str(n) + ",}[ \t]*$", raw):
-                fence = None
-                out.append("")
+    comparable content text. Fenced code blocks and HTML `<pre>`/`<code>`
+    elements are protected first: their text is kept verbatim (fence content
+    as-is, HTML code text entity-decoded so ``&lt;signature&gt;`` becomes
+    ``<signature>``) and never mistaken for storage markup. Remaining prose
+    lines then drop line-leading blockquote markers, strip structural HTML/XML
+    tags, and finally decode HTML entities — in that order, so a decoded tag
+    inside prose text (``&lt;b&gt;`` meant literally) is not stripped."""
+    protected: list[str] = []
+
+    def placeholder(content: str) -> str:
+        protected.append(content)
+        return f" \x00{len(protected) - 1}\x00 "
+
+    def stash_fences(text: str) -> str:
+        """Pull fenced code blocks out of the prose path: their content is
+        verbatim and must never be tag-stripped, quote-marked, or decoded."""
+        lines = text.split("\n")
+        out: list[str] = []
+        i = 0
+        n = len(lines)
+        while i < n:
+            raw = lines[i]
+            m = _FENCE.match(raw)
+            if m:
+                ch = m.group("fence")[0]
+                count = len(m.group("fence"))
+                closing = re.compile(
+                    r"^[ \t]*" + re.escape(ch) + "{" + str(count) + ",}[ \t]*$"
+                )
+                content: list[str] = []
+                i += 1
+                while i < n:
+                    if closing.match(lines[i]):
+                        i += 1
+                        break
+                    content.append(lines[i])
+                    i += 1
+                out.append(placeholder("\n".join(content)))
                 continue
-            out.append(raw)  # code content: verbatim, never decoded or stripped
-            continue
-        m = _FENCE.match(raw)
-        if m:
-            fence = (m.group("fence")[0], len(m.group("fence")))
-            out.append("")
-            continue
+            out.append(raw)
+            i += 1
+        return "\n".join(out)
+
+    def stash_code_elements(text: str) -> str:
+        """Pull HTML ``<pre>``/``<code>`` regions out of the prose path. Their
+        text is code content: entity-decoded (Confluence HTML escapes it) but
+        never stripped as structural markup."""
+        def repl(m: re.Match[str]) -> str:
+            inner = m.group("pre") if m.group("pre") is not None else m.group("code")
+            inner = _CODE_OPEN.sub("", inner)  # drop the wrapper tags themselves
+            inner = html.unescape(inner).replace("\u00a0", " ")
+            return placeholder(inner)
+        return _CODE_REGION.sub(repl, text)
+
+    text = stash_fences(text)
+    text = stash_code_elements(text)
+
+    out: list[str] = []
+    for raw in text.split("\n"):
         line = _LEAD_BLOCKQUOTE.sub("", raw)
+        line = _HTML_TAG.sub(" ", line)
         line = html.unescape(line).replace("\u00a0", " ")
-        out.append(_HTML_TAG.sub(" ", line))
-    return "\n".join(out)
+        out.append(line)
+
+    def restore(m: re.Match[str]) -> str:
+        return protected[int(m.group(1))]
+
+    return re.sub(r"\x00(\d+)\x00", restore, "\n".join(out))
 
 
 def token_stream(text: str) -> list[str]:
