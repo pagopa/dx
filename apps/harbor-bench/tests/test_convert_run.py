@@ -8,12 +8,14 @@ generation) are asserted here rather than through the CLI adapter.
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
 import yaml
 
 from harbor_bench.convert.discover import DiscoverError
+from harbor_bench.convert.environment_overrides import EnvironmentOverridesError
 from harbor_bench.convert.run import (
     ConvertOptions,
     TaskNameCollision,
@@ -232,9 +234,122 @@ def test_environment_option_lands_in_config(tmp_path: Path):
     }
 
 
+# --- skill harbor/environment.toml overrides -----------------------------
+
+
+def read_task_toml(task_dir: Path) -> dict:
+    return tomllib.loads((task_dir / "task.toml").read_text())
+
+
+def write_environment_overrides(skill: Path, text: str) -> None:
+    path = skill / "harbor" / "environment.toml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def test_skill_environment_overrides_merge_into_every_task(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_environment_overrides(
+        skill,
+        """
+[environment]
+network_mode = "public"
+env = { ATLASSIAN_MCP_AUTH = "${ATLASSIAN_MCP_AUTH}" }
+
+[[environment.mcp_servers]]
+name = "atlassian"
+transport = "stdio"
+command = "bash"
+args = ["-lc", "echo hi"]
+""",
+    )
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    for name in ("test-skill-1-case-one", "test-skill-2-case-two"):
+        env = read_task_toml(out / "tasks" / name)["environment"]
+        assert env["network_mode"] == "public"
+        assert env["env"] == {"ATLASSIAN_MCP_AUTH": "${ATLASSIAN_MCP_AUTH}"}
+        assert env["mcp_servers"] == [
+            {
+                "name": "atlassian",
+                "transport": "stdio",
+                "command": "bash",
+                "args": ["-lc", "echo hi"],
+            }
+        ]
+        # converter defaults are preserved next to the merged overrides
+        assert env["build_timeout_sec"] == 900.0
+
+
+def test_malformed_environment_overrides_fail_before_write(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_environment_overrides(skill, "[agent]\ntimeout_sec = 1\n")
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    with pytest.raises(EnvironmentOverridesError, match="unknown top-level key"):
+        plan_run(make_options(out, [evals_path]))
+    assert not out.exists()
+
+
+def test_run_level_flags_win_over_skill_environment_overrides(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_environment_overrides(
+        skill,
+        """
+[environment]
+env = { ATLASSIAN_MCP_AUTH = "${ATLASSIAN_MCP_AUTH}" }
+""",
+    )
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path], without_skill=True)
+
+    task_toml = read_task_toml(out / "tasks" / "test-skill-1-case-one")
+    # the run-level gate lands in [verifier] ...
+    assert task_toml["verifier"]["env"]["SKILL_EVAL_ENFORCE_SKILL_USE"] == "false"
+    # ... while the skill's [environment] overrides survive
+    assert task_toml["environment"]["env"] == {
+        "ATLASSIAN_MCP_AUTH": "${ATLASSIAN_MCP_AUTH}"
+    }
+
+
+# --- per-case instruction.append.md ("user answers") ----------------------
+
+
+def write_instruction_append(skill: Path, case_name: str, text: str) -> None:
+    path = skill / "harbor" / case_name / "instruction.append.md"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text)
+
+
+def test_instruction_append_is_appended_to_the_prompt(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_instruction_append(skill, "case-one", "User answers: space DevEx.")
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    one = (out / "tasks" / "test-skill-1-case-one" / "instruction.md").read_text()
+    assert one.startswith("do the thing")
+    assert "User answers: space DevEx." in one
+    # cases without a file keep the prompt unchanged
+    two = (out / "tasks" / "test-skill-2-case-two" / "instruction.md").read_text()
+    assert two == "do the other thing\n"
+
+
+def test_instruction_append_fails_plan_when_not_a_file(tmp_path: Path):
+    skill = tmp_path / "skill"
+    (skill / "harbor" / "case-one" / "instruction.append.md").mkdir(
+        parents=True
+    )
+    evals_path = write_evals(skill)
+    with pytest.raises(ValueError, match="must be a file"):
+        plan_run(make_options(tmp_path / "out", [evals_path]))
+
+
 # --- host preflight ------------------------------------------------------
-
-
 def test_check_host_environment_docker_is_always_ready():
     assert check_host_environment("docker") is None
 

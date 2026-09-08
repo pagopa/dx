@@ -7,7 +7,7 @@ from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .layout import discover_prepare_script
+from .layout import discover_instruction_append, discover_prepare_script
 
 
 def _assert_safe_rel(path: str) -> None:
@@ -58,6 +58,7 @@ class ResolvedEvalPaths(TypedDict):
 
     files: list[Path]
     prepare_script: Path | None
+    instruction_append: Path | None
 
 
 def resolve_eval_paths(
@@ -66,8 +67,9 @@ def resolve_eval_paths(
     """Resolve eval fixture files and on-disk prepare hooks.
 
     ``files`` are declared by the agentskills.io document. ``prepare_script``
-    is discovered from the skill's ``harbor/`` layout. Raises ``ValueError``
-    for unsafe or missing paths.
+    is discovered from the skill's ``harbor/`` layout and
+    ``instruction_append`` is the optional per-case "user answers" file.
+    Raises ``ValueError`` for unsafe or missing paths.
     """
     resolved_skill_dir = skill_dir.resolve()
     resolved: dict[int, ResolvedEvalPaths] = {}
@@ -86,5 +88,8 @@ def resolve_eval_paths(
         resolved[case.id] = {
             "files": files,
             "prepare_script": discover_prepare_script(resolved_skill_dir, case),
+            "instruction_append": discover_instruction_append(
+                resolved_skill_dir, case
+            ),
         }
     return resolved

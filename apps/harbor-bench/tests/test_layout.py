@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from harbor_bench.convert.layout import (
+    discover_environment_overrides,
+    discover_instruction_append,
     discover_prepare_script,
     discover_workspace_dir,
     task_key,
@@ -29,6 +31,46 @@ def test_missing_harbor_layout_has_no_hooks_or_workspace(tmp_path: Path):
 
     assert discover_prepare_script(skill, make_case()) is None
     assert discover_workspace_dir(skill) is None
+    assert discover_environment_overrides(skill) is None
+    assert discover_instruction_append(skill, make_case()) is None
+
+
+def test_instruction_append_is_discovered_per_case(tmp_path: Path):
+    skill = tmp_path / "skill"
+    append = skill / "harbor" / "case-one" / "instruction.append.md"
+    append.parent.mkdir(parents=True)
+    append.write_text("user answers")
+
+    assert discover_instruction_append(skill, make_case()) == append.resolve()
+    # a different case has no user-answers file
+    assert discover_instruction_append(skill, make_case(2, "two")) is None
+
+
+def test_instruction_append_must_be_a_file(tmp_path: Path):
+    skill = tmp_path / "skill"
+    (skill / "harbor" / "case-one" / "instruction.append.md").mkdir(
+        parents=True
+    )
+
+    with pytest.raises(ValueError, match="must be a file"):
+        discover_instruction_append(skill, make_case())
+
+
+def test_environment_overrides_file_is_discovered(tmp_path: Path):
+    skill = tmp_path / "skill"
+    overrides = skill / "harbor" / "environment.toml"
+    overrides.parent.mkdir(parents=True)
+    overrides.write_text("[environment]\n")
+
+    assert discover_environment_overrides(skill) == overrides.resolve()
+
+
+def test_environment_overrides_must_be_a_file(tmp_path: Path):
+    skill = tmp_path / "skill"
+    (skill / "harbor" / "environment.toml").mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="must be a file"):
+        discover_environment_overrides(skill)
 
 
 def test_workspace_directory_is_discovered_and_files_are_rejected(tmp_path: Path):
@@ -89,6 +131,7 @@ def test_extra_harbor_files_are_ignored(tmp_path: Path):
     (harbor / "case-one" / "notes.md").write_text("ignored")
 
     assert discover_prepare_script(skill, make_case()) is None
+    assert discover_environment_overrides(skill) is None
 
 
 def test_workspace_is_reserved_for_the_fixture_directory(tmp_path: Path):

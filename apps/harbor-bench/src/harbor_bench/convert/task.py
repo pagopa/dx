@@ -88,11 +88,12 @@ def task_name(task_dir: str) -> str:
     return f"pagopa/{task_dir}"
 
 
-def _deep_merge(base: dict, override: dict) -> dict:
+def deep_merge(base: dict, override: dict) -> dict:
+    """Deep-merge ``override`` onto a copy of ``base`` (later wins)."""
     out = deepcopy(base)
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(out.get(key), dict):
-            out[key] = _deep_merge(out[key], value)
+            out[key] = deep_merge(out[key], value)
         else:
             out[key] = value
     return out
@@ -142,7 +143,7 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     env_overrides = spec.env_overrides
 
     task_root.mkdir(parents=True, exist_ok=True)
-    task_toml = _deep_merge(DEFAULT_TASK_TOML, env_overrides or {})
+    task_toml = deep_merge(DEFAULT_TASK_TOML, env_overrides or {})
     task_toml.setdefault("task", {})
     task_toml["task"]["name"] = task_name(spec.task_dir)
     task_toml["task"]["description"] = case.expected_output.strip()[:200]
@@ -162,7 +163,13 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
 
     (task_root / "task.toml").write_text(tomli_w.dumps(task_toml))
 
-    (task_root / "instruction.md").write_text(case.prompt.strip() + "\n")
+    instruction = case.prompt.strip()
+    append_path = spec.paths["instruction_append"]
+    if append_path is not None:
+        # Deterministic per-case "user answers" appended after the eval prompt
+        # (see layout.discover_instruction_append).
+        instruction += "\n\n" + append_path.read_text(encoding="utf-8").strip()
+    (task_root / "instruction.md").write_text(instruction + "\n")
 
     # environment/ = fixture workspace + generated Dockerfile
     env_dir = task_root / "environment"
