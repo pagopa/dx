@@ -37,6 +37,17 @@ variable "resource_group_ids" {
   default     = []
 }
 
+variable "entraid_group_domain" {
+  type        = string
+  description = "Optional governance domain included in Entra ID group names."
+  default     = null
+
+  validation {
+    condition     = var.entraid_group_domain == null || trimspace(var.entraid_group_domain) != ""
+    error_message = "The Entra ID group governance domain must not be empty when provided."
+  }
+}
+
 variable "tags" {
   type        = map(any)
   description = "Map of tags to apply to all created resources."

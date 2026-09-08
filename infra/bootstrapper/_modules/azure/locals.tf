@@ -12,10 +12,17 @@ locals {
     p = "prod"
   }[lower(var.environment.env_short)]
 
+  adgroup_prefix = join("-", compact([
+    var.environment.prefix,
+    var.environment.env_short,
+    var.entraid_group_domain,
+    "adgroup",
+  ]))
+
   adgroups = {
-    admins_name   = "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin"
-    devs_name     = "${var.environment.prefix}-${var.environment.env_short}-adgroup-developers"
-    external_name = "${var.environment.prefix}-${var.environment.env_short}-adgroup-externals"
+    admins_name   = "${local.adgroup_prefix}-admins"
+    devs_name     = "${local.adgroup_prefix}-developers"
+    external_name = "${local.adgroup_prefix}-externals"
   }
 
   tf_storage_account = {
@@ -25,4 +32,3 @@ locals {
 
   tf_storage_account_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.tf_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${local.tf_storage_account.name}"
 }
-
