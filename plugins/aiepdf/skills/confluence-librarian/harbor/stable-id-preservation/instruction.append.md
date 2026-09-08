@@ -3,7 +3,8 @@ and do not invent others:
 
 - Operation: create a new Confluence page.
 - Space: DevEx.
-- Parent page: none.
+- Parent page: create it inside the DevEx Playground folder
+  (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).
 - Language: Italian (translate the human-facing prose as requested).
 - Title: derive it from the architecture guide's heading (e.g.
   "Guida all'architettura — Notifiche degli esiti dei pagamenti").

@@ -8,9 +8,11 @@ them, and grades each trial with RewardKit.
 The agent inside the benchmark container talks to Confluence through the
 **Atlassian remote MCP server** (`mcp.atlassian.com/v2/mcp`). That server is
 authenticated with **OAuth only** — there is no static token — and the evals
-create/update live pages under the DevEx Confluence (the seed page
-`…/spaces/DevEx/pages/3313926515` and the DevEx Playground folder
-`…/spaces/DevEx/folder/3314123072`). Run them deliberately.
+write **only** inside the DevEx Playground folder
+`…/spaces/DevEx/folder/3314123072`: the `safe-update` case copies the seed page
+`…/spaces/DevEx/pages/3313926515` into that folder and updates the copy, while
+every other case creates its page directly under the folder. The seed page
+itself is read-only. Run them deliberately.
 
 ## 1. Obtain the Atlassian OAuth credential (one time)
 

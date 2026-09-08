@@ -3,7 +3,8 @@ publication request as confirmed). Use these answers and do not invent others:
 
 - Operation: create a new Confluence page.
 - Space: DevEx.
-- Parent page: none.
+- Parent page: create it inside the DevEx Playground folder
+  (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).
 - Language: English.
 - Title: derive it from the meeting guide's own heading if present (e.g.
   "Weekly Product Design Sync — Meeting Guide").
@@ -14,7 +15,7 @@ summary exactly in this form (never after the create, never abbreviated):
 Operation: create
 Title: <resolved title>
 Space: DevEx
-Parent: none
+Parent: DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072)
 Language: English
 Source: /workspace/meeting-guide.md
 

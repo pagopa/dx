@@ -4,11 +4,12 @@
     {
       "id": 0,
       "name": "publication-confirmation",
-      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page.",
+      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).",
       "expected_output": "The agent treats the publication request as confirmed, consumes the destination answers already supplied (space, parent, title, language) without re-asking or inventing others, and shows the complete operation summary before publishing.",
       "expectations": [
         "Does not publish before resolving the destination and operation.",
         "Consumes the destination answers supplied in the instructions (space, parent, title, language); only when one is genuinely missing does it ask for it, rather than re-asking for answered details or inventing values.",
+        "Creates the page inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) supplied as its parent.",
         "Summarizes the irreversible operation before executing it."
       ],
       "files": ["fixtures/meeting-guide.md"]
@@ -16,13 +17,14 @@
     {
       "id": 1,
       "name": "stable-id-preservation",
-      "prompt": "Create a Confluence page from this Markdown architecture guide (architecture-guide.md in this workspace). Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.",
+      "prompt": "Create a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) from this Markdown architecture guide (architecture-guide.md in this workspace). Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.",
       "expected_output": "The page content is translated only where requested while machine-facing identifiers and document structure remain unchanged.",
       "expectations": [
         "Preserves stable IDs and machine-facing status values exactly.",
         "Preserves headings, tables, links, and conditional N/A reasons.",
         "Translates human-facing prose without translating code, URLs, or operation names.",
         "Omits a leading H1 when it exactly matches the Confluence page title, while preserving other headings.",
+        "Creates the page inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) supplied as its parent.",
         "A stable `<!-- id: ... -->` marker kept in the prepared representation may be dropped outright by Confluence on import (HTML comments are not representable on every write route); that platform limitation does not violate the ID rule. Only mangling it into visible or escaped text (`\\<!--`, `&lt;!--`) is a failure."
       ],
       "files": ["fixtures/architecture-guide.md"]
@@ -34,6 +36,7 @@
       "expected_output": "The agent first creates one fresh working copy of the seed page, then resolves and fetches that copy, updates that copy, preserves its status, avoids creating further duplicates, and returns the updated copy's URL.",
       "expectations": [
         "Creates exactly one fresh working copy of the seed page and never edits the seed page itself.",
+        "Creates and updates the working copy inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) and performs no operation outside it.",
         "Uses the created copy as the update target without making any further duplicate page.",
         "Does not change lifecycle status merely because publication occurred.",
         "Returns the updated page URL only after a successful update."
