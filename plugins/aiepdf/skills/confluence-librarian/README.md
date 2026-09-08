@@ -19,15 +19,19 @@ REST API*, but **not** the Atlassian MCP server: MCP tool calls then fail with
 `HTTP 403 missing scope claim / Current user not permitted to use Confluence`.
 For the MCP you need an OAuth session for your Atlassian user.
 
-Get it once with `mcp-remote` (needs a browser on the host, Node ≥ 20):
+Get it once with `mcp-remote` into a **dedicated store** (a browser on the
+host is needed, Node ≥ 20). Using its own directory keeps the benchmark archive
+scoped to the Atlassian session instead of shipping every server's tokens that
+may already live in `~/.mcp-auth`:
 
 ```sh
+export MCP_REMOTE_CONFIG_DIR="$HOME/.mcp-auth-atlassian"
 npx -y -p mcp-remote@0.8.4 mcp-remote-client https://mcp.atlassian.com/v2/mcp
 ```
 
 Approve the Atlassian consent screen (it requests the
 `read/write:confluence:agent-interface` scopes). On success mcp-remote stores
-the refresh + access tokens under `~/.mcp-auth/`
+the refresh + access tokens under `~/.mcp-auth-atlassian/`
 (`mcp-remote-v1/…_tokens.json`) and refreshes them automatically afterwards.
 
 The version is pinned (here and in `harbor/prepare.sh`) so identical benchmark
@@ -40,11 +44,12 @@ together when you upgrade.
 - Docker (or Apple's `container` CLI — pass `--environment apple-container` to
   `convert`).
 - `gh` authenticated, for `COPILOT_GITHUB_TOKEN`.
-- The OAuth store from step 1 (`~/.mcp-auth`).
+- The OAuth store from step 1 (`~/.mcp-auth-atlassian`).
 
 The generated task environment image is prepared by this skill's
-[`harbor/prepare.sh`](harbor/prepare.sh) — it bakes Node 22 LTS, `mcp-remote`,
-and `python3` into the image, so the agent container needs nothing at run time.
+[`harbor/prepare.sh`](harbor/prepare.sh) — it bakes Node 22 LTS (pinned release,
+digest-verified), `mcp-remote`, and `python3` into the image, so the agent
+container needs nothing at run time.
 
 ## 3. Convert the evals to Harbor tasks
 
@@ -67,7 +72,7 @@ Export the credentials on the host, then run **only** the confluence tasks
 ```sh
 cd <repo-root>
 export COPILOT_GITHUB_TOKEN="$(gh auth token)"
-export MCP_AUTH_B64="$(tar -C ~ -czf - .mcp-auth | base64 | tr -d '\n')"
+export MCP_AUTH_B64="$(tar -C "$HOME" -czf - .mcp-auth-atlassian | base64 | tr -d '\n')"
 ```
 
 Create a run config that filters to this skill's tasks and keeps concurrency at
@@ -98,10 +103,15 @@ Notes:
 - `MCP_AUTH_B64` must be exported in the host environment: Harbor resolves the
   `[environment].env` template `${MCP_AUTH_B64}` at run time and injects it at
   **container level** (agent `--ae` env does not reach the MCP server process).
-- Each container rebuilds the `~/.mcp-auth` store from that env var into an
-  ephemeral temp dir that the MCP process owns and that disappears with the
-  container — nothing is written to the repo, the task config, or the host
-  (the archive only ever exists as an env var).
+- The archive holds only the dedicated Atlassian store from step 1 — not every
+  session in `~/.mcp-auth`. Each container rebuilds that store from the env
+  var into an ephemeral temp dir that only the MCP process owns and that
+  disappears with the container — nothing is written to the repo, the task
+  config, or the host (the archive only ever exists as an env var). Harbor
+  task config exposes no sidecar/secret-mount channel for a stdio MCP server,
+  so the container-level env var is the one supported way to reach the MCP
+  process; the dedicated-store + ephemeral-temp-dir scoping keeps that surface
+  minimal.
 - `--job-name` must change whenever the config/task changes (Harbor refuses to
   resume a job dir with a different config). Results land in `runs/<name>/`.
 
@@ -120,7 +130,8 @@ or use `harbor-bench compare` for a base/head skill delta. See the
 
 - **`HTTP 403 missing scope claim` / `Current user not permitted to use
   Confluence`** — the session is authenticated with an API token (Basic), not
-  OAuth. Re-run step 1 and export `MCP_AUTH_B64` from `~/.mcp-auth`.
+  OAuth. Re-run step 1 and export `MCP_AUTH_B64` from
+  `~/.mcp-auth-atlassian`.
 - **MCP server `failed to initialize` with
   `MCP_AUTH_B64 … is required`** — the env var did not reach the container.
   Export it on the host (see step 4); the template lives in

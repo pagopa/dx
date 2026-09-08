@@ -8,26 +8,37 @@
 # The evals publish and update REAL Confluence pages through the authenticated
 # Atlassian MCP server. The Atlassian remote MCP authenticates with OAuth only
 # (no static token; an API token gets 403 "missing scope claim" on Confluence
-# tools). Obtain the credential once on the host:
+# tools). Obtain the credential once on the host into a DEDICATED store — never
+# the whole ~/.mcp-auth, which may hold other servers' sessions:
 #
+#     export MCP_REMOTE_CONFIG_DIR="$HOME/.mcp-auth-atlassian"
 #     npx -y -p mcp-remote@0.8.4 mcp-remote-client https://mcp.atlassian.com/v2/mcp
 #
-# which runs the browser authorization-code flow and stores refresh+access
-# tokens under ~/.mcp-auth (mcp-remote refreshes them automatically). Nothing is
-# stored in this repo: before `harbor run`, export the packed store so Harbor
-# resolves the ${MCP_AUTH_B64} template below from the host environment, e.g.:
+# which runs the browser authorization-code flow and stores the refresh+access
+# tokens under ~/.mcp-auth-atlassian (mcp-remote refreshes them automatically).
+# Nothing is stored in this repo: before `harbor run`, export the packed store
+# so Harbor resolves the ${MCP_AUTH_B64} template below from the host env, e.g.:
 #
-#     export MCP_AUTH_B64="$(tar -C ~ -czf - .mcp-auth | base64 | tr -d '\n')"
+#     export MCP_AUTH_B64="$(tar -C "$HOME" -czf - .mcp-auth-atlassian | base64 | tr -d '\n')"
 #     uv run --package harbor-bench harbor run -c <config>.yaml -y \
 #       --ae COPILOT_GITHUB_TOKEN="$COPILOT_GITHUB_TOKEN"
 #
-# [environment].env injects MCP_AUTH_B64 at the container level — the only
-# channel the Copilot CLI's MCP server process reliably inherits (agent --ae
-# env does not reach it). Each container rebuilds the mcp-remote store in a
-# temp dir from that env var (bash wrapper: Harbor/Copilot do not expand ${...}
-# in mcp args, and a one-shot secret must not sit in the JSON config), then
-# execs mcp-remote without any header — the store owns the OAuth session.
-# `mcp-remote` is baked into the image by harbor/prepare.sh (Node 22).
+# Secret handling. Harbor task config exposes no sidecar or secret-mount channel
+# for a stdio MCP server: the MCP process is spawned inside the agent container,
+# so whatever it can read the agent can read too. We therefore ship only the
+# single dedicated Atlassian store above (not every session in ~/.mcp-auth) and
+# never persist it: [environment].env injects MCP_AUTH_B64 at container level —
+# the only channel the Copilot CLI's MCP server process reliably inherits (agent
+# --ae env does not reach it) — and each container rebuilds the store into an
+# ephemeral temp dir that only the MCP wrapper owns and that disappears with the
+# container. The archive never touches the repo, the task config, or the host
+# (it exists only as the env var).
+#
+# Each container rebuilds the mcp-remote store in a temp dir from that env var
+# (bash wrapper: Harbor/Copilot do not expand ${...} in mcp args, and a one-shot
+# secret must not sit in the JSON config), then execs mcp-remote without any
+# header — the store owns the OAuth session. `mcp-remote` is baked into the
+# image by harbor/prepare.sh (Node 22, digest-pinned).
 
 [environment]
 network_mode = "public"
@@ -37,4 +48,4 @@ env = { MCP_AUTH_B64 = "${MCP_AUTH_B64}" }
 name = "atlassian"
 transport = "stdio"
 command = "bash"
-args = ["-lc", "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.mcp-auth) is required}\"; d=$(mktemp -d); printf '%s' \"$MCP_AUTH_B64\" | base64 -d | tar -xz -C \"$d\"; MCP_REMOTE_CONFIG_DIR=\"$d/.mcp-auth\" exec mcp-remote https://mcp.atlassian.com/v2/mcp --silent"]
+args = ["-lc", "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.mcp-auth-atlassian) is required}\"; d=$(mktemp -d); printf '%s' \"$MCP_AUTH_B64\" | base64 -d | tar -xz -C \"$d\"; MCP_REMOTE_CONFIG_DIR=\"$d/.mcp-auth-atlassian\" exec mcp-remote https://mcp.atlassian.com/v2/mcp --silent"]

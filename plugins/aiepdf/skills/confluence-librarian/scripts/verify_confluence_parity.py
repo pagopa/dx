@@ -10,11 +10,13 @@ Run this AFTER publishing/updating, with the stored body saved to a local file
 Semantics (mirror the skill's content-parity rule):
 
 - compares token streams ignoring whitespace and structural markup that carries
-  no content: HTML/XML tags are dropped and entities decoded (so the stored
-  body may come back as Markdown or HTML), and blockquote '>' markers are
-  ignored only where Markdown treats them as structure — a line-leading marker
-  outside fenced code. A literal '>' that is real content (for example a
-  comparison in code) is never dropped;
+  no content: HTML/XML tags are dropped and entities decoded on prose lines (so
+  the stored body may come back as Markdown or HTML), and blockquote '>'
+  markers are ignored only where Markdown treats them as structure — a
+  line-leading marker outside fenced code. Content inside a fenced code block
+  is compared verbatim (never tag-stripped or entity-decoded), and a literal
+  '>' that is real content (for example a comparison in code) is never
+  dropped;
 - does NOT treat emphasis delimiters, table separators, or other cosmetic
   Markdown re-normalization as a failure — such a delta is reported as
   `cosmetic-only` when the content tokens still align;
@@ -70,7 +72,10 @@ def _strip_structural(text: str) -> str:
     comparable content text: remove line-leading blockquote markers outside
     fenced code, drop fenced-code markers (opening/closing lines, including any
     info string) while keeping the code itself, decode HTML entities, and drop
-    structural HTML/XML tags."""
+    structural HTML/XML tags. Entity decoding and tag stripping apply to prose
+    lines only: content inside a fenced code block is kept verbatim, so a
+    literal ``<signature>`` or ``&lt;signature&gt;`` in code is never mistaken
+    for storage markup."""
     lines = text.split("\n")
     out: list[str] = []
     fence: tuple[str, int] | None = None
@@ -81,16 +86,17 @@ def _strip_structural(text: str) -> str:
                 fence = None
                 out.append("")
                 continue
-            out.append(raw)
+            out.append(raw)  # code content: verbatim, never decoded or stripped
             continue
         m = _FENCE.match(raw)
         if m:
             fence = (m.group("fence")[0], len(m.group("fence")))
             out.append("")
             continue
-        out.append(_LEAD_BLOCKQUOTE.sub("", raw))
-    text = html.unescape("\n".join(out)).replace("\u00a0", " ")
-    return "\n".join(_HTML_TAG.sub(" ", ln) for ln in text.split("\n"))
+        line = _LEAD_BLOCKQUOTE.sub("", raw)
+        line = html.unescape(line).replace("\u00a0", " ")
+        out.append(_HTML_TAG.sub(" ", line))
+    return "\n".join(out)
 
 
 def token_stream(text: str) -> list[str]:

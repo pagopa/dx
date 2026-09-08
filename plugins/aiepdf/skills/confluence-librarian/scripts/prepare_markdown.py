@@ -15,6 +15,9 @@ This script does exactly that normalization, deterministically:
   keeping explicit Markdown hard breaks (a line ending with two or more
   spaces) as hard line breaks instead of folding them into the next line;
 - preserves fenced code blocks byte-for-byte;
+- preserves indented code blocks (four-space- or tab-indented paragraphs that
+  do not continue a loose list item) line by line instead of soft-wrapping
+  them;
 - preserves GFM tables (leading `|` optional): a header row containing `|`
   that is immediately followed by a delimiter row (`--- | ---`) is kept as
   one line per table row, like tables whose rows already start with `|`;
@@ -188,6 +191,28 @@ def _hard_break(line: str) -> bool:
     """True when the physical line ends in an explicit Markdown hard break
     (two or more trailing spaces before the newline)."""
     return bool(HARD_BREAK.search(line))
+
+
+def _is_indented(line: str) -> bool:
+    """True when the line starts with at least one space or tab."""
+    return bool(re.match(r"[ \t]+", line))
+
+
+def _is_indented_code_block(block: list[str]) -> bool:
+    """True when every line of a blank-separated block is indented code: at
+    least four leading spaces, or a leading tab, on each line. Loose-list
+    continuation paragraphs share that indentation but are prose; the caller
+    excludes them with list context (see ``normalize``)."""
+    if not block:
+        return False
+    for raw in block:
+        m = re.match(r"[ \t]*", raw)
+        indent = m.group(0) if m else ""
+        if "\t" in indent:
+            continue
+        if len(indent) < 4:
+            return False
+    return True
 
 
 def _logical_lines(buf: list[str], breaks: list[bool]) -> list[str]:
@@ -414,6 +439,10 @@ def normalize(text: str, title: str | None = None) -> str:
         # normal markdown segment: walk line by line, blockwise
         i = 0
         n = len(seg)
+        # True while the previous block was a (loose) list item or one of its
+        # continuation paragraphs: an indented block here belongs to that item
+        # and must not be read as indented code.
+        in_loose_item = False
         while i < n:
             line = seg[i]
             if not line.strip():
@@ -424,12 +453,23 @@ def normalize(text: str, title: str | None = None) -> str:
                 while i < n and seg[i].strip() and _is_table_row(seg[i]):
                     out.append(seg[i].rstrip())
                     i += 1
+                in_loose_item = False
                 continue
             block: list[str] = []
             while i < n and seg[i].strip():
                 block.append(seg[i])
                 i += 1
+            # Indented code (>= 4 leading spaces/tab on every line) is kept
+            # line by line — unless it is a loose list item's continuation
+            # paragraph, which shares the indentation but stays prose.
+            if _is_indented_code_block(block) and not in_loose_item:
+                out.extend(block)  # verbatim, indentation and line breaks kept
+                in_loose_item = False
+                continue
             out.extend(_process_plain_block(block))
+            in_loose_item = _is_list_marker(block[0]) or (
+                in_loose_item and _is_indented(block[0])
+            )
     # collapse blank runs, drop leading/trailing blanks
     final: list[str] = []
     prev_blank = False

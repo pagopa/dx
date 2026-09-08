@@ -45,6 +45,20 @@ class TokenStreamTest(unittest.TestCase):
         self.assertNotEqual(exp, sto)
         self.assertTrue(vp.is_cosmetic_only(exp, sto))
 
+    def test_tag_like_code_token_inside_fence_is_content(self):
+        src = "```\nx-psp-signature: <signature>\n```\n"
+        tokens = vp.token_stream(src)
+        self.assertIn("<signature>", tokens)
+
+    def test_fence_content_entities_not_decoded(self):
+        tokens = vp.token_stream("```\nif a &lt; b\n```\n")
+        self.assertIn("&lt;", tokens)
+
+    def test_html_tags_stripped_but_not_inside_fence(self):
+        stored = vp.token_stream("<p>Intro:</p>\n```\n<signature>\n```\n")
+        expected = vp.token_stream("Intro:\n```\n<signature>\n```\n")
+        self.assertEqual(expected, stored)
+
 
 class MarkerTest(unittest.TestCase):
     MARKER = "<!-- id: x -->"
@@ -104,6 +118,20 @@ class CliTest(unittest.TestCase):
     def test_html_stored_body_comparison(self):
         expected = "Hello world\n"
         stored = "<p>Hello&nbsp;world</p>\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_OK", proc.stdout)
+
+    def test_lost_code_token_inside_fence_is_a_diff(self):
+        expected = "```\n<signature>\n```\n"
+        stored = "```\n\n```\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("PARITY_DIFF", proc.stdout)
+
+    def test_tag_like_code_roundtrip_is_ok(self):
+        expected = "Sample:\n```\nx-psp-signature: <signature>\n```\n"
+        stored = "Sample:\n```\nx-psp-signature: <signature>\n```\n"
         proc = self._run(expected, stored)
         self.assertEqual(proc.returncode, 0)
         self.assertIn("PARITY_OK", proc.stdout)

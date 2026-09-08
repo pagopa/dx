@@ -140,6 +140,25 @@ class NormalizeTest(unittest.TestCase):
         src = "````\n```python\nsecond line\nthird line\n```\n````\n"
         self.assertEqual(self.norm(src), src)
 
+    def test_indented_code_block_preserved_after_paragraph(self):
+        src = "para before\n\n    def f():\n        return 1\n\nafter\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_indented_code_block_at_document_start(self):
+        src = "    line one\n    line two\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_indented_code_containing_list_markers_preserved(self):
+        src = "    - sample bullet\n    - second line\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_loose_list_continuation_not_read_as_code(self):
+        src = "- item\n\n    continuation line one\n    continues here.\n- next\n"
+        self.assertEqual(
+            self.norm(src),
+            "- item\n\n    continuation line one continues here.\n- next\n",
+        )
+
 
 class MainTest(unittest.TestCase):
     def test_mismatch_returns_1(self):
