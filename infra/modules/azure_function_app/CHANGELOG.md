@@ -1,3 +1,16 @@
+## 7.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Suppress azu-0061 Trivy warning ([#2151](https://github.com/pagopa/dx/pull/2151))
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Krusty93
+- Mario Mupo @mamu0
+
 # 7.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes
