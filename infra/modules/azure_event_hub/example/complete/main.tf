@@ -37,7 +37,7 @@ resource "azurerm_subnet" "allowed" {
 
 module "azure_event_hub" {
   source  = "pagopa-dx/azure-event-hub/azurerm"
-  version = "~> 1.0"
+  version = "~> 2.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

@@ -7,7 +7,7 @@ resource "azurerm_user_assigned_identity" "id" {
 
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.3"
+  version = "~> 4.0"
 
   principal_id    = azurerm_user_assigned_identity.id.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
