@@ -29,6 +29,17 @@ class TokenStreamTest(unittest.TestCase):
         self.assertIn("quoted", tokens)
         self.assertIn("body", tokens)
 
+    def test_comment_inside_code_fence_is_content(self):
+        src = "para\n```\n<!-- TODO -->\n```\n"
+        tokens = vp.token_stream(src)
+        self.assertIn("<!--", tokens)
+        self.assertIn("-->", tokens)
+        self.assertIn("TODO", tokens)
+
+    def test_stable_marker_stripped_from_prose_tokens(self):
+        tokens = vp.token_stream("a\n<!-- id: x -->\nb\n")
+        self.assertNotIn("id:", tokens)
+
     def test_html_tags_and_entities_collapse_to_text(self):
         stored = vp.token_stream("<p>Hello&nbsp;world</p>\n<p>second paragraph</p>\n")
         expected = vp.token_stream("Hello world\nsecond paragraph\n")
@@ -40,9 +51,9 @@ class TokenStreamTest(unittest.TestCase):
         self.assertEqual(expected, stored)
 
     def test_table_delimiter_width_differs_between_sides(self):
-        exp = vp.token_stream("| a | b |\n-----------------------\n| 1 | 2 |")
-        sto = vp.token_stream("| a | b |\n| --- | --- |\n| 1 | 2 |")
-        self.assertNotEqual(exp, sto)
+        exp = "| a | b |\n-----------------------\n| 1 | 2 |"
+        sto = "| a | b |\n| --- | --- |\n| 1 | 2 |"
+        self.assertNotEqual(vp.token_stream(exp), vp.token_stream(sto))
         self.assertTrue(vp.is_cosmetic_only(exp, sto))
 
     def test_tag_like_code_token_inside_fence_is_content(self):
@@ -132,6 +143,63 @@ class CliTest(unittest.TestCase):
         proc = self._run(expected, stored)
         self.assertEqual(proc.returncode, 1)
         self.assertIn("ISSUE escaped comment marker", proc.stdout)
+
+    def test_unmatched_underscore_identifier_change_is_diff(self):
+        expected = "set the _private field now\n"
+        stored = "set the private field now\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("PARITY_DIFF", proc.stdout)
+
+    def test_balanced_emphasis_delta_is_cosmetic(self):
+        expected = "**bold** word\n"
+        stored = "*bold* word\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_COSMETIC", proc.stdout)
+
+    def test_table_outer_border_pipe_delta_is_cosmetic(self):
+        expected = "a | b\n--- | ---\n1 | 2\n"
+        stored = "| a | b |\n| --- | --- |\n| 1 | 2 |\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_COSMETIC", proc.stdout)
+
+    def test_literal_comment_inside_code_fence_lost_is_a_diff(self):
+        expected = "```\n<!-- TODO -->\n```\n"
+        stored = "```\n\n```\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("PARITY_DIFF", proc.stdout)
+
+    def test_literal_comment_inside_code_fence_kept_is_ok(self):
+        expected = "```\n<!-- TODO -->\n```\n"
+        stored = "```\n<!-- TODO -->\n```\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_OK", proc.stdout)
+
+    def test_non_stable_comment_dropped_outside_code_is_a_diff(self):
+        expected = "para\n<!-- TODO -->\nworld\n"
+        stored = "para\nworld\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("PARITY_DIFF", proc.stdout)
+
+    def test_altered_stable_marker_fails(self):
+        expected = "a\n<!-- id: x -->\nb\n"
+        stored = "a\n<!-- id: y -->\nb\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 1)
+        self.assertIn("unexpected/altered comment marker", proc.stdout)
+
+    def test_stable_marker_dropped_is_platform_note(self):
+        expected = "a\n<!-- id: x -->\nb\n"
+        stored = "a\nb\n"
+        proc = self._run(expected, stored)
+        self.assertEqual(proc.returncode, 0)
+        self.assertIn("PARITY_OK", proc.stdout)
+        self.assertIn("platform limitation", proc.stdout)
 
     def test_html_stored_body_comparison(self):
         expected = "Hello world\n"

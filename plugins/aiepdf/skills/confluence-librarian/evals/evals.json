@@ -5,10 +5,10 @@
       "id": 0,
       "name": "publication-confirmation",
       "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page.",
-      "expected_output": "The agent asks for explicit confirmation or confirms the already explicit publication request, then asks only for missing destination details before showing the final operation.",
+      "expected_output": "The agent treats the publication request as confirmed, consumes the destination answers already supplied (space, parent, title, language) without re-asking or inventing others, and shows the complete operation summary before publishing.",
       "expectations": [
         "Does not publish before resolving the destination and operation.",
-        "Asks for missing space, parent, title, or language rather than inventing them.",
+        "Consumes the destination answers supplied in the instructions (space, parent, title, language); only when one is genuinely missing does it ask for it, rather than re-asking for answered details or inventing values.",
         "Summarizes the irreversible operation before executing it."
       ],
       "files": ["fixtures/meeting-guide.md"]

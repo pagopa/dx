@@ -108,6 +108,25 @@ class NormalizeTest(unittest.TestCase):
         src = "> quoted line\n- item\n"
         self.assertEqual(self.norm(src), "> quoted line\n- item\n")
 
+    def test_block_starter_resets_quote_depth_for_following_text(self):
+        src = "> quoted line\n- item\nfollowing paragraph\n"
+        self.assertEqual(
+            self.norm(src), "> quoted line\n- item\nfollowing paragraph\n"
+        )
+
+    def test_block_starter_resets_nested_quote_depth_for_following_text(self):
+        src = "> outer\n> > nested line\n- item\nfollowing soft\nwrapped paragraph\n"
+        self.assertEqual(
+            self.norm(src),
+            "> outer\n> > nested line\n- item\nfollowing soft wrapped paragraph\n",
+        )
+
+    def test_lazy_quote_resumes_after_top_level_paragraph(self):
+        src = "> quoted line\n- item\nplain paragraph\n> quoted again\n"
+        self.assertEqual(
+            self.norm(src), "> quoted line\n- item\nplain paragraph\n> quoted again\n"
+        )
+
     def test_nested_blockquote_stays_nested(self):
         src = "> quote outer line\n> > nested line one\n> > nested line two\n"
         self.assertEqual(
@@ -159,6 +178,41 @@ class NormalizeTest(unittest.TestCase):
     def test_keeps_deeper_heading_equal_to_title(self):
         src = "## Design Review\n\nBody text.\n"
         self.assertEqual(self.norm(src, title="Design Review"), src)
+
+    def test_setext_h1_preserved(self):
+        src = "Design Review\n=====\n\nBody text.\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_setext_h1_soft_wrapped_content_joined(self):
+        src = "Design Review\ncontinued on\nnext line\n=====\n\nBody text.\n"
+        self.assertEqual(
+            self.norm(src),
+            "Design Review continued on next line\n=====\n\nBody text.\n",
+        )
+
+    def test_leading_setext_h1_equal_to_title_dropped(self):
+        src = "Design Review\n=====\n\nBody text.\n"
+        self.assertEqual(self.norm(src, title="Design Review"), "Body text.\n")
+
+    def test_leading_soft_wrapped_setext_h1_equal_to_title_dropped(self):
+        src = "Design Review —\ncontinued\n=====\n\nBody text.\n"
+        self.assertEqual(
+            self.norm(src, title="Design Review — continued"), "Body text.\n"
+        )
+
+    def test_leading_setext_h1_different_from_title_kept(self):
+        src = "Other Title\n=====\n\nBody text.\n"
+        self.assertEqual(self.norm(src, title="Design Review"), src)
+
+    def test_setext_h2_kept_verbatim(self):
+        src = "Section\n-------\n\nBody text.\n"
+        self.assertEqual(self.norm(src), src)
+
+    def test_setext_h2_after_wrapped_paragraph_kept(self):
+        src = "Section heading\nwrapped line\n---\nBody text.\n"
+        self.assertEqual(
+            self.norm(src), "Section heading wrapped line\n---\nBody text.\n"
+        )
 
     def test_longer_fence_not_closed_by_shorter_or_info_string(self):
         src = "````\n```python\nsecond line\nthird line\n```\n````\n"

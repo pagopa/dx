@@ -182,11 +182,22 @@ Source: <document path or artifact>
   script compare token streams ignoring whitespace, structural `>` markers,
   HTML/XML tags, and stable comment markers Confluence dropped outright, report
   `PARITY_OK`/`PARITY_COSMETIC`/`PARITY_DIFF`, and print
-  only the first mismatched windows. Inspect structure (tables, list-item
-  indentation, blockquote nesting, macro nodes) only in the regions it flags.
-  The normalizer's own `--check` detects lost or reordered tokens on the
-  *prepared* file only and cannot compare against the stored page. Cosmetic
-  deltas are expected and are not a sync failure.
+  only the first mismatched windows. The check is deliberately blind to
+  structure (it strips tags and whitespace), so it **cannot flag pure
+  structural loss**: flattening a `<details>`/expand macro, an
+  `info`/`note`/`tip`/`warning`/`error` callout, a `toc`, an image, or a smart
+  link into plain prose can still print `PARITY_OK`. Whenever the source or the
+  existing page contains such constructs, run an independent structural check
+  on top of parity — do not rely on the flagged regions alone, because a
+  flattened construct leaves nothing to flag. Confirm each construct survived
+  as a macro node in the stored body (for example count the `<details>`/expand,
+  callout, `toc`, or image nodes against the prepared body or the source) and
+  treat a surviving-but-flattened construct as content loss even when parity
+  reports `PARITY_OK`. Inspect other structure (tables, list-item indentation,
+  blockquote nesting) in the regions the report flags. The normalizer's own
+  `--check` detects lost or reordered tokens on the *prepared* file only and
+  cannot compare against the stored page. Cosmetic deltas are expected and are
+  not a sync failure.
 - Markdown front matter is not native Confluence metadata. When publishing a
   Markdown document, render its front-matter values as a Confluence metadata
   table, and verify that stable IDs and lifecycle status remain visible after

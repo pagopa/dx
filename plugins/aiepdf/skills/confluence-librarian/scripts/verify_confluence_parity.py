@@ -20,20 +20,29 @@ Semantics (mirror the skill's content-parity rule):
   comparison in code) is never dropped;
 - does NOT treat emphasis delimiters, table separators, or other cosmetic
   Markdown re-normalization as a failure — such a delta is reported as
-  `cosmetic-only` when the content tokens still align;
-- ignores stable HTML comment blocks on both sides (Confluence may drop them on
-  a write route — that is a platform limitation, and the marker stays in the
-  prepared representation) and fails only when a comment was **escaped into
-  visible text** (`\\<!--`, `&lt;!-- … --&gt;`, in either half-escaped or fully
-  HTML-escaped form) or real content differs.
+  `cosmetic-only` when the content tokens still align after dropping a
+  delimiter that wraps a token on both sides (never an unmatched leading
+  underscore), a table row's outer border pipes, and table separator cells;
+- stable HTML-comment markers (`<!-- id: … -->`) are stripped only from the
+  prose path — never inside a fenced code block or an HTML `<pre>`/`<code>`
+  element, where a literal comment is code content — because Confluence may
+  drop such a marker on a write route (a platform limitation; the marker stays
+  in the prepared representation). A marker that survives only as escaped
+  visible text (`\<!--`, `&lt;!-- … --&gt;`) is a failure, and so is an
+  unexpected or altered stable marker found in the stored body. Any other HTML
+  comment is ordinary content and a drop or change to it is a content diff.
 
 Output is deliberately compact: a verdict line, then at most ``--max-context``
 mismatch windows (10 tokens either side), never the whole documents. Exit codes:
 0 parity OK, 1 real content/comment mismatch found, 2 usage error.
 
 The check cannot prove Markdown structure survived (tables, list-item
-indentation, blockquote nesting, macro nodes) — confirm those structurally
-only in the regions this tool flags.
+indentation, blockquote nesting, macro nodes), and because it strips tags and
+whitespace it cannot even flag pure structural loss — a macro such as an
+expand/callout flattened to prose can still read PARITY_OK. Confirm constructs
+that must survive with an independent structural check (for example count the
+macro nodes in the stored body), and inspect other structure in the regions
+this tool flags.
 """
 
 from __future__ import annotations
@@ -45,11 +54,13 @@ import sys
 from pathlib import Path
 
 _STABLE_COMMENT = re.compile(r"<!--\s*id\s*:")
-# A genuine HTML comment block; stripped from BOTH sides before the token
-# comparison, because Confluence does not retain HTML comments on every write
-# route. Escaped forms (\\<!--, &lt;!--) do not match this and stay visible as
-# content, so mangled markers are still reported as a failure.
-_COMMENT_BLOCK = re.compile(r"<!--.*?-->", re.S)
+# A genuine stable-comment marker block (`<!-- id: … -->`); stripped from BOTH
+# sides before the token comparison, because Confluence does not retain HTML
+# comments on every write route. Only these markers are ignored, and only where
+# they are real comments: code regions are stashed first, so a literal
+# `<!-- … -->` inside code stays content. Escaped forms (`\<!--`, `&lt;!--`)
+# do not match and stay visible as content, so mangled markers are reported.
+_STABLE_COMMENT_BLOCK = re.compile(r"<!--\s*id\s*:.*?-->", re.S)
 # A fenced code block: content inside it is verbatim, so a line-leading '>'
 # there is code, not a blockquote marker.
 _FENCE = re.compile(r"^[ \t]*(?P<fence>`{3,}|~{3,})")
@@ -78,15 +89,19 @@ def _norm_newlines(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
-def _strip_structural(text: str) -> str:
+def _strip_structural(text: str, *, cosmetic: bool = False) -> str:
     """Reduce a body (prepared Markdown or a Confluence Markdown/HTML export) to
     comparable content text. Fenced code blocks and HTML `<pre>`/`<code>`
     elements are protected first: their text is kept verbatim (fence content
     as-is, HTML code text entity-decoded so ``&lt;signature&gt;`` becomes
-    ``<signature>``) and never mistaken for storage markup. Remaining prose
-    lines then drop line-leading blockquote markers, strip structural HTML/XML
-    tags, and finally decode HTML entities — in that order, so a decoded tag
-    inside prose text (``&lt;b&gt;`` meant literally) is not stripped."""
+    ``<signature>``) and never mistaken for storage markup. Stable comment
+    markers are then removed — only outside code, where they are real comments
+    rather than code content. Remaining prose lines drop line-leading
+    blockquote markers, strip structural HTML/XML tags, and finally decode HTML
+    entities — in that order, so a decoded tag inside prose text
+    (``&lt;b&gt;`` meant literally) is not stripped. With ``cosmetic=True`` the
+    prose path also drops a table row's single outer border pipes, so rows that
+    differ only in whether they carry the leading/trailing ``|`` still match."""
     protected: list[str] = []
 
     def placeholder(content: str) -> str:
@@ -136,12 +151,29 @@ def _strip_structural(text: str) -> str:
 
     text = stash_fences(text)
     text = stash_code_elements(text)
+    # stable comment markers are ignored on both sides (Confluence may drop
+    # them); code regions are already stashed, so a marker-looking comment
+    # inside code is never removed here. The retained marker set is compared
+    # separately in main().
+    text = _STABLE_COMMENT_BLOCK.sub(" ", text)
 
     out: list[str] = []
     for raw in text.split("\n"):
         line = _LEAD_BLOCKQUOTE.sub("", raw)
         line = _HTML_TAG.sub(" ", line)
         line = html.unescape(line).replace("\u00a0", " ")
+        if cosmetic:
+            s = line.strip()
+            if s.startswith("|"):
+                s = s[1:]
+            if s.endswith("|"):
+                s = s[:-1]
+            # a pure table-separator row (`---`, `:---:`, `| --- | --- |`):
+            # its pipes are layout too, so separator rows that only differ in
+            # cell formatting compare equal after the cells themselves drop
+            if re.fullmatch(r"[|\-: \t]*", s) and "-" in s:
+                s = re.sub(r"\|", " ", s)
+            line = s
         out.append(line)
 
     def restore(m: re.Match[str]) -> str:
@@ -162,25 +194,40 @@ def first_delta(expected: list[str], stored: list[str]) -> int:
     return min(len(expected), len(stored))
 
 
-def is_cosmetic_only(expected: list[str], stored: list[str]) -> bool:
-    """True when content tokens align after stripping markdown cosmetics."""
-    def strip(tokens: list[str]) -> list[str]:
-        out = []
-        for token in tokens:
-            # drop ATX heading markers ('#', '##', ...) and table-delimiter
-            # cells ('---', ':---:', '|----|'); neither is content
-            if (token and set(token) <= {"#"} and len(token) <= 6) or _DELIM_CELL.fullmatch(token):
-                continue
-            t = token
-            # drop emphasis/literal markers and leading table '|'
-            while t[:2] in ("**", "__", "``") or t[:1] in ("*", "_", "`", "|"):
-                t = t[1:]
-            while t[-2:] in ("**", "__", "``") or t[-1:] in ("*", "_", "`", "|"):
-                t = t[:-1]
-            if t:
-                out.append(t)
-        return out
-    return strip(expected) == strip(stored)
+# Emphasis/code delimiters, longest first; only a wrapper that opens AND closes
+# on the same token is cosmetic.
+_EMPH_DELIMS = ("**", "__", "``", "*", "_", "`")
+
+
+def _cosmetic_tokens(text: str) -> list[str]:
+    """Content tokens with cosmetic Markdown re-normalization applied: table
+    separator cells and ATX heading markers dropped, a table row's outer border
+    pipes removed, and emphasis delimiters removed only when they wrap the
+    token on both sides (so an identifier change like ``_private`` -> ``private``
+    stays a content difference)."""
+    out: list[str] = []
+    for token in _strip_structural(text, cosmetic=True).split():
+        # ATX heading markers ('#', '##', ...) and table-delimiter cells
+        # ('---', ':---:', '|----|') are layout, not content
+        if (token and set(token) <= {"#"} and len(token) <= 6) or _DELIM_CELL.fullmatch(token):
+            continue
+        t = token
+        changed = True
+        while changed and t:
+            changed = False
+            for marker in _EMPH_DELIMS:
+                if len(t) > 2 * len(marker) and t.startswith(marker) and t.endswith(marker):
+                    t = t[len(marker):-len(marker)]
+                    changed = True
+                    break
+        if t:
+            out.append(t)
+    return out
+
+
+def is_cosmetic_only(expected: str, stored: str) -> bool:
+    """True when two bodies align after dropping markdown cosmetics only."""
+    return _cosmetic_tokens(expected) == _cosmetic_tokens(stored)
 
 
 def find_markers(expected: str) -> list[str]:
@@ -190,6 +237,13 @@ def find_markers(expected: str) -> list[str]:
         if m:
             out.append(line.strip())
     return out
+
+
+def _marker_key(marker: str) -> str:
+    """Canonical identity of a stable marker (runs of whitespace collapsed), so
+    a comment re-emitted with different internal spacing is not mistaken for a
+    different marker."""
+    return re.sub(r"\s+", " ", marker.strip())
 
 
 def marker_status(stored: str, marker: str) -> str:
@@ -224,18 +278,21 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
 
     try:
-        expected_text = Path(args.expected).read_text(encoding="utf-8")
-        stored_text = Path(args.stored).read_text(encoding="utf-8")
+        expected_text = _norm_newlines(
+            Path(args.expected).read_text(encoding="utf-8")
+        )
+        stored_text = _norm_newlines(Path(args.stored).read_text(encoding="utf-8"))
     except OSError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
-    exp_tokens = token_stream(_COMMENT_BLOCK.sub("", _norm_newlines(expected_text)))
-    sto_tokens = token_stream(_COMMENT_BLOCK.sub("", _norm_newlines(stored_text)))
+    exp_tokens = token_stream(expected_text)
+    sto_tokens = token_stream(stored_text)
 
     issues: list[str] = []
     notes: list[str] = []
-    for marker in find_markers(expected_text):
+    expected_markers = find_markers(expected_text)
+    for marker in expected_markers:
         status = marker_status(stored_text, marker)
         if status == "escaped":
             issues.append(f"escaped comment marker: {marker}")
@@ -247,17 +304,27 @@ def main(argv: list[str] | None = None) -> int:
             notes.append(
                 f"comment marker dropped by Confluence (platform limitation): {marker}"
             )
+    # Expected markers may legitimately be absent (dropped), but the stored body
+    # must never contain a stable marker with no prepared counterpart: that is
+    # an altered/corrupted marker (e.g. `<!-- id: x -->` -> `<!-- id: y -->`),
+    # which the token streams alone cannot see because both are stripped.
+    expected_marker_set = {_marker_key(m) for m in expected_markers}
+    for marker in find_markers(stored_text):
+        if _marker_key(marker) not in expected_marker_set:
+            issues.append(
+                f"unexpected/altered comment marker in stored body: {marker}"
+            )
 
     if exp_tokens == sto_tokens:
         print(f"PARITY_OK tokens={len(exp_tokens)}")
         for issue in issues:
-            print("WARN " + issue)
+            print("ISSUE " + issue)
         for note in notes:
             print("NOTE " + note)
-        return 0
+        return 1 if issues else 0
 
     delta = first_delta(exp_tokens, sto_tokens)
-    cosmetic = is_cosmetic_only(exp_tokens, sto_tokens)
+    cosmetic = is_cosmetic_only(expected_text, stored_text)
 
     print(
         f"PARITY_{'COSMETIC' if cosmetic else 'DIFF'} "

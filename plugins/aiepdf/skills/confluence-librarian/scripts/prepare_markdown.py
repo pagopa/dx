@@ -21,7 +21,8 @@ This script does exactly that normalization, deterministically:
 - preserves GFM tables (leading `|` optional): a header row containing `|`
   that is immediately followed by a delimiter row (`--- | ---`) is kept as
   one line per table row, like tables whose rows already start with `|`;
-- preserves headings, thematic breaks, list markers and their indentation,
+- preserves headings (ATX ``#`` and Setext ``===``/``---``), thematic breaks,
+  list markers and their indentation,
   keeping a loose list item's continuation paragraphs indented under the
   item instead of promoting them to the top level;
 - preserves blockquotes and their nesting: consecutive lines at the same
@@ -77,6 +78,9 @@ ATX_HEADING = re.compile(r"^#{1,6}[ \t]+")
 ATX_H1 = re.compile(r"^ {0,3}#(?!#)[ \t]+(.*)$")
 LIST_MARKER = re.compile(r"^[ \t]*(?:[-+*]|\d{1,3}[.)])[ \t]+")
 THEMATIC_BREAK = re.compile(r"^[ \t]*(?:-[ \t]*){3,}$|^[ \t]*(?:\*[ \t]*){3,}$|^[ \t]*(?:_[ \t]*){3,}$")
+# A Setext heading underline: one or more '=' (H1) or '-' (H2) alone on a line,
+# immediately after the paragraph it underlines (up to 3 leading spaces).
+SETEXT_UNDERLINE = re.compile(r"^ {0,3}(?P<bar>=+|-+)[ \t]*$")
 HARD_BREAK = re.compile(r" {2,}[ \t]*$")
 HTML_COMMENT_START = re.compile(r"^[ \t]*<!--")
 HTML_COMMENT_END = "-->"  # must appear on the same logical line or before a blank
@@ -121,6 +125,48 @@ def _atx_h1_text(line: str) -> str | None:
     content = re.sub(r"[ \t]+#{1,}[ \t]*$", "", m.group(1))
     content = content.strip()
     return content or None
+
+
+def _leading_h1_line_count(lines: list[str], title: str) -> int:
+    """Number of leading lines to drop when they form an H1 equal to ``title``.
+
+    Recognizes a single ATX ``# Title`` line or a Setext H1: a run of prose
+    lines immediately followed by an ``=`` underline (a ``-`` underline is an
+    H2 and never matches a page title). Returns 0 when there is no such leading
+    H1 or its text differs from ``title``.
+    """
+    if not lines or not title:
+        return 0
+    if _atx_h1_text(lines[0]) == title:
+        return 1
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip():
+            return 0
+        if SETEXT_UNDERLINE.match(line):
+            break
+        if (
+            _is_heading(line)
+            or _is_hr(line)
+            or _is_list_marker(line)
+            or _is_quote(line)
+            or _is_fence(line)
+            or _is_html_comment(line)
+            or _is_details(line)
+            or _is_table(line)
+        ):
+            return 0
+        if re.match(r"[ \t]{4}", line):
+            return 0
+        i += 1
+    if i == 0 or i >= len(lines):
+        return 0
+    m = SETEXT_UNDERLINE.match(lines[i])
+    if not m or "-" in m.group("bar") or "=" not in m.group("bar"):
+        return 0
+    text = " ".join(lines[j].strip() for j in range(i)).strip()
+    return i + 1 if text == title else 0
 
 
 def _is_list_marker(line: str) -> bool:
@@ -317,6 +363,11 @@ def _process_plain_block(block: list[str]) -> list[str]:
         buf: list[str] = []
         qbrk: list[bool] = []
         cur_depth = -1
+        # A top-level paragraph that follows an interrupting block starter (the
+        # quote is over, so these lines must not be folded back into it). Its
+        # soft-wrapped lines are joined when the paragraph ends.
+        top: list[str] = []
+        top_brk: list[bool] = []
 
         def flush_run() -> None:
             nonlocal buf
@@ -325,6 +376,13 @@ def _process_plain_block(block: list[str]) -> list[str]:
                     out.append("> " * cur_depth + text)
                 buf = []
                 qbrk.clear()
+
+        def flush_top() -> None:
+            nonlocal top
+            if top:
+                out.extend(_logical_lines(top, top_brk))
+                top = []
+                top_brk.clear()
 
         def _interrupts_quote_paragraph(line: str) -> bool:
             # A line that starts its own Markdown block (heading, rule, list,
@@ -344,15 +402,25 @@ def _process_plain_block(block: list[str]) -> list[str]:
             split = _split_quote(line)
             if split is None:
                 # non-quote line inside a quote block: plain text is a lazy
-                # paragraph continuation and stays quoted at the current depth;
-                # a block starter ends the quote and is emitted on its own.
-                if cur_depth < 0 or _interrupts_quote_paragraph(line):
+                # paragraph continuation and stays quoted at the current depth,
+                # while a real block starter ends the quote and is emitted at
+                # the top level. Once an interrupter has been emitted the quote
+                # is over: reset the depth so later plain lines build a normal
+                # top-level paragraph instead of being quoted again.
+                if _interrupts_quote_paragraph(line):
                     flush_run()
+                    flush_top()
                     out.append(line.rstrip())
+                    cur_depth = -1
+                elif cur_depth < 0:
+                    top.append(line.strip())
+                    top_brk.append(_hard_break(line))
                 else:
                     buf.append(line.strip())
                     qbrk.append(_hard_break(line))
                 continue
+            # a real quote marker line ends any pending top-level paragraph
+            flush_top()
             depth, body = split
             if not body:
                 # '>' alone separates paragraphs inside the quote
@@ -366,6 +434,7 @@ def _process_plain_block(block: list[str]) -> list[str]:
             buf.append(body)
             qbrk.append(_hard_break(line))
         flush_run()
+        flush_top()
         # drop quote markers left over by a lone '>' at the very end
         while out:
             parts = _split_quote(out[-1])
@@ -415,6 +484,14 @@ def _process_plain_block(block: list[str]) -> list[str]:
             emit()
             out.append(line.rstrip())
             continue
+        # A Setext underline ('=' H1 / '-' H2) directly after an open prose
+        # paragraph turns that paragraph into a heading. Keep the folded text
+        # on one line and the underline on its own, instead of merging the
+        # underline into the paragraph.
+        if SETEXT_UNDERLINE.match(line) and buf is not None and not buf_is_list:
+            emit()
+            out.append(line.rstrip())
+            continue
         if _is_list_marker(line):
             emit()
             marker = LIST_MARKER.match(line)
@@ -446,10 +523,11 @@ def normalize(text: str, title: str | None = None) -> str:
         lines.pop(0)
     while lines and not lines[-1].strip():
         lines.pop()
-    # optional: strip a leading H1 identical to the page title
+    # optional: strip a leading H1 identical to the page title (ATX or Setext)
     if title:
-        if lines and _atx_h1_text(lines[0]) == title:
-            lines = lines[1:]
+        drop = _leading_h1_line_count(lines, title)
+        if drop:
+            lines = lines[drop:]
             while lines and not lines[0].strip():
                 lines.pop(0)
     text = "\n".join(lines)
@@ -527,8 +605,9 @@ def check_equivalence(source: str, prepared: str, title: str | None) -> tuple[bo
     while src_lines and not src_lines[0].strip():
         src_lines.pop(0)
     if title:
-        if src_lines and _atx_h1_text(src_lines[0]) == title:
-            src_lines = src_lines[1:]
+        drop = _leading_h1_line_count(src_lines, title)
+        if drop:
+            src_lines = src_lines[drop:]
     src_tokens = token_stream("\n".join(src_lines))
     dst_tokens = token_stream(prepared)
     if src_tokens == dst_tokens:
