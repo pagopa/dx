@@ -1,3 +1,22 @@
+## 7.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Few changes to `ignore_changes` block: ([#2145](https://github.com/pagopa/dx/pull/2145))
+
+  - Add `ingress[0].traffic_weight` to ignored properties
+  - Remove `latest_revision_fqdn` from ignored_properties
+  - Remove `url_latest_revision` output because it was causing a drift after each application deployment
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot Autofix powered by AI @Copilot
+- Krusty93
+- Mario Mupo @mamu0
+
 # 7.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes

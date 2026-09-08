@@ -1,6 +1,6 @@
 {
   "name": "harbor-bench",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "PagoPA Harbor CLI: convert evals.json to Harbor tasks, report and compare benchmark runs.",
   "nx": {

@@ -1,3 +1,14 @@
+## 2.1.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
 ## 2.1.1 (2026-09-04)
 
 ### 🩹 Fixes
