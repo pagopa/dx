@@ -48,8 +48,8 @@ together when you upgrade.
 
 The generated task environment image is prepared by this skill's
 [`harbor/prepare.sh`](harbor/prepare.sh) — it bakes Node 22 LTS (pinned release,
-digest-verified), `mcp-remote`, and `python3` into the image, so the agent
-container needs nothing at run time.
+digest-verified) and `mcp-remote` into the image, so the agent container needs
+nothing at run time.
 
 ## 3. Convert the evals to Harbor tasks
 

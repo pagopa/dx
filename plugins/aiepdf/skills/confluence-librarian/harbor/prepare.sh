@@ -17,13 +17,12 @@
 #   - mcp-remote, baked globally so the agent container never needs the npm
 #     registry at run time. Version-pinned; npm verifies the registry package
 #     against its published integrity hash on install.
-#   - python3: eval 3 runs the skill's bundled `scripts/prepare_markdown.py`.
 set -euo pipefail
 
 export DEBIAN_FRONTEND=noninteractive
 
 apt-get update
-apt-get install -y --no-install-recommends curl ca-certificates xz-utils python3
+apt-get install -y --no-install-recommends curl ca-certificates xz-utils
 rm -rf /var/lib/apt/lists/*
 
 # Node.js 22.23.2 LTS (Jod), pinned by release + SHA-256 per architecture.

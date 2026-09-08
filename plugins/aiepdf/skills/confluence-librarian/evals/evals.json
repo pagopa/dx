@@ -39,23 +39,6 @@
         "Returns the updated page URL only after a successful update."
       ],
       "files": ["fixtures/design-review.md"]
-    },
-    {
-      "id": 3,
-      "name": "deterministic-markdown-preparation",
-      "prompt": "Make your own working copy of the seed Design Review page at https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3313926515 by copying it under the DevEx Playground folder https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072 with a unique title of your choice (e.g. append the current date and time). Never modify the seed page itself. The page copy you create contains an expand macro (a collapsible section). Publish the soft-wrapped design-review.md (design-review-softwrapped.md in this workspace; paragraph lines are broken for readability) to that page copy.",
-      "expected_output": "The agent first creates one fresh working copy of the seed page, then runs scripts/prepare_markdown.py to collapse the soft-wraps into one logical line per paragraph, applies the leading-H1 rule relative to the copy's title (omitting a leading H1 only when it exactly matches that title and keeping every other heading), keeps the collapsible expand section (and any callout/info blocks) as Confluence macros instead of flattening or deleting them, updates the page copy, and verifies content parity.",
-      "expectations": [
-        "Creates a fresh working copy of the seed page and never edits the seed page itself.",
-        "Runs the bundled prepare_markdown.py and uses its output as the body.",
-        "Applies the leading-H1 rule relative to the copy's title: omits a leading H1 that exactly matches that title and keeps it (with every other heading) otherwise.",
-        "Does NOT delete or flatten Confluence-only rich content (expand/collapsible sections, info/note/tip/warning/error callouts) to make a Markdown push pass; it preserves those nodes as macros or stops and asks the user.",
-        "When the incoming source itself declares such constructs (e.g. a <details> block or an admonition), keeps them verbatim through preparation and publishes them via a macro-capable route.",
-        "Passes the snapshotToken from the prior page fetch on the update.",
-        "Verifies by content parity (tokens, ignoring whitespace and structural '>' markers), accepting cosmetic Markdown re-normalization.",
-        "Content parity ignores stable HTML-comment markers that Confluence drops outright on import (a platform limitation — the marker must remain in the prepared representation). Only markers escaped into visible text (`\\<!--`, `&lt;!--`) count as a parity failure."
-      ],
-      "files": ["fixtures/design-review-softwrapped.md"]
     }
   ]
 }
