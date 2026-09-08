@@ -1,3 +1,13 @@
+## 4.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 4.0.0 (2026-09-01)
 
 ### ⚠️  Breaking Changes
