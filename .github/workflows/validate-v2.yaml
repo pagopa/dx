@@ -58,6 +58,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -90,6 +91,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -186,6 +188,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           experimental: true
+          minimum_release_age: 7d
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -269,6 +272,7 @@ jobs:
         with:
           # Enable experimental features to use "mise deps"
           experimental: true
+          minimum_release_age: 7d
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
