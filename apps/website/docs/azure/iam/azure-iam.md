@@ -15,15 +15,78 @@ In order to ensure a clear separation of concerns and resource ownership, as DX
 team, we have defined a set of guidelines and best practices for managing IAM
 roles and permissions in Azure.
 
+## Canonical authorization contract
+
+The DX bootstrap contract governs three human-access Entra ID security groups:
+
+- `admins`
+- `developers`
+- `externals`
+
+The canonical group name for a team in a subscription with a single governance
+boundary is:
+
+```text
+<prefix>-<envShort>-adgroup-<rolePlural>
+```
+
+When a subscription is shared by domains with independent membership or
+resource ownership, include the domain:
+
+```text
+<prefix>-<envShort>-<domain>-adgroup-<rolePlural>
+```
+
+The domain-specific form is an exception, not the default. Existing groups
+named with the singular `admin` suffix are legacy aliases. Migrations must
+create or adopt the plural `admins` group, reconcile its membership and access,
+validate the replacement, and only then remove or deprecate the legacy group.
+The sequence must remain reversible until validation is complete.
+
+The canonical RBAC baseline is:
+
+| Principal | Subscription scope | Repository-managed resource groups | Key Vault scope |
+| --- | --- | --- | --- |
+| `admins` | `Contributor` | `Owner` | `Key Vault Data Access Administrator` and `Key Vault Administrator` |
+| `developers` | `Reader` | `Contributor` | `Key Vault Secrets Officer` |
+| `externals` | `Reader` | `Reader` | No Key Vault data-plane role |
+
+`Owner` at subscription scope is not an ordinary access role for `developers`
+or `externals`. Bootstrap identities and other temporarily privileged
+principals are separate from human-access groups and must retain only the
+privileges explicitly required for their operations.
+
+### Ownership boundaries
+
+The DX CLI must manage only `admins`, `developers`, and `externals`. These
+organizational groups remain owned by
+[eng-azure-authorization](https://github.com/pagopa/eng-azure-authorization):
+
+- `operations`
+- `security`
+- `technical-project-managers`
+- `product-owners`
+- `oncall`
+
+The DX CLI must preserve these groups and must not rewrite their role
+definitions.
+
+### Bootstrap identity prerequisite
+
+Both the bootstrap CI identity and the bootstrap CD identity require the
+Microsoft Entra `Directory Readers` role because both flows resolve groups and
+directory metadata during Terraform operations. This directory permission is
+separate from the resource-level RBAC roles listed in the matrix below.
+
 ## Roles and Permissions
 
 We propose a role-based access control (RBAC) model that leverages Azure Entra
 ID groups to manage access to Azure resources. Each team will have three Entra
 ID security groups:
 
-- Admins (domain experts)
-- Developers (regular team members)
-- Externals (contractors)
+- `admins` (domain experts)
+- `developers` (regular team members)
+- `externals` (contractors)
 
 This segmentation allows for appropriate access levels based on role
 responsibilities and trust levels. Each team is responsible and autonomous on
@@ -97,6 +160,24 @@ to the repository where they are defined (generally `<product-name>-infra`).
 This process is useful to control access and management of critical resources
 with big radius impact.
 
+### Migration invariants
+
+Any migration from the legacy authorization model must:
+
+1. Create or adopt the plural replacement before changing the legacy group.
+2. Preserve membership and custom fields unless the authorization owner
+   explicitly approves a change.
+3. Apply the canonical role at the canonical scope before removing legacy
+   assignments.
+4. Validate group lookup, the Terraform plan, and access behavior before
+   deprecating the legacy group.
+5. Keep a rollback path to the legacy group until validation is complete.
+6. Treat domain-specific naming as an exception requiring independent
+   membership or ownership.
+7. Never assign `Owner` at subscription scope to `developers` or `externals`.
+8. Never allow the DX CLI to rewrite organizational groups owned by
+   `eng-azure-authorization`.
+
 ## Role-Based Access Matrix
 
 The following roles are set up automatically by the Terraform module
@@ -109,9 +190,9 @@ developers.
 
 |                   | **Product Subscription** | **Product Private Endpoints** | **Product Private DNS Zone** | **Product NAT Gateway** | **Product APIM** |           **Team Resource Groups**           | **Opex Resource Group** |
 | :---------------: | :----------------------: | :---------------------------: | :--------------------------: | :---------------------: | :--------------: | :------------------------------------------: | :---------------------: |
-| **Entra ID Adm**  |          Writer          |            Writer             |            Writer            |         Writer          |      Writer      |     Writer - Lock manager - IAM manager      |         Writer          |
-| **Entra ID Devs** |          Reader          |            Writer             |            Reader            |         Reader          |      Reader      |  Writer - No access to Certificate and Keys  |         Reader          |
-| **Entra ID Ext**  |          Reader          |            Writer             |            Reader            |         Reader          |      Reader      |                    Reader                    |         Reader          |
+| **Entra ID Admins**  |          Writer          |            Writer             |            Writer             |            Writer          |      Writer      |     Writer - Lock manager - IAM manager      |         Writer          |
+| **Entra ID Developers** |          Reader          |            Writer             |            Reader            |         Reader          |      Reader      |  Writer - No access to Certificate and Keys  |         Reader          |
+| **Entra ID Externals**  |          Reader          |            Writer             |            Reader            |         Reader          |      Reader      |                    Reader                    |         Reader          |
 |     \*\*\*\*      |                          |                               |                              |                         |                  |                                              |                         |
 |  **ID Infra CI**  |          Reader          |            Reader             |            Reader            |         Reader          |   List secrets   |                    Reader                    |         Reader          |
 |  **ID Infra CD**  |   Reader - IAM Manager   |            Writer             |            Writer            |         Writer          |      Writer      | Writer - IAM Manager - Manage resource locks |  Reader - IAM Manager   |
@@ -129,9 +210,9 @@ This view is instead recommended for cloud operators.
 
 |                   |                               **Product Subscription**                               |                                  **Product Private Endpoints**                                   |                                   **Product Private DNS Zone**                                   |                                     **Product NAT Gateway**                                      |              **Product APIM**               |                                                                     **Team Resource Groups**                                                                      |                                           **Opex Resource Group**                                           |
 | :---------------: | :----------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------: | :-----------------------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------------: |
-| **Entra ID Adm**  |                                     Contributor                                      |                                     (inherited Contributor)                                      |                                     (inherited Contributor)                                      |                                     (inherited Contributor)                                      |           (inherited Contributor)           |                                               Owner - Key Vault Data Access Administrator - Key Vault Administrator                                               |                                           (inherited Contributor)                                           |
-| **Entra ID Devs** |                                        Reader                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |             (inherited Reader)              |                                                              Contributor - Key Vault Secrets Officer                                                              |                                             (inherited Reader)                                              |
-| **Entra ID Ext**  |                                        Reader                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |             (inherited Reader)              |                                                                              Reader                                                                               |                                             (inherited Reader)                                              |
+| **Entra ID Admins**  |                                     Contributor                                      |                                     (inherited Contributor)                                      |                                     (inherited Contributor)                                      |                                     (inherited Contributor)                                      |           (inherited Contributor)           |                                               Owner - Key Vault Data Access Administrator - Key Vault Administrator                                               |                                           (inherited Contributor)                                           |
+| **Entra ID Developers** |                                        Reader                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |             (inherited Reader)              |                                                              Contributor - Key Vault Secrets Officer                                                              |                                             (inherited Reader)                                              |
+| **Entra ID Externals**  |                                        Reader                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |                                        (inherited Reader)                                        |             (inherited Reader)              |                                                                              Reader                                                                               |                                             (inherited Reader)                                              |
 |     \*\*\*\*      |                                                                                      |                                                                                                  |                                                                                                  |                                                                                                  |                                             |                                                                                                                                                                   |                                                                                                             |
 |  **ID Infra CI**  | Reader - Reader and Data Access - PagoPA Iac Reader - DocumentDB Account Contributor | (inherited Reader - Reader and Data Access - PagoPA Iac Reader - DocumentDB Account Contributor) | (inherited Reader - Reader and Data Access - PagoPA Iac Reader - DocumentDB Account Contributor) | (inherited Reader - Reader and Data Access - PagoPA Iac Reader - DocumentDB Account Contributor) | PagoPA API Management Service List Secrets  | Key Vault Secrets User - Key Vault Certificate User - Key Vault Crypto Officer - Storage Blob Data Reader - Storage Queue Data Reader - Storage Table Data Reader |      (inherited Reader - Reader and Data Access - PagoPA Iac Reader - DocumentDB Account Contributor)       |
 |  **ID Infra CD**  |                   Reader - Role Based Access Control Administrator                   |                                       Network Contributor                                        |                                   Private DNS Zone Contributor                                   |                                       Network Contributor                                        |     API Management Service Contributor      |                                Contributor - Key Vault Secrets Officer - Key Vault Certificates Officer - Key Vault Crypto Officer                                |                        (inherited Reader - Role Based Access Control Administrator)                         |
