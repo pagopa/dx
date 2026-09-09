@@ -70,7 +70,7 @@ tsconfig.*.tsbuildinfo
 .worktrees
 
 .dx-tasks
-.trivy-cache
+trivy-cache
 
 .nx/migrate-runs
 .tflint.d/
