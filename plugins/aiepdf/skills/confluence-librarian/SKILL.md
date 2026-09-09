@@ -74,23 +74,39 @@ the first `draft: true` write below — the write creates it from the published
 body, and that write's response `webUrl` is the draft's resume URL
 (`…/pages/resumedraft.action?draftId=…`).
 
-1. **Fetch the baseline and the draft.** Fetch the published page **as native
-   HTML** — `getConfluenceContent` with `content_format: html`, `detail: full`
-   — for its current body and `snapshotToken`. Fetch the draft too (`draft:
-   true`, `content_format: html`) to see what has already been staged.
+To edit a **working copy** instead of the original, create it once with
+`executeWrite copyConfluenceContent {contentId, title, parentContentId}`. Its
+response carries the copy's id — read `contentId` and build the page URL from
+the response's `baseUrl` + `_links.webui`. Do **not** filter the response with
+`responseFields` naming `id`/`webUrl`/`spaceId`: those keys do not exist on
+this response (`contentId`, `_links.webui` do) and the filter drops the id,
+leaving only `title`/`status`. Omit `responseFields`, or ask for
+`contentId`/`_links`. Never search or list descendants to rediscover the copy
+you just made.
+
+
+1. **Fetch the baseline once.** Fetch the published page **as native HTML** —
+   `getConfluenceContent` with `content_format: html`, `detail: full` — for its
+   current body and `snapshotToken`. That single fetch is the baseline for the
+   whole task. Do not fetch the draft up front (a fresh working copy has none);
+   its state comes from the write's response or a cheap follow-up read.
 2. **Apply the minimal change.** Express it as granular edits on the node's
    `data-local-id` (protocol rule 2) and keep every element you are not
    changing byte-for-byte (protocol rule 3).
 3. **Persist directly, on the draft.** Write through `updateConfluenceContent`
-   with `draft: true`, passing the **published** page's current `snapshotToken`
-   — the write validates against that token, not the draft's. The write itself
-   validates and rejects an invalid document; a server dry-run is not required.
-   Use `dryRun` only when you want the canonical resulting HTML without a full
-   re-fetch (to confirm macros survived or to refresh the baseline).
-4. **Done when** the intended change is staged on the draft, unrelated content —
-   including macros and expandables — survived, and you report the draft's
-   resume URL. The change reaches the published page only when the user
-   publishes the draft.
+   with `draft: true` — never without it — passing the **published** page's
+   current `snapshotToken`; the write validates against that token, not the
+   draft's. Submit the whole change as a single `edits` array in one write.
+   The write itself validates and rejects an invalid document; a server
+   dry-run is not required. Treat the write's response as the verification:
+   it echoes the applied content and carries the draft's `webUrl` (resume URL).
+4. **Done when** the intended change is staged on the draft and you report the
+   draft's resume URL from the write's response. Confirm unrelated content
+   survived against the baseline you already hold — do not re-fetch the full
+   body to check. When a fresh look is genuinely needed, read the draft with a
+   cheap shape (`detail: summary`, or `responseFields` limited to `status`,
+   `version`, `webUrl`) instead of `detail: full`. The change reaches the
+   published page only when the user publishes the draft.
 
 ### Preserve lifecycle state
 
@@ -126,6 +142,15 @@ only what was requested.
 - **In context by default.** Hold the baseline in context for the task. Do not
   re-fetch the full page before every edit; fetch only when a new baseline is
   needed.
+- **Never re-read what you hold.** Do not re-fetch a page whose content is
+  already in context or on disk; a fresh read is warranted only to obtain a new
+  `snapshotToken` or after `snapshot_stale`. A write's response (echoed
+  content, `status`, `webUrl`) is verification enough; for any other follow-up
+  use a cheap shape (`detail: summary`, `responseFields`) — never `detail:
+  full` just to check state.
+- **Do not rediscover what you created.** Take `id`, `webUrl`, and `title` from
+  the create/copy/update response. Do not locate a page you just made with
+  `search`, `listConfluenceContent`, or `getConfluenceContentDescendants`.
 - **Persist to a file only when it pays.** For a large page edited repeatedly,
   or work that resumes in another session, save it and read it back as the
   starting baseline on resume:
@@ -135,6 +160,10 @@ only what was requested.
   <working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
                                                    #   snapshotToken, version }
   ```
+
+  Once persisted, inspect the file with targeted queries (`rg`, `view_range`
+  slices) or a single deterministic extraction of the node you must change —
+  do not chain exploratory one-liners that dump the body back into context.
 
 - **A new baseline is produced** by a fresh fetch, or when the integration
   returns canonical output (a dry-run result or the persisted page) with a new
