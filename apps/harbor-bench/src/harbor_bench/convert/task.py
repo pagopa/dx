@@ -5,8 +5,9 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import tomllib
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import tomli_w
@@ -25,6 +26,28 @@ ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 # Defaults formerly configurable through evals.json Harbor metadata.
 DEFAULT_BASE_IMAGE = "ubuntu:24.04"
 DEFAULT_JUDGE_MODEL = "openai/gpt-5.6-luna"
+
+#: The exact set of files ``convert`` generates for every task (identical for
+#: every task of every skill). These are the ONLY files a skill's ``harbor/``
+#: overlay may replace — see ``harbor_bench.convert.overlay``.
+GENERATED_TASK_FILES: frozenset[str] = frozenset(
+    {
+        "task.toml",
+        "instruction.md",
+        "environment/Dockerfile",
+        "environment/.dockerignore",
+        "tests/test.sh",
+        "tests/quality.toml",
+        "tests/Dockerfile",
+        "solution/solve.sh",
+    }
+)
+
+#: Names the converter writes into the fixture workspace dir
+#: (``environment/``) after the fixture layers are staged. A fixture that
+#: collides with one of these names is rejected rather than silently
+#: overwritten — customize via the ``harbor/`` overlay instead.
+RESERVED_ENVIRONMENT_FILES: tuple[str, ...] = ("Dockerfile", ".dockerignore")
 
 # schema 1.4 task.toml skeleton; converter defaults are merged in.
 DEFAULT_TASK_TOML: dict = {
@@ -57,6 +80,13 @@ class TaskSpec:
     Value-based: carries the resolved eval case, the precomputed directory
     name, and the resolved fixture paths — everything generation needs, with no
     lookups and no reference back into an evals file.
+    ``overlay`` maps task-relative paths to skill-side ``harbor/`` sources
+    (suite and per-task already merged by the plan; per-task wins). An overlay
+    file either replaces a generated file (its path matches
+    ``GENERATED_TASK_FILES``) or is added to the task tree (e.g. an extra
+    file under ``environment/``). ``run_level_overrides`` carries
+    converter-owned run-level patches (e.g. ``--without-skill``) re-applied
+    over the final ``task.toml``.
     The write destination (``task_root``) is deliberately NOT part of the spec:
     the spec is the *what*, ``task_root`` is the *where*.
     """
@@ -65,8 +95,8 @@ class TaskSpec:
     skill_name: str
     case: EvalCase
     paths: ResolvedEvalPaths
-    workspace_dir: Path | None = None
-    env_overrides: dict | None = None
+    overlay: dict[str, Path] = field(default_factory=dict)
+    run_level_overrides: dict | None = None
 
 
 def task_dir_name(skill_name: str, case_id: int, case_name: str | None) -> str:
@@ -88,11 +118,12 @@ def task_name(task_dir: str) -> str:
     return f"pagopa/{task_dir}"
 
 
-def _deep_merge(base: dict, override: dict) -> dict:
+def deep_merge(base: dict, override: dict) -> dict:
+    """Deep-merge ``override`` onto a copy of ``base`` (later wins)."""
     out = deepcopy(base)
     for key, value in override.items():
         if isinstance(value, dict) and isinstance(out.get(key), dict):
-            out[key] = _deep_merge(out[key], value)
+            out[key] = deep_merge(out[key], value)
         else:
             out[key] = value
     return out
@@ -128,21 +159,59 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
     return header + "\n" + tomli_w.dumps({"criterion": criteria})
 
 
+def _apply_overlay(task_root: Path, overlay: dict[str, Path]) -> None:
+    """Apply the skill's ``harbor/`` overlay onto a generated task tree.
+
+    Each overlay file lands at its task-relative path: if the path matches a
+    generated file (``GENERATED_TASK_FILES``) it **replaces** it wholesale;
+    otherwise the file is **added** (directories created as needed). An overlay
+    never silently overwrites a per-eval fixture staged from ``evals.json``:
+    only generated files may be replaced, so a collision with a case's ``files``
+    is an error.
+    """
+    for rel, source in sorted(overlay.items()):
+        target = task_root / rel
+        if target.exists() and rel not in GENERATED_TASK_FILES:
+            raise WorkspaceError(
+                f"overlay file {rel!r} would overwrite a per-eval fixture "
+                "staged from the eval case 'files' (only generated files may be "
+                "replaced); remove it from the case files or drop the overlay"
+            )
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+
+
+def _apply_run_level(task_toml_path: Path, overrides: dict | None) -> None:
+    """Re-apply converter-owned run-level ``task.toml`` patches (later wins).
+
+    Run-level flags (``--without-skill``) stay authoritative even when the
+    author replaced ``task.toml`` through the ``harbor/`` overlay: the patch is
+    deep-merged over the final file, so a run can always gate skill use.
+    """
+    if not overrides:
+        return
+    data = tomllib.loads(task_toml_path.read_text(encoding="utf-8"))
+    task_toml_path.write_text(tomli_w.dumps(deep_merge(data, overrides)))
+
+
 def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     """Write a full Harbor task tree at ``task_root`` from a :class:`TaskSpec`.
 
-    ``spec.paths["prepare_script"]`` (when set) is a build-time setup script
-    from the skill's on-disk ``harbor/`` layout. It is copied into the
-    workspace as ``prepare.sh`` and the generated ``environment/Dockerfile``
-    runs it after ``COPY . /workspace/``, before the git baseline.
+    The generated task is fully owned by the converter: the fixed files from
+    ``GENERATED_TASK_FILES`` (rendered from templates + the eval case), plus
+    the eval case's ``files`` staged into ``environment/``. After generation the
+    skill's ``harbor/`` overlay (``spec.overlay``) replaces matching generated
+    files wholesale and adds any other file (e.g. extra context under
+    ``environment/``), then run-level overrides are re-applied over the final
+    ``task.toml``.
 
-    Returns the list of created fixture paths (workspace files).
+    Returns the list of created fixture paths (the eval case's ``files``).
     """
     case = spec.case
-    env_overrides = spec.env_overrides
 
     task_root.mkdir(parents=True, exist_ok=True)
-    task_toml = _deep_merge(DEFAULT_TASK_TOML, env_overrides or {})
+
+    task_toml = deep_merge(DEFAULT_TASK_TOML, {})
     task_toml.setdefault("task", {})
     task_toml["task"]["name"] = task_name(spec.task_dir)
     task_toml["task"]["description"] = case.expected_output.strip()[:200]
@@ -164,25 +233,13 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
 
     (task_root / "instruction.md").write_text(case.prompt.strip() + "\n")
 
-    # environment/ = fixture workspace + generated Dockerfile
+    # environment/ = per-eval fixtures + generated Dockerfile
     env_dir = task_root / "environment"
     created = compose_workspace(
         env_dir,
-        workspace_dir=spec.workspace_dir,
         files=spec.paths["files"],
+        reserved=RESERVED_ENVIRONMENT_FILES,
     )
-    prepare_script = spec.paths["prepare_script"]
-    if prepare_script is not None:
-        # Build-time setup hook: the generated Dockerfile runs /workspace/prepare.sh
-        # after copying the workspace and before the git baseline commit.
-        prepare_dst = env_dir / "prepare.sh"
-        if prepare_dst.exists():
-            raise WorkspaceError(
-                f"prepare_script would overwrite workspace file 'prepare.sh' "
-                f"(configured {prepare_script} collides with a fixture layer)"
-            )
-        shutil.copy2(prepare_script, prepare_dst)
-        created.append("prepare.sh")
     (env_dir / "Dockerfile").write_text(
         render_template(
             (TEMPLATES / ENVIRONMENT_DOCKERFILE_TEMPLATE).read_text(),
@@ -218,6 +275,10 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     (solution_dir / "solve.sh").write_text(
         render_template((TEMPLATES / "solve.sh").read_text())
     )
+
+    # skill-owned overlay replaces generated files, then run-level wins
+    _apply_overlay(task_root, spec.overlay)
+    _apply_run_level(task_root / "task.toml", spec.run_level_overrides)
 
     return created
 
