@@ -38,8 +38,8 @@ args = ["-lc", "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.m
 [solution.env]
 
 [task]
-name = "pagopa/confluence-librarian-2-safe-update"
-description = "The agent first creates one fresh working copy of the seed page, then resolves and fetches that copy, updates that copy, preserves its status, avoids creating further duplicates, and returns the updat"
+name = "pagopa/confluence-librarian-3-small-update-large-file"
+description = "The agent creates one fresh working copy of the large seed page, then stages the small change from update-target.md on that copy's DRAFT in place through Confluence's native HTML/granular edits, chang"
 version = "1.0.0"
 
 [metadata]
