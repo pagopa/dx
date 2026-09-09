@@ -399,27 +399,6 @@ uv run --package harbor-bench harbor run -c .harbor/config.yaml -y \
   --jobs-dir runs --job-name confluence-baseline
 ```
 
-**Why the `bash -lc` wrapper around `mcp-remote`:** Harbor and the Copilot
-CLI hand MCP server `args` to the spawner verbatim — they do not expand
-`${…}`. The agent environment (from `--ae`) is inherited by the Copilot CLI
-process and therefore by the MCP server it spawns, and the shell wrapper
-expands the token there. The wrapper also keeps the credential out of the
-JSON `--additional-mcp-config` that lands in the agent command line. Bake
-`mcp-remote` into the image with a `harbor/environment/prepare.sh` overlay
-addition (and use a recent Node: current `mcp-remote` needs Node ≥ 20.18, the
-distro `nodejs` on `ubuntu:24.04` is 18.x and makes the server exit before the
-MCP initialize handshake), so the run needs outbound network only to
-`mcp.atlassian.com`.
-
-**Real, mutating integrations:** these evals operate on live infrastructure
-(e.g. create/update pages in the DevEx Confluence Playground). Run them
-deliberately, one at a time (`n_concurrent_trials = 1`) when they share a
-destination, and keep the judge (`COPILOT_GITHUB_TOKEN`) working by leaving
-the verifier's own network unrestricted. Hardening to
-`network_mode = "allowlist"` is possible per-phase, but the Copilot CLI and
-the judge call their own hosts (`api.github.com`,
-`api.githubcopilot.com`, …), so the allowlist must list every one of them.
-
 Because everything lives under the skill's `harbor/` directory, git-loaded
 skills (`compare`, `harbor run --skill`) carry the same harness automatically —
 as long as the files are committed with the skill.
