@@ -29,22 +29,27 @@ A runnable Harbor task directory generated for one eval case (`task.toml`,
 _Avoid_: job, run
 
 **Fixture**:
-A workspace file staged for the agent from the skill dir, via the optional
-`harbor/workspace/` base directory and the eval case's individual `files`.
+A workspace file staged for the agent from the skill dir, via an eval case's
+`files` (the per-case channel; the container context of the task's
+`environment/`). Suite-wide extra files are added through the `harbor/` overlay
+under `environment/` instead.
 _Avoid_: file, asset
 
 **Harbor layout**:
-The optional on-disk controls under a skill's `harbor/` directory:
-`workspace/` supplies the base fixture layer, `prepare.sh` applies to every
-case, `harbor/<task-key>/prepare.sh` applies to one case,
-`harbor/<task-key>/instruction.append.md` carries per-case deterministic
-"user answers" appended after the eval prompt (for rubrics that assume an
-interactive user), and
-`environment.toml` carries skill-wide `[environment]` overrides (MCP servers,
-env-var templates, network policy) that `convert` deep-merges into every
-generated task of the skill. Converter defaults
-own the generated image, task, verifier, and config settings; other files under
-`harbor/` are ignored.
+The optional on-disk controls under a skill's `harbor/` directory: a pure
+**overlay** over the generated task tree. `harbor/<rel>` is applied to every
+task of the skill (suite-level), `harbor/<generated-task-dir>/<rel>` to exactly
+that task (per-task wins). A file whose path matches a `GENERATED_TASK_FILES`
+entry (the eight fixed files `convert` writes) replaces it wholesale (no
+merge/append); any other file is added at that path in the task tree (e.g. a
+`harbor/environment/prepare.sh` build-context script or data file — everything
+under `environment/` is the Docker build context and `/workspace` at runtime).
+`task.toml` embeds the per-task identity, so it is per-task only. `harbor/workspace`
+is a removed legacy layer and is rejected loudly. The plan validates the layout
+before anything is written; an overlay never silently overwrites a per-eval
+fixture from the case `files`. Run-level flags (`--without-skill`) are
+re-applied over the final `task.toml`, so they stay authoritative. Converter
+defaults own the generated task, verifier, and config settings.
 _Avoid_: configuration file, metadata block
 
 **Agent**:

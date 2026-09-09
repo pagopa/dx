@@ -1,10 +1,14 @@
-"""Compose the task workspace fixture layers into an ``environment/`` dir.
+"""Compose the eval-case fixture files into an ``environment/`` dir.
 
-Layers (in order, later wins on non-colliding paths):
-1. per-skill ``harbor/workspace/`` (base layer)
-2. per-eval ``files`` (single files)
+Each eval case may declare ``files`` in ``evals.json``; ``convert`` stages
+them as the task's workspace fixtures (files the agent sees under
+``/workspace``). Two rules:
 
-Any path collision between layers is an error (never silently overwrite).
+1. Each fixture may be declared only once (a duplicate basename across the
+   case's ``files`` is an error — never silently overwrite).
+2. ``reserved`` names top-level files the converter writes after staging (the
+   generated ``Dockerfile`` / ``.dockerignore``); a fixture colliding with one
+   is rejected — customize them via the ``harbor/`` overlay instead.
 """
 
 from __future__ import annotations
@@ -21,59 +25,57 @@ class WorkspaceError(RuntimeError):
 
 @dataclass
 class WorkspaceLayer:
-    """One resolved fixture layer to copy into the environment dir."""
+    """One resolved fixture to copy into the environment dir."""
 
     label: str
     source: Path
 
 
-def _rel_entries(source: Path) -> list[Path]:
-    if source.is_file():
-        return [source]
-    return [p for p in source.rglob("*") if p.is_file()]
-
-
-def _collect(
-    layers: list[WorkspaceLayer],
-) -> dict[str, tuple[str, Path]]:
+def _collect(layers: list[WorkspaceLayer]) -> dict[str, tuple[str, Path]]:
     """Map relative workspace path -> (layer label, source file), rejecting collisions."""
     entries: dict[str, tuple[str, Path]] = {}
     for layer in layers:
         if not layer.source.exists():
             raise WorkspaceError(f"layer '{layer.label}': source not found: {layer.source}")
-        for source in _rel_entries(layer.source):
-            rel = source.relative_to(layer.source) if layer.source.is_dir() else Path(source.name)
-            key = rel.as_posix()
-            if key in entries:
-                prev_label, prev_source = entries[key]
-                raise WorkspaceError(
-                    f"workspace path collision: {key} (layer '{layer.label}' from "
-                    f"{source} vs layer '{prev_label}' from {prev_source})"
-                )
-            entries[key] = (layer.label, source)
+        rel = Path(layer.source.name)
+        key = rel.as_posix()
+        if key in entries:
+            prev_label, prev_source = entries[key]
+            raise WorkspaceError(
+                f"workspace path collision: {key} (layer '{layer.label}' from "
+                f"{layer.source} vs layer '{prev_label}' from {prev_source})"
+            )
+        entries[key] = (layer.label, layer.source)
     return entries
 
 
 def compose_workspace(
     env_dir: Path,
     *,
-    workspace_dir: Path | None = None,
     files: Sequence[Path] = (),
+    reserved: Sequence[str] = (),
 ) -> list[str]:
-    """Copy the fixture layers into ``env_dir`` and return created relative paths.
+    """Copy the eval-case fixture ``files`` into ``env_dir``; return created paths.
 
-    ``env_dir`` is created if missing. ``workspace_dir`` is the per-skill base
-    layer and ``files`` are individual files. Each relative path may appear in
-    only one layer.
+    ``env_dir`` is created if missing. Each file lands at its basename inside
+    ``env_dir`` and may be declared only once. ``reserved`` names top-level
+    files the caller will write after staging (e.g. the generated
+    ``Dockerfile``); a fixture colliding with one is rejected rather than
+    silently overwritten.
     """
-    layers: list[WorkspaceLayer] = []
-    if workspace_dir is not None:
-        layers.append(WorkspaceLayer("workspace", workspace_dir))
-    for f in files:
-        layers.append(WorkspaceLayer(f"file:{f.name}", f))
+    layers = [WorkspaceLayer(f"file:{f.name}", f) for f in files]
 
     env_dir.mkdir(parents=True, exist_ok=True)
     entries = _collect(layers)
+    reserved_set = set(reserved)
+    for key in entries:
+        if "/" not in key and key in reserved_set:
+            label, source = entries[key]
+            raise WorkspaceError(
+                f"fixture path collides with a generated environment file: "
+                f"{key} (layer '{label}' from {source}); use the harbor/ "
+                f"overlay to customize generated files instead"
+            )
     created: list[str] = []
     for rel, (_, source) in sorted(entries.items()):
         target = env_dir / rel

@@ -7,8 +7,6 @@ from typing import TypedDict
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .layout import discover_instruction_append, discover_prepare_script
-
 
 def _assert_safe_rel(path: str) -> None:
     """Reject absolute paths and ``..`` escapes (container workspace safety)."""
@@ -54,22 +52,20 @@ class EvalsFile(BaseModel):
 
 
 class ResolvedEvalPaths(TypedDict):
-    """Absolute paths for one eval case's fixtures and build hooks."""
+    """Absolute paths for one eval case's fixture files."""
 
     files: list[Path]
-    prepare_script: Path | None
-    instruction_append: Path | None
 
 
 def resolve_eval_paths(
     evals_file: EvalsFile, skill_dir: Path
 ) -> dict[int, ResolvedEvalPaths]:
-    """Resolve eval fixture files and on-disk prepare hooks.
+    """Resolve each eval case's fixture ``files``.
 
-    ``files`` are declared by the agentskills.io document. ``prepare_script``
-    is discovered from the skill's ``harbor/`` layout and
-    ``instruction_append`` is the optional per-case "user answers" file.
-    Raises ``ValueError`` for unsafe or missing paths.
+    ``files`` are declared by the agentskills.io document and staged into the
+    task workspace. Build-time hooks and user-answer injection no longer live
+    here: a skill customizes generated task files exclusively through the
+    ``harbor/`` overlay. Raises ``ValueError`` for unsafe or missing paths.
     """
     resolved_skill_dir = skill_dir.resolve()
     resolved: dict[int, ResolvedEvalPaths] = {}
@@ -85,11 +81,5 @@ def resolve_eval_paths(
                     f"eval {case.id}: file not found: {rel} (resolved to {path})"
                 )
             files.append(path)
-        resolved[case.id] = {
-            "files": files,
-            "prepare_script": discover_prepare_script(resolved_skill_dir, case),
-            "instruction_append": discover_instruction_append(
-                resolved_skill_dir, case
-            ),
-        }
+        resolved[case.id] = {"files": files}
     return resolved

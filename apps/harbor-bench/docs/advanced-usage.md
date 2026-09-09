@@ -14,10 +14,10 @@ skills for the benchmark, and the exact semantics of the comparison reports.
   - [Reusing the environment image (faster startup)](#reusing-the-environment-image-faster-startup)
   - [Authoring skills for the benchmark](#authoring-skills-for-the-benchmark)
     - [evals.json](#evalsjson)
-    - [Build-time setup hook (`prepare.sh`)](#build-time-setup-hook-preparesh)
-      - [Deterministic git baseline](#deterministic-git-baseline)
-    - [Scripted user answers (`harbor/<task-key>/instruction.append.md`)](#scripted-user-answers-harbortask-keyinstructionappendmd)
-    - [External MCP servers and secrets (`harbor/environment.toml`)](#external-mcp-servers-and-secrets-harborenvironmenttoml)
+    - [The `harbor/` overlay](#the-harbor-overlay)
+      - [Overriding the environment Dockerfile](#overriding-the-environment-dockerfile)
+        - [Deterministic git baseline](#deterministic-git-baseline)
+    - [External MCP servers and secrets](#external-mcp-servers-and-secrets)
     - [RewardKit LLM judge](#rewardkit-llm-judge)
     - [Separate verifier environment](#separate-verifier-environment)
   - [Skill eval data and git sources](#skill-eval-data-and-git-sources)
@@ -269,33 +269,90 @@ represented by the current evals, removes stale tasks, and never overwrites job
 results or the generated config. Conversion defaults such as the base image,
 judge model, timeouts, separate verifier, and artifact list live in code.
 
-The workspace fixture has two layers: the optional `harbor/workspace/` directory
-and the per-eval `files` entries. Path collisions between layers are rejected.
-`harbor/environment.toml` (see below) is consumed as skill-wide task overrides;
-`harbor/<task-key>/instruction.append.md` is a per-case deterministic "user
-answers" block appended after the eval prompt (for rubrics that assume an
-interactive user who supplies destination details); other files under `harbor/`
-are ignored.
+The eval cases carry their per-case fixture `files`, staged into the task's
+`environment/` (the agent's `/workspace` at runtime). Everything else a task
+needs beyond `evals.json` — extra container files, `task.toml` `[environment]`
+config, custom Dockerfiles, judge tweaks — is authored under the skill's
+`harbor/` directory (below).
 
-### Build-time setup hook (`prepare.sh`)
+### The `harbor/` overlay
 
-The generated `environment/Dockerfile` can run a **prepare.sh** at image build
-time to install extra tooling or seed the workspace **before the agent runs**
-(and before the git baseline commit, so prepared files are part of the agent's
-starting repo). Place a suite-wide script at `harbor/prepare.sh` or a
-case-specific script at `harbor/<task-key>/prepare.sh`; the case-specific
-script wins. `<task-key>` is the non-empty eval name, or the eval ID when the
-case has no name. The selected script is copied into the workspace as
-`prepare.sh`; a fixture with that name is rejected rather than silently
-overwritten:
+The optional `harbor/` directory is the skill's harness: a pure overlay over
+the generated task tree. Every file maps by relative path onto a generated
+task and is copied there:
 
-```sh
-RUN if [ -f /workspace/prepare.sh ]; then \
-        bash /workspace/prepare.sh; \
-    fi
+- if the path matches one of the files `convert` generates, it **replaces** it
+  wholesale (no merge, no append);
+- otherwise it is **added** at that path, creating directories as needed —
+  e.g. `harbor/environment/prepare.sh` adds a build-context script, and any
+  extra file under `harbor/environment/` becomes part of the container's
+  `environment/` (Docker build context → `/workspace` at runtime).
+
+The overridable generated files are: `task.toml`, `instruction.md`,
+`environment/Dockerfile`, `environment/.dockerignore`, `tests/test.sh`,
+`tests/quality.toml`, `tests/Dockerfile`, `solution/solve.sh`.
+
+Two scopes; the per-task overlay wins over the suite one:
+
+- **suite-level**: `harbor/<rel>` applies to _every_ generated task of the
+  skill — e.g. `harbor/environment/Dockerfile`, `harbor/tests/quality.toml`,
+  or an added `harbor/environment/data/seed.csv`.
+- **per-task**: `harbor/<generated-task-dir>/<rel>` applies to exactly that
+  task. `<generated-task-dir>` is the directory `convert` emits
+  (`<skill>-<id>-<name>`), so `harbor/dr-blacksmith-3-publish/task.toml`
+  overrides only that case. Copy the generated task directory as a starting
+  template.
+
+Rules, enforced at plan time (before anything is written):
+
+- **`task.toml` is per-task only.** It carries the per-task identity
+  (`[task].name = pagopa/<task-dir>`), so a suite-level `harbor/task.toml` is
+  rejected. Because replacement is wholesale, a per-task `task.toml` author
+  owns its content (schema version, the separate verifier
+  `[verifier] environment_mode = "separate"`, the `artifacts` list and judge
+  env) — `convert` does not re-inject them. To share an `[environment]` (MCP
+  servers, `${VAR}` env templates, network policy) across many cases, copy the
+  generated `task.toml` into each per-task overlay dir and edit the
+  `[environment]` table.
+- **Per-eval `files` win over the overlay for the same path.** An overlay file
+  never silently overwrites a fixture staged from an eval case's `files`: only
+  generated files may be replaced, so such a collision is an error.
+- **Run-level flags win.** `--without-skill` (the verifier skill-use gate) is
+  re-applied by `convert` _after_ the overlay, so it stays authoritative even
+  over an overridden `task.toml`. Final precedence: converter defaults <
+  per-eval `files` (additive) < generated files < suite overlay < per-task
+  overlay < run-level flags.
+
+#### Overriding the environment Dockerfile
+
+```toml
+# harbor/<generated-task-dir>/task.toml  (per-task only)
+[environment]
+network_mode = "public"
+
+[[environment.mcp_servers]]
+name = "atlassian"
+transport = "stdio"
+command = "bash"
+args = ["-lc", "mcp-remote https://mcp.atlassian.com/v2/mcp --header \"Authorization: ${ATLASSIAN_MCP_AUTH}\""]
 ```
 
-#### Deterministic git baseline
+To customize the container, override `harbor/environment/Dockerfile` and add
+any scripts it references in the same subtree — the overlay puts them all in
+the task's `environment/` build context:
+
+```
+harbor/environment/Dockerfile   (overrides the generated one)
+harbor/environment/tool.sh      (added; available to COPY/RUN in the build)
+harbor/environment/prepare.sh   (added; the GENERATED Dockerfile also runs it,
+                                 before the git baseline, when present)
+```
+
+Because replacement is wholesale, a full `environment/Dockerfile` override
+means reproducing the Copilot CLI install, `COPY . /workspace/` and the git
+baseline — or keep the generated file and just add a `prepare.sh`.
+
+##### Deterministic git baseline
 
 Every generated `environment/Dockerfile` creates a git baseline commit so the
 agent can diff its own edits. The commit uses a fixed repository-local identity
@@ -304,100 +361,68 @@ image's global git config is never touched — and image construction **fails
 visibly** when `git init` or the baseline commit fails (no `|| true`), so every
 environment starts from a valid baseline and a clean worktree.
 
-### Scripted user answers (`harbor/<task-key>/instruction.append.md`)
+### External MCP servers and secrets
 
-Some eval rubrics assume an **interactive user**: the agent must ask for
-missing destination details (space, parent, language) before publishing, and
-a headless Copilot CLI session cannot answer its own question. For those
-cases a skill can commit `harbor/<task-key>/instruction.append.md` (key = the
-eval name, as in `prepare.sh`); `convert` appends its content after the eval
-prompt in `instruction.md`. Keep it deterministic ("the user answered: space =
-DevEx, …") so the agent stops asking and completes the real publish instead of
-stopping at the question. This is the lightweight scripted-user approach and
-leaves `evals.json` untouched. For a true back-and-forth conversation Harbor
-offers a simulated-user agent over the ACP bridge (`harbor run --user-agent …
---bridge acp`); it requires the target agent to expose ACP — the Copilot CLI
-agent in this repo does not implement it yet.
+Evals that drive a live external service (e.g. publishing real pages through
+the **Atlassian MCP** server) need more than fixtures: the agent container must
+reach the service, authenticated, from inside the benchmark. Express the
+harness with the `harbor/` overlay:
 
-### External MCP servers and secrets (`harbor/environment.toml`)
+- the per-task `task.toml` override carries the `[environment]` table — MCP
+  servers, network policy and env-var templates (see the example in
+  [Overriding the environment Dockerfile](#overriding-the-environment-dockerfile));
+- `harbor/environment/…` additions provide the container context: extra files
+  the evals reference from `/workspace`, and a
+  `harbor/environment/prepare.sh` addition to bake tooling into the image
+  (e.g. `mcp-remote`) before the agent runs. Note: tooling _bundled with the
+  skill_ (e.g. `scripts/prepare_markdown.py`) is **not** staged here — the
+  skill is uploaded as-is to `/harbor/skills/<name>/` inside the agent
+  container, and the skill resolves its own `scripts/` relative to its
+  directory, never the workspace.
 
-Evals that drive a live external service (e.g. publishing real pages through the **Atlassian MCP** server)
-need more than a fixture workspace: the agent container must reach the service, authenticated,
-from inside the benchmark. This is skill-owned harness, declared next to the
-evals under the skill's `harbor/` directory:
+`[environment].env` accepts `${VAR}` / `${VAR:-default}` templates
+(e.g. `env = { ATLASSIAN_MCP_AUTH = "${ATLASSIAN_MCP_AUTH}" }`) resolved by
+Harbor from the host at run time — but for secrets prefer passing the value
+as **agent env** (`--ae NAME="$NAME"`), so Harbor's artifact scrubber also
+redacts it from the collected trial logs.
 
-- `harbor/prepare.sh` — build-time hook installing whatever the runtime needs
-  (e.g. `nodejs`/`npm`, `python3`). Runs before the git baseline, like any
-  `prepare.sh`.
-- `harbor/workspace/…` — optional fixture base layer for extra files the evals
-  reference from `/workspace`. Note: tooling *bundled with the skill* (e.g.
-  `scripts/prepare_markdown.py`) is **not** staged here — the skill is uploaded
-  as-is to `/harbor/skills/<name>/` inside the agent container, and the skill
-  resolves its own `scripts/` relative to its directory, never the workspace.
-- `harbor/environment.toml` — read by `convert` and **deep-merged into the
-  generated `[environment]` of every task of that skill**, on top of the
-  converter defaults. The surface mirrors Harbor's own `EnvironmentConfig`
-  subset the converter may override:
+**Secrets stay out of the repo.** Export them on the host and forward them
+to the run; Harbor resolves `${VAR}` templates from the host environment and
+never stores the value (a missing host variable fails fast with a clear
+message; `-y` auto-confirms host env passthrough):
 
-  ```toml
-  [environment]
-  network_mode = "public"
+```sh
+export COPILOT_GITHUB_TOKEN="$(gh auth token)"
+export ATLASSIAN_MCP_AUTH="Basic <base64(email:api-token)>"   # full Authorization header value
+uv run --package harbor-bench harbor run -c .harbor/config.yaml -y \
+  --ae ATLASSIAN_MCP_AUTH="$ATLASSIAN_MCP_AUTH" \
+  --jobs-dir runs --job-name confluence-baseline
+```
 
-  [[environment.mcp_servers]]
-  name = "atlassian"
-  transport = "stdio"
-  command = "bash"
-  args = ["-lc", "mcp-remote https://mcp.atlassian.com/v2/mcp --header \"Authorization: ${ATLASSIAN_MCP_AUTH}\""]
-  ```
+**Why the `bash -lc` wrapper around `mcp-remote`:** Harbor and the Copilot
+CLI hand MCP server `args` to the spawner verbatim — they do not expand
+`${…}`. The agent environment (from `--ae`) is inherited by the Copilot CLI
+process and therefore by the MCP server it spawns, and the shell wrapper
+expands the token there. The wrapper also keeps the credential out of the
+JSON `--additional-mcp-config` that lands in the agent command line. Bake
+`mcp-remote` into the image with a `harbor/environment/prepare.sh` overlay
+addition (and use a recent Node: current `mcp-remote` needs Node ≥ 20.18, the
+distro `nodejs` on `ubuntu:24.04` is 18.x and makes the server exit before the
+MCP initialize handshake), so the run needs outbound network only to
+`mcp.atlassian.com`.
 
-  `[environment].env` also accepts `${VAR}` / `${VAR:-default}` templates
-  (e.g. `env = { ATLASSIAN_MCP_AUTH = "${ATLASSIAN_MCP_AUTH}" }`) resolved by
-  Harbor from the host at run time — but for secrets prefer passing the value
-  as **agent env** (`--ae NAME="$NAME"`), so Harbor's artifact scrubber also
-  redacts it from the collected trial logs.
-
-  `evals.json` stays the source of truth for the eval cases; this file only
-  carries the skill's container harness. Merge precedence is **converter
-  defaults < `harbor/environment.toml` < run-level flags** (`--without-skill`
-  stays authoritative for its keys). A malformed file fails the plan before
-  anything is written.
-
-- **Secrets stay out of the repo.** Export them on the host and forward them
-  to the run; Harbor resolves `${VAR}` templates from the host environment and
-  never stores the value (a missing host variable fails fast with a clear
-  message; `-y` auto-confirms host env passthrough):
-
-  ```sh
-  export COPILOT_GITHUB_TOKEN="$(gh auth token)"
-  export ATLASSIAN_MCP_AUTH="Basic <base64(email:api-token)>"   # full Authorization header value
-  uv run --package harbor-bench harbor run -c .harbor/config.yaml -y \
-    --ae ATLASSIAN_MCP_AUTH="$ATLASSIAN_MCP_AUTH" \
-    --jobs-dir runs --job-name confluence-baseline
-  ```
-
-- **Why the `bash -lc` wrapper around `mcp-remote`:** Harbor and the Copilot
-  CLI hand MCP server `args` to the spawner verbatim — they do not expand
-  `${…}`. The agent environment (from `--ae`) is inherited by the Copilot CLI
-  process and therefore by the MCP server it spawns, and the shell wrapper
-  expands the token there. The wrapper also keeps the credential out of the
-  JSON `--additional-mcp-config` that lands in the agent command line. Bake
-  `mcp-remote` into the image in `harbor/prepare.sh` (and use a recent Node:
-  current `mcp-remote` needs Node ≥ 20.18, the distro `nodejs` on
-  `ubuntu:24.04` is 18.x and makes the server exit before the MCP initialize
-  handshake), so the run needs outbound network only to `mcp.atlassian.com`.
-
-- **Real, mutating integrations:** these evals operate on live infrastructure
-  (e.g. create/update pages in the DevEx Confluence Playground). Run them
-  deliberately, one at a time (`n_concurrent_trials = 1`) when they share a
-  destination, and keep the judge (`COPILOT_GITHUB_TOKEN`) working by leaving
-  the verifier's own network unrestricted. Hardening to
-  `network_mode = "allowlist"` is possible per-phase, but the Copilot CLI and
-  the judge call their own hosts (`api.github.com`,
-  `api.githubcopilot.com`, …), so the allowlist must list every one of them.
+**Real, mutating integrations:** these evals operate on live infrastructure
+(e.g. create/update pages in the DevEx Confluence Playground). Run them
+deliberately, one at a time (`n_concurrent_trials = 1`) when they share a
+destination, and keep the judge (`COPILOT_GITHUB_TOKEN`) working by leaving
+the verifier's own network unrestricted. Hardening to
+`network_mode = "allowlist"` is possible per-phase, but the Copilot CLI and
+the judge call their own hosts (`api.github.com`,
+`api.githubcopilot.com`, …), so the allowlist must list every one of them.
 
 Because everything lives under the skill's `harbor/` directory, git-loaded
 skills (`compare`, `harbor run --skill`) carry the same harness automatically —
-as long as the file is committed with the skill.
+as long as the files are committed with the skill.
 
 ### RewardKit LLM judge
 
