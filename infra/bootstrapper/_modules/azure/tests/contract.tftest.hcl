@@ -268,3 +268,15 @@ run "canonical_domain_specific_group_names" {
     error_message = "The domain-specific externals lookup must use the canonical group name"
   }
 }
+
+run "rejects_blank_group_domain" {
+  command = plan
+
+  variables {
+    entraid_group_domain = "   "
+  }
+
+  expect_failures = [
+    var.entraid_group_domain,
+  ]
+}
