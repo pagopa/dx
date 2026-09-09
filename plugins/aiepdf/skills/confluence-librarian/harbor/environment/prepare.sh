@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # Build-time setup hook for the confluence-librarian skill evals.
 #
-# harbor-bench copies this into the generated task workspace as prepare.sh and
-# the environment Dockerfile runs it at image build time, before the git
-# baseline commit. It installs the runtimes the agent needs inside the
-# container:
+# This lives at harbor/environment/prepare.sh: the harbor overlay adds it to
+# every generated task's environment/ and the generated environment/Dockerfile
+# runs it as /workspace/prepare.sh at image build time, before the git baseline
+# commit. It installs the runtimes the agent needs inside the container:
 #
 #   - Node.js 22 LTS, pinned to an exact release and digest-verified below: the
-#     Copilot CLI spawns the Atlassian MCP server (harbor/environment.toml)
-#     via mcp-remote, which requires Node >= 20.18 — the distro nodejs (18.x on
+#     Copilot CLI spawns the Atlassian MCP server (declared per task in the
+#     [environment] of each harbor/<generated-task-dir>/task.toml) via
+#     mcp-remote, which requires Node >= 20.18 — the distro nodejs (18.x on
 #     ubuntu:24.04) is too old and makes the server exit before the MCP
 #     initialize handshake. The exact release tarball is downloaded from
 #     nodejs.org (not the rolling NodeSource setup script / repo) and must

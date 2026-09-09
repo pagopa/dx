@@ -36,9 +36,9 @@ Approve the Atlassian consent screen (it requests the
 the refresh + access tokens under `~/.mcp-auth-atlassian/`
 (`mcp-remote-v1/…_tokens.json`) and refreshes them automatically afterwards.
 
-The version is pinned (here and in `harbor/prepare.sh`) so identical benchmark
-commits build the same task image and use the same OAuth client; bump both
-together when you upgrade.
+The version is pinned (here and in `harbor/environment/prepare.sh`) so
+identical benchmark commits build the same task image and use the same OAuth
+client; bump both together when you upgrade.
 
 ## 2. Requirements
 
@@ -49,9 +49,9 @@ together when you upgrade.
 - The OAuth store from step 1 (`~/.mcp-auth-atlassian`).
 
 The generated task environment image is prepared by this skill's
-[`harbor/prepare.sh`](harbor/prepare.sh) — it bakes Node 22 LTS (pinned release,
-digest-verified) and `mcp-remote` into the image, so the agent container needs
-nothing at run time.
+[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) — it bakes
+Node 22 LTS (pinned release, digest-verified) and `mcp-remote` into the image,
+so the agent container needs nothing at run time.
 
 ## 3. Convert the evals to Harbor tasks
 
@@ -62,9 +62,12 @@ uv run --project apps/harbor-bench --package harbor-bench harbor-bench convert \
 ```
 
 This generates one task per eval case (the `.harbor/` directory is gitignored).
-`convert` reads this skill's [`harbor/environment.toml`](harbor/environment.toml)
-and injects the Atlassian MCP server + env wiring into every generated task of
-the skill.
+The skill customizes those tasks through its `harbor/` overlay:
+[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) is added to
+every task's environment (the generated Dockerfile runs it at image build time,
+before the git baseline), and each per-task
+`harbor/<generated-task-dir>/task.toml` carries the Atlassian MCP server + env
+wiring in its `[environment]` table.
 
 ## 4. Run the eval tasks
 
@@ -137,10 +140,11 @@ or use `harbor-bench compare` for a base/head skill delta. See the
 - **MCP server `failed to initialize` with
   `MCP_AUTH_B64 … is required`** — the env var did not reach the container.
   Export it on the host (see step 4); the template lives in
-  `harbor/environment.toml` `[environment].env`.
+  each per-task `harbor/<generated-task-dir>/task.toml` `[environment].env`.
 - **MCP server exits before the initialize handshake with a Node stack trace** —
   `mcp-remote` needs Node ≥ 20.18; the image installs Node 22 via
-  `harbor/prepare.sh`. Rebuild the task image (or delete cached images).
+  `harbor/environment/prepare.sh`. Rebuild the task image (or delete cached
+  images).
 - **`Job directory … cannot be resumed with a different config`** — use a new
   `--job-name`.
 - **`reward 0` on a task that created the page** — RewardKit is an LLM judge;
