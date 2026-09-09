@@ -1,3 +1,17 @@
+## 2.0.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### 🧱 Updated Dependencies
+
+- Updated modules-azure-storage-account to 4.0.2
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.0.1 (2026-09-08)
 
 ### 🧱 Updated Dependencies
