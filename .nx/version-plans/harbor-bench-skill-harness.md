@@ -2,11 +2,12 @@
 harbor-bench: minor
 ---
 
-Extend `harbor-bench convert` so a skill declares its own benchmark harness in
-its `harbor/` directory: `harbor/environment.toml` for skill-wide
-`[environment]` overrides (MCP servers, env-var templates, network policy)
-deep-merged into every generated task of the skill, and
-`harbor/<task-key>/instruction.append.md` for per-case deterministic "user
-answers" appended after the eval prompt (for rubrics that assume an
-interactive user). `evals.json` stays the single source of truth for eval
-cases.
+Make a skill's `harbor/` directory a pure **overlay** over the tasks
+`harbor-bench convert` generates, so a skill can ship its own benchmark
+harness next to `evals.json` by dropping files in place instead of relying on
+converter-discovered layout hooks.
+
+Precedence over a generated task: converter defaults < per-eval `files` <
+generated files < suite overlay < per-task overlay < run-level flags
+(e.g. `--without-skill`, re-applied by the converter). `evals.json` stays the
+source of truth for the eval cases.
