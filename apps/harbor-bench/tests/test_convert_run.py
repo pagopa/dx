@@ -8,6 +8,7 @@ generation) are asserted here rather than through the CLI adapter.
 
 from __future__ import annotations
 
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -138,16 +139,20 @@ def test_no_evals_found_raises(tmp_path: Path):
 
 
 def test_apply_failure_preserves_completed_tasks(tmp_path: Path):
-    # Case 1 is clean; case 2 collides with the workspace layer, so the
-    # apply-time failure leaves case 1's task (and no config) in place.
+    # Case 1 is clean; case 2 declares two per-eval fixtures with the same
+    # basename, so the apply-time failure leaves case 1's task (and no config)
+    # in place.
     skill = tmp_path / "skill"
-    (skill / "harbor" / "workspace").mkdir(parents=True)
-    (skill / "harbor" / "workspace" / "collide.txt").write_text("base")
-    (skill / "fixtures").mkdir()
-    (skill / "fixtures" / "collide.txt").write_text("file-layer")
+    (skill / "fixtures" / "a").mkdir(parents=True)
+    (skill / "fixtures" / "b").mkdir()
+    (skill / "fixtures" / "a" / "collide.txt").write_text("from a")
+    (skill / "fixtures" / "b" / "collide.txt").write_text("from b")
     evals_path = write_evals(
         skill,
-        cases=[CASE_ONE, {**CASE_TWO, "files": ["fixtures/collide.txt"]}],
+        cases=[
+            CASE_ONE,
+            {**CASE_TWO, "files": ["fixtures/a/collide.txt", "fixtures/b/collide.txt"]},
+        ],
     )
     out = tmp_path / "out"
     plan = plan_run(make_options(out, [evals_path]))
@@ -176,18 +181,18 @@ def test_reapply_removes_stale_tasks(tmp_path: Path):
     assert (out / "config.yaml").is_file()
 
 
-def test_reapply_removes_stale_fixture_files(tmp_path: Path):
+def test_reapply_drops_removed_overlay_additions(tmp_path: Path):
     skill = tmp_path / "skill"
-    (skill / "harbor" / "workspace").mkdir(parents=True)
-    (skill / "harbor" / "workspace" / "seed.txt").write_text("seed")
-    (skill / "harbor" / "workspace" / "obsolete.txt").write_text("old")
+    (skill / "harbor" / "environment").mkdir(parents=True)
+    (skill / "harbor" / "environment" / "seed.txt").write_text("seed")
+    (skill / "harbor" / "environment" / "obsolete.txt").write_text("old")
     evals_path = write_evals(skill, cases=[CASE_ONE])
     out = tmp_path / "out"
     plan_and_apply(out, [evals_path])
     env = out / "tasks" / "test-skill-1-case-one" / "environment"
     assert (env / "obsolete.txt").is_file()
 
-    (skill / "harbor" / "workspace" / "obsolete.txt").unlink()
+    (skill / "harbor" / "environment" / "obsolete.txt").unlink()
     plan_and_apply(out, [evals_path])
     assert not (env / "obsolete.txt").exists()
     assert (env / "seed.txt").is_file()
@@ -232,9 +237,152 @@ def test_environment_option_lands_in_config(tmp_path: Path):
     }
 
 
+# --- skill harbor/ overlay (replace generated task files) ---------------
+
+
+def read_task_toml(task_dir: Path) -> dict:
+    return tomllib.loads((task_dir / "task.toml").read_text())
+
+
+def write_harbor(skill: Path, *parts: str, content: str = "") -> Path:
+    path = skill.joinpath("harbor", *parts)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content)
+    return path
+
+
+def test_suite_overlay_replaces_file_in_every_task(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(skill, "solution", "solve.sh", content="#!/bin/sh\necho custom\n")
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    for name in ("test-skill-1-case-one", "test-skill-2-case-two"):
+        solve = out / "tasks" / name / "solution" / "solve.sh"
+        assert solve.read_text() == "#!/bin/sh\necho custom\n"
+    # unrelated generated files are untouched by the suite overlay
+    assert (out / "tasks" / "test-skill-1-case-one" / "task.toml").is_file()
+
+
+def test_per_task_overlay_replaces_only_that_task_and_wins(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(skill, "tests", "quality.toml", content="suite-quality\n")
+    write_harbor(
+        skill,
+        "test-skill-1-case-one",
+        "tests",
+        "quality.toml",
+        content="task-quality\n",
+    )
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    q1 = out / "tasks" / "test-skill-1-case-one" / "tests" / "quality.toml"
+    q2 = out / "tasks" / "test-skill-2-case-two" / "tests" / "quality.toml"
+    assert q1.read_text() == "task-quality\n"  # per-task beats suite
+    assert q2.read_text() == "suite-quality\n"
+
+
+def test_per_task_task_toml_is_a_full_replacement(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(
+        skill, "test-skill-1-case-one", "task.toml", content="[agent]\ntimeout_sec = 42.0\n"
+    )
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    task_toml = read_task_toml(out / "tasks" / "test-skill-1-case-one")
+    assert task_toml == {"agent": {"timeout_sec": 42.0}}
+    # the other task keeps its converter-generated task.toml
+    other = read_task_toml(out / "tasks" / "test-skill-2-case-two")
+    assert other["task"]["name"] == "pagopa/test-skill-2-case-two"
+
+
+def test_suite_level_task_toml_override_is_rejected(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(skill, "task.toml", content='[task]\nname = "pagopa/x"\n')
+    evals_path = write_evals(skill)
+    with pytest.raises(ValueError, match="suite-level task.toml override is not allowed"):
+        plan_run(make_options(tmp_path / "out", [evals_path]))
+    assert not (tmp_path / "out").exists()
+
+
+def test_legacy_environment_toml_is_now_an_inert_task_root_file(tmp_path: Path):
+    # the old skill-wide harbor/environment.toml merge is gone; under the
+    # add-anywhere overlay it would land at the task root, which nothing reads.
+    skill = tmp_path / "skill"
+    write_harbor(skill, "environment.toml", content="[environment]\n")
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+    task = out / "tasks" / "test-skill-1-case-one"
+    assert (task / "environment.toml").read_text() == "[environment]\n"
+
+
+def test_legacy_workspace_dir_fails_plan(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(skill, "workspace", "seed.txt", content="old fixture layer\n")
+    evals_path = write_evals(skill)
+    with pytest.raises(ValueError, match="harbor/workspace is no longer"):
+        plan_run(make_options(tmp_path / "out", [evals_path]))
+    assert not (tmp_path / "out").exists()
+
+
+def test_overlay_adds_anywhere_in_the_task_tree(tmp_path: Path):
+    skill = tmp_path / "skill"
+    # an eval-key style legacy dir and a typo'd dir are now plain additions
+    write_harbor(skill, "case-one", "notes.md", content="notes\n")
+    write_harbor(skill, "enviroment", "Dockerfile", content="FROM ubuntu:24.04\n")
+    evals_path = write_evals(skill, cases=[CASE_ONE])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+    task = out / "tasks" / "test-skill-1-case-one"
+    assert (task / "case-one" / "notes.md").read_text() == "notes\n"
+    assert (task / "enviroment" / "Dockerfile").read_text() == (
+        "FROM ubuntu:24.04\n"
+    )
+
+
+def test_suite_overlay_adds_container_context_for_a_dockerfile_override(
+    tmp_path: Path,
+):
+    # a custom environment/Dockerfile plus the scripts it references live in
+    # the same harbor/environment/ subtree
+    skill = tmp_path / "skill"
+    write_harbor(
+        skill, "environment", "Dockerfile", content="FROM ubuntu:24.04\nCOPY tool.sh /tool.sh\nRUN bash /tool.sh\n"
+    )
+    write_harbor(skill, "environment", "tool.sh", content="#!/bin/sh\necho setup\n")
+    evals_path = write_evals(skill, cases=[CASE_ONE, CASE_TWO])
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path])
+
+    for name in ("test-skill-1-case-one", "test-skill-2-case-two"):
+        task = out / "tasks" / name
+        assert "COPY tool.sh" in (task / "environment" / "Dockerfile").read_text()
+        assert (task / "environment" / "tool.sh").is_file()
+
+
+def test_run_level_flags_stay_authoritative_over_overridden_task_toml(tmp_path: Path):
+    skill = tmp_path / "skill"
+    write_harbor(
+        skill, "test-skill-1-case-one", "task.toml", content="[agent]\ntimeout_sec = 42.0\n"
+    )
+    evals_path = write_evals(skill)
+    out = tmp_path / "out"
+    plan_and_apply(out, [evals_path], without_skill=True)
+
+    task_toml = read_task_toml(out / "tasks" / "test-skill-1-case-one")
+    # the author's full replacement survives ...
+    assert task_toml["agent"] == {"timeout_sec": 42.0}
+    # ... but the run-level gate is re-applied over the final task.toml
+    assert task_toml["verifier"]["env"]["SKILL_EVAL_ENFORCE_SKILL_USE"] == "false"
+
+
 # --- host preflight ------------------------------------------------------
-
-
 def test_check_host_environment_docker_is_always_ready():
     assert check_host_environment("docker") is None
 
