@@ -4,12 +4,13 @@
     {
       "id": 0,
       "name": "publication-confirmation",
-      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\nThe user has already answered your destination questions (treat their\npublication request as confirmed). Use these answers and do not invent others:\n\n- Operation: create a new Confluence page.\n- Space: DevEx.\n- Parent page: create it inside the DevEx Playground folder\n  (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\n- Language: English.\n- Title: derive it from the meeting guide's own heading if present (e.g.\n  \"Weekly Product Design Sync — Meeting Guide\").\n\n**Before you call any create/publish tool**, present the complete operation\nsummary exactly in this form (never after the create, never abbreviated):\n\nOperation: create\nTitle: <resolved title>\nSpace: DevEx\nParent: DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072)\nLanguage: English\nSource: /workspace/meeting-guide.md\n\nOnly after that summary has been emitted may you create the page. Then verify\nthe result and report the page URL as the skill prescribes.",
+      "prompt": "I have a completed team meeting guide in meeting-guide.md. Publish it as a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\nThe user has already answered your destination questions, so treat this publication request as confirmed. Use these answers and do not invent others:\n\n- Operation: create a new Confluence page.\n- Space: DevEx.\n- Parent page: create it inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\n- Language: English.\n- Title: derive it from the meeting guide's own heading if present (e.g. \"Weekly Product Design Sync — Meeting Guide\").",
       "expected_output": "The agent treats the publication request as confirmed, consumes the destination answers already supplied (space, parent, title, language) without re-asking or inventing others, and shows the complete operation summary before publishing.",
       "expectations": [
         "Does not publish before resolving the destination and operation.",
         "Consumes the destination answers supplied in the instructions (space, parent, title, language); only when one is genuinely missing does it ask for it, rather than re-asking for answered details or inventing values.",
         "Creates the page inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) supplied as its parent.",
+        "Publishes the source by converting it once to Confluence's native HTML body (a single create, never a round trip through Markdown of an existing page).",
         "Summarizes the irreversible operation before executing it."
       ],
       "files": ["fixtures/meeting-guide.md"]
@@ -17,31 +18,49 @@
     {
       "id": 1,
       "name": "stable-id-preservation",
-      "prompt": "Create a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) from this Markdown architecture guide (architecture-guide.md in this workspace). Translate the visible prose into Italian, but preserve all stable IDs, status values, API operation names, URLs, and code exactly.\nThe user has already answered your destination questions. Use these answers\nand do not invent others:\n\n- Operation: create a new Confluence page.\n- Space: DevEx.\n- Parent page: create it inside the DevEx Playground folder\n  (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\n- Language: Italian (translate the human-facing prose as requested).\n- Title: derive it from the architecture guide's heading (e.g.\n  \"Guida all'architettura — Notifiche degli esiti dei pagamenti\").\n\nApply the leading-H1 rule relative to that title, preserve every stable ID,\nstatus value, API operation name, URL, code block, and the HTML-comment ID\nexactly, then create the page and verify it by content parity.",
+      "prompt": "Create a Confluence page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) from this Markdown architecture guide (architecture-guide.md in this workspace). Translate the visible prose into Italian.\nThe user has already answered your destination questions. Use these answers and do not invent others:\n\n- Operation: create a new Confluence page.\n- Space: DevEx.\n- Parent page: create it inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072).\n- Language: Italian (translate the human-facing prose as requested).\n- Title: derive it from the architecture guide's heading (e.g. \"Guida all'architettura — Notifiche degli esiti dei pagamenti\").",
       "expected_output": "The page content is translated only where requested while machine-facing identifiers and document structure remain unchanged.",
       "expectations": [
         "Preserves stable IDs and machine-facing status values exactly.",
         "Preserves headings, tables, links, and conditional N/A reasons.",
         "Translates human-facing prose without translating code, URLs, or operation names.",
         "Omits a leading H1 when it exactly matches the Confluence page title, while preserving other headings.",
-        "Creates the page inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) supplied as its parent.",
-        "A stable `<!-- id: ... -->` marker kept in the prepared representation may be dropped outright by Confluence on import (HTML comments are not representable on every write route); that platform limitation does not violate the ID rule. Only mangling it into visible or escaped text (`\\<!--`, `&lt;!--`) is a failure."
+        "Creates the page inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) supplied as its parent."
       ],
       "files": ["fixtures/architecture-guide.md"]
     },
     {
       "id": 2,
-      "name": "safe-update",
-      "prompt": "Make your own working copy of the seed Design Review page at https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3313926515 by copying it under the DevEx Playground folder https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072 with a unique title of your choice (e.g. append the current date and time). Never modify the seed page itself. Then update the page copy you created with the contents of design-review.md (in this workspace). Keep the document status unchanged and do not create any additional duplicate page. Return the updated copy's URL.",
-      "expected_output": "The agent first creates one fresh working copy of the seed page, then resolves and fetches that copy, updates that copy, preserves its status, avoids creating further duplicates, and returns the updated copy's URL.",
+      "name": "native-edit-in-place",
+      "prompt": "Make exactly one working copy of the seed Design Review page at https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3313926515 by copying it under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) with a unique title of your choice (e.g. append the current date and time). Never modify the seed page itself. On that working copy, change the `metadata.last-updated` cell of the header table to 2026-09-09 and change the 'Resolution' of row `open.001` from TBD to 'fail open'. Make no other content changes.",
+      "expected_output": "The agent creates one fresh working copy of the seed page, then edits that copy's DRAFT in place through granular/native HTML changes (not a Markdown round trip), changing only the `metadata.last-updated` cell to 2026-09-09 and the `open.001` Resolution cell to 'fail open' while preserving the collapsible 'Record of decisions' section, the info panel, and every other element. It never touches the seed page, never publishes the draft, never creates further duplicates, works from a single known-good native HTML baseline without re-fetching per change, and returns the draft's resume URL.",
       "expectations": [
         "Creates exactly one fresh working copy of the seed page and never edits the seed page itself.",
-        "Creates and updates the working copy inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) and performs no operation outside it.",
-        "Uses the created copy as the update target without making any further duplicate page.",
-        "Does not change lifecycle status merely because publication occurred.",
-        "Returns the updated page URL only after a successful update."
+        "Creates the working copy and edits its draft inside the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) and performs no operation outside it.",
+        "Operates on the working copy's draft (getConfluenceContent/updateConfluenceContent with draft: true) rather than overwriting the published body.",
+        "Edits the draft through Confluence's native HTML body and/or granular edits addressed by node ID; it does not convert the page to Markdown and does not push a body rebuilt from a Markdown file.",
+        "Changes exactly the `metadata.last-updated` value to 2026-09-09 and the `open.001` Resolution value to 'fail open' on the draft and leaves every other element — the collapsible 'Record of decisions' section, the info panel, tables, and other cells — unchanged.",
+        "Does not publish the draft: the published copy keeps its original content.",
+        "Does not re-fetch the full page for every change; it edits from a single known-good native HTML baseline.",
+        "Does not change lifecycle status merely because an edit occurred.",
+        "Returns the draft's resume URL only after a successful draft edit."
       ],
-      "files": ["fixtures/design-review.md"]
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "small-update-large-file",
+      "prompt": "A large Design Review page exists at https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3319005192 and is used as a read-only seed: never modify it. update-target.md in this workspace holds the updated content of that same large page; compared with the seed it differs only by a small change. Make your own working copy of the seed page under the DevEx Playground folder https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072 with a unique title of your choice, then apply the small change so your working copy's content matches update-target.md.",
+      "expected_output": "The agent creates one fresh working copy of the large seed page, then stages the small change from update-target.md on that copy's DRAFT in place through Confluence's native HTML/granular edits, changing only the content that differs between the seed and update-target.md while the rest of the large page stays intact. It does not modify the seed page, does not create further duplicates, does not publish the draft, and returns the draft's resume URL.",
+      "expectations": [
+        "Creates exactly one fresh working copy of the large seed page (https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3319005192) and never edits the seed page itself.",
+        "Stages the change on the working copy's draft (getConfluenceContent/updateConfluenceContent with draft: true) rather than overwriting the published body.",
+        "Edits the draft through Confluence's native HTML body and/or granular edits addressed by node ID; it does not convert the page to Markdown and does not push a body rebuilt from update-target.md or any Markdown file.",
+        "Changes only the content that differs between the seed and update-target.md; all other content of the large page stays intact.",
+        "Does not publish the draft: the published copy keeps its original content.",
+        "Returns the draft's resume URL only after the change is applied."
+      ],
+      "files": ["fixtures/update-target.md"]
     }
   ]
 }
