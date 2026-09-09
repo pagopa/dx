@@ -34,7 +34,23 @@ const makeEnv = () => {
 
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
-    bootstrapIdentityId: "test-bootstrap-identity-id",
+    bootstrapIdentityIds: {
+      cd: "test-bootstrap-identity-id",
+      ci: "test-bootstrap-ci-identity-id",
+    },
+    envShort: "d",
+    prefix: "test",
+    repoName: "test-repo",
+    repoOwner: "pagopa",
+    subscriptionName: "test-subscription",
+  });
+
+const makeBootstrapIdentityPairInput = (): RequestAuthorizationInput =>
+  requestAuthorizationInputSchema.parse({
+    bootstrapIdentityIds: {
+      cd: "test-d-itn-bootstrap-id-01",
+      ci: "test-d-itn-bootstrap-ci-id-01",
+    },
     envShort: "d",
     prefix: "test",
     repoName: "test-repo",
@@ -47,6 +63,176 @@ const FILE_PATH =
 
 // eslint-disable-next-line max-lines-per-function
 describe("PagoPA AuthorizationService", () => {
+  describe("bootstrap identity pair", () => {
+    it("adds both identities while preserving existing principals and fields", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["existing-identity"],
+            some_other_field: "keep-me",
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "identity-pair-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/70",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "existing-identity",
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+      expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
+    });
+
+    it("adds only the missing CI identity", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-d-itn-bootstrap-id-01"],
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "missing-ci-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/71",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+    });
+
+    it("removes duplicate identities while preserving their first occurrence", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const groups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "existing-identity",
+              "test-d-itn-bootstrap-id-01",
+              "test-d-itn-bootstrap-id-01",
+              "existing-identity",
+              "test-d-itn-bootstrap-ci-id-01",
+              "test-d-itn-bootstrap-ci-id-01",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "duplicate-identities-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/72",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "existing-identity",
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+    });
+
+    it("skips the pull request when both identities and groups are current", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const groups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-d-itn-bootstrap-id-01",
+              "test-d-itn-bootstrap-ci-id-01",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "identity-pair-noop-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/72",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBeUndefined();
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
+      expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
+    });
+  });
+
   // eslint-disable-next-line max-lines-per-function
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
@@ -96,7 +282,8 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
           branch: "feats/add-test-repo-test-subscription-bootstrap-identity",
-          message: "Add bootstrap identity and AD groups for test-subscription",
+          message:
+            "Authorize bootstrap identities and configure AD groups for test-subscription",
           owner: "pagopa",
           path: FILE_PATH,
           repo: "eng-azure-authorization",
@@ -106,18 +293,22 @@ describe("PagoPA AuthorizationService", () => {
 
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
+        body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa",
         repo: "eng-azure-authorization",
-        title: "Add bootstrap identity and AD groups for test-subscription",
+        title:
+          "Authorize bootstrap identities and configure AD groups for test-subscription",
       });
     });
 
     it("should target the authorization repository under the selected owner", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = requestAuthorizationInputSchema.parse({
-        bootstrapIdentityId: "test-bootstrap-identity-id",
+        bootstrapIdentityIds: {
+          cd: "test-bootstrap-identity-id",
+          ci: "test-bootstrap-ci-identity-id",
+        },
         envShort: "d",
         prefix: "test",
         repoName: "test-repo",
@@ -159,11 +350,12 @@ describe("PagoPA AuthorizationService", () => {
       });
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
+        body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa-dx",
         repo: "eng-azure-authorization",
-        title: "Add bootstrap identity and AD groups for test-subscription",
+        title:
+          "Authorize bootstrap identities and configure AD groups for test-subscription",
       });
     });
 
@@ -381,9 +573,12 @@ describe("PagoPA AuthorizationService", () => {
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
 
-      // Identity added
+      // Identities added
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
       );
       // Extra fields preserved
       expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
@@ -393,7 +588,7 @@ describe("PagoPA AuthorizationService", () => {
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
-    it("should append identity to an existing non-empty list", async () => {
+    it("should append identities to an existing non-empty list", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -426,6 +621,9 @@ describe("PagoPA AuthorizationService", () => {
       const updatedParsed = JSON.parse(updateCall.content);
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
       );
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "existing-identity",
@@ -468,13 +666,13 @@ describe("PagoPA AuthorizationService", () => {
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: "Add bootstrap identity for test-subscription",
+          message: "Authorize bootstrap identities for test-subscription",
         }),
       );
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
-          title: "Add bootstrap identity for test-subscription",
+          body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers for subscription `test-subscription`.",
+          title: "Authorize bootstrap identities for test-subscription",
         }),
       );
     });
@@ -486,7 +684,10 @@ describe("PagoPA AuthorizationService", () => {
       const originalContent = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
         },
         null,
@@ -643,14 +844,17 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
-    it("should upsert groups and create PR when identity already exists", async () => {
+    it("should upsert groups and create PR when identities already exist", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      // Identity already present, no groups yet
+      // Identities already present, no groups yet
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
         },
         null,
@@ -677,25 +881,28 @@ describe("PagoPA AuthorizationService", () => {
         "https://github.com/pagopa/eng-azure-authorization/pull/55",
       );
 
-      // Identity must NOT be duplicated
+      // Identities must NOT be duplicated
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
       expect(
         updatedParsed.directory_readers.service_principals_name,
-      ).toHaveLength(1);
+      ).toHaveLength(2);
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
       );
 
       // All default groups must be created
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
-    it("should skip update and PR when identity exists and groups are already correct", async () => {
+    it("should skip update and PR when identities exist and groups are already correct", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      // Build a file where the identity is present and all groups are already correct
+      // Build a file where both identities and all groups are already correct
       const allGroups = DEFAULT_GROUP_SPECS.map((spec) => ({
         members: [],
         name: makeGroupName("test", "d", spec.groupName),
@@ -704,7 +911,10 @@ describe("PagoPA AuthorizationService", () => {
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
           groups: allGroups,
         },
@@ -729,15 +939,18 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
     });
 
-    it("should update group roles and create PR when identity exists with wrong roles", async () => {
+    it("should update group roles and create PR when identities exist with wrong roles", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      // Identity present, but externals group has wrong roles
+      // Identities present, but externals group has wrong roles
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
           groups: [
             {
@@ -779,10 +992,10 @@ describe("PagoPA AuthorizationService", () => {
       expect(externalsGroup.roles).toEqual(["Owner"]);
       // Member preserved
       expect(externalsGroup.members).toContain("bob@pagopa.it");
-      // Identity not duplicated
+      // Identities not duplicated
       expect(
         updatedParsed.directory_readers.service_principals_name,
-      ).toHaveLength(1);
+      ).toHaveLength(2);
     });
 
     it("should return error when file content is not valid JSON", async () => {
