@@ -183,9 +183,8 @@ def plan_run(options: ConvertOptions) -> RunPlan:
             seen[dir_name] = source
             dirs.add(dir_name)
 
-    # Plan-time overlay validation: every harbor/ overlay must target a file
-    # convert generates; a malformed layout fails before anything is written.
-    overlays_by_skill: dict[Path, OverlaySet] = {}
+    # Plan-time overlay validation: reject structurally invalid layouts (e.g.
+    # suite-level harbor/task.toml, legacy harbor/workspace) before anything is written.
     for evals_path, evals, skill_dir in loaded:
         overlays = discover_overlays(skill_dir, task_dirs_by_skill[skill_dir])
         validate_overlays(overlays)
