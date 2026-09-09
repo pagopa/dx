@@ -185,6 +185,7 @@ def plan_run(options: ConvertOptions) -> RunPlan:
 
     # Plan-time overlay validation: reject structurally invalid layouts (e.g.
     # suite-level harbor/task.toml, legacy harbor/workspace) before anything is written.
+    overlays_by_skill: dict[Path, OverlaySet] = {}
     for evals_path, evals, skill_dir in loaded:
         overlays = discover_overlays(skill_dir, task_dirs_by_skill[skill_dir])
         validate_overlays(overlays)
