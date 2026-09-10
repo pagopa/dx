@@ -62,9 +62,9 @@ const rolesAreEqual = (
 
 /**
  * Adds or updates the AD groups array in the parsed authorization JSON.
- * - Missing default groups are added with empty members.
- * - Existing groups with wrong roles have their roles updated; members are preserved.
- * - Custom (non-default) groups are preserved unchanged.
+ * - Missing managed groups are added with empty members.
+ * - Existing managed groups with wrong roles have their roles updated; members are preserved.
+ * - Unmanaged groups are preserved unchanged.
  * Returns the updated JSON along with a flag indicating whether anything changed.
  */
 const upsertGroups = (
@@ -83,7 +83,7 @@ const upsertGroups = (
   );
 
   const existingGroups = jsonContent.groups ?? [];
-  const seenDefaults = new Set<string>();
+  const seenManagedGroups = new Set<string>();
 
   // Walk existing groups in their original order, updating roles where needed
   const finalGroups: typeof existingGroups = [];
@@ -92,10 +92,10 @@ const upsertGroups = (
   for (const existing of existingGroups) {
     const spec = expectedByName.get(existing.name);
     if (!spec) {
-      // Custom group — preserve as-is
+      // Unmanaged group — preserve as-is
       finalGroups.push(existing);
     } else {
-      seenDefaults.add(existing.name);
+      seenManagedGroups.add(existing.name);
       if (!rolesAreEqual(existing.roles, spec.roles)) {
         // Roles differ — update roles, preserve members and any extra fields
         finalGroups.push({ ...existing, roles: [...spec.roles] });
@@ -106,10 +106,10 @@ const upsertGroups = (
     }
   }
 
-  // Append missing default groups at the end
+  // Append missing managed groups at the end
   for (const spec of DEFAULT_GROUP_SPECS) {
     const name = makeAzureAdGroupName(prefix, envShort, spec.groupName);
-    if (!seenDefaults.has(name)) {
+    if (!seenManagedGroups.has(name)) {
       finalGroups.push({ members: [], name, roles: [...spec.roles] });
       groupsChanged = true;
     }
