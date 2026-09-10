@@ -14,7 +14,7 @@ Oxlint can replace ESLint or run alongside it during migration, including
 type-aware checks and multi-file analysis. Benchmarks report it as substantially
 faster than ESLint on large codebases.
 
-We are assessing Oxlint as a possible successor to [ESLint](./eslint.md) for
+We are trialing Oxlint as a possible successor to [ESLint](./eslint.md) for
 JavaScript and TypeScript linting. ESLint and
 [`@pagopa/eslint-config`](https://github.com/pagopa/dx/tree/main/packages/eslint-config)
 remain the current adopt choice until this evaluation is complete.
@@ -28,7 +28,7 @@ remain the current adopt choice until this evaluation is complete.
 ## Related radar entries
 
 - [ESLint](./eslint.md) — current adopt linter
-- [Oxfmt](./oxfmt.md) — companion Oxc formatter, also in assess
+- [Oxfmt](./oxfmt.md) — companion Oxc formatter, also in trial
 
 ## Reference of usage in our organization
 
