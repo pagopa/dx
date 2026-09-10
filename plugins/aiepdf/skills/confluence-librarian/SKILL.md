@@ -1,143 +1,240 @@
 ---
 name: confluence-librarian
-description: Publish and update prepared pages and document artifacts in Confluence without losing structure or traceability. Use whenever a user asks to publish, create, update, translate, or synchronize Markdown, HTML, or another readable document to Confluence, including hierarchical child pages under a parent catalog. Require explicit confirmation before irreversible publication and preserve headings, tables, links, statuses, IDs, and intentional gaps.
+description: Publish a prepared document as a new Confluence page, or edit an existing Confluence page in place, preserving structure, macros, and traceability. Use whenever a user asks to create, publish, update, edit, translate, or synchronize Confluence content, including pages handed off by other skills.
 ---
 
 # Confluence Librarian
 
-Move a prepared page or document into Confluence while preserving its meaning,
-structure, traceability, and lifecycle state. This skill owns publication
-mechanics; the calling skill or user owns the source content and domain rules.
-
-## When to use this skill
-
-Use this skill when:
-
-- a user asks to publish or update a prepared page or document in Confluence;
-- another skill has completed any artifact, such as a PRD, DR/SRS, RFC, runbook,
-  meeting note, guide, decision record, or operational page, and the user
-  confirms publication;
-- a user asks to translate or synchronize an existing document into a
-  Confluence page;
-
-Do not invent missing domain decisions. Do not rewrite the source content's
-meaning merely to make publication easier.
-
-## Input contract
-
-Accept the following from the calling skill or user:
-
-| Input            | Required    | Description                                                      |
-| ---------------- | ----------- | ---------------------------------------------------------------- |
-| Source document  | Yes         | Path or content of the prepared page/document artifact           |
-| Operation        | Yes         | Create a new page or update an existing page                     |
-| Title            | Yes         | Page title, inferred only when unambiguous                       |
-| Language         | Yes         | Visible page language; preserve machine-facing IDs               |
-| Space           | Yes         | Target Confluence space, inferred only when safe                 |
-| Parent page     | When needed | Parent page for hierarchical content such as a Use Case          |
-| Existing page ID | For updates | Page ID or URL when updating an existing page                    |
-
-If the source document is not available, ask the user to provide it. Do not
-claim to have published content that was not read.
+Confluence mechanics for documents. You own the mechanics; the calling skill or
+user owns the source content and domain rules. When a domain decision is missing
+from the source, surface it to the caller rather than invent one to ease
+publication.
 
 ## Workflow
 
-1. **Confirm publication.** Before creating or updating a page, obtain an
-   explicit affirmative answer. If the user only asks to write a document,
-   stop after the local artifact and do not start publication questions.
-2. **Resolve destination.** Ask for the target space, parent page when the
-   document belongs in an existing page hierarchy, title, language, and
-   operation when they cannot be inferred safely. For updates, resolve the
-   existing page ID and fetch the current page before replacing it.
-3. **Read and validate the source.** Preserve the complete heading hierarchy,
-   tables, lists, links, code blocks, stable HTML-comment IDs, table IDs,
-   statuses, `N/A` reasons, open questions, and source references. Identify
-   unsupported constructs before writing. Treat markdown soft-wraps as
-   presentation-only formatting: when the source is wrapped for readability,
-   collapse soft-wrapped lines before comparing or publishing content so they do
-   not become accidental paragraphs, bullets, or content changes.
-4. **Prepare the representation.** Convert the source into the format
-   supported by the authenticated Confluence integration. Translate only
-   human-facing prose, headings, labels, and values when requested. Keep
-   stable IDs, machine-facing status values, entity IDs, URLs, API operation
-   names, and code unchanged. Ignore markdown soft-wraps in the source; do not
-   reproduce them as hard line breaks or blank paragraphs in Confluence.
-5. **Show the irreversible action.** State the operation, page title, space,
-   parent, language, and source path before creating or updating the page.
-6. **Publish through the authenticated integration.** Use the available
-   Confluence tool or API. For updates, preserve the current page's relevant
-   metadata and replace only the requested content.
-7. **Verify the result.** Retrieve or inspect the returned page identifier and
-   URL. Confirm that the operation succeeded and report the page URL. If the
-   integration reports an error, surface it rather than returning a
-   success-shaped response.
-8. **Preserve lifecycle state.** Publication alone must not change a source
-   document's status such as `draft` or `review`. Change lifecycle state only
-   when the user explicitly requests it and the domain skill permits it.
-## Confirmation protocol
+Both paths share the same three gates, run in order: **confirm** the write with
+an explicit yes, **summarize** the irreversible action, and **report the URL**
+when done. Each path below ends with its own completion check.
 
-Use this question when a prepared document is ready but publication has not
-been confirmed:
+### Decide: create or edit
 
-> Do you want me to create or update the Confluence page for this document?
+Choose the path from the target, not the wording of the request:
 
-After an affirmative answer, ask only for destination details that are not
-already known. Do not ask for language, space, or parent before publication
-confirmation unless the user explicitly asks to plan the publication.
+- an **existing page** must change → **Edit** (section below);
+- no target page yet → **Create** (section below).
 
-Before the write, summarize:
+If the request does not name an existing page, ask before assuming edit. If the
+prepared source or the desired change is unavailable, ask for it; report only
+content you actually read, published, or edited.
+
+### Confirm and resolve
+
+1. Get an explicit affirmative answer before creating or updating. If the user
+   only asked to write a document locally, stop there.
+2. Resolve what is not already known: space; parent and title (create); the
+   existing page URL and the change to apply (edit); language when relevant.
+3. Show the summary before writing:
 
 ```text
-Operation: create/update
+Operation: create | edit
 Title: <page title>
 Space: <space>
 Parent: <parent or none>
 Language: <language>
 Source: <document path or artifact>
+[Edit] Target: <existing page URL>
+[Edit] Change: <the intended difference>
 ```
+
+### Create — publish a prepared document once
+
+1. **Validate the source.** Preserve headings, tables, lists, and code blocks
+   across conversion, and apply the Structure and traceability rules below. When
+   the source is Markdown and starts with an H1 matching the page title, drop
+   that H1 from the body so the title is not shown twice.
+2. **Convert once to native HTML.** Build Confluence's native HTML body and map
+   Markdown-only rich constructs to their Confluence equivalents:
+   `<details>`/`<summary>` → collapsible expand; `> [!NOTE]`, `> [!TIP]`,
+   `> [!WARNING]`, `> [!CAUTION]` → info/tip/warning/error callouts. Front
+   matter is not native metadata: render it as a metadata table. Publish with
+   `createConfluenceContent` (`body.format: html`), or as an unpublished draft
+   (`draft: true`) when the user wants to edit before publishing.
+3. **Translate if requested.** Apply the Translation rules below.
+4. **Write.** Show the summary, then create the page.
+5. **Done when** the page exists at the returned URL and its body carries the
+   source's structure, stable IDs, and status values.
+
+### Edit — change an existing page in place
+
+Apply the **native edit protocol** below; this section is its step order.
+
+An in-place edit runs on the page's unpublished **draft**: the published page
+stays untouched until the user publishes. A page with no draft yet gets one from
+the first `draft: true` write below — the write creates it from the published
+body, and that write's response `webUrl` is the draft's resume URL
+(`…/pages/resumedraft.action?draftId=…`).
+
+To edit a **working copy** instead of the original, create it once with the
+copy call shape below and keep the `contentId` it returns.
+
+1. **Fetch the baseline once.** Fetch the published page **as native HTML** —
+   `getConfluenceContent` with `content_format: html`, `detail: full` — for its
+   current body and `snapshotToken`. That single fetch is the baseline for the
+   whole task. Do not fetch the draft up front (a fresh working copy has none);
+   its state comes from the write's response or a cheap follow-up read.
+2. **Apply the minimal change.** Express it as granular edits on the node's
+   `data-local-id` (protocol rule 2) and keep every element you are not
+   changing intact (protocol rule 3). When the change is handed over as
+   a document, extract only its differing lines (a diff or a targeted match)
+   and change exactly the nodes those lines touch — never read the whole file.
+3. **Persist directly, on the draft.** Write with the granular draft edit shape
+   below — `draft: true`, never without it, with the published page's current
+   `snapshotToken`. Treat the write's response as the verification: it echoes
+   the applied content and carries the draft's resume URL.
+4. **Done when** the change is staged on the draft and you report the draft's
+   resume URL from the write's response. Verify against the baseline you
+   already hold (Baseline contract) — never re-fetch the full body to check.
+   The change reaches the published page only when the user publishes the
+   draft.
+
+### Preserve lifecycle state
+
+Both paths leave a document's status (`metadata.status`, `draft`/`current`,
+review state) unchanged. Change lifecycle state only when the user explicitly
+requests it and the domain skill permits it.
+
+## Native edit protocol
+
+An existing Confluence page holds content that has **no Markdown form** —
+`toc`, collapsible `expand`/`<details>`, info/note/tip/warning/error panels,
+images, smart links, inline comments, `data-local-id` anchors. Converting the
+page to Markdown and back silently destroys them, so edit the page's own native
+HTML. The rules:
+
+1. **Work from a known-good baseline.** Start from the baseline the Baseline
+   contract defines; every change is a diff against it.
+2. **Send only the change.** Express changes as granular edits on a node's
+   `data-local-id` — e.g. `replaceNode`, `insertNodeAfter`/`insertNodeBefore`,
+   `deleteNode` (granular draft edit shape below). A full `body` is only for
+   changes a node-level edit cannot express, and is still the baseline with the
+   smallest possible diff.
+3. **Keep what you are not changing.** Preserve every native-only construct you
+   were not asked to change, keeping the `data-local-id` attributes on nodes you
+   keep — granular edits address nodes by those anchors.
+
+## MCP call shapes
+
+Exact payloads for the two writes this skill drives. Their responses carry the
+ids and URLs — read them from there. No `discover` and no
+`getContentFormatGuide` is needed for these two shapes; the payloads below are
+complete.
+
+**Working copy** — `executeWrite`:
+
+```text
+name: copyConfluenceContent
+inputs: { contentId, title, parentContentId }     # or destinationSpaceKey
+```
+
+The response carries the copy's id. Do not filter it away: omit
+`responseFields`, or request `contentId`/`_links`; the keys `id`/`webUrl`/
+`spaceId` do not exist on this response and a filter naming them drops the id,
+leaving only `title`/`status`. Build the page URL from the response's
+`baseUrl` + `_links.webui`.
+
+**Granular draft edit** — `updateConfluenceContent`:
+
+```text
+contentId:     <the published page's id>
+draft:         true
+snapshotToken: <token from the baseline fetch, e.g. "v:1">
+edits:         [ { name: "replaceNode" | "insertNodeAfter" |
+                       "insertNodeBefore" | "deleteNode",
+                   localId: "<data-local-id of the target node>",
+                   value:  "<replacement node HTML>" } ]
+```
+
+Send the whole change as a single `edits` array in one write. The response
+echoes the applied content; `content.webUrl` (a `resumedraft.action` URL) is
+the draft's resume URL. A server dry-run is not required; the write itself
+validates and rejects an invalid document.
+
+## Baseline contract
+
+The **baseline** is the page's current native HTML together with its
+`snapshotToken` and version — the reference for verifying that an edit changed
+only what was requested.
+
+- **In context by default.** Hold the baseline in context for the task. Do not
+  re-fetch the full page before every edit; fetch only when a new baseline is
+  needed.
+- **Never re-read what you hold.** Do not re-fetch a page whose content is
+  already in context or on disk; a fresh read is warranted only to obtain a new
+  `snapshotToken` or after `snapshot_stale`. A write's response (echoed
+  content, `status`, `webUrl`) is verification enough; for any other follow-up
+  use a cheap shape (`detail: summary`, `responseFields`) — never `detail:
+  full` just to check state.
+- **Do not rediscover what you created.** Take the copy's `contentId` (or a
+  page's `id`/`webUrl`/`title`) from the create/copy/update response. Do not
+  locate a page you just made with `search`, `listConfluenceContent`, or
+  `getConfluenceContentDescendants`.
+- **Persist to a file only when it pays.** For a large page edited repeatedly,
+  or work that resumes in another session, save it and read it back as the
+  starting baseline on resume:
+
+  ```text
+  <working-dir>/confluence/<content-id>.html      # full native HTML body
+  <working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
+                                                   #   snapshotToken, version }
+  ```
+
+  Once persisted, query the file — never `view` it whole. One deterministic
+  extraction that prints the target node and its `data-local-id` is enough
+  (e.g. `jq -r '.data.body.value' <file> | rg -o '.{0,80}<needle>.{0,200}'`).
+  The same holds for any large tool output the environment saved to a file:
+  slice or match it, never read the file back in full.
+
+- **A new baseline is produced** by a fresh fetch, or when the integration
+  returns canonical output (a dry-run result or the persisted page) with a new
+  snapshot token. Never rebuild it from memory.
+- **Staleness.** If an update returns `snapshot_stale`, discard the cached
+  token, refetch once, and re-apply the intended change.
+- Never store credentials in baseline files.
 
 ## Structure and traceability rules
 
-- Preserve every stable ID exactly. IDs are never translated or renumbered.
-- Preserve every source section, including conditional sections marked
-  `N/A — <reason>`.
+- Preserve every stable ID exactly; IDs are never translated or renumbered.
+- Preserve every section, including conditional sections marked `N/A — <reason>`.
 - Preserve links to PRDs, RFCs, ADRs, Figma, Service Blueprints, APIs, events,
   data contracts, reviews, dashboards, and Jira.
-- Preserve visible status values and do not infer approval from publication.
-- Keep detailed source content in the page; do not replace it with a summary
-  unless the user explicitly requests a summary.
-- Treat the Confluence page title as separate from the body. When the source
-  starts with a Markdown H1 whose text exactly matches the page title, omit
-  that H1 from the published body to avoid displaying the title twice. Keep
-  later H1 headings and a leading H1 with different text unchanged.
-- For updates, fetch the existing page first when the operation could overwrite
-  comments, local IDs, links, or page metadata.
-- Use the authenticated integration's native document representation when
-  available. Never store credentials in the skill or generated document.
-- Ignore markdown soft-wraps in the source. Wrapped lines are formatting-only
-  and must be normalized before import; they must not become new paragraphs,
-  bullets, or hard breaks in Confluence.
-- Markdown front matter is not native Confluence metadata. When publishing a
-  Markdown document, render its front-matter values as a Confluence metadata
-  table, and verify that stable IDs and lifecycle status remain visible after
-  conversion.
+- Preserve visible status values; do not infer approval from publication.
+- Keep detailed content in the page; replace it with a summary only when the
+  user explicitly asks.
+- Verify edits by content, not byte equality: Confluence re-normalizes HTML
+  cosmetics on import/export, but macros and node structure must survive
+  identically.
 
 ## Translation rules
 
 When a language is requested:
 
 - translate human-facing text, headings, table labels, and explanatory prose;
-- preserve stable English IDs, code, endpoint names, URLs, status enum values,
-  metric identifiers, and document references;
-- keep the hierarchy and field order unchanged;
-- do not translate content that the source marks as machine-facing.
+- preserve stable IDs, code, endpoint names, URLs, status enum values, metric
+  identifiers, and document references;
+- keep hierarchy and field order unchanged;
+- for an in-place edit, translate only the text nodes requested and leave every
+  other node identical.
 
 ## Failure handling
 
-- If authentication or permissions are unavailable, report the concrete
-  failure and return publication-ready content instead of claiming success.
-- If the destination is ambiguous, ask for the missing destination detail.
-- If the source cannot be parsed or contains unsupported structure, identify the
+- **Authentication or permissions unavailable:** report the concrete failure and
+  return publication-ready content instead of claiming success.
+- **Ambiguous destination or target:** ask for the missing detail.
+- **Source cannot be parsed or has unsupported structure:** identify the
   affected section and ask how to proceed; do not silently flatten it.
-- If an update target cannot be resolved, do not create a duplicate page as a
+- **The write rejects the body:** surface the validation result and fix the
+  document; do not bypass validation or fall back to a lossy form.
+- **`snapshot_stale`:** the baseline is outdated — recover as the Baseline
+  contract describes.
+- **Edit target cannot be resolved:** ask, do not create a duplicate page as a
   fallback.
