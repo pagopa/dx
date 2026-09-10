@@ -1,3 +1,13 @@
+## 0.22.4 (2026-09-10)
+
+### 🩹 Fixes
+
+- Fix the Oxlint and Oxfmt technology radar entry descriptions to reference the Trial ring. ([#2179](https://github.com/pagopa/dx/pull/2179))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.22.3 (2026-09-01)
 
 ### 🚀 Features
