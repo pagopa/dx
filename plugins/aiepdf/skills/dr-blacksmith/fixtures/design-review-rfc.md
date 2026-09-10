@@ -18,6 +18,7 @@
 | `references.prd`       | PRD                                | prd-notifications.md               | source                  |
 | `references.rfc`       | RFCs                               | RFC-07 — event notifications       | accepted                |
 | `references.contracts` | OpenAPI / AsyncAPI / Data Contract | notifications-api.yaml             | current synchronous API |
+| `references.repository` | Repository                        | github.com/pagopa/notifications    | target codebase         |
 | `references.reviews`   | Security / Privacy / Legal reviews | internal service, no personal data | N/A — reason            |
 
 ## Expected outcome of the initiative
@@ -39,6 +40,16 @@ scope: notification content authoring.
 
 The current design calls the notification provider **synchronously** from the
 payment outcome handler. A provider timeout delays the outcome response.
+
+### Domain model and glossary
+
+| Entity | Description | Key attributes | Relations | States / invariants |
+| ------ | ----------- | -------------- | --------- | ------------------- |
+| Notification | A payment outcome to deliver | outcome, channel | Payment core | pending -> sent -> failed |
+
+| Term | Definition | Not to confuse with |
+| ---- | ---------- | ------------------- |
+| Delivery | Successful hand-off to the provider | Dispatch (the attempt) |
 
 ## Non-functional requirements and compliance
 
@@ -66,6 +77,7 @@ payment outcome handler. A provider timeout delays the outcome response.
 
 | ID                      | Criterion                                              | Evidence / status  |
 | ----------------------- | ------------------------------------------------------ | ------------------ |
+| `ready.domain`          | Domain model and glossary present, by name             | confirmed          |
 | `ready.rfc-propagation` | Accepted RFC decisions are propagated into this DR/SRS | _<evidence / gap>_ |
 
 ## Open questions, assumptions, decisions, and change propagation

@@ -26,8 +26,16 @@ criterion, the model wins.
 
 - [ ] Context, outcome, scope, non-goals, constraints, and ownership are clear
       enough for the requested lifecycle state.
-- [ ] The solution design includes the technology profile (CSP/language
-      preferences, Technology Radar outcome or an explicit gap).
+- [ ] The `Domain model and glossary` section describes the solution entities,
+      relations, states, invariants, and shared terms by name, without
+      identifiers, or records `N/A — <confirmed reason>`.
+- [ ] The solution design includes the technology profile as high-level,
+      Technology-Radar-informed choices (CSP, language, runtime, managed cloud
+      services, architecture style, contract format), with the Radar outcome or
+      an explicit gap, and without day-to-day development tooling.
+- [ ] The deployment view shows the real cloud services and the trust
+      boundaries, with no IaC, pipeline, or SKU-level detail; the repository is
+      recorded as a link.
 - [ ] Solution boundaries, components, dependencies, and deployment assumptions
       are internally consistent.
 - [ ] Relevant non-functional requirements and compliance concerns have targets,
@@ -44,8 +52,15 @@ criterion, the model wins.
       duplicated from the child.
 - [ ] Every `ready` child names the `solution.components.*` and `contracts.*`
       entries it touches, or a justified `N/A`.
+- [ ] Every `ready` child names the domain entities it touches (by name) and
+      defines its typed errors with semantic identifiers, or a justified `N/A`;
+      no error taxonomy is centralized in the DR/SRS and no error carries an
+      owner.
 - [ ] `ready` children meet the minimum core defined in `dr-srs-model.md`; other
       children stay `draft` with an owner gap.
+- [ ] Open questions are not duplicated: cross-Use-Case and initiative
+      questions live in the DR/SRS, behavior-local questions live in the child,
+      and a child references rather than restates a DR/SRS question.
 - [ ] Detailed triggers, flows, exceptions, postconditions, acceptance checks,
       and tracking events live on the child page, owned by the dedicated Use
       Case skill.
@@ -68,6 +83,9 @@ criterion, the model wins.
       separately, each with linked evidence rather than prose.
 - [ ] At least one Use Case page may be `ready` while the document stays
       `draft`; document gaps do not block ready Use Cases.
+- [ ] A status promotion (`draft` → `review`/`baseline`, or Use Case
+      `draft` → `ready`) is proposed by the skill with evidence and confirmed by
+      a human reviewer, never applied autonomously.
 - [ ] Material unresolved blockers are visible with an owner and expected
       resolution; non-blocking gaps are marked as partial readiness.
 

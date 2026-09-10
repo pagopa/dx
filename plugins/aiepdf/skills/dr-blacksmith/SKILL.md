@@ -30,8 +30,11 @@ to prepare the document for review readiness; and to keep it aligned with the
 linked PRD, RFC, ADR, API, event, data, security, privacy, and operational
 artifacts.
 
-This skill owns only the DR/SRS and its Use Case catalog. `uc-engraver` owns the
-`UC-XX` child content.
+This skill owns the DR/SRS, its Use Case catalog, and the `Domain model and
+glossary`. `uc-engraver` owns the `UC-XX` child content, including each Use
+Case's typed errors. This skill does not produce a work breakdown, estimates,
+tasks, or dependency edges: those belong to the backlog projection, which runs
+once the document is considered ready.
 
 ## Output contract
 
@@ -59,9 +62,19 @@ bundled template as a read-only input.
   the review readiness gate.
 - Keep the Use Case catalog link-first: a stable `UC-XX` ID, a title, and a link
   to the child page. Status, priority, component and contract references, and
-  behavior detail live only on the child page. The two states (`draft`, `ready`)
-  and the gates live in
+  behavior detail live only on the child page. Typed errors live on the child
+  page too, with semantic identifiers and no owner. The two states (`draft`,
+  `ready`) and the gates live in
   [`references/dr-srs-model.md`](./references/dr-srs-model.md).
+- Keep the `Domain model and glossary` descriptive: entities, relations, states,
+  invariants, and terms referenced by name, with no identifiers and no schema or
+  code.
+- Keep the technology profile at the high level the Technology Radar informs
+  (CSP, language, runtime, managed cloud services, architecture style, contract
+  format). Never list day-to-day development tooling; it reaches the coding
+  agent as separate context. Show the deployment view with the real cloud
+  services and trust boundaries, not IaC, pipeline, or SKU detail, and record the
+  repository as a link.
 - Keep evidence traceable to its source artifact or stated input.
 - Separate confirmed facts, proposed design, assumptions, unresolved questions,
   and decisions.
@@ -82,11 +95,12 @@ bundled template as a read-only input.
    record. Apply an accepted RFC only after its decision is propagated into the
    DR/SRS for the impacted slices, and record the propagation reference.
 3. **Map evidence to the template.** Cover context and outcome, solution
-   boundaries and components, technology profile, deployment architecture,
-   assumptions and trade-offs, non-functional requirements, compliance,
-   technical contracts, Use Case index, rollout and rollback, validation,
-   monitoring, and readiness. Address every template section: populate it, mark
-   it `N/A — <confirmed reason>`, or record it as a gap.
+   boundaries and components, the domain model and glossary, technology profile,
+   deployment architecture, assumptions and trade-offs, non-functional
+   requirements, compliance, technical contracts, Use Case index, rollout and
+   rollback, validation, monitoring, and readiness. Address every template
+   section: populate it, mark it `N/A — <confirmed reason>`, or record it as a
+   gap.
 4. **Clarify selectively.** Ask targeted questions about every contradiction or
    missing fact that touches a _material dimension_ — scope, behavior,
    ownership, priority, targets, architecture, compliance, contracts, or
@@ -109,8 +123,9 @@ bundled template as a read-only input.
    [`references/dr-srs-model.md`](./references/dr-srs-model.md).
 8. **Maintain the Use Case index.** Keep the catalog link-first: each stable
    `UC-XX` entry is only a title and a link to its child page. Status, priority,
-   source artifact, linked JTBD, components, contracts, and behavior detail live
-   on the child page. When the user asks for detailed Use Cases, invoke
+   source artifact, linked JTBD, components, contracts, domain entities, typed
+   errors, and behavior detail live on the child page. When the user asks for
+   detailed Use Cases, invoke
    `uc-engraver` with the existing parent DR/SRS and source artifacts, then fold
    its returned child paths and stable IDs into the index. Write no child bodies
    and leave no index entry out of sync.
@@ -123,13 +138,19 @@ bundled template as a read-only input.
    meaningfully reviewed. _Backlog readiness_ lives on each Use Case page as a
    single `draft` or `ready` status and does not wait for the whole document:
    the child is `ready` when it has a trigger, a main flow, at least one binary
-   acceptance check on Must, a priority, and its component and contract
-   references. Downstream backlog generation consumes the `ready` children and
-   ignores the rest.
+   acceptance check on Must, a priority, its component and contract references,
+   and its domain entities and typed errors. Downstream backlog generation
+   consumes the `ready` children and ignores the rest. A promotion is proposed
+   with evidence and confirmed by a human reviewer; never apply it
+   autonomously.
 
 ## Clarification rules
 
-- Ask rather than infer any material dimension.
+- Ask rather than infer any material dimension, including domain entities,
+  states, invariants, and terms.
+- Keep open questions at one level: cross-Use-Case and initiative questions in
+  the DR/SRS, behavior-local questions on the child. Never repeat the same
+  question in both places.
 - Batch material questions and keep drafting: ask only when the answer changes
   what you write now, and record every other unknown as a gap with an owner.
   Default to a draft with visible gaps over a stalled interview.

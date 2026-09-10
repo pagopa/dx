@@ -1,6 +1,6 @@
 ---
 id: UC-XX
-status: candidate
+status: draft
 priority: <Must / Should>
 parent_dr: <parent DR/SRS path or URL>
 ---
@@ -25,7 +25,7 @@ parent_dr: <parent DR/SRS path or URL>
 
 **Service Blueprint step**: _<step or touchpoint, or N/A - confirmed reason>_
 
-**Design maturity**: candidate
+**Domain entities**: _<entity names from the parent `Domain model and glossary`, or N/A - confirmed reason>_
 
 **Trigger**: _<event that starts the Use Case>_
 
@@ -51,11 +51,21 @@ parent_dr: <parent DR/SRS path or URL>
 
 - _<observable state or outcome>_
 
+**Errors**:
+
+Each error has a stable semantic identifier (`UPPER_SNAKE_CASE`), no owner, and
+the observable behavior it produces. The same identifier may be reused in other
+Use Cases when the condition is the same. Keep the wire detail in the contract,
+not here.
+
+- `<AREA>_<CONDITION>`: _<when it occurs>_ -> _<HTTP status / response>_, _<side-effect guarantee>_.
+
 **Acceptance checks**:
 
 Each check must be binary, independently verifiable, sufficiently detailed for
 implementation and testing, and stable across updates. Given/When/Then or
-Gherkin may be used when it improves clarity, but it is not compulsory.
+Gherkin may be used when it improves clarity, but it is not compulsory. A
+negative check references the typed error it expects.
 
 - `AC-01`: _<binary check>_ - Evidence: _<link, test, or TBD>_
 - `AC-02`: _<binary check>_ - Evidence: _<link, test, or TBD>_
@@ -71,11 +81,16 @@ Gherkin may be used when it improves clarity, but it is not compulsory.
 - Sequence diagram: _<inline Mermaid/PlantUML or link to a repository diagram>_
 - Service Blueprint: _<link to the relevant step or N/A - confirmed reason>_
 - Figma: _<link to the relevant frame or flow, or N/A - confirmed reason>_
-- Endpoint / OpenAPI / AsyncAPI / Data Contract: _<operation ID, path, link, or N/A - reason>_
+- DR components: _<solution.components.\* IDs from the parent DR/SRS, or N/A - reason>_
+- Endpoint / OpenAPI / AsyncAPI / Data Contract: _<contracts.\* ID from the parent DR/SRS, operation ID, path, link, or N/A - reason>_
 - Validation evidence: _<test plan, mock, report, or TBD>_
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
-| `uc-open-01` | _<question / assumption / proposed decision>_ | _<item>_ | _<impact>_ | _<owner / TBD>_ | _<TBD>_ |
+Questions that are local to this behavior only. Do not repeat a question that
+already lives in the parent DR/SRS: reference its `open.item-XX` instead.
+Cross-Use-Case or initiative questions belong to the parent document.
+
+| ID           | Type                                          | Item     | Impact / blocker | Owner           | Resolution / link |
+| ------------ | --------------------------------------------- | -------- | ---------------- | --------------- | ----------------- |
+| `uc-open-01` | _<question / assumption / proposed decision>_ | _<item>_ | _<impact>_       | _<owner / TBD>_ | _<TBD>_           |

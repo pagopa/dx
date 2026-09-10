@@ -5,11 +5,11 @@
       "id": 0,
       "name": "complete-design-review",
       "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, the technology profile (CSP and language preferences, Technology Radar outcome), API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md.",
-      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a link-first UC-01 catalog entry rather than a detailed Use Case body.",
+      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a domain model and glossary, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a link-first UC-01 catalog entry rather than a detailed Use Case body.",
       "expectations": [
-        "Uses the bundled DR/SRS template structure and includes every Always section.",
+        "Uses the bundled DR/SRS template structure and includes every Always section, including the Domain model and glossary.",
         "Includes technical contracts, security/privacy, performance/availability, rollout/rollback, validation, monitoring, and readiness content.",
-        "Includes a technology profile with explicit preferences/constraints and the Technology Radar outcome or an explicit gap.",
+        "Includes a technology profile at the high level the Technology Radar informs, with explicit preferences/constraints, and no day-to-day development tooling.",
         "Creates a UC-01 catalog entry with only ID, title, and child link, with no behavior detail, status, priority, or component/contract data in the catalog.",
         "Preserves traceability to the PRD and other supplied source artifacts."
       ],
@@ -65,6 +65,7 @@
         "Lists UC-01 in the catalog with only ID, title, and child link.",
         "Leaves the component, contract, priority, and status references in the child page, not in the DR catalog.",
         "Keeps sponsor, owner, and threshold gaps visible with owners instead of inventing values.",
+        "Keeps the child's domain entities and typed errors on the child page, not in the DR/SRS catalog.",
         "States that backlog generation consumes ready children without requiring metadata.status: review."
       ],
       "files": [
@@ -130,10 +131,24 @@
       "prompt": "Create a minimal DR/SRS for a small internal tooling change from a task-centric intake with no PRD and no external interfaces. Follow the template section labels: fill every Always section, mark If applicable sections N/A with a confirmed reason, and omit Optional sections. Confirm a backlog agent can consume the result.",
       "expected_output": "A minimal DR/SRS that fills only the Always sections, marks the non-applicable If applicable sections N/A with reasons, omits Optional sections, and shows the backlog handoff path without forcing metadata.status: review.",
       "expectations": [
-        "Fills every Always section and does not leave Always placeholders unresolved.",
+        "Fills every Always section and does not leave Always placeholders unresolved; an Always section that does not apply is marked N/A with a confirmed reason.",
         "Marks each non-applicable If applicable section N/A — <confirmed reason>.",
         "Omits Optional sections or keeps them minimal and justified.",
         "Identifies a ready Use Case or an explicit owner gap without requiring the document review gate."
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "domain-model-and-high-level-technology-profile",
+      "prompt": "Create a Design Review / SRS for a document-upload service on Azure. Fully describe the solution domain: a Practice with states REQUEST and PENDING, and a Document with a signingStep. Provide the technology profile and a deployment view. The repository is github.com/pagopa/ced-portal. Do not include development tooling such as package managers, version managers, test runners, or linters, and do not assign identifiers to domain entities or terms.",
+      "expected_output": "A DR/SRS with a Domain model and glossary that describes entities, relations, states, invariants, and terms by name without identifiers; a high-level, Technology-Radar-informed technology profile limited to platform/cloud choices; a deployment view with real cloud services; and the repository recorded as a link.",
+      "expectations": [
+        "Describes the Practice and Document entities, their states and invariants, and a glossary, all by name and without identifiers.",
+        "Provides the technology profile at the high level the Technology Radar informs (CSP, language, managed services, architecture style) and omits day-to-day development tooling.",
+        "Shows the deployment view with real cloud services and trust boundaries, without IaC, pipeline, or SKU detail.",
+        "Records the repository as a link.",
+        "Does not centralize typed errors or an error taxonomy in the DR/SRS."
       ],
       "files": []
     }

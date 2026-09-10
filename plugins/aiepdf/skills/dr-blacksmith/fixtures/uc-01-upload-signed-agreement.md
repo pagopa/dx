@@ -23,6 +23,10 @@ PRD.
 
 Entity upload step. Back-office details are excluded from the pilot.
 
+## Domain entities
+
+Practice (states `REQUEST`, `PENDING`), Document (`signingStep`).
+
 ## Trigger
 
 The entity selects the signed agreement file and submits the upload form.
@@ -58,6 +62,13 @@ The entity selects the signed agreement file and submits the upload form.
 
 - On success: Document step 1 persisted, blob present, practice in `PENDING`.
 - On failure: practice unchanged, no new blob, typed error without PII.
+
+## Errors
+
+- `AGREEMENT_EXTENSION_INVALID`: wrong extension -> 400, no blob written, state unchanged.
+- `AGREEMENT_SIGNATURE_INVALID`: malformed signature -> 400, no blob written, state unchanged.
+- `PRACTICE_STATE_INVALID`: practice not in `REQUEST` -> 409, state unchanged.
+- `AGREEMENT_FILE_TOO_LARGE`: over the demo limit -> 400, state unchanged.
 
 ## Checks of acceptance
 

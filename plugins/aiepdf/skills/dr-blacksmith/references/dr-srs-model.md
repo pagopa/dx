@@ -20,6 +20,12 @@ linked to, but distinct from:
 Link source documents and summarize only the decision or requirement the
 DR/SRS must govern, so the DR/SRS stays a summary and not a copy.
 
+Within the DR/SRS, the `Domain model and glossary` section owns the solution
+vocabulary — entities, states, invariants, and shared terms — as a description,
+never as schema or code, and without per-item identifiers. Typed errors are not
+centralized: each Use Case page owns the errors of its own behavior, using
+stable semantic identifiers, and an error carries no owner.
+
 ## Living-document, baseline, and change propagation
 
 Update the DR/SRS whenever a material change is accepted, a new Use Case is
@@ -57,7 +63,9 @@ When updating:
 ## Use Case status
 
 Each Use Case lives on its own page and carries one status: `draft` or `ready`.
-The page owns the status; the parent DR/SRS catalog does not repeat it.
+The page owns the status; the parent DR/SRS catalog does not repeat it. The
+status is a human decision: a skill proposes `ready` with evidence and never
+promotes the page on its own.
 
 - `draft`: identified and being detailed, not yet ready to slice.
 - `ready`: has a trigger, a main flow, at least one binary acceptance check on
@@ -80,8 +88,8 @@ Classify statements as:
 - **Proposed**: a design option still awaiting decision.
 - **Assumption**: needed to draft but not verified.
 - **Open question**: a missing or conflicting decision that may affect a
-  _material dimension_ — scope, behavior, ownership, priority, targets,
-  architecture, compliance, contracts, or readiness.
+  _material dimension_ — scope, behavior, domain, data, ownership, priority,
+  targets, architecture, compliance, contracts, or readiness.
 - **N/A**: confirmed not applicable, always with a reason.
 
 Never turn an inferred architecture, target, owner, compliance result, or
@@ -102,7 +110,16 @@ Everything else lives on the child page: status, priority, source artifact,
 linked JTBD, actors, components, contracts, trigger, flows, and acceptance
 checks. The child names the parent DR/SRS `solution.components.*` and
 `contracts.*` entries it touches, so a backlog agent maps a Use Case to its
-technical surface without the catalog duplicating it.
+technical surface without the catalog duplicating it. It also names the domain
+entities it touches by name (no identifiers) and defines its own typed errors
+with semantic identifiers, reusing the same identifier across Use Cases when the
+condition is the same instead of restating it.
+
+Open questions live at the right level and are never duplicated: questions that
+affect several Use Cases or the initiative belong to the DR/SRS
+(`open.item-XX`); questions local to one behavior belong to that Use Case page
+(`uc-open-XX`). A page that repeats a DR/SRS question by text is non-conformant
+and must reference it instead.
 
 The Use Case minimum core, required for `ready`, is: a stable `UC-XX` ID, a
 trigger, a main flow, and at least one binary acceptance check on the Must Use
@@ -128,6 +145,16 @@ Use the canonical stable identifiers:
 Dotted IDs such as `outcome.context`, `solution.components.item-001`, or
 `contracts.item-001` are section or field anchors; content entities use the
 canonical namespaces above.
+
+Two categories deliberately have no canonical numeric namespace:
+
+- **Domain model and glossary.** Entities, states, invariants, and terms are
+  referenced by name, without identifiers.
+- **Typed errors.** Each Use Case defines its errors with stable semantic
+  identifiers in `UPPER_SNAKE_CASE` (for example
+  `AGREEMENT_EXTENSION_INVALID`). These are local to behaviors, not a
+  centralized catalogue, and the same identifier may legitimately appear in
+  different Use Cases when the condition is the same.
 
 ## Incremental adoption
 
@@ -155,7 +182,18 @@ The DR/SRS is ready for review when:
 
 - the linked PRD has an owner, outcome, JTBD, KPI, and guardrails — or, for a
   direct DR/SRS intake, outcome and scope are in the `Expected outcome` section;
-- all `Always` sections are complete, or gaps are explicit;
+- all `Always` sections are complete, or gaps are explicit; an `Always` section
+  may be `N/A — <confirmed reason>` when it is genuinely inapplicable, but it
+  must be present;
+- the `Domain model and glossary` section describes entities, relations, states,
+  invariants, and terms, or records `N/A — <confirmed reason>`; it never carries
+  identifiers;
+- the technology profile lists the high-level, Technology-Radar-informed choices
+  (CSP, language, runtime, managed cloud services, architecture style, contract
+  format) and does not embed day-to-day development tooling, which reaches the
+  coding agent as separate context;
+- the deployment view shows the real cloud services and the trust boundaries,
+  not IaC, pipeline, or SKU-level detail; the repository is a link;
 - relevant conditional blocks are populated or marked `N/A` with reasons;
 - each selected Use Case meets the minimum core or records a gap with an owner;
 - Figma/Service Blueprint links exist for user-facing work, or a gap is
@@ -181,7 +219,9 @@ A Use Case page is `ready` when:
   on Must Use Cases;
 - it names the `solution.components.*` and `contracts.*` entries it touches, or
   a justified `N/A`;
-- its remaining gaps carry an owner.
+- it names the domain entities it touches and defines its typed errors with
+  semantic identifiers, or records a justified `N/A`;
+- its remaining gaps carry an owner, and no open question repeats a DR/SRS one.
 
 Backlog generation consumes only `ready` pages and does not require the document
 review gate. A gap that blocks one Use Case keeps that page `draft`; it does not

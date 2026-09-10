@@ -7,10 +7,11 @@
 >
 > **Minimum for backlog handoff** — a backlog agent can consume a DR/SRS with
 > declared gaps when these are real: `Expected outcome` (outcome and scope),
-> system context, the relevant NFRs, and a Use Case catalog listing the child
-> pages, where each `ready` child carries a priority, a binary acceptance check,
-> and its component and contract references. `metadata.status: review` is not
-> required for handoff.
+> system context, the relevant NFRs, the `Domain model and glossary`, the
+> repository link, and a Use Case catalog listing the child pages. Each `ready`
+> child carries a priority, a binary acceptance check, its component and
+> contract references, and its typed errors; the DR/SRS open questions carry a
+> blocking flag. `metadata.status: review` is not required for handoff.
 
 <!-- id: metadata -->
 
@@ -36,10 +37,11 @@
 | `references.service-blueprint` | Service Blueprint                           | _<link or N/A — reason>_               | _<relevant journey>_               |
 | `references.figma`             | Figma / design discovery                    | _<link or N/A — reason>_               | _<relevant flow>_                  |
 | `references.contracts`         | OpenAPI / AsyncAPI / Data Contract          | _<links or N/A — reason>_              | _<affected contracts>_             |
+| `references.repository`        | Repository                                  | _<GitHub link or N/A — reason>_        | _<target codebase>_                |
 | `references.reviews`           | Security / Privacy / Legal reviews          | _<links or N/A — reason>_              | _<status>_                         |
 | `references.dpia`              | DPIA / privacy review                       | _<link or N/A — reason>_               | _<status>_                         |
 | `references.launch-review`     | Launch Readiness Review (separate Go/No-Go) | _<link or N/A — reason>_               | _<linked, not duplicated>_         |
-| `references.glossary`          | Project glossary                            | _<link or N/A — reason>_               | _<namespace and terminology>_      |
+| `references.glossary`          | Business glossary (PRD/Confluence)          | _<link or N/A — reason>_               | _<external terms; the solution glossary lives in this DR/SRS>_ |
 | `references.operations`        | Jira board / runbook / readiness artifacts  | _<links or N/A — reason>_              | _<status>_                         |
 
 <!-- id: expected-outcome -->
@@ -64,9 +66,14 @@ is no PRD, this section is the home of the initiative outcome and scope._
 
 ### Technology profile and constraints — `Always`
 
-_Describe the preferred technology profile (CSP, programming language, runtime
-platforms), explicit constraints, the Technology Radar outcome, and any
-decisions or derogations. Mark unknown values as open questions._
+_Describe the preferred technology profile as high-level,
+Technology-Radar-informed choices: CSP, programming language, runtime platform,
+managed cloud services, architecture style, and contract format. Record explicit
+constraints, the Technology Radar outcome, and any decisions or derogations. Do
+**not** list day-to-day development tooling (package manager, runtime version
+manager, test runner, linter, formatter, git hooks, diagram tooling, performance
+tool): that reaches the coding agent as separate context. Mark unknown values as
+open questions._
 
 | ID                      | Topic                         | Preference / constraint | Technology Radar outcome       | Decision / derogation | Owner / status |
 | ----------------------- | ----------------------------- | ----------------------- | ------------------------------ | --------------------- | -------------- |
@@ -95,11 +102,30 @@ catalog, so keep the IDs stable._
 | ------------------------------ | ------------- | ---------------------- | ---------------- | --------- |
 | `solution.components.item-001` | _<component>_ | _<capability or data>_ | _<dependencies>_ | _<notes>_ |
 
+### Domain model and glossary — `Always`
+
+_Describe the solution vocabulary as a description, not a schema: entities and
+value objects, their key attributes, relations, states/transitions, and
+invariants, plus the shared terms and their meanings. Reference entities and
+terms by name; do not assign them identifiers. Keep DDL, types, and code out of
+the DR/SRS. If the initiative has no domain behavior (for example a pure
+infrastructure change), write `N/A — <confirmed reason>`._
+
+| Entity | Description | Key attributes | Relations | States / invariants |
+| ------ | ----------- | -------------- | --------- | ------------------- |
+| _<entity>_ | _<what it represents>_ | _<attributes>_ | _<relations>_ | _<states and invariants>_ |
+
+| Term | Definition | Not to confuse with |
+| ---- | ---------- | ------------------- |
+| _<term>_ | _<definition>_ | _<nearby or ambiguous terms>_ |
+
 ### Deployment and architecture view — `If applicable`
 
-_Describe runtime topology, environments, deployment boundaries, and
-availability zones or regions where relevant. Link the C4 Deployment diagram or
-equivalent._
+_Describe the runtime topology with the real cloud services deployed, the
+service boundaries, the trust boundaries, and the environments where relevant.
+Link the C4 Deployment diagram or equivalent. Do **not** put IaC, pipeline, or
+SKU-level detail here: the implementation environment already exists and its
+repository is recorded as a link in `Related artifacts`._
 
 `[Diagram or link: TBD]`
 
@@ -201,13 +227,15 @@ Two gates with different consumers. The normative criteria live in
 evidence here.
 
 **Review gate** (document-level) — `metadata.status` moves `draft` → `review` →
-`baseline` only through this gate.
+`baseline` only through this gate. The skill proposes the promotion with
+evidence; a human reviewer confirms it.
 
 | ID                      | Criterion                                                                                                                                                                                                                               | Evidence / status  |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
 | `ready.outcome-id`      | `metadata.canonical-outcome-id` is present and stable                                                                                                                                                                                   | _<evidence / gap>_ |
 | `ready.prd`             | Linked PRD has owner, outcome, JTBD, KPI, and guardrails — or, for a direct DR/SRS intake, outcome and scope are in `Expected outcome`                                                                                                  | _<evidence / gap>_ |
 | `ready.solution`        | All `Always` sections are complete, or gaps are explicit; the technology profile is included                                                                                                                                            | _<evidence / gap>_ |
+| `ready.domain`          | The `Domain model and glossary` describes the solution entities, relations, states, invariants, and terms (by name, no identifiers), or records `N/A — <confirmed reason>`                                              | _<evidence / gap>_ |
 | `ready.conditional`     | Relevant conditional blocks are populated or marked `N/A — <confirmed reason>`                                                                                                                                                          | _<evidence / gap>_ |
 | `ready.use-cases`       | Use Case catalog has stable IDs and titles linked to child pages; each selected child declares its priority, status, and minimum core (trigger, main flow, at least one binary acceptance check on Must) or records a gap with an owner | _<evidence / gap>_ |
 | `ready.discovery-links` | Figma/Service Blueprint links exist for user-facing work, or a gap is recorded                                                                                                                                                          | _<evidence / gap>_ |
@@ -217,9 +245,11 @@ evidence here.
 
 **Backlog gate** (per-Use-Case) — does not wait for the document review gate.
 Each child Use Case page carries a single `draft` or `ready` status; it is
-`ready` when it meets the minimum core, has a priority, and names its components
-and contracts (or a justified `N/A`). Downstream backlog generation consumes the
-`ready` children; the DR/SRS catalog does not repeat their status.
+`ready` when it meets the minimum core, has a priority, names its components and
+contracts (or a justified `N/A`), and names its domain entities and typed errors
+(or a justified `N/A`). Downstream backlog generation consumes the `ready`
+children; the DR/SRS catalog does not repeat their status. A status promotion is
+confirmed by a human reviewer, not applied autonomously.
 
 <!-- id: specialist-appendices -->
 
@@ -238,8 +268,12 @@ DR/SRS or Use Case documents._
 _Pre-baseline uncertainty is a gap or open question; a post-baseline material
 change is a Change Request (`CR-YYYY-NNN`). Duplicate or unresolvable
 identifiers become a `possible-duplicate`/gap and wait for a human decision
-before any write. Every material gap carries an owner._
+before any write. Every material gap carries an owner. A question that affects
+several Use Cases or the initiative lives here; a behavior-local question lives
+on its Use Case page. Never repeat the same question at both levels — reference
+it instead. The `Blocking` flag tells a backlog agent where to place a spike or
+a dependency edge._
 
-| ID              | Type                                      | Item     | Impact / blocker | Owner     | Decision or propagation date | Resolution / link      |
-| --------------- | ----------------------------------------- | -------- | ---------------- | --------- | ---------------------------- | ---------------------- |
-| `open.item-001` | _<question / assumption / decision / CR>_ | _<item>_ | _<impact>_       | _<owner>_ | _<date / TBD>_               | _<resolution or link>_ |
+| ID              | Type                                      | Item     | Impact / blocker | Blocking     | Owner     | Decision or propagation date | Resolution / link      |
+| --------------- | ----------------------------------------- | -------- | ---------------- | ------------ | --------- | ---------------------------- | ---------------------- |
+| `open.item-001` | _<question / assumption / decision / CR>_ | _<item>_ | _<impact>_       | _<yes / no>_ | _<owner>_ | _<date / TBD>_               | _<resolution or link>_ |
