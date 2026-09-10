@@ -1,14 +1,14 @@
 # DR/SRS validation checklist
 
-Apply this checklist before changing `metadata.status`. It is the operational
-form of the Definition of Ready in
-[`dr-srs-model.md`](./dr-srs-model.md), plus the structural and traceability
-gates. The Definition of Ready stays normative: where a check restates it, the
-model wins.
+Apply this checklist before changing `metadata.status`. The Definition of Ready
+in [`dr-srs-model.md`](./dr-srs-model.md) is the single normative source for the
+review and backlog gates; this checklist is the operational form of the
+structural and traceability requirements around them. Where a check restates a
+criterion, the model wins.
 
 ## Structure and traceability
 
-- [ ] The document follows `templates/design-review.md`.
+- [ ] The document follows `templates/design-review.md` and its section labels.
 - [ ] Every stable section and field ID is present and unchanged.
 - [ ] `metadata.canonical-outcome-id` is present and stable.
 - [ ] Content entities use the canonical namespaces (`UC-XX`, `AC-UC-XX-YY`,
@@ -39,30 +39,37 @@ model wins.
 
 ## Use Case boundary
 
-- [ ] The Use Case catalog has stable `UC-XX` IDs, titles, source artifacts,
-      linked JTBDs (or `N/A — no linked PRD`), priorities, and lifecycle status
-      or explicit gaps.
-- [ ] Each catalog row links the child Use Case page; the DR/SRS links child
-      pages without copying their content.
-- [ ] Each selected Use Case meets the minimum core or records an owner gap (see
-      the Definition of Ready in `dr-srs-model.md`).
+- [ ] The Use Case catalog is link-first: stable `UC-XX` IDs and titles, each
+      linked to its child page, with no status, priority, or behavior detail
+      duplicated from the child.
+- [ ] Every `ready` child names the `solution.components.*` and `contracts.*`
+      entries it touches, or a justified `N/A`.
+- [ ] `ready` children meet the minimum core defined in `dr-srs-model.md`; other
+      children stay `draft` with an owner gap.
 - [ ] Detailed triggers, flows, exceptions, postconditions, acceptance checks,
-      and tracking events live in the dedicated Use Case skill.
+      and tracking events live on the child page, owned by the dedicated Use
+      Case skill.
 
 ## Lifecycle and change propagation
 
 - [ ] Pre-baseline missing, ambiguous, or contradictory content is recorded as a
       gap or open question, not a Change Request.
-- [ ] Post-baseline material changes are recorded as a Change Request per DR-07
-      with propagation to the affected contracts, Use Cases, and tests.
+- [ ] Post-baseline material changes to behavior, scope, or contracts are
+      recorded as a Change Request with propagation to the affected contracts,
+      Use Cases, tests, and backlog. Detail added inside the agreed scope is a
+      normal update, not a Change Request.
+- [ ] A new Use Case takes the next free `UC-XX` ID without renumbering; a
+      changed Use Case that already has tracker items is flagged for
+      synchronization.
 
 ## Delivery readiness
 
-- [ ] Every Definition of Ready criterion in `dr-srs-model.md` passes with
-      linked evidence, not prose alone.
+- [ ] The review gate and the backlog gate in `dr-srs-model.md` are assessed
+      separately, each with linked evidence rather than prose.
+- [ ] At least one Use Case page may be `ready` while the document stays
+      `draft`; document gaps do not block ready Use Cases.
 - [ ] Material unresolved blockers are visible with an owner and expected
-      resolution.
-- [ ] Non-blocking gaps are marked as partial readiness.
+      resolution; non-blocking gaps are marked as partial readiness.
 
 ## Finalization
 

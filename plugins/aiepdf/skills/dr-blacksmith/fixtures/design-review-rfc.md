@@ -49,10 +49,10 @@ payment outcome handler. A provider timeout delays the outcome response.
 
 ## Dynamic component view and Use Case index
 
-| ID      | Title                     | Source artifact | Linked JTBD | Priority | Status / gap | Child page                        |
-| ------- | ------------------------- | --------------- | ----------- | -------- | ------------ | --------------------------------- |
-| `UC-01` | Notify payment outcome    | PRD             | JTBD-01     | Must     | ready        | use-cases/uc-01-notify-outcome.md |
-| `UC-02` | Retry failed notification | PRD             | JTBD-02     | Should   | candidate    | TBD                               |
+| ID      | Title                     | Child page                        |
+| ------- | ------------------------- | --------------------------------- |
+| `UC-01` | Notify payment outcome    | use-cases/uc-01-notify-outcome.md |
+| `UC-02` | Retry failed notification | TBD                               |
 
 ## Data and technical contracts
 

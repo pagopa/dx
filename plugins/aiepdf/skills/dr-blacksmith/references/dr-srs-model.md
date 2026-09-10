@@ -13,14 +13,14 @@ linked to, but distinct from:
 - ADRs, which own code-adjacent implementation decisions;
 - OpenAPI, AsyncAPI, Data Contracts, and audit specifications, which own
   technical contract detail;
-- Jira, which projects the operational work and validation;
+- Jira and other trackers, which project the operational work and validation;
 - the Launch Readiness Review, which is a separate Go/No-Go gate artifact,
   linked but not duplicated in the DR/SRS or the PRD.
 
 Link source documents and summarize only the decision or requirement the
 DR/SRS must govern, so the DR/SRS stays a summary and not a copy.
 
-## Living-document, baseline, and RFC rule
+## Living-document, baseline, and change propagation
 
 Update the DR/SRS whenever a material change is accepted, a new Use Case is
 identified, or a decision changes expected system behavior.
@@ -28,7 +28,12 @@ identified, or a decision changes expected system behavior.
 - Before the baseline is approved, missing, ambiguous, or contradictory content
   is recorded as a gap or an open question, never as a Change Request.
 - After the baseline is approved, a Change Request is required only for a
-  material change to behavior, scope, or contracts, according to DR-07.
+  material change to behavior, scope, or contracts. A material change is one
+  that alters observable system behavior, the agreed scope, or a contract other
+  teams depend on. Adding detail to an existing Use Case, or adding a new Use
+  Case inside the agreed scope, is a normal update, not a Change Request.
+- Record a Change Request with its `CR-YYYY-NNN` ID, the affected artifacts, and
+  the propagation to contracts, Use Cases, tests, and the backlog.
 - An RFC with status `accepted` is not sufficient by itself: first propagate its
   decision into the DR/SRS for the impacted slices, record the RFC and
   propagation reference, then treat the updated DR/SRS as the input for backlog
@@ -48,6 +53,23 @@ When updating:
 5. Flag downstream Use Case documents, contracts, tests, tracking, and backlog
    that need alignment; edit them only when the user explicitly asks and the
    owning skill handles them.
+
+## Use Case status
+
+Each Use Case lives on its own page and carries one status: `draft` or `ready`.
+The page owns the status; the parent DR/SRS catalog does not repeat it.
+
+- `draft`: identified and being detailed, not yet ready to slice.
+- `ready`: has a trigger, a main flow, at least one binary acceptance check on
+  Must, a priority, and its component and contract references. This is the
+  threshold a backlog agent consumes.
+
+A new Use Case takes the next free `UC-XX` ID and does not renumber existing
+entries. Raising one Use Case to `ready` does not force the rest of the document
+to be ready, and the parent catalog stays a minimal ID, title, and link list.
+Where tracker items already exist, their stable source ID maps them back to the
+Use Case; a change is handled by the tracker's own synchronization, not by a
+status stored in the DR/SRS.
 
 ## Required information discipline
 
@@ -73,19 +95,21 @@ is a `possible-duplicate` or a gap and is never written automatically.
 The DR/SRS contains only the dynamic view/catalog, link-first:
 
 - stable `UC-XX` ID;
-- explicit title;
-- source artifact;
-- linked `JTBD-XX` when a PRD exists, otherwise `N/A — no linked PRD`;
-- `Must` or `Should` priority;
-- a link to the child Use Case page;
-- lifecycle/status and any missing-content gap.
+- explicit title (in most cases the user story);
+- a link to the child Use Case page.
 
-The Use Case minimum core, required for the DR/SRS readiness gate, is: a stable
-`UC-XX` ID, a trigger, a main flow, and at least one binary acceptance check on
-the Must Use Cases; the linked JTBD is required only when the PRD exists. The
-`uc-engraver` skill owns trigger, preconditions, flows, exception/edge cases,
-postconditions, binary acceptance checks, tracking events, and detailed evidence
-links. Keep those details in the child pages and link them from the DR/SRS.
+Everything else lives on the child page: status, priority, source artifact,
+linked JTBD, actors, components, contracts, trigger, flows, and acceptance
+checks. The child names the parent DR/SRS `solution.components.*` and
+`contracts.*` entries it touches, so a backlog agent maps a Use Case to its
+technical surface without the catalog duplicating it.
+
+The Use Case minimum core, required for `ready`, is: a stable `UC-XX` ID, a
+trigger, a main flow, and at least one binary acceptance check on the Must Use
+Cases; the linked JTBD is required only when the PRD exists. The `uc-engraver`
+skill owns trigger, preconditions, flows, exception/edge cases, postconditions,
+binary acceptance checks, tracking events, and detailed evidence links. Keep
+those details in the child pages and link them from the DR/SRS.
 
 ## ID namespaces
 
@@ -101,8 +125,9 @@ Use the canonical stable identifiers:
 - `ADR-XXXX` for repository ADRs;
 - `metadata.canonical-outcome-id` for the stable initiative outcome identity.
 
-Dotted IDs such as `outcome.context` or `solution.components.item-001` are
-section or field anchors; content entities use the canonical namespaces above.
+Dotted IDs such as `outcome.context`, `solution.components.item-001`, or
+`contracts.item-001` are section or field anchors; content entities use the
+canonical namespaces above.
 
 ## Incremental adoption
 
@@ -114,17 +139,25 @@ section or field anchors; content entities use the canonical namespaces above.
 - For an in-flight initiative, migrate the minimum viable header/references,
   outcome and scope, solution design, Use Case index, relevant contracts, and
   execution/readiness sections, then complete the remaining gaps progressively.
+- Handoff can start before the document is complete: project the Use Cases that
+  are `ready` and keep the remaining gaps visible.
 
 ## Definition of Ready
 
-The DR/SRS is ready for solutioning or backlog generation when:
+Readiness is evidence-based and may be partial: declared gaps are allowed. A
+criterion is ready only when evidence supports it; prose alone leaves it
+unready. The two gates below are independent, and this section is their single
+normative source.
+
+### Review readiness (document-level)
+
+The DR/SRS is ready for review when:
 
 - the linked PRD has an owner, outcome, JTBD, KPI, and guardrails — or, for a
   direct DR/SRS intake, outcome and scope are in the `Expected outcome` section;
 - all `Always` sections are complete, or gaps are explicit;
 - relevant conditional blocks are populated or marked `N/A` with reasons;
-- each selected Use Case meets the minimum core defined above, or records a gap
-  with an owner;
+- each selected Use Case meets the minimum core or records a gap with an owner;
 - Figma/Service Blueprint links exist for user-facing work, or a gap is
   recorded;
 - privacy, security, accessibility, tracking, and support readiness are
@@ -136,6 +169,20 @@ The DR/SRS is ready for solutioning or backlog generation when:
   impacted slices;
 - `metadata.canonical-outcome-id` is present and stable.
 
-Readiness is evidence-based and may be partial: declared gaps are allowed. A
-criterion is ready only when evidence supports it; prose alone leaves it at
-`draft`.
+Only this gate moves `metadata.status` from `draft` to `review` or `baseline`.
+
+### Backlog readiness (per-Use-Case)
+
+A Use Case page is `ready` when:
+
+- it has a stable `UC-XX` ID, a title, a `Must` or `Should` priority, and a
+  source artifact;
+- it supplies a trigger, a main flow, and at least one binary acceptance check
+  on Must Use Cases;
+- it names the `solution.components.*` and `contracts.*` entries it touches, or
+  a justified `N/A`;
+- its remaining gaps carry an owner.
+
+Backlog generation consumes only `ready` pages and does not require the document
+review gate. A gap that blocks one Use Case keeps that page `draft`; it does not
+block the others.

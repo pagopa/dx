@@ -1,6 +1,6 @@
 ---
 name: dr-blacksmith
-description: Create and update a Design Review / Software Requirements Specification (DR/SRS) from a PRD or discovery material, from a direct task-centric intake when no PRD exists, to turn an accepted RFC into the operational design, after a material decision, or to prepare the document for review.
+description: Create and update a Design Review / Software Requirements Specification (DR/SRS) from a PRD or discovery material, from a direct task-centric intake when no PRD exists, to turn an accepted RFC into the operational design, after a material decision, to prepare the document for review, or to mark Use Cases ready for backlog handoff.
 ---
 
 # DR Blacksmith
@@ -52,10 +52,16 @@ bundled template as a read-only input.
   section; when the user confirms it does not apply, write
   `N/A — <confirmed reason>`. Mark a conditional block `N/A — <confirmed reason>`
   when its applicability matters for the review; individual non-applicable
-  fields may be omitted.
+  fields may be omitted. The template labels each section and lists the minimum
+  a backlog agent needs; a DR/SRS with declared gaps is a valid handoff input.
 - Start new documents with `metadata.status: draft` and an explicit
   `metadata.canonical-outcome-id`; promote to review or baseline only through
-  the readiness gate.
+  the review readiness gate.
+- Keep the Use Case catalog link-first: a stable `UC-XX` ID, a title, and a link
+  to the child page. Status, priority, component and contract references, and
+  behavior detail live only on the child page. The two states (`draft`, `ready`)
+  and the gates live in
+  [`references/dr-srs-model.md`](./references/dr-srs-model.md).
 - Keep evidence traceable to its source artifact or stated input.
 - Separate confirmed facts, proposed design, assumptions, unresolved questions,
   and decisions.
@@ -97,27 +103,36 @@ bundled template as a read-only input.
 7. **Operate by lifecycle state.** Before the baseline is approved, missing,
    ambiguous, or contradictory content produces a gap or an open question,
    never a Change Request. After the baseline is approved, a Change Request is
-   required only for a material change to behavior, scope, or contracts, per
-   DR-07; record the CR ID (`CR-YYYY-NNN`), the affected artifacts, and
-   propagation. Materiality and propagation rules live in
+   required only for a material change to behavior, scope, or contracts; record
+   the CR ID (`CR-YYYY-NNN`), the affected artifacts, and propagation.
+   Materiality and propagation rules live in
    [`references/dr-srs-model.md`](./references/dr-srs-model.md).
-8. **Maintain the Use Case index.** Keep the catalog link-first: add stable
-   `UC-XX` entries with title, source artifact, linked JTBD (or
-   `N/A — no linked PRD`), priority, status/gap, and a link to the child page.
-   When the user asks for detailed Use Cases, invoke `uc-engraver` with the
-   existing parent DR/SRS and source artifacts, then fold its returned child
-   path, stable ID, and unresolved gaps into the index. Write no child bodies
+8. **Maintain the Use Case index.** Keep the catalog link-first: each stable
+   `UC-XX` entry is only a title and a link to its child page. Status, priority,
+   source artifact, linked JTBD, components, contracts, and behavior detail live
+   on the child page. When the user asks for detailed Use Cases, invoke
+   `uc-engraver` with the existing parent DR/SRS and source artifacts, then fold
+   its returned child paths and stable IDs into the index. Write no child bodies
    and leave no index entry out of sync.
 9. **Validate and gate readiness.** Apply
    [`references/validation-checklist.md`](./references/validation-checklist.md);
-   every item is satisfied or recorded as a gap with an owner. Change
-   `metadata.status` only when the user explicitly requests review readiness
-   and the document has enough context, owner, scope, solution, and evidence to
-   be meaningfully reviewed; otherwise keep `draft` and identify the blockers.
+   every item is satisfied or recorded as a gap with an owner. Keep the two
+   gates separate. _Review readiness_ changes `metadata.status` (`draft` →
+   `review` → `baseline`) only when the user explicitly requests it and the
+   document has enough context, owner, scope, solution, and evidence to be
+   meaningfully reviewed. _Backlog readiness_ lives on each Use Case page as a
+   single `draft` or `ready` status and does not wait for the whole document:
+   the child is `ready` when it has a trigger, a main flow, at least one binary
+   acceptance check on Must, a priority, and its component and contract
+   references. Downstream backlog generation consumes the `ready` children and
+   ignores the rest.
 
 ## Clarification rules
 
 - Ask rather than infer any material dimension.
+- Batch material questions and keep drafting: ask only when the answer changes
+  what you write now, and record every other unknown as a gap with an owner.
+  Default to a draft with visible gaps over a stalled interview.
 - Preserve competing designs and contradictions until the decision owner
   resolves them.
 - Record missing inputs as open questions, assumptions, or justified `N/A`;
@@ -133,8 +148,10 @@ bundled template as a read-only input.
 
 ## References
 
-Read [`references/dr-srs-model.md`](./references/dr-srs-model.md) when updating
-an existing document, handling RFC propagation, or determining the Definition
-of Ready. Apply
+[`references/dr-srs-model.md`](./references/dr-srs-model.md) is the single
+normative source for the Use Case backlog lifecycle, the change-propagation
+rules, and the Definition of Ready (review and backlog gates). Read it when
+updating an existing document, handling RFC propagation, assigning a Use Case
+lifecycle status, or deciding readiness. Apply
 [`references/validation-checklist.md`](./references/validation-checklist.md)
 before changing review status.

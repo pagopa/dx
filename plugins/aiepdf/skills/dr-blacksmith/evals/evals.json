@@ -5,12 +5,12 @@
       "id": 0,
       "name": "complete-design-review",
       "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, the technology profile (CSP and language preferences, Technology Radar outcome), API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md.",
-      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
+      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a link-first UC-01 catalog entry rather than a detailed Use Case body.",
       "expectations": [
-        "Uses the bundled DR/SRS template structure and includes the required sections.",
+        "Uses the bundled DR/SRS template structure and includes every Always section.",
         "Includes technical contracts, security/privacy, performance/availability, rollout/rollback, validation, monitoring, and readiness content.",
         "Includes a technology profile with explicit preferences/constraints and the Technology Radar outcome or an explicit gap.",
-        "Creates a UC-01 index entry without generating trigger, flow, edge-case, or acceptance-check child content.",
+        "Creates a UC-01 catalog entry with only ID, title, and child link, with no behavior detail, status, priority, or component/contract data in the catalog.",
         "Preserves traceability to the PRD and other supplied source artifacts."
       ],
       "files": []
@@ -24,7 +24,8 @@
         "Keeps metadata.status as draft.",
         "Makes missing ownership, scope, architecture, compliance, NFR, and delivery decisions visible.",
         "Does not invent metrics, components, owners, or approval outcomes.",
-        "Uses N/A only with an explicit confirmed reason."
+        "Uses N/A only with an explicit confirmed reason.",
+        "Continues drafting on non-blocking unknowns and batches questions instead of stalling the draft."
       ],
       "files": []
     },
@@ -44,25 +45,42 @@
     {
       "id": 3,
       "name": "use-case-catalog-link-first-and-readiness",
-      "prompt": "Author a new DR/SRS from the linked PRD at prd.md. Add UC-01 \"Upload signed agreement\" to the Use Case catalog; its child document is uc-01-upload-signed-agreement.md. Keep the DR/SRS as catalog only and link the child. Then assess whether the DR/SRS is ready for backlog generation: the child has a trigger and a main flow but no binary acceptance check.",
-      "expected_output": "A new DR/SRS from the PRD whose Use Case catalog row links the child document and carries the source artifact, priority, and status, with no detailed Use Case body; readiness is reported as not ready because a binary acceptance check is missing, with a gap and owner.",
+      "prompt": "Author a new DR/SRS from the linked PRD at prd.md. Add UC-01 \"Upload signed agreement\" to the Use Case catalog; its child document is uc-01-upload-signed-agreement.md. Keep the DR/SRS as catalog only and link the child. Then assess whether the child is ready for a backlog agent: it has a trigger and a main flow but no binary acceptance check.",
+      "expected_output": "A new DR/SRS from the PRD whose Use Case catalog row is only ID, title, and child link, with no detailed body; the child is draft because a binary acceptance check is missing, with a gap and owner, while metadata.status stays draft.",
       "expectations": [
-        "The catalog row links the child document and includes source artifact, priority, and status.",
+        "The catalog row contains only UC-01, its title, and the child link.",
         "No trigger, flow, edge case, postcondition, or acceptance-check body appears in the DR/SRS.",
-        "Reports the missing binary acceptance check as a gap with an owner and does not claim readiness.",
-        "Does not invent acceptance checks."
+        "Reports the child as draft, not ready, because the binary acceptance check is missing, and does not invent one.",
+        "Keeps metadata.status as draft and does not force the document review gate."
       ],
       "files": ["fixtures/prd.md", "fixtures/uc-01-upload-signed-agreement.md"]
+    },
+    {
+      "id": 4,
+      "name": "backlog-handoff-with-declared-gaps",
+      "prompt": "Use the day-zero PRD at prd.md, where the sponsor, owner, and thresholds are still TBD, plus the ready Use Case child at uc-01-upload-signed-agreement-ready.md. The child has a trigger, a main flow, AC-01, a priority, and its processing component (solution.components.item-001) and upload contract (contracts.item-001). Produce the DR/SRS catalog and decide what a backlog agent can consume now. Do not invent the missing sponsor, owner, or thresholds.",
+      "expected_output": "A draft DR/SRS that declares the PRD gaps but still lists UC-01 with its child link; the child is ready because it meets the minimum core and names its component and contract, and handoff does not require the document review gate.",
+      "expectations": [
+        "Keeps metadata.status as draft while the UC-01 child is ready.",
+        "Lists UC-01 in the catalog with only ID, title, and child link.",
+        "Leaves the component, contract, priority, and status references in the child page, not in the DR catalog.",
+        "Keeps sponsor, owner, and threshold gaps visible with owners instead of inventing values.",
+        "States that backlog generation consumes ready children without requiring metadata.status: review."
+      ],
+      "files": [
+        "fixtures/prd.md",
+        "fixtures/uc-01-upload-signed-agreement-ready.md"
+      ]
     },
     {
       "id": 5,
       "name": "direct-intake-without-prd",
       "prompt": "Crea una Design Review / SRS per un'iniziativa di hardening infrastrutturale. Non esiste un PRD né materiale di discovery: l'intake è una lista di attività: ruotare le credenziali del database, imporre mTLS tra i servizi interni e aggiungere un alert sulla scadenza dei certificati. Metti outcome e scope nella DR/SRS, lascia il JTBD collegato come non applicabile e non inventare un'esigenza di prodotto né bloccare il documento per l'assenza del PRD. Scrivi Markdown in design-review.md.",
-      "expected_output": "A DR/SRS whose visible content is in Italian, with references.prd marked N/A — direct DR/SRS intake, the initiative outcome and scope placed in the Expected outcome section, Use Case entries whose linked JTBD is N/A, and no fabricated product need, KPI, or guardrail.",
+      "expected_output": "A DR/SRS whose visible content is in Italian, with references.prd marked N/A — direct DR/SRS intake, the initiative outcome and scope placed in the Expected outcome section, Use Case catalog entries with linked JTBD N/A on their child pages, and no fabricated product need, KPI, or guardrail.",
       "expectations": [
         "Writes visible content in Italian (session language) while keeping IDs and machine-facing values unchanged.",
         "Marks references.prd as N/A — direct DR/SRS intake and satisfies ready.prd via outcome/scope in the DR/SRS.",
-        "Records Use Case entries with linked JTBD = N/A — no linked PRD.",
+        "Keeps the catalog to ID, title, and child link, with linked JTBD = N/A — no linked PRD on the child.",
         "Does not block the draft and does not fabricate product need, KPIs, or guardrails."
       ],
       "files": []
@@ -71,12 +89,51 @@
       "id": 6,
       "name": "stable-identifiers-and-change-propagation",
       "prompt": "Normalize identifiers and handle two change situations. Two source documents both label different behaviors as UC-03 in the DR/SRS. The linked PRD is \"PRD-pagamenti\" and defines JTBD-01; note that PRD and JTBD are optional and may be absent entirely. (A) Pre-baseline, two sources contradict each other on the retention period. (B) The baseline is approved and a new decision materially changes the API response contract. Add a cross-cutting availability target and an API acceptance check for UC-05. Record outcomes in the open questions/decisions area.",
-      "expected_output": "The duplicate UC-03 is flagged as possible-duplicate/gap without renumbering; identifiers follow the canonical namespaces (PRD-pagamenti/JTBD-01, NFR-XX, AC-UC-05-YY); the pre-baseline contradiction becomes an open question/gap, not a Change Request; the post-baseline material change becomes a Change Request per DR-07 with propagation to contracts, Use Cases, and tests, without implementing it.",
+      "expected_output": "The duplicate UC-03 is flagged as possible-duplicate/gap without renumbering; identifiers follow the canonical namespaces (PRD-pagamenti/JTBD-01, NFR-XX, AC-UC-05-YY); the pre-baseline contradiction becomes an open question/gap, not a Change Request; the post-baseline material change becomes a Change Request with propagation to contracts, Use Cases, and tests, without implementing it.",
       "expectations": [
         "Flags the duplicate UC-03 as possible-duplicate/gap and never renumbers or reuses an ID.",
         "Uses canonical ID namespaces (NFR-XX, AC-UC-XX-YY, PRD-xxx/JTBD-yy) and tolerates absent PRD/JTBD (N/A).",
         "Pre-baseline contradiction produces an open question/gap, not a Change Request.",
-        "Post-baseline material change produces a Change Request per DR-07 with propagation to contracts, Use Cases, and tests, without implementing it."
+        "Post-baseline material change to the API contract produces a Change Request with propagation to contracts, Use Cases, and tests, without implementing it."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "use-case-detail-stays-in-child",
+      "prompt": "The DR/SRS at design-review-rfc.md is the parent. A UC-03 child document for \"Emit payment outcome event\" references component solution.context.item-001 and contract contracts.item-001, and carries status ready. Add UC-03 to the parent catalog. Keep the parent link-first and do not duplicate the child's detail.",
+      "expected_output": "The UC-03 catalog row is only ID, title, and child link; component, contract, status, and behavior stay in the child; existing IDs are unchanged.",
+      "expectations": [
+        "Adds a UC-03 catalog row containing only its ID, title, and child link.",
+        "Does not copy the component, contract, status, priority, or behavior into the catalog.",
+        "Keeps the child page as the home of the component and contract references.",
+        "Preserves the existing catalog IDs without renumbering."
+      ],
+      "files": ["fixtures/design-review-rfc.md"]
+    },
+    {
+      "id": 8,
+      "name": "new-use-case-emerges-after-baseline",
+      "prompt": "The DR/SRS baseline is approved. During implementation a new Use Case emerges inside the agreed scope, and an existing Use Case that already has Jira items gains a more detailed acceptance check without changing observable behavior. Handle both. Do not create a Change Request for detail inside the agreed scope, and do not renumber existing entries.",
+      "expected_output": "The new Use Case takes the next free UC-XX ID and a child page; the detail-only acceptance change is a normal update; only a material behavior, scope, or contract change is a Change Request; the changed Use Case with existing Jira items is flagged for synchronization.",
+      "expectations": [
+        "Allocates the next free UC-XX ID and never renumbers existing Use Cases.",
+        "Treats the detail-only acceptance change as a normal update, not a Change Request.",
+        "Flags the changed Use Case with existing Jira items for synchronization.",
+        "Keeps material behavior/scope/contract changes as the only Change Request trigger."
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "minimal-dr-section-labels",
+      "prompt": "Create a minimal DR/SRS for a small internal tooling change from a task-centric intake with no PRD and no external interfaces. Follow the template section labels: fill every Always section, mark If applicable sections N/A with a confirmed reason, and omit Optional sections. Confirm a backlog agent can consume the result.",
+      "expected_output": "A minimal DR/SRS that fills only the Always sections, marks the non-applicable If applicable sections N/A with reasons, omits Optional sections, and shows the backlog handoff path without forcing metadata.status: review.",
+      "expectations": [
+        "Fills every Always section and does not leave Always placeholders unresolved.",
+        "Marks each non-applicable If applicable section N/A — <confirmed reason>.",
+        "Omits Optional sections or keeps them minimal and justified.",
+        "Identifies a ready Use Case or an explicit owner gap without requiring the document review gate."
       ],
       "files": []
     }
