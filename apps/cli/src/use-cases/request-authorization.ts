@@ -15,7 +15,7 @@ import {
 } from "../domain/authorization.js";
 
 /**
- * Creates a function that requests authorization for a bootstrap identity.
+ * Creates a function that requests authorization for bootstrap identities.
  *
  * @param authorizationService - The service handling authorization logic
  * @returns A function that takes input and returns a ResultAsync with the authorization result

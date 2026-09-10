@@ -63,7 +63,10 @@ const EnvShort = z
  * Input validation schema for the authorization workflow.
  */
 export const requestAuthorizationInputSchema = z.object({
-  bootstrapIdentityId: BootstrapIdentityId,
+  bootstrapIdentityIds: z.object({
+    cd: BootstrapIdentityId,
+    ci: BootstrapIdentityId,
+  }),
   envShort: EnvShort,
   prefix: ResourcePrefix,
   repoName: z.string().min(1),
