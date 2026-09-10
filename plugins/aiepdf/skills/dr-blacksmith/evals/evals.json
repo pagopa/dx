@@ -4,11 +4,12 @@
     {
       "id": 0,
       "name": "complete-design-review",
-      "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md and do not publish it.",
-      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
+      "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, the technology profile (CSP and language preferences, Technology Radar outcome), API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md.",
+      "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a UC-01 catalog entry rather than a detailed Use Case body.",
       "expectations": [
         "Uses the bundled DR/SRS template structure and includes the required sections.",
         "Includes technical contracts, security/privacy, performance/availability, rollout/rollback, validation, monitoring, and readiness content.",
+        "Includes a technology profile with explicit preferences/constraints and the Technology Radar outcome or an explicit gap.",
         "Creates a UC-01 index entry without generating trigger, flow, edge-case, or acceptance-check child content.",
         "Preserves traceability to the PRD and other supplied source artifacts."
       ],
@@ -30,7 +31,7 @@
     {
       "id": 2,
       "name": "accepted-rfc-requires-propagation",
-      "prompt": "Update the existing DR/SRS after RFC-07 was accepted to replace synchronous notifications with an event. The RFC page is linked, but its decision has not yet been propagated into the DR/SRS. Keep the operational document honest and identify the propagation work instead of silently treating the RFC as the current design.",
+      "prompt": "Update the existing DR/SRS at design-review-rfc.md after RFC-07 was accepted to replace synchronous notifications with an event. The RFC page is linked, but its decision has not yet been propagated into the DR/SRS. Keep the operational document honest and identify the propagation work instead of silently treating the RFC as the current design.",
       "expected_output": "The DR/SRS does not silently apply the RFC. It records the missing propagation, preserves the current operational behavior, and identifies affected contracts, Use Cases, tests, and backlog as follow-up work.",
       "expectations": [
         "Treats the existing DR/SRS as the operational source of truth.",
@@ -38,30 +39,44 @@
         "Records RFC-07 and the propagation gap in the decision/open-question area.",
         "Identifies affected contracts and downstream artifacts without generating their implementation."
       ],
-      "files": []
+      "files": ["fixtures/design-review-rfc.md"]
     },
     {
       "id": 3,
-      "name": "use-case-boundary",
-      "prompt": "Create the DR/SRS for a payment authorization initiative. Add UC-01 and UC-02 entries with titles, linked JTBDs, priorities, and status gaps. Do not write the individual Use Cases because another skill owns them.",
-      "expected_output": "A DR/SRS containing a stable Use Case catalog and no detailed Use Case sections.",
+      "name": "use-case-catalog-link-first-and-readiness",
+      "prompt": "Author a new DR/SRS from the linked PRD at prd.md. Add UC-01 \"Upload signed agreement\" to the Use Case catalog; its child document is uc-01-upload-signed-agreement.md. Keep the DR/SRS as catalog only and link the child. Then assess whether the DR/SRS is ready for backlog generation: the child has a trigger and a main flow but no binary acceptance check.",
+      "expected_output": "A new DR/SRS from the PRD whose Use Case catalog row links the child document and carries the source artifact, priority, and status, with no detailed Use Case body; readiness is reported as not ready because a binary acceptance check is missing, with a gap and owner.",
       "expectations": [
-        "Creates stable UC-01 and UC-02 catalog entries with title, linked JTBD, priority, and status/gap.",
-        "Does not generate triggers, flows, postconditions, acceptance checks, or tracking events for the child Use Cases.",
-        "Keeps detailed behavior delegated to the separate Use Case skill."
+        "The catalog row links the child document and includes source artifact, priority, and status.",
+        "No trigger, flow, edge case, postcondition, or acceptance-check body appears in the DR/SRS.",
+        "Reports the missing binary acceptance check as a gap with an owner and does not claim readiness.",
+        "Does not invent acceptance checks."
+      ],
+      "files": ["fixtures/prd.md", "fixtures/uc-01-upload-signed-agreement.md"]
+    },
+    {
+      "id": 5,
+      "name": "direct-intake-without-prd",
+      "prompt": "Crea una Design Review / SRS per un'iniziativa di hardening infrastrutturale. Non esiste un PRD né materiale di discovery: l'intake è una lista di attività: ruotare le credenziali del database, imporre mTLS tra i servizi interni e aggiungere un alert sulla scadenza dei certificati. Metti outcome e scope nella DR/SRS, lascia il JTBD collegato come non applicabile e non inventare un'esigenza di prodotto né bloccare il documento per l'assenza del PRD. Scrivi Markdown in design-review.md.",
+      "expected_output": "A DR/SRS whose visible content is in Italian, with references.prd marked N/A — direct DR/SRS intake, the initiative outcome and scope placed in the Expected outcome section, Use Case entries whose linked JTBD is N/A, and no fabricated product need, KPI, or guardrail.",
+      "expectations": [
+        "Writes visible content in Italian (session language) while keeping IDs and machine-facing values unchanged.",
+        "Marks references.prd as N/A — direct DR/SRS intake and satisfies ready.prd via outcome/scope in the DR/SRS.",
+        "Records Use Case entries with linked JTBD = N/A — no linked PRD.",
+        "Does not block the draft and does not fabricate product need, KPIs, or guardrails."
       ],
       "files": []
     },
     {
-      "id": 4,
-      "name": "publication-confirmation",
-      "prompt": "The local DR/SRS has been written and validated. Ask whether I want it published to Confluence, but do not publish, choose a language, or assume a target space until I explicitly confirm.",
-      "expected_output": "The agent asks for explicit publication confirmation and does not choose a language or target location before confirmation. After confirmation, it delegates the operation to confluence-librarian rather than publishing directly.",
+      "id": 6,
+      "name": "stable-identifiers-and-change-propagation",
+      "prompt": "Normalize identifiers and handle two change situations. Two source documents both label different behaviors as UC-03 in the DR/SRS. The linked PRD is \"PRD-pagamenti\" and defines JTBD-01; note that PRD and JTBD are optional and may be absent entirely. (A) Pre-baseline, two sources contradict each other on the retention period. (B) The baseline is approved and a new decision materially changes the API response contract. Add a cross-cutting availability target and an API acceptance check for UC-05. Record outcomes in the open questions/decisions area.",
+      "expected_output": "The duplicate UC-03 is flagged as possible-duplicate/gap without renumbering; identifiers follow the canonical namespaces (PRD-pagamenti/JTBD-01, NFR-XX, AC-UC-05-YY); the pre-baseline contradiction becomes an open question/gap, not a Change Request; the post-baseline material change becomes a Change Request per DR-07 with propagation to contracts, Use Cases, and tests, without implementing it.",
       "expectations": [
-        "Requests explicit confirmation before creating or updating a Confluence page.",
-        "Does not publish without an affirmative answer.",
-        "Does not ask for or assume publication language/location before confirmation.",
-        "Delegates confirmed publication to confluence-librarian and does not duplicate its publication mechanics."
+        "Flags the duplicate UC-03 as possible-duplicate/gap and never renumbers or reuses an ID.",
+        "Uses canonical ID namespaces (NFR-XX, AC-UC-XX-YY, PRD-xxx/JTBD-yy) and tolerates absent PRD/JTBD (N/A).",
+        "Pre-baseline contradiction produces an open question/gap, not a Change Request.",
+        "Post-baseline material change produces a Change Request per DR-07 with propagation to contracts, Use Cases, and tests, without implementing it."
       ],
       "files": []
     }
