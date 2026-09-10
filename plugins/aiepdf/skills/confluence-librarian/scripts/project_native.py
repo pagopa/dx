@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Derive a block-addressable Markdown *projection* from Confluence native HTML.
 
-Part of the confluence-librarian spike: see the handoff plan
-https://gist.github.com/gunzip/30a7dca16e0966fec7ab403b7e81d8a0
+Part of the confluence-librarian projection workflow (see SKILL.md, "Review
+projection and patch compilation").
 
 The projection is a *derived* view of a page's native body (returned by
 `getConfluenceContent` with `content_format: html`). It exists for human
