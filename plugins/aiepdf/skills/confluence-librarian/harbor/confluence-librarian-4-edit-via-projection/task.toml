@@ -39,7 +39,7 @@ args = ["-lc", "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.m
 
 [task]
 name = "pagopa/confluence-librarian-4-edit-via-projection"
-description = "The agent creates one fresh working copy of the large seed page, derives a review projection of its native baseline, compiles exactly the two changed cells to node-level replaceNode edits, stages them"
+description = "The agent creates one fresh working copy of the large seed page and stages exactly the two cell changes on the copy's DRAFT as node-level granular edits, leaving every other element and the published "
 version = "1.0.0"
 
 [metadata]

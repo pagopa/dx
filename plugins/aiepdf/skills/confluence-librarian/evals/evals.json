@@ -66,14 +66,15 @@
       "id": 4,
       "name": "edit-via-projection",
       "prompt": "A large Design Review page exists at https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3319005192 and is used as a read-only seed: never modify it. Make your own working copy of the seed page under the DevEx Playground folder (https://pagopa.atlassian.net/wiki/spaces/DevEx/folder/3314123072) with a unique title of your choice (e.g. append the current date and time). On that working copy's DRAFT, stage exactly two changes: set the `metadata.last-updated` value to 2026-09-09 and the `metadata.version` value to 1.3. Compile only the nodes those values live in (the skill's review projection workflow is the recommended way); do not rebuild the page. Never publish the draft. Report the draft's resume URL.",
-      "expected_output": "The agent creates one fresh working copy of the large seed page, derives a review projection of its native baseline, compiles exactly the two changed cells to node-level replaceNode edits, stages them on the copy's DRAFT, leaves every other element and the published copy unchanged, and returns the draft's resume URL.",
+      "expected_output": "The agent creates one fresh working copy of the large seed page and stages exactly the two cell changes on the copy's DRAFT as node-level granular edits, leaving every other element and the published copy unchanged, and returns the draft's resume URL. The skill's review projection workflow is optional for this outcome.",
       "expectations": [
         "Creates exactly one fresh working copy of the large seed page (https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3319005192) and never edits the seed page itself.",
         "Stages both changes on the working copy's draft (updateConfluenceContent with draft: true) rather than overwriting the published body.",
         "Applies the changes as node-level granular edits addressed by the existing data-local-id (replaceNode); it does not rebuild the page from Markdown and does not push a full body.",
         "Changes exactly the `metadata.last-updated` cell to 2026-09-09 and the `metadata.version` cell to 1.3, leaving every other element — tables, the collapsible section, the info panel — unchanged.",
         "Does not publish the draft: the published copy keeps its original content.",
-        "Returns the draft's resume URL only after the changes are applied."
+        "Returns the draft's resume URL only after the changes are applied.",
+        "Process (adoption): the agent uses the skill's review projection workflow for this multi-node change — it derives the block-addressable projection and compiles the edits with the bundled scripts (scripts/project_native.py, scripts/compile_patch.py) rather than hand-writing the edits."
       ],
       "files": []
     }

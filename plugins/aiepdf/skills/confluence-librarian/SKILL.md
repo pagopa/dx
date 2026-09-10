@@ -87,9 +87,9 @@ copy call shape below and keep the `contentId` it returns.
    changing intact (protocol rule 3). When the change is handed over as
    a document, extract only its differing lines (a diff or a targeted match)
    and change exactly the nodes those lines touch — never read the whole file.
-   For a change spanning several nodes, compile the edits from the review
-   projection (Review projection and patch compilation) instead of hand-writing
-   them.
+   For a change spanning several nodes, you can compile the edits from the
+   review projection (Review projection and patch compilation) instead of
+   hand-writing them — optional, but it gives the user a reviewable diff.
 3. **Persist directly, on the draft.** Write with the granular draft edit shape
    below — `draft: true`, never without it, with the published page's current
    `snapshotToken`. Treat the write's response as the verification: it echoes
@@ -127,9 +127,11 @@ HTML. The rules:
 
 ## Review projection and patch compilation
 
-Native HTML is the transport, but it is hard to review. For any change larger
-than a single node, project the baseline into a block-addressable Markdown view,
-edit that, and compile the diff back into granular edits. The bundled scripts do
+Native HTML is the transport, but it is hard to review. When a change spans
+several nodes and a reviewable Markdown view is useful (or the user asks for
+one), you can project the baseline into a block-addressable Markdown view, edit
+that, and compile the diff back into granular edits. This review aid is
+**optional**: the write is always the granular `edits[]`. The bundled scripts do
 this deterministically:
 
 ```text
