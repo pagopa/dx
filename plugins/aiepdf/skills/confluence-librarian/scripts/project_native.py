@@ -74,8 +74,9 @@ BLOCK_LEVEL_IN_P = ("<table", "<div", "<ul", "<ol", "<p", "<details", "<pre", "<
 
 _ATTR_RE = re.compile(r"([:\w.-]+)\s*=\s*(?:\"([^\"]*)\"|'([^']*)')")
 _TAG_NAME_RE = re.compile(r"<(/?)([a-zA-Z][\w:.-]*)")
-_TABLE_ROW_RE = re.compile(r"<tr\b[^>]*>(.*?)</tr>", re.S | re.I)
+_TABLE_ROW_RE = re.compile(r"<tr\b([^>]*)>(.*?)</tr>", re.S | re.I)
 _TABLE_CELL_RE = re.compile(r"<(th|td)\b([^>]*)>(.*?)</\1>", re.S | re.I)
+_LIST_ITEM_RE = re.compile(r"<li\b([^>]*)>(.*?)</li>", re.S | re.I)
 _PARAGRAPH_RE = re.compile(r"<p\b([^>]*)>(.*?)</p>", re.S | re.I)
 _ANCHOR_LINE_RE = re.compile(r"^\{#([^}\s]+)\}$")
 _NATIVE_OPEN_RE = re.compile(r'^:::native\s*\{#([^}\s]+)\s+kind="([^"]+)"\}\s*$')
@@ -83,12 +84,23 @@ _NATIVE_OPEN_RE = re.compile(r'^:::native\s*\{#([^}\s]+)\s+kind="([^"]+)"\}\s*$'
 
 @dataclass
 class Cell:
-    """One table cell's editable node (the inner <p>, or the cell itself)."""
+    """One table cell: its editable node, the cell element, and its text."""
 
     node_id: str
     node_tag: str  # "p" | "td" | "th"
     tag: str       # "td" | "th"
     text: str      # projected Markdown inline text
+    cell_id: str = ""  # the <td>/<th> data-local-id (anchor for cell insert)
+
+
+@dataclass
+class ListItem:
+    """One list item: the <li> element and its editable inner node."""
+
+    item_id: str
+    node_id: str
+    node_tag: str  # "p" | "li"
+    text: str
 
 
 @dataclass
@@ -96,11 +108,14 @@ class Block:
     """A top-level native element reduced to a projection block."""
 
     local_id: str | None
-    kind: str            # heading | paragraph | table | native
+    kind: str            # heading | paragraph | table | list | native
     body: str            # Markdown body (anchored) or raw native HTML (native)
     tag: str | None = None
     level: int | None = None
     cells: list[list[Cell]] | None = None
+    row_ids: list[str] | None = None
+    items: list[ListItem] | None = None
+    ordered: bool = False
     hash: str = ""
 
     def digest(self) -> str:
@@ -221,29 +236,30 @@ def _is_paragraph(raw: str) -> bool:
     return bool(re.match(r"<\s*p\b", raw, re.I))
 
 
-def parse_table(raw: str) -> tuple[str, list[list[Cell]]]:
-    """Project a native <table> to a GFM table plus its cell-address matrix."""
+def parse_table(raw: str) -> tuple[str, list[list[Cell]], list[str]]:
+    """Project a native <table> to GFM plus cell/row address matrices."""
     rows: list[list[Cell]] = []
-    for row_html in _TABLE_ROW_RE.findall(raw):
+    row_ids: list[str] = []
+    for tr_attrs, row_html in _TABLE_ROW_RE.findall(raw):
+        row_ids.append(parse_attrs(f"<tr{tr_attrs}>").get("data-local-id", ""))
         cells: list[Cell] = []
         for cell_tag, cell_attrs, cell_inner in _TABLE_CELL_RE.findall(row_html):
             cell_tag = cell_tag.lower()
-            cell_attrs_full = f"<{cell_tag}{cell_attrs}>"
-            cell_id = parse_attrs(cell_attrs_full).get("data-local-id", "")
+            cell_id = parse_attrs(f"<{cell_tag}{cell_attrs}>").get("data-local-id", "")
             pm = _PARAGRAPH_RE.match(cell_inner.strip())
             if pm:
-                p_attrs = f"<p{pm.group(1)}>"
-                node_id = parse_attrs(p_attrs).get("data-local-id") or cell_id
+                node_id = parse_attrs(f"<p{pm.group(1)}>").get("data-local-id") or cell_id
                 text = render_inline(pm.group(2))
                 node_tag = "p"
             else:
                 node_id = cell_id
                 text = render_inline(cell_inner)
                 node_tag = cell_tag
-            cells.append(Cell(node_id=node_id, node_tag=node_tag, tag=cell_tag, text=text))
+            cells.append(Cell(node_id=node_id, node_tag=node_tag, tag=cell_tag,
+                              text=text, cell_id=cell_id))
         rows.append(cells)
     if not rows:
-        return "", []
+        return "", [], []
     width = max(len(r) for r in rows)
 
     def line(cells: list[Cell]) -> str:
@@ -252,7 +268,37 @@ def parse_table(raw: str) -> tuple[str, list[list[Cell]]]:
 
     md = [line(rows[0]), "| " + " | ".join("--" for _ in range(width)) + " |"]
     md += [line(r) for r in rows[1:]]
-    return "\n".join(md), rows
+    return "\n".join(md), rows, row_ids
+
+
+def _has_nested_list(raw: str) -> bool:
+    return bool(re.search(r"<(ul|ol)\b", _inner(raw), re.I))
+
+
+def parse_list(raw: str) -> tuple[str, list[ListItem]]:
+    """Project a native <ul>/<ol> to a Markdown list plus item addresses."""
+    ordered = bool(re.match(r"<\s*ol\b", raw, re.I))
+    items: list[ListItem] = []
+    for li_attrs, li_inner in _LIST_ITEM_RE.findall(raw):
+        item_id = parse_attrs(f"<li{li_attrs}>").get("data-local-id", "")
+        pm = _PARAGRAPH_RE.match(li_inner.strip())
+        if pm:
+            node_id = parse_attrs(f"<p{pm.group(1)}>").get("data-local-id") or item_id
+            text = render_inline(pm.group(2))
+            node_tag = "p"
+        else:
+            node_id = item_id
+            text = render_inline(li_inner)
+            node_tag = "li"
+        items.append(ListItem(item_id=item_id, node_id=node_id,
+                              node_tag=node_tag, text=text))
+    if not items:
+        return "", []
+    lines = [
+        (f"{i + 1}. {it.text}" if ordered else f"- {it.text}")
+        for i, it in enumerate(items)
+    ]
+    return "\n".join(lines), items
 
 
 def block_from_raw(raw: str) -> Block:
@@ -278,10 +324,15 @@ def block_from_raw(raw: str) -> Block:
             return Block(local_id=local_id, kind="paragraph",
                          body=render_inline(inner), tag="p").with_hash()
         if tag == "table" and not _has_native_subtree(raw):
-            body, cells = parse_table(raw)
+            body, cells, row_ids = parse_table(raw)
             if body:
                 return Block(local_id=local_id, kind="table", body=body, tag="table",
-                             cells=cells).with_hash()
+                             cells=cells, row_ids=row_ids).with_hash()
+        if tag in ("ul", "ol") and not _has_native_subtree(raw) and not _has_nested_list(raw):
+            body, items = parse_list(raw)
+            if body:
+                return Block(local_id=local_id, kind="list", body=body, tag=tag,
+                             items=items, ordered=(tag == "ol")).with_hash()
     # No native data-local-id (or a native-only construct): opaque and never
     # re-rendered. A synthetic id is assigned by `project()` for display.
     return Block(local_id=local_id, kind="native", body=raw, tag=tag).with_hash()
@@ -323,6 +374,8 @@ def project(native_html: str) -> tuple[str, dict]:
                 "level": b.level,
                 "text": (b.body.splitlines()[0] if b.body else "")[:120],
                 "hash": b.hash,
+                "ordered": b.ordered,
+                "rowIds": b.row_ids,
                 "cells": (
                     [
                         [
@@ -331,12 +384,25 @@ def project(native_html: str) -> tuple[str, dict]:
                                 "nodeTag": c.node_tag,
                                 "tag": c.tag,
                                 "text": c.text,
+                                "cellId": c.cell_id,
                             }
                             for c in row
                         ]
                         for row in b.cells
                     ]
                     if b.cells is not None else None
+                ),
+                "items": (
+                    [
+                        {
+                            "itemId": it.item_id,
+                            "nodeId": it.node_id,
+                            "nodeTag": it.node_tag,
+                            "text": it.text,
+                        }
+                        for it in b.items
+                    ]
+                    if b.items is not None else None
                 ),
             }
             for b in blocks
@@ -395,6 +461,9 @@ def parse_projection(markdown: str) -> list[Block]:
                 kind, tag = "heading", f"h{len(body) - len(body.lstrip('#'))}"
             elif body.lstrip().startswith("|"):
                 kind, tag = "table", "table"
+            elif re.match(r"^([-*]|\d+\.)\s", body):
+                kind = "list"
+                tag = "ol" if re.match(r"^\d+\.\s", body) else "ul"
             else:
                 kind, tag = "paragraph", "p"
             blocks.append(Block(local_id=local_id, kind=kind, body=body,
