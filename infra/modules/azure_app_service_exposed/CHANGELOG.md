@@ -1,3 +1,13 @@
+## 5.0.3 (2026-09-09)
+
+### 🩹 Fixes
+
+- Address Trivy warnings ([#2170](https://github.com/pagopa/dx/pull/2170))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 5.0.2 (2026-09-08)
 
 ### 🩹 Fixes
