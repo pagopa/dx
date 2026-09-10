@@ -87,6 +87,9 @@ copy call shape below and keep the `contentId` it returns.
    changing intact (protocol rule 3). When the change is handed over as
    a document, extract only its differing lines (a diff or a targeted match)
    and change exactly the nodes those lines touch — never read the whole file.
+   For a change spanning several nodes, compile the edits from the review
+   projection (Review projection and patch compilation) instead of hand-writing
+   them.
 3. **Persist directly, on the draft.** Write with the granular draft edit shape
    below — `draft: true`, never without it, with the published page's current
    `snapshotToken`. Treat the write's response as the verification: it echoes
@@ -121,6 +124,32 @@ HTML. The rules:
 3. **Keep what you are not changing.** Preserve every native-only construct you
    were not asked to change, keeping the `data-local-id` attributes on nodes you
    keep — granular edits address nodes by those anchors.
+
+## Review projection and patch compilation
+
+Native HTML is the transport, but it is hard to review. For any change larger
+than a single node, project the baseline into a block-addressable Markdown view,
+edit that, and compile the diff back into granular edits. The bundled scripts do
+this deterministically:
+
+```text
+# 1. project the native baseline: one anchored block per node ({#local-id}),
+#    native-only constructs kept verbatim as :::native blocks
+python3 scripts/project_native.py <baseline>.html \
+  --projection <content-id>.md --anchors <content-id>.anchors.json
+
+# 2. edit <content-id>.md (or diff it against the changed source) and review it
+
+# 3. compile the diff to the edits[] array for updateConfluenceContent
+python3 scripts/compile_patch.py <old>.md <new>.md \
+  --anchors <content-id>.anchors.json
+```
+
+The compiler emits only the changed nodes (`replaceNode`,
+`insertNodeAfter`/`insertNodeBefore`, `deleteNode`) and refuses to re-render an
+opaque `:::native` block, so nothing native-only is lost. The projection is a
+**derived view**: never send it back wholesale — the write is always the compiled
+`edits[]` on the draft.
 
 ## MCP call shapes
 
@@ -183,9 +212,11 @@ only what was requested.
   starting baseline on resume:
 
   ```text
-  <working-dir>/confluence/<content-id>.html      # full native HTML body
-  <working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
-                                                   #   snapshotToken, version }
+  <working-dir>/confluence/<content-id>.html          # full native HTML body
+  <working-dir>/confluence/<content-id>.json          # { contentId, title, spaceId,
+                                                       #   snapshotToken, version }
+  <working-dir>/confluence/<content-id>.md            # derived review projection (optional)
+  <working-dir>/confluence/<content-id>.anchors.json  # localId -> kind/label/hash + cells/items
   ```
 
   Once persisted, query the file — never `view` it whole. One deterministic
