@@ -58,7 +58,7 @@ the observable behavior it produces. The same identifier may be reused in other
 Use Cases when the condition is the same. Keep the wire detail in the contract,
 not here.
 
-- `<AREA>_<CONDITION>`: _<when it occurs>_ -> _<HTTP status / response>_, _<side-effect guarantee>_.
+- `<AREA>_<CONDITION>`: _<when it occurs>_ -> _<observable outcome>_, _<side-effect guarantee>_.
 
 **Acceptance checks**:
 

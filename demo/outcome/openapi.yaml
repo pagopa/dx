@@ -11,7 +11,7 @@ info:
     >
     > Source: DR `design-review.md` | JTBD-01 | UC-01 | contracts.item-001
     >
-    > Confirmed behaviour reflected here: a valid upload moves the Practice from
+    > Proposed behaviour reflected here: a valid upload moves the Practice from
     > `REQUEST` to `PENDING`, persists the Document, and returns `documentId`
     > with `status=PENDING`. Invalid uploads leave the Practice unchanged and
     > return a typed error.
@@ -227,9 +227,9 @@ components:
     PracticeStatus:
       type: string
       description: >-
-        Proposed state names taken from the blueprint and to be confirmed
-        (DR open.item-003 / PRD context). States after the pilot are not
-        modelled here.
+        Proposed state names taken from the blueprint and still to be confirmed
+        (PRD `Context and hypothesized constraints to confirm`). States after the
+        pilot are not modelled here.
       enum:
         - REQUEST
         - PENDING

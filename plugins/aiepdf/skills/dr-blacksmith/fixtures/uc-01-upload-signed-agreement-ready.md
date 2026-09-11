@@ -55,10 +55,10 @@ The entity selects the signed agreement file and submits the upload form.
 
 - A1: if a valid step 1 already exists for the same `onboardingId`, respond
   `409` without overwriting.
-- E1: wrong extension leads to a typed error, with no blob written.
-- E2: invalid format or digest leads to a typed error, with no blob written.
-- E3: practice not in `REQUEST` leads to a typed error, with no state change.
-- E4: file over the demo limit leads to a typed error, with no state change.
+- E1: wrong extension leads to `AGREEMENT_EXTENSION_INVALID`, with no blob written.
+- E2: invalid format or digest leads to `AGREEMENT_SIGNATURE_INVALID`, with no blob written.
+- E3: practice not in `REQUEST` leads to `PRACTICE_STATE_INVALID`, with no state change.
+- E4: file over the demo limit leads to `AGREEMENT_FILE_TOO_LARGE`, with no state change.
 
 ## Postconditions
 

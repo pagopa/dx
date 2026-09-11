@@ -33,7 +33,7 @@ propagated through a separate RFC here: no RFC exists for this initiative.
 
 | DoR check                                     | Result                                                         | Consequence for this projection |
 | --------------------------------------------- | ------------------------------------------------------------- | ------------------------------- |
-| PRD owner, outcome, JTBD, KPI, guardrail      | Present; sponsor TBD                                          | Pass with a visible gap          |
+| PRD owner, outcome, JTBD, KPI, guardrail      | Present                                                       | Pass                            |
 | Complete required DR sections                 | `Always` sections present; gaps carry owners                   | Pass with declared gaps          |
 | Stable Use Case ID + binary acceptance checks | `UC-01`, `AC-01`..`AC-03` on `Must`                            | Pass                             |
 | Priority / lifecycle context                  | `priority: Must`, child status `ready` (proposed)              | Pass, pending human confirmation |
