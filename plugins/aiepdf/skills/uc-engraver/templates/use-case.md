@@ -45,7 +45,7 @@ parent_dr: <parent DR/SRS path or URL>
 
 **Exception flows / edge cases**:
 
-- `E1`: _<failure, boundary, or recovery behavior, or N/A - confirmed reason>_
+- `E1`: _<failure, boundary, or recovery behavior, or N/A - confirmed reason>_ -> Error: `<AREA>_<CONDITION>`
 
 **Postconditions**:
 
