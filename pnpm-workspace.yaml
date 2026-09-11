@@ -123,3 +123,5 @@ minimumReleaseAgeExclude:
   - hono@4.12.34
   - mermaid@11.16.1
   - image-size@2.0.3
+  # Renovate security update: js-yaml@4.3.2
+  - js-yaml@4.3.2
