@@ -15,3 +15,7 @@ Use Expo as the first choice when building React Native applications. The
 managed workflow abstracts away the complexities of managing two independent
 native projects through the continuous native integration. It can also be
 integrated into existing bare React Native projects.
+
+## Reference of usage in our organization
+
+- [io-app](https://github.com/pagopa/io-app)
