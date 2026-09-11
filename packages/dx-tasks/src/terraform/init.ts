@@ -4,13 +4,17 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as z from "zod/mini";
 
-import type { ProcessResult } from "../run-command.ts";
-
 import { runCommand } from "../run-command.ts";
 import { compareModuleLock } from "./module-lock.ts";
 
 const incompatibleGetArgumentError =
   "The -get=false option is incompatible with Terraform module locking";
+const providerLockPlatforms = [
+  "-platform=windows_amd64",
+  "-platform=darwin_amd64",
+  "-platform=darwin_arm64",
+  "-platform=linux_amd64",
+];
 
 const isTerraformFalse = (value: string): boolean =>
   /^(?:0|f(?:alse)?)$/i.test(value);
@@ -69,26 +73,6 @@ export interface TerraformInitPayload {
   modulePath: string;
 }
 
-const printTerraformOutput = (result: ProcessResult): void => {
-  if (result.stdout.length > 0) {
-    console.log(result.stdout);
-  }
-  if (result.stderr.length > 0) {
-    console.error(result.stderr);
-  }
-};
-
-const getInitFailureMessage = (result: ProcessResult): string => {
-  const termination =
-    result.signal === null
-      ? `exit code ${result.exitCode}`
-      : `signal ${result.signal}`;
-  const details = [result.stderr.trim(), result.stdout.trim()]
-    .filter((output) => output.length > 0)
-    .join("\n");
-  return `terraform init failed with ${termination}${details ? `\n${details}` : ""}`;
-};
-
 const getLockChangeSummary = (
   changes: readonly { key: string; status: string }[],
   formatVersion: 1 | 2,
@@ -99,6 +83,32 @@ const getLockChangeSummary = (
       ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ")
       : "no module hash changes";
 
+const runTerraformCommand = async (
+  operation: string,
+  args: string[],
+  modulePath: string,
+): Promise<void> => {
+  const result = await runCommand("terraform", args, modulePath, {});
+  if (result.stdout.length > 0) {
+    console.log(result.stdout);
+  }
+  if (result.stderr.length > 0) {
+    console.error(result.stderr);
+  }
+  if (result.exitCode !== 0) {
+    const termination =
+      result.signal === null
+        ? `exit code ${result.exitCode}`
+        : `signal ${result.signal}`;
+    const details = [result.stderr.trim(), result.stdout.trim()]
+      .filter((output) => output.length > 0)
+      .join("\n");
+    throw new Error(
+      `terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`,
+    );
+  }
+};
+
 export async function terraformInit({
   args = [],
   frozenLockfile = false,
@@ -108,16 +118,21 @@ export async function terraformInit({
     throw new Error(incompatibleGetArgumentError);
   }
 
+  const initArguments = [
+    "init",
+    ...normalizeTerraformInitArguments(args),
+    "-get=true",
+    ...(frozenLockfile ? ["-lockfile=readonly"] : []),
+  ];
+
   // The lock must describe the module cache produced by this initialization.
-  const result = await runCommand(
-    "terraform",
-    ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
-    modulePath,
-    {},
-  );
-  printTerraformOutput(result);
-  if (result.exitCode !== 0) {
-    throw new Error(getInitFailureMessage(result));
+  await runTerraformCommand("init", initArguments, modulePath);
+  if (!frozenLockfile) {
+    await runTerraformCommand(
+      "providers lock",
+      ["providers", "lock", ...providerLockPlatforms],
+      modulePath,
+    );
   }
 
   const comparison = await compareModuleLock(modulePath);
@@ -137,8 +152,6 @@ export async function terraformInit({
 
   // Developer runs refresh the lock only after Terraform has initialized successfully.
   if (comparison.isDifferent) {
-    // Replace the lock atomically so interruptions cannot leave a partial file or
-    // follow a symlink outside the project.
     const temporaryDirectory = await fs.mkdtemp(
       path.join(path.dirname(comparison.path), ".tfmodules-lock-"),
     );

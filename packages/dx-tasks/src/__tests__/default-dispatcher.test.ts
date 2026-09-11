@@ -147,7 +147,7 @@ describe("createDefaultTaskDispatcher", () => {
 
     expect(mockRunCommand).toHaveBeenCalledWith(
       "terraform",
-      ["init", "-get=true"],
+      ["init", "-get=true", "-lockfile=readonly"],
       "/tmp/module",
       {},
     );

@@ -441,6 +441,12 @@ const compareModuleLock = async (projectRoot) => {
 //#region ../dx-tasks/src/terraform/init.ts
 /** This module initializes Terraform and enforces Registry module locks. */
 const incompatibleGetArgumentError = "The -get=false option is incompatible with Terraform module locking";
+const providerLockPlatforms = [
+	"-platform=windows_amd64",
+	"-platform=darwin_amd64",
+	"-platform=darwin_arm64",
+	"-platform=linux_amd64"
+];
 const isTerraformFalse = (value) => /^(?:0|f(?:alse)?)$/i.test(value);
 const disablesModuleDownloads = (args) => args.some((argument, index) => {
 	const inlineValue = /^--?get=(.+)$/i.exec(argument)?.[1];
@@ -464,25 +470,31 @@ const terraformInitPayloadShape = {
 	modulePath: z$1.string().check(z$1.minLength(1))
 };
 const payloadSchema$1 = z$1.object(terraformInitPayloadShape);
-const printTerraformOutput = (result) => {
+const getLockChangeSummary = (changes, formatVersion) => formatVersion === 1 ? "legacy module lock format (version 1)" : changes.length > 0 ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ") : "no module hash changes";
+const runTerraformCommand = async (operation, args, modulePath) => {
+	const result = await runCommand("terraform", args, modulePath, {});
 	if (result.stdout.length > 0) console.log(result.stdout);
 	if (result.stderr.length > 0) console.error(result.stderr);
+	if (result.exitCode !== 0) {
+		const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
+		const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
+		throw new Error(`terraform ${operation} failed with ${termination}${details ? `\n${details}` : ""}`);
+	}
 };
-const getInitFailureMessage = (result) => {
-	const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
-	const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
-	return `terraform init failed with ${termination}${details ? `\n${details}` : ""}`;
-};
-const getLockChangeSummary = (changes, formatVersion) => formatVersion === 1 ? "legacy module lock format (version 1)" : changes.length > 0 ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ") : "no module hash changes";
 async function terraformInit({ args = [], frozenLockfile = false, modulePath }) {
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
-	const result = await runCommand("terraform", [
+	const initArguments = [
 		"init",
 		...normalizeTerraformInitArguments(args),
-		"-get=true"
-	], modulePath, {});
-	printTerraformOutput(result);
-	if (result.exitCode !== 0) throw new Error(getInitFailureMessage(result));
+		"-get=true",
+		...frozenLockfile ? ["-lockfile=readonly"] : []
+	];
+	await runTerraformCommand("init", initArguments, modulePath);
+	if (!frozenLockfile) await runTerraformCommand("providers lock", [
+		"providers",
+		"lock",
+		...providerLockPlatforms
+	], modulePath);
 	const comparison = await compareModuleLock(modulePath);
 	if (frozenLockfile && comparison.isDifferent) {
 		const summary = getLockChangeSummary(comparison.changes, comparison.formatVersion);
