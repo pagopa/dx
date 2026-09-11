@@ -68,9 +68,7 @@ status is a human decision: a skill proposes `ready` with evidence and never
 promotes the page on its own.
 
 - `draft`: identified and being detailed, not yet ready to slice.
-- `ready`: has a trigger, a main flow, at least one binary acceptance check on
-  Must, a priority, and its component and contract references. This is the
-  threshold a backlog agent consumes.
+- `ready`: see "Backlog readiness" section for the criteria that must be met before a Use Case can be considered ready.
 
 A new Use Case takes the next free `UC-XX` ID and does not renumber existing
 entries. Raising one Use Case to `ready` does not force the rest of the document
