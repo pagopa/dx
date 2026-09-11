@@ -1,3 +1,9 @@
+## 0.27.5 (2026-09-11)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.6
+
 ## 0.27.4 (2026-09-02)
 
 ### 🧱 Updated Dependencies
