@@ -335,11 +335,9 @@ variable "monitoring" {
 }
 
 variable "metric_alerts" {
-  default = {}
+  default = null
 
-  description = <<EOD
-Map of name = criteria objects
-EOD
+  description = "Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use_case."
 
   type = map(object({
     description = string
