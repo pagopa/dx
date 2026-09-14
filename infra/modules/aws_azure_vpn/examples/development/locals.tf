@@ -3,14 +3,14 @@ locals {
     prefix          = "dx"
     location        = "italynorth"
     location_short  = "itn"
-    env_short       = "d"
+    env_short       = "u"
     app_name        = "examples"
     instance_number = "01"
   }
 
   aws_environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     region          = "eu-south-1"
     app_name        = "examples"
     instance_number = "01"
@@ -28,7 +28,7 @@ locals {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/aws_azure_vpn/examples/complete"
     ManagementTeam = "Developer Experience"
   }

@@ -1,7 +1,7 @@
 locals {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "sbns"
@@ -29,7 +29,7 @@ locals {
 
   tags = {
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_service_bus_namespace/examples/complete"
     CostCenter     = "TS000 - Tecnologia e Servizi"
