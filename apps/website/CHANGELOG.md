@@ -1,3 +1,16 @@
+## 0.22.5 (2026-09-11)
+
+### 🚀 Features
+
+- Replace Flipper with Reactotron on technology radar ([#2183](https://github.com/pagopa/dx/pull/2183))
+- Add Proxyman to technology radar ([#2184](https://github.com/pagopa/dx/pull/2184))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli
+- LazyAfternoons @LazyAfternoons
+
 ## 0.22.4 (2026-09-10)
 
 ### 🩹 Fixes
