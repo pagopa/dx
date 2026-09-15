@@ -1,7 +1,7 @@
 locals {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     name            = "ghrapp"
     instance_number = "01"
@@ -29,7 +29,7 @@ locals {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/github_selfhosted_runner_on_container_app_jobs/examples/app_based"
     ManagementTeam = "Developer Experience"
