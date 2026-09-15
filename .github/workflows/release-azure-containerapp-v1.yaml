@@ -100,7 +100,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
-    environment: ${{ inputs.environment }}-ci
+    environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
       id-token: write
