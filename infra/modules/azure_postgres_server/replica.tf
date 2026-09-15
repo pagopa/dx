@@ -2,11 +2,6 @@
 # PostgreSQL Flexible Server Replica #
 #------------------------------------#
 
-# Trivy suppressions:
-# - AVD-AZU-0019: Azure enables this parameter by default.
-# - AVD-AZU-0021: This parameter is not documented for Flexible Server.
-# - AVD-AZU-0024: Azure enables this parameter by default.
-
 # trivy:ignore:AVD-AZU-0019 Ensure server parameter ’log_connections’ is set to ‘ON’ for PostgreSQL Database Server
 # trivy:ignore:AVD-AZU-0021 Ensure server parameter ’connection_throttling’ is set to ‘ON’ for PostgreSQL Database Server
 # trivy:ignore:AVD-AZU-0024 Ensure server parameter ’log_checkpoints’ is set to ‘ON’ for PostgreSQL Database Server

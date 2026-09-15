@@ -94,7 +94,7 @@ module "postgres" {
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.23 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -106,7 +106,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_key_vault_secret.admin_password](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_secret) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_diagnostic_setting.replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -125,7 +125,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_admin_password"></a> [admin\_password](#input\_admin\_password) | The administrator password for the PostgreSQL Flexible Server. | `string` | n/a | yes |
 | <a name="input_admin_password_version"></a> [admin\_password\_version](#input\_admin\_password\_version) | Version counter for the administrator password. Start at 1 and increment on every rotation — this is the only signal Terraform has to re-apply a write-only value, since it cannot diff ephemeral inputs. | `number` | n/a | yes |
 | <a name="input_admin_username"></a> [admin\_username](#input\_admin\_username) | The administrator username for the PostgreSQL Flexible Server. | `string` | n/a | yes |
@@ -156,7 +156,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_admin_password_secret"></a> [admin\_password\_secret](#output\_admin\_password\_secret) | Details of the Key Vault secret storing the admin password. Null when key\_vault\_id is not provided. Never exposes the password value. |
 | <a name="output_postgres"></a> [postgres](#output\_postgres) | Details of the PostgreSQL Flexible Server, including its name, ID, and resource group name. |
 | <a name="output_postgres_replica"></a> [postgres\_replica](#output\_postgres\_replica) | Details of the PostgreSQL Flexible Server Replica, including its name and ID. Returns an empty object if the tier is not 'l'. |

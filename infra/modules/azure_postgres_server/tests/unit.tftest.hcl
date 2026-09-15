@@ -42,7 +42,6 @@ run "postgres_server_creates_default_replica_and_private_endpoints" {
     condition     = azurerm_private_endpoint.postgre_pep[0].subnet_id == var.subnet_pep_id
     error_message = "The primary private endpoint must use the configured subnet."
   }
-
 }
 
 run "postgres_server_supports_delegated_subnet" {
@@ -69,7 +68,6 @@ run "postgres_server_skips_replica_when_disabled" {
     condition     = length(azurerm_postgresql_flexible_server.replica) == 0
     error_message = "No replica must be created when create_replica is false."
   }
-
 }
 
 run "postgres_server_creates_optional_key_vault_secret" {

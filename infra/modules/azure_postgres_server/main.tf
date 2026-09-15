@@ -1,3 +1,8 @@
+# Trivy suppressions:
+# - AVD-AZU-0019: Azure enables this parameter by default.
+# - AVD-AZU-0021: This parameter is not documented for Flexible Server.
+# - AVD-AZU-0024: Azure enables this parameter by default.
+
 terraform {
   required_version = ">= 1.15.0"
 
@@ -12,11 +17,6 @@ terraform {
     }
   }
 }
-
-# Trivy suppressions:
-# - AVD-AZU-0019: Azure enables this parameter by default.
-# - AVD-AZU-0021: This parameter is not documented for Flexible Server.
-# - AVD-AZU-0024: Azure enables this parameter by default.
 
 #----------------------------#
 # PostgreSQL Flexible Server #
