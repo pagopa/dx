@@ -4,7 +4,12 @@
 
 import Link from "next/link";
 
-import { DataTable, SimpleBarChart, SimplePieChart } from "@/components/Charts";
+import {
+  DataTable,
+  SERIES_COLORS,
+  SimpleBarChart,
+  SimplePieChart,
+} from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
@@ -99,7 +104,7 @@ export default function TechradarDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Techradar Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon content={tooltipContent.title} label="Techradar Metrics" />
       </div>
       <DashboardRequestState
         error={error}
@@ -141,7 +146,7 @@ export default function TechradarDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2563eb",
+                  color: SERIES_COLORS.blue,
                   key: "adoptionPercentage",
                   name: "Adoption %",
                 },
@@ -164,7 +169,7 @@ export default function TechradarDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: "#7c3aed",
+                    color: SERIES_COLORS.purple,
                     key: "repositoryCount",
                     name: "Detected usages",
                   },

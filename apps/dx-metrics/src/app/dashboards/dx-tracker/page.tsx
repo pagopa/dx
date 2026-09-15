@@ -1,6 +1,10 @@
 "use client";
 
-import { SimpleBarChart, SimpleLineChart } from "@/components/Charts";
+import {
+  SERIES_COLORS,
+  SimpleBarChart,
+  SimpleLineChart,
+} from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
@@ -41,7 +45,10 @@ export default function TrackerDashboard() {
         <h2 className="text-xl font-bold text-white">
           Team DX Requests Metrics
         </h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Team DX Requests Metrics"
+        />
       </div>
 
       <DashboardRequestState
@@ -87,11 +94,11 @@ export default function TrackerDashboard() {
               data={data.frequencyTrend}
               lines={[
                 {
-                  color: "#2563eb",
+                  color: SERIES_COLORS.blue,
                   key: "actualRequests",
                   name: "Actual Requests",
                 },
-                { color: "#dc2626", key: "trend", name: "Trend" },
+                { color: SERIES_COLORS.red, key: "trend", name: "Trend" },
               ]}
               title="DX Requests Frequency Trend"
               tooltip={tooltipContent.frequencyTrend}
@@ -101,14 +108,26 @@ export default function TrackerDashboard() {
 
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
-              bars={[{ color: "#0891b2", key: "requests", name: "Requests" }]}
+              bars={[
+                {
+                  color: SERIES_COLORS.lightBlue,
+                  key: "requests",
+                  name: "Requests",
+                },
+              ]}
               data={data.byCategory}
               title="Requests by Category"
               tooltipFormatter={(value) => value.toFixed(0)}
               xKey="category"
             />
             <SimpleBarChart
-              bars={[{ color: "#a371f7", key: "requests", name: "Requests" }]}
+              bars={[
+                {
+                  color: SERIES_COLORS.purple,
+                  key: "requests",
+                  name: "Requests",
+                },
+              ]}
               data={data.byPriority}
               title="Requests by Priority"
               tooltipFormatter={(value) => value.toFixed(0)}

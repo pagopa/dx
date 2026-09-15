@@ -97,7 +97,10 @@ export default function DxAdoptionDashboard() {
         <h2 className="text-xl font-bold text-white">
           DX Tools Adoption Metrics
         </h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="DX Tools Adoption Metrics"
+        />
       </div>
       <DashboardFilters
         mode="repository-only"

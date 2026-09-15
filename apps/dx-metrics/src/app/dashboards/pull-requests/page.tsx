@@ -2,6 +2,7 @@
 
 import {
   DataTable,
+  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -97,9 +98,12 @@ export default function PullRequestsDashboard() {
             <h2 className="text-3xl font-bold tracking-tight text-[#e6edf3]">
               Pull Request <span className="text-green-500">Insights</span>
             </h2>
-            <TooltipIcon content={tooltipContent.title} />
+            <TooltipIcon
+              content={tooltipContent.title}
+              label="Pull Request Insights"
+            />
           </div>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-400 mt-1">
             Analyzing engineering velocity and collaboration patterns.
           </p>
         </div>
@@ -114,7 +118,6 @@ export default function PullRequestsDashboard() {
       <DashboardRequestState
         error={error}
         loading={loading}
-        loadingMessage="Synchronizing data..."
         onRetry={refetch}
       />
 
@@ -155,7 +158,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#238636",
+                  color: SERIES_COLORS.green,
                   key: "avgLeadTimeDays",
                   name: "Days",
                 },
@@ -170,14 +173,22 @@ export default function PullRequestsDashboard() {
             />
             <SimpleLineChart
               data={data.leadTimeTrend}
-              lines={[{ color: "#dc2626", key: "trendLine", name: "Trend" }]}
+              lines={[
+                { color: SERIES_COLORS.red, key: "trendLine", name: "Trend" },
+              ]}
               title="Lead Time Trend (within period)"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
               zeroBaseline={false}
             />
             <SimpleBarChart
-              bars={[{ color: "#2563eb", key: "prCount", name: "Merged PRs" }]}
+              bars={[
+                {
+                  color: SERIES_COLORS.blue,
+                  key: "prCount",
+                  name: "Merged PRs",
+                },
+              ]}
               data={data.mergedPrs}
               title="Merged Pull Requests"
               tooltip={tooltipContent.mergedPrs}
@@ -186,13 +197,21 @@ export default function PullRequestsDashboard() {
             />
             <SimpleLineChart
               data={data.unmergedPrs}
-              lines={[{ color: "#ea580c", key: "openPrs", name: "Open PRs" }]}
+              lines={[
+                {
+                  color: SERIES_COLORS.amber,
+                  key: "openPrs",
+                  name: "Open PRs",
+                },
+              ]}
               title="Open Pull Requests (never merged)"
               tooltip={tooltipContent.unmergedPrs}
               xKey="date"
             />
             <SimpleBarChart
-              bars={[{ color: "#16a34a", key: "prCount", name: "New PRs" }]}
+              bars={[
+                { color: SERIES_COLORS.green, key: "prCount", name: "New PRs" },
+              ]}
               data={data.newPrs}
               title="New Pull Requests"
               tooltip={tooltipContent.newPrs}
@@ -203,7 +222,7 @@ export default function PullRequestsDashboard() {
               data={data.cumulatedNewPrs}
               lines={[
                 {
-                  color: "#7c3aed",
+                  color: SERIES_COLORS.purple,
                   key: "cumulativeCount",
                   name: "Cumulated New PRs",
                 },
@@ -215,7 +234,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2196F3",
+                  color: SERIES_COLORS.lightBlue,
                   key: "avgAdditions",
                   name: "Avg Additions",
                 },
@@ -228,7 +247,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#0891b2",
+                  color: SERIES_COLORS.lightBlue,
                   key: "avgComments",
                   name: "Avg Comments",
                 },
@@ -241,7 +260,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2196F3",
+                  color: SERIES_COLORS.lightBlue,
                   key: "avgAdditions",
                   name: "Avg Additions",
                 },

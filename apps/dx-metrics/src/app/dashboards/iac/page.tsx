@@ -2,6 +2,7 @@
 
 import {
   DataTable,
+  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -61,7 +62,10 @@ export default function IacDashboard() {
         <h2 className="text-xl font-bold text-white">
           IaC Pull Requests Metrics
         </h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="IaC Pull Requests Metrics"
+        />
       </div>
       <DashboardFilters
         onRepositoryChange={setRepository}
@@ -86,7 +90,7 @@ export default function IacDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2563eb",
+                  color: SERIES_COLORS.blue,
                   key: "avgLeadTimeDays",
                   name: "Lead Time",
                 },
@@ -111,7 +115,9 @@ export default function IacDashboard() {
             />
             <SimpleLineChart
               data={data.leadTimeTrend}
-              lines={[{ color: "#dc2626", key: "trendLine", name: "Trend" }]}
+              lines={[
+                { color: SERIES_COLORS.red, key: "trendLine", name: "Trend" },
+              ]}
               title="IaC PR Lead Time (trend)"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
@@ -121,12 +127,12 @@ export default function IacDashboard() {
               data={supervisedPivoted}
               lines={[
                 {
-                  color: "#dc2626",
+                  color: SERIES_COLORS.red,
                   key: "supervised",
                   name: "Supervised PRs",
                 },
                 {
-                  color: "#16a34a",
+                  color: SERIES_COLORS.green,
                   key: "unsupervised",
                   name: "Unsupervised PRs",
                 },
@@ -137,7 +143,9 @@ export default function IacDashboard() {
             />
             <SimpleLineChart
               data={data.prsOverTime}
-              lines={[{ color: "#2563eb", key: "prCount", name: "PR Count" }]}
+              lines={[
+                { color: SERIES_COLORS.blue, key: "prCount", name: "PR Count" },
+              ]}
               title="IaC PRs Count Over Time"
               tooltip={tooltipContent.prsOverTime}
               xKey="week"

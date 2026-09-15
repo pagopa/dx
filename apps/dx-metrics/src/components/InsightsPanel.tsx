@@ -1,10 +1,11 @@
 "use client";
 
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 import { formatWithUnit } from "@/lib/format";
 import type { Insight, InsightSeverity } from "@/lib/insights/types";
+import { focusRing } from "@/lib/utils";
 
 interface InsightsPanelProps {
   className?: string;
@@ -68,8 +69,10 @@ const DeltaBadge = ({ deltaPct }: { deltaPct: number }) => {
   const rising = deltaPct > 0;
 
   return (
-    <span className="text-xs font-medium text-gray-400">
-      {rising ? "↑" : "↓"} {Math.abs(deltaPct).toFixed(0)}%
+    <span className="text-xs font-medium text-gray-400 tabular-nums">
+      <span aria-hidden="true">{rising ? "↑" : "↓"}</span>{" "}
+      <span className="sr-only">{rising ? "up" : "down"}</span>
+      {Math.abs(deltaPct).toFixed(0)}%
     </span>
   );
 };
@@ -83,7 +86,7 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
     >
       <div className="flex items-start justify-between gap-3">
         <h3 className="text-sm font-semibold text-white">
-          <span aria-hidden className="mr-2">
+          <span aria-hidden="true" className="mr-2">
             {style.icon}
           </span>
           {insight.title}
@@ -99,7 +102,7 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
 
       {insight.value && (
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight text-[#e6edf3]">
+          <span className="text-2xl font-bold tracking-tight text-[#e6edf3] tabular-nums">
             {formatWithUnit(
               insight.value.current,
               insight.value.unit,
@@ -139,7 +142,7 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
 
       {insight.action && (
         <p className="mt-auto text-xs font-medium text-gray-400">
-          <span className="uppercase tracking-wider text-gray-500">Next: </span>
+          <span className="uppercase tracking-wider text-gray-400">Next: </span>
           {insight.action}
         </p>
       )}
@@ -158,6 +161,7 @@ export function InsightsPanel({
   limit = 5,
 }: InsightsPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const panelId = useId();
 
   const visible = insights.slice(0, limit);
   const isTruncated = visible.length < insights.length;
@@ -177,13 +181,18 @@ export function InsightsPanel({
       className={`rounded-xl border border-[#30363d] bg-[#0d1117] ${className}`}
     >
       <button
+        aria-controls={panelId}
         aria-expanded={isOpen}
-        className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+        className={`flex w-full items-center justify-between gap-3 rounded-xl px-5 py-4 text-left ${focusRing}`}
         onClick={() => setIsOpen((open) => !open)}
         type="button"
       >
         <span className="flex items-center gap-2 text-sm font-semibold text-white">
-          {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+          {isOpen ? (
+            <ChevronDown aria-hidden="true" size={16} />
+          ) : (
+            <ChevronRight aria-hidden="true" size={16} />
+          )}
           Insights
           <span className="rounded bg-[#21262d] px-2 py-0.5 text-xs text-gray-300">
             {isTruncated ? `top ${visible.length}` : visible.length}
@@ -203,21 +212,24 @@ export function InsightsPanel({
         </span>
       </button>
 
-      {isOpen && (
-        <div className="border-t border-[#30363d] p-5">
-          {visible.length === 0 ? (
-            <p className="text-sm text-gray-400">
-              No relevant insights for the selected period.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {visible.map((insight) => (
-                <InsightCard insight={insight} key={insight.id} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      <div
+        className="border-t border-[#30363d] p-5"
+        hidden={!isOpen}
+        id={panelId}
+      >
+        {visible.length === 0 ? (
+          <p className="text-sm text-gray-400">
+            No insights for the selected period. Try a wider time interval to
+            include earlier activity.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {visible.map((insight) => (
+              <InsightCard insight={insight} key={insight.id} />
+            ))}
+          </div>
+        )}
+      </div>
     </section>
   );
 }

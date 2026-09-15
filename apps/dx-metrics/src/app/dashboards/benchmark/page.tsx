@@ -150,7 +150,10 @@ export default function BenchmarkDashboard() {
         <h2 className="text-xl font-bold text-white">
           Cross-repository Benchmark
         </h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Cross-repository Benchmark"
+        />
       </div>
 
       <DashboardFilters

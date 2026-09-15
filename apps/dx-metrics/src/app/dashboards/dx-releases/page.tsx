@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable, SimpleLineChart } from "@/components/Charts";
+import { DataTable, SERIES_COLORS, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
@@ -61,17 +61,19 @@ export default function ReleasesDashboard() {
           <h2 className="text-3xl font-bold tracking-tight text-[#e6edf3]">
             Terraform Registry <span className="text-green-500">Releases</span>
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-400 mt-1">
             Tracking module evolution and versioning frequency.
           </p>
         </div>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Terraform Registry Releases"
+        />
       </div>
 
       <DashboardRequestState
         error={error}
         loading={loading}
-        loadingMessage="Fetching registry data..."
         onRetry={refetch}
       />
 
@@ -104,7 +106,7 @@ export default function ReleasesDashboard() {
             data={releasesTimelineChartData}
             lines={[
               {
-                color: "#238636",
+                color: SERIES_COLORS.green,
                 key: "major_versions",
                 name: "New Majors",
               },

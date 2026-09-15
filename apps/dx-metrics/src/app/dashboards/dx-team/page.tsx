@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -44,7 +44,7 @@ export default function DxTeamDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Team DX Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon content={tooltipContent.title} label="Team DX Metrics" />
       </div>
       <DashboardFilters
         mode="time-only"
@@ -67,9 +67,14 @@ export default function DxTeamDashboard() {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[
-                { color: "#2563eb", key: "dxPr", name: "DX PR", stackId: "a" },
                 {
-                  color: "#dc2626",
+                  color: SERIES_COLORS.blue,
+                  key: "dxPr",
+                  name: "DX PR",
+                  stackId: "a",
+                },
+                {
+                  color: SERIES_COLORS.red,
                   key: "nonDxPr",
                   name: "Non DX PR",
                   stackId: "a",
@@ -84,7 +89,7 @@ export default function DxTeamDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2563eb",
+                  color: SERIES_COLORS.blue,
                   key: "repositoryCommits",
                   name: "Commits",
                 },

@@ -128,9 +128,9 @@ export default function OverviewDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Executive Summary</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon content={tooltipContent.title} label="Executive Summary" />
       </div>
-      <p className="mb-4 text-sm text-gray-500">
+      <p className="mb-4 text-sm text-gray-400">
         Most urgent insights across every dashboard for the selected repository.
         For the cross-repository comparison see the Benchmark page.
       </p>

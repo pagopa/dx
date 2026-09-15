@@ -19,6 +19,7 @@ import {
 } from "recharts";
 
 import TooltipIcon from "@/components/TooltipIcon";
+import { focusRing } from "@/lib/utils";
 
 /** Horizontal reference marker (target or previous-period average). */
 interface ChartReferenceLine {
@@ -27,22 +28,34 @@ interface ChartReferenceLine {
   readonly value: number;
 }
 
-const COLORS = [
-  "#238636", // green
-  "#8b949e", // grey
-  "#1f6feb", // blue
-  "#d29922", // golden
-  "#a371f7", // purple
-  "#39d353", // bright green
-  "#58a6ff", // light blue
-  "#f85149", // red
-];
+/**
+ * The only series palette. Named by hue because these are primitives: a chart
+ * picks a key by meaning, and the value can be retuned in one place.
+ */
+export const SERIES_COLORS = {
+  green: "#238636",
+  gray: "#8b949e",
+  blue: "#1f6feb",
+  amber: "#d29922",
+  purple: "#a371f7",
+  brightGreen: "#39d353",
+  lightBlue: "#58a6ff",
+  red: "#f85149",
+} as const;
+
+/** Default assignment order for multi-series charts. */
+const COLORS: string[] = Object.values(SERIES_COLORS);
 
 interface ChartWrapperProps {
   ariaLabel?: string;
   children: React.ReactNode;
   className?: string;
   footer?: React.ReactNode;
+  /**
+   * When true the chart is replaced by an empty state. The state has to be
+   * rendered outside `role="img"` or assistive tech never reaches it.
+   */
+  isEmpty?: boolean;
   title: string;
   tooltip?: string;
 }
@@ -109,39 +122,48 @@ export function ChartWrapper({
   children,
   className = "",
   footer,
+  isEmpty = false,
   title,
   tooltip,
 }: ChartWrapperProps) {
   return (
     <div
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-all hover:border-[#8b949e]/50 ${className}`}
+      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-colors hover:border-[#8b949e]/50 ${className}`}
     >
       <div className="mb-6 flex items-center gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
           {title}
         </h3>
-        {tooltip && <TooltipIcon content={tooltip} />}
+        {tooltip && <TooltipIcon content={tooltip} label={title} />}
       </div>
-      <div
-        aria-label={ariaLabel ?? title}
-        className="w-full"
-        role="img"
-        style={{ height: "288px" }}
-      >
-        {children}
-      </div>
-      {footer}
+      {isEmpty ? (
+        <div className="flex h-72 items-center justify-center text-center text-sm text-gray-400">
+          No data for the selected period. Try a wider time interval.
+        </div>
+      ) : (
+        <div
+          aria-label={ariaLabel ?? title}
+          className="w-full"
+          role="img"
+          style={{ height: "288px" }}
+        >
+          {children}
+        </div>
+      )}
+      {!isEmpty && footer}
     </div>
   );
 }
 
 /** Tabular fallback exposing the same series rendered by a chart. */
 function ChartDataTable({
+  chartTitle,
   data,
   series,
   xKey,
   xValueFormatter,
 }: {
+  chartTitle: string;
   data: Record<string, unknown>[];
   series: readonly { key: string; name: string }[];
   xKey: string;
@@ -149,16 +171,20 @@ function ChartDataTable({
 }) {
   return (
     <div className="custom-scrollbar mt-4 max-h-64 overflow-auto">
-      <table className="min-w-full text-xs">
+      <table aria-label={`${chartTitle} data`} className="min-w-full text-xs">
         <thead>
           <tr className="border-b border-[#30363d]">
-            <th className="px-3 py-2 text-left font-semibold text-gray-400">
+            <th
+              className="px-3 py-2 text-left font-semibold text-gray-400"
+              scope="col"
+            >
               {xKey}
             </th>
             {series.map((entry) => (
               <th
                 className="px-3 py-2 text-left font-semibold text-gray-400"
                 key={entry.key}
+                scope="col"
               >
                 {entry.name}
               </th>
@@ -190,35 +216,43 @@ function ChartDataTable({
 
 /** Toggle button plus tabular fallback shared by the chart components. */
 function ChartDataToggle({
+  chartTitle,
   data,
   series,
   xKey,
   xValueFormatter,
 }: {
+  chartTitle: string;
   data: Record<string, unknown>[];
   series: readonly { key: string; name: string }[];
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
 }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const regionId = React.useId();
 
   return (
     <>
       <button
-        className="mt-3 text-xs font-medium text-gray-400 transition-colors hover:text-gray-200"
+        aria-controls={regionId}
+        aria-expanded={isOpen}
+        className={`mt-3 rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
         onClick={() => setIsOpen((open) => !open)}
         type="button"
       >
         {isOpen ? "Hide data" : "Show data"}
       </button>
-      {isOpen && (
-        <ChartDataTable
-          data={data}
-          series={series}
-          xKey={xKey}
-          xValueFormatter={xValueFormatter}
-        />
-      )}
+      <div id={regionId}>
+        {isOpen && (
+          <ChartDataTable
+            chartTitle={chartTitle}
+            data={data}
+            series={series}
+            xKey={xKey}
+            xValueFormatter={xValueFormatter}
+          />
+        )}
+      </div>
     </>
   );
 }
@@ -265,39 +299,58 @@ export function DataTable<TData extends object>({
 
   return (
     <div
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-all hover:border-[#8b949e]/50 ${className}`}
+      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-colors hover:border-[#8b949e]/50 ${className}`}
     >
       <div className="mb-6 flex items-center gap-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
           {title}
         </h3>
-        {tooltip && <TooltipIcon content={tooltip} />}
+        {tooltip && <TooltipIcon content={tooltip} label={title} />}
       </div>
-      <div className="max-h-96 overflow-auto custom-scrollbar">
-        <table className="min-w-full text-sm">
+      <div className="custom-scrollbar max-h-96 overflow-auto">
+        <table aria-label={title} className="min-w-full text-sm">
           <thead>
             <tr className="border-b border-[#30363d]">
-              {columns.map((col) => (
-                <th
-                  className="cursor-pointer select-none px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-white hover:text-[#e6edf3] transition-colors"
-                  key={col.key}
-                  onClick={() => handleSort(col.key)}
-                >
-                  {col.label}
-                  {sortKey === col.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-                </th>
-              ))}
+              {columns.map((col) => {
+                const isSorted = sortKey === col.key;
+
+                return (
+                  <th
+                    aria-sort={
+                      isSorted
+                        ? sortDir === "asc"
+                          ? "ascending"
+                          : "descending"
+                        : "none"
+                    }
+                    className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-white"
+                    key={col.key}
+                    scope="col"
+                  >
+                    <button
+                      className={`inline-flex items-center gap-1 rounded transition-colors hover:text-[#e6edf3] ${focusRing}`}
+                      onClick={() => handleSort(col.key)}
+                      type="button"
+                    >
+                      {col.label}
+                      <span aria-hidden="true">
+                        {isSorted ? (sortDir === "asc" ? "↑" : "↓") : ""}
+                      </span>
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
             {sorted.map((row, i) => (
               <tr
-                className="border-b border-[#21262d] hover:bg-[#161b22] transition-colors group"
+                className="group border-b border-[#21262d] transition-colors hover:bg-[#161b22]"
                 key={i}
               >
                 {columns.map((col) => (
                   <td
-                    className="px-4 py-3 text-[#e6edf3] font-medium"
+                    className="px-4 py-3 font-medium text-[#e6edf3]"
                     key={col.key}
                   >
                     {col.renderCell
@@ -313,12 +366,6 @@ export function DataTable<TData extends object>({
     </div>
   );
 }
-
-const CHART_EMPTY_STATE = (
-  <div className="flex h-full items-center justify-center text-sm text-gray-500">
-    No data for the selected period.
-  </div>
-);
 
 export function SimpleBarChart({
   ariaLabel,
@@ -341,122 +388,120 @@ export function SimpleBarChart({
       className={className}
       footer={
         <ChartDataToggle
+          chartTitle={title}
           data={data}
           series={bars.map((bar) => ({ key: bar.key, name: bar.name }))}
           xKey={xKey}
           xValueFormatter={xValueFormatter}
         />
       }
+      isEmpty={data.length === 0}
       title={title}
       tooltip={tooltip}
     >
-      {data.length === 0 ? (
-        CHART_EMPTY_STATE
-      ) : (
-        <BarChart
-          data={data}
-          height={288}
-          layout={isVertical ? "vertical" : "horizontal"}
-          margin={{
-            bottom: isVertical ? 10 : 5,
-            left: 10,
-            right: 30,
-            top: 10,
-          }}
-          responsive
-          width="100%"
-        >
-          <CartesianGrid
-            stroke="#21262d"
-            strokeDasharray="3 3"
-            vertical={false}
-          />
-          <XAxis
-            dataKey={isVertical ? undefined : xKey}
-            stroke="#30363d"
-            tick={{
-              fill: "#8b949e",
-              fontSize: isVertical ? 11 : 9,
-              ...(isVertical
-                ? {}
-                : {
-                    textAnchor: data.length > 4 ? "end" : "middle",
-                  }),
-            }}
-            tickFormatter={xValueFormatter}
-            type={isVertical ? "number" : "category"}
-            {...(isVertical
-              ? { domain: [0, (max: number) => Math.ceil(max * 1.1)] }
+      <BarChart
+        data={data}
+        height={288}
+        layout={isVertical ? "vertical" : "horizontal"}
+        margin={{
+          bottom: isVertical ? 10 : 5,
+          left: 10,
+          right: 30,
+          top: 10,
+        }}
+        responsive
+        width="100%"
+      >
+        <CartesianGrid
+          stroke="#21262d"
+          strokeDasharray="3 3"
+          vertical={false}
+        />
+        <XAxis
+          dataKey={isVertical ? undefined : xKey}
+          stroke="#30363d"
+          tick={{
+            fill: "#8b949e",
+            fontSize: 11,
+            ...(isVertical
+              ? {}
               : {
-                  angle: data.length > 4 ? -45 : 0,
-                  height: data.length > 4 ? 80 : 30,
-                  interval: Math.max(0, Math.floor(data.length / 8) - 1),
-                  tickMargin: data.length > 4 ? 15 : 0,
-                })}
+                  textAnchor: data.length > 4 ? "end" : "middle",
+                }),
+          }}
+          tickFormatter={xValueFormatter}
+          type={isVertical ? "number" : "category"}
+          {...(isVertical
+            ? { domain: [0, (max: number) => Math.ceil(max * 1.1)] }
+            : {
+                angle: data.length > 4 ? -45 : 0,
+                height: data.length > 4 ? 80 : 30,
+                interval: Math.max(0, Math.floor(data.length / 8) - 1),
+                tickMargin: data.length > 4 ? 15 : 0,
+              })}
+        />
+        <YAxis
+          dataKey={isVertical ? xKey : undefined}
+          stroke="#30363d"
+          tick={{ fill: "#8b949e", fontSize: 11 }}
+          type={isVertical ? "category" : "number"}
+          {...(isVertical
+            ? { width: 120 }
+            : { domain: [0, (max: number) => Math.ceil(max * 1.1)] })}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#161b22",
+            border: "1px solid #30363d",
+            borderRadius: "8px",
+            color: "#e6edf3",
+          }}
+          formatter={(value) => {
+            if (typeof value === "number") {
+              return tooltipFormatter
+                ? tooltipFormatter(value)
+                : value.toFixed(2);
+            }
+            return value;
+          }}
+          itemStyle={{ color: "#e6edf3" }}
+        />
+        <Legend
+          wrapperStyle={{
+            color: "#8b949e",
+            fontSize: "12px",
+            paddingTop: "20px",
+          }}
+        />
+        {bars.map((bar, i) => (
+          <Bar
+            dataKey={bar.key}
+            fill={bar.color || COLORS[i % COLORS.length]}
+            key={bar.key}
+            name={bar.name}
+            stackId={bar.stackId}
           />
-          <YAxis
-            dataKey={isVertical ? xKey : undefined}
-            stroke="#30363d"
-            tick={{ fill: "#8b949e", fontSize: 11 }}
-            type={isVertical ? "category" : "number"}
-            {...(isVertical
-              ? { width: 120 }
-              : { domain: [0, (max: number) => Math.ceil(max * 1.1)] })}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#161b22",
-              border: "1px solid #30363d",
-              borderRadius: "8px",
-              color: "#e6edf3",
-            }}
-            formatter={(value) => {
-              if (typeof value === "number") {
-                return tooltipFormatter
-                  ? tooltipFormatter(value)
-                  : value.toFixed(2);
-              }
-              return value;
-            }}
-            itemStyle={{ color: "#e6edf3" }}
-          />
-          <Legend
-            wrapperStyle={{
-              color: "#8b949e",
-              fontSize: "12px",
-              paddingTop: "20px",
-            }}
-          />
-          {bars.map((bar, i) => (
-            <Bar
-              dataKey={bar.key}
-              fill={bar.color || COLORS[i % COLORS.length]}
-              key={bar.key}
-              name={bar.name}
-              stackId={bar.stackId}
+        ))}
+        {referenceLines?.map((line) =>
+          isVertical ? (
+            <ReferenceLine
+              key={`ref-${line.label}`}
+              label={line.label}
+              stroke={line.color ?? SERIES_COLORS.red}
+              strokeDasharray="4 4"
+              x={line.value}
             />
-          ))}
-          {referenceLines?.map((line) =>
-            isVertical ? (
-              <ReferenceLine
-                key={`ref-${line.label}`}
-                label={line.label}
-                stroke={line.color ?? "#f85149"}
-                strokeDasharray="4 4"
-                x={line.value}
-              />
-            ) : (
-              <ReferenceLine
-                key={`ref-${line.label}`}
-                label={line.label}
-                stroke={line.color ?? "#f85149"}
-                strokeDasharray="4 4"
-                y={line.value}
-              />
-            ),
-          )}
-        </BarChart>
-      )}
+          ) : (
+            <ReferenceLine
+              key={`ref-${line.label}`}
+              label={line.label}
+              stroke={line.color ?? SERIES_COLORS.red}
+              strokeDasharray="4 4"
+              y={line.value}
+            />
+          ),
+        )}
+      </BarChart>
     </ChartWrapper>
   );
 }
@@ -480,107 +525,105 @@ export function SimpleLineChart({
       className={className}
       footer={
         <ChartDataToggle
+          chartTitle={title}
           data={data}
           series={lines.map((line) => ({ key: line.key, name: line.name }))}
           xKey={xKey}
           xValueFormatter={xValueFormatter}
         />
       }
+      isEmpty={data.length === 0}
       title={title}
       tooltip={tooltip}
     >
-      {data.length === 0 ? (
-        CHART_EMPTY_STATE
-      ) : (
-        <LineChart
-          data={data}
-          height={288}
-          margin={{ bottom: 5, left: 10, right: 30, top: 20 }}
-          responsive
-          width="100%"
-        >
-          <CartesianGrid
-            stroke="#21262d"
-            strokeDasharray="3 3"
-            vertical={false}
-          />
-          <XAxis
-            angle={data.length > 6 ? -35 : 0}
-            dataKey={xKey}
-            height={data.length > 6 ? 70 : 30}
-            interval={Math.max(0, Math.floor(data.length / 8) - 1)}
-            stroke="#30363d"
-            tick={{
-              fill: "#8b949e",
-              fontSize: 10,
-              textAnchor: data.length > 6 ? "end" : "middle",
-            }}
-            tickFormatter={
-              xValueFormatter ??
-              ((v: string) => {
-                const d = new Date(v);
-                return isNaN(d.getTime())
-                  ? v
-                  : d.toLocaleDateString("en", {
-                      day: "numeric",
-                      month: "short",
-                    });
-              })
+      <LineChart
+        data={data}
+        height={288}
+        margin={{ bottom: 5, left: 10, right: 30, top: 20 }}
+        responsive
+        width="100%"
+      >
+        <CartesianGrid
+          stroke="#21262d"
+          strokeDasharray="3 3"
+          vertical={false}
+        />
+        <XAxis
+          angle={data.length > 6 ? -35 : 0}
+          dataKey={xKey}
+          height={data.length > 6 ? 70 : 30}
+          interval={Math.max(0, Math.floor(data.length / 8) - 1)}
+          stroke="#30363d"
+          tick={{
+            fill: "#8b949e",
+            fontSize: 11,
+            textAnchor: data.length > 6 ? "end" : "middle",
+          }}
+          tickFormatter={
+            xValueFormatter ??
+            ((v: string) => {
+              const d = new Date(v);
+              return isNaN(d.getTime())
+                ? v
+                : d.toLocaleDateString("en", {
+                    day: "numeric",
+                    month: "short",
+                  });
+            })
+          }
+          tickMargin={data.length > 6 ? 15 : 0}
+        />
+        <YAxis
+          domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
+          stroke="#30363d"
+          tick={{ fill: "#8b949e", fontSize: 11 }}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: "#161b22",
+            border: "1px solid #30363d",
+            borderRadius: "8px",
+            color: "#e6edf3",
+          }}
+          formatter={(value) => {
+            if (typeof value === "number") {
+              return tooltipFormatter
+                ? tooltipFormatter(value)
+                : value.toFixed(2);
             }
-            tickMargin={data.length > 6 ? 15 : 0}
+            return value;
+          }}
+          itemStyle={{ color: "#e6edf3" }}
+        />
+        <Legend
+          wrapperStyle={{
+            color: "#8b949e",
+            fontSize: "12px",
+            paddingTop: "10px",
+          }}
+        />
+        {lines.map((line, i) => (
+          <Line
+            dataKey={line.key}
+            dot={false}
+            isAnimationActive={false}
+            key={line.key}
+            name={line.name}
+            stroke={line.color || COLORS[i % COLORS.length]}
+            strokeWidth={2}
+            type="linear"
           />
-          <YAxis
-            domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
-            stroke="#30363d"
-            tick={{ fill: "#8b949e", fontSize: 11 }}
+        ))}
+        {referenceLines?.map((line) => (
+          <ReferenceLine
+            key={`ref-${line.label}`}
+            label={line.label}
+            stroke={line.color ?? SERIES_COLORS.red}
+            strokeDasharray="4 4"
+            y={line.value}
           />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#161b22",
-              border: "1px solid #30363d",
-              borderRadius: "8px",
-              color: "#e6edf3",
-            }}
-            formatter={(value) => {
-              if (typeof value === "number") {
-                return tooltipFormatter
-                  ? tooltipFormatter(value)
-                  : value.toFixed(2);
-              }
-              return value;
-            }}
-            itemStyle={{ color: "#e6edf3" }}
-          />
-          <Legend
-            wrapperStyle={{
-              color: "#8b949e",
-              fontSize: "12px",
-              paddingTop: "10px",
-            }}
-          />
-          {lines.map((line, i) => (
-            <Line
-              dataKey={line.key}
-              dot={false}
-              isAnimationActive={false}
-              key={line.key}
-              name={line.name}
-              stroke={line.color || COLORS[i % COLORS.length]}
-              strokeWidth={2}
-              type="linear"
-            />
-          ))}
-          {referenceLines?.map((line) => (
-            <ReferenceLine
-              key={`ref-${line.label}`}
-              label={line.label}
-              stroke={line.color ?? "#f85149"}
-              strokeDasharray="4 4"
-              y={line.value}
-            />
-          ))}
-        </LineChart>
-      )}
+        ))}
+      </LineChart>
     </ChartWrapper>
   );
 }
@@ -592,7 +635,12 @@ export function SimplePieChart({
   tooltip,
 }: SimplePieChartProps) {
   return (
-    <ChartWrapper className={className} title={title} tooltip={tooltip}>
+    <ChartWrapper
+      className={className}
+      isEmpty={data.length === 0}
+      title={title}
+      tooltip={tooltip}
+    >
       <ResponsiveContainer height={288} width="100%">
         <PieChart>
           <Pie
@@ -638,5 +686,3 @@ export function SimplePieChart({
     </ChartWrapper>
   );
 }
-
-export { COLORS };

@@ -2,6 +2,7 @@
 
 import {
   DataTable,
+  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -62,7 +63,11 @@ export default function WorkflowsDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Workflow Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} side="right" />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Workflow Metrics"
+          side="right"
+        />
       </div>
       <DashboardFilters
         onRepositoryChange={setRepository}
@@ -158,7 +163,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleBarChart
           bars={[
             {
-              color: "#2563eb",
+              color: SERIES_COLORS.blue,
               key: "weeklyDeploymentCount",
               name: "Deployments",
             },
@@ -172,8 +177,12 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleLineChart
           data={dxVsNonDxPivoted}
           lines={[
-            { color: "#2563eb", key: "dx", name: "DX Pipelines" },
-            { color: "#dc2626", key: "non_dx", name: "Non-DX Pipelines" },
+            { color: SERIES_COLORS.blue, key: "dx", name: "DX Pipelines" },
+            {
+              color: SERIES_COLORS.red,
+              key: "non_dx",
+              name: "Non-DX Pipelines",
+            },
           ]}
           title="DX VS Non-DX Pipeline Runs (Cumulative)"
           tooltip={tooltipContent.dxVsNonDx}
@@ -181,7 +190,13 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           xValueFormatter={formatDate}
         />
         <SimpleBarChart
-          bars={[{ color: "#c97d9b", key: "failedRuns", name: "Failed Runs" }]}
+          bars={[
+            {
+              color: SERIES_COLORS.red,
+              key: "failedRuns",
+              name: "Failed Runs",
+            },
+          ]}
           data={data.failures}
           layout="vertical"
           title="Pipeline Failures"
@@ -192,7 +207,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleBarChart
           bars={[
             {
-              color: "#2563eb",
+              color: SERIES_COLORS.blue,
               key: "averageDurationMinutes",
               name: "Avg Duration",
             },
@@ -204,7 +219,9 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           xKey="workflowName"
         />
         <SimpleBarChart
-          bars={[{ color: "#16a34a", key: "runCount", name: "Run Count" }]}
+          bars={[
+            { color: SERIES_COLORS.green, key: "runCount", name: "Run Count" },
+          ]}
           data={data.runCount}
           layout="vertical"
           title="Pipeline Run Count"
@@ -215,7 +232,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleBarChart
           bars={[
             {
-              color: "#7c3aed",
+              color: SERIES_COLORS.purple,
               key: "cumulativeDurationMinutes",
               name: "Cumulative Duration",
             },
@@ -229,7 +246,11 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleLineChart
           data={data.infraPlan}
           lines={[
-            { color: "#2563eb", key: "durationMinutes", name: "Duration" },
+            {
+              color: SERIES_COLORS.blue,
+              key: "durationMinutes",
+              name: "Duration",
+            },
           ]}
           title="Infra Plan Duration (minutes)"
           tooltip={tooltipContent.infraPlanDuration}
@@ -239,7 +260,11 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
         <SimpleLineChart
           data={data.infraApply}
           lines={[
-            { color: "#16a34a", key: "durationMinutes", name: "Duration" },
+            {
+              color: SERIES_COLORS.green,
+              key: "durationMinutes",
+              name: "Duration",
+            },
           ]}
           title="Infra Apply Duration (minutes)"
           tooltip={tooltipContent.infraApplyDuration}

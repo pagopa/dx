@@ -2,6 +2,7 @@
 
 import {
   DataTable,
+  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -70,7 +71,10 @@ export default function PullRequestsReviewDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Pull Requests Review</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Pull Requests Review"
+        />
       </div>
       <DashboardFilters
         onRepositoryChange={setRepository}
@@ -123,7 +127,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToFirstReviewTrend}
                   lines={[
                     {
-                      color: "#2563eb",
+                      color: SERIES_COLORS.blue,
                       key: "avgHoursToFirstReview",
                       name: "Hours to First Review",
                     },
@@ -142,7 +146,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToMergeTrend}
                   lines={[
                     {
-                      color: "#dc2626",
+                      color: SERIES_COLORS.red,
                       key: "avgHoursToMerge",
                       name: "Hours to Merge",
                     },
@@ -165,13 +169,13 @@ export default function PullRequestsReviewDashboard() {
                 <SimpleBarChart
                   bars={[
                     {
-                      color: "#16a34a",
+                      color: SERIES_COLORS.green,
                       key: "approvals",
                       name: "Approvals",
                       stackId: "reviews",
                     },
                     {
-                      color: "#dc2626",
+                      color: SERIES_COLORS.red,
                       key: "changeRequests",
                       name: "Change Requests",
                       stackId: "reviews",

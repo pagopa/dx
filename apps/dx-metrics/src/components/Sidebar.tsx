@@ -14,17 +14,12 @@ import {
   Target,
   TrendingUp,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { useState } from "react";
 
-import {
-  readSidebarCollapsedState,
-  sidebarCollapsedStorageKey,
-  sidebarToggleEventName,
-} from "@/lib/sidebar-state";
-import { cn } from "@/lib/utils";
+import { cn, focusRing } from "@/lib/utils";
 
 const navItems = [
   { href: "/dashboards/overview", icon: Gauge, label: "Overview" },
@@ -48,89 +43,140 @@ const navItems = [
   { href: "/dashboards/dx-releases", icon: Ship, label: "DX Releases" },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Desktop rail state: a 64px icon rail instead of the 224px panel. */
+  isCollapsed: boolean;
+  /** Off-canvas drawer state, used below the `lg` breakpoint only. */
+  isOpen: boolean;
+  onClose: () => void;
+  onToggleCollapsed: () => void;
+}
+
+export function Sidebar({
+  isCollapsed,
+  isOpen,
+  onClose,
+  onToggleCollapsed,
+}: SidebarProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isCollapsed, setIsCollapsed] = useState(readSidebarCollapsedState);
-
-  const toggleSidebar = () => {
-    const newState = !isCollapsed;
-    setIsCollapsed(newState);
-    window.localStorage.setItem(sidebarCollapsedStorageKey, String(newState));
-    // Dispatch a custom event to notify the layout
-    window.dispatchEvent(new Event(sidebarToggleEventName));
-  };
+  const queryString = searchParams.toString();
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 h-screen border-r border-[#30363d] bg-[#0d1117] transition-all duration-300 ease-in-out z-20",
-        isCollapsed ? "w-16" : "w-56",
-      )}
-    >
+    <>
       <div
+        aria-hidden="true"
         className={cn(
-          "flex items-center p-4 h-16 border-b border-[#30363d] relative",
-          isCollapsed ? "justify-center" : "justify-between",
+          "fixed inset-0 z-30 bg-black/60 transition-opacity lg:hidden",
+          isOpen ? "opacity-100" : "pointer-events-none opacity-0",
         )}
+        onClick={onClose}
+      />
+
+      <aside
+        className={cn(
+          "fixed left-0 top-0 z-40 flex h-screen w-56 flex-col border-r border-[#30363d] bg-[#0d1117]",
+          // `visibility` keeps the closed drawer out of the tab order and the
+          // accessibility tree, while still letting it slide.
+          "transition-[translate,visibility] duration-300 ease-in-out",
+          isOpen ? "visible translate-x-0" : "invisible -translate-x-full",
+          "lg:visible lg:z-20 lg:translate-x-0 lg:transition-[width]",
+          isCollapsed ? "lg:w-16" : "lg:w-56",
+        )}
+        id="app-sidebar"
       >
-        {!isCollapsed && (
-          <h1 className="text-xl font-bold text-[#e6edf3] tracking-tight truncate">
-            Engineering <br />
-            <span className="text-green-500 text-sm">M e t r i c s</span>
-          </h1>
-        )}
-
-        <button
+        <div
           className={cn(
-            "p-1.5 rounded-md hover:bg-[#21262d] text-gray-400 hover:text-white border border-[#30363d] transition-colors",
-            isCollapsed ? "" : "",
+            "flex h-16 items-center border-b border-[#30363d] p-4",
+            isCollapsed ? "justify-between lg:justify-center" : "justify-end",
           )}
-          onClick={toggleSidebar}
-          title={isCollapsed ? "Expand" : "Collapse"}
         >
-          {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-        </button>
-      </div>
+          <button
+            aria-label="Close navigation"
+            className={cn(
+              "rounded-md border border-[#30363d] p-1.5 text-gray-400 transition-colors hover:bg-[#21262d] hover:text-white lg:hidden",
+              focusRing,
+            )}
+            onClick={onClose}
+            type="button"
+          >
+            <X aria-hidden="true" size={18} />
+          </button>
 
-      <nav className="mt-4 px-2 space-y-1">
-        {navItems.map((item) => {
-          const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
-          const href = searchParams.toString()
-            ? `${item.href}?${searchParams.toString()}`
-            : item.href;
-          const Icon = item.icon;
+          <button
+            aria-label={
+              isCollapsed ? "Expand navigation" : "Collapse navigation"
+            }
+            className={cn(
+              "hidden rounded-md border border-[#30363d] p-1.5 text-gray-400 transition-colors hover:bg-[#21262d] hover:text-white lg:inline-flex",
+              focusRing,
+            )}
+            onClick={onToggleCollapsed}
+            type="button"
+          >
+            {isCollapsed ? (
+              <ChevronRight aria-hidden="true" size={18} />
+            ) : (
+              <ChevronLeft aria-hidden="true" size={18} />
+            )}
+          </button>
+        </div>
 
-          return (
-            <Link
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-all group relative",
-                isActive
-                  ? "bg-[#21262d] font-semibold text-white border border-[#30363d]"
-                  : "text-gray-400 hover:text-white hover:bg-[#161b22]",
-                isCollapsed && "justify-center px-0",
-              )}
-              href={href}
-              key={item.href}
-            >
-              <Icon
+        <nav
+          aria-label="Dashboards"
+          className="custom-scrollbar mt-4 flex-1 space-y-1 overflow-y-auto px-2"
+        >
+          {navItems.map((item) => {
+            const isActive =
+              pathname === item.href || pathname.startsWith(item.href + "/");
+            const href = queryString
+              ? `${item.href}?${queryString}`
+              : item.href;
+            const Icon = item.icon;
+
+            return (
+              <Link
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  isActive ? "text-green-500" : "group-hover:text-white",
+                  "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  isActive
+                    ? "border border-[#30363d] bg-[#21262d] font-semibold text-white"
+                    : "text-gray-400 hover:bg-[#161b22] hover:text-white",
+                  isCollapsed && "lg:justify-center lg:px-0",
+                  focusRing,
                 )}
-                size={18}
-              />
-              {!isCollapsed && <span className="truncate">{item.label}</span>}
-
-              {isCollapsed && (
-                <div className="absolute left-full ml-2 px-2 py-1 bg-[#21262d] border border-[#30363d] rounded text-white text-xs invisible group-hover:visible whitespace-nowrap z-50">
+                href={href}
+                key={item.href}
+              >
+                <Icon
+                  aria-hidden="true"
+                  className={cn(
+                    "shrink-0",
+                    isActive ? "text-green-500" : "group-hover:text-white",
+                  )}
+                  size={18}
+                />
+                {/*
+                  The label stays in the accessibility tree in every rail state;
+                  only its visual rendering is suppressed.
+                */}
+                <span className={cn("truncate", isCollapsed && "lg:sr-only")}>
                   {item.label}
-                </div>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
-    </aside>
+                </span>
+
+                {isCollapsed && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none invisible absolute left-full ml-2 hidden whitespace-nowrap rounded border border-[#30363d] bg-[#21262d] px-2 py-1 text-xs text-white group-hover:visible group-focus-visible:visible lg:block"
+                  >
+                    {item.label}
+                  </span>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }

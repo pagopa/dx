@@ -16,7 +16,7 @@ export function DataFreshness({
   referenceDate,
 }: DataFreshnessProps) {
   return (
-    <p className={`text-xs text-gray-500 ${className}`}>
+    <p className={`text-xs text-gray-400 ${className}`}>
       Data updated to {formatFullDate(referenceDate)}
     </p>
   );
