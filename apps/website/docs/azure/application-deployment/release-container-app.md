@@ -47,6 +47,9 @@ When the `${environment}-cd` GitHub environment is configured with protection
 rules, deployments are approved automatically by default through the
 `GH_TOKEN_DEPLOYMENT_APPROVAL` repository secret. Set `disable_auto_deploy` to
 `true` to require a manual approval before the new revision receives traffic.
+The revision is created and health-checked before the approval; traffic is
+shifted only after approval. Manual approval requires the Container App to use
+the **Multiple** revision mode.
 
 ### Implementing a Canary Test Script
 
