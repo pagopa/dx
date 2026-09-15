@@ -89,10 +89,9 @@ resource "azurerm_security_center_storage_defender" "this" {
   storage_account_id = azurerm_storage_account.this.id
 
   override_subscription_settings_enabled      = local.defender_override_subscription_settings_enabled
-  malware_scanning_on_upload_enabled          = local.security.malware_scanning.enabled
-  malware_scanning_on_upload_cap_gb_per_month = local.security.malware_scanning.cap_gb_per_month
-  sensitive_data_discovery_enabled            = local.security.sensitive_data_discovery
-  scan_results_event_grid_topic_id            = local.security.malware_scanning.event_grid_topic
+  malware_scanning_on_upload_enabled          = var.malware_scanning_enabled
+  malware_scanning_on_upload_cap_gb_per_month = -1
+  sensitive_data_discovery_enabled            = false
 }
 
 # Blob lifecycle management policy for Audit (Hot -> Cool -> Cold -> Delete)

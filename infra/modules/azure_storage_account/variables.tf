@@ -68,25 +68,10 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
-variable "security" {
-  type = object({
-    malware_scanning = optional(object({
-      enabled          = optional(bool, false)
-      cap_gb_per_month = optional(number, -1)
-      event_grid_topic = optional(string, null)
-    }), {})
-    sensitive_data_discovery = optional(bool, false)
-  })
-  description = "Optional security capabilities. Setting this object creates and configures Defender for Storage even when the storage account is private."
-  default     = null
-
-  validation {
-    condition = var.security == null || (
-      var.security.malware_scanning.cap_gb_per_month == -1 ||
-      var.security.malware_scanning.cap_gb_per_month >= 1
-    )
-    error_message = "Malware scanning cap must be -1 or greater than 0."
-  }
+variable "malware_scanning_enabled" {
+  type        = bool
+  description = "Enables Defender malware scanning on blob upload. Uses the standard unlimited scan cap and does not enable sensitive data discovery."
+  default     = false
 }
 
 # @deprecated This variable will be removed in the next major version.
