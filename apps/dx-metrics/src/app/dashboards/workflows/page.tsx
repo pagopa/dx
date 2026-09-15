@@ -7,8 +7,11 @@ import {
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import type { Insight } from "@/lib/insights/types";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -40,10 +43,13 @@ interface WorkflowDashboardData {
   }[];
   summary: {
     avgDurationMinutes: number;
+    failedDurationMinutes: null | number;
     firstPipelineDate: string;
     totalDurationMinutes: number;
     totalPipelines: number;
   };
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function WorkflowsDashboard() {
@@ -102,7 +108,9 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
 
   return (
     <>
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <DataFreshness className="mb-2" referenceDate={data.meta.referenceDate} />
+      <InsightsPanel className="mb-6" insights={data.insights} />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard
           label="First Run"
           tooltip={tooltipContent.firstRun}
@@ -133,6 +141,17 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
               : "—"
           }
         />
+        <MetricCard
+          label="Time in Failed Runs"
+          suffix="min"
+          tooltip={tooltipContent.failedRunDuration}
+          value={
+            data.summary.failedDurationMinutes !== null &&
+            data.summary.failedDurationMinutes !== undefined
+              ? Number(data.summary.failedDurationMinutes).toFixed(0)
+              : "—"
+          }
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -145,7 +164,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
             },
           ]}
           data={data.deployments}
-          title="Deployments to Production (weekly)"
+          title="Deploy / Release Workflow Runs (weekly)"
           tooltip={tooltipContent.deploymentsToProduction}
           xKey="runWeek"
           xValueFormatter={formatDate}
@@ -167,6 +186,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           layout="vertical"
           title="Pipeline Failures"
           tooltip={tooltipContent.pipelineFailures}
+          tooltipFormatter={(value) => value.toFixed(0)}
           xKey="workflowName"
         />
         <SimpleBarChart
@@ -189,6 +209,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           layout="vertical"
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
+          tooltipFormatter={(value) => value.toFixed(0)}
           xKey="workflowName"
         />
         <SimpleBarChart

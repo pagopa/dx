@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   sqlDateSchema,
@@ -65,6 +65,7 @@ export const prSizeRowSchema = z.object({
 
 export const prSizeDistributionRowSchema = z.object({
   avgAdditions: sqlNumberSchema,
+  avgLeadTimeDays: nullableSqlNumberSchema,
   prCount: sqlNumberSchema,
   sizeRange: z.string().min(1),
 });
@@ -101,6 +102,7 @@ export const prDashboardSchema = z.object({
   cards: prSummaryCardsSchema,
   cumulatedNewPrs: z.array(prCumulativeCountRowSchema),
   leadTimeMovingAvg: z.array(prLeadTimeMovingAvgRowSchema),
+  leadTimePercentiles: percentileRowSchema,
   leadTimeTrend: z.array(prLeadTimeTrendRowSchema),
   mergedPrs: z.array(prDateCountRowSchema),
   newPrs: z.array(prDateCountRowSchema),
@@ -108,6 +110,7 @@ export const prDashboardSchema = z.object({
   prCommentsBySize: z.array(prCommentsBySizeRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
+  previousLeadTime: nullableSqlNumberSchema,
   slowestPrs: z.array(slowestPrRowSchema),
   unmergedPrs: z.array(prOpenCountRowSchema),
 });

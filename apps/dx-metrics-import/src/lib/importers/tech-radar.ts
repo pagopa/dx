@@ -1,7 +1,7 @@
 /** This module imports Techradar tool usage data via direct file existence checks. */
 
 import * as schema from "@pagopa/dx-metrics-core/schema";
-import { sql } from "drizzle-orm";
+import { count, sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
@@ -18,6 +18,50 @@ const isNotFoundError = (error: unknown): boolean =>
   error !== null &&
   "status" in error &&
   error.status === 404;
+
+/**
+ * Records the current Techradar adoption as one snapshot row per
+ * tool/ring/status. Must run after all repositories have been imported, so the
+ * snapshot reflects the whole organisation.
+ */
+export async function captureTechRadarSnapshot(
+  context: ImportContext,
+): Promise<void> {
+  const grouped = await context.db
+    .select({
+      radarRing: schema.techRadarUsages.radarRing,
+      radarStatus: schema.techRadarUsages.radarStatus,
+      repositoryCount: count(),
+      toolKey: schema.techRadarUsages.toolKey,
+      toolName: schema.techRadarUsages.toolName,
+    })
+    .from(schema.techRadarUsages)
+    .groupBy(
+      schema.techRadarUsages.toolKey,
+      schema.techRadarUsages.toolName,
+      schema.techRadarUsages.radarStatus,
+      schema.techRadarUsages.radarRing,
+    );
+
+  if (grouped.length === 0) {
+    console.log("  ⏭ Techradar snapshot skipped — no usages recorded");
+    return;
+  }
+
+  const capturedAt = new Date();
+  await context.db.insert(schema.techRadarSnapshots).values(
+    grouped.map((row) => ({
+      capturedAt,
+      radarRing: row.radarRing,
+      radarStatus: row.radarStatus,
+      repositoryCount: row.repositoryCount,
+      toolKey: row.toolKey,
+      toolName: row.toolName,
+    })),
+  );
+
+  console.log(`  ✓ Techradar snapshot recorded (${grouped.length} rows)`);
+}
 
 export async function importTechRadarRepositoryUsages(
   context: ImportContext,

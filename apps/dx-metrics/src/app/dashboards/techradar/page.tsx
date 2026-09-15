@@ -6,8 +6,11 @@ import Link from "next/link";
 
 import { DataTable, SimpleBarChart, SimplePieChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { techradarTooltips as tooltipContent } from "./tooltips";
@@ -49,6 +52,16 @@ interface TechradarDashboardData {
     toolsDetected: number;
     usagesNotInRadar: number;
   };
+  insights: Insight[];
+  meta: { referenceDate: string };
+  usageTrend: {
+    capturedAt: string;
+    radarRing: null | string;
+    radarStatus: string;
+    repositoryCount: number;
+    toolKey: string;
+    toolName: string;
+  }[];
 }
 
 const statusBadgeClassName = (status: string): string => {
@@ -70,6 +83,18 @@ export default function TechradarDashboard() {
     })) ?? [];
   const statusPieData = data?.statusDistribution ?? [];
 
+  const usageTrendByDate = new Map<string, number>();
+  for (const row of data?.usageTrend ?? []) {
+    const date = row.capturedAt.slice(0, 10);
+    usageTrendByDate.set(
+      date,
+      (usageTrendByDate.get(date) ?? 0) + Number(row.repositoryCount),
+    );
+  }
+  const usageTrendData = [...usageTrendByDate.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([date, repositoryCount]) => ({ date, repositoryCount }));
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -84,6 +109,11 @@ export default function TechradarDashboard() {
 
       {data && (
         <>
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-6" insights={data.insights} />
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               label="Repositories Analyzed"
@@ -107,7 +137,7 @@ export default function TechradarDashboard() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[
                 {
@@ -129,7 +159,25 @@ export default function TechradarDashboard() {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          {usageTrendData.length > 1 && (
+            <div className="mt-4">
+              <SimpleBarChart
+                bars={[
+                  {
+                    color: "#7c3aed",
+                    key: "repositoryCount",
+                    name: "Detected usages",
+                  },
+                ]}
+                data={usageTrendData}
+                title="Detected Tool Usages Over Time"
+                tooltip={tooltipContent.usageTrend}
+                xKey="date"
+              />
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 { key: "toolName", label: "Tool" },

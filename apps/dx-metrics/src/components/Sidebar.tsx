@@ -2,9 +2,11 @@
 
 import {
   Activity,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   Cloud,
+  Gauge,
   GitPullRequest,
   MessageSquare,
   PlayCircle,
@@ -25,6 +27,8 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
+  { href: "/dashboards/overview", icon: Gauge, label: "Overview" },
+  { href: "/dashboards/benchmark", icon: BarChart3, label: "Benchmark" },
   {
     href: "/dashboards/pull-requests",
     icon: GitPullRequest,

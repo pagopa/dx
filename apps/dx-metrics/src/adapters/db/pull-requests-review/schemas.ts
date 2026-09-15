@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   sqlDateSchema,
@@ -45,6 +45,8 @@ export const pullRequestsReviewCardsSchema = z.object({
 
 export const pullRequestsReviewDashboardSchema = z.object({
   cards: pullRequestsReviewCardsSchema,
+  firstReviewPercentiles: percentileRowSchema,
+  mergedWithoutReviewShare: nullableSqlNumberSchema,
   reviewDistribution: z.array(reviewDistributionRowSchema),
   reviewMatrix: z.array(reviewMatrixRowSchema),
   timeToFirstReviewTrend: z.array(timeToFirstReviewTrendRowSchema),

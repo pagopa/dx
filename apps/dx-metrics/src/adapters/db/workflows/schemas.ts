@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   nullableSqlTimestampSchema,
@@ -63,21 +63,29 @@ export const workflowSuccessRatioSchema = z.object({
 
 export const workflowSummarySchema = z.object({
   avgDurationMinutes: nullableSqlNumberSchema,
+  failedDurationMinutes: nullableSqlNumberSchema,
   firstPipelineDate: nullableSqlTimestampSchema,
   totalDurationMinutes: nullableSqlNumberSchema,
   totalPipelines: sqlNumberSchema,
+});
+
+export const workflowSuccessRateStatsSchema = z.object({
+  current: nullableSqlNumberSchema,
+  previous: nullableSqlNumberSchema,
 });
 
 export const workflowDashboardSchema = z.object({
   avgDuration: z.array(workflowAvgDurationSchema),
   cumulativeDuration: z.array(workflowCumulativeDurationSchema),
   deployments: z.array(workflowDeploymentSchema),
+  durationPercentiles: percentileRowSchema,
   dxVsNonDx: z.array(workflowDxVsNonDxSchema),
   failures: z.array(workflowFailureSchema),
   infraApply: z.array(workflowInfraDurationSchema),
   infraPlan: z.array(workflowInfraDurationSchema),
   runCount: z.array(workflowRunCountSchema),
   successRatio: z.array(workflowSuccessRatioSchema),
+  successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
 });
 

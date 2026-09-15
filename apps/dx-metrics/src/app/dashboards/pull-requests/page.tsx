@@ -7,8 +7,14 @@ import {
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { severityFromTargetWithTrend } from "@/lib/insights/insight-helpers";
+import type { Insight } from "@/lib/insights/types";
+import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -41,6 +47,9 @@ interface PrDashboardData {
     title: string;
   }[];
   unmergedPrs: { date: string; openPrs: number }[];
+  previousLeadTime: null | number;
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function PullRequestsDashboard() {
@@ -52,6 +61,32 @@ export default function PullRequestsDashboard() {
       days,
       repository,
     },
+  );
+
+  // Delta comes from the fitted trend line endpoints, the same data the trend
+  // chart draws, so the card can never contradict the chart.
+  const trendValues = data?.leadTimeTrend ?? [];
+  const trendFirst = trendValues[0]?.trendLine;
+  const trendLast = trendValues[trendValues.length - 1]?.trendLine;
+  const leadTimeDelta =
+    trendFirst !== undefined && trendLast !== undefined && trendFirst !== 0
+      ? percentChange(trendLast, trendFirst)
+      : null;
+  const leadTimeSeverity =
+    data?.cards.avgLeadTime != null
+      ? severityFromTargetWithTrend(
+          data.cards.avgLeadTime,
+          METRIC_TARGETS.leadTimeDays,
+          leadTimeDelta,
+          {
+            higherIsBetter: false,
+            significantChangePct: METRIC_TARGETS.significantChangePct,
+            tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
+          },
+        )
+      : undefined;
+  const leadTimeSparkline = data?.leadTimeMovingAvg.map(
+    (row) => row.avgLeadTimeDays,
   );
 
   return (
@@ -85,12 +120,19 @@ export default function PullRequestsDashboard() {
 
       {data && (
         <div className="space-y-8">
+          <DataFreshness referenceDate={data.meta.referenceDate} />
+          <InsightsPanel insights={data.insights} />
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
               label="Avg Lead Time"
               suffix="days"
               tooltip={tooltipContent.avgLeadTime}
               value={data.cards.avgLeadTime}
+              deltaPct={leadTimeDelta}
+              target={METRIC_TARGETS.leadTimeDays}
+              severity={leadTimeSeverity}
+              sparkline={leadTimeSparkline}
             />
             <MetricCard
               label="Total PRs"
@@ -119,6 +161,9 @@ export default function PullRequestsDashboard() {
                 },
               ]}
               data={data.leadTimeMovingAvg}
+              referenceLines={[
+                { label: "target", value: METRIC_TARGETS.leadTimeDays },
+              ]}
               title="Avg Lead Time (Weekly)"
               tooltip={tooltipContent.leadTimeMovingAvg}
               xKey="week"
@@ -126,15 +171,17 @@ export default function PullRequestsDashboard() {
             <SimpleLineChart
               data={data.leadTimeTrend}
               lines={[{ color: "#dc2626", key: "trendLine", name: "Trend" }]}
-              title="Lead Time Trend"
+              title="Lead Time Trend (within period)"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
+              zeroBaseline={false}
             />
             <SimpleBarChart
               bars={[{ color: "#2563eb", key: "prCount", name: "Merged PRs" }]}
               data={data.mergedPrs}
               title="Merged Pull Requests"
               tooltip={tooltipContent.mergedPrs}
+              tooltipFormatter={(value) => value.toFixed(0)}
               xKey="date"
             />
             <SimpleLineChart
@@ -149,6 +196,7 @@ export default function PullRequestsDashboard() {
               data={data.newPrs}
               title="New Pull Requests"
               tooltip={tooltipContent.newPrs}
+              tooltipFormatter={(value) => value.toFixed(0)}
               xKey="date"
             />
             <SimpleLineChart

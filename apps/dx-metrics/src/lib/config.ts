@@ -10,6 +10,83 @@ export const DX_REPO: string = dxMetricsConfig.dxRepo;
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 
+/** Repository whose external contributions the DX Team dashboard measures. */
+export const DX_TEAM_IO_INFRA_REPOSITORY = "io-infra";
+
+/**
+ * Substrings that mark a repository as DX-owned (or DX tooling). Commits on
+ * these repositories are excluded from "DX members on non-DX repos" metrics so
+ * the number reflects work done outside the team's own area.
+ */
+export const DX_TEAM_COMMIT_EXCLUDED_SUBSTRINGS = [
+  "dx",
+  "eng",
+  "technology-radar",
+];
+
+/** Substrings excluded when counting DX members' commits by repository. */
+export const DX_TEAM_COMMITS_BY_REPO_EXCLUDED_SUBSTRINGS = [
+  "pagopa-dx",
+  `${ORGANIZATION}/terraform`,
+];
+
+/** Code-search query used to detect repositories adopting DX tooling. */
+export const DX_ADOPTION_CODE_SEARCH_QUERY = "pagopa/dx org:pagopa";
+
+/**
+ * IaC pull requests with these titles are release automation, not real
+ * infrastructure changes, and are excluded from IaC metrics.
+ */
+export const IAC_EXCLUDED_PR_TITLES = ["Version Packages"];
+
+/**
+ * Reference targets used by insight rules to turn a raw number into a
+ * good/bad judgement. Values confirmed by the team, tuned to avoid noisy
+ * warnings (a miss within `INSIGHT_THRESHOLDS.targetTolerancePct` is neutral).
+ */
+export const METRIC_TARGETS = {
+  dxPipelineAdoptionPct: 80,
+  leadTimeDays: 5,
+  minTrendRSquared: 0.3,
+  moduleUpToDatePct: 80,
+  significantChangePct: 30,
+  staleOpenPrDays: 21,
+  timeToFirstReviewHours: 48,
+  workflowSuccessRatePct: 90,
+} as const;
+
+/**
+ * Share/ratio thresholds above which an insight escalates from neutral to
+ * warning. Kept here so tuning warning sensitivity is a single-file change.
+ */
+export const INSIGHT_THRESHOLDS = {
+  ciCostHotspotShare: 0.6,
+  // Beyond `criticalMultiplier` times the target (bad direction) an insight
+  // escalates from warning to critical (red).
+  criticalMultiplier: 2,
+  durationSpreadRatio: 8,
+  dxSupervisedShare: 0.8,
+  failedRunWasteShare: 0.2,
+  failureHotspotShare: 0.5,
+  governanceGapShare: 0.5,
+  largePrShare: 0.4,
+  leadTimeSpreadRatio: 5,
+  reviewerLoadShare: 0.5,
+  reviewBusFactorShare: 0.5,
+  reviewWaitDominanceShare: 0.7,
+  slowPrConcentrationShare: 0.6,
+  spreadMinMedianDays: 1,
+  spreadMinMedianHours: 4,
+  spreadMinMedianMinutes: 5,
+  staleModuleShare: 0.3,
+  targetTolerancePct: 25,
+  teamBusFactorShare: 0.5,
+  techradarCoverage: 0.3,
+  trackerBacklogShare: 0.1,
+  unsupervisedShare: 0.6,
+  unreviewedMergeShare: 0.4,
+} as const;
+
 export const TIME_INTERVALS = [
   { label: "30 days", value: 30 },
   { label: "60 days", value: 60 },

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   sqlDateSchema,
   sqlNumberSchema,
@@ -49,6 +49,7 @@ export const supervisedVsUnsupervisedRowSchema = z.object({
 
 export const iacDashboardResultSchema = z.object({
   leadTimeMovingAvg: z.array(leadTimeMovingAvgRowSchema),
+  leadTimePercentiles: percentileRowSchema,
   leadTimeTrend: z.array(leadTimeTrendRowSchema),
   prsByReviewer: z.array(prsByReviewerRowSchema),
   prsOverTime: z.array(prsOverTimeRowSchema),

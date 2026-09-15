@@ -2,9 +2,16 @@
 
 import { sql } from "drizzle-orm";
 
-import type { Database } from "../shared/types";
+import { buildTrackerInsights } from "@/lib/insights/tracker";
+import type { WithInsights } from "@/lib/insights/types";
+
+import type { Database, WithMeta } from "../shared/types";
 import type { TrackerDashboard } from "./schemas";
 
+import {
+  buildReferenceDateQuery,
+  parseReferenceDate,
+} from "../shared/reference-date";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   categoryRowSchema,
@@ -15,7 +22,18 @@ import {
 
 export const getTrackerDashboard = async (
   db: Database,
-): Promise<TrackerDashboard> => {
+): Promise<TrackerDashboard & WithInsights & WithMeta> => {
+  const referenceDateResult = await db.execute(
+    buildReferenceDateQuery({
+      column: "submitted_at",
+      from: "tracker_requests",
+    }),
+  );
+  const referenceDate = parseReferenceDate(
+    referenceDateResult.rows[0],
+    "tracker referenceDate",
+  );
+
   const [
     openedTotal,
     closedTotal,
@@ -131,7 +149,7 @@ export const getTrackerDashboard = async (
     "tracker requestsTrend",
   ).value;
 
-  return {
+  const dashboard = {
     byCategory: parseSqlRows(
       categoryRowSchema,
       byCategory.rows,
@@ -153,5 +171,11 @@ export const getTrackerDashboard = async (
       frequencyTrend.rows,
       "tracker frequencyTrend",
     ),
+  };
+
+  return {
+    ...dashboard,
+    insights: buildTrackerInsights(dashboard),
+    meta: { referenceDate },
   };
 };

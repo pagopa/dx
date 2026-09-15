@@ -42,6 +42,8 @@ export const pullRequests = pgTable(
     uniqueIndex("pr_repo_number_idx").on(t.repositoryId, t.number),
     index("pr_created_at_idx").on(t.createdAt),
     index("pr_merged_at_idx").on(t.mergedAt),
+    index("pr_repo_merged_idx").on(t.repositoryId, t.mergedAt),
+    index("pr_repo_closed_idx").on(t.repositoryId, t.closedAt),
     index("pr_updated_at_idx").on(t.updatedAt),
   ],
 );
@@ -79,6 +81,7 @@ export const workflowRuns = pgTable(
   (t) => [
     index("wr_repo_idx").on(t.repositoryId),
     index("wr_created_at_idx").on(t.createdAt),
+    index("wr_repo_updated_idx").on(t.repositoryId, t.updatedAt),
     index("wr_workflow_idx").on(t.workflowId),
   ],
 );
@@ -124,6 +127,7 @@ export const commits = pgTable(
     index("commit_repo_idx").on(t.repositoryId),
     index("commit_date_idx").on(t.committerDate),
     index("commit_author_idx").on(t.author),
+    index("commit_author_date_idx").on(t.author, t.committerDate),
   ],
 );
 
@@ -163,6 +167,7 @@ export const pullRequestReviews = pgTable(
   },
   (t) => [
     index("prr_pr_idx").on(t.pullRequestId),
+    index("prr_pr_submitted_idx").on(t.pullRequestId, t.submittedAt),
     index("prr_repo_idx").on(t.repositoryId),
     index("prr_submitted_at_idx").on(t.submittedAt),
   ],
@@ -253,6 +258,24 @@ export const techRadarUsages = pgTable(
     index("tech_radar_status_idx").on(t.radarStatus),
     uniqueIndex("tech_radar_repo_tool_idx").on(t.repositoryFullName, t.toolKey),
   ],
+);
+
+// --- Techradar Usage Snapshots ---
+// Append-only history captured on every import run. `tech_radar_usages` is a
+// per-repository upsert and cannot answer "how has adoption changed over time",
+// so each run records the aggregated repository count per tool/ring/status.
+export const techRadarSnapshots = pgTable(
+  "tech_radar_snapshots",
+  {
+    capturedAt: timestamp("captured_at").defaultNow().notNull(),
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    radarRing: text("radar_ring"),
+    radarStatus: text("radar_status").notNull(),
+    repositoryCount: integer("repository_count").notNull(),
+    toolKey: text("tool_key").notNull(),
+    toolName: text("tool_name").notNull(),
+  },
+  (t) => [index("tr_snapshot_tool_time_idx").on(t.toolKey, t.capturedAt)],
 );
 
 // --- Tracker Requests ---

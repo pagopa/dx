@@ -33,7 +33,10 @@ import {
   importCodeSearch,
   importDxPipelineUsages,
 } from "./lib/importers/search";
-import { importTechRadarRepositoryUsages } from "./lib/importers/tech-radar";
+import {
+  captureTechRadarSnapshot,
+  importTechRadarRepositoryUsages,
+} from "./lib/importers/tech-radar";
 import {
   importTerraformModules,
   importTerraformRegistryReleases,
@@ -182,6 +185,13 @@ async function main(): Promise<void> {
           importTechRadarRepositoryUsages(context, repoName),
         );
       }
+    }
+
+    if (shouldRun("tech-radar")) {
+      console.log("\n🎯 Techradar Snapshot");
+      await runWithCheckpoint("tech-radar-snapshot", null, () =>
+        captureTechRadarSnapshot(context),
+      );
     }
 
     if (shouldRun("commits")) {

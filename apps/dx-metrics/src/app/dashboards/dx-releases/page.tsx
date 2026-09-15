@@ -2,7 +2,11 @@
 
 import { DataTable, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
+import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { releasesTooltips as tooltipContent } from "./tooltips";
@@ -22,6 +26,8 @@ interface ReleasesDashboardData {
   modulesSummary: ModuleSummary[];
   releasesTimeline: ReleasesTimeline[];
   stats: ReleaseStats;
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 interface ReleaseStats {
@@ -71,19 +77,22 @@ export default function ReleasesDashboard() {
 
       {data && (
         <div className="space-y-8">
+          <DataFreshness referenceDate={data.meta.referenceDate} />
+          <InsightsPanel insights={data.insights} />
+
           {/* Stats cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <StatCard
+            <MetricCard
               label="Modules"
               tooltip={tooltipContent.totalModules}
               value={data.stats.totalModules}
             />
-            <StatCard
+            <MetricCard
               label="Major Versions"
               tooltip={tooltipContent.totalMajorVersions}
               value={data.stats.totalMajorVersions}
             />
-            <StatCard
+            <MetricCard
               label="Total Releases"
               tooltip={tooltipContent.totalReleases}
               value={data.stats.totalReleases}
@@ -144,28 +153,6 @@ export default function ReleasesDashboard() {
           />
         </div>
       )}
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  tooltip,
-  value,
-}: {
-  label: string;
-  tooltip?: string;
-  value: null | number | string;
-}) {
-  return (
-    <div className="rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-all hover:border-[#8b949e]">
-      <p className="text-xs font-medium uppercase tracking-wider text-white flex items-center gap-1">
-        {label}
-        {tooltip && <TooltipIcon content={tooltip} />}
-      </p>
-      <p className="mt-2 text-3xl font-bold tracking-tighter text-[#e6edf3]">
-        {value ?? "—"}
-      </p>
     </div>
   );
 }

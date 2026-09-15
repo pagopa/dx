@@ -10,9 +10,11 @@ export const workflowsTooltips = {
   cumulativeDuration:
     "Total time spent per pipeline. Helps prioritize optimization efforts.",
   deploymentsToProduction:
-    "Weekly production deployments. Key metric for deployment frequency and release cadence.",
+    "Weekly runs of deploy/release workflows (name matched on deploy, delivery, release or apply). A heuristic proxy for deployment frequency, not an exact count of production releases.",
   dxVsNonDx:
     "Comparison of DX vs non-DX pipeline runs. Measures adoption of standardized deployment tools.",
+  failedRunDuration:
+    "Total pipeline time spent in failed runs. Time consumed without delivering a result.",
   firstRun:
     "Date of first pipeline execution in this period. Indicates when pipeline was enabled.",
   infraApplyDuration:

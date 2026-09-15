@@ -246,6 +246,7 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       workflowSummarySchema,
       {
         avgDurationMinutes: null,
+        failedDurationMinutes: null,
         firstPipelineDate: null,
         totalDurationMinutes: "34.5",
         totalPipelines: "9",
@@ -254,6 +255,7 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     ),
   ).toEqual({
     avgDurationMinutes: null,
+    failedDurationMinutes: null,
     firstPipelineDate: null,
     totalDurationMinutes: 34.5,
     totalPipelines: 9,

@@ -1,0 +1,45 @@
+/**
+ * Shared contract for dashboard insights.
+ *
+ * An insight is a deterministic, human-readable reading of a metric: what
+ * changed, how much, and what to do about it. It is produced by pure functions
+ * (see the sibling `build*Insights` modules) and rendered by `InsightsPanel`.
+ */
+
+/** How urgently an insight deserves attention. */
+export type InsightSeverity = "positive" | "neutral" | "warning" | "critical";
+
+/** The engineering concern an insight belongs to. */
+export type InsightCategory =
+  "velocity" | "quality" | "reliability" | "adoption" | "risk";
+
+/** A metric value with an optional comparison against a previous value. */
+export interface InsightValue {
+  readonly current: number;
+  readonly deltaPct?: number;
+  readonly previous?: number;
+  readonly unit?: string;
+}
+
+/** A drill-down reference supporting an insight. */
+export interface InsightEvidence {
+  readonly href?: string;
+  readonly label: string;
+}
+
+/** A single deterministic reading of the dashboard data. */
+export interface Insight {
+  readonly action?: string;
+  readonly category: InsightCategory;
+  readonly detail: string;
+  readonly evidence?: readonly InsightEvidence[];
+  readonly id: string;
+  readonly severity: InsightSeverity;
+  readonly title: string;
+  readonly value?: InsightValue;
+}
+
+/** A dashboard payload enriched with its computed insights. */
+export interface WithInsights {
+  readonly insights: Insight[];
+}

@@ -1,7 +1,10 @@
 /** SQL queries and data transformation for the pull-request dashboard. */
 import { sql } from "drizzle-orm";
 
-import type { Database } from "../shared/types";
+import { buildPullRequestsInsights } from "@/lib/insights/pull-requests";
+import type { WithInsights } from "@/lib/insights/types";
+
+import type { Database, WithMeta } from "../shared/types";
 import type {
   FetchPrDashboardInput,
   PrCountData,
@@ -11,6 +14,16 @@ import type {
   PrSummaryCards,
 } from "./schemas";
 
+import {
+  buildReferenceDateQuery,
+  parseReferenceDate,
+} from "../shared/reference-date";
+import { percentileRowSchema, previousValueRowSchema } from "../shared/schemas";
+import {
+  botAuthorsExclusion,
+  timeBucket,
+  timeBucketInterval,
+} from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   prCommentsBySizeRowSchema,
@@ -19,31 +32,129 @@ import {
   prDateCountRowSchema,
   prLeadTimeMovingAvgRowSchema,
   prLeadTimeTrendRowSchema,
-  prMetricValueRowSchema,
   prOpenCountRowSchema,
   prSizeDistributionRowSchema,
   prSizeRowSchema,
+  prSummaryCardsSchema,
   slowestPrRowSchema,
 } from "./schemas";
+
+/**
+ * The single population every pull-request metric is computed on: pull requests
+ * opened by a human (not a bot) and not marked as draft.
+ */
+const HUMAN_PR = sql`${botAuthorsExclusion("pr.author")} AND (pr.draft IS NULL OR pr.draft = 0)`;
+
+/** Resolves the latest PR activity timestamp used to anchor time windows. */
+const fetchReferenceDate = async (
+  db: Database,
+  fullName: string,
+): Promise<string> => {
+  const result = await db.execute(
+    buildReferenceDateQuery({
+      column: "GREATEST(pr.created_at, pr.merged_at)",
+      from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+      where: sql`r.full_name = ${fullName}`,
+    }),
+  );
+  return parseReferenceDate(result.rows[0], "pull-requests referenceDate");
+};
 
 /** Fetches the complete pull-request dashboard for a repository. */
 export const fetchPrDashboard = async (
   db: Database,
   params: FetchPrDashboardInput,
-): Promise<PrDashboardResult> => {
+): Promise<PrDashboardResult & WithInsights & WithMeta> => {
   const { days, fullName } = params;
-  const [cards, leadTime, counts, quality] = await Promise.all([
-    fetchPrSummary(db, fullName, days),
-    fetchLeadTimeData(db, fullName, days),
-    fetchPrCountData(db, fullName, days),
-    fetchPrQualityData(db, fullName, days),
+
+  const referenceDate = await fetchReferenceDate(db, fullName);
+
+  // The card delta is derived from the fitted trend line (see the insight
+  // below), so it can never contradict the trend chart drawn from the same data.
+  const half = Math.max(1, Math.floor(days / 2));
+
+  const [cards, leadTime, counts, quality, leadTimeStats] = await Promise.all([
+    fetchPrSummary(db, fullName, referenceDate, days),
+    fetchLeadTimeData(db, fullName, referenceDate, days),
+    fetchPrCountData(db, fullName, referenceDate, days),
+    fetchPrQualityData(db, fullName, referenceDate, days),
+    fetchLeadTimeStats(db, fullName, referenceDate, days, half),
   ]);
-  return { cards, ...leadTime, ...counts, ...quality };
+
+  const dashboard = {
+    cards,
+    ...leadTime,
+    ...counts,
+    ...quality,
+    ...leadTimeStats,
+  };
+  return {
+    ...dashboard,
+    insights: buildPullRequestsInsights(dashboard),
+    meta: { days, referenceDate },
+  };
 };
+
+/**
+ * Lead-time distribution percentiles (full window) and the average of the first
+ * half of the window, used as the "previous" side of the card delta.
+ */
+async function fetchLeadTimeStats(
+  db: Database,
+  fullName: string,
+  referenceDate: string,
+  days: number,
+  half: number,
+): Promise<
+  Pick<PrDashboardResult, "leadTimePercentiles" | "previousLeadTime">
+> {
+  const [percentiles, previous] = await Promise.all([
+    db.execute(sql`
+      SELECT
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p50",
+        ROUND(PERCENTILE_CONT(0.85) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p85",
+        ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p95"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE r.full_name = ${fullName}
+        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
+        AND ${HUMAN_PR}
+    `),
+    db.execute(sql`
+      SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE r.full_name = ${fullName}
+        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${half})
+        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
+        AND ${HUMAN_PR}
+    `),
+  ]);
+
+  return {
+    leadTimePercentiles: parseSqlRow(
+      percentileRowSchema,
+      percentiles.rows[0],
+      "pull-requests leadTimePercentiles",
+    ),
+    previousLeadTime: parseSqlRow(
+      previousValueRowSchema,
+      previous.rows[0],
+      "pull-requests previousLeadTime",
+    ).previous,
+  };
+}
 
 async function fetchLeadTimeData(
   db: Database,
   fullName: string,
+  referenceDate: string,
   days: number,
 ): Promise<PrLeadTimeData> {
   const [leadTimeMovingAvg, leadTimeTrend] = await Promise.all([
@@ -52,10 +163,9 @@ async function fetchLeadTimeData(
         ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${fullName}
-        AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-        AND (pr.draft IS NULL OR pr.draft = 0)
+        AND ${HUMAN_PR}
       GROUP BY DATE_TRUNC('week', pr.merged_at)::date ORDER BY week
     `),
     db.execute(sql`
@@ -65,10 +175,9 @@ async function fetchLeadTimeData(
           ROW_NUMBER() OVER (ORDER BY DATE_TRUNC('week', pr.merged_at)::date) AS x
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
+          AND ${HUMAN_PR}
         GROUP BY DATE_TRUNC('week', pr.merged_at)::date
       ),
       stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("avgLeadTimeDays") AS "yAvg" FROM weekly_avg),
@@ -100,69 +209,72 @@ async function fetchLeadTimeData(
 async function fetchPrCountData(
   db: Database,
   fullName: string,
+  referenceDate: string,
   days: number,
 ): Promise<PrCountData> {
   const [mergedPrs, unmergedPrs, newPrs, cumulatedNewPrs] = await Promise.all([
     db.execute(sql`
       WITH date_series AS (
         SELECT generate_series(
-          CASE WHEN ${days} < 240 THEN (NOW() - MAKE_INTERVAL(days => ${days}))::date
-               ELSE date_trunc('week', (NOW() - MAKE_INTERVAL(days => ${days}))::date)::date END,
-          CASE WHEN ${days} < 240 THEN CURRENT_DATE
-               ELSE date_trunc('week', CURRENT_DATE)::date END,
-          CASE WHEN ${days} < 240 THEN '1 day'::interval ELSE '7 days'::interval END
+          ${timeBucket(sql`(${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))`, days)},
+          ${timeBucket(sql`(${referenceDate}::timestamptz)::date`, days)},
+          ${timeBucketInterval(days)}
         )::date AS date
       ),
       pr_counts AS (
-        SELECT CASE WHEN ${days} < 240 THEN pr.merged_at::date
-          ELSE date_trunc('week', pr.merged_at)::date END AS "prDate", COUNT(*) AS "prCount"
+        SELECT ${timeBucket("pr.merged_at", days)} AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.merged_at <= NOW()
-          AND pr.merged_at IS NOT NULL AND (pr.draft IS NULL OR pr.draft = 0)
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at <= ${referenceDate}::timestamptz
+          AND pr.merged_at IS NOT NULL
+          AND ${HUMAN_PR}
         GROUP BY "prDate"
       )
       SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
       FROM date_series ds LEFT JOIN pr_counts pc ON ds.date = pc."prDate" ORDER BY ds.date
     `),
+    // Open (not yet merged) pull requests per day. The window restricts the date
+    // series, not the PRs, so PRs created before the window that are still open
+    // are counted correctly.
     db.execute(sql`
-      WITH daily_counts AS (
+      WITH date_series AS (
         SELECT generate_series(
-          (SELECT MIN(created_at::date) FROM pull_requests pr
-           JOIN repositories r ON pr.repository_id = r.id
-           WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
-           AND (pr.draft IS NULL OR pr.draft = 0)),
-          CURRENT_DATE, '1 day'::interval
+          (${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))::date,
+          (${referenceDate}::timestamptz)::date,
+          '1 day'::interval
         )::date AS date
       ),
-      pr_status AS (
+      open_prs AS (
         SELECT pr.created_at::date AS "createdDate",
-          COALESCE(pr.closed_at::date, CURRENT_DATE + 1) AS "closedDate"
+          COALESCE(pr.closed_at::date, (${referenceDate}::timestamptz)::date + 1) AS "closedDate"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
-        AND (pr.draft IS NULL OR pr.draft = 0)
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at IS NOT NULL
+          AND pr.merged_at IS NULL
+          AND (pr.closed_at IS NULL OR pr.closed_at > ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))
+          AND ${HUMAN_PR}
       )
-      SELECT d.date, COUNT(*) FILTER (WHERE d.date >= p."createdDate" AND d.date < p."closedDate") AS "openPrs"
-      FROM daily_counts d LEFT JOIN pr_status p ON d.date >= p."createdDate" AND d.date < p."closedDate"
+      SELECT d.date, COUNT(p."createdDate") AS "openPrs"
+      FROM date_series d
+      LEFT JOIN open_prs p ON d.date >= p."createdDate" AND d.date < p."closedDate"
       GROUP BY d.date ORDER BY d.date
     `),
     db.execute(sql`
       WITH date_series AS (
         SELECT generate_series(
-          CASE WHEN ${days} < 240 THEN (NOW() - MAKE_INTERVAL(days => ${days}))::date
-               ELSE date_trunc('week', (NOW() - MAKE_INTERVAL(days => ${days}))::date)::date END,
-          CASE WHEN ${days} < 240 THEN CURRENT_DATE
-               ELSE date_trunc('week', CURRENT_DATE)::date END,
-          CASE WHEN ${days} < 240 THEN '1 day'::interval ELSE '7 days'::interval END
+          ${timeBucket(sql`(${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))`, days)},
+          ${timeBucket(sql`(${referenceDate}::timestamptz)::date`, days)},
+          ${timeBucketInterval(days)}
         )::date AS date
       ),
       pr_counts AS (
-        SELECT CASE WHEN ${days} < 240 THEN pr.created_at::date
-          ELSE date_trunc('week', pr.created_at)::date END AS "prDate", COUNT(*) AS "prCount"
+        SELECT ${timeBucket("pr.created_at", days)} AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.created_at <= NOW()
-          AND (pr.draft IS NULL OR pr.draft = 0)
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at <= ${referenceDate}::timestamptz
+          AND ${HUMAN_PR}
         GROUP BY "prDate"
       )
       SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
@@ -172,10 +284,12 @@ async function fetchPrCountData(
       WITH daily_pr AS (
         SELECT pr.created_at::date AS date, COUNT(*) AS "dailyCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}
         GROUP BY pr.created_at::date
       ),
-      ts AS (SELECT generate_series((SELECT MIN(date) FROM daily_pr), CURRENT_DATE, '1 day'::interval)::date AS date)
+      ts AS (SELECT generate_series((SELECT MIN(date) FROM daily_pr), (${referenceDate}::timestamptz)::date, '1 day'::interval)::date AS date)
       SELECT t.date, SUM(COALESCE(d."dailyCount", 0)) OVER (ORDER BY t.date) AS "cumulativeCount"
       FROM ts t LEFT JOIN daily_pr d ON t.date = d.date ORDER BY t.date
     `),
@@ -207,6 +321,7 @@ async function fetchPrCountData(
 async function fetchPrQualityData(
   db: Database,
   fullName: string,
+  referenceDate: string,
   days: number,
 ): Promise<PrQualityData> {
   const [prSize, prComments, prCommentsBySize, prSizeDistribution, slowestPrs] =
@@ -216,14 +331,18 @@ async function fetchPrQualityData(
           ROUND(AVG(pr.additions)::numeric, 2) AS "avgAdditions"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.additions IS NOT NULL
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.additions IS NOT NULL
+          AND ${HUMAN_PR}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
       `),
       db.execute(sql`
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
           ROUND(AVG(pr.total_comments_count)::numeric, 2) AS "avgComments"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName} AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
       `),
       db.execute(sql`
@@ -233,12 +352,14 @@ async function fetchPrQualityData(
           , 2) AS "avgCommentsPerAddition"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
       `),
       db.execute(sql`
         WITH bucketed AS (
           SELECT pr.additions,
+            EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400 AS "leadTimeDays",
             CASE WHEN additions <= 50 THEN '0-50' WHEN additions <= 200 THEN '51-200'
             WHEN additions <= 500 THEN '201-500' WHEN additions <= 1000 THEN '501-1000'
             ELSE '1000+' END AS "sizeRange",
@@ -247,10 +368,12 @@ async function fetchPrQualityData(
             ELSE 5 END AS "sortOrder"
           FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
           WHERE r.full_name = ${fullName}
-            AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days}) AND pr.additions IS NOT NULL
-            AND (pr.draft IS NULL OR pr.draft = 0)
+            AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+            AND pr.additions IS NOT NULL
+            AND ${HUMAN_PR}
         )
-        SELECT "sizeRange", COUNT(*) AS "prCount", ROUND(AVG(additions)::numeric, 0) AS "avgAdditions"
+        SELECT "sizeRange", COUNT(*) AS "prCount", ROUND(AVG(additions)::numeric, 0) AS "avgAdditions",
+          ROUND(AVG("leadTimeDays")::numeric, 2) AS "avgLeadTimeDays"
         FROM bucketed GROUP BY "sizeRange", "sortOrder" ORDER BY "sortOrder"
       `),
       db.execute(sql`
@@ -258,10 +381,9 @@ async function fetchPrQualityData(
           pr.number, pr.created_at AS "createdAt", pr.merged_at AS "mergedAt"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
+          AND ${HUMAN_PR}
         ORDER BY "leadTimeDays" DESC LIMIT 50
       `),
     ]);
@@ -293,69 +415,38 @@ async function fetchPrQualityData(
 async function fetchPrSummary(
   db: Database,
   fullName: string,
+  referenceDate: string,
   days: number,
 ): Promise<PrSummaryCards> {
-  const [avgLeadTime, totalPrs, totalComments, commentsPerPr] =
-    await Promise.all([
-      db.execute(sql`
-        SELECT ROUND(AVG(EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400)::numeric, 2) AS value
+  // A single scan over the same population produces every summary card.
+  const result = await db.execute(sql`
+    SELECT
+      (SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.merged_at >= NOW() - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
-      `),
-      db.execute(sql`
-        SELECT COUNT(*) AS value FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
-      `),
-      db.execute(sql`
-        SELECT COALESCE(SUM(total_comments_count), 0) AS value
+          AND ${HUMAN_PR}) AS "avgLeadTime",
+      (SELECT COUNT(*)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
-      `),
-      db.execute(sql`
-        SELECT ROUND(SUM(total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2) AS value
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}) AS "totalPrs",
+      (SELECT COALESCE(SUM(pr.total_comments_count), 0)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= NOW() - MAKE_INTERVAL(days => ${days})
-          AND pr.author NOT IN ('renovate-pagopa', 'dependabot', 'dx-pagopa-bot')
-          AND (pr.draft IS NULL OR pr.draft = 0)
-      `),
-    ]);
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}) AS "totalComments",
+      (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
+        FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${HUMAN_PR}) AS "commentsPerPr"
+  `);
 
-  const avgLeadTimeValue = parseSqlRow(
-    prMetricValueRowSchema,
-    avgLeadTime.rows[0],
-    "pull-requests avgLeadTime",
-  ).value;
-  const commentsPerPrValue = parseSqlRow(
-    prMetricValueRowSchema,
-    commentsPerPr.rows[0],
-    "pull-requests commentsPerPr",
-  ).value;
-  const totalCommentsValue = parseSqlRow(
-    prMetricValueRowSchema,
-    totalComments.rows[0],
-    "pull-requests totalComments",
-  ).value;
-  const totalPrsValue = parseSqlRow(
-    prMetricValueRowSchema,
-    totalPrs.rows[0],
-    "pull-requests totalPrs",
-  ).value;
-
-  return {
-    avgLeadTime: avgLeadTimeValue,
-    commentsPerPr: commentsPerPrValue,
-    totalComments: totalCommentsValue,
-    totalPrs: totalPrsValue,
-  };
+  return parseSqlRow(
+    prSummaryCardsSchema,
+    result.rows[0],
+    "pull-requests summary",
+  );
 }

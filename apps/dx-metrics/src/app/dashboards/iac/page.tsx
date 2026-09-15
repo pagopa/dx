@@ -7,7 +7,11 @@ import {
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
+import { METRIC_TARGETS } from "@/lib/config";
+import type { Insight } from "@/lib/insights/types";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -29,6 +33,8 @@ interface IacDashboardData {
     prType: string;
     runDate: string;
   }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function IacDashboard() {
@@ -71,7 +77,12 @@ export default function IacDashboard() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-4" insights={data.insights} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[
                 {
@@ -81,6 +92,9 @@ export default function IacDashboard() {
                 },
               ]}
               data={data.leadTimeMovingAvg}
+              referenceLines={[
+                { label: "target", value: METRIC_TARGETS.leadTimeDays },
+              ]}
               title="IaC PR Lead Time (weekly average)"
               tooltip={tooltipContent.leadTimeMovingAvg}
               xKey="week"
@@ -101,6 +115,7 @@ export default function IacDashboard() {
               title="IaC PR Lead Time (trend)"
               tooltip={tooltipContent.leadTimeTrend}
               xKey="date"
+              zeroBaseline={false}
             />
             <SimpleLineChart
               data={supervisedPivoted}

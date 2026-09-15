@@ -3,8 +3,13 @@
 import { DataTable, SimplePieChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { severityFromTarget } from "@/lib/insights/insight-helpers";
+import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -32,6 +37,8 @@ interface DxAdoptionData {
     upToDate: number;
   };
   workflowsList: { pipelineType: string; workflowName: string }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function DxAdoptionDashboard() {
@@ -105,7 +112,12 @@ export default function DxAdoptionDashboard() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-4" insights={data.insights} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimplePieChart
               data={pipelinePie}
               title="DX Pipeline Adoption"
@@ -118,7 +130,7 @@ export default function DxAdoptionDashboard() {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 { key: "workflowName", label: "Workflow" },
@@ -161,6 +173,19 @@ export default function DxAdoptionDashboard() {
                   suffix="%"
                   tooltip={tooltipContent.upToDatePercentage}
                   value={driftUpToDatePct}
+                  target={METRIC_TARGETS.moduleUpToDatePct}
+                  severity={
+                    driftUpToDatePct != null
+                      ? severityFromTarget(
+                          driftUpToDatePct,
+                          METRIC_TARGETS.moduleUpToDatePct,
+                          {
+                            higherIsBetter: true,
+                            tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
+                          },
+                        )
+                      : undefined
+                  }
                 />
                 <MetricCard
                   label="Outdated Modules"

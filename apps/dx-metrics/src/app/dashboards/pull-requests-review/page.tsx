@@ -7,8 +7,13 @@ import {
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { severityFromTarget } from "@/lib/insights/insight-helpers";
+import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -32,6 +37,8 @@ interface PrReviewDashboardData {
   }[];
   timeToFirstReviewTrend: { avgHoursToFirstReview: number; week: string }[];
   timeToMergeTrend: { avgHoursToMerge: number; week: string }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function PullRequestsReviewDashboard() {
@@ -46,6 +53,18 @@ export default function PullRequestsReviewDashboard() {
   const reviewMatrixWithoutSelfReviews =
     data?.reviewMatrix.filter(({ author, reviewer }) => author !== reviewer) ??
     [];
+
+  const firstReviewSeverity =
+    data?.cards.avgTimeToFirstReview != null
+      ? severityFromTarget(
+          data.cards.avgTimeToFirstReview,
+          METRIC_TARGETS.timeToFirstReviewHours,
+          {
+            higherIsBetter: false,
+            tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
+          },
+        )
+      : undefined;
 
   return (
     <div>
@@ -67,12 +86,22 @@ export default function PullRequestsReviewDashboard() {
 
       {data && (
         <>
-          <div className="mb-6 grid grid-cols-2 gap-4">
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-6" insights={data.insights} />
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <MetricCard
               label="Avg Time to First Review"
               suffix="hours"
               tooltip={tooltipContent.avgTimeToFirstReview}
               value={data.cards.avgTimeToFirstReview}
+              target={METRIC_TARGETS.timeToFirstReviewHours}
+              severity={firstReviewSeverity}
+              sparkline={data.timeToFirstReviewTrend.map(
+                (row) => row.avgHoursToFirstReview,
+              )}
             />
             <MetricCard
               label="Avg Time to Merge"
@@ -89,7 +118,7 @@ export default function PullRequestsReviewDashboard() {
               <h3 className="mt-2 mb-4 text-base font-semibold text-white">
                 Review Timing
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimpleLineChart
                   data={data.timeToFirstReviewTrend}
                   lines={[
@@ -97,6 +126,12 @@ export default function PullRequestsReviewDashboard() {
                       color: "#2563eb",
                       key: "avgHoursToFirstReview",
                       name: "Hours to First Review",
+                    },
+                  ]}
+                  referenceLines={[
+                    {
+                      label: "target",
+                      value: METRIC_TARGETS.timeToFirstReviewHours,
                     },
                   ]}
                   title="Avg Time to First Review (weekly, hours)"
@@ -126,7 +161,7 @@ export default function PullRequestsReviewDashboard() {
               <h3 className="mt-8 mb-4 text-base font-semibold text-white">
                 Code Review Distribution
               </h3>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimpleBarChart
                   bars={[
                     {

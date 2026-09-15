@@ -2,9 +2,16 @@
 
 import { sql } from "drizzle-orm";
 
-import type { Database } from "../shared/types";
+import { buildDxAdoptionInsights } from "@/lib/insights/dx-adoption";
+import type { WithInsights } from "@/lib/insights/types";
+
+import type { Database, WithMeta } from "../shared/types";
 import type { DxAdoptionResult, FetchDxAdoptionInput } from "./schemas";
 
+import {
+  buildReferenceDateQuery,
+  parseReferenceDate,
+} from "../shared/reference-date";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   moduleAdoptionRowSchema,
@@ -22,7 +29,18 @@ import {
 export const fetchDxAdoption = async (
   db: Database,
   { fullName }: FetchDxAdoptionInput,
-): Promise<DxAdoptionResult> => {
+): Promise<DxAdoptionResult & WithInsights & WithMeta> => {
+  const referenceDateResult = await db.execute(
+    buildReferenceDateQuery({
+      column: "release_date",
+      from: "terraform_registry_releases",
+    }),
+  );
+  const referenceDate = parseReferenceDate(
+    referenceDateResult.rows[0],
+    "dx-adoption referenceDate",
+  );
+
   // DX Pipeline Adoption (pie)
   const pipelineAdoption = await db.execute(sql`
     WITH distinct_workflows AS (
@@ -74,7 +92,9 @@ export const fetchDxAdoption = async (
     ORDER BY module, CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
   `);
 
-  // Version Drift: compare used version constraint vs latest available for DX modules
+  // Version Drift: compare the used major version constraint against the latest
+  // available major for DX modules. Only majors are compared: `version` is a
+  // Terraform constraint (e.g. `~> 1.2`), so minor/patch drift is not reliable.
   const versionDriftList = await db.execute(sql`
     SELECT
       tm.module AS "moduleName",
@@ -140,7 +160,7 @@ export const fetchDxAdoption = async (
     "dx-adoption versionDriftSummary",
   );
 
-  return {
+  const dashboard = {
     moduleAdoption: parseSqlRows(
       moduleAdoptionRowSchema,
       moduleAdoption.rows,
@@ -172,5 +192,11 @@ export const fetchDxAdoption = async (
       workflowsList.rows,
       "dx-adoption workflowsList",
     ),
+  };
+
+  return {
+    ...dashboard,
+    insights: buildDxAdoptionInsights(dashboard),
+    meta: { referenceDate },
   };
 };
