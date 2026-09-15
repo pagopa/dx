@@ -204,6 +204,7 @@ export default function PullRequestsDashboard() {
               targetBand={leadTimeToleranceBand}
               title="Mean Lead Time (Weekly)"
               tooltip={tooltipContent.leadTimeMovingAvg}
+              unit="days"
               xKey="week"
             />
             <SimpleLineChart
@@ -213,6 +214,7 @@ export default function PullRequestsDashboard() {
               ]}
               title="Lead Time Trend (within period)"
               tooltip={tooltipContent.leadTimeTrend}
+              unit="days"
               xKey="date"
               zeroBaseline={false}
             />
@@ -228,6 +230,7 @@ export default function PullRequestsDashboard() {
               title="Merged Pull Requests"
               tooltip={tooltipContent.mergedPrs}
               tooltipFormatter={(value) => value.toFixed(0)}
+              unit="PRs"
               xKey="date"
             />
             <SimpleLineChart
@@ -241,6 +244,7 @@ export default function PullRequestsDashboard() {
               ]}
               title="Open Pull Requests (never merged)"
               tooltip={tooltipContent.unmergedPrs}
+              unit="PRs"
               xKey="date"
             />
             <SimpleBarChart
@@ -251,6 +255,7 @@ export default function PullRequestsDashboard() {
               title="New Pull Requests"
               tooltip={tooltipContent.newPrs}
               tooltipFormatter={(value) => value.toFixed(0)}
+              unit="PRs"
               xKey="date"
             />
             <SimpleLineChart
@@ -264,6 +269,7 @@ export default function PullRequestsDashboard() {
               ]}
               title="Cumulated New Pull Requests"
               tooltip={tooltipContent.cumulatedNewPrs}
+              unit="PRs"
               xKey="date"
             />
             <SimpleBarChart
@@ -277,6 +283,7 @@ export default function PullRequestsDashboard() {
               data={data.prSize}
               title="Pull Requests Size (weekly average)"
               tooltip={tooltipContent.prSize}
+              unit="lines"
               xKey="week"
             />
             <SimpleBarChart
@@ -290,6 +297,7 @@ export default function PullRequestsDashboard() {
               data={data.prComments}
               title="Pull Requests Comments (weekly average)"
               tooltip={tooltipContent.prComments}
+              unit="comments"
               xKey="week"
             />
             <SimpleBarChart
@@ -303,6 +311,7 @@ export default function PullRequestsDashboard() {
               data={data.prSizeDistribution}
               title="Pull Requests Size (avg additions)"
               tooltip={tooltipContent.prSizeDistribution}
+              unit="lines"
               xKey="sizeRange"
             />
           </div>

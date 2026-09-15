@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { paretoShare, percentChange, share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   formatSpreadRatio,
@@ -115,6 +116,7 @@ const leadTimeTrendInsight = (
         ? "Look at the slowest PRs to find where wait time accumulates."
         : undefined,
     category: "velocity",
+    confidence: conclusive ? undefined : "low",
     detail: `The lead-time trend moved from ${formatNumber(firstAverage)} to ${formatNumber(secondAverage)} days (${formatNumber(deltaPct, 0)}%).${conclusive ? "" : " The week-by-week series is too noisy to draw conclusions."}`,
     id: "pr-lead-time-trend",
     severity,
@@ -141,6 +143,7 @@ const leadTimeTargetInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(input.leadTimePercentiles?.count),
     detail: `Average lead time is ${formatNumber(value)} days against a ${METRIC_TARGETS.leadTimeDays}-day target.`,
     id: "pr-lead-time-target",
     sampleSize: input.leadTimePercentiles?.count,
@@ -179,6 +182,7 @@ const leadTimeSpreadInsight = (
       ? "Investigate the slowest PRs: a small tail drives most of the wait."
       : undefined,
     category: "velocity",
+    confidence: confidenceFromSample(count),
     detail: `The median PR merges in ${formatNumber(p50)} days, while the slowest 5% exceeds ${formatNumber(p95)} days${formatSpreadRatio(ratio)}.`,
     id: "pr-lead-time-spread",
     sampleSize: count,
@@ -214,6 +218,7 @@ const prSizeInsight = (input: PullRequestsInsightsInput): Insight | null => {
       ? "Split large changes into smaller, focused pull requests."
       : undefined,
     category: "risk",
+    confidence: confidenceFromSample(total),
     detail: `${formatPercent(largeShare)} of pull requests add more than 500 lines.`,
     id: "pr-size-risk",
     sampleSize: total,
@@ -291,6 +296,9 @@ const throughputInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(
+      input.mergedPrs.reduce((sum, row) => sum + row.prCount, 0),
+    ),
     detail: `Average throughput moved from ${formatNumber(change.firstAverage, 1)} to ${formatNumber(change.secondAverage, 1)} merged PRs per period (${formatNumber(change.deltaPct, 0)}%).`,
     id: "pr-throughput-trend",
     sampleSize: input.mergedPrs.reduce((sum, row) => sum + row.prCount, 0),
@@ -340,6 +348,7 @@ const slowPrConcentrationInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(input.slowestPrs.length),
     detail: `The slowest 10% of pull requests account for ${formatPercent(concentration)} of the total wait time across the analyzed PRs.`,
     evidence: evidence && evidence.length > 0 ? evidence : undefined,
     id: "pr-slow-concentration",

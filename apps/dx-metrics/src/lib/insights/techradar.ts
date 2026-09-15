@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   severityFromUpperThreshold,
@@ -48,6 +49,7 @@ const coverageInsight = (input: TechRadarInsightsInput): Insight | null => {
 
   return {
     category: "adoption",
+    confidence: confidenceFromSample(repositoriesTotal),
     detail: `${repositoriesWithDetectedTools}/${repositoriesTotal} repositories have at least one detected tool (${formatPercent(coverage)}).`,
     id: "techradar-coverage",
     severity:
@@ -86,6 +88,7 @@ const governanceGapInsight = (
       ? "Consider adding the most used untracked tools to the radar."
       : undefined,
     category: "adoption",
+    confidence: confidenceFromSample(detectedUsages),
     detail: `${formatPercent(gap)} of detected usages are not mapped to a radar entry.`,
     id: "techradar-governance-gap",
     severity,
@@ -157,8 +160,8 @@ const usageTrendInsight = (input: TechRadarInsightsInput): Insight | null => {
   } | null = null;
 
   for (const entry of byTool.values()) {
-    const sorted = [...entry.pointsByCapturedAt.entries()].sort(
-      (left, right) => left[0].localeCompare(right[0]),
+    const sorted = [...entry.pointsByCapturedAt.entries()].sort((left, right) =>
+      left[0].localeCompare(right[0]),
     );
 
     if (sorted.length < 2) {

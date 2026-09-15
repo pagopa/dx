@@ -5,15 +5,11 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   Legend,
   Line,
   LineChart,
-  Pie,
-  PieChart,
   ReferenceArea,
   ReferenceLine,
-  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -54,6 +50,24 @@ const formatChartNumber = (
     ? formatter(value)
     : chartNumberFormatter.format(Number(value.toFixed(2)));
 
+/** Formats a tooltip value with the caller's formatter, or the series unit. */
+const formatTooltipValue = (
+  value: unknown,
+  formatter?: (value: number) => string,
+  unit?: string,
+): React.ReactNode => {
+  if (typeof value !== "number") {
+    return value as React.ReactNode;
+  }
+
+  if (formatter) {
+    return formatChartNumber(value, formatter);
+  }
+
+  const formatted = formatChartNumber(value);
+  return unit ? `${formatted} ${unit}` : formatted;
+};
+
 const DATE_LIKE = /^\d{4}-\d{2}-\d{2}/;
 
 /**
@@ -72,6 +86,21 @@ const defaultTickFormatter = (value: unknown): string => {
     ? text
     : date.toLocaleDateString("en", { day: "numeric", month: "short" });
 };
+
+/**
+ * Formats a numeric axis tick, appending the series unit so a reader never has
+ * to infer whether the axis is days, hours, minutes or percent.
+ */
+const numericTickFormatter =
+  (unit?: string) =>
+  (value: unknown): string => {
+    const numeric = Number(value);
+    const text = Number.isFinite(numeric)
+      ? chartNumberFormatter.format(Number(numeric.toFixed(2)))
+      : String(value ?? "");
+
+    return unit ? `${text} ${unit}` : text;
+  };
 
 /**
  * The only series palette. Named by hue because these are primitives: a chart
@@ -135,6 +164,8 @@ interface SimpleBarChartProps {
   title: string;
   tooltip?: string;
   tooltipFormatter?: (value: number) => string;
+  /** Unit of the value axis (e.g. "days"), shown on ticks and in the tooltip. */
+  unit?: string;
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
 }
@@ -150,18 +181,12 @@ interface SimpleLineChartProps {
   title: string;
   tooltip?: string;
   tooltipFormatter?: (value: number) => string;
+  /** Unit of the value axis (e.g. "days"), shown on ticks and in the tooltip. */
+  unit?: string;
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
   /** When true (default) the y-axis starts at zero. */
   zeroBaseline?: boolean;
-}
-
-// --- Pie Chart ---
-interface SimplePieChartProps {
-  className?: string;
-  data: { name: string; value: number }[];
-  title: string;
-  tooltip?: string;
 }
 
 export function ChartWrapper({
@@ -482,6 +507,7 @@ export function SimpleBarChart({
   title,
   tooltip,
   tooltipFormatter,
+  unit,
   xKey,
   xValueFormatter,
 }: SimpleBarChartProps) {
@@ -534,7 +560,11 @@ export function SimpleBarChart({
                   textAnchor: data.length > 4 ? "end" : "middle",
                 }),
           }}
-          tickFormatter={xValueFormatter ?? defaultTickFormatter}
+          tickFormatter={
+            isVertical
+              ? (xValueFormatter ?? numericTickFormatter(unit))
+              : (xValueFormatter ?? defaultTickFormatter)
+          }
           type={isVertical ? "number" : "category"}
           {...(isVertical
             ? { domain: [0, (max: number) => Math.ceil(max * 1.1)] }
@@ -549,6 +579,7 @@ export function SimpleBarChart({
           dataKey={isVertical ? xKey : undefined}
           stroke="#30363d"
           tick={{ fill: "#8b949e", fontSize: 11 }}
+          tickFormatter={isVertical ? undefined : numericTickFormatter(unit)}
           type={isVertical ? "category" : "number"}
           {...(isVertical
             ? { width: 120 }
@@ -561,12 +592,9 @@ export function SimpleBarChart({
             borderRadius: "8px",
             color: "#e6edf3",
           }}
-          formatter={(value) => {
-            if (typeof value === "number") {
-              return formatChartNumber(value, tooltipFormatter);
-            }
-            return value;
-          }}
+          formatter={(value) =>
+            formatTooltipValue(value, tooltipFormatter, unit)
+          }
           itemStyle={{ color: "#e6edf3" }}
         />
         <Legend
@@ -612,7 +640,7 @@ export function SimpleBarChart({
             <ReferenceLine
               key={`ref-${line.label}`}
               label={line.label}
-              stroke={line.color ?? SERIES_COLORS.red}
+              stroke={line.color ?? SERIES_COLORS.gray}
               strokeDasharray="4 4"
               x={line.value}
             />
@@ -620,7 +648,7 @@ export function SimpleBarChart({
             <ReferenceLine
               key={`ref-${line.label}`}
               label={line.label}
-              stroke={line.color ?? SERIES_COLORS.red}
+              stroke={line.color ?? SERIES_COLORS.gray}
               strokeDasharray="4 4"
               y={line.value}
             />
@@ -641,6 +669,7 @@ export function SimpleLineChart({
   title,
   tooltip,
   tooltipFormatter,
+  unit,
   xKey,
   xValueFormatter,
   zeroBaseline = true,
@@ -692,6 +721,7 @@ export function SimpleLineChart({
           domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
           stroke="#30363d"
           tick={{ fill: "#8b949e", fontSize: 11 }}
+          tickFormatter={numericTickFormatter(unit)}
         />
         <Tooltip
           contentStyle={{
@@ -700,12 +730,9 @@ export function SimpleLineChart({
             borderRadius: "8px",
             color: "#e6edf3",
           }}
-          formatter={(value) => {
-            if (typeof value === "number") {
-              return formatChartNumber(value, tooltipFormatter);
-            }
-            return value;
-          }}
+          formatter={(value) =>
+            formatTooltipValue(value, tooltipFormatter, unit)
+          }
           itemStyle={{ color: "#e6edf3" }}
         />
         <Legend
@@ -741,71 +768,12 @@ export function SimpleLineChart({
           <ReferenceLine
             key={`ref-${line.label}`}
             label={line.label}
-            stroke={line.color ?? SERIES_COLORS.red}
+            stroke={line.color ?? SERIES_COLORS.gray}
             strokeDasharray="4 4"
             y={line.value}
           />
         ))}
       </LineChart>
-    </ChartWrapper>
-  );
-}
-
-export function SimplePieChart({
-  className,
-  data,
-  title,
-  tooltip,
-}: SimplePieChartProps) {
-  return (
-    <ChartWrapper
-      className={className}
-      isEmpty={data.length === 0}
-      title={title}
-      tooltip={tooltip}
-    >
-      <ResponsiveContainer height={288} width="100%">
-        <PieChart>
-          <Pie
-            cx="50%"
-            cy="50%"
-            data={data}
-            dataKey="value"
-            label={({
-              name,
-              percent,
-            }: {
-              name?: number | string;
-              percent?: number;
-            }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
-            labelLine
-            outerRadius={80}
-          >
-            {data.map((entry, index) => (
-              <Cell
-                fill={COLORS[index % COLORS.length]}
-                key={`cell-${index}`}
-              />
-            ))}
-          </Pie>
-          <Tooltip
-            contentStyle={{
-              backgroundColor: "#161b22",
-              border: "1px solid #30363d",
-              borderRadius: "8px",
-              color: "#e6edf3",
-            }}
-            formatter={(value) => {
-              if (typeof value === "number") {
-                return formatChartNumber(value);
-              }
-              return value;
-            }}
-            itemStyle={{ color: "#e6edf3" }}
-          />
-          <Legend wrapperStyle={{ color: "#8b949e", fontSize: "12px" }} />
-        </PieChart>
-      </ResponsiveContainer>
     </ChartWrapper>
   );
 }

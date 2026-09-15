@@ -16,7 +16,11 @@ import {
   parseReferenceDate,
 } from "../shared/reference-date";
 import { parseSqlRows } from "../shared/sql-parsing";
-import { botAuthorsExclusion, textArray } from "../shared/sql-fragments";
+import {
+  botAuthorsExclusion,
+  isHumanReview,
+  textArray,
+} from "../shared/sql-fragments";
 import { prBenchmarkRowSchema, workflowBenchmarkRowSchema } from "./schemas";
 
 /** Result of the cross-repository overview. */
@@ -94,7 +98,7 @@ export const getOverviewDashboard = async (
           NOT EXISTS (
             SELECT 1 FROM pull_request_reviews rr
             WHERE rr.pull_request_id = pr.id
-              AND ${botAuthorsExclusion("rr.reviewer")}
+              AND ${isHumanReview("rr", "pr")}
           ) AS no_review
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.name = ANY(${repositories})

@@ -71,6 +71,9 @@ export const INSIGHT_THRESHOLDS = {
   governanceGapShare: 0.5,
   largePrShare: 0.4,
   leadTimeSpreadRatio: 5,
+  // Below this many observations a rule still fires, but the reading is marked
+  // low confidence so a signal from a handful of items is not over-trusted.
+  minReliableSampleSize: 10,
   reviewerLoadShare: 0.5,
   reviewBusFactorShare: 0.5,
   reviewWaitDominanceShare: 0.7,
@@ -96,3 +99,10 @@ export const TIME_INTERVALS = [
   { label: "360 days", value: 360 },
   { label: "720 days", value: 720 },
 ];
+
+/**
+ * How many days of lag between the reference date and "now" still count as
+ * fresh. Past this the freshness note turns amber, so a viewer notices the
+ * importer has fallen behind instead of trusting stale numbers.
+ */
+export const DATA_STALE_AFTER_DAYS = 3;

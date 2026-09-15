@@ -138,10 +138,11 @@ export function InsightsPanel({
   periodDays,
 }: InsightsPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [showAll, setShowAll] = useState(false);
   const panelId = useId();
 
-  const visible = insights.slice(0, limit);
-  const isTruncated = visible.length < insights.length;
+  const isLimited = insights.length > limit;
+  const visible = showAll ? insights : insights.slice(0, limit);
 
   // Counts reflect what the panel will actually show, so the header never
   // promises more cards than the reader gets.
@@ -172,7 +173,9 @@ export function InsightsPanel({
           )}
           Insights
           <span className="rounded bg-[#21262d] px-2 py-0.5 text-xs text-gray-300">
-            {isTruncated ? `top ${visible.length}` : visible.length}
+            {showAll || !isLimited
+              ? insights.length
+              : `top ${visible.length} of ${insights.length}`}
           </span>
           {periodDays !== undefined && (
             <span className="text-xs font-normal text-gray-400">
@@ -205,11 +208,27 @@ export function InsightsPanel({
             include earlier activity.
           </p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {visible.map((insight) => (
-              <InsightCard insight={insight} key={insight.id} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {visible.map((insight) => (
+                <InsightCard insight={insight} key={insight.id} />
+              ))}
+            </div>
+            {isLimited && (
+              <div className="mt-4 flex justify-center">
+                <button
+                  aria-expanded={showAll}
+                  className={`rounded-md border border-[#30363d] bg-[#161b22] px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-[#21262d] hover:text-white ${focusRing}`}
+                  onClick={() => setShowAll((all) => !all)}
+                  type="button"
+                >
+                  {showAll
+                    ? `Show top ${limit}`
+                    : `Show all ${insights.length} insights`}
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>

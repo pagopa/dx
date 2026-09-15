@@ -113,6 +113,7 @@ export default function ReleasesDashboard() {
             ]}
             title="Major Versions Trend (Monthly)"
             tooltip={tooltipContent.majorVersionsTrend}
+            unit="new majors"
             xKey="month"
           />
 

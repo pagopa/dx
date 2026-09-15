@@ -53,11 +53,6 @@ export const prCommentsRowSchema = z.object({
   week: sqlDateSchema,
 });
 
-export const prCommentsBySizeRowSchema = z.object({
-  avgCommentsPerAddition: nullableSqlNumberSchema,
-  week: sqlDateSchema,
-});
-
 export const prSizeRowSchema = z.object({
   avgAdditions: sqlNumberSchema,
   week: sqlDateSchema,
@@ -92,7 +87,6 @@ export const prLeadTimeDataSchema = z.object({
 
 export const prQualityDataSchema = z.object({
   prComments: z.array(prCommentsRowSchema),
-  prCommentsBySize: z.array(prCommentsBySizeRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
   slowestPrs: z.array(slowestPrRowSchema),
@@ -107,7 +101,6 @@ export const prDashboardSchema = z.object({
   mergedPrs: z.array(prDateCountRowSchema),
   newPrs: z.array(prDateCountRowSchema),
   prComments: z.array(prCommentsRowSchema),
-  prCommentsBySize: z.array(prCommentsBySizeRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
   previousLeadTime: nullableSqlNumberSchema,

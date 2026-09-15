@@ -3,6 +3,7 @@
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   halfSplitChange,
@@ -86,6 +87,7 @@ const staleModulesInsight = (input: ReleasesInsightsInput): Insight | null => {
         ? `Review whether modules without a release in ${STALE_MODULE_DAYS} days are still maintained.`
         : undefined,
     category: "quality",
+    confidence: confidenceFromSample(dated.length),
     detail: `${stale.length} of ${dated.length} modules have not received a release in over ${STALE_MODULE_DAYS} days (${formatPercent(staleShare)}).`,
     evidence: stale.slice(0, 3).map((module) => ({ label: module.moduleName })),
     id: "releases-stale-modules",

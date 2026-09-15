@@ -102,6 +102,7 @@ export default function TrackerDashboard() {
               ]}
               title="DX Requests Frequency Trend"
               tooltip={tooltipContent.frequencyTrend}
+              unit="requests"
               xKey="requestDate"
             />
           </div>
@@ -118,6 +119,7 @@ export default function TrackerDashboard() {
               data={data.byCategory}
               title="Requests by Category"
               tooltipFormatter={(value) => value.toFixed(0)}
+              unit="requests"
               xKey="category"
             />
             <SimpleBarChart
@@ -131,6 +133,7 @@ export default function TrackerDashboard() {
               data={data.byPriority}
               title="Requests by Priority"
               tooltipFormatter={(value) => value.toFixed(0)}
+              unit="requests"
               xKey="priority"
             />
           </div>

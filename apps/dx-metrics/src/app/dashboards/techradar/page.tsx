@@ -4,12 +4,7 @@
 
 import Link from "next/link";
 
-import {
-  DataTable,
-  SERIES_COLORS,
-  SimpleBarChart,
-  SimplePieChart,
-} from "@/components/Charts";
+import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
@@ -155,12 +150,22 @@ export default function TechradarDashboard() {
               layout="vertical"
               title="Tool Adoption by Repository Coverage"
               tooltip={tooltipContent.adoptionByTool}
+              unit="%"
               xKey="toolName"
             />
-            <SimplePieChart
+            <SimpleBarChart
+              bars={[
+                {
+                  color: SERIES_COLORS.purple,
+                  key: "value",
+                  name: "Detected usages",
+                },
+              ]}
               data={statusPieData}
               title="Detected Tool Distribution by Radar Status"
               tooltip={tooltipContent.statusDistribution}
+              unit="usages"
+              xKey="name"
             />
           </div>
 
@@ -177,6 +182,7 @@ export default function TechradarDashboard() {
                 data={usageTrendData}
                 title="Detected Tool Usages Over Time"
                 tooltip={tooltipContent.usageTrend}
+                unit="usages"
                 xKey="date"
               />
             </div>

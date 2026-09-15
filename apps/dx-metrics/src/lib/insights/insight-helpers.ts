@@ -30,6 +30,21 @@ export const mean = (values: readonly number[]): number | null => {
   return usable.reduce((sum, value) => sum + value, 0) / usable.length;
 };
 
+/**
+ * Flags a reading that rests on too few observations.
+ *
+ * Returns `"low"` only when the sample size is known and below the threshold;
+ * an unknown sample size returns `undefined` (the field is optional) so the
+ * absence of a count never silently claims confidence.
+ */
+export const confidenceFromSample = (
+  sampleSize: null | number | undefined,
+  minimum: number = INSIGHT_THRESHOLDS.minReliableSampleSize,
+): "low" | undefined =>
+  sampleSize !== null && sampleSize !== undefined && sampleSize < minimum
+    ? "low"
+    : undefined;
+
 /** Formats a 0..1 ratio as a percentage string. */
 export const formatPercent = (ratio: number, digits = 0): string =>
   `${(ratio * 100).toFixed(digits)}%`;

@@ -203,6 +203,7 @@ function WorkflowsDashboardContent({
           data={data.deployments}
           title="Deploy / Release Workflow Runs (weekly)"
           tooltip={tooltipContent.deploymentsToProduction}
+          unit="runs"
           xKey="runWeek"
           xValueFormatter={formatDate}
         />
@@ -218,6 +219,7 @@ function WorkflowsDashboardContent({
           ]}
           title="DX VS Non-DX Pipeline Runs (Cumulative)"
           tooltip={tooltipContent.dxVsNonDx}
+          unit="runs"
           xKey="runDate"
           xValueFormatter={formatDate}
         />
@@ -234,6 +236,7 @@ function WorkflowsDashboardContent({
           title="Pipeline Failures"
           tooltip={tooltipContent.pipelineFailures}
           tooltipFormatter={(value) => value.toFixed(0)}
+          unit="failures"
           xKey="workflowName"
         />
         <SimpleBarChart
@@ -248,6 +251,7 @@ function WorkflowsDashboardContent({
           layout="vertical"
           title="Pipeline Average Duration (minutes)"
           tooltip={tooltipContent.avgPipelineDuration}
+          unit="min"
           xKey="workflowName"
         />
         <SimpleBarChart
@@ -259,6 +263,7 @@ function WorkflowsDashboardContent({
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
           tooltipFormatter={(value) => value.toFixed(0)}
+          unit="runs"
           xKey="workflowName"
         />
         <SimpleBarChart
@@ -273,6 +278,7 @@ function WorkflowsDashboardContent({
           layout="vertical"
           title="Pipeline Cumulative Duration (minutes)"
           tooltip={tooltipContent.cumulativeDuration}
+          unit="min"
           xKey="workflowName"
         />
         <SimpleLineChart
@@ -286,6 +292,7 @@ function WorkflowsDashboardContent({
           ]}
           title="Infra Plan Duration (minutes)"
           tooltip={tooltipContent.infraPlanDuration}
+          unit="min"
           xKey="runTimestamp"
           xValueFormatter={formatDate}
         />
@@ -300,6 +307,7 @@ function WorkflowsDashboardContent({
           ]}
           title="Infra Apply Duration (minutes)"
           tooltip={tooltipContent.infraApplyDuration}
+          unit="min"
           xKey="runTimestamp"
           xValueFormatter={formatDate}
         />

@@ -176,6 +176,7 @@ export default function PullRequestsReviewDashboard() {
                   targetBand={firstReviewToleranceBand}
                   title="Avg Time to First Review (weekly, hours)"
                   tooltip={tooltipContent.timeToFirstReviewTrend}
+                  unit="hours"
                   xKey="week"
                 />
                 <SimpleLineChart
@@ -189,6 +190,7 @@ export default function PullRequestsReviewDashboard() {
                   ]}
                   title="Avg Time to Merge after Approval (weekly, hours)"
                   tooltip={tooltipContent.timeToMergeTrend}
+                  unit="hours"
                   xKey="week"
                 />
               </div>

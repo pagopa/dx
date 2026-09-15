@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   formatSpreadRatio,
@@ -93,6 +94,7 @@ const firstReviewTargetInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(input.firstReviewPercentiles?.count),
     detail: `Average time to first review is ${formatNumber(value)}h against a ${METRIC_TARGETS.timeToFirstReviewHours}h target.`,
     id: "review-first-review-target",
     sampleSize: input.firstReviewPercentiles?.count,
@@ -142,6 +144,7 @@ const busFactorInsight = (
       ? "Spread reviews across more people to reduce dependency risk."
       : undefined,
     category: "risk",
+    confidence: confidenceFromSample(totalReviews),
     detail: `${top.reviewer} performed ${formatPercent(topShare)} of the reviews in the period.`,
     evidence: [{ label: `${top.reviewer}: ${top.totalReviews} reviews` }],
     id: "review-bus-factor",
@@ -237,6 +240,7 @@ const firstReviewSpreadInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(count),
     detail: `The median PR waits ${formatNumber(p50)}h for its first review, while the slowest 5% wait ${formatNumber(p95)}h${formatSpreadRatio(ratio)}.`,
     id: "review-first-review-spread",
     sampleSize: count,

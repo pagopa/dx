@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { paretoShare, percentChange, share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   formatSpreadRatio,
@@ -86,6 +87,7 @@ const failureHotspotInsight = (
       ? "Start from the workflow with the most failures."
       : undefined,
     category: "reliability",
+    confidence: confidenceFromSample(totalFailures),
     detail: `"${top.workflowName}" produced ${top.failedRuns} of ${totalFailures} failures${topShare === null ? "" : `; the top 20% of workflows cause ${formatPercent(topShare)} of them`}.`,
     evidence: [{ label: top.workflowName }],
     id: "workflow-failure-hotspot",
@@ -133,6 +135,7 @@ const ciCostHotspotInsight = (
 
   return {
     category: "reliability",
+    confidence: confidenceFromSample(input.cumulativeDuration.length),
     detail: `"${top.workflowName}" consumed ${formatNumber(top.cumulativeDurationMinutes, 0)} minutes of CI${topShare === null ? "" : `; the top 20% of workflows absorb ${formatPercent(topShare)} of the time`}.`,
     id: "workflow-ci-cost-hotspot",
     sampleSize: input.cumulativeDuration.length,
@@ -165,6 +168,7 @@ const successRateInsight = (input: WorkflowsInsightsInput): Insight | null => {
   if (belowTarget.length === 0) {
     return {
       category: "reliability",
+      confidence: confidenceFromSample(significantRuns),
       detail: `Every workflow with at least ${MIN_RUNS_FOR_SIGNAL} runs is above the ${METRIC_TARGETS.workflowSuccessRatePct}% success threshold.`,
       id: "workflow-success-rate",
       sampleSize: significantRuns,
@@ -184,6 +188,7 @@ const successRateInsight = (input: WorkflowsInsightsInput): Insight | null => {
   return {
     action: "Investigate recurring failures in the least reliable workflows.",
     category: "reliability",
+    confidence: confidenceFromSample(significantRuns),
     detail: `${belowTarget.length} of ${significant.length} workflows are below the ${METRIC_TARGETS.workflowSuccessRatePct}% success threshold. The worst is "${worst.workflowName}" (${formatNumber(worst.successRatePercentage)}%).`,
     id: "workflow-success-rate",
     sampleSize: significantRuns,
@@ -216,6 +221,7 @@ const deploymentFrequencyInsight = (
 
   return {
     category: "reliability",
+    confidence: confidenceFromSample(total),
     detail: `An average of ${formatNumber(average)} deployments per week across the observed periods.`,
     id: "workflow-deployment-frequency",
     sampleSize: total,
@@ -331,6 +337,7 @@ const durationSpreadInsight = (
 
   return {
     category: "reliability",
+    confidence: confidenceFromSample(count),
     detail: `The median pipeline takes ${formatNumber(p50)} min, while the slowest 5% exceed ${formatNumber(p95)} min${formatSpreadRatio(ratio)}.`,
     id: "workflow-duration-spread",
     sampleSize: count,

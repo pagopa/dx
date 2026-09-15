@@ -8,6 +8,7 @@ import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
+  isHumanReview,
   notLikeAll,
   textArray,
   timeBucket,
@@ -34,6 +35,23 @@ describe("botAuthorsExclusion", () => {
     expect(query.sql).toBe(
       "(reviewer NOT IN ($1, $2, $3) AND reviewer NOT LIKE '%[bot]')",
     );
+  });
+});
+
+describe("isHumanReview", () => {
+  it("excludes bots and the pull-request author", () => {
+    const query = dialect.sqlToQuery(isHumanReview("rr", "pr"));
+
+    expect(query.sql).toBe(
+      "(rr.reviewer NOT IN ($1, $2, $3) AND rr.reviewer NOT LIKE '%[bot]') AND rr.reviewer <> pr.author",
+    );
+    expect(query.params).toEqual([...BOT_AUTHORS]);
+  });
+
+  it("targets arbitrary review and author aliases", () => {
+    const query = dialect.sqlToQuery(isHumanReview("prr", "pr"));
+
+    expect(query.sql).toContain("prr.reviewer <> pr.author");
   });
 });
 
@@ -140,4 +158,3 @@ describe("deployWorkflowMatch", () => {
     expect(rendered.params).toEqual([]);
   });
 });
-

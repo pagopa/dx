@@ -106,6 +106,7 @@ export default function IacDashboard() {
               ]}
               title="IaC PR Lead Time (weekly average)"
               tooltip={tooltipContent.leadTimeMovingAvg}
+              unit="days"
               xKey="week"
               xValueFormatter={(v: unknown) => {
                 // Shorten "2025-11-10" to "Nov 10"
@@ -125,6 +126,7 @@ export default function IacDashboard() {
               ]}
               title="IaC PR Lead Time (trend)"
               tooltip={tooltipContent.leadTimeTrend}
+              unit="days"
               xKey="date"
               zeroBaseline={false}
             />
@@ -144,6 +146,7 @@ export default function IacDashboard() {
               ]}
               title="Supervised vs Unsupervised IaC PRs (Cumulative)"
               tooltip={tooltipContent.supervisedVsUnsupervised}
+              unit="PRs"
               xKey="runDate"
             />
             <SimpleLineChart
@@ -153,6 +156,7 @@ export default function IacDashboard() {
               ]}
               title="IaC PRs Count Over Time"
               tooltip={tooltipContent.prsOverTime}
+              unit="PRs"
               xKey="week"
             />
           </div>

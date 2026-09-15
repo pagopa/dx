@@ -15,7 +15,7 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
-import { botAuthorsExclusion } from "../shared/sql-fragments";
+import { botAuthorsExclusion, isHumanReview } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import {
@@ -46,6 +46,8 @@ export const getPullRequestsReviewDashboard = async (
   );
 
   // --- Time to First Review (population: PRs created in the window) ---
+  // The "first review" is the earliest review from a human who is not the
+  // author: bot comments and self-comments are not reviews.
   const avgTimeToFirstReview = await db.execute(sql`
     SELECT ROUND(AVG(
       EXTRACT(EPOCH FROM (first_review.submitted_at - pr.created_at)) / 3600
@@ -55,6 +57,7 @@ export const getPullRequestsReviewDashboard = async (
     JOIN LATERAL (
       SELECT submitted_at FROM pull_request_reviews prr
       WHERE prr.pull_request_id = pr.id
+        AND ${isHumanReview("prr", "pr")}
       ORDER BY submitted_at ASC LIMIT 1
     ) first_review ON true
     WHERE r.full_name = ${fullName}
@@ -72,6 +75,7 @@ export const getPullRequestsReviewDashboard = async (
     JOIN LATERAL (
       SELECT submitted_at FROM pull_request_reviews prr
       WHERE prr.pull_request_id = pr.id
+        AND ${isHumanReview("prr", "pr")}
       ORDER BY submitted_at ASC LIMIT 1
     ) first_review ON true
     WHERE r.full_name = ${fullName}
@@ -81,7 +85,7 @@ export const getPullRequestsReviewDashboard = async (
     ORDER BY week
   `);
 
-  // --- Time to Merge (population: PRs merged in the window) ---
+  // --- Time to Merge (population: PRs merged in the window, with a human approval) ---
   const avgTimeToMerge = await db.execute(sql`
     SELECT ROUND(AVG(
       EXTRACT(EPOCH FROM (pr.merged_at - last_approval.submitted_at)) / 3600
@@ -91,6 +95,7 @@ export const getPullRequestsReviewDashboard = async (
     JOIN LATERAL (
       SELECT submitted_at FROM pull_request_reviews prr
       WHERE prr.pull_request_id = pr.id AND prr.state = 'APPROVED'
+        AND ${isHumanReview("prr", "pr")}
       ORDER BY submitted_at DESC LIMIT 1
     ) last_approval ON true
     WHERE r.full_name = ${fullName}
@@ -108,6 +113,7 @@ export const getPullRequestsReviewDashboard = async (
     JOIN LATERAL (
       SELECT submitted_at FROM pull_request_reviews prr
       WHERE prr.pull_request_id = pr.id AND prr.state = 'APPROVED'
+        AND ${isHumanReview("prr", "pr")}
       ORDER BY submitted_at DESC LIMIT 1
     ) last_approval ON true
     WHERE r.full_name = ${fullName}
@@ -131,6 +137,7 @@ export const getPullRequestsReviewDashboard = async (
       JOIN LATERAL (
         SELECT submitted_at FROM pull_request_reviews prr
         WHERE prr.pull_request_id = pr.id
+          AND ${isHumanReview("prr", "pr")}
         ORDER BY submitted_at ASC LIMIT 1
       ) first_review ON true
       WHERE r.full_name = ${fullName}
@@ -140,15 +147,15 @@ export const getPullRequestsReviewDashboard = async (
   `);
 
   // --- Share of merged PRs without any human review ---
-  // Population: PRs merged in the window. Bot reviews do not count as reviews,
-  // matching `reviewMatrix` and `reviewDistribution` in this file.
+  // Population: PRs merged in the window. Bot reviews and self-comments do not
+  // count as reviews, matching `reviewMatrix` and `reviewDistribution`.
   const mergedWithoutReviewShare = await db.execute(sql`
     SELECT ROUND(
       COUNT(*) FILTER (
         WHERE NOT EXISTS (
           SELECT 1 FROM pull_request_reviews prr
           WHERE prr.pull_request_id = pr.id
-            AND ${botAuthorsExclusion("prr.reviewer")}
+            AND ${isHumanReview("prr", "pr")}
         )
       )::numeric / NULLIF(COUNT(*), 0)
     , 4) AS value
@@ -183,7 +190,7 @@ export const getPullRequestsReviewDashboard = async (
     WHERE r.full_name = ${fullName}
       AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND ${HUMAN_PR}
-      AND ${botAuthorsExclusion("prr.reviewer")}
+      AND ${isHumanReview("prr", "pr")}
     GROUP BY pr.author, prr.reviewer
     ORDER BY "reviewCount" DESC
   `);

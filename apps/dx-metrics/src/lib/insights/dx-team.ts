@@ -3,7 +3,11 @@
 import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
-import { formatPercent, sortInsights } from "./insight-helpers";
+import {
+  confidenceFromSample,
+  formatPercent,
+  sortInsights,
+} from "./insight-helpers";
 import type { Insight } from "./types";
 
 export interface DxTeamInsightsInput {
@@ -45,6 +49,7 @@ const ioInfraExternalInsight = (input: DxTeamInsightsInput): Insight | null => {
 
   return {
     category: "velocity",
+    confidence: confidenceFromSample(total),
     detail: `${formatPercent(externalShare)} of io-infra pull requests come from outside the DX team (${nonDx}/${total}).`,
     id: "dx-team-io-infra-external",
     severity: "positive",
@@ -93,6 +98,7 @@ const busFactorInsight = (input: DxTeamInsightsInput): Insight | null => {
       ? "Spread work on non-DX repositories across more team members."
       : "Shift non-DX work back to the teams that own those repositories.",
     category: "risk",
+    confidence: confidenceFromSample(total),
     detail: `${top[0]} accounts for ${formatPercent(topShare)} of the ${total} DX commits on non-DX repositories.`,
     id: "dx-team-bus-factor",
     severity: concentrated ? "warning" : "neutral",

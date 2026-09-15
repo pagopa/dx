@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   formatSpreadRatio,
@@ -70,6 +71,7 @@ const supervisionInsight = (input: IacInsightsInput): Insight | null => {
       ? "Let product teams own their infrastructure PRs; DX should enable, not implement."
       : undefined,
     category: "risk",
+    confidence: confidenceFromSample(total),
     detail: `${formatPercent(unsupervisedShare)} of IaC pull requests are unsupervised (${unsupervised}/${total}).`,
     id: "iac-supervision",
     severity: autonomous ? "positive" : dxOwned ? "warning" : "neutral",
@@ -147,6 +149,7 @@ const reviewerLoadInsight = (input: IacInsightsInput): Insight | null => {
       ? "Involve more reviewers in infrastructure pull requests."
       : undefined,
     category: "risk",
+    confidence: confidenceFromSample(total),
     detail: `${top.reviewer} handles ${formatPercent(topShare)} of the IaC pull requests in the period.`,
     id: "iac-reviewer-load",
     severity,

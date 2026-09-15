@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatNumber,
   formatPercent,
   severityFromUpperThreshold,
@@ -40,6 +41,7 @@ const backlogInsight = (input: TrackerInsightsInput): Insight | null => {
 
   return {
     category: "quality",
+    confidence: confidenceFromSample(openedTotal),
     detail: `${openedTotal} requests opened and ${closedTotal} closed: ${open} still to handle.`,
     id: "tracker-backlog",
     severity,
@@ -71,6 +73,7 @@ const topCategoryInsight = (input: TrackerInsightsInput): Insight | null => {
 
   return {
     category: "quality",
+    confidence: confidenceFromSample(total),
     detail: `The most frequent category is "${top.category}" with ${formatPercent(topShare)} of requests (${top.requests}/${total}).`,
     id: "tracker-top-category",
     severity: "neutral",

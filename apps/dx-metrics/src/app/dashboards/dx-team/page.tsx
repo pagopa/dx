@@ -88,6 +88,7 @@ export default function DxTeamDashboard() {
               title="Pull Requests on IO-Infra"
               tooltip={tooltipContent.ioInfraPrs}
               tooltipFormatter={(value) => value.toFixed(0)}
+              unit="PRs"
               xKey="date"
             />
             <SimpleBarChart
@@ -101,6 +102,7 @@ export default function DxTeamDashboard() {
               data={data.dxCommits}
               title="DX Members Commits on Non-DX Repositories"
               tooltip={tooltipContent.dxMemberCommits}
+              unit="commits"
               xKey="committerDate"
             />
           </div>

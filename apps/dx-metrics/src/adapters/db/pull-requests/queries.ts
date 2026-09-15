@@ -26,7 +26,6 @@ import {
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
-  prCommentsBySizeRowSchema,
   prCommentsRowSchema,
   prCumulativeCountRowSchema,
   prDateCountRowSchema,
@@ -172,7 +171,8 @@ async function fetchLeadTimeData(
     db.execute(sql`
       WITH weekly_avg AS (
         SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
-          ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays",
+          AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400) AS "avgLeadTimeDays",
+          COUNT(*)::numeric AS weight,
           ROW_NUMBER() OVER (ORDER BY DATE_TRUNC('week', pr.merged_at)::date) AS x
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
@@ -181,15 +181,32 @@ async function fetchLeadTimeData(
           AND ${HUMAN_PR}
         GROUP BY DATE_TRUNC('week', pr.merged_at)::date
       ),
-      stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("avgLeadTimeDays") AS "yAvg" FROM weekly_avg),
+      stats AS (
+        SELECT
+          SUM(weight) AS "wSum",
+          SUM(weight * x) AS "wxSum",
+          SUM(weight * "avgLeadTimeDays") AS "wySum",
+          SUM(weight * x * x) AS "wxxSum",
+          SUM(weight * x * "avgLeadTimeDays") AS "wxySum"
+        FROM weekly_avg
+      ),
       regression AS (
-        SELECT CASE WHEN SUM(POWER(w.x - s."xAvg", 2)) != 0
-          THEN SUM((w.x - s."xAvg") * (w."avgLeadTimeDays" - s."yAvg")) / SUM(POWER(w.x - s."xAvg", 2))
-          ELSE 0 END AS slope, s."yAvg", s."xAvg"
-        FROM weekly_avg w CROSS JOIN stats s GROUP BY s."xAvg", s."yAvg"
+        -- Weighted least squares: weeks with more merged PRs carry more weight,
+        -- so a single-PR week cannot bend the trend like a fifty-PR week.
+        SELECT CASE WHEN "wSum" * "wxxSum" - "wxSum" * "wxSum" <> 0
+          THEN ("wSum" * "wxySum" - "wxSum" * "wySum")
+            / ("wSum" * "wxxSum" - "wxSum" * "wxSum")
+          ELSE 0 END AS slope,
+          "wSum", "wxSum", "wySum"
+        FROM stats
       )
       SELECT w.week AS date,
-        ROUND((r.slope * w.x + (r."yAvg" - r.slope * r."xAvg"))::numeric, 2) AS "trendLine"
+        ROUND((
+          r.slope * w.x
+          + CASE WHEN r."wSum" <> 0
+            THEN (r."wySum" - r.slope * r."wxSum") / r."wSum"
+            ELSE 0 END
+        )::numeric, 2) AS "trendLine"
       FROM weekly_avg w CROSS JOIN regression r ORDER BY w.week
     `),
   ]);
@@ -325,7 +342,7 @@ async function fetchPrQualityData(
   referenceDate: string,
   days: number,
 ): Promise<PrQualityData> {
-  const [prSize, prComments, prCommentsBySize, prSizeDistribution, slowestPrs] =
+  const [prSize, prComments, prSizeDistribution, slowestPrs] =
     await Promise.all([
       db.execute(sql`
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
@@ -340,17 +357,6 @@ async function fetchPrQualityData(
       db.execute(sql`
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
           ROUND(AVG(pr.total_comments_count)::numeric, 2) AS "avgComments"
-        FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}
-        GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
-      `),
-      db.execute(sql`
-        SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
-          ROUND(
-            AVG(pr.total_comments_count)::numeric / NULLIF(AVG(pr.additions)::numeric, 0)
-          , 2) AS "avgCommentsPerAddition"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
@@ -393,11 +399,6 @@ async function fetchPrQualityData(
       prCommentsRowSchema,
       prComments.rows,
       "pull-requests prComments",
-    ),
-    prCommentsBySize: parseSqlRows(
-      prCommentsBySizeRowSchema,
-      prCommentsBySize.rows,
-      "pull-requests prCommentsBySize",
     ),
     prSize: parseSqlRows(prSizeRowSchema, prSize.rows, "pull-requests prSize"),
     prSizeDistribution: parseSqlRows(

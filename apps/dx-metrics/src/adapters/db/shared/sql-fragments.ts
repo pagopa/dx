@@ -33,6 +33,18 @@ export const botAuthorsExclusion = (column: string): SQL => {
   return sql`(${notInList} AND ${sql.raw(column)} NOT LIKE '%[bot]')`;
 };
 
+/**
+ * Predicate matching reviews that count as a real human review: a reviewer who
+ * is neither a bot nor the pull-request author.
+ *
+ * Without it, a bot comment (e.g. Renovate) or the author's own comment is
+ * picked up as the "first review", collapsing review-latency metrics to ~0 and
+ * inflating the review count. Every review-based metric must use this predicate
+ * so the review dashboards and the benchmark agree on what a review is.
+ */
+export const isHumanReview = (reviewAlias: string, authorAlias: string): SQL =>
+  sql`${botAuthorsExclusion(`${reviewAlias}.reviewer`)} AND ${sql.raw(reviewAlias)}.reviewer <> ${sql.raw(authorAlias)}.author`;
+
 /** Classifies a pipeline path as a DX or non-DX pipeline. */
 export const dxPipelineCase = (pipelineColumn: string): SQL =>
   sql`CASE WHEN ${sql.raw(pipelineColumn)} LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END`;

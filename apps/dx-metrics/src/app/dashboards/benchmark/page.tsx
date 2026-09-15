@@ -149,7 +149,7 @@ export default function BenchmarkDashboard() {
   const { days, setDays } = useDashboardFilters({ mode: "time-only" });
 
   const { data, error, loading, refetch } = useDashboardData<BenchmarkData>(
-    "overview",
+    "benchmark",
     { days },
   );
 

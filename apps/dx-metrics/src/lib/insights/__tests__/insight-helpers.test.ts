@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  confidenceFromSample,
   formatSpreadRatio,
   halfSplitChange,
   mean,
@@ -13,6 +14,21 @@ import {
   sortInsights,
 } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
+
+describe("confidenceFromSample", () => {
+  it("marks a small known sample as low confidence", () => {
+    expect(confidenceFromSample(3, 10)).toBe("low");
+  });
+
+  it("does not flag an adequate sample", () => {
+    expect(confidenceFromSample(25, 10)).toBeUndefined();
+  });
+
+  it("stays silent when the sample size is unknown", () => {
+    expect(confidenceFromSample(undefined)).toBeUndefined();
+    expect(confidenceFromSample(null)).toBeUndefined();
+  });
+});
 
 describe("mean", () => {
   it("averages finite values", () => {

@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromSample,
   formatPercent,
   severityFromTarget,
   sortInsights,
@@ -58,6 +59,7 @@ const pipelineAdoptionInsight = (
 
   return {
     category: "adoption",
+    confidence: confidenceFromSample(total),
     detail: `${formatPercent(adoption)} of pipelines use DX workflows (target ${METRIC_TARGETS.dxPipelineAdoptionPct}%).`,
     id: "dx-adoption-pipeline",
     severity: severityFromTarget(
@@ -98,6 +100,7 @@ const moduleAdoptionInsight = (
 
   return {
     category: "adoption",
+    confidence: confidenceFromSample(total),
     detail: `${formatPercent(adoption)} of Terraform modules are DX modules.`,
     id: "dx-adoption-modules",
     severity: "neutral",
@@ -159,6 +162,7 @@ const versionDriftInsight = (
         ? "Upgrade the listed modules to the latest major version."
         : undefined,
     category: "adoption",
+    confidence: confidenceFromSample(total),
     detail: `${upToDate}/${total} DX modules are up to date (${formatPercent(freshness)}), ${outdated} outdated${unknown > 0 ? `, ${unknown} without a version` : ""}.`,
     evidence,
     id: "dx-adoption-version-drift",
