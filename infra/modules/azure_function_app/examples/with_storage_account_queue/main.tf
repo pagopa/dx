@@ -12,8 +12,8 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
-# trivy:ignore:AZU-0057 This connectivity example does not configure a consumer-owned logging destination
-# trivy:ignore:AZU-0058 LRS keeps this connectivity example lightweight; geo-redundancy is workload-specific
+# trivy:ignore:AZU-0057 Storage account should have logging enabled
+# trivy:ignore:AZU-0058 Storage account should use geo-redundant replication
 # trivy:ignore:AZU-0061 Storage account should have infrastructure encryption enabled
 resource "azurerm_storage_account" "external" {
   name                     = provider::dx::resource_name(merge(local.naming_config, { name = "external", resource_type = "storage_account" }))
