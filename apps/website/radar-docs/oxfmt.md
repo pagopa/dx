@@ -14,7 +14,7 @@ Oxfmt can drop into existing Prettier-based scripts with little change, and it
 ships built-in sorting for imports, Tailwind CSS classes, and `package.json`
 fields that usually require extra Prettier plugins.
 
-We are assessing Oxfmt as a possible successor to [Prettier](./prettier.md) for
+We are trialing Oxfmt as a possible successor to [Prettier](./prettier.md) for
 JavaScript and TypeScript formatting. Prettier remains the current adopt choice
 until this evaluation is complete.
 
@@ -27,7 +27,7 @@ until this evaluation is complete.
 ## Related radar entries
 
 - [Prettier](./prettier.md) — current adopt formatter
-- [Oxlint](./oxlint.md) — companion Oxc linter, also in assess
+- [Oxlint](./oxlint.md) — companion Oxc linter, also in trial
 
 ## Reference of usage in our organization
 

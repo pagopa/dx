@@ -1,3 +1,36 @@
+## 0.22.6 (2026-09-15)
+
+### 🚀 Features
+
+- Add Expo to the Technology Radar ([#2187](https://github.com/pagopa/dx/pull/2187))
+
+### ❤️ Thank You
+
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.5 (2026-09-11)
+
+### 🚀 Features
+
+- Replace Flipper with Reactotron on technology radar ([#2183](https://github.com/pagopa/dx/pull/2183))
+- Add Proxyman to technology radar ([#2184](https://github.com/pagopa/dx/pull/2184))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.4 (2026-09-10)
+
+### 🩹 Fixes
+
+- Fix the Oxlint and Oxfmt technology radar entry descriptions to reference the Trial ring. ([#2179](https://github.com/pagopa/dx/pull/2179))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.22.3 (2026-09-01)
 
 ### 🚀 Features

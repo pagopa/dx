@@ -23,8 +23,8 @@ data "azurerm_virtual_network" "e2e" {
 }
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "pep",
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "pep",
     resource_type = "subnet"
   }))
   virtual_network_name = data.azurerm_virtual_network.e2e.name
@@ -32,8 +32,8 @@ data "azurerm_subnet" "pep" {
 }
 
 data "azurerm_resource_group" "network" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "network"
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "network"
     resource_type = "resource_group"
   }))
 }

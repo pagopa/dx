@@ -2,7 +2,7 @@ locals {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_merge_roles/tests"
     ManagementTeam = "Developer Experience"
@@ -12,7 +12,7 @@ locals {
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "e2e"
     app_name        = "mrg"

@@ -1,3 +1,20 @@
+## 0.27.6 (2026-09-15)
+
+### 🩹 Fixes
+
+- Authorize both bootstrap CI and CD identities as Azure Directory Readers. ([#2176](https://github.com/pagopa/dx/pull/2176))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.27.5 (2026-09-11)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.6
+
 ## 0.27.4 (2026-09-02)
 
 ### 🧱 Updated Dependencies
