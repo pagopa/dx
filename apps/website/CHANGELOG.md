@@ -1,3 +1,13 @@
+## 0.22.6 (2026-09-15)
+
+### 🚀 Features
+
+- Add Expo to the Technology Radar ([#2187](https://github.com/pagopa/dx/pull/2187))
+
+### ❤️ Thank You
+
+- LazyAfternoons @LazyAfternoons
+
 ## 0.22.5 (2026-09-11)
 
 ### 🚀 Features

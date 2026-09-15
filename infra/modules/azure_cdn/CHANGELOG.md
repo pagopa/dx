@@ -1,3 +1,13 @@
+## 2.1.4 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.1.3 (2026-09-08)
 
 ### 🩹 Fixes
