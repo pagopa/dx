@@ -52,6 +52,11 @@ on:
         description: Environment where the image will be deployed
         type: string
         required: true
+      disable_auto_deploy:
+        description: Disable automatic deployment approval, requiring manual approval
+        type: boolean
+        required: false
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -296,3 +301,53 @@ jobs:
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$NEW_REVISION_NAME"
+
+  auto_approve_deploy:
+    name: Approve Deployment
+    runs-on: ubuntu-latest
+    needs: build
+    # If auto approval fails, the deployment can be approved manually.
+    continue-on-error: true
+    if: ${{ !inputs.disable_auto_deploy && always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+
+    steps:
+      - name: Approve deployment
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }}
+          REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set."
+            exit 1
+          fi
+
+          deployments=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
+
+          environment=$(echo "$deployments" | jq -r '.[].environment.name')
+
+          if [ "$environment" != "$REQUIRED_ENVIRONMENT" ]; then
+            echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
+            echo "::warning::Check if the deployment was already approved by one of the reviewers."
+            exit 1
+          fi
+
+          current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
+
+          if [ "$current_user_can_approve" != true ]; then
+            github_user=$(gh api user | jq -r '.login')
+            echo "::error::$github_user is not a reviewer"
+            echo "::warning::Auto approval is not available because the user is not a reviewer of $REQUIRED_ENVIRONMENT."
+            exit 1
+          fi
+
+          environment_id=$(echo "$deployments" | jq -r '.[].environment.id')
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
+            -F "environment_ids[]=$environment_id" \
+            -f "state=approved" \
+            -f "comment=Approved automatically by the workflow."
