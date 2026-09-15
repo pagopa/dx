@@ -38,9 +38,11 @@
     "projectsRelationship": "independent",
     "groups": {
       "applications": {
-        "projects": ["tag:release:docker"],
-        "projectsRelationship": "independent",
-        "versionPlans": true,
+        "projects": [
+          "tag:release:docker",
+          "!tag:private",
+          "!tag:*:private"
+        ],
         "docker": {
           "preVersionCommand": "",
           "registryUrl": "ghcr.io",
@@ -50,17 +52,11 @@
         }
       },
       "npm-packages": {
-        "projectsRelationship": "independent",
-        "versionPlans": true,
         "projects": [
-          "apps/*",
-          "packages/*",
-          "actions/*",
-          "containers/*",
-          "infra/modules/*",
-          "providers/*",
-          "infra/scripts",
-          "!tag:release:docker"
+          "tag:npm:public",
+          "!tag:release:docker",
+          "!tag:private",
+          "!tag:*:private"
         ]
       }
     },

@@ -153,9 +153,11 @@ release repository and override the release target in its package's `nx.targets`
 
 Keep the Docker repository in the project's `package.json` as shown in the
 [complete release guide](https://dx.pagopa.it/docs/containers/nx-docker-release).
-The plugin supplies the image name, build context, Dockerfile, platform, and OCI
-metadata to the target automatically. Projects without a `package.json` do not
-need this override.
+Package projects must also keep the `nx-release-publish` override shown above,
+because Nx's JavaScript package plugin otherwise replaces the inferred Docker
+publisher. The plugin supplies the image name, build context, Dockerfile,
+platform, and OCI metadata to the target automatically. Projects without a
+`package.json` do not need this override.
 
 ## Default Docker Build Layout
 
@@ -216,7 +218,7 @@ Its behavior is:
 
 1. read the released version from the project's `package.json`, or from
    `project.json` `metadata.version` for projects without a `package.json`
-2. compute the immutable version, major/minor, and `latest` tags
+2. compute the immutable version, minor, major, and `latest` tags
 3. in dry-run mode, print the tags that would be published and stop
 4. otherwise rebuild the image with Buildx and push every release tag
 

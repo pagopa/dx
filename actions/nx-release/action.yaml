@@ -178,9 +178,10 @@ runs:
         set -euo pipefail
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
-          # workflow_dispatch: build all projects that expose a build target,
-          # then publish every project covered by the release configuration.
-          BUILD_PROJECTS=$(npx nx show projects --withTarget=build --sep=,)
+          # workflow_dispatch: build all public projects that expose a build
+          # target, then publish every project covered by the release
+          # configuration.
+          BUILD_PROJECTS=$(npx nx show projects --withTarget=build --projects='!tag:private,!tag:*:private' --sep=,)
           if [[ -n "${BUILD_PROJECTS:-}" ]]; then
             npx nx run-many --target=build --projects="$BUILD_PROJECTS"
           fi

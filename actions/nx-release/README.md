@@ -52,7 +52,7 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts public projects to publish from the latest merged `Version Packages` PR (or builds all projects with a `build` target when triggered via `workflow_dispatch`)
+1. Extracts public projects to publish from the latest merged `Version Packages` PR (or builds all public projects with a `build` target when triggered via `workflow_dispatch`)
 2. Runs `npx nx release publish` with provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
@@ -181,7 +181,7 @@ Used automatically on `pull_request` workflows. The action:
 
 Triggered manually. The action:
 
-1. Builds all projects with a `build` target and publishes all projects covered by
+1. Builds all public projects with a `build` target and publishes all projects covered by
    the Nx release configuration
 2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
