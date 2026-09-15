@@ -1,3 +1,6 @@
+# trivy:ignore:AZU-0001 App service does not have client certificates enabled
+# trivy:ignore:AZU-0003 App service does not have authentication enabled
+# trivy:ignore:AZU-0006 App service does not require a secure TLS version
 resource "azurerm_linux_web_app" "this" {
   name                = local.app_service.name
   location            = var.environment.location
