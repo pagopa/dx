@@ -63,7 +63,11 @@ export default function DxTeamDashboard() {
             className="mb-2"
             referenceDate={data.meta.referenceDate}
           />
-          <InsightsPanel className="mb-4" insights={data.insights} />
+          <InsightsPanel
+            className="mb-4"
+            insights={data.insights}
+            periodDays={days}
+          />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[

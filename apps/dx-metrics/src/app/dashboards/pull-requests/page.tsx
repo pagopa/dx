@@ -13,6 +13,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { formatNumber } from "@/lib/format";
 import { severityFromTargetWithTrend } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
 import { percentChange } from "@/lib/stats";
@@ -30,6 +31,11 @@ interface PrDashboardData {
   };
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
   leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
+  leadTimePercentiles: {
+    p50: null | number;
+    p85: null | number;
+    p95: null | number;
+  };
   leadTimeTrend: { date: string; trendLine: number }[];
   mergedPrs: { date: string; prCount: number }[];
   newPrs: { date: string; prCount: number }[];
@@ -89,6 +95,20 @@ export default function PullRequestsDashboard() {
   const leadTimeSparkline = data?.leadTimeMovingAvg.map(
     (row) => row.avgLeadTimeDays,
   );
+  // Percentiles sit next to the mean on the card: the headline is an average,
+  // and a right-skewed distribution needs the median and the tail in view.
+  const leadTimeBreakdown = data?.leadTimePercentiles
+    ? [
+        {
+          label: "median",
+          value: `${formatNumber(data.leadTimePercentiles.p50, 1)} d`,
+        },
+        {
+          label: "p95",
+          value: `${formatNumber(data.leadTimePercentiles.p95, 1)} d`,
+        },
+      ]
+    : undefined;
 
   return (
     <div className="space-y-8">
@@ -124,15 +144,17 @@ export default function PullRequestsDashboard() {
       {data && (
         <div className="space-y-8">
           <DataFreshness referenceDate={data.meta.referenceDate} />
-          <InsightsPanel insights={data.insights} />
+          <InsightsPanel insights={data.insights} periodDays={days} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              label="Avg Lead Time"
+              breakdown={leadTimeBreakdown}
+              label="Mean Lead Time"
               suffix="days"
               tooltip={tooltipContent.avgLeadTime}
               value={data.cards.avgLeadTime}
               deltaPct={leadTimeDelta}
+              deltaLabel="trend"
               target={METRIC_TARGETS.leadTimeDays}
               severity={leadTimeSeverity}
               sparkline={leadTimeSparkline}
@@ -167,7 +189,7 @@ export default function PullRequestsDashboard() {
               referenceLines={[
                 { label: "target", value: METRIC_TARGETS.leadTimeDays },
               ]}
-              title="Avg Lead Time (Weekly)"
+              title="Mean Lead Time (Weekly)"
               tooltip={tooltipContent.leadTimeMovingAvg}
               xKey="week"
             />

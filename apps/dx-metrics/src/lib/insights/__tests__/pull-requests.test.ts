@@ -90,6 +90,29 @@ describe("buildPullRequestsInsights", () => {
     ).toBeCloseTo(100);
   });
 
+  it("labels the statistic behind each lead-time value", () => {
+    const insights = buildPullRequestsInsights({
+      ...baseInput(),
+      cards: { avgLeadTime: 5.42 },
+      leadTimePercentiles: { p50: 1.2, p85: 8, p95: 20.4 },
+    });
+
+    // The spread card headlines p95, not the average shown in the metric card,
+    // so the two numbers must be named to avoid reading as a contradiction.
+    expect(
+      insights.find((insight) => insight.id === "pr-lead-time-spread")?.value
+        ?.label,
+    ).toBe("95th percentile");
+    expect(
+      insights.find((insight) => insight.id === "pr-lead-time-target")?.value
+        ?.label,
+    ).toBe("average");
+    expect(
+      insights.find((insight) => insight.id === "pr-lead-time-trend")?.value
+        ?.label,
+    ).toBe("trend at period end");
+  });
+
   it("escalates a lead time far beyond the target to critical", () => {
     const insights = buildPullRequestsInsights({
       ...baseInput(),

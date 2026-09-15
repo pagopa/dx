@@ -4,8 +4,19 @@ import TooltipIcon from "@/components/TooltipIcon";
 import type { InsightSeverity } from "@/lib/insights/types";
 
 interface MetricCardProps {
+  /**
+   * Breakdown of the same metric by statistic (e.g. median, p95), rendered
+   * next to the target. Keeps a skewed distribution visible on the card so the
+   * headline number is not read as if it were the only aggregation.
+   */
+  breakdown?: readonly { label: string; value: string }[];
   /** Percentage change versus the previous period, when available. */
   deltaPct?: null | number;
+  /**
+   * Names what `deltaPct` compares (e.g. "trend"). Shown before the arrow so a
+   * trend-based delta is not mistaken for a change in the headline value.
+   */
+  deltaLabel?: string;
   label: string;
   /** Value from the previous period, shown next to the delta. */
   previousValue?: null | number;
@@ -101,7 +112,9 @@ const Sparkline = ({ points }: { points: readonly number[] }) => {
  * component stays backward compatible with dashboards that do not compute them.
  */
 export function MetricCard({
+  breakdown,
   deltaPct,
+  deltaLabel,
   label,
   previousValue,
   severity,
@@ -117,6 +130,20 @@ export function MetricCard({
     severity !== undefined ? SEVERITY_BADGE[severity] : null;
   const hasDelta = deltaPct !== undefined && deltaPct !== null;
   const rising = hasDelta && deltaPct > 0;
+
+  // A single metadata line: the statistic breakdown, the target, and the
+  // comparison against the previous period all read together. Internal spaces
+  // are non-breaking so an item like "p95 20.4 d" never splits across lines.
+  const nonBreaking = (text: string) => text.replace(/ /g, "\u00A0");
+  const metaParts = [
+    previousValue !== undefined && previousValue !== null
+      ? nonBreaking(`previous ${previousValue}`)
+      : null,
+    ...(breakdown ?? []).map((item) =>
+      nonBreaking(`${item.label} ${item.value}`),
+    ),
+    target !== undefined ? nonBreaking(`target ${target}`) : null,
+  ].filter((part): part is string => part !== null);
 
   return (
     <div
@@ -136,7 +163,7 @@ export function MetricCard({
           </span>
         )}
       </p>
-      <div className="mt-2 flex items-baseline">
+      <div className="mt-2 flex flex-wrap items-baseline">
         <p className="text-3xl font-bold tracking-tighter text-[#e6edf3] tabular-nums metric-value-glow">
           {value ?? "—"}
         </p>
@@ -146,26 +173,26 @@ export function MetricCard({
           </span>
         )}
         {hasDelta && (
-          <span className="ml-3 text-sm font-semibold text-gray-400 tabular-nums">
+          <span className="ml-3 whitespace-nowrap text-sm font-semibold text-gray-400 tabular-nums">
+            {deltaLabel && <span className="mr-1">{deltaLabel}</span>}
             <span aria-hidden="true">{rising ? "↑" : "↓"}</span>{" "}
             <span className="sr-only">{rising ? "up" : "down"}</span>
             {Math.abs(deltaPct).toFixed(0)}%
           </span>
         )}
       </div>
-      {(target !== undefined || previousValue !== undefined) && (
-        <p className="mt-1 text-xs text-gray-400">
-          {previousValue !== undefined && previousValue !== null && (
-            <span>previous {previousValue}</span>
-          )}
-          {target !== undefined && (
-            <span>
-              {previousValue !== undefined && previousValue !== null
-                ? " · "
-                : ""}
-              target {target}
+      {metaParts.length > 0 && (
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-gray-400">
+          {metaParts.map((part, index) => (
+            <span className="whitespace-nowrap" key={`${index}-${part}`}>
+              {index > 0 && (
+                <span aria-hidden="true" className="mr-1 text-gray-500">
+                  ·
+                </span>
+              )}
+              {part}
             </span>
-          )}
+          ))}
         </p>
       )}
       {sparkline && <Sparkline points={sparkline} />}

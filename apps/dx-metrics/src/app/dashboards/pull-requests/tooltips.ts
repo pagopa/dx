@@ -4,15 +4,15 @@
 
 export const pullRequestsTooltips = {
   avgLeadTime:
-    "Average time from PR creation to merge in the selected period. The delta reflects the direction of the within-period trend line, so it always matches the trend chart.",
+    "Arithmetic mean of lead time (merge minus creation) across PRs merged in the selected period. Each PR counts once, so a few very slow PRs raise it above the median. The delta describes the within-period trend line, not the mean itself, so it always matches the trend chart.",
   commentsPerPr:
     "Average comments per PR. Indicates review quality and collaboration intensity.",
   cumulatedNewPrs:
     "Cumulative count of PRs over time. Shows total throughput and long-term trends.",
   leadTimeMovingAvg:
-    "Weekly average lead time, with the target as reference line. Shows the shape of the period.",
+    "Unweighted mean lead time of the PRs merged in each week, with the target as reference line. Each week counts as one point regardless of how many PRs it contains, so low-volume weeks swing more.",
   leadTimeTrend:
-    "In-period linear regression of the weekly average lead time. The card delta is derived from its endpoints, so card and chart cannot point in opposite directions.",
+    "Least-squares line fitted on the weekly mean lead times (one point per week). The card delta is the change between its endpoints, so card and chart cannot point in opposite directions. Endpoints are fitted values, not actual weekly means.",
   mergedPrs:
     "Number of successfully merged PRs per day. Tracks deployment throughput.",
   newPrs:

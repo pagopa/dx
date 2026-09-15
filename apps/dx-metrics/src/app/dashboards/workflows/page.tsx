@@ -80,7 +80,7 @@ export default function WorkflowsDashboard() {
         loading={loading}
         onRetry={refetch}
       />
-      {data && <WorkflowsDashboardContent data={data} />}
+      {data && <WorkflowsDashboardContent data={data} days={days} />}
     </div>
   );
 }
@@ -101,7 +101,13 @@ function formatDate(value: unknown): string {
   }
 }
 
-function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
+function WorkflowsDashboardContent({
+  data,
+  days,
+}: {
+  data: WorkflowDashboardData;
+  days: number;
+}) {
   const dxVsNonDxPivoted = pivotCumulativeSeries(
     data.dxVsNonDx,
     "pipelineType",
@@ -114,7 +120,11 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
   return (
     <>
       <DataFreshness className="mb-2" referenceDate={data.meta.referenceDate} />
-      <InsightsPanel className="mb-6" insights={data.insights} />
+      <InsightsPanel
+        className="mb-6"
+        insights={data.insights}
+        periodDays={days}
+      />
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard
           label="First Run"

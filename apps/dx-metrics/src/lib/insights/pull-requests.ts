@@ -114,7 +114,12 @@ const leadTimeTrendInsight = (
     id: "pr-lead-time-trend",
     severity,
     title: `Lead time ${direction}`,
-    value: { current: secondAverage, deltaPct, unit: "days" },
+    value: {
+      current: secondAverage,
+      deltaPct,
+      label: "trend at period end",
+      unit: "days",
+    },
   };
 };
 
@@ -138,7 +143,7 @@ const leadTimeTargetInsight = (
       tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
     }),
     title: withinTarget ? "Lead time within target" : "Lead time above target",
-    value: { current: value, unit: "days" },
+    value: { current: value, label: "average", unit: "days" },
   };
 };
 
@@ -172,7 +177,7 @@ const leadTimeSpreadInsight = (
     id: "pr-lead-time-spread",
     severity,
     title: poor ? "Lead-time spread too wide" : "Lead-time spread contained",
-    value: { current: p95, unit: "days" },
+    value: { current: p95, label: "95th percentile", unit: "days" },
   };
 };
 

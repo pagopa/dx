@@ -241,7 +241,7 @@ const firstReviewSpreadInsight = (
       severity === "positive"
         ? "First-review wait spread contained"
         : "First-review wait spread",
-    value: { current: p95, unit: "hours" },
+    value: { current: p95, label: "95th percentile", unit: "hours" },
   };
 };
 

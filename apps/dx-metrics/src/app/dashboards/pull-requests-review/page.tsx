@@ -94,7 +94,11 @@ export default function PullRequestsReviewDashboard() {
             className="mb-2"
             referenceDate={data.meta.referenceDate}
           />
-          <InsightsPanel className="mb-6" insights={data.insights} />
+          <InsightsPanel
+            className="mb-6"
+            insights={data.insights}
+            periodDays={days}
+          />
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <MetricCard
               label="Avg Time to First Review"

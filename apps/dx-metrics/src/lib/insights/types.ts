@@ -17,6 +17,12 @@ export type InsightCategory =
 export interface InsightValue {
   readonly current: number;
   readonly deltaPct?: number;
+  /**
+   * Names the statistic behind `current` (e.g. "average", "95th percentile").
+   * Shown under the headline number so it is never mistaken for a different
+   * statistic of the same metric rendered in a card nearby.
+   */
+  readonly label?: string;
   readonly previous?: number;
   readonly unit?: string;
 }

@@ -328,7 +328,7 @@ const durationSpreadInsight = (
       severity === "positive"
         ? "Pipeline duration spread contained"
         : "Pipeline duration spread",
-    value: { current: p95, unit: "minutes" },
+    value: { current: p95, label: "95th percentile", unit: "minutes" },
   };
 };
 

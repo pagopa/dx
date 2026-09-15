@@ -14,6 +14,12 @@ interface InsightsPanelProps {
   insights: readonly Insight[];
   /** Maximum number of insights to display. Defaults to 5. */
   limit?: number;
+  /**
+   * Length of the analysis window in days, when the dashboard is time-windowed.
+   * Shown in the header so it is explicit that insights cover the same period
+   * as the cards and charts below, and not a different one.
+   */
+  periodDays?: number;
 }
 
 interface SeverityStyle {
@@ -101,16 +107,21 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
       <p className="text-sm text-gray-300">{insight.detail}</p>
 
       {insight.value && (
-        <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold tracking-tight text-[#e6edf3] tabular-nums">
-            {formatWithUnit(
-              insight.value.current,
-              insight.value.unit,
-              Number.isInteger(insight.value.current) ? 0 : 1,
+        <div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-bold tracking-tight text-[#e6edf3] tabular-nums">
+              {formatWithUnit(
+                insight.value.current,
+                insight.value.unit,
+                Number.isInteger(insight.value.current) ? 0 : 1,
+              )}
+            </span>
+            {insight.value.deltaPct !== undefined && (
+              <DeltaBadge deltaPct={insight.value.deltaPct} />
             )}
-          </span>
-          {insight.value.deltaPct !== undefined && (
-            <DeltaBadge deltaPct={insight.value.deltaPct} />
+          </div>
+          {insight.value.label && (
+            <p className="text-xs text-gray-400">{insight.value.label}</p>
           )}
         </div>
       )}
@@ -159,6 +170,7 @@ export function InsightsPanel({
   defaultOpen = false,
   insights,
   limit = 5,
+  periodDays,
 }: InsightsPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const panelId = useId();
@@ -197,6 +209,11 @@ export function InsightsPanel({
           <span className="rounded bg-[#21262d] px-2 py-0.5 text-xs text-gray-300">
             {isTruncated ? `top ${visible.length}` : visible.length}
           </span>
+          {periodDays !== undefined && (
+            <span className="text-xs font-normal text-gray-400">
+              last {periodDays} days
+            </span>
+          )}
         </span>
         <span className="flex flex-wrap items-center justify-end gap-2">
           {SUMMARY_ORDER.filter((severity) => counts[severity] > 0).map(

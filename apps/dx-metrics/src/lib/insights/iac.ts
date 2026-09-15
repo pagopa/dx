@@ -184,7 +184,7 @@ const leadTimeSpreadInsight = (input: IacInsightsInput): Insight | null => {
       severity === "positive"
         ? "IaC lead-time spread contained"
         : "IaC lead-time spread",
-    value: { current: p95, unit: "days" },
+    value: { current: p95, label: "95th percentile", unit: "days" },
   };
 };
 
