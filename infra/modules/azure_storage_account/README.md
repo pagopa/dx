@@ -13,7 +13,7 @@ The following diagram illustrates the architecture and relationships between the
 ## Features
 
 - **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
-- **Advanced Threat Protection**: Enables advanced threat protection for enhanced security only for public configurations.
+- **Defender for Storage**: Enables advanced threat protection for public configurations or custom security capabilities, including malware scanning on upload, sensitive data discovery, and scan result Event Grid notifications.
 - **Advanced Security**: Enforces the use of User Delegation SAS for secure shared access if `delegated_access`.
 - **Data Lifecycle Management**: Includes automated policies for tiering data from Hot to Cool/Archive and setting retention periods to optimize costs.
 - **Private Networking**: Configures private endpoints and DNS zones for secure access.
@@ -31,6 +31,27 @@ The following diagram illustrates the architecture and relationships between the
 | `audit`            | For storing audit logs with high security and long-term retention (default: 1 year) | Yes    | No                         | ZRS + secondary replica | Standard     |
 | `delegated_access` | For sharing files externally, forcing secure access patterns.                       | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                                  | No     | No                         | LRS + secondary replica | Standard     |
+
+## Security capabilities
+
+Security capabilities can be configured with a single optional object. Providing
+the object enables Defender for Storage even when the storage account uses private
+networking and makes the local settings override subscription defaults.
+The malware scanning cap defaults to unlimited (`-1` GB/month).
+
+```hcl
+security = {
+  malware_scanning = {
+    enabled          = true
+    cap_gb_per_month = 100
+  }
+  sensitive_data_discovery = true
+}
+```
+
+If `event_grid_topic` is set, the module maps it to the Defender scan-results
+topic. Subscription settings are overridden automatically for any local security
+configuration.
 
 ## Important Considerations for CDN Origin
 
@@ -267,6 +288,7 @@ No modules.
 | <a name="input_containers"></a> [containers](#input\_containers) | Containers to be created. | <pre>list(object({<br/>    name        = string<br/>    access_type = optional(string, "private")<br/>    immutability_policy = optional(object({<br/>      period_in_days = number<br/>      locked         = optional(bool, false)<br/>    }), null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration for the storage account. | <pre>object({<br/>    name          = optional(string, null)<br/>    use_subdomain = optional(bool, false)<br/>  })</pre> | <pre>{<br/>  "name": null,<br/>  "use_subdomain": false<br/>}</pre> | no |
 | <a name="input_customer_managed_key"></a> [customer\_managed\_key](#input\_customer\_managed\_key) | Configures customer-managed keys (CMK) for encryption. Supports only 'kv' (Key Vault). | <pre>object({<br/>    enabled                   = optional(bool, false)<br/>    type                      = optional(string, null)<br/>    key_name                  = optional(string, null)<br/>    user_assigned_identity_id = optional(string, null)<br/>    key_vault_id              = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false<br/>}</pre> | no |
+| <a name="input_security"></a> [security](#input\_security) | Optional security capabilities. Setting this object creates and configures Defender for Storage even when the storage account is private. | <pre>object({<br/>    malware_scanning = optional(object({<br/>      enabled          = optional(bool, false)<br/>      cap_gb_per_month = optional(number, -1)<br/>      event_grid_topic = optional(string, null)<br/>    }), {})<br/>    sensitive_data_discovery = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for access logging (control and data plane). Mandatory for audit use case to track all access operations. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_force_public_network_access_enabled"></a> [force\_public\_network\_access\_enabled](#input\_force\_public\_network\_access\_enabled) | Allows public network access. Defaults to 'false'. | `bool` | `false` | no |

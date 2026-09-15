@@ -63,6 +63,47 @@ run "storage_account_security_defaults" {
   }
 }
 
+# ── 2. Security capabilities ─────────────────────────────────────────────────
+run "storage_account_defender_malware_scanning" {
+  command = plan
+
+  variables {
+    security = {
+      malware_scanning = {
+        enabled          = true
+        cap_gb_per_month = 10
+        event_grid_topic = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.EventGrid/topics/topic-test"
+      }
+      sensitive_data_discovery = true
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_security_center_storage_defender.this) == 1
+    error_message = "Defender for Storage must be created when custom settings are configured"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_enabled == true
+    error_message = "malware scanning on upload must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_cap_gb_per_month == 10
+    error_message = "malware scanning cap must be 10"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].sensitive_data_discovery_enabled == true
+    error_message = "sensitive data discovery must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].override_subscription_settings_enabled == true
+    error_message = "subscription settings must be overridden when local security settings are configured"
+  }
+}
+
 # ── 2. Default use case ─────────────────────────────────────────────────────
 run "storage_account_default_use_case" {
   command = plan

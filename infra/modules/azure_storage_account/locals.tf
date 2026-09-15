@@ -78,6 +78,20 @@ locals {
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
   immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : "Unlocked"
 
+  security = var.security == null ? {
+    malware_scanning = {
+      enabled          = false
+      cap_gb_per_month = -1
+      event_grid_topic = null
+    }
+    sensitive_data_discovery = false
+  } : var.security
+
+  defender_enabled = var.security != null
+
+  # Local security settings intentionally override subscription defaults.
+  defender_override_subscription_settings_enabled = var.security != null
+
   peps = {
     create_subservices = local.force_public_network_access_enabled ? {
       blob  = false

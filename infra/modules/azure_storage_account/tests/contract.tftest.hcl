@@ -314,3 +314,18 @@ run "audit_retention_days_out_of_range" {
 
   expect_failures = [var.audit_retention_days]
 }
+
+# ── 17. Invalid malware scanning cap ─────────────────────────────────────────
+run "defender_malware_scanning_cap_must_be_positive" {
+  command = plan
+
+  variables {
+    security = {
+      malware_scanning = {
+        cap_gb_per_month = 0
+      }
+    }
+  }
+
+  expect_failures = [var.security]
+}
