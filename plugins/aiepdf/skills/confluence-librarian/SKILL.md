@@ -145,7 +145,8 @@ leaving only `title`/`status`. Build the page URL from the response's
 **Granular draft edit** — `updateConfluenceContent`:
 
 ```text
-contentId:     <the published page's id>
+contentId:     <the target's id — the copy's contentId when editing a working
+               copy (see Working copy above), else the published page's id>
 draft:         true
 snapshotToken: <token from the baseline fetch, e.g. "v:1">
 edits:         [ { name: "replaceNode" | "insertNodeAfter" |
@@ -185,7 +186,10 @@ only what was requested.
   ```text
   <working-dir>/confluence/<content-id>.html      # full native HTML body
   <working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
-                                                   #   snapshotToken, version }
+                                                   #   snapshotToken, version } —
+                                                   # all from the baseline fetch
+                                                   # response; the copy response
+                                                   # carries only the copy's id
   ```
 
   Once persisted, query the file — never `view` it whole. One deterministic
