@@ -20,6 +20,7 @@ export interface WorkflowsInsightsInput {
   }[];
   readonly deployments: readonly { readonly weeklyDeploymentCount: number }[];
   readonly durationPercentiles?: {
+    readonly count?: number;
     readonly p50: null | number;
     readonly p85: null | number;
     readonly p95: null | number;
@@ -88,6 +89,7 @@ const failureHotspotInsight = (
     detail: `"${top.workflowName}" produced ${top.failedRuns} of ${totalFailures} failures${topShare === null ? "" : `; the top 20% of workflows cause ${formatPercent(topShare)} of them`}.`,
     evidence: [{ label: top.workflowName }],
     id: "workflow-failure-hotspot",
+    sampleSize: totalFailures,
     severity,
     title: concentrated
       ? "Workflow with most failures"
@@ -133,6 +135,7 @@ const ciCostHotspotInsight = (
     category: "reliability",
     detail: `"${top.workflowName}" consumed ${formatNumber(top.cumulativeDurationMinutes, 0)} minutes of CI${topShare === null ? "" : `; the top 20% of workflows absorb ${formatPercent(topShare)} of the time`}.`,
     id: "workflow-ci-cost-hotspot",
+    sampleSize: input.cumulativeDuration.length,
     severity,
     title:
       severity === "positive"
@@ -151,6 +154,10 @@ const successRateInsight = (input: WorkflowsInsightsInput): Insight | null => {
     return null;
   }
 
+  const significantRuns = significant.reduce(
+    (sum, row) => sum + row.totalRuns,
+    0,
+  );
   const belowTarget = significant.filter(
     (row) => row.successRatePercentage < METRIC_TARGETS.workflowSuccessRatePct,
   );
@@ -160,6 +167,7 @@ const successRateInsight = (input: WorkflowsInsightsInput): Insight | null => {
       category: "reliability",
       detail: `Every workflow with at least ${MIN_RUNS_FOR_SIGNAL} runs is above the ${METRIC_TARGETS.workflowSuccessRatePct}% success threshold.`,
       id: "workflow-success-rate",
+      sampleSize: significantRuns,
       severity: "positive",
       title: "Workflow reliability on target",
     };
@@ -178,6 +186,7 @@ const successRateInsight = (input: WorkflowsInsightsInput): Insight | null => {
     category: "reliability",
     detail: `${belowTarget.length} of ${significant.length} workflows are below the ${METRIC_TARGETS.workflowSuccessRatePct}% success threshold. The worst is "${worst.workflowName}" (${formatNumber(worst.successRatePercentage)}%).`,
     id: "workflow-success-rate",
+    sampleSize: significantRuns,
     severity: severityFromTarget(
       worst.successRatePercentage,
       METRIC_TARGETS.workflowSuccessRatePct,
@@ -209,6 +218,7 @@ const deploymentFrequencyInsight = (
     category: "reliability",
     detail: `An average of ${formatNumber(average)} deployments per week across the observed periods.`,
     id: "workflow-deployment-frequency",
+    sampleSize: total,
     severity: frequent ? "positive" : "warning",
     title: frequent
       ? "Healthy deployment frequency"
@@ -302,7 +312,7 @@ const overallSuccessRateInsight = (
 const durationSpreadInsight = (
   input: WorkflowsInsightsInput,
 ): Insight | null => {
-  const { p50, p95 } = input.durationPercentiles ?? {};
+  const { count, p50, p95 } = input.durationPercentiles ?? {};
 
   if (p50 === null || p50 === undefined || p95 === null || p95 === undefined) {
     return null;
@@ -323,6 +333,7 @@ const durationSpreadInsight = (
     category: "reliability",
     detail: `The median pipeline takes ${formatNumber(p50)} min, while the slowest 5% exceed ${formatNumber(p95)} min${formatSpreadRatio(ratio)}.`,
     id: "workflow-duration-spread",
+    sampleSize: count,
     severity,
     title:
       severity === "positive"

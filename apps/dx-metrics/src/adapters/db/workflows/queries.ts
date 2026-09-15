@@ -101,9 +101,12 @@ export const getWorkflowDashboard = async (
 };
 
 const fetchReferenceDate = async (db: Database, fullName: string) => {
+  // Some metrics filter on `created_at` and others on `updated_at`; anchoring
+  // the window to the latest activity in either column keeps both populations
+  // inside the same window instead of silently truncating one of them.
   const result = await db.execute(
     buildReferenceDateQuery({
-      column: "wr.created_at",
+      column: "GREATEST(wr.created_at, wr.updated_at)",
       from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
       where: sql`r.full_name = ${fullName}`,
     }),
@@ -422,6 +425,7 @@ const fetchDurationPercentiles = async (
 ) => {
   const r = await db.execute(sql`
     SELECT
+      COUNT(*) AS "count",
       ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
         ORDER BY EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60
       )::numeric, 2) AS "p50",

@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
+  nullableSqlNumberSchema,
   sqlDateSchema,
   sqlNumberSchema,
   sqlTimestampSchema,
@@ -30,7 +31,9 @@ export const leadTimeTrendRowSchema = z.object({
 });
 
 export const prsByReviewerRowSchema = z.object({
-  avgLeadTimeDays: sqlNumberSchema,
+  // Null when a member only has unmerged PRs in the window: `AVG(...)` over an
+  // empty set returns NULL, so the field must accept it rather than throw.
+  avgLeadTimeDays: nullableSqlNumberSchema,
   mergedPrs: sqlNumberSchema,
   reviewer: z.string().min(1),
   totalPrs: sqlNumberSchema,

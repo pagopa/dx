@@ -37,9 +37,16 @@ export interface InsightEvidence {
 export interface Insight {
   readonly action?: string;
   readonly category: InsightCategory;
+  /**
+   * How much the sample size weakens the reading. `low` is set when the rule
+   * fires on few observations; the panel surfaces it next to `sampleSize`.
+   */
+  readonly confidence?: "high" | "low";
   readonly detail: string;
   readonly evidence?: readonly InsightEvidence[];
   readonly id: string;
+  /** Number of observations the insight is computed on, when known. */
+  readonly sampleSize?: number;
   readonly severity: InsightSeverity;
   readonly title: string;
   readonly value?: InsightValue;

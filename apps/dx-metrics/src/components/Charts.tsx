@@ -11,6 +11,7 @@ import {
   LineChart,
   Pie,
   PieChart,
+  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
@@ -27,6 +28,50 @@ interface ChartReferenceLine {
   readonly label: string;
   readonly value: number;
 }
+
+/**
+ * Shaded band around a target value, e.g. the tolerance inside which a metric
+ * is still considered on target. Mirrors the severity rules so the chart and
+ * the metric cards agree on what "good" looks like.
+ */
+interface ChartTargetBand {
+  readonly from: number;
+  /** Short caption drawn next to the band, e.g. "on target". */
+  readonly label?: string;
+  readonly to: number;
+}
+
+/** Shared number formatter so charts agree with the metric cards. */
+const chartNumberFormatter = new Intl.NumberFormat("en-GB", {
+  maximumFractionDigits: 2,
+});
+
+const formatChartNumber = (
+  value: number,
+  formatter?: (value: number) => string,
+): string =>
+  formatter
+    ? formatter(value)
+    : chartNumberFormatter.format(Number(value.toFixed(2)));
+
+const DATE_LIKE = /^\d{4}-\d{2}-\d{2}/;
+
+/**
+ * Formats date-like tick labels (`2026-03-10` -> `10 Mar`) and leaves category
+ * labels untouched, so both time series and categorical axes are legible.
+ */
+const defaultTickFormatter = (value: unknown): string => {
+  const text = String(value ?? "");
+
+  if (!DATE_LIKE.test(text)) {
+    return text;
+  }
+
+  const date = new Date(text);
+  return isNaN(date.getTime())
+    ? text
+    : date.toLocaleDateString("en", { day: "numeric", month: "short" });
+};
 
 /**
  * The only series palette. Named by hue because these are primitives: a chart
@@ -86,6 +131,7 @@ interface SimpleBarChartProps {
   data: Record<string, unknown>[];
   layout?: "horizontal" | "vertical";
   referenceLines?: readonly ChartReferenceLine[];
+  targetBand?: ChartTargetBand;
   title: string;
   tooltip?: string;
   tooltipFormatter?: (value: number) => string;
@@ -100,6 +146,7 @@ interface SimpleLineChartProps {
   data: Record<string, unknown>[];
   lines: { color?: string; key: string; name: string }[];
   referenceLines?: readonly ChartReferenceLine[];
+  targetBand?: ChartTargetBand;
   title: string;
   tooltip?: string;
   tooltipFormatter?: (value: number) => string;
@@ -214,6 +261,39 @@ function ChartDataTable({
   );
 }
 
+/** Quotes a CSV cell when it contains a delimiter, quote, or newline. */
+const csvCell = (value: unknown): string => {
+  const text = value === null || value === undefined ? "" : String(value);
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+/** Serializes a chart's series into a spreadsheet-friendly CSV document. */
+const buildCsv = (
+  data: Record<string, unknown>[],
+  series: readonly { key: string; name: string }[],
+  xKey: string,
+): string => {
+  const header = [xKey, ...series.map((entry) => entry.name)]
+    .map(csvCell)
+    .join(",");
+  const rows = data.map((row) =>
+    [row[xKey], ...series.map((entry) => row[entry.key])]
+      .map(csvCell)
+      .join(","),
+  );
+
+  return [header, ...rows].join("\n");
+};
+
+const csvFileName = (chartTitle: string): string => {
+  const slug = chartTitle
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+
+  return `${slug || "chart"}.csv`;
+};
+
 /** Toggle button plus tabular fallback shared by the chart components. */
 function ChartDataToggle({
   chartTitle,
@@ -231,17 +311,41 @@ function ChartDataToggle({
   const [isOpen, setIsOpen] = React.useState(false);
   const regionId = React.useId();
 
+  const handleDownload = () => {
+    const blob = new Blob([buildCsv(data, series, xKey)], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.download = csvFileName(chartTitle);
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
-      <button
-        aria-controls={regionId}
-        aria-expanded={isOpen}
-        className={`mt-3 rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
-        onClick={() => setIsOpen((open) => !open)}
-        type="button"
-      >
-        {isOpen ? "Hide data" : "Show data"}
-      </button>
+      <div className="mt-3 flex items-center gap-4">
+        <button
+          aria-controls={regionId}
+          aria-expanded={isOpen}
+          className={`rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
+          onClick={() => setIsOpen((open) => !open)}
+          type="button"
+        >
+          {isOpen ? "Hide data" : "Show data"}
+        </button>
+        <button
+          className={`rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
+          onClick={handleDownload}
+          type="button"
+        >
+          Download CSV
+        </button>
+      </div>
       <div id={regionId}>
         {isOpen && (
           <ChartDataTable
@@ -374,6 +478,7 @@ export function SimpleBarChart({
   data,
   layout = "horizontal",
   referenceLines,
+  targetBand,
   title,
   tooltip,
   tooltipFormatter,
@@ -429,7 +534,7 @@ export function SimpleBarChart({
                   textAnchor: data.length > 4 ? "end" : "middle",
                 }),
           }}
-          tickFormatter={xValueFormatter}
+          tickFormatter={xValueFormatter ?? defaultTickFormatter}
           type={isVertical ? "number" : "category"}
           {...(isVertical
             ? { domain: [0, (max: number) => Math.ceil(max * 1.1)] }
@@ -458,9 +563,7 @@ export function SimpleBarChart({
           }}
           formatter={(value) => {
             if (typeof value === "number") {
-              return tooltipFormatter
-                ? tooltipFormatter(value)
-                : value.toFixed(2);
+              return formatChartNumber(value, tooltipFormatter);
             }
             return value;
           }}
@@ -473,6 +576,28 @@ export function SimpleBarChart({
             paddingTop: "20px",
           }}
         />
+        {targetBand &&
+          (isVertical ? (
+            <ReferenceArea
+              fill={SERIES_COLORS.green}
+              fillOpacity={0.08}
+              ifOverflow="extendDomain"
+              key="target-band"
+              label={targetBand.label}
+              x1={targetBand.from}
+              x2={targetBand.to}
+            />
+          ) : (
+            <ReferenceArea
+              fill={SERIES_COLORS.green}
+              fillOpacity={0.08}
+              ifOverflow="extendDomain"
+              key="target-band"
+              label={targetBand.label}
+              y1={targetBand.from}
+              y2={targetBand.to}
+            />
+          ))}
         {bars.map((bar, i) => (
           <Bar
             dataKey={bar.key}
@@ -512,6 +637,7 @@ export function SimpleLineChart({
   data,
   lines,
   referenceLines,
+  targetBand,
   title,
   tooltip,
   tooltipFormatter,
@@ -559,18 +685,7 @@ export function SimpleLineChart({
             fontSize: 11,
             textAnchor: data.length > 6 ? "end" : "middle",
           }}
-          tickFormatter={
-            xValueFormatter ??
-            ((v: string) => {
-              const d = new Date(v);
-              return isNaN(d.getTime())
-                ? v
-                : d.toLocaleDateString("en", {
-                    day: "numeric",
-                    month: "short",
-                  });
-            })
-          }
+          tickFormatter={xValueFormatter ?? defaultTickFormatter}
           tickMargin={data.length > 6 ? 15 : 0}
         />
         <YAxis
@@ -587,9 +702,7 @@ export function SimpleLineChart({
           }}
           formatter={(value) => {
             if (typeof value === "number") {
-              return tooltipFormatter
-                ? tooltipFormatter(value)
-                : value.toFixed(2);
+              return formatChartNumber(value, tooltipFormatter);
             }
             return value;
           }}
@@ -602,6 +715,16 @@ export function SimpleLineChart({
             paddingTop: "10px",
           }}
         />
+        {targetBand && (
+          <ReferenceArea
+            fill={SERIES_COLORS.green}
+            fillOpacity={0.08}
+            ifOverflow="extendDomain"
+            label={targetBand.label}
+            y1={targetBand.from}
+            y2={targetBand.to}
+          />
+        )}
         {lines.map((line, i) => (
           <Line
             dataKey={line.key}
@@ -674,7 +797,7 @@ export function SimplePieChart({
             }}
             formatter={(value) => {
               if (typeof value === "number") {
-                return value.toFixed(2);
+                return formatChartNumber(value);
               }
               return value;
             }}

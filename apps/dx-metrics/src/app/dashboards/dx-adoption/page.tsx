@@ -161,7 +161,7 @@ export default function DxAdoptionDashboard() {
               <h3 className="mt-8 mb-4 text-base font-semibold text-white">
                 Version Drift
               </h3>
-              <div className="mb-4 grid grid-cols-4 gap-4">
+              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   label="DX Modules Up-to-Date"
                   tooltip={tooltipContent.upToDatePercentage}

@@ -13,6 +13,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -24,6 +25,12 @@ interface PrReviewDashboardData {
   cards: {
     avgTimeToFirstReview: null | number;
     avgTimeToMerge: null | number;
+  };
+  firstReviewPercentiles: {
+    count: number;
+    p50: null | number;
+    p85: null | number;
+    p95: null | number;
   };
   reviewDistribution: {
     approvals: number;
@@ -67,6 +74,28 @@ export default function PullRequestsReviewDashboard() {
         )
       : undefined;
 
+  const firstReviewBreakdown = data?.firstReviewPercentiles
+    ? [
+        {
+          label: "median",
+          value: `${formatNumber(data.firstReviewPercentiles.p50, 1)} h`,
+        },
+        {
+          label: "p95",
+          value: `${formatNumber(data.firstReviewPercentiles.p95, 1)} h`,
+        },
+      ]
+    : undefined;
+  // Acceptable region for a lower-is-better metric: from zero to the target
+  // plus its tolerance, matching how the card severity is computed.
+  const firstReviewToleranceBand = {
+    from: 0,
+    label: "within tolerance",
+    to:
+      METRIC_TARGETS.timeToFirstReviewHours *
+      (1 + INSIGHT_THRESHOLDS.targetTolerancePct / 100),
+  };
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -101,7 +130,9 @@ export default function PullRequestsReviewDashboard() {
           />
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
             <MetricCard
+              breakdown={firstReviewBreakdown}
               label="Avg Time to First Review"
+              sampleSize={data.firstReviewPercentiles.count}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToFirstReview}
               value={data.cards.avgTimeToFirstReview}
@@ -142,6 +173,7 @@ export default function PullRequestsReviewDashboard() {
                       value: METRIC_TARGETS.timeToFirstReviewHours,
                     },
                   ]}
+                  targetBand={firstReviewToleranceBand}
                   title="Avg Time to First Review (weekly, hours)"
                   tooltip={tooltipContent.timeToFirstReviewTrend}
                   xKey="week"

@@ -12,6 +12,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -26,6 +27,12 @@ interface WorkflowDashboardData {
     workflowName: string;
   }[];
   deployments: { runWeek: string; weeklyDeploymentCount: number }[];
+  durationPercentiles: {
+    count: number;
+    p50: null | number;
+    p85: null | number;
+    p95: null | number;
+  };
   dxVsNonDx: {
     cumulativeCount: number;
     pipelineType: string;
@@ -117,6 +124,19 @@ function WorkflowsDashboardContent({
     },
   );
 
+  // The headline duration is a run-weighted mean; the median and p95 keep a
+  // skewed distribution visible next to it.
+  const durationBreakdown = [
+    {
+      label: "median",
+      value: `${formatNumber(data.durationPercentiles.p50, 1)} min`,
+    },
+    {
+      label: "p95",
+      value: `${formatNumber(data.durationPercentiles.p95, 1)} min`,
+    },
+  ];
+
   return (
     <>
       <DataFreshness className="mb-2" referenceDate={data.meta.referenceDate} />
@@ -137,7 +157,9 @@ function WorkflowsDashboardContent({
           value={data.summary.totalPipelines}
         />
         <MetricCard
+          breakdown={durationBreakdown}
           label="Average Duration"
+          sampleSize={data.durationPercentiles.count}
           suffix="min"
           tooltip={tooltipContent.avgDuration}
           value={
@@ -169,7 +191,7 @@ function WorkflowsDashboardContent({
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SimpleBarChart
           bars={[
             {

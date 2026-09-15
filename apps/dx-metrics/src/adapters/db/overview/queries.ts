@@ -37,12 +37,17 @@ const padRows = (
   repositories: readonly string[],
   rows: readonly BenchmarkValueRow[],
 ): BenchmarkValueRow[] => {
-  const values = new Map(rows.map((row) => [row.repository, row.value]));
+  const byRepository = new Map(rows.map((row) => [row.repository, row]));
 
-  return repositories.map((repository) => ({
-    repository,
-    value: values.get(repository) ?? null,
-  }));
+  return repositories.map((repository) => {
+    const row = byRepository.get(repository);
+
+    return {
+      count: row?.count ?? null,
+      repository,
+      value: row?.value ?? null,
+    };
+  });
 };
 
 /**
@@ -87,7 +92,9 @@ export const getOverviewDashboard = async (
           EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400 AS lead_days,
           COALESCE(pr.total_comments_count, 0) AS comments,
           NOT EXISTS (
-            SELECT 1 FROM pull_request_reviews rr WHERE rr.pull_request_id = pr.id
+            SELECT 1 FROM pull_request_reviews rr
+            WHERE rr.pull_request_id = pr.id
+              AND ${botAuthorsExclusion("rr.reviewer")}
           ) AS no_review
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.name = ANY(${repositories})
@@ -97,6 +104,7 @@ export const getOverviewDashboard = async (
           AND (pr.draft IS NULL OR pr.draft = 0)
       )
       SELECT repository,
+        COUNT(*) AS "count",
         ROUND(AVG(lead_days)::numeric, 2) AS "leadTime",
         ROUND(COUNT(*) FILTER (WHERE no_review)::numeric
               / NULLIF(COUNT(*), 0) * 100, 2) AS "mergedWithoutReview",
@@ -107,6 +115,7 @@ export const getOverviewDashboard = async (
     // Workflows: successful-run duration and overall success rate.
     db.execute(sql`
       SELECT r.name AS repository,
+        COUNT(*) AS "count",
         ROUND((AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
           FILTER (WHERE TRIM(wr.conclusion) = 'success') / 60)::numeric, 2) AS "pipelineDuration",
         ROUND(
@@ -145,6 +154,7 @@ export const getOverviewDashboard = async (
       rows: padRows(
         configuredRepositories,
         prRows.map((row) => ({
+          count: row.count,
           repository: row.repository,
           value: row.leadTime,
         })),
@@ -159,6 +169,7 @@ export const getOverviewDashboard = async (
       rows: padRows(
         configuredRepositories,
         workflowRows.map((row) => ({
+          count: row.count,
           repository: row.repository,
           value: row.pipelineDuration,
         })),
@@ -173,6 +184,7 @@ export const getOverviewDashboard = async (
       rows: padRows(
         configuredRepositories,
         workflowRows.map((row) => ({
+          count: row.count,
           repository: row.repository,
           value: row.successRate,
         })),
@@ -187,6 +199,7 @@ export const getOverviewDashboard = async (
       rows: padRows(
         configuredRepositories,
         prRows.map((row) => ({
+          count: row.count,
           repository: row.repository,
           value: row.mergedWithoutReview,
         })),
@@ -201,6 +214,7 @@ export const getOverviewDashboard = async (
       rows: padRows(
         configuredRepositories,
         prRows.map((row) => ({
+          count: row.count,
           repository: row.repository,
           value: row.mergedWithoutComments,
         })),

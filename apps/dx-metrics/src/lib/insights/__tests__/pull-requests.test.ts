@@ -160,4 +160,43 @@ describe("buildPullRequestsInsights", () => {
 
     expect(insights).toEqual([]);
   });
+
+  it("carries the sample size so a reading is not mistaken for a large one", () => {
+    const insights = buildPullRequestsInsights({
+      ...baseInput(),
+      leadTimePercentiles: { count: 7, p50: 1, p85: 4, p95: 8 },
+    });
+
+    expect(
+      insights.find((insight) => insight.id === "pr-lead-time-spread")
+        ?.sampleSize,
+    ).toBe(7);
+    expect(
+      insights.find((insight) => insight.id === "pr-lead-time-target")
+        ?.sampleSize,
+    ).toBe(7);
+  });
+
+  it("links the slowest pull requests when the repository is known", () => {
+    const insights = buildPullRequestsInsights(
+      {
+        ...baseInput(),
+        slowestPrs: [
+          { leadTimeDays: 9, number: 101, title: "Slow rollout" },
+          { leadTimeDays: 4, number: 102, title: "Small fix" },
+          { leadTimeDays: 2, number: 103, title: "Docs" },
+        ],
+      },
+      "https://github.com/pagopa/dx",
+    );
+
+    const evidence = insights.find(
+      (insight) => insight.id === "pr-slow-concentration",
+    )?.evidence;
+
+    expect(evidence?.[0]).toEqual({
+      href: "https://github.com/pagopa/dx/pull/101",
+      label: "#101 Slow rollout",
+    });
+  });
 });

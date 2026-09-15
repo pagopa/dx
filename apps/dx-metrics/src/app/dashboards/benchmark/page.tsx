@@ -6,13 +6,14 @@ import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import TooltipIcon from "@/components/TooltipIcon";
 import { classifyPercentile } from "@/lib/benchmark";
-import { formatNumber, formatWithUnit } from "@/lib/format";
+import { formatInteger, formatNumber, formatWithUnit } from "@/lib/format";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
 import { benchmarkTooltips as tooltipContent } from "./tooltips";
 
 interface BenchmarkEntry {
+  count: null | number;
   percentileRank: null | number;
   repository: string;
   value: null | number;
@@ -34,6 +35,7 @@ interface BenchmarkData {
 }
 
 interface BenchmarkRow {
+  count: null | number;
   delta: null | number;
   position: null | string;
   repository: string;
@@ -88,6 +90,7 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
         : right.value - left.value;
     })
     .map((entry) => ({
+      count: entry.count,
       delta:
         entry.value === null || metric.median === null
           ? null
@@ -108,6 +111,12 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
             typeof value === "number"
               ? formatWithUnit(value, metric.unit, 2)
               : "—",
+        },
+        {
+          key: "count",
+          label: "N",
+          renderCell: (value) =>
+            typeof value === "number" ? formatInteger(value) : "—",
         },
         {
           key: "delta",

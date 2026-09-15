@@ -21,6 +21,7 @@ export interface PullRequestsInsightsInput {
   };
   readonly leadTimeMovingAvg: readonly { readonly avgLeadTimeDays: number }[];
   readonly leadTimePercentiles?: {
+    readonly count?: number;
     readonly p50: null | number;
     readonly p85: null | number;
     readonly p95: null | number;
@@ -35,7 +36,11 @@ export interface PullRequestsInsightsInput {
     readonly prCount: number;
     readonly sizeRange: string;
   }[];
-  readonly slowestPrs: readonly { readonly leadTimeDays: number }[];
+  readonly slowestPrs: readonly {
+    readonly leadTimeDays: number;
+    readonly number?: number;
+    readonly title?: string;
+  }[];
   readonly unmergedPrs: readonly { readonly openPrs: number }[];
 }
 
@@ -138,6 +143,7 @@ const leadTimeTargetInsight = (
     category: "velocity",
     detail: `Average lead time is ${formatNumber(value)} days against a ${METRIC_TARGETS.leadTimeDays}-day target.`,
     id: "pr-lead-time-target",
+    sampleSize: input.leadTimePercentiles?.count,
     severity: severityFromTarget(value, METRIC_TARGETS.leadTimeDays, {
       higherIsBetter: false,
       tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
@@ -150,7 +156,7 @@ const leadTimeTargetInsight = (
 const leadTimeSpreadInsight = (
   input: PullRequestsInsightsInput,
 ): Insight | null => {
-  const { p50, p95 } = input.leadTimePercentiles ?? {};
+  const { count, p50, p95 } = input.leadTimePercentiles ?? {};
 
   if (p50 === null || p50 === undefined || p95 === null || p95 === undefined) {
     return null;
@@ -175,6 +181,7 @@ const leadTimeSpreadInsight = (
     category: "velocity",
     detail: `The median PR merges in ${formatNumber(p50)} days, while the slowest 5% exceeds ${formatNumber(p95)} days${formatSpreadRatio(ratio)}.`,
     id: "pr-lead-time-spread",
+    sampleSize: count,
     severity,
     title: poor ? "Lead-time spread too wide" : "Lead-time spread contained",
     value: { current: p95, label: "95th percentile", unit: "days" },
@@ -209,6 +216,7 @@ const prSizeInsight = (input: PullRequestsInsightsInput): Insight | null => {
     category: "risk",
     detail: `${formatPercent(largeShare)} of pull requests add more than 500 lines.`,
     id: "pr-size-risk",
+    sampleSize: total,
     severity: isRisky ? "warning" : "positive",
     title: isRisky
       ? "Many large pull requests"
@@ -285,6 +293,7 @@ const throughputInsight = (
     category: "velocity",
     detail: `Average throughput moved from ${formatNumber(change.firstAverage, 1)} to ${formatNumber(change.secondAverage, 1)} merged PRs per period (${formatNumber(change.deltaPct, 0)}%).`,
     id: "pr-throughput-trend",
+    sampleSize: input.mergedPrs.reduce((sum, row) => sum + row.prCount, 0),
     severity,
     title:
       severity === "positive"
@@ -298,6 +307,7 @@ const throughputInsight = (
 
 const slowPrConcentrationInsight = (
   input: PullRequestsInsightsInput,
+  repositoryUrl?: string,
 ): Insight | null => {
   const concentration = paretoShare(
     input.slowestPrs.map((pr) => pr.leadTimeDays),
@@ -313,10 +323,27 @@ const slowPrConcentrationInsight = (
     INSIGHT_THRESHOLDS.slowPrConcentrationShare,
   );
 
+  // When the caller knows the repository, point at the actual offending pull
+  // requests so the reading is actionable instead of just descriptive.
+  const evidence =
+    repositoryUrl === undefined
+      ? undefined
+      : input.slowestPrs
+          .filter((pr) => pr.number !== undefined)
+          .slice()
+          .sort((left, right) => right.leadTimeDays - left.leadTimeDays)
+          .slice(0, 3)
+          .map((pr) => ({
+            href: `${repositoryUrl}/pull/${pr.number}`,
+            label: `#${pr.number} ${pr.title ?? ""}`.trim(),
+          }));
+
   return {
     category: "velocity",
     detail: `The slowest 10% of pull requests account for ${formatPercent(concentration)} of the total wait time across the analyzed PRs.`,
+    evidence: evidence && evidence.length > 0 ? evidence : undefined,
     id: "pr-slow-concentration",
+    sampleSize: input.slowestPrs.length,
     severity,
     title:
       severity === "positive"
@@ -326,9 +353,15 @@ const slowPrConcentrationInsight = (
   };
 };
 
-/** Builds the ordered list of insights for the Pull Requests dashboard. */
+/**
+ * Builds the ordered list of insights for the Pull Requests dashboard.
+ *
+ * `repositoryUrl` is optional: when provided, insights can carry deep links to
+ * the concrete pull requests behind a reading.
+ */
 export const buildPullRequestsInsights = (
   input: PullRequestsInsightsInput,
+  repositoryUrl?: string,
 ): Insight[] =>
   sortInsights(
     [
@@ -338,6 +371,6 @@ export const buildPullRequestsInsights = (
       prSizeInsight(input),
       backlogInsight(input),
       throughputInsight(input),
-      slowPrConcentrationInsight(input),
+      slowPrConcentrationInsight(input, repositoryUrl),
     ].filter((insight): insight is Insight => insight !== null),
   );

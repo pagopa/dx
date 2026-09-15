@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import {
   EMPTY_VALUE,
   formatFullDate,
+  formatInteger,
   formatNumber,
   formatPercent,
   formatShortDate,
@@ -21,6 +22,23 @@ describe("formatNumber", () => {
     expect(formatNumber(null)).toBe(EMPTY_VALUE);
     expect(formatNumber(undefined)).toBe(EMPTY_VALUE);
     expect(formatNumber(Number.NaN)).toBe(EMPTY_VALUE);
+  });
+});
+
+describe("formatInteger", () => {
+  it("adds thousands separators", () => {
+    expect(formatInteger(1234)).toBe("1,234");
+    expect(formatInteger(1234567)).toBe("1,234,567");
+  });
+
+  it("rounds away meaningless decimals", () => {
+    expect(formatInteger(12.6)).toBe("13");
+  });
+
+  it("returns the placeholder for missing or invalid values", () => {
+    expect(formatInteger(null)).toBe(EMPTY_VALUE);
+    expect(formatInteger(undefined)).toBe(EMPTY_VALUE);
+    expect(formatInteger(Number.NaN)).toBe(EMPTY_VALUE);
   });
 });
 

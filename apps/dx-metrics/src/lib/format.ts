@@ -12,6 +12,20 @@ export const formatNumber = (
     ? EMPTY_VALUE
     : value.toFixed(digits);
 
+const integerFormatter = new Intl.NumberFormat("en-GB", {
+  maximumFractionDigits: 0,
+});
+
+/**
+ * Formats an integer with thousands separators (`1234` -> `1,234`), or the
+ * empty placeholder. Use it for counts (sample sizes, totals) where a long digit
+ * string would otherwise be hard to read at a glance.
+ */
+export const formatInteger = (value: null | number | undefined): string =>
+  value === null || value === undefined || !Number.isFinite(value)
+    ? EMPTY_VALUE
+    : integerFormatter.format(value);
+
 /** Formats an already-scaled percentage value (e.g. `12.5` -> `12.5%`). */
 export const formatPercent = (
   value: null | number | undefined,

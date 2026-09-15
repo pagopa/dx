@@ -2,7 +2,11 @@
 
 import { z } from "zod";
 
-import { nullableSqlNumberSchema, sqlTimestampSchema } from "./sql-parsing";
+import {
+  nullableSqlNumberSchema,
+  sqlNumberSchema,
+  sqlTimestampSchema,
+} from "./sql-parsing";
 
 export const dashboardParamsSchema = z.object({
   days: z.number().int().nonnegative(),
@@ -16,8 +20,12 @@ export const referenceDateRowSchema = z.object({
   referenceDate: sqlTimestampSchema,
 });
 
-/** Distribution percentiles (median, p85, p95) for a duration metric. */
+/**
+ * Distribution percentiles (median, p85, p95) for a duration metric, plus the
+ * number of observations they are computed on so the UI can show a sample size.
+ */
 export const percentileRowSchema = z.object({
+  count: sqlNumberSchema,
   p50: nullableSqlNumberSchema,
   p85: nullableSqlNumberSchema,
   p95: nullableSqlNumberSchema,

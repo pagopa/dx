@@ -69,16 +69,12 @@ export const fetchPrDashboard = async (
 
   const referenceDate = await fetchReferenceDate(db, fullName);
 
-  // The card delta is derived from the fitted trend line (see the insight
-  // below), so it can never contradict the trend chart drawn from the same data.
-  const half = Math.max(1, Math.floor(days / 2));
-
   const [cards, leadTime, counts, quality, leadTimeStats] = await Promise.all([
     fetchPrSummary(db, fullName, referenceDate, days),
     fetchLeadTimeData(db, fullName, referenceDate, days),
     fetchPrCountData(db, fullName, referenceDate, days),
     fetchPrQualityData(db, fullName, referenceDate, days),
-    fetchLeadTimeStats(db, fullName, referenceDate, days, half),
+    fetchLeadTimeStats(db, fullName, referenceDate, days),
   ]);
 
   const dashboard = {
@@ -90,27 +86,32 @@ export const fetchPrDashboard = async (
   };
   return {
     ...dashboard,
-    insights: buildPullRequestsInsights(dashboard),
+    insights: buildPullRequestsInsights(
+      dashboard,
+      `https://github.com/${fullName}`,
+    ),
     meta: { days, referenceDate },
   };
 };
 
 /**
- * Lead-time distribution percentiles (full window) and the average of the first
- * half of the window, used as the "previous" side of the card delta.
+ * Lead-time distribution percentiles for the selected window and the average of
+ * the immediately preceding, equally-sized window. Comparing two adjacent
+ * windows of the same length makes the "previous" value directly comparable to
+ * the headline average, unlike a first-half split of the same window.
  */
 async function fetchLeadTimeStats(
   db: Database,
   fullName: string,
   referenceDate: string,
   days: number,
-  half: number,
 ): Promise<
   Pick<PrDashboardResult, "leadTimePercentiles" | "previousLeadTime">
 > {
   const [percentiles, previous] = await Promise.all([
     db.execute(sql`
       SELECT
+        COUNT(*) AS "count",
         ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
           ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
         )::numeric, 2) AS "p50",
@@ -130,8 +131,8 @@ async function fetchLeadTimeStats(
       SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${fullName}
-        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${half})
+        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+        AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
         AND ${HUMAN_PR}
     `),

@@ -32,6 +32,7 @@ interface PrDashboardData {
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
   leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
   leadTimePercentiles: {
+    count: number;
     p50: null | number;
     p85: null | number;
     p95: null | number;
@@ -109,6 +110,15 @@ export default function PullRequestsDashboard() {
         },
       ]
     : undefined;
+  // Lower is better here, so the acceptable region is everything from zero up
+  // to the target plus its tolerance; the band mirrors the severity rule.
+  const leadTimeToleranceBand = {
+    from: 0,
+    label: "within tolerance",
+    to:
+      METRIC_TARGETS.leadTimeDays *
+      (1 + INSIGHT_THRESHOLDS.targetTolerancePct / 100),
+  };
 
   return (
     <div className="space-y-8">
@@ -155,6 +165,8 @@ export default function PullRequestsDashboard() {
               value={data.cards.avgLeadTime}
               deltaPct={leadTimeDelta}
               deltaLabel="trend"
+              previousValue={data.previousLeadTime}
+              sampleSize={data.leadTimePercentiles.count}
               target={METRIC_TARGETS.leadTimeDays}
               severity={leadTimeSeverity}
               sparkline={leadTimeSparkline}
@@ -189,6 +201,7 @@ export default function PullRequestsDashboard() {
               referenceLines={[
                 { label: "target", value: METRIC_TARGETS.leadTimeDays },
               ]}
+              targetBand={leadTimeToleranceBand}
               title="Mean Lead Time (Weekly)"
               tooltip={tooltipContent.leadTimeMovingAvg}
               xKey="week"

@@ -12,6 +12,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
 import { METRIC_TARGETS } from "@/lib/config";
+import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -23,7 +24,7 @@ interface IacDashboardData {
   leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
   leadTimeTrend: { date: string; trendLine: number }[];
   prsByReviewer: {
-    avgLeadTimeDays: number;
+    avgLeadTimeDays: null | number;
     mergedPrs: number;
     reviewer: string;
     totalPrs: number;
@@ -162,7 +163,12 @@ export default function IacDashboard() {
                 { key: "reviewer", label: "Reviewer" },
                 { key: "totalPrs", label: "Total PRs" },
                 { key: "mergedPrs", label: "Merged PRs" },
-                { key: "avgLeadTimeDays", label: "Avg Lead Time (days)" },
+                {
+                  key: "avgLeadTimeDays",
+                  label: "Avg Lead Time (days)",
+                  renderCell: (value) =>
+                    typeof value === "number" ? formatNumber(value, 2) : "—",
+                },
               ]}
               data={data.prsByReviewer}
               title="IaC PRs by Reviewer"

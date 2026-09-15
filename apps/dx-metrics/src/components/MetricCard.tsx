@@ -1,6 +1,8 @@
 "use client";
 
+import { SEVERITY_STYLES } from "@/components/severity";
 import TooltipIcon from "@/components/TooltipIcon";
+import { formatInteger } from "@/lib/format";
 import type { InsightSeverity } from "@/lib/insights/types";
 
 interface MetricCardProps {
@@ -20,6 +22,11 @@ interface MetricCardProps {
   label: string;
   /** Value from the previous period, shown next to the delta. */
   previousValue?: null | number;
+  /**
+   * Number of observations behind the headline value. Shown as `n=…` so a
+   * metric computed over a handful of items is not read like one over thousands.
+   */
+  sampleSize?: number;
   /** Optional severity accent driven by insight rules. */
   severity?: InsightSeverity;
   /** Optional series rendered as a sparkline. */
@@ -30,43 +37,6 @@ interface MetricCardProps {
   tooltip?: string;
   value: null | number | string;
 }
-
-const SEVERITY_ACCENT: Record<InsightSeverity, string> = {
-  critical: "border-l-red-500",
-  neutral: "border-l-[#30363d]",
-  positive: "border-l-green-500",
-  warning: "border-l-amber-500",
-};
-
-/**
- * Severity is never carried by the accent colour alone: each level also renders
- * a labelled badge, using the same vocabulary as the insights panel.
- */
-const SEVERITY_BADGE: Record<
-  InsightSeverity,
-  { className: string; icon: string; label: string }
-> = {
-  critical: {
-    className: "bg-red-500/15 text-red-300",
-    icon: "▲",
-    label: "Critical",
-  },
-  neutral: {
-    className: "bg-slate-500/15 text-slate-300",
-    icon: "•",
-    label: "Info",
-  },
-  positive: {
-    className: "bg-green-500/15 text-green-300",
-    icon: "✔",
-    label: "Positive",
-  },
-  warning: {
-    className: "bg-amber-500/15 text-amber-300",
-    icon: "!",
-    label: "Attention",
-  },
-};
 
 const Sparkline = ({ points }: { points: readonly number[] }) => {
   const finite = points.filter((point) => Number.isFinite(point));
@@ -117,6 +87,7 @@ export function MetricCard({
   deltaLabel,
   label,
   previousValue,
+  sampleSize,
   severity,
   sparkline,
   suffix,
@@ -124,24 +95,34 @@ export function MetricCard({
   tooltip,
   value,
 }: MetricCardProps) {
-  const accent =
-    severity !== undefined ? ` border-l-4 ${SEVERITY_ACCENT[severity]}` : "";
-  const severityBadge =
-    severity !== undefined ? SEVERITY_BADGE[severity] : null;
+  const severityStyle =
+    severity !== undefined ? SEVERITY_STYLES[severity] : null;
+  const accent = severityStyle ? ` border-l-4 ${severityStyle.accent}` : "";
   const hasDelta = deltaPct !== undefined && deltaPct !== null;
   const rising = hasDelta && deltaPct > 0;
+  // Group long counts (1,234) but leave decimals and small values untouched.
+  const displayValue =
+    typeof value === "number" &&
+    Number.isInteger(value) &&
+    Math.abs(value) >= 1000
+      ? formatInteger(value)
+      : (value ?? "—");
 
-  // A single metadata line: the statistic breakdown, the target, and the
-  // comparison against the previous period all read together. Internal spaces
-  // are non-breaking so an item like "p95 20.4 d" never splits across lines.
+  // A single metadata line: the statistic breakdown, the sample size, the
+  // target, and the comparison against the previous period all read together.
+  // Internal spaces are non-breaking so an item like "p95 20.4 d" never splits
+  // across lines.
   const nonBreaking = (text: string) => text.replace(/ /g, "\u00A0");
   const metaParts = [
     previousValue !== undefined && previousValue !== null
-      ? nonBreaking(`previous ${previousValue}`)
+      ? nonBreaking(`previous ${formatInteger(previousValue)}`)
       : null,
     ...(breakdown ?? []).map((item) =>
       nonBreaking(`${item.label} ${item.value}`),
     ),
+    sampleSize !== undefined
+      ? nonBreaking(`n=${formatInteger(sampleSize)}`)
+      : null,
     target !== undefined ? nonBreaking(`target ${target}`) : null,
   ].filter((part): part is string => part !== null);
 
@@ -152,20 +133,20 @@ export function MetricCard({
       <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-400">
         {label}
         {tooltip && <TooltipIcon content={tooltip} label={label} />}
-        {severityBadge && (
+        {severityStyle && (
           <span
-            className={`ml-auto shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${severityBadge.className}`}
+            className={`ml-auto shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${severityStyle.badge}`}
           >
             <span aria-hidden="true" className="mr-1">
-              {severityBadge.icon}
+              {severityStyle.icon}
             </span>
-            {severityBadge.label}
+            {severityStyle.label}
           </span>
         )}
       </p>
       <div className="mt-2 flex flex-wrap items-baseline">
         <p className="text-3xl font-bold tracking-tighter text-[#e6edf3] tabular-nums metric-value-glow">
-          {value ?? "—"}
+          {displayValue}
         </p>
         {suffix && (
           <span className="ml-1 text-sm font-medium text-gray-400">

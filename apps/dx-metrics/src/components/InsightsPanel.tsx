@@ -3,7 +3,12 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useId, useState } from "react";
 
-import { formatWithUnit } from "@/lib/format";
+import {
+  SEVERITY_STYLES,
+  SEVERITY_SUMMARY_LABELS,
+  SEVERITY_SUMMARY_ORDER,
+} from "@/components/severity";
+import { formatInteger, formatWithUnit } from "@/lib/format";
 import type { Insight, InsightSeverity } from "@/lib/insights/types";
 import { focusRing } from "@/lib/utils";
 
@@ -21,55 +26,6 @@ interface InsightsPanelProps {
    */
   periodDays?: number;
 }
-
-interface SeverityStyle {
-  readonly badge: string;
-  readonly card: string;
-  readonly icon: string;
-  readonly label: string;
-}
-
-const SEVERITY_STYLES: Record<InsightSeverity, SeverityStyle> = {
-  critical: {
-    badge: "bg-red-500/15 text-red-300",
-    card: "border-red-500/40 bg-red-950/20",
-    icon: "▲",
-    label: "Critical",
-  },
-  neutral: {
-    badge: "bg-slate-500/15 text-slate-300",
-    card: "border-[#30363d] bg-[#0d1117]",
-    icon: "•",
-    label: "Info",
-  },
-  positive: {
-    badge: "bg-green-500/15 text-green-300",
-    card: "border-green-600/40 bg-green-950/20",
-    icon: "✔",
-    label: "Positive",
-  },
-  warning: {
-    badge: "bg-amber-500/15 text-amber-300",
-    card: "border-amber-500/40 bg-amber-950/20",
-    icon: "!",
-    label: "Attention",
-  },
-};
-
-/** Summary chips are shown in urgency order. */
-const SUMMARY_ORDER: readonly InsightSeverity[] = [
-  "critical",
-  "warning",
-  "positive",
-  "neutral",
-];
-
-const SUMMARY_LABELS: Record<InsightSeverity, string> = {
-  critical: "critical",
-  neutral: "info",
-  positive: "positive",
-  warning: "attention",
-};
 
 const DeltaBadge = ({ deltaPct }: { deltaPct: number }) => {
   const rising = deltaPct > 0;
@@ -124,6 +80,15 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
             <p className="text-xs text-gray-400">{insight.value.label}</p>
           )}
         </div>
+      )}
+
+      {insight.sampleSize !== undefined && (
+        <p className="text-xs text-gray-400 tabular-nums">
+          n={formatInteger(insight.sampleSize)}
+          {insight.confidence === "low" && (
+            <span className="ml-2 text-amber-300">low confidence</span>
+          )}
+        </p>
       )}
 
       {insight.evidence && insight.evidence.length > 0 && (
@@ -216,16 +181,16 @@ export function InsightsPanel({
           )}
         </span>
         <span className="flex flex-wrap items-center justify-end gap-2">
-          {SUMMARY_ORDER.filter((severity) => counts[severity] > 0).map(
-            (severity) => (
-              <span
-                className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${SEVERITY_STYLES[severity].badge}`}
-                key={severity}
-              >
-                {counts[severity]} {SUMMARY_LABELS[severity]}
-              </span>
-            ),
-          )}
+          {SEVERITY_SUMMARY_ORDER.filter(
+            (severity) => counts[severity] > 0,
+          ).map((severity) => (
+            <span
+              className={`rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${SEVERITY_STYLES[severity].badge}`}
+              key={severity}
+            >
+              {counts[severity]} {SEVERITY_SUMMARY_LABELS[severity]}
+            </span>
+          ))}
         </span>
       </button>
 

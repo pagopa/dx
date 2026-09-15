@@ -2,10 +2,14 @@
 
 import { z } from "zod";
 
-import { nullableSqlNumberSchema } from "../shared/sql-parsing";
+import {
+  nullableSqlNumberSchema,
+  sqlNumberSchema,
+} from "../shared/sql-parsing";
 
 /** Per-repository pull-request benchmark values. */
 export const prBenchmarkRowSchema = z.object({
+  count: sqlNumberSchema,
   leadTime: nullableSqlNumberSchema,
   mergedWithoutComments: nullableSqlNumberSchema,
   mergedWithoutReview: nullableSqlNumberSchema,
@@ -14,6 +18,7 @@ export const prBenchmarkRowSchema = z.object({
 
 /** Per-repository workflow benchmark values. */
 export const workflowBenchmarkRowSchema = z.object({
+  count: sqlNumberSchema,
   pipelineDuration: nullableSqlNumberSchema,
   repository: z.string().min(1),
   successRate: nullableSqlNumberSchema,

@@ -120,6 +120,7 @@ export const getPullRequestsReviewDashboard = async (
   // --- First-review time distribution ---
   const firstReviewPercentiles = await db.execute(sql`
     SELECT
+      COUNT(*) AS "count",
       ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours)::numeric, 2) AS "p50",
       ROUND(PERCENTILE_CONT(0.85) WITHIN GROUP (ORDER BY hours)::numeric, 2) AS "p85",
       ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY hours)::numeric, 2) AS "p95"

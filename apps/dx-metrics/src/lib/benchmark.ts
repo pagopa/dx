@@ -10,12 +10,16 @@ import { median, percentileRank } from "@/lib/stats";
 
 /** A metric value for a single repository. */
 export interface BenchmarkValueRow {
+  /** Number of observations behind `value`, when known. */
+  readonly count?: null | number;
   readonly repository: string;
   readonly value: null | number;
 }
 
 /** A repository's value with its position within the peer set. */
 export interface BenchmarkEntry {
+  /** Number of observations behind `value`, when known. */
+  readonly count: null | number;
   readonly percentileRank: null | number;
   readonly repository: string;
   readonly value: null | number;
@@ -55,6 +59,7 @@ export const buildBenchmarkMetric = (
     );
 
   const entries = input.rows.map((row) => ({
+    count: row.count ?? null,
     percentileRank:
       row.value === null || !Number.isFinite(row.value)
         ? null

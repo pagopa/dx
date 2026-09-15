@@ -119,6 +119,7 @@ const queryLeadTimePercentiles = (
 ) =>
   db.execute(sql`
     SELECT
+      COUNT(*) AS "count",
       ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
         ORDER BY EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400
       )::numeric, 2) AS "p50",

@@ -21,6 +21,7 @@ export interface PullRequestsReviewInsightsInput {
     readonly avgTimeToMerge: null | number;
   };
   readonly firstReviewPercentiles?: {
+    readonly count?: number;
     readonly p50: null | number;
     readonly p85: null | number;
     readonly p95: null | number;
@@ -94,6 +95,7 @@ const firstReviewTargetInsight = (
     category: "velocity",
     detail: `Average time to first review is ${formatNumber(value)}h against a ${METRIC_TARGETS.timeToFirstReviewHours}h target.`,
     id: "review-first-review-target",
+    sampleSize: input.firstReviewPercentiles?.count,
     severity: severityFromTarget(value, METRIC_TARGETS.timeToFirstReviewHours, {
       higherIsBetter: false,
       tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
@@ -143,6 +145,7 @@ const busFactorInsight = (
     detail: `${top.reviewer} performed ${formatPercent(topShare)} of the reviews in the period.`,
     evidence: [{ label: `${top.reviewer}: ${top.totalReviews} reviews` }],
     id: "review-bus-factor",
+    sampleSize: totalReviews,
     severity,
     title: concentrated
       ? "Reviews concentrated on few people"
@@ -215,7 +218,7 @@ const unreviewedMergeInsight = (
 const firstReviewSpreadInsight = (
   input: PullRequestsReviewInsightsInput,
 ): Insight | null => {
-  const { p50, p95 } = input.firstReviewPercentiles ?? {};
+  const { count, p50, p95 } = input.firstReviewPercentiles ?? {};
 
   if (p50 === null || p50 === undefined || p95 === null || p95 === undefined) {
     return null;
@@ -236,6 +239,7 @@ const firstReviewSpreadInsight = (
     category: "velocity",
     detail: `The median PR waits ${formatNumber(p50)}h for its first review, while the slowest 5% wait ${formatNumber(p95)}h${formatSpreadRatio(ratio)}.`,
     id: "review-first-review-spread",
+    sampleSize: count,
     severity,
     title:
       severity === "positive"
