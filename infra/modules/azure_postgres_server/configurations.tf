@@ -1,22 +1,27 @@
-locals {
-  postgres_security_configurations = {
-    connection_throttling = "on"
-    log_checkpoints       = "on"
-  }
-}
-
-resource "azurerm_postgresql_flexible_server_configuration" "security" {
-  for_each = local.postgres_security_configurations
-
-  name      = each.key
+resource "azurerm_postgresql_flexible_server_configuration" "connection_throttling" {
+  name      = "connection_throttling"
   server_id = azurerm_postgresql_flexible_server.this.id
-  value     = each.value
+  value     = "on"
 }
 
-resource "azurerm_postgresql_flexible_server_configuration" "security_replica" {
-  for_each = local.replica.create ? local.postgres_security_configurations : {}
+resource "azurerm_postgresql_flexible_server_configuration" "log_checkpoints" {
+  name      = "log_checkpoints"
+  server_id = azurerm_postgresql_flexible_server.this.id
+  value     = "on"
+}
 
-  name      = each.key
+resource "azurerm_postgresql_flexible_server_configuration" "connection_throttling_replica" {
+  count = local.replica.create ? 1 : 0
+
+  name      = "connection_throttling"
   server_id = azurerm_postgresql_flexible_server.replica[0].id
-  value     = each.value
+  value     = "on"
+}
+
+resource "azurerm_postgresql_flexible_server_configuration" "log_checkpoints_replica" {
+  count = local.replica.create ? 1 : 0
+
+  name      = "log_checkpoints"
+  server_id = azurerm_postgresql_flexible_server.replica[0].id
+  value     = "on"
 }
