@@ -91,7 +91,7 @@ resource "azurerm_security_center_storage_defender" "this" {
   override_subscription_settings_enabled      = local.defender_override_subscription_settings_enabled
   malware_scanning_on_upload_enabled          = var.malware_scanning_enabled
   malware_scanning_on_upload_cap_gb_per_month = -1
-  sensitive_data_discovery_enabled            = false
+  sensitive_data_discovery_enabled            = var.malware_scanning_enabled
 }
 
 # Blob lifecycle management policy for Audit (Hot -> Cool -> Cold -> Delete)

@@ -70,7 +70,7 @@ variable "force_public_network_access_enabled" {
 
 variable "malware_scanning_enabled" {
   type        = bool
-  description = "Enables Defender malware scanning on blob upload. Uses the standard unlimited scan cap and does not enable sensitive data discovery."
+  description = "Enables Defender malware scanning on blob upload and sensitive data discovery. Uses the standard unlimited scan cap."
   default     = false
 }
 

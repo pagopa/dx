@@ -87,8 +87,8 @@ run "storage_account_defender_malware_scanning" {
   }
 
   assert {
-    condition     = azurerm_security_center_storage_defender.this[0].sensitive_data_discovery_enabled == false
-    error_message = "sensitive data discovery must remain disabled"
+    condition     = azurerm_security_center_storage_defender.this[0].sensitive_data_discovery_enabled
+    error_message = "sensitive data discovery must be enabled"
   }
 
   assert {
