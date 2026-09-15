@@ -119,7 +119,7 @@ const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 
 //#endregion
 //#region src/index.ts
-const dockerfileGlob = "**/Dockerfile";
+const dockerfileGlob = "**/{Dockerfile,package.json}";
 const getProjectJson = (workspaceRoot, projectRoot) => {
 	const projectJsonPath = (0, node_path.join)(workspaceRoot, projectRoot, "project.json");
 	return (0, node_fs.existsSync)(projectJsonPath) ? (0, _nx_devkit.readJsonFile)(projectJsonPath) : null;
@@ -162,6 +162,7 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		projectDisplayName,
 		projectRoot
 	};
+	const dockerRepositoryName = getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot);
 	targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
 	targets[options.pushTargetName] = buildDockerPushTarget(dockerRunOptions, options.buildTargetName);
 	targets["docker:run"] = {
@@ -173,7 +174,7 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		},
 		options: { cwd: projectRoot }
 	};
-	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
+	if (dockerRepositoryName !== null) targets["nx-release-publish"] = {
 		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
@@ -183,12 +184,16 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 	};
 	return { projects: { [projectRoot]: {
 		root: projectRoot,
+		...dockerRepositoryName !== null ? { tags: ["release:docker"] } : {},
 		targets
 	} } };
 };
 const createNodesV2 = [dockerfileGlob, async (configFilePaths, options, context) => {
 	const parsedOptions = parseDockerReleasePluginOptions(options, context.workspaceRoot);
-	return (0, _nx_devkit.createNodesFromFiles)((configFilePath, _options, nodeContext) => createDockerReleaseNodes((0, node_path.dirname)(configFilePath), parsedOptions, nodeContext), configFilePaths, options, context);
+	return (0, _nx_devkit.createNodesFromFiles)((configFilePath, _options, nodeContext) => {
+		const projectRoot = (0, node_path.dirname)(configFilePath);
+		return configFilePath.endsWith("/Dockerfile") || (0, node_fs.existsSync)((0, node_path.join)(context.workspaceRoot, projectRoot, "Dockerfile")) ? createDockerReleaseNodes(projectRoot, parsedOptions, nodeContext) : { projects: {} };
+	}, configFilePaths, options, context);
 }];
 
 //#endregion

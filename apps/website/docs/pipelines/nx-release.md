@@ -65,24 +65,17 @@ creating only the missing tags and releases.
 - npm packages require
   [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements)
   configured (`id-token: write` permission must be granted)
-- Public packages must be tagged as public in their Nx project configuration.
-  The `nx-release` workflow treats any tag equal to `public` or ending with
-  `:public` (for example, `npm:public`) as publishable.
 
-### Marking a package as public
+Projects are public by default. Add a `public` or `<distribution>:public` tag to
+make visibility explicit, or a `private`/`<distribution>:private` tag to exclude
+a project from the release workflow. GHCR image visibility is managed by the
+associated GitHub repository.
 
-To mark a package as public, set `"private": false` in the package's
-`package.json` file. This is necessary for the publish workflow to process the
-package:
-
-```json
-{
-  "name": "@pagopa/my-package",
-  "version": "1.0.0",
-  "private": false,
-  ... other package.json fields
-}
-```
+Release groups select the publishing technology. The Docker plugin automatically
+assigns the `release:docker` tag to projects configured for Docker release
+publishing. The `npm-packages` group includes the configured releasable project
+roots and excludes that Docker tag, so package manifests do not need a release
+selector. Do not use `package.json.private` as a release selector.
 
 ### nx.json configuration
 
@@ -92,12 +85,24 @@ Add the following `release` block to your `nx.json`:
 {
   "release": {
     "versionPlans": true,
-    "projects": [
-      "apps/*",
-      "packages/*",
-      ... other project globs
-    ],
     "projectsRelationship": "independent",
+    "groups": {
+      "applications": {
+        "projects": ["tag:release:docker"]
+      },
+      "npm-packages": {
+        "projects": [
+          "apps/*",
+          "packages/*",
+          "actions/*",
+          "containers/*",
+          "infra/modules/*",
+          "providers/*",
+          "infra/scripts",
+          "!tag:release:docker"
+        ]
+      }
+    },
     "version": {},
     "changelog": {
       "projectChangelogs": {
@@ -123,15 +128,16 @@ Add the following `release` block to your `nx.json`:
 }
 ```
 
-| Option                 | Value                        | Why                                                                                                                                                                                                      |
-| ---------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `versionPlans`         | `true`                       | Enables file-based versioning via [version plans](../github/pull-requests/version-plan.md): version increments are described in dedicated files committed to the repo                                    |
-| `projects`             | `["projects_path_1/*", ...]` | Glob patterns matching all projects to include in the release process; required for Nx to discover and release all packages                                                                              |
-| `projectsRelationship` | `"independent"`              | Each package has its own version; there is no single workspace-wide version                                                                                                                              |
-| `createRelease`        | `false`                      | GitHub Releases are created automatically by the workflow after the PR is merged, not at changelog generation time                                                                                       |
-| `git.commit`           | `false`                      | The workflow handles commits itself; letting Nx commit would interfere with the PR creation logic                                                                                                        |
-| `git.tag`              | `true`                       | Nx creates tags locally so the workflow can reference them; they are pushed only after the PR is merged                                                                                                  |
-| `releaseTag.pattern`   | `{projectName}@{version}`    | Follows the [default Nx independent release convention](https://nx.dev/docs/guides/nx-release/release-projects-independently#create-a-git-tag-for-each-project); defining it explicitly improves clarity |
+| Option                         | Value                                    | Why                                                                                                                                                                                                      |
+| ------------------------------ | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `versionPlans`                 | `true`                                   | Enables file-based versioning via [version plans](../github/pull-requests/version-plan.md): version increments are described in dedicated files committed to the repo                                    |
+| `groups.applications.projects` | `["tag:release:docker"]`                 | Selects Docker projects using the tag assigned automatically by the Docker plugin                                                                                                                        |
+| `groups.npm-packages.projects` | `["apps/*", ..., "!tag:release:docker"]` | Selects releasable package roots while excluding projects that publish Docker images                                                                                                                     |
+| `projectsRelationship`         | `"independent"`                          | Each package has its own version; there is no single workspace-wide version                                                                                                                              |
+| `createRelease`                | `false`                                  | GitHub Releases are created automatically by the workflow after the PR is merged, not at changelog generation time                                                                                       |
+| `git.commit`                   | `false`                                  | The workflow handles commits itself; letting Nx commit would interfere with the PR creation logic                                                                                                        |
+| `git.tag`                      | `true`                                   | Nx creates tags locally so the workflow can reference them; they are pushed only after the PR is merged                                                                                                  |
+| `releaseTag.pattern`           | `{projectName}@{version}`                | Follows the [default Nx independent release convention](https://nx.dev/docs/guides/nx-release/release-projects-independently#create-a-git-tag-for-each-project); defining it explicitly improves clarity |
 
 :::note
 
@@ -287,7 +293,6 @@ as well.
 
 ### Publish fails
 
-- Verify that packages have the `npm:public` tag in their Nx configuration
 - Check that OIDC trusted publishing is configured on npm
 - Ensure `id-token: write` permission is granted to the workflow
 

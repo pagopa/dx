@@ -1,12 +1,13 @@
 {
   "name": "@pagopa/dx-mcpserver",
   "version": "0.2.14",
-  "private": true,
   "type": "module",
   "nx": {
-    "tags": [
-      "public"
-    ],
+    "targets": {
+      "nx-release-publish": {
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+      }
+    },
     "docker": {
       "platform": "linux/amd64"
     }

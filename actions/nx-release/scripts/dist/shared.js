@@ -18370,10 +18370,13 @@ async function getRepoInfo() {
 async function isPublicProject(projectName) {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
-  const tags = metadata.tags;
-  if (!tags) return false;
-  return tags.some(
-    (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
+  const tags = metadata.tags ?? [];
+  const visibilityTags = tags.filter(
+    (tag) => tag === "public" || tag === "private" || tag.endsWith(":public") || tag.endsWith(":private")
+  );
+  if (visibilityTags.length === 0) return true;
+  return visibilityTags.some(
+    (tag) => tag === "public" || tag.endsWith(":public")
   );
 }
 function matchProjectName(tag, projectNames) {

@@ -178,8 +178,12 @@ runs:
         set -euo pipefail
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
-          # workflow_dispatch: build and publish all public projects (recovery mode)
-          npx nx run-many --target=build --projects="tag:*:public"
+          # workflow_dispatch: build all projects that expose a build target,
+          # then publish every project covered by the release configuration.
+          BUILD_PROJECTS=$(npx nx show projects --withTarget=build --sep=,)
+          if [[ -n "${BUILD_PROJECTS:-}" ]]; then
+            npx nx run-many --target=build --projects="$BUILD_PROJECTS"
+          fi
           npx nx release publish
         else
           # push mode: extract projects from the latest merged Version Packages PR
@@ -196,7 +200,7 @@ runs:
             npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
             npx nx release publish --projects="$PROJECTS_TO_BUILD"
           else
-            echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
+            echo "No projects to publish. Skipping build/publish but proceeding to tag/release sync."
           fi
         fi
 

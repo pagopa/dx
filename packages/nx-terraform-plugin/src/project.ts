@@ -7,6 +7,7 @@ import {
   ProjectType,
   TargetConfiguration,
 } from "@nx/devkit";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 import { getPackageLogger } from "./logger.ts";
@@ -65,6 +66,31 @@ const getProjectType = (root: string): ProjectType =>
   isTerraformLibraryRoot(root) ? "library" : "application";
 
 const defaultEnvironments = ["prod", "uat", "dev"];
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getPackageTags = (workspaceRoot: string, root: string): string[] => {
+  const packageJsonPath = path.join(workspaceRoot, root, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    return [];
+  }
+
+  const packageJson: unknown = JSON.parse(
+    readFileSync(packageJsonPath, "utf-8"),
+  );
+  if (
+    !isRecord(packageJson) ||
+    !isRecord(packageJson.nx) ||
+    !Array.isArray(packageJson.nx.tags)
+  ) {
+    return [];
+  }
+
+  return packageJson.nx.tags.filter(
+    (tag): tag is string => typeof tag === "string",
+  );
+};
 
 const getEnvironmentTag = (
   root: string,
@@ -450,7 +476,11 @@ export const getProject = (
     projectType === "application"
       ? getEnvironmentTag(root, opts.additionalEnvironments)
       : undefined;
-  const tags = ["terraform", ...(environmentTag ? [environmentTag] : [])];
+  const tags = [
+    ...getPackageTags(workspaceRoot, root),
+    "terraform",
+    ...(environmentTag ? [environmentTag] : []),
+  ];
   if (isPublishableLibrary) {
     tags.push("terraform:public");
   }
@@ -463,10 +493,9 @@ export const getProject = (
     },
     projectType,
     root,
-    // We assign the 'terraform' tag to all Terraform projects, add the
-    // environment tag for applications, and add 'terraform:public'
-    // for publishable module libraries discovered from module.json.
-    tags,
+    // Preserve package-level tags, then add Terraform-specific tags inferred
+    // from the project root and publishable module manifest.
+    tags: [...new Set(tags)],
     targets,
   };
 

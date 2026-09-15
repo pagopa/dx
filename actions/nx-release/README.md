@@ -52,14 +52,14 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts projects to publish from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
+1. Extracts public projects to publish from the latest merged `Version Packages` PR (or builds all projects with a `build` target when triggered via `workflow_dispatch`)
 2. Runs `npx nx release publish` with provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
 5. Creates any missing GitHub Releases with extracted changelog notes
 
 > [!TIP]
-> `workflow_dispatch` can be used to recover from failed runs: it builds and publishes all public projects
+> `workflow_dispatch` can be used to recover from failed runs: it builds all projects with a `build` target and publishes all projects covered by the Nx release configuration
 > and the Sync step scans all past merged PRs to create any missing tags and releases.
 
 ## Inputs
@@ -170,7 +170,7 @@ Used automatically on `pull_request` workflows. The action:
 `.nx/version-plans/**` changed in the push and the directory contains zero files. The action:
 
 1. Finds the latest merged `Version Packages` PR and extracts the list of released projects
-2. Builds and publishes only those projects (falls back to all public if no PR is found)
+2. Builds and publishes only those public projects (falls back to all projects covered by the Nx release configuration if no PR is found)
 3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 4. Ensures a GitHub Release exists for every release tag found in PR metadata,
@@ -181,7 +181,8 @@ Used automatically on `pull_request` workflows. The action:
 
 Triggered manually. The action:
 
-1. Builds and publishes **all** public projects (`tag:*:public`)
+1. Builds all projects with a `build` target and publishes all projects covered by
+   the Nx release configuration
 2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 3. Creates any missing GitHub Releases with extracted changelog notes
@@ -211,12 +212,15 @@ Triggered manually. The action:
 ### Publish fails
 
 - Verify registry credentials are available (or OIDC/provenance is configured)
+- Projects are public by default; add a `private` or `<distribution>:private` tag
+  when a project must be excluded from the release workflow
 - Check that released packages are configured for publication
 - Ensure `NPM_CONFIG_PROVENANCE=true` is set in workflow when needed
 
 ### Git tags or GitHub Releases missing after publish
 
-- Trigger `workflow_dispatch` on the release workflow; it builds and publishes all public projects
+- Trigger `workflow_dispatch` on the release workflow; it builds and publishes all projects
+  covered by the Nx release configuration
   and the Sync step scans all past merged `Version Packages` PRs to create any missing tags and releases.
 - If a PR body lacks the `<!-- nx-release-tags -->` comment, re-run the Create PR
   step on the `nx-release/main` branch to regenerate it.

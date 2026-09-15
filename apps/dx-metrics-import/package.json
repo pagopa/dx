@@ -1,7 +1,6 @@
 {
   "name": "dx-metrics-import",
   "version": "0.1.11",
-  "private": true,
   "type": "module",
   "nx": {
     "release": {

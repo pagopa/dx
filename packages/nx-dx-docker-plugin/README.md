@@ -96,7 +96,10 @@ The plugin applies these defaults even when they are not declared in `nx.json`:
 - `DOCKER_BUILDKIT=1` is injected into the inferred Docker build target unless the target already defines `DOCKER_BUILDKIT`.
 - OCI labels are generated automatically from project metadata and workspace Git metadata.
 - optional metadata tags and labels are attached to the inferred Docker build target.
-- Projects configured for Docker release publishing get a custom `nx-release-publish` target.
+- Projects configured for Docker release publishing get the `release:docker` Nx
+  tag and a custom `nx-release-publish` target. Package-backed projects must
+  override the target in `package.json` because Nx's package plugin adds the
+  JavaScript publisher with higher priority.
 - target option objects without an explicit `name` are normalized to `docker:build`
 
 ### `docker:run` Behavior
@@ -134,24 +137,25 @@ The plugin preserves unrelated build arguments already defined on the inferred t
 ## Workspace Release Composition
 
 For a package project released only as a Docker image, configure its Docker
-release repository and mark its `package.json` as private. This prevents Nx from
-inferring the JavaScript publisher:
+release repository and override the release target in its package's `nx.targets`:
 
 ```json
 {
-  "private": true,
-  "release": {
-    "docker": {
-      "repositoryName": "acme/dockerapp"
+  "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+      }
     }
   }
 }
 ```
 
+Keep the Docker repository in the project's `package.json` as shown in the
+[complete release guide](https://dx.pagopa.it/docs/containers/nx-docker-release).
 The plugin supplies the image name, build context, Dockerfile, platform, and OCI
-metadata to its inferred publisher automatically; do not declare a separate
-release target. For projects that publish both an npm package and a Docker image,
-or projects without a `package.json`, see the [complete release guide](https://dx.pagopa.it/docs/containers/nx-docker-release).
+metadata to the target automatically. Projects without a `package.json` do not
+need this override.
 
 ## Default Docker Build Layout
 
@@ -204,9 +208,9 @@ The package provides one executor:
 
 - `@pagopa/nx-dx-docker-plugin:release-publish`
 
-The executor is reached through the inferred `nx-release-publish` target. For a
-project with a `package.json`, set `"private": true` when Docker is its only
-release artifact, as shown in [Workspace Release Composition](#workspace-release-composition).
+The executor is reached through the inferred `nx-release-publish` target.
+Package projects need only configure a Docker release repository; projects
+without a `package.json` use the inferred target directly.
 
 Its behavior is:
 
@@ -235,7 +239,6 @@ Package projects can configure Docker release publishing in `package.json`:
 ```json
 {
   "name": "dockerapp",
-  "private": true,
   "description": "Example Docker application",
   "repository": {
     "url": "https://github.com/acme/example-monorepo"

@@ -73,9 +73,9 @@ plugin:
 - defaults OCI authors to `PagoPA`
 - builds for `linux/amd64,linux/arm64`
 
-The optional `imageAuthors`, `imageNamePrefix`, `imageUrl`, and
-`repositoryName` settings configure OCI metadata or the image repository
-shared by every inferred target.
+The optional `imageAuthors`, `imageNamePrefix`, `imageUrl`, and `repositoryName`
+settings configure OCI metadata or the image repository shared by every inferred
+target.
 
 ## Generated targets
 
@@ -144,12 +144,11 @@ configuration:
 }
 ```
 
-If an application is released only as a Docker image, mark its `package.json` as
-private to prevent Nx from inferring the JavaScript publisher:
+If an application has a `package.json` and is released only as a Docker image,
+configure only its Docker repository:
 
 ```json
 {
-  "private": true,
   "release": {
     "docker": {
       "repositoryName": "pagopa/my-image-name"
@@ -158,10 +157,25 @@ private to prevent Nx from inferring the JavaScript publisher:
 }
 ```
 
-The plugin automatically supplies the image name, build context, Dockerfile,
-platform, and OCI metadata to its inferred publisher; do not declare a separate
-release target. Projects that publish both an npm package and a Docker image
-should publish the image from a release-tag workflow.
+The plugin automatically supplies the `release:docker` tag, image name, build
+context, Dockerfile, platform, and OCI metadata. Because Nx's package plugin
+adds the JavaScript publisher after inferred plugin targets, package-backed
+Docker applications must override that target in their package's `nx.targets`:
+
+```json
+{
+  "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+      }
+    }
+  }
+}
+```
+
+Projects that publish both an npm package and a Docker image should publish the
+image from a release-tag workflow.
 
 ### Projects without a package manifest
 
@@ -195,12 +209,35 @@ that version. No package manifest or temporary version file is needed.
 
 ## Nx Release configuration
 
-Do not configure `release.docker.versionSchemes` or an `@nx/docker` plugin for
-this flow. The DX publisher reads the version produced by Nx from the project's
+Do not configure an `@nx/docker` plugin for this flow. When using release
+groups, configure the Docker group's registry and map its version scheme to the
+version produced by the package version actions:
+
+```json
+{
+  "release": {
+    "groups": {
+      "applications": {
+        "projects": ["tag:release:docker"],
+        "docker": {
+          "preVersionCommand": "",
+          "registryUrl": "ghcr.io",
+          "versionSchemes": {
+            "production": "{versionActionsVersion}"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+The DX publisher reads the version produced by Nx from the project's
 `package.json`, or `project.json` `metadata.version` for a container-only
 project, then derives the Docker aliases itself. This keeps Git release tags,
 package versions, and Docker image versions aligned without interactive scheme
-selection.
+selection. The empty `preVersionCommand` disables Nx's default Docker build; the
+custom publisher builds the image during `nx release publish`.
 
 ## Tag strategy
 

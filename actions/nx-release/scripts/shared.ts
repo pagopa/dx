@@ -137,20 +137,28 @@ export async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 }
 
 /**
- * Checks if an Nx project has the "public" tag.
- * Supports both "public" and "<distribution>:public" formats (e.g. "npm:public", "maven:public").
- * Returns false if project metadata cannot be retrieved or tag is not present.
+ * Checks if an Nx project is publishable based on its visibility tags.
+ * Projects without a visibility tag are public by default. Both "public" and
+ * "<distribution>:public" formats are supported, as well as their private
+ * counterparts.
  */
 export async function isPublicProject(projectName: string): Promise<boolean> {
   const metadata = await getNxProjectMetadata(projectName);
   if (!metadata) return false;
 
-  const tags = metadata.tags;
-  if (!tags) return false;
-
-  return tags.some(
+  const tags = metadata.tags ?? [];
+  const visibilityTags = tags.filter(
     (tag) =>
-      tag === "public" || (typeof tag === "string" && tag.endsWith(":public")),
+      tag === "public" ||
+      tag === "private" ||
+      tag.endsWith(":public") ||
+      tag.endsWith(":private"),
+  );
+
+  if (visibilityTags.length === 0) return true;
+
+  return visibilityTags.some(
+    (tag) => tag === "public" || tag.endsWith(":public"),
   );
 }
 
@@ -190,7 +198,7 @@ export function parseTagEntries(raw: unknown): TagEntry[] {
 /**
  * Retrieves Nx project metadata by name.
  * Returns parsed JSON object or null on failure.
- * Used by both isPublicProject and getNxProjectRoot to avoid duplicate nx calls.
+ * Used by isPublicProject and getNxProjectRoot to avoid duplicate nx calls.
  */
 async function getNxProjectMetadata(
   projectName: string,
