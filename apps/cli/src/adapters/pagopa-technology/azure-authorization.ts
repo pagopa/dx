@@ -150,22 +150,25 @@ const parseAuthorizationFile = (
  */
 const makeChangeDescription = (
   subscriptionName: string,
-  bootstrapIdentityId: string,
-  identityAdded: boolean,
+  bootstrapIdentityIds: RequestAuthorizationInput["bootstrapIdentityIds"],
+  identitiesChanged: boolean,
   groupsChanged: boolean,
 ): { body: string; message: string; title: string } => {
-  if (identityAdded && groupsChanged) {
-    const title = `Add bootstrap identity and AD groups for ${subscriptionName}`;
+  const formattedIdentityIds =
+    `\`${bootstrapIdentityIds.cd}\` and ` + `\`${bootstrapIdentityIds.ci}\``;
+
+  if (identitiesChanged && groupsChanged) {
+    const title = `Authorize bootstrap identities and configure AD groups for ${subscriptionName}`;
     return {
-      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
+      body: `This PR ensures the bootstrap identities ${formattedIdentityIds} are directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
       message: title,
       title,
     };
   }
-  if (identityAdded) {
-    const title = `Add bootstrap identity for ${subscriptionName}`;
+  if (identitiesChanged) {
+    const title = `Authorize bootstrap identities for ${subscriptionName}`;
     return {
-      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers for subscription \`${subscriptionName}\`.`,
+      body: `This PR ensures the bootstrap identities ${formattedIdentityIds} are directory readers for subscription \`${subscriptionName}\`.`,
       message: title,
       title,
     };
@@ -179,33 +182,39 @@ const makeChangeDescription = (
 };
 
 /**
- * Ensures the given identity is present in the service_principals_name list.
- * Returns the (possibly updated) JSON and whether the identity was newly added.
- * Never fails: if the identity already exists it is a no-op with identityAdded = false.
+ * Ensures the bootstrap identities are present in the service principal list.
+ * Existing entries keep their first-seen order and only missing identities are
+ * appended.
  */
-const ensureIdentity = (
+const ensureIdentities = (
   jsonContent: z.infer<typeof azureAuthorizationFileSchema>,
-  identityId: string,
+  identityIds: RequestAuthorizationInput["bootstrapIdentityIds"],
 ): {
-  identityAdded: boolean;
+  identitiesChanged: boolean;
   json: z.infer<typeof azureAuthorizationFileSchema>;
 } => {
-  if (
-    jsonContent.directory_readers.service_principals_name.includes(identityId)
-  ) {
-    return { identityAdded: false, json: jsonContent };
+  const servicePrincipalNames =
+    jsonContent.directory_readers.service_principals_name;
+  const uniqueIdentityIds = [...new Set(servicePrincipalNames)];
+  const existingIdentityIds = new Set(uniqueIdentityIds);
+  const missingIdentityIds = [identityIds.cd, identityIds.ci].filter(
+    (identityId) => !existingIdentityIds.has(identityId),
+  );
+  const identitiesChanged =
+    uniqueIdentityIds.length !== servicePrincipalNames.length ||
+    missingIdentityIds.length > 0;
+
+  if (!identitiesChanged) {
+    return { identitiesChanged: false, json: jsonContent };
   }
 
   return {
-    identityAdded: true,
+    identitiesChanged: true,
     json: {
       ...jsonContent,
       directory_readers: {
         ...jsonContent.directory_readers,
-        service_principals_name: [
-          ...jsonContent.directory_readers.service_principals_name,
-          identityId,
-        ],
+        service_principals_name: [...uniqueIdentityIds, ...missingIdentityIds],
       },
     },
   };
@@ -222,7 +231,7 @@ export const makeAzureAuthorizationService = (
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
     const logger = getLogger(["dx-cli", "pagopa-azure-authorization"]);
     const {
-      bootstrapIdentityId,
+      bootstrapIdentityIds,
       envShort,
       prefix,
       repoName,
@@ -250,7 +259,7 @@ export const makeAzureAuthorizationService = (
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Step 2: Parse file, ensure identity, upsert groups, detect no-op
+        // Step 2: Parse file, ensure identities, upsert groups, detect no-op
         .andThen(({ content, sha }) => {
           const parseResult = parseAuthorizationFile(content);
           if (parseResult.isErr()) {
@@ -261,24 +270,24 @@ export const makeAzureAuthorizationService = (
           }
           const parsed = parseResult.value;
 
-          const { identityAdded, json: withIdentity } = ensureIdentity(
+          const { identitiesChanged, json: withIdentities } = ensureIdentities(
             parsed,
-            bootstrapIdentityId,
+            bootstrapIdentityIds,
           );
-          if (!identityAdded) {
-            logger.warn("Identity already exists, checking groups", {
-              identityId: bootstrapIdentityId,
+          if (!identitiesChanged) {
+            logger.warn("Bootstrap identities already exist, checking groups", {
+              identityIds: bootstrapIdentityIds,
               subscription: subscriptionName,
             });
           }
 
           const { groupsChanged, json: updatedJson } = upsertGroups(
-            withIdentity,
+            withIdentities,
             prefix,
             envShort,
           );
 
-          if (!identityAdded && !groupsChanged) {
+          if (!identitiesChanged && !groupsChanged) {
             // Nothing to do — no branch created, no PR needed.
             logger.info("No changes needed, skipping PR", {
               subscription: subscriptionName,
@@ -288,8 +297,8 @@ export const makeAzureAuthorizationService = (
 
           const { body, message, title } = makeChangeDescription(
             subscriptionName,
-            bootstrapIdentityId,
-            identityAdded,
+            bootstrapIdentityIds,
+            identitiesChanged,
             groupsChanged,
           );
 
