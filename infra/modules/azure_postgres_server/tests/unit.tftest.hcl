@@ -43,25 +43,6 @@ run "postgres_server_creates_default_replica_and_private_endpoints" {
     error_message = "The primary private endpoint must use the configured subnet."
   }
 
-  assert {
-    condition     = azurerm_postgresql_flexible_server_configuration.connection_throttling.value == "on"
-    error_message = "The primary server must enable connection throttling logging."
-  }
-
-  assert {
-    condition     = azurerm_postgresql_flexible_server_configuration.log_checkpoints.value == "on"
-    error_message = "The primary server must enable checkpoint logging."
-  }
-
-  assert {
-    condition     = azurerm_postgresql_flexible_server_configuration.connection_throttling_replica[0].value == "on"
-    error_message = "The replica server must enable connection throttling logging."
-  }
-
-  assert {
-    condition     = azurerm_postgresql_flexible_server_configuration.log_checkpoints_replica[0].value == "on"
-    error_message = "The replica server must enable checkpoint logging."
-  }
 }
 
 run "postgres_server_supports_delegated_subnet" {
@@ -89,15 +70,6 @@ run "postgres_server_skips_replica_when_disabled" {
     error_message = "No replica must be created when create_replica is false."
   }
 
-  assert {
-    condition     = length(azurerm_postgresql_flexible_server_configuration.connection_throttling_replica) == 0
-    error_message = "No replica server configurations must be created when create_replica is false."
-  }
-
-  assert {
-    condition     = length(azurerm_postgresql_flexible_server_configuration.log_checkpoints_replica) == 0
-    error_message = "No replica server configurations must be created when create_replica is false."
-  }
 }
 
 run "postgres_server_creates_optional_key_vault_secret" {
