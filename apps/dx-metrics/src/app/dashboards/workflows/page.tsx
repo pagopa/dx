@@ -117,7 +117,7 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           value={formatDate(data.summary.firstPipelineDate)}
         />
         <MetricCard
-          label="Runs Count"
+          label="Successful Runs"
           tooltip={tooltipContent.runsCount}
           value={data.summary.totalPipelines}
         />

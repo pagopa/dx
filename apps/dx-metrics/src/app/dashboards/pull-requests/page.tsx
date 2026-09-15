@@ -187,7 +187,7 @@ export default function PullRequestsDashboard() {
             <SimpleLineChart
               data={data.unmergedPrs}
               lines={[{ color: "#ea580c", key: "openPrs", name: "Open PRs" }]}
-              title="Unmerged Pull Requests"
+              title="Open Pull Requests (never merged)"
               tooltip={tooltipContent.unmergedPrs}
               xKey="date"
             />

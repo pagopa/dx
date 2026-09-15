@@ -26,7 +26,7 @@ export const workflowsTooltips = {
   pipelineRunCount:
     "Total runs per pipeline. Indicates pipeline usage and importance.",
   runsCount:
-    "Total number of pipeline executions. Measures CI/CD activity and testing frequency.",
+    "Pipeline runs that completed successfully in the selected period. The period is anchored to the most recent available data, not to today, so it always covers the same number of days before the latest run. Failed runs are excluded: their count and time cost appear in the failure charts and in 'Time in Failed Runs'.",
   successFailureRatio:
     "Success rate percentage for each pipeline. Key reliability metric for CI/CD health.",
   title:

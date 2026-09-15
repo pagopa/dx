@@ -229,7 +229,7 @@ const backlogInsight = (input: PullRequestsInsightsInput): Insight | null => {
 
     return {
       category: "quality",
-      detail: `There are currently ${latest} open pull requests.`,
+      detail: `There are currently ${latest} pull requests open and never merged.`,
       id: "pr-backlog",
       severity: "neutral",
       title: "Open pull requests",
@@ -248,7 +248,7 @@ const backlogInsight = (input: PullRequestsInsightsInput): Insight | null => {
       ? "Check whether pull requests wait too long for review."
       : undefined,
     category: "quality",
-    detail: `Open pull requests moved from an average of ${formatNumber(change.firstAverage, 0)} to ${formatNumber(change.secondAverage, 0)} (${formatNumber(change.deltaPct, 0)}%).`,
+    detail: `Never-merged open pull requests moved from an average of ${formatNumber(change.firstAverage, 0)} to ${formatNumber(change.secondAverage, 0)} (${formatNumber(change.deltaPct, 0)}%).`,
     id: "pr-backlog",
     severity: growing ? "warning" : "neutral",
     title: growing

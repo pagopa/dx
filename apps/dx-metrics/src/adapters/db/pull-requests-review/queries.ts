@@ -45,7 +45,7 @@ export const getPullRequestsReviewDashboard = async (
     "pull-requests-review referenceDate",
   );
 
-  // --- Time to First Review (PRs created in the window) ---
+  // --- Time to First Review (population: PRs created in the window) ---
   const avgTimeToFirstReview = await db.execute(sql`
     SELECT ROUND(AVG(
       EXTRACT(EPOCH FROM (first_review.submitted_at - pr.created_at)) / 3600
@@ -81,7 +81,7 @@ export const getPullRequestsReviewDashboard = async (
     ORDER BY week
   `);
 
-  // --- Time to Merge (last approval -> merged_at, PRs merged in the window) ---
+  // --- Time to Merge (population: PRs merged in the window) ---
   const avgTimeToMerge = await db.execute(sql`
     SELECT ROUND(AVG(
       EXTRACT(EPOCH FROM (pr.merged_at - last_approval.submitted_at)) / 3600
@@ -138,12 +138,16 @@ export const getPullRequestsReviewDashboard = async (
     ) first_review_hours
   `);
 
-  // --- Share of merged PRs without any review ---
+  // --- Share of merged PRs without any human review ---
+  // Population: PRs merged in the window. Bot reviews do not count as reviews,
+  // matching `reviewMatrix` and `reviewDistribution` in this file.
   const mergedWithoutReviewShare = await db.execute(sql`
     SELECT ROUND(
       COUNT(*) FILTER (
         WHERE NOT EXISTS (
-          SELECT 1 FROM pull_request_reviews prr WHERE prr.pull_request_id = pr.id
+          SELECT 1 FROM pull_request_reviews prr
+          WHERE prr.pull_request_id = pr.id
+            AND ${botAuthorsExclusion("prr.reviewer")}
         )
       )::numeric / NULLIF(COUNT(*), 0)
     , 4) AS value

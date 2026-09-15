@@ -68,7 +68,7 @@ const reviewVsMergeInsight = (
       ? "Reduce the wait before the first review: that is where time accumulates."
       : "The bottleneck is after approval: check merges waiting to land.",
     category: "velocity",
-    detail: `${formatPercent(reviewShare)} of the time between creation and merge is spent waiting for the first review (${formatNumber(avgTimeToFirstReview)}h versus ${formatNumber(avgTimeToMerge)}h after approval).`,
+    detail: `Waiting for the first review takes ${formatNumber(avgTimeToFirstReview)}h on average (over PRs created in the period), while the wait from last approval to merge is ${formatNumber(avgTimeToMerge)}h (over PRs merged in the period). The pre-review wait is ${formatPercent(reviewShare)} of the combined wait; the two figures come from different populations, not from the same PR lifecycle.`,
     id: "review-vs-merge-split",
     severity,
     title:

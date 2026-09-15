@@ -101,9 +101,3 @@ export const notLikeAll = (
  */
 export const deployWorkflowMatch = (nameColumn: string): SQL =>
   sql`(LOWER(${sql.raw(nameColumn)}) LIKE '%deploy%' OR LOWER(${sql.raw(nameColumn)}) LIKE '%delivery%' OR LOWER(${sql.raw(nameColumn)}) LIKE '%release%' OR LOWER(${sql.raw(nameColumn)}) LIKE '%apply%')`;
-
-/**
- * Builds a `[reference - days, reference)` lower bound on a timestamp column.
- */
-export const movingWindow = (anchorColumn: string, days: number): SQL =>
-  sql`${sql.raw(anchorColumn)}::timestamptz - MAKE_INTERVAL(days => ${days})`;

@@ -66,6 +66,46 @@ describe("buildTechRadarInsights", () => {
     expect(trend?.value?.current).toBe(5);
   });
 
+  it("sums rows for the same tool and snapshot before comparing", () => {
+    const insights = buildTechRadarInsights({
+      adoptionByTool: [],
+      summary: {
+        detectedUsages: 0,
+        repositoriesTotal: 0,
+        repositoriesWithDetectedTools: 0,
+        toolsDetected: 0,
+        usagesNotInRadar: 0,
+      },
+      usageTrend: [
+        {
+          capturedAt: "2026-01-01T00:00:00.000Z",
+          repositoryCount: 2,
+          toolKey: "nx",
+          toolName: "Nx",
+        },
+        {
+          capturedAt: "2026-01-01T00:00:00.000Z",
+          repositoryCount: 3,
+          toolKey: "nx",
+          toolName: "Nx",
+        },
+        {
+          capturedAt: "2026-02-01T00:00:00.000Z",
+          repositoryCount: 9,
+          toolKey: "nx",
+          toolName: "Nx",
+        },
+      ],
+    });
+
+    const trend = insights.find(
+      (insight) => insight.id === "techradar-usage-trend",
+    );
+    // The first snapshot is the sum of its two rows (2 + 3), not a row pick.
+    expect(trend?.value?.previous).toBe(5);
+    expect(trend?.value?.current).toBe(9);
+  });
+
   it("returns no insights when there are no detections", () => {
     expect(
       buildTechRadarInsights({

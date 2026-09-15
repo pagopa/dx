@@ -187,6 +187,10 @@ async function main(): Promise<void> {
       }
     }
 
+    // Captured once, after every repository has been imported, so the snapshot
+    // reflects the full usage set. It has its own `tech-radar-snapshot`
+    // checkpoint, so `--entity tech-radar` re-captures it even when all
+    // per-repo steps are checkpoint-skipped.
     if (shouldRun("tech-radar")) {
       console.log("\n🎯 Techradar Snapshot");
       await runWithCheckpoint("tech-radar-snapshot", null, () =>

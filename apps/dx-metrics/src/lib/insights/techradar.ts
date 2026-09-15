@@ -129,20 +129,23 @@ const usageTrendInsight = (input: TechRadarInsightsInput): Insight | null => {
   const byTool = new Map<
     string,
     {
-      points: { capturedAt: string; repositoryCount: number }[];
+      pointsByCapturedAt: Map<string, number>;
       toolName: string;
     }
   >();
 
   for (const row of trend) {
     const entry = byTool.get(row.toolKey) ?? {
-      points: [],
+      pointsByCapturedAt: new Map<string, number>(),
       toolName: row.toolName,
     };
-    entry.points.push({
-      capturedAt: row.capturedAt,
-      repositoryCount: row.repositoryCount,
-    });
+    // The dashboard chart sums `repositoryCount` across rows per date. The
+    // insight aggregates the same way, so it stays consistent even if a tool
+    // ever produces more than one row per snapshot (e.g. per-ring counting).
+    entry.pointsByCapturedAt.set(
+      row.capturedAt,
+      (entry.pointsByCapturedAt.get(row.capturedAt) ?? 0) + row.repositoryCount,
+    );
     byTool.set(row.toolKey, entry);
   }
 
@@ -154,16 +157,16 @@ const usageTrendInsight = (input: TechRadarInsightsInput): Insight | null => {
   } | null = null;
 
   for (const entry of byTool.values()) {
-    const sorted = [...entry.points].sort((left, right) =>
-      left.capturedAt.localeCompare(right.capturedAt),
+    const sorted = [...entry.pointsByCapturedAt.entries()].sort(
+      (left, right) => left[0].localeCompare(right[0]),
     );
 
     if (sorted.length < 2) {
       continue;
     }
 
-    const first = sorted[0].repositoryCount;
-    const last = sorted[sorted.length - 1].repositoryCount;
+    const first = sorted[0][1];
+    const last = sorted[sorted.length - 1][1];
     const delta = last - first;
 
     if (best === null || Math.abs(delta) > Math.abs(best.delta)) {

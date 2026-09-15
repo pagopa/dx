@@ -38,6 +38,7 @@ export default function OverviewDashboard() {
   const [referenceDate, setReferenceDate] = useState<null | string>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<null | string>(null);
+  const [warning, setWarning] = useState<null | string>(null);
 
   const queryString = useMemo(
     () => new URLSearchParams({ days: String(days), repository }).toString(),
@@ -48,6 +49,7 @@ export default function OverviewDashboard() {
     async (signal?: AbortSignal) => {
       setLoading(true);
       setError(null);
+      setWarning(null);
 
       try {
         const responses = await Promise.all(
@@ -58,6 +60,16 @@ export default function OverviewDashboard() {
             }),
           ),
         );
+
+        const failed = responses.filter((response) => !response.ok).length;
+
+        // A single failing dashboard degrades the summary; losing every
+        // dashboard is a hard failure and uses the standard error UI.
+        if (failed === INSIGHT_ENDPOINTS.length) {
+          throw new Error(
+            `All ${failed} dashboards failed to load. Try again in a moment.`,
+          );
+        }
 
         const payloads: InsightPayload[] = await Promise.all(
           responses
@@ -78,6 +90,11 @@ export default function OverviewDashboard() {
             sortInsights(payloads.flatMap((payload) => payload.insights ?? [])),
           );
           setReferenceDate(dates.at(-1) ?? null);
+          setWarning(
+            failed > 0
+              ? `${failed} of ${INSIGHT_ENDPOINTS.length} dashboards failed to load. The summary below is incomplete.`
+              : null,
+          );
         }
       } catch (caughtError) {
         if (!signal?.aborted) {
@@ -131,6 +148,15 @@ export default function OverviewDashboard() {
       />
 
       {referenceDate && <DataFreshness referenceDate={referenceDate} />}
+
+      {warning ? (
+        <div
+          className="mt-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
+          role="status"
+        >
+          {warning}
+        </div>
+      ) : null}
 
       <InsightsPanel
         className="mt-4"

@@ -8,7 +8,6 @@ import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
-  movingWindow,
   notLikeAll,
   textArray,
   timeBucket,
@@ -142,13 +141,3 @@ describe("deployWorkflowMatch", () => {
   });
 });
 
-describe("movingWindow", () => {
-  it("builds a relative lower bound with a bound number of days", () => {
-    const query = dialect.sqlToQuery(movingWindow("wr.created_at", 30));
-
-    expect(query.sql).toBe(
-      "wr.created_at::timestamptz - MAKE_INTERVAL(days => $1)",
-    );
-    expect(query.params).toEqual([30]);
-  });
-});

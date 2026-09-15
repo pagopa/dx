@@ -73,11 +73,19 @@ const positionClassName = (position: null | string): string => {
 const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
   const rows: BenchmarkRow[] = [...metric.entries]
     .sort((left, right) => {
-      const leftValue = left.value ?? Number.POSITIVE_INFINITY;
-      const rightValue = right.value ?? Number.POSITIVE_INFINITY;
+      // Rows without a value always sort last, in both metric directions.
+      if (left.value === null && right.value === null) {
+        return 0;
+      }
+      if (left.value === null) {
+        return 1;
+      }
+      if (right.value === null) {
+        return -1;
+      }
       return metric.lowerIsBetter
-        ? leftValue - rightValue
-        : rightValue - leftValue;
+        ? left.value - right.value
+        : right.value - left.value;
     })
     .map((entry) => ({
       delta:

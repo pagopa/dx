@@ -31,5 +31,5 @@ export const pullRequestsTooltips = {
     "Total comments across all PRs. Higher engagement indicates active code reviews and discussion.",
   totalPrs: "Total number of pull requests created during the selected period.",
   unmergedPrs:
-    "Open pull requests not yet merged. Higher numbers may indicate review bottlenecks.",
+    "Pull requests that are open and have never been merged, counted per day over the selected period. The period sets the time axis, not the population: PRs created earlier and still open are included. PRs merged during the period are not shown as open on those days. Higher numbers may indicate review bottlenecks.",
 } as const;
