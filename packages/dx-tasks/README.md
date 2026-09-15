@@ -6,6 +6,7 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 
 | Task              | Description                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terraformInit`   | Initializes Terraform, optionally locks providers for configured platforms, and enforces the downloaded module lock.                               |
 | `terraformPlan`   | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                      |
 | `renderReport`    | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers. |
 | `prComment`       | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                       |
