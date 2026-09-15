@@ -5,11 +5,15 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
+  Pie,
+  PieChart,
   ReferenceArea,
   ReferenceLine,
+  ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
@@ -28,12 +32,11 @@ interface ChartReferenceLine {
 /**
  * Shaded band around a target value, e.g. the tolerance inside which a metric
  * is still considered on target. Mirrors the severity rules so the chart and
- * the metric cards agree on what "good" looks like.
+ * the metric cards agree on what "good" looks like. Drawn unlabelled: the
+ * adjacent target line already names the reference.
  */
 interface ChartTargetBand {
   readonly from: number;
-  /** Short caption drawn next to the band, e.g. "on target". */
-  readonly label?: string;
   readonly to: number;
 }
 
@@ -122,6 +125,8 @@ const COLORS: string[] = Object.values(SERIES_COLORS);
 
 interface ChartWrapperProps {
   ariaLabel?: string;
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
   children: React.ReactNode;
   className?: string;
   footer?: React.ReactNode;
@@ -156,6 +161,8 @@ interface DataTableProps<TData extends object> {
 interface SimpleBarChartProps {
   ariaLabel?: string;
   bars: { color?: string; key: string; name: string; stackId?: string }[];
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
   className?: string;
   data: Record<string, unknown>[];
   layout?: "horizontal" | "vertical";
@@ -173,6 +180,8 @@ interface SimpleBarChartProps {
 // --- Line Chart ---
 interface SimpleLineChartProps {
   ariaLabel?: string;
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
   className?: string;
   data: Record<string, unknown>[];
   lines: { color?: string; key: string; name: string }[];
@@ -189,8 +198,17 @@ interface SimpleLineChartProps {
   zeroBaseline?: boolean;
 }
 
+// --- Pie Chart ---
+interface SimplePieChartProps {
+  className?: string;
+  data: { name: string; value: number }[];
+  title: string;
+  tooltip?: string;
+}
+
 export function ChartWrapper({
   ariaLabel,
+  caption,
   children,
   className = "",
   footer,
@@ -207,6 +225,11 @@ export function ChartWrapper({
           {title}
         </h3>
         {tooltip && <TooltipIcon content={tooltip} label={title} />}
+        {caption && (
+          <span className="ml-auto text-xs font-normal normal-case tracking-normal text-gray-500">
+            {caption}
+          </span>
+        )}
       </div>
       {isEmpty ? (
         <div className="flex h-72 items-center justify-center text-center text-sm text-gray-400">
@@ -499,6 +522,7 @@ export function DataTable<TData extends object>({
 export function SimpleBarChart({
   ariaLabel,
   bars,
+  caption,
   className,
   data,
   layout = "horizontal",
@@ -516,6 +540,7 @@ export function SimpleBarChart({
   return (
     <ChartWrapper
       ariaLabel={ariaLabel}
+      caption={caption}
       className={className}
       footer={
         <ChartDataToggle
@@ -611,7 +636,6 @@ export function SimpleBarChart({
               fillOpacity={0.08}
               ifOverflow="extendDomain"
               key="target-band"
-              label={targetBand.label}
               x1={targetBand.from}
               x2={targetBand.to}
             />
@@ -621,7 +645,6 @@ export function SimpleBarChart({
               fillOpacity={0.08}
               ifOverflow="extendDomain"
               key="target-band"
-              label={targetBand.label}
               y1={targetBand.from}
               y2={targetBand.to}
             />
@@ -661,6 +684,7 @@ export function SimpleBarChart({
 
 export function SimpleLineChart({
   ariaLabel,
+  caption,
   className,
   data,
   lines,
@@ -677,6 +701,7 @@ export function SimpleLineChart({
   return (
     <ChartWrapper
       ariaLabel={ariaLabel}
+      caption={caption}
       className={className}
       footer={
         <ChartDataToggle
@@ -747,7 +772,6 @@ export function SimpleLineChart({
             fill={SERIES_COLORS.green}
             fillOpacity={0.08}
             ifOverflow="extendDomain"
-            label={targetBand.label}
             y1={targetBand.from}
             y2={targetBand.to}
           />
@@ -774,6 +798,65 @@ export function SimpleLineChart({
           />
         ))}
       </LineChart>
+    </ChartWrapper>
+  );
+}
+
+export function SimplePieChart({
+  className,
+  data,
+  title,
+  tooltip,
+}: SimplePieChartProps) {
+  return (
+    <ChartWrapper
+      className={className}
+      isEmpty={data.length === 0}
+      title={title}
+      tooltip={tooltip}
+    >
+      <ResponsiveContainer height={288} width="100%">
+        <PieChart>
+          <Pie
+            cx="50%"
+            cy="50%"
+            data={data}
+            dataKey="value"
+            label={({
+              name,
+              percent,
+            }: {
+              name?: number | string;
+              percent?: number;
+            }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+            labelLine
+            outerRadius={80}
+          >
+            {data.map((entry, index) => (
+              <Cell
+                fill={COLORS[index % COLORS.length]}
+                key={`cell-${index}`}
+              />
+            ))}
+          </Pie>
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#161b22",
+              border: "1px solid #30363d",
+              borderRadius: "8px",
+              color: "#e6edf3",
+            }}
+            formatter={(value) => {
+              if (typeof value === "number") {
+                return formatChartNumber(value);
+              }
+              return value;
+            }}
+            itemStyle={{ color: "#e6edf3" }}
+          />
+          <Legend wrapperStyle={{ color: "#8b949e", fontSize: "12px" }} />
+        </PieChart>
+      </ResponsiveContainer>
     </ChartWrapper>
   );
 }

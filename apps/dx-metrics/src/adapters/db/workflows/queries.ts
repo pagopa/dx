@@ -95,7 +95,10 @@ export const getWorkflowDashboard = async (
   };
   return {
     ...dashboard,
-    insights: buildWorkflowsInsights(dashboard),
+    insights: buildWorkflowsInsights(
+      dashboard,
+      `https://github.com/${fullName}`,
+    ),
     meta: { days, referenceDate },
   };
 };

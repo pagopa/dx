@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromFit,
   confidenceFromSample,
   formatNumber,
   formatPercent,
@@ -175,6 +176,7 @@ const reviewLatencyTrendInsight = (
 
   return {
     category: "velocity",
+    confidence: confidenceFromFit(change.rSquared),
     detail: `Time to first review moved from ${formatNumber(change.firstAverage)}h to ${formatNumber(change.secondAverage)}h (${formatNumber(change.deltaPct, 0)}%).`,
     id: "review-latency-trend",
     severity,

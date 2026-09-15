@@ -29,12 +29,12 @@ describe("buildPullRequestsInsights", () => {
     const insights = buildPullRequestsInsights(baseInput());
     const ids = insights.map((insight) => insight.id);
 
-    expect(ids).toContain("pr-lead-time-trend");
+    expect(ids).toContain("pr-lead-time-change");
     expect(ids).toContain("pr-lead-time-target");
     expect(ids).toContain("pr-throughput-trend");
 
     const trend = insights.find(
-      (insight) => insight.id === "pr-lead-time-trend",
+      (insight) => insight.id === "pr-lead-time-change",
     );
     expect(trend?.severity).toBe("warning");
   });
@@ -53,7 +53,7 @@ describe("buildPullRequestsInsights", () => {
     });
 
     const trend = insights.find(
-      (insight) => insight.id === "pr-lead-time-trend",
+      (insight) => insight.id === "pr-lead-time-change",
     );
     expect(trend?.severity).toBe("positive");
   });
@@ -85,7 +85,7 @@ describe("buildPullRequestsInsights", () => {
         ?.severity,
     ).toBe("warning");
     expect(
-      insights.find((insight) => insight.id === "pr-lead-time-trend")?.value
+      insights.find((insight) => insight.id === "pr-lead-time-change")?.value
         ?.deltaPct,
     ).toBeCloseTo(100);
   });
@@ -108,9 +108,9 @@ describe("buildPullRequestsInsights", () => {
         ?.label,
     ).toBe("average");
     expect(
-      insights.find((insight) => insight.id === "pr-lead-time-trend")?.value
+      insights.find((insight) => insight.id === "pr-lead-time-change")?.value
         ?.label,
-    ).toBe("trend at period end");
+    ).toBe("period average");
   });
 
   it("escalates a lead time far beyond the target to critical", () => {

@@ -7,6 +7,37 @@ interface DashboardRequestStateProps {
   onRetry: () => Promise<void>;
 }
 
+const SKELETON_CARDS = 4;
+const SKELETON_CHARTS = 2;
+
+/**
+ * Placeholder layout shown while a dashboard loads. It mirrors the metric-card
+ * grid and the chart grid so the real content lands in place instead of
+ * pushing everything down after a spinner.
+ */
+function DashboardSkeleton() {
+  return (
+    <div aria-hidden="true" className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+          <div
+            className="h-28 animate-pulse rounded-xl border border-[#30363d] bg-[#0d1117]"
+            key={index}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {Array.from({ length: SKELETON_CHARTS }, (_, index) => (
+          <div
+            className="h-80 animate-pulse rounded-xl border border-[#30363d] bg-[#0d1117]"
+            key={index}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DashboardRequestState({
   error,
   loading,
@@ -20,13 +51,10 @@ export function DashboardRequestState({
     <div className={isIdle ? "" : "mb-6 space-y-3"}>
       <div role="status">
         {loading ? (
-          <span className="flex items-center gap-2 text-gray-400">
-            <span
-              aria-hidden="true"
-              className="h-4 w-4 animate-spin rounded-full border-2 border-gray-400 border-t-transparent"
-            />
-            <span className="text-sm font-medium">Loading dashboard data…</span>
-          </span>
+          <>
+            <span className="sr-only">Loading dashboard data…</span>
+            <DashboardSkeleton />
+          </>
         ) : null}
       </div>
 

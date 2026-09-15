@@ -51,6 +51,7 @@ const MIN_RUNS_FOR_SIGNAL = 10;
 
 const failureHotspotInsight = (
   input: WorkflowsInsightsInput,
+  repositoryUrl?: string,
 ): Insight | null => {
   const totalFailures = input.failures.reduce(
     (sum, row) => sum + row.failedRuns,
@@ -89,7 +90,14 @@ const failureHotspotInsight = (
     category: "reliability",
     confidence: confidenceFromSample(totalFailures),
     detail: `"${top.workflowName}" produced ${top.failedRuns} of ${totalFailures} failures${topShare === null ? "" : `; the top 20% of workflows cause ${formatPercent(topShare)} of them`}.`,
-    evidence: [{ label: top.workflowName }],
+    evidence: [
+      {
+        ...(repositoryUrl === undefined
+          ? {}
+          : { href: `${repositoryUrl}/actions` }),
+        label: top.workflowName,
+      },
+    ],
     id: "workflow-failure-hotspot",
     sampleSize: totalFailures,
     severity,
@@ -353,10 +361,11 @@ const durationSpreadInsight = (
 /** Builds the ordered list of insights for the Workflows dashboard. */
 export const buildWorkflowsInsights = (
   input: WorkflowsInsightsInput,
+  repositoryUrl?: string,
 ): Insight[] =>
   sortInsights(
     [
-      failureHotspotInsight(input),
+      failureHotspotInsight(input, repositoryUrl),
       ciCostHotspotInsight(input),
       successRateInsight(input),
       overallSuccessRateInsight(input),

@@ -13,9 +13,8 @@ import {
   textArray,
   timeBucket,
   timeBucketInterval,
-  WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/adapters/db/shared/sql-fragments";
-import { BOT_AUTHORS } from "@/lib/config";
+import { BOT_AUTHORS, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
 
 const dialect = new PgDialect();
 

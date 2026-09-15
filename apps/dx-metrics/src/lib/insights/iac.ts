@@ -4,6 +4,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
 import {
+  confidenceFromFit,
   confidenceFromSample,
   formatNumber,
   formatPercent,
@@ -100,6 +101,7 @@ const leadTimeTrendInsight = (input: IacInsightsInput): Insight | null => {
 
   return {
     category: "velocity",
+    confidence: confidenceFromFit(change.rSquared),
     detail: `IaC lead time moved from ${formatNumber(change.firstAverage)} to ${formatNumber(change.secondAverage)} days (${formatNumber(change.deltaPct, 0)}%).`,
     id: "iac-lead-time-trend",
     severity,

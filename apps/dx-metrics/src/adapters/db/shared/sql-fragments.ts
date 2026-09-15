@@ -2,15 +2,11 @@
 
 import { sql, type SQL } from "drizzle-orm";
 
-import { BOT_AUTHORS } from "@/lib/config";
+import { BOT_AUTHORS, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
 
 /**
- * Time windows shorter than this threshold are bucketed by day, longer windows
- * by week. Defined once here so adapters do not repeat the magic number.
+ * Renders a column expression, accepting either raw text or a bound fragment.
  */
-export const WEEKLY_BUCKET_THRESHOLD_DAYS = 240;
-
-/** Renders a column expression, accepting either raw text or a bound fragment. */
 const asFragment = (expression: SQL | string): SQL =>
   typeof expression === "string" ? sql.raw(expression) : expression;
 

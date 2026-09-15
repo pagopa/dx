@@ -1,7 +1,7 @@
 /** Reusable computations and formatting for insight rules. */
 
 import { linearRegression, percentChange } from "@/lib/stats";
-import { INSIGHT_THRESHOLDS } from "@/lib/config";
+import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 
 import type { Insight, InsightSeverity } from "./types";
 
@@ -44,6 +44,16 @@ export const confidenceFromSample = (
   sampleSize !== null && sampleSize !== undefined && sampleSize < minimum
     ? "low"
     : undefined;
+
+/**
+ * Flags a trend reading whose fitted line explains too little of the variance.
+ * A change between two halves only means something when the series actually
+ * trends, not when it is noise whose two halves happen to differ.
+ */
+export const confidenceFromFit = (
+  rSquared: number,
+  minimum: number = METRIC_TARGETS.minTrendRSquared,
+): "low" | undefined => (rSquared >= minimum ? undefined : "low");
 
 /** Formats a 0..1 ratio as a percentage string. */
 export const formatPercent = (ratio: number, digits = 0): string =>

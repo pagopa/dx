@@ -3,6 +3,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  confidenceFromFit,
   confidenceFromSample,
   formatSpreadRatio,
   halfSplitChange,
@@ -27,6 +28,16 @@ describe("confidenceFromSample", () => {
   it("stays silent when the sample size is unknown", () => {
     expect(confidenceFromSample(undefined)).toBeUndefined();
     expect(confidenceFromSample(null)).toBeUndefined();
+  });
+});
+
+describe("confidenceFromFit", () => {
+  it("marks a poorly fitted trend as low confidence", () => {
+    expect(confidenceFromFit(0.05, 0.3)).toBe("low");
+  });
+
+  it("does not flag a well fitted trend", () => {
+    expect(confidenceFromFit(0.8, 0.3)).toBeUndefined();
   });
 });
 

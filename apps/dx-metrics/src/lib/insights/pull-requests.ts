@@ -1,9 +1,11 @@
 /** Deterministic insights for the Pull Requests dashboard. */
 
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { LARGE_PR_BUCKET_LABELS } from "@/lib/pr-size-buckets";
 import { paretoShare, percentChange, share } from "@/lib/stats";
 
 import {
+  confidenceFromFit,
   confidenceFromSample,
   formatNumber,
   formatPercent,
@@ -27,10 +29,6 @@ export interface PullRequestsInsightsInput {
     readonly p85: null | number;
     readonly p95: null | number;
   };
-  readonly leadTimeTrend?: readonly {
-    readonly date: string;
-    readonly trendLine: number;
-  }[];
   readonly mergedPrs: readonly { readonly prCount: number }[];
   readonly previousLeadTime?: null | number;
   readonly prSizeDistribution: readonly {
@@ -45,55 +43,39 @@ export interface PullRequestsInsightsInput {
   readonly unmergedPrs: readonly { readonly openPrs: number }[];
 }
 
-const LARGE_PR_RANGES = new Set(["501-1000", "1000+"]);
-
-const leadTimeTrendInsight = (
+const leadTimeChangeInsight = (
   input: PullRequestsInsightsInput,
 ): Insight | null => {
-  // Primary signal: the endpoints of the fitted trend line, which is exactly
-  // what the "Lead Time Trend" chart draws. This guarantees the card delta and
-  // the chart cannot point in opposite directions.
-  const trend = input.leadTimeTrend ?? [];
-  const trendFirst = trend[0]?.trendLine;
-  const trendLast = trend[trend.length - 1]?.trendLine;
+  // One comparison rule for the card and the insight: the current period is
+  // compared with the immediately preceding, equally-sized window. This is why
+  // the card shows `previous <value>` next to the same delta. Only when the
+  // previous window is missing do we fall back to a first-half/second-half
+  // split of the same window, and then the fit quality gates the severity.
+  const current = input.cards.avgLeadTime;
+  const previous = input.previousLeadTime ?? null;
 
   let deltaPct: null | number = null;
   let firstAverage: number | null = null;
   let secondAverage: number | null = null;
   let conclusive = true;
 
-  if (
-    trend.length >= 2 &&
-    trendFirst !== undefined &&
-    trendLast !== undefined &&
-    trendFirst !== 0
-  ) {
-    deltaPct = percentChange(trendLast, trendFirst);
-    firstAverage = trendFirst;
-    secondAverage = trendLast;
+  if (current !== null && previous !== null) {
+    deltaPct = percentChange(current, previous);
+    firstAverage = previous;
+    secondAverage = current;
   } else {
-    // Fallbacks for short windows with no fitted line.
-    const current = input.cards.avgLeadTime;
-    const previous = input.previousLeadTime ?? null;
+    const change = halfSplitChange(
+      input.leadTimeMovingAvg.map((row) => row.avgLeadTimeDays),
+    );
 
-    if (current !== null && previous !== null) {
-      deltaPct = percentChange(current, previous);
-      firstAverage = previous;
-      secondAverage = current;
-    } else {
-      const change = halfSplitChange(
-        input.leadTimeMovingAvg.map((row) => row.avgLeadTimeDays),
-      );
-
-      if (change === null) {
-        return null;
-      }
-
-      deltaPct = change.deltaPct;
-      firstAverage = change.firstAverage;
-      secondAverage = change.secondAverage;
-      conclusive = change.rSquared >= METRIC_TARGETS.minTrendRSquared;
+    if (change === null) {
+      return null;
     }
+
+    deltaPct = change.deltaPct;
+    firstAverage = change.firstAverage;
+    secondAverage = change.secondAverage;
+    conclusive = change.rSquared >= METRIC_TARGETS.minTrendRSquared;
   }
 
   if (deltaPct === null || firstAverage === null || secondAverage === null) {
@@ -117,14 +99,14 @@ const leadTimeTrendInsight = (
         : undefined,
     category: "velocity",
     confidence: conclusive ? undefined : "low",
-    detail: `The lead-time trend moved from ${formatNumber(firstAverage)} to ${formatNumber(secondAverage)} days (${formatNumber(deltaPct, 0)}%).${conclusive ? "" : " The week-by-week series is too noisy to draw conclusions."}`,
-    id: "pr-lead-time-trend",
+    detail: `Average lead time moved from ${formatNumber(firstAverage)} to ${formatNumber(secondAverage)} days versus the previous period (${formatNumber(deltaPct, 0)}%).${conclusive ? "" : " The period is too noisy to draw conclusions."}`,
+    id: "pr-lead-time-change",
     severity,
     title: `Lead time ${direction}`,
     value: {
       current: secondAverage,
       deltaPct,
-      label: "trend at period end",
+      label: "period average",
       unit: "days",
     },
   };
@@ -140,11 +122,12 @@ const leadTimeTargetInsight = (
   }
 
   const withinTarget = value <= METRIC_TARGETS.leadTimeDays;
+  const median = input.leadTimePercentiles?.p50;
 
   return {
     category: "velocity",
     confidence: confidenceFromSample(input.leadTimePercentiles?.count),
-    detail: `Average lead time is ${formatNumber(value)} days against a ${METRIC_TARGETS.leadTimeDays}-day target.`,
+    detail: `Average lead time is ${formatNumber(value)} days against a ${METRIC_TARGETS.leadTimeDays}-day target${median === null || median === undefined ? "" : `. The target is compared with the mean, which a long tail pulls up; the median is ${formatNumber(median)} days`}.`,
     id: "pr-lead-time-target",
     sampleSize: input.leadTimePercentiles?.count,
     severity: severityFromTarget(value, METRIC_TARGETS.leadTimeDays, {
@@ -203,7 +186,7 @@ const prSizeInsight = (input: PullRequestsInsightsInput): Insight | null => {
   }
 
   const large = input.prSizeDistribution
-    .filter((row) => LARGE_PR_RANGES.has(row.sizeRange))
+    .filter((row) => LARGE_PR_BUCKET_LABELS.has(row.sizeRange))
     .reduce((sum, row) => sum + row.prCount, 0);
   const largeShare = share(large, total);
 
@@ -266,6 +249,7 @@ const backlogInsight = (input: PullRequestsInsightsInput): Insight | null => {
       ? "Check whether pull requests wait too long for review."
       : undefined,
     category: "quality",
+    confidence: confidenceFromFit(change.rSquared),
     detail: `Never-merged open pull requests moved from an average of ${formatNumber(change.firstAverage, 0)} to ${formatNumber(change.secondAverage, 0)} (${formatNumber(change.deltaPct, 0)}%).`,
     id: "pr-backlog",
     severity: growing ? "warning" : "neutral",
@@ -294,14 +278,18 @@ const throughputInsight = (
     significantChangePct: METRIC_TARGETS.significantChangePct,
   });
 
+  const totalMerged = input.mergedPrs.reduce(
+    (sum, row) => sum + row.prCount,
+    0,
+  );
+
   return {
     category: "velocity",
-    confidence: confidenceFromSample(
-      input.mergedPrs.reduce((sum, row) => sum + row.prCount, 0),
-    ),
+    confidence:
+      confidenceFromFit(change.rSquared) ?? confidenceFromSample(totalMerged),
     detail: `Average throughput moved from ${formatNumber(change.firstAverage, 1)} to ${formatNumber(change.secondAverage, 1)} merged PRs per period (${formatNumber(change.deltaPct, 0)}%).`,
     id: "pr-throughput-trend",
-    sampleSize: input.mergedPrs.reduce((sum, row) => sum + row.prCount, 0),
+    sampleSize: totalMerged,
     severity,
     title:
       severity === "positive"
@@ -374,7 +362,7 @@ export const buildPullRequestsInsights = (
 ): Insight[] =>
   sortInsights(
     [
-      leadTimeTrendInsight(input),
+      leadTimeChangeInsight(input),
       leadTimeTargetInsight(input),
       leadTimeSpreadInsight(input),
       prSizeInsight(input),

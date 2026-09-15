@@ -90,7 +90,6 @@ export default function PullRequestsReviewDashboard() {
   // plus its tolerance, matching how the card severity is computed.
   const firstReviewToleranceBand = {
     from: 0,
-    label: "within tolerance",
     to:
       METRIC_TARGETS.timeToFirstReviewHours *
       (1 + INSIGHT_THRESHOLDS.targetTolerancePct / 100),

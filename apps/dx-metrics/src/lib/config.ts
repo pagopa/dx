@@ -101,6 +101,13 @@ export const TIME_INTERVALS = [
 ];
 
 /**
+ * Time windows shorter than this are bucketed by day, longer windows by week.
+ * Defined in the shared config so both the SQL adapters and the chart captions
+ * describe the same bucketing.
+ */
+export const WEEKLY_BUCKET_THRESHOLD_DAYS = 240;
+
+/**
  * How many days of lag between the reference date and "now" still count as
  * fresh. Past this the freshness note turns amber, so a viewer notices the
  * importer has fallen behind instead of trusting stale numbers.

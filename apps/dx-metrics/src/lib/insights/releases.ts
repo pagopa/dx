@@ -3,6 +3,7 @@
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 
 import {
+  confidenceFromFit,
   confidenceFromSample,
   formatNumber,
   formatPercent,
@@ -42,6 +43,7 @@ const cadenceInsight = (input: ReleasesInsightsInput): Insight | null => {
 
   return {
     category: "adoption",
+    confidence: confidenceFromFit(change.rSquared),
     detail: `New major versions moved from ${formatNumber(change.firstAverage)} to ${formatNumber(change.secondAverage)} per month (${formatNumber(change.deltaPct, 0)}%).`,
     id: "releases-cadence",
     severity,

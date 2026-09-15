@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SimplePieChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -121,33 +121,15 @@ export default function DxAdoptionDashboard() {
           />
           <InsightsPanel className="mb-4" insights={data.insights} />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <SimpleBarChart
-              bars={[
-                {
-                  color: SERIES_COLORS.blue,
-                  key: "value",
-                  name: "Pipelines",
-                },
-              ]}
+            <SimplePieChart
               data={pipelinePie}
               title="DX Pipeline Adoption"
               tooltip={tooltipContent.pipelineAdoption}
-              unit="pipelines"
-              xKey="name"
             />
-            <SimpleBarChart
-              bars={[
-                {
-                  color: SERIES_COLORS.green,
-                  key: "value",
-                  name: "Modules",
-                },
-              ]}
+            <SimplePieChart
               data={modulePie}
               title="DX Terraform Modules Adoption"
               tooltip={tooltipContent.moduleAdoption}
-              unit="modules"
-              xKey="name"
             />
           </div>
 

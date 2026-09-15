@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 
 import { buildPullRequestsInsights } from "@/lib/insights/pull-requests";
 import type { WithInsights } from "@/lib/insights/types";
+import { PR_SIZE_BUCKETS } from "@/lib/pr-size-buckets";
 
 import type { Database, WithMeta } from "../shared/types";
 import type {
@@ -43,6 +44,27 @@ import {
  * opened by a human (not a bot) and not marked as draft.
  */
 const HUMAN_PR = sql`${botAuthorsExclusion("pr.author")} AND (pr.draft IS NULL OR pr.draft = 0)`;
+
+// Size buckets come from `@/lib/pr-size-buckets`, the same list the insight
+// rules use, so the histogram and the "large PR" reading can never disagree.
+const PR_SIZE_UPPER_BOUNDS = PR_SIZE_BUCKETS.filter(
+  (bucket) => bucket.max !== null,
+);
+
+const prSizeRangeExpression = sql`CASE ${sql.join(
+  PR_SIZE_UPPER_BOUNDS.map(
+    (bucket) => sql`WHEN pr.additions <= ${bucket.max} THEN ${bucket.label}`,
+  ),
+  sql` `,
+)} ELSE ${PR_SIZE_BUCKETS[PR_SIZE_BUCKETS.length - 1].label} END`;
+
+const prSizeSortOrderExpression = sql`CASE ${sql.join(
+  PR_SIZE_UPPER_BOUNDS.map(
+    (bucket, index) =>
+      sql`WHEN pr.additions <= ${bucket.max} THEN ${index + 1}`,
+  ),
+  sql` `,
+)} ELSE ${PR_SIZE_BUCKETS.length} END`;
 
 /** Resolves the latest PR activity timestamp used to anchor time windows. */
 const fetchReferenceDate = async (
@@ -367,12 +389,8 @@ async function fetchPrQualityData(
         WITH bucketed AS (
           SELECT pr.additions,
             EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400 AS "leadTimeDays",
-            CASE WHEN additions <= 50 THEN '0-50' WHEN additions <= 200 THEN '51-200'
-            WHEN additions <= 500 THEN '201-500' WHEN additions <= 1000 THEN '501-1000'
-            ELSE '1000+' END AS "sizeRange",
-            CASE WHEN additions <= 50 THEN 1 WHEN additions <= 200 THEN 2
-            WHEN additions <= 500 THEN 3 WHEN additions <= 1000 THEN 4
-            ELSE 5 END AS "sortOrder"
+            ${prSizeRangeExpression} AS "sizeRange",
+            ${prSizeSortOrderExpression} AS "sortOrder"
           FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
           WHERE r.full_name = ${fullName}
             AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
