@@ -83,10 +83,10 @@ module "core_values" {
   version = "~> 0.4"
 
   core_state = {
-    resource_group_name  = "dx-d-itn-tfstate-rg-01"
-    storage_account_name = "dxditntfstatest01"
+    resource_group_name  = "dx-u-itn-tfstate-rg-01"
+    storage_account_name = "dxuitntfstatest01"
     container_name       = "terraform-state"
-    key                  = "dx.core.dev.tfstate"
+    key                  = "dx.core.uat.tfstate"
   }
 }
 ```
