@@ -52,6 +52,7 @@ interface PrDashboardData {
     prCount: number;
     sizeRange: string;
   }[];
+  prsByContributor: { author: string; prCount: number }[];
   slowestPrs: {
     createdAt: string;
     leadTimeDays: number;
@@ -386,6 +387,34 @@ export default function PullRequestsDashboard() {
               data={data.slowestPrs}
               title="Slowest Pull Requests"
               tooltip={tooltipContent.slowestPrs}
+            />
+          </div>
+
+          <div className="mt-8">
+            <DataTable
+              columns={[
+                {
+                  key: "author",
+                  label: "Contributor",
+                  renderCell: (value) => {
+                    const author = String(value);
+                    return (
+                      <a
+                        className="text-blue-600 hover:underline"
+                        href={`https://github.com/${author}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        {author}
+                      </a>
+                    );
+                  },
+                },
+                { key: "prCount", label: "Pull Requests" },
+              ]}
+              data={data.prsByContributor}
+              title="Pull Requests by Contributor"
+              tooltip={tooltipContent.prsByContributor}
             />
           </div>
         </div>

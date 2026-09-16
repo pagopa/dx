@@ -36,6 +36,7 @@ import {
   prOpenCountRowSchema,
   prSizeDistributionRowSchema,
   prSizeRowSchema,
+  prsByContributorRowSchema,
   prSummaryCardsSchema,
   slowestPrRowSchema,
 } from "./schemas";
@@ -85,13 +86,15 @@ export const fetchPrDashboard = async (
 
   const referenceDate = await fetchReferenceDate(db, fullName);
 
-  const [cards, leadTime, counts, quality, leadTimeStats] = await Promise.all([
-    fetchPrSummary(db, fullName, referenceDate, days),
-    fetchLeadTimeData(db, fullName, referenceDate, days),
-    fetchPrCountData(db, fullName, referenceDate, days),
-    fetchPrQualityData(db, fullName, referenceDate, days),
-    fetchLeadTimeStats(db, fullName, referenceDate, days),
-  ]);
+  const [cards, leadTime, counts, quality, leadTimeStats, prsByContributor] =
+    await Promise.all([
+      fetchPrSummary(db, fullName, referenceDate, days),
+      fetchLeadTimeData(db, fullName, referenceDate, days),
+      fetchPrCountData(db, fullName, referenceDate, days),
+      fetchPrQualityData(db, fullName, referenceDate, days),
+      fetchLeadTimeStats(db, fullName, referenceDate, days),
+      fetchPrsByContributor(db, fullName, referenceDate, days),
+    ]);
 
   const dashboard = {
     cards,
@@ -99,6 +102,7 @@ export const fetchPrDashboard = async (
     ...counts,
     ...quality,
     ...leadTimeStats,
+    ...prsByContributor,
   };
   return {
     ...dashboard,
@@ -424,6 +428,37 @@ async function fetchPrQualityData(
       slowestPrRowSchema,
       slowestPrs.rows,
       "pull-requests slowestPrs",
+    ),
+  };
+}
+
+/**
+ * Pull requests created in the window grouped by author, ordered by volume.
+ * The population mirrors the "Contributors" and "Total PRs" cards (human,
+ * non-draft PRs created in the window), so the per-author counts sum to the
+ * total and a reader can reconcile the table with the cards above it.
+ */
+async function fetchPrsByContributor(
+  db: Database,
+  fullName: string,
+  referenceDate: string,
+  days: number,
+): Promise<Pick<PrDashboardResult, "prsByContributor">> {
+  const result = await db.execute(sql`
+    SELECT pr.author, COUNT(*) AS "prCount"
+    FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+    WHERE r.full_name = ${fullName}
+      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.author IS NOT NULL
+      AND ${humanPullRequest("pr")}
+    GROUP BY pr.author
+    ORDER BY "prCount" DESC, pr.author
+  `);
+  return {
+    prsByContributor: parseSqlRows(
+      prsByContributorRowSchema,
+      result.rows,
+      "pull-requests prsByContributor",
     ),
   };
 }

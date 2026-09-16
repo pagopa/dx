@@ -27,6 +27,8 @@ export const pullRequestsTooltips = {
     "Distribution of PR sizes across ranges. Shows team's tendency for large or small changes.",
   prSizeLeadTime:
     "Average lead time per size bucket (merged PRs only). Shows whether larger changes wait longer before merging; buckets without merged PRs are omitted.",
+  prsByContributor:
+    "Number of pull requests created per author in the selected period. Uses the same population as the Total PRs and Contributors cards (human, non-draft PRs created in the window), so the counts add up to Total PRs and the number of rows matches the Contributors card. Bots are excluded.",
   slowestPrs:
     "PRs with the longest merge times. Helps identify problematic changes or review delays.",
   title:

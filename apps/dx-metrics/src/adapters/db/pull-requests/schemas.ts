@@ -77,6 +77,11 @@ export const prSizeDistributionRowSchema = z.object({
   sizeRange: z.string().min(1),
 });
 
+export const prsByContributorRowSchema = z.object({
+  author: z.string().min(1),
+  prCount: sqlNumberSchema,
+});
+
 export const slowestPrRowSchema = z.object({
   createdAt: sqlTimestampSchema,
   leadTimeDays: sqlNumberSchema,
@@ -115,6 +120,7 @@ export const prDashboardSchema = z.object({
   prComments: z.array(prCommentsRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
+  prsByContributor: z.array(prsByContributorRowSchema),
   previousLeadTime: nullableSqlNumberSchema,
   slowestPrs: z.array(slowestPrRowSchema),
   unmergedPrs: z.array(prOpenCountRowSchema),
