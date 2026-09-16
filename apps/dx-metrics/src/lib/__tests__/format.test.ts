@@ -77,3 +77,16 @@ describe("formatFullDate", () => {
     expect(formatFullDate("2026-11-10")).toContain("2026");
   });
 });
+
+describe("date locale", () => {
+  it("renders the short date in the requested locale", () => {
+    expect(formatShortDate("2026-11-10", "en-GB")).toContain("Nov");
+    expect(formatShortDate("2026-11-10", "it-IT").toLowerCase()).toContain(
+      "nov",
+    );
+  });
+
+  it("keeps the year in the full date regardless of locale", () => {
+    expect(formatFullDate("2026-11-10", "it-IT")).toContain("2026");
+  });
+});

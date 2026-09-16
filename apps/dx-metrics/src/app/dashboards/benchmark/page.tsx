@@ -1,6 +1,6 @@
 "use client";
 
-import { DataTable } from "@/components/Charts";
+import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -100,48 +100,76 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
       value: entry.value,
     }));
 
+  // Chart rows use a plain object shape: the chart primitive expects
+  // `Record<string, unknown>`, which a named interface does not satisfy.
+  const chartData = rows.map((row) => ({
+    repository: row.repository,
+    value: row.value,
+  }));
+
   return (
-    <DataTable
-      columns={[
-        { key: "repository", label: "Repository" },
-        {
-          key: "value",
-          label: metric.label,
-          renderCell: (value) =>
-            typeof value === "number"
-              ? formatWithUnit(value, metric.unit, 2)
-              : "—",
-        },
-        {
-          key: "count",
-          label: "N",
-          renderCell: (value) =>
-            typeof value === "number" ? formatInteger(value) : "—",
-        },
-        {
-          key: "delta",
-          label: "vs median",
-          renderCell: (value) =>
-            typeof value === "number"
-              ? `${value > 0 ? "+" : ""}${formatNumber(value, 2)}`
-              : "—",
-        },
-        {
-          key: "position",
-          label: "Position",
-          renderCell: (value) => (
-            <span
-              className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${positionClassName(String(value))}`}
-            >
-              {positionLabel(String(value))}
-            </span>
-          ),
-        },
-      ]}
-      data={rows}
-      title={`${metric.label} (median ${formatWithUnit(metric.median, metric.unit, 2)})`}
-      tooltip={tooltipContent.benchmark}
-    />
+    <div className="space-y-4">
+      {/* A ranked bar chart with the median as reference makes the spread and
+          the outliers visible; the table below carries the exact figures. */}
+      <SimpleBarChart
+        bars={[{ color: SERIES_COLORS.blue, key: "value", name: metric.label }]}
+        data={chartData}
+        layout="vertical"
+        referenceLines={
+          metric.median === null
+            ? undefined
+            : [{ label: "median", value: metric.median }]
+        }
+        sortDirection={metric.lowerIsBetter ? "asc" : "desc"}
+        sortKey="value"
+        title={`${metric.label} across repositories`}
+        tooltip={tooltipContent.benchmark}
+        unit={metric.unit}
+        xKey="repository"
+        yAxisWidth={160}
+      />
+      <DataTable
+        columns={[
+          { key: "repository", label: "Repository" },
+          {
+            key: "value",
+            label: metric.label,
+            renderCell: (value) =>
+              typeof value === "number"
+                ? formatWithUnit(value, metric.unit, 2)
+                : "—",
+          },
+          {
+            key: "count",
+            label: "N",
+            renderCell: (value) =>
+              typeof value === "number" ? formatInteger(value) : "—",
+          },
+          {
+            key: "delta",
+            label: "vs median",
+            renderCell: (value) =>
+              typeof value === "number"
+                ? `${value > 0 ? "+" : ""}${formatNumber(value, 2)}`
+                : "—",
+          },
+          {
+            key: "position",
+            label: "Position",
+            renderCell: (value) => (
+              <span
+                className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${positionClassName(String(value))}`}
+              >
+                {positionLabel(String(value))}
+              </span>
+            ),
+          },
+        ]}
+        data={rows}
+        title={`${metric.label} (median ${formatWithUnit(metric.median, metric.unit, 2)})`}
+        tooltip={tooltipContent.benchmark}
+      />
+    </div>
   );
 };
 

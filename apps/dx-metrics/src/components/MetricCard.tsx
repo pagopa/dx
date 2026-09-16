@@ -15,6 +15,11 @@ interface MetricCardProps {
   /** Percentage change versus the previous period, when available. */
   deltaPct?: null | number;
   /**
+   * Direction the metric is expected to move in. When provided, the delta is
+   * coloured and labelled as favourable or not, so an arrow is never ambiguous.
+   */
+  deltaDirection?: "higher-is-better" | "lower-is-better";
+  /**
    * Names what `deltaPct` compares (e.g. "trend"). Shown before the arrow so a
    * trend-based delta is not mistaken for a change in the headline value.
    */
@@ -83,6 +88,7 @@ const Sparkline = ({ points }: { points: readonly number[] }) => {
  */
 export function MetricCard({
   breakdown,
+  deltaDirection,
   deltaPct,
   deltaLabel,
   label,
@@ -100,6 +106,20 @@ export function MetricCard({
   const accent = severityStyle ? ` border-l-4 ${severityStyle.accent}` : "";
   const hasDelta = deltaPct !== undefined && deltaPct !== null;
   const rising = hasDelta && deltaPct > 0;
+  // When the desired direction is known, say whether the move is good. Without
+  // it the delta stays neutral, so an arrow never implies a judgement.
+  const favorable =
+    hasDelta && deltaDirection !== undefined
+      ? deltaDirection === "higher-is-better"
+        ? deltaPct > 0
+        : deltaPct < 0
+      : null;
+  const deltaClass =
+    favorable === null
+      ? "text-gray-400"
+      : favorable
+        ? "text-green-400"
+        : "text-amber-400";
   // Group long counts (1,234) but leave decimals and small values untouched.
   const displayValue =
     typeof value === "number" &&
@@ -154,10 +174,19 @@ export function MetricCard({
           </span>
         )}
         {hasDelta && (
-          <span className="ml-3 whitespace-nowrap text-sm font-semibold text-gray-400 tabular-nums">
+          <span
+            className={`ml-3 whitespace-nowrap text-sm font-semibold tabular-nums ${deltaClass}`}
+          >
             {deltaLabel && <span className="mr-1">{deltaLabel}</span>}
             <span aria-hidden="true">{rising ? "↑" : "↓"}</span>{" "}
-            <span className="sr-only">{rising ? "up" : "down"}</span>
+            <span className="sr-only">
+              {rising ? "up" : "down"}
+              {favorable === null
+                ? ""
+                : favorable
+                  ? " (improving)"
+                  : " (worsening)"}
+            </span>
             {Math.abs(deltaPct).toFixed(0)}%
           </span>
         )}

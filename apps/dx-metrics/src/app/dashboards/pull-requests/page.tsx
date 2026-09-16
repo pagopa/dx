@@ -170,6 +170,7 @@ export default function PullRequestsDashboard() {
               tooltip={tooltipContent.avgLeadTime}
               value={data.cards.avgLeadTime}
               deltaPct={leadTimeDelta}
+              deltaDirection="lower-is-better"
               deltaLabel="vs prev"
               previousValue={data.previousLeadTime}
               sampleSize={data.leadTimePercentiles.count}

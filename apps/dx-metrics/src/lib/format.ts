@@ -3,6 +3,13 @@
 /** Placeholder shown when a value is not available. */
 export const EMPTY_VALUE = "—";
 
+/**
+ * Locale used for dates before the browser preference is known, and whenever the
+ * browser locale cannot be resolved. Chosen over the default runtime locale so
+ * the server and the first client render agree (no hydration mismatch).
+ */
+export const DEFAULT_LOCALE = "en-GB";
+
 /** Formats a number with a fixed number of decimals, or the empty placeholder. */
 export const formatNumber = (
   value: null | number | undefined,
@@ -52,26 +59,36 @@ const toDate = (value: string | number | Date): Date | null => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-/** Formats a date as `10 Nov`, or returns the raw string when invalid. */
-export const formatShortDate = (value: string | number | Date): string => {
+/**
+ * Formats a date as `10 Nov`, or returns the raw string when invalid.
+ * `locale` defaults to `DEFAULT_LOCALE` so pure callers stay deterministic;
+ * React components pass the browser-derived locale via `useDateFormatters`.
+ */
+export const formatShortDate = (
+  value: string | number | Date,
+  locale: string = DEFAULT_LOCALE,
+): string => {
   const date = toDate(value);
 
   if (date === null) {
     return String(value);
   }
 
-  return date.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
 };
 
 /** Formats a date as `10 Nov 2026`, or returns the raw string when invalid. */
-export const formatFullDate = (value: string | number | Date): string => {
+export const formatFullDate = (
+  value: string | number | Date,
+  locale: string = DEFAULT_LOCALE,
+): string => {
   const date = toDate(value);
 
   if (date === null) {
     return String(value);
   }
 
-  return date.toLocaleDateString("en-GB", {
+  return date.toLocaleDateString(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",

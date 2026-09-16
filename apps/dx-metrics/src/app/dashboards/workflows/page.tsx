@@ -14,6 +14,7 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
+import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -92,22 +93,6 @@ export default function WorkflowsDashboard() {
   );
 }
 
-function formatDate(value: unknown): string {
-  const str = String(value);
-  if (!str) return str;
-  try {
-    const date = new Date(str);
-    if (isNaN(date.getTime())) return str;
-    return date.toLocaleDateString("it-IT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return str;
-  }
-}
-
 function WorkflowsDashboardContent({
   data,
   days,
@@ -115,6 +100,7 @@ function WorkflowsDashboardContent({
   data: WorkflowDashboardData;
   days: number;
 }) {
+  const { full: formatFullDate, short: formatShortDate } = useDateFormatters();
   const dxVsNonDxPivoted = pivotCumulativeSeries(
     data.dxVsNonDx,
     "pipelineType",
@@ -123,6 +109,10 @@ function WorkflowsDashboardContent({
       "Non-DX Pipelines": "non_dx",
     },
   );
+
+  // Chart axes accept `unknown`; route them through the shared locale-aware
+  // formatters so a category value is never mistaken for a date.
+  const shortDateTick = (value: unknown) => formatShortDate(String(value));
 
   // The headline duration is a run-weighted mean; the median and p95 keep a
   // skewed distribution visible next to it.
@@ -147,9 +137,9 @@ function WorkflowsDashboardContent({
       />
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard
-          label="First Run"
+          label="First Run in Period"
           tooltip={tooltipContent.firstRun}
-          value={formatDate(data.summary.firstPipelineDate)}
+          value={formatFullDate(data.summary.firstPipelineDate)}
         />
         <MetricCard
           label="Successful Runs"
@@ -205,7 +195,7 @@ function WorkflowsDashboardContent({
           tooltip={tooltipContent.deploymentsToProduction}
           unit="runs"
           xKey="runWeek"
-          xValueFormatter={formatDate}
+          xValueFormatter={shortDateTick}
         />
         <SimpleLineChart
           data={dxVsNonDxPivoted}
@@ -221,7 +211,7 @@ function WorkflowsDashboardContent({
           tooltip={tooltipContent.dxVsNonDx}
           unit="runs"
           xKey="runDate"
-          xValueFormatter={formatDate}
+          xValueFormatter={shortDateTick}
         />
         <SimpleBarChart
           bars={[
@@ -233,6 +223,8 @@ function WorkflowsDashboardContent({
           ]}
           data={data.failures}
           layout="vertical"
+          maxItems={10}
+          sortKey="failedRuns"
           title="Pipeline Failures"
           tooltip={tooltipContent.pipelineFailures}
           tooltipFormatter={(value) => value.toFixed(0)}
@@ -249,6 +241,7 @@ function WorkflowsDashboardContent({
           ]}
           data={data.avgDuration}
           layout="vertical"
+          sortKey="averageDurationMinutes"
           title="Pipeline Average Duration (minutes)"
           tooltip={tooltipContent.avgPipelineDuration}
           unit="min"
@@ -260,6 +253,7 @@ function WorkflowsDashboardContent({
           ]}
           data={data.runCount}
           layout="vertical"
+          sortKey="runCount"
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
           tooltipFormatter={(value) => value.toFixed(0)}
@@ -276,6 +270,7 @@ function WorkflowsDashboardContent({
           ]}
           data={data.cumulativeDuration}
           layout="vertical"
+          sortKey="cumulativeDurationMinutes"
           title="Pipeline Cumulative Duration (minutes)"
           tooltip={tooltipContent.cumulativeDuration}
           unit="min"
@@ -294,7 +289,7 @@ function WorkflowsDashboardContent({
           tooltip={tooltipContent.infraPlanDuration}
           unit="min"
           xKey="runTimestamp"
-          xValueFormatter={formatDate}
+          xValueFormatter={shortDateTick}
         />
         <SimpleLineChart
           data={data.infraApply}
@@ -309,7 +304,7 @@ function WorkflowsDashboardContent({
           tooltip={tooltipContent.infraApplyDuration}
           unit="min"
           xKey="runTimestamp"
-          xValueFormatter={formatDate}
+          xValueFormatter={shortDateTick}
         />
       </div>
 

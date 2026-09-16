@@ -14,6 +14,7 @@ import TooltipIcon from "@/components/TooltipIcon";
 import { METRIC_TARGETS } from "@/lib/config";
 import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
+import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -41,6 +42,7 @@ interface IacDashboardData {
 
 export default function IacDashboard() {
   const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { short: formatShortDate } = useDateFormatters();
 
   const { data, error, loading, refetch } = useDashboardData<IacDashboardData>(
     "iac",
@@ -108,16 +110,7 @@ export default function IacDashboard() {
               tooltip={tooltipContent.leadTimeMovingAvg}
               unit="days"
               xKey="week"
-              xValueFormatter={(v: unknown) => {
-                // Shorten "2025-11-10" to "Nov 10"
-                const d = new Date(String(v));
-                return isNaN(d.getTime())
-                  ? String(v)
-                  : d.toLocaleDateString("en", {
-                      day: "numeric",
-                      month: "short",
-                    });
-              }}
+              xValueFormatter={(v: unknown) => formatShortDate(String(v))}
             />
             <SimpleLineChart
               data={data.leadTimeTrend}

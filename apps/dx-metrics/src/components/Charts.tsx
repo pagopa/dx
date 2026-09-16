@@ -20,6 +20,14 @@ import {
 } from "recharts";
 
 import TooltipIcon from "@/components/TooltipIcon";
+import {
+  buildChartCsv,
+  csvFileName,
+  formatChartNumber,
+  formatSeriesValue,
+  sortChartData,
+} from "@/lib/chart-data";
+import { useDateFormatters } from "@/lib/locale";
 import { focusRing } from "@/lib/utils";
 
 /** Horizontal reference marker (target or previous-period average). */
@@ -41,19 +49,6 @@ interface ChartTargetBand {
 }
 
 /** Shared number formatter so charts agree with the metric cards. */
-const chartNumberFormatter = new Intl.NumberFormat("en-GB", {
-  maximumFractionDigits: 2,
-});
-
-const formatChartNumber = (
-  value: number,
-  formatter?: (value: number) => string,
-): string =>
-  formatter
-    ? formatter(value)
-    : chartNumberFormatter.format(Number(value.toFixed(2)));
-
-/** Formats a tooltip value with the caller's formatter, or the series unit. */
 const formatTooltipValue = (
   value: unknown,
   formatter?: (value: number) => string,
@@ -74,20 +69,25 @@ const formatTooltipValue = (
 const DATE_LIKE = /^\d{4}-\d{2}-\d{2}/;
 
 /**
- * Formats date-like tick labels (`2026-03-10` -> `10 Mar`) and leaves category
- * labels untouched, so both time series and categorical axes are legible.
+ * Builds a tick formatter that shortens date-like labels (`2026-03-10` -> `10
+ * Mar`) using the browser locale, and leaves category labels untouched, so both
+ * time series and categorical axes are legible.
  */
-const defaultTickFormatter = (value: unknown): string => {
-  const text = String(value ?? "");
+const useDefaultTickFormatter = (): ((value: unknown) => string) => {
+  const { short } = useDateFormatters();
 
-  if (!DATE_LIKE.test(text)) {
-    return text;
-  }
+  return React.useCallback(
+    (value: unknown): string => {
+      const text = String(value ?? "");
 
-  const date = new Date(text);
-  return isNaN(date.getTime())
-    ? text
-    : date.toLocaleDateString("en", { day: "numeric", month: "short" });
+      if (!DATE_LIKE.test(text)) {
+        return text;
+      }
+
+      return short(text);
+    },
+    [short],
+  );
 };
 
 /**
@@ -99,7 +99,7 @@ const numericTickFormatter =
   (value: unknown): string => {
     const numeric = Number(value);
     const text = Number.isFinite(numeric)
-      ? chartNumberFormatter.format(Number(numeric.toFixed(2)))
+      ? formatChartNumber(numeric)
       : String(value ?? "");
 
     return unit ? `${text} ${unit}` : text;
@@ -122,6 +122,20 @@ export const SERIES_COLORS = {
 
 /** Default assignment order for multi-series charts. */
 const COLORS: string[] = Object.values(SERIES_COLORS);
+
+/**
+ * Categorical palette for part-to-whole charts. Deliberately excludes the
+ * semantic green/red used by severity, so a slice colour never implies a
+ * good/bad judgement on the category it represents.
+ */
+const PIE_COLORS: string[] = [
+  SERIES_COLORS.blue,
+  SERIES_COLORS.purple,
+  SERIES_COLORS.amber,
+  SERIES_COLORS.lightBlue,
+  SERIES_COLORS.gray,
+  SERIES_COLORS.brightGreen,
+];
 
 interface ChartWrapperProps {
   ariaLabel?: string;
@@ -166,7 +180,12 @@ interface SimpleBarChartProps {
   className?: string;
   data: Record<string, unknown>[];
   layout?: "horizontal" | "vertical";
+  /** Keeps only the top N rows after sorting, for ranked charts. */
+  maxItems?: number;
   referenceLines?: readonly ChartReferenceLine[];
+  /** Sorts rows by this key before rendering; defaults to largest first. */
+  sortDirection?: "asc" | "desc";
+  sortKey?: string;
   targetBand?: ChartTargetBand;
   title: string;
   tooltip?: string;
@@ -175,6 +194,8 @@ interface SimpleBarChartProps {
   unit?: string;
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
+  /** Width reserved for the category axis in the vertical layout. */
+  yAxisWidth?: number;
 }
 
 // --- Line Chart ---
@@ -255,12 +276,16 @@ function ChartDataTable({
   chartTitle,
   data,
   series,
+  unit,
+  valueFormatter,
   xKey,
   xValueFormatter,
 }: {
   chartTitle: string;
   data: Record<string, unknown>[];
   series: readonly { key: string; name: string }[];
+  unit?: string;
+  valueFormatter?: (value: number) => string;
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
 }) {
@@ -282,6 +307,11 @@ function ChartDataTable({
                 scope="col"
               >
                 {entry.name}
+                {unit && (
+                  <span className="ml-1 font-normal text-gray-500">
+                    ({unit})
+                  </span>
+                )}
               </th>
             ))}
           </tr>
@@ -296,9 +326,7 @@ function ChartDataTable({
               </td>
               {series.map((entry) => (
                 <td className="px-3 py-1.5 text-gray-300" key={entry.key}>
-                  {row[entry.key] === null || row[entry.key] === undefined
-                    ? "—"
-                    : String(row[entry.key])}
+                  {formatSeriesValue(row[entry.key], valueFormatter, unit)}
                 </td>
               ))}
             </tr>
@@ -309,50 +337,21 @@ function ChartDataTable({
   );
 }
 
-/** Quotes a CSV cell when it contains a delimiter, quote, or newline. */
-const csvCell = (value: unknown): string => {
-  const text = value === null || value === undefined ? "" : String(value);
-  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-};
-
-/** Serializes a chart's series into a spreadsheet-friendly CSV document. */
-const buildCsv = (
-  data: Record<string, unknown>[],
-  series: readonly { key: string; name: string }[],
-  xKey: string,
-): string => {
-  const header = [xKey, ...series.map((entry) => entry.name)]
-    .map(csvCell)
-    .join(",");
-  const rows = data.map((row) =>
-    [row[xKey], ...series.map((entry) => row[entry.key])]
-      .map(csvCell)
-      .join(","),
-  );
-
-  return [header, ...rows].join("\n");
-};
-
-const csvFileName = (chartTitle: string): string => {
-  const slug = chartTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-
-  return `${slug || "chart"}.csv`;
-};
-
 /** Toggle button plus tabular fallback shared by the chart components. */
 function ChartDataToggle({
   chartTitle,
   data,
   series,
+  unit,
+  valueFormatter,
   xKey,
   xValueFormatter,
 }: {
   chartTitle: string;
   data: Record<string, unknown>[];
   series: readonly { key: string; name: string }[];
+  unit?: string;
+  valueFormatter?: (value: number) => string;
   xKey: string;
   xValueFormatter?: (value: unknown) => string;
 }) {
@@ -360,7 +359,7 @@ function ChartDataToggle({
   const regionId = React.useId();
 
   const handleDownload = () => {
-    const blob = new Blob([buildCsv(data, series, xKey)], {
+    const blob = new Blob([buildChartCsv(data, series, xKey, valueFormatter)], {
       type: "text/csv;charset=utf-8;",
     });
     const url = URL.createObjectURL(blob);
@@ -400,6 +399,8 @@ function ChartDataToggle({
             chartTitle={chartTitle}
             data={data}
             series={series}
+            unit={unit}
+            valueFormatter={valueFormatter}
             xKey={xKey}
             xValueFormatter={xValueFormatter}
           />
@@ -526,7 +527,10 @@ export function SimpleBarChart({
   className,
   data,
   layout = "horizontal",
+  maxItems,
   referenceLines,
+  sortDirection = "desc",
+  sortKey,
   targetBand,
   title,
   tooltip,
@@ -534,8 +538,17 @@ export function SimpleBarChart({
   unit,
   xKey,
   xValueFormatter,
+  yAxisWidth = 120,
 }: SimpleBarChartProps) {
   const isVertical = layout === "vertical";
+  const defaultTickFormatter = useDefaultTickFormatter();
+
+  // Ranked charts (e.g. Pareto of failures) need magnitudes, not the
+  // alphabetical order the SQL returns; the same order feeds table and CSV.
+  const chartData = React.useMemo(
+    () => sortChartData(data, sortKey, sortDirection, maxItems),
+    [data, sortKey, sortDirection, maxItems],
+  );
 
   return (
     <ChartWrapper
@@ -545,18 +558,20 @@ export function SimpleBarChart({
       footer={
         <ChartDataToggle
           chartTitle={title}
-          data={data}
+          data={chartData}
           series={bars.map((bar) => ({ key: bar.key, name: bar.name }))}
+          unit={unit}
+          valueFormatter={tooltipFormatter}
           xKey={xKey}
           xValueFormatter={xValueFormatter}
         />
       }
-      isEmpty={data.length === 0}
+      isEmpty={chartData.length === 0}
       title={title}
       tooltip={tooltip}
     >
       <BarChart
-        data={data}
+        data={chartData}
         height={288}
         layout={isVertical ? "vertical" : "horizontal"}
         margin={{
@@ -582,7 +597,7 @@ export function SimpleBarChart({
             ...(isVertical
               ? {}
               : {
-                  textAnchor: data.length > 4 ? "end" : "middle",
+                  textAnchor: chartData.length > 4 ? "end" : "middle",
                 }),
           }}
           tickFormatter={
@@ -594,10 +609,10 @@ export function SimpleBarChart({
           {...(isVertical
             ? { domain: [0, (max: number) => Math.ceil(max * 1.1)] }
             : {
-                angle: data.length > 4 ? -45 : 0,
-                height: data.length > 4 ? 80 : 30,
-                interval: Math.max(0, Math.floor(data.length / 8) - 1),
-                tickMargin: data.length > 4 ? 15 : 0,
+                angle: chartData.length > 4 ? -45 : 0,
+                height: chartData.length > 4 ? 80 : 30,
+                interval: Math.max(0, Math.floor(chartData.length / 8) - 1),
+                tickMargin: chartData.length > 4 ? 15 : 0,
               })}
         />
         <YAxis
@@ -607,7 +622,7 @@ export function SimpleBarChart({
           tickFormatter={isVertical ? undefined : numericTickFormatter(unit)}
           type={isVertical ? "category" : "number"}
           {...(isVertical
-            ? { width: 120 }
+            ? { width: yAxisWidth }
             : { domain: [0, (max: number) => Math.ceil(max * 1.1)] })}
         />
         <Tooltip
@@ -698,6 +713,8 @@ export function SimpleLineChart({
   xValueFormatter,
   zeroBaseline = true,
 }: SimpleLineChartProps) {
+  const defaultTickFormatter = useDefaultTickFormatter();
+
   return (
     <ChartWrapper
       ariaLabel={ariaLabel}
@@ -708,6 +725,8 @@ export function SimpleLineChart({
           chartTitle={title}
           data={data}
           series={lines.map((line) => ({ key: line.key, name: line.name }))}
+          unit={unit}
+          valueFormatter={tooltipFormatter}
           xKey={xKey}
           xValueFormatter={xValueFormatter}
         />
@@ -808,9 +827,19 @@ export function SimplePieChart({
   title,
   tooltip,
 }: SimplePieChartProps) {
+  const total = data.reduce((sum, entry) => sum + Number(entry.value), 0);
+
   return (
     <ChartWrapper
       className={className}
+      footer={
+        <ChartDataToggle
+          chartTitle={title}
+          data={data.map((entry) => ({ ...entry }))}
+          series={[{ key: "value", name: "Count" }]}
+          xKey="name"
+        />
+      }
       isEmpty={data.length === 0}
       title={title}
       tooltip={tooltip}
@@ -825,16 +854,20 @@ export function SimplePieChart({
             label={({
               name,
               percent,
+              value,
             }: {
               name?: number | string;
               percent?: number;
-            }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+              value?: number;
+            }) =>
+              `${name} — ${formatChartNumber(Number(value ?? 0))} (${((percent || 0) * 100).toFixed(0)}%)`
+            }
             labelLine
             outerRadius={80}
           >
             {data.map((entry, index) => (
               <Cell
-                fill={COLORS[index % COLORS.length]}
+                fill={PIE_COLORS[index % PIE_COLORS.length]}
                 key={`cell-${index}`}
               />
             ))}
@@ -848,7 +881,7 @@ export function SimplePieChart({
             }}
             formatter={(value) => {
               if (typeof value === "number") {
-                return formatChartNumber(value);
+                return `${formatChartNumber(value)} (${total > 0 ? ((value / total) * 100).toFixed(0) : 0}%)`;
               }
               return value;
             }}

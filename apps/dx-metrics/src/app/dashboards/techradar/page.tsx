@@ -148,6 +148,7 @@ export default function TechradarDashboard() {
               ]}
               data={adoptionBarData}
               layout="vertical"
+              sortKey="adoptionPercentage"
               title="Tool Adoption by Repository Coverage"
               tooltip={tooltipContent.adoptionByTool}
               unit="%"

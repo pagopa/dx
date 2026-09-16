@@ -26,6 +26,19 @@ const INSIGHT_ENDPOINTS = [
   "releases",
 ] as const;
 
+/** Human-readable name of the dashboard an insight comes from. */
+const ENDPOINT_LABELS: Record<(typeof INSIGHT_ENDPOINTS)[number], string> = {
+  "dx-adoption": "DX Adoption",
+  "dx-team": "DX Team",
+  iac: "IaC PRs",
+  "pull-requests": "Pull Requests",
+  "pull-requests-review": "PR Reviews",
+  releases: "DX Releases",
+  techradar: "Techradar",
+  tracker: "DX Tracker",
+  workflows: "Workflows",
+};
+
 interface InsightPayload {
   insights?: Insight[];
   meta?: { referenceDate?: string };
@@ -61,7 +74,25 @@ export default function OverviewDashboard() {
           ),
         );
 
-        const failed = responses.filter((response) => !response.ok).length;
+        // Keep each payload paired with the dashboard it came from so the
+        // executive summary can label where an insight originated.
+        const parsed = await Promise.all(
+          responses.map(async (response, index) => ({
+            endpoint: INSIGHT_ENDPOINTS[index],
+            payload: response.ok
+              ? ((await response.json()) as InsightPayload)
+              : null,
+          })),
+        );
+        const payloads = parsed.filter(
+          (
+            entry,
+          ): entry is {
+            endpoint: (typeof INSIGHT_ENDPOINTS)[number];
+            payload: InsightPayload;
+          } => entry.payload !== null,
+        );
+        const failed = responses.length - payloads.length;
 
         // A single failing dashboard degrades the summary; losing every
         // dashboard is a hard failure and uses the standard error UI.
@@ -71,23 +102,21 @@ export default function OverviewDashboard() {
           );
         }
 
-        const payloads: InsightPayload[] = await Promise.all(
-          responses
-            .filter((response) => response.ok)
-            .map(async (response) => {
-              const payload: InsightPayload = await response.json();
-              return payload;
-            }),
-        );
-
         const dates = payloads
-          .map((payload) => payload.meta?.referenceDate)
+          .map((entry) => entry.payload.meta?.referenceDate)
           .filter((value): value is string => typeof value === "string")
           .sort();
 
         if (!signal?.aborted) {
           setInsights(
-            sortInsights(payloads.flatMap((payload) => payload.insights ?? [])),
+            sortInsights(
+              payloads.flatMap(({ endpoint, payload }) =>
+                (payload.insights ?? []).map((insight) => ({
+                  ...insight,
+                  source: ENDPOINT_LABELS[endpoint],
+                })),
+              ),
+            ),
           );
           setReferenceDate(dates.at(-1) ?? null);
           setWarning(
@@ -163,6 +192,7 @@ export default function OverviewDashboard() {
         defaultOpen
         insights={insights}
         limit={9}
+        periodDays={days}
       />
     </div>
   );

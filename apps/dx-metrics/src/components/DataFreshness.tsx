@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { DATA_STALE_AFTER_DAYS } from "@/lib/config";
-import { formatFullDate } from "@/lib/format";
+import { useDateFormatters } from "@/lib/locale";
 
 interface DataFreshnessProps {
   className?: string;
@@ -24,6 +24,7 @@ export function DataFreshness({
   className = "",
   referenceDate,
 }: DataFreshnessProps) {
+  const { full } = useDateFormatters();
   const timestamp = Date.parse(referenceDate);
   const [daysAgo, setDaysAgo] = useState<null | number>(null);
 
@@ -45,7 +46,7 @@ export function DataFreshness({
     <p
       className={`text-xs ${isStale ? "text-amber-300" : "text-gray-400"} ${className}`}
     >
-      Data updated to {formatFullDate(referenceDate)}
+      Data updated to {full(referenceDate)}
       {daysAgo !== null && daysAgo > 0
         ? ` · ${daysAgo} ${daysAgo === 1 ? "day" : "days"} ago`
         : ""}

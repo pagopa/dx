@@ -48,6 +48,12 @@ export interface Insight {
   /** Number of observations the insight is computed on, when known. */
   readonly sampleSize?: number;
   readonly severity: InsightSeverity;
+  /**
+   * Dashboard the insight was computed by, when it is aggregated into a
+   * multi-dashboard view (e.g. the Executive Summary). Optional so single-
+   * dashboard insights carry no redundant label.
+   */
+  readonly source?: string;
   readonly title: string;
   readonly value?: InsightValue;
 }

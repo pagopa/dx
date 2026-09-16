@@ -52,6 +52,11 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
             {style.icon}
           </span>
           {insight.title}
+          {insight.source && (
+            <span className="ml-2 align-middle text-[10px] font-normal uppercase tracking-wider text-gray-500">
+              {insight.source}
+            </span>
+          )}
         </h3>
         <span
           className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${style.badge}`}
