@@ -159,3 +159,13 @@ run "azure_app_service_node_24" {
     error_message = "The App Service must support Node 24 LTS."
   }
 }
+
+run "azure_app_service_rejects_unsupported_tls_version" {
+  command = plan
+
+  variables {
+    tls_version = 1.1
+  }
+
+  expect_failures = [var.tls_version]
+}

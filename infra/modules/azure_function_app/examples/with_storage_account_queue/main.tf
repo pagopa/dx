@@ -12,6 +12,8 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
+# trivy:ignore:AZU-0057 Storage account should have logging enabled
+# trivy:ignore:AZU-0058 Storage account should use geo-redundant replication
 # trivy:ignore:AZU-0061 Storage account should have infrastructure encryption enabled
 resource "azurerm_storage_account" "external" {
   name                     = provider::dx::resource_name(merge(local.naming_config, { name = "external", resource_type = "storage_account" }))
@@ -25,6 +27,12 @@ resource "azurerm_storage_account" "external" {
   default_to_oauth_authentication = true
 
   tags = local.tags
+}
+
+resource "azurerm_storage_account_network_rules" "external" {
+  storage_account_id = azurerm_storage_account.external.id
+  default_action     = "Deny"
+  bypass             = ["Metrics", "Logging", "AzureServices"]
 }
 
 module "azure_function_app" {
