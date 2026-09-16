@@ -1,10 +1,13 @@
 "use client";
 
-import { DataTable, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
 import { ORGANIZATION } from "@/lib/config";
+import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -25,6 +28,8 @@ interface DxTeamData {
   dxPipelinesUsage: { dxPath: string; repositoryCount: number }[];
   ioInfraPrs: { date: string; dxPr: number; nonDxPr: number }[];
   ioInfraPrTable: { author: string; createdAt: string }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function DxTeamDashboard() {
@@ -39,7 +44,7 @@ export default function DxTeamDashboard() {
     <div>
       <div className="mb-4 flex items-center gap-2">
         <h2 className="text-xl font-bold text-white">Team DX Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon content={tooltipContent.title} label="Team DX Metrics" />
       </div>
       <DashboardFilters
         mode="time-only"
@@ -54,12 +59,26 @@ export default function DxTeamDashboard() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel
+            className="mb-4"
+            insights={data.insights}
+            periodDays={days}
+          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[
-                { color: "#2563eb", key: "dxPr", name: "DX PR", stackId: "a" },
                 {
-                  color: "#dc2626",
+                  color: SERIES_COLORS.blue,
+                  key: "dxPr",
+                  name: "DX PR",
+                  stackId: "a",
+                },
+                {
+                  color: SERIES_COLORS.red,
                   key: "nonDxPr",
                   name: "Non DX PR",
                   stackId: "a",
@@ -68,12 +87,14 @@ export default function DxTeamDashboard() {
               data={data.ioInfraPrs}
               title="Pull Requests on IO-Infra"
               tooltip={tooltipContent.ioInfraPrs}
+              tooltipFormatter={(value) => value.toFixed(0)}
+              unit="PRs"
               xKey="date"
             />
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2563eb",
+                  color: SERIES_COLORS.blue,
                   key: "repositoryCommits",
                   name: "Commits",
                 },
@@ -81,11 +102,12 @@ export default function DxTeamDashboard() {
               data={data.dxCommits}
               title="DX Members Commits on Non-DX Repositories"
               tooltip={tooltipContent.dxMemberCommits}
+              unit="commits"
               xKey="committerDate"
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 { key: "author", label: "Author" },
@@ -107,7 +129,7 @@ export default function DxTeamDashboard() {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 {

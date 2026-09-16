@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 @theme {
+  /* UI text uses Inter; numbers, IDs and evidence use the mono face. */
   --font-sans:
-    var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
-    Consolas, monospace;
+    var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono:
     var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, monospace;
@@ -12,7 +13,7 @@
   --color-foreground: #e6edf3;
   --color-card: #0d1117;
   --color-border: #30363d;
-  --color-accent: #238636;
+  --color-accent: #00c950;
 }
 
 :root {
@@ -22,6 +23,21 @@
 
 body {
   font-family: var(--font-sans);
+}
+
+/*
+ * Motion is decorative here (rail resize, spinners, tooltip pop). Honour the
+ * reader's preference globally so no future animation can silently ignore it.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer utilities {

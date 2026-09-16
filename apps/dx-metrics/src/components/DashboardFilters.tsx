@@ -3,6 +3,7 @@
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
 import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
+import { focusRing } from "@/lib/utils";
 
 interface DashboardFiltersProps {
   mode?: DashboardFilterMode;
@@ -18,6 +19,12 @@ const showsRepositoryFilter = (mode: DashboardFilterMode) =>
 const showsTimeIntervalFilter = (mode: DashboardFilterMode) =>
   mode === "repository-and-time" || mode === "time-only";
 
+const selectClassName =
+  "block w-full cursor-pointer rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] transition-colors focus-visible:border-green-500";
+
+const labelClassName =
+  "text-xs font-semibold uppercase tracking-wider text-gray-400";
+
 export function DashboardFilters({
   mode = "repository-and-time",
   onRepositoryChange,
@@ -29,14 +36,13 @@ export function DashboardFilters({
   const showTimeInterval = showsTimeIntervalFilter(mode);
 
   return (
-    <div className="mb-8 flex flex-wrap gap-6 items-end">
+    <div className="mb-8 flex flex-wrap items-end gap-6">
       {showRepository && (
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            Repository
-          </label>
+        // The label wraps the control, so the select always has an accessible name.
+        <label className="block space-y-1.5">
+          <span className={labelClassName}>Repository</span>
           <select
-            className="block w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all cursor-pointer"
+            className={`${selectClassName} ${focusRing}`}
             onChange={(e) => onRepositoryChange?.(e.target.value)}
             value={repository}
           >
@@ -46,15 +52,13 @@ export function DashboardFilters({
               </option>
             ))}
           </select>
-        </div>
+        </label>
       )}
       {showTimeInterval && (
-        <div className="space-y-1.5">
-          <label className="text-xs font-semibold uppercase tracking-wider text-gray-500">
-            Time Interval
-          </label>
+        <label className="block space-y-1.5">
+          <span className={labelClassName}>Time Interval</span>
           <select
-            className="block w-full rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] focus:border-green-500 focus:ring-1 focus:ring-green-500 outline-none transition-all cursor-pointer"
+            className={`${selectClassName} ${focusRing}`}
             onChange={(e) => onTimeIntervalChange?.(Number(e.target.value))}
             value={timeInterval}
           >
@@ -64,7 +68,7 @@ export function DashboardFilters({
               </option>
             ))}
           </select>
-        </div>
+        </label>
       )}
     </div>
   );

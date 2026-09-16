@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getWorkflowDashboard } from "@/adapters/db/workflows/queries";
 import { db } from "@/db/instance";
+import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 
@@ -15,7 +16,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await getWorkflowDashboard(db, { days, fullName });
-    return NextResponse.json(result);
+    return jsonWithCache(result);
   } catch (error) {
     console.error("Workflow dashboard error:", error);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });

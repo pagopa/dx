@@ -56,6 +56,26 @@ pnpm run import -- --config ./config.json --since 2026-01-01
 pnpm run import -- --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
 ```
 
+## Backfilling a new column
+
+The scheduled import is incremental: it fetches workflow runs created in the
+last `IMPORT_SINCE_DAYS` days (30 in the deployed job) and only upserts those
+rows. It therefore cannot populate a **newly added** column on older rows, which
+then read as blank. When a column the portal charts is added (for example
+`workflow_runs.event` or `workflow_runs.triggering_actor`), apply the schema and
+then run a one-off import with a `since` wide enough to cover the history you
+care about:
+
+```bash
+cd apps/dx-metrics-import
+pnpm run import -- --entity workflow-runs --since 2024-01-01
+```
+
+A different `--since` bypasses the freshness checkpoint, so `--force` is only
+needed to repeat the same backfill on the same day. Until the backfill runs, the
+trigger charts on the portal exclude the blank rows and report the excluded
+share in their caption.
+
 ## GitHub authentication
 
 The import script authenticates to GitHub with this precedence:
