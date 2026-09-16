@@ -1,5 +1,6 @@
 /** Tests for techradar insight rules. */
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import { describe, expect, it } from "vitest";
 
 import { buildTechRadarInsights } from "@/lib/insights/techradar";
@@ -119,5 +120,37 @@ describe("buildTechRadarInsights", () => {
         },
       }),
     ).toEqual([]);
+  });
+
+  it("ignores the zero-adoption snapshot marker in the usage trend", () => {
+    const insights = buildTechRadarInsights({
+      adoptionByTool: [],
+      summary: {
+        detectedUsages: 0,
+        repositoriesTotal: 0,
+        repositoriesWithDetectedTools: 0,
+        toolsDetected: 0,
+        usagesNotInRadar: 0,
+      },
+      usageTrend: [
+        {
+          capturedAt: "2026-01-01T00:00:00.000Z",
+          repositoryCount: 4,
+          toolKey: "nx",
+          toolName: "Nx",
+        },
+        {
+          capturedAt: "2026-02-01T00:00:00.000Z",
+          repositoryCount: 0,
+          toolKey: TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY,
+          toolName: "No detected tools",
+        },
+      ],
+    });
+
+    // The marker is not a tool, so it never becomes a usage-trend reading.
+    expect(
+      insights.find((insight) => insight.id === "techradar-usage-trend"),
+    ).toBeUndefined();
   });
 });

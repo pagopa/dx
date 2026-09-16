@@ -38,8 +38,13 @@ export const getTechRadarDashboard = async (
 > => {
   const referenceDateResult = await db.execute(
     buildReferenceDateQuery({
-      from: "tech_radar_usages",
       column: "detected_at",
+      from: "tech_radar_usages",
+      // Scope the freshness signal to the repositories the dashboard shows: a
+      // repo removed from configuration must not keep the view looking fresh.
+      where: inArray(techRadarUsages.repositoryFullName, [
+        ...configuredRepositories,
+      ]),
     }),
   );
   const referenceDate = parseReferenceDate(

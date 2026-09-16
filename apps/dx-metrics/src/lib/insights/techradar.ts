@@ -1,5 +1,7 @@
 /** Deterministic insights for the Techradar dashboard. */
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
+
 import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
@@ -138,6 +140,12 @@ const usageTrendInsight = (input: TechRadarInsightsInput): Insight | null => {
   >();
 
   for (const row of trend) {
+    // The zero-adoption marker only exists to keep the trend line continuous;
+    // it is not a tool and must not be reported as one.
+    if (row.toolKey === TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY) {
+      continue;
+    }
+
     const entry = byTool.get(row.toolKey) ?? {
       pointsByCapturedAt: new Map<string, number>(),
       toolName: row.toolName,

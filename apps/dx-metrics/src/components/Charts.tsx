@@ -58,11 +58,9 @@ const formatTooltipValue = (
     return value as React.ReactNode;
   }
 
-  if (formatter) {
-    return formatChartNumber(value, formatter);
-  }
-
-  const formatted = formatChartNumber(value);
+  // The unit is appended whether or not a custom formatter is given, so a
+  // tooltip never shows a bare number while the axis and table show the unit.
+  const formatted = formatChartNumber(value, formatter);
   return unit ? `${formatted} ${unit}` : formatted;
 };
 
@@ -359,9 +357,12 @@ function ChartDataToggle({
   const regionId = React.useId();
 
   const handleDownload = () => {
-    const blob = new Blob([buildChartCsv(data, series, xKey, valueFormatter)], {
-      type: "text/csv;charset=utf-8;",
-    });
+    const blob = new Blob(
+      [buildChartCsv(data, series, xKey, valueFormatter, unit)],
+      {
+        type: "text/csv;charset=utf-8;",
+      },
+    );
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 

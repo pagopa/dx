@@ -23,7 +23,7 @@ import { db } from "@/db/instance";
 import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
 import { sortInsights } from "@/lib/insights/insight-helpers";
-import type { Insight } from "@/lib/insights/types";
+import type { Insight, WithInsights } from "@/lib/insights/types";
 import { parseDashboardQuery } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
@@ -57,31 +57,49 @@ export async function GET(req: NextRequest) {
 
   // All nine adapters run concurrently; each failure degrades the summary
   // instead of failing the whole endpoint, so a single broken dashboard still
-  // yields the insights of the remaining eight.
-  const settled = await Promise.allSettled([
-    fetchPrDashboard(db, { days, fullName }),
-    getPullRequestsReviewDashboard(db, { days, fullName }),
-    getWorkflowDashboard(db, { days, fullName }),
-    getIacDashboard(db, { days, fullName }),
-    fetchDxAdoption(db, { fullName }),
-    getTechRadarDashboard(db, {
-      configuredRepositories: REPOSITORIES.map(
-        (name) => `${ORGANIZATION}/${name}`,
-      ),
-    }),
-    fetchDxTeamDashboard(db, { days, organization: ORGANIZATION }),
-    getTrackerDashboard(db),
-    getReleasesDashboard(db),
-  ]);
+  // yields the insights of the remaining eight. Each promise is bound to its
+  // key so the settled result cannot be paired with the wrong label.
+  const dashboardRequests: readonly {
+    key: EndpointKey;
+    request: Promise<WithInsights & { meta?: unknown }>;
+  }[] = [
+    { key: "pull-requests", request: fetchPrDashboard(db, { days, fullName }) },
+    {
+      key: "pull-requests-review",
+      request: getPullRequestsReviewDashboard(db, { days, fullName }),
+    },
+    {
+      key: "workflows",
+      request: getWorkflowDashboard(db, { days, fullName }),
+    },
+    { key: "iac", request: getIacDashboard(db, { days, fullName }) },
+    { key: "dx-adoption", request: fetchDxAdoption(db, { fullName }) },
+    {
+      key: "techradar",
+      request: getTechRadarDashboard(db, {
+        configuredRepositories: REPOSITORIES.map(
+          (name) => `${ORGANIZATION}/${name}`,
+        ),
+      }),
+    },
+    {
+      key: "dx-team",
+      request: fetchDxTeamDashboard(db, { days, organization: ORGANIZATION }),
+    },
+    { key: "tracker", request: getTrackerDashboard(db) },
+    { key: "releases", request: getReleasesDashboard(db) },
+  ];
+
+  const settled = await Promise.allSettled(
+    dashboardRequests.map((entry) => entry.request),
+  );
 
   const insights: Insight[] = [];
   const referenceDates: string[] = [];
   const failed: string[] = [];
 
-  const labels = Object.keys(ENDPOINT_LABELS) as EndpointKey[];
-
   settled.forEach((result, index) => {
-    const label = ENDPOINT_LABELS[labels[index]];
+    const label = ENDPOINT_LABELS[dashboardRequests[index].key];
 
     if (result.status === "rejected") {
       console.error(`Executive summary — ${label} failed:`, result.reason);
@@ -95,7 +113,7 @@ export async function GET(req: NextRequest) {
       ...dashboardInsights.map((insight) => ({ ...insight, source: label })),
     );
 
-    const referenceDate = (meta as { referenceDate?: string }).referenceDate;
+    const referenceDate = (meta as { referenceDate?: string })?.referenceDate;
     if (typeof referenceDate === "string") {
       referenceDates.push(referenceDate);
     }

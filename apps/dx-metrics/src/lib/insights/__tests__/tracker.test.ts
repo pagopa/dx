@@ -57,4 +57,20 @@ describe("buildTrackerInsights", () => {
       }),
     ).toEqual([]);
   });
+
+  it("treats a zero-row dataset as no sample instead of a handled backlog", () => {
+    const insights = buildTrackerInsights({
+      byCategory: [],
+      cards: {
+        avgClose: null,
+        closedTotal: 0,
+        openedTotal: 0,
+        requestsTrend: null,
+      },
+    });
+
+    expect(
+      insights.find((insight) => insight.id === "tracker-backlog"),
+    ).toBeUndefined();
+  });
 });

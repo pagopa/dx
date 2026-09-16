@@ -22,6 +22,12 @@ export interface ReleasesInsightsInput {
     readonly lastReleaseDate: null | string;
     readonly moduleName: string;
   }[];
+  /**
+   * Freshest release date across the registry, used as the "now" against which
+   * module staleness is measured. Anchoring to the data (rather than `Date.now`)
+   * keeps the insight comparable when the importer lags behind.
+   */
+  readonly referenceDate: string;
   readonly releasesTimeline: readonly {
     readonly majorVersionsIntroduced: number | string;
   }[];
@@ -58,6 +64,12 @@ const cadenceInsight = (input: ReleasesInsightsInput): Insight | null => {
 };
 
 const staleModulesInsight = (input: ReleasesInsightsInput): Insight | null => {
+  const referenceTime = Date.parse(input.referenceDate);
+
+  if (!Number.isFinite(referenceTime)) {
+    return null;
+  }
+
   const dated = input.modulesSummary
     .map((module) => ({
       moduleName: module.moduleName,
@@ -72,9 +84,12 @@ const staleModulesInsight = (input: ReleasesInsightsInput): Insight | null => {
     return null;
   }
 
-  const latest = Math.max(...dated.map((module) => module.time));
+  // Measured against the registry's reference date, not the newest module
+  // release: a stale dataset must still surface modules without recent
+  // releases instead of comparing modules with each other.
   const stale = dated.filter(
-    (module) => latest - module.time > STALE_MODULE_DAYS * 24 * 60 * 60 * 1000,
+    (module) =>
+      referenceTime - module.time > STALE_MODULE_DAYS * 24 * 60 * 60 * 1000,
   );
 
   const staleShare = stale.length / dated.length;

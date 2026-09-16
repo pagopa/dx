@@ -59,6 +59,18 @@ describe("buildChartCsv", () => {
 
     expect(csv.split("\n")[1]).toBe('"a,b",1');
   });
+
+  it("carries the unit in the header and values, matching the data table", () => {
+    const csv = buildChartCsv(
+      [{ week: "2026-01-01", value: 3.6666 }],
+      [{ key: "value", name: "Value" }],
+      "week",
+      undefined,
+      "days",
+    );
+
+    expect(csv).toBe("week,Value (days)\n2026-01-01,3.67 days");
+  });
 });
 
 describe("csvFileName", () => {

@@ -15,11 +15,7 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
-import {
-  botAuthorsExclusion,
-  humanPullRequest,
-  isHumanReview,
-} from "../shared/sql-fragments";
+import { humanPullRequest, isHumanReview } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import {
@@ -178,16 +174,22 @@ export const getPullRequestsReviewDashboard = async (
   `);
 
   // --- Code Review Distribution ---
+  // Same population as `reviewMatrix`: pull requests opened by a human (not a
+  // bot, not a draft) with a human review from someone other than the author.
+  // Without it, a human author reviewing their own PR or a review on a bot PR
+  // inflates the distribution and the bus-factor insight built from it.
   const reviewDistribution = await db.execute(sql`
-    SELECT reviewer,
+    SELECT prr.reviewer,
       COUNT(*) AS "totalReviews",
       COUNT(*) FILTER (WHERE state = 'APPROVED') AS approvals,
       COUNT(*) FILTER (WHERE state = 'CHANGES_REQUESTED') AS "changeRequests"
     FROM pull_request_reviews prr
+    JOIN pull_requests pr ON prr.pull_request_id = pr.id
     JOIN repositories r ON prr.repository_id = r.id
     WHERE r.full_name = ${fullName}
       AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${botAuthorsExclusion("reviewer")}
+      AND ${humanPullRequest("pr")}
+      AND ${isHumanReview("prr", "pr")}
     GROUP BY reviewer
     ORDER BY "totalReviews" DESC
   `);

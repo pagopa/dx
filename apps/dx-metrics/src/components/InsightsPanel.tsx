@@ -87,11 +87,16 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
         </div>
       )}
 
-      {insight.sampleSize !== undefined && (
+      {(insight.sampleSize !== undefined || insight.confidence === "low") && (
         <p className="text-xs text-gray-400 tabular-nums">
-          n={formatInteger(insight.sampleSize)}
+          {insight.sampleSize !== undefined &&
+            `n=${formatInteger(insight.sampleSize)}`}
           {insight.confidence === "low" && (
-            <span className="ml-2 text-amber-300">low confidence</span>
+            <span
+              className={`text-amber-300${insight.sampleSize !== undefined ? " ml-2" : ""}`}
+            >
+              low confidence
+            </span>
           )}
         </p>
       )}

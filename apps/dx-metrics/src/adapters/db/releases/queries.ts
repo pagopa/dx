@@ -103,7 +103,7 @@ export const getReleasesDashboard = async (
 
   return {
     ...dashboard,
-    insights: buildReleasesInsights(dashboard),
+    insights: buildReleasesInsights({ ...dashboard, referenceDate }),
     meta: { referenceDate },
   };
 };

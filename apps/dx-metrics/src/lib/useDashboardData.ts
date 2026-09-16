@@ -98,6 +98,9 @@ export function useDashboardData<T>(
 
       if (cached !== null && options?.force !== true) {
         setData(cached);
+        // A cache hit is a success: clear any error left by a previous failed
+        // request for this key so the dashboard does not keep showing it.
+        setError(null);
         setLoading(false);
         return;
       }

@@ -40,32 +40,30 @@ export const csvCell = (value: unknown): string => {
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 
-/** Formats a series value for CSV: rounded, but never carrying the unit. */
-const csvSeriesValue = (
-  value: unknown,
-  formatter?: (value: number) => string,
-): unknown =>
-  typeof value === "number" && Number.isFinite(value)
-    ? formatChartNumber(value, formatter)
-    : value;
-
 /**
  * Serializes a chart's series into a spreadsheet-friendly CSV document. Series
- * values use the same formatter as the chart so the export matches the UI.
+ * headers and values carry the same unit as the chart and data table so the
+ * export is not ambiguous.
  */
 export const buildChartCsv = (
   data: readonly Record<string, unknown>[],
   series: readonly { key: string; name: string }[],
   xKey: string,
   formatter?: (value: number) => string,
+  unit?: string,
 ): string => {
-  const header = [xKey, ...series.map((entry) => entry.name)]
+  const header = [
+    xKey,
+    ...series.map((entry) => (unit ? `${entry.name} (${unit})` : entry.name)),
+  ]
     .map(csvCell)
     .join(",");
   const rows = data.map((row) =>
     [
       row[xKey],
-      ...series.map((entry) => csvSeriesValue(row[entry.key], formatter)),
+      ...series.map((entry) =>
+        formatSeriesValue(row[entry.key], formatter, unit),
+      ),
     ]
       .map(csvCell)
       .join(","),

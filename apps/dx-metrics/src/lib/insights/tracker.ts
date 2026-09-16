@@ -28,7 +28,9 @@ export interface TrackerInsightsInput {
 const backlogInsight = (input: TrackerInsightsInput): Insight | null => {
   const { closedTotal, openedTotal } = input.cards;
 
-  if (openedTotal === null || closedTotal === null) {
+  // A zero-row tracker dataset returns 0/0 from the COUNT queries; treating it
+  // as "all requests handled" would claim a positive reading on no sample.
+  if (openedTotal === null || closedTotal === null || openedTotal <= 0) {
     return null;
   }
 
