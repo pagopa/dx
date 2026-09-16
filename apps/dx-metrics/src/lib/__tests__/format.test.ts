@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   EMPTY_VALUE,
+  formatDecimal,
   formatFullDate,
   formatInteger,
   formatNumber,
@@ -42,6 +43,20 @@ describe("formatInteger", () => {
   });
 });
 
+describe("formatDecimal", () => {
+  it("keeps up to two decimals without forcing trailing zeros", () => {
+    expect(formatDecimal(3.49)).toBe("3.49");
+    expect(formatDecimal(3)).toBe("3");
+    expect(formatDecimal(1234.5)).toBe("1,234.5");
+  });
+
+  it("returns the placeholder for missing or invalid values", () => {
+    expect(formatDecimal(null)).toBe(EMPTY_VALUE);
+    expect(formatDecimal(undefined)).toBe(EMPTY_VALUE);
+    expect(formatDecimal(Number.NaN)).toBe(EMPTY_VALUE);
+  });
+});
+
 describe("formatPercent", () => {
   it("appends the percent sign", () => {
     expect(formatPercent(42, 0)).toBe("42%");
@@ -65,6 +80,11 @@ describe("formatWithUnit", () => {
 describe("formatShortDate", () => {
   it("formats a valid date without the year", () => {
     expect(formatShortDate("2026-11-10")).toContain("Nov");
+  });
+
+  it("keeps the calendar day of a date-only string in any timezone", () => {
+    expect(formatShortDate("2026-11-10")).toContain("10");
+    expect(formatFullDate("2026-11-10")).toContain("10");
   });
 
   it("returns the raw string for invalid dates", () => {

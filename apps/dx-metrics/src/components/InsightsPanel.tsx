@@ -28,12 +28,16 @@ interface InsightsPanelProps {
 }
 
 const DeltaBadge = ({ deltaPct }: { deltaPct: number }) => {
-  const rising = deltaPct > 0;
+  const direction = deltaPct > 0 ? "up" : deltaPct < 0 ? "down" : "flat";
 
   return (
     <span className="text-xs font-medium text-gray-400 tabular-nums">
-      <span aria-hidden="true">{rising ? "↑" : "↓"}</span>{" "}
-      <span className="sr-only">{rising ? "up" : "down"}</span>
+      <span aria-hidden="true">
+        {direction === "up" ? "↑" : direction === "down" ? "↓" : "→"}
+      </span>{" "}
+      <span className="sr-only">
+        {direction === "flat" ? "no change" : direction}
+      </span>
       {Math.abs(deltaPct).toFixed(0)}%
     </span>
   );

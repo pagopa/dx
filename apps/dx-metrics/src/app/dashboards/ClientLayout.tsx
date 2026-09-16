@@ -3,7 +3,7 @@
 import { TooltipProvider } from "@radix-ui/react-tooltip";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { Sidebar } from "@/components/Sidebar";
@@ -21,6 +21,10 @@ export function ClientLayout({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const pathname = usePathname();
   const [lastPathname, setLastPathname] = useState(pathname);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // Tracks whether the drawer was ever opened, so focus is only restored to the
+  // trigger when the drawer actually closed instead of on first mount.
+  const wasDrawerOpenRef = useRef(false);
 
   // A drawer that survives navigation would cover the page the reader asked for.
   // Adjusting during render beats an effect that paints the new page first and
@@ -29,6 +33,41 @@ export function ClientLayout({
     setLastPathname(pathname);
     setIsDrawerOpen(false);
   }
+
+  // Move focus into the drawer when it opens and back to the trigger when it
+  // closes, so keyboard readers are not left behind the overlay. The background
+  // is made `inert` below while the drawer is open, which keeps it out of the
+  // tab order.
+  useEffect(() => {
+    if (isDrawerOpen) {
+      wasDrawerOpenRef.current = true;
+      document
+        .getElementById("app-sidebar")
+        ?.querySelector<HTMLElement>("button, a[href]")
+        ?.focus();
+      return;
+    }
+
+    if (wasDrawerOpenRef.current) {
+      wasDrawerOpenRef.current = false;
+      triggerRef.current?.focus();
+    }
+  }, [isDrawerOpen]);
+
+  // The drawer only exists below `lg`; closing it when the viewport grows keeps
+  // the page content from staying `inert` behind an overlay that no longer
+  // covers anything.
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setIsDrawerOpen(false);
+      }
+    };
+
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
 
   useEffect(() => {
     if (!isDrawerOpen) {
@@ -58,6 +97,7 @@ export function ClientLayout({
         <a
           className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:border focus:border-[#30363d] focus:bg-[#21262d] focus:px-4 focus:py-2 focus:text-sm focus:text-white"
           href="#dashboard-content"
+          inert={isDrawerOpen}
         >
           Skip to content
         </a>
@@ -75,6 +115,7 @@ export function ClientLayout({
               "min-w-0 flex-1 transition-[margin] duration-300 ease-in-out",
               isCollapsed ? "lg:ml-16" : "lg:ml-56",
             )}
+            inert={isDrawerOpen}
           >
             <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-[#30363d] bg-[#0d1117]/80 px-4 py-3 backdrop-blur-md sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
@@ -87,6 +128,7 @@ export function ClientLayout({
                     focusRing,
                   )}
                   onClick={() => setIsDrawerOpen(true)}
+                  ref={triggerRef}
                   type="button"
                 >
                   <Menu aria-hidden="true" size={18} />

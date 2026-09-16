@@ -14,8 +14,8 @@ export const PR_SIZE_BUCKETS = [
   { label: "51-200", max: 200 },
   { label: "201-500", max: 500 },
   { label: "501-1000", max: 1000 },
-  { label: "1000+", max: null },
+  { label: "1001+", max: null },
 ] as const;
 
 /** Buckets whose additions already count as a large pull request. */
-export const LARGE_PR_BUCKET_LABELS = new Set<string>(["501-1000", "1000+"]);
+export const LARGE_PR_BUCKET_LABELS = new Set<string>(["501-1000", "1001+"]);

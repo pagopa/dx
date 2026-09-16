@@ -33,6 +33,21 @@ export const formatInteger = (value: null | number | undefined): string =>
     ? EMPTY_VALUE
     : integerFormatter.format(value);
 
+const decimalFormatter = new Intl.NumberFormat("en-GB", {
+  maximumFractionDigits: 2,
+});
+
+/**
+ * Formats a number with up to two decimals and thousands separators, without
+ * forcing trailing zeros (`3.5` -> `3.5`, `1234.5` -> `1,234.5`). Use it for
+ * means and other fractional values where `formatInteger` would round away
+ * meaningful precision.
+ */
+export const formatDecimal = (value: null | number | undefined): string =>
+  value === null || value === undefined || !Number.isFinite(value)
+    ? EMPTY_VALUE
+    : decimalFormatter.format(value);
+
 /** Formats an already-scaled percentage value (e.g. `12.5` -> `12.5%`). */
 export const formatPercent = (
   value: null | number | undefined,
@@ -54,8 +69,28 @@ export const formatWithUnit = (
     : `${formatted} ${unit}`;
 };
 
+const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
 const toDate = (value: string | number | Date): Date | null => {
-  const date = value instanceof Date ? value : new Date(value);
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  // SQL `DATE` values (and the `::date` buckets derived from them) arrive as
+  // calendar strings. `new Date("2026-11-10")` would read them as UTC midnight
+  // and, west of UTC, format them as the previous day, so parse the components
+  // into a local calendar date instead.
+  if (typeof value === "string") {
+    const match = DATE_ONLY_PATTERN.exec(value);
+
+    if (match) {
+      const [, year, month, day] = match;
+      const date = new Date(Number(year), Number(month) - 1, Number(day));
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+  }
+
+  const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 };
 

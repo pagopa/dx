@@ -19,7 +19,7 @@ const baseInput = (): PullRequestsInsightsInput => ({
   mergedPrs: [{ prCount: 10 }, { prCount: 10 }, { prCount: 5 }, { prCount: 5 }],
   prSizeDistribution: [
     { prCount: 8, sizeRange: "0-50" },
-    { prCount: 2, sizeRange: "1000+" },
+    { prCount: 2, sizeRange: "1001+" },
   ],
   slowestPrs: [{ leadTimeDays: 10 }, { leadTimeDays: 1 }],
   unmergedPrs: [{ openPrs: 2 }, { openPrs: 2 }, { openPrs: 5 }, { openPrs: 5 }],
@@ -65,7 +65,7 @@ describe("buildPullRequestsInsights", () => {
       ...input,
       prSizeDistribution: [
         { prCount: 1, sizeRange: "0-50" },
-        { prCount: 9, sizeRange: "1000+" },
+        { prCount: 9, sizeRange: "1001+" },
       ],
     });
 
@@ -200,9 +200,7 @@ describe("buildPullRequestsInsights", () => {
   });
 
   it("reads a peer-beating lead time as positive and stays neutral in between", () => {
-    const find = (
-      insights: Insight[],
-    ): Insight | undefined =>
+    const find = (insights: Insight[]): Insight | undefined =>
       insights.find((insight) => insight.id === "pr-lead-time-peers");
 
     const better = find(

@@ -2,7 +2,7 @@
 
 import { SEVERITY_STYLES } from "@/components/severity";
 import TooltipIcon from "@/components/TooltipIcon";
-import { formatInteger } from "@/lib/format";
+import { formatDecimal, formatInteger } from "@/lib/format";
 import type { InsightSeverity } from "@/lib/insights/types";
 
 interface MetricCardProps {
@@ -105,11 +105,13 @@ export function MetricCard({
     severity !== undefined ? SEVERITY_STYLES[severity] : null;
   const accent = severityStyle ? ` border-l-4 ${severityStyle.accent}` : "";
   const hasDelta = deltaPct !== undefined && deltaPct !== null;
+  const isFlat = hasDelta && deltaPct === 0;
   const rising = hasDelta && deltaPct > 0;
-  // When the desired direction is known, say whether the move is good. Without
-  // it the delta stays neutral, so an arrow never implies a judgement.
+  // When the desired direction is known, say whether the move is good. An
+  // unchanged value and a missing direction both stay neutral, so an arrow
+  // never implies a judgement.
   const favorable =
-    hasDelta && deltaDirection !== undefined
+    hasDelta && !isFlat && deltaDirection !== undefined
       ? deltaDirection === "higher-is-better"
         ? deltaPct > 0
         : deltaPct < 0
@@ -135,7 +137,7 @@ export function MetricCard({
   const nonBreaking = (text: string) => text.replace(/ /g, "\u00A0");
   const metaParts = [
     previousValue !== undefined && previousValue !== null
-      ? nonBreaking(`previous ${formatInteger(previousValue)}`)
+      ? nonBreaking(`previous ${formatDecimal(previousValue)}`)
       : null,
     ...(breakdown ?? []).map((item) =>
       nonBreaking(`${item.label} ${item.value}`),
@@ -178,9 +180,11 @@ export function MetricCard({
             className={`ml-3 whitespace-nowrap text-sm font-semibold tabular-nums ${deltaClass}`}
           >
             {deltaLabel && <span className="mr-1">{deltaLabel}</span>}
-            <span aria-hidden="true">{rising ? "↑" : "↓"}</span>{" "}
+            <span aria-hidden="true">
+              {isFlat ? "→" : rising ? "↑" : "↓"}
+            </span>{" "}
             <span className="sr-only">
-              {rising ? "up" : "down"}
+              {isFlat ? "no change" : rising ? "up" : "down"}
               {favorable === null
                 ? ""
                 : favorable

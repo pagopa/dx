@@ -67,18 +67,21 @@ interface BenchmarkReferenceDates {
 
 const fetchReferenceDates = async (
   db: Database,
+  repositories: SQL,
 ): Promise<BenchmarkReferenceDates> => {
   const [prReferenceResult, wrReferenceResult] = await Promise.all([
     db.execute(
       buildReferenceDateQuery({
         column: "GREATEST(pr.created_at, pr.merged_at)",
-        from: "pull_requests pr",
+        from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+        where: sql`r.name = ANY(${repositories})`,
       }),
     ),
     db.execute(
       buildReferenceDateQuery({
         column: "wr.created_at",
-        from: "workflow_runs wr",
+        from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
+        where: sql`r.name = ANY(${repositories})`,
       }),
     ),
   ]);
@@ -139,7 +142,8 @@ const fetchWorkflowBenchmarkRows = async (
 ): Promise<WorkflowBenchmarkRow[]> => {
   const result = await db.execute(sql`
     SELECT r.name AS repository,
-      COUNT(*) AS "count",
+      COUNT(*) FILTER (WHERE TRIM(wr.conclusion) = 'success') AS "durationCount",
+      COUNT(*) FILTER (WHERE TRIM(wr.conclusion) IN ('success', 'failure')) AS "successRateCount",
       ROUND((AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
         FILTER (WHERE TRIM(wr.conclusion) = 'success') / 60)::numeric, 2) AS "pipelineDuration",
       ROUND(
@@ -157,7 +161,11 @@ const fetchWorkflowBenchmarkRows = async (
     GROUP BY r.name
   `);
 
-  return parseSqlRows(workflowBenchmarkRowSchema, result.rows, "benchmark workflow");
+  return parseSqlRows(
+    workflowBenchmarkRowSchema,
+    result.rows,
+    "benchmark workflow",
+  );
 };
 
 /**
@@ -168,9 +176,12 @@ export const getBenchmarkDashboard = async (
   db: Database,
   { configuredRepositories, days }: BenchmarkInput,
 ): Promise<BenchmarkResult> => {
-  const { prReference, wrReference } = await fetchReferenceDates(db);
-
   const repositories = textArray(configuredRepositories);
+
+  const { prReference, wrReference } = await fetchReferenceDates(
+    db,
+    repositories,
+  );
 
   const [prRows, workflowRows] = await Promise.all([
     fetchPrBenchmarkRows(db, repositories, days, prReference),
@@ -201,7 +212,7 @@ export const getBenchmarkDashboard = async (
       rows: padRows(
         configuredRepositories,
         workflowRows.map((row) => ({
-          count: row.count,
+          count: row.durationCount,
           repository: row.repository,
           value: row.pipelineDuration,
         })),
@@ -216,7 +227,7 @@ export const getBenchmarkDashboard = async (
       rows: padRows(
         configuredRepositories,
         workflowRows.map((row) => ({
-          count: row.count,
+          count: row.successRateCount,
           repository: row.repository,
           value: row.successRate,
         })),
@@ -270,12 +281,15 @@ export const getPrLeadTimeBenchmark = async (
   db: Database,
   { configuredRepositories, days }: BenchmarkInput,
 ): Promise<BenchmarkMetric> => {
+  const repositories = textArray(configuredRepositories);
+
   const prReference = parseReferenceDate(
     (
       await db.execute(
         buildReferenceDateQuery({
           column: "GREATEST(pr.created_at, pr.merged_at)",
-          from: "pull_requests pr",
+          from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+          where: sql`r.name = ANY(${repositories})`,
         }),
       )
     ).rows[0],
@@ -284,7 +298,7 @@ export const getPrLeadTimeBenchmark = async (
 
   const prRows = await fetchPrBenchmarkRows(
     db,
-    textArray(configuredRepositories),
+    repositories,
     days,
     prReference,
   );

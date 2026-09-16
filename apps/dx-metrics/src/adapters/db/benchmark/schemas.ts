@@ -18,10 +18,11 @@ export const prBenchmarkRowSchema = z.object({
 
 /** Per-repository workflow benchmark values. */
 export const workflowBenchmarkRowSchema = z.object({
-  count: sqlNumberSchema,
+  durationCount: sqlNumberSchema,
   pipelineDuration: nullableSqlNumberSchema,
   repository: z.string().min(1),
   successRate: nullableSqlNumberSchema,
+  successRateCount: sqlNumberSchema,
 });
 
 export interface BenchmarkInput {
