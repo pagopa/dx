@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "terraform",
   "description": "A plugin to manage cloud infrastructure via terraform IaC",
   "version": "0.1.1",
@@ -6,7 +7,5 @@
     "name": "PagoPA DX Team"
   },
   "repository": "https://github.com/pagopa/dx",
-  "keywords": ["cloud", "infrastructure", "iac", "terraform"],
-  "commands": ["./commands"],
-  "hooks": "./hooks/hooks.json"
+  "keywords": ["cloud", "infrastructure", "iac", "terraform"]
 }
