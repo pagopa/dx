@@ -23,7 +23,6 @@ variables {
   }
 }
 
-
 mock_provider "azurerm" {}
 mock_provider "dx" {}
 
