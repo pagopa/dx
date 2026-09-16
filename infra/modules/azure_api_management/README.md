@@ -83,12 +83,6 @@ After that, submit a new _Pull Request_ to update the variable to `false` and ap
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
-## Providers
-
-| Name | Version |
-| ---- | ------- |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 4.81.0 |
-
 ## Modules
 
 No modules.
