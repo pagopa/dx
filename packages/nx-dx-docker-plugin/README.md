@@ -137,14 +137,15 @@ The plugin preserves unrelated build arguments already defined on the inferred t
 ## Workspace Release Composition
 
 For a package project released only as a Docker image, configure its Docker
-release repository and override the release target in its package's `nx.targets`:
+release repository and preserve the Docker publisher inferred by this plugin in
+its package's `nx.targets`:
 
 ```json
 {
   "nx": {
     "targets": {
       "nx-release-publish": {
-        "executor": "@pagopa/nx-dx-docker-plugin:release-publish"
+        "...": true
       }
     }
   }
@@ -153,11 +154,11 @@ release repository and override the release target in its package's `nx.targets`
 
 Keep the Docker repository in the project's `package.json` as shown in the
 [complete release guide](https://dx.pagopa.it/docs/containers/nx-docker-release).
-Package projects must also keep the `nx-release-publish` override shown above,
-because Nx's JavaScript package plugin otherwise replaces the inferred Docker
-publisher. The plugin supplies the image name, build context, Dockerfile,
-platform, and OCI metadata to the target automatically. Projects without a
-`package.json` do not need this override.
+Package projects need the merge marker shown above because Nx's JavaScript
+package plugin otherwise replaces the inferred Docker publisher. The marker
+prevents that replacement while letting this plugin supply the executor, image
+name, build context, Dockerfile, platform, and OCI metadata automatically.
+Projects without a `package.json` do not need the marker.
 
 ## Default Docker Build Layout
 
