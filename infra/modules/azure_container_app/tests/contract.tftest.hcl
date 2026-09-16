@@ -211,23 +211,50 @@ run "log_analytics_required_for_non_development_use_case" {
   ]
 }
 
-# --- secrets contract validation ---
+# --- environment variable contract validation ---
 
-run "invalid_secret_binding_reference" {
+run "environment_variable_names_must_be_unique" {
   command = plan
 
   variables {
-    secrets = [
-      {
-        name                = "APP_SECRET"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/app-secret"
+    containers = [{
+      image = "nginx:latest"
+      environment_variables = [
+        { name = "DUPLICATE", value = "one" },
+        { name = "DUPLICATE", value = "two" },
+      ]
+      liveness_probe = {
+        path = "/"
       }
-    ]
+    }]
+  }
 
+  expect_failures = [
+    var.containers,
+  ]
+}
+
+run "normalized_environment_variable_name_cannot_reference_multiple_key_vault_secrets" {
+  command = plan
+
+  variables {
     containers = [
       {
-        image        = "nginx:latest"
-        secret_names = ["MISSING_SECRET"]
+        image = "nginx:latest"
+        environment_variables = [{
+          name  = "APP_SECRET"
+          value = "https://kv-test.vault.azure.net/secrets/app-secret"
+        }]
+        liveness_probe = {
+          path = "/"
+        }
+      },
+      {
+        image = "sidecar:latest"
+        environment_variables = [{
+          name  = "app-secret"
+          value = "https://kv-test.vault.azure.net/secrets/different-app-secret"
+        }]
         liveness_probe = {
           path = "/"
         }

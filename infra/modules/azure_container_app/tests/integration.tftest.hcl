@@ -188,3 +188,61 @@ run "apply_with_http_scaler" {
     error_message = "HTTP scale rule concurrent_requests must be set correctly"
   }
 }
+
+run "apply_with_key_vault_secret_environment_variable" {
+  command = apply
+
+  variables {
+    environment                  = merge(var.environment, { instance_number = run.setup.instance_numbers.key_vault_secret, app_name = "kv" })
+    tags                         = var.tags
+    resource_group_name          = run.setup.resource_group_name
+    container_app_environment_id = run.setup.container_app_environment_id
+    log_analytics_workspace_id   = run.setup.log_analytics_workspace_id
+    user_assigned_identity_id    = run.setup.key_vault_secret_user_identity_id
+
+    containers = [
+      {
+        image = "nginx:latest"
+        environment_variables = [
+          {
+            name  = "INTEGRATION_SECRET"
+            value = run.setup.key_vault_secret_id
+          },
+        ]
+        liveness_probe = {
+          path = "/"
+        }
+      }
+    ]
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.identity[0].identity_ids[0] == run.setup.key_vault_secret_user_identity_id
+    error_message = "Container App must use the identity authorized to read the Key Vault secret"
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.secret) == 1
+    error_message = "Container App must create one native Key Vault secret"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.secret[0].name == "integration-secret"
+    error_message = "Key Vault secret name must be normalized from the environment variable name"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.secret[0].key_vault_secret_id == run.setup.key_vault_secret_id
+    error_message = "Container App secret must preserve the versioned Key Vault secret URI"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.secret[0].identity == run.setup.key_vault_secret_user_identity_id
+    error_message = "Container App secret must use the identity authorized to read it"
+  }
+
+  assert {
+    condition     = azurerm_container_app.this.template[0].container[0].env[1].secret_name == "integration-secret"
+    error_message = "Environment variable must bind to the generated native Key Vault secret"
+  }
+}
