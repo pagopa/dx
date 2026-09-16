@@ -3,6 +3,11 @@
   "version": "0.1.11",
   "type": "module",
   "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "...": true
+      }
+    },
     "release": {
       "docker": {
         "repositoryName": "pagopa/dx-metrics-import"
