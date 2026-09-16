@@ -4,6 +4,14 @@
 configurations and infers targets for formatting, testing, validation, planning,
 applying, security scanning, documentation, and module publishing.
 
+## Terraform project discovery
+
+Terraform configurations outside `modules` or `_modules` are always inferred as
+application projects. Configurations inside those directories are inferred as
+library projects only when their own root contains a `module.json` file. This
+keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
+from becoming standalone projects.
+
 ## Trivy
 
 The inferred `trivy` target scans each Terraform project with the workspace

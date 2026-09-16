@@ -1,3 +1,23 @@
+## 0.1.12 (2026-09-09)
+
+### 🩹 Fixes
+
+- Bump google.golang.org/grpc from v1.83.1 to v1.83.2 in both Terraform providers. ([#2173](https://github.com/pagopa/dx/pull/2173))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.11 (2026-09-08)
+
+### 🩹 Fixes
+
+- Bump google.golang.org/grpc from v1.83.0 to v1.83.1 in both Terraform providers. ([#2156](https://github.com/pagopa/dx/pull/2156))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.10 (2026-08-27)
 
 ### 🩹 Fixes

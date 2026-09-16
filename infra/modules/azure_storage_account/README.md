@@ -13,7 +13,7 @@ The following diagram illustrates the architecture and relationships between the
 ## Features
 
 - **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
-- **Advanced Threat Protection**: Enables advanced threat protection for enhanced security only for public configurations.
+- **Defender for Storage**: Enables advanced threat protection for public configurations or when malware scanning is enabled, including malware scanning on upload and sensitive data discovery.
 - **Advanced Security**: Enforces the use of User Delegation SAS for secure shared access if `delegated_access`.
 - **Data Lifecycle Management**: Includes automated policies for tiering data from Hot to Cool/Archive and setting retention periods to optimize costs.
 - **Private Networking**: Configures private endpoints and DNS zones for secure access.
@@ -31,6 +31,18 @@ The following diagram illustrates the architecture and relationships between the
 | `audit`            | For storing audit logs with high security and long-term retention (default: 1 year) | Yes    | No                         | ZRS + secondary replica | Standard     |
 | `delegated_access` | For sharing files externally, forcing secure access patterns.                       | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                                  | No     | No                         | LRS + secondary replica | Standard     |
+
+## Defender malware scanning and sensitive data discovery
+
+Malware scanning and sensitive data discovery can be enabled with a single
+boolean. It enables Defender for Storage even when the storage account uses
+private networking and makes the local setting override subscription defaults.
+The scan cap defaults to unlimited (`-1` GB/month), while scan result Event Grid
+notifications remain disabled.
+
+```hcl
+malware_scanning_enabled = true
+```
 
 ## Important Considerations for CDN Origin
 
@@ -270,6 +282,7 @@ No modules.
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for access logging (control and data plane). Mandatory for audit use case to track all access operations. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_force_public_network_access_enabled"></a> [force\_public\_network\_access\_enabled](#input\_force\_public\_network\_access\_enabled) | Allows public network access. Defaults to 'false'. | `bool` | `false` | no |
+| <a name="input_malware_scanning_enabled"></a> [malware\_scanning\_enabled](#input\_malware\_scanning\_enabled) | Enables Defender malware scanning on blob upload and sensitive data discovery. Uses the standard unlimited scan cap. | `bool` | `false` | no |
 | <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Defines network rules for the storage account:<br/>- `default_action`: Default action when no rules match ('Deny' or 'Allow').<br/>- `bypass`: Services bypassing restrictions (valid values: 'Logging', 'Metrics', 'AzureServices').<br/>- `ip_rules`: List of IPv4 addresses or CIDR ranges.<br/>- `virtual_network_subnet_ids`: List of subnet resource IDs.<br/>Defaults to denying all traffic unless explicitly allowed. | <pre>object({<br/>    default_action             = string<br/>    bypass                     = list(string)<br/>    ip_rules                   = list(string)<br/>    virtual_network_subnet_ids = list(string)<br/>  })</pre> | <pre>{<br/>  "bypass": [],<br/>  "default_action": "Deny",<br/>  "ip_rules": [],<br/>  "virtual_network_subnet_ids": []<br/>}</pre> | no |
 | <a name="input_override_infrastructure_encryption"></a> [override\_infrastructure\_encryption](#input\_override\_infrastructure\_encryption) | When set to true, disables infrastructure encryption even if the use case configuration would enable it. Useful for audit use case to prevent storage account recreation when infrastructure encryption was enabled by default. | `bool` | `false` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Resource group for the private DNS zone. Defaults to the virtual network's resource group. | `string` | `null` | no |

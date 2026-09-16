@@ -127,4 +127,9 @@ variable "tls_version" {
   type        = number
   default     = 1.2
   description = "Minimum TLS version for the App Service."
+
+  validation {
+    condition     = contains([1.2, 1.3], var.tls_version)
+    error_message = "Allowed values for \"tls_version\" are 1.2, 1.3."
+  }
 }

@@ -53,7 +53,27 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-describe("getDiscoveryStateWithValidation", () => {
+describe("Terraform project discovery", () => {
+  it("infers applications and declared libraries but skips nested modules", () => {
+    const applicationRoot = path.join("infra", "resources", "prod");
+    const libraryRoot = path.join("infra", "modules", "azure_core_infra");
+    const nestedModuleRoot = path.join(libraryRoot, "modules", "dns");
+    const unmanifestedModuleRoot = path.join("infra", "_modules", "dx_website");
+
+    const result = getDiscoveryState([
+      path.join(applicationRoot, "main.tf"),
+      path.join(libraryRoot, "main.tf"),
+      path.join(libraryRoot, "module.json"),
+      path.join(nestedModuleRoot, "main.tf"),
+      path.join(unmanifestedModuleRoot, "main.tf"),
+    ]);
+
+    expect(result.terraformConfigFiles).toEqual([
+      path.join(applicationRoot, "main.tf"),
+      path.join(libraryRoot, "main.tf"),
+    ]);
+  });
+
   it("collects test capabilities and only validated publishable roots", async () => {
     const workspaceRoot = await createWorkspaceRoot();
 
@@ -71,6 +91,7 @@ describe("getDiscoveryStateWithValidation", () => {
       path.join("infra", "_modules", "good-module", "tests", "e2e_test.go"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
       path.join("infra", "_modules", "invalid-module", "module.json"),
+      path.join("infra", "_modules", "invalid-module", "main.tf"),
       path.join("infra", "_modules", "invalid-module-two", "module.json"),
       path.join("infra", "_modules", "example", "module.json"),
       path.join("infra", "_modules", "tests", "main.tf"),
@@ -142,6 +163,7 @@ describe("getDiscoveryStateWithValidation", () => {
     expect(result.terraformConfigFiles).toEqual([
       path.join("infra", "_modules", "good-module", "main.tf"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
+      path.join("infra", "_modules", "invalid-module", "main.tf"),
       path.join("infra", "resources", "prod", "main.tf"),
     ]);
     expect(Array.from(result.publishableManifestByRoot.keys())).toEqual([

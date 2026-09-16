@@ -25,9 +25,9 @@ data "azuread_group" "externals_dev" {
 
 module "dev" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 3.1"
+  version = "~> 6.0"
 
-  environment = merge(local.environment, { env_short = "d" })
+  environment = merge(local.environment, { env_short = "u" })
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins_dev.object_id
@@ -53,5 +53,5 @@ module "dev" {
   private_dns_zone_resource_group_id = data.azurerm_resource_group.common_dev.id
   opex_resource_group_id             = data.azurerm_resource_group.dashboards_dev.id
 
-  tags = merge(local.tags, { Environment = "Dev" })
+  tags = merge(local.tags, { Environment = "Uat" })
 }

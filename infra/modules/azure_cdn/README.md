@@ -11,7 +11,7 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
-- **Routing Rules**: Enables response compression and allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
+- **Routing Rules**: Enables response compression for Azure Front Door's default compressible MIME types and allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
 
 > **Note:** The module includes support for managed identity authentication to storage origins with automatic RBAC assignment. This feature is currently in preview and disabled by validation. It will be enabled once the feature becomes generally available. See [Azure documentation](https://learn.microsoft.com/en-us/azure/frontdoor/origin-authentication-with-managed-identities) for more information.
 

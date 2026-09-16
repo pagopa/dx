@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -158,4 +158,14 @@ run "azure_app_service_node_24" {
     condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == "24-lts"
     error_message = "The App Service must support Node 24 LTS."
   }
+}
+
+run "azure_app_service_rejects_unsupported_tls_version" {
+  command = plan
+
+  variables {
+    tls_version = 1.1
+  }
+
+  expect_failures = [var.tls_version]
 }

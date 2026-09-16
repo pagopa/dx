@@ -13,7 +13,7 @@ import {
   reviewMetricValueRowSchema,
 } from "@/adapters/db/pull-requests-review/schemas";
 import {
-  prCommentsBySizeRowSchema,
+  prCommentsRowSchema,
   prMetricValueRowSchema,
   slowestPrRowSchema,
 } from "@/adapters/db/pull-requests/schemas";
@@ -36,6 +36,7 @@ import {
 import {
   workflowDeploymentSchema,
   workflowSummarySchema,
+  workflowTriggerTypeSchema,
 } from "@/adapters/db/workflows/schemas";
 
 it("coerces shared scalar SQL values", () => {
@@ -246,6 +247,7 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       workflowSummarySchema,
       {
         avgDurationMinutes: null,
+        failedDurationMinutes: null,
         firstPipelineDate: null,
         totalDurationMinutes: "34.5",
         totalPipelines: "9",
@@ -254,10 +256,19 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     ),
   ).toEqual({
     avgDurationMinutes: null,
+    failedDurationMinutes: null,
     firstPipelineDate: null,
     totalDurationMinutes: 34.5,
     totalPipelines: 9,
   });
+
+  expect(
+    parseSqlRows(
+      workflowTriggerTypeSchema,
+      [{ runCount: "8", triggerType: "Automatic" }],
+      "workflow trigger types",
+    ),
+  ).toEqual([{ runCount: 8, triggerType: "Automatic" }]);
 
   expect(
     parseSqlRow(prMetricValueRowSchema, { value: "12" }, "pr metric"),
@@ -265,11 +276,11 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
 
   expect(
     parseSqlRows(
-      prCommentsBySizeRowSchema,
-      [{ avgCommentsPerAddition: null, week: "2026-03-10" }],
-      "pr comments by size",
+      prCommentsRowSchema,
+      [{ avgComments: "3.5", week: "2026-03-10" }],
+      "pr comments",
     ),
-  ).toEqual([{ avgCommentsPerAddition: null, week: "2026-03-10" }]);
+  ).toEqual([{ avgComments: 3.5, week: "2026-03-10" }]);
 
   expect(
     parseSqlRows(

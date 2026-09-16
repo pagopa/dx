@@ -3,7 +3,7 @@ variables {
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -13,7 +13,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
     ManagementTeam = "Developer Experience"
@@ -193,6 +193,11 @@ run "cdn_route_configuration" {
   assert {
     condition     = azurerm_cdn_frontdoor_route.this.cache[0].compression_enabled == true
     error_message = "Route compression must be enabled"
+  }
+
+  assert {
+    condition     = toset(azurerm_cdn_frontdoor_route.this.cache[0].content_types_to_compress) == toset(local.compression_content_types)
+    error_message = "Route compression must use the supported content types"
   }
 
   assert {

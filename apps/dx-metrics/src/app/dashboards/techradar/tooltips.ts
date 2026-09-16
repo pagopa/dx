@@ -23,4 +23,6 @@ export const techradarTooltips = {
     "Unique discoverable tools found in the configured repository set.",
   usagesNotInRadar:
     "Detected tools that are intentionally shown even though they are not currently modeled in the Technology Radar.",
+  usageTrend:
+    "Total detected repository/tool usages recorded in each import snapshot. Requires at least two snapshots to show a trend.",
 } as const;

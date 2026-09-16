@@ -54,16 +54,15 @@ export const getProjectNameFromRoot = (root: string) =>
     )
     .join("-");
 
-// Modules contained in "modules" or "_modules" folder are reusable and should be
-// treated as libraries, while other Terraform configurations should be treated
-// as applications (assuming they are meant to be provisioned directly, rather than being
-// consumed by other configurations)
-const getProjectType = (root: string): ProjectType => {
+// Identifies roots that conventionally contain reusable Terraform modules.
+// Discovery additionally requires module.json before inferring these as projects.
+export const isTerraformLibraryRoot = (root: string): boolean => {
   const rootSegments = new Set(root.split(path.sep));
-  return rootSegments.has("modules") || rootSegments.has("_modules")
-    ? "library"
-    : "application";
+  return rootSegments.has("modules") || rootSegments.has("_modules");
 };
+
+const getProjectType = (root: string): ProjectType =>
+  isTerraformLibraryRoot(root) ? "library" : "application";
 
 const defaultEnvironments = ["prod", "uat", "dev"];
 
@@ -240,7 +239,15 @@ const getTrivyTarget = (
     "{workspaceRoot}/.trivy/checks/terraform/**/*",
   ],
   options: {
-    args: ["--config", path.resolve(workspaceRoot, "trivy.yml"), root],
+    args: [
+      // Trivy updates the checks bundle cache while scanning, so concurrent
+      // projects must not share the same cache directory.
+      "--cache-dir",
+      path.join(workspaceRoot, "trivy-cache", getProjectNameFromRoot(root)),
+      "--config",
+      path.resolve(workspaceRoot, "trivy.yml"),
+      root,
+    ],
     cwd: "{workspaceRoot}",
   },
 });
@@ -287,6 +294,7 @@ const getTargets = (
     {
       cache: true,
       command: `terraform validate`,
+      dependsOn: [initTargetName],
       inputs: ["default", "examples"],
       options: {
         cwd,

@@ -19,7 +19,7 @@ data "azurerm_subnet" "pep" {
 # Create a storage account with static website enabled
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = local.environment
 
@@ -44,7 +44,7 @@ module "storage_account" {
 # Example 1: Create a CDN profile with WAF enabled
 module "azure_cdn_with_waf" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -71,7 +71,7 @@ module "azure_cdn_with_waf" {
 
 module "storage_account_secondary" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = merge(local.environment, {
     app_name        = "media"
@@ -98,7 +98,7 @@ module "storage_account_secondary" {
 
 module "azure_cdn_reuse_profile" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 

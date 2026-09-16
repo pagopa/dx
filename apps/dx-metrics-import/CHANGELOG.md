@@ -1,3 +1,32 @@
+## 0.1.11 (2026-09-16)
+
+### 🚀 Features
+
+- Rework DX Metrics for trustworthiness and readability: ([#2205](https://github.com/pagopa/dx/pull/2205))
+
+  - `dx-metrics`: deterministic insights (sample size, confidence, severity) on every dashboard, aggregated into a single Executive Summary landing page served by one server-side endpoint; a cross-repository Benchmark dashboard; human-only review timing and equal-window lead-time comparison; ranked bar charts with units, locale-aware dates, data freshness, and loading skeletons.
+  - `dx-metrics-import`: capture an append-only techradar adoption snapshot after each import run.
+  - `@pagopa/dx-metrics-core`: add the `tech_radar_snapshots` table and new indexes on pull requests, workflow runs, commits, and reviews. Apply with `drizzle-kit push`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.8
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.10 (2026-09-11)
+
+### 🩹 Fixes
+
+- Bump `js-yaml` from 4.3.1 to 4.3.2, picking up the fix for GHSA-2883-xcg3-v3hh (unbounded CPU usage when merging empty mappings). ([#2178](https://github.com/pagopa/dx/pull/2178))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.1.9 (2026-09-01)
 
 ### 🩹 Fixes

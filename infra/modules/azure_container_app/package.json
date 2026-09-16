@@ -1,7 +1,0 @@
-{
-  "name": "azure_container_app",
-  "version": "6.0.1",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Provisions an Azure Container App with a given configuration"
-}

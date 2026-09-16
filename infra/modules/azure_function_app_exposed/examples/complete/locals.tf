@@ -1,7 +1,7 @@
 locals {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -18,7 +18,7 @@ locals {
 
   tags = {
     CreatedBy   = "Terraform"
-    Environment = "Dev"
+    Environment = "Uat"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/modules/azure_function_app_exposed/examples/complete"
     CostCenter  = "TS700 - ENGINEERING"

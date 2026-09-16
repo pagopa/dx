@@ -1,6 +1,6 @@
 module "github_runner" {
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 1.0"
+  version = "~> 3.0"
 
   environment = {
     prefix          = var.environment.prefix

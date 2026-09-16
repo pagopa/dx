@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     instance_number = "01"
@@ -31,7 +31,7 @@ run "federated_identity_creates_default_ci_and_cd_identities" {
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.ci_github[0].subject == "repo:pagopa/dx:environment:infra-dev-ci"
+    condition     = azurerm_federated_identity_credential.ci_github[0].subject == "repo:pagopa/dx:environment:infra-uat-ci"
     error_message = "The CI credential must target the expected GitHub environment."
   }
 }

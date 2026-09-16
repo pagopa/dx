@@ -1,3 +1,56 @@
+## 2.1.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 2.1.4 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.3 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
+## 2.1.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Fix Azure Front Door compression configuration ([#2148](https://github.com/pagopa/dx/pull/2148))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
 ## 2.1.0 (2026-09-02)
 
 ### 🚀 Features

@@ -1,0 +1,23 @@
+# RewardKit LLM judge header, prepended to the per-eval criteria by
+# `harbor-bench convert` (see tests/quality.toml in each generated task).
+#
+# judge: OpenAI-compatible endpoint of GitHub Copilot routed through the
+#        LiteLLM `openai` provider (see [verifier.env] in task.toml:
+#        OPENAI_API_BASE=https://api.githubcopilot.com,
+#        OPENAI_API_KEY=${COPILOT_GITHUB_TOKEN}).
+#        gpt-5.x models (e.g. gpt-5.6-luna) are Responses-API-only and are
+#        rejected by the Copilot bridge /chat/completions endpoint
+#        (unsupported_api_for_model); the verifier sets
+#        LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true so LiteLLM routes
+#        openai/* judge calls to https://api.githubcopilot.com/responses
+#        instead (verified working).
+[judge]
+judge = "{{JUDGE_MODEL}}"
+files = ["{{WORKSPACE_PACKET_MD}}"]
+atif-trajectory = "{{TRAJECTORY_JSON}}"
+
+[scoring]
+# threshold=0.8 mirrors the total-score gate (>= 80%). It does NOT reproduce
+# all-or-nothing gates; implement those in test.sh by reading reward-details.json.
+aggregation = "threshold"
+threshold = 0.8
