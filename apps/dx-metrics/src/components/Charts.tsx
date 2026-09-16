@@ -219,6 +219,8 @@ interface SimpleLineChartProps {
 
 // --- Pie Chart ---
 interface SimplePieChartProps {
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
   className?: string;
   data: { name: string; value: number }[];
   title: string;
@@ -823,6 +825,7 @@ export function SimpleLineChart({
 }
 
 export function SimplePieChart({
+  caption,
   className,
   data,
   title,
@@ -832,6 +835,7 @@ export function SimplePieChart({
 
   return (
     <ChartWrapper
+      caption={caption}
       className={className}
       footer={
         <ChartDataToggle

@@ -13,7 +13,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
-import { formatNumber } from "@/lib/format";
+import { formatInteger, formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
@@ -59,6 +59,16 @@ interface WorkflowDashboardData {
     totalPipelines: number;
   };
   triggerTypes: { runCount: number; triggerType: string }[];
+  /**
+   * Optional so a cached payload from before this field existed still renders:
+   * the chart falls back to an empty list instead of throwing.
+   */
+  triggerBreakdown?: {
+    automatic: number;
+    manual: number;
+    unknown: number;
+    workflowName: string;
+  }[];
   insights: Insight[];
   meta: { referenceDate: string };
 }
@@ -129,12 +139,47 @@ function WorkflowsDashboardContent({
     },
   ];
 
+  // "Unknown" (trigger not recorded on rows imported before the column existed)
+  // would dwarf the split and make the percentages describe only the subset that
+  // happens to be recorded, so it is excluded from both trigger charts. The
+  // excluded share is surfaced in the caption instead. Both charts share it
+  // because they cover the same population.
+  const triggerCoverage = data.triggerTypes.reduce(
+    (coverage, row) => ({
+      total: coverage.total + row.runCount,
+      unknown:
+        coverage.unknown + (row.triggerType === "Unknown" ? row.runCount : 0),
+    }),
+    { total: 0, unknown: 0 },
+  );
+  const triggerExclusionCaption =
+    triggerCoverage.total > 0 && triggerCoverage.unknown > 0
+      ? `${formatInteger(triggerCoverage.unknown)} runs (${Math.round(
+          (triggerCoverage.unknown / triggerCoverage.total) * 100,
+        )}%) without a recorded trigger, excluded`
+      : undefined;
+
   // The trigger query already returns display-ready categories (Manual,
   // Automatic, Unknown); the pie primitive wants `name`/`value`.
-  const triggerDistribution = data.triggerTypes.map((row) => ({
-    name: row.triggerType,
-    value: row.runCount,
-  }));
+  const triggerDistribution = data.triggerTypes
+    .filter((row) => row.triggerType !== "Unknown")
+    .map((row) => ({ name: row.triggerType, value: row.runCount }));
+
+  // Match the pie by dropping the unknown segment, then rank by the runs that
+  // are actually drawn so the kept bars are the largest recorded totals; a
+  // workflow with only unknown runs would render as an empty bar, so it is
+  // dropped too. Missing data yields an empty chart, not a crash.
+  const triggerBreakdown = [...(data.triggerBreakdown ?? [])]
+    .filter((row) => row.automatic + row.manual > 0)
+    .sort(
+      (left, right) =>
+        right.automatic + right.manual - (left.automatic + left.manual),
+    )
+    .map(({ automatic, manual, workflowName }) => ({
+      automatic,
+      manual,
+      workflowName,
+    }));
 
   return (
     <>
@@ -316,9 +361,35 @@ function WorkflowsDashboardContent({
           xValueFormatter={shortDateTick}
         />
         <SimplePieChart
+          caption={triggerExclusionCaption}
           data={triggerDistribution}
           title="Workflow Runs by Trigger"
           tooltip={tooltipContent.triggerTypes}
+        />
+        <SimpleBarChart
+          bars={[
+            {
+              color: SERIES_COLORS.blue,
+              key: "automatic",
+              name: "Automatic",
+              stackId: "trigger",
+            },
+            {
+              color: SERIES_COLORS.amber,
+              key: "manual",
+              name: "Manual",
+              stackId: "trigger",
+            },
+          ]}
+          caption={triggerExclusionCaption}
+          data={triggerBreakdown}
+          layout="vertical"
+          maxItems={10}
+          title="Trigger Breakdown by Workflow"
+          tooltip={tooltipContent.triggerBreakdown}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="runs"
+          xKey="workflowName"
         />
       </div>
 

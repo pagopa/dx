@@ -79,6 +79,13 @@ export const workflowRuns = pgTable(
       .notNull()
       .references(() => repositories.id),
     status: text("status"),
+    /**
+     * Login of the user (or bot) whose action triggered the run. Nullable for
+     * the same reason as `event`: rows imported before the column existed are
+     * only backfilled on a re-import, and the dashboard degrades them to
+     * "Unknown" instead of failing.
+     */
+    triggeringActor: text("triggering_actor"),
     updatedAt: timestamp("updated_at"),
     workflowId: bigint("workflow_id", { mode: "number" })
       .notNull()

@@ -79,6 +79,13 @@ export const workflowTriggerTypeSchema = z.object({
   triggerType: z.string().min(1),
 });
 
+export const workflowTriggerBreakdownSchema = z.object({
+  automatic: sqlNumberSchema,
+  manual: sqlNumberSchema,
+  unknown: sqlNumberSchema,
+  workflowName: z.string().min(1),
+});
+
 export const workflowDashboardSchema = z.object({
   avgDuration: z.array(workflowAvgDurationSchema),
   cumulativeDuration: z.array(workflowCumulativeDurationSchema),
@@ -92,6 +99,7 @@ export const workflowDashboardSchema = z.object({
   successRatio: z.array(workflowSuccessRatioSchema),
   successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
+  triggerBreakdown: z.array(workflowTriggerBreakdownSchema),
   triggerTypes: z.array(workflowTriggerTypeSchema),
 });
 

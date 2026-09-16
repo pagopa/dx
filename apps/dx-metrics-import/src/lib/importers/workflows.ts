@@ -55,6 +55,7 @@ export async function importWorkflowRuns(
         id: workflowRun.id,
         repositoryId: repoId,
         status: workflowRun.status || null,
+        triggeringActor: workflowRun.triggering_actor?.login ?? null,
         updatedAt: new Date(workflowRun.updated_at),
         workflowId: workflowRun.workflow_id,
       })
@@ -63,6 +64,7 @@ export async function importWorkflowRuns(
           conclusion: workflowRun.conclusion || null,
           event: workflowRun.event || null,
           status: workflowRun.status || null,
+          triggeringActor: workflowRun.triggering_actor?.login ?? null,
           updatedAt: new Date(workflowRun.updated_at),
         },
         target: schema.workflowRuns.id,

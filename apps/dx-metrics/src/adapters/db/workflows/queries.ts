@@ -38,6 +38,7 @@ import {
   workflowSuccessRatioSchema,
   workflowSuccessRateStatsSchema,
   workflowSummarySchema,
+  workflowTriggerBreakdownSchema,
   workflowTriggerTypeSchema,
 } from "./schemas";
 
@@ -67,6 +68,7 @@ export const getWorkflowDashboard = async (
     successRateStats,
     durationPercentiles,
     triggerTypes,
+    triggerBreakdown,
   ] = await Promise.all([
     fetchDeployments(db, fullName, days, referenceDate),
     fetchDxVsNonDx(db, fullName, days, referenceDate),
@@ -81,6 +83,7 @@ export const getWorkflowDashboard = async (
     fetchSuccessRateStats(db, fullName, days, half, referenceDate),
     fetchDurationPercentiles(db, fullName, days, referenceDate),
     fetchTriggerTypes(db, fullName, days, referenceDate),
+    fetchTriggerBreakdown(db, fullName, days, referenceDate),
   ]);
 
   const dashboard = {
@@ -96,6 +99,7 @@ export const getWorkflowDashboard = async (
     successRatio,
     successRateStats,
     summary: summaryResult,
+    triggerBreakdown,
     triggerTypes,
   };
   return {
@@ -494,5 +498,42 @@ const fetchTriggerTypes = async (
     workflowTriggerTypeSchema,
     r.rows,
     "workflows triggerTypes",
+  );
+};
+
+/**
+ * Per-workflow breakdown of runs by trigger class: manual (`workflow_dispatch`),
+ * automatic (every other recorded event), and unknown (no event recorded). One
+ * row per workflow, ordered by total runs so a stacked chart reads
+ * busiest-first; mirrors the population and labels of {@link fetchTriggerTypes}
+ * so the two charts cannot disagree.
+ */
+const fetchTriggerBreakdown = async (
+  db: Database,
+  fullName: string,
+  days: number,
+  maxDate: string,
+) => {
+  const r = await db.execute(sql`
+    SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
+      COUNT(*) FILTER (WHERE wr.event = 'workflow_dispatch') AS "manual",
+      COUNT(*) FILTER (
+        WHERE wr.event IS NOT NULL AND TRIM(wr.event) <> '' AND wr.event <> 'workflow_dispatch'
+      ) AS "automatic",
+      COUNT(*) FILTER (WHERE wr.event IS NULL OR TRIM(wr.event) = '') AS "unknown"
+    FROM workflow_runs wr
+    JOIN workflows w ON wr.workflow_id = w.id
+    JOIN repositories r ON wr.repository_id = r.id
+    WHERE r.full_name = ${fullName}
+      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND wr.created_at <= ${maxDate}::timestamptz
+      AND ${workflowNameExclusion("w.name")}
+    GROUP BY "workflowName"
+    ORDER BY COUNT(*) DESC
+  `);
+  return parseSqlRows(
+    workflowTriggerBreakdownSchema,
+    r.rows,
+    "workflows triggerBreakdown",
   );
 };
