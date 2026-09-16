@@ -390,7 +390,26 @@ export default function PullRequestsDashboard() {
             />
           </div>
 
-          <div className="mt-8">
+          <div className="mt-8 grid grid-cols-1 gap-8 lg:grid-cols-2">
+            <SimpleBarChart
+              bars={[
+                {
+                  color: SERIES_COLORS.blue,
+                  key: "prCount",
+                  name: "Pull Requests",
+                },
+              ]}
+              caption="top 8"
+              data={data.prsByContributor}
+              layout="vertical"
+              maxItems={8}
+              sortKey="prCount"
+              title="Top Contributors"
+              tooltip={tooltipContent.prsByContributor}
+              tooltipFormatter={(value) => value.toFixed(0)}
+              unit="PRs"
+              xKey="author"
+            />
             <DataTable
               columns={[
                 {
