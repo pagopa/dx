@@ -108,9 +108,10 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
   }));
 
   return (
-    <div className="space-y-4">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       {/* A ranked bar chart with the median as reference makes the spread and
-          the outliers visible; the table below carries the exact figures. */}
+          the outliers visible; the table next to it carries the exact figures,
+          so both titles sit on the same row. */}
       <SimpleBarChart
         bars={[{ color: SERIES_COLORS.blue, key: "value", name: metric.label }]}
         data={chartData}
@@ -225,7 +226,7 @@ export default function BenchmarkDashboard() {
                   <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
                     {CATEGORY_LABELS[category]}
                   </h3>
-                  <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  <div className="space-y-4">
                     {categoryMetrics.map((metric) => (
                       <BenchmarkMetricTable key={metric.key} metric={metric} />
                     ))}
