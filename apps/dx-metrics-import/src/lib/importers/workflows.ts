@@ -51,6 +51,7 @@ export async function importWorkflowRuns(
       .values({
         conclusion: workflowRun.conclusion || null,
         createdAt: new Date(workflowRun.created_at),
+        event: workflowRun.event || null,
         id: workflowRun.id,
         repositoryId: repoId,
         status: workflowRun.status || null,
@@ -60,6 +61,7 @@ export async function importWorkflowRuns(
       .onConflictDoUpdate({
         set: {
           conclusion: workflowRun.conclusion || null,
+          event: workflowRun.event || null,
           status: workflowRun.status || null,
           updatedAt: new Date(workflowRun.updated_at),
         },

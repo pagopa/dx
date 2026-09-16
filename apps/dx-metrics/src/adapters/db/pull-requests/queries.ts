@@ -447,11 +447,12 @@ async function fetchPrSummary(
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}) AS "totalPrs",
-      (SELECT COALESCE(SUM(pr.total_comments_count), 0)
+      (SELECT COUNT(DISTINCT pr.author)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${humanPullRequest("pr")}) AS "totalComments",
+          AND pr.author IS NOT NULL
+          AND ${humanPullRequest("pr")}) AS "contributors",
       (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}

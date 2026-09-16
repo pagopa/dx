@@ -36,6 +36,7 @@ import {
 import {
   workflowDeploymentSchema,
   workflowSummarySchema,
+  workflowTriggerTypeSchema,
 } from "@/adapters/db/workflows/schemas";
 
 it("coerces shared scalar SQL values", () => {
@@ -260,6 +261,14 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     totalDurationMinutes: 34.5,
     totalPipelines: 9,
   });
+
+  expect(
+    parseSqlRows(
+      workflowTriggerTypeSchema,
+      [{ runCount: "8", triggerType: "Automatic" }],
+      "workflow trigger types",
+    ),
+  ).toEqual([{ runCount: 8, triggerType: "Automatic" }]);
 
   expect(
     parseSqlRow(prMetricValueRowSchema, { value: "12" }, "pr metric"),

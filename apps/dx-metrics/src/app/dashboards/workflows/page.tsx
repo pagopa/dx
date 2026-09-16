@@ -5,6 +5,7 @@ import {
   SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
+  SimplePieChart,
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
@@ -57,6 +58,7 @@ interface WorkflowDashboardData {
     totalDurationMinutes: number;
     totalPipelines: number;
   };
+  triggerTypes: { runCount: number; triggerType: string }[];
   insights: Insight[];
   meta: { referenceDate: string };
 }
@@ -126,6 +128,13 @@ function WorkflowsDashboardContent({
       value: `${formatNumber(data.durationPercentiles.p95, 1)} min`,
     },
   ];
+
+  // The trigger query already returns display-ready categories (Manual,
+  // Automatic, Unknown); the pie primitive wants `name`/`value`.
+  const triggerDistribution = data.triggerTypes.map((row) => ({
+    name: row.triggerType,
+    value: row.runCount,
+  }));
 
   return (
     <>
@@ -305,6 +314,11 @@ function WorkflowsDashboardContent({
           unit="min"
           xKey="runTimestamp"
           xValueFormatter={shortDateTick}
+        />
+        <SimplePieChart
+          data={triggerDistribution}
+          title="Workflow Runs by Trigger"
+          tooltip={tooltipContent.triggerTypes}
         />
       </div>
 

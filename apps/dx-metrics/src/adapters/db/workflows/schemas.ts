@@ -74,6 +74,11 @@ export const workflowSuccessRateStatsSchema = z.object({
   previous: nullableSqlNumberSchema,
 });
 
+export const workflowTriggerTypeSchema = z.object({
+  runCount: sqlNumberSchema,
+  triggerType: z.string().min(1),
+});
+
 export const workflowDashboardSchema = z.object({
   avgDuration: z.array(workflowAvgDurationSchema),
   cumulativeDuration: z.array(workflowCumulativeDurationSchema),
@@ -87,6 +92,7 @@ export const workflowDashboardSchema = z.object({
   successRatio: z.array(workflowSuccessRatioSchema),
   successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
+  triggerTypes: z.array(workflowTriggerTypeSchema),
 });
 
 export type GetWorkflowDashboardInput = z.infer<
@@ -104,3 +110,4 @@ export type WorkflowInfraDuration = z.infer<typeof workflowInfraDurationSchema>;
 export type WorkflowRunCount = z.infer<typeof workflowRunCountSchema>;
 export type WorkflowSuccessRatio = z.infer<typeof workflowSuccessRatioSchema>;
 export type WorkflowSummary = z.infer<typeof workflowSummarySchema>;
+export type WorkflowTriggerType = z.infer<typeof workflowTriggerTypeSchema>;

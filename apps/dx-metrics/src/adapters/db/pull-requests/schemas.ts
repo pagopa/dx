@@ -31,7 +31,7 @@ export const prMetricValueRowSchema = z.object({
 export const prSummaryCardsSchema = z.object({
   avgLeadTime: nullableSqlNumberSchema,
   commentsPerPr: nullableSqlNumberSchema,
-  totalComments: nullableSqlNumberSchema,
+  contributors: nullableSqlNumberSchema,
   totalPrs: nullableSqlNumberSchema,
 });
 

@@ -38,6 +38,7 @@ import {
   workflowSuccessRatioSchema,
   workflowSuccessRateStatsSchema,
   workflowSummarySchema,
+  workflowTriggerTypeSchema,
 } from "./schemas";
 
 /** Fetch all workflow dashboard data for the given repository and time window. */
@@ -65,6 +66,7 @@ export const getWorkflowDashboard = async (
     summaryResult,
     successRateStats,
     durationPercentiles,
+    triggerTypes,
   ] = await Promise.all([
     fetchDeployments(db, fullName, days, referenceDate),
     fetchDxVsNonDx(db, fullName, days, referenceDate),
@@ -78,6 +80,7 @@ export const getWorkflowDashboard = async (
     fetchSummary(db, fullName, days, referenceDate),
     fetchSuccessRateStats(db, fullName, days, half, referenceDate),
     fetchDurationPercentiles(db, fullName, days, referenceDate),
+    fetchTriggerTypes(db, fullName, days, referenceDate),
   ]);
 
   const dashboard = {
@@ -93,6 +96,7 @@ export const getWorkflowDashboard = async (
     successRatio,
     successRateStats,
     summary: summaryResult,
+    triggerTypes,
   };
   return {
     ...dashboard,
@@ -452,5 +456,43 @@ const fetchDurationPercentiles = async (
     percentileRowSchema,
     r.rows[0],
     "workflows durationPercentiles",
+  );
+};
+
+/**
+ * Run counts grouped by how the run was triggered. GitHub only exposes a
+ * dedicated event for manual dispatches (`workflow_dispatch`); every other
+ * event (push, pull request, schedule, workflow_call, ...) is repository- or
+ * API-driven, so it is classified as automatic. Rows imported before the
+ * `event` column existed are reported as Unknown until a re-import backfills
+ * them, so the pie stays honest instead of guessing.
+ */
+const fetchTriggerTypes = async (
+  db: Database,
+  fullName: string,
+  days: number,
+  maxDate: string,
+) => {
+  const r = await db.execute(sql`
+    SELECT
+      CASE
+        WHEN wr.event = 'workflow_dispatch' THEN 'Manual'
+        WHEN wr.event IS NULL OR TRIM(wr.event) = '' THEN 'Unknown'
+        ELSE 'Automatic'
+      END AS "triggerType",
+      COUNT(*) AS "runCount"
+    FROM workflow_runs wr
+    JOIN workflows w ON wr.workflow_id = w.id
+    JOIN repositories r ON wr.repository_id = r.id
+    WHERE r.full_name = ${fullName}
+      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND wr.created_at <= ${maxDate}::timestamptz
+      AND ${workflowNameExclusion("w.name")}
+    GROUP BY "triggerType" ORDER BY "runCount" DESC
+  `);
+  return parseSqlRows(
+    workflowTriggerTypeSchema,
+    r.rows,
+    "workflows triggerTypes",
   );
 };

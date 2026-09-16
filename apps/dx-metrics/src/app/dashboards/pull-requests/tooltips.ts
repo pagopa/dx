@@ -7,6 +7,8 @@ export const pullRequestsTooltips = {
     "Arithmetic mean of lead time (merge minus creation) across PRs merged in the selected period. Each PR counts once, so a few very slow PRs raise it above the median. The delta describes the within-period trend line, not the mean itself, so it always matches the trend chart.",
   commentsPerPr:
     "Average comments per PR. Indicates review quality and collaboration intensity.",
+  contributors:
+    "Number of distinct authors of the pull requests created during the selected period. Shows how many people contribute code, independently of review activity.",
   cumulatedNewPrs:
     "Cumulative count of PRs over time. Shows total throughput and long-term trends.",
   leadTimeMovingAvg:
@@ -29,8 +31,6 @@ export const pullRequestsTooltips = {
     "PRs with the longest merge times. Helps identify problematic changes or review delays.",
   title:
     "Measures pull request metrics including lead time, merge rate, and collaboration patterns to assess engineering velocity and code review effectiveness.",
-  totalComments:
-    "Total comments across all PRs. Higher engagement indicates active code reviews and discussion.",
   totalPrs: "Total number of pull requests created during the selected period.",
   unmergedPrs:
     "Pull requests that are open and have never been merged, counted per day over the selected period. The period sets the time axis, not the population: PRs created earlier and still open are included. PRs merged during the period are not shown as open on those days. Higher numbers may indicate review bottlenecks.",

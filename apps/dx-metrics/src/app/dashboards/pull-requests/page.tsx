@@ -30,7 +30,7 @@ interface PrDashboardData {
   cards: {
     avgLeadTime: null | number;
     commentsPerPr: null | number;
-    totalComments: null | number;
+    contributors: null | number;
     totalPrs: null | number;
   };
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
@@ -185,9 +185,9 @@ export default function PullRequestsDashboard() {
               value={data.cards.totalPrs}
             />
             <MetricCard
-              label="Total Comments"
-              tooltip={tooltipContent.totalComments}
-              value={data.cards.totalComments}
+              label="Contributors"
+              tooltip={tooltipContent.contributors}
+              value={data.cards.contributors}
             />
             <MetricCard
               label="Comments / PR"

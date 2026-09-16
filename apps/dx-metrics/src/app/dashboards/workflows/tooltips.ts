@@ -33,4 +33,6 @@ export const workflowsTooltips = {
     "Monitors CI/CD pipeline metrics including build success rates, execution times, and failure patterns.",
   totalDuration:
     "Total pipeline time spent in this period. Helps calculate resource utilization costs.",
+  triggerTypes:
+    "How runs in the period were triggered. Manual covers runs started on demand by a person (workflow_dispatch); automatic covers every repository- or API-driven event (push, pull request, schedule, workflow_call, ...). Runs imported before the trigger was recorded appear as Unknown until the next import.",
 } as const;
