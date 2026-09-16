@@ -78,11 +78,6 @@ locals {
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
   immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : "Unlocked"
 
-  defender_enabled = var.malware_scanning_enabled
-
-  # Malware scanning is a local setting, so it must override subscription defaults.
-  defender_override_subscription_settings_enabled = var.malware_scanning_enabled
-
   peps = {
     create_subservices = local.force_public_network_access_enabled ? {
       blob  = false
