@@ -1,3 +1,14 @@
+## 7.0.4 (2026-09-16)
+
+### 🩹 Fixes
+
+- Address Trivy warnings ([#2199](https://github.com/pagopa/dx/pull/2199))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 7.0.3 (2026-09-15)
 
 ### 🩹 Fixes
