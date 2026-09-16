@@ -75,9 +75,8 @@ resource "azurerm_user_assigned_identity" "key_vault_secret" {
   tags = var.tags
 }
 
-#trivy:ignore:AVD-AZU-0013
-#trivy:ignore:AVD-AZU-0016
-#trivy:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0013 Key vault should have the network acl block specified
+#trivy:ignore:AVD-AZU-0016 Key vault should have purge protection enabled
 resource "azurerm_key_vault" "sut" {
   name = provider::dx::resource_name(merge(var.environment, {
     resource_type   = "key_vault"
@@ -107,9 +106,8 @@ resource "azurerm_role_assignment" "key_vault_secret_user" {
   principal_id         = azurerm_user_assigned_identity.key_vault_secret.principal_id
 }
 
-#trivy:ignore:AVD-AZU-0015
-#trivy:ignore:AVD-AZU-0016
-#trivy:ignore:AVD-AZU-0017
+#trivy:ignore:AVD-AZU-0015 Key vault Secret should have a content type set
+#trivy:ignore:AVD-AZU-0017 Key Vault Secret should have an expiration date set
 resource "azurerm_key_vault_secret" "container_app" {
   name         = "container-app-integration"
   value        = "integration-test-secret-value"
