@@ -1,3 +1,14 @@
+## 4.0.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Add simple Defender protection toggle for malware scanning and data discovery ([#2202](https://github.com/pagopa/dx/pull/2202))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 4.0.4 (2026-09-16)
 
 ### 🩹 Fixes
