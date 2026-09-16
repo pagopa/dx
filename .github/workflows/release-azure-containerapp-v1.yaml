@@ -95,11 +95,50 @@ jobs:
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: true
 
+  validate:
+    name: Validate Container App
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}-ci
+      deployment: false
+    permissions:
+      id-token: write
+    outputs:
+      revision_mode: ${{ steps.get_revision_mode.outputs.revision_mode }}
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      CONTAINER_APP_NAME: ${{ inputs.container_app }}
+      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+
+    steps:
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Configure AZ CLI
+        run: |
+          az config set extension.use_dynamic_install=yes_without_prompt
+          az configure --defaults group="$RESOURCE_GROUP_NAME"
+
+      - name: Get Container App Revision Mode
+        id: get_revision_mode
+        run: |
+          set -euo
+
+          revision_mode=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --query "properties.configuration.activeRevisionsMode" \
+            --output tsv)
+
+          echo "::notice::Revision mode: $revision_mode"
+          echo "revision_mode=$revision_mode" >> "$GITHUB_OUTPUT"
+
   release:
     name: Deploy Container App Revision
     runs-on: ubuntu-latest
-    needs: build
-    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    needs: [validate, build]
+    if: ${{ always() && needs.validate.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
@@ -107,7 +146,7 @@ jobs:
     outputs:
       current_revision_name: ${{ steps.get_current_revision.outputs.current_revision_name }}
       new_revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
-      revision_mode: ${{ steps.get_revision_mode.outputs.revision_mode }}
+      revision_mode: ${{ needs.validate.outputs.revision_mode }}
       skip_remaining_steps: ${{ steps.create_new_revision.outputs.skip_remaining_steps }}
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -161,26 +200,6 @@ jobs:
           az config set extension.use_dynamic_install=yes_without_prompt
           az configure --defaults group="$RESOURCE_GROUP_NAME"
 
-      - name: Get Container App Revision Mode
-        id: get_revision_mode
-        run: |
-          set -euo
-
-          revision_mode=$(az containerapp show \
-            --name "$CONTAINER_APP_NAME" \
-            --query "properties.configuration.activeRevisionsMode" \
-            --output tsv)
-
-          echo "::notice::Revision mode: $revision_mode"
-
-          echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
-
-      - name: Verify Auto Approval Is Supported
-        if: ${{ inputs.disable_auto_deploy && steps.get_revision_mode.outputs.revision_mode != 'Multiple' }}
-        run: |
-          echo "::error::Auto approval before activation requires the Container App to use the Multiple revision mode."
-          exit 1
-
       - name: Get Container App Current Revision
         id: get_current_revision
         run: |
@@ -198,7 +217,7 @@ jobs:
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           IMAGE_REF: ${{ steps.image.outputs.image_ref }}
-          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode}}
+          REVISION_MODE: ${{ needs.validate.outputs.revision_mode }}
         run: |
           set -euo
 
@@ -264,8 +283,7 @@ jobs:
           fi
 
       - name: Deactivate New Revision
-        if:
-          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
+        if: ${{ failure() && needs.validate.outputs.revision_mode == 'Multiple'
           }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
@@ -283,10 +301,10 @@ jobs:
   auto_approve_deploy:
     name: Approve Deployment
     runs-on: ubuntu-latest
-    needs: release
+    needs: [validate, build]
     # If auto approval fails, the deployment can be approved manually.
     continue-on-error: true
-    if: ${{ !inputs.disable_auto_deploy && always() && needs.release.result == 'success' && needs.release.outputs.revision_mode == 'Multiple' && needs.release.outputs.skip_remaining_steps == 'false' }}
+    if: ${{ !github.event.act && !inputs.disable_auto_deploy && always() && needs.validate.result == 'success' && needs.validate.outputs.revision_mode == 'Multiple' && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
 
     steps:
       - name: Approve deployment
@@ -314,19 +332,19 @@ jobs:
           current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
 
           if [ "$current_user_can_approve" != true ]; then
-            github_user=$(gh api user | jq -r '.login')
-            echo "::error::$github_user is not a reviewer"
-            echo "::warning::Auto approval is not available because the user is not a reviewer of $REQUIRED_ENVIRONMENT."
+            GITHUB_USER=$(gh api user | jq -r '.login')
+            echo "::error::$GITHUB_USER is not a reviewer"
+            echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
             exit 1
           fi
 
-          environment_id=$(echo "$deployments" | jq -r '.[].environment.id')
+          env_id=$(echo "$deployments" | jq -r '.[].environment.id')
 
           gh api \
             --method POST \
             -H "Accept: application/vnd.github+json" \
             /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
-            -F "environment_ids[]=$environment_id" \
+            -F "environment_ids[]=$env_id" \
             -f "state=approved" \
             -f "comment=Approved automatically by the workflow."
 
@@ -334,7 +352,7 @@ jobs:
     name: Activate Container App Revision
     runs-on: ubuntu-latest
     needs: release
-    if: ${{ always() && needs.release.result == 'success' && needs.release.outputs.revision_mode == 'Multiple' && needs.release.outputs.skip_remaining_steps == 'false' }}
+    if: ${{ !github.event.act && needs.release.result == 'success' && needs.release.outputs.revision_mode == 'Multiple' && needs.release.outputs.skip_remaining_steps == 'false' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
