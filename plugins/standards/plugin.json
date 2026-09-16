@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "standards",
   "description": "A plugin to align technology choices with PagoPA DX standards",
   "version": "0.1.0",
@@ -6,6 +7,5 @@
     "name": "PagoPA DX Team"
   },
   "repository": "https://github.com/pagopa/dx",
-  "keywords": ["standards", "governance", "technology radar"],
-  "skills": ["./skills"]
+  "keywords": ["standards", "governance", "technology radar"]
 }

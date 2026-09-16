@@ -1,4 +1,5 @@
 {
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "azure",
   "description": "A plugin to manage azure cloud infrastructure",
   "version": "0.1.1",
@@ -6,7 +7,5 @@
     "name": "PagoPA DX Team"
   },
   "repository": "https://github.com/pagopa/dx",
-  "keywords": ["cloud", "infrastructure", "azure"],
-  "skills": ["./skills"],
-  "mcpServers": ".mcp.json"
+  "keywords": ["cloud", "infrastructure", "azure"]
 }
