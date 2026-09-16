@@ -6,6 +6,7 @@ import {
   buildPullRequestsInsights,
   type PullRequestsInsightsInput,
 } from "@/lib/insights/pull-requests";
+import type { Insight } from "@/lib/insights/types";
 
 const baseInput = (): PullRequestsInsightsInput => ({
   cards: { avgLeadTime: 5 },
@@ -175,6 +176,75 @@ describe("buildPullRequestsInsights", () => {
       insights.find((insight) => insight.id === "pr-lead-time-target")
         ?.sampleSize,
     ).toBe(7);
+  });
+
+  it("compares lead time with the organisation peers when the benchmark is available", () => {
+    const insights = buildPullRequestsInsights({
+      ...baseInput(),
+      peerBenchmark: {
+        leadTimeMedian: 2.5,
+        peerCount: 6,
+        percentileRank: 0.8,
+      },
+    });
+
+    const peers = insights.find(
+      (insight) => insight.id === "pr-lead-time-peers",
+    );
+
+    expect(peers?.severity).toBe("warning");
+    expect(peers?.detail).toContain(
+      "median across 6 organisation repositories is 2.5 days",
+    );
+    expect(peers?.detail).toContain("80th percentile");
+  });
+
+  it("reads a peer-beating lead time as positive and stays neutral in between", () => {
+    const find = (
+      insights: Insight[],
+    ): Insight | undefined =>
+      insights.find((insight) => insight.id === "pr-lead-time-peers");
+
+    const better = find(
+      buildPullRequestsInsights({
+        ...baseInput(),
+        peerBenchmark: { leadTimeMedian: 6, peerCount: 4, percentileRank: 0.2 },
+      }),
+    );
+    const middle = find(
+      buildPullRequestsInsights({
+        ...baseInput(),
+        peerBenchmark: { leadTimeMedian: 4, peerCount: 4, percentileRank: 0.5 },
+      }),
+    );
+
+    expect(better?.severity).toBe("positive");
+    expect(better?.title).toBe("Lead time better than most peers");
+    expect(better?.action).toBeUndefined();
+    expect(better?.detail).toContain(
+      "median across 4 organisation repositories is 6.0 days",
+    );
+    expect(better?.detail).toContain("20th percentile");
+    expect(better?.value?.current).toBe(5);
+    expect(better?.value?.unit).toBe("days");
+
+    expect(middle?.severity).toBe("neutral");
+    expect(middle?.title).toBe("Lead time in line with peers");
+  });
+
+  it("omits the peer comparison without benchmark data or too few peers", () => {
+    const withoutPeers = buildPullRequestsInsights(baseInput());
+    const fewPeers = buildPullRequestsInsights({
+      ...baseInput(),
+      peerBenchmark: { leadTimeMedian: 2, peerCount: 2, percentileRank: 0.8 },
+    });
+
+    expect(
+      withoutPeers.some((insight) => insight.id === "pr-lead-time-peers"),
+    ).toBe(false);
+    expect(
+      fewPeers.some((insight) => insight.id === "pr-lead-time-peers"),
+    ).toBe(false);
   });
 
   it("links the slowest pull requests when the repository is known", () => {

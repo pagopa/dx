@@ -11,6 +11,8 @@ export const pullRequestsReviewTooltips = {
     "Average time to first review. Indicates how quickly code reviews are initiated.",
   avgTimeToMerge:
     "Average time to merge after approval. Indicates workflow automation efficiency.",
+  mergedWithoutCommentsShare:
+    "Percentage of merged pull requests with no comments at all (from anyone, bots included). Indicates changes that shipped without any discussion.",
   changeRequests:
     "Number of change requests by reviewer. Reflects code quality standards and thoroughness.",
   reviewerStats:

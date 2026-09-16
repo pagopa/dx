@@ -48,6 +48,7 @@ interface PrDashboardData {
   prSize: { avgAdditions: number; week: string }[];
   prSizeDistribution: {
     avgAdditions: number;
+    avgLeadTimeDays: null | number;
     prCount: number;
     sizeRange: string;
   }[];
@@ -351,6 +352,22 @@ export default function PullRequestsDashboard() {
                 title="Pull Requests Size (avg additions)"
                 tooltip={tooltipContent.prSizeDistribution}
                 unit="lines"
+                xKey="sizeRange"
+              />
+              <SimpleBarChart
+                bars={[
+                  {
+                    color: SERIES_COLORS.amber,
+                    key: "avgLeadTimeDays",
+                    name: "Avg Lead Time",
+                  },
+                ]}
+                data={data.prSizeDistribution.filter(
+                  (row) => row.avgLeadTimeDays !== null,
+                )}
+                title="Avg Lead Time by PR Size"
+                tooltip={tooltipContent.prSizeLeadTime}
+                unit="days"
                 xKey="sizeRange"
               />
             </div>

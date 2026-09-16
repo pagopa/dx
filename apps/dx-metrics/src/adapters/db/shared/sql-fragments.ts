@@ -2,7 +2,7 @@
 
 import { sql, type SQL } from "drizzle-orm";
 
-import { BOT_AUTHORS, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
+import { BOT_AUTHORS, EXCLUDED_WORKFLOW_NAMES, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
 
 /**
  * Renders a column expression, accepting either raw text or a bound fragment.
@@ -17,17 +17,8 @@ const asFragment = (expression: SQL | string): SQL =>
  * exclude that pattern generically in addition to the explicit list. Without
  * this, new bots silently inflate the metrics.
  */
-export const botAuthorsExclusion = (column: string): SQL => {
-  const notInList =
-    BOT_AUTHORS.length === 0
-      ? sql`TRUE`
-      : sql`${sql.raw(column)} NOT IN (${sql.join(
-          BOT_AUTHORS.map((author) => sql`${author}`),
-          sql`, `,
-        )})`;
-
-  return sql`(${notInList} AND ${sql.raw(column)} NOT LIKE '%[bot]')`;
-};
+export const botAuthorsExclusion = (column: string): SQL =>
+  sql`(${notInValues(column, BOT_AUTHORS)} AND ${sql.raw(column)} NOT LIKE '%[bot]')`;
 
 /**
  * Predicate matching reviews that count as a real human review: a reviewer who
@@ -40,6 +31,24 @@ export const botAuthorsExclusion = (column: string): SQL => {
  */
 export const isHumanReview = (reviewAlias: string, authorAlias: string): SQL =>
   sql`${botAuthorsExclusion(`${reviewAlias}.reviewer`)} AND ${sql.raw(reviewAlias)}.reviewer <> ${sql.raw(authorAlias)}.author`;
+
+/**
+ * The single population every pull-request metric is computed on: pull requests
+ * opened by a human (not a bot) and not marked as draft. Shared so the PR,
+ * PR-review, and benchmark adapters cannot drift apart on what counts as a
+ * "real" pull request.
+ */
+export const humanPullRequest = (alias: string): SQL =>
+  sql`(${botAuthorsExclusion(`${alias}.author`)} AND (${sql.raw(alias)}.draft IS NULL OR ${sql.raw(alias)}.draft = 0))`;
+
+/**
+ * Excludes tooling workflow names (e.g. "CodeQL", "Labeler") from a workflow
+ * name column. Centralised with the list in the shared config so the workflow
+ * dashboards, the DX adoption pie, and the benchmark agree on what a workflow
+ * run is.
+ */
+export const workflowNameExclusion = (column: string): SQL =>
+  notInValues(column, EXCLUDED_WORKFLOW_NAMES);
 
 /** Classifies a pipeline path as a DX or non-DX pipeline. */
 export const dxPipelineCase = (pipelineColumn: string): SQL =>
@@ -83,6 +92,25 @@ export const textArray = (values: readonly string[]): SQL =>
         values.map((value) => sql`${value}`),
         sql`, `,
       )}]::text[]`;
+
+/**
+ * Builds `col NOT IN (...)` for an exclusion list. Returns `TRUE` for an empty
+ * list so the predicate never breaks. Accepts a qualified column name
+ * (e.g. `ipr.title`), so the same exclusion can be applied to any alias.
+ */
+export const notInValues = (
+  column: string,
+  values: readonly string[],
+): SQL => {
+  if (values.length === 0) {
+    return sql`TRUE`;
+  }
+
+  return sql`${sql.raw(column)} NOT IN (${sql.join(
+    values.map((value) => sql`${value}`),
+    sql`, `,
+  )})`;
+};
 
 /**
  * Builds `col NOT LIKE '%a%' AND col NOT LIKE '%b%' ...` for an exclusion list.

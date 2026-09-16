@@ -12,6 +12,7 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
+import { workflowNameExclusion } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   moduleAdoptionRowSchema,
@@ -46,7 +47,7 @@ export const fetchDxAdoption = async (
     WITH distinct_workflows AS (
       SELECT DISTINCT ON (w.name) w.name, w.pipeline
       FROM workflows w JOIN repositories r ON w.repository_id = r.id
-      WHERE r.full_name = ${fullName} AND w.name NOT IN ('CodeQL', 'Labeler')
+      WHERE r.full_name = ${fullName} AND ${workflowNameExclusion("w.name")}
     )
     SELECT CASE WHEN pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS "pipelineType",
       COUNT(*) AS "pipelineCount"
@@ -77,7 +78,7 @@ export const fetchDxAdoption = async (
     SELECT DISTINCT ON (w.name) w.name AS "workflowName",
       CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS "pipelineType"
     FROM workflows w JOIN repositories r ON w.repository_id = r.id
-    WHERE r.full_name = ${fullName} AND w.name NOT IN ('CodeQL', 'Labeler')
+    WHERE r.full_name = ${fullName} AND ${workflowNameExclusion("w.name")}
     ORDER BY w.name, CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
   `);
 

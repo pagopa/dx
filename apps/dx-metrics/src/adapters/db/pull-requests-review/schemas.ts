@@ -15,6 +15,12 @@ export const reviewMetricValueRowSchema = z.object({
   value: nullableSqlNumberSchema,
 });
 
+/** The two "merged without …" shares computed on the same PR population. */
+export const mergedWithoutActivityShareRowSchema = z.object({
+  withoutComments: nullableSqlNumberSchema,
+  withoutReview: nullableSqlNumberSchema,
+});
+
 export const reviewDistributionRowSchema = z.object({
   approvals: sqlNumberSchema,
   changeRequests: sqlNumberSchema,
@@ -46,6 +52,7 @@ export const pullRequestsReviewCardsSchema = z.object({
 export const pullRequestsReviewDashboardSchema = z.object({
   cards: pullRequestsReviewCardsSchema,
   firstReviewPercentiles: percentileRowSchema,
+  mergedWithoutCommentsShare: nullableSqlNumberSchema,
   mergedWithoutReviewShare: nullableSqlNumberSchema,
   reviewDistribution: z.array(reviewDistributionRowSchema),
   reviewMatrix: z.array(reviewMatrixRowSchema),

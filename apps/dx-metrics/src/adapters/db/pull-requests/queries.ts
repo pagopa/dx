@@ -21,7 +21,7 @@ import {
 } from "../shared/reference-date";
 import { percentileRowSchema, previousValueRowSchema } from "../shared/schemas";
 import {
-  botAuthorsExclusion,
+  humanPullRequest,
   timeBucket,
   timeBucketInterval,
 } from "../shared/sql-fragments";
@@ -38,12 +38,6 @@ import {
   prSummaryCardsSchema,
   slowestPrRowSchema,
 } from "./schemas";
-
-/**
- * The single population every pull-request metric is computed on: pull requests
- * opened by a human (not a bot) and not marked as draft.
- */
-const HUMAN_PR = sql`${botAuthorsExclusion("pr.author")} AND (pr.draft IS NULL OR pr.draft = 0)`;
 
 // Size buckets come from `@/lib/pr-size-buckets`, the same list the insight
 // rules use, so the histogram and the "large PR" reading can never disagree.
@@ -86,7 +80,7 @@ export const fetchPrDashboard = async (
   db: Database,
   params: FetchPrDashboardInput,
 ): Promise<PrDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullName } = params;
+  const { days, fullName, peerBenchmark } = params;
 
   const referenceDate = await fetchReferenceDate(db, fullName);
 
@@ -110,6 +104,7 @@ export const fetchPrDashboard = async (
     insights: buildPullRequestsInsights(
       dashboard,
       `https://github.com/${fullName}`,
+      peerBenchmark,
     ),
     meta: { days, referenceDate },
   };
@@ -146,7 +141,7 @@ async function fetchLeadTimeStats(
       WHERE r.full_name = ${fullName}
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND ${HUMAN_PR}
+        AND ${humanPullRequest("pr")}
     `),
     db.execute(sql`
       SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
@@ -155,7 +150,7 @@ async function fetchLeadTimeStats(
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
         AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND ${HUMAN_PR}
+        AND ${humanPullRequest("pr")}
     `),
   ]);
 
@@ -187,7 +182,7 @@ async function fetchLeadTimeData(
       WHERE r.full_name = ${fullName}
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND ${HUMAN_PR}
+        AND ${humanPullRequest("pr")}
       GROUP BY DATE_TRUNC('week', pr.merged_at)::date ORDER BY week
     `),
     db.execute(sql`
@@ -200,7 +195,7 @@ async function fetchLeadTimeData(
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY DATE_TRUNC('week', pr.merged_at)::date
       ),
       stats AS (
@@ -268,7 +263,7 @@ async function fetchPrCountData(
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at <= ${referenceDate}::timestamptz
           AND pr.merged_at IS NOT NULL
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY "prDate"
       )
       SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
@@ -293,7 +288,7 @@ async function fetchPrCountData(
           AND pr.created_at IS NOT NULL
           AND pr.merged_at IS NULL
           AND (pr.closed_at IS NULL OR pr.closed_at > ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
       )
       SELECT d.date, COUNT(p."createdDate") AS "openPrs"
       FROM date_series d
@@ -314,7 +309,7 @@ async function fetchPrCountData(
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.created_at <= ${referenceDate}::timestamptz
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY "prDate"
       )
       SELECT ds.date, COALESCE(pc."prCount", 0) AS "prCount"
@@ -326,7 +321,7 @@ async function fetchPrCountData(
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY pr.created_at::date
       ),
       ts AS (SELECT generate_series((SELECT MIN(date) FROM daily_pr), (${referenceDate}::timestamptz)::date, '1 day'::interval)::date AS date)
@@ -373,7 +368,7 @@ async function fetchPrQualityData(
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.additions IS NOT NULL
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
       `),
       db.execute(sql`
@@ -382,7 +377,7 @@ async function fetchPrQualityData(
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
       `),
       db.execute(sql`
@@ -395,7 +390,7 @@ async function fetchPrQualityData(
           WHERE r.full_name = ${fullName}
             AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
             AND pr.additions IS NOT NULL
-            AND ${HUMAN_PR}
+            AND ${humanPullRequest("pr")}
         )
         SELECT "sizeRange", COUNT(*) AS "prCount", ROUND(AVG(additions)::numeric, 0) AS "avgAdditions",
           ROUND(AVG("leadTimeDays")::numeric, 2) AS "avgLeadTimeDays"
@@ -408,7 +403,7 @@ async function fetchPrQualityData(
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND ${HUMAN_PR}
+          AND ${humanPullRequest("pr")}
         ORDER BY "leadTimeDays" DESC LIMIT 50
       `),
     ]);
@@ -446,22 +441,22 @@ async function fetchPrSummary(
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-          AND ${HUMAN_PR}) AS "avgLeadTime",
+          AND ${humanPullRequest("pr")}) AS "avgLeadTime",
       (SELECT COUNT(*)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}) AS "totalPrs",
+          AND ${humanPullRequest("pr")}) AS "totalPrs",
       (SELECT COALESCE(SUM(pr.total_comments_count), 0)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}) AS "totalComments",
+          AND ${humanPullRequest("pr")}) AS "totalComments",
       (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
         WHERE r.full_name = ${fullName}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${HUMAN_PR}) AS "commentsPerPr"
+          AND ${humanPullRequest("pr")}) AS "commentsPerPr"
   `);
 
   return parseSqlRow(

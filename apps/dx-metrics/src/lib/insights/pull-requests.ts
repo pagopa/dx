@@ -30,6 +30,16 @@ export interface PullRequestsInsightsInput {
     readonly p95: null | number;
   };
   readonly mergedPrs: readonly { readonly prCount: number }[];
+  /**
+   * Organisation-wide lead-time benchmark, when the caller fetched it. Lets an
+   * insight compare this repository with its peers instead of only against an
+   * absolute target. Absent (or null inside) when no peer data exists.
+   */
+  readonly peerBenchmark?: {
+    readonly leadTimeMedian: null | number;
+    readonly peerCount: number;
+    readonly percentileRank: null | number;
+  };
   readonly previousLeadTime?: null | number;
   readonly prSizeDistribution: readonly {
     readonly prCount: number;
@@ -107,6 +117,66 @@ const leadTimeChangeInsight = (
       current: secondAverage,
       deltaPct,
       label: "period average",
+      unit: "days",
+    },
+  };
+};
+
+/**
+ * Minimum number of peers behind a median before it is worth comparing
+ * against: a "median" over one or two repositories is just noise.
+ */
+const MIN_PEER_COUNT = 3;
+
+const leadTimePeerComparisonInsight = (
+  input: PullRequestsInsightsInput,
+): Insight | null => {
+  const { cards, peerBenchmark } = input;
+  const current = cards.avgLeadTime;
+  const median = peerBenchmark?.leadTimeMedian;
+
+  if (
+    current === null ||
+    median === null ||
+    median === undefined ||
+    (peerBenchmark?.peerCount ?? 0) < MIN_PEER_COUNT
+  ) {
+    return null;
+  }
+
+  const rank = peerBenchmark?.percentileRank ?? null;
+
+  if (rank === null) {
+    return null;
+  }
+
+  // Lower lead time is better, so a high share of peers below this repository
+  // means it is among the slowest. The 0.25/0.75 cut-offs mirror how the
+  // benchmark page classifies "best in class" and "needs attention".
+  const severity =
+    rank >= 0.75 ? "warning" : rank <= 0.25 ? "positive" : "neutral";
+  const peers = peerBenchmark?.peerCount ?? 0;
+
+  return {
+    action:
+      severity === "warning"
+        ? "Compare with the Benchmark page to see which peers pull the median down and what they do differently."
+        : undefined,
+    category: "velocity",
+    confidence: confidenceFromSample(input.leadTimePercentiles?.count),
+    detail: `Average lead time is ${formatNumber(current)} days; the median across ${peers} organisation repositories is ${formatNumber(median)} days. This repository sits at the ${formatNumber(rank * 100, 0)}th percentile (higher means slower than more peers).`,
+    id: "pr-lead-time-peers",
+    sampleSize: input.leadTimePercentiles?.count,
+    severity,
+    title:
+      severity === "warning"
+        ? "Lead time worse than most peers"
+        : severity === "positive"
+          ? "Lead time better than most peers"
+          : "Lead time in line with peers",
+    value: {
+      current,
+      label: "average",
       unit: "days",
     },
   };
@@ -354,16 +424,20 @@ const slowPrConcentrationInsight = (
  * Builds the ordered list of insights for the Pull Requests dashboard.
  *
  * `repositoryUrl` is optional: when provided, insights can carry deep links to
- * the concrete pull requests behind a reading.
+ * the concrete pull requests behind a reading. `peerBenchmark` is optional:
+ * when provided, a peer-comparison insight anchors the lead time to the
+ * organisation median and this repository's percentile rank.
  */
 export const buildPullRequestsInsights = (
   input: PullRequestsInsightsInput,
   repositoryUrl?: string,
+  peerBenchmark?: PullRequestsInsightsInput["peerBenchmark"],
 ): Insight[] =>
   sortInsights(
     [
       leadTimeChangeInsight(input),
       leadTimeTargetInsight(input),
+      leadTimePeerComparisonInsight(input),
       leadTimeSpreadInsight(input),
       prSizeInsight(input),
       backlogInsight(input),

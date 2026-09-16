@@ -15,19 +15,21 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
-import { botAuthorsExclusion, isHumanReview } from "../shared/sql-fragments";
+import {
+  botAuthorsExclusion,
+  humanPullRequest,
+  isHumanReview,
+} from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import {
+  mergedWithoutActivityShareRowSchema,
   reviewDistributionRowSchema,
   reviewMatrixRowSchema,
   reviewMetricValueRowSchema,
   timeToFirstReviewTrendRowSchema,
   timeToMergeTrendRowSchema,
 } from "./schemas";
-
-/** Human, non-draft pull requests, the population every review metric uses. */
-const HUMAN_PR = sql`${botAuthorsExclusion("pr.author")} AND (pr.draft IS NULL OR pr.draft = 0)`;
 
 export const getPullRequestsReviewDashboard = async (
   db: Database,
@@ -62,7 +64,7 @@ export const getPullRequestsReviewDashboard = async (
     ) first_review ON true
     WHERE r.full_name = ${fullName}
       AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
   `);
 
   const timeToFirstReviewTrend = await db.execute(sql`
@@ -80,7 +82,7 @@ export const getPullRequestsReviewDashboard = async (
     ) first_review ON true
     WHERE r.full_name = ${fullName}
       AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
     GROUP BY week
     ORDER BY week
   `);
@@ -100,7 +102,7 @@ export const getPullRequestsReviewDashboard = async (
     ) last_approval ON true
     WHERE r.full_name = ${fullName}
       AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
   `);
 
   const timeToMergeTrend = await db.execute(sql`
@@ -118,7 +120,7 @@ export const getPullRequestsReviewDashboard = async (
     ) last_approval ON true
     WHERE r.full_name = ${fullName}
       AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
     GROUP BY week
     ORDER BY week
   `);
@@ -142,29 +144,37 @@ export const getPullRequestsReviewDashboard = async (
       ) first_review ON true
       WHERE r.full_name = ${fullName}
         AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND ${HUMAN_PR}
+        AND ${humanPullRequest("pr")}
     ) first_review_hours
   `);
 
-  // --- Share of merged PRs without any human review ---
+  // --- Share of merged PRs without any human review / without comments ---
   // Population: PRs merged in the window. Bot reviews and self-comments do not
-  // count as reviews, matching `reviewMatrix` and `reviewDistribution`.
-  const mergedWithoutReviewShare = await db.execute(sql`
-    SELECT ROUND(
-      COUNT(*) FILTER (
-        WHERE NOT EXISTS (
-          SELECT 1 FROM pull_request_reviews prr
-          WHERE prr.pull_request_id = pr.id
-            AND ${isHumanReview("prr", "pr")}
-        )
-      )::numeric / NULLIF(COUNT(*), 0)
-    , 4) AS value
+  // count as reviews, matching `reviewMatrix` and `reviewDistribution`. Both
+  // shares come from a single scan of the same population so they cannot
+  // disagree on the denominator.
+  const mergedWithoutActivityShare = await db.execute(sql`
+    SELECT
+      ROUND(
+        COUNT(*) FILTER (
+          WHERE NOT EXISTS (
+            SELECT 1 FROM pull_request_reviews prr
+            WHERE prr.pull_request_id = pr.id
+              AND ${isHumanReview("prr", "pr")}
+          )
+        )::numeric / NULLIF(COUNT(*), 0)
+      , 4) AS "withoutReview",
+      ROUND(
+        COUNT(*) FILTER (
+          WHERE COALESCE(pr.total_comments_count, 0) = 0
+        )::numeric / NULLIF(COUNT(*), 0)
+      , 4) AS "withoutComments"
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE r.full_name = ${fullName}
       AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND pr.merged_at IS NOT NULL
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
   `);
 
   // --- Code Review Distribution ---
@@ -189,7 +199,7 @@ export const getPullRequestsReviewDashboard = async (
     JOIN repositories r ON prr.repository_id = r.id
     WHERE r.full_name = ${fullName}
       AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND ${HUMAN_PR}
+      AND ${humanPullRequest("pr")}
       AND ${isHumanReview("prr", "pr")}
     GROUP BY pr.author, prr.reviewer
     ORDER BY "reviewCount" DESC
@@ -213,11 +223,16 @@ export const getPullRequestsReviewDashboard = async (
       firstReviewPercentiles.rows[0],
       "pull-requests-review firstReviewPercentiles",
     ),
+    mergedWithoutCommentsShare: parseSqlRow(
+      mergedWithoutActivityShareRowSchema,
+      mergedWithoutActivityShare.rows[0],
+      "pull-requests-review mergedWithoutCommentsShare",
+    ).withoutComments,
     mergedWithoutReviewShare: parseSqlRow(
-      reviewMetricValueRowSchema,
-      mergedWithoutReviewShare.rows[0],
+      mergedWithoutActivityShareRowSchema,
+      mergedWithoutActivityShare.rows[0],
       "pull-requests-review mergedWithoutReviewShare",
-    ).value,
+    ).withoutReview,
     reviewDistribution: parseSqlRows(
       reviewDistributionRowSchema,
       reviewDistribution.rows,

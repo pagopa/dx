@@ -22,6 +22,7 @@ import {
   parseReferenceDate,
 } from "../shared/reference-date";
 import {
+  botAuthorsExclusion,
   notLikeAll,
   timeBucket,
   timeBucketInterval,
@@ -109,6 +110,7 @@ const fetchIoInfraPrs = async (
       WHERE r.full_name = ${`${org}/${DX_TEAM_IO_INFRA_REPOSITORY}`}
         AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND (pr.draft IS NULL OR pr.draft = 0)
+        AND ${botAuthorsExclusion("pr.author")}
       GROUP BY "prDate"
     )
     SELECT ds.date, SUM(COALESCE(pc."dxPr", 0)) AS "dxPr", SUM(COALESCE(pc."nonDxPr", 0)) AS "nonDxPr"
@@ -131,7 +133,7 @@ const fetchDxCommits = async (
     FROM commits
     WHERE author IN (SELECT username FROM dx_team_members)
       AND committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND repository_full_name LIKE ${`%${org}%`}
+      AND repository_full_name LIKE ${`${org}/%`}
       AND ${notLikeAll("repository_full_name", DX_TEAM_COMMIT_EXCLUDED_SUBSTRINGS)}
     GROUP BY committer_date::date, author ORDER BY "committerDate"
   `);
@@ -151,6 +153,7 @@ const fetchIoInfraPrTable = async (
     WHERE r.full_name = ${`${org}/${DX_TEAM_IO_INFRA_REPOSITORY}`}
       AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND (pr.draft IS NULL OR pr.draft = 0)
+      AND ${botAuthorsExclusion("pr.author")}
     ORDER BY "createdAt" DESC
   `);
   return parseSqlRows(

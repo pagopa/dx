@@ -23,6 +23,8 @@ export const pullRequestsTooltips = {
     "Average PR size (lines of code) per week. Smaller PRs are typically reviewed faster and are lower risk.",
   prSizeDistribution:
     "Distribution of PR sizes across ranges. Shows team's tendency for large or small changes.",
+  prSizeLeadTime:
+    "Average lead time per size bucket (merged PRs only). Shows whether larger changes wait longer before merging; buckets without merged PRs are omitted.",
   slowestPrs:
     "PRs with the longest merge times. Helps identify problematic changes or review delays.",
   title:

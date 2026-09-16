@@ -81,7 +81,7 @@ export default function TechradarDashboard() {
       adoptionPercentage: tool.adoptionPercentage,
       toolName: tool.toolName,
     })) ?? [];
-  const statusPieData = data?.statusDistribution ?? [];
+  const statusDistribution = data?.statusDistribution ?? [];
 
   const usageTrendByDate = new Map<string, number>();
   for (const row of data?.usageTrend ?? []) {
@@ -162,7 +162,7 @@ export default function TechradarDashboard() {
                   name: "Detected usages",
                 },
               ]}
-              data={statusPieData}
+              data={statusDistribution}
               title="Detected Tool Distribution by Radar Status"
               tooltip={tooltipContent.statusDistribution}
               unit="usages"
@@ -286,9 +286,16 @@ export default function TechradarDashboard() {
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white">
                 Repositories without detections
               </h3>
-              <p className="text-sm text-[#8b949e]">
-                {data.repositoriesWithoutDetectedTools.join(", ")}
-              </p>
+              <ul className="flex flex-wrap gap-2" aria-label="Repositories without detections">
+                {data.repositoriesWithoutDetectedTools.map((repository) => (
+                  <li
+                    className="rounded bg-[#161b22] px-2 py-1 text-xs font-medium text-[#8b949e]"
+                    key={repository}
+                  >
+                    {repository}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </>

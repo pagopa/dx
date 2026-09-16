@@ -10,7 +10,19 @@ import {
   sqlTimestampSchema,
 } from "../shared/sql-parsing";
 
-export const fetchPrDashboardInputSchema = dashboardParamsSchema;
+export const fetchPrDashboardInputSchema = dashboardParamsSchema.extend({
+  /**
+   * Organisation lead-time benchmark, optional so the route can omit it when
+   * the benchmark query fails without failing the whole dashboard.
+   */
+  peerBenchmark: z
+    .object({
+      leadTimeMedian: nullableSqlNumberSchema,
+      peerCount: sqlNumberSchema,
+      percentileRank: nullableSqlNumberSchema,
+    })
+    .optional(),
+});
 
 export const prMetricValueRowSchema = z.object({
   value: nullableSqlNumberSchema,

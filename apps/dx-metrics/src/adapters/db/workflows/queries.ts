@@ -20,6 +20,7 @@ import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
+  workflowNameExclusion,
 } from "../shared/sql-fragments";
 import {
   parseOptionalSqlRow,
@@ -136,7 +137,7 @@ const fetchDeployments = async (
       AND ${deployWorkflowMatch("w.name")}
       AND TRIM(wr.conclusion) = 'success'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND w.name != 'Labeler'
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY DATE_TRUNC('week', wr.created_at) ORDER BY "runWeek"
   `);
   return parseSqlRows(
@@ -164,7 +165,7 @@ const fetchDxVsNonDx = async (
       JOIN repositories r ON wr.repository_id = r.id
       WHERE r.full_name = ${fullName}
         AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND w.name NOT IN ('CodeQL', 'Labeler')
+        AND ${workflowNameExclusion("w.name")}
       GROUP BY wr.created_at::date,
         ${dxPipelineCase("w.pipeline")}
     ) daily_counts ORDER BY "runDate", "pipelineType"
@@ -187,7 +188,7 @@ const fetchFailures = async (
     WHERE r.full_name = ${fullName}
       AND TRIM(wr.conclusion) = 'failure'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(workflowFailureSchema, r.rows, "workflows failures");
@@ -209,7 +210,7 @@ const fetchAvgDuration = async (
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(
@@ -235,7 +236,7 @@ const fetchRunCount = async (
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(workflowRunCountSchema, r.rows, "workflows runCount");
@@ -257,7 +258,7 @@ const fetchCumulativeDuration = async (
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
   return parseSqlRows(
@@ -283,7 +284,7 @@ const fetchInfraPlan = async (
       AND wr.status = 'completed'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
-      AND w.pipeline LIKE '%infra_plan.yaml%' AND w.name != 'Labeler'
+      AND w.pipeline LIKE '%infra_plan.yaml%' AND ${workflowNameExclusion("w.name")}
     ORDER BY "runTimestamp"
   `);
   return parseSqlRows(
@@ -309,7 +310,7 @@ const fetchInfraApply = async (
       AND wr.status = 'completed'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
-      AND w.pipeline LIKE '%infra_apply.yaml%' AND w.name != 'Labeler'
+      AND w.pipeline LIKE '%infra_apply.yaml%' AND ${workflowNameExclusion("w.name")}
     ORDER BY "runTimestamp"
   `);
   return parseSqlRows(
@@ -336,7 +337,7 @@ const fetchSuccessRatio = async (
     WHERE r.full_name = ${fullName}
       AND TRIM(wr.conclusion) IN ('success', 'failure')
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
     GROUP BY w.name, w.pipeline ORDER BY "totalRuns" DESC
   `);
   return parseSqlRows(
@@ -369,7 +370,7 @@ const fetchSummary = async (
       AND wr.status = 'completed' AND TRIM(wr.conclusion) IN ('success', 'failure')
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
   `);
   return parseOptionalSqlRow(
     workflowSummarySchema,
@@ -403,7 +404,7 @@ const fetchSuccessRateStats = async (
        WHERE r2.full_name = ${fullName}
          AND wr2.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
          AND wr2.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
-         AND w2.name NOT IN ('CodeQL', 'Labeler')
+         AND ${workflowNameExclusion("w2.name")}
       ) AS "previous"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
@@ -411,7 +412,7 @@ const fetchSuccessRateStats = async (
     WHERE r.full_name = ${fullName}
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
   `);
   return parseSqlRow(
     workflowSuccessRateStatsSchema,
@@ -445,7 +446,7 @@ const fetchDurationPercentiles = async (
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
-      AND w.name NOT IN ('CodeQL', 'Labeler')
+      AND ${workflowNameExclusion("w.name")}
   `);
   return parseSqlRow(
     percentileRowSchema,

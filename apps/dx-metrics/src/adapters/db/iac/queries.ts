@@ -1,6 +1,6 @@
 /** IaC dashboard SQL queries and data transformation logic. */
 
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 
 import { buildIacInsights } from "@/lib/insights/iac";
 import type { WithInsights } from "@/lib/insights/types";
@@ -13,6 +13,7 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
+import { notInValues } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import { buildMemberMatchSql } from "./member-match-sql";
@@ -27,11 +28,11 @@ import {
 
 /**
  * Excludes release-automation PRs (e.g. "Version Packages") from IaC metrics.
+ * Takes a qualified column so the same exclusion can be applied to both the
+ * `iac_pr_lead_times` scan and the `pull_requests` join (`ipr.title`).
  */
-const IAC_TITLE_FILTER = sql`title NOT IN (${sql.join(
-  IAC_EXCLUDED_PR_TITLES.map((title) => sql`${title}`),
-  sql`, `,
-)})`;
+const iacTitleFilter = (column: string): SQL =>
+  notInValues(column, IAC_EXCLUDED_PR_TITLES);
 
 /**
  * Resolves the latest data point date for the given repository.
@@ -75,7 +76,7 @@ const queryLeadTimeMovingAvg = (
     WHERE repository_full_name = ${fullName}
       AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND created_at IS NOT NULL AND merged_at IS NOT NULL
-      AND ${IAC_TITLE_FILTER}
+      AND ${iacTitleFilter("title")}
     GROUP BY DATE_TRUNC('week', merged_at)::date
     ORDER BY week
   `);
@@ -96,7 +97,7 @@ const queryLeadTimeTrend = (
       WHERE repository_full_name = ${fullName}
         AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND created_at IS NOT NULL AND merged_at IS NOT NULL
-        AND ${IAC_TITLE_FILTER}
+        AND ${iacTitleFilter("title")}
     ),
     stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("leadTimeDays") AS "yAvg" FROM pr_lead_times),
     regression AS (
@@ -133,7 +134,7 @@ const queryLeadTimePercentiles = (
     WHERE repository_full_name = ${fullName}
       AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND created_at IS NOT NULL AND merged_at IS NOT NULL
-      AND ${IAC_TITLE_FILTER}
+      AND ${iacTitleFilter("title")}
   `);
 
 /**
@@ -158,7 +159,7 @@ const querySupervisedVsUnsupervised = (
       LEFT JOIN pull_requests pr ON pr.repository_id = ipr.repository_id AND pr.number = ipr.pr_number
       WHERE ipr.repository_full_name = ${fullName}
         AND ipr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND ipr.created_at IS NOT NULL AND ipr.${IAC_TITLE_FILTER}
+        AND ipr.created_at IS NOT NULL AND ${iacTitleFilter("ipr.title")}
         AND (pr.draft IS NULL OR pr.draft = 0)
     )
     SELECT "runDate", "prType",
@@ -183,7 +184,7 @@ const queryPrsOverTime = (
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
       AND created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND created_at IS NOT NULL AND ${IAC_TITLE_FILTER}
+      AND created_at IS NOT NULL AND ${iacTitleFilter("title")}
     GROUP BY DATE_TRUNC('week', created_at)::date ORDER BY week
   `);
 
@@ -202,7 +203,7 @@ const queryPrsByReviewer = (
       LEFT JOIN pull_requests pr ON pr.repository_id = ipr.repository_id AND pr.number = ipr.pr_number
       WHERE ipr.repository_full_name = ${fullName}
         AND ipr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND ipr.created_at IS NOT NULL AND ipr.${IAC_TITLE_FILTER}
+        AND ipr.created_at IS NOT NULL AND ${iacTitleFilter("ipr.title")}
     ),
     expanded AS (
       SELECT pr_number, created_at, merged_at,

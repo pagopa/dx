@@ -20,6 +20,17 @@ import {
   trackerMetricValueRowSchema,
 } from "./schemas";
 
+/** Distinct days of data required before a fitted trend is worth showing. */
+const MIN_TREND_DAYS = 7;
+
+/**
+ * Predicate for "this request is closed". The underlying `is_closed` column is
+ * a text-serialized boolean (`'true'` / `'false'`), so it must be compared as a
+ * string; `closed_at IS NOT NULL` is the authoritative signal whenever it is
+ * populated. Centralised here so every closed-count agrees on the definition.
+ */
+const requestClosedPredicate = sql`closed_at IS NOT NULL OR is_closed = 'true'`;
+
 export const getTrackerDashboard = async (
   db: Database,
 ): Promise<TrackerDashboard & WithInsights & WithMeta> => {
@@ -50,19 +61,20 @@ export const getTrackerDashboard = async (
     `),
     // Closed requests (total)
     db.execute(sql`
-      SELECT COUNT(*) AS value FROM tracker_requests 
-      WHERE is_closed = 'true' 
-      OR closed_at IS NOT NULL
+      SELECT COUNT(*) AS value FROM tracker_requests
+      WHERE ${requestClosedPredicate}
     `),
     // Avg Time to Close
     db.execute(sql`
       SELECT ROUND(AVG(EXTRACT(EPOCH FROM (closed_at - submitted_at)) / 86400)::numeric, 2) AS value
-      FROM tracker_requests 
-      WHERE (is_closed = 'true' OR closed_at IS NOT NULL)
-      AND closed_at IS NOT NULL 
+      FROM tracker_requests
+      WHERE ${requestClosedPredicate}
+      AND closed_at IS NOT NULL
       AND submitted_at IS NOT NULL
     `),
-    // Requests Trend (percentage change from linear regression)
+    // Requests Trend (percentage change from linear regression). The fitted
+    // line is meaningless on a couple of days of data, so the value is only
+    // returned once the history spans at least MIN_TREND_DAYS distinct days.
     db.execute(sql`
       WITH daily_requests AS (
         SELECT submitted_at::date AS "requestDate", COUNT(*) AS requests
@@ -90,7 +102,9 @@ export const getTrackerDashboard = async (
           END) AS "lastValue"
         FROM numbered_days nd CROSS JOIN regression r
       )
-      SELECT ROUND((("lastValue" - "firstValue") / NULLIF("firstValue", 0) * 100)::numeric, 2) AS value
+      SELECT CASE WHEN (SELECT COUNT(*) FROM daily_requests) >= ${MIN_TREND_DAYS}
+        THEN ROUND((("lastValue" - "firstValue") / NULLIF("firstValue", 0) * 100)::numeric, 2)
+      END AS value
       FROM trend_values
     `),
     // Requests Frequency Trend chart

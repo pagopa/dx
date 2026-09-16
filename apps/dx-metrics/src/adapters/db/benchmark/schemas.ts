@@ -1,4 +1,4 @@
-/** Zod schemas and inferred types for the cross-repository overview adapter. */
+/** Zod schemas and inferred types for the cross-repository benchmark adapter. */
 
 import { z } from "zod";
 
@@ -24,7 +24,7 @@ export const workflowBenchmarkRowSchema = z.object({
   successRate: nullableSqlNumberSchema,
 });
 
-export interface OverviewInput {
+export interface BenchmarkInput {
   readonly configuredRepositories: readonly string[];
   readonly days: number;
 }

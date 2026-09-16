@@ -32,6 +32,10 @@ interface PrReviewDashboardData {
     p85: null | number;
     p95: null | number;
   };
+  // Share (0..1) of merged PRs with no human review before merge (feeds the
+  // insights) / with no comments at all (rendered as a card).
+  mergedWithoutCommentsShare: null | number;
+  mergedWithoutReviewShare: null | number;
   reviewDistribution: {
     approvals: number;
     changeRequests: number;
@@ -95,6 +99,15 @@ export default function PullRequestsReviewDashboard() {
       (1 + INSIGHT_THRESHOLDS.targetTolerancePct / 100),
   };
 
+  // The adapter reports a 0..1 share; the card speaks in percentages, so
+  // convert once here. Rounded to two decimals: the share is stored with four
+  // decimals, and the raw float multiplication leaves artifacts such as
+  // 23.080000000000002.
+  const mergedWithoutCommentsPct =
+    data?.mergedWithoutCommentsShare != null
+      ? Math.round(data.mergedWithoutCommentsShare * 10_000) / 100
+      : null;
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -127,7 +140,7 @@ export default function PullRequestsReviewDashboard() {
             insights={data.insights}
             periodDays={days}
           />
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
             <MetricCard
               breakdown={firstReviewBreakdown}
               label="Avg Time to First Review"
@@ -146,6 +159,12 @@ export default function PullRequestsReviewDashboard() {
               suffix="hours"
               tooltip={tooltipContent.avgTimeToMerge}
               value={data.cards.avgTimeToMerge}
+            />
+            <MetricCard
+              label="Merged Without Comments"
+              suffix="%"
+              tooltip={tooltipContent.mergedWithoutCommentsShare}
+              value={mergedWithoutCommentsPct}
             />
           </div>
 

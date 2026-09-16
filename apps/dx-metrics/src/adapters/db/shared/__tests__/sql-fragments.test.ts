@@ -8,13 +8,20 @@ import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
+  humanPullRequest,
   isHumanReview,
+  notInValues,
   notLikeAll,
   textArray,
   timeBucket,
   timeBucketInterval,
+  workflowNameExclusion,
 } from "@/adapters/db/shared/sql-fragments";
-import { BOT_AUTHORS, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
+import {
+  BOT_AUTHORS,
+  EXCLUDED_WORKFLOW_NAMES,
+  WEEKLY_BUCKET_THRESHOLD_DAYS,
+} from "@/lib/config";
 
 const dialect = new PgDialect();
 
@@ -154,6 +161,46 @@ describe("deployWorkflowMatch", () => {
     expect(rendered.sql).toBe(
       "(LOWER(w.name) LIKE '%deploy%' OR LOWER(w.name) LIKE '%delivery%' OR LOWER(w.name) LIKE '%release%' OR LOWER(w.name) LIKE '%apply%')",
     );
+    expect(rendered.params).toEqual([]);
+  });
+});
+
+describe("humanPullRequest", () => {
+  it("excludes bots and drafts for the given alias", () => {
+    const query = dialect.sqlToQuery(humanPullRequest("pr"));
+
+    expect(query.sql).toBe(
+      "((pr.author NOT IN ($1, $2, $3) AND pr.author NOT LIKE '%[bot]') AND (pr.draft IS NULL OR pr.draft = 0))",
+    );
+    expect(query.params).toEqual([...BOT_AUTHORS]);
+  });
+});
+
+describe("workflowNameExclusion", () => {
+  it("excludes the configured tooling workflow names", () => {
+    const query = dialect.sqlToQuery(workflowNameExclusion("w.name"));
+
+    expect(query.sql).toBe(
+      `w.name NOT IN (${EXCLUDED_WORKFLOW_NAMES.map((_, index) => `$${index + 1}`).join(", ")})`,
+    );
+    expect(query.params).toEqual([...EXCLUDED_WORKFLOW_NAMES]);
+  });
+});
+
+describe("notInValues", () => {
+  it("builds one bound parameter per excluded value", () => {
+    const rendered = dialect.sqlToQuery(
+      notInValues("ipr.title", ["Version Packages"]),
+    );
+
+    expect(rendered.sql).toBe("ipr.title NOT IN ($1)");
+    expect(rendered.params).toEqual(["Version Packages"]);
+  });
+
+  it("returns TRUE for an empty list", () => {
+    const rendered = dialect.sqlToQuery(notInValues("x", []));
+
+    expect(rendered.sql).toBe("TRUE");
     expect(rendered.params).toEqual([]);
   });
 });

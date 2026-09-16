@@ -10,6 +10,14 @@ export const DX_REPO: string = dxMetricsConfig.dxRepo;
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 
+/**
+ * Workflows that are CI tooling rather than the team's own pipelines. Excluded
+ * from workflow metrics so a scanner ("CodeQL") or a labeller ("Labeler") never
+ * inflates run counts, durations, or failure Pareto charts. Centralised so a
+ * new exclusion is a single-list change, not a query-by-query edit.
+ */
+export const EXCLUDED_WORKFLOW_NAMES = ["CodeQL", "Labeler"];
+
 /** Repository whose external contributions the DX Team dashboard measures. */
 export const DX_TEAM_IO_INFRA_REPOSITORY = "io-infra";
 
