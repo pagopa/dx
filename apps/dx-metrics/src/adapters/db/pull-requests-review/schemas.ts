@@ -21,6 +21,12 @@ export const mergedWithoutActivityShareRowSchema = z.object({
   withoutReview: nullableSqlNumberSchema,
 });
 
+/** Comment total and per-PR average, computed on the same PR population. */
+export const commentSummaryRowSchema = z.object({
+  commentsPerPr: nullableSqlNumberSchema,
+  totalComments: nullableSqlNumberSchema,
+});
+
 export const reviewDistributionRowSchema = z.object({
   approvals: sqlNumberSchema,
   changeRequests: sqlNumberSchema,
@@ -47,6 +53,8 @@ export const timeToMergeTrendRowSchema = z.object({
 export const pullRequestsReviewCardsSchema = z.object({
   avgTimeToFirstReview: nullableSqlNumberSchema,
   avgTimeToMerge: nullableSqlNumberSchema,
+  commentsPerPr: nullableSqlNumberSchema,
+  totalComments: nullableSqlNumberSchema,
 });
 
 export const pullRequestsReviewDashboardSchema = z.object({

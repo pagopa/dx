@@ -22,6 +22,7 @@ import {
 import { percentileRowSchema, previousValueRowSchema } from "../shared/schemas";
 import {
   humanPullRequest,
+  isHumanReview,
   timeBucket,
   timeBucketInterval,
 } from "../shared/sql-fragments";
@@ -433,7 +434,9 @@ async function fetchPrSummary(
   referenceDate: string,
   days: number,
 ): Promise<PrSummaryCards> {
-  // A single scan over the same population produces every summary card.
+  // One pass produces every summary card. `avgTimeToMerge` measures the wait
+  // from the last human approval to merge, for PRs merged in the window; it is
+  // the same definition the review dashboard uses, kept consistent on purpose.
   const result = await db.execute(sql`
     SELECT
       (SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2)
@@ -453,11 +456,17 @@ async function fetchPrSummary(
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.author IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "contributors",
-      (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
+      (SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - last_approval.submitted_at)) / 3600)::numeric, 2)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+        JOIN LATERAL (
+          SELECT submitted_at FROM pull_request_reviews prr
+          WHERE prr.pull_request_id = pr.id AND prr.state = 'APPROVED'
+            AND ${isHumanReview("prr", "pr")}
+          ORDER BY submitted_at DESC LIMIT 1
+        ) last_approval ON true
         WHERE r.full_name = ${fullName}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${humanPullRequest("pr")}) AS "commentsPerPr"
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "avgTimeToMerge"
   `);
 
   return parseSqlRow(

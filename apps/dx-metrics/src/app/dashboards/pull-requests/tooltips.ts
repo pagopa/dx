@@ -5,8 +5,8 @@
 export const pullRequestsTooltips = {
   avgLeadTime:
     "Arithmetic mean of lead time (merge minus creation) across PRs merged in the selected period. Each PR counts once, so a few very slow PRs raise it above the median. The delta describes the within-period trend line, not the mean itself, so it always matches the trend chart.",
-  commentsPerPr:
-    "Average comments per PR. Indicates review quality and collaboration intensity.",
+  avgTimeToMerge:
+    "Average time from the last human approval to merge, for pull requests merged in the selected period. Measures how long a PR waits after being approved; lower is better.",
   contributors:
     "Number of distinct authors of the pull requests created during the selected period. Shows how many people contribute code, independently of review activity.",
   cumulatedNewPrs:

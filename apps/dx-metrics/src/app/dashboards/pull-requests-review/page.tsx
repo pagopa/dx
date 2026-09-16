@@ -24,7 +24,8 @@ import { pullRequestsReviewTooltips as tooltipContent } from "./tooltips";
 interface PrReviewDashboardData {
   cards: {
     avgTimeToFirstReview: null | number;
-    avgTimeToMerge: null | number;
+    commentsPerPr: null | number;
+    totalComments: null | number;
   };
   firstReviewPercentiles: {
     count: number;
@@ -140,7 +141,7 @@ export default function PullRequestsReviewDashboard() {
             insights={data.insights}
             periodDays={days}
           />
-          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+          <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               breakdown={firstReviewBreakdown}
               label="Avg Time to First Review"
@@ -155,10 +156,14 @@ export default function PullRequestsReviewDashboard() {
               )}
             />
             <MetricCard
-              label="Avg Time to Merge"
-              suffix="hours"
-              tooltip={tooltipContent.avgTimeToMerge}
-              value={data.cards.avgTimeToMerge}
+              label="Total Comments"
+              tooltip={tooltipContent.totalComments}
+              value={data.cards.totalComments}
+            />
+            <MetricCard
+              label="Comments / PR"
+              tooltip={tooltipContent.commentsPerPr}
+              value={data.cards.commentsPerPr}
             />
             <MetricCard
               label="Merged Without Comments"

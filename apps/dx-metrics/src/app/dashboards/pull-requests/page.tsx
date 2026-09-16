@@ -29,7 +29,7 @@ import { pullRequestsTooltips as tooltipContent } from "./tooltips";
 interface PrDashboardData {
   cards: {
     avgLeadTime: null | number;
-    commentsPerPr: null | number;
+    avgTimeToMerge: null | number;
     contributors: null | number;
     totalPrs: null | number;
   };
@@ -180,6 +180,12 @@ export default function PullRequestsDashboard() {
               sparkline={leadTimeSparkline}
             />
             <MetricCard
+              label="Avg Time to Merge"
+              suffix="hours"
+              tooltip={tooltipContent.avgTimeToMerge}
+              value={data.cards.avgTimeToMerge}
+            />
+            <MetricCard
               label="Total PRs"
               tooltip={tooltipContent.totalPrs}
               value={data.cards.totalPrs}
@@ -188,11 +194,6 @@ export default function PullRequestsDashboard() {
               label="Contributors"
               tooltip={tooltipContent.contributors}
               value={data.cards.contributors}
-            />
-            <MetricCard
-              label="Comments / PR"
-              tooltip={tooltipContent.commentsPerPr}
-              value={data.cards.commentsPerPr}
             />
           </div>
 

@@ -19,6 +19,7 @@ import { humanPullRequest, isHumanReview } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import {
+  commentSummaryRowSchema,
   mergedWithoutActivityShareRowSchema,
   reviewDistributionRowSchema,
   reviewMatrixRowSchema,
@@ -207,6 +208,29 @@ export const getPullRequestsReviewDashboard = async (
     ORDER BY "reviewCount" DESC
   `);
 
+  // --- Comment volume ---
+  // The data model only stores a per-PR aggregate (`total_comments_count`),
+  // with no per-comment author or timestamp. The cards therefore report the
+  // comments recorded on the pull requests opened in the window; they cannot
+  // separate human from bot comments, nor restrict the count to the exact days.
+  // One scan produces both the total and its per-PR average so the two cards
+  // share a denominator and cannot disagree.
+  const commentSummaryResult = await db.execute(sql`
+    SELECT
+      COALESCE(SUM(pr.total_comments_count), 0) AS "totalComments",
+      ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2) AS "commentsPerPr"
+    FROM pull_requests pr
+    JOIN repositories r ON pr.repository_id = r.id
+    WHERE r.full_name = ${fullName}
+      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND ${humanPullRequest("pr")}
+  `);
+  const commentSummary = parseSqlRow(
+    commentSummaryRowSchema,
+    commentSummaryResult.rows[0],
+    "pull-requests-review commentSummary",
+  );
+
   const dashboard = {
     cards: {
       avgTimeToFirstReview: parseSqlRow(
@@ -219,6 +243,8 @@ export const getPullRequestsReviewDashboard = async (
         avgTimeToMerge.rows[0],
         "pull-requests-review avgTimeToMerge",
       ).value,
+      commentsPerPr: commentSummary.commentsPerPr,
+      totalComments: commentSummary.totalComments,
     },
     firstReviewPercentiles: parseSqlRow(
       percentileRowSchema,
