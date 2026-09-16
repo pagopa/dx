@@ -1,3 +1,20 @@
+## 0.22.7 (2026-09-16)
+
+### 🚀 Features
+
+- Add Azure App Configuration to technology radar in the Assess ring. ([#2197](https://github.com/pagopa/dx/pull/2197))
+- Add mise to technology radar as a polyglot tool version manager in the Adopt ring. ([#2196](https://github.com/pagopa/dx/pull/2196))
+
+### 🩹 Fixes
+
+- Correct Azure Entra group naming in the setup and IAM documentation to use the Technology-owned singular `admin` name without domain-qualified suffixes. ([#2194](https://github.com/pagopa/dx/pull/2194))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 0.22.6 (2026-09-15)
 
 ### 🚀 Features
