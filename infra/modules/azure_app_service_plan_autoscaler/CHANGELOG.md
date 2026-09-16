@@ -1,3 +1,14 @@
+## 4.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 4.0.2 (2026-09-15)
 
 ### 🩹 Fixes
