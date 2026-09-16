@@ -68,6 +68,12 @@ export const workflowRuns = pgTable(
   {
     conclusion: text("conclusion"),
     createdAt: timestamp("created_at"),
+    /**
+     * GitHub event that triggered the run (e.g. `push`, `pull_request`,
+     * `schedule`, `workflow_dispatch`). Nullable because rows imported before
+     * the column existed are only backfilled on a re-import.
+     */
+    event: text("event"),
     id: bigint("id", { mode: "number" }).primaryKey(),
     repositoryId: integer("repository_id")
       .notNull()
