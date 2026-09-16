@@ -1,6 +1,6 @@
 # Nx Release Manager Action
 
-A composite GitHub Action that mirrors [Changesets](https://github.com/changesets/action) behavior for [Nx Release](https://nx.dev/features/manage-releases).
+A composite GitHub Action that mirrors [Changesets](https://github.com/changesets/action) behavior for [Nx Release](https://nx.dev/features/manage-releases) in an Nx monorepo.
 
 In DX repositories, the validation workflow invokes this action on pull
 requests to manage version plan coverage warnings.
@@ -52,8 +52,8 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts public projects to publish from the latest merged `Version Packages` PR (or builds all public projects with a `build` target when triggered via `workflow_dispatch`)
-2. Runs `npx nx release publish` with provenance enabled
+1. Extracts public projects to publish from the latest merged `Version Packages` PR (or discovers all public projects with an `nx-release-publish` target when triggered via `workflow_dispatch`)
+2. Builds and publishes only public projects that expose the `nx-release-publish` target, allowing any Nx-supported registry publisher
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
 5. Creates any missing GitHub Releases with extracted changelog notes
@@ -181,8 +181,8 @@ Used automatically on `pull_request` workflows. The action:
 
 Triggered manually. The action:
 
-1. Builds all public projects with a `build` target and publishes all projects covered by
-   the Nx release configuration
+1. Builds all public projects with a `build` target and publishes all public
+   projects that expose the `nx-release-publish` target
 2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 3. Creates any missing GitHub Releases with extracted changelog notes
@@ -208,6 +208,13 @@ Triggered manually. The action:
 - Ensure the repository validation workflow invokes this action on `pull_request`
 - Ensure the job checks out the repository before calling the local action
 - Ensure the PR affects Nx projects and that uncovered projects are not already declared in the changed `.nx/version-plans/**` files
+
+### Projects are not published
+
+- Ensure the project belongs to an Nx release group and exposes an
+  `nx-release-publish` target
+- Projects marked with `private` or `<distribution>:private` tags are excluded
+  from publishing but remain eligible for versioning and changelog generation
 
 ### Publish fails
 

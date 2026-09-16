@@ -179,13 +179,17 @@ runs:
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: build all public projects that expose a build
-          # target, then publish every project covered by the release
-          # configuration.
+          # target, then publish every public project with a release publisher.
           BUILD_PROJECTS=$(npx nx show projects --withTarget=build --projects='!tag:private,!tag:*:private' --sep=,)
           if [[ -n "${BUILD_PROJECTS:-}" ]]; then
             npx nx run-many --target=build --projects="$BUILD_PROJECTS"
           fi
-          npx nx release publish
+          PUBLISH_PROJECTS=$(npx nx show projects --withTarget=nx-release-publish --projects='!tag:private,!tag:*:private' --sep=,)
+          if [[ -n "${PUBLISH_PROJECTS:-}" ]]; then
+            npx nx release publish --projects="$PUBLISH_PROJECTS"
+          else
+            echo "No public projects expose nx-release-publish. Skipping publish."
+          fi
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -198,8 +202,13 @@ runs:
           PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
 
           if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
-            npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
-            npx nx release publish --projects="$PROJECTS_TO_BUILD"
+            PUBLISH_PROJECTS=$(npx nx show projects --withTarget=nx-release-publish --projects="$PROJECTS_TO_BUILD,!tag:private,!tag:*:private" --sep=,)
+            if [[ -n "${PUBLISH_PROJECTS:-}" ]]; then
+              npx nx run-many --target=build --projects="$PUBLISH_PROJECTS"
+              npx nx release publish --projects="$PUBLISH_PROJECTS"
+            else
+              echo "No released projects expose nx-release-publish. Skipping publish."
+            fi
           else
             echo "No projects to publish. Skipping build/publish but proceeding to tag/release sync."
           fi

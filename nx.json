@@ -38,11 +38,7 @@
     "projectsRelationship": "independent",
     "groups": {
       "applications": {
-        "projects": [
-          "tag:release:docker",
-          "!tag:private",
-          "!tag:*:private"
-        ],
+        "projects": ["tag:release:docker", "!tag:private", "!tag:*:private"],
         "docker": {
           "preVersionCommand": "",
           "registryUrl": "ghcr.io",
@@ -58,6 +54,9 @@
           "!tag:private",
           "!tag:*:private"
         ]
+      },
+      "version-only": {
+        "projects": ["tag:private", "tag:*:private"]
       }
     },
     "version": {},
