@@ -1,21 +1,16 @@
 [tools]
-aws-cli = { version = "2.36", symlink_bins = "true" }
-azure-cli = { version = "2.87", depends = ["uv"] }
 github-cli = { version = "latest" }
 pre-commit = "4.6"
-python = "3.14.6"
 terraform-docs = "0.24"
 tflint = "0.63"
 trivy = "0.74"
-uv = "latest"
 
 [env]
 TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
 
 [settings]
-idiomatic_version_file_enable_tools = ["node", "python", "terraform"]
+idiomatic_version_file_enable_tools = ["node", "terraform"]
 minimum_release_age = "7d"
-minimum_release_age_excludes = ["copilot", "github-cli"]
 experimental = true
 lockfile = true
 

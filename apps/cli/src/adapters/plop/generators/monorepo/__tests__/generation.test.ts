@@ -117,37 +117,34 @@ describe("monorepo generator — file generation", () => {
       path.join(generatedRoot, "mise.toml"),
       "utf-8",
     );
-    expect(miseConfig).toContain(
-      'aws-cli = { version = "2.36", symlink_bins = "true" }',
-    );
-    expect(miseConfig).toContain(
-      'azure-cli = { version = "2.87", depends = ["uv"] }',
-    );
     expect(miseConfig).toContain('github-cli = { version = "latest" }');
     expect(miseConfig).toContain('pre-commit = "4.6"');
-    expect(miseConfig).toContain('python = "3.14.6"');
     expect(miseConfig).toContain('terraform-docs = "0.24"');
     expect(miseConfig).toContain('tflint = "0.63"');
     expect(miseConfig).toContain('trivy = "0.74"');
-    expect(miseConfig).toContain('uv = "latest"');
     expect(miseConfig).toContain(
-      'idiomatic_version_file_enable_tools = ["node", "python", "terraform"]',
+      'idiomatic_version_file_enable_tools = ["node", "terraform"]',
     );
     for (const removedTool of [
       "acli",
       "act",
+      "aws-cli",
+      "azure-cli",
       "copilot",
       "go",
       "golangci-lint",
       "jq",
       "npm:nx",
+      "python",
       "qdns",
       "ripgrep",
       "shellcheck",
+      "uv",
     ]) {
       expect(miseConfig).not.toMatch(new RegExp(`^${removedTool}\\s*=`, "m"));
     }
     expect(miseConfig).not.toContain("postinstall");
+    expect(miseConfig).not.toContain("minimum_release_age_excludes");
   });
 
   it("applies the repository-specific gitignore customization", async () => {
