@@ -56,11 +56,11 @@ describe("setupPnpm", () => {
     expect(mocks.commands).toContain(
       "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
     );
+    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@10");
     expect(mocks.commands).toEqual(
       expect.arrayContaining([
         expect.stringContaining("mise exec -- pnpm -w add -D"),
       ]),
     );
-    expect(mocks.commands).not.toContain("corepack use pnpm@10");
   });
 });

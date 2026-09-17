@@ -118,7 +118,6 @@ describe("monorepo generator — file generation", () => {
       "utf-8",
     );
     expect(miseConfig).toContain('"npm:nx" = "23.1"');
-    expect(miseConfig).toContain('pnpm = "10"');
     expect(miseConfig).toContain(
       'idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]',
     );
