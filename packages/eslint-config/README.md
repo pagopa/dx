@@ -8,20 +8,18 @@ It supports both **ESLint 9** and **ESLint 10**.
 
 1. Install `@pagopa/eslint-config` together with its peer dependencies.
 
-   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`), and `prettier`.
+   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`)
 
    For ESLint 10:
 
    ```shell
    pnpm add -D eslint@^10 @eslint/js@^10 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
    For ESLint 9:
 
    ```shell
    pnpm add -D eslint@^9 @eslint/js@^9 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
 2. Create a file names `eslint.config.js` at the root of your workspace with the following content
