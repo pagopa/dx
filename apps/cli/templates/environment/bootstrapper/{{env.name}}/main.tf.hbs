@@ -8,7 +8,7 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -28,8 +28,10 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner = "{{@root.github.owner}}"
-    name  = "{{@root.github.repo}}"
+    owner    = "{{@root.github.owner}}"
+    name     = "{{@root.github.repo}}"
+    owner_id = {{#if @root.github.ownerId}}"{{@root.github.ownerId}}"{{else}}null{{/if}}
+    repo_id  = {{#if @root.github.repoId}}"{{@root.github.repoId}}"{{else}}null{{/if}}
   }
 
   github_private_runner = {
@@ -66,7 +68,7 @@ module "azure-{{displayName}}_core_values" {
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -86,8 +88,10 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner = "{{@root.github.owner}}"
-    name  = "{{@root.github.repo}}"
+    owner    = "{{@root.github.owner}}"
+    name     = "{{@root.github.repo}}"
+    owner_id = {{#if @root.github.ownerId}}"{{@root.github.ownerId}}"{{else}}null{{/if}}
+    repo_id  = {{#if @root.github.repoId}}"{{@root.github.repoId}}"{{else}}null{{/if}}
   }
 
   github_private_runner = {

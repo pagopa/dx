@@ -13,6 +13,14 @@ locals {
     "p" = "prod"
   }[var.environment.env_short]
 
+  # GitHub emits immutable subject claims that embed the numeric owner and
+  # repository IDs for repositories created or renamed after 2026-07-15.
+  # Federated identity credentials match the `sub` claim as an exact string, so
+  # when the immutable IDs are available we create an additional credential with
+  # the immutable subject, keeping the name-based one for older repositories.
+  immutable_subject_enabled = var.repository.owner_id != null && var.repository.repo_id != null
+  immutable_repository_slug = "${var.repository.owner}@${var.repository.owner_id != null ? var.repository.owner_id : ""}/${var.repository.name}@${var.repository.repo_id != null ? var.repository.repo_id : ""}"
+
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
       name          = var.environment.domain

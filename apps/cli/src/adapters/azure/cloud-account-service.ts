@@ -733,6 +733,31 @@ export class AzureCloudAccountService implements CloudAccountService {
       ),
     );
 
+    if (github.ownerId !== undefined && github.repoId !== undefined) {
+      // GitHub emits immutable subject claims embedding the numeric owner and
+      // repository IDs for repositories created or renamed after 2026-07-15.
+      // Azure matches the subject as an exact string, so an extra credential
+      // with the immutable format is created next to the name-based one, which
+      // keeps working for older repositories.
+      await Promise.all(
+        environmentIdentities.map(({ environmentName, identityName }) =>
+          msiClient.federatedIdentityCredentials.createOrUpdate(
+            resourceGroupName,
+            identityName,
+            `${this.#createFederatedCredentialName({
+              github,
+              githubEnvironmentName: environmentName,
+            })}-immutable`,
+            {
+              audiences: ["api://AzureADTokenExchange"],
+              issuer: "https://token.actions.githubusercontent.com",
+              subject: `repo:${github.owner}@${github.ownerId}/${github.repo}@${github.repoId}:environment:${environmentName}`,
+            },
+          ),
+        ),
+      );
+    }
+
     logger.debug(
       "Configured bootstrapper federated identity credentials in subscription {subscriptionId}",
       { subscriptionId: cloudAccountId },

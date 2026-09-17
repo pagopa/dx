@@ -226,7 +226,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.DEV-DX
@@ -246,8 +246,10 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner = "pagopa"
-    name  = "my-project"
+    owner    = "pagopa"
+    name     = "my-project"
+    owner_id = "57742367"
+    repo_id  = "1373623344"
   }
 
   github_private_runner = {
@@ -345,7 +347,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.DEV-DX
@@ -365,8 +367,10 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner = "pagopa"
-    name  = "my-project"
+    owner    = "pagopa"
+    name     = "my-project"
+    owner_id = null
+    repo_id  = null
   }
 
   github_private_runner = {

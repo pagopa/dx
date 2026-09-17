@@ -11,7 +11,17 @@ resource "azurerm_federated_identity_credential" "github_app_ci" {
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer
   user_assigned_identity_id = azurerm_user_assigned_identity.app_ci.id
-  subject                   = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.app_environment_name, "ci")}"
+  subject                   = "repo:${var.repository.owner}/${var.repository.name}:environment:${format(local.ids.app_environment_name, "ci")}"
+}
+
+resource "azurerm_federated_identity_credential" "github_app_ci_immutable" {
+  count = local.immutable_subject_enabled ? 1 : 0
+
+  name                      = "${format(local.ids.federated_identity_name, "app", "ci")}-immutable"
+  audience                  = local.ids.audience
+  issuer                    = local.ids.issuer
+  user_assigned_identity_id = azurerm_user_assigned_identity.app_ci.id
+  subject                   = "repo:${local.immutable_repository_slug}:environment:${format(local.ids.app_environment_name, "ci")}"
 }
 
 
@@ -28,5 +38,15 @@ resource "azurerm_federated_identity_credential" "github_app_cd" {
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer
   user_assigned_identity_id = azurerm_user_assigned_identity.app_cd.id
-  subject                   = "repo:pagopa/${var.repository.name}:environment:${format(local.ids.app_environment_name, "cd")}"
+  subject                   = "repo:${var.repository.owner}/${var.repository.name}:environment:${format(local.ids.app_environment_name, "cd")}"
+}
+
+resource "azurerm_federated_identity_credential" "github_app_cd_immutable" {
+  count = local.immutable_subject_enabled ? 1 : 0
+
+  name                      = "${format(local.ids.federated_identity_name, "app", "cd")}-immutable"
+  audience                  = local.ids.audience
+  issuer                    = local.ids.issuer
+  user_assigned_identity_id = azurerm_user_assigned_identity.app_cd.id
+  subject                   = "repo:${local.immutable_repository_slug}:environment:${format(local.ids.app_environment_name, "cd")}"
 }

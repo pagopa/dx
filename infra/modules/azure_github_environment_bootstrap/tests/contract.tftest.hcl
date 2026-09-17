@@ -150,3 +150,18 @@ run "azure_github_environment_bootstrap_invalid_additional_resource_group_ids" {
   ]
 }
 
+run "azure_github_environment_bootstrap_rejects_partial_immutable_ids" {
+  command = plan
+
+  variables {
+    repository = {
+      name    = "dx-test-monorepo-starter-pack"
+      repo_id = "1373623344"
+    }
+  }
+
+  expect_failures = [
+    var.repository,
+  ]
+}
+
