@@ -178,9 +178,7 @@ describe("environment generator — file generation (no init)", () => {
     },
     github: {
       owner: "pagopa",
-      ownerId: 57742367,
       repo: "my-project",
-      repoId: 1373623344,
     },
     tags: {
       BusinessUnit: "Platform",

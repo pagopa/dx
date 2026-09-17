@@ -28,10 +28,8 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner    = "{{@root.github.owner}}"
-    name     = "{{@root.github.repo}}"
-    owner_id = {{#if @root.github.ownerId}}"{{@root.github.ownerId}}"{{else}}null{{/if}}
-    repo_id  = {{#if @root.github.repoId}}"{{@root.github.repoId}}"{{else}}null{{/if}}
+    owner = "{{@root.github.owner}}"
+    name  = "{{@root.github.repo}}"
   }
 
   github_private_runner = {
@@ -88,10 +86,8 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner    = "{{@root.github.owner}}"
-    name     = "{{@root.github.repo}}"
-    owner_id = {{#if @root.github.ownerId}}"{{@root.github.ownerId}}"{{else}}null{{/if}}
-    repo_id  = {{#if @root.github.repoId}}"{{@root.github.repoId}}"{{else}}null{{/if}}
+    owner = "{{@root.github.owner}}"
+    name  = "{{@root.github.repo}}"
   }
 
   github_private_runner = {

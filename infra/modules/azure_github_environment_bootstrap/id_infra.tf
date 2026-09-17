@@ -38,11 +38,11 @@ resource "azurerm_federated_identity_credential" "github_automation_cd" {
   subject                   = "repo:${var.repository.owner}/${var.repository.name}:environment:${format(local.ids.automation_environment_name, "cd")}"
 }
 
-# Additional credentials for repositories that emit immutable subject claims.
-# They are only created when both immutable IDs are provided.
+# Credentials for repositories that emit immutable subject claims. GitHub embeds
+# the numeric owner and repository IDs for repositories created or renamed after
+# 2026-07-15; both formats are federated so each repository matches exactly one
+# of them.
 resource "azurerm_federated_identity_credential" "github_infra_ci_immutable" {
-  count = local.immutable_subject_enabled ? 1 : 0
-
   name                      = "${format(local.ids.federated_identity_name, "infra", "ci")}-immutable"
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer
@@ -51,8 +51,6 @@ resource "azurerm_federated_identity_credential" "github_infra_ci_immutable" {
 }
 
 resource "azurerm_federated_identity_credential" "github_infra_cd_immutable" {
-  count = local.immutable_subject_enabled ? 1 : 0
-
   name                      = "${format(local.ids.federated_identity_name, "infra", "cd")}-immutable"
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer
@@ -61,8 +59,6 @@ resource "azurerm_federated_identity_credential" "github_infra_cd_immutable" {
 }
 
 resource "azurerm_federated_identity_credential" "github_automation_cd_immutable" {
-  count = local.immutable_subject_enabled ? 1 : 0
-
   name                      = "${format(local.ids.federated_identity_name, "automation", "cd")}-immutable"
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer

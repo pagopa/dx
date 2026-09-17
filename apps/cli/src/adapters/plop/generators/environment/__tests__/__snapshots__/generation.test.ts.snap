@@ -246,10 +246,8 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner    = "pagopa"
-    name     = "my-project"
-    owner_id = "57742367"
-    repo_id  = "1373623344"
+    owner = "pagopa"
+    name  = "my-project"
   }
 
   github_private_runner = {
@@ -367,10 +365,8 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner    = "pagopa"
-    name     = "my-project"
-    owner_id = null
-    repo_id  = null
+    owner = "pagopa"
+    name  = "my-project"
   }
 
   github_private_runner = {

@@ -15,8 +15,6 @@ resource "azurerm_federated_identity_credential" "github_app_ci" {
 }
 
 resource "azurerm_federated_identity_credential" "github_app_ci_immutable" {
-  count = local.immutable_subject_enabled ? 1 : 0
-
   name                      = "${format(local.ids.federated_identity_name, "app", "ci")}-immutable"
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer
@@ -42,8 +40,6 @@ resource "azurerm_federated_identity_credential" "github_app_cd" {
 }
 
 resource "azurerm_federated_identity_credential" "github_app_cd_immutable" {
-  count = local.immutable_subject_enabled ? 1 : 0
-
   name                      = "${format(local.ids.federated_identity_name, "app", "cd")}-immutable"
   audience                  = local.ids.audience
   issuer                    = local.ids.issuer

@@ -46,18 +46,11 @@ variable "opex_resource_group_id" {
 
 variable "repository" {
   type = object({
-    owner    = optional(string, "pagopa")
-    name     = string
-    owner_id = optional(string)
-    repo_id  = optional(string)
+    owner = optional(string, "pagopa")
+    name  = string
   })
 
-  description = "Details about the GitHub repository, including owner and name. Set 'owner_id' and 'repo_id' to the immutable numeric GitHub IDs to also federate repositories that emit immutable subject claims (created or renamed after 2026-07-15). Both must be provided together."
-
-  validation {
-    condition     = (var.repository.owner_id == null) == (var.repository.repo_id == null)
-    error_message = "'owner_id' and 'repo_id' must be provided together to federate repositories that use immutable subject claims."
-  }
+  description = "Details about the GitHub repository, including owner and name."
 }
 
 variable "github_private_runner" {
