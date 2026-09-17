@@ -1,10 +1,12 @@
 /**
  * Terraform state key helper.
  *
- * Workspace-scoped entries follow the shared prefix/domain/scope.tfstate
- * convention for remote state keys. Shared scopes (such as the core) live at
- * the root of the state storage account, which is already scoped by prefix and
- * environment, so they can be shared across workspace domains.
+ * The state storage account is already scoped by prefix and environment, so
+ * keys never repeat the prefix:
+ *
+ * - workspace-scoped entries follow the domain/scope.tfstate convention;
+ * - shared scopes (such as the core) live at the root of the container, because
+ *   they are shared across workspace domains.
  */
 import { type NodePlopAPI } from "node-plop";
 import { z } from "zod";
@@ -13,7 +15,6 @@ import { CORE_STATE_SCOPE } from "../../../domain/environment.js";
 import { payloadSchema } from "../generators/environment/prompts.js";
 
 const terraformStateContextSchema = payloadSchema.pick({
-  env: true,
   workspace: true,
 });
 
@@ -50,7 +51,7 @@ export const terraformStateKey = (
     return `${parsedName.data}.tfstate`;
   }
 
-  return `${context.env.prefix}/${context.workspace.domain}/${parsedName.data}.tfstate`;
+  return `${context.workspace.domain}/${parsedName.data}.tfstate`;
 };
 
 export default (plop: NodePlopAPI) => {

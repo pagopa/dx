@@ -172,7 +172,7 @@ terraform {
     resource_group_name  = "dx-d-itn-tf-rg"
     storage_account_name = "dxditntfst"
     container_name       = "terraform-state"
-    key                  = "dx/payments/bootstrapper.tfstate"
+    key                  = "payments/bootstrapper.tfstate"
     subscription_id      = "00000000-0000-0000-0000-000000000000"
     use_azuread_auth     = true
   }

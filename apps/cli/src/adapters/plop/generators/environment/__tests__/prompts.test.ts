@@ -236,6 +236,7 @@ describe("prompts with prefilled answers", () => {
   });
 });
 
+// eslint-disable-next-line max-lines-per-function
 describe("prompts — shared core state resolution", () => {
   const cloudAccount: CloudAccount = {
     csp: "azure",
@@ -333,6 +334,103 @@ describe("prompts — shared core state resolution", () => {
     } finally {
       promptSpy.mockRestore();
       consoleLogSpy.mockRestore();
+    }
+  });
+
+  it("uses an explicit core state key without prompting", async () => {
+    const terraformStateExists = vi.fn().mockResolvedValue(true);
+
+    const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getTerraformBackend: vi.fn().mockResolvedValue(backend),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      terraformStateExists,
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: { owner: "pagopa", repo: "dx" },
+        initialAnswers: {
+          ...initialAnswers,
+          coreStateKey: "dx.core.dev.tfstate",
+        },
+      })(inquirer);
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(terraformStateExists).toHaveBeenCalledWith(
+        backend,
+        "dx.core.dev.tfstate",
+      );
+      expect(result).toMatchObject({
+        coreStateKey: "dx.core.dev.tfstate",
+      });
+    } finally {
+      promptSpy.mockRestore();
+    }
+  });
+
+  it("fails when the explicit core state key does not exist", async () => {
+    const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getTerraformBackend: vi.fn().mockResolvedValue(backend),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      terraformStateExists: vi.fn().mockResolvedValue(false),
+    };
+
+    await expect(
+      prompts({
+        cloudAccountRepository,
+        cloudAccountService,
+        github: { owner: "pagopa", repo: "dx" },
+        initialAnswers: {
+          ...initialAnswers,
+          coreStateKey: "missing.tfstate",
+        },
+      })(inquirer),
+    ).rejects.toThrow(
+      'No Terraform state named "missing.tfstate" was found in the "sttest" storage account.',
+    );
+  });
+
+  it("fails instead of prompting on non-interactive runs", async () => {
+    const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getTerraformBackend: vi.fn().mockResolvedValue(backend),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      terraformStateExists: vi.fn().mockResolvedValue(false),
+    };
+
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+
+    try {
+      await expect(
+        prompts({
+          cloudAccountRepository,
+          cloudAccountService,
+          github: { owner: "pagopa", repo: "dx" },
+          initialAnswers: {
+            ...initialAnswers,
+            init: { confirm: true },
+          },
+        })(inquirer),
+      ).rejects.toThrow("Pass --core-state-key");
+
+      expect(promptSpy).not.toHaveBeenCalled();
+    } finally {
+      promptSpy.mockRestore();
     }
   });
 

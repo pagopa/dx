@@ -89,6 +89,7 @@ export type Payload = z.infer<typeof payloadSchema>;
  * account id, since the full domain objects aren't available before resolving.
  */
 export const initialAnswersSchema = z.object({
+  coreStateKey: z.string().trim().min(1).optional(),
   env: z
     .object({
       cloudAccountIds: z.array(z.string().trim().min(1)).optional(),
@@ -463,24 +464,42 @@ const withImmutableRepositoryIds = async (
  * initialized environment.
  *
  * Returns `undefined` when the default `${CORE_STATE_SCOPE}.tfstate` exists, so
- * the generator keeps using the default. When the default is missing (for
- * example because the workspace shares a core stored under a legacy key), the
- * user is asked for the explicit core state key so it can be wired into the
- * generated IaC.
+ * the generator keeps using the default. An explicit key passed by the caller
+ * (e.g. the `--core-state-key` flag) takes precedence and is validated. When the
+ * default is missing and nothing was prefilled, the user is asked for the
+ * explicit core state key so it can be wired into the generated IaC.
  */
 const resolveCoreStateKey = async ({
   cloudAccountService,
   environment,
+  initialAnswers,
   promptModule,
 }: {
   cloudAccountService: CloudAccountService;
   environment: Environment;
+  initialAnswers: InitialAnswers;
   promptModule: typeof inquirer;
 }): Promise<string | undefined> => {
   const backend = await getTerraformBackend(cloudAccountService, environment);
 
   if (backend === undefined) {
     return undefined;
+  }
+
+  const prefilledCoreStateKey = initialAnswers.coreStateKey;
+
+  if (prefilledCoreStateKey !== undefined) {
+    const exists = await cloudAccountService.terraformStateExists(
+      backend,
+      prefilledCoreStateKey,
+    );
+
+    assert.ok(
+      exists,
+      `No Terraform state named "${prefilledCoreStateKey}" was found in the "${backend.storageAccountName}" storage account.`,
+    );
+
+    return prefilledCoreStateKey;
   }
 
   const defaultExists = await cloudAccountService.terraformStateExists(
@@ -490,6 +509,14 @@ const resolveCoreStateKey = async ({
 
   if (defaultExists) {
     return undefined;
+  }
+
+  // `--yes` is used for non-interactive runs: fail with an actionable message
+  // instead of blocking on a prompt.
+  if (initialAnswers.init?.confirm === true) {
+    throw new Error(
+      `The environment is already initialized, but no "${DEFAULT_CORE_STATE_KEY}" state exists in the "${backend.storageAccountName}" storage account. Pass --core-state-key with the key of the existing shared core state.`,
+    );
   }
 
   console.log(
@@ -570,6 +597,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       const coreStateKey = await resolveCoreStateKey({
         cloudAccountService: deps.cloudAccountService,
         environment: payload.env,
+        initialAnswers,
         promptModule,
       });
 
