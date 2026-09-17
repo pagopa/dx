@@ -188,6 +188,7 @@ const getTestTargets = (
 };
 
 const getInitTarget = (
+  opts: TerraformPluginOptions,
   projectType: ProjectType,
   initTargetName: string,
   cwd: string,
@@ -204,6 +205,7 @@ const getInitTarget = (
         executor: "@pagopa/nx-terraform-plugin:init",
         inputs: ["default"],
         options: {
+          platforms: opts.initTarget.platforms,
           projectRoot: "{projectRoot}",
         },
         outputs: [
@@ -267,7 +269,7 @@ const getTargets = (
   const initTargetName = getTargetName(opts, "init");
 
   const targets: [string, TargetConfiguration][] = [
-    getInitTarget(projectType, initTargetName, cwd),
+    getInitTarget(opts, projectType, initTargetName, cwd),
     [
       getTargetName(opts, "fmt"),
       {

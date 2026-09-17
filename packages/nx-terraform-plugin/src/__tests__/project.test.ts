@@ -421,6 +421,7 @@ describe("getProject application initialization and tags", () => {
         executor: "@pagopa/nx-terraform-plugin:init",
         inputs: ["default"],
         options: {
+          platforms: [],
           projectRoot: "{projectRoot}",
         },
         outputs: [
@@ -428,6 +429,21 @@ describe("getProject application initialization and tags", () => {
           "{projectRoot}/.terraform.lock.hcl",
           "{projectRoot}/tfmodules.lock.json",
         ],
+      });
+    });
+
+    it("passes configured provider lock platforms to the init target", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const options = parseOptions({
+        initTarget: {
+          platforms: ["linux_amd64", "darwin_arm64"],
+        },
+      });
+      const targets = getTargetsOrThrow(getProject(options, root));
+
+      expect(targets["init"]?.options).toEqual({
+        platforms: ["linux_amd64", "darwin_arm64"],
+        projectRoot: "{projectRoot}",
       });
     });
 
