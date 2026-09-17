@@ -33,8 +33,10 @@ describe("OctokitGitHubService", () => {
       const mockResponse = {
         data: {
           full_name: "pagopa/dx",
+          id: 1373623344,
           name: "dx",
           owner: {
+            id: 57742367,
             login: "pagopa",
           },
         },
@@ -47,6 +49,8 @@ describe("OctokitGitHubService", () => {
       expect(result).toBeInstanceOf(Repository);
       expect(result.name).toBe("dx");
       expect(result.owner).toBe("pagopa");
+      expect(result.id).toBe(1373623344);
+      expect(result.ownerId).toBe(57742367);
       expect(result.fullName).toBe("pagopa/dx");
       expect(result.url).toBe("https://github.com/pagopa/dx");
       expect(result.ssh).toBe("git@github.com:pagopa/dx.git");

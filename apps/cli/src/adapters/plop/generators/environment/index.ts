@@ -50,6 +50,7 @@ export default function (
       cloudAccountRepository,
       cloudAccountService,
       github,
+      gitHubService,
       initialAnswers,
     }),
   });
