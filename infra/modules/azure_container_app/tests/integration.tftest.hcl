@@ -217,7 +217,7 @@ run "apply_with_key_vault_secret_environment_variable" {
   }
 
   assert {
-    condition     = azurerm_container_app.this.identity[0].identity_ids[0] == run.setup.key_vault_secret_user_identity_id
+    condition     = contains(azurerm_container_app.this.identity[0].identity_ids, run.setup.key_vault_secret_user_identity_id)
     error_message = "Container App must use the identity authorized to read the Key Vault secret"
   }
 
@@ -227,17 +227,17 @@ run "apply_with_key_vault_secret_environment_variable" {
   }
 
   assert {
-    condition     = azurerm_container_app.this.secret[0].name == "integration-secret"
+    condition     = length([for secret in azurerm_container_app.this.secret : secret if secret.name == "integration-secret"]) == 1
     error_message = "Key Vault secret name must be normalized from the environment variable name"
   }
 
   assert {
-    condition     = azurerm_container_app.this.secret[0].key_vault_secret_id == run.setup.key_vault_secret_id
+    condition     = length([for secret in azurerm_container_app.this.secret : secret if secret.name == "integration-secret" && secret.key_vault_secret_id == run.setup.key_vault_secret_id]) == 1
     error_message = "Container App secret must preserve the versioned Key Vault secret URI"
   }
 
   assert {
-    condition     = azurerm_container_app.this.secret[0].identity == run.setup.key_vault_secret_user_identity_id
+    condition     = length([for secret in azurerm_container_app.this.secret : secret if secret.name == "integration-secret" && secret.identity == run.setup.key_vault_secret_user_identity_id]) == 1
     error_message = "Container App secret must use the identity authorized to read it"
   }
 
