@@ -54,6 +54,17 @@ const { mockSleep } = vi.hoisted(() => ({
   mockSleep: vi.fn().mockResolvedValue(undefined),
 }));
 
+const { mockBlobExists, mockGetBlobClient, mockGetContainerClient } =
+  vi.hoisted(() => {
+    const mockBlobExists = vi.fn().mockResolvedValue(true);
+    const mockGetBlobClient = vi.fn(() => ({ exists: mockBlobExists }));
+    const mockGetContainerClient = vi.fn(() => ({
+      getBlobClient: mockGetBlobClient,
+    }));
+
+    return { mockBlobExists, mockGetBlobClient, mockGetContainerClient };
+  });
+
 vi.mock("@azure/arm-authorization", () => ({
   AuthorizationManagementClient: class {
     roleAssignments = {
@@ -117,6 +128,12 @@ vi.mock("@azure/arm-resources-subscriptions", () => ({
   },
 }));
 
+vi.mock("@azure/storage-blob", () => ({
+  BlobServiceClient: class {
+    getContainerClient = mockGetContainerClient;
+  },
+}));
+
 vi.mock("@azure/keyvault-secrets", () => ({
   SecretClient: class {
     setSecret = mockSetSecret;
@@ -169,6 +186,10 @@ beforeEach(() => {
   mockLookup.mockReset();
   mockLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
   mockSleep.mockClear();
+  mockBlobExists.mockReset();
+  mockBlobExists.mockResolvedValue(true);
+  mockGetBlobClient.mockClear();
+  mockGetContainerClient.mockClear();
 });
 
 const expectBootstrapperFederatedCredentials = (repo: string) => {
@@ -722,5 +743,57 @@ describe("initialize", () => {
     expect(mockLookup).toHaveBeenCalledTimes(2);
     expect(mockSleep).toHaveBeenCalledWith(10_000);
     expect(mockSetSecret).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("terraformStateExists", () => {
+  const backend = {
+    resourceGroupName: "dx-d-itn-tfstate-rg-01",
+    storageAccountName: "dxditntfstatest01",
+    subscriptionId: "sub-1",
+    type: "azurerm" as const,
+  };
+
+  test("checks the given key in the terraform-state container", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobExists.mockResolvedValueOnce(true);
+
+    const result = await cloudAccountService.terraformStateExists(
+      backend,
+      "core.tfstate",
+    );
+
+    expect(result).toBe(true);
+    expect(mockGetContainerClient).toHaveBeenCalledWith("terraform-state");
+    expect(mockGetBlobClient).toHaveBeenCalledWith("core.tfstate");
+  });
+
+  test("returns false when the state is not found", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobExists.mockResolvedValueOnce(false);
+
+    const result = await cloudAccountService.terraformStateExists(
+      backend,
+      "core.tfstate",
+    );
+
+    expect(result).toBe(false);
+  });
+
+  test("returns false when the caller cannot read the state", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobExists.mockRejectedValueOnce(
+      Object.assign(new Error("forbidden"), { statusCode: 403 }),
+    );
+
+    const result = await cloudAccountService.terraformStateExists(
+      backend,
+      "core.tfstate",
+    );
+
+    expect(result).toBe(false);
   });
 });

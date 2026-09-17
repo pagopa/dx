@@ -27,6 +27,17 @@ describe("terraformStateKey", () => {
     expect(result).toBe("dx/shared/bootstrapper.tfstate");
   });
 
+  it("keeps the shared core state at the root of the storage account", () => {
+    expect(terraformStateKey(createMockContext(), "core")).toBe("core.tfstate");
+
+    expect(
+      terraformStateKey(
+        createMockContext({ workspace: { domain: "api" } }),
+        "core",
+      ),
+    ).toBe("core.tfstate");
+  });
+
   it("supports hyphenated names", () => {
     const result = terraformStateKey(
       createMockContext({

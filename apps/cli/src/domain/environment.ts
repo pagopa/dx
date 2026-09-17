@@ -7,6 +7,24 @@ import {
 } from "./cloud-account.js";
 import { TerraformBackend } from "./remote-backend.js";
 
+/**
+ * Name of the shared core Terraform state scope.
+ *
+ * The core is shared by every workspace domain using the same prefix, so its
+ * state does not belong to a single domain.
+ */
+export const CORE_STATE_SCOPE = "core";
+
+/**
+ * Default key of the shared core Terraform state.
+ *
+ * The Terraform state storage account is already scoped by prefix and
+ * environment, and the core is shared across domains, so the core state lives
+ * at the root of the `terraform-state` container instead of following the
+ * `prefix/domain/scope.tfstate` layout used by workspace-scoped entries.
+ */
+export const DEFAULT_CORE_STATE_KEY = `${CORE_STATE_SCOPE}.tfstate`;
+
 export const baseEnvironmentNames = ["dev", "prod", "uat"] as const;
 
 export const environmentShort = {
