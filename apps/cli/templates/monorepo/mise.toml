@@ -1,19 +1,9 @@
 [tools]
-acli = "latest"
-act = "latest"
 aws-cli = { version = "2.36", symlink_bins = "true" }
 azure-cli = { version = "2.87", depends = ["uv"] }
-copilot = "latest"
-github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
-go = "1.26"
-golangci-lint = "2.12.2"
-jq = "1.8"
-"npm:nx" = "23.1"
+github-cli = { version = "latest" }
 pre-commit = "4.6"
 python = "3.14.6"
-qdns = "latest"
-ripgrep = "latest"
-shellcheck = "0.11"
 terraform-docs = "0.24"
 tflint = "0.63"
 trivy = "0.74"
