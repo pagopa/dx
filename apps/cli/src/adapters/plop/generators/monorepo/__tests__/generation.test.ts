@@ -119,7 +119,10 @@ describe("monorepo generator — file generation", () => {
     );
     expect(miseConfig).toContain('"npm:nx" = "23.1"');
     expect(miseConfig).toContain(
-      'idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]',
+      'azure-cli = { version = "2.87", depends = ["uv"] }',
+    );
+    expect(miseConfig).toContain(
+      'idiomatic_version_file_enable_tools = ["node", "python", "terraform"]',
     );
   });
 

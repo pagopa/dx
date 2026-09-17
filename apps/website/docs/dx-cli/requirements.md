@@ -22,7 +22,8 @@ The following tools must be installed on your machine:
 | [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only) |
 
 `dx init` checks for mise before scaffolding the repository, then uses it to
-install the generated toolchain before installing the workspace dependencies.
+lock and install the generated toolchain before installing the workspace
+dependencies.
 
 Before running any command that interacts with GitHub or a cloud provider,
 ensure you are logged in:

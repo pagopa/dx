@@ -13,7 +13,7 @@ Bootstrap a new project following DevEx conventions.
 **Always provisions**:
 
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
-  a mise toolchain configuration.
+  a locked mise toolchain configuration.
 
 ### Prompt Reference
 

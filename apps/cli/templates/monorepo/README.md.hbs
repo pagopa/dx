@@ -6,11 +6,14 @@
 
 ### Using local machine
 
-This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production, use [mise](https://mise.jdx.dev/) to install the required tools.
+This project uses specific versions of `node`, `pnpm` and `terraform`. The
+resolved toolchain is recorded in `mise.lock`. To make sure your development
+setup matches with production, use [mise](https://mise.jdx.dev/) to install the
+required tools.
 
 1. Install [mise](https://mise.jdx.dev/installing-mise.html)
 
-2. Install the toolchain declared in `mise.toml`
+2. Install the locked toolchain declared in `mise.toml` and `mise.lock`
 
 ```bash
 mise install
