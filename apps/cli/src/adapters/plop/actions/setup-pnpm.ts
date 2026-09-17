@@ -25,6 +25,7 @@ export default function (plop: NodePlopAPI) {
       extendEnv: false, // Don't include process.env variables
     });
     await $`mise install`;
+    await $`mise exec -- corepack use pnpm@10`;
     await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
     await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest`;
     await $`mise exec -- pnpm install`;
