@@ -267,6 +267,34 @@ run "normalized_environment_variable_name_cannot_reference_multiple_key_vault_se
   ]
 }
 
+run "authentication_secret_alias_cannot_collide_with_environment_variable_secret" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = "https://kv-test.vault.azure.net/secrets/entra-id-secret"
+      }
+    }
+    containers = [{
+      image = "nginx:latest"
+      environment_variables = [{
+        name  = "ENTRA_ID_CLIENT_SECRET"
+        value = "https://kv-test.vault.azure.net/secrets/another-secret"
+      }]
+      liveness_probe = {
+        path = "/"
+      }
+    }]
+  }
+
+  expect_failures = [
+    azurerm_container_app.this,
+  ]
+}
+
 # --- custom_domain validation ---
 
 run "custom_domain_requires_public_access" {
@@ -400,6 +428,24 @@ run "authentication_invalid_kv_uri" {
         client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
         client_secret_key_vault_id = "not-a-valid-kv-uri"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.authentication,
+  ]
+}
+
+run "authentication_invalid_kv_host" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        client_secret_key_vault_id = "https://example.com/secrets/client-secret"
       }
     }
   }

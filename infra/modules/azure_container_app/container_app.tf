@@ -199,6 +199,11 @@ resource "azurerm_container_app" "this" {
       error_message = "Environment variables with the same normalized name must use the same Key Vault secret URI."
     }
 
+    precondition {
+      condition     = var.authentication == null || !contains(keys(local.key_vault_secret_ids_by_name), "entra-id-client-secret")
+      error_message = "The normalized environment variable name 'entra-id-client-secret' is reserved when authentication is configured."
+    }
+
     ignore_changes = [
       # The image is not managed by Terraform, but instead updated by CD pipelines
       template[0].container[0].image,

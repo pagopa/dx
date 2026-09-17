@@ -132,8 +132,8 @@ variable "authentication" {
   description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets."
 
   validation {
-    condition     = var.authentication == null || startswith(var.authentication.azure_active_directory.client_secret_key_vault_id, "https://")
-    error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI (must start with 'https://')."
+    condition     = var.authentication == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
+    error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI."
   }
 }
 
