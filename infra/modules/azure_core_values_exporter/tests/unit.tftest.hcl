@@ -66,3 +66,19 @@ run "core_values_exporter_reads_azurerm_state" {
     error_message = "Exporter outputs must be derived from the mocked core state."
   }
 }
+
+# A remote state that exists but does not expose the `values` output (e.g. a wrong
+# or empty `core_state.key`) must fail with an actionable error instead of the
+# generic "Unsupported attribute" raised while evaluating `local.values`.
+run "core_values_exporter_fails_when_values_output_is_missing" {
+  command = plan
+
+  override_data {
+    target = data.terraform_remote_state.core_azurerm[0]
+    values = {
+      outputs = {}
+    }
+  }
+
+  expect_failures = [data.terraform_remote_state.core_azurerm[0]]
+}
