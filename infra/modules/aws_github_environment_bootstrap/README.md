@@ -99,6 +99,12 @@ repository = {
 }
 ```
 
+The module reads the numeric owner and repository IDs from GitHub and trusts
+**both** OIDC subject formats: the name-based one used by repositories created
+before **2026-07-15** and the immutable one
+(`repo:OWNER@OWNER-ID/REPO@REPO-ID:...`) used by repositories created or renamed
+after that date.
+
 #### `vpc`
 
 VPC configuration for the GitHub self-hosted runner on CodeBuild:
@@ -401,6 +407,8 @@ resource "aws_iam_policy" "custom_app_policy" {
 | [aws_iam_policy_document.ecr_push_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.ecs_read_only_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.github_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [github_organization.owner](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/organization) | data source |
+| [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/repository) | data source |
 
 ## Inputs
 
