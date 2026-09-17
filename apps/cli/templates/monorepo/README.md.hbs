@@ -4,53 +4,21 @@
 
 ## Getting Started
 
-### Using Devcontainer
-
-The preferred way to setup your development environment is to use [Devcontainer](https://containers.dev) ([Host system requirements](https://code.visualstudio.com/docs/devcontainers/containers#_system-requirements)).
-
-> [!TIP]
-> If you are on macOS we recommend using [Rancher Desktop](https://rancherdesktop.io/) configured to use `VZ` as _Virtual Machine Type_ and `virtiofs` as volume _Mount Type_.
-
-#### Visual Studio Code
-
-1. Make sure `docker` is available and running in your host system
-2. Install the [Devcontainer Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-3. Open the project root folder and select `Dev Containers: Reopen in Container` from the command palette
-4. Visual Studio Code will build the devcontainer image and then open the project inside the container, with all the needed tools and extension configured
-
-#### Console
-
-If you use a code editor that doesn't support Dev Container, you can still run it in your terminal.
-
-1. Follow the instructions of the following chapter ("Using local machine") to setup your local environment
-2. Run devcontainer from your terminal
-```bash
-pnpm devcontainer up --workspace-folder .
-pnpm devcontainer exec --workspace-folder . /bin/bash
-```
-
 ### Using local machine
 
-This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
+This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production, use [mise](https://mise.jdx.dev/) to install the required tools.
 
-1. Install and configure the following tools in your machine
+1. Install [mise](https://mise.jdx.dev/installing-mise.html)
 
-- [nodenv](https://github.com/nodenv/nodenv) - Node version manager
-- [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
-- [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
-- [tflint](https://github.com/terraform-linters/tflint) - A Pluggable Terraform Linter
-- [pre-commit](https://pre-commit.com/) - A framework for managing and maintaining multi-language pre-commit hooks
-
-2. Install `node` at the right version used by this project
+2. Install the toolchain declared in `mise.toml`
 
 ```bash
-cd {{ repoName }}
-nodenv install
+mise install
 ```
 
 3. Install dependencies using `pnpm`
 
-```bashbash
+```bash
 pnpm install
 ```
 
