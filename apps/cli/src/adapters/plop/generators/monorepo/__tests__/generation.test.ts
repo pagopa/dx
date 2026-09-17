@@ -108,6 +108,21 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
 
+  it("includes the mise toolchain configuration", async () => {
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedFiles = await fs.readdir(generatedRoot);
+    expect(generatedFiles).toContain("mise.toml");
+
+    const miseConfig = await fs.readFile(
+      path.join(generatedRoot, "mise.toml"),
+      "utf-8",
+    );
+    expect(miseConfig).toContain('"npm:nx" = "23.1"');
+    expect(miseConfig).toContain(
+      'idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]',
+    );
+  });
+
   it("applies the repository-specific gitignore customization", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
