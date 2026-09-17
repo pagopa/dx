@@ -8,20 +8,18 @@ It supports both **ESLint 9** and **ESLint 10**.
 
 1. Install `@pagopa/eslint-config` together with its peer dependencies.
 
-   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`), and `prettier`.
+   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`)
 
    For ESLint 10:
 
    ```shell
    pnpm add -D eslint@^10 @eslint/js@^10 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
    For ESLint 9:
 
    ```shell
    pnpm add -D eslint@^9 @eslint/js@^9 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
 2. Create a file names `eslint.config.js` at the root of your workspace with the following content
@@ -48,22 +46,56 @@ It supports both **ESLint 9** and **ESLint 10**.
 
 ## Test-runner support
 
-The default entry point ships rules for [Vitest](https://vitest.dev/). A separate
-`@pagopa/eslint-config/jest` subpath provides the equivalent rules for
-[Jest](https://jestjs.io/), which is the default test runner for React Native apps.
+The config requires one of the following test-runner plugins to be installed:
 
-### Jest
+- [Vitest](https://vitest.dev/): `@vitest/eslint-plugin`
+- [Jest](https://jestjs.io/): `eslint-plugin-jest`
 
-Install `eslint-plugin-jest` alongside the regular peer dependencies:
+If both plugins are installed, the config loads Vitest rules with precedence.
+
+## Migration guide
+
+### From versions with the `/jest` subpath
+
+The `/jest` subpath is no longer required. Import the main package entry point
+for both Vitest and Jest configurations:
+
+```js
+import pagopa from "@pagopa/eslint-config";
+
+export default pagopa;
+```
+
+Install the plugin for the test runner used by your repository. If both plugins
+are installed, Vitest rules are selected.
+
+### Peer dependencies
+
+`@vitest/eslint-plugin` is now an optional peer dependency, alongside
+`eslint-plugin-jest`. Install at least one of them in the repository that
+consumes `@pagopa/eslint-config`:
+
+```shell
+pnpm add -D @vitest/eslint-plugin
+```
+
+or:
 
 ```shell
 pnpm add -D eslint-plugin-jest
 ```
 
-Then import the `/jest` subpath:
+### Formatting
 
-```js
-import pagopa from "@pagopa/eslint-config/jest";
+Formatting is no longer run or configured by `@pagopa/eslint-config`. Add a
+format task to your repository and configure the formatter independently. For
+example, with [Prettier](https://prettier.io/):
 
-export default pagopa;
+```json
+{
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
 ```

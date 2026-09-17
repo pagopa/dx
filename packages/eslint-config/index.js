@@ -1,20 +1,37 @@
-import vitest from "@vitest/eslint-plugin";
+import eslint from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
+import perfectionist from "eslint-plugin-perfectionist";
+import tseslint from "typescript-eslint";
 
-import base, { TEST_FILES } from "./base.js";
+import testConfig from "./test-config.js";
 
 export default [
-  ...base,
+  eslint.configs.recommended,
+  ...tseslint.configs.strict,
+  ...tseslint.configs.stylistic,
+  perfectionist.configs["recommended-natural"],
+  eslintConfigPrettier,
   {
-    files: TEST_FILES,
-    ...vitest.configs.recommended,
     rules: {
-      ...vitest.configs.recommended.rules,
-      "@typescript-eslint/no-empty-function": "off",
-      "vitest/prefer-called-with": "error",
-      "vitest/prefer-equality-matcher": "error",
-      "vitest/prefer-expect-resolves": "error",
-      "vitest/prefer-spy-on": "error",
-      "vitest/prefer-todo": "error",
+      "@typescript-eslint/no-unused-expressions": "error",
+      "@typescript-eslint/no-unused-vars": ["error", { args: "after-used" }],
+      "arrow-body-style": "error",
+      complexity: "error",
+      eqeqeq: ["error", "smart"],
+      "guard-for-in": "error",
+      "max-lines-per-function": ["error", 200],
+      "no-bitwise": "error",
+      "no-eval": "error",
+      "no-new-wrappers": "error",
+      "no-param-reassign": "error",
+      "no-undef-init": "error",
+      "no-var": "error",
+      "prefer-const": "error",
+      radix: "error",
     },
   },
+  {
+    ignores: ["**/generated/*", "**/dist/**", "**/bin/**"],
+  },
+  testConfig,
 ];
