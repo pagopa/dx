@@ -370,7 +370,43 @@ const fetchSummary = async (
         FILTER (WHERE TRIM(wr.conclusion) = 'success') / 60 AS "totalDurationMinutes",
       SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
         FILTER (WHERE TRIM(wr.conclusion) = 'failure') / 60 AS "failedDurationMinutes",
-      MIN(wr.created_at) AS "firstPipelineDate"
+      MIN(wr.created_at) AS "firstPipelineDate",
+      (SELECT COUNT(*)::int
+        FROM workflow_runs wr
+        JOIN workflows w ON wr.workflow_id = w.id
+        JOIN repositories r ON wr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
+          AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND wr.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${workflowNameExclusion("w.name")}) AS "previousTotalPipelines",
+      (SELECT AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60
+        FROM workflow_runs wr
+        JOIN workflows w ON wr.workflow_id = w.id
+        JOIN repositories r ON wr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
+          AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND wr.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${workflowNameExclusion("w.name")}) AS "previousAvgDurationMinutes",
+      (SELECT SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60
+        FROM workflow_runs wr
+        JOIN workflows w ON wr.workflow_id = w.id
+        JOIN repositories r ON wr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
+          AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND wr.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${workflowNameExclusion("w.name")}) AS "previousTotalDurationMinutes",
+      (SELECT SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60
+        FROM workflow_runs wr
+        JOIN workflows w ON wr.workflow_id = w.id
+        JOIN repositories r ON wr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'failure'
+          AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND wr.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${workflowNameExclusion("w.name")}) AS "previousFailedDurationMinutes"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id

@@ -2,6 +2,7 @@
 
 "use client";
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import Link from "next/link";
 
 import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
@@ -85,6 +86,12 @@ export default function TechradarDashboard() {
 
   const usageTrendByDate = new Map<string, number>();
   for (const row of data?.usageTrend ?? []) {
+    // The zero-adoption marker only exists to keep the trend line continuous;
+    // it is not a tool and must not be counted as a usage.
+    if (row.toolKey === TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY) {
+      continue;
+    }
+
     const date = row.capturedAt.slice(0, 10);
     usageTrendByDate.set(
       date,

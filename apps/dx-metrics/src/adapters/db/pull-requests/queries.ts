@@ -1,6 +1,7 @@
 /** SQL queries and data transformation for the pull-request dashboard. */
 import { sql } from "drizzle-orm";
 
+import { METRIC_TARGETS } from "@/lib/config";
 import { buildPullRequestsInsights } from "@/lib/insights/pull-requests";
 import type { WithInsights } from "@/lib/insights/types";
 import { PR_SIZE_BUCKETS } from "@/lib/pr-size-buckets";
@@ -33,12 +34,14 @@ import {
   prDateCountRowSchema,
   prLeadTimeMovingAvgRowSchema,
   prLeadTimeTrendRowSchema,
+  prOpenBacklogRowSchema,
   prOpenCountRowSchema,
   prSizeDistributionRowSchema,
   prSizeRowSchema,
   prsByContributorRowSchema,
   prSummaryCardsSchema,
   slowestPrRowSchema,
+  stalePrRowSchema,
 } from "./schemas";
 
 // Size buckets come from `@/lib/pr-size-buckets`, the same list the insight
@@ -86,15 +89,23 @@ export const fetchPrDashboard = async (
 
   const referenceDate = await fetchReferenceDate(db, fullName);
 
-  const [cards, leadTime, counts, quality, leadTimeStats, prsByContributor] =
-    await Promise.all([
-      fetchPrSummary(db, fullName, referenceDate, days),
-      fetchLeadTimeData(db, fullName, referenceDate, days),
-      fetchPrCountData(db, fullName, referenceDate, days),
-      fetchPrQualityData(db, fullName, referenceDate, days),
-      fetchLeadTimeStats(db, fullName, referenceDate, days),
-      fetchPrsByContributor(db, fullName, referenceDate, days),
-    ]);
+  const [
+    cards,
+    leadTime,
+    counts,
+    quality,
+    leadTimeStats,
+    prsByContributor,
+    openBacklog,
+  ] = await Promise.all([
+    fetchPrSummary(db, fullName, referenceDate, days),
+    fetchLeadTimeData(db, fullName, referenceDate, days),
+    fetchPrCountData(db, fullName, referenceDate, days),
+    fetchPrQualityData(db, fullName, referenceDate, days),
+    fetchLeadTimeStats(db, fullName, referenceDate, days),
+    fetchPrsByContributor(db, fullName, referenceDate, days),
+    fetchPrOpenBacklog(db, fullName, referenceDate, days),
+  ]);
 
   const dashboard = {
     cards,
@@ -103,6 +114,7 @@ export const fetchPrDashboard = async (
     ...quality,
     ...leadTimeStats,
     ...prsByContributor,
+    ...openBacklog,
   };
   return {
     ...dashboard,
@@ -463,6 +475,68 @@ async function fetchPrsByContributor(
   };
 }
 
+/**
+ * Point-in-time backlog for pull requests that were never merged: how many are
+ * still open now, how many of those have had no activity for longer than the
+ * stale target, and how many were closed without merging during the window.
+ * The list of stale PRs carries the concrete numbers so the reading is
+ * actionable instead of just descriptive.
+ */
+async function fetchPrOpenBacklog(
+  db: Database,
+  fullName: string,
+  referenceDate: string,
+  days: number,
+): Promise<Pick<PrDashboardResult, "openBacklog" | "stalePrs">> {
+  const [summary, stale] = await Promise.all([
+    db.execute(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE pr.closed_at IS NULL) AS "openNow",
+        COUNT(*) FILTER (
+          WHERE pr.closed_at IS NULL
+            AND COALESCE(pr.updated_at, pr.created_at)
+              < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
+        ) AS "stale",
+        COUNT(*) FILTER (
+          WHERE pr.closed_at IS NOT NULL
+            AND pr.closed_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        ) AS "closedUnmerged"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE r.full_name = ${fullName}
+        AND pr.merged_at IS NULL
+        AND ${humanPullRequest("pr")}
+    `),
+    db.execute(sql`
+      SELECT pr.number, pr.title, pr.author,
+        ROUND(EXTRACT(EPOCH FROM (
+          ${referenceDate}::timestamptz - COALESCE(pr.updated_at, pr.created_at)
+        )) / 86400, 0) AS "idleDays",
+        COALESCE(pr.updated_at, pr.created_at) AS "updatedAt"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE r.full_name = ${fullName}
+        AND pr.merged_at IS NULL AND pr.closed_at IS NULL
+        AND COALESCE(pr.updated_at, pr.created_at)
+          < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
+        AND ${humanPullRequest("pr")}
+      ORDER BY "idleDays" DESC, pr.number
+      LIMIT 25
+    `),
+  ]);
+
+  return {
+    openBacklog: parseSqlRow(
+      prOpenBacklogRowSchema,
+      summary.rows[0],
+      "pull-requests openBacklog",
+    ),
+    stalePrs: parseSqlRows(
+      stalePrRowSchema,
+      stale.rows,
+      "pull-requests stalePrs",
+    ),
+  };
+}
+
 async function fetchPrSummary(
   db: Database,
   fullName: string,
@@ -501,7 +575,32 @@ async function fetchPrSummary(
         ) last_approval ON true
         WHERE r.full_name = ${fullName}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-          AND ${humanPullRequest("pr")}) AS "avgTimeToMerge"
+          AND ${humanPullRequest("pr")}) AS "avgTimeToMerge",
+      (SELECT COUNT(*)
+        FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "previousTotalPrs",
+      (SELECT COUNT(DISTINCT pr.author)
+        FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.author IS NOT NULL
+          AND ${humanPullRequest("pr")}) AS "previousContributors",
+      (SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - last_approval.submitted_at)) / 3600)::numeric, 2)
+        FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+        JOIN LATERAL (
+          SELECT submitted_at FROM pull_request_reviews prr
+          WHERE prr.pull_request_id = pr.id AND prr.state = 'APPROVED'
+            AND ${isHumanReview("prr", "pr")}
+          ORDER BY submitted_at DESC LIMIT 1
+        ) last_approval ON true
+        WHERE r.full_name = ${fullName}
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "previousAvgTimeToMerge"
   `);
 
   return parseSqlRow(

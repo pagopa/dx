@@ -50,10 +50,22 @@ export const timeToMergeTrendRowSchema = z.object({
   week: sqlDateSchema,
 });
 
+/** Same card metrics over the immediately preceding, equally-sized window. */
+export const reviewPreviousValuesRowSchema = z.object({
+  previousAvgTimeToFirstReview: nullableSqlNumberSchema,
+  previousCommentsPerPr: nullableSqlNumberSchema,
+  previousMergedWithoutCommentsPct: nullableSqlNumberSchema,
+  previousTotalComments: nullableSqlNumberSchema,
+});
+
 export const pullRequestsReviewCardsSchema = z.object({
   avgTimeToFirstReview: nullableSqlNumberSchema,
   avgTimeToMerge: nullableSqlNumberSchema,
   commentsPerPr: nullableSqlNumberSchema,
+  previousAvgTimeToFirstReview: nullableSqlNumberSchema,
+  previousCommentsPerPr: nullableSqlNumberSchema,
+  previousMergedWithoutCommentsPct: nullableSqlNumberSchema,
+  previousTotalComments: nullableSqlNumberSchema,
   totalComments: nullableSqlNumberSchema,
 });
 

@@ -15,10 +15,14 @@ import TooltipIcon from "@/components/TooltipIcon";
 import {
   INSIGHT_THRESHOLDS,
   METRIC_TARGETS,
+  ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
-import { formatNumber } from "@/lib/format";
-import { severityFromTargetWithTrend } from "@/lib/insights/insight-helpers";
+import { formatNumber, formatShortDate } from "@/lib/format";
+import {
+  severityFromTargetWithTrend,
+  severityFromUpperThreshold,
+} from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -31,6 +35,10 @@ interface PrDashboardData {
     avgLeadTime: null | number;
     avgTimeToMerge: null | number;
     contributors: null | number;
+    /** Same metrics over the immediately preceding, equally-sized window. */
+    previousAvgTimeToMerge: null | number;
+    previousContributors: null | number;
+    previousTotalPrs: null | number;
     totalPrs: null | number;
   };
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
@@ -44,6 +52,15 @@ interface PrDashboardData {
   leadTimeTrend: { date: string; trendLine: number }[];
   mergedPrs: { date: string; prCount: number }[];
   newPrs: { date: string; prCount: number }[];
+  /**
+   * Optional so a cached payload from before this field existed still renders:
+   * the cards fall back to zero instead of throwing.
+   */
+  openBacklog?: {
+    closedUnmerged: number;
+    openNow: number;
+    stale: number;
+  };
   prComments: { avgComments: number; week: string }[];
   prSize: { avgAdditions: number; week: string }[];
   prSizeDistribution: {
@@ -59,6 +76,13 @@ interface PrDashboardData {
     mergedAt: string;
     number: number;
     title: string;
+  }[];
+  stalePrs?: {
+    author: null | string;
+    idleDays: number;
+    number: number;
+    title: string;
+    updatedAt: string;
   }[];
   unmergedPrs: { date: string; openPrs: number }[];
   previousLeadTime: null | number;
@@ -81,6 +105,31 @@ export default function PullRequestsDashboard() {
   // caption repeats it on the chart so a point is never read as the wrong unit.
   const bucketCaption =
     days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
+
+  const repositoryUrl = `https://github.com/${ORGANIZATION}/${repository}`;
+  // Tolerate a cached payload from before these fields existed rather than
+  // crashing the dashboard until the cache expires.
+  const openBacklog = data?.openBacklog ?? {
+    closedUnmerged: 0,
+    openNow: 0,
+    stale: 0,
+  };
+  const stalePrs = data?.stalePrs ?? [];
+  // Share of the open backlog that has gone quiet; drives the stale card badge
+  // with the same threshold the insight uses.
+  const staleShare =
+    openBacklog.openNow > 0 ? openBacklog.stale / openBacklog.openNow : null;
+  const staleSeverity =
+    staleShare === null
+      ? undefined
+      : severityFromUpperThreshold(staleShare, INSIGHT_THRESHOLDS.stalePrShare);
+
+  // The same current-vs-previous comparison the lead-time card uses, so every
+  // summary card reads the change against the adjacent window the same way.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) => (current != null && previous != null ? percentChange(current, previous) : null);
 
   // One comparison everywhere: the current period versus the immediately
   // preceding, equally-sized window — the same value shown as `previous` — so
@@ -181,18 +230,39 @@ export default function PullRequestsDashboard() {
               sparkline={leadTimeSparkline}
             />
             <MetricCard
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.avgTimeToMerge,
+                data.cards.previousAvgTimeToMerge,
+              )}
               label="Avg Time to Merge"
+              previousValue={data.cards.previousAvgTimeToMerge}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToMerge}
               value={data.cards.avgTimeToMerge}
             />
             <MetricCard
+              deltaDirection="higher-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.totalPrs,
+                data.cards.previousTotalPrs,
+              )}
               label="Total PRs"
+              previousValue={data.cards.previousTotalPrs}
               tooltip={tooltipContent.totalPrs}
               value={data.cards.totalPrs}
             />
             <MetricCard
+              deltaDirection="higher-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.contributors,
+                data.cards.previousContributors,
+              )}
               label="Contributors"
+              previousValue={data.cards.previousContributors}
               tooltip={tooltipContent.contributors}
               value={data.cards.contributors}
             />
@@ -273,6 +343,25 @@ export default function PullRequestsDashboard() {
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Backlog
             </h3>
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <MetricCard
+                label="Open PRs Now"
+                tooltip={tooltipContent.openPrsNow}
+                value={openBacklog.openNow}
+              />
+              <MetricCard
+                label={`Stale Open PRs (> ${METRIC_TARGETS.staleOpenPrDays} days)`}
+                sampleSize={openBacklog.openNow}
+                severity={staleSeverity}
+                tooltip={tooltipContent.staleOpenPrs}
+                value={openBacklog.stale}
+              />
+              <MetricCard
+                label="Closed Without Merge"
+                tooltip={tooltipContent.closedUnmerged}
+                value={openBacklog.closedUnmerged}
+              />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleLineChart
                 caption="per day"
@@ -305,6 +394,53 @@ export default function PullRequestsDashboard() {
                 xKey="date"
               />
             </div>
+            {stalePrs.length > 0 && (
+              <DataTable
+                columns={[
+                  {
+                    key: "number",
+                    label: "#",
+                    renderCell: (value) => (
+                      <a
+                        className="text-blue-600 hover:underline"
+                        href={`${repositoryUrl}/pull/${value}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        #{value}
+                      </a>
+                    ),
+                  },
+                  { key: "title", label: "Title" },
+                  {
+                    key: "author",
+                    label: "Author",
+                    renderCell: (value) =>
+                      value ? (
+                        <a
+                          className="text-blue-600 hover:underline"
+                          href={`https://github.com/${value}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {String(value)}
+                        </a>
+                      ) : (
+                        "—"
+                      ),
+                  },
+                  { key: "idleDays", label: "Idle (days)" },
+                  {
+                    key: "updatedAt",
+                    label: "Last activity",
+                    renderCell: (value) => formatShortDate(String(value)),
+                  },
+                ]}
+                data={stalePrs}
+                title={`Stale Pull Requests (> ${METRIC_TARGETS.staleOpenPrDays} days idle)`}
+                tooltip={tooltipContent.stalePrs}
+              />
+            )}
           </section>
 
           <section className="space-y-4">
@@ -380,7 +516,20 @@ export default function PullRequestsDashboard() {
               columns={[
                 { key: "title", label: "Title" },
                 { key: "leadTimeDays", label: "Lead Time (days)" },
-                { key: "number", label: "#" },
+                {
+                  key: "number",
+                  label: "#",
+                  renderCell: (value) => (
+                    <a
+                      className="text-blue-600 hover:underline"
+                      href={`${repositoryUrl}/pull/${value}`}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      #{value}
+                    </a>
+                  ),
+                },
                 { key: "createdAt", label: "Created" },
                 { key: "mergedAt", label: "Merged" },
               ]}

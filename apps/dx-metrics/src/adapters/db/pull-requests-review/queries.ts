@@ -24,6 +24,7 @@ import {
   reviewDistributionRowSchema,
   reviewMatrixRowSchema,
   reviewMetricValueRowSchema,
+  reviewPreviousValuesRowSchema,
   timeToFirstReviewTrendRowSchema,
   timeToMergeTrendRowSchema,
 } from "./schemas";
@@ -174,6 +175,55 @@ export const getPullRequestsReviewDashboard = async (
       AND ${humanPullRequest("pr")}
   `);
 
+  // --- Same card metrics over the preceding, equally-sized window ---
+  // Powers the "vs prev" delta on every summary card. The populations mirror
+  // the current-window queries exactly (first review: PRs created; comments:
+  // PRs created; merged-without-comments: PRs merged), so the delta compares
+  // like with like.
+  const previousValues = await db.execute(sql`
+    SELECT
+      (SELECT ROUND(AVG(
+          EXTRACT(EPOCH FROM (first_review.submitted_at - pr.created_at)) / 3600
+        )::numeric, 2)
+        FROM pull_requests pr
+        JOIN repositories r ON pr.repository_id = r.id
+        JOIN LATERAL (
+          SELECT submitted_at FROM pull_request_reviews prr
+          WHERE prr.pull_request_id = pr.id
+            AND ${isHumanReview("prr", "pr")}
+          ORDER BY submitted_at ASC LIMIT 1
+        ) first_review ON true
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "previousAvgTimeToFirstReview",
+      (SELECT COALESCE(SUM(pr.total_comments_count), 0)
+        FROM pull_requests pr
+        JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "previousTotalComments",
+      (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
+        FROM pull_requests pr
+        JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND ${humanPullRequest("pr")}) AS "previousCommentsPerPr",
+      (SELECT ROUND(
+          COUNT(*) FILTER (WHERE COALESCE(pr.total_comments_count, 0) = 0)::numeric
+          / NULLIF(COUNT(*), 0) * 100
+        , 2)
+        FROM pull_requests pr
+        JOIN repositories r ON pr.repository_id = r.id
+        WHERE r.full_name = ${fullName}
+          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at IS NOT NULL
+          AND ${humanPullRequest("pr")}) AS "previousMergedWithoutCommentsPct"
+  `);
+
   // --- Code Review Distribution ---
   // Same population as `reviewMatrix`: pull requests opened by a human (not a
   // bot, not a draft) with a human review from someone other than the author.
@@ -233,6 +283,11 @@ export const getPullRequestsReviewDashboard = async (
 
   const dashboard = {
     cards: {
+      ...parseSqlRow(
+        reviewPreviousValuesRowSchema,
+        previousValues.rows[0],
+        "pull-requests-review previousValues",
+      ),
       avgTimeToFirstReview: parseSqlRow(
         reviewMetricValueRowSchema,
         avgTimeToFirstReview.rows[0],

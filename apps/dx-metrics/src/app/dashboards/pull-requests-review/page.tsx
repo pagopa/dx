@@ -16,6 +16,7 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
+import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -25,6 +26,11 @@ interface PrReviewDashboardData {
   cards: {
     avgTimeToFirstReview: null | number;
     commentsPerPr: null | number;
+    /** Same metrics over the immediately preceding, equally-sized window. */
+    previousAvgTimeToFirstReview: null | number;
+    previousCommentsPerPr: null | number;
+    previousMergedWithoutCommentsPct: null | number;
+    previousTotalComments: null | number;
     totalComments: null | number;
   };
   firstReviewPercentiles: {
@@ -109,6 +115,13 @@ export default function PullRequestsReviewDashboard() {
       ? Math.round(data.mergedWithoutCommentsShare * 10_000) / 100
       : null;
 
+  // Same current-vs-previous window comparison across every card, so the reader
+  // does not have to check which dashboards offer a delta.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
@@ -144,7 +157,14 @@ export default function PullRequestsReviewDashboard() {
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               breakdown={firstReviewBreakdown}
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.avgTimeToFirstReview,
+                data.cards.previousAvgTimeToFirstReview,
+              )}
               label="Avg Time to First Review"
+              previousValue={data.cards.previousAvgTimeToFirstReview}
               sampleSize={data.firstReviewPercentiles.count}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToFirstReview}
@@ -156,17 +176,36 @@ export default function PullRequestsReviewDashboard() {
               )}
             />
             <MetricCard
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.totalComments,
+                data.cards.previousTotalComments,
+              )}
               label="Total Comments"
+              previousValue={data.cards.previousTotalComments}
               tooltip={tooltipContent.totalComments}
               value={data.cards.totalComments}
             />
             <MetricCard
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.commentsPerPr,
+                data.cards.previousCommentsPerPr,
+              )}
               label="Comments / PR"
+              previousValue={data.cards.previousCommentsPerPr}
               tooltip={tooltipContent.commentsPerPr}
               value={data.cards.commentsPerPr}
             />
             <MetricCard
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                mergedWithoutCommentsPct,
+                data.cards.previousMergedWithoutCommentsPct,
+              )}
               label="Merged Without Comments"
+              previousValue={data.cards.previousMergedWithoutCommentsPct}
               suffix="%"
               tooltip={tooltipContent.mergedWithoutCommentsShare}
               value={mergedWithoutCommentsPct}
