@@ -3,8 +3,7 @@
  * which projects need to be built before publishing.
  *
  * Reads the nx-release-tags metadata comment from the PR body and outputs
- * a comma-separated list of PUBLIC project names to stdout.
- * Private projects are filtered out to avoid publish errors.
+ * a comma-separated list of project names to stdout.
  */
 import {
   createOctokit,
@@ -78,14 +77,9 @@ async function run(): Promise<void> {
     return;
   }
 
-  // Filter only public projects (to avoid publishing private packages)
-  console.error(
-    `Filtering public projects from ${matchedProjects.size} matched projects`,
-  );
   const publicProjects: string[] = [];
   for (const projectName of matchedProjects) {
-    const isPublic = await isPublicProject(projectName);
-    if (isPublic) {
+    if (await isPublicProject(projectName)) {
       publicProjects.push(projectName);
       console.error(`✓ ${projectName} is public`);
     } else {

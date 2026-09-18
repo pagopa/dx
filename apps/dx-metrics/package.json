@@ -1,9 +1,13 @@
 {
   "name": "dx-metrics",
   "version": "0.5.16",
-  "private": true,
   "type": "module",
   "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "...": true
+      }
+    },
     "release": {
       "docker": {
         "repositoryName": "pagopa/dx-metrics"

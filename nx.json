@@ -35,16 +35,30 @@
   },
   "release": {
     "versionPlans": true,
-    "projects": [
-      "apps/*",
-      "packages/*",
-      "actions/*",
-      "containers/*",
-      "infra/modules/*",
-      "providers/*",
-      "infra/scripts"
-    ],
     "projectsRelationship": "independent",
+    "groups": {
+      "applications": {
+        "projects": ["tag:release:docker", "!tag:private", "!tag:*:private"],
+        "docker": {
+          "preVersionCommand": "",
+          "registryUrl": "ghcr.io",
+          "versionSchemes": {
+            "production": "{versionActionsVersion}"
+          }
+        }
+      },
+      "npm-packages": {
+        "projects": [
+          "tag:npm:public",
+          "!tag:release:docker",
+          "!tag:private",
+          "!tag:*:private"
+        ]
+      },
+      "version-only": {
+        "projects": ["tag:private", "tag:*:private"]
+      }
+    },
     "version": {},
     "changelog": {
       "projectChangelogs": {

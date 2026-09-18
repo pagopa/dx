@@ -1,6 +1,6 @@
 {
   "name": "nx-release",
-  "description": "Action to automate releases of npm packages in an Nx monorepo. It creates a PR with the version changes and changelog updates, and when the PR is merged, it creates git tags and publishes the packages to npm.",
+  "description": "Action to automate releases of publishable projects in an Nx monorepo. It creates a PR with version changes and changelog updates, then creates git tags and publishes projects through their Nx release publishers.",
   "version": "0.3.10",
   "type": "module",
   "private": true,

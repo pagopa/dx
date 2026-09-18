@@ -155,6 +155,10 @@ export const createDockerReleaseNodes = (
     projectDisplayName,
     projectRoot,
   };
+  const dockerRepositoryName = getDockerRepositoryNameOverride(
+    context.workspaceRoot,
+    projectRoot,
+  );
 
   targets[options.buildTargetName] = buildDockerBuildTarget(dockerRunOptions);
 
@@ -179,9 +183,7 @@ export const createDockerReleaseNodes = (
     },
   };
 
-  if (
-    getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null
-  ) {
+  if (dockerRepositoryName !== null) {
     targets["nx-release-publish"] = {
       executor: "@pagopa/nx-dx-docker-plugin:release-publish",
       metadata: {
@@ -199,6 +201,7 @@ export const createDockerReleaseNodes = (
     projects: {
       [projectRoot]: {
         root: projectRoot,
+        ...(dockerRepositoryName !== null ? { tags: ["release:docker"] } : {}),
         targets,
       },
     },

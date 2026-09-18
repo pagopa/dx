@@ -1,9 +1,13 @@
 {
   "name": "dx-metrics-import",
   "version": "0.1.11",
-  "private": true,
   "type": "module",
   "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "...": true
+      }
+    },
     "release": {
       "docker": {
         "repositoryName": "pagopa/dx-metrics-import"

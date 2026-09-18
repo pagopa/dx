@@ -3,9 +3,18 @@
   "version": "0.2.14",
   "type": "module",
   "nx": {
+    "targets": {
+      "nx-release-publish": {
+        "...": true
+      }
+    },
     "docker": {
-      "repositoryName": "dx/mcp-server",
       "platform": "linux/amd64"
+    }
+  },
+  "release": {
+    "docker": {
+      "repositoryName": "dx/mcp-server"
     }
   },
   "description": "An MCP server that supports developers using DX tools.",
