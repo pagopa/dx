@@ -60,7 +60,7 @@ module "azure-{{displayName}}_core_values" {
     storage_account_name = "{{@root.terraform.backend.storageAccountName}}"
     subscription_id      = "{{@root.terraform.backend.subscriptionId}}"
     container_name       = "terraform-state"
-    key                  = "{{terraformStateKey @root "core"}}"
+    key                  = "{{#if @root.coreStateKey}}{{@root.coreStateKey}}{{else}}{{terraformStateKey @root "core"}}{{/if}}"
   }
 }
 

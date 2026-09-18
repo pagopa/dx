@@ -93,6 +93,11 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Business unit cannot be empty")
       .optional(),
     clientId: z.string().trim().min(1, "Client id cannot be empty").optional(),
+    coreStateKey: z
+      .string()
+      .trim()
+      .min(1, "Core state key cannot be empty")
+      .optional(),
     domain: workspaceSchema.shape.domain.optional(),
     installationId: z
       .string()
@@ -188,6 +193,7 @@ const buildBaseEnvironmentInitialAnswers = (
   };
 
   return {
+    ...(options.coreStateKey && { coreStateKey: options.coreStateKey }),
     ...(Object.keys(env).length > 0 && { env }),
     ...(Object.keys(tags).length > 0 && { tags }),
     ...(options.domain && { workspace: { domain: options.domain } }),
@@ -441,6 +447,12 @@ export const makeAddCommand = (
         )
         .addOption(new Option("--prefix <prefix>", "Environment prefix"))
         .addOption(new Option("--domain <domain>", "Workspace domain"))
+        .addOption(
+          new Option(
+            "--core-state-key <key>",
+            "Key of the shared core Terraform state in the state storage account",
+          ),
+        )
         .addOption(
           new Option("--business-unit <business-unit>", "Business unit tag"),
         )

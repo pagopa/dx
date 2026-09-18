@@ -7,13 +7,8 @@ import { Payload } from "../../generators/environment/prompts.js";
 import { terraformStateKey } from "../terraform-state-key.js";
 
 const createMockContext = (
-  overrides: Partial<Pick<Payload, "env" | "workspace">> = {},
-): Pick<Payload, "env" | "workspace"> => ({
-  env: {
-    cloudAccounts: [],
-    name: "dev",
-    prefix: "dx",
-  },
+  overrides: Partial<Pick<Payload, "workspace">> = {},
+): Pick<Payload, "workspace"> => ({
   workspace: {
     domain: "shared",
   },
@@ -21,10 +16,21 @@ const createMockContext = (
 });
 
 describe("terraformStateKey", () => {
-  it("returns keys using the prefix/domain/scope convention", () => {
+  it("returns keys using the domain/scope convention", () => {
     const result = terraformStateKey(createMockContext(), "bootstrapper");
 
-    expect(result).toBe("dx/shared/bootstrapper.tfstate");
+    expect(result).toBe("shared/bootstrapper.tfstate");
+  });
+
+  it("keeps the shared core state at the root of the storage account", () => {
+    expect(terraformStateKey(createMockContext(), "core")).toBe("core.tfstate");
+
+    expect(
+      terraformStateKey(
+        createMockContext({ workspace: { domain: "api" } }),
+        "core",
+      ),
+    ).toBe("core.tfstate");
   });
 
   it("supports hyphenated names", () => {
@@ -35,7 +41,7 @@ describe("terraformStateKey", () => {
       "mcp-server",
     );
 
-    expect(result).toBe("dx/playground/mcp-server.tfstate");
+    expect(result).toBe("playground/mcp-server.tfstate");
   });
 
   it("rejects names that would create nested paths", () => {

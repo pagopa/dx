@@ -55,6 +55,17 @@ export type CloudAccountService = {
     environment: EnvironmentId,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
+
+  /**
+   * Checks whether a Terraform state file exists in the given backend.
+   *
+   * Used to detect an already initialized workspace whose shared core state is
+   * not in the expected location.
+   */
+  terraformStateExists(
+    backend: TerraformBackend,
+    key: string,
+  ): Promise<boolean>;
 };
 
 export const cloudRegionSchema = z.object({

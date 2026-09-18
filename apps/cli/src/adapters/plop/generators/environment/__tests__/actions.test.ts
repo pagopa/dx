@@ -92,14 +92,11 @@ describe("actions", () => {
 
   test.each([
     {
-      expectedKeys: [
-        "dx/mytest/bootstrapper.tfstate",
-        "dx/mytest/core.tfstate",
-      ],
+      expectedKeys: ["mytest/bootstrapper.tfstate", "core.tfstate"],
       payload: getPayload(true),
     },
     {
-      expectedKeys: ["dx/mytest/bootstrapper.tfstate"],
+      expectedKeys: ["mytest/bootstrapper.tfstate"],
       payload: getPayload(false),
     },
   ])(

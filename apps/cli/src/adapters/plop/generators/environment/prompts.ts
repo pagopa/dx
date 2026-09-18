@@ -11,9 +11,12 @@ import {
   CloudRegion,
 } from "../../../../domain/cloud-account.js";
 import {
+  DEFAULT_CORE_STATE_KEY,
+  type Environment,
   EnvironmentInitStatus,
   environmentSchema,
   getInitializationStatus,
+  getTerraformBackend,
   hasUserPermissionToInitialize,
 } from "../../../../domain/environment.js";
 import * as azure from "../../../azure/locations.js";
@@ -64,6 +67,13 @@ export const workspaceSchema = z.object({
 });
 
 export const payloadSchema = z.object({
+  /**
+   * Key of the shared core Terraform state inside the state container.
+   *
+   * Only set when the default `core.tfstate` is not available and the user
+   * points to an existing (e.g. legacy) core state.
+   */
+  coreStateKey: z.string().trim().min(1).optional(),
   env: environmentSchema,
   github: githubRepoSchema,
   init: initSchema.optional(),
@@ -79,6 +89,7 @@ export type Payload = z.infer<typeof payloadSchema>;
  * account id, since the full domain objects aren't available before resolving.
  */
 export const initialAnswersSchema = z.object({
+  coreStateKey: z.string().trim().min(1).optional(),
   env: z
     .object({
       cloudAccountIds: z.array(z.string().trim().min(1)).optional(),
@@ -448,6 +459,102 @@ const withImmutableRepositoryIds = async (
   });
 };
 
+/**
+ * Resolve the key of the shared core Terraform state for an already
+ * initialized environment.
+ *
+ * Returns `undefined` when the default `${CORE_STATE_SCOPE}.tfstate` exists, so
+ * the generator keeps using the default. An explicit key passed by the caller
+ * (e.g. the `--core-state-key` flag) takes precedence and is validated. When the
+ * default is missing and nothing was prefilled, the user is asked for the
+ * explicit core state key so it can be wired into the generated IaC.
+ */
+const resolveCoreStateKey = async ({
+  cloudAccountService,
+  environment,
+  initialAnswers,
+  promptModule,
+}: {
+  cloudAccountService: CloudAccountService;
+  environment: Environment;
+  initialAnswers: InitialAnswers;
+  promptModule: typeof inquirer;
+}): Promise<string | undefined> => {
+  const backend = await getTerraformBackend(cloudAccountService, environment);
+
+  if (backend === undefined) {
+    return undefined;
+  }
+
+  const prefilledCoreStateKey = initialAnswers.coreStateKey;
+
+  if (prefilledCoreStateKey !== undefined) {
+    const exists = await cloudAccountService.terraformStateExists(
+      backend,
+      prefilledCoreStateKey,
+    );
+
+    assert.ok(
+      exists,
+      `No Terraform state named "${prefilledCoreStateKey}" was found in the "${backend.storageAccountName}" storage account.`,
+    );
+
+    return prefilledCoreStateKey;
+  }
+
+  const defaultExists = await cloudAccountService.terraformStateExists(
+    backend,
+    DEFAULT_CORE_STATE_KEY,
+  );
+
+  if (defaultExists) {
+    return undefined;
+  }
+
+  // `--yes` is used for non-interactive runs: fail with an actionable message
+  // instead of blocking on a prompt.
+  if (initialAnswers.init?.confirm === true) {
+    throw new Error(
+      `The environment is already initialized, but no "${DEFAULT_CORE_STATE_KEY}" state exists in the "${backend.storageAccountName}" storage account. Pass --core-state-key with the key of the existing shared core state.`,
+    );
+  }
+
+  console.log(
+    [
+      "",
+      chalk.bold.yellow("Shared core Terraform state not found."),
+      `The environment is already initialized, but no "${DEFAULT_CORE_STATE_KEY}" state exists in the "${backend.storageAccountName}" storage account.`,
+      "The core may have been created with a different (for example legacy) key.",
+      "",
+    ].join("\n"),
+  );
+
+  const { coreStateKey } = await promptModule.prompt({
+    default: DEFAULT_CORE_STATE_KEY,
+    message: `Core Terraform state key in "${backend.storageAccountName}"`,
+    name: "coreStateKey",
+    type: "input",
+    validate: async (value: string) => {
+      const key = value.trim();
+
+      if (key.length === 0) {
+        return "Core state key cannot be empty.";
+      }
+
+      const exists = await cloudAccountService.terraformStateExists(
+        backend,
+        key,
+      );
+
+      return exists
+        ? true
+        : `No Terraform state named "${key}" was found in "${backend.storageAccountName}".`;
+    },
+  });
+
+  return String(coreStateKey).trim();
+};
+
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (promptModule) => {
     const logger = getLogger(["gen", "env"]);
@@ -487,6 +594,17 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
     logger.debug("initialization status {initStatus}", { initStatus });
 
     if (initStatus.initialized) {
+      const coreStateKey = await resolveCoreStateKey({
+        cloudAccountService: deps.cloudAccountService,
+        environment: payload.env,
+        initialAnswers,
+        promptModule,
+      });
+
+      if (coreStateKey !== undefined) {
+        payload.coreStateKey = coreStateKey;
+      }
+
       return payload;
     }
 
