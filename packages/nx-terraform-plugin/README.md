@@ -123,3 +123,28 @@ before execution when the module lock is stale.
 The `init` target is intentionally not cached. This ensures that
 `terraform init` and frozen-lock verification cannot be skipped by an Nx cache
 hit.
+
+Provider lock platforms can be configured for inferred application init targets
+through the plugin options:
+
+```json
+{
+  "plugins": [
+    {
+      "plugin": "@pagopa/nx-terraform-plugin",
+      "include": ["infra/**"],
+      "options": {
+        "initTarget": {
+          "platforms": ["linux_amd64", "darwin_arm64"]
+        }
+      }
+    }
+  ]
+}
+```
+
+When platforms are configured, initialization runs
+`terraform providers lock -enable-plugin-cache -platform=...` after
+`terraform init`. An empty platform list skips provider locking. Frozen
+initialization runs `terraform init -lockfile=readonly` and fails if either
+`.terraform.lock.hcl` or `tfmodules.lock.json` changes.

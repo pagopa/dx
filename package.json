@@ -1,26 +1,28 @@
 {
   "name": "@pagopa/dx",
-  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1",
+  "scripts": {
+    "dx": "node ./apps/cli/bin/index.js",
+    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci"
+  },
   "devDependencies": {
     "@devcontainers/cli": "^0.88.0",
-    "@nx/docker": "23.1.1",
-    "@nx/eslint": "23.1.1",
-    "@nx/js": "23.1.1",
-    "@nx/plugin": "23.1.1",
-    "@nx/vitest": "23.1.1",
+    "@nx/docker": "^23.2.1",
+    "@nx/eslint": "^23.2.1",
+    "@nx/js": "^23.2.1",
+    "@nx/plugin": "^23.2.1",
+    "@nx/vitest": "^23.2.1",
     "@pagopa/nx-dx-docker-plugin": "workspace:^",
     "@pagopa/nx-terraform-plugin": "workspace:^",
     "@swc-node/register": "^1.12.1",
     "@swc/core": "^1.16.1",
+    "@swc/helpers": "~0.5.18",
     "@tsconfig/node24": "catalog:",
     "eslint": "catalog:",
     "nx": "catalog:",
+    "oxfmt": "^0.60.0",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "scripts": {
-    "dx": "node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci"
-  }
+  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
 }
