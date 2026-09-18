@@ -95,50 +95,11 @@ jobs:
           build_platforms: ${{ inputs.build_platforms }}
           push_to_registry: true
 
-  validate:
-    name: Validate Container App
-    runs-on: ubuntu-latest
-    environment:
-      name: ${{ inputs.environment }}-ci
-      deployment: false
-    permissions:
-      id-token: write
-    outputs:
-      revision_mode: ${{ steps.get_revision_mode.outputs.revision_mode }}
-    env:
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      CONTAINER_APP_NAME: ${{ inputs.container_app }}
-      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-
-    steps:
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
-
-      - name: Configure AZ CLI
-        run: |
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az configure --defaults group="$RESOURCE_GROUP_NAME"
-
-      - name: Get Container App Revision Mode
-        id: get_revision_mode
-        run: |
-          set -euo
-
-          revision_mode=$(az containerapp show \
-            --name "$CONTAINER_APP_NAME" \
-            --query "properties.configuration.activeRevisionsMode" \
-            --output tsv)
-
-          echo "::notice::Revision mode: $revision_mode"
-          echo "revision_mode=$revision_mode" >> "$GITHUB_OUTPUT"
-
   release:
     name: Deploy Container App Revision
     runs-on: ubuntu-latest
-    needs: [validate, build]
-    if: ${{ always() && needs.validate.result == 'success' && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    needs: build
+    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
@@ -146,7 +107,7 @@ jobs:
     outputs:
       current_revision_name: ${{ steps.get_current_revision.outputs.current_revision_name }}
       new_revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
-      revision_mode: ${{ needs.validate.outputs.revision_mode }}
+      revision_mode: ${{ steps.get_revision_mode.outputs.revision_mode }}
       skip_remaining_steps: ${{ steps.create_new_revision.outputs.skip_remaining_steps }}
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -200,6 +161,19 @@ jobs:
           az config set extension.use_dynamic_install=yes_without_prompt
           az configure --defaults group="$RESOURCE_GROUP_NAME"
 
+      - name: Get Container App Revision Mode
+        id: get_revision_mode
+        run: |
+          set -euo
+
+          revision_mode=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --query "properties.configuration.activeRevisionsMode" \
+            --output tsv)
+
+          echo "::notice::Revision mode: $revision_mode"
+          echo "revision_mode=$revision_mode" >> "$GITHUB_OUTPUT"
+
       - name: Get Container App Current Revision
         id: get_current_revision
         run: |
@@ -217,7 +191,7 @@ jobs:
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           IMAGE_REF: ${{ steps.image.outputs.image_ref }}
-          REVISION_MODE: ${{ needs.validate.outputs.revision_mode }}
+          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode }}
         run: |
           set -euo
 
@@ -283,7 +257,8 @@ jobs:
           fi
 
       - name: Deactivate New Revision
-        if: ${{ failure() && needs.validate.outputs.revision_mode == 'Multiple'
+        if:
+          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
           }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
@@ -301,10 +276,10 @@ jobs:
   auto_approve_deploy:
     name: Approve Deployment
     runs-on: ubuntu-latest
-    needs: [validate, build]
+    needs: build
     # If auto approval fails, the deployment can be approved manually.
     continue-on-error: true
-    if: ${{ !github.event.act && !inputs.disable_auto_deploy && always() && needs.validate.result == 'success' && needs.validate.outputs.revision_mode == 'Multiple' && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    if: ${{ !github.event.act && !inputs.disable_auto_deploy && always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
 
     steps:
       - name: Approve deployment
