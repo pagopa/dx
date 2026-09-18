@@ -17,8 +17,13 @@ The following tools must be installed on your machine:
 | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
 | [Node.js](https://nodejs.org/)                                                                              | **>= 22.0.0**                                 |
 | [Terraform](https://developer.hashicorp.com/terraform/install) or [tfenv](https://github.com/tfutils/tfenv) | latest                                        |
+| [mise](https://mise.jdx.dev/installing-mise.html)                                                           | latest                                        |
 | [GitHub CLI](https://cli.github.com/)                                                                       | latest                                        |
 | [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)                                  | latest (required for Azure environments only) |
+
+`dx init` checks for mise before scaffolding the repository, then uses it to
+lock and install the generated toolchain before installing the workspace
+dependencies.
 
 Before running any command that interacts with GitHub or a cloud provider,
 ensure you are logged in:

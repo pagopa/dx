@@ -45,7 +45,24 @@ describe("init preconditions", () => {
     const result = await runInitPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
-    expect(calledCommands()).toEqual(["terraform -version", "corepack -v"]);
+    expect(calledCommands()).toEqual(["terraform -version", "mise --version"]);
+  });
+
+  it("returns mise installation guidance when mise is unavailable", async () => {
+    const miseError = new Error("mise is not installed");
+    mocks.tf$
+      .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockRejectedValueOnce(miseError);
+
+    const result = await runInitPreconditions(presenter);
+
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.message).toBe(
+      "Please install mise before running this command. See https://mise.jdx.dev/installing-mise.html",
+    );
+    expect(error.cause).toBe(miseError);
+    expect(calledCommands()).toEqual(["terraform -version", "mise --version"]);
   });
 
   it("runAddEnvironmentPreconditions requires Azure login", async () => {

@@ -59,6 +59,12 @@ const techRadarToolCatalog = [
     toolName: "Nx",
   }),
   techRadarTool({
+    key: "mise",
+    path: "mise.toml",
+    radarSlug: "mise",
+    toolName: "mise",
+  }),
+  techRadarTool({
     key: "yarn",
     path: "yarn.lock",
     radarSlug: "yarn-classic",
