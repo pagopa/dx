@@ -2,7 +2,7 @@
 
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
-import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
+import { ALL_REPOSITORIES, REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
 import { focusRing } from "@/lib/utils";
 
 interface DashboardFiltersProps {
@@ -14,10 +14,17 @@ interface DashboardFiltersProps {
 }
 
 const showsRepositoryFilter = (mode: DashboardFilterMode) =>
-  mode === "repository-and-time" || mode === "repository-only";
+  mode === "repository-and-time" ||
+  mode === "repository-only" ||
+  mode === "all-repositories-and-time";
+
+const showsAllRepositoriesOption = (mode: DashboardFilterMode) =>
+  mode === "all-repositories-and-time";
 
 const showsTimeIntervalFilter = (mode: DashboardFilterMode) =>
-  mode === "repository-and-time" || mode === "time-only";
+  mode === "repository-and-time" ||
+  mode === "time-only" ||
+  mode === "all-repositories-and-time";
 
 const selectClassName =
   "block w-full cursor-pointer rounded-lg border border-[#30363d] bg-[#0d1117] px-4 py-2 text-sm text-[#e6edf3] transition-colors focus-visible:border-green-500";
@@ -46,6 +53,9 @@ export function DashboardFilters({
             onChange={(e) => onRepositoryChange?.(e.target.value)}
             value={repository}
           >
+            {showsAllRepositoriesOption(mode) && (
+              <option value={ALL_REPOSITORIES}>All repositories</option>
+            )}
             {REPOSITORIES.map((repo) => (
               <option key={repo} value={repo}>
                 {repo}

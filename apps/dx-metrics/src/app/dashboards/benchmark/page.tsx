@@ -210,6 +210,7 @@ export default function BenchmarkDashboard() {
           <DataFreshness
             className="mb-4"
             referenceDate={data.meta.referenceDate}
+            windowDays={days}
           />
           <div className="space-y-6">
             {CATEGORY_ORDER.map((category) => {

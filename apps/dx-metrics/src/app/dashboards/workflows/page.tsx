@@ -196,7 +196,11 @@ function WorkflowsDashboardContent({
 
   return (
     <>
-      <DataFreshness className="mb-2" referenceDate={data.meta.referenceDate} />
+      <DataFreshness
+        className="mb-2"
+        referenceDate={data.meta.referenceDate}
+        windowDays={days}
+      />
       <InsightsPanel
         className="mb-6"
         insights={data.insights}

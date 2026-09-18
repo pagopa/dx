@@ -148,6 +148,7 @@ export default function PullRequestsReviewDashboard() {
           <DataFreshness
             className="mb-2"
             referenceDate={data.meta.referenceDate}
+            windowDays={days}
           />
           <InsightsPanel
             className="mb-6"

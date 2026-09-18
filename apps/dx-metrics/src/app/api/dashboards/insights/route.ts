@@ -10,6 +10,8 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
+import { getCollaborationDashboard } from "@/adapters/db/collaboration/queries";
+import { getContributorsDashboard } from "@/adapters/db/contributors/queries";
 import { getIacDashboard } from "@/adapters/db/iac/queries";
 import { fetchDxAdoption } from "@/adapters/db/dx-adoption/queries";
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
@@ -28,6 +30,8 @@ import { parseDashboardQuery } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
+  collaboration: "Review & Collaboration",
+  contributors: "Contributors & Ownership",
   "dx-adoption": "DX Adoption",
   "dx-team": "DX Team",
   iac: "IaC PRs",
@@ -54,15 +58,24 @@ export async function GET(req: NextRequest) {
   if ("error" in parsed) return parsed.error;
   const { days, repository = "dx" } = parsed.query;
   const fullName = `${ORGANIZATION}/${repository}`;
+  const fullNames = REPOSITORIES.map((name) => `${ORGANIZATION}/${name}`);
 
-  // All nine adapters run concurrently; each failure degrades the summary
-  // instead of failing the whole endpoint, so a single broken dashboard still
-  // yields the insights of the remaining eight. Each promise is bound to its
-  // key so the settled result cannot be paired with the wrong label.
+  // Every adapter runs concurrently; each failure degrades the summary instead
+  // of failing the whole endpoint, so a single broken dashboard still yields
+  // the insights of the others. Each promise is bound to its key so the settled
+  // result cannot be paired with the wrong label.
   const dashboardRequests: readonly {
     key: EndpointKey;
     request: Promise<WithInsights & { meta?: unknown }>;
   }[] = [
+    {
+      key: "collaboration",
+      request: getCollaborationDashboard(db, { days, repositories: fullNames }),
+    },
+    {
+      key: "contributors",
+      request: getContributorsDashboard(db, { days, repositories: fullNames }),
+    },
     { key: "pull-requests", request: fetchPrDashboard(db, { days, fullName }) },
     {
       key: "pull-requests-review",
@@ -127,6 +140,8 @@ export async function GET(req: NextRequest) {
   return jsonWithCache({
     insights: sortInsights(insights),
     meta: {
+      // Lets the summary say "N of M" without hard-coding the dashboard count.
+      dashboardCount: settled.length,
       failed,
       referenceDate: latestReferenceDate(referenceDates),
     },

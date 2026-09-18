@@ -210,7 +210,7 @@ export default function PullRequestsDashboard() {
 
       {data && (
         <div className="space-y-8">
-          <DataFreshness referenceDate={data.meta.referenceDate} />
+          <DataFreshness referenceDate={data.meta.referenceDate} windowDays={days} />
           <InsightsPanel insights={data.insights} periodDays={days} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -14,6 +14,8 @@ import { overviewTooltips as tooltipContent } from "./tooltips";
 interface ExecutiveSummaryData {
   insights: Insight[];
   meta: {
+    /** Total dashboards feeding the summary, so the failure count is not hard-coded. */
+    dashboardCount?: number;
     /** Dashboards whose insights could not be computed; the summary is partial. */
     failed: string[];
     referenceDate: null | string;
@@ -58,7 +60,10 @@ export default function OverviewDashboard() {
       />
 
       {data?.meta.referenceDate && (
-        <DataFreshness referenceDate={data.meta.referenceDate} />
+        <DataFreshness
+          referenceDate={data.meta.referenceDate}
+          windowDays={days}
+        />
       )}
 
       {data && data.meta.failed.length > 0 && (
@@ -66,8 +71,9 @@ export default function OverviewDashboard() {
           className="mt-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
           role="status"
         >
-          {data.meta.failed.length} of 9 dashboards failed to load
-          ({data.meta.failed.join(", ")}). The summary below is incomplete.
+          {data.meta.failed.length} of {data.meta.dashboardCount ?? 9}{" "}
+          dashboards failed to load ({data.meta.failed.join(", ")}). The summary
+          below is incomplete.
         </div>
       )}
 

@@ -9,10 +9,12 @@ import {
   Gauge,
   GitPullRequest,
   MessageSquare,
+  MessagesSquare,
   PlayCircle,
   Ship,
   Target,
   TrendingUp,
+  UserRound,
   Users,
   X,
 } from "lucide-react";
@@ -58,6 +60,21 @@ const navGroups = [
       { href: "/dashboards/dx-team", icon: Users, label: "DX Team" },
     ],
     label: "Adoption",
+  },
+  {
+    items: [
+      {
+        href: "/dashboards/collaboration",
+        icon: MessagesSquare,
+        label: "Review & Collaboration",
+      },
+      {
+        href: "/dashboards/contributors",
+        icon: UserRound,
+        label: "Contributors & Ownership",
+      },
+    ],
+    label: "People",
   },
   {
     items: [
