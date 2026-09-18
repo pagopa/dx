@@ -1,3 +1,18 @@
+## 0.22.8 (2026-09-18)
+
+### 🚀 Features
+
+- Add XState to the technology radar. ([#2193](https://github.com/pagopa/dx/pull/2193))
+
+### 🩹 Fixes
+
+- Align DX plugins with Agent Plugins 1.0 ([#2207](https://github.com/pagopa/dx/pull/2207))
+
+### ❤️ Thank You
+
+- LazyAfternoons @LazyAfternoons
+- Marco Comi @kin0992
+
 ## 0.22.7 (2026-09-16)
 
 ### 🚀 Features

@@ -1,3 +1,13 @@
+## 0.2.6 (2026-09-18)
+
+### 🩹 Fixes
+
+- Add configurable Terraform provider lock platforms to the init task. ([#2203](https://github.com/pagopa/dx/pull/2203))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.2.5 (2026-09-02)
 
 ### 🚀 Features
