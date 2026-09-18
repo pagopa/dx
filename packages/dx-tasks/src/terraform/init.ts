@@ -59,6 +59,7 @@ const terraformInitPayloadShape = {
   args: terraformInitArgumentsSchema,
   frozenLockfile: z._default(z.boolean(), false),
   modulePath: z.string().check(z.minLength(1)),
+  platforms: z._default(z.array(z.string()), []),
 };
 
 export const payloadSchema = z.object(terraformInitPayloadShape);
@@ -67,6 +68,7 @@ export interface TerraformInitPayload {
   args?: string[];
   frozenLockfile?: boolean;
   modulePath: string;
+  platforms?: string[];
 }
 
 const printTerraformOutput = (result: ProcessResult): void => {
@@ -78,7 +80,10 @@ const printTerraformOutput = (result: ProcessResult): void => {
   }
 };
 
-const getInitFailureMessage = (result: ProcessResult): string => {
+const getTerraformFailureMessage = (
+  command: string,
+  result: ProcessResult,
+): string => {
   const termination =
     result.signal === null
       ? `exit code ${result.exitCode}`
@@ -86,7 +91,30 @@ const getInitFailureMessage = (result: ProcessResult): string => {
   const details = [result.stderr.trim(), result.stdout.trim()]
     .filter((output) => output.length > 0)
     .join("\n");
-  return `terraform init failed with ${termination}${details ? `\n${details}` : ""}`;
+  return `${command} failed with ${termination}${details ? `\n${details}` : ""}`;
+};
+
+const providerLockFileName = ".terraform.lock.hcl";
+
+const readProviderLock = async (
+  modulePath: string,
+): Promise<string | undefined> => {
+  try {
+    return await fs.readFile(
+      path.join(modulePath, providerLockFileName),
+      "utf8",
+    );
+  } catch (error) {
+    if (
+      error !== null &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
+      return undefined;
+    }
+    throw error;
+  }
 };
 
 const getLockChangeSummary = (
@@ -99,25 +127,69 @@ const getLockChangeSummary = (
       ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ")
       : "no module hash changes";
 
+const runTerraformCommand = (
+  args: string[],
+  modulePath: string,
+): Promise<ProcessResult> => {
+  console.log(`$ terraform ${args.join(" ")}`);
+  return runCommand("terraform", args, modulePath, {});
+};
+
 export async function terraformInit({
   args = [],
   frozenLockfile = false,
   modulePath,
+  platforms = [],
 }: TerraformInitPayload): Promise<void> {
   if (disablesModuleDownloads(args)) {
     throw new Error(incompatibleGetArgumentError);
   }
 
+  const providerLockPath = path.join(modulePath, providerLockFileName);
+  const providerLockBeforeInit = await readProviderLock(modulePath);
+
   // The lock must describe the module cache produced by this initialization.
-  const result = await runCommand(
-    "terraform",
-    ["init", ...normalizeTerraformInitArguments(args), "-get=true"],
+  const result = await runTerraformCommand(
+    [
+      "init",
+      ...normalizeTerraformInitArguments(args),
+      ...(frozenLockfile ? ["-lockfile=readonly"] : []),
+      "-get=true",
+    ],
     modulePath,
-    {},
   );
   printTerraformOutput(result);
   if (result.exitCode !== 0) {
-    throw new Error(getInitFailureMessage(result));
+    throw new Error(getTerraformFailureMessage("terraform init", result));
+  }
+  if (platforms.length > 0) {
+    const providerLockResult = await runTerraformCommand(
+      [
+        "providers",
+        "lock",
+        "-enable-plugin-cache",
+        ...platforms.map((platform) => `-platform=${platform}`),
+      ],
+      modulePath,
+    );
+    printTerraformOutput(providerLockResult);
+    if (providerLockResult.exitCode !== 0) {
+      throw new Error(
+        getTerraformFailureMessage(
+          "terraform providers lock",
+          providerLockResult,
+        ),
+      );
+    }
+  }
+
+  if (frozenLockfile) {
+    const providerLockAfterInit = await readProviderLock(modulePath);
+    if (providerLockBeforeInit !== providerLockAfterInit) {
+      throw new Error(
+        `Terraform provider lock is frozen and out of date at ${providerLockPath}`,
+      );
+    }
   }
 
   const comparison = await compareModuleLock(modulePath);

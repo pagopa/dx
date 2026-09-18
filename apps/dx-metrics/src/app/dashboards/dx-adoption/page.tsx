@@ -3,8 +3,14 @@
 import { DataTable, SimplePieChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { SEVERITY_STYLES } from "@/components/severity";
+import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { severityFromTarget } from "@/lib/insights/insight-helpers";
+import type { Insight, InsightSeverity } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -32,6 +38,8 @@ interface DxAdoptionData {
     upToDate: number;
   };
   workflowsList: { pipelineType: string; workflowName: string }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
 }
 
 export default function DxAdoptionDashboard() {
@@ -64,22 +72,23 @@ export default function DxAdoptionDashboard() {
       ? Math.round((driftSummary.upToDate / driftSummary.total) * 100)
       : null;
 
+  // Drift status maps to the shared insight severity vocabulary so the table
+  // badges, the summary chips, and the metric cards all read the same way.
+  const driftSeverity = (status: string): InsightSeverity => {
+    if (status === "up-to-date") {
+      return "positive";
+    }
+    return status === "outdated" ? "warning" : "neutral";
+  };
+
   const driftStatusBadge = (status: string) => {
-    if (status === "up-to-date")
-      return (
-        <span className="inline-block whitespace-nowrap rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-800">
-          🟢 up-to-date
-        </span>
-      );
-    if (status === "outdated")
-      return (
-        <span className="inline-block whitespace-nowrap rounded bg-yellow-100 px-2 py-0.5 text-xs font-medium text-yellow-800">
-          🟡 outdated
-        </span>
-      );
+    const style = SEVERITY_STYLES[driftSeverity(status)];
+
     return (
-      <span className="inline-block whitespace-nowrap rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
-        ⚪ unknown
+      <span
+        className={`inline-block whitespace-nowrap rounded px-2 py-0.5 text-xs font-medium ${style.badge}`}
+      >
+        <span aria-hidden="true">{style.icon}</span> {status}
       </span>
     );
   };
@@ -90,7 +99,10 @@ export default function DxAdoptionDashboard() {
         <h2 className="text-xl font-bold text-white">
           DX Tools Adoption Metrics
         </h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="DX Tools Adoption Metrics"
+        />
       </div>
       <DashboardFilters
         mode="repository-only"
@@ -105,7 +117,12 @@ export default function DxAdoptionDashboard() {
 
       {data && (
         <>
-          <div className="grid grid-cols-2 gap-4">
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-4" insights={data.insights} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimplePieChart
               data={pipelinePie}
               title="DX Pipeline Adoption"
@@ -118,7 +135,7 @@ export default function DxAdoptionDashboard() {
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 { key: "workflowName", label: "Workflow" },
@@ -146,7 +163,7 @@ export default function DxAdoptionDashboard() {
               <h3 className="mt-8 mb-4 text-base font-semibold text-white">
                 Version Drift
               </h3>
-              <div className="mb-4 grid grid-cols-4 gap-4">
+              <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <MetricCard
                   label="DX Modules Up-to-Date"
                   tooltip={tooltipContent.upToDatePercentage}
@@ -161,6 +178,19 @@ export default function DxAdoptionDashboard() {
                   suffix="%"
                   tooltip={tooltipContent.upToDatePercentage}
                   value={driftUpToDatePct}
+                  target={METRIC_TARGETS.moduleUpToDatePct}
+                  severity={
+                    driftUpToDatePct != null
+                      ? severityFromTarget(
+                          driftUpToDatePct,
+                          METRIC_TARGETS.moduleUpToDatePct,
+                          {
+                            higherIsBetter: true,
+                            tolerancePct: INSIGHT_THRESHOLDS.targetTolerancePct,
+                          },
+                        )
+                      : undefined
+                  }
                 />
                 <MetricCard
                   label="Outdated Modules"

@@ -4,13 +4,23 @@ sidebar_position: 12
 
 # Plugin Marketplace
 
-The **PagoPA DX Plugin Marketplace** is a curated collection of GitHub Copilot
-plugins tailored for the PagoPA development ecosystem. Each plugin bundles
-domain-specific skills, agents, commands, and MCP server configurations that
-extend your AI assistant with focused capabilities.
+The **PagoPA DX Plugin Marketplace** is a curated collection of Agent Plugins
+tailored for the PagoPA development ecosystem. Each plugin bundles
+domain-specific skills and MCP server configurations, with Copilot-specific
+agents, commands, and hooks where needed.
 
 Browse the full list of available plugins in the
 [`plugins/` directory on GitHub](https://github.com/pagopa/dx/tree/main/plugins).
+
+All DX plugins follow the Agent Plugins 1.0 layout:
+
+- `plugin.json` at the plugin root contains the portable manifest.
+- `skills/` contains portable Agent Skills.
+- `mcp.json` contains portable MCP server configurations.
+- `com.github.copilot/` contains Copilot-specific agents, commands, and hooks.
+
+Other compatible agent clients can ignore the `com.github.copilot/` directory
+while still loading the portable skills and MCP servers.
 
 ## Team Setup (Recommended)
 

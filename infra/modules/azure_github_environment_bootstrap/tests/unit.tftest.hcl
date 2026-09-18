@@ -46,7 +46,18 @@ variables {
 }
 
 mock_provider "azurerm" {}
-mock_provider "github" {}
+mock_provider "github" {
+  mock_data "github_organization" {
+    defaults = {
+      id = "57742367"
+    }
+  }
+  mock_data "github_repository" {
+    defaults = {
+      repo_id = 1373623344
+    }
+  }
+}
 mock_provider "dx" {}
 
 override_data {
@@ -271,6 +282,50 @@ run "azure_github_environment_bootstrap_opex_identities" {
   assert {
     condition     = azurerm_role_assignment.opex_cd_subscription_reader != null
     error_message = "Opex CD subscription reader role assignment should not be null"
+  }
+}
+
+run "azure_github_environment_bootstrap_immutable_identities" {
+  command = plan
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-ci"
+    error_message = "The Infra CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-cd"
+    error_message = "The Infra CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_automation_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-cd"
+    error_message = "The automation CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-ci"
+    error_message = "The App CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-cd"
+    error_message = "The App CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-ci"
+    error_message = "The Opex CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-cd"
+    error_message = "The Opex CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci != null && azurerm_federated_identity_credential.github_app_ci != null
+    error_message = "The name-based credentials must be kept for backward compatibility"
   }
 }
 

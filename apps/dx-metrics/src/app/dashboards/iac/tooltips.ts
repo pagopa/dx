@@ -16,7 +16,7 @@ export const iacTooltips = {
   prsOverTime:
     "Count of IaC PRs by week. Measures infrastructure change frequency and update velocity.",
   supervisedVsUnsupervised:
-    "Cumulative count of supervised vs unsupervised IaC PRs. Tracks governance compliance.",
+    "Cumulative count of supervised vs unsupervised IaC PRs. Unsupervised means product teams own their infrastructure changes (the goal); heavy DX supervision means the team is implementing instead of enabling.",
   title:
     "Tracks Infrastructure as Code pull request metrics to ensure configuration changes are properly reviewed.",
 } as const;

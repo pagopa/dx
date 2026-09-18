@@ -33,7 +33,10 @@ import {
   importCodeSearch,
   importDxPipelineUsages,
 } from "./lib/importers/search";
-import { importTechRadarRepositoryUsages } from "./lib/importers/tech-radar";
+import {
+  captureTechRadarSnapshot,
+  importTechRadarRepositoryUsages,
+} from "./lib/importers/tech-radar";
 import {
   importTerraformModules,
   importTerraformRegistryReleases,
@@ -102,7 +105,7 @@ async function main(): Promise<void> {
       entityType: string,
       repoName: null | string,
       task: () => Promise<void>,
-    ): Promise<void> => {
+    ): Promise<boolean> => {
       if (
         !args.force &&
         (await hasCheckpoint(context, entityType, repoName, args.since))
@@ -112,7 +115,7 @@ async function main(): Promise<void> {
           `  ⏭ Skipping ${label} — already imported for --since ${args.since}`,
         );
         stats.skipped += 1;
-        return;
+        return true;
       }
 
       const isRepositoryEntity =
@@ -132,11 +135,18 @@ async function main(): Promise<void> {
       try {
         await task();
         await completeCheckpoint(context, syncRunId);
+        return true;
       } catch (error) {
         await failCheckpoint(context, syncRunId);
         console.error(`  ❌ Failed: ${error}`);
+        return false;
       }
     };
+
+    // Repositories whose per-repo Techradar import failed this run. The
+    // organisation-wide snapshot is skipped when any of them failed, so a
+    // partial import is never recorded as complete.
+    const failedTechRadarRepositories: string[] = [];
 
     for (const repoName of context.repositories) {
       console.log(`\n📦 ${context.organization}/${repoName}`);
@@ -178,8 +188,31 @@ async function main(): Promise<void> {
       }
 
       if (shouldRun("tech-radar")) {
-        await runWithCheckpoint("tech-radar", repoName, () =>
+        const succeeded = await runWithCheckpoint("tech-radar", repoName, () =>
           importTechRadarRepositoryUsages(context, repoName),
+        );
+
+        if (!succeeded) {
+          failedTechRadarRepositories.push(repoName);
+        }
+      }
+    }
+
+    // Captured once, after every repository has been imported, so the snapshot
+    // reflects the full usage set. It has its own `tech-radar-snapshot`
+    // checkpoint, so `--entity tech-radar` re-captures it even when all
+    // per-repo steps are checkpoint-skipped. Skipped entirely when any
+    // repository import failed, so a partial run is not published as complete.
+    if (shouldRun("tech-radar")) {
+      console.log("\n🎯 Techradar Snapshot");
+
+      if (failedTechRadarRepositories.length > 0) {
+        console.warn(
+          `  ⏭ Skipping snapshot — Techradar import failed for ${failedTechRadarRepositories.length} repository(ies): ${failedTechRadarRepositories.join(", ")}`,
+        );
+      } else {
+        await runWithCheckpoint("tech-radar-snapshot", null, () =>
+          captureTechRadarSnapshot(context),
         );
       }
     }

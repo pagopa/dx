@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
 import { db } from "@/db/instance";
+import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 
@@ -16,7 +17,7 @@ export async function GET(req: NextRequest) {
       days,
       organization: ORGANIZATION,
     });
-    return NextResponse.json(result);
+    return jsonWithCache(result);
   } catch (error) {
     console.error("DX Team dashboard error:", error);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });

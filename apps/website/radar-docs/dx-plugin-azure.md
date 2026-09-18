@@ -9,8 +9,8 @@ for working with Azure resources, configuration, and best practices.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/azure/.plugin/plugin.json)
-- [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/azure/.mcp.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/azure/plugin.json)
+- [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/azure/mcp.json)
 
 ## Available skills
 

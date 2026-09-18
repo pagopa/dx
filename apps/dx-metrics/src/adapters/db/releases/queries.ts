@@ -2,9 +2,16 @@
 
 import { sql } from "drizzle-orm";
 
-import type { Database } from "../shared/types";
+import { buildReleasesInsights } from "@/lib/insights/releases";
+import type { WithInsights } from "@/lib/insights/types";
+
+import type { Database, WithMeta } from "../shared/types";
 import type { ReleasesDashboard } from "./schemas";
 
+import {
+  buildReferenceDateQuery,
+  parseReferenceDate,
+} from "../shared/reference-date";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   moduleSummaryRowSchema,
@@ -15,7 +22,18 @@ import {
 /** Fetches the full releases dashboard payload. */
 export const getReleasesDashboard = async (
   db: Database,
-): Promise<ReleasesDashboard> => {
+): Promise<ReleasesDashboard & WithInsights & WithMeta> => {
+  const referenceDateResult = await db.execute(
+    buildReferenceDateQuery({
+      column: "release_date",
+      from: "terraform_registry_releases",
+    }),
+  );
+  const referenceDate = parseReferenceDate(
+    referenceDateResult.rows[0],
+    "releases referenceDate",
+  );
+
   // Aggregate stats
   const statsResult = await db.execute(sql`
     SELECT
@@ -63,7 +81,7 @@ export const getReleasesDashboard = async (
     ORDER BY month
   `);
 
-  return {
+  const dashboard = {
     modulesSummary: parseSqlRows(
       moduleSummaryRowSchema,
       modulesSummary.rows,
@@ -81,5 +99,11 @@ export const getReleasesDashboard = async (
       totalModules: stats.totalModules,
       totalReleases: stats.totalReleases,
     },
+  };
+
+  return {
+    ...dashboard,
+    insights: buildReleasesInsights({ ...dashboard, referenceDate }),
+    meta: { referenceDate },
   };
 };

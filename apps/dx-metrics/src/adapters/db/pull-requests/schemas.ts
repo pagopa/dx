@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   sqlDateSchema,
@@ -10,7 +10,19 @@ import {
   sqlTimestampSchema,
 } from "../shared/sql-parsing";
 
-export const fetchPrDashboardInputSchema = dashboardParamsSchema;
+export const fetchPrDashboardInputSchema = dashboardParamsSchema.extend({
+  /**
+   * Organisation lead-time benchmark, optional so the route can omit it when
+   * the benchmark query fails without failing the whole dashboard.
+   */
+  peerBenchmark: z
+    .object({
+      leadTimeMedian: nullableSqlNumberSchema,
+      peerCount: sqlNumberSchema,
+      percentileRank: nullableSqlNumberSchema,
+    })
+    .optional(),
+});
 
 export const prMetricValueRowSchema = z.object({
   value: nullableSqlNumberSchema,
@@ -18,8 +30,8 @@ export const prMetricValueRowSchema = z.object({
 
 export const prSummaryCardsSchema = z.object({
   avgLeadTime: nullableSqlNumberSchema,
-  commentsPerPr: nullableSqlNumberSchema,
-  totalComments: nullableSqlNumberSchema,
+  avgTimeToMerge: nullableSqlNumberSchema,
+  contributors: nullableSqlNumberSchema,
   totalPrs: nullableSqlNumberSchema,
 });
 
@@ -53,11 +65,6 @@ export const prCommentsRowSchema = z.object({
   week: sqlDateSchema,
 });
 
-export const prCommentsBySizeRowSchema = z.object({
-  avgCommentsPerAddition: nullableSqlNumberSchema,
-  week: sqlDateSchema,
-});
-
 export const prSizeRowSchema = z.object({
   avgAdditions: sqlNumberSchema,
   week: sqlDateSchema,
@@ -65,8 +72,14 @@ export const prSizeRowSchema = z.object({
 
 export const prSizeDistributionRowSchema = z.object({
   avgAdditions: sqlNumberSchema,
+  avgLeadTimeDays: nullableSqlNumberSchema,
   prCount: sqlNumberSchema,
   sizeRange: z.string().min(1),
+});
+
+export const prsByContributorRowSchema = z.object({
+  author: z.string().min(1),
+  prCount: sqlNumberSchema,
 });
 
 export const slowestPrRowSchema = z.object({
@@ -91,7 +104,6 @@ export const prLeadTimeDataSchema = z.object({
 
 export const prQualityDataSchema = z.object({
   prComments: z.array(prCommentsRowSchema),
-  prCommentsBySize: z.array(prCommentsBySizeRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
   slowestPrs: z.array(slowestPrRowSchema),
@@ -101,13 +113,15 @@ export const prDashboardSchema = z.object({
   cards: prSummaryCardsSchema,
   cumulatedNewPrs: z.array(prCumulativeCountRowSchema),
   leadTimeMovingAvg: z.array(prLeadTimeMovingAvgRowSchema),
+  leadTimePercentiles: percentileRowSchema,
   leadTimeTrend: z.array(prLeadTimeTrendRowSchema),
   mergedPrs: z.array(prDateCountRowSchema),
   newPrs: z.array(prDateCountRowSchema),
   prComments: z.array(prCommentsRowSchema),
-  prCommentsBySize: z.array(prCommentsBySizeRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
+  prsByContributor: z.array(prsByContributorRowSchema),
+  previousLeadTime: nullableSqlNumberSchema,
   slowestPrs: z.array(slowestPrRowSchema),
   unmergedPrs: z.array(prOpenCountRowSchema),
 });

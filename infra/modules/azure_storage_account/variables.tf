@@ -68,6 +68,12 @@ variable "force_public_network_access_enabled" {
   default     = false
 }
 
+variable "malware_scanning_enabled" {
+  type        = bool
+  description = "Enables Defender malware scanning on blob upload and sensitive data discovery. Uses the standard unlimited scan cap."
+  default     = false
+}
+
 # @deprecated This variable will be removed in the next major version.
 # Infrastructure encryption should be managed through proper use case configuration instead of overrides.
 variable "override_infrastructure_encryption" {
