@@ -268,7 +268,9 @@ export const getPullRequestsReviewDashboard = async (
   // population as the other metrics. Bots (e.g. Renovate) and merges with no
   // recorded merger are excluded, so the chart shows people, not automation.
   const mergers = await db.execute(sql`
-    SELECT pr.merged_by AS login, COUNT(*) AS merges
+    SELECT pr.merged_by AS login,
+      COUNT(*) AS merges,
+      COUNT(*) FILTER (WHERE pr.merged_by <> pr.author) AS "mergesOfOthers"
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE r.full_name = ${fullName}

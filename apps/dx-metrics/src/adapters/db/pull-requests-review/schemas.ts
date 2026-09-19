@@ -40,10 +40,15 @@ export const reviewMatrixRowSchema = z.object({
   reviewer: z.string().min(1),
 });
 
-/** Merges performed in the window, grouped by the person who merged. */
+/**
+ * Merges performed in the window, grouped by the person who merged. Carries
+ * both the total and the subset on pull requests authored by someone else, so
+ * the two charts are two views of one scan and cannot disagree.
+ */
 export const prReviewMergerRowSchema = z.object({
   login: z.string().min(1),
   merges: sqlNumberSchema,
+  mergesOfOthers: sqlNumberSchema,
 });
 
 export const timeToFirstReviewTrendRowSchema = z.object({

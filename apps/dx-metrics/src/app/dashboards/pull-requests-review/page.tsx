@@ -45,7 +45,7 @@ interface PrReviewDashboardData {
   mergedWithoutReviewShare: null | number;
   /** Merges in the window grouped by the person who merged. Optional so a
    * cached payload from before this field existed still renders. */
-  mergers?: { login: string; merges: number }[];
+  mergers?: { login: string; merges: number; mergesOfOthers?: number }[];
   reviewDistribution: {
     approvals: number;
     changeRequests: number;
@@ -324,24 +324,46 @@ export default function PullRequestsReviewDashboard() {
               <h3 className="mt-8 mb-4 text-base font-semibold text-white">
                 Merge Ownership
               </h3>
-              <SimpleBarChart
-                bars={[
-                  {
-                    color: SERIES_COLORS.blue,
-                    key: "merges",
-                    name: "Merges",
-                  },
-                ]}
-                caption="top 10"
-                data={data.mergers ?? []}
-                layout="vertical"
-                maxItems={10}
-                sortKey="merges"
-                title="Merges per Merger"
-                tooltip={tooltipContent.mergesPerMerger}
-                unit="merges"
-                xKey="login"
-              />
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SimpleBarChart
+                  bars={[
+                    {
+                      color: SERIES_COLORS.blue,
+                      key: "merges",
+                      name: "Merges",
+                    },
+                  ]}
+                  caption="top 10"
+                  data={data.mergers ?? []}
+                  layout="vertical"
+                  maxItems={10}
+                  sortKey="merges"
+                  title="Merges per Merger"
+                  tooltip={tooltipContent.mergesPerMerger}
+                  unit="merges"
+                  xKey="login"
+                />
+                <SimpleBarChart
+                  bars={[
+                    {
+                      color: SERIES_COLORS.green,
+                      key: "mergesOfOthers",
+                      name: "Merges of others' PRs",
+                    },
+                  ]}
+                  caption="top 10"
+                  data={(data.mergers ?? []).filter(
+                    (merger) => (merger.mergesOfOthers ?? 0) > 0,
+                  )}
+                  layout="vertical"
+                  maxItems={10}
+                  sortKey="mergesOfOthers"
+                  title="Merges of Others' PRs per Merger"
+                  tooltip={tooltipContent.mergesOfOthersPerMerger}
+                  unit="merges"
+                  xKey="login"
+                />
+              </div>
             </>
           )}
         </>
