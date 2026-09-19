@@ -15,12 +15,17 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
-import { humanPullRequest, isHumanReview } from "../shared/sql-fragments";
+import {
+  botAuthorsExclusion,
+  humanPullRequest,
+  isHumanReview,
+} from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
 import {
   commentSummaryRowSchema,
   mergedWithoutActivityShareRowSchema,
+  prReviewMergerRowSchema,
   reviewDistributionRowSchema,
   reviewMatrixRowSchema,
   reviewMetricValueRowSchema,
@@ -258,6 +263,24 @@ export const getPullRequestsReviewDashboard = async (
     ORDER BY "reviewCount" DESC
   `);
 
+  // --- Merge ownership ---
+  // Who performed the merges in the window, on the same human non-draft PR
+  // population as the other metrics. Bots (e.g. Renovate) and merges with no
+  // recorded merger are excluded, so the chart shows people, not automation.
+  const mergers = await db.execute(sql`
+    SELECT pr.merged_by AS login, COUNT(*) AS merges
+    FROM pull_requests pr
+    JOIN repositories r ON pr.repository_id = r.id
+    WHERE r.full_name = ${fullName}
+      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at IS NOT NULL
+      AND pr.merged_by IS NOT NULL
+      AND ${botAuthorsExclusion("merged_by")}
+      AND ${humanPullRequest("pr")}
+    GROUP BY pr.merged_by
+    ORDER BY merges DESC, login
+  `);
+
   // --- Comment volume ---
   // The data model only stores a per-PR aggregate (`total_comments_count`),
   // with no per-comment author or timestamp. The cards therefore report the
@@ -316,6 +339,11 @@ export const getPullRequestsReviewDashboard = async (
       mergedWithoutActivityShare.rows[0],
       "pull-requests-review mergedWithoutReviewShare",
     ).withoutReview,
+    mergers: parseSqlRows(
+      prReviewMergerRowSchema,
+      mergers.rows,
+      "pull-requests-review mergers",
+    ),
     reviewDistribution: parseSqlRows(
       reviewDistributionRowSchema,
       reviewDistribution.rows,

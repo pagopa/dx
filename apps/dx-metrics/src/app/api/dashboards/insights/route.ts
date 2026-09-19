@@ -10,8 +10,6 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { getCollaborationDashboard } from "@/adapters/db/collaboration/queries";
-import { getContributorsDashboard } from "@/adapters/db/contributors/queries";
 import { getIacDashboard } from "@/adapters/db/iac/queries";
 import { fetchDxAdoption } from "@/adapters/db/dx-adoption/queries";
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
@@ -30,8 +28,6 @@ import { parseDashboardQuery } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
-  collaboration: "Review & Collaboration",
-  contributors: "Contributors & Ownership",
   "dx-adoption": "DX Adoption",
   "dx-team": "DX Team",
   iac: "IaC PRs",
@@ -58,7 +54,6 @@ export async function GET(req: NextRequest) {
   if ("error" in parsed) return parsed.error;
   const { days, repository = "dx" } = parsed.query;
   const fullName = `${ORGANIZATION}/${repository}`;
-  const fullNames = REPOSITORIES.map((name) => `${ORGANIZATION}/${name}`);
 
   // Every adapter runs concurrently; each failure degrades the summary instead
   // of failing the whole endpoint, so a single broken dashboard still yields
@@ -68,14 +63,6 @@ export async function GET(req: NextRequest) {
     key: EndpointKey;
     request: Promise<WithInsights & { meta?: unknown }>;
   }[] = [
-    {
-      key: "collaboration",
-      request: getCollaborationDashboard(db, { days, repositories: fullNames }),
-    },
-    {
-      key: "contributors",
-      request: getContributorsDashboard(db, { days, repositories: fullNames }),
-    },
     { key: "pull-requests", request: fetchPrDashboard(db, { days, fullName }) },
     {
       key: "pull-requests-review",

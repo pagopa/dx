@@ -43,6 +43,9 @@ interface PrReviewDashboardData {
   // insights) / with no comments at all (rendered as a card).
   mergedWithoutCommentsShare: null | number;
   mergedWithoutReviewShare: null | number;
+  /** Merges in the window grouped by the person who merged. Optional so a
+   * cached payload from before this field existed still renders. */
+  mergers?: { login: string; merges: number }[];
   reviewDistribution: {
     approvals: number;
     changeRequests: number;
@@ -312,6 +315,33 @@ export default function PullRequestsReviewDashboard() {
                   tooltip={tooltipContent.authorReviewerMatrix}
                 />
               </div>
+            </>
+          )}
+
+          {/* Merge Ownership */}
+          {(data.mergers ?? []).length > 0 && (
+            <>
+              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+                Merge Ownership
+              </h3>
+              <SimpleBarChart
+                bars={[
+                  {
+                    color: SERIES_COLORS.blue,
+                    key: "merges",
+                    name: "Merges",
+                  },
+                ]}
+                caption="top 10"
+                data={data.mergers ?? []}
+                layout="vertical"
+                maxItems={10}
+                sortKey="merges"
+                title="Merges per Merger"
+                tooltip={tooltipContent.mergesPerMerger}
+                unit="merges"
+                xKey="login"
+              />
             </>
           )}
         </>

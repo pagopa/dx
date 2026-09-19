@@ -13,6 +13,8 @@ export const pullRequestsReviewTooltips = {
     "Average comments per pull request opened in the selected period (conversation and review comments, bots included). Indicates review quality and collaboration intensity.",
   mergedWithoutCommentsShare:
     "Percentage of merged pull requests with no comments at all (from anyone, bots included). Indicates changes that shipped without any discussion.",
+  mergesPerMerger:
+    "Top ten people by merges in the selected period, for this repository. A long bar for one person relative to the rest signals concentrated merge rights, a delivery-risk (bus factor) signal rather than a performance ranking.",
   changeRequests:
     "Number of change requests by reviewer. Reflects code quality standards and thoroughness.",
   reviewerStats:

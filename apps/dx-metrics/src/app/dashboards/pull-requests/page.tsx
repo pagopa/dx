@@ -24,6 +24,7 @@ import {
   severityFromUpperThreshold,
 } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
+import { useDateFormatters } from "@/lib/locale";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -130,6 +131,13 @@ export default function PullRequestsDashboard() {
     current: null | number,
     previous: null | number,
   ) => (current != null && previous != null ? percentChange(current, previous) : null);
+
+  // The window is anchored to the latest activity, not to today, so the exact
+  // range is shown on the contributor count.
+  const { range } = useDateFormatters();
+  const periodBreakdown = data
+    ? [{ label: "period", value: range(data.meta.referenceDate, days) }]
+    : undefined;
 
   // One comparison everywhere: the current period versus the immediately
   // preceding, equally-sized window — the same value shown as `previous` — so
@@ -255,6 +263,7 @@ export default function PullRequestsDashboard() {
               value={data.cards.totalPrs}
             />
             <MetricCard
+              breakdown={periodBreakdown}
               deltaDirection="higher-is-better"
               deltaLabel="vs prev"
               deltaPct={deltaFromPrevious(

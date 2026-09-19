@@ -13,30 +13,8 @@ export const REPOSITORIES: string[] = [...configuredRepositories].sort((a, b) =>
   a.localeCompare(b),
 );
 export const DEFAULT_REPOSITORY = configuredRepositories[0] ?? "dx";
-/**
- * Sentinel `repository` value for dashboards that aggregate every configured
- * repository. Kept out of {@link REPOSITORIES} so it can never be mistaken for
- * a real repository name or reach a query as one.
- */
-export const ALL_REPOSITORIES = "all";
 export const DX_TEAM_SLUG: string = dxMetricsConfig.dxTeamSlug;
 export const DX_REPO: string = dxMetricsConfig.dxRepo;
-
-/**
- * Resolves the `repository` query value for a cross-repository dashboard into
- * the list of full names to aggregate. A real repository name narrows the view
- * to it; the {@link ALL_REPOSITORIES} sentinel (or anything unknown) widens it
- * back to every configured repository.
- */
-export const resolveDashboardRepositories = (
-  repository: null | string | undefined,
-): string[] => {
-  if (repository !== null && repository !== undefined && REPOSITORIES.includes(repository)) {
-    return [`${ORGANIZATION}/${repository}`];
-  }
-
-  return REPOSITORIES.map((name) => `${ORGANIZATION}/${name}`);
-};
 
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 
@@ -112,19 +90,9 @@ export const INSIGHT_THRESHOLDS = {
   // Below this many observations a rule still fires, but the reading is marked
   // low confidence so a signal from a handful of items is not over-trusted.
   minReliableSampleSize: 10,
-  // Share of human reviews that ask for changes or are dismissed: a proxy for
-  // review churn / rework, above which the collaboration view flags it.
-  reviewChurnShare: 0.3,
   reviewerLoadShare: 0.5,
   reviewBusFactorShare: 0.5,
   reviewWaitDominanceShare: 0.7,
-  // Share of open pull requests left waiting for a first review beyond the
-  // first-review target, above which the review queue is flagged.
-  awaitingReviewShare: 0.3,
-  // Share of merges performed by the busiest merger above which merge rights
-  // are considered concentrated. A high value is a delivery-risk signal: one
-  // person's absence can stall every merge.
-  mergeBusFactorShare: 0.5,
   slowPrConcentrationShare: 0.6,
   spreadMinMedianDays: 1,
   spreadMinMedianHours: 4,

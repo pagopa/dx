@@ -40,6 +40,12 @@ export const reviewMatrixRowSchema = z.object({
   reviewer: z.string().min(1),
 });
 
+/** Merges performed in the window, grouped by the person who merged. */
+export const prReviewMergerRowSchema = z.object({
+  login: z.string().min(1),
+  merges: sqlNumberSchema,
+});
+
 export const timeToFirstReviewTrendRowSchema = z.object({
   avgHoursToFirstReview: sqlNumberSchema,
   week: sqlDateSchema,
@@ -74,6 +80,7 @@ export const pullRequestsReviewDashboardSchema = z.object({
   firstReviewPercentiles: percentileRowSchema,
   mergedWithoutCommentsShare: nullableSqlNumberSchema,
   mergedWithoutReviewShare: nullableSqlNumberSchema,
+  mergers: z.array(prReviewMergerRowSchema),
   reviewDistribution: z.array(reviewDistributionRowSchema),
   reviewMatrix: z.array(reviewMatrixRowSchema),
   timeToFirstReviewTrend: z.array(timeToFirstReviewTrendRowSchema),

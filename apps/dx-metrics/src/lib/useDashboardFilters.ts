@@ -3,17 +3,10 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-import {
-  ALL_REPOSITORIES,
-  DEFAULT_REPOSITORY,
-  REPOSITORIES,
-} from "@/lib/config";
+import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
 
 export type DashboardFilterMode =
-  | "all-repositories-and-time"
-  | "repository-and-time"
-  | "repository-only"
-  | "time-only";
+  "repository-and-time" | "repository-only" | "time-only";
 
 interface DashboardFilterUpdates {
   days?: number;
@@ -40,12 +33,6 @@ const getValidRepository = (
     ? repository
     : fallbackRepository;
 
-/** `all-repositories-and-time` accepts the sentinel in addition to real names. */
-const getValidAggregateRepository = (repository: null | string): string =>
-  repository === ALL_REPOSITORIES || (repository !== null && REPOSITORIES.includes(repository))
-    ? repository
-    : ALL_REPOSITORIES;
-
 export function useDashboardFilters({
   defaultDays = DEFAULT_DAYS,
   defaultRepository = DEFAULT_REPOSITORY,
@@ -55,13 +42,14 @@ export function useDashboardFilters({
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
-  const isAggregate = mode === "all-repositories-and-time";
-  const resolvedDefaultRepository = isAggregate
-    ? ALL_REPOSITORIES
-    : getValidRepository(defaultRepository, DEFAULT_REPOSITORY);
-  const repository = isAggregate
-    ? getValidAggregateRepository(searchParams.get("repository"))
-    : getValidRepository(searchParams.get("repository"), resolvedDefaultRepository);
+  const resolvedDefaultRepository = getValidRepository(
+    defaultRepository,
+    DEFAULT_REPOSITORY,
+  );
+  const repository = getValidRepository(
+    searchParams.get("repository"),
+    resolvedDefaultRepository,
+  );
   const requestedDays = Number(searchParams.get("days"));
   const days = isPositiveInteger(requestedDays) ? requestedDays : defaultDays;
 
@@ -78,12 +66,12 @@ export function useDashboardFilters({
       }
 
       if (mode !== "time-only") {
-        const nextRepository = newParams.repository ?? repository;
         params.set(
           "repository",
-          isAggregate
-            ? getValidAggregateRepository(nextRepository)
-            : getValidRepository(nextRepository, resolvedDefaultRepository),
+          getValidRepository(
+            newParams.repository ?? repository,
+            resolvedDefaultRepository,
+          ),
         );
       }
 
@@ -96,7 +84,6 @@ export function useDashboardFilters({
       router.push(queryString ? `${pathname}?${queryString}` : pathname);
     },
     [
-      isAggregate,
       mode,
       pathname,
       repository,
