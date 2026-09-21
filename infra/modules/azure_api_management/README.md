@@ -40,13 +40,11 @@ The module creates five-minute alerts with the following defaults, selected by
 Request thresholds are absolute counts within each five-minute window. Set
 `metric_alerts` to provide thresholds appropriate for a specific workload.
 
-The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
-`UnauthorizedRequests` metrics are not used. Success and server-side failure
+Success and server-side failure
 (`5xx`) are filtered with the `GatewayResponseCodeCategory` dimension of
 `Requests`. Unauthorized traffic is filtered with the `GatewayResponseCode`
-dimension and includes only `401` and `403`; `429` (Too Many Requests) is
-excluded. No default throttling alert is created. The `development` use case
-has no default alerts, but an explicit non-empty `metric_alerts` map is
+dimension and includes only `401` and `403`;
+The `development` use case,has no default alerts, but an explicit non-empty `metric_alerts` map is
 honored for any use case.
 
 Set `metric_alerts = null` or omit the argument to use the defaults. Set
