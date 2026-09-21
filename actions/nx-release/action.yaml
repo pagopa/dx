@@ -179,7 +179,7 @@ runs:
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: publish every project with an Nx Release publisher.
-          PUBLISHER_PROJECTS=$(TARGET=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
+          PUBLISHER_PROJECTS=$(target=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -196,7 +196,7 @@ runs:
             exit 0
           fi
 
-          PUBLISHER_PROJECTS=$(PROJECTS="$VERSIONED_PROJECTS" TARGET=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
+          PUBLISHER_PROJECTS=$(projects="$VERSIONED_PROJECTS" target=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
         fi
 
         if [[ -z "${PUBLISHER_PROJECTS:-}" ]]; then
@@ -205,7 +205,7 @@ runs:
           exit 0
         fi
 
-        BUILD_PROJECTS=$(PROJECTS="$PUBLISHER_PROJECTS" TARGET=build node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
+        BUILD_PROJECTS=$(projects="$PUBLISHER_PROJECTS" target=build node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
         if [[ -n "${BUILD_PROJECTS:-}" ]]; then
           npx nx run-many --target=build --projects="$BUILD_PROJECTS"
         fi

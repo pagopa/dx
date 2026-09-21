@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { getNxProjectNames } from "./shared.js";
 
-const TargetSchema = z.enum(["build", "nx-release-publish"]);
+const TargetSchema = z.string().min(1);
 
 const ProjectCsvSchema = z
   .string()
@@ -16,8 +16,8 @@ const ProjectCsvSchema = z
   .pipe(z.array(z.string().min(1)).min(1));
 
 const SelectionInputSchema = z.object({
-  PROJECTS: ProjectCsvSchema.optional(),
-  TARGET: TargetSchema,
+  projects: ProjectCsvSchema.optional(),
+  target: TargetSchema,
 });
 
 export interface SelectionInput {
@@ -39,8 +39,8 @@ export function parseSelectionInput(environment: unknown): SelectionInput {
   }
 
   return {
-    projects: parsed.data.PROJECTS,
-    target: parsed.data.TARGET,
+    projects: parsed.data.projects,
+    target: parsed.data.target,
   };
 }
 
@@ -54,14 +54,15 @@ export function selectProjectsWithTarget(
   }
 
   const requested = new Set(requestedProjects);
+  // Node 20 does not yet support Set.prototype.intersection().
   return projectsWithTarget.filter((project) => requested.has(project));
 }
 
 /** Main entrypoint: queries Nx and emits the selected projects as CSV. */
 async function run(): Promise<void> {
   const { projects, target } = parseSelectionInput({
-    PROJECTS: process.env.PROJECTS,
-    TARGET: process.env.TARGET,
+    projects: process.env.projects,
+    target: process.env.target,
   });
   const projectsWithTarget = await getNxProjectNames(target);
   const selectedProjects = selectProjectsWithTarget(

@@ -14557,11 +14557,11 @@ async function getNxProjectNames(targetName) {
 }
 
 // scripts/select-projects-with-target.ts
-var TargetSchema = external_exports.enum(["build", "nx-release-publish"]);
+var TargetSchema = external_exports.string().min(1);
 var ProjectCsvSchema = external_exports.string().transform((value) => value.split(",").map((project) => project.trim())).pipe(external_exports.array(external_exports.string().min(1)).min(1));
 var SelectionInputSchema = external_exports.object({
-  PROJECTS: ProjectCsvSchema.optional(),
-  TARGET: TargetSchema
+  projects: ProjectCsvSchema.optional(),
+  target: TargetSchema
 });
 function parseSelectionInput(environment) {
   const parsed = SelectionInputSchema.safeParse(environment);
@@ -14571,8 +14571,8 @@ function parseSelectionInput(environment) {
     );
   }
   return {
-    projects: parsed.data.PROJECTS,
-    target: parsed.data.TARGET
+    projects: parsed.data.projects,
+    target: parsed.data.target
   };
 }
 function selectProjectsWithTarget(projectsWithTarget, requestedProjects) {
@@ -14584,8 +14584,8 @@ function selectProjectsWithTarget(projectsWithTarget, requestedProjects) {
 }
 async function run() {
   const { projects, target } = parseSelectionInput({
-    PROJECTS: process.env.PROJECTS,
-    TARGET: process.env.TARGET
+    projects: process.env.projects,
+    target: process.env.target
   });
   const projectsWithTarget = await getNxProjectNames(target);
   const selectedProjects = selectProjectsWithTarget(

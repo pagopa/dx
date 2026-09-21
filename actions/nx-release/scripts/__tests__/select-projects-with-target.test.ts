@@ -9,8 +9,8 @@ describe("parseSelectionInput", () => {
   it("parses the target and requested project CSV", () => {
     expect(
       parseSelectionInput({
-        PROJECTS: "dx-metrics, @pagopa/dx-mcpserver",
-        TARGET: "nx-release-publish",
+        projects: "dx-metrics, @pagopa/dx-mcpserver",
+        target: "nx-release-publish",
       }),
     ).toEqual({
       projects: ["dx-metrics", "@pagopa/dx-mcpserver"],
@@ -21,8 +21,8 @@ describe("parseSelectionInput", () => {
   it("rejects an empty requested-project CSV", () => {
     expect(() =>
       parseSelectionInput({
-        PROJECTS: "",
-        TARGET: "build",
+        projects: "",
+        target: "build",
       }),
     ).toThrow("Invalid target selection input");
   });
@@ -42,5 +42,15 @@ describe("selectProjectsWithTarget", () => {
         ["@pagopa/dx-mcpserver", "unpublishable-project"],
       ),
     ).toEqual(["@pagopa/dx-mcpserver"]);
+  });
+
+  it("accepts any Nx target name", () => {
+    expect(
+      parseSelectionInput({
+        target: "custom-publisher",
+      }),
+    ).toEqual({
+      target: "custom-publisher",
+    });
   });
 });
