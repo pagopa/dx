@@ -178,9 +178,8 @@ runs:
         set -euo pipefail
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
-          # workflow_dispatch: build and publish all public projects (recovery mode)
-          npx nx run-many --target=build --projects="tag:*:public"
-          npx nx release publish
+          # workflow_dispatch: publish every project with an Nx Release publisher.
+          PUBLISHER_PROJECTS=$(TARGET=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
         else
           # push mode: extract projects from the latest merged Version Packages PR
           LATEST_PR_NUMBER=$(gh pr list --state merged --base "$BASE_BRANCH" --head "nx-release/main" --limit 1 --json number --jq '.[0].number // empty' 2>/dev/null || true)
@@ -190,15 +189,27 @@ runs:
             exit 1
           fi
 
-          PROJECTS_TO_BUILD=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
-
-          if [[ -n "${PROJECTS_TO_BUILD:-}" ]]; then
-            npx nx run-many --target=build --projects="$PROJECTS_TO_BUILD"
-            npx nx release publish --projects="$PROJECTS_TO_BUILD"
-          else
-            echo "No public projects to publish (all released projects may be private). Skipping build/publish but proceeding to tag/release sync."
+          VERSIONED_PROJECTS=$(PR_NUMBER="$LATEST_PR_NUMBER" node "$ACTION_PATH/scripts/dist/extract-projects-to-build.js")
+          if [[ -z "${VERSIONED_PROJECTS:-}" ]]; then
+            echo "No versioned projects found in the latest Version Packages PR. Skipping build/publish but proceeding to tag/release sync."
+            echo "published=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
+
+          PUBLISHER_PROJECTS=$(PROJECTS="$VERSIONED_PROJECTS" TARGET=nx-release-publish node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
         fi
+
+        if [[ -z "${PUBLISHER_PROJECTS:-}" ]]; then
+          echo "No versioned projects expose nx-release-publish. Skipping build/publish but proceeding to tag/release sync."
+          echo "published=true" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        BUILD_PROJECTS=$(PROJECTS="$PUBLISHER_PROJECTS" TARGET=build node "$ACTION_PATH/scripts/dist/select-projects-with-target.js")
+        if [[ -n "${BUILD_PROJECTS:-}" ]]; then
+          npx nx run-many --target=build --projects="$BUILD_PROJECTS"
+        fi
+        npx nx release publish --projects="$PUBLISHER_PROJECTS"
 
         echo "published=true" >> "$GITHUB_OUTPUT"
 

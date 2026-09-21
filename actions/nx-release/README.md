@@ -1,6 +1,9 @@
 # Nx Release Manager Action
 
 A composite GitHub Action that mirrors [Changesets](https://github.com/changesets/action) behavior for [Nx Release](https://nx.dev/features/manage-releases).
+It routes publication through each project's inferred or configured
+`nx-release-publish` target, so it supports npm packages, Docker images, and
+other Nx Release publishers.
 
 In DX repositories, the validation workflow invokes this action on pull
 requests to manage version plan coverage warnings.
@@ -52,14 +55,18 @@ This action automates the Nx release flow in three phases:
 
 **Actions**:
 
-1. Extracts projects to publish from the latest merged `Version Packages` PR (or builds all public projects when triggered via `workflow_dispatch`)
-2. Runs `npx nx release publish` with provenance enabled
+1. Extracts versioned projects from the latest merged `Version Packages` PR and
+   intersects them with projects that expose `nx-release-publish`; manual runs
+   select every project that exposes that target
+2. Builds only selected publisher projects that expose `build`, then runs
+   `npx nx release publish --projects=<selected publishers>` with provenance enabled
 3. Reads the `<!-- nx-release-tags -->` metadata from **all** past merged `Version Packages` PRs
 4. Creates any missing annotated git tags and pushes them
 5. Creates any missing GitHub Releases with extracted changelog notes
 
 > [!TIP]
-> `workflow_dispatch` can be used to recover from failed runs: it builds and publishes all public projects
+> `workflow_dispatch` can be used to recover from failed runs: it builds and publishes all projects with
+> an `nx-release-publish` target
 > and the Sync step scans all past merged PRs to create any missing tags and releases.
 
 ## Inputs
@@ -170,7 +177,10 @@ Used automatically on `pull_request` workflows. The action:
 `.nx/version-plans/**` changed in the push and the directory contains zero files. The action:
 
 1. Finds the latest merged `Version Packages` PR and extracts the list of released projects
-2. Builds and publishes only those projects (falls back to all public if no PR is found)
+2. Selects only those versioned projects that expose `nx-release-publish`,
+   builds the selected projects that expose `build`, and publishes the selected
+   publisher projects. Versioned projects without a publisher remain tagged and
+   are skipped cleanly.
 3. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 4. Ensures a GitHub Release exists for every release tag found in PR metadata,
@@ -181,7 +191,7 @@ Used automatically on `pull_request` workflows. The action:
 
 Triggered manually. The action:
 
-1. Builds and publishes **all** public projects (`tag:*:public`)
+1. Builds and publishes every project that exposes `nx-release-publish`
 2. Reads the `<!-- nx-release-tags -->` metadata from all past merged PRs,
    creates any missing annotated git tags, and pushes them
 3. Creates any missing GitHub Releases with extracted changelog notes
@@ -190,7 +200,9 @@ Triggered manually. The action:
 
 - ✅ Idempotent: re-running on the same commit handles deduplication
 - ✅ Supports monorepos with multiple packages
-- ✅ NPM provenance enabled by default
+- ✅ NPM provenance enabled by default for npm publisher projects
+- ✅ Supports Docker and other custom `nx-release-publish` targets, including
+  private JavaScript projects that must not be published to npm
 - ✅ Compatible with custom `releaseTagPattern` in `nx.json` (tag matching does not
   assume a specific separator between package name and version)
 
@@ -210,13 +222,14 @@ Triggered manually. The action:
 
 ### Publish fails
 
-- Verify registry credentials are available (or OIDC/provenance is configured)
-- Check that released packages are configured for publication
-- Ensure `NPM_CONFIG_PROVENANCE=true` is set in workflow when needed
+- Verify the project exposes `nx-release-publish`
+- Verify the required registry credentials are available (or OIDC/provenance is configured)
+- Ensure `NPM_CONFIG_PROVENANCE=true` is set when an npm publisher needs it
 
 ### Git tags or GitHub Releases missing after publish
 
-- Trigger `workflow_dispatch` on the release workflow; it builds and publishes all public projects
+- Trigger `workflow_dispatch` on the release workflow; it builds and publishes all projects with an
+  `nx-release-publish` target
   and the Sync step scans all past merged `Version Packages` PRs to create any missing tags and releases.
 - If a PR body lacks the `<!-- nx-release-tags -->` comment, re-run the Create PR
   step on the `nx-release/main` branch to regenerate it.
