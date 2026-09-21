@@ -25,6 +25,11 @@ locals {
 
   env_name = local.envs[var.environment.env_short]
 
+  # GitHub emits immutable subject claims that embed the numeric owner and
+  # repository IDs for repositories created or renamed after 2026-07-15, while
+  # older repositories still emit name-based subjects. Both are trusted.
+  immutable_repository_slug = "${var.repository.owner}@${data.github_organization.owner.id}/${var.repository.name}@${data.github_repository.this.repo_id}"
+
   repo_secrets = {}
 
   infra_ci = {

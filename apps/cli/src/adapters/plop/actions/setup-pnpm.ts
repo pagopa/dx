@@ -32,8 +32,7 @@ export default function (plop: NodePlopAPI) {
     // build-approval settings that would otherwise leak into the generated template.
     await $`corepack use pnpm@${pnpmBootstrapVersion}`;
     await $`npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
-    await $`pnpm -w add -D @devcontainers/cli @nx/js @nx/eslint @nx/vitest`;
-    await $`pnpm devcontainer templates apply -t ghcr.io/pagopa/devcontainer-templates/node:1`;
+    await $`pnpm -w add -D @nx/js @nx/eslint @nx/vitest`;
     return "Monorepo bootstrapped";
   });
 }

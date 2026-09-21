@@ -97,6 +97,9 @@
       "plugin": "@pagopa/nx-terraform-plugin",
       "include": ["infra/**"],
       "options": {
+        "initTarget": {
+          "platforms": ["linux_amd64"]
+        },
         "publish": {
           "mode": "github",
           "github": {

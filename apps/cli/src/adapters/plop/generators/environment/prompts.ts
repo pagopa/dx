@@ -30,6 +30,7 @@ import {
 import {
   type GitHubAppCredentials,
   githubAppCredentialsSchema,
+  type GitHubService,
 } from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
@@ -140,6 +141,7 @@ export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
   github?: GitHubRepo;
+  gitHubService?: GitHubService;
   initialAnswers?: InitialAnswers;
 };
 
@@ -426,13 +428,37 @@ const buildPayload = ({
     },
   });
 
+const withImmutableRepositoryIds = async (
+  github: GitHubRepo,
+  gitHubService?: GitHubService,
+): Promise<GitHubRepo> => {
+  if (!gitHubService) {
+    return github;
+  }
+
+  const repository = await gitHubService.getRepository(
+    github.owner,
+    github.repo,
+  );
+
+  return githubRepoSchema.parse({
+    ...github,
+    ownerId: repository.ownerId,
+    repoId: repository.id,
+  });
+};
+
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (promptModule) => {
     const logger = getLogger(["gen", "env"]);
     const github = deps.github ?? (await getGithubRepo());
     assert.ok(github, "This generator only works inside a GitHub repository.");
+    const repository = await withImmutableRepositoryIds(
+      github,
+      deps.gitHubService,
+    );
     const initialAnswers = parseInitialAnswers(deps.initialAnswers);
-    logger.debug("github repo {github}", { github });
+    logger.debug("github repo {github}", { github: repository });
     const availableCloudAccounts = await deps.cloudAccountRepository.list();
     const { answers, initialCloudAccounts } = await collectBaseAnswers(
       promptModule,
@@ -448,7 +474,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     const payload = buildPayload({
       answers,
-      github,
+      github: repository,
       initialAnswers,
       selectedCloudAccounts,
     });

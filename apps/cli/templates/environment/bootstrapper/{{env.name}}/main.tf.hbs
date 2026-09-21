@@ -8,7 +8,7 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -66,7 +66,7 @@ module "azure-{{displayName}}_core_values" {
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
