@@ -38,20 +38,20 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@main
+        uses: pagopa/dx/actions/setup-telemetry@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
         env:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
@@ -60,7 +60,7 @@ jobs:
         run: terraform init -input=false
 
       - name: Start Terraform Apply telemetry span
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
         with:
           name: terraform-apply
           span_phase: start
@@ -73,7 +73,7 @@ jobs:
 
       - name: End Terraform Apply telemetry span
         if: always()
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@1323cb47dc65aadf61a04c4f34bdef49cb8da727 # main
         with:
           name: terraform-apply
           span_phase: end
