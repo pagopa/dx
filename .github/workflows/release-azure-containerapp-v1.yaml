@@ -52,11 +52,11 @@ on:
         description: Environment where the image will be deployed
         type: string
         required: true
-      disable_auto_deploy:
-        description: Disable automatic deployment approval, requiring manual approval
+      enable_auto_deploy:
+        description: Enable automatic deployment approval
         type: boolean
         required: false
-        default: false
+        default: true
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -279,7 +279,7 @@ jobs:
     needs: build
     # If auto approval fails, the deployment can be approved manually.
     continue-on-error: true
-    if: ${{ !github.event.act && !inputs.disable_auto_deploy && always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+    if: ${{ !github.event.act && inputs.enable_auto_deploy && always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
 
     steps:
       - name: Approve deployment
