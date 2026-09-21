@@ -46,12 +46,13 @@ The legacy `TotalRequests`, `SuccessfulRequests`, `FailedRequests`, and
 `Requests`. Unauthorized traffic is filtered with the `GatewayResponseCode`
 dimension and includes only `401` and `403`; `429` (Too Many Requests) is
 excluded. No default throttling alert is created. The `development` use case
-keeps alerts disabled, including when `metric_alerts` is provided.
+has no default alerts, but an explicit non-empty `metric_alerts` map is
+honored for any use case.
 
 Set `metric_alerts = null` or omit the argument to use the defaults. Set
 `metric_alerts = {}` to disable all metric alerts. A non-empty custom map
-replaces the defaults. Alerts are routed to an Azure Monitor Action Group when
-`action_group_id` is set.
+replaces the defaults, including for the `development` use case. Alerts are
+routed to an Azure Monitor Action Group when `action_group_id` is set.
 
 Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  

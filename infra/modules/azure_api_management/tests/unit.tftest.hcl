@@ -276,6 +276,42 @@ run "azure_api_management_development_has_no_default_alerts" {
   }
 }
 
+run "azure_api_management_development_honors_explicit_alerts" {
+  command = plan
+
+  variables {
+    use_case = "development"
+    metric_alerts = {
+      custom_requests = {
+        description      = "Custom development request alert."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Total"
+          dimension              = []
+          metric_name            = "Requests"
+          metric_namespace       = "Microsoft.ApiManagement/service"
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 10
+        }]
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      azurerm_api_management.this.sku_name == "Developer_1" &&
+      length(azurerm_monitor_metric_alert.this) == 1 &&
+      azurerm_monitor_metric_alert.this["custom_requests"].criteria[0].metric_name == "Requests"
+    )
+    error_message = "Explicit metric alerts must be honored for the development use case."
+  }
+}
+
 run "azure_api_management_custom_domain_types" {
   command = plan
 
