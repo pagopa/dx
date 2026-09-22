@@ -22,6 +22,7 @@ jobs:
       AWS_REGION: eu-central-1
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       LAMBDA_FUNCTION_NAME: dx-p-euc1-mcp-server-lambda-01
+      SOURCE_IMAGE_NAME: pagopa/dx-mcp-server
       IMAGE_NAME: dx/mcp-server
     permissions:
       contents: read
@@ -66,7 +67,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          source_image="ghcr.io/$IMAGE_NAME:$RELEASE_VERSION"
+          source_image="ghcr.io/$SOURCE_IMAGE_NAME:$RELEASE_VERSION"
           target_image="$ECR_REGISTRY/$IMAGE_NAME:$RELEASE_VERSION"
 
           docker pull --platform linux/amd64 "$source_image"
