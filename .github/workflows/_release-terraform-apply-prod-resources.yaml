@@ -11,7 +11,7 @@ on:
       - ".github/workflows/_release-terraform-apply-prod-resources.yaml"
 jobs:
   deploy:
-    uses: $/.github/workflows/infra_apply.yaml
+    uses: $/.github/workflows/release-terraform.yaml
     name: Prod - Deploy
     secrets: inherit
     with:
