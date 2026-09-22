@@ -624,6 +624,12 @@ describe("initialize", () => {
           getRepository: vi.fn(),
           updateFile: vi.fn(),
         },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
       );
 
       // One name-based credential plus one immutable credential per identity.
