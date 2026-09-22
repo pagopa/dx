@@ -1,3 +1,17 @@
+## 0.5.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add preceding-window deltas to every summary card, a stale open-PR backlog reading with links to the pull requests, merge-ownership charts, and grouped sidebar navigation. ([#2230](https://github.com/pagopa/dx/pull/2230))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.16 (2026-09-16)
 
 ### 🚀 Features
