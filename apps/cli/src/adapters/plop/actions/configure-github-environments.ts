@@ -12,7 +12,14 @@ export const configureGitHubEnvironments = async (
   cloudAccountService: CloudAccountService,
   gitHubService: GitHubService,
 ) => {
-  const runnerAppCredentials = payload.init?.runnerAppCredentials;
+  const runnerAppCredentials =
+    payload.runnerAppCredentials ?? payload.init?.runnerAppCredentials;
+
+  if (!runnerAppCredentials) {
+    throw new Error(
+      "GitHub Runner App credentials are required to configure the GitHub environment.",
+    );
+  }
 
   await Promise.all(
     payload.env.cloudAccounts.map((cloudAccount) =>

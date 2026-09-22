@@ -567,6 +567,12 @@ describe("initialize", () => {
           getRepository: vi.fn(),
           updateFile: vi.fn(),
         },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
       );
 
       expect(mockCreateIdentity).not.toHaveBeenCalled();
@@ -583,7 +589,6 @@ describe("initialize", () => {
       expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
         cdClientId: "cd-client-1",
         ciClientId: "ci-client-1",
-        includesRunnerSecrets: false,
       });
     });
 
