@@ -28,7 +28,7 @@
       "matchDatasources": ["terraform-module"],
       "matchPackageNames": ["/^pagopa-dx\\//"],
       "matchUpdateTypes": ["major"],
-      "groupName": "PagoPA DX Terraform modules updates"
+      "groupName": "PagoPA DX Terraform modules versions"
     }
   ]
 }
