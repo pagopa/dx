@@ -1,3 +1,14 @@
+## 0.2.16 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.2.15 (2026-09-22)
 
 ### 🧱 Updated Dependencies
