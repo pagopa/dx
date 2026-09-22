@@ -11,7 +11,7 @@ on:
       - ".github/workflows/_release-terraform-apply-uat-resources.yaml"
 jobs:
   uat_itn_common_deploy:
-    uses: $/.github/workflows/infra_apply.yaml
+    uses: $/.github/workflows/release-terraform.yaml
     name: Uat - Deploy
     secrets: inherit
     with:

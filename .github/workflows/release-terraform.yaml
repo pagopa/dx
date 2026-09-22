@@ -1,0 +1,158 @@
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Environment where the resources will be deployed.
+        type: string
+        required: true
+      base_path:
+        description: Base path that contains the environment Terraform projects.
+        type: string
+        required: true
+      env_vars:
+        description: List of environment variables to set up, given in env=value format.
+        type: string
+        required: false
+      use_private_agent:
+        description: Use a private agent to run the Terraform apply.
+        type: boolean
+        required: false
+        default: false
+      override_github_environment:
+        description:
+          Set a value if GitHub Environment name is different than the TF
+          environment folder
+        type: string
+        required: false
+        default: ''
+      use_labels:
+        description:
+          Use labels to start the right environment's GitHub runner. If
+          use_labels is true, also use_private_agent must be set to true
+        type: boolean
+        required: false
+        default: false
+      override_labels:
+        description: Needed for special cases where the environment alone is not
+          sufficient as a distinguishing label
+        type: string
+        required: false
+        default: ''
+
+env:
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  TF_IN_AUTOMATION: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.environment }}-${{ inputs.base_path }}-cd
+  cancel-in-progress: false
+
+jobs:
+  get-terraform-version:
+    name: Get Terraform Version
+    runs-on: ubuntu-latest
+    outputs:
+      terraform_version: ${{ steps.get-version.outputs.terraform_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Get Terraform version from .terraform-version file
+        id: get-version
+        uses: pagopa/dx/.github/actions/get-terraform-version@main
+
+  tf_apply:
+    name: Terraform Apply
+    needs: get-terraform-version
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent &&
+      (inputs.override_labels != '' && inputs.override_labels ||
+      inputs.environment) || inputs.use_private_agent && 'self-hosted' ||
+      'ubuntu-latest' }}
+    environment: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-cd
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: 'node pnpm'
+          minimum_release_age: 7d
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      - name: Set environment variables
+        if: ${{ inputs.env_vars }}
+        env:
+          ENV_VARS: ${{ inputs.env_vars }}
+        run: |
+          set -euo pipefail
+          line_number=0
+          while IFS= read -r line; do
+            line_number=$((line_number + 1))
+            line="${line%$'\r'}"
+            [ -z "$line" ] && continue
+
+            if [[ ! "$line" =~ ^[A-Za-z_][A-Za-z0-9_]*=.*$ ]]; then
+              echo "::error title=Invalid env_vars entry::env_vars line ${line_number} must be in NAME=VALUE format with a valid environment variable name."
+              exit 1
+            fi
+
+            printf '%s\n' "$line" >> "$GITHUB_ENV"
+          done <<< "$ENV_VARS"
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Setup
+        uses: pagopa/dx/.github/actions/terraform-setup@main
+        with:
+          terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
+
+      - name: Find Terraform projects
+        id: projects
+        env:
+          BASE_PATH: ${{ inputs.base_path }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          project_path="${BASE_PATH%/}/${ENVIRONMENT}/**"
+          projects="$(
+            pnpm nx show projects \
+              --projects="$project_path" \
+              --type=app \
+              --withTarget=apply \
+              --json
+          )"
+          project_names="$(jq --raw-output 'join(",")' <<< "$projects")"
+
+          if [ -z "$project_names" ]; then
+            echo "::notice::No Terraform projects found under ${BASE_PATH%/}/${ENVIRONMENT}."
+          fi
+
+          echo "names=$project_names" >> "$GITHUB_OUTPUT"
+
+      - name: Apply Terraform projects
+        if: ${{ steps.projects.outputs.names != '' }}
+        env:
+          PROJECTS: ${{ steps.projects.outputs.names }}
+        run: |
+          pnpm nx run-many \
+            --target=apply \
+            --projects="$PROJECTS" \
+            -- \
+            -auto-approve \
+            -input=false \
+            -lock-timeout=120s
