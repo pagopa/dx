@@ -31,6 +31,15 @@ export interface PullRequestsInsightsInput {
   };
   readonly mergedPrs: readonly { readonly prCount: number }[];
   /**
+   * Point-in-time backlog of never-merged pull requests. Optional so the pure
+   * functions stay usable in tests and callers that predate it.
+   */
+  readonly openBacklog?: {
+    readonly closedUnmerged: number;
+    readonly openNow: number;
+    readonly stale: number;
+  };
+  /**
    * Organisation-wide lead-time benchmark, when the caller fetched it. Lets an
    * insight compare this repository with its peers instead of only against an
    * absolute target. Absent (or null inside) when no peer data exists.
@@ -47,6 +56,12 @@ export interface PullRequestsInsightsInput {
   }[];
   readonly slowestPrs: readonly {
     readonly leadTimeDays: number;
+    readonly number?: number;
+    readonly title?: string;
+  }[];
+  /** Open pull requests with no recent activity, used as stale-backlog evidence. */
+  readonly stalePrs?: readonly {
+    readonly idleDays: number;
     readonly number?: number;
     readonly title?: string;
   }[];
@@ -330,6 +345,74 @@ const backlogInsight = (input: PullRequestsInsightsInput): Insight | null => {
   };
 };
 
+/**
+ * Flags pull requests that are still open but have had no activity for longer
+ * than the stale target. This is a point-in-time reading, complementary to the
+ * backlog trend: it says how much of the open backlog is actually abandoned.
+ */
+const staleBacklogInsight = (
+  input: PullRequestsInsightsInput,
+  repositoryUrl?: string,
+): Insight | null => {
+  const backlog = input.openBacklog;
+
+  if (backlog === undefined) {
+    return null;
+  }
+
+  const { openNow, stale } = backlog;
+
+  if (openNow === 0) {
+    return {
+      category: "quality",
+      detail: "No pull requests are waiting in the backlog.",
+      id: "pr-stale-backlog",
+      severity: "positive",
+      title: "No open pull requests",
+      value: { current: 0, unit: "PRs" },
+    };
+  }
+
+  const staleShare = share(stale, openNow);
+
+  if (staleShare === null) {
+    return null;
+  }
+
+  const severity = severityFromUpperThreshold(
+    staleShare,
+    INSIGHT_THRESHOLDS.stalePrShare,
+  );
+  const poor = severity === "warning" || severity === "critical";
+
+  const evidence =
+    repositoryUrl === undefined
+      ? undefined
+      : (input.stalePrs ?? [])
+          .filter((pr) => pr.number !== undefined)
+          .slice(0, 3)
+          .map((pr) => ({
+            href: `${repositoryUrl}/pull/${pr.number}`,
+            label:
+              `#${pr.number} ${pr.title ?? ""} · ${formatNumber(pr.idleDays, 0)}d idle`.trim(),
+          }));
+
+  return {
+    action: poor
+      ? `Nudge the authors or close the ${stale} stale pull requests.`
+      : undefined,
+    category: "quality",
+    confidence: confidenceFromSample(openNow),
+    detail: `${stale} of ${openNow} open pull requests have had no activity for more than ${METRIC_TARGETS.staleOpenPrDays} days (${formatPercent(staleShare)} of the open backlog).`,
+    evidence: evidence && evidence.length > 0 ? evidence : undefined,
+    id: "pr-stale-backlog",
+    sampleSize: openNow,
+    severity,
+    title: poor ? "Stale open pull requests" : "Open pull requests are active",
+    value: { current: stale, unit: "PRs" },
+  };
+};
+
 const throughputInsight = (
   input: PullRequestsInsightsInput,
 ): Insight | null => {
@@ -441,6 +524,7 @@ export const buildPullRequestsInsights = (
       leadTimeSpreadInsight(input),
       prSizeInsight(input),
       backlogInsight(input),
+      staleBacklogInsight(input, repositoryUrl),
       throughputInsight(input),
       slowPrConcentrationInsight(input, repositoryUrl),
     ].filter((insight): insight is Insight => insight !== null),

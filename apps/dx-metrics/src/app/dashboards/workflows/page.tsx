@@ -17,6 +17,7 @@ import { formatInteger, formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
+import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -55,6 +56,11 @@ interface WorkflowDashboardData {
     avgDurationMinutes: number;
     failedDurationMinutes: null | number;
     firstPipelineDate: string;
+    /** Same card metrics over the immediately preceding, equally-sized window. */
+    previousAvgDurationMinutes: null | number;
+    previousFailedDurationMinutes: null | number;
+    previousTotalDurationMinutes: null | number;
+    previousTotalPipelines: null | number;
     totalDurationMinutes: number;
     totalPipelines: number;
   };
@@ -181,9 +187,20 @@ function WorkflowsDashboardContent({
       workflowName,
     }));
 
+  // Same current-vs-previous comparison on every summary card, so a repo's
+  // trend is readable without opening another dashboard.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+
   return (
     <>
-      <DataFreshness className="mb-2" referenceDate={data.meta.referenceDate} />
+      <DataFreshness
+        className="mb-2"
+        referenceDate={data.meta.referenceDate}
+        windowDays={days}
+      />
       <InsightsPanel
         className="mb-6"
         insights={data.insights}
@@ -196,13 +213,27 @@ function WorkflowsDashboardContent({
           value={formatFullDate(data.summary.firstPipelineDate)}
         />
         <MetricCard
+          deltaDirection="higher-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.totalPipelines,
+            data.summary.previousTotalPipelines,
+          )}
           label="Successful Runs"
+          previousValue={data.summary.previousTotalPipelines}
           tooltip={tooltipContent.runsCount}
           value={data.summary.totalPipelines}
         />
         <MetricCard
           breakdown={durationBreakdown}
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.avgDurationMinutes,
+            data.summary.previousAvgDurationMinutes,
+          )}
           label="Average Duration"
+          previousValue={data.summary.previousAvgDurationMinutes}
           sampleSize={data.durationPercentiles.count}
           suffix="min"
           tooltip={tooltipContent.avgDuration}
@@ -213,7 +244,14 @@ function WorkflowsDashboardContent({
           }
         />
         <MetricCard
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.totalDurationMinutes,
+            data.summary.previousTotalDurationMinutes,
+          )}
           label="Total Duration"
+          previousValue={data.summary.previousTotalDurationMinutes}
           suffix="min"
           tooltip={tooltipContent.totalDuration}
           value={
@@ -223,7 +261,14 @@ function WorkflowsDashboardContent({
           }
         />
         <MetricCard
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.failedDurationMinutes,
+            data.summary.previousFailedDurationMinutes,
+          )}
           label="Time in Failed Runs"
+          previousValue={data.summary.previousFailedDurationMinutes}
           suffix="min"
           tooltip={tooltipContent.failedRunDuration}
           value={
