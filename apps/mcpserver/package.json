@@ -9,7 +9,7 @@
     },
     "release": {
       "docker": {
-        "repositoryName": "dx/mcp-server"
+        "repositoryName": "pagopa/dx/mcp-server"
       }
     }
   },
