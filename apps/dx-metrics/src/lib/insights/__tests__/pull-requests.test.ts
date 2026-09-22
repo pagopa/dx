@@ -274,9 +274,7 @@ describe("buildPullRequestsInsights", () => {
       openBacklog: { closedUnmerged: 2, openNow: 10, stale: 5 },
     });
 
-    const stale = insights.find(
-      (insight) => insight.id === "pr-stale-backlog",
-    );
+    const stale = insights.find((insight) => insight.id === "pr-stale-backlog");
 
     expect(stale?.severity).toBe("warning");
     expect(stale?.title).toBe("Stale open pull requests");
@@ -293,9 +291,7 @@ describe("buildPullRequestsInsights", () => {
       openBacklog: { closedUnmerged: 0, openNow: 8, stale: 0 },
     });
 
-    const stale = insights.find(
-      (insight) => insight.id === "pr-stale-backlog",
-    );
+    const stale = insights.find((insight) => insight.id === "pr-stale-backlog");
 
     expect(stale?.severity).toBe("positive");
     expect(stale?.action).toBeUndefined();
@@ -304,9 +300,9 @@ describe("buildPullRequestsInsights", () => {
   it("omits the stale-backlog reading when no snapshot is provided", () => {
     const insights = buildPullRequestsInsights(baseInput());
 
-    expect(
-      insights.some((insight) => insight.id === "pr-stale-backlog"),
-    ).toBe(false);
+    expect(insights.some((insight) => insight.id === "pr-stale-backlog")).toBe(
+      false,
+    );
   });
 
   it("links the stale pull requests when the repository is known", () => {

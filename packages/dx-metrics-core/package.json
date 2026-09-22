@@ -1,9 +1,9 @@
 {
   "name": "@pagopa/dx-metrics-core",
   "version": "0.1.9",
-  "type": "module",
   "private": true,
   "description": "Shared configuration and database contracts for DX Metrics apps.",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./src/index.ts",

@@ -1,18 +1,22 @@
 {
   "name": "run-dx-task",
   "version": "0.1.8",
-  "type": "module",
   "private": true,
   "description": "GitHub Action that dispatches dx-tasks tasks",
-  "sideEffects": false,
   "keywords": [
-    "github",
     "action",
     "dx",
+    "github",
     "tasks"
   ],
+  "type": "module",
+  "sideEffects": false,
   "scripts": {
     "build": "tsdown"
+  },
+  "dependencies": {
+    "@nx/devkit": "catalog:",
+    "nx": "catalog:"
   },
   "devDependencies": {
     "@actions/core": "catalog:github-actions",
@@ -25,10 +29,6 @@
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"
-  },
-  "dependencies": {
-    "@nx/devkit": "catalog:",
-    "nx": "catalog:"
   },
   "nx": {
     "targets": {

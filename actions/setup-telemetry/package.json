@@ -3,20 +3,20 @@
   "version": "0.1.19",
   "private": true,
   "description": "Setup OpenTelemetry",
-  "main": "dist/index.js",
+  "keywords": [
+    "action",
+    "github",
+    "open-telemetry",
+    "opentelemetry",
+    "otel"
+  ],
+  "license": "UNLICENSED",
   "type": "module",
+  "main": "dist/index.js",
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
   },
-  "keywords": [
-    "github",
-    "action",
-    "otel",
-    "opentelemetry",
-    "open-telemetry"
-  ],
-  "license": "UNLICENSED",
   "dependencies": {
     "@azure/monitor-opentelemetry-exporter": "catalog:opentelemetry",
     "@opentelemetry/api": "catalog:opentelemetry",

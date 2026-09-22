@@ -1,16 +1,16 @@
 {
   "name": "@pagopa/dx-tasks",
   "version": "0.2.6",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/dx-tasks"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     "./default-dispatcher": "./src/default-dispatcher.ts"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/dx-tasks"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
@@ -22,11 +22,11 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "engines": {
-    "node": ">=22.0.0"
-  },
   "peerDependencies": {
     "octokit": "catalog:",
     "zod": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

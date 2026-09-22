@@ -2,6 +2,11 @@
   "name": "@pagopa/nx-terraform-plugin",
   "version": "0.5.9",
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/nx-terraform-plugin"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -21,14 +26,19 @@
       "default": "./dist/release/version-actions.js"
     }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/nx-terraform-plugin"
-  },
   "scripts": {
     "build": "tsdown",
     "generate": "node src/generate-module-schema.ts"
+  },
+  "dependencies": {
+    "@logtape/logtape": "catalog:",
+    "@nx/devkit": "catalog:",
+    "@octokit/auth-app": "catalog:",
+    "execa": "catalog:",
+    "octokit": "catalog:",
+    "semver": "catalog:",
+    "tslib": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/dx-tasks": "workspace:^",
@@ -45,16 +55,6 @@
   },
   "engines": {
     "node": ">=22.0.0"
-  },
-  "dependencies": {
-    "@logtape/logtape": "catalog:",
-    "@nx/devkit": "catalog:",
-    "@octokit/auth-app": "catalog:",
-    "execa": "catalog:",
-    "octokit": "catalog:",
-    "semver": "catalog:",
-    "tslib": "catalog:",
-    "zod": "catalog:"
   },
   "executors": "./executors.json",
   "nx": {

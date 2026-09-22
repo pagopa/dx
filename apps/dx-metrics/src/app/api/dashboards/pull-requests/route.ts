@@ -41,7 +41,11 @@ export async function GET(req: NextRequest) {
           }
         : undefined;
 
-    const result = await fetchPrDashboard(db, { days, fullName, peerBenchmark });
+    const result = await fetchPrDashboard(db, {
+      days,
+      fullName,
+      peerBenchmark,
+    });
     return jsonWithCache(result);
   } catch (error) {
     console.error("PR dashboard error:", error);

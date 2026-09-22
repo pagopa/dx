@@ -11,13 +11,13 @@ published to the architecture documentation space after each review cycle.
 
 ## Scope
 
-| ID                         | Item                                         | Value / status                            |
-| -------------------------- | -------------------------------------------- | ----------------------------------------- |
-| `guide.status`             | Document status                              | draft                                     |
-| `guide.owner`              | Owner                                        | Platform Experience                       |
-| `guide.version`            | Version                                      | 0.9                                       |
-| `guide.languages`          | Supported languages                          | `it-IT`, `en-GB`                          |
-| `guide.last-review`        | Last review                                  | 2026-09-01                                |
+| ID                  | Item                | Value / status      |
+| ------------------- | ------------------- | ------------------- |
+| `guide.status`      | Document status     | draft               |
+| `guide.owner`       | Owner               | Platform Experience |
+| `guide.version`     | Version             | 0.9                 |
+| `guide.languages`   | Supported languages | `it-IT`, `en-GB`    |
+| `guide.last-review` | Last review         | 2026-09-01          |
 
 ## Context and goals
 
@@ -28,13 +28,13 @@ underlying message bus.
 
 ## Components
 
-| ID                  | Component                 | Responsibility                        | Status   |
-| ------------------- | ------------------------- | ------------------------------------- | -------- |
-| `comp.ingest`       | Outcome ingest API        | Accept PSP outcome callbacks          | active   |
-| `comp.router`       | Notification router       | Map an outcome to the right channel   | active   |
-| `comp.queue`        | Delivery queue            | Buffer deliveries between components  | active   |
-| `comp.dispatch`     | Dispatcher                | Send notifications through channels   | active   |
-| `comp.audit`        | Audit trail               | Record delivery attempts and results  | draft    |
+| ID              | Component           | Responsibility                       | Status |
+| --------------- | ------------------- | ------------------------------------ | ------ |
+| `comp.ingest`   | Outcome ingest API  | Accept PSP outcome callbacks         | active |
+| `comp.router`   | Notification router | Map an outcome to the right channel  | active |
+| `comp.queue`    | Delivery queue      | Buffer deliveries between components | active |
+| `comp.dispatch` | Dispatcher          | Send notifications through channels  | active |
+| `comp.audit`    | Audit trail         | Record delivery attempts and results | draft  |
 
 ## Key flows
 
@@ -55,22 +55,22 @@ Delivery attempts are retried with an exponential backoff. The retry budget is
 bounded and the policy is encoded in the `delivery-policy` configuration, never
 in application code.
 
-| ID               | Parameter          | Default     | Status |
-| ---------------- | ------------------ | ----------- | ------ |
-| `retry.attempts` | Max attempts       | 5           | active |
-| `retry.backoff`  | Backoff (seconds)  | 30          | active |
-| `retry.timeout`  | Timeout (seconds)  | 300         | active |
+| ID               | Parameter         | Default | Status |
+| ---------------- | ----------------- | ------- | ------ |
+| `retry.attempts` | Max attempts      | 5       | active |
+| `retry.backoff`  | Backoff (seconds) | 30      | active |
+| `retry.timeout`  | Timeout (seconds) | 300     | active |
 
 ## Naming and reference conventions
 
 Stable identifiers are reused across this guide, the OpenAPI contract, and the
 monitoring dashboards. Do not rename them without a deprecation cycle.
 
-| Identifier      | Meaning                       | Owner             |
-| --------------- | ----------------------------- | ----------------- |
-| `svc.outcomes`  | Outcome service name          | Platform          |
-| `metric.outcome.delivery.latency` | End-to-end delivery latency | Platform |
-| `evt.outcome.delivered` | Event emitted after delivery | Platform   |
+| Identifier                        | Meaning                      | Owner    |
+| --------------------------------- | ---------------------------- | -------- |
+| `svc.outcomes`                    | Outcome service name         | Platform |
+| `metric.outcome.delivery.latency` | End-to-end delivery latency  | Platform |
+| `evt.outcome.delivered`           | Event emitted after delivery | Platform |
 
 ## Related links
 

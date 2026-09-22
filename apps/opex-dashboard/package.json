@@ -1,38 +1,38 @@
 {
   "name": "@pagopa/opex-dashboard",
+  "version": "0.2.15",
+  "description": "Generate operational dashboards from OpenAPI specifications",
+  "keywords": [
+    "azure",
+    "dashboard",
+    "monitoring",
+    "observability",
+    "openapi",
+    "terraform"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/opex-dashboard"
   },
-  "version": "0.2.15",
-  "description": "Generate operational dashboards from OpenAPI specifications",
-  "main": "dist/index.js",
   "bin": {
     "opex-dashboard": "./bin/index.js"
   },
-  "type": "module",
   "files": [
     "bin",
     "dist",
     "config.schema.json"
   ],
+  "type": "module",
+  "main": "dist/index.js",
   "publishConfig": {
-    "registry": "https://registry.npmjs.org/",
-    "access": "public"
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   },
   "scripts": {
     "build": "tsup && tsx scripts/generate-json-schema.ts",
     "dev": "tsup --watch"
   },
-  "keywords": [
-    "dashboard",
-    "openapi",
-    "azure",
-    "terraform",
-    "monitoring",
-    "observability"
-  ],
   "dependencies": {
     "@apidevtools/swagger-parser": "^12.1.0",
     "commander": "catalog:",

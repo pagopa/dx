@@ -64,7 +64,11 @@ export const useDateFormatters = (): DateFormatters => {
         const end = formatShortDate(referenceDate, locale);
         const endMs = new Date(referenceDate).getTime();
 
-        if (Number.isNaN(endMs) || !Number.isFinite(windowDays) || windowDays <= 0) {
+        if (
+          Number.isNaN(endMs) ||
+          !Number.isFinite(windowDays) ||
+          windowDays <= 0
+        ) {
           return end;
         }
 

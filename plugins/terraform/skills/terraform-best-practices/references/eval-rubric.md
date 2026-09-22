@@ -8,22 +8,22 @@ Score each eval prompt from 0 to 2 for every criterion.
 
 ## Core Criteria
 
-| Criterion | What to check |
-| --- | --- |
-| DX docs consulted | The run reads or cites relevant DX Terraform docs before generating code. |
-| DX module preference | The run searches for matching `pagopa-dx/*` modules and uses them when available. |
-| Source-based capability discovery | The run inspects module source, variables, outputs, examples, and package version rather than relying on guesses. |
-| Inference before questions | The run infers folder, environment, location, tags, and shared outputs from existing Terraform before asking the user. |
-| Minimal focused questions | Any question is necessary, one-at-a-time, and uses choices when valid answers are known. |
-| Secret safety | No secret value is introduced into Terraform state, code, locals, variables, outputs, app settings, env vars, or `.tfvars`. |
-| IAM/RBAC completeness | Required managed identities and least-privilege role assignments are added or reused. |
-| Network correctness | New subnets use `dx_available_subnet_cidr`; private endpoints include required DNS wiring. |
-| Technology Radar alignment | New technologies are checked against the radar and non-recommended choices require explicit user confirmation. |
-| Structure correctness | Related resources are grouped into a local module when appropriate; root env folders avoid `variables.tf`. |
-| Version pinning | DX registry modules use `~> major.minor` constraints derived from the module version. |
-| Complete implementation | No placeholder Terraform or TODO comments are left for required functionality. |
-| Validation | The run performs or clearly reports the smallest relevant `terraform init`, `terraform validate`, plan, and repository validation steps. |
-| Scope control | Migration or diagram prompts modify only the requested scope. |
+| Criterion                         | What to check                                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| DX docs consulted                 | The run reads or cites relevant DX Terraform docs before generating code.                                                                |
+| DX module preference              | The run searches for matching `pagopa-dx/*` modules and uses them when available.                                                        |
+| Source-based capability discovery | The run inspects module source, variables, outputs, examples, and package version rather than relying on guesses.                        |
+| Inference before questions        | The run infers folder, environment, location, tags, and shared outputs from existing Terraform before asking the user.                   |
+| Minimal focused questions         | Any question is necessary, one-at-a-time, and uses choices when valid answers are known.                                                 |
+| Secret safety                     | No secret value is introduced into Terraform state, code, locals, variables, outputs, app settings, env vars, or `.tfvars`.              |
+| IAM/RBAC completeness             | Required managed identities and least-privilege role assignments are added or reused.                                                    |
+| Network correctness               | New subnets use `dx_available_subnet_cidr`; private endpoints include required DNS wiring.                                               |
+| Technology Radar alignment        | New technologies are checked against the radar and non-recommended choices require explicit user confirmation.                           |
+| Structure correctness             | Related resources are grouped into a local module when appropriate; root env folders avoid `variables.tf`.                               |
+| Version pinning                   | DX registry modules use `~> major.minor` constraints derived from the module version.                                                    |
+| Complete implementation           | No placeholder Terraform or TODO comments are left for required functionality.                                                           |
+| Validation                        | The run performs or clearly reports the smallest relevant `terraform init`, `terraform validate`, plan, and repository validation steps. |
+| Scope control                     | Migration or diagram prompts modify only the requested scope.                                                                            |
 
 ## Suggested Quantitative Gates
 

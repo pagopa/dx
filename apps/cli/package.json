@@ -1,24 +1,27 @@
 {
   "name": "@pagopa/dx-cli",
   "version": "0.27.7",
-  "type": "module",
   "description": "A CLI useful to manage DX tools.",
+  "keywords": [
+    "CLI",
+    "DX"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/cli"
   },
-  "keywords": [
-    "DX",
-    "CLI"
-  ],
+  "bin": {
+    "dx": "./bin/index.js"
+  },
   "files": [
     "bin",
     "dist",
     "templates"
   ],
-  "bin": {
-    "dx": "./bin/index.js"
+  "type": "module",
+  "scripts": {
+    "plop": "plop"
   },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
@@ -74,9 +77,6 @@
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"
-  },
-  "scripts": {
-    "plop": "plop"
   },
   "engines": {
     "node": ">=22.0.0"

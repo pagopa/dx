@@ -1,37 +1,42 @@
 {
   "name": "@pagopa/azure-tracing",
   "version": "0.5.9",
-  "type": "module",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/azure-tracing"
-  },
-  "nx": {
-    "targets": {
-      "integration": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "dependsOn": [
-          "^build"
-        ],
-        "options": {
-          "command": "pnpm run integration",
-          "cwd": "packages/azure-tracing"
-        }
-      }
-    }
-  },
   "keywords": [
     "azure",
     "azuremonitor",
     "opentelemetry"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/azure-tracing"
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
   "main": "./dist/functions/index.js",
+  "types": "./dist/functions/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "azure-functions": [
+        "dist/functions/hooks.d.ts"
+      ],
+      "azure-functions/v3": [
+        "dist/functions/v3/index.d.ts"
+      ],
+      "logger": [
+        "dist/opentelemetry/logger.d.ts"
+      ],
+      "azure-monitor": [
+        "dist/monitor/index.d.ts"
+      ],
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/functions/index.d.ts",
@@ -59,25 +64,9 @@
       "require": "./dist/functions/v3/index.cjs"
     }
   },
-  "types": "./dist/functions/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "azure-functions": [
-        "dist/functions/hooks.d.ts"
-      ],
-      "azure-functions/v3": [
-        "dist/functions/v3/index.d.ts"
-      ],
-      "logger": [
-        "dist/opentelemetry/logger.d.ts"
-      ],
-      "azure-monitor": [
-        "dist/monitor/index.d.ts"
-      ],
-      "*": [
-        "dist/*"
-      ]
-    }
+  "scripts": {
+    "build": "tsup",
+    "test:integration": "vitest run --config vitest.integration.config.js"
   },
   "dependencies": {
     "@azure/identity": "catalog:",
@@ -107,8 +96,19 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "scripts": {
-    "build": "tsup",
-    "test:integration": "vitest run --config vitest.integration.config.js"
+  "nx": {
+    "targets": {
+      "integration": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": [
+          "^build"
+        ],
+        "options": {
+          "command": "pnpm run integration",
+          "cwd": "packages/azure-tracing"
+        }
+      }
+    }
   }
 }

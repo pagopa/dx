@@ -8,7 +8,7 @@
     "moduleResolution": "bundler",
     "module": "ESNext",
     "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
+    "emitDeclarationOnly": true
   },
-  "include": ["./src/**/*"],
+  "include": ["./src/**/*"]
 }
