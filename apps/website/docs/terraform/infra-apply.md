@@ -18,8 +18,8 @@ operations.
 ## Overview
 
 The `infra_apply` workflow is part of the Infrastructure as Code (IaC) solution
-and is responsible for executing a `terraform apply` to implement infrastructure
-changes.
+and is responsible for executing the Nx `apply` target for Terraform projects to
+implement infrastructure changes.
 
 It uses the OIDC authentication provider for Azure and is configured to manage
 the application of changes across different environments.
@@ -31,62 +31,53 @@ The workflow supports both of these repository layouts under
 - multiple Terraform projects split across first-level subdirectories
 
 This allows one apply pipeline to work for both single-state and multi-state
-environments.
+environments. The repository must configure `@pagopa/nx-terraform-plugin` so
+that these directories are discovered as Nx Terraform application projects.
 
 ## Use Cases
 
 - Implement infrastructure changes in specific environments
 - Deploy resources after approval
-- Apply only the Terraform projects affected by a change
-- Apply all projects in an environment when shared modules change
+- Apply all Nx Terraform projects in an environment
 - Automate infrastructure provisioning
 
 ## Input
 
-| Parameter                     | Description                                                                                                                                       | Type    | Req | Default |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | --- | ------- |
-| `environment`                 | Environment where the resources will be deployed                                                                                                  | string  | ✓   |         |
-| `base_path`                   | Base path that contains the environment folders. The workflow inspects `<base_path>/<environment>` and auto-detects flat or multi-project layouts | string  | ✓   |         |
-| `env_vars`                    | List of environment variables to set up, given in `env=value` format                                                                              | string  |     |         |
-| `use_private_agent`           | Use a private agent to run the Terraform plan                                                                                                     | boolean |     | `false` |
-| `override_github_environment` | Set a value if GitHub Environment name is different from the TF environment folder                                                                | string  |     | `''`    |
-| `use_labels`                  | Use labels to start the right environment's GitHub runner                                                                                         | boolean |     | `false` |
-| `override_labels`             | Needed for special cases where the environment alone is not sufficient as a distinguishing label                                                  | string  |     | `''`    |
+| Parameter                     | Description                                                                                                                                            | Type    | Req | Default |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------- | --- | ------- |
+| `environment`                 | Environment where the resources will be deployed                                                                                                       | string  | ✓   |         |
+| `base_path`                   | Base path that contains the environment folders. The workflow selects Nx application projects with an `apply` target below `<base_path>/<environment>` | string  | ✓   |         |
+| `env_vars`                    | List of environment variables to set up, given in `env=value` format                                                                                   | string  |     |         |
+| `use_private_agent`           | Use a private agent to run the Terraform apply                                                                                                         | boolean |     | `false` |
+| `override_github_environment` | Set a value if GitHub Environment name is different from the TF environment folder                                                                     | string  |     | `''`    |
+| `use_labels`                  | Use labels to start the right environment's GitHub runner                                                                                              | boolean |     | `false` |
+| `override_labels`             | Needed for special cases where the environment alone is not sufficient as a distinguishing label                                                       | string  |     | `''`    |
 
 ## How it Works
 
 The workflow executes the following steps:
 
 1. Determines the Terraform version to use from the `.terraform-version` file
-2. Detects the Terraform project roots inside `<base_path>/<environment>`
-3. Checks the validity of Terraform registry module locks for each detected
-   project
-4. Configures the environment and CSP credentials
-5. Executes a Terraform plan for each detected project and stores the related
-   bundle
-6. Downloads the matching plan bundle for each detected project
-7. Applies the previously generated Terraform plan
+2. Installs the repository dependencies required by Nx
+3. Configures the environment and CSP credentials
+4. Finds Nx Terraform application projects with an `apply` target below
+   `<base_path>/<environment>`
+5. Runs their Nx `apply` target with Terraform's non-interactive apply options
 
-## Project detection rules
+## Project selection rules
 
-The workflow automatically detects which directories must be applied:
+The workflow asks Nx to select Terraform application projects that:
 
-- **Flat layout**: if Terraform files exist directly in
-  `<base_path>/<environment>`, that directory is treated as the single Terraform
-  project root. This detection applies when:
-  - `workflow_dispatch` is triggered (full directory scan)
-  - Shared modules change (full environment scan)
-- **Multi-project layout**: if there are no Terraform files directly in the
+- are located under `<base_path>/<environment>`
+- expose the inferred `apply` target from `@pagopa/nx-terraform-plugin`
 
-  environment directory, each first-level subdirectory containing changed files
-  is treated as an independent project root.
+This covers both layouts:
 
-- **Shared modules changed**: if files under `<base_path>/_modules` change, the
-  workflow applies all Terraform projects in the target environment.
-- **Manual runs**: when triggered with `workflow_dispatch`, the workflow scans
-  the whole environment and applies all detected projects.
+- **Flat layout**: the environment directory is the Terraform project root.
+- **Multi-project layout**: each first-level subdirectory in the environment
+  directory is an independent Terraform project root.
 
-If no Terraform project is detected, the plan and apply jobs are skipped.
+If no matching Nx project is found, the apply step is skipped.
 
 ## Supported layouts
 
@@ -122,10 +113,11 @@ jobs:
       override_labels: ""
 ```
 
-With the example above, the workflow will inspect `infra/resources/prod`:
+With the example above, the workflow will ask Nx for Terraform application
+projects with an `apply` target under `infra/resources/prod`:
 
-- if Terraform files exist directly in that folder, it runs a single plan/apply
-- otherwise, it runs one plan/apply for each changed first-level subdirectory
+- if that folder is a Terraform project, it runs one Nx apply target
+- otherwise, it runs the target for each Terraform project in its subdirectories
 
 ## Special configurations (multi environment/multi cloud)
 
@@ -149,10 +141,9 @@ strategies across multiple cloud providers or subscriptions.
 
 The typical execution flow in a CI/CD process includes:
 
-1. **Pull Request**: the `infra_plan` workflow is triggered to verify the
-   proposed changes
+1. **Pull Request**: the Nx validation pipeline verifies the proposed changes
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
-4. **Deploy**: this `infra_apply` workflow is triggered to implement the changes
-   in the desired environment, reusing the per-project plan bundles
+4. **Deploy**: this `infra_apply` workflow runs the Nx apply target for the
+   desired environment
