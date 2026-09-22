@@ -98,6 +98,9 @@ export const INSIGHT_THRESHOLDS = {
   spreadMinMedianHours: 4,
   spreadMinMedianMinutes: 5,
   staleModuleShare: 0.3,
+  // Share of still-open pull requests with no activity for `staleOpenPrDays`
+  // above which the backlog is flagged as stale.
+  stalePrShare: 0.3,
   targetTolerancePct: 25,
   teamBusFactorShare: 0.5,
   techradarCoverage: 0.3,

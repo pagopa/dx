@@ -9,15 +9,20 @@ import {
 
 /** Per-repository pull-request benchmark values. */
 export const prBenchmarkRowSchema = z.object({
+  avgPrSize: nullableSqlNumberSchema,
   count: sqlNumberSchema,
+  firstReviewCount: sqlNumberSchema,
   leadTime: nullableSqlNumberSchema,
   mergedWithoutComments: nullableSqlNumberSchema,
   mergedWithoutReview: nullableSqlNumberSchema,
+  prSizeCount: sqlNumberSchema,
   repository: z.string().min(1),
+  timeToFirstReview: nullableSqlNumberSchema,
 });
 
 /** Per-repository workflow benchmark values. */
 export const workflowBenchmarkRowSchema = z.object({
+  ciFailureTime: nullableSqlNumberSchema,
   durationCount: sqlNumberSchema,
   pipelineDuration: nullableSqlNumberSchema,
   repository: z.string().min(1),

@@ -55,10 +55,10 @@ export async function GET(req: NextRequest) {
   const { days, repository = "dx" } = parsed.query;
   const fullName = `${ORGANIZATION}/${repository}`;
 
-  // All nine adapters run concurrently; each failure degrades the summary
-  // instead of failing the whole endpoint, so a single broken dashboard still
-  // yields the insights of the remaining eight. Each promise is bound to its
-  // key so the settled result cannot be paired with the wrong label.
+  // Every adapter runs concurrently; each failure degrades the summary instead
+  // of failing the whole endpoint, so a single broken dashboard still yields
+  // the insights of the others. Each promise is bound to its key so the settled
+  // result cannot be paired with the wrong label.
   const dashboardRequests: readonly {
     key: EndpointKey;
     request: Promise<WithInsights & { meta?: unknown }>;
@@ -127,6 +127,8 @@ export async function GET(req: NextRequest) {
   return jsonWithCache({
     insights: sortInsights(insights),
     meta: {
+      // Lets the summary say "N of M" without hard-coding the dashboard count.
+      dashboardCount: settled.length,
       failed,
       referenceDate: latestReferenceDate(referenceDates),
     },

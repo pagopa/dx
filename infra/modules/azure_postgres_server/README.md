@@ -17,9 +17,9 @@ This Terraform module provisions an Azure PostgreSQL Flexible Server along with 
 
 ## Use cases Comparison
 
-| Use case   | Description                                                                  | High Availability | Geo-Redundant Backup  | Replica Server | Auto Grow |
-|------------|------------------------------------------------------------------------------|-------------------|-----------------------|----------------|-----------|
-| `default`  | Suitable for production with low to moderate performance and scaling needs.  | Yes               | Yes                   | Yes            | Yes       |
+| Use case  | Description                                                                 | High Availability | Geo-Redundant Backup | Replica Server | Auto Grow |
+| --------- | --------------------------------------------------------------------------- | ----------------- | -------------------- | -------------- | --------- |
+| `default` | Suitable for production with low to moderate performance and scaling needs. | Yes               | Yes                  | Yes            | Yes       |
 
 ## Usage Example
 
