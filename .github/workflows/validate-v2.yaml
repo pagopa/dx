@@ -69,6 +69,33 @@ jobs:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
 
+  format:
+    name: Format
+    needs: gate
+    if: ${{ needs.gate.outputs.run == 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
+          minimum_release_age: 7d
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      - name: Check formatting
+        run: pnpm nx format:check
+
   assess-affected-projects:
     name: Affected Projects Assessment
     needs: gate
