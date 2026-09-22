@@ -129,7 +129,10 @@ export default function PullRequestsDashboard() {
   const deltaFromPrevious = (
     current: null | number,
     previous: null | number,
-  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
 
   // The window is anchored to the latest activity, not to today, so the exact
   // range is shown on the contributor count.
@@ -217,7 +220,10 @@ export default function PullRequestsDashboard() {
 
       {data && (
         <div className="space-y-8">
-          <DataFreshness referenceDate={data.meta.referenceDate} windowDays={days} />
+          <DataFreshness
+            referenceDate={data.meta.referenceDate}
+            windowDays={days}
+          />
           <InsightsPanel insights={data.insights} periodDays={days} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -11,7 +11,11 @@ export type InsightSeverity = "positive" | "neutral" | "warning" | "critical";
 
 /** The engineering concern an insight belongs to. */
 export type InsightCategory =
-  "velocity" | "quality" | "reliability" | "adoption" | "risk";
+  | "velocity"
+  | "quality"
+  | "reliability"
+  | "adoption"
+  | "risk";
 
 /** A metric value with an optional comparison against a previous value. */
 export interface InsightValue {

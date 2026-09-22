@@ -295,7 +295,10 @@ export default function TechradarDashboard() {
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white">
                 Repositories without detections
               </h3>
-              <ul className="flex flex-wrap gap-2" aria-label="Repositories without detections">
+              <ul
+                className="flex flex-wrap gap-2"
+                aria-label="Repositories without detections"
+              >
                 {data.repositoriesWithoutDetectedTools.map((repository) => (
                   <li
                     className="rounded bg-[#161b22] px-2 py-1 text-xs font-medium text-[#8b949e]"

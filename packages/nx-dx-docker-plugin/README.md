@@ -195,7 +195,7 @@ This executor is reached through the inferred `nx-release-publish` target.
 Its behavior is:
 
 1. read the released version from the project's `package.json`, or from
-  `project.json` `metadata.version` for Docker-only projects
+   `project.json` `metadata.version` for Docker-only projects
 2. compute the immutable version, major/minor, and `latest` tags
 3. in dry-run mode, print the tags that would be published and stop
 4. otherwise rebuild the image with Buildx and push every release tag

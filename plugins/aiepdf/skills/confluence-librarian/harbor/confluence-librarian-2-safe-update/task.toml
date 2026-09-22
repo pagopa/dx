@@ -1,10 +1,10 @@
 schema_version = "1.4"
 artifacts = [
-    { source = "/workspace", exclude = [
+  { source = "/workspace", exclude = [
     ".git",
-] },
-    "/logs/agent/copilot-cli.jsonl",
-    "/logs/agent/trajectory.json",
+  ] },
+  "/logs/agent/copilot-cli.jsonl",
+  "/logs/agent/trajectory.json",
 ]
 
 [verifier]
@@ -33,7 +33,10 @@ MCP_AUTH_B64 = "${MCP_AUTH_B64}"
 name = "atlassian"
 transport = "stdio"
 command = "bash"
-args = ["-lc", "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.mcp-auth-atlassian) is required}\"; d=$(mktemp -d); printf '%s' \"$MCP_AUTH_B64\" | base64 -d | tar -xz -C \"$d\"; MCP_REMOTE_CONFIG_DIR=\"$d/.mcp-auth-atlassian\" exec mcp-remote https://mcp.atlassian.com/v2/mcp --silent"]
+args = [
+  "-lc",
+  "set -euo pipefail; : \"${MCP_AUTH_B64:?MCP_AUTH_B64 (packed ~/.mcp-auth-atlassian) is required}\"; d=$(mktemp -d); printf '%s' \"$MCP_AUTH_B64\" | base64 -d | tar -xz -C \"$d\"; MCP_REMOTE_CONFIG_DIR=\"$d/.mcp-auth-atlassian\" exec mcp-remote https://mcp.atlassian.com/v2/mcp --silent",
+]
 
 [solution.env]
 
@@ -45,8 +48,5 @@ version = "1.0.0"
 [metadata]
 difficulty = "medium"
 category = "skill-eval"
-tags = [
-    "confluence-librarian",
-    "skill-eval",
-]
+tags = ["confluence-librarian", "skill-eval"]
 estimated_duration_sec = 900

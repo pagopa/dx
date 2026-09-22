@@ -28,13 +28,11 @@ export default function OverviewDashboard() {
   // A single aggregated endpoint replaces the previous nine per-dashboard
   // fetches: the server runs every adapter in parallel and returns only the
   // insights, so the browser makes one request instead of nine.
-  const { data, error, loading, refetch } = useDashboardData<ExecutiveSummaryData>(
-    "insights",
-    {
+  const { data, error, loading, refetch } =
+    useDashboardData<ExecutiveSummaryData>("insights", {
       days,
       repository,
-    },
-  );
+    });
 
   return (
     <div>

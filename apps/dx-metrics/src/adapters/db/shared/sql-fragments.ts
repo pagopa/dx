@@ -2,7 +2,11 @@
 
 import { sql, type SQL } from "drizzle-orm";
 
-import { BOT_AUTHORS, EXCLUDED_WORKFLOW_NAMES, WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
+import {
+  BOT_AUTHORS,
+  EXCLUDED_WORKFLOW_NAMES,
+  WEEKLY_BUCKET_THRESHOLD_DAYS,
+} from "@/lib/config";
 
 /**
  * Renders a column expression, accepting either raw text or a bound fragment.
@@ -98,10 +102,7 @@ export const textArray = (values: readonly string[]): SQL =>
  * list so the predicate never breaks. Accepts a qualified column name
  * (e.g. `ipr.title`), so the same exclusion can be applied to any alias.
  */
-export const notInValues = (
-  column: string,
-  values: readonly string[],
-): SQL => {
+export const notInValues = (column: string, values: readonly string[]): SQL => {
   if (values.length === 0) {
     return sql`TRUE`;
   }

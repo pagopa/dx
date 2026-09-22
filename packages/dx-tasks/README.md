@@ -167,7 +167,7 @@ and errors are rendered as GitHub Markdown notices before the summary line. Full
 never included in the Markdown comment, keeping comments compact even across many plans and linking
 back to `sourceUrl`, when provided, and report artifacts for the complete output.
 
-````markdown
+```markdown
 ### Terraform Plans
 
 #### Module: `./infra/modules/example` - ✅ Success
@@ -182,7 +182,7 @@ Plan: 0 to add, 1 to change, 0 to destroy.
 > [!NOTE]
 > Full plan output is not included in this comment.
 > See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.
-````
+```
 
 To control which namespaces/formats are renderable, build your own `ReportStore` and register
 namespaces with `renderers` explicitly:

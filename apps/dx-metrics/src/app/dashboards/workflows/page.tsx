@@ -192,7 +192,10 @@ function WorkflowsDashboardContent({
   const deltaFromPrevious = (
     current: null | number,
     previous: null | number,
-  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
 
   return (
     <>
