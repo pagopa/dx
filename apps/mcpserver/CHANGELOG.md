@@ -1,3 +1,13 @@
+## 0.2.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Correct the MCP Docker image registry namespace. ([#2234](https://github.com/pagopa/dx/pull/2234))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.2.16 (2026-09-22)
 
 ### 🩹 Fixes
