@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.14",
   "private": true,
+  "version": "0.2.15",
   "type": "module",
   "nx": {
     "docker": {
