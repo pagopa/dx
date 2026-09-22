@@ -65,14 +65,22 @@ const prSizeSortOrderExpression = sql`CASE ${sql.join(
   sql` `,
 )} ELSE ${PR_SIZE_BUCKETS.length} END`;
 
-/** Resolves the latest PR activity timestamp used to anchor time windows. */
+/**
+ * Resolves the latest PR activity timestamp used to anchor time windows.
+ *
+ * Closure and update activity are included alongside creation/merge: the
+ * backlog metrics read `closed_at` and `updated_at`, so anchoring only to
+ * `created_at`/`merged_at` would let a PR closed after the reference date leak
+ * into the window and distort the stale age.
+ */
 const fetchReferenceDate = async (
   db: Database,
   fullName: string,
 ): Promise<string> => {
   const result = await db.execute(
     buildReferenceDateQuery({
-      column: "GREATEST(pr.created_at, pr.merged_at)",
+      column:
+        "GREATEST(pr.created_at, pr.merged_at, pr.closed_at, pr.updated_at)",
       from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
       where: sql`r.full_name = ${fullName}`,
     }),
@@ -500,6 +508,7 @@ async function fetchPrOpenBacklog(
         COUNT(*) FILTER (
           WHERE pr.closed_at IS NOT NULL
             AND pr.closed_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+            AND pr.closed_at <= ${referenceDate}::timestamptz
         ) AS "closedUnmerged"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${fullName}

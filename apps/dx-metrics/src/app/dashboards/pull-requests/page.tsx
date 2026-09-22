@@ -108,18 +108,17 @@ export default function PullRequestsDashboard() {
     days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
 
   const repositoryUrl = `https://github.com/${ORGANIZATION}/${repository}`;
-  // Tolerate a cached payload from before these fields existed rather than
-  // crashing the dashboard until the cache expires.
-  const openBacklog = data?.openBacklog ?? {
-    closedUnmerged: 0,
-    openNow: 0,
-    stale: 0,
-  };
+  // A cached payload from before these fields existed must not be rendered as a
+  // real zero backlog; the cards only appear when the snapshot is present, so an
+  // empty backlog is distinguishable from unavailable data.
+  const openBacklog = data?.openBacklog;
   const stalePrs = data?.stalePrs ?? [];
   // Share of the open backlog that has gone quiet; drives the stale card badge
   // with the same threshold the insight uses.
   const staleShare =
-    openBacklog.openNow > 0 ? openBacklog.stale / openBacklog.openNow : null;
+    openBacklog && openBacklog.openNow > 0
+      ? openBacklog.stale / openBacklog.openNow
+      : null;
   const staleSeverity =
     staleShare === null
       ? undefined
@@ -352,25 +351,27 @@ export default function PullRequestsDashboard() {
             <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
               Backlog
             </h3>
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-              <MetricCard
-                label="Open PRs Now"
-                tooltip={tooltipContent.openPrsNow}
-                value={openBacklog.openNow}
-              />
-              <MetricCard
-                label={`Stale Open PRs (> ${METRIC_TARGETS.staleOpenPrDays} days)`}
-                sampleSize={openBacklog.openNow}
-                severity={staleSeverity}
-                tooltip={tooltipContent.staleOpenPrs}
-                value={openBacklog.stale}
-              />
-              <MetricCard
-                label="Closed Without Merge"
-                tooltip={tooltipContent.closedUnmerged}
-                value={openBacklog.closedUnmerged}
-              />
-            </div>
+            {openBacklog && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <MetricCard
+                  label="Open PRs Now"
+                  tooltip={tooltipContent.openPrsNow}
+                  value={openBacklog.openNow}
+                />
+                <MetricCard
+                  label={`Stale Open PRs (> ${METRIC_TARGETS.staleOpenPrDays} days)`}
+                  sampleSize={openBacklog.openNow}
+                  severity={staleSeverity}
+                  tooltip={tooltipContent.staleOpenPrs}
+                  value={openBacklog.stale}
+                />
+                <MetricCard
+                  label="Closed Without Merge"
+                  tooltip={tooltipContent.closedUnmerged}
+                  value={openBacklog.closedUnmerged}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleLineChart
                 caption="per day"

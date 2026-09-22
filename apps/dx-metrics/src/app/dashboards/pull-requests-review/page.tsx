@@ -179,6 +179,12 @@ export default function PullRequestsReviewDashboard() {
                 (row) => row.avgHoursToFirstReview,
               )}
             />
+            {/*
+              Comment volume is a context signal, not a good/bad one: more
+              comments can mean either deeper review or unclear changes, so
+              `Total Comments` and `Comments / PR` intentionally omit a direction
+              and their deltas stay neutral.
+            */}
             <MetricCard
               deltaLabel="vs prev"
               deltaPct={deltaFromPrevious(

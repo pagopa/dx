@@ -60,10 +60,10 @@ export default function OverviewDashboard() {
       />
 
       {data?.meta.referenceDate && (
-        <DataFreshness
-          referenceDate={data.meta.referenceDate}
-          windowDays={days}
-        />
+        // The summary aggregates dashboards with independent reference dates and
+        // some all-time insights, so it deliberately shows only the latest date
+        // rather than one shared window range.
+        <DataFreshness referenceDate={data.meta.referenceDate} />
       )}
 
       {data && data.meta.failed.length > 0 && (

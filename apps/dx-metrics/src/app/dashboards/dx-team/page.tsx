@@ -59,10 +59,12 @@ export default function DxTeamDashboard() {
 
       {data && (
         <>
+          {/* The dashboard mixes windowed and all-time data (e.g. adopting
+              projects and pipeline usage are not date-filtered), so no single
+              N-day range is shown. */}
           <DataFreshness
             className="mb-2"
             referenceDate={data.meta.referenceDate}
-            windowDays={days}
           />
           <InsightsPanel
             className="mb-4"
