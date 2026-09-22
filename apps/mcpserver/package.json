@@ -1,11 +1,16 @@
 {
   "name": "@pagopa/dx-mcpserver",
+  "private": true,
   "version": "0.2.15",
   "type": "module",
   "nx": {
     "docker": {
-      "repositoryName": "dx/mcp-server",
       "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "dx/mcp-server"
+      }
     }
   },
   "description": "An MCP server that supports developers using DX tools.",
