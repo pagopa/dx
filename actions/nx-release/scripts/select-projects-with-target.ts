@@ -53,9 +53,9 @@ export function selectProjectsWithTarget(
     return projectsWithTarget;
   }
 
-  const requested = new Set(requestedProjects);
-  // Node 20 does not yet support Set.prototype.intersection().
-  return projectsWithTarget.filter((project) => requested.has(project));
+  return [
+    ...new Set(projectsWithTarget).intersection(new Set(requestedProjects)),
+  ];
 }
 
 /** Main entrypoint: queries Nx and emits the selected projects as CSV. */

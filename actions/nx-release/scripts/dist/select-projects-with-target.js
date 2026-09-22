@@ -14579,8 +14579,9 @@ function selectProjectsWithTarget(projectsWithTarget, requestedProjects) {
   if (!requestedProjects) {
     return projectsWithTarget;
   }
-  const requested = new Set(requestedProjects);
-  return projectsWithTarget.filter((project) => requested.has(project));
+  return [
+    ...new Set(projectsWithTarget).intersection(new Set(requestedProjects))
+  ];
 }
 async function run() {
   const { projects, target } = parseSelectionInput({
