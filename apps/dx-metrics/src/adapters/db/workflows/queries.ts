@@ -361,24 +361,37 @@ const fetchSummary = async (
   days: number,
   maxDate: string,
 ) => {
+  // One scan of the two-window population, split into current and previous with
+  // a boolean instead of four repeated scalar subqueries: the previous-period
+  // cards share the same joins and date filters, so reaggregating them per
+  // metric would multiply the cost on this high-volume table for no benefit.
   const r = await db.execute(sql`
+    WITH scoped AS (
+      SELECT
+        wr.created_at,
+        EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes",
+        TRIM(wr.conclusion) AS "conclusion",
+        (wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})) AS "inCurrentWindow"
+      FROM workflow_runs wr
+      JOIN workflows w ON wr.workflow_id = w.id
+      JOIN repositories r ON wr.repository_id = r.id
+      WHERE r.full_name = ${fullName}
+        AND wr.status = 'completed' AND TRIM(wr.conclusion) IN ('success', 'failure')
+        AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
+        AND wr.updated_at <= ${maxDate}::timestamptz
+        AND ${workflowNameExclusion("w.name")}
+    )
     SELECT
-      (COUNT(*) FILTER (WHERE TRIM(wr.conclusion) = 'success'))::int AS "totalPipelines",
-      AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
-        FILTER (WHERE TRIM(wr.conclusion) = 'success') / 60 AS "avgDurationMinutes",
-      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
-        FILTER (WHERE TRIM(wr.conclusion) = 'success') / 60 AS "totalDurationMinutes",
-      SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
-        FILTER (WHERE TRIM(wr.conclusion) = 'failure') / 60 AS "failedDurationMinutes",
-      MIN(wr.created_at) AS "firstPipelineDate"
-    FROM workflow_runs wr
-    JOIN workflows w ON wr.workflow_id = w.id
-    JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
-      AND wr.status = 'completed' AND TRIM(wr.conclusion) IN ('success', 'failure')
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${maxDate}::timestamptz
-      AND ${workflowNameExclusion("w.name")}
+      (COUNT(*) FILTER (WHERE "inCurrentWindow" AND "conclusion" = 'success'))::int AS "totalPipelines",
+      AVG("durationMinutes") FILTER (WHERE "inCurrentWindow" AND "conclusion" = 'success') AS "avgDurationMinutes",
+      SUM("durationMinutes") FILTER (WHERE "inCurrentWindow" AND "conclusion" = 'success') AS "totalDurationMinutes",
+      SUM("durationMinutes") FILTER (WHERE "inCurrentWindow" AND "conclusion" = 'failure') AS "failedDurationMinutes",
+      MIN(created_at) FILTER (WHERE "inCurrentWindow") AS "firstPipelineDate",
+      (COUNT(*) FILTER (WHERE NOT "inCurrentWindow" AND "conclusion" = 'success'))::int AS "previousTotalPipelines",
+      AVG("durationMinutes") FILTER (WHERE NOT "inCurrentWindow" AND "conclusion" = 'success') AS "previousAvgDurationMinutes",
+      SUM("durationMinutes") FILTER (WHERE NOT "inCurrentWindow" AND "conclusion" = 'success') AS "previousTotalDurationMinutes",
+      SUM("durationMinutes") FILTER (WHERE NOT "inCurrentWindow" AND "conclusion" = 'failure') AS "previousFailedDurationMinutes"
+    FROM scoped
   `);
   return parseOptionalSqlRow(
     workflowSummarySchema,

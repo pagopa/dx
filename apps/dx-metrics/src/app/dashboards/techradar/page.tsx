@@ -2,6 +2,7 @@
 
 "use client";
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import Link from "next/link";
 
 import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
@@ -86,9 +87,17 @@ export default function TechradarDashboard() {
   const usageTrendByDate = new Map<string, number>();
   for (const row of data?.usageTrend ?? []) {
     const date = row.capturedAt.slice(0, 10);
+    // The zero-adoption marker keeps the trend line continuous: it is not a tool,
+    // so it contributes no usages, but its date must stay in the series so a
+    // snapshot with no detected tools plots a zero point instead of a gap.
+    const repositoryCount =
+      row.toolKey === TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY
+        ? 0
+        : Number(row.repositoryCount);
+
     usageTrendByDate.set(
       date,
-      (usageTrendByDate.get(date) ?? 0) + Number(row.repositoryCount),
+      (usageTrendByDate.get(date) ?? 0) + repositoryCount,
     );
   }
   const usageTrendData = [...usageTrendByDate.entries()]
