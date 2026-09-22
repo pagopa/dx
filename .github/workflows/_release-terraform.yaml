@@ -1,0 +1,20 @@
+name: Release Terraform Infrastructure
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "infra/resources/**"
+      - ".github/workflows/_release-terraform.yaml"
+      - ".github/workflows/release-terraform-v1.yaml"
+
+jobs:
+  release:
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    uses: $/.github/workflows/release-terraform-v1.yaml
+    secrets: inherit
