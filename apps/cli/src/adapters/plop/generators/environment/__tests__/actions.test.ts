@@ -74,8 +74,14 @@ describe("actions", () => {
     ];
 
     if (payload.init) {
-      actionsOrder.unshift("initCloudAccounts", "provisionTerraformBackend");
+      actionsOrder.unshift(
+        "setupCloudTools",
+        "initCloudAccounts",
+        "provisionTerraformBackend",
+      );
       actionsOrder.push("addMany", "addMany");
+    } else {
+      actionsOrder.unshift("setupCloudTools");
     }
 
     const actions = getActions("/templates/path")(payload);
