@@ -9,7 +9,7 @@ sidebar_position: 6
 | Workflow                            | Version | Source                                                                                                                |
 | ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
 | **Infrastructure Apply**            | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)                       |
-| **Nx Terraform Infrastructure Apply** | latest  | [`release-terraform.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-terraform.yaml) |
+| **Nx Terraform Infrastructure Apply** | latest  | [`release-terraform-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-terraform-v1.yaml) |
 
 :::
 
@@ -36,34 +36,32 @@ environments.
 
 ## Nx-based Terraform apply
 
-Use `release-terraform.yaml` for repositories that manage Terraform
-projects through Nx and `@pagopa/nx-terraform-plugin`.
+Use `_release-terraform.yaml` as the repository-level release workflow for
+repositories that manage Terraform projects through Nx and
+`@pagopa/nx-terraform-plugin`. Like `_validate.yaml`, this wrapper only invokes
+the versioned reusable workflow implementation.
 
-This workflow keeps the same main inputs as `infra_apply`, but it delegates
-project selection and execution to Nx:
+`release-terraform-v1.yaml` contains the release logic and follows the same
+environment discovery approach used by `validate-v2.yaml`: it reads the
+repository GitHub environments named `infra-<env>-cd`, checks which Terraform Nx
+projects are affected for each environment, and starts one release job for each
+matching environment.
 
-1. It installs the repository dependencies required by Nx.
-2. It selects Terraform application projects under `<base_path>/<environment>`
-   that expose the inferred `apply` target.
-3. It runs the selected projects with `nx run-many --target=apply` and
-   Terraform's non-interactive apply options.
+For each selected environment, the workflow:
+
+1. Runs on the matching self-hosted runner label.
+2. Opens the matching GitHub deployment environment.
+3. Installs the repository dependencies required by Nx.
+4. Runs the Terraform Nx `apply` target with Terraform's non-interactive apply
+   options.
 
 If no matching Nx project is found, the apply step is skipped.
 
 ```yaml
 jobs:
-  apply_infra:
-    uses: pagopa/dx/.github/workflows/release-terraform.yaml@main
+  release:
+    uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
     secrets: inherit
-    with:
-      environment: prod
-      base_path: infra/resources
-      # Optional parameters
-      env_vars: ""
-      use_private_agent: true
-      override_github_environment: pe-prod
-      use_labels: true
-      override_labels: ""
 ```
 
 Keep using `infra_apply.yaml` for the legacy Terraform flow that creates,
@@ -189,5 +187,5 @@ The typical execution flow in a CI/CD process includes:
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
-4. **Deploy**: `infra_apply` or `release-terraform` is triggered to
+4. **Deploy**: `infra_apply` or `_release-terraform` is triggered to
    implement the changes in the desired environment
