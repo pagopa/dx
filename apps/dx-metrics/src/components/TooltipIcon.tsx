@@ -26,7 +26,7 @@ export default function TooltipIcon({
           aria-label={`More information about ${label}`}
           className={cn(
             "inline-flex size-6 shrink-0 items-center justify-center",
-            "text-gray-400 transition-colors hover:text-gray-300",
+            "text-muted-foreground transition-colors hover:text-foreground",
             focusRing,
             className,
           )}
@@ -37,12 +37,12 @@ export default function TooltipIcon({
       </Tooltip.Trigger>
       <Tooltip.Portal>
         <Tooltip.Content
-          className="z-50 max-w-xs rounded border border-[#30363d] bg-[#161b22] px-2 py-1 text-sm break-words text-[#e6edf3] shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95"
+          className="z-50 max-w-xs rounded border border-border bg-subtle px-2 py-1 text-sm break-words text-foreground shadow-lg animate-in fade-in-0 zoom-in-95 data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95"
           side={side}
           sideOffset={5}
         >
           {content}
-          <Tooltip.Arrow className="fill-[#161b22]" />
+          <Tooltip.Arrow className="fill-subtle" />
         </Tooltip.Content>
       </Tooltip.Portal>
     </Tooltip.Root>

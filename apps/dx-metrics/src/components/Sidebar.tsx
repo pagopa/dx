@@ -99,7 +99,7 @@ export function Sidebar({
 
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 flex h-screen w-56 flex-col border-r border-[#30363d] bg-[#0d1117]",
+          "fixed left-0 top-0 z-40 flex h-screen w-56 flex-col border-r border-border bg-card",
           // `visibility` keeps the closed drawer out of the tab order and the
           // accessibility tree, while still letting it slide.
           "transition-[translate,visibility] duration-300 ease-in-out",
@@ -111,14 +111,14 @@ export function Sidebar({
       >
         <div
           className={cn(
-            "flex h-16 items-center border-b border-[#30363d] p-4",
+            "flex h-16 items-center border-b border-border p-4",
             isCollapsed ? "justify-between lg:justify-center" : "justify-end",
           )}
         >
           <button
             aria-label="Close navigation"
             className={cn(
-              "rounded-md border border-[#30363d] p-1.5 text-gray-400 transition-colors hover:bg-[#21262d] hover:text-white lg:hidden",
+              "rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden",
               focusRing,
             )}
             onClick={onClose}
@@ -132,7 +132,7 @@ export function Sidebar({
               isCollapsed ? "Expand navigation" : "Collapse navigation"
             }
             className={cn(
-              "hidden rounded-md border border-[#30363d] p-1.5 text-gray-400 transition-colors hover:bg-[#21262d] hover:text-white lg:inline-flex",
+              "hidden rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:inline-flex",
               focusRing,
             )}
             onClick={onToggleCollapsed}
@@ -158,7 +158,7 @@ export function Sidebar({
               */}
               <p
                 className={cn(
-                  "px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-gray-500",
+                  "px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-subtle-foreground",
                   isCollapsed && "lg:sr-only",
                 )}
               >
@@ -181,8 +181,8 @@ export function Sidebar({
                       className={cn(
                         "group relative flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                         isActive
-                          ? "border border-[#30363d] bg-[#21262d] font-semibold text-white"
-                          : "text-gray-400 hover:bg-[#161b22] hover:text-white",
+                          ? "border border-border bg-muted font-semibold text-foreground"
+                          : "text-muted-foreground hover:bg-subtle hover:text-foreground",
                         isCollapsed && "lg:justify-center lg:px-0",
                         focusRing,
                       )}
@@ -194,8 +194,8 @@ export function Sidebar({
                         className={cn(
                           "shrink-0",
                           isActive
-                            ? "text-green-500"
-                            : "group-hover:text-white",
+                            ? "text-accent"
+                            : "group-hover:text-foreground",
                         )}
                         size={18}
                       />
@@ -212,7 +212,7 @@ export function Sidebar({
                       {isCollapsed && (
                         <span
                           aria-hidden="true"
-                          className="pointer-events-none invisible absolute left-full ml-2 hidden whitespace-nowrap rounded border border-[#30363d] bg-[#21262d] px-2 py-1 text-xs text-white group-hover:visible group-focus-visible:visible lg:block"
+                          className="pointer-events-none invisible absolute left-full ml-2 hidden whitespace-nowrap rounded border border-border bg-muted px-2 py-1 text-xs text-foreground group-hover:visible group-focus-visible:visible lg:block"
                         >
                           {item.label}
                         </span>

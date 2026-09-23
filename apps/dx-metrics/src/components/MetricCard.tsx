@@ -66,7 +66,7 @@ const Sparkline = ({ points }: { points: readonly number[] }) => {
   return (
     <svg
       aria-hidden="true"
-      className="mt-2 text-gray-400"
+      className="mt-2 text-muted-foreground"
       height={height}
       preserveAspectRatio="none"
       viewBox={`0 0 ${width} ${height}`}
@@ -118,10 +118,10 @@ export function MetricCard({
       : null;
   const deltaClass =
     favorable === null
-      ? "text-gray-400"
+      ? "text-muted-foreground"
       : favorable
-        ? "text-green-400"
-        : "text-amber-400";
+        ? "text-green-700 dark:text-green-400"
+        : "text-amber-700 dark:text-amber-400";
   // Group long counts (1,234) but leave decimals and small values untouched.
   const displayValue =
     typeof value === "number" &&
@@ -150,9 +150,9 @@ export function MetricCard({
 
   return (
     <div
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-colors hover:border-[#8b949e]${accent}`}
+      className={`rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-muted-foreground${accent}`}
     >
-      <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-gray-400">
+      <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
         {tooltip && <TooltipIcon content={tooltip} label={label} />}
         {severityStyle && (
@@ -167,11 +167,11 @@ export function MetricCard({
         )}
       </p>
       <div className="mt-2 flex flex-wrap items-baseline">
-        <p className="text-3xl font-bold tracking-tighter text-[#e6edf3] tabular-nums metric-value-glow">
+        <p className="text-3xl font-bold tracking-tighter text-foreground tabular-nums metric-value-glow">
           {displayValue}
         </p>
         {suffix && (
-          <span className="ml-1 text-sm font-medium text-gray-400">
+          <span className="ml-1 text-sm font-medium text-muted-foreground">
             {suffix}
           </span>
         )}
@@ -196,11 +196,14 @@ export function MetricCard({
         )}
       </div>
       {metaParts.length > 0 && (
-        <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-gray-400">
+        <p className="mt-1 flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
           {metaParts.map((part, index) => (
             <span className="whitespace-nowrap" key={`${index}-${part}`}>
               {index > 0 && (
-                <span aria-hidden="true" className="mr-1 text-gray-500">
+                <span
+                  aria-hidden="true"
+                  className="mr-1 text-subtle-foreground"
+                >
                   ·
                 </span>
               )}

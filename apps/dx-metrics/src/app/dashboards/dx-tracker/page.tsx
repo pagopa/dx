@@ -1,15 +1,12 @@
 "use client";
 
-import {
-  SERIES_COLORS,
-  SimpleBarChart,
-  SimpleLineChart,
-} from "@/components/Charts";
+import { SimpleBarChart, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
@@ -34,6 +31,7 @@ interface TrackerData {
 }
 
 export default function TrackerDashboard() {
+  const colors = useSeriesColors();
   const { data, error, loading, refetch } = useDashboardData<TrackerData>(
     "tracker",
     {},
@@ -42,7 +40,7 @@ export default function TrackerDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           Team DX Requests Metrics
         </h2>
         <TooltipIcon
@@ -94,11 +92,11 @@ export default function TrackerDashboard() {
               data={data.frequencyTrend}
               lines={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "actualRequests",
                   name: "Actual Requests",
                 },
-                { color: SERIES_COLORS.red, key: "trend", name: "Trend" },
+                { color: colors.red, key: "trend", name: "Trend" },
               ]}
               title="DX Requests Frequency Trend"
               tooltip={tooltipContent.frequencyTrend}
@@ -111,7 +109,7 @@ export default function TrackerDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.lightBlue,
+                  color: colors.lightBlue,
                   key: "requests",
                   name: "Requests",
                 },
@@ -125,7 +123,7 @@ export default function TrackerDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.purple,
+                  color: colors.purple,
                   key: "requests",
                   name: "Requests",
                 },
