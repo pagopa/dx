@@ -1,3 +1,14 @@
+## 0.5.19 (2026-09-23)
+
+### 🩹 Fixes
+
+- Fix the DX Team bus-factor insight to count only commits on non-DX repositories ([#2247](https://github.com/pagopa/dx/pull/2247))
+- Classify the DX repository's own workflows as DX pipelines in the Workflows dashboard ([#2252](https://github.com/pagopa/dx/pull/2252))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.18 (2026-09-23)
 
 ### 🚀 Features
