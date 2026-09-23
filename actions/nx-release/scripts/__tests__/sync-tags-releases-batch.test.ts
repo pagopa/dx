@@ -1,46 +1,41 @@
 /**
- * Verifies the batched remote-state lookups used by the tag/release sync.
- * These replaced per-tag network probes, which made the step take minutes on
- * repositories with hundreds of tags.
+ * Tests the batched remote-state lookups used by the tag/release sync.
+ *
+ * The `git ls-remote` parsing is tested as a pure function and the release
+ * listing through an injected `ReleaseLister`, so no process or HTTP mocking is
+ * needed.
  */
-import { promisify } from "node:util";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-interface ExecFileResult {
-  stderr: string;
-  stdout: string;
-}
+import {
+  getExistingReleaseTags,
+  parseRemoteTagRefs,
+  type ReleaseLister,
+} from "../sync-tags-releases.js";
 
 interface ReleaseItem {
   created_at: string;
   tag_name: string;
 }
 
-const { execFilePromiseMock } = vi.hoisted(() => ({
-  execFilePromiseMock: vi.fn<
-    (file: string, args: readonly string[]) => Promise<ExecFileResult>
-  >(async () => ({ stderr: "", stdout: "" })),
-}));
-
-vi.mock("node:child_process", () => ({
-  execFile: Object.assign(vi.fn(), {
-    [promisify.custom]: execFilePromiseMock,
-  }),
-}));
-
-import {
-  getExistingReleaseTags,
-  getRemoteTagNames,
-} from "../sync-tags-releases.js";
-
-/** Fake Octokit whose `listReleases` serves the provided pages by index. */
-function mockListReleases(pages: ReleaseItem[][]) {
-  const listReleases = vi.fn(
-    async ({ page }: { page: number }): Promise<{ data: ReleaseItem[] }> => ({
-      data: pages[page - 1] ?? [],
-    }),
-  );
-  return { listReleases, octokit: { repos: { listReleases } } as never };
+/** Records the pages requested and serves the provided pages by index. */
+function fakeReleaseLister(pages: ReleaseItem[][]): {
+  lister: ReleaseLister;
+  requests: { owner: string; page: number; per_page: number; repo: string }[];
+} {
+  const requests: {
+    owner: string;
+    page: number;
+    per_page: number;
+    repo: string;
+  }[] = [];
+  const lister: ReleaseLister = {
+    listReleases: async (params) => {
+      requests.push(params);
+      return { data: pages[params.page - 1] ?? [] };
+    },
+  };
+  return { lister, requests };
 }
 
 /** Builds a full page of releases sharing the same creation time. */
@@ -55,58 +50,39 @@ function pageOf(
   }));
 }
 
-describe("getRemoteTagNames", () => {
-  beforeEach(() => {
-    execFilePromiseMock.mockReset();
-  });
+describe("parseRemoteTagRefs", () => {
+  it("returns tag names without the refs/tags prefix or peel suffix", () => {
+    const stdout = [
+      "1111111111111111111111111111111111111111\trefs/tags/docs@0.22.9",
+      "2222222222222222222222222222222222222222\trefs/tags/@pagopa/dx-cli@0.27.9",
+      "3333333333333333333333333333333333333333\trefs/tags/dx-metrics@0.5.19^{}",
+      "",
+    ].join("\n");
 
-  it("parses tag names from a single ls-remote call", async () => {
-    execFilePromiseMock.mockResolvedValue({
-      stderr: "",
-      stdout: [
-        "1111111111111111111111111111111111111111\trefs/tags/docs@0.22.9",
-        "2222222222222222222222222222222222222222\trefs/tags/@pagopa/dx-cli@0.27.9",
-        "3333333333333333333333333333333333333333\trefs/tags/dx-metrics@0.5.19^{}",
-        "",
-      ].join("\n"),
-    });
-
-    const tags = await getRemoteTagNames();
-
-    expect(tags).toEqual(
+    expect(parseRemoteTagRefs(stdout)).toEqual(
       new Set(["@pagopa/dx-cli@0.27.9", "docs@0.22.9", "dx-metrics@0.5.19"]),
     );
-    expect(execFilePromiseMock).toHaveBeenCalledTimes(1);
-    expect(execFilePromiseMock).toHaveBeenCalledWith("git", [
-      "ls-remote",
-      "--tags",
-      "--refs",
-      "origin",
-    ]);
   });
 
-  it("ignores non-tag refs and blank lines", async () => {
-    execFilePromiseMock.mockResolvedValue({
-      stderr: "",
-      stdout: "\n0000\trefs/heads/main\n1111\trefs/tags/docs@1.0.0\n",
-    });
+  it("ignores non-tag refs and blank lines", () => {
+    const stdout = "\n0000\trefs/heads/main\n1111\trefs/tags/docs@1.0.0\n";
 
-    await expect(getRemoteTagNames()).resolves.toEqual(new Set(["docs@1.0.0"]));
+    expect(parseRemoteTagRefs(stdout)).toEqual(new Set(["docs@1.0.0"]));
   });
 });
 
 describe("getExistingReleaseTags", () => {
-  it("requests 100 releases per page", async () => {
-    const { listReleases, octokit } = mockListReleases([[]]);
+  it("lists 100 releases per page for the requested repository", async () => {
+    const { lister, requests } = fakeReleaseLister([[]]);
 
     await getExistingReleaseTags(
-      octokit,
+      lister,
       "pagopa",
       "dx",
       new Set(["docs@1.0.0"]),
     );
 
-    expect(listReleases).toHaveBeenCalledWith({
+    expect(requests[0]).toEqual({
       owner: "pagopa",
       page: 1,
       per_page: 100,
@@ -115,21 +91,21 @@ describe("getExistingReleaseTags", () => {
   });
 
   it("returns an empty set when the repository has no releases", async () => {
-    const { listReleases, octokit } = mockListReleases([[]]);
+    const { lister, requests } = fakeReleaseLister([[]]);
 
     const tags = await getExistingReleaseTags(
-      octokit,
+      lister,
       "pagopa",
       "dx",
       new Set(["docs@1.0.0"]),
     );
 
     expect(tags.size).toBe(0);
-    expect(listReleases).toHaveBeenCalledTimes(1);
+    expect(requests).toHaveLength(1);
   });
 
   it("stops as soon as every candidate tag has been found", async () => {
-    const { listReleases, octokit } = mockListReleases([
+    const { lister, requests } = fakeReleaseLister([
       [
         { created_at: "2026-01-10T00:00:00Z", tag_name: "docs@1.0.0" },
         ...pageOf(99, "2026-01-10T00:00:00Z", "pkg"),
@@ -138,24 +114,24 @@ describe("getExistingReleaseTags", () => {
     ]);
 
     const tags = await getExistingReleaseTags(
-      octokit,
+      lister,
       "pagopa",
       "dx",
       new Set(["docs@1.0.0"]),
     );
 
     expect(tags.has("docs@1.0.0")).toBe(true);
-    expect(listReleases).toHaveBeenCalledTimes(1);
+    expect(requests.map((r) => r.page)).toEqual([1]);
   });
 
   it("stops at the recovery-window cutoff when candidates are missing", async () => {
-    const { listReleases, octokit } = mockListReleases([
+    const { lister, requests } = fakeReleaseLister([
       pageOf(100, "2020-01-01T00:00:00Z", "pkg"),
       pageOf(100, "2019-01-01T00:00:00Z", "older"),
     ]);
 
     const tags = await getExistingReleaseTags(
-      octokit,
+      lister,
       "pagopa",
       "dx",
       new Set(["missing@1.0.0"]),
@@ -163,17 +139,17 @@ describe("getExistingReleaseTags", () => {
     );
 
     expect(tags.has("missing@1.0.0")).toBe(false);
-    expect(listReleases).toHaveBeenCalledTimes(1);
+    expect(requests.map((r) => r.page)).toEqual([1]);
   });
 
   it("walks pages until the candidate tags are found", async () => {
-    const { listReleases, octokit } = mockListReleases([
+    const { lister, requests } = fakeReleaseLister([
       pageOf(100, "2026-01-10T00:00:00Z", "a"),
       [{ created_at: "2026-01-09T00:00:00Z", tag_name: "docs@1.0.0" }],
     ]);
 
     const tags = await getExistingReleaseTags(
-      octokit,
+      lister,
       "pagopa",
       "dx",
       new Set(["docs@1.0.0"]),
@@ -181,6 +157,6 @@ describe("getExistingReleaseTags", () => {
     );
 
     expect(tags.has("docs@1.0.0")).toBe(true);
-    expect(listReleases).toHaveBeenCalledTimes(2);
+    expect(requests.map((r) => r.page)).toEqual([1, 2]);
   });
 });

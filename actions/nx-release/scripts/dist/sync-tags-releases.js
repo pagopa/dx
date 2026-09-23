@@ -18382,13 +18382,13 @@ var AlreadyExistsErrorSchema = external_exports.object({
   }).optional(),
   status: external_exports.number()
 });
-async function getExistingReleaseTags(octokit, owner, repo, candidateTags, notBefore) {
+async function getExistingReleaseTags(lister, owner, repo, candidateTags, notBefore) {
   const found = /* @__PURE__ */ new Set();
   const cutoff = notBefore === void 0 ? null : notBefore.getTime() - RELEASE_WINDOW_MARGIN_MS;
   let page = 1;
   let hasMore = true;
   while (hasMore) {
-    const { data: releases } = await octokit.repos.listReleases({
+    const { data: releases } = await lister.listReleases({
       owner,
       page,
       per_page: RELEASES_PER_PAGE,
@@ -18415,6 +18415,16 @@ async function getRemoteTagNames() {
     "--refs",
     "origin"
   ]);
+  return parseRemoteTagRefs(stdout);
+}
+function isAlreadyExistsError(err) {
+  const parsed = AlreadyExistsErrorSchema.safeParse(err);
+  if (!parsed.success || parsed.data.status !== 422) return false;
+  return (parsed.data.response?.data?.errors ?? []).some(
+    (e) => e.code === "already_exists"
+  );
+}
+function parseRemoteTagRefs(stdout) {
   const tags = /* @__PURE__ */ new Set();
   for (const line of stdout.split("\n")) {
     const ref = line.trim().split("	")[1];
@@ -18497,7 +18507,7 @@ async function run(base) {
   const [remoteTags, existingReleaseTags] = await Promise.all([
     getRemoteTagNames(),
     getExistingReleaseTags(
-      octokit,
+      octokit.repos,
       owner,
       repo,
       candidateTags,
@@ -18570,13 +18580,6 @@ async function run(base) {
     }
   }
 }
-function isAlreadyExistsError(err) {
-  const parsed = AlreadyExistsErrorSchema.safeParse(err);
-  if (!parsed.success || parsed.data.status !== 422) return false;
-  return (parsed.data.response?.data?.errors ?? []).some(
-    (e) => e.code === "already_exists"
-  );
-}
 if (import.meta.url === `file://${process.argv[1]}`) {
   run(process.env.BASE_BRANCH ?? "main").catch((err) => {
     console.error("Unexpected error in sync-tags-releases:", err);
@@ -18600,4 +18603,4 @@ content-type/dist/index.js:
   (* v8 ignore else -- @preserve *)
 */
 
-export { extractChangelogSection, getExistingReleaseTags, getRemoteTagNames, releaseExists, run };
+export { extractChangelogSection, getExistingReleaseTags, getRemoteTagNames, isAlreadyExistsError, parseRemoteTagRefs, releaseExists, run };
