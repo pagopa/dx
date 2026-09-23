@@ -1,6 +1,6 @@
 module "core_values" {
   source  = "pagopa-dx/aws-core-values-exporter/aws"
-  version = "~> 0.0"
+  version = "~> 0.1"
 
   core_state = var.core_state
 }
