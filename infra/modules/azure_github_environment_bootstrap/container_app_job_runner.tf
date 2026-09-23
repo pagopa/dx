@@ -51,7 +51,7 @@ module "github_runner_dx" {
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = var.environment.domain
-    instance_number = format("%02d", tonumber(var.environment.instance_number) + 1)
+    instance_number = format("%02d", (tonumber(var.environment.instance_number) % 99) + 1)
   }
 
   resource_group_name = azurerm_resource_group.main.name
