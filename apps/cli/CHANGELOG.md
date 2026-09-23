@@ -1,3 +1,13 @@
+## 0.27.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Add cloud CLI tools during environment setup ([#2237](https://github.com/pagopa/dx/pull/2237))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.27.8 (2026-09-23)
 
 ### 🩹 Fixes
