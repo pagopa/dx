@@ -9,6 +9,24 @@
 
 export type Theme = "dark" | "light";
 
+const INLINE_SCRIPT_UNSAFE_CHAR_MAP: Record<string, string> = {
+  "<": "\\u003C",
+  ">": "\\u003E",
+  "/": "\\u002F",
+  "\\": "\\\\",
+  "\b": "\\b",
+  "\f": "\\f",
+  "\n": "\\n",
+  "\r": "\\r",
+  "\t": "\\t",
+  "\0": "\\0",
+  "\u2028": "\\u2028",
+  "\u2029": "\\u2029",
+};
+
+const escapeUnsafeForInlineScript = (value: string): string =>
+  value.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => INLINE_SCRIPT_UNSAFE_CHAR_MAP[ch]);
+
 /** localStorage key holding the reader's explicit choice, if any. */
 export const themeStorageKey = "dx-metrics-theme";
 
@@ -72,4 +90,4 @@ export const persistTheme = (theme: Theme) => {
  * Runs synchronously as the first child of <body>. Kept as a string so it is
  * inlined into the HTML and never waits on a bundle.
  */
-export const themeScript = `(function(){try{var k=${JSON.stringify(themeStorageKey)};var s=localStorage.getItem(k);var t=(s==="light"||s==="dark")?s:(window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");var e=document.documentElement;e.classList.remove("dark","light");e.classList.add(t);e.dataset.theme=t;e.style.colorScheme=t;}catch(e){}})();`;
+export const themeScript = `(function(){try{var k=${escapeUnsafeForInlineScript(JSON.stringify(themeStorageKey))};var s=localStorage.getItem(k);var t=(s==="light"||s==="dark")?s:(window.matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");var e=document.documentElement;e.classList.remove("dark","light");e.classList.add(t);e.dataset.theme=t;e.style.colorScheme=t;}catch(e){}})();`;
