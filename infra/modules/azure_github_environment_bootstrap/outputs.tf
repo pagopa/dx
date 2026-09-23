@@ -25,11 +25,13 @@ output "github_private_runner" {
 }
 
 output "github_dx_runner" {
-  description = "Details of the DX GitHub self-hosted runner, including ID, name, and resource group name."
+  description = "Details of the DX GitHub self-hosted runner, including ID, name, resource group name, image, and labels."
   value = {
     id                  = module.github_runner_dx.container_app_job.id
     name                = module.github_runner_dx.container_app_job.name
     resource_group_name = module.github_runner_dx.container_app_job.resource_group_name
+    image               = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    labels              = concat(var.github_private_runner.labels, ["dx"])
   }
 }
 

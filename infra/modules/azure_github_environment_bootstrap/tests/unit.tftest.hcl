@@ -299,6 +299,41 @@ run "azure_github_environment_bootstrap_dx_runner" {
   }
 }
 
+run "azure_github_environment_bootstrap_dx_runner_configuration" {
+  command = plan
+
+  variables {
+    github_private_runner = merge(var.github_private_runner, {
+      labels = ["uat"]
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner.image == "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    error_message = "The DX GitHub self-hosted runner should use the DX image"
+  }
+
+  assert {
+    condition     = output.github_dx_runner.labels == ["uat", "dx"]
+    error_message = "The DX GitHub self-hosted runner should preserve configured labels and append dx"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_instance_number_boundary" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      instance_number = "99"
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner != null
+    error_message = "The DX GitHub self-hosted runner should support instance number 99"
+  }
+}
+
 run "azure_github_environment_bootstrap_immutable_identities" {
   command = plan
 
