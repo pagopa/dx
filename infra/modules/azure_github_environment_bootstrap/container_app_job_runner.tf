@@ -1,6 +1,6 @@
 module "github_runner" {
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 3.0"
+  version = "~> 1.0"
 
   environment = {
     prefix          = var.environment.prefix
@@ -44,18 +44,17 @@ module "github_runner" {
 
 module "github_runner_dx" {
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 3.0"
+  version = "~> 1.0"
 
   environment = {
     prefix          = var.environment.prefix
     env_short       = var.environment.env_short
     location        = var.environment.location
     domain          = var.environment.domain
-    instance_number = var.environment.instance_number
+    instance_number = format("%02d", tonumber(var.environment.instance_number) + 1)
   }
 
   resource_group_name = azurerm_resource_group.main.name
-  runner_name         = "dx"
 
   repository = {
     owner = var.repository.owner

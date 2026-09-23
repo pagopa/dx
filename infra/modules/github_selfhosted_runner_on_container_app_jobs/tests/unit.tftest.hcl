@@ -287,19 +287,6 @@ run "github_runner_custom_resource_group" {
   }
 }
 
-run "github_runner_custom_name" {
-  command = plan
-
-  variables {
-    runner_name = "custom"
-  }
-
-  assert {
-    condition     = strcontains(azurerm_container_app_job.github_runner.name, "custom")
-    error_message = "runner_name must be used to generate a distinct Container App Job name"
-  }
-}
-
 run "github_runner_repo_url_env_var" {
   command = plan
 

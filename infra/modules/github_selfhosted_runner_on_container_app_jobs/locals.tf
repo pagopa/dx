@@ -5,7 +5,7 @@ locals {
     environment = var.environment.env_short,
     location    = var.environment.location
     # max 32 characters, minus prefix length (2/4), instance number (2), location (3) and environment (1)
-    name            = var.runner_name != null ? var.runner_name : trimsuffix(substr(var.repository.name, 0, (18 - length(var.environment.prefix))), "-"),
+    name            = trimsuffix(substr(var.repository.name, 0, (18 - length(var.environment.prefix))), "-"),
     instance_number = tonumber(var.environment.instance_number),
   }
   env = {
