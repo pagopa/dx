@@ -19,7 +19,9 @@ import {
 } from "@/adapters/db/shared/sql-fragments";
 import {
   BOT_AUTHORS,
+  DX_REPO,
   EXCLUDED_WORKFLOW_NAMES,
+  ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
 
@@ -62,13 +64,18 @@ describe("isHumanReview", () => {
 });
 
 describe("dxPipelineCase", () => {
-  it("classifies DX and non-DX pipelines with literal labels", () => {
-    const query = dialect.sqlToQuery(dxPipelineCase("w.pipeline"));
+  it("classifies the DX repository and DX references as DX pipelines", () => {
+    const query = dialect.sqlToQuery(
+      dxPipelineCase("w.pipeline", "r.full_name"),
+    );
 
     expect(query.sql).toBe(
-      "CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END",
+      "CASE WHEN r.full_name = $1 OR w.pipeline LIKE $2 THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END",
     );
-    expect(query.params).toEqual([]);
+    expect(query.params).toEqual([
+      `${ORGANIZATION}/${DX_REPO}`,
+      `%${ORGANIZATION}/${DX_REPO}%`,
+    ]);
   });
 });
 

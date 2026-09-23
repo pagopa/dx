@@ -4,9 +4,14 @@ import { sql, type SQL } from "drizzle-orm";
 
 import {
   BOT_AUTHORS,
+  DX_REPO,
   EXCLUDED_WORKFLOW_NAMES,
+  ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
+
+/** Full name of the DX repository (e.g. `pagopa/dx`), the source of DX pipelines. */
+const DX_REPOSITORY_FULL_NAME = `${ORGANIZATION}/${DX_REPO}`;
 
 /**
  * Renders a column expression, accepting either raw text or a bound fragment.
@@ -54,9 +59,21 @@ export const humanPullRequest = (alias: string): SQL =>
 export const workflowNameExclusion = (column: string): SQL =>
   notInValues(column, EXCLUDED_WORKFLOW_NAMES);
 
-/** Classifies a pipeline path as a DX or non-DX pipeline. */
-export const dxPipelineCase = (pipelineColumn: string): SQL =>
-  sql`CASE WHEN ${sql.raw(pipelineColumn)} LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END`;
+/**
+ * Classifies a workflow as a DX or non-DX pipeline.
+ *
+ * A workflow is a DX pipeline when it references the DX repository (a reusable
+ * workflow or action from `pagopa/dx`) or when it belongs to the DX repository
+ * itself. The repository check is required because the DX repository's own
+ * workflows call local reusable workflows with `$/.github/workflows/...`, which
+ * carry no `pagopa/dx` reference and would otherwise be misclassified as
+ * non-DX.
+ */
+export const dxPipelineCase = (
+  pipelineColumn: string,
+  repositoryColumn: string,
+): SQL =>
+  sql`CASE WHEN ${sql.raw(repositoryColumn)} = ${DX_REPOSITORY_FULL_NAME} OR ${sql.raw(pipelineColumn)} LIKE ${`%${DX_REPOSITORY_FULL_NAME}%`} THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END`;
 
 /**
  * Prefixes a workflow name with `DX ` when it comes from a DX pipeline,
