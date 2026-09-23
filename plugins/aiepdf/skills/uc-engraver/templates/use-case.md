@@ -76,6 +76,6 @@ Gherkin may be used when it improves clarity, but it is not compulsory.
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
-| `uc-open-01` | _<question / assumption / proposed decision>_ | _<item>_ | _<impact>_ | _<owner / TBD>_ | _<TBD>_ |
+| ID           | Type                                          | Item     | Impact / blocker | Owner           | Resolution / link |
+| ------------ | --------------------------------------------- | -------- | ---------------- | --------------- | ----------------- |
+| `uc-open-01` | _<question / assumption / proposed decision>_ | _<item>_ | _<impact>_       | _<owner / TBD>_ | _<TBD>_           |

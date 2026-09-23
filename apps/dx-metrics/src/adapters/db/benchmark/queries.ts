@@ -108,26 +108,47 @@ const fetchPrBenchmarkRows = async (
     WITH pr AS (
       SELECT r.name AS repository,
         EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400 AS lead_days,
+        EXTRACT(EPOCH FROM (first_review.submitted_at - pr.created_at)) / 3600
+          AS first_review_hours,
+        pr.additions AS additions,
         COALESCE(pr.total_comments_count, 0) AS comments,
+        (pr.merged_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
+          AS merged_in_window,
+        (pr.created_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
+          AS created_in_window,
         NOT EXISTS (
           SELECT 1 FROM pull_request_reviews rr
           WHERE rr.pull_request_id = pr.id
             AND ${isHumanReview("rr", "pr")}
         ) AS no_review
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      LEFT JOIN LATERAL (
+        SELECT submitted_at FROM pull_request_reviews prr
+        WHERE prr.pull_request_id = pr.id
+          AND ${isHumanReview("prr", "pr")}
+        ORDER BY submitted_at ASC LIMIT 1
+      ) first_review ON true
       WHERE r.name = ANY(${repositories})
-        AND pr.merged_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
+        AND (pr.merged_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days})
+          OR pr.created_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
+        AND pr.created_at IS NOT NULL
         AND ${botAuthorsExclusion("pr.author")}
         AND (pr.draft IS NULL OR pr.draft = 0)
     )
     SELECT repository,
-      COUNT(*) AS "count",
-      ROUND(AVG(lead_days)::numeric, 2) AS "leadTime",
-      ROUND(COUNT(*) FILTER (WHERE no_review)::numeric
-            / NULLIF(COUNT(*), 0) * 100, 2) AS "mergedWithoutReview",
-      ROUND(COUNT(*) FILTER (WHERE comments = 0)::numeric
-            / NULLIF(COUNT(*), 0) * 100, 2) AS "mergedWithoutComments"
+      COUNT(*) FILTER (WHERE merged_in_window) AS "count",
+      ROUND((AVG(lead_days) FILTER (WHERE merged_in_window))::numeric, 2) AS "leadTime",
+      ROUND(COUNT(*) FILTER (WHERE merged_in_window AND no_review)::numeric
+            / NULLIF(COUNT(*) FILTER (WHERE merged_in_window), 0) * 100, 2) AS "mergedWithoutReview",
+      ROUND(COUNT(*) FILTER (WHERE merged_in_window AND comments = 0)::numeric
+            / NULLIF(COUNT(*) FILTER (WHERE merged_in_window), 0) * 100, 2) AS "mergedWithoutComments",
+      ROUND((AVG(first_review_hours) FILTER (WHERE created_in_window))::numeric, 2)
+        AS "timeToFirstReview",
+      COUNT(*) FILTER (WHERE created_in_window AND first_review_hours IS NOT NULL)
+        AS "firstReviewCount",
+      ROUND((AVG(additions) FILTER (WHERE created_in_window))::numeric, 2) AS "avgPrSize",
+      COUNT(*) FILTER (WHERE created_in_window AND additions IS NOT NULL)
+        AS "prSizeCount"
     FROM pr GROUP BY repository
   `);
 
@@ -149,7 +170,17 @@ const fetchWorkflowBenchmarkRows = async (
       ROUND(
         (COUNT(*) FILTER (WHERE TRIM(wr.conclusion) = 'success'))::numeric
         / NULLIF(COUNT(*) FILTER (WHERE TRIM(wr.conclusion) IN ('success', 'failure')), 0) * 100
-      , 2) AS "successRate"
+      , 2) AS "successRate",
+      ROUND(
+        (COALESCE(SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
+          FILTER (WHERE TRIM(wr.conclusion) = 'failure'), 0))::numeric
+        / NULLIF(
+          COALESCE(SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
+            FILTER (WHERE TRIM(wr.conclusion) = 'failure'), 0)
+          + COALESCE(SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)))
+            FILTER (WHERE TRIM(wr.conclusion) = 'success'), 0)
+        , 0) * 100
+      , 2) AS "ciFailureTime"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
@@ -206,6 +237,36 @@ export const getBenchmarkDashboard = async (
     }),
     buildBenchmarkMetric({
       category: "delivery",
+      key: "timeToFirstReview",
+      label: "Time to first review",
+      lowerIsBetter: true,
+      rows: padRows(
+        configuredRepositories,
+        prRows.map((row) => ({
+          count: row.firstReviewCount,
+          repository: row.repository,
+          value: row.timeToFirstReview,
+        })),
+      ),
+      unit: "h",
+    }),
+    buildBenchmarkMetric({
+      category: "delivery",
+      key: "mergedPrs",
+      label: "Merged PRs",
+      lowerIsBetter: false,
+      rows: padRows(
+        configuredRepositories,
+        prRows.map((row) => ({
+          count: row.count,
+          repository: row.repository,
+          value: row.count,
+        })),
+      ),
+      unit: "PRs",
+    }),
+    buildBenchmarkMetric({
+      category: "delivery",
       key: "pipelineDuration",
       label: "Avg pipeline duration",
       lowerIsBetter: true,
@@ -218,6 +279,21 @@ export const getBenchmarkDashboard = async (
         })),
       ),
       unit: "min",
+    }),
+    buildBenchmarkMetric({
+      category: "quality",
+      key: "avgPrSize",
+      label: "Avg PR size",
+      lowerIsBetter: true,
+      rows: padRows(
+        configuredRepositories,
+        prRows.map((row) => ({
+          count: row.prSizeCount,
+          repository: row.repository,
+          value: row.avgPrSize,
+        })),
+      ),
+      unit: "lines",
     }),
     buildBenchmarkMetric({
       category: "quality",
@@ -260,6 +336,21 @@ export const getBenchmarkDashboard = async (
           count: row.count,
           repository: row.repository,
           value: row.mergedWithoutComments,
+        })),
+      ),
+      unit: "%",
+    }),
+    buildBenchmarkMetric({
+      category: "quality",
+      key: "ciFailureTime",
+      label: "CI time on failures",
+      lowerIsBetter: true,
+      rows: padRows(
+        configuredRepositories,
+        workflowRows.map((row) => ({
+          count: row.successRateCount,
+          repository: row.repository,
+          value: row.ciFailureTime,
         })),
       ),
       unit: "%",

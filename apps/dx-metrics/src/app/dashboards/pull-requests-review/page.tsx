@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -12,10 +11,12 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
+import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -25,6 +26,11 @@ interface PrReviewDashboardData {
   cards: {
     avgTimeToFirstReview: null | number;
     commentsPerPr: null | number;
+    /** Same metrics over the immediately preceding, equally-sized window. */
+    previousAvgTimeToFirstReview: null | number;
+    previousCommentsPerPr: null | number;
+    previousMergedWithoutCommentsPct: null | number;
+    previousTotalComments: null | number;
     totalComments: null | number;
   };
   firstReviewPercentiles: {
@@ -37,6 +43,9 @@ interface PrReviewDashboardData {
   // insights) / with no comments at all (rendered as a card).
   mergedWithoutCommentsShare: null | number;
   mergedWithoutReviewShare: null | number;
+  /** Merges in the window grouped by the person who merged. Optional so a
+   * cached payload from before this field existed still renders. */
+  mergers?: { login: string; merges: number; mergesOfOthers?: number }[];
   reviewDistribution: {
     approvals: number;
     changeRequests: number;
@@ -55,6 +64,7 @@ interface PrReviewDashboardData {
 }
 
 export default function PullRequestsReviewDashboard() {
+  const colors = useSeriesColors();
   const { days, repository, setDays, setRepository } = useDashboardFilters();
 
   const { data, error, loading, refetch } =
@@ -109,10 +119,22 @@ export default function PullRequestsReviewDashboard() {
       ? Math.round(data.mergedWithoutCommentsShare * 10_000) / 100
       : null;
 
+  // Same current-vs-previous window comparison across every card, so the reader
+  // does not have to check which dashboards offer a delta.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
+
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Pull Requests Review</h2>
+        <h2 className="text-xl font-bold text-foreground">
+          Pull Requests Review
+        </h2>
         <TooltipIcon
           content={tooltipContent.title}
           label="Pull Requests Review"
@@ -135,6 +157,7 @@ export default function PullRequestsReviewDashboard() {
           <DataFreshness
             className="mb-2"
             referenceDate={data.meta.referenceDate}
+            windowDays={days}
           />
           <InsightsPanel
             className="mb-6"
@@ -144,7 +167,14 @@ export default function PullRequestsReviewDashboard() {
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               breakdown={firstReviewBreakdown}
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.avgTimeToFirstReview,
+                data.cards.previousAvgTimeToFirstReview,
+              )}
               label="Avg Time to First Review"
+              previousValue={data.cards.previousAvgTimeToFirstReview}
               sampleSize={data.firstReviewPercentiles.count}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToFirstReview}
@@ -155,18 +185,43 @@ export default function PullRequestsReviewDashboard() {
                 (row) => row.avgHoursToFirstReview,
               )}
             />
+            {/*
+              Comment volume is a context signal, not a good/bad one: more
+              comments can mean either deeper review or unclear changes, so
+              `Total Comments` and `Comments / PR` intentionally omit a direction
+              and their deltas stay neutral.
+            */}
             <MetricCard
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.totalComments,
+                data.cards.previousTotalComments,
+              )}
               label="Total Comments"
+              previousValue={data.cards.previousTotalComments}
               tooltip={tooltipContent.totalComments}
               value={data.cards.totalComments}
             />
             <MetricCard
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.commentsPerPr,
+                data.cards.previousCommentsPerPr,
+              )}
               label="Comments / PR"
+              previousValue={data.cards.previousCommentsPerPr}
               tooltip={tooltipContent.commentsPerPr}
               value={data.cards.commentsPerPr}
             />
             <MetricCard
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                mergedWithoutCommentsPct,
+                data.cards.previousMergedWithoutCommentsPct,
+              )}
               label="Merged Without Comments"
+              previousValue={data.cards.previousMergedWithoutCommentsPct}
               suffix="%"
               tooltip={tooltipContent.mergedWithoutCommentsShare}
               value={mergedWithoutCommentsPct}
@@ -177,7 +232,7 @@ export default function PullRequestsReviewDashboard() {
           {(data.timeToFirstReviewTrend.length > 0 ||
             data.timeToMergeTrend.length > 0) && (
             <>
-              <h3 className="mt-2 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-2 mb-4 text-base font-semibold text-foreground">
                 Review Timing
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -185,7 +240,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToFirstReviewTrend}
                   lines={[
                     {
-                      color: SERIES_COLORS.blue,
+                      color: colors.blue,
                       key: "avgHoursToFirstReview",
                       name: "Hours to First Review",
                     },
@@ -206,7 +261,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToMergeTrend}
                   lines={[
                     {
-                      color: SERIES_COLORS.red,
+                      color: colors.red,
                       key: "avgHoursToMerge",
                       name: "Hours to Merge",
                     },
@@ -223,20 +278,20 @@ export default function PullRequestsReviewDashboard() {
           {/* Code Review Distribution */}
           {data.reviewDistribution.length > 0 && (
             <>
-              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
                 Code Review Distribution
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimpleBarChart
                   bars={[
                     {
-                      color: SERIES_COLORS.green,
+                      color: colors.green,
                       key: "approvals",
                       name: "Approvals",
                       stackId: "reviews",
                     },
                     {
-                      color: SERIES_COLORS.red,
+                      color: colors.red,
                       key: "changeRequests",
                       name: "Change Requests",
                       stackId: "reviews",
@@ -270,6 +325,55 @@ export default function PullRequestsReviewDashboard() {
                   data={reviewMatrixWithoutSelfReviews}
                   title="Author → Reviewer Matrix"
                   tooltip={tooltipContent.authorReviewerMatrix}
+                />
+              </div>
+            </>
+          )}
+
+          {/* Merge Ownership */}
+          {(data.mergers ?? []).length > 0 && (
+            <>
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
+                Merge Ownership
+              </h3>
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                <SimpleBarChart
+                  bars={[
+                    {
+                      color: colors.blue,
+                      key: "merges",
+                      name: "Merges",
+                    },
+                  ]}
+                  caption="top 10"
+                  data={data.mergers ?? []}
+                  layout="vertical"
+                  maxItems={10}
+                  sortKey="merges"
+                  title="Merges per Merger"
+                  tooltip={tooltipContent.mergesPerMerger}
+                  unit="merges"
+                  xKey="login"
+                />
+                <SimpleBarChart
+                  bars={[
+                    {
+                      color: colors.green,
+                      key: "mergesOfOthers",
+                      name: "Merges of others' PRs",
+                    },
+                  ]}
+                  caption="top 10"
+                  data={(data.mergers ?? []).filter(
+                    (merger) => (merger.mergesOfOthers ?? 0) > 0,
+                  )}
+                  layout="vertical"
+                  maxItems={10}
+                  sortKey="mergesOfOthers"
+                  title="Merges of Others' PRs per Merger"
+                  tooltip={tooltipContent.mergesOfOthersPerMerger}
+                  unit="merges"
+                  xKey="login"
                 />
               </div>
             </>

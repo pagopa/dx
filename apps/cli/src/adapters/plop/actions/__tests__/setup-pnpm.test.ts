@@ -46,12 +46,12 @@ describe("setupPnpm", () => {
 
     await plop.getGenerator("test").runActions({ repoName: "generated-repo" });
 
-    expect(mocks.commands).toContain("corepack use pnpm@10");
+    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@10");
     expect(mocks.commands).toContain(
-      "npx --yes nx@latest init --interactive=false --aiAgents=copilot",
+      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
     );
     expect(mocks.commands).toContain(
-      "pnpm -w add -D @nx/js @nx/eslint @nx/vitest",
+      "mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest",
     );
     expect(mocks.commands).not.toEqual(
       expect.arrayContaining([expect.stringContaining("devcontainer")]),

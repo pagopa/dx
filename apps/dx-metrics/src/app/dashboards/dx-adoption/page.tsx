@@ -96,7 +96,7 @@ export default function DxAdoptionDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           DX Tools Adoption Metrics
         </h2>
         <TooltipIcon
@@ -160,7 +160,7 @@ export default function DxAdoptionDashboard() {
           {/* Version Drift */}
           {data.versionDriftList.length > 0 && (
             <>
-              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
                 Version Drift
               </h3>
               <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

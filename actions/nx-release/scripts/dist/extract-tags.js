@@ -14517,7 +14517,6 @@ config(en_default());
 // scripts/shared.ts
 var execFileAsync = promisify(execFile);
 var NonEmptyStringSchema = external_exports.string().min(1);
-var ProjectTagsSchema = external_exports.array(external_exports.string());
 var StringArraySchema = external_exports.array(external_exports.string());
 external_exports.object({
   path: external_exports.string().nullable(),
@@ -14525,16 +14524,17 @@ external_exports.object({
   version: external_exports.string()
 });
 var ProjectMetadataSchema = external_exports.looseObject({
-  root: NonEmptyStringSchema.optional(),
-  tags: ProjectTagsSchema.optional()
+  root: NonEmptyStringSchema.optional()
 });
-async function getNxProjectNames() {
+async function getNxProjectNames(targetName) {
   try {
+    const targetArgs = targetName ? ["--withTarget", targetName] : [];
     const { stdout } = await execFileAsync("npx", [
       "nx",
       "show",
       "projects",
-      "--json"
+      "--json",
+      ...targetArgs
     ]);
     let jsonStart = stdout.indexOf('["');
     if (jsonStart === -1) jsonStart = stdout.indexOf("[]");

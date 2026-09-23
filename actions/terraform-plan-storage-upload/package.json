@@ -1,9 +1,9 @@
 {
   "name": "@pagopa-dx/terraform-plan-storage-upload",
-  "version": "0.0.10",
-  "type": "module",
+  "version": "0.0.11",
   "private": true,
   "description": "GitHub Action to bundle and upload a Terraform plan to the state backend storage",
+  "type": "module",
   "main": "dist/main.cjs",
   "scripts": {
     "build": "tsup"

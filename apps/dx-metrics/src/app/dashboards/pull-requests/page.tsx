@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -12,14 +11,20 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import {
   INSIGHT_THRESHOLDS,
   METRIC_TARGETS,
+  ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
-import { formatNumber } from "@/lib/format";
-import { severityFromTargetWithTrend } from "@/lib/insights/insight-helpers";
+import { formatNumber, formatShortDate } from "@/lib/format";
+import {
+  severityFromTargetWithTrend,
+  severityFromUpperThreshold,
+} from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
+import { useDateFormatters } from "@/lib/locale";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -31,6 +36,10 @@ interface PrDashboardData {
     avgLeadTime: null | number;
     avgTimeToMerge: null | number;
     contributors: null | number;
+    /** Same metrics over the immediately preceding, equally-sized window. */
+    previousAvgTimeToMerge: null | number;
+    previousContributors: null | number;
+    previousTotalPrs: null | number;
     totalPrs: null | number;
   };
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
@@ -44,6 +53,15 @@ interface PrDashboardData {
   leadTimeTrend: { date: string; trendLine: number }[];
   mergedPrs: { date: string; prCount: number }[];
   newPrs: { date: string; prCount: number }[];
+  /**
+   * Optional so a cached payload from before this field existed still renders:
+   * the cards fall back to zero instead of throwing.
+   */
+  openBacklog?: {
+    closedUnmerged: number;
+    openNow: number;
+    stale: number;
+  };
   prComments: { avgComments: number; week: string }[];
   prSize: { avgAdditions: number; week: string }[];
   prSizeDistribution: {
@@ -60,6 +78,13 @@ interface PrDashboardData {
     number: number;
     title: string;
   }[];
+  stalePrs?: {
+    author: null | string;
+    idleDays: number;
+    number: number;
+    title: string;
+    updatedAt: string;
+  }[];
   unmergedPrs: { date: string; openPrs: number }[];
   previousLeadTime: null | number;
   insights: Insight[];
@@ -67,6 +92,7 @@ interface PrDashboardData {
 }
 
 export default function PullRequestsDashboard() {
+  const colors = useSeriesColors();
   const { days, repository, setDays, setRepository } = useDashboardFilters();
 
   const { data, error, loading, refetch } = useDashboardData<PrDashboardData>(
@@ -81,6 +107,40 @@ export default function PullRequestsDashboard() {
   // caption repeats it on the chart so a point is never read as the wrong unit.
   const bucketCaption =
     days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
+
+  const repositoryUrl = `https://github.com/${ORGANIZATION}/${repository}`;
+  // A cached payload from before these fields existed must not be rendered as a
+  // real zero backlog; the cards only appear when the snapshot is present, so an
+  // empty backlog is distinguishable from unavailable data.
+  const openBacklog = data?.openBacklog;
+  const stalePrs = data?.stalePrs ?? [];
+  // Share of the open backlog that has gone quiet; drives the stale card badge
+  // with the same threshold the insight uses.
+  const staleShare =
+    openBacklog && openBacklog.openNow > 0
+      ? openBacklog.stale / openBacklog.openNow
+      : null;
+  const staleSeverity =
+    staleShare === null
+      ? undefined
+      : severityFromUpperThreshold(staleShare, INSIGHT_THRESHOLDS.stalePrShare);
+
+  // The same current-vs-previous comparison the lead-time card uses, so every
+  // summary card reads the change against the adjacent window the same way.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
+
+  // The window is anchored to the latest activity, not to today, so the exact
+  // range is shown on the contributor count.
+  const { range } = useDateFormatters();
+  const periodBreakdown = data
+    ? [{ label: "period", value: range(data.meta.referenceDate, days) }]
+    : undefined;
 
   // One comparison everywhere: the current period versus the immediately
   // preceding, equally-sized window — the same value shown as `previous` — so
@@ -133,15 +193,15 @@ export default function PullRequestsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold tracking-tight text-[#e6edf3]">
-              Pull Request <span className="text-green-500">Insights</span>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              Pull Request <span className="text-accent">Insights</span>
             </h2>
             <TooltipIcon
               content={tooltipContent.title}
               label="Pull Request Insights"
             />
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Analyzing engineering velocity and collaboration patterns.
           </p>
         </div>
@@ -161,7 +221,10 @@ export default function PullRequestsDashboard() {
 
       {data && (
         <div className="space-y-8">
-          <DataFreshness referenceDate={data.meta.referenceDate} />
+          <DataFreshness
+            referenceDate={data.meta.referenceDate}
+            windowDays={days}
+          />
           <InsightsPanel insights={data.insights} periodDays={days} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -181,32 +244,54 @@ export default function PullRequestsDashboard() {
               sparkline={leadTimeSparkline}
             />
             <MetricCard
+              deltaDirection="lower-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.avgTimeToMerge,
+                data.cards.previousAvgTimeToMerge,
+              )}
               label="Avg Time to Merge"
+              previousValue={data.cards.previousAvgTimeToMerge}
               suffix="hours"
               tooltip={tooltipContent.avgTimeToMerge}
               value={data.cards.avgTimeToMerge}
             />
             <MetricCard
+              deltaDirection="higher-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.totalPrs,
+                data.cards.previousTotalPrs,
+              )}
               label="Total PRs"
+              previousValue={data.cards.previousTotalPrs}
               tooltip={tooltipContent.totalPrs}
               value={data.cards.totalPrs}
             />
             <MetricCard
+              breakdown={periodBreakdown}
+              deltaDirection="higher-is-better"
+              deltaLabel="vs prev"
+              deltaPct={deltaFromPrevious(
+                data.cards.contributors,
+                data.cards.previousContributors,
+              )}
               label="Contributors"
+              previousValue={data.cards.previousContributors}
               tooltip={tooltipContent.contributors}
               value={data.cards.contributors}
             />
           </div>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Flow
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.green,
+                    color: colors.green,
                     key: "avgLeadTimeDays",
                     name: "Days",
                   },
@@ -225,9 +310,7 @@ export default function PullRequestsDashboard() {
               <SimpleLineChart
                 caption="per week"
                 data={data.leadTimeTrend}
-                lines={[
-                  { color: SERIES_COLORS.red, key: "trendLine", name: "Trend" },
-                ]}
+                lines={[{ color: colors.red, key: "trendLine", name: "Trend" }]}
                 title="Lead Time Trend (within period)"
                 tooltip={tooltipContent.leadTimeTrend}
                 unit="days"
@@ -237,7 +320,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.blue,
+                    color: colors.blue,
                     key: "prCount",
                     name: "Merged PRs",
                   },
@@ -253,7 +336,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.green,
+                    color: colors.green,
                     key: "prCount",
                     name: "New PRs",
                   },
@@ -270,16 +353,37 @@ export default function PullRequestsDashboard() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Backlog
             </h3>
+            {openBacklog && (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                <MetricCard
+                  label="Open PRs Now"
+                  tooltip={tooltipContent.openPrsNow}
+                  value={openBacklog.openNow}
+                />
+                <MetricCard
+                  label={`Stale Open PRs (> ${METRIC_TARGETS.staleOpenPrDays} days)`}
+                  sampleSize={openBacklog.openNow}
+                  severity={staleSeverity}
+                  tooltip={tooltipContent.staleOpenPrs}
+                  value={openBacklog.stale}
+                />
+                <MetricCard
+                  label="Closed Without Merge"
+                  tooltip={tooltipContent.closedUnmerged}
+                  value={openBacklog.closedUnmerged}
+                />
+              </div>
+            )}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleLineChart
                 caption="per day"
                 data={data.unmergedPrs}
                 lines={[
                   {
-                    color: SERIES_COLORS.amber,
+                    color: colors.amber,
                     key: "openPrs",
                     name: "Open PRs",
                   },
@@ -294,7 +398,7 @@ export default function PullRequestsDashboard() {
                 data={data.cumulatedNewPrs}
                 lines={[
                   {
-                    color: SERIES_COLORS.purple,
+                    color: colors.purple,
                     key: "cumulativeCount",
                     name: "Cumulated New PRs",
                   },
@@ -305,17 +409,64 @@ export default function PullRequestsDashboard() {
                 xKey="date"
               />
             </div>
+            {stalePrs.length > 0 && (
+              <DataTable
+                columns={[
+                  {
+                    key: "number",
+                    label: "#",
+                    renderCell: (value) => (
+                      <a
+                        className="text-link hover:underline"
+                        href={`${repositoryUrl}/pull/${value}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        #{value}
+                      </a>
+                    ),
+                  },
+                  { key: "title", label: "Title" },
+                  {
+                    key: "author",
+                    label: "Author",
+                    renderCell: (value) =>
+                      value ? (
+                        <a
+                          className="text-link hover:underline"
+                          href={`https://github.com/${value}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          {String(value)}
+                        </a>
+                      ) : (
+                        "—"
+                      ),
+                  },
+                  { key: "idleDays", label: "Idle (days)" },
+                  {
+                    key: "updatedAt",
+                    label: "Last activity",
+                    renderCell: (value) => formatShortDate(String(value)),
+                  },
+                ]}
+                data={stalePrs}
+                title={`Stale Pull Requests (> ${METRIC_TARGETS.staleOpenPrDays} days idle)`}
+                tooltip={tooltipContent.stalePrs}
+              />
+            )}
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Size &amp; collaboration
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgAdditions",
                     name: "Avg Additions",
                   },
@@ -330,7 +481,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgComments",
                     name: "Avg Comments",
                   },
@@ -345,7 +496,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgAdditions",
                     name: "Avg Additions",
                   },
@@ -359,7 +510,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.amber,
+                    color: colors.amber,
                     key: "avgLeadTimeDays",
                     name: "Avg Lead Time",
                   },
@@ -380,7 +531,20 @@ export default function PullRequestsDashboard() {
               columns={[
                 { key: "title", label: "Title" },
                 { key: "leadTimeDays", label: "Lead Time (days)" },
-                { key: "number", label: "#" },
+                {
+                  key: "number",
+                  label: "#",
+                  renderCell: (value) => (
+                    <a
+                      className="text-link hover:underline"
+                      href={`${repositoryUrl}/pull/${value}`}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      #{value}
+                    </a>
+                  ),
+                },
                 { key: "createdAt", label: "Created" },
                 { key: "mergedAt", label: "Merged" },
               ]}
@@ -394,7 +558,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "prCount",
                   name: "Pull Requests",
                 },
@@ -419,7 +583,7 @@ export default function PullRequestsDashboard() {
                     const author = String(value);
                     return (
                       <a
-                        className="text-blue-600 hover:underline"
+                        className="text-link hover:underline"
                         href={`https://github.com/${author}`}
                         rel="noopener noreferrer"
                         target="_blank"

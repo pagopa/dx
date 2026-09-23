@@ -2,14 +2,16 @@
 
 "use client";
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import Link from "next/link";
 
-import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
@@ -73,6 +75,7 @@ const statusBadgeClassName = (status: string): string => {
 };
 
 export default function TechradarDashboard() {
+  const colors = useSeriesColors();
   const { data, error, loading, refetch } =
     useDashboardData<TechradarDashboardData>("techradar", {});
 
@@ -86,9 +89,17 @@ export default function TechradarDashboard() {
   const usageTrendByDate = new Map<string, number>();
   for (const row of data?.usageTrend ?? []) {
     const date = row.capturedAt.slice(0, 10);
+    // The zero-adoption marker keeps the trend line continuous: it is not a tool,
+    // so it contributes no usages, but its date must stay in the series so a
+    // snapshot with no detected tools plots a zero point instead of a gap.
+    const repositoryCount =
+      row.toolKey === TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY
+        ? 0
+        : Number(row.repositoryCount);
+
     usageTrendByDate.set(
       date,
-      (usageTrendByDate.get(date) ?? 0) + Number(row.repositoryCount),
+      (usageTrendByDate.get(date) ?? 0) + repositoryCount,
     );
   }
   const usageTrendData = [...usageTrendByDate.entries()]
@@ -98,7 +109,7 @@ export default function TechradarDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Techradar Metrics</h2>
+        <h2 className="text-xl font-bold text-foreground">Techradar Metrics</h2>
         <TooltipIcon content={tooltipContent.title} label="Techradar Metrics" />
       </div>
       <DashboardRequestState
@@ -141,7 +152,7 @@ export default function TechradarDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "adoptionPercentage",
                   name: "Adoption %",
                 },
@@ -157,7 +168,7 @@ export default function TechradarDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.purple,
+                  color: colors.purple,
                   key: "value",
                   name: "Detected usages",
                 },
@@ -175,7 +186,7 @@ export default function TechradarDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.purple,
+                    color: colors.purple,
                     key: "repositoryCount",
                     name: "Detected usages",
                   },
@@ -212,7 +223,7 @@ export default function TechradarDashboard() {
                   renderCell: (value, row) =>
                     value ? (
                       <Link
-                        className="text-blue-400 hover:text-blue-300 hover:underline"
+                        className="text-link hover:text-link hover:underline"
                         href={String(value)}
                         rel="noreferrer"
                         target="_blank"
@@ -262,7 +273,7 @@ export default function TechradarDashboard() {
                   renderCell: (value, row) =>
                     value ? (
                       <Link
-                        className="text-blue-400 hover:text-blue-300 hover:underline"
+                        className="text-link hover:text-link hover:underline"
                         href={String(value)}
                         rel="noreferrer"
                         target="_blank"
@@ -282,14 +293,17 @@ export default function TechradarDashboard() {
           </div>
 
           {data.repositoriesWithoutDetectedTools.length > 0 && (
-            <div className="mt-4 rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white">
+            <div className="mt-4 rounded-xl border border-border bg-card p-6">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground">
                 Repositories without detections
               </h3>
-              <ul className="flex flex-wrap gap-2" aria-label="Repositories without detections">
+              <ul
+                className="flex flex-wrap gap-2"
+                aria-label="Repositories without detections"
+              >
                 {data.repositoriesWithoutDetectedTools.map((repository) => (
                   <li
-                    className="rounded bg-[#161b22] px-2 py-1 text-xs font-medium text-[#8b949e]"
+                    className="rounded bg-subtle px-2 py-1 text-xs font-medium text-muted-foreground"
                     key={repository}
                   >
                     {repository}

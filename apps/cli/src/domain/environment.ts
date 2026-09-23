@@ -93,7 +93,8 @@ type CloudAccountNotInitializedIssue = {
 };
 
 type EnvironmentInitIssue =
-  CloudAccountNotInitializedIssue | MissingRemoteBackendIssue;
+  | CloudAccountNotInitializedIssue
+  | MissingRemoteBackendIssue;
 
 type MissingRemoteBackendIssue = {
   type: "MISSING_REMOTE_BACKEND";

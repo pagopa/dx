@@ -136,6 +136,28 @@ need the default npm publisher. Projects that publish both an npm package and a
 Docker image should configure `nx.docker.repositoryName` and publish the image
 from a release-tag workflow.
 
+For a JavaScript project released only as a Docker image, set `"private": true`
+in `package.json`. This prevents Nx's JavaScript/package plugin from inferring
+npm publishing, but it does **not** disable the custom Docker
+`nx-release-publish` target inferred from `nx.release.docker.repositoryName`.
+Keep Docker build settings, such as `platform`, under `nx.docker`:
+
+```json
+{
+  "private": true,
+  "nx": {
+    "docker": {
+      "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/my-image-name"
+      }
+    }
+  }
+}
+```
+
 ### Container-only projects
 
 For a Docker-only project without `package.json`, keep its durable release

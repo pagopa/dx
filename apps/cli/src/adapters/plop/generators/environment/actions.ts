@@ -80,6 +80,9 @@ export default function getActions(
 
     const actions: ActionType[] = [
       {
+        type: "setupCloudTools",
+      },
+      {
         type: "getTerraformBackend",
       },
       {
@@ -96,7 +99,9 @@ export default function getActions(
     ];
 
     if (init) {
-      actions.unshift(
+      actions.splice(
+        1,
+        0,
         {
           type: "initCloudAccounts",
         },

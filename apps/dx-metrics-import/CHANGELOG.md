@@ -1,3 +1,20 @@
+## 0.1.13 (2026-09-23)
+
+### 🩹 Fixes
+
+- Require mise for generated repository bootstrap, generate a mise lockfile, and track mise adoption ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.1.12 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.1.11 (2026-09-16)
 
 ### 🚀 Features

@@ -18,5 +18,3 @@ This configuration package provides the following default settings for your `pnp
 - Sets [linkWorkspacePackages](https://pnpm.io/cli/run#linkworkspacepackages) to `true`
 - Sets [packageImportMethod](https://pnpm.io/settings#packageimportmethod) to `clone-or-copy`
 - Sets [cleanupUnusedCatalogs](https://pnpm.io/catalogs#cleanupunusedcatalogs) to `true`
-
-

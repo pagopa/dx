@@ -113,6 +113,11 @@ module "dx_infra_ci_resource_group_reader" {
     "Storage Table Data Reader",
     "Container Apps Operator",
     "Container Apps Jobs Operator",
+    "PagoPA Static Web Apps List Secrets",
+  ]
+  additional_actions = [
+    # Terraform plan refreshes the App Configuration access keys, which the read roles above do not cover.
+    "Microsoft.AppConfiguration/configurationStores/listKeys/action",
   ]
 }
 

@@ -1,28 +1,27 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.14",
-  "type": "module",
-  "nx": {
-    "docker": {
-      "repositoryName": "dx/mcp-server",
-      "platform": "linux/amd64"
-    }
-  },
+  "version": "0.2.17",
+  "private": true,
   "description": "An MCP server that supports developers using DX tools.",
+  "keywords": [
+    "DX",
+    "MCP"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/mcpserver"
   },
-  "keywords": [
-    "DX",
-    "MCP"
-  ],
+  "bin": {
+    "dx": "./dist/cli.js"
+  },
   "files": [
     "dist"
   ],
-  "bin": {
-    "dx": "./dist/cli.js"
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "version": "node ./scripts/generate-server-manifest.js"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-agent-runtime": "^3.1117.0",
@@ -45,8 +44,14 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "scripts": {
-    "start": "tsx src/cli.ts",
-    "version": "node ./scripts/generate-server-manifest.js"
+  "nx": {
+    "docker": {
+      "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-mcp-server"
+      }
+    }
   }
 }
