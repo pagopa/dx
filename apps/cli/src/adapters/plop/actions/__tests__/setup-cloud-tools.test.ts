@@ -47,7 +47,7 @@ describe("setupCloudTools", () => {
     await plop.getGenerator("test").runActions({});
 
     expect(mocks.commands).toEqual([
-      'mise use aws-cli[symlink_bins=true]@2.36 azure-cli[uvx_args=--prerelease=allow,depends=["uv"]]@2.87 uv@latest',
+      'mise use aws-cli[symlink_bins=true]@2 azure-cli[uvx_args=--prerelease=allow,depends=["uv"]]@2 uv@latest',
       "mise lock",
     ]);
   });
