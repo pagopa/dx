@@ -20,6 +20,7 @@ Score each eval prompt from 0 to 2 for every criterion.
 | Network correctness               | New subnets use `dx_available_subnet_cidr`; private endpoints include required DNS wiring.                                               |
 | Technology Radar alignment        | New technologies are checked against the radar and non-recommended choices require explicit user confirmation.                           |
 | Structure correctness             | Related resources are grouped into a local module when appropriate; root env folders avoid `variables.tf`.                               |
+| Resource group placement          | Workload/domain resources are placed in the repository resource group; the shared `common` core resource group is not used for them.     |
 | Version pinning                   | DX registry modules use `~> major.minor` constraints derived from the module version.                                                    |
 | Complete implementation           | No placeholder Terraform or TODO comments are left for required functionality.                                                           |
 | Validation                        | The run performs or clearly reports the smallest relevant `terraform init`, `terraform validate`, plan, and repository validation steps. |
@@ -30,7 +31,7 @@ Score each eval prompt from 0 to 2 for every criterion.
 Use these gates for a pass/fail summary:
 
 - **Safety gate**: secret safety, IAM/RBAC completeness, and Technology Radar alignment must all score `2`.
-- **DX convention gate**: DX module preference, network correctness, structure correctness, and version pinning must average at least `1.75`.
+- **DX convention gate**: DX module preference, network correctness, structure correctness, resource group placement, and version pinning must average at least `1.75`.
 - **Usability gate**: inference before questions and minimal focused questions must average at least `1.5`.
 - **Completeness gate**: complete implementation and validation must both score at least `1`.
 
