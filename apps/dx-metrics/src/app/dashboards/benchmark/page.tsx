@@ -1,11 +1,12 @@
 "use client";
 
-import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import TooltipIcon from "@/components/TooltipIcon";
 import { classifyPercentile } from "@/lib/benchmark";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { formatInteger, formatNumber, formatWithUnit } from "@/lib/format";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -64,15 +65,16 @@ const positionLabel = (position: null | string): string => {
 const positionClassName = (position: null | string): string => {
   switch (position) {
     case "best":
-      return "bg-green-500/15 text-green-300";
+      return "bg-green-500/15 text-green-700 dark:text-green-300";
     case "needs-attention":
-      return "bg-amber-500/15 text-amber-300";
+      return "bg-amber-500/15 text-amber-700 dark:text-amber-300";
     default:
-      return "bg-slate-500/15 text-slate-300";
+      return "bg-slate-500/15 text-slate-600 dark:text-slate-300";
   }
 };
 
 const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
+  const colors = useSeriesColors();
   const rows: BenchmarkRow[] = [...metric.entries]
     .sort((left, right) => {
       // Rows without a value always sort last, in both metric directions.
@@ -113,7 +115,7 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
           the outliers visible; the table next to it carries the exact figures,
           so both titles sit on the same row. */}
       <SimpleBarChart
-        bars={[{ color: SERIES_COLORS.blue, key: "value", name: metric.label }]}
+        bars={[{ color: colors.blue, key: "value", name: metric.label }]}
         data={chartData}
         layout="vertical"
         referenceLines={
@@ -185,7 +187,7 @@ export default function BenchmarkDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           Cross-repository Benchmark
         </h2>
         <TooltipIcon
@@ -226,7 +228,7 @@ export default function BenchmarkDashboard() {
 
               return (
                 <section className="space-y-3" key={category}>
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                     {CATEGORY_LABELS[category]}
                   </h3>
                   <div className="space-y-4">

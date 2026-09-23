@@ -27,6 +27,12 @@ import {
   formatSeriesValue,
   sortChartData,
 } from "@/lib/chart-data";
+import {
+  PIE_ORDER,
+  SERIES_ORDER,
+  useChartChrome,
+  useSeriesColors,
+} from "@/lib/chart-theme";
 import { useDateFormatters } from "@/lib/locale";
 import { focusRing } from "@/lib/utils";
 
@@ -104,36 +110,10 @@ const numericTickFormatter =
   };
 
 /**
- * The only series palette. Named by hue because these are primitives: a chart
- * picks a key by meaning, and the value can be retuned in one place.
+ * Series palettes are theme-aware and live in `@/lib/chart-theme`; components
+ * read them through `useSeriesColors()` / `useChartChrome()` so a theme switch
+ * repaints the marks along with the rest of the surface.
  */
-export const SERIES_COLORS = {
-  green: "#238636",
-  gray: "#8b949e",
-  blue: "#1f6feb",
-  amber: "#d29922",
-  purple: "#a371f7",
-  brightGreen: "#39d353",
-  lightBlue: "#58a6ff",
-  red: "#f85149",
-} as const;
-
-/** Default assignment order for multi-series charts. */
-const COLORS: string[] = Object.values(SERIES_COLORS);
-
-/**
- * Categorical palette for part-to-whole charts. Deliberately excludes the
- * semantic green/red used by severity, so a slice colour never implies a
- * good/bad judgement on the category it represents.
- */
-const PIE_COLORS: string[] = [
-  SERIES_COLORS.blue,
-  SERIES_COLORS.purple,
-  SERIES_COLORS.amber,
-  SERIES_COLORS.lightBlue,
-  SERIES_COLORS.gray,
-  SERIES_COLORS.brightGreen,
-];
 
 interface ChartWrapperProps {
   ariaLabel?: string;
@@ -239,21 +219,21 @@ export function ChartWrapper({
 }: ChartWrapperProps) {
   return (
     <div
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-colors hover:border-[#8b949e]/50 ${className}`}
+      className={`rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-muted-foreground/50 ${className}`}
     >
       <div className="mb-6 flex items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
           {title}
         </h3>
         {tooltip && <TooltipIcon content={tooltip} label={title} />}
         {caption && (
-          <span className="ml-auto text-xs font-normal normal-case tracking-normal text-gray-500">
+          <span className="ml-auto text-xs font-normal normal-case tracking-normal text-subtle-foreground">
             {caption}
           </span>
         )}
       </div>
       {isEmpty ? (
-        <div className="flex h-72 items-center justify-center text-center text-sm text-gray-400">
+        <div className="flex h-72 items-center justify-center text-center text-sm text-muted-foreground">
           No data for the selected period. Try a wider time interval.
         </div>
       ) : (
@@ -293,22 +273,22 @@ function ChartDataTable({
     <div className="custom-scrollbar mt-4 max-h-64 overflow-auto">
       <table aria-label={`${chartTitle} data`} className="min-w-full text-xs">
         <thead>
-          <tr className="border-b border-[#30363d]">
+          <tr className="border-b border-border">
             <th
-              className="px-3 py-2 text-left font-semibold text-gray-400"
+              className="px-3 py-2 text-left font-semibold text-muted-foreground"
               scope="col"
             >
               {xKey}
             </th>
             {series.map((entry) => (
               <th
-                className="px-3 py-2 text-left font-semibold text-gray-400"
+                className="px-3 py-2 text-left font-semibold text-muted-foreground"
                 key={entry.key}
                 scope="col"
               >
                 {entry.name}
                 {unit && (
-                  <span className="ml-1 font-normal text-gray-500">
+                  <span className="ml-1 font-normal text-subtle-foreground">
                     ({unit})
                   </span>
                 )}
@@ -318,14 +298,14 @@ function ChartDataTable({
         </thead>
         <tbody>
           {data.map((row, index) => (
-            <tr className="border-b border-[#21262d]" key={index}>
-              <td className="px-3 py-1.5 text-gray-300">
+            <tr className="border-b border-border-subtle" key={index}>
+              <td className="px-3 py-1.5 text-foreground">
                 {xValueFormatter
                   ? xValueFormatter(row[xKey])
                   : String(row[xKey] ?? "")}
               </td>
               {series.map((entry) => (
-                <td className="px-3 py-1.5 text-gray-300" key={entry.key}>
+                <td className="px-3 py-1.5 text-foreground" key={entry.key}>
                   {formatSeriesValue(row[entry.key], valueFormatter, unit)}
                 </td>
               ))}
@@ -382,14 +362,14 @@ function ChartDataToggle({
         <button
           aria-controls={regionId}
           aria-expanded={isOpen}
-          className={`rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
+          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
           onClick={() => setIsOpen((open) => !open)}
           type="button"
         >
           {isOpen ? "Hide data" : "Show data"}
         </button>
         <button
-          className={`rounded text-xs font-medium text-gray-400 transition-colors hover:text-gray-200 ${focusRing}`}
+          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
           onClick={handleDownload}
           type="button"
         >
@@ -455,10 +435,10 @@ export function DataTable<TData extends object>({
 
   return (
     <div
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] p-6 shadow-sm transition-colors hover:border-[#8b949e]/50 ${className}`}
+      className={`rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-muted-foreground/50 ${className}`}
     >
       <div className="mb-6 flex items-center gap-2">
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-white">
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-foreground">
           {title}
         </h3>
         {tooltip && <TooltipIcon content={tooltip} label={title} />}
@@ -466,7 +446,7 @@ export function DataTable<TData extends object>({
       <div className="custom-scrollbar max-h-96 overflow-auto">
         <table aria-label={title} className="min-w-full text-sm">
           <thead>
-            <tr className="border-b border-[#30363d]">
+            <tr className="border-b border-border">
               {columns.map((col) => {
                 const isSorted = sortKey === col.key;
 
@@ -479,12 +459,12 @@ export function DataTable<TData extends object>({
                           : "descending"
                         : "none"
                     }
-                    className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-white"
+                    className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-foreground"
                     key={col.key}
                     scope="col"
                   >
                     <button
-                      className={`inline-flex items-center gap-1 rounded transition-colors hover:text-[#e6edf3] ${focusRing}`}
+                      className={`inline-flex items-center gap-1 rounded transition-colors hover:text-foreground ${focusRing}`}
                       onClick={() => handleSort(col.key)}
                       type="button"
                     >
@@ -501,12 +481,12 @@ export function DataTable<TData extends object>({
           <tbody>
             {sorted.map((row, i) => (
               <tr
-                className="group border-b border-[#21262d] transition-colors hover:bg-[#161b22]"
+                className="group border-b border-border-subtle transition-colors hover:bg-subtle"
                 key={i}
               >
                 {columns.map((col) => (
                   <td
-                    className="px-4 py-3 font-medium text-[#e6edf3]"
+                    className="px-4 py-3 font-medium text-foreground"
                     key={col.key}
                   >
                     {col.renderCell
@@ -545,6 +525,8 @@ export function SimpleBarChart({
 }: SimpleBarChartProps) {
   const isVertical = layout === "vertical";
   const defaultTickFormatter = useDefaultTickFormatter();
+  const colors = useSeriesColors();
+  const chrome = useChartChrome();
 
   // Ranked charts (e.g. Pareto of failures) need magnitudes, not the
   // alphabetical order the SQL returns; the same order feeds table and CSV.
@@ -587,15 +569,15 @@ export function SimpleBarChart({
         width="100%"
       >
         <CartesianGrid
-          stroke="#21262d"
+          stroke={chrome.grid}
           strokeDasharray="3 3"
           vertical={false}
         />
         <XAxis
           dataKey={isVertical ? undefined : xKey}
-          stroke="#30363d"
+          stroke={chrome.axis}
           tick={{
-            fill: "#8b949e",
+            fill: chrome.tick,
             fontSize: 11,
             ...(isVertical
               ? {}
@@ -620,8 +602,8 @@ export function SimpleBarChart({
         />
         <YAxis
           dataKey={isVertical ? xKey : undefined}
-          stroke="#30363d"
-          tick={{ fill: "#8b949e", fontSize: 11 }}
+          stroke={chrome.axis}
+          tick={{ fill: chrome.tick, fontSize: 11 }}
           tickFormatter={isVertical ? undefined : numericTickFormatter(unit)}
           type={isVertical ? "category" : "number"}
           {...(isVertical
@@ -630,19 +612,19 @@ export function SimpleBarChart({
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: "#161b22",
-            border: "1px solid #30363d",
+            backgroundColor: chrome.tooltipBackground,
+            border: `1px solid ${chrome.tooltipBorder}`,
             borderRadius: "8px",
-            color: "#e6edf3",
+            color: chrome.tooltipText,
           }}
           formatter={(value) =>
             formatTooltipValue(value, tooltipFormatter, unit)
           }
-          itemStyle={{ color: "#e6edf3" }}
+          itemStyle={{ color: chrome.tooltipText }}
         />
         <Legend
           wrapperStyle={{
-            color: "#8b949e",
+            color: chrome.legend,
             fontSize: "12px",
             paddingTop: "20px",
           }}
@@ -650,7 +632,7 @@ export function SimpleBarChart({
         {targetBand &&
           (isVertical ? (
             <ReferenceArea
-              fill={SERIES_COLORS.green}
+              fill={colors.green}
               fillOpacity={0.08}
               ifOverflow="extendDomain"
               key="target-band"
@@ -659,7 +641,7 @@ export function SimpleBarChart({
             />
           ) : (
             <ReferenceArea
-              fill={SERIES_COLORS.green}
+              fill={colors.green}
               fillOpacity={0.08}
               ifOverflow="extendDomain"
               key="target-band"
@@ -670,7 +652,7 @@ export function SimpleBarChart({
         {bars.map((bar, i) => (
           <Bar
             dataKey={bar.key}
-            fill={bar.color || COLORS[i % COLORS.length]}
+            fill={bar.color ?? colors[SERIES_ORDER[i % SERIES_ORDER.length]]}
             key={bar.key}
             name={bar.name}
             stackId={bar.stackId}
@@ -681,7 +663,7 @@ export function SimpleBarChart({
             <ReferenceLine
               key={`ref-${line.label}`}
               label={line.label}
-              stroke={line.color ?? SERIES_COLORS.gray}
+              stroke={line.color ?? colors.gray}
               strokeDasharray="4 4"
               x={line.value}
             />
@@ -689,7 +671,7 @@ export function SimpleBarChart({
             <ReferenceLine
               key={`ref-${line.label}`}
               label={line.label}
-              stroke={line.color ?? SERIES_COLORS.gray}
+              stroke={line.color ?? colors.gray}
               strokeDasharray="4 4"
               y={line.value}
             />
@@ -717,6 +699,8 @@ export function SimpleLineChart({
   zeroBaseline = true,
 }: SimpleLineChartProps) {
   const defaultTickFormatter = useDefaultTickFormatter();
+  const colors = useSeriesColors();
+  const chrome = useChartChrome();
 
   return (
     <ChartWrapper
@@ -746,7 +730,7 @@ export function SimpleLineChart({
         width="100%"
       >
         <CartesianGrid
-          stroke="#21262d"
+          stroke={chrome.grid}
           strokeDasharray="3 3"
           vertical={false}
         />
@@ -755,9 +739,9 @@ export function SimpleLineChart({
           dataKey={xKey}
           height={data.length > 6 ? 70 : 30}
           interval={Math.max(0, Math.floor(data.length / 8) - 1)}
-          stroke="#30363d"
+          stroke={chrome.axis}
           tick={{
-            fill: "#8b949e",
+            fill: chrome.tick,
             fontSize: 11,
             textAnchor: data.length > 6 ? "end" : "middle",
           }}
@@ -766,32 +750,32 @@ export function SimpleLineChart({
         />
         <YAxis
           domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
-          stroke="#30363d"
-          tick={{ fill: "#8b949e", fontSize: 11 }}
+          stroke={chrome.axis}
+          tick={{ fill: chrome.tick, fontSize: 11 }}
           tickFormatter={numericTickFormatter(unit)}
         />
         <Tooltip
           contentStyle={{
-            backgroundColor: "#161b22",
-            border: "1px solid #30363d",
+            backgroundColor: chrome.tooltipBackground,
+            border: `1px solid ${chrome.tooltipBorder}`,
             borderRadius: "8px",
-            color: "#e6edf3",
+            color: chrome.tooltipText,
           }}
           formatter={(value) =>
             formatTooltipValue(value, tooltipFormatter, unit)
           }
-          itemStyle={{ color: "#e6edf3" }}
+          itemStyle={{ color: chrome.tooltipText }}
         />
         <Legend
           wrapperStyle={{
-            color: "#8b949e",
+            color: chrome.legend,
             fontSize: "12px",
             paddingTop: "10px",
           }}
         />
         {targetBand && (
           <ReferenceArea
-            fill={SERIES_COLORS.green}
+            fill={colors.green}
             fillOpacity={0.08}
             ifOverflow="extendDomain"
             y1={targetBand.from}
@@ -805,7 +789,7 @@ export function SimpleLineChart({
             isAnimationActive={false}
             key={line.key}
             name={line.name}
-            stroke={line.color || COLORS[i % COLORS.length]}
+            stroke={line.color ?? colors[SERIES_ORDER[i % SERIES_ORDER.length]]}
             strokeWidth={2}
             type="linear"
           />
@@ -814,7 +798,7 @@ export function SimpleLineChart({
           <ReferenceLine
             key={`ref-${line.label}`}
             label={line.label}
-            stroke={line.color ?? SERIES_COLORS.gray}
+            stroke={line.color ?? colors.gray}
             strokeDasharray="4 4"
             y={line.value}
           />
@@ -832,6 +816,8 @@ export function SimplePieChart({
   tooltip,
 }: SimplePieChartProps) {
   const total = data.reduce((sum, entry) => sum + Number(entry.value), 0);
+  const colors = useSeriesColors();
+  const chrome = useChartChrome();
 
   return (
     <ChartWrapper
@@ -872,17 +858,17 @@ export function SimplePieChart({
           >
             {data.map((entry, index) => (
               <Cell
-                fill={PIE_COLORS[index % PIE_COLORS.length]}
+                fill={colors[PIE_ORDER[index % PIE_ORDER.length]]}
                 key={`cell-${index}`}
               />
             ))}
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: "#161b22",
-              border: "1px solid #30363d",
+              backgroundColor: chrome.tooltipBackground,
+              border: `1px solid ${chrome.tooltipBorder}`,
               borderRadius: "8px",
-              color: "#e6edf3",
+              color: chrome.tooltipText,
             }}
             formatter={(value) => {
               if (typeof value === "number") {
@@ -890,9 +876,9 @@ export function SimplePieChart({
               }
               return value;
             }}
-            itemStyle={{ color: "#e6edf3" }}
+            itemStyle={{ color: chrome.tooltipText }}
           />
-          <Legend wrapperStyle={{ color: "#8b949e", fontSize: "12px" }} />
+          <Legend wrapperStyle={{ color: chrome.legend, fontSize: "12px" }} />
         </PieChart>
       </ResponsiveContainer>
     </ChartWrapper>

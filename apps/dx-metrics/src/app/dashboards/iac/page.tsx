@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -11,6 +10,7 @@ import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { METRIC_TARGETS } from "@/lib/config";
 import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
@@ -41,6 +41,7 @@ interface IacDashboardData {
 }
 
 export default function IacDashboard() {
+  const colors = useSeriesColors();
   const { days, repository, setDays, setRepository } = useDashboardFilters();
   const { short: formatShortDate } = useDateFormatters();
 
@@ -62,7 +63,7 @@ export default function IacDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           IaC Pull Requests Metrics
         </h2>
         <TooltipIcon
@@ -98,7 +99,7 @@ export default function IacDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "avgLeadTimeDays",
                   name: "Lead Time",
                 },
@@ -115,9 +116,7 @@ export default function IacDashboard() {
             />
             <SimpleLineChart
               data={data.leadTimeTrend}
-              lines={[
-                { color: SERIES_COLORS.red, key: "trendLine", name: "Trend" },
-              ]}
+              lines={[{ color: colors.red, key: "trendLine", name: "Trend" }]}
               title="IaC PR Lead Time (trend)"
               tooltip={tooltipContent.leadTimeTrend}
               unit="days"
@@ -128,12 +127,12 @@ export default function IacDashboard() {
               data={supervisedPivoted}
               lines={[
                 {
-                  color: SERIES_COLORS.red,
+                  color: colors.red,
                   key: "supervised",
                   name: "Supervised PRs",
                 },
                 {
-                  color: SERIES_COLORS.green,
+                  color: colors.green,
                   key: "unsupervised",
                   name: "Unsupervised PRs",
                 },
@@ -145,9 +144,7 @@ export default function IacDashboard() {
             />
             <SimpleLineChart
               data={data.prsOverTime}
-              lines={[
-                { color: SERIES_COLORS.blue, key: "prCount", name: "PR Count" },
-              ]}
+              lines={[{ color: colors.blue, key: "prCount", name: "PR Count" }]}
               title="IaC PRs Count Over Time"
               tooltip={tooltipContent.prsOverTime}
               unit="PRs"

@@ -37,10 +37,10 @@ export default function OverviewDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Executive Summary</h2>
+        <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
         <TooltipIcon content={tooltipContent.title} label="Executive Summary" />
       </div>
-      <p className="mb-4 text-sm text-gray-400">
+      <p className="mb-4 text-sm text-muted-foreground">
         Most urgent insights across every dashboard for the selected repository.
         For the cross-repository comparison see the Benchmark page.
       </p>
@@ -66,7 +66,7 @@ export default function OverviewDashboard() {
 
       {data && data.meta.failed.length > 0 && (
         <div
-          className="mt-4 rounded-lg border border-amber-500/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100"
+          className="mt-4 rounded-lg border border-amber-500/30 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:bg-amber-950/30 dark:text-amber-100"
           role="status"
         >
           {data.meta.failed.length} of {data.meta.dashboardCount ?? 9}{" "}
