@@ -166,7 +166,7 @@ const fetchDxVsNonDx = async (
       SUM("dailyCount") OVER (PARTITION BY "pipelineType" ORDER BY "runDate") AS "cumulativeCount"
     FROM (
       SELECT wr.created_at::date AS "runDate",
-        ${dxPipelineCase("w.pipeline")} AS "pipelineType",
+        ${dxPipelineCase("w.pipeline", "r.full_name")} AS "pipelineType",
         COUNT(*) AS "dailyCount"
       FROM workflow_runs wr
       JOIN workflows w ON wr.workflow_id = w.id
@@ -174,8 +174,10 @@ const fetchDxVsNonDx = async (
       WHERE r.full_name = ${fullName}
         AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND ${workflowNameExclusion("w.name")}
-      GROUP BY wr.created_at::date,
-        ${dxPipelineCase("w.pipeline")}
+      -- Group by the output alias: the CASE binds parameters, so repeating the
+      -- expression here would use different placeholders and PostgreSQL would
+      -- treat it as a different expression from the one in the SELECT list.
+      GROUP BY wr.created_at::date, "pipelineType"
     ) daily_counts ORDER BY "runDate", "pipelineType"
   `);
   return parseSqlRows(workflowDxVsNonDxSchema, r.rows, "workflows dxVsNonDx");

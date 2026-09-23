@@ -184,6 +184,12 @@ describe("environment generator — file generation (no init)", () => {
       owner: "pagopa",
       repo: "my-project",
     },
+    runnerAppCredentials: {
+      clientId: "test-app-client-id",
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
     tags: {
       BusinessUnit: "Platform",
       CostCenter: "TS000",
@@ -224,6 +230,7 @@ describe("environment generator — file generation (no init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+    expect(generatedFiles).not.toContain("test-private-key");
   });
 
   it("skips init-only side effects and core files when init is absent", async () => {
