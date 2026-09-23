@@ -11,7 +11,7 @@ ephemeral "random_password" "db_admin" {
 # The module automatically creates the admin password secret in Key Vault.
 module "postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
-  version = "~> 3.0"
+  version = "~> 5.0"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
