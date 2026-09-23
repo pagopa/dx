@@ -1,5 +1,56 @@
 @import "tailwindcss";
 
+/*
+ * Colour themes.
+ *
+ * Every surface, border and text colour is expressed as a semantic token so a
+ * single class (`.light` on <html>) repaints the whole dashboard. Dark is the
+ * default and lives on `:root`; `.light` overrides the same tokens. The
+ * pre-paint script in the root layout applies the stored/system theme before
+ * the first frame, so there is no flash of the wrong palette.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  color-scheme: dark;
+
+  --background: #0a0c10;
+  --foreground: #e6edf3;
+  --card: #0d1117;
+  --subtle: #161b22;
+  --muted: #21262d;
+  --border: #30363d;
+  --border-subtle: #21262d;
+  --muted-foreground: #8b949e;
+  --subtle-foreground: #6e7681;
+  --accent: #00c950;
+  --link: #58a6ff;
+
+  --scrollbar-track: #0d1117;
+  --scrollbar-thumb: #30363d;
+  --scrollbar-thumb-hover: #8b949e;
+}
+
+.light {
+  color-scheme: light;
+
+  --background: #f6f8fa;
+  --foreground: #1f2328;
+  --card: #ffffff;
+  --subtle: #f6f8fa;
+  --muted: #eaeef2;
+  --border: #d0d7de;
+  --border-subtle: #eaeef2;
+  --muted-foreground: #57606a;
+  --subtle-foreground: #6e7781;
+  --accent: #1a7f37;
+  --link: #0969da;
+
+  --scrollbar-track: #f6f8fa;
+  --scrollbar-thumb: #d0d7de;
+  --scrollbar-thumb-hover: #8b949e;
+}
+
 @theme {
   /* UI text uses Inter; numbers, IDs and evidence use the mono face. */
   --font-sans:
@@ -8,17 +59,30 @@
   --font-mono:
     var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco,
     Consolas, monospace;
+}
 
-  --color-background: #0a0c10;
-  --color-foreground: #e6edf3;
-  --color-card: #0d1117;
-  --color-border: #30363d;
-  --color-accent: #00c950;
+/*
+ * `inline` keeps the utility values as `var(--token)` references instead of
+ * resolving them at build time, which is what lets `.light` repaint them at
+ * runtime.
+ */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-subtle: var(--subtle);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-link: var(--link);
 }
 
 :root {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
+  background-color: var(--background);
+  color: var(--foreground);
 }
 
 body {
@@ -41,24 +105,18 @@ body {
 }
 
 @layer utilities {
-  .metric-value-glow {
-    text-shadow:
-      0 0 12px rgba(230, 237, 243, 0.45),
-      0 0 28px rgba(230, 237, 243, 0.2);
-  }
-
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: #0d1117;
+    background: var(--scrollbar-track);
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #30363d;
+    background: var(--scrollbar-thumb);
     border-radius: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #8b949e;
+    background: var(--scrollbar-thumb-hover);
   }
 }

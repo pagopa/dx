@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
   SimplePieChart,
@@ -13,6 +12,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { formatInteger, formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
@@ -88,7 +88,7 @@ export default function WorkflowsDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Workflow Metrics</h2>
+        <h2 className="text-xl font-bold text-foreground">Workflow Metrics</h2>
         <TooltipIcon
           content={tooltipContent.title}
           label="Workflow Metrics"
@@ -118,6 +118,7 @@ function WorkflowsDashboardContent({
   data: WorkflowDashboardData;
   days: number;
 }) {
+  const colors = useSeriesColors();
   const { full: formatFullDate, short: formatShortDate } = useDateFormatters();
   const dxVsNonDxPivoted = pivotCumulativeSeries(
     data.dxVsNonDx,
@@ -287,7 +288,7 @@ function WorkflowsDashboardContent({
         <SimpleBarChart
           bars={[
             {
-              color: SERIES_COLORS.blue,
+              color: colors.blue,
               key: "weeklyDeploymentCount",
               name: "Deployments",
             },
@@ -302,9 +303,9 @@ function WorkflowsDashboardContent({
         <SimpleLineChart
           data={dxVsNonDxPivoted}
           lines={[
-            { color: SERIES_COLORS.blue, key: "dx", name: "DX Pipelines" },
+            { color: colors.blue, key: "dx", name: "DX Pipelines" },
             {
-              color: SERIES_COLORS.red,
+              color: colors.red,
               key: "non_dx",
               name: "Non-DX Pipelines",
             },
@@ -318,7 +319,7 @@ function WorkflowsDashboardContent({
         <SimpleBarChart
           bars={[
             {
-              color: SERIES_COLORS.red,
+              color: colors.red,
               key: "failedRuns",
               name: "Failed Runs",
             },
@@ -336,7 +337,7 @@ function WorkflowsDashboardContent({
         <SimpleBarChart
           bars={[
             {
-              color: SERIES_COLORS.blue,
+              color: colors.blue,
               key: "averageDurationMinutes",
               name: "Avg Duration",
             },
@@ -350,9 +351,7 @@ function WorkflowsDashboardContent({
           xKey="workflowName"
         />
         <SimpleBarChart
-          bars={[
-            { color: SERIES_COLORS.green, key: "runCount", name: "Run Count" },
-          ]}
+          bars={[{ color: colors.green, key: "runCount", name: "Run Count" }]}
           data={data.runCount}
           layout="vertical"
           sortKey="runCount"
@@ -365,7 +364,7 @@ function WorkflowsDashboardContent({
         <SimpleBarChart
           bars={[
             {
-              color: SERIES_COLORS.purple,
+              color: colors.purple,
               key: "cumulativeDurationMinutes",
               name: "Cumulative Duration",
             },
@@ -382,7 +381,7 @@ function WorkflowsDashboardContent({
           data={data.infraPlan}
           lines={[
             {
-              color: SERIES_COLORS.blue,
+              color: colors.blue,
               key: "durationMinutes",
               name: "Duration",
             },
@@ -397,7 +396,7 @@ function WorkflowsDashboardContent({
           data={data.infraApply}
           lines={[
             {
-              color: SERIES_COLORS.green,
+              color: colors.green,
               key: "durationMinutes",
               name: "Duration",
             },
@@ -417,13 +416,13 @@ function WorkflowsDashboardContent({
         <SimpleBarChart
           bars={[
             {
-              color: SERIES_COLORS.blue,
+              color: colors.blue,
               key: "automatic",
               name: "Automatic",
               stackId: "trigger",
             },
             {
-              color: SERIES_COLORS.amber,
+              color: colors.amber,
               key: "manual",
               name: "Manual",
               stackId: "trigger",
