@@ -25,7 +25,10 @@ const INLINE_SCRIPT_UNSAFE_CHAR_MAP: Record<string, string> = {
 };
 
 const escapeUnsafeForInlineScript = (value: string): string =>
-  value.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => INLINE_SCRIPT_UNSAFE_CHAR_MAP[ch]);
+  value.replace(
+    /[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g,
+    (ch) => INLINE_SCRIPT_UNSAFE_CHAR_MAP[ch],
+  );
 
 /** localStorage key holding the reader's explicit choice, if any. */
 export const themeStorageKey = "dx-metrics-theme";
