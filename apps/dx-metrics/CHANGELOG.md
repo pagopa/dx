@@ -1,3 +1,14 @@
+## 0.5.18 (2026-09-23)
+
+### 🚀 Features
+
+- Add a dark/light theme toggle and light mode to the metrics dashboards ([#2245](https://github.com/pagopa/dx/pull/2245))
+
+### ❤️ Thank You
+
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+- Danilo Spinelli @gunzip
+
 ## 0.5.17 (2026-09-22)
 
 ### 🩹 Fixes

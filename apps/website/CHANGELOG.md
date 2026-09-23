@@ -1,3 +1,13 @@
+## 0.22.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Document mise setup requirements ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.22.8 (2026-09-22)
 
 ### 🚀 Features
