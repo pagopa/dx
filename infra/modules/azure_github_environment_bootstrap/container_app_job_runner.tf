@@ -41,3 +41,48 @@ module "github_runner" {
 
   tags = local.tags
 }
+
+module "github_runner_dx" {
+  source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
+  version = "~> 3.0"
+
+  environment = {
+    prefix          = var.environment.prefix
+    env_short       = var.environment.env_short
+    location        = var.environment.location
+    domain          = var.environment.domain
+    instance_number = format("%02d", (tonumber(var.environment.instance_number) % 99) + 1)
+  }
+
+  resource_group_name = azurerm_resource_group.main.name
+
+  repository = {
+    owner = var.repository.owner
+    name  = var.repository.name
+  }
+
+  container_app_environment = {
+    id                          = var.github_private_runner.container_app_environment_id
+    location                    = var.environment.location
+    replica_timeout_in_seconds  = var.github_private_runner.replica_timeout_in_seconds
+    polling_interval_in_seconds = var.github_private_runner.polling_interval_in_seconds
+    min_instances               = var.github_private_runner.min_instances
+    max_instances               = var.github_private_runner.max_instances
+    use_labels                  = true
+    override_labels             = concat(var.github_private_runner.labels, ["dx"])
+    cpu                         = var.github_private_runner.cpu
+    memory                      = var.github_private_runner.memory
+    image                       = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+  }
+
+  key_vault = {
+    name                = var.github_private_runner.key_vault.name
+    resource_group_name = var.github_private_runner.key_vault.resource_group_name
+    secret_name         = var.github_private_runner.key_vault.secret_name
+    use_rbac            = var.github_private_runner.key_vault.use_rbac
+  }
+
+  use_github_app = var.github_private_runner.use_github_app
+
+  tags = local.tags
+}
