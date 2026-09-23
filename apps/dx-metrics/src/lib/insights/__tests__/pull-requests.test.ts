@@ -267,4 +267,64 @@ describe("buildPullRequestsInsights", () => {
       label: "#101 Slow rollout",
     });
   });
+
+  it("flags a stale open backlog above the threshold", () => {
+    const insights = buildPullRequestsInsights({
+      ...baseInput(),
+      openBacklog: { closedUnmerged: 2, openNow: 10, stale: 5 },
+    });
+
+    const stale = insights.find((insight) => insight.id === "pr-stale-backlog");
+
+    expect(stale?.severity).toBe("warning");
+    expect(stale?.title).toBe("Stale open pull requests");
+    expect(stale?.value?.current).toBe(5);
+    expect(stale?.value?.unit).toBe("PRs");
+    expect(stale?.detail).toContain(
+      "5 of 10 open pull requests have had no activity for more than 21 days",
+    );
+  });
+
+  it("reads a backlog with recent activity as positive", () => {
+    const insights = buildPullRequestsInsights({
+      ...baseInput(),
+      openBacklog: { closedUnmerged: 0, openNow: 8, stale: 0 },
+    });
+
+    const stale = insights.find((insight) => insight.id === "pr-stale-backlog");
+
+    expect(stale?.severity).toBe("positive");
+    expect(stale?.action).toBeUndefined();
+  });
+
+  it("omits the stale-backlog reading when no snapshot is provided", () => {
+    const insights = buildPullRequestsInsights(baseInput());
+
+    expect(insights.some((insight) => insight.id === "pr-stale-backlog")).toBe(
+      false,
+    );
+  });
+
+  it("links the stale pull requests when the repository is known", () => {
+    const insights = buildPullRequestsInsights(
+      {
+        ...baseInput(),
+        openBacklog: { closedUnmerged: 0, openNow: 4, stale: 2 },
+        stalePrs: [
+          { idleDays: 40, number: 201, title: "Forgotten change" },
+          { idleDays: 30, number: 202, title: "Old refactor" },
+        ],
+      },
+      "https://github.com/pagopa/dx",
+    );
+
+    const evidence = insights.find(
+      (insight) => insight.id === "pr-stale-backlog",
+    )?.evidence;
+
+    expect(evidence?.[0]).toEqual({
+      href: "https://github.com/pagopa/dx/pull/201",
+      label: "#201 Forgotten change · 40d idle",
+    });
+  });
 });

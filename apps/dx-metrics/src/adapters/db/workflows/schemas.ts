@@ -65,6 +65,11 @@ export const workflowSummarySchema = z.object({
   avgDurationMinutes: nullableSqlNumberSchema,
   failedDurationMinutes: nullableSqlNumberSchema,
   firstPipelineDate: nullableSqlTimestampSchema,
+  /** Same card metrics over the immediately preceding, equally-sized window. */
+  previousAvgDurationMinutes: nullableSqlNumberSchema,
+  previousFailedDurationMinutes: nullableSqlNumberSchema,
+  previousTotalDurationMinutes: nullableSqlNumberSchema,
+  previousTotalPipelines: nullableSqlNumberSchema,
   totalDurationMinutes: nullableSqlNumberSchema,
   totalPipelines: sqlNumberSchema,
 });

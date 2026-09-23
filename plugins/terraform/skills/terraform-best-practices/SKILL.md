@@ -37,6 +37,7 @@ Local KB paths to inspect, relative to the selected knowledge-base root (`DX_KB_
 - Infer values from existing Terraform before asking the user. Ask one focused question at a time only for values or decisions that cannot be inferred.
 - Use secure secret patterns: no secret values in Terraform code, variables, locals, outputs, `.tfvars`, app settings, or container environment variables.
 - Use `provider::dx::resource_name()` for resource names and `dx_available_subnet_cidr` for every new subnet.
+- Place workload resources in the repository's own resource group. The shared `common` resource group (from `azure_core_infra`) is reserved for subscription-level core resources such as the VNet, Key Vault, Log Analytics, Application Insights and NAT gateways; keep domain resources out of it.
 - Pin DX registry module versions with `~> major.minor`, using the module `module.json` as the source for the current version.
 - Never create `variables.tf` in root environment folders. Root environment configuration belongs in `locals.tf`; local modules own their own `variables.tf`.
 

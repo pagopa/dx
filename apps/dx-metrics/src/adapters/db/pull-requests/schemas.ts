@@ -32,6 +32,9 @@ export const prSummaryCardsSchema = z.object({
   avgLeadTime: nullableSqlNumberSchema,
   avgTimeToMerge: nullableSqlNumberSchema,
   contributors: nullableSqlNumberSchema,
+  previousAvgTimeToMerge: nullableSqlNumberSchema,
+  previousContributors: nullableSqlNumberSchema,
+  previousTotalPrs: nullableSqlNumberSchema,
   totalPrs: nullableSqlNumberSchema,
 });
 
@@ -90,6 +93,26 @@ export const slowestPrRowSchema = z.object({
   title: z.string().min(1),
 });
 
+/**
+ * Snapshot of the pull-request backlog: pull requests never merged, split into
+ * still-open, stale (no activity for longer than the stale target) and closed
+ * without being merged. The distinction matters because the daily "open PRs"
+ * series counts a PR as open until it closes, while this is a point-in-time view.
+ */
+export const prOpenBacklogRowSchema = z.object({
+  closedUnmerged: sqlNumberSchema,
+  openNow: sqlNumberSchema,
+  stale: sqlNumberSchema,
+});
+
+export const stalePrRowSchema = z.object({
+  author: z.string().min(1).nullable(),
+  idleDays: sqlNumberSchema,
+  number: sqlNumberSchema,
+  title: z.string().min(1),
+  updatedAt: sqlTimestampSchema,
+});
+
 export const prCountDataSchema = z.object({
   cumulatedNewPrs: z.array(prCumulativeCountRowSchema),
   mergedPrs: z.array(prDateCountRowSchema),
@@ -117,12 +140,14 @@ export const prDashboardSchema = z.object({
   leadTimeTrend: z.array(prLeadTimeTrendRowSchema),
   mergedPrs: z.array(prDateCountRowSchema),
   newPrs: z.array(prDateCountRowSchema),
+  openBacklog: prOpenBacklogRowSchema,
   prComments: z.array(prCommentsRowSchema),
   prSize: z.array(prSizeRowSchema),
   prSizeDistribution: z.array(prSizeDistributionRowSchema),
   prsByContributor: z.array(prsByContributorRowSchema),
   previousLeadTime: nullableSqlNumberSchema,
   slowestPrs: z.array(slowestPrRowSchema),
+  stalePrs: z.array(stalePrRowSchema),
   unmergedPrs: z.array(prOpenCountRowSchema),
 });
 

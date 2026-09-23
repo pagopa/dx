@@ -1,3 +1,31 @@
+## 0.2.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Correct the MCP Docker image registry namespace. ([#2234](https://github.com/pagopa/dx/pull/2234))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.16 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.15 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.9
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.2.14 (2026-09-01)
 
 ### 🩹 Fixes

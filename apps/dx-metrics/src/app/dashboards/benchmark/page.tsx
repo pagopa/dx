@@ -207,6 +207,9 @@ export default function BenchmarkDashboard() {
 
       {data && (
         <>
+          {/* No window range here: PR-based and workflow-based metrics are
+              anchored to their own reference dates, so a single exact range
+              would not describe the earlier of the two. */}
           <DataFreshness
             className="mb-4"
             referenceDate={data.meta.referenceDate}

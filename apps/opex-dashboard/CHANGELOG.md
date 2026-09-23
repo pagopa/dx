@@ -1,3 +1,9 @@
+## 0.2.15 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.2.14 (2026-09-11)
 
 ### 🩹 Fixes
