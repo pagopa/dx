@@ -69,7 +69,7 @@ module "github_runner_dx" {
     min_instances               = var.github_private_runner.min_instances
     max_instances               = var.github_private_runner.max_instances
     use_labels                  = true
-    override_labels             = ["dx", local.env_name]
+    override_labels             = concat(var.github_private_runner.labels, ["dx"])
     cpu                         = var.github_private_runner.cpu
     memory                      = var.github_private_runner.memory
     image                       = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
