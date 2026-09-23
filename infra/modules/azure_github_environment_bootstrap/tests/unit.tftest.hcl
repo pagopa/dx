@@ -294,7 +294,7 @@ run "azure_github_environment_bootstrap_dx_runner" {
   }
 
   assert {
-    condition     = strcontains(output.github_dx_runner.name, "dx")
+    condition     = output.github_dx_runner.name != output.github_private_runner.name
     error_message = "The DX GitHub self-hosted runner should use its distinct name"
   }
 }
