@@ -156,7 +156,7 @@ files.
 | **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).          |
 | **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account. |
 | **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.mdx#setting-up-a-github-app) section. |
-| **GitHub Runner App Client ID**                    | The `Client ID` retrieved in the same section.                                                                        |
+| **GitHub Runner App Client ID**                    | The `Client ID` retrieved in the same section.                                                                       |
 | **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
 | **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
 
@@ -174,7 +174,8 @@ CI=1 npx @pagopa/dx-cli add environment \
   --runner-app-id <runner-app-id> \
   --client-id <client-id> \
   --installation-id <installation-id> \
-  --private-key-path <path-to-private-key.pem>
+  --private-key-path <path-to-private-key.pem> \
+  -y
 ```
 
 If any Runner App value is missing in `CI=1` mode, the command stops with an

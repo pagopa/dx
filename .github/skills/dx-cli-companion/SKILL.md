@@ -165,16 +165,11 @@ CI=1 npx -y @pagopa/dx-cli add environment \
   --location <subscription-id>=<region> \
   --business-unit <business-unit> \
   --management-team <management-team> \
-  -y
-```
-
-If the initialization path requires GitHub Runner App credentials, extend the command with:
-
-```bash
   --runner-app-id <runner-app-id> \
   --client-id <client-id> \
   --installation-id <installation-id> \
-  --private-key-path <private-key-path>
+  --private-key-path <private-key-path> \
+  -y
 ```
 
 ### `add environment` Notes
