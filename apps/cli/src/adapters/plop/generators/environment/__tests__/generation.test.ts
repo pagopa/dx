@@ -54,6 +54,10 @@ const registerEnvironmentSetup = (
   mockCloudAccountService: CloudAccountService,
   mockGitHubService: GitHubService,
 ) => {
+  plop.setActionType(
+    "setupCloudTools",
+    async () => "Cloud CLI tools configured",
+  );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);

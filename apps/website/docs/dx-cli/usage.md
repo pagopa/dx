@@ -68,6 +68,10 @@ Scaffold new components in your project following DevEx guidelines.
 
 Add a new cloud environment following DevEx conventions.
 
+The command requires `mise`. During setup it adds the AWS and Azure CLIs (and
+the `uv` runtime required by the Azure CLI backend) to the repository's
+`mise.toml`, then refreshes `mise.lock`.
+
 **Always provisions**:
 
 - GitHub environments corresponding to the specified cloud environments
