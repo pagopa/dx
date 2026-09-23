@@ -17,6 +17,12 @@ Product managers use the PRD to align sponsors, engineers, designers,
 Legal/Compliance, Support/Operations, and other stakeholders before downstream
 solution design and delivery planning.
 
+## Shared glossary
+
+Before proceeding, read the shared plugin glossary at
+[`../../references/glossary.md`](../../references/glossary.md). Use its
+definitions to keep framework terminology consistent across plugin artifacts.
+
 ## When to Use This Skill
 
 Use this skill when the user wants to:
