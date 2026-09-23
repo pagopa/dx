@@ -54,6 +54,213 @@ locals {
 
   use_case_features = local.use_cases[var.use_case]
 
+  metric_namespace = "Microsoft.ApiManagement/service"
+
+  alert_thresholds = {
+    cost_optimized = {
+      sku                    = "StandardV2_1"
+      total_requests         = 10000
+      successful_requests    = 9500
+      failed_requests        = 100
+      unauthorized_requests  = 50
+      duration               = 500
+      capacity               = null
+      cpu_percent_gateway    = 80
+      memory_percent_gateway = 80
+    }
+    high_load = {
+      sku                    = "Premium_2"
+      total_requests         = 20000
+      successful_requests    = 19000
+      failed_requests        = 200
+      unauthorized_requests  = 100
+      duration               = 500
+      capacity               = 80
+      cpu_percent_gateway    = null
+      memory_percent_gateway = null
+    }
+  }
+
+  request_metric_alerts = {
+    for use_case, thresholds in local.alert_thresholds : use_case => {
+      total_requests = {
+        description      = "The total number of gateway requests is above the expected threshold. Monitor traffic and scale appropriately."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Total"
+          dimension              = []
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.total_requests
+        }]
+      }
+      successful_requests = {
+        description      = "The number of successful gateway requests is above the expected threshold. Ensure the success rate aligns with traffic volume."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCodeCategory"
+            operator = "Include"
+            values   = ["2xx", "3xx"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.successful_requests
+        }]
+      }
+      failed_requests = {
+        description      = "The number of server-side failed gateway requests is above the expected threshold. Investigate backend or configuration issues."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCodeCategory"
+            operator = "Include"
+            values   = ["5xx"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.failed_requests
+        }]
+      }
+      unauthorized_requests = {
+        description      = "The number of unauthorized gateway requests is above the expected threshold. Check authentication policies and tokens."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation = "Total"
+          dimension = [{
+            name     = "GatewayResponseCode"
+            operator = "Include"
+            values   = ["401", "403"]
+          }]
+          metric_name            = "Requests"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = thresholds.unauthorized_requests
+        }]
+      }
+    }
+  }
+
+  default_metric_alerts = {
+    development = {}
+    cost_optimized = merge(local.request_metric_alerts.cost_optimized, {
+      response_time = {
+        description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Duration"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = local.alert_thresholds.cost_optimized.duration
+        }]
+      }
+      cpu_percent_gateway = {
+        description      = "The average gateway CPU utilization is above the expected threshold. Consider scaling the API Management service."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "CpuPercent_Gateway"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = local.alert_thresholds.cost_optimized.cpu_percent_gateway
+        }]
+      }
+      memory_percent_gateway = {
+        description      = "The average gateway memory utilization is above the expected threshold. Consider scaling the API Management service."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "MemoryPercent_Gateway"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = local.alert_thresholds.cost_optimized.memory_percent_gateway
+        }]
+      }
+    })
+    high_load = merge(local.request_metric_alerts.high_load, {
+      response_time = {
+        description      = "The average gateway request duration is above the expected threshold. Optimize backend services or caching."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Duration"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = local.alert_thresholds.high_load.duration
+        }]
+      }
+      capacity = {
+        description      = "The average API Management capacity is above the expected threshold. Consider scaling or upgrading the tier."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Average"
+          dimension              = []
+          metric_name            = "Capacity"
+          metric_namespace       = local.metric_namespace
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = local.alert_thresholds.high_load.capacity
+        }]
+      }
+    })
+  }
+
+  metric_alerts = var.metric_alerts != null ? var.metric_alerts : local.default_metric_alerts[var.use_case]
+
   virtual_network_type                  = var.virtual_network_type_internal != null ? (var.virtual_network_type_internal ? "Internal" : "None") : local.use_case_features.virtual_network_type
   virtual_network_configuration_enabled = local.virtual_network_type == "Internal" || var.use_case == "cost_optimized" ? true : false
   public_network                        = var.enable_public_network_access
