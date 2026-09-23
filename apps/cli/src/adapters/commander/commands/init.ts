@@ -162,16 +162,6 @@ const trackMiseIsInstalled = (presenter: CommandPresenter) =>
     ),
   );
 
-const checkCorepack = () => tf$`corepack -v`;
-
-const trackCorepackIsInstalled = (presenter: CommandPresenter) =>
-  trackStep(
-    presenter,
-    "Checking Corepack installation...",
-    checkCorepack,
-    asError("Please install Corepack before running this command."),
-  );
-
 const azureAccountSchema = z.object({
   user: z.object({
     name: z.string().min(1),
@@ -238,8 +228,8 @@ export const runInitPreconditions = (presenter: CommandPresenter) =>
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter)
-    .andThen(() => trackAzLogin(presenter))
-    .andThen(() => trackCorepackIsInstalled(presenter));
+    .andThen(() => trackMiseIsInstalled(presenter))
+    .andThen(() => trackAzLogin(presenter));
 
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
