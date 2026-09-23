@@ -167,7 +167,7 @@ export function MetricCard({
         )}
       </p>
       <div className="mt-2 flex flex-wrap items-baseline">
-        <p className="text-3xl font-bold tracking-tighter text-foreground tabular-nums metric-value-glow">
+        <p className="text-3xl font-bold tracking-tighter text-foreground tabular-nums">
           {displayValue}
         </p>
         {suffix && (
