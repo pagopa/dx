@@ -6,7 +6,7 @@ tflint = "0.63"
 trivy = "0.74"
 
 [env]
-TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
+TFLINT_PLUGIN_DIR = "{{config_root}}/.tflint.d/plugins"
 
 [settings]
 idiomatic_version_file_enable_tools = ["node", "terraform"]
@@ -17,5 +17,6 @@ lockfile = true
 [deps.tflint]
 sources = [".tflint.hcl"]
 outputs = [".tflint.d/plugins"]
+run = "tflint --init"
 
 [deps.pnpm]

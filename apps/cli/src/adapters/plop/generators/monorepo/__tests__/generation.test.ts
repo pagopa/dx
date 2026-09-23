@@ -125,6 +125,7 @@ describe("monorepo generator — file generation", () => {
     expect(miseConfig).toContain(
       'idiomatic_version_file_enable_tools = ["node", "terraform"]',
     );
+    expect(miseConfig).toContain('run = "tflint --init"');
     for (const removedTool of [
       "acli",
       "act",
