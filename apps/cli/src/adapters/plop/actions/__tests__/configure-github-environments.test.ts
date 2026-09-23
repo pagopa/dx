@@ -64,12 +64,19 @@ describe("configureGitHubEnvironments", () => {
       configureGitHubEnvironment,
     );
     const gitHubService = createMockGitHubService();
+    const runnerAppCredentials = {
+      clientId: "client-id",
+      id: "app-id",
+      installationId: "installation-id",
+      key: "private-key",
+    };
     const payload = createMockPayload({
       env: {
         cloudAccounts: [account1, account2],
         name: "ced-prod",
         prefix: "ced",
       },
+      runnerAppCredentials,
     });
 
     await configureGitHubEnvironments(
@@ -84,18 +91,37 @@ describe("configureGitHubEnvironments", () => {
       payload.env,
       payload.github,
       gitHubService,
-      undefined,
+      runnerAppCredentials,
     );
     expect(configureGitHubEnvironment).toHaveBeenCalledWith(
       account2,
       payload.env,
       payload.github,
       gitHubService,
-      undefined,
+      runnerAppCredentials,
     );
   });
 
-  it("passes runner app credentials when the environment was initialized in the same run", async () => {
+  it("rejects configuration when Runner App credentials are missing", async () => {
+    const configureGitHubEnvironment = vi.fn().mockResolvedValue(undefined);
+    const cloudAccountService = createMockCloudAccountService(
+      configureGitHubEnvironment,
+    );
+    const gitHubService = createMockGitHubService();
+
+    await expect(
+      configureGitHubEnvironments(
+        createMockPayload(),
+        cloudAccountService,
+        gitHubService,
+      ),
+    ).rejects.toThrow(
+      "GitHub Runner App credentials are required to configure the GitHub environment",
+    );
+    expect(configureGitHubEnvironment).not.toHaveBeenCalled();
+  });
+
+  it("falls back to initialization credentials for compatibility", async () => {
     const configureGitHubEnvironment = vi.fn().mockResolvedValue(undefined);
     const cloudAccountService = createMockCloudAccountService(
       configureGitHubEnvironment,

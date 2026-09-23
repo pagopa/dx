@@ -33,6 +33,7 @@ export default function (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: InitialAnswers = {},
+  nonInteractive = false,
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
@@ -54,6 +55,7 @@ export default function (
       github,
       gitHubService,
       initialAnswers,
+      nonInteractive,
     }),
   });
 }

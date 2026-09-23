@@ -153,12 +153,14 @@ export const collectDeploymentEnvironmentPayload = async (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
   setDeploymentEnvironmentGenerator(
     plop,
     gitHubService,
     github,
     initialAnswers,
+    nonInteractive,
   );
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
@@ -194,6 +196,7 @@ export const setDeploymentEnvironmentGenerator = (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
@@ -213,5 +216,6 @@ export const setDeploymentEnvironmentGenerator = (
     gitHubService,
     github,
     initialAnswers,
+    nonInteractive,
   );
 };
