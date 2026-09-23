@@ -134,7 +134,6 @@ describe("makeAddCommand", () => {
         "--location <subscription-id=region>",
         "--prefix <prefix>",
         "--domain <domain>",
-        "--core-state-key <key>",
         "--business-unit <business-unit>",
         "--management-team <management-team>",
         "--runner-app-id <runner-app-id>",
@@ -167,8 +166,6 @@ describe("makeAddCommand", () => {
       "dx",
       "--domain",
       "payments",
-      "--core-state-key",
-      "dx.core.dev.tfstate",
       "--business-unit",
       "Platform",
       "--management-team",
@@ -180,7 +177,6 @@ describe("makeAddCommand", () => {
       expect.anything(),
       undefined,
       {
-        coreStateKey: "dx.core.dev.tfstate",
         env: {
           cloudAccountIds: ["sub-123", "sub-456"],
           locations: {

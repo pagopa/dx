@@ -109,8 +109,6 @@ const keyVaultDnsErrorSchema = z.object({
 const keyVaultDnsReadyMaxAttempts = 30;
 const keyVaultDnsReadyRetryDelayMs = 10_000;
 
-const TERRAFORM_STATE_CONTAINER = "terraform-state";
-
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
   #requiredResourceProviders = [
@@ -591,9 +589,8 @@ export class AzureCloudAccountService implements CloudAccountService {
       this.#credential,
     );
 
-    const containerClient = blobServiceClient.getContainerClient(
-      TERRAFORM_STATE_CONTAINER,
-    );
+    const containerClient =
+      blobServiceClient.getContainerClient("terraform-state");
 
     try {
       await containerClient.create();
@@ -614,35 +611,6 @@ export class AzureCloudAccountService implements CloudAccountService {
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
-  }
-
-  async terraformStateExists(
-    backend: TerraformBackend,
-    key: string,
-  ): Promise<boolean> {
-    const blobServiceClient = new BlobServiceClient(
-      `https://${backend.storageAccountName}.blob.core.windows.net`,
-      this.#credential,
-    );
-
-    try {
-      return await blobServiceClient
-        .getContainerClient(TERRAFORM_STATE_CONTAINER)
-        .getBlobClient(key)
-        .exists();
-    } catch (error: unknown) {
-      // Missing read permissions are treated as "state not found" so the caller
-      // can fall back to asking for the explicit core state key.
-      if (
-        error &&
-        typeof error === "object" &&
-        "statusCode" in error &&
-        error.statusCode === 403
-      ) {
-        return false;
-      }
-      throw error;
-    }
   }
 
   async #areProvidersRegistered(subscriptionId: string): Promise<boolean> {

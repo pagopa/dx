@@ -87,7 +87,6 @@ const createMockCloudAccountService = (
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(isInitialized),
   provisionTerraformBackend: vi.fn().mockResolvedValue(backend),
-  terraformStateExists: vi.fn().mockResolvedValue(true),
 });
 
 const createMockGitHubService = (): GitHubService => ({

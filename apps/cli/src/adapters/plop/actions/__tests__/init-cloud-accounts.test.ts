@@ -26,7 +26,6 @@ const createMockCloudAccountService = (
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
   provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
-  terraformStateExists: vi.fn().mockResolvedValue(true),
   ...overrides,
 });
 
