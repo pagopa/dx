@@ -19,6 +19,7 @@ const {
   extractTagEntriesFromPRBodyMock,
   getReleaseByTagMock,
   listPullsMock,
+  listReleasesMock,
 } = vi.hoisted(() => ({
   createReleaseMock: vi.fn(async () => undefined),
   execFilePromiseMock: vi.fn<
@@ -29,6 +30,7 @@ const {
   listPullsMock: vi.fn<() => Promise<{ data: PullListItem[] }>>(async () => ({
     data: [],
   })),
+  listReleasesMock: vi.fn(async () => ({ data: [] })),
 }));
 
 vi.mock("node:child_process", () => ({
@@ -45,6 +47,7 @@ vi.mock("../shared.js", () => ({
     repos: {
       createRelease: createReleaseMock,
       getReleaseByTag: getReleaseByTagMock,
+      listReleases: listReleasesMock,
     },
   }),
   extractTagEntriesFromPRBody: extractTagEntriesFromPRBodyMock,
@@ -55,11 +58,14 @@ import { run } from "../sync-tags-releases.js";
 
 describe("run", () => {
   beforeEach(() => {
-    createReleaseMock.mockClear();
+    createReleaseMock.mockReset();
+    createReleaseMock.mockResolvedValue(undefined);
     execFilePromiseMock.mockReset();
     extractTagEntriesFromPRBodyMock.mockReset();
     getReleaseByTagMock.mockReset();
     listPullsMock.mockClear();
+    listReleasesMock.mockClear();
+    listReleasesMock.mockResolvedValue({ data: [] });
   });
 
   it("creates a missing GitHub release even when the tag already exists remotely", async () => {
@@ -171,6 +177,51 @@ describe("run", () => {
     expect(execFilePromiseMock).not.toHaveBeenCalledWith(
       "git",
       expect.arrayContaining(["push", "origin", "--tags"]),
+    );
+
+    // Remote tags are snapshotted once, not probed per tag.
+    const lsRemoteCalls = execFilePromiseMock.mock.calls.filter(
+      ([file, args]) => file === "git" && args[0] === "ls-remote",
+    );
+    expect(lsRemoteCalls).toHaveLength(1);
+  });
+
+  it("treats an already-existing release as success when early stopping missed it", async () => {
+    listPullsMock.mockResolvedValue({
+      data: [
+        {
+          body: "<!-- nx-release-tags: [] -->",
+          merge_commit_sha: "abcdef0123456789",
+          merged_at: "2026-05-21T00:00:00Z",
+          number: 1783,
+        },
+      ],
+    });
+    extractTagEntriesFromPRBodyMock.mockReturnValue([
+      {
+        path: null,
+        tag: "docs@0.18.1",
+        version: "0.18.1",
+      },
+    ]);
+    // Release listing stops before this tag, so the sync tries to create it.
+    listReleasesMock.mockResolvedValue({ data: [] });
+    execFilePromiseMock.mockResolvedValue({ stderr: "", stdout: "" });
+    createReleaseMock.mockRejectedValue(
+      Object.assign(new Error("Validation Failed"), {
+        response: {
+          data: {
+            errors: [{ code: "already_exists", field: "tag_name" }],
+          },
+        },
+        status: 422,
+      }),
+    );
+
+    await expect(run("main")).resolves.toBeUndefined();
+
+    expect(createReleaseMock).toHaveBeenCalledWith(
+      expect.objectContaining({ tag_name: "docs@0.18.1" }),
     );
   });
 });

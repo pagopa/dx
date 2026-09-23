@@ -18351,6 +18351,7 @@ var PrDataSchema = external_exports.object({
   mergeCommit: external_exports.object({
     oid: external_exports.string()
   }).optional(),
+  mergedAt: external_exports.string().optional(),
   number: external_exports.number()
 });
 var PrDataArraySchema = external_exports.array(PrDataSchema);
@@ -18371,6 +18372,58 @@ async function extractChangelogSection(clPath, version2) {
   }
 }
 var getReleaseByTag404Error = /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
+var RELEASES_PER_PAGE = 100;
+var RELEASE_WINDOW_MARGIN_MS = 24 * 60 * 60 * 1e3;
+var AlreadyExistsErrorSchema = external_exports.object({
+  response: external_exports.object({
+    data: external_exports.object({
+      errors: external_exports.array(external_exports.object({ code: external_exports.string() })).optional()
+    }).optional()
+  }).optional(),
+  status: external_exports.number()
+});
+async function getExistingReleaseTags(octokit, owner, repo, candidateTags, notBefore) {
+  const found = /* @__PURE__ */ new Set();
+  const cutoff = notBefore === void 0 ? null : notBefore.getTime() - RELEASE_WINDOW_MARGIN_MS;
+  let page = 1;
+  let hasMore = true;
+  while (hasMore) {
+    const { data: releases } = await octokit.repos.listReleases({
+      owner,
+      page,
+      per_page: RELEASES_PER_PAGE,
+      repo
+    });
+    if (releases.length === 0) break;
+    let reachedCutoff = false;
+    for (const release of releases) {
+      found.add(release.tag_name);
+      if (cutoff !== null && Date.parse(release.created_at) < cutoff) {
+        reachedCutoff = true;
+      }
+    }
+    const allCandidatesFound = candidateTags.size > 0 && [...candidateTags].every((tag) => found.has(tag));
+    hasMore = !allCandidatesFound && !reachedCutoff && releases.length >= RELEASES_PER_PAGE;
+    page += 1;
+  }
+  return found;
+}
+async function getRemoteTagNames() {
+  const { stdout } = await execFileAsync2("git", [
+    "ls-remote",
+    "--tags",
+    "--refs",
+    "origin"
+  ]);
+  const tags = /* @__PURE__ */ new Set();
+  for (const line of stdout.split("\n")) {
+    const ref = line.trim().split("	")[1];
+    if (ref?.startsWith("refs/tags/")) {
+      tags.add(ref.slice("refs/tags/".length).replace(/\^\{\}$/, ""));
+    }
+  }
+  return tags;
+}
 async function releaseExists(octokit, owner, repo, tag) {
   try {
     await octokit.repos.getReleaseByTag({
@@ -18416,6 +18469,7 @@ async function run(base) {
   const mergedPrs = pulls.filter((pr) => pr.merged_at !== null).map((pr) => ({
     body: pr.body ?? "",
     mergeCommit: pr.merge_commit_sha ? { oid: pr.merge_commit_sha } : void 0,
+    mergedAt: pr.merged_at ?? void 0,
     number: pr.number
   }));
   const validationResult = PrDataArraySchema.safeParse(mergedPrs);
@@ -18437,9 +18491,28 @@ async function run(base) {
     console.log("No release tags found in merged Version Packages PRs");
     return;
   }
+  const candidateTags = new Set(allEntries.keys());
+  const oldestMergedAt = validatedPrs.map((pr) => pr.mergedAt).filter((value) => Boolean(value)).sort().at(0);
+  const notBefore = oldestMergedAt ? new Date(oldestMergedAt) : void 0;
+  const [remoteTags, existingReleaseTags] = await Promise.all([
+    getRemoteTagNames(),
+    getExistingReleaseTags(
+      octokit,
+      owner,
+      repo,
+      candidateTags,
+      notBefore
+    ).catch((err) => {
+      console.warn(
+        "Could not list existing releases, falling back to per-tag checks:",
+        err
+      );
+      return null;
+    })
+  ]);
   const newTags = [];
   for (const entry of allEntries.values()) {
-    if (await tagExistsOnRemote(entry.tag)) {
+    if (remoteTags.has(entry.tag)) {
       console.log(`Tag ${entry.tag} already exists, skipping`);
       continue;
     }
@@ -18467,35 +18540,42 @@ async function run(base) {
     }
   }
   for (const { path, tag, version: version2 } of allEntries.values()) {
+    const alreadyReleased = existingReleaseTags === null ? await releaseExists(octokit, owner, repo, tag) : existingReleaseTags.has(tag);
+    if (alreadyReleased) {
+      console.log(`GitHub release ${tag} already exists, skipping`);
+      continue;
+    }
     let notes = `Release ${tag}`;
     if (path) {
       const clPath = join(path, "CHANGELOG.md");
       const section = await extractChangelogSection(clPath, version2);
       if (section) notes = section;
     }
-    if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`GitHub release ${tag} already exists, skipping`);
-      continue;
+    try {
+      await octokit.repos.createRelease({
+        body: notes,
+        name: tag,
+        owner,
+        prerelease: version2.includes("-"),
+        repo,
+        tag_name: tag
+      });
+      console.log(`Created GitHub release: ${tag}`);
+    } catch (err) {
+      if (isAlreadyExistsError(err)) {
+        console.log(`GitHub release ${tag} already exists, skipping`);
+        continue;
+      }
+      throw err;
     }
-    await octokit.repos.createRelease({
-      body: notes,
-      name: tag,
-      owner,
-      prerelease: version2.includes("-"),
-      repo,
-      tag_name: tag
-    });
-    console.log(`Created GitHub release: ${tag}`);
   }
 }
-async function tagExistsOnRemote(tag) {
-  const { stdout } = await execFileAsync2("git", [
-    "ls-remote",
-    "--tags",
-    "origin",
-    `refs/tags/${tag}`
-  ]);
-  return stdout.trim().length > 0;
+function isAlreadyExistsError(err) {
+  const parsed = AlreadyExistsErrorSchema.safeParse(err);
+  if (!parsed.success || parsed.data.status !== 422) return false;
+  return (parsed.data.response?.data?.errors ?? []).some(
+    (e) => e.code === "already_exists"
+  );
 }
 if (import.meta.url === `file://${process.argv[1]}`) {
   run(process.env.BASE_BRANCH ?? "main").catch((err) => {
@@ -18520,4 +18600,4 @@ content-type/dist/index.js:
   (* v8 ignore else -- @preserve *)
 */
 
-export { extractChangelogSection, releaseExists, run, tagExistsOnRemote };
+export { extractChangelogSection, getExistingReleaseTags, getRemoteTagNames, releaseExists, run };

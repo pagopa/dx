@@ -34,6 +34,7 @@ const PrDataSchema = z.object({
       oid: z.string(),
     })
     .optional(),
+  mergedAt: z.string().optional(),
   number: z.number(),
 });
 
@@ -69,6 +70,120 @@ export async function extractChangelogSection(
 
 const getReleaseByTag404Error =
   /GET \/repos\/[^/]+\/[^/]+\/releases\/tags\/[^/]+ - 404\b/;
+
+/** Number of releases requested per page. */
+const RELEASES_PER_PAGE = 100;
+
+/**
+ * Safety margin applied to the recovery-window cutoff. The GitHub releases API
+ * is approximately but not strictly ordered by `created_at` (adjacent release
+ * runs can interleave by a few hours), so we keep paging slightly past the
+ * oldest candidate to avoid stopping before an existing release scrolls into
+ * view.
+ */
+const RELEASE_WINDOW_MARGIN_MS = 24 * 60 * 60 * 1000;
+
+const AlreadyExistsErrorSchema = z.object({
+  response: z
+    .object({
+      data: z
+        .object({
+          errors: z.array(z.object({ code: z.string() })).optional(),
+        })
+        .optional(),
+    })
+    .optional(),
+  status: z.number(),
+});
+
+/**
+ * Lists existing release tags, stopping once the recovery window is covered
+ * instead of paginating the entire repository history.
+ *
+ * `listReleases` returns releases newest-first, so releases for the tags in the
+ * recovery window sit near the top. Pagination stops when:
+ * - every candidate tag has been found (exact and ordering-independent), or
+ * - the page reaches releases older than the recovery-window cutoff, after
+ *   which no candidate release can exist, or
+ * - the last page is reached.
+ *
+ * Because the API ordering is only approximate, a candidate missed here is
+ * created optimistically by the caller, which treats an "already exists"
+ * response as success.
+ */
+export async function getExistingReleaseTags(
+  octokit: Octokit,
+  owner: string,
+  repo: string,
+  candidateTags: ReadonlySet<string>,
+  notBefore?: Date,
+): Promise<Set<string>> {
+  const found = new Set<string>();
+  const cutoff =
+    notBefore === undefined
+      ? null
+      : notBefore.getTime() - RELEASE_WINDOW_MARGIN_MS;
+
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const { data: releases } = await octokit.repos.listReleases({
+      owner,
+      page,
+      per_page: RELEASES_PER_PAGE,
+      repo,
+    });
+
+    if (releases.length === 0) break;
+
+    let reachedCutoff = false;
+    for (const release of releases) {
+      found.add(release.tag_name);
+      if (cutoff !== null && Date.parse(release.created_at) < cutoff) {
+        reachedCutoff = true;
+      }
+    }
+
+    const allCandidatesFound =
+      candidateTags.size > 0 &&
+      [...candidateTags].every((tag) => found.has(tag));
+
+    hasMore =
+      !allCandidatesFound &&
+      !reachedCutoff &&
+      releases.length >= RELEASES_PER_PAGE;
+    page += 1;
+  }
+
+  return found;
+}
+
+/**
+ * Fetches every tag currently on the remote in a single network round-trip.
+ *
+ * Probing each tag with its own `git ls-remote` call made this step take minutes
+ * on repositories with many tags, since the recovery window spans the tags of
+ * up to 20 merged PRs. Returns tag names without the `refs/tags/` prefix.
+ */
+export async function getRemoteTagNames(): Promise<Set<string>> {
+  const { stdout } = await execFileAsync("git", [
+    "ls-remote",
+    "--tags",
+    "--refs",
+    "origin",
+  ]);
+
+  const tags = new Set<string>();
+  for (const line of stdout.split("\n")) {
+    const ref = line.trim().split("\t")[1];
+    if (ref?.startsWith("refs/tags/")) {
+      // `--refs` omits peeled `^{}` entries, but strip them defensively anyway.
+      tags.add(ref.slice("refs/tags/".length).replace(/\^\{\}$/, ""));
+    }
+  }
+  return tags;
+}
 
 export async function releaseExists(
   octokit: Octokit,
@@ -132,6 +247,7 @@ export async function run(base: string): Promise<void> {
       mergeCommit: pr.merge_commit_sha
         ? { oid: pr.merge_commit_sha }
         : undefined,
+      mergedAt: pr.merged_at ?? undefined,
       number: pr.number,
     }));
 
@@ -160,9 +276,40 @@ export async function run(base: string): Promise<void> {
     return;
   }
 
+  // Bound the release lookup to the recovery window: releases are only needed
+  // for tags that came from these PRs, so pagination can stop around the oldest
+  // of their merge times instead of walking the whole repository history.
+  const candidateTags = new Set(allEntries.keys());
+  const oldestMergedAt = validatedPrs
+    .map((pr) => pr.mergedAt)
+    .filter((value): value is string => Boolean(value))
+    .sort()
+    .at(0);
+  const notBefore = oldestMergedAt ? new Date(oldestMergedAt) : undefined;
+
+  // Snapshot remote state once instead of probing each tag individually.
+  // Both checks below are network round-trips and the recovery window can span
+  // hundreds of tags across 20 merged PRs, so per-tag probing dominated runtime.
+  const [remoteTags, existingReleaseTags] = await Promise.all([
+    getRemoteTagNames(),
+    getExistingReleaseTags(
+      octokit,
+      owner,
+      repo,
+      candidateTags,
+      notBefore,
+    ).catch((err: unknown) => {
+      console.warn(
+        "Could not list existing releases, falling back to per-tag checks:",
+        err,
+      );
+      return null;
+    }),
+  ]);
+
   const newTags: (TagEntry & { mergeCommitSha?: string })[] = [];
   for (const entry of allEntries.values()) {
-    if (await tagExistsOnRemote(entry.tag)) {
+    if (remoteTags.has(entry.tag)) {
       console.log(`Tag ${entry.tag} already exists, skipping`);
       continue;
     }
@@ -197,6 +344,16 @@ export async function run(base: string): Promise<void> {
   }
 
   for (const { path, tag, version } of allEntries.values()) {
+    const alreadyReleased =
+      existingReleaseTags === null
+        ? await releaseExists(octokit, owner, repo, tag)
+        : existingReleaseTags.has(tag);
+
+    if (alreadyReleased) {
+      console.log(`GitHub release ${tag} already exists, skipping`);
+      continue;
+    }
+
     let notes = `Release ${tag}`;
 
     if (path) {
@@ -205,31 +362,35 @@ export async function run(base: string): Promise<void> {
       if (section) notes = section;
     }
 
-    if (await releaseExists(octokit, owner, repo, tag)) {
-      console.log(`GitHub release ${tag} already exists, skipping`);
-      continue;
+    try {
+      await octokit.repos.createRelease({
+        body: notes,
+        name: tag,
+        owner,
+        prerelease: version.includes("-"),
+        repo,
+        tag_name: tag,
+      });
+      console.log(`Created GitHub release: ${tag}`);
+    } catch (err: unknown) {
+      // Early stopping means a pre-existing release may not have been listed.
+      // Creating it again is rejected with `already_exists`, which is success.
+      if (isAlreadyExistsError(err)) {
+        console.log(`GitHub release ${tag} already exists, skipping`);
+        continue;
+      }
+      throw err;
     }
-
-    await octokit.repos.createRelease({
-      body: notes,
-      name: tag,
-      owner,
-      prerelease: version.includes("-"),
-      repo,
-      tag_name: tag,
-    });
-    console.log(`Created GitHub release: ${tag}`);
   }
 }
 
-export async function tagExistsOnRemote(tag: string): Promise<boolean> {
-  const { stdout } = await execFileAsync("git", [
-    "ls-remote",
-    "--tags",
-    "origin",
-    `refs/tags/${tag}`,
-  ]);
-  return stdout.trim().length > 0;
+/** True when GitHub rejected a create because the resource already exists. */
+function isAlreadyExistsError(err: unknown): boolean {
+  const parsed = AlreadyExistsErrorSchema.safeParse(err);
+  if (!parsed.success || parsed.data.status !== 422) return false;
+  return (parsed.data.response?.data?.errors ?? []).some(
+    (e) => e.code === "already_exists",
+  );
 }
 
 if (import.meta.url === `file://${process.argv[1]}`) {
