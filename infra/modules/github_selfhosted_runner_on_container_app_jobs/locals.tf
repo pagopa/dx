@@ -5,7 +5,7 @@ locals {
     environment = var.environment.env_short,
     location    = var.environment.location
     # max 32 characters, minus prefix length (2/4), instance number (2), location (3) and environment (1)
-    name            = trimsuffix(substr(var.repository.name, 0, (18 - length(var.environment.prefix))), "-"),
+    name            = var.runner_name != null ? var.runner_name : trimsuffix(substr(var.repository.name, 0, (18 - length(var.environment.prefix))), "-"),
     instance_number = tonumber(var.environment.instance_number),
   }
   env = {
@@ -42,4 +42,3 @@ locals {
   key_vault_id  = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.key_vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.key_vault.name}")
   key_vault_uri = "https://${var.key_vault.name}.vault.azure.net/"
 }
-

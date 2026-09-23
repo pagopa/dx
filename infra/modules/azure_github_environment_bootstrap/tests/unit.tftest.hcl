@@ -274,3 +274,16 @@ run "azure_github_environment_bootstrap_opex_identities" {
   }
 }
 
+run "azure_github_environment_bootstrap_dx_runner" {
+  command = plan
+
+  assert {
+    condition     = output.github_dx_runner != null
+    error_message = "The DX GitHub self-hosted runner should be provisioned"
+  }
+
+  assert {
+    condition     = strcontains(output.github_dx_runner.name, "dx")
+    error_message = "The DX GitHub self-hosted runner should use its distinct name"
+  }
+}

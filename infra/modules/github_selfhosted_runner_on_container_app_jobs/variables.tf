@@ -9,6 +9,12 @@ variable "resource_group_name" {
   default     = null
 }
 
+variable "runner_name" {
+  type        = string
+  description = "Optional name used to distinguish the Container App Job from other runners deployed for the same repository."
+  default     = null
+}
+
 variable "environment" {
   type = object({
     prefix          = string

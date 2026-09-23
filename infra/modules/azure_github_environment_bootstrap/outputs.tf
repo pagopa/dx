@@ -24,6 +24,15 @@ output "github_private_runner" {
   }
 }
 
+output "github_dx_runner" {
+  description = "Details of the DX GitHub self-hosted runner, including ID, name, and resource group name."
+  value = {
+    id                  = module.github_runner_dx.container_app_job.id
+    name                = module.github_runner_dx.container_app_job.name
+    resource_group_name = module.github_runner_dx.container_app_job.resource_group_name
+  }
+}
+
 output "subscription_id" {
   description = "The Azure Subscription ID of the Terraform state file."
   value       = data.azurerm_subscription.current.subscription_id
