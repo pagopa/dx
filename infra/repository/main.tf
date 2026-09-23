@@ -12,10 +12,10 @@ module "github_repository" {
     pages_enabled          = false
     has_projects           = true
     has_issues             = true
-    app_cd_policy_tags     = ["@pagopa/dx-mcpserver@**", "docs@**"]
+    app_cd_policy_tags     = ["@pagopa/dx-mcpserver@**", "docs@**", "dx-metrics@**"]
     homepage_url           = "https://dx.pagopa.it"
     pull_request_bypassers = ["/dx-pagopa-bot"]
-    environments           = ["dev", "prod"]
+    environments           = ["dev", "uat", "prod"]
     jira_boards_ids        = ["CES", "AEPDF"]
   }
 }

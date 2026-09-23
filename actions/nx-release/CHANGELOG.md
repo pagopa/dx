@@ -1,3 +1,31 @@
+## 0.3.12 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.3.11 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.3.10 (2026-09-11)
+
+### 🩹 Fixes
+
+- Bump `js-yaml` from 4.3.1 to 4.3.2, picking up the fix for GHSA-2883-xcg3-v3hh (unbounded CPU usage when merging empty mappings). ([#2178](https://github.com/pagopa/dx/pull/2178))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+
 ## 0.3.9 (2026-09-01)
 
 ### 🧱 Updated Dependencies

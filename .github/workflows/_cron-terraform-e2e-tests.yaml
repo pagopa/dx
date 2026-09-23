@@ -19,8 +19,8 @@ env:
 jobs:
   terraform-e2e-tests:
     name: Run Terraform E2E Tests
-    runs-on: dev
-    environment: automation-dev-cd
+    runs-on: uat
+    environment: automation-uat-cd
     permissions:
       actions: write
       id-token: write

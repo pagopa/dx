@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json as _json
 import tomllib
 from pathlib import Path
 
@@ -11,7 +12,7 @@ from harbor_bench import task_shape
 from harbor_bench.convert.discover import load_evals_file
 from harbor_bench.convert.schema import resolve_eval_paths
 from harbor_bench.convert.task import (
-    DEFAULT_TASK_TOML,
+    GENERATED_TASK_FILES,
     TaskSpec,
     generate_task,
     generate_task_atomic,
@@ -27,9 +28,6 @@ def skill(tmp_path: Path) -> Path:
     (skill / "evals").mkdir(parents=True)
     (skill / "SKILL.md").write_text("# Test")
     (skill / "harbor").mkdir()
-    (skill / "harbor" / "workspace").mkdir()
-    (skill / "harbor" / "workspace" / "core.txt").write_text("core")
-    import json as _json
 
     (skill / "evals" / "evals.json").write_text(
         _json.dumps(
@@ -55,8 +53,8 @@ def make_spec(
     skill: Path,
     case_id: int = 1,
     *,
-    workspace_dir: Path | None = None,
-    env_overrides: dict | None = None,
+    overlay: dict[str, Path] | None = None,
+    run_level_overrides: dict | None = None,
     paths: dict | None = None,
 ) -> TaskSpec:
     """Build a fully-resolved TaskSpec for ``case_id`` in ``skill``."""
@@ -68,18 +66,16 @@ def make_spec(
         skill_name=evals.skill_name,
         case=case,
         paths=paths if paths is not None else resolved[case_id],
-        workspace_dir=workspace_dir,
-        env_overrides=env_overrides,
+        overlay=overlay or {},
+        run_level_overrides=run_level_overrides,
     )
 
 
 def test_generate_task_structure(skill: Path, tmp_path: Path):
     task_root = tmp_path / "task"
-    created = generate_task(
-        make_spec(skill, workspace_dir=skill / "harbor" / "workspace"), task_root
-    )
+    created = generate_task(make_spec(skill), task_root)
 
-    assert "core.txt" in created
+    assert created == []
     # required files per Harbor TaskPaths
     assert (task_root / "task.toml").is_file()
     assert (task_root / "instruction.md").is_file()
@@ -90,7 +86,6 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
 
     toml = tomllib.loads((task_root / "task.toml").read_text())
     assert toml["task"]["name"].startswith("pagopa/")
-    assert (task_root / "environment" / "core.txt").read_text() == "core"
     assert toml["verifier"]["env"] == task_shape.JUDGE_BRIDGE_ENV
     # separate verifier env (default): dedicated container, artifacts declared
     assert toml["verifier"]["environment_mode"] == "separate"
@@ -110,25 +105,23 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert all(c["type"] == "binary" for c in quality["criterion"])
 
 
-def test_generate_task_empty_workspace(skill: Path, tmp_path: Path):
-    task_root = tmp_path / "task2"
-    created = generate_task(make_spec(skill), task_root)
-    assert created == []
-    assert not list((task_root / "environment").iterdir()) or (
-        task_root / "environment" / "Dockerfile"
-    ).is_file()
+def test_generate_task_writes_exactly_the_generated_file_set(
+    skill: Path, tmp_path: Path
+):
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+    generated = {
+        p.relative_to(task_root).as_posix()
+        for p in task_root.rglob("*")
+        if p.is_file()
+    }
+    assert generated == set(GENERATED_TASK_FILES)
 
 
-def test_env_overrides_merge(skill: Path, tmp_path: Path):
-    task_root = tmp_path / "task3"
-    generate_task(
-        make_spec(skill, env_overrides={"agent": {"timeout_sec": 42.0}}),
-        task_root,
-    )
-    toml = tomllib.loads((task_root / "task.toml").read_text())
-    assert toml["agent"]["timeout_sec"] == 42.0
-    # skeleton defaults still present
-    assert toml["schema_version"] == DEFAULT_TASK_TOML["schema_version"]
+def test_instruction_md_is_the_prompt_only(skill: Path, tmp_path: Path):
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+    assert (task_root / "instruction.md").read_text() == "do the thing\n"
 
 
 def test_task_dir_name_includes_case_id():
@@ -138,6 +131,111 @@ def test_task_dir_name_includes_case_id():
     assert task_dir_name("skill", 1, "same") != task_dir_name("skill", 2, "same")
     assert task_name("skill-1-case-one") == "pagopa/skill-1-case-one"
     assert task_name("skill-2") == "pagopa/skill-2"
+
+
+def test_overlay_replaces_a_generated_file(skill: Path, tmp_path: Path):
+    source = tmp_path / "override-solve.sh"
+    source.write_text("#!/bin/sh\necho overridden\n")
+    task_root = tmp_path / "task"
+    generate_task(
+        make_spec(skill, overlay={"solution/solve.sh": source}), task_root
+    )
+    assert (task_root / "solution" / "solve.sh").read_text() == (
+        "#!/bin/sh\necho overridden\n"
+    )
+    # non-overlaid files keep their generated content
+    toml = tomllib.loads((task_root / "task.toml").read_text())
+    assert toml["task"]["name"] == "pagopa/test-skill-1-case-one"
+
+
+def test_overlay_adds_files_into_environment(skill: Path, tmp_path: Path):
+    prepare = tmp_path / "prepare.sh"
+    prepare.write_text("#!/bin/sh\necho prepared\n")
+    data = tmp_path / "seed.csv"
+    data.write_text("a,b\n")
+    task_root = tmp_path / "task"
+    generate_task(
+        make_spec(
+            skill,
+            overlay={
+                "environment/prepare.sh": prepare,
+                "environment/data/seed.csv": data,
+            },
+        ),
+        task_root,
+    )
+    # extra files land in the container context/workspace ...
+    assert (task_root / "environment" / "prepare.sh").read_text() == (
+        "#!/bin/sh\necho prepared\n"
+    )
+    assert (task_root / "environment" / "data" / "seed.csv").read_text() == "a,b\n"
+    # ... and the generated Dockerfile still runs a prepare.sh when present
+    dockerfile = (task_root / "environment" / "Dockerfile").read_text()
+    assert "prepare.sh" in dockerfile
+
+
+def test_overlay_cannot_clobber_a_per_eval_fixture(skill: Path, tmp_path: Path):
+    # a per-eval fixture staged from evals.json may not be silently overridden
+    fixture = tmp_path / "seed.txt"
+    fixture.write_text("from evals")
+    overlay_source = tmp_path / "seed-override.txt"
+    overlay_source.write_text("from overlay")
+
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    resolved = resolve_eval_paths(evals, skill)
+    resolved[1]["files"] = [fixture]
+
+    with pytest.raises(WorkspaceError, match="overwrite a per-eval fixture"):
+        generate_task(
+            make_spec(
+                skill,
+                paths=resolved[1],
+                overlay={"environment/seed.txt": overlay_source},
+            ),
+            tmp_path / "task",
+        )
+
+
+def test_run_level_overrides_reapplied_over_final_task_toml(
+    skill: Path, tmp_path: Path
+):
+    task_root = tmp_path / "task"
+    generate_task(
+        make_spec(
+            skill,
+            run_level_overrides={
+                "verifier": {"env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}}
+            },
+        ),
+        task_root,
+    )
+    toml = tomllib.loads((task_root / "task.toml").read_text())
+    assert toml["verifier"]["env"]["SKILL_EVAL_ENFORCE_SKILL_USE"] == "false"
+    # converter defaults survive the re-application
+    assert toml["schema_version"] == "1.4"
+
+
+def test_run_level_overrides_win_over_an_overridden_task_toml(
+    skill: Path, tmp_path: Path
+):
+    toml_source = tmp_path / "task.toml"
+    toml_source.write_text("[agent]\ntimeout_sec = 42.0\n")
+    task_root = tmp_path / "task"
+    generate_task(
+        make_spec(
+            skill,
+            overlay={"task.toml": toml_source},
+            run_level_overrides={
+                "verifier": {"env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}}
+            },
+        ),
+        task_root,
+    )
+    toml = tomllib.loads((task_root / "task.toml").read_text())
+    # the author's full replacement survives ...
+    assert toml["agent"] == {"timeout_sec": 42.0}
+    # ... and the run-level gate is re-applied on top
+    assert toml["verifier"]["env"]["SKILL_EVAL_ENFORCE_SKILL_USE"] == "false"
 
 
 def test_generate_task_atomic_preserves_previous_on_failure(
@@ -194,83 +292,19 @@ def test_generated_dockerfile_deterministic_git_baseline(
     assert last_run.index("git init") < last_run.index("git commit")
 
 
-def _write_evals(skill: Path, *, cases: list[dict] | None = None) -> None:
-    import json as _json
-
-    data: dict = {
-        "skill_name": "test-skill",
-        "evals": cases
-        or [
-            {
-                "id": 1,
-                "name": "case-one",
-                "prompt": "do the thing",
-                "expected_output": "the thing done",
-                "expectations": ["inspects repo"],
-                "files": [],
-            }
-        ],
-    }
-    (skill / "evals" / "evals.json").write_text(_json.dumps(data))
-
-
-def _generate(skill: Path, task_root: Path) -> None:
-    generate_task(make_spec(skill), task_root)
-
-
-def test_leftover_harbor_files_do_not_override_generated_files(
+def test_per_eval_fixture_named_like_generated_file_is_rejected(
     skill: Path, tmp_path: Path
 ):
-    (skill / "harbor" / "task.toml").write_text(
-        '[task]\nname = "leftover-task"\n'
-    )
-    (skill / "harbor" / "quality.toml").write_text("leftover quality\n")
+    # a per-eval fixture cannot silently shadow the generated environment
+    # Dockerfile: customization goes through the harbor/ overlay instead
+    fixture_dir = tmp_path / "fixtures"
+    fixture_dir.mkdir()
+    dockerfile_fixture = fixture_dir / "Dockerfile"
+    dockerfile_fixture.write_text("FROM nope\n")
 
-    task_root = tmp_path / "task"
-    _generate(skill, task_root)
+    evals, _ = load_evals_file(skill / "evals" / "evals.json")
+    resolved = resolve_eval_paths(evals, skill)
+    resolved[1]["files"] = [dockerfile_fixture]
 
-    toml = tomllib.loads((task_root / "task.toml").read_text())
-    assert toml["task"]["name"] == "pagopa/test-skill-1-case-one"
-    assert toml["agent"]["timeout_sec"] == 900.0
-    assert "leftover-task" not in (task_root / "task.toml").read_text()
-    assert "leftover quality" not in (task_root / "tests" / "quality.toml").read_text()
-
-
-def test_prepare_script_copied_into_workspace(skill: Path, tmp_path: Path):
-    skill_dir = skill
-    (skill_dir / "harbor" / "prepare.sh").write_text(
-        "#!/bin/sh\necho prepared > /workspace/status.txt\n"
-    )
-    task_root = tmp_path / "task"
-    _generate(skill_dir, task_root)
-
-    prepare = task_root / "environment" / "prepare.sh"
-    assert prepare.is_file()
-    assert "prepared" in prepare.read_text()
-    # the generated Dockerfile runs it at build time, before the git baseline
-    dockerfile = (task_root / "environment" / "Dockerfile").read_text()
-    assert "prepare.sh" in dockerfile
-    assert dockerfile.index("prepare.sh") < dockerfile.index("git init")
-
-
-def test_prepare_script_per_eval_override(skill: Path, tmp_path: Path):
-    skill_dir = skill
-    (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
-    (skill_dir / "harbor" / "case-one").mkdir()
-    (skill_dir / "harbor" / "case-one" / "prepare.sh").write_text("case prepare")
-    task_root = tmp_path / "task"
-    _generate(skill_dir, task_root)
-    assert (task_root / "environment" / "prepare.sh").read_text() == "case prepare"
-
-
-def test_prepare_script_collision_rejected(skill: Path, tmp_path: Path):
-    skill_dir = skill
-    # a fixture layer already ships prepare.sh
-    (skill_dir / "harbor" / "workspace" / "prepare.sh").write_text("fixture")
-    (skill_dir / "harbor" / "prepare.sh").write_text("suite prepare")
-    task_root = tmp_path / "task"
-    with pytest.raises(WorkspaceError, match="prepare.sh"):
-        generate_task(
-            make_spec(skill_dir, workspace_dir=skill_dir / "harbor" / "workspace"),
-            task_root,
-        )
+    with pytest.raises(WorkspaceError, match="generated environment file"):
+        generate_task(make_spec(skill, paths=resolved[1]), tmp_path / "task")

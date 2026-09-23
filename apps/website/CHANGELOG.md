@@ -1,3 +1,75 @@
+## 0.22.8 (2026-09-22)
+
+### 🚀 Features
+
+- Add XState to the technology radar. ([#2193](https://github.com/pagopa/dx/pull/2193))
+- Add @pagopa/eslint-config to the technology radar in the Adopt ring. ([#2226](https://github.com/pagopa/dx/pull/2226))
+- Add Drizzle to the technology radar in the Trial ring. ([#2227](https://github.com/pagopa/dx/pull/2227))
+
+### 🩹 Fixes
+
+- Align DX plugins with Agent Plugins 1.0 ([#2207](https://github.com/pagopa/dx/pull/2207))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- LazyAfternoons @LazyAfternoons
+- Marco Comi @kin0992
+
+## 0.22.7 (2026-09-16)
+
+### 🚀 Features
+
+- Add Azure App Configuration to technology radar in the Assess ring. ([#2197](https://github.com/pagopa/dx/pull/2197))
+- Add mise to technology radar as a polyglot tool version manager in the Adopt ring. ([#2196](https://github.com/pagopa/dx/pull/2196))
+
+### 🩹 Fixes
+
+- Correct Azure Entra group naming in the setup and IAM documentation to use the Technology-owned singular `admin` name without domain-qualified suffixes. ([#2194](https://github.com/pagopa/dx/pull/2194))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.22.6 (2026-09-15)
+
+### 🚀 Features
+
+- Add Expo to the Technology Radar ([#2187](https://github.com/pagopa/dx/pull/2187))
+
+### ❤️ Thank You
+
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.5 (2026-09-11)
+
+### 🚀 Features
+
+- Replace Flipper with Reactotron on technology radar ([#2183](https://github.com/pagopa/dx/pull/2183))
+- Add Proxyman to technology radar ([#2184](https://github.com/pagopa/dx/pull/2184))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.4 (2026-09-10)
+
+### 🩹 Fixes
+
+- Fix the Oxlint and Oxfmt technology radar entry descriptions to reference the Trial ring. ([#2179](https://github.com/pagopa/dx/pull/2179))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.22.3 (2026-09-01)
 
 ### 🚀 Features

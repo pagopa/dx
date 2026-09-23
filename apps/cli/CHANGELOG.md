@@ -1,3 +1,46 @@
+## 0.27.7 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+
+### 🩹 Fixes
+
+- Align Azure subscription authorization with the Technology-owned group contract by managing only `admin`, `developers`, and `externals` with `Contributor`, `Reader`, and `Reader` roles while preserving organizational groups. ([#2181](https://github.com/pagopa/dx/pull/2181))
+- Stop generating devcontainers during init ([#2217](https://github.com/pagopa/dx/pull/2217))
+- Reuse the bootstrapper release workflow and configure GitHub App telemetry login centrally ([#2223](https://github.com/pagopa/dx/pull/2223))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-savemoney to 0.6.7
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.27.6 (2026-09-15)
+
+### 🩹 Fixes
+
+- Authorize both bootstrap CI and CD identities as Azure Directory Readers. ([#2176](https://github.com/pagopa/dx/pull/2176))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.27.5 (2026-09-11)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.6
+
 ## 0.27.4 (2026-09-02)
 
 ### 🧱 Updated Dependencies

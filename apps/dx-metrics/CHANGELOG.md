@@ -1,3 +1,48 @@
+## 0.5.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add preceding-window deltas to every summary card, a stale open-PR backlog reading with links to the pull requests, merge-ownership charts, and grouped sidebar navigation. ([#2230](https://github.com/pagopa/dx/pull/2230))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.16 (2026-09-16)
+
+### 🚀 Features
+
+- Rework DX Metrics for trustworthiness and readability: ([#2205](https://github.com/pagopa/dx/pull/2205))
+
+  - `dx-metrics`: deterministic insights (sample size, confidence, severity) on every dashboard, aggregated into a single Executive Summary landing page served by one server-side endpoint; a cross-repository Benchmark dashboard; human-only review timing and equal-window lead-time comparison; ranked bar charts with units, locale-aware dates, data freshness, and loading skeletons.
+  - `dx-metrics-import`: capture an append-only techradar adoption snapshot after each import run.
+  - `@pagopa/dx-metrics-core`: add the `tech_radar_snapshots` table and new indexes on pull requests, workflow runs, commits, and reviews. Apply with `drizzle-kit push`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.8
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.15 (2026-09-09)
+
+### 🩹 Fixes
+
+- Update `next` from 16.3.2 to 16.3.4 (`^16.3.3`) to pick up the security fixes ([#2177](https://github.com/pagopa/dx/pull/2177))
+  released in 16.3.3 (GHSA-p293-qw3h-jr36, GHSA-2xp9-vwfh-vxw4), together with the
+  patched transitive deps it brings (`sharp` 0.35.4, `nanoid` 3.3.18, `js-yaml`
+  3.15.2).
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.14 (2026-09-01)
 
 ### 🩹 Fixes

@@ -1,3 +1,29 @@
+## 0.5.9 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add configurable Terraform provider lock platforms to the init task. ([#2203](https://github.com/pagopa/dx/pull/2203))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-tasks to 0.2.6
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.8 (2026-09-08)
+
+### 🩹 Fixes
+
+- Isolate Trivy caches per Terraform project to support parallel scans. ([#2150](https://github.com/pagopa/dx/pull/2150))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 0.5.7 (2026-09-04)
 
 ### 🚀 Features

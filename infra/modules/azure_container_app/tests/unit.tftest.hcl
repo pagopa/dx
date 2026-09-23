@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -11,7 +11,7 @@ variables {
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_container_app/tests"
     ManagementTeam = "Developer Experience"
@@ -43,7 +43,7 @@ run "container_app_default_configuration" {
   command = plan
 
   assert {
-    condition     = azurerm_container_app.this.name == "dx-d-itn-modules-test-ca-01"
+    condition     = azurerm_container_app.this.name == "dx-u-itn-modules-test-ca-01"
     error_message = "Container App name must follow naming convention"
   }
 
@@ -489,7 +489,7 @@ run "container_app_custom_scaler" {
           custom_rule_type = "azure-servicebus"
           metadata = {
             queueName              = "my-queue"
-            namespace              = "dx-d-itn-test-sbns-01"
+            namespace              = "dx-u-itn-test-sbns-01"
             activationMessageCount = "2"
           }
         }

@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "test"
     instance_number = "02"
@@ -23,20 +23,20 @@ variables {
   }
 
   github_private_runner = {
-    container_app_environment_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-github-runner-rg-01/providers/Microsoft.App/managedEnvironments/dx-d-itn-github-runner-cae-01"
+    container_app_environment_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-github-runner-rg-01/providers/Microsoft.App/managedEnvironments/dx-u-itn-github-runner-cae-01"
     key_vault = {
-      name                = "dx-d-itn-common-kv-01"
-      resource_group_name = "dx-d-itn-common-rg-01"
+      name                = "dx-u-itn-common-kv-01"
+      resource_group_name = "dx-u-itn-common-rg-01"
     }
   }
 
-  private_dns_zone_resource_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-common-rg-01"
-  opex_resource_group_id             = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-opex-rg-01"
+  private_dns_zone_resource_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-common-rg-01"
+  opex_resource_group_id             = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"
 
   tags = {
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_github_environment_bootstrap/tests"
     ManagementTeam = "Developer Experience"
@@ -46,7 +46,18 @@ variables {
 }
 
 mock_provider "azurerm" {}
-mock_provider "github" {}
+mock_provider "github" {
+  mock_data "github_organization" {
+    defaults = {
+      id = "57742367"
+    }
+  }
+  mock_data "github_repository" {
+    defaults = {
+      repo_id = 1373623344
+    }
+  }
+}
 mock_provider "dx" {}
 
 override_data {
@@ -55,7 +66,7 @@ override_data {
     id              = "/subscriptions/00000000-0000-0000-0000-000000000000"
     subscription_id = "00000000-0000-0000-0000-000000000000"
     tenant_id       = "11111111-1111-1111-1111-111111111111"
-    display_name    = "PagoPA Dev"
+    display_name    = "PagoPA Uat"
   }
 }
 
@@ -112,12 +123,12 @@ run "azure_github_environment_bootstrap_app_identities" {
   command = plan
 
   assert {
-    condition     = azurerm_user_assigned_identity.app_ci.name == "dx-d-itn-test-app-github-ci-id-02"
+    condition     = azurerm_user_assigned_identity.app_ci.name == "dx-u-itn-test-app-github-ci-id-02"
     error_message = "The App CI user assigned identity has the wrong name"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_app_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:app-dev-ci"
+    condition     = azurerm_federated_identity_credential.github_app_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:app-uat-ci"
     error_message = "The App CI GitHub federation has the wrong subject"
   }
 
@@ -132,12 +143,12 @@ run "azure_github_environment_bootstrap_app_identities" {
   }
 
   assert {
-    condition     = azurerm_user_assigned_identity.app_cd.name == "dx-d-itn-test-app-github-cd-id-02"
+    condition     = azurerm_user_assigned_identity.app_cd.name == "dx-u-itn-test-app-github-cd-id-02"
     error_message = "The App CD user assigned identity has the wrong name"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_app_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:app-dev-cd"
+    condition     = azurerm_federated_identity_credential.github_app_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:app-uat-cd"
     error_message = "The App CD GitHub federation has the wrong subject"
   }
 
@@ -161,22 +172,22 @@ run "azure_github_environment_bootstrap_infra_identities" {
   command = plan
 
   assert {
-    condition     = azurerm_user_assigned_identity.infra_ci.name == "dx-d-itn-test-infra-github-ci-id-02"
+    condition     = azurerm_user_assigned_identity.infra_ci.name == "dx-u-itn-test-infra-github-ci-id-02"
     error_message = "The Infra CI user assigned identity has the wrong name"
   }
 
   assert {
-    condition     = azurerm_user_assigned_identity.infra_cd.name == "dx-d-itn-test-infra-github-cd-id-02"
+    condition     = azurerm_user_assigned_identity.infra_cd.name == "dx-u-itn-test-infra-github-cd-id-02"
     error_message = "The Infra CD user assigned identity has the wrong name"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_infra_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-dev-ci"
+    condition     = azurerm_federated_identity_credential.github_infra_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-uat-ci"
     error_message = "The Infra CI GitHub federation has the wrong subject"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_infra_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-dev-cd"
+    condition     = azurerm_federated_identity_credential.github_infra_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-uat-cd"
     error_message = "The Infra CD GitHub federation has the wrong subject"
   }
 
@@ -244,22 +255,22 @@ run "azure_github_environment_bootstrap_opex_identities" {
   command = plan
 
   assert {
-    condition     = azurerm_user_assigned_identity.opex_ci.name == "dx-d-itn-test-opex-github-ci-id-02"
+    condition     = azurerm_user_assigned_identity.opex_ci.name == "dx-u-itn-test-opex-github-ci-id-02"
     error_message = "Opex CI identity name is incorrect"
   }
 
   assert {
-    condition     = azurerm_user_assigned_identity.opex_cd.name == "dx-d-itn-test-opex-github-cd-id-02"
+    condition     = azurerm_user_assigned_identity.opex_cd.name == "dx-u-itn-test-opex-github-cd-id-02"
     error_message = "Opex CD identity name is incorrect"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_opex_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:opex-dev-ci"
+    condition     = azurerm_federated_identity_credential.github_opex_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:opex-uat-ci"
     error_message = "GitHub Opex CI federated credential subject is incorrect"
   }
 
   assert {
-    condition     = azurerm_federated_identity_credential.github_opex_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:opex-dev-cd"
+    condition     = azurerm_federated_identity_credential.github_opex_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:opex-uat-cd"
     error_message = "GitHub Opex CD federated credential subject is incorrect"
   }
 
@@ -285,5 +296,49 @@ run "azure_github_environment_bootstrap_dx_runner" {
   assert {
     condition     = strcontains(output.github_dx_runner.name, "dx")
     error_message = "The DX GitHub self-hosted runner should use its distinct name"
+  }
+}
+
+run "azure_github_environment_bootstrap_immutable_identities" {
+  command = plan
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-ci"
+    error_message = "The Infra CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-cd"
+    error_message = "The Infra CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_automation_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-cd"
+    error_message = "The automation CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-ci"
+    error_message = "The App CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-cd"
+    error_message = "The App CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-ci"
+    error_message = "The Opex CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-cd"
+    error_message = "The Opex CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci != null && azurerm_federated_identity_credential.github_app_ci != null
+    error_message = "The name-based credentials must be kept for backward compatibility"
   }
 }

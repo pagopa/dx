@@ -19,11 +19,11 @@ resource "azurerm_resource_group" "example" {
 
 module "service_bus_01" {
   source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
-  version = "~> 0.1"
+  version = "~> 2.0"
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     app_name        = "test"
     instance_number = "01"

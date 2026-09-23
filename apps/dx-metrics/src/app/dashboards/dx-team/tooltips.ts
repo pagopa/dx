@@ -8,9 +8,9 @@ export const dxTeamTooltips = {
   commitsByRepo:
     "DX member contributions across repositories. Reveals team expertise areas.",
   dxMemberCommits:
-    "Commits by DX members to non-DX repositories. Measures team's cross-domain impact.",
+    "Commits by DX members to non-DX repositories. A negative signal: work that should belong to the teams owning those repositories.",
   ioInfraPrs:
-    "Pull requests to infrastructure repo by team. Shows DX team's infrastructure contribution.",
+    "Pull requests to the shared infrastructure repository by author group. External contributions are a positive signal of product teams owning infrastructure.",
   ioInfraPrTable:
     "List of infrastructure PRs authored by team. Tracks infrastructure enhancement efforts.",
   pipelinesUsage:

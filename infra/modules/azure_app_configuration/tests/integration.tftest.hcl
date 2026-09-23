@@ -15,7 +15,7 @@ provider "pagopa-dx" {}
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "int"
     app_name        = "ac"
@@ -26,7 +26,7 @@ variables {
     BusinessUnit   = "DevEx"
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_app_configuration/tests"
     ManagementTeam = "Developer Experience"
     Test           = "true"

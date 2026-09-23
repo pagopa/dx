@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   sqlDateSchema,
@@ -13,6 +13,18 @@ export const getPullRequestsReviewDashboardInputSchema = dashboardParamsSchema;
 
 export const reviewMetricValueRowSchema = z.object({
   value: nullableSqlNumberSchema,
+});
+
+/** The two "merged without …" shares computed on the same PR population. */
+export const mergedWithoutActivityShareRowSchema = z.object({
+  withoutComments: nullableSqlNumberSchema,
+  withoutReview: nullableSqlNumberSchema,
+});
+
+/** Comment total and per-PR average, computed on the same PR population. */
+export const commentSummaryRowSchema = z.object({
+  commentsPerPr: nullableSqlNumberSchema,
+  totalComments: nullableSqlNumberSchema,
 });
 
 export const reviewDistributionRowSchema = z.object({
@@ -28,6 +40,17 @@ export const reviewMatrixRowSchema = z.object({
   reviewer: z.string().min(1),
 });
 
+/**
+ * Merges performed in the window, grouped by the person who merged. Carries
+ * both the total and the subset on pull requests authored by someone else, so
+ * the two charts are two views of one scan and cannot disagree.
+ */
+export const prReviewMergerRowSchema = z.object({
+  login: z.string().min(1),
+  merges: sqlNumberSchema,
+  mergesOfOthers: sqlNumberSchema,
+});
+
 export const timeToFirstReviewTrendRowSchema = z.object({
   avgHoursToFirstReview: sqlNumberSchema,
   week: sqlDateSchema,
@@ -38,13 +61,31 @@ export const timeToMergeTrendRowSchema = z.object({
   week: sqlDateSchema,
 });
 
+/** Same card metrics over the immediately preceding, equally-sized window. */
+export const reviewPreviousValuesRowSchema = z.object({
+  previousAvgTimeToFirstReview: nullableSqlNumberSchema,
+  previousCommentsPerPr: nullableSqlNumberSchema,
+  previousMergedWithoutCommentsPct: nullableSqlNumberSchema,
+  previousTotalComments: nullableSqlNumberSchema,
+});
+
 export const pullRequestsReviewCardsSchema = z.object({
   avgTimeToFirstReview: nullableSqlNumberSchema,
   avgTimeToMerge: nullableSqlNumberSchema,
+  commentsPerPr: nullableSqlNumberSchema,
+  previousAvgTimeToFirstReview: nullableSqlNumberSchema,
+  previousCommentsPerPr: nullableSqlNumberSchema,
+  previousMergedWithoutCommentsPct: nullableSqlNumberSchema,
+  previousTotalComments: nullableSqlNumberSchema,
+  totalComments: nullableSqlNumberSchema,
 });
 
 export const pullRequestsReviewDashboardSchema = z.object({
   cards: pullRequestsReviewCardsSchema,
+  firstReviewPercentiles: percentileRowSchema,
+  mergedWithoutCommentsShare: nullableSqlNumberSchema,
+  mergedWithoutReviewShare: nullableSqlNumberSchema,
+  mergers: z.array(prReviewMergerRowSchema),
   reviewDistribution: z.array(reviewDistributionRowSchema),
   reviewMatrix: z.array(reviewMatrixRowSchema),
   timeToFirstReviewTrend: z.array(timeToFirstReviewTrendRowSchema),

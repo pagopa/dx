@@ -22,11 +22,10 @@ WORKDIR {{WORKSPACE_DIR}}
 # Deterministic fixture repository (git baseline so the agent can diff).
 COPY . {{WORKSPACE_DIR}}/
 
-# Optional build-time setup: `harbor/prepare.sh` or
-# `harbor/<task>/prepare.sh` is copied into the workspace as `prepare.sh` to
-# install extra tooling or seed the workspace before the agent runs. Runs
-# before the git baseline so prepared files are part of the agent's starting
-# repo.
+# Optional build-time setup: stage a `prepare.sh` into the environment dir
+# (harbor/environment/prepare.sh, or an eval case `files` entry) to install
+# extra tooling or seed the workspace before the agent runs. Runs before the
+# git baseline so prepared files are part of the agent's starting repo.
 RUN if [ -f {{WORKSPACE_DIR}}/prepare.sh ]; then \
         bash {{WORKSPACE_DIR}}/prepare.sh; \
     fi

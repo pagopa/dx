@@ -49,21 +49,20 @@ Before applying any infrastructure, you need to organize your team into Azure
 Entra ID groups via Azure
 [authorization repository](https://github.com/orgs/pagopa/repositories?q=eng-azure-au).
 
-Ensure to have the following groups in your configuration, eventually split by
-domains:
+Ensure to have the following groups in your configuration:
 
-| Group                                           | Required roles                                                              |
-| ----------------------------------------------- | --------------------------------------------------------------------------- |
-| `<product>-<env>-adgroup-[<domain>]-admins`     | `Contributor`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` |
-| `<product>-<env>-adgroup-[<domain>]-developers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`           |
-| `<product>-<env>-adgroup-[<domain>]-externals`  | `Reader`                                                                    |
+| Group                                | Required roles                                                              |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| `<product>-<env>-adgroup-admin`      | `Contributor`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` |
+| `<product>-<env>-adgroup-developers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`           |
+| `<product>-<env>-adgroup-externals`  | `Reader`                                                                    |
 
 Once defined, assign each team member to one of the following groups based on
 the responsibilities you want to grant them:
 
 | Group        | Who belongs here                                                                      |
 | ------------ | ------------------------------------------------------------------------------------- |
-| `admins`     | Engineers with high privileges. They can also apply `core` and `bootstrapper` modules |
+| `admin`      | Engineers with high privileges. They can also apply `core` and `bootstrapper` modules |
 | `developers` | Engineers with development access on resources defined in the monorepository          |
 | `externals`  | External collaborators with limited access                                            |
 

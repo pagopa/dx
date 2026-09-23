@@ -1,6 +1,6 @@
 ---
 name: dx-cli-companion
-description: 'Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, create an environment with `add environment`, or scaffold multi-tenant environments such as `ced-prod`/`cgn-dev` with custom prefixes. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint.'
+description: "Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, create an environment with `add environment`, or scaffold multi-tenant environments such as `ced-prod`/`cgn-dev` with custom prefixes. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint."
 ---
 
 # DX CLI Companion
@@ -117,10 +117,10 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 
 Use tenant-qualified environment names when a repository hosts multiple tenants or product scopes that share the same base lifecycle environment.
 
-| Input | Meaning | Example |
-| --- | --- | --- |
-| `--name` | Environment identifier. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with `-dev`, `-uat`, or `-prod`. | `ced-prod` |
-| `--prefix` | Short 2–4 character tenant/product prefix used in Azure resource names. | `ced` |
+| Input      | Meaning                                                                                                                    | Example    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `--name`   | Environment identifier. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with `-dev`, `-uat`, or `-prod`. | `ced-prod` |
+| `--prefix` | Short 2–4 character tenant/product prefix used in Azure resource names.                                                    | `ced`      |
 
 The suffix of `--name` determines the base environment short code used in Azure names: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod` maps to `p`. For example, `--name ced-prod --prefix ced` uses `p` as the environment short code and generates infrastructure under `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`.
 
@@ -192,13 +192,13 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 
 ## Troubleshooting
 
-| Symptom | Meaning | Action |
-| --- | --- | --- |
-| `? Description` appears during `init` | The description was not prefilled, or it is intentionally empty | Ask for the description choice upfront; for an empty description, pipe a blank line on stdin. |
-| Publish confirmation appears during `init` | The publish choice was not encoded in the command | Ask whether to publish now; use `--publish` for yes, or answer `n` on stdin for no. |
-| `? Business unit` appears during `add environment` | `--business-unit` is missing | Ask for the value and rerun with the flag. |
-| `? Management team` appears during `add environment` | `--management-team` is missing | Ask for the value and rerun with the flag. |
-| Runner App credential prompts appear | The environment needs initialization credentials | Ask for the four Runner App values and rerun with the related flags. |
+| Symptom                                              | Meaning                                                         | Action                                                                                        |
+| ---------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `? Description` appears during `init`                | The description was not prefilled, or it is intentionally empty | Ask for the description choice upfront; for an empty description, pipe a blank line on stdin. |
+| Publish confirmation appears during `init`           | The publish choice was not encoded in the command               | Ask whether to publish now; use `--publish` for yes, or answer `n` on stdin for no.           |
+| `? Business unit` appears during `add environment`   | `--business-unit` is missing                                    | Ask for the value and rerun with the flag.                                                    |
+| `? Management team` appears during `add environment` | `--management-team` is missing                                  | Ask for the value and rerun with the flag.                                                    |
+| Runner App credential prompts appear                 | The environment needs initialization credentials                | Ask for the four Runner App values and rerun with the related flags.                          |
 
 ## Practical Rules
 

@@ -1,4 +1,4 @@
-"""Tests for workspace fixture composition (collision detection)."""
+"""Tests for eval-case fixture staging into ``environment/``."""
 
 from __future__ import annotations
 
@@ -9,53 +9,56 @@ import pytest
 from harbor_bench.convert.workspace import WorkspaceError, compose_workspace
 
 
-def test_composes_base_and_files(tmp_path):
+def test_stages_files_by_basename(tmp_path):
     env = tmp_path / "env"
-    base = tmp_path / "base"
-    (base / "sub").mkdir(parents=True)
-    (base / "a.txt").write_text("base-a")
-    (base / "sub" / "b.txt").write_text("base-b")
-    f = tmp_path / "file.txt"
-    f.write_text("file")
+    a = tmp_path / "a" / "x.txt"
+    a.parent.mkdir(parents=True)
+    a.write_text("x")
+    b = tmp_path / "sub" / "dir" / "y.txt"
+    b.parent.mkdir(parents=True)
+    b.write_text("y")
 
-    created = compose_workspace(env, workspace_dir=base, files=[f])
-    assert sorted(created) == ["a.txt", "file.txt", "sub/b.txt"]
-    assert (env / "a.txt").read_text() == "base-a"
-    assert (env / "file.txt").read_text() == "file"
-
-
-def test_collision_between_layers_rejected(tmp_path):
-    env = tmp_path / "env"
-    base = tmp_path / "base"
-    base.mkdir()
-    (base / "a.txt").write_text("base")
-    f = tmp_path / "a.txt"
-    f.write_text("file")
-
-    with pytest.raises(WorkspaceError, match="collision"):
-        compose_workspace(env, workspace_dir=base, files=[f])
+    created = compose_workspace(env, files=[a, b])
+    assert sorted(created) == ["x.txt", "y.txt"]
+    assert (env / "x.txt").read_text() == "x"
+    assert (env / "y.txt").read_text() == "y"
 
 
-def test_same_filename_in_different_dirs_not_collision(tmp_path):
+def test_duplicate_basename_rejected(tmp_path):
     env = tmp_path / "env"
     d1 = tmp_path / "d1"
     d2 = tmp_path / "d2"
     d1.mkdir()
     d2.mkdir()
     (d1 / "x.txt").write_text("1")
-    (d2 / "y.txt").write_text("2")
-    created = compose_workspace(env, files=[d1 / "x.txt", d2 / "y.txt"])
-    assert "x.txt" in created
-    assert "y.txt" in created
+    (d2 / "x.txt").write_text("2")
+
+    with pytest.raises(WorkspaceError, match="collision"):
+        compose_workspace(env, files=[d1 / "x.txt", d2 / "x.txt"])
 
 
-def test_missing_layer_rejected(tmp_path):
+def test_fixture_colliding_with_reserved_name_rejected(tmp_path):
+    env = tmp_path / "env"
+    d = tmp_path / "d"
+    d.mkdir()
+    dockerfile = d / "Dockerfile"
+    dockerfile.write_text("FROM x")
+    dockerignore = d / ".dockerignore"
+    dockerignore.write_text("*")
+
+    with pytest.raises(WorkspaceError, match="generated environment file"):
+        compose_workspace(env, files=[dockerfile], reserved=("Dockerfile",))
+    with pytest.raises(WorkspaceError, match="generated environment file"):
+        compose_workspace(env, files=[dockerignore], reserved=(".dockerignore",))
+
+
+def test_missing_file_rejected(tmp_path):
     env = tmp_path / "env"
     with pytest.raises(WorkspaceError, match="not found"):
-        compose_workspace(env, workspace_dir=tmp_path / "nope")
+        compose_workspace(env, files=[tmp_path / "nope.txt"])
 
 
-def test_empty_workspace(tmp_path):
+def test_empty_files_creates_dir_only(tmp_path):
     env = tmp_path / "env"
     created = compose_workspace(env)
     assert created == []

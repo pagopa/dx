@@ -119,8 +119,13 @@ Everything beyond the quick start is documented in
 - [Reusing the environment image (faster startup)](docs/advanced-usage.md#reusing-the-environment-image-faster-startup) —
   skip repeated image builds for faster runs.
 - [Authoring skills for the benchmark](docs/advanced-usage.md#authoring-skills-for-the-benchmark) —
-  `evals.json`, workspace fixtures, `prepare.sh`, and how grading (RewardKit)
-  and the verifier work.
+  `evals.json`, per-case `files` fixtures, the `harbor/` overlay (replace a
+  generated task file or add container context under `environment/`), and how
+  grading (RewardKit) and the verifier work.
+- [External MCP servers and secrets](docs/advanced-usage.md#external-mcp-servers-and-secrets) —
+  running evals that drive a live authenticated service (e.g. Confluence via
+  the Atlassian MCP) with per-task `task.toml` `[environment]` overrides +
+  host-provided secrets.
 - [Skill eval data and git sources](docs/advanced-usage.md#skill-eval-data-and-git-sources) —
   eval-data visibility inside the agent container.
 - [Comparing skill versions (workspace vs git)](docs/advanced-usage.md#comparing-skill-versions-workspace-vs-git) —

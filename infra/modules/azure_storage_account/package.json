@@ -1,7 +1,0 @@
-{
-  "name": "azure_storage_account",
-  "version": "3.0.0",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Provisions an Azure Storage Account with networking, monitoring, and security configurations"
-}

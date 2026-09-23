@@ -15,7 +15,7 @@ export const trackerTooltips = {
     "Daily request volume with trend line. Identifies peak demand periods.",
   openedRequestsTotal: "Total requests opened. Measures demand on DX team.",
   requestsTrend:
-    "Percentage trend in requests. Shows if demand is increasing or decreasing.",
+    "Percentage change of the fitted daily-request trend line, computed over the full request history. Shown only once at least a week of daily data exists; a couple of days would make the percentage pure noise.",
   title:
     "Monitors the status and progress of team DX improvement requests and initiatives.",
 } as const;

@@ -62,9 +62,9 @@ const rolesAreEqual = (
 
 /**
  * Adds or updates the AD groups array in the parsed authorization JSON.
- * - Missing default groups are added with empty members.
- * - Existing groups with wrong roles have their roles updated; members are preserved.
- * - Custom (non-default) groups are preserved unchanged.
+ * - Missing managed groups are added with empty members.
+ * - Existing managed groups with wrong roles have their roles updated; members are preserved.
+ * - Unmanaged groups are preserved unchanged.
  * Returns the updated JSON along with a flag indicating whether anything changed.
  */
 const upsertGroups = (
@@ -83,7 +83,7 @@ const upsertGroups = (
   );
 
   const existingGroups = jsonContent.groups ?? [];
-  const seenDefaults = new Set<string>();
+  const seenManagedGroups = new Set<string>();
 
   // Walk existing groups in their original order, updating roles where needed
   const finalGroups: typeof existingGroups = [];
@@ -92,10 +92,10 @@ const upsertGroups = (
   for (const existing of existingGroups) {
     const spec = expectedByName.get(existing.name);
     if (!spec) {
-      // Custom group — preserve as-is
+      // Unmanaged group — preserve as-is
       finalGroups.push(existing);
     } else {
-      seenDefaults.add(existing.name);
+      seenManagedGroups.add(existing.name);
       if (!rolesAreEqual(existing.roles, spec.roles)) {
         // Roles differ — update roles, preserve members and any extra fields
         finalGroups.push({ ...existing, roles: [...spec.roles] });
@@ -106,10 +106,10 @@ const upsertGroups = (
     }
   }
 
-  // Append missing default groups at the end
+  // Append missing managed groups at the end
   for (const spec of DEFAULT_GROUP_SPECS) {
     const name = makeAzureAdGroupName(prefix, envShort, spec.groupName);
-    if (!seenDefaults.has(name)) {
+    if (!seenManagedGroups.has(name)) {
       finalGroups.push({ members: [], name, roles: [...spec.roles] });
       groupsChanged = true;
     }
@@ -150,22 +150,25 @@ const parseAuthorizationFile = (
  */
 const makeChangeDescription = (
   subscriptionName: string,
-  bootstrapIdentityId: string,
-  identityAdded: boolean,
+  bootstrapIdentityIds: RequestAuthorizationInput["bootstrapIdentityIds"],
+  identitiesChanged: boolean,
   groupsChanged: boolean,
 ): { body: string; message: string; title: string } => {
-  if (identityAdded && groupsChanged) {
-    const title = `Add bootstrap identity and AD groups for ${subscriptionName}`;
+  const formattedIdentityIds =
+    `\`${bootstrapIdentityIds.cd}\` and ` + `\`${bootstrapIdentityIds.ci}\``;
+
+  if (identitiesChanged && groupsChanged) {
+    const title = `Authorize bootstrap identities and configure AD groups for ${subscriptionName}`;
     return {
-      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
+      body: `This PR ensures the bootstrap identities ${formattedIdentityIds} are directory readers and configures AD groups for subscription \`${subscriptionName}\`.`,
       message: title,
       title,
     };
   }
-  if (identityAdded) {
-    const title = `Add bootstrap identity for ${subscriptionName}`;
+  if (identitiesChanged) {
+    const title = `Authorize bootstrap identities for ${subscriptionName}`;
     return {
-      body: `This PR adds the bootstrap identity \`${bootstrapIdentityId}\` to the directory readers for subscription \`${subscriptionName}\`.`,
+      body: `This PR ensures the bootstrap identities ${formattedIdentityIds} are directory readers for subscription \`${subscriptionName}\`.`,
       message: title,
       title,
     };
@@ -179,33 +182,39 @@ const makeChangeDescription = (
 };
 
 /**
- * Ensures the given identity is present in the service_principals_name list.
- * Returns the (possibly updated) JSON and whether the identity was newly added.
- * Never fails: if the identity already exists it is a no-op with identityAdded = false.
+ * Ensures the bootstrap identities are present in the service principal list.
+ * Existing entries keep their first-seen order and only missing identities are
+ * appended.
  */
-const ensureIdentity = (
+const ensureIdentities = (
   jsonContent: z.infer<typeof azureAuthorizationFileSchema>,
-  identityId: string,
+  identityIds: RequestAuthorizationInput["bootstrapIdentityIds"],
 ): {
-  identityAdded: boolean;
+  identitiesChanged: boolean;
   json: z.infer<typeof azureAuthorizationFileSchema>;
 } => {
-  if (
-    jsonContent.directory_readers.service_principals_name.includes(identityId)
-  ) {
-    return { identityAdded: false, json: jsonContent };
+  const servicePrincipalNames =
+    jsonContent.directory_readers.service_principals_name;
+  const uniqueIdentityIds = [...new Set(servicePrincipalNames)];
+  const existingIdentityIds = new Set(uniqueIdentityIds);
+  const missingIdentityIds = [identityIds.cd, identityIds.ci].filter(
+    (identityId) => !existingIdentityIds.has(identityId),
+  );
+  const identitiesChanged =
+    uniqueIdentityIds.length !== servicePrincipalNames.length ||
+    missingIdentityIds.length > 0;
+
+  if (!identitiesChanged) {
+    return { identitiesChanged: false, json: jsonContent };
   }
 
   return {
-    identityAdded: true,
+    identitiesChanged: true,
     json: {
       ...jsonContent,
       directory_readers: {
         ...jsonContent.directory_readers,
-        service_principals_name: [
-          ...jsonContent.directory_readers.service_principals_name,
-          identityId,
-        ],
+        service_principals_name: [...uniqueIdentityIds, ...missingIdentityIds],
       },
     },
   };
@@ -222,7 +231,7 @@ export const makeAzureAuthorizationService = (
   ): ResultAsync<AuthorizationResult, AuthorizationError> {
     const logger = getLogger(["dx-cli", "pagopa-azure-authorization"]);
     const {
-      bootstrapIdentityId,
+      bootstrapIdentityIds,
       envShort,
       prefix,
       repoName,
@@ -250,7 +259,7 @@ export const makeAzureAuthorizationService = (
         .orTee((error) => {
           logger.error(error.message);
         })
-        // Step 2: Parse file, ensure identity, upsert groups, detect no-op
+        // Step 2: Parse file, ensure identities, upsert groups, detect no-op
         .andThen(({ content, sha }) => {
           const parseResult = parseAuthorizationFile(content);
           if (parseResult.isErr()) {
@@ -261,24 +270,24 @@ export const makeAzureAuthorizationService = (
           }
           const parsed = parseResult.value;
 
-          const { identityAdded, json: withIdentity } = ensureIdentity(
+          const { identitiesChanged, json: withIdentities } = ensureIdentities(
             parsed,
-            bootstrapIdentityId,
+            bootstrapIdentityIds,
           );
-          if (!identityAdded) {
-            logger.warn("Identity already exists, checking groups", {
-              identityId: bootstrapIdentityId,
+          if (!identitiesChanged) {
+            logger.warn("Bootstrap identities already exist, checking groups", {
+              identityIds: bootstrapIdentityIds,
               subscription: subscriptionName,
             });
           }
 
           const { groupsChanged, json: updatedJson } = upsertGroups(
-            withIdentity,
+            withIdentities,
             prefix,
             envShort,
           );
 
-          if (!identityAdded && !groupsChanged) {
+          if (!identitiesChanged && !groupsChanged) {
             // Nothing to do — no branch created, no PR needed.
             logger.info("No changes needed, skipping PR", {
               subscription: subscriptionName,
@@ -288,8 +297,8 @@ export const makeAzureAuthorizationService = (
 
           const { body, message, title } = makeChangeDescription(
             subscriptionName,
-            bootstrapIdentityId,
-            identityAdded,
+            bootstrapIdentityIds,
+            identitiesChanged,
             groupsChanged,
           );
 

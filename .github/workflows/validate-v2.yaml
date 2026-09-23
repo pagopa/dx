@@ -58,6 +58,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -67,6 +68,36 @@ jobs:
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
+
+  format:
+    name: Format
+    needs: gate
+    if: ${{ needs.gate.outputs.run == 'true' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
+          minimum_release_age: 7d
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      - name: Set base and head SHAs for format check
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Check formatting
+        run: pnpm nx format:check
 
   assess-affected-projects:
     name: Affected Projects Assessment
@@ -90,6 +121,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -127,7 +159,6 @@ jobs:
               [
                 .[].environments[]
                 | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
-                | select(.name | contains("uat") | not)
                 | {
                     "github-environment": .name,
                     "env-name": (.name | split("-")[1])
@@ -187,6 +218,7 @@ jobs:
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           experimental: true
+          minimum_release_age: 7d
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -270,6 +302,7 @@ jobs:
         with:
           # Enable experimental features to use "mise deps"
           experimental: true
+          minimum_release_age: 7d
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main

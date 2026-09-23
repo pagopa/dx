@@ -1,19 +1,19 @@
 {
   "name": "renew-tls-certificate",
-  "description": "Checks whether a certificate stored in Azure Key Vault is expiring and renews it via Let's Encrypt if needed.",
-  "version": "0.0.5",
-  "type": "module",
+  "version": "0.0.6",
   "private": true,
+  "description": "Checks whether a certificate stored in Azure Key Vault is expiring and renews it via Let's Encrypt if needed.",
   "keywords": [
-    "github",
     "action",
-    "dx",
-    "tls",
-    "certificate",
-    "lets-encrypt",
     "azure",
-    "key-vault"
+    "certificate",
+    "dx",
+    "github",
+    "key-vault",
+    "lets-encrypt",
+    "tls"
   ],
+  "type": "module",
   "scripts": {
     "test": "bash test-smoke.sh"
   },

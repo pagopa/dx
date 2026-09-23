@@ -1,33 +1,55 @@
 /** IaC dashboard SQL queries and data transformation logic. */
 
-import { sql } from "drizzle-orm";
+import { sql, type SQL } from "drizzle-orm";
 
-import type { Database } from "../shared/types";
+import { buildIacInsights } from "@/lib/insights/iac";
+import type { WithInsights } from "@/lib/insights/types";
+import { IAC_EXCLUDED_PR_TITLES } from "@/lib/config";
+
+import type { Database, WithMeta } from "../shared/types";
 import type { GetIacDashboardInput, IacDashboardResult } from "./schemas";
 
+import {
+  buildReferenceDateQuery,
+  parseReferenceDate,
+} from "../shared/reference-date";
+import { notInValues } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import { percentileRowSchema } from "../shared/schemas";
 import { buildMemberMatchSql } from "./member-match-sql";
 import {
   dxMemberRowSchema,
   leadTimeMovingAvgRowSchema,
   leadTimeTrendRowSchema,
-  maxDateRowSchema,
   prsByReviewerRowSchema,
   prsOverTimeRowSchema,
   supervisedVsUnsupervisedRowSchema,
 } from "./schemas";
 
 /**
+ * Excludes release-automation PRs (e.g. "Version Packages") from IaC metrics.
+ * Takes a qualified column so the same exclusion can be applied to both the
+ * `iac_pr_lead_times` scan and the `pull_requests` join (`ipr.title`).
+ */
+const iacTitleFilter = (column: string): SQL =>
+  notInValues(column, IAC_EXCLUDED_PR_TITLES);
+
+/**
  * Resolves the latest data point date for the given repository.
  * All time-window filters are relative to this reference date.
  */
-const getMaxDate = async (db: Database, fullName: string): Promise<string> => {
-  const result = await db.execute(sql`
-    SELECT COALESCE(MAX(GREATEST(created_at, merged_at)), NOW()) AS "maxDate"
-    FROM iac_pr_lead_times
-    WHERE repository_full_name = ${fullName}
-  `);
-  return parseSqlRow(maxDateRowSchema, result.rows[0], "iac maxDate").maxDate;
+const getReferenceDate = async (
+  db: Database,
+  fullName: string,
+): Promise<string> => {
+  const result = await db.execute(
+    buildReferenceDateQuery({
+      column: "GREATEST(created_at, merged_at)",
+      from: "iac_pr_lead_times",
+      where: sql`repository_full_name = ${fullName}`,
+    }),
+  );
+  return parseReferenceDate(result.rows[0], "iac referenceDate");
 };
 
 /** Fetches the list of DX team member usernames. */
@@ -54,7 +76,7 @@ const queryLeadTimeMovingAvg = (
     WHERE repository_full_name = ${fullName}
       AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND created_at IS NOT NULL AND merged_at IS NOT NULL
-      AND title != 'Version Packages'
+      AND ${iacTitleFilter("title")}
     GROUP BY DATE_TRUNC('week', merged_at)::date
     ORDER BY week
   `);
@@ -75,7 +97,7 @@ const queryLeadTimeTrend = (
       WHERE repository_full_name = ${fullName}
         AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND created_at IS NOT NULL AND merged_at IS NOT NULL
-        AND title != 'Version Packages'
+        AND ${iacTitleFilter("title")}
     ),
     stats AS (SELECT COUNT(*) AS n, AVG(x) AS "xAvg", AVG("leadTimeDays") AS "yAvg" FROM pr_lead_times),
     regression AS (
@@ -87,6 +109,32 @@ const queryLeadTimeTrend = (
     SELECT p."createdDate" AS date,
       GREATEST(ROUND((r.slope * p.x + (r."yAvg" - r.slope * r."xAvg"))::numeric, 2), 0) AS "trendLine"
     FROM pr_lead_times p CROSS JOIN regression r ORDER BY p."createdDate"
+  `);
+
+/** IaC PR lead-time distribution percentiles. */
+const queryLeadTimePercentiles = (
+  db: Database,
+  fullName: string,
+  maxDate: string,
+  days: number,
+) =>
+  db.execute(sql`
+    SELECT
+      COUNT(*) AS "count",
+      ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
+        ORDER BY EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400
+      )::numeric, 2) AS "p50",
+      ROUND(PERCENTILE_CONT(0.85) WITHIN GROUP (
+        ORDER BY EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400
+      )::numeric, 2) AS "p85",
+      ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (
+        ORDER BY EXTRACT(EPOCH FROM (merged_at - created_at)) / 86400
+      )::numeric, 2) AS "p95"
+    FROM iac_pr_lead_times
+    WHERE repository_full_name = ${fullName}
+      AND merged_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND created_at IS NOT NULL AND merged_at IS NOT NULL
+      AND ${iacTitleFilter("title")}
   `);
 
 /**
@@ -111,7 +159,7 @@ const querySupervisedVsUnsupervised = (
       LEFT JOIN pull_requests pr ON pr.repository_id = ipr.repository_id AND pr.number = ipr.pr_number
       WHERE ipr.repository_full_name = ${fullName}
         AND ipr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND ipr.created_at IS NOT NULL AND ipr.title != 'Version Packages'
+        AND ipr.created_at IS NOT NULL AND ${iacTitleFilter("ipr.title")}
         AND (pr.draft IS NULL OR pr.draft = 0)
     )
     SELECT "runDate", "prType",
@@ -136,7 +184,7 @@ const queryPrsOverTime = (
     FROM iac_pr_lead_times
     WHERE repository_full_name = ${fullName}
       AND created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND created_at IS NOT NULL AND title != 'Version Packages'
+      AND created_at IS NOT NULL AND ${iacTitleFilter("title")}
     GROUP BY DATE_TRUNC('week', created_at)::date ORDER BY week
   `);
 
@@ -155,7 +203,7 @@ const queryPrsByReviewer = (
       LEFT JOIN pull_requests pr ON pr.repository_id = ipr.repository_id AND pr.number = ipr.pr_number
       WHERE ipr.repository_full_name = ${fullName}
         AND ipr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND ipr.created_at IS NOT NULL AND ipr.title != 'Version Packages'
+        AND ipr.created_at IS NOT NULL AND ${iacTitleFilter("ipr.title")}
     ),
     expanded AS (
       SELECT pr_number, created_at, merged_at,
@@ -179,31 +227,38 @@ const queryPrsByReviewer = (
 export const getIacDashboard = async (
   db: Database,
   params: GetIacDashboardInput,
-): Promise<IacDashboardResult> => {
+): Promise<IacDashboardResult & WithInsights & WithMeta> => {
   const { days, fullName } = params;
 
-  const maxDate = await getMaxDate(db, fullName);
+  const referenceDate = await getReferenceDate(db, fullName);
   const dxMembers = await getDxMembers(db);
 
   const [
     leadTimeMovingAvg,
+    leadTimePercentiles,
     leadTimeTrend,
     supervisedVsUnsupervised,
     prsOverTime,
     prsByReviewer,
   ] = await Promise.all([
-    queryLeadTimeMovingAvg(db, fullName, maxDate, days),
-    queryLeadTimeTrend(db, fullName, maxDate, days),
-    querySupervisedVsUnsupervised(db, fullName, maxDate, days, dxMembers),
-    queryPrsOverTime(db, fullName, maxDate, days),
-    queryPrsByReviewer(db, fullName, maxDate, days, dxMembers),
+    queryLeadTimeMovingAvg(db, fullName, referenceDate, days),
+    queryLeadTimePercentiles(db, fullName, referenceDate, days),
+    queryLeadTimeTrend(db, fullName, referenceDate, days),
+    querySupervisedVsUnsupervised(db, fullName, referenceDate, days, dxMembers),
+    queryPrsOverTime(db, fullName, referenceDate, days),
+    queryPrsByReviewer(db, fullName, referenceDate, days, dxMembers),
   ]);
 
-  return {
+  const dashboard = {
     leadTimeMovingAvg: parseSqlRows(
       leadTimeMovingAvgRowSchema,
       leadTimeMovingAvg.rows,
       "iac leadTimeMovingAvg",
+    ),
+    leadTimePercentiles: parseSqlRow(
+      percentileRowSchema,
+      leadTimePercentiles.rows[0],
+      "iac leadTimePercentiles",
     ),
     leadTimeTrend: parseSqlRows(
       leadTimeTrendRowSchema,
@@ -225,5 +280,11 @@ export const getIacDashboard = async (
       supervisedVsUnsupervised.rows,
       "iac supervisedVsUnsupervised",
     ),
+  };
+
+  return {
+    ...dashboard,
+    insights: buildIacInsights(dashboard),
+    meta: { days, referenceDate },
   };
 };

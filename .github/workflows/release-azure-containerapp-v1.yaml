@@ -186,18 +186,10 @@ jobs:
         run: |
           set -euo
 
-          # It is not stated in the documentation, but according to "az cli" validation:
-          # "A revision suffix must consist of lower case alphanumeric characters or '-',
-          # start with a letter or number, end with an alphanumeric character and cannot have '--'."
-
-          # Generate a random 4-char lowercase alphanumeric suffix
-          SUFFIX=$(openssl rand -base64 8 | tr -dc 'a-z0-9' | head -c 4)
-
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
             --image "$IMAGE_REF" \
             --from-revision "$CURRENT_REVISION" \
-            --revision-suffix "$SUFFIX" \
             --query "properties.latestRevisionName" \
             --output tsv)
 

@@ -12,4 +12,22 @@ locals {
   # local.core_outputs.values is a map of account IDs to their respective core values
   # previously, it was assumed there was only one account - the default value make this variable backwards compatible
   values = lookup(local.core_outputs.values, data.azurerm_subscription.current.subscription_id, local.core_outputs.values)
+
+  # Raised by the remote state postconditions when the referenced core state does not
+  # contain the `values` output produced by the azure-core-infra module.
+  missing_values_output_error_message = <<-EOT
+    The configured core remote state does not expose a `values` output.
+
+    This module reads the core infrastructure outputs from a Terraform remote state
+    and expects them to be wrapped in a top-level `values` output, as produced by
+    the azure-core-infra module.
+
+    This usually means one of the following:
+      - core_state.key ("${var.core_state.key}") points to the wrong state file;
+      - the referenced state file is empty or has not been applied yet;
+      - the remote state does not belong to an azure-core-infra deployment.
+
+    Check the `core_state` configuration and make sure the referenced state exists
+    and has been produced by a deployed core infrastructure.
+  EOT
 }

@@ -35,8 +35,8 @@ from .config import (
     write_config,
 )
 from .discover import DiscoverError, find_evals_files, load_evals_file
-from .layout import discover_workspace_dir
-from .schema import EvalsFile, resolve_eval_paths
+from .overlay import OverlaySet, discover_overlays, validate_overlays
+from .schema import EvalsFile, ResolvedEvalPaths, resolve_eval_paths
 from .task import TaskSpec, generate_task_atomic, task_dir_name
 
 DEFAULT_OUT = Path(".harbor")
@@ -138,9 +138,9 @@ def _normalize_options(options: ConvertOptions) -> ConvertOptions:
 def plan_run(options: ConvertOptions) -> RunPlan:
     """Discover, load, validate, and resolve a full run. Never writes.
 
-    Raises ``DiscoverError``, ``TaskNameCollision``, or ``ValueError`` (an
-    unsafe/missing fixture or unsupported environment) when the input set is
-    not runnable; nothing is written.
+    Raises ``DiscoverError``, ``TaskNameCollision``, ``OverlayError``, or
+    ``ValueError`` (an unsafe/missing fixture or unsupported environment) when
+    the input set is not runnable; nothing is written.
     """
     opts = _normalize_options(options)
     if opts.environment not in SUPPORTED_ENVIRONMENT_TYPES:
@@ -164,17 +164,15 @@ def plan_run(options: ConvertOptions) -> RunPlan:
         evals, skill_dir = load_evals_file(evals_path)
         loaded.append((evals_path, evals, skill_dir))
 
-    env_overrides = (
-        {"verifier": {"env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}}}
-        if opts.without_skill
-        else None
-    )
-
-    tasks: list[TaskSpec] = []
+    # Resolve fixtures, check naming collisions, and collect each skill's
+    # generated task dir names (the per-task overlay keys) in one pass.
+    resolved_by_skill: dict[Path, dict[int, ResolvedEvalPaths]] = {}
+    task_dirs_by_skill: dict[Path, set[str]] = {}
     seen: dict[str, str] = {}
     for evals_path, evals, skill_dir in loaded:
         resolved = resolve_eval_paths(evals, skill_dir)
-        workspace_dir = discover_workspace_dir(skill_dir)
+        resolved_by_skill[skill_dir] = resolved
+        dirs = task_dirs_by_skill.setdefault(skill_dir, set())
         for case in evals.evals:
             dir_name = task_dir_name(evals.skill_name, case.id, case.name)
             source = f"{evals.skill_name} eval {case.id} ({evals_path})"
@@ -183,14 +181,38 @@ def plan_run(options: ConvertOptions) -> RunPlan:
                     f"duplicate task name {dir_name!r}: {seen[dir_name]} vs {source}"
                 )
             seen[dir_name] = source
+            dirs.add(dir_name)
+
+    # Plan-time overlay validation: reject structurally invalid layouts (e.g.
+    # suite-level harbor/task.toml, legacy harbor/workspace) before anything is written.
+    overlays_by_skill: dict[Path, OverlaySet] = {}
+    for evals_path, evals, skill_dir in loaded:
+        overlays = discover_overlays(skill_dir, task_dirs_by_skill[skill_dir])
+        validate_overlays(overlays)
+        overlays_by_skill[skill_dir] = overlays
+
+    run_level_overrides = (
+        {"verifier": {"env": {"SKILL_EVAL_ENFORCE_SKILL_USE": "false"}}}
+        if opts.without_skill
+        else None
+    )
+
+    tasks: list[TaskSpec] = []
+    for evals_path, evals, skill_dir in loaded:
+        resolved = resolved_by_skill[skill_dir]
+        overlays = overlays_by_skill[skill_dir]
+        for case in evals.evals:
+            dir_name = task_dir_name(evals.skill_name, case.id, case.name)
+            # Overlay precedence for this task: per-task wins over suite-level.
+            task_overlay = overlays.for_task(dir_name)
             tasks.append(
                 TaskSpec(
                     task_dir=dir_name,
                     skill_name=evals.skill_name,
                     case=case,
                     paths=resolved[case.id],
-                    workspace_dir=workspace_dir,
-                    env_overrides=env_overrides,
+                    overlay=task_overlay,
+                    run_level_overrides=run_level_overrides,
                 )
             )
 

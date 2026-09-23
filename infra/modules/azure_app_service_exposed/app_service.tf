@@ -1,3 +1,6 @@
+# trivy:ignore:AZU-0001 Web App accepts incoming client certificate
+# trivy:ignore:AZU-0003 App Service authentication is activated
+# trivy:ignore:AZU-0006 Web App uses latest TLS version
 resource "azurerm_linux_web_app" "this" {
   name                = local.app_service.name
   location            = var.environment.location

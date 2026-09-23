@@ -44,7 +44,6 @@ def test_load_and_skill_dir(tmp_path):
 
     resolved = resolve_eval_paths(evals, skill_dir)
     assert resolved[1]["files"][0].name == "a.txt"
-    assert resolved[1]["prepare_script"] is None
 
 
 def test_duplicate_ids_rejected(tmp_path):

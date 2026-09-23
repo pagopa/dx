@@ -15,43 +15,61 @@ const RadarEntrySchema = z.object({
 
 const RadarEntriesSchema = z.array(RadarEntrySchema);
 
+/**
+ * Wraps a catalog entry so `radarSlug` stays `string | null` while `key` keeps
+ * its literal type. Without this the `as const` array narrows every slug to a
+ * non-null literal and the not-in-radar branch becomes unreachable.
+ */
+const techRadarTool = <TKey extends string>(tool: {
+  key: TKey;
+  path: string;
+  radarSlug: null | string;
+  toolName: string;
+}) => tool;
+
 const techRadarToolCatalog = [
-  {
+  techRadarTool({
     key: "pnpm",
     path: "pnpm-lock.yaml",
     radarSlug: "pnpm",
     toolName: "pnpm",
-  },
-  {
+  }),
+  techRadarTool({
     key: "npm",
     path: "package-lock.json",
     radarSlug: "npm",
     toolName: "npm",
-  },
-  {
+  }),
+  techRadarTool({
     key: "turborepo",
     path: "turbo.json",
     radarSlug: "turborepo",
     toolName: "Turborepo",
-  },
-  {
+  }),
+  techRadarTool({
     key: "changeset",
     path: ".changeset/config.json",
     radarSlug: "changeset",
     toolName: "Changeset",
-  },
-  {
+  }),
+  techRadarTool({
     key: "nx",
     path: "nx.json",
-    radarSlug: null,
+    radarSlug: "nx",
     toolName: "Nx",
-  },
-  {
+  }),
+  techRadarTool({
+    key: "mise",
+    path: "mise.toml",
+    radarSlug: "mise",
+    toolName: "mise",
+  }),
+  techRadarTool({
     key: "yarn",
     path: "yarn.lock",
     radarSlug: "yarn-classic",
     toolName: "Yarn",
-  },
+  }),
 ] as const;
 
 export interface LoadedTechRadarTool {

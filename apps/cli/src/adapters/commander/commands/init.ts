@@ -150,6 +150,18 @@ const trackTerraformCliIsInstalled = (presenter: CommandPresenter) =>
     ),
   );
 
+const checkMise = () => tf$`mise --version`;
+
+const trackMiseIsInstalled = (presenter: CommandPresenter) =>
+  trackStep(
+    presenter,
+    "Checking mise installation...",
+    checkMise,
+    asError(
+      "Please install mise before running this command. See https://mise.jdx.dev/installing-mise.html",
+    ),
+  );
+
 const checkCorepack = () => tf$`corepack -v`;
 
 const trackCorepackIsInstalled = (presenter: CommandPresenter) =>
@@ -220,7 +232,7 @@ const trackAzLogin = (presenter: CommandPresenter) =>
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runInitPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter).andThen(() =>
-    trackCorepackIsInstalled(presenter),
+    trackMiseIsInstalled(presenter),
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase

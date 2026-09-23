@@ -3,6 +3,8 @@ name: "Copilot Setup Steps"
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - .github/workflows/copilot-setup-steps.yml
   pull_request:
@@ -23,3 +25,5 @@ jobs:
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          minimum_release_age: 7d

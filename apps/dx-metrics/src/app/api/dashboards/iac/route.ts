@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getIacDashboard } from "@/adapters/db/iac/queries";
 import { db } from "@/db/instance";
+import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION } from "@/lib/config";
 import { parseDashboardQuery } from "@/lib/query-params";
 
@@ -14,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const result = await getIacDashboard(db, { days, fullName });
-    return NextResponse.json(result);
+    return jsonWithCache(result);
   } catch (error) {
     console.error("IaC dashboard error:", error);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });

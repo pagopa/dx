@@ -70,13 +70,14 @@ tsconfig.*.tsbuildinfo
 .worktrees
 
 .dx-tasks
-.trivy-cache
+trivy-cache
 
 .nx/migrate-runs
 .tflint.d/
 
 # harbor-bench generated eval tasks
 .harbor/
+runs/
 
 # python excludes
 .venv/
