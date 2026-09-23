@@ -1,5 +1,5 @@
 /**
- * Verifies the commands used to bootstrap a generated monorepo.
+ * Verifies the mise-managed commands used to bootstrap a generated monorepo.
  */
 import nodePlop from "node-plop";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -36,7 +36,7 @@ describe("setupPnpm", () => {
     mocks.execa$.mockClear();
   });
 
-  it("bootstraps Nx without installing or applying a devcontainer", async () => {
+  it("locks and installs mise tools before running the pnpm bootstrap", async () => {
     const plop = await nodePlop();
     setSetupPnpmAction(plop);
     plop.setGenerator("test", {
@@ -46,15 +46,28 @@ describe("setupPnpm", () => {
 
     await plop.getGenerator("test").runActions({ repoName: "generated-repo" });
 
-    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@10");
-    expect(mocks.commands).toContain(
+    const miseInstallIndex = mocks.commands.indexOf("mise install");
+    const corepackIndex = mocks.commands.indexOf(
+      "mise exec -- corepack use pnpm@10",
+    );
+    const miseLockIndex = mocks.commands.indexOf("mise lock");
+    const nxInitIndex = mocks.commands.indexOf(
       "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
     );
-    expect(mocks.commands).toContain(
-      "mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest",
+    const pnpmInstallIndex = mocks.commands.indexOf(
+      "mise exec -- pnpm install",
     );
-    expect(mocks.commands).not.toEqual(
-      expect.arrayContaining([expect.stringContaining("devcontainer")]),
+
+    expect(miseInstallIndex).toBeGreaterThanOrEqual(0);
+    expect(miseLockIndex).toBeGreaterThanOrEqual(0);
+    expect(miseLockIndex).toBeLessThan(miseInstallIndex);
+    expect(corepackIndex).toBeGreaterThan(miseInstallIndex);
+    expect(nxInitIndex).toBeGreaterThan(corepackIndex);
+    expect(pnpmInstallIndex).toBeGreaterThan(miseInstallIndex);
+    expect(mocks.commands).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("mise exec -- pnpm -w add -D"),
+      ]),
     );
   });
 });
