@@ -36,12 +36,12 @@ variable "use_case" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet used for private endpoints. When set, private endpoints are created for the subservices enabled in `subservices_enabled`, independently of `force_public_network_access_enabled` (this allows enabling private endpoints even when public network access is also enabled). Required only if `force_public_network_access_enabled` is set to false."
+  description = "The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false, or if it is set to true and `force_private_endpoint_enabled` is set to true."
   default     = null
 
   validation {
-    condition     = var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
-    error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
+    condition     = (var.use_case == "delegated_access" || var.force_public_network_access_enabled) && !var.force_private_endpoint_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+    error_message = "subnet_pep_id is required when force_public_network_access_enabled is false, or when force_private_endpoint_enabled is true."
   }
 }
 
@@ -65,6 +65,12 @@ variable "customer_managed_key" {
 variable "force_public_network_access_enabled" {
   type        = bool
   description = "Allows public network access. Defaults to 'false'."
+  default     = false
+}
+
+variable "force_private_endpoint_enabled" {
+  type        = bool
+  description = "Creates private endpoints for the enabled subservices even when `force_public_network_access_enabled` is set to 'true'. Useful when the storage account must be reachable both publicly (e.g. as a Front Door/CDN origin) and privately from within the network. Ignored when `force_public_network_access_enabled` is 'false', since private endpoints are already created in that case. Defaults to 'false' to preserve the existing behavior."
   default     = false
 }
 
@@ -95,7 +101,7 @@ variable "subservices_enabled" {
     queue = optional(bool, false)
     table = optional(bool, false)
   })
-  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only when subnet_pep_id is set."
+  description = "Enables subservices (blob, file, queue, table). Controls creation of queue/table resources and their diagnostic settings regardless of network configuration, and additionally determines which enabled subservices get Private Endpoints when private endpoints are created (i.e. when force_public_network_access_enabled is false, or true with force_private_endpoint_enabled set). Defaults to 'blob' only."
   default     = {}
 
   validation {
